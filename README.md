@@ -1,7 +1,7 @@
 Storage Performance Development Kit
 ===================================
 
-[https://01.org/spdk](SPDK on 01.org)
+[SPDK on 01.org](https://01.org/spdk)
 
 The Storage Performance Development Kit (SPDK) provides a set of tools
 and libraries for writing high performance, scalable, user-mode storage
@@ -30,7 +30,7 @@ Ubuntu/Debian:
 - libcunit1-dev
 
 Additionally, DPDK is required.
-See [http://dpdk.org/doc/quick-start](DPDK Quick Start).
+See [DPDK Quick Start](http://dpdk.org/doc/quick-start).
 
 Building
 ========
