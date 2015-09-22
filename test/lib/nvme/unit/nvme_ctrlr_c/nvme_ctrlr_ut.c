@@ -159,22 +159,14 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 }
 
 void
-test_nvme_ctrlr_fail()
+test_nvme_ctrlr_fail(void)
 {
-	struct nvme_controller *ctrlr = NULL;
-	struct nvme_qpair	qpair = {};
-	uint64_t		phys_addr = 0;
+	struct nvme_controller	ctrlr = {};
 
-	ctrlr = nvme_malloc("nvme_controller", sizeof(struct nvme_controller),
-			    64, &phys_addr);
-	CU_ASSERT(ctrlr != NULL);
+	ctrlr.num_io_queues = 0;
+	nvme_ctrlr_fail(&ctrlr);
 
-	ctrlr->num_io_queues = 0;
-	ctrlr->adminq = qpair;
-	nvme_ctrlr_fail(ctrlr);
-
-	CU_ASSERT(ctrlr->is_failed == true);
-	nvme_free(ctrlr);
+	CU_ASSERT(ctrlr.is_failed == true);
 }
 
 int main(int argc, char **argv)
