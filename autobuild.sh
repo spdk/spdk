@@ -12,11 +12,12 @@ cd $src
 
 scanbuild=''
 if hash scan-build; then
-	scanbuild="scan-build -o $out/scan-build-tmp"
+	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
 fi
 
 make $MAKEFLAGS clean
-time $scanbuild make $MAKEFLAGS DPDK_DIR=$DPDK_DIR
+fail=0
+time $scanbuild make $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
 
 if [ -d $out/scan-build-tmp ]; then
 	scanoutput=$(ls -1 $out/scan-build-tmp/)
@@ -34,3 +35,5 @@ if hash doxygen; then
 		rm -rf "$d"
 	done
 fi
+
+exit $fail
