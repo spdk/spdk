@@ -287,10 +287,8 @@ void test_nvme_qpair_process_completions(void)
 void test_nvme_qpair_destroy(void)
 {
 	struct nvme_qpair	qpair = {0};
-	struct nvme_request	*req = NULL;
 	struct nvme_controller	ctrlr = {};
 	struct nvme_registers	regs = {0};
-	struct nvme_tracker	*tr_temp;
 	uint64_t		phys_addr = 0;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
@@ -302,8 +300,7 @@ void test_nvme_qpair_destroy(void)
 	qpair.cpl = nvme_malloc("nvme_completion", sizeof(struct nvme_completion),
 				64, &phys_addr);
 
-	qpair.act_tr = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
-				   64, &phys_addr);
+	qpair.act_tr = calloc(32, sizeof(struct nvme_tracker *));
 
 	nvme_qpair_destroy(&qpair);
 }
