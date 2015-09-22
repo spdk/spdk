@@ -49,10 +49,6 @@ nvme_ctrlr_construct_admin_qpair(struct nvme_controller *ctrlr)
 
 	qpair = &ctrlr->adminq;
 
-	/*
-	 * The admin queue's max xfer size is treated differently than the
-	 *  max I/O xfer size.  16KB is sufficient here - maybe even less?
-	 */
 	rc = nvme_qpair_construct(qpair,
 				  0, /* qpair ID */
 				  NVME_ADMIN_ENTRIES,
@@ -106,9 +102,6 @@ nvme_ctrlr_construct_io_qpairs(struct nvme_controller *ctrlr)
 		/*
 		 * Admin queue has ID=0. IO queues start at ID=1 -
 		 *  hence the 'i+1' here.
-		 *
-		 * For I/O queues, use the controller-wide max_xfer_size
-		 *  calculated in nvme_attach().
 		 */
 		rc = nvme_qpair_construct(qpair,
 					  i + 1, /* qpair ID */
