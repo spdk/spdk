@@ -298,6 +298,9 @@ nvme_qpair_complete_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr,
 	bool			retry, error;
 
 	req = tr->req;
+
+	nvme_assert(req != NULL, ("tr has NULL req\n"));
+
 	error = nvme_completion_is_error(cpl);
 	retry = error && nvme_completion_is_retry(cpl) &&
 		req->retries < nvme_retry_count;
