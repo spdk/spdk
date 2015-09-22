@@ -429,9 +429,6 @@ int	nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 			  struct nvme_controller *ctrlr);
 void	nvme_ns_destruct(struct nvme_namespace *ns);
 
-void	nvme_dump_command(struct nvme_command *cmd);
-void	nvme_dump_completion(struct nvme_completion *cpl);
-
 struct nvme_request *
 nvme_allocate_request(void *payload, uint32_t payload_size,
 		      nvme_cb_fn_t cb_fn, void *cb_arg);

@@ -234,9 +234,10 @@ static void
 nvme_qpair_print_completion(struct nvme_qpair *qpair,
 			    struct nvme_completion *cpl)
 {
-	nvme_printf(qpair->ctrlr, "%s (%02x/%02x) sqid:%d cid:%d cdw0:%x\n",
+	nvme_printf(qpair->ctrlr, "%s (%02x/%02x) sqid:%d cid:%d cdw0:%x sqhd:%04x p:%x m:%x dnr:%x\n",
 		    get_status_string(cpl->status.sct, cpl->status.sc),
-		    cpl->status.sct, cpl->status.sc, cpl->sqid, cpl->cid, cpl->cdw0);
+		    cpl->status.sct, cpl->status.sc, cpl->sqid, cpl->cid, cpl->cdw0,
+		    cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
 }
 
 static bool
@@ -464,7 +465,7 @@ nvme_qpair_process_completions(struct nvme_qpair *qpair)
 		} else {
 			nvme_printf(qpair->ctrlr,
 				    "cpl does not map to outstanding cmd\n");
-			nvme_dump_completion(cpl);
+			nvme_qpair_print_completion(qpair, cpl);
 			nvme_assert(0, ("received completion for unknown cmd\n"));
 		}
 

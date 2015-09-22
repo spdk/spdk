@@ -163,60 +163,6 @@ test2(void)
 	CU_ASSERT(threads_fail == 4);
 }
 
-void
-test_nvme_dump_command(void)
-{
-	struct nvme_command	*cmd = NULL;
-	uint64_t		physaddr = 0;
-
-	cmd = nvme_malloc("nvme_command", sizeof(struct nvme_command),
-			  64, &physaddr);
-	CU_ASSERT(cmd != NULL);
-
-	cmd->opc = 1;
-	cmd->fuse = 1;
-	cmd->rsvd1 = 1;
-	cmd->cid = 1;
-	cmd->nsid = 1;
-	cmd->rsvd2 = 1;
-	cmd->rsvd3 = 1;
-	cmd->mptr = 1;
-	cmd->dptr.prp.prp1 = 1;
-	cmd->dptr.prp.prp2 = 1;
-	cmd->cdw10 = 1;
-	cmd->cdw11 = 1;
-	cmd->cdw12 = 1;
-	cmd->cdw13 = 1;
-	cmd->cdw14 = 1;
-	cmd->cdw15 = 1;
-
-	nvme_dump_command(cmd);
-	nvme_free(cmd);
-}
-
-void
-test_nvme_dump_completion(void)
-{
-	struct nvme_completion	*cpl = NULL;
-	uint64_t		physaddr = 0;
-
-	cpl = nvme_malloc("nvme_completion", sizeof(struct nvme_completion),
-			  64, &physaddr);
-	CU_ASSERT(cpl != NULL);
-
-	cpl->cdw0 = 1;
-	cpl->sqhd = 1;
-	cpl->sqid = 1;
-	cpl->cid = 1;
-	cpl->status.p = 1;
-	cpl->status.sc = 1;
-	cpl->status.sct = 1;
-	cpl->status.m = 1;
-	cpl->status.dnr = 1;
-
-	nvme_dump_completion(cpl);
-	nvme_free(cpl);
-}
 
 int main(int argc, char **argv)
 {
@@ -236,8 +182,6 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "test1", test1) == NULL
 		|| CU_add_test(suite, "test2", test2) == NULL
-		|| CU_add_test(suite, "nvme_dump_command", test_nvme_dump_command) == NULL
-		|| CU_add_test(suite, "nvme_dump_completion", test_nvme_dump_completion) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
