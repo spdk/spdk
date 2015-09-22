@@ -21,7 +21,7 @@ time $scanbuild make $MAKEFLAGS DPDK_DIR=$DPDK_DIR
 if [ -d $out/scan-build-tmp ]; then
 	scanoutput=$(ls -1 $out/scan-build-tmp/)
 	mv $out/scan-build-tmp/$scanoutput $out/scan-build
-	rmdir $out/scan-build-tmp
+	rm -rf $out/scan-build-tmp
 	chmod -R a+rX $out/scan-build
 fi
 
