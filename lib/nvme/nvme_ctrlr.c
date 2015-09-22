@@ -68,7 +68,6 @@ nvme_ctrlr_construct_io_qpairs(struct nvme_controller *ctrlr)
 	union nvme_cap_lo_register	cap_lo;
 	int				i, num_entries, num_trackers, rc;
 
-	rc = 0;
 	if (ctrlr->ioq != NULL) {
 		/*
 		 * io_qpairs were already constructed, so just return.
