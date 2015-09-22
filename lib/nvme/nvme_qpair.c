@@ -488,6 +488,9 @@ nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 	volatile uint32_t	*doorbell_base;
 	uint64_t		phys_addr = 0;
 
+	nvme_assert(num_entries != 0, ("invalid num_entries\n"));
+	nvme_assert(num_trackers != 0, ("invalid num_trackers\n"));
+
 	qpair->id = id;
 	qpair->num_entries = num_entries;
 
