@@ -44,17 +44,11 @@ static void nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 static int
 nvme_ctrlr_construct_admin_qpair(struct nvme_controller *ctrlr)
 {
-	struct nvme_qpair	*qpair;
-	int rc;
-
-	qpair = &ctrlr->adminq;
-
-	rc = nvme_qpair_construct(qpair,
-				  0, /* qpair ID */
-				  NVME_ADMIN_ENTRIES,
-				  NVME_ADMIN_TRACKERS,
-				  ctrlr);
-	return rc;
+	return nvme_qpair_construct(&ctrlr->adminq,
+				    0, /* qpair ID */
+				    NVME_ADMIN_ENTRIES,
+				    NVME_ADMIN_TRACKERS,
+				    ctrlr);
 }
 
 static int
