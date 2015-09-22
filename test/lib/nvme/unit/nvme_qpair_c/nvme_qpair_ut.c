@@ -310,88 +310,63 @@ void test_nvme_qpair_destroy(void)
 
 void test_nvme_completion_is_retry(void)
 {
-	struct nvme_completion	*cpl = NULL;
-	uint64_t		phys_addr = 0;
-	bool			ret_val = false;
+	struct nvme_completion	cpl = {};
 
-	cpl = nvme_malloc("nvme_completion", sizeof(struct nvme_completion),
-			  64, &phys_addr);
+	cpl.status.sct = NVME_SCT_GENERIC;
+	cpl.status.sc = NVME_SC_ABORTED_BY_REQUEST;
+	cpl.status.dnr = 0;
+	CU_ASSERT_TRUE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sct = NVME_SCT_GENERIC;
-	cpl->status.sc = NVME_SC_ABORTED_BY_REQUEST;
-	cpl->status.dnr = 0;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_TRUE(ret_val);
+	cpl.status.sc = NVME_SC_INVALID_OPCODE;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_INVALID_OPCODE;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_INVALID_FIELD;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_INVALID_FIELD;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_COMMAND_ID_CONFLICT;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_COMMAND_ID_CONFLICT;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_DATA_TRANSFER_ERROR;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_DATA_TRANSFER_ERROR;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_ABORTED_POWER_LOSS;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_ABORTED_POWER_LOSS;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_INTERNAL_DEVICE_ERROR;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_INTERNAL_DEVICE_ERROR;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_ABORTED_FAILED_FUSED;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_ABORTED_FAILED_FUSED;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_ABORTED_MISSING_FUSED;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_ABORTED_MISSING_FUSED;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_COMMAND_SEQUENCE_ERROR;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_COMMAND_SEQUENCE_ERROR;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_LBA_OUT_OF_RANGE;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_LBA_OUT_OF_RANGE;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = NVME_SC_CAPACITY_EXCEEDED;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = NVME_SC_CAPACITY_EXCEEDED;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sc = 0x70;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sc = 0x70;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sct = NVME_SCT_COMMAND_SPECIFIC;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sct = NVME_SCT_COMMAND_SPECIFIC;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sct = NVME_SCT_MEDIA_ERROR;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sct = NVME_SCT_MEDIA_ERROR;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
+	cpl.status.sct = NVME_SCT_VENDOR_SPECIFIC;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl->status.sct = NVME_SCT_VENDOR_SPECIFIC;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
-
-	cpl->status.sct = 0x4;
-	ret_val = nvme_completion_is_retry(cpl);
-	CU_ASSERT_FALSE(ret_val);
-
-
+	cpl.status.sct = 0x4;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 }
 
 int main(int argc, char **argv)
