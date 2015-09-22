@@ -61,8 +61,8 @@ do					\
 	while (0);
 
 #define nvme_free_request(buf)		free(buf)
-#define nvme_pcicfg_read32(handle, var, offset)
-#define nvme_pcicfg_write32(handle, var, offset)
+#define nvme_pcicfg_read32(handle, var, offset)		do { *(var) = 0xFFFFFFFFu; } while (0)
+#define nvme_pcicfg_write32(handle, var, offset)	do { (void)(var); } while (0)
 
 static inline
 int nvme_pcicfg_map_bar(void *pci_handle, int bar, int read_only, void **addr)
