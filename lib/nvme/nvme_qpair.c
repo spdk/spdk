@@ -150,6 +150,9 @@ nvme_io_qpair_print_command(struct nvme_qpair *qpair,
 static void
 nvme_qpair_print_command(struct nvme_qpair *qpair, struct nvme_command *cmd)
 {
+	nvme_assert(qpair != NULL, ("qpair can not be NULL"));
+	nvme_assert(cmd != NULL, ("cmd can not be NULL"));
+
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_admin_qpair_print_command(qpair, cmd);
 	} else {
@@ -576,19 +579,13 @@ _nvme_admin_qpair_destroy(struct nvme_qpair *qpair)
 	nvme_admin_qpair_abort_aers(qpair);
 }
 
-static void
-_nvme_io_qpair_destroy(struct nvme_qpair *qpair)
-{
-}
 
 void
 nvme_qpair_destroy(struct nvme_qpair *qpair)
 {
 	struct nvme_tracker	*tr;
 
-	if (nvme_qpair_is_io_queue(qpair)) {
-		_nvme_io_qpair_destroy(qpair);
-	} else {
+	if (nvme_qpair_is_admin_queue(qpair)) {
 		_nvme_admin_qpair_destroy(qpair);
 	}
 	if (qpair->cmd)
