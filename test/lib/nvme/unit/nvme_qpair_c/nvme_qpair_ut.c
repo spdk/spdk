@@ -31,9 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdbool.h>
-#include "nvme/nvme_internal.h"
-
 #include "CUnit/Basic.h"
 
 #include "nvme/nvme_qpair.c"
@@ -254,7 +251,6 @@ void test_nvme_qpair_fail(void)
 
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
-	tr_temp->req = NULL;
 	nvme_alloc_request(&tr_temp->req);
 
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
@@ -288,18 +284,18 @@ void test_nvme_qpair_destroy(void)
 	struct nvme_qpair	qpair = {};
 	struct nvme_controller	ctrlr = {};
 	struct nvme_registers	regs = {};
+	struct nvme_tracker	*tr_temp;
 	uint64_t		phys_addr = 0;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.regs = &regs;
 	nvme_qpair_construct(&qpair, 1, 128, 32, &ctrlr);
-	qpair.cmd = nvme_malloc("nvme_command", sizeof(struct nvme_command),
-				64, &phys_addr);
 
-	qpair.cpl = nvme_malloc("nvme_completion", sizeof(struct nvme_completion),
-				64, &phys_addr);
+	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
+			      64, &phys_addr);
+	nvme_alloc_request(&tr_temp->req);
 
-	qpair.act_tr = calloc(32, sizeof(struct nvme_tracker *));
+	LIST_INSERT_HEAD(&qpair.free_tr, tr_temp, list);
 
 	nvme_qpair_destroy(&qpair);
 }

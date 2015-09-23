@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "nvme/nvme_internal.h"
-
 #include "CUnit/Basic.h"
 
 #include "nvme/nvme_ctrlr.c"

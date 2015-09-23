@@ -36,36 +36,82 @@
 
 #include "nvme/nvme_ctrlr_cmd.c"
 
+#define CTRLR_CDATA_ELPE   5
+
 char outbuf[OUTBUF_SIZE];
 
 struct nvme_request g_req;
+
+uint32_t error_num_entries;
+uint32_t health_log_nsid = 1;
+uint8_t feature = 1;
+uint32_t feature_cdw11 = 1;
+uint8_t get_feature = 1;
+uint32_t get_feature_cdw11 = 1;
+uint16_t abort_cid = 1;
+uint16_t abort_sqid = 1;
+
 
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
 
 void verify_firmware_log_page(struct nvme_request *req)
 {
+	uint32_t temp_cdw10;
+
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+	CU_ASSERT(req->cmd.nsid == NVME_GLOBAL_NAMESPACE_TAG);
+
+	temp_cdw10 = ((sizeof(struct nvme_firmware_page) / sizeof(uint32_t) - 1) << 16) |
+		     NVME_LOG_FIRMWARE_SLOT;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
 void verify_health_log_page(struct nvme_request *req)
 {
+	uint32_t temp_cdw10;
+
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+	CU_ASSERT(req->cmd.nsid == health_log_nsid);
+
+	temp_cdw10 = ((sizeof(struct nvme_health_information_page) / sizeof(uint32_t) - 1) << 16) |
+		     NVME_LOG_HEALTH_INFORMATION;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
 void verify_error_log_page(struct nvme_request *req)
 {
+	uint32_t temp_cdw10;
+
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+	CU_ASSERT(req->cmd.nsid == NVME_GLOBAL_NAMESPACE_TAG);
+
+	if (error_num_entries > CTRLR_CDATA_ELPE + 1)
+		error_num_entries = CTRLR_CDATA_ELPE + 1;
+
+	temp_cdw10 = (((sizeof(struct nvme_error_information_entry) * error_num_entries) / sizeof(
+			       uint32_t) - 1) << 16) | NVME_LOG_ERROR;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
+void verify_set_feature_cmd(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == NVME_OPC_SET_FEATURES);
+	CU_ASSERT(req->cmd.cdw10 == feature);
+	CU_ASSERT(req->cmd.cdw11 == feature_cdw11);
 }
 
 void verify_get_feature_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_FEATURES);
+	CU_ASSERT(req->cmd.cdw10 == get_feature);
+	CU_ASSERT(req->cmd.cdw11 == get_feature_cdw11);
 }
 
 void verify_abort_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == NVME_OPC_ABORT);
+	CU_ASSERT(req->cmd.cdw10 == ((abort_cid << 16) | abort_sqid));
 }
 
 void verify_io_raw_cmd(struct nvme_request *req)
@@ -135,7 +181,7 @@ test_health_get_log_page()
 
 	verify_fn = verify_health_log_page;
 
-	nvme_ctrlr_cmd_get_health_information_page(&ctrlr, 0, &payload, NULL, NULL);
+	nvme_ctrlr_cmd_get_health_information_page(&ctrlr, health_log_nsid, &payload, NULL, NULL);
 }
 
 void
@@ -144,16 +190,29 @@ test_error_get_log_page()
 	struct nvme_controller			ctrlr = {};
 	struct nvme_error_information_entry	payload = {};
 
-	ctrlr.cdata.elpe = 5;
+	ctrlr.cdata.elpe = CTRLR_CDATA_ELPE;
 
 	verify_fn = verify_error_log_page;
 
 	/* valid page */
-	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, 1, NULL, NULL);
+	error_num_entries = 1;
+	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, error_num_entries, NULL, NULL);
 
 	/* out of range page */
-	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, 50, NULL, NULL);
+	error_num_entries = 50;
+	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, error_num_entries, NULL, NULL);
 }
+
+void
+test_set_feature_cmd()
+{
+	struct nvme_controller  ctrlr = {};
+
+	verify_fn = verify_set_feature_cmd;
+
+	nvme_ctrlr_cmd_set_feature(&ctrlr, feature, feature_cdw11, NULL, 0, NULL, NULL);
+}
+
 
 void
 test_get_feature_cmd()
@@ -162,7 +221,7 @@ test_get_feature_cmd()
 
 	verify_fn = verify_get_feature_cmd;
 
-	nvme_ctrlr_cmd_get_feature(&ctrlr, 1, 1, NULL, 0, NULL, NULL);
+	nvme_ctrlr_cmd_get_feature(&ctrlr, get_feature, get_feature_cdw11, NULL, 0, NULL, NULL);
 }
 
 void
@@ -172,7 +231,7 @@ test_abort_cmd()
 
 	verify_fn = verify_abort_cmd;
 
-	nvme_ctrlr_cmd_abort(&ctrlr, 0, 0, NULL, NULL);
+	nvme_ctrlr_cmd_abort(&ctrlr, abort_cid, abort_sqid, NULL, NULL);
 }
 
 void
@@ -205,6 +264,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test ctrlr cmd get_firmware_page", test_firmware_get_log_page) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_health_page", test_health_get_log_page) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_error_page", test_error_get_log_page) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd set_feature", test_set_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd", test_io_raw_cmd) == NULL
