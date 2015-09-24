@@ -95,6 +95,13 @@ nvme_completion_poll_cb(void *arg, const struct nvme_completion *cpl)
 }
 
 void
+nvme_ctrlr_cmd_set_async_event_config(struct nvme_controller *ctrlr,
+				      union nvme_critical_warning_state state, nvme_cb_fn_t cb_fn,
+				      void *cb_arg)
+{
+}
+
+void
 nvme_ctrlr_cmd_identify_controller(struct nvme_controller *ctrlr, void *payload,
 				   nvme_cb_fn_t cb_fn, void *cb_arg)
 {
