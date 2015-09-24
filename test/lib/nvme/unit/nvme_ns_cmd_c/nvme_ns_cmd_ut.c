@@ -94,6 +94,7 @@ prepare_for_test(struct nvme_namespace *ns, struct nvme_controller *ctrlr,
 		 uint32_t stripe_size)
 {
 	ctrlr->max_xfer_size = max_xfer_size;
+	memset(ns, 0, sizeof(*ns));
 	ns->ctrlr = ctrlr;
 	ns->sector_size = sector_size;
 	ns->stripe_size = stripe_size;
@@ -122,8 +123,11 @@ split_test(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_request != NULL);
-	CU_ASSERT(g_request->num_children == 0);
+	if (g_request == NULL) {
+		return; /* can't run the rest of the tests without crashing if this failed */
+	}
 
+	CU_ASSERT(g_request->num_children == 0);
 	nvme_free_request(g_request);
 }
 
@@ -147,6 +151,10 @@ split_test2(void)
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_request != NULL);
+	if (g_request == NULL) {
+		return; /* can't run the rest of the tests without crashing if this failed */
+	}
+
 	CU_ASSERT(g_request->num_children == 2);
 
 	child = TAILQ_FIRST(&g_request->children);
