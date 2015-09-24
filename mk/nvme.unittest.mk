@@ -34,17 +34,13 @@
 SPDK_ROOT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/..
 NVME_DIR := $(SPDK_ROOT_DIR)/lib/nvme
 
-include $(SPDK_ROOT_DIR)/CONFIG
-
-C_OPT ?= -O2 -fno-omit-frame-pointer
-Q ?= @
-S ?= $(notdir $(CURDIR))
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
 OBJS = $(C_SRCS:.c=.o)
 
-CFLAGS += $(C_OPT) -I$(SPDK_ROOT_DIR)/lib -I$(SPDK_ROOT_DIR)/include -include $(SPDK_ROOT_DIR)/test/lib/nvme/unit/nvme_impl.h
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib -include $(SPDK_ROOT_DIR)/test/lib/nvme/unit/nvme_impl.h
 
 LIBS += -lcunit -lpthread
 
@@ -68,4 +64,3 @@ clean:
 	@sed -e 's/.*://' -e 's/\\$$//' < $*.d.tmp | fmt -1 | \
 		sed -e 's/^ *//' -e 's/$$/:/' >> $*.d
 	@rm -f $*.d.tmp
-
