@@ -29,8 +29,13 @@ Ubuntu/Debian:
 - make
 - libcunit1-dev
 
-Additionally, DPDK is required.
-See [DPDK Quick Start](http://dpdk.org/doc/quick-start).
+Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.
+
+    1) cd /path/to/spdk
+    2) wget http://dpdk.org/browse/dpdk/snapshot/dpdk-2.1.0.tar.gz
+    3) tar xfz dpdk-2.1.0.tar.gz
+    4) cd dpdk-2.1.0
+    5) make install T=x86_64-native-linuxapp-gcc
 
 Building
 ========
@@ -39,3 +44,7 @@ Once the prerequisites are installed, run 'make' within the SPDK directory
 to build the SPDK libraries and examples.
 
     make DPDK_DIR=/path/to/dpdk
+
+If you followed the instructions above for building DPDK:
+
+    make DPDK_DIR=`pwd`/dpdk-2.1.0/x86_64-native-linuxapp-gcc
