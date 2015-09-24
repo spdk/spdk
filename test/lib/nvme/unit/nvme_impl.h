@@ -107,4 +107,9 @@ nvme_mutex_init_recursive(nvme_mutex_t *mtx)
 	return pthread_mutex_init(mtx, &attr);
 }
 
+/**
+ * Copy a struct nvme_command from one memory location to another.
+ */
+#define nvme_copy_command(dst, src)	memcpy((dst), (src), sizeof(struct nvme_command))
+
 #endif /* __NVME_IMPL_H__ */

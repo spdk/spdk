@@ -40,6 +40,7 @@
 #include <rte_malloc.h>
 #include <rte_config.h>
 #include <rte_mempool.h>
+#include <rte_memcpy.h>
 
 /**
  * \file
@@ -160,5 +161,10 @@ nvme_mutex_init_recursive(nvme_mutex_t *mtx)
 	pthread_mutexattr_destroy(&attr);
 	return rc;
 }
+
+/**
+ * Copy a struct nvme_command from one memory location to another.
+ */
+#define nvme_copy_command(dst, src)	rte_memcpy((dst), (src), sizeof(struct nvme_command))
 
 #endif /* __NVME_IMPL_H__ */

@@ -624,7 +624,7 @@ nvme_qpair_submit_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr)
 	qpair->act_tr[tr->cid] = tr;
 
 	/* Copy the command from the tracker to the submission queue. */
-	memcpy(&qpair->cmd[qpair->sq_tail], &req->cmd, sizeof(req->cmd));
+	nvme_copy_command(&qpair->cmd[qpair->sq_tail], &req->cmd);
 
 	if (++qpair->sq_tail == qpair->num_entries) {
 		qpair->sq_tail = 0;
