@@ -53,7 +53,7 @@ endif
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0
 else
-COMMON_CFLAGS += -O2
+COMMON_CFLAGS += -DNDEBUG -O2
 endif
 
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu11
