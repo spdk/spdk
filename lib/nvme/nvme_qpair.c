@@ -317,14 +317,14 @@ nvme_qpair_complete_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr,
 
 	nvme_assert(cpl->cid == req->cmd.cid, ("cpl cid does not match cmd cid\n"));
 
-	if (req->cb_fn && !retry) {
-		req->cb_fn(req->cb_arg, cpl);
-	}
-
 	if (retry) {
 		req->retries++;
 		nvme_qpair_submit_tracker(qpair, tr);
 	} else {
+		if (req->cb_fn) {
+			req->cb_fn(req->cb_arg, cpl);
+		}
+
 		nvme_free_request(req);
 		tr->req = NULL;
 
