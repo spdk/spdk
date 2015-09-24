@@ -41,6 +41,41 @@
 static struct nvme_request *
 _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 		uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
+		uint32_t opc);
+
+static struct nvme_request *
+_nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
+			   uint64_t lba, uint32_t lba_count,
+			   nvme_cb_fn_t cb_fn, void *cb_arg, uint32_t opc,
+			   struct nvme_request *req,
+			   uint32_t sectors_per_max_io, uint32_t sector_mask)
+{
+	uint32_t		sector_size = ns->sector_size;
+	uint32_t		remaining_lba_count = lba_count;
+	struct nvme_request	*child;
+
+	while (remaining_lba_count > 0) {
+		lba_count = sectors_per_max_io - (lba & sector_mask);
+		lba_count = nvme_min(remaining_lba_count, lba_count);
+
+		child = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn,
+					cb_arg, opc);
+		if (child == NULL) {
+			nvme_free_request(req);
+			return NULL;
+		}
+		nvme_request_add_child(req, child);
+		remaining_lba_count -= lba_count;
+		lba += lba_count;
+		payload = (void *)((uintptr_t)payload + (lba_count * sector_size));
+	}
+
+	return req;
+}
+
+static struct nvme_request *
+_nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
+		uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
 		uint32_t opc)
 {
 	struct nvme_request	*req;
@@ -67,41 +102,12 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 	 */
 	if (sectors_per_stripe > 0 &&
 	    (((lba & (sectors_per_stripe - 1)) + lba_count) > sectors_per_stripe)) {
-		uint64_t		remaining_lba_count = lba_count;
-		struct nvme_request	*child;
 
-		while (remaining_lba_count > 0) {
-			lba_count = sectors_per_stripe - (lba & (sectors_per_stripe - 1));
-			lba_count = nvme_min(remaining_lba_count, lba_count);
-
-			child = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn,
-						cb_arg, opc);
-			if (child == NULL) {
-				nvme_free_request(req);
-				return NULL;
-			}
-			nvme_request_add_child(req, child);
-			remaining_lba_count -= lba_count;
-			lba += lba_count;
-			payload = (void *)((uintptr_t)payload + (lba_count * sector_size));
-		}
+		return _nvme_ns_cmd_split_request(ns, payload, lba, lba_count, cb_fn, cb_arg, opc,
+						  req, sectors_per_stripe, sectors_per_stripe - 1);
 	} else if (lba_count > sectors_per_max_io) {
-		uint64_t		remaining_lba_count = lba_count;
-		struct nvme_request	*child;
-
-		while (remaining_lba_count > 0) {
-			lba_count = nvme_min(remaining_lba_count, sectors_per_max_io);
-			child = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn,
-						cb_arg, opc);
-			if (child == NULL) {
-				nvme_free_request(req);
-				return NULL;
-			}
-			nvme_request_add_child(req, child);
-			remaining_lba_count -= lba_count;
-			lba += lba_count;
-			payload = (void *)((uintptr_t)payload + (lba_count * sector_size));
-		}
+		return _nvme_ns_cmd_split_request(ns, payload, lba, lba_count, cb_fn, cb_arg, opc,
+						  req, sectors_per_max_io, 0);
 	} else {
 		cmd = &req->cmd;
 		cmd->opc = opc;
