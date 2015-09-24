@@ -272,7 +272,6 @@ void test_nvme_qpair_fail(void)
 void test_nvme_qpair_process_completions(void)
 {
 	struct nvme_qpair	qpair = {0};
-	struct nvme_request	*req = NULL;
 	struct nvme_controller	ctrlr = {};
 	struct nvme_registers	regs = {0};
 
