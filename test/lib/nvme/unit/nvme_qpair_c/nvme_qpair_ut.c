@@ -243,10 +243,10 @@ void struct_packing(void)
 
 void test_nvme_qpair_fail(void)
 {
-	struct nvme_qpair	qpair = {0};
+	struct nvme_qpair	qpair = {};
 	struct nvme_request	*req = NULL;
 	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {0};
+	struct nvme_registers	regs = {};
 	struct nvme_tracker	*tr_temp;
 	uint64_t		phys_addr = 0;
 
@@ -271,9 +271,9 @@ void test_nvme_qpair_fail(void)
 
 void test_nvme_qpair_process_completions(void)
 {
-	struct nvme_qpair	qpair = {0};
+	struct nvme_qpair	qpair = {};
 	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {0};
+	struct nvme_registers	regs = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 	qpair.is_enabled = false;
@@ -285,9 +285,9 @@ void test_nvme_qpair_process_completions(void)
 
 void test_nvme_qpair_destroy(void)
 {
-	struct nvme_qpair	qpair = {0};
+	struct nvme_qpair	qpair = {};
 	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {0};
+	struct nvme_registers	regs = {};
 	uint64_t		phys_addr = 0;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
