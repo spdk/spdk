@@ -2,15 +2,30 @@
 
 set -e
 
-if [ "$1" = "" ]; then
-	NRHUGE=1024
+function configure_linux {
+	if mount | grep -qv hugetlbfs; then
+		mkdir -p /mnt/huge
+		mount -t hugetlbfs nodev /mnt/huge
+	fi
+
+	if [ "$1" = "" ]; then
+		NRHUGE=1024
+	else
+		NRHUGE="$1"
+	fi
+
+	echo $NRHUGE > /proc/sys/vm/nr_hugepages
+}
+
+function configure_freebsd {
+	kenv hw.contigmem.num_buffers=16
+	kenv hw.contigmem.buffer_size=33554432
+	kldload `find . -name contigmem.ko | head -1`
+}
+
+if [ `uname` = Linux ]; then
+	configure_linux
 else
-	NRHUGE="$1"
+	configure_freebsd
 fi
 
-if mount | grep -qv hugetlbfs; then
-	mkdir -p /mnt/huge
-	mount -t hugetlbfs nodev /mnt/huge
-fi
-
-echo $NRHUGE > /proc/sys/vm/nr_hugepages
