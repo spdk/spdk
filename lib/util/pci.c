@@ -43,6 +43,10 @@
 
 #include <pciaccess.h>
 
+#ifdef __FreeBSD__
+#include <sys/pciio.h>
+#endif
+
 #include "spdk/pci.h"
 
 #define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"
@@ -125,6 +129,65 @@ pci_device_has_uio_driver(struct pci_device *dev)
 
 	return 1;
 }
+
+#ifdef __FreeBSD__
+int
+pci_device_has_non_null_driver(struct pci_device *dev)
+{
+	struct pci_conf_io	configsel;
+	struct pci_match_conf	pattern;
+	struct pci_conf		conf;
+	int			fd;
+
+	memset(&pattern, 0, sizeof(pattern));
+	pattern.pc_sel.pc_domain = dev->domain;
+	pattern.pc_sel.pc_bus = dev->bus;
+	pattern.pc_sel.pc_dev = dev->dev;
+	pattern.pc_sel.pc_func = dev->func;
+	pattern.flags = PCI_GETCONF_MATCH_DOMAIN |
+			PCI_GETCONF_MATCH_BUS |
+			PCI_GETCONF_MATCH_DEV |
+			PCI_GETCONF_MATCH_FUNC;
+
+	memset(&configsel, 0, sizeof(configsel));
+	configsel.match_buf_len = sizeof(conf);
+	configsel.matches = &conf;
+	configsel.num_patterns = 1;
+	configsel.pat_buf_len = sizeof(pattern);
+	configsel.patterns = &pattern;
+
+	fd = open("/dev/pci", O_RDONLY, 0);
+	if (fd < 0) {
+		fprintf(stderr, "could not open /dev/pci\n");
+		return -1;
+	}
+
+	if (ioctl(fd, PCIOCGETCONF, &configsel) == -1) {
+		fprintf(stderr, "ioctl(PCIOCGETCONF) failed\n");
+		close(fd);
+		return -1;
+	}
+
+	close(fd);
+
+	if (configsel.num_matches != 1) {
+		fprintf(stderr, "could not find specified device\n");
+		return -1;
+	}
+
+	if (conf.pd_name[0] == '\0' || !strcmp(conf.pd_name, "nic_uio")) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+#else
+int
+pci_device_has_non_null_driver(struct pci_device *dev)
+{
+	return pci_device_has_kernel_driver(dev) && !pci_device_has_uio_driver(dev);
+}
+#endif
 
 int
 pci_device_unbind_kernel_driver(struct pci_device *dev)
