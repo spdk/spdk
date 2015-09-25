@@ -41,7 +41,14 @@ ifeq ($(MAKECMDGOALS),)
 MAKECMDGOALS=$(.DEFAULT_GOAL)
 endif
 
+OS := $(shell uname)
+
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Werror -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
+
+ifeq ($(OS),FreeBSD)
+LIBS += -L/usr/local/lib
+COMMON_CFLAGS += -I/usr/local/include
+endif
 
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0
@@ -72,6 +79,11 @@ DPDK_INC_DIR ?= $(DPDK_DIR)/include
 DPDK_LIB_DIR ?= $(DPDK_DIR)/lib
 
 DPDK_INC = -I$(DPDK_INC_DIR)
-# DPDK requires dl library for dlopen/dlclose.
-DPDK_LIB = -L$(DPDK_LIB_DIR) -lrte_eal -lrte_malloc -lrte_mempool -lrte_ring -ldl -Wl,-rpath=$(DPDK_LIB_DIR)
-
+DPDK_LIB = -L$(DPDK_LIB_DIR) -lrte_eal -lrte_malloc -lrte_mempool -lrte_ring -Wl,-rpath=$(DPDK_LIB_DIR)
+# DPDK requires dl library for dlopen/dlclose on Linux.
+ifeq ($(OS),Linux)
+DPDK_LIB += -ldl
+endif
+ifeq ($(OS),FreeBSD)
+DPDK_LIB += -lexecinfo
+endif
