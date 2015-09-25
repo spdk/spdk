@@ -31,16 +31,15 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _LARGEFILE64_SOURCE
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/user.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
 
+#include "rte_config.h"
+#include "rte_eal.h"
+#include "rte_eal_memconfig.h"
 #include "spdk/vtophys.h"
 
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
@@ -63,12 +62,6 @@
 
 #define MAP_128TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB + 1)) - 1))
-
-/* Defines related to Linux pagemap. */
-#define PAGEMAP_PFN_MASK	0x007FFFFFFFFFFFFFULL /* bits 54:0 */
-
-/* Defines related to Linux kpageflags. */
-#define KPAGEFLAGS_HUGE		17
 
 /* Physical page frame number of a single 2MB page. */
 struct map_2mb {
@@ -135,71 +128,30 @@ vtophys_get_map(uint64_t vfn_2mb)
 uint64_t
 vtophys_get_pfn_2mb(uint64_t vfn_2mb)
 {
-	off64_t offset;
-	uint64_t pfn_4kb, pfn_2mb, pfn_flag_info;
-	static __thread int fd = -1;
-	static __thread int kpageflag_fd = -1;
+	uintptr_t vaddr, paddr;
+	struct rte_mem_config *mcfg;
+	struct rte_memseg *seg;
+	uint32_t seg_idx;
 
-	if (fd == -1) {
-		fd = open("/proc/self/pagemap", O_RDONLY);
-		if (fd == -1) {
-			perror("pagemap open failed");
-			return VTOPHYS_ERROR;
+	vaddr = vfn_2mb << SHIFT_2MB;
+	mcfg = rte_eal_get_configuration()->mem_config;
+
+	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
+		seg = &mcfg->memseg[seg_idx];
+		if (seg->addr == NULL) {
+			break;
+		}
+
+		if (vaddr >= (uintptr_t)seg->addr &&
+		    vaddr < ((uintptr_t)seg->addr + seg->len)) {
+			paddr = seg->phys_addr;
+			paddr += (vaddr - (uintptr_t)seg->addr);
+			return paddr >> SHIFT_2MB;
 		}
 	}
 
-	/*
-	 * pagemap has a separate 8 byte entry for each 4KB
-	 * page.  So even though we are only storing a single
-	 * PFN for every 2MB VFN, we have to get the 4KB
-	 * VFN equivalent to lseek into the pagemap.
-	 *
-	 * vfn contains the 2MB virtual frame number, but we
-	 * we need the 4KB equivalent to lseek into the pagemap.
-	 * So do a left shift to convert the 2MB vfn to the
-	 * 4KB vfn equivalent.
-	 */
-	offset = FN_2MB_TO_4KB(vfn_2mb) * sizeof(uint64_t);
-
-	if (lseek64(fd, offset, SEEK_SET) < 0) {
-		perror("pagemap llseek failed");
-		return VTOPHYS_ERROR;
-	}
-
-	if (read(fd, &pfn_4kb, sizeof(pfn_4kb)) != sizeof(pfn_4kb)) {
-		perror("pagemap read failed");
-		return VTOPHYS_ERROR;
-	}
-
-	pfn_4kb &= PAGEMAP_PFN_MASK;
-
-	if (kpageflag_fd == -1) {
-		kpageflag_fd = open("/proc/kpageflags", O_RDONLY);
-		if (kpageflag_fd == -1) {
-			perror("kpageflags open failed");
-			return VTOPHYS_ERROR;
-		}
-	}
-
-	offset = pfn_4kb * sizeof(uint64_t);
-	if (lseek64(kpageflag_fd, offset, SEEK_SET) < 0) {
-		perror("kpageflags llseek failed");
-		return VTOPHYS_ERROR;
-	}
-
-	if (read(kpageflag_fd, &pfn_flag_info, sizeof(pfn_flag_info)) != sizeof(pfn_flag_info)) {
-		perror("kpageflags read failed");
-		return VTOPHYS_ERROR;
-	}
-
-	/* check whether it is a huge page */
-	if (!(pfn_flag_info & (1ULL << KPAGEFLAGS_HUGE))) {
-		printf("This is not a huge page\n");
-		return VTOPHYS_ERROR;
-	}
-
-	pfn_2mb = FN_4KB_TO_2MB(pfn_4kb);
-	return pfn_2mb;
+	fprintf(stderr, "could not find 2MB vfn 0x%jx in DPDK mem config\n", vfn_2mb);
+	return -1;
 }
 
 uint64_t
