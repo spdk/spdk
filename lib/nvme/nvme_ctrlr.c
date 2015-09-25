@@ -687,7 +687,7 @@ nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle)
 void
 nvme_ctrlr_destruct(struct nvme_controller *ctrlr)
 {
-	int				i;
+	int	i;
 
 	nvme_ctrlr_disable(ctrlr);
 	nvme_ctrlr_shutdown(ctrlr);
