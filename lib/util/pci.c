@@ -37,11 +37,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <error.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <linux/limits.h>
 
 #include <pciaccess.h>
 
@@ -50,6 +48,7 @@
 #define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 #define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
+#define SPDK_PCI_PATH_MAX	256
 
 int
 pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
@@ -97,7 +96,7 @@ pci_device_has_uio_driver(struct pci_device *dev)
 {
 	struct dirent *e;
 	DIR *dir;
-	char dirname[PATH_MAX];
+	char dirname[SPDK_PCI_PATH_MAX];
 
 	snprintf(dirname, sizeof(dirname),
 		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/uio",
@@ -132,7 +131,7 @@ pci_device_unbind_kernel_driver(struct pci_device *dev)
 {
 	int n;
 	FILE *fd;
-	char filename[PATH_MAX];
+	char filename[SPDK_PCI_PATH_MAX];
 	char buf[256];
 
 	snprintf(filename, sizeof(filename),
@@ -186,7 +185,7 @@ pci_device_bind_uio_driver(struct pci_device *dev, char *driver_name)
 {
 	int err, n;
 	FILE *fd;
-	char filename[PATH_MAX];
+	char filename[SPDK_PCI_PATH_MAX];
 	char buf[256];
 
 	err = check_modules(driver_name);
