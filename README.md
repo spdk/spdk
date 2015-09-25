@@ -29,13 +29,27 @@ Ubuntu/Debian:
 - make
 - libcunit1-dev
 
+FreeBSD:
+
+- gcc
+- libpciaccess
+- gmake
+- cunit
+
 Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.
 
     1) cd /path/to/spdk
     2) wget http://dpdk.org/browse/dpdk/snapshot/dpdk-2.1.0.tar.gz
     3) tar xfz dpdk-2.1.0.tar.gz
     4) cd dpdk-2.1.0
+
+Linux:
+
     5) make install T=x86_64-native-linuxapp-gcc
+
+FreeBSD:
+
+    5) gmake install T=x86_64-native-bsdapp-clang
 
 Building
 ========
@@ -47,4 +61,20 @@ to build the SPDK libraries and examples.
 
 If you followed the instructions above for building DPDK:
 
+Linux:
+
     make DPDK_DIR=`pwd`/dpdk-2.1.0/x86_64-native-linuxapp-gcc
+
+FreeBSD:
+
+    gmake DPDK_DIR=`pwd`/dpdk-2.1.0/x86_64-native-bsdapp-clang
+
+Hugepages and Device Binding
+============================
+
+Before running an SPDK application, some hugepages must be allocated and
+any NVMe devices must be unbound from the native NVMe kernel driver.
+SPDK includes scripts to automate this process on both Linux and FreeBSD.
+
+    1) scripts/configure_hugepages.sh
+    2) scripts/unbind_nvme.sh
