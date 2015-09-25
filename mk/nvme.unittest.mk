@@ -64,3 +64,5 @@ clean:
 	@sed -e 's/.*://' -e 's/\\$$//' < $*.d.tmp | fmt -1 | \
 		sed -e 's/^ *//' -e 's/$$/:/' >> $*.d
 	@rm -f $*.d.tmp
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

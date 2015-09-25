@@ -53,3 +53,4 @@ clean :
 $(LIB) : $(OBJS)
 	$(Q)ar crDs $(LIB) $(OBJS)
 
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

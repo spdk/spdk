@@ -51,3 +51,4 @@ clean :
 libspdk_nvme.a : $(OBJS)
 	$(Q)ar crDs libspdk_nvme.a $(OBJS)
 
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

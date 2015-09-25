@@ -51,3 +51,4 @@ clean :
 libspdk_util.a : $(OBJS)
 	$(Q)ar crDs libspdk_util.a $(OBJS)
 
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

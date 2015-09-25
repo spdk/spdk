@@ -46,3 +46,5 @@ vtophys: vtophys.o $(OBJS)
 
 clean:
 	$(Q)rm -f vtophys vtophys.o *.d
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

@@ -21,6 +21,18 @@ make $MAKEFLAGS clean
 fail=0
 time $scanbuild make $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
 
+# Check that header file dependencies are working correctly by
+#  capturing a binary's stat data before and after touching a
+#  header file and re-making.
+STAT1=`stat examples/nvme/identify/identify`
+touch lib/nvme/nvme_internal.h
+make $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
+STAT2=`stat examples/nvme/identify/identify`
+
+if [ "$STAT1" == "$STAT2" ]; then
+	fail=1
+fi
+
 if [ -d $out/scan-build-tmp ]; then
 	scanoutput=$(ls -1 $out/scan-build-tmp/)
 	mv $out/scan-build-tmp/$scanoutput $out/scan-build

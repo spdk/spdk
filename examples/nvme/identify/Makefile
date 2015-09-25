@@ -58,5 +58,4 @@ $(APP) : $(OBJS) $(SPDK_LIBS)
 clean :
 	$(Q)rm -f $(OBJS) *.d $(APP)
 
-
-
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

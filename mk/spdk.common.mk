@@ -60,10 +60,6 @@ CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu11
 
 MAKEFLAGS += --no-print-directory
 
-.PRECIOUS: $(OBJS)
-
--include $(OBJS:.o=.d)
-
 %.o : %.c
 	@echo "  CC $@"
 	$(Q)$(CC) $(CFLAGS) -c $<
