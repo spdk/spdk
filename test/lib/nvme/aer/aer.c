@@ -142,7 +142,7 @@ get_health_log_page(struct dev *dev)
 
 	cmd.opc = NVME_OPC_GET_LOG_PAGE;
 	cmd.cdw10 = NVME_LOG_HEALTH_INFORMATION;
-	cmd.cdw10 |= (sizeof(*(dev->health_page)) / 4) << 16; // number of dwords
+	cmd.cdw10 |= ((sizeof(*(dev->health_page)) / 4) - 1) << 16; // number of dwords
 	cmd.nsid = NVME_GLOBAL_NAMESPACE_TAG;
 
 	return nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, dev->health_page, sizeof(*dev->health_page),
