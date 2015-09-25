@@ -10,6 +10,8 @@ if [ $EUID -ne 0 ]; then
 	exit 1
 fi
 
+trap "process_core; exit 1" SIGINT SIGTERM EXIT
+
 timing_enter autotest
 
 src=$(readlink -f $(dirname $0))
@@ -48,6 +50,8 @@ fi
 
 timing_exit autotest
 chmod a+r $output_dir/timing.txt
+
+trap - SIGINT SIGTERM EXIT
 
 # catch any stray core files
 process_core
