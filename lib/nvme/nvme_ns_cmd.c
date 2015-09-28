@@ -43,6 +43,48 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 		uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
 		uint32_t opc);
 
+static void
+nvme_cb_complete_child(void *child_arg, const struct nvme_completion *cpl)
+{
+	struct nvme_request *child = child_arg;
+	struct nvme_request *parent = child->parent;
+
+	parent->num_children--;
+	TAILQ_REMOVE(&parent->children, child, child_tailq);
+
+	if (nvme_completion_is_error(cpl)) {
+		memcpy(&parent->parent_status, cpl, sizeof(*cpl));
+	}
+
+	if (parent->num_children == 0) {
+		if (parent->cb_fn) {
+			parent->cb_fn(parent->cb_arg, &parent->parent_status);
+		}
+		nvme_free_request(parent);
+	}
+}
+
+static void
+nvme_request_add_child(struct nvme_request *parent, struct nvme_request *child)
+{
+	if (parent->num_children == 0) {
+		/*
+		 * Defer initialization of the children TAILQ since it falls
+		 *  on a separate cacheline.  This ensures we do not touch this
+		 *  cacheline except on request splitting cases, which are
+		 *  relatively rare.
+		 */
+		TAILQ_INIT(&parent->children);
+		memset(&parent->parent_status, 0, sizeof(struct nvme_completion));
+	}
+
+	parent->num_children++;
+	TAILQ_INSERT_TAIL(&parent->children, child, child_tailq);
+	child->parent = parent;
+	child->cb_fn = nvme_cb_complete_child;
+	child->cb_arg = child;
+}
+
 static struct nvme_request *
 _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 			   uint64_t lba, uint32_t lba_count,

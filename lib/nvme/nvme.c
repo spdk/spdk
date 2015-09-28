@@ -138,6 +138,8 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 	 *  TAILQ_ENTRY.  children, and following members, are
 	 *  only used as part of I/O splitting so we avoid
 	 *  memsetting them until it is actually needed.
+	 *  They will be initialized in nvme_request_add_child()
+	 *  if the request is split.
 	 */
 	memset(req, 0, offsetof(struct nvme_request, children));
 	req->cb_fn = cb_fn;
@@ -155,48 +157,6 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 	}
 
 	return req;
-}
-
-void
-nvme_cb_complete_child(void *child_arg, const struct nvme_completion *cpl)
-{
-	struct nvme_request *child = child_arg;
-	struct nvme_request *parent = child->parent;
-
-	parent->num_children--;
-	TAILQ_REMOVE(&parent->children, child, child_tailq);
-
-	if (nvme_completion_is_error(cpl)) {
-		memcpy(&parent->parent_status, cpl, sizeof(*cpl));
-	}
-
-	if (parent->num_children == 0) {
-		if (parent->cb_fn) {
-			parent->cb_fn(parent->cb_arg, &parent->parent_status);
-		}
-		nvme_free_request(parent);
-	}
-}
-
-void
-nvme_request_add_child(struct nvme_request *parent, struct nvme_request *child)
-{
-	if (parent->num_children == 0) {
-		/*
-		 * Defer initialization of the children TAILQ since it falls
-		 *  on a separate cacheline.  This ensures we do not touch this
-		 *  cacheline except on request splitting cases, which are
-		 *  relatively rare.
-		 */
-		TAILQ_INIT(&parent->children);
-		memset(&parent->parent_status, 0, sizeof(struct nvme_completion));
-	}
-
-	parent->num_children++;
-	TAILQ_INSERT_TAIL(&parent->children, child, child_tailq);
-	child->parent = parent;
-	child->cb_fn = nvme_cb_complete_child;
-	child->cb_arg = child;
 }
 
 static int
