@@ -86,9 +86,6 @@ void verify_error_log_page(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
 	CU_ASSERT(req->cmd.nsid == NVME_GLOBAL_NAMESPACE_TAG);
 
-	if (error_num_entries > CTRLR_CDATA_ELPE + 1)
-		error_num_entries = CTRLR_CDATA_ELPE + 1;
-
 	temp_cdw10 = (((sizeof(struct nvme_error_information_entry) * error_num_entries) / sizeof(
 			       uint32_t) - 1) << 16) | NVME_LOG_ERROR;
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
@@ -196,10 +193,6 @@ test_error_get_log_page()
 
 	/* valid page */
 	error_num_entries = 1;
-	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, error_num_entries, NULL, NULL);
-
-	/* out of range page */
-	error_num_entries = 50;
 	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, error_num_entries, NULL, NULL);
 }
 

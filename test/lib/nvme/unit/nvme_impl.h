@@ -34,6 +34,7 @@
 #ifndef __NVME_IMPL_H__
 #define __NVME_IMPL_H__
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -56,17 +57,20 @@ extern char outbuf[OUTBUF_SIZE];
 #define nvme_assert(check, str)			\
 do							\
 	{						\
-		if (!(check))				\
-		printf str;				\
+		if (!(check)) {				\
+			printf str;			\
+			assert(check);			\
+		}					\
 	}						\
-	while (0);
+	while (0)
+
 uint64_t nvme_vtophys(void *buf);
 #define nvme_alloc_request(bufp)	\
 do					\
 	{				\
 		*bufp = malloc(sizeof(struct nvme_request));	\
 	}				\
-	while (0);
+	while (0)
 
 #define nvme_free_request(buf)		free(buf)
 #define nvme_pcicfg_read32(handle, var, offset)		do { *(var) = 0xFFFFFFFFu; } while (0)

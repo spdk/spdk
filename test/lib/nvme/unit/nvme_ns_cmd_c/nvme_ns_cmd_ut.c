@@ -113,7 +113,7 @@ split_test(void)
 	int			rc;
 
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
-	payload = 0x0;
+	payload = malloc(512);
 	lba = 0;
 	lba_count = 1;
 
@@ -126,6 +126,7 @@ split_test(void)
 	}
 
 	CU_ASSERT(g_request->num_children == 0);
+	free(payload);
 	nvme_free_request(g_request);
 }
 
