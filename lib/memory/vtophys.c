@@ -108,9 +108,11 @@ vtophys_get_map(uint64_t vfn_2mb)
 		map_1gb = vtophys_map_128tb.map[idx_128tb];
 		if (!map_1gb) {
 			map_1gb = malloc(sizeof(struct map_1gb));
-			/* initialize all entries to all 0xFF (VTOPHYS_ERROR) */
-			memset(map_1gb, 0xFF, sizeof(struct map_1gb));
-			vtophys_map_128tb.map[idx_128tb] = map_1gb;
+			if (map_1gb) {
+				/* initialize all entries to all 0xFF (VTOPHYS_ERROR) */
+				memset(map_1gb, 0xFF, sizeof(struct map_1gb));
+				vtophys_map_128tb.map[idx_128tb] = map_1gb;
+			}
 		}
 
 		pthread_mutex_unlock(&vtophys_mutex);
