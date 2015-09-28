@@ -120,10 +120,7 @@ split_test(void)
 	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_request != NULL);
-	if (g_request == NULL) {
-		return; /* can't run the rest of the tests without crashing if this failed */
-	}
+	CU_ASSERT_FATAL(g_request != NULL);
 
 	CU_ASSERT(g_request->num_children == 0);
 	free(payload);
@@ -149,10 +146,7 @@ split_test2(void)
 	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_request != NULL);
-	if (g_request == NULL) {
-		return; /* can't run the rest of the tests without crashing if this failed */
-	}
+	CU_ASSERT_FATAL(g_request != NULL);
 
 	CU_ASSERT(g_request->num_children == 2);
 
