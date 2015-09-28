@@ -191,6 +191,122 @@ split_test2(void)
 }
 
 void
+split_test3(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	struct nvme_request	*child;
+	void			*payload;
+	uint64_t		lba, cmd_lba;
+	uint32_t		lba_count, cmd_lba_count;
+	int			rc;
+
+	/*
+	 * Controller has max xfer of 128 KB (256 blocks).
+	 * Submit an I/O of 256 KB starting at LBA 10, which should be split
+	 * into two I/Os:
+	 *  1) LBA = 10, count = 256 blocks
+	 *  2) LBA = 266, count = 256 blocks
+	 */
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+	payload = malloc(256 * 1024);
+	lba = 10; /* Start at an LBA that isn't aligned to the stripe size */
+	lba_count = (256 * 1024) / 512;
+
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_FATAL(g_request != NULL);
+
+	CU_ASSERT_FATAL(g_request->num_children == 2);
+
+	child = TAILQ_FIRST(&g_request->children);
+	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(child->payload_size == 128 * 1024);
+	CU_ASSERT(cmd_lba == 10);
+	CU_ASSERT(cmd_lba_count == 256);
+
+	child = TAILQ_FIRST(&g_request->children);
+	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(child->payload_size == 128 * 1024);
+	CU_ASSERT(cmd_lba == 266);
+	CU_ASSERT(cmd_lba_count == 256);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
+
+	free(payload);
+	nvme_free_request(g_request);
+}
+
+void
+split_test4(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	struct nvme_request	*child;
+	void			*payload;
+	uint64_t		lba, cmd_lba;
+	uint32_t		lba_count, cmd_lba_count;
+	int			rc;
+
+	/*
+	 * Controller has max xfer of 128 KB (256 blocks) and a stripe size of 128 KB.
+	 * (Same as split_test3 except with driver-assisted striping enabled.)
+	 * Submit an I/O of 256 KB starting at LBA 10, which should be split
+	 * into three I/Os:
+	 *  1) LBA = 10, count = 246 blocks (less than max I/O size to align to stripe size)
+	 *  2) LBA = 256, count = 256 blocks (aligned to stripe size and max I/O size)
+	 *  3) LBA = 512, count = 10 blocks (finish off the remaining I/O size)
+	 */
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 128 * 1024);
+	payload = malloc(256 * 1024);
+	lba = 10; /* Start at an LBA that isn't aligned to the stripe size */
+	lba_count = (256 * 1024) / 512;
+
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_FATAL(g_request != NULL);
+
+	CU_ASSERT_FATAL(g_request->num_children == 3);
+
+	child = TAILQ_FIRST(&g_request->children);
+	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(child->payload_size == (256 - 10) * 512);
+	CU_ASSERT(cmd_lba == 10);
+	CU_ASSERT(cmd_lba_count == 256 - 10);
+
+	child = TAILQ_FIRST(&g_request->children);
+	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(child->payload_size == 128 * 1024);
+	CU_ASSERT(cmd_lba == 256);
+	CU_ASSERT(cmd_lba_count == 256);
+
+	child = TAILQ_FIRST(&g_request->children);
+	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(child->payload_size == 10 * 512);
+	CU_ASSERT(cmd_lba == 512);
+	CU_ASSERT(cmd_lba_count == 10);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
+
+	free(payload);
+	nvme_free_request(g_request);
+}
+
+void
 test_nvme_ns_cmd_flush(void)
 {
 	struct nvme_namespace	ns;
@@ -253,6 +369,8 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "split_test", split_test) == NULL
 		|| CU_add_test(suite, "split_test2", split_test2) == NULL
+		|| CU_add_test(suite, "split_test3", split_test3) == NULL
+		|| CU_add_test(suite, "split_test4", split_test4) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_flush testing", test_nvme_ns_cmd_flush) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_deallocate testing", test_nvme_ns_cmd_deallocate) == NULL
 	) {
