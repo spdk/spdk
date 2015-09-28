@@ -103,13 +103,21 @@ prepare_for_test(struct nvme_namespace *ns, struct nvme_controller *ctrlr,
 }
 
 void
+nvme_cmd_interpret_rw(const struct nvme_command *cmd,
+		      uint64_t *lba, uint32_t *num_blocks)
+{
+	*lba = *(const uint64_t *)&cmd->cdw10;
+	*num_blocks = (cmd->cdw12 & 0xFFFFu) + 1;
+}
+
+void
 split_test(void)
 {
 	struct nvme_namespace	ns;
 	struct nvme_controller	ctrlr;
 	void			*payload;
-	uint64_t		lba;
-	uint32_t		lba_count;
+	uint64_t		lba, cmd_lba;
+	uint32_t		lba_count, cmd_lba_count;
 	int			rc;
 
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
@@ -123,6 +131,10 @@ split_test(void)
 	CU_ASSERT_FATAL(g_request != NULL);
 
 	CU_ASSERT(g_request->num_children == 0);
+	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(cmd_lba == lba);
+	CU_ASSERT(cmd_lba_count == lba_count);
+
 	free(payload);
 	nvme_free_request(g_request);
 }
@@ -134,9 +146,15 @@ split_test2(void)
 	struct nvme_controller	ctrlr;
 	struct nvme_request	*child;
 	void			*payload;
-	uint64_t		lba;
-	uint32_t		lba_count;
+	uint64_t		lba, cmd_lba;
+	uint32_t		lba_count, cmd_lba_count;
 	int			rc;
+
+	/*
+	 * Controller has max xfer of 128 KB (256 blocks).
+	 * Submit an I/O of 256 KB starting at LBA 0, which should be split
+	 * on the max I/O boundary into two I/Os of 128 KB.
+	 */
 
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 	payload = malloc(256 * 1024);
@@ -152,13 +170,19 @@ split_test2(void)
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
+	CU_ASSERT(cmd_lba == 0);
+	CU_ASSERT(cmd_lba_count == 256); /* 256 * 512 byte blocks = 128 KB */
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
+	CU_ASSERT(cmd_lba == 256);
+	CU_ASSERT(cmd_lba_count == 256);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
 
