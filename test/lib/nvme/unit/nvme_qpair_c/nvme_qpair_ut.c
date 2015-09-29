@@ -401,6 +401,27 @@ void test_nvme_completion_is_retry(void)
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 }
 
+void
+test_get_status_string(void)
+{
+	const char	*status_string;
+
+	status_string = get_status_string(NVME_SCT_GENERIC, NVME_SC_SUCCESS);
+	CU_ASSERT(strcmp(status_string, "SUCCESS") == 0);
+
+	status_string = get_status_string(NVME_SCT_COMMAND_SPECIFIC, NVME_SC_COMPLETION_QUEUE_INVALID);
+	CU_ASSERT(strcmp(status_string, "INVALID COMPLETION QUEUE") == 0);
+
+	status_string = get_status_string(NVME_SCT_MEDIA_ERROR, NVME_SC_UNRECOVERED_READ_ERROR);
+	CU_ASSERT(strcmp(status_string, "UNRECOVERED READ ERROR") == 0);
+
+	status_string = get_status_string(NVME_SCT_VENDOR_SPECIFIC, 0);
+	CU_ASSERT(strcmp(status_string, "VENDOR SPECIFIC") == 0);
+
+	status_string = get_status_string(100, 0);
+	CU_ASSERT(strcmp(status_string, "RESERVED") == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -427,6 +448,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_qpair_process_completions", test_nvme_qpair_process_completions) == NULL
 		|| CU_add_test(suite, "nvme_qpair_destroy", test_nvme_qpair_destroy) == NULL
 		|| CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
+		|| CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
