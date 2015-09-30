@@ -101,14 +101,17 @@ static inline int
 nvme_mutex_init_recursive(nvme_mutex_t *mtx)
 {
 	pthread_mutexattr_t attr;
+	int rc = 0;
 
 	if (pthread_mutexattr_init(&attr)) {
 		return -1;
 	}
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE)) {
-		return -1;
+	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) ||
+	    pthread_mutex_init(mtx, &attr)) {
+		rc = -1;
 	}
-	return pthread_mutex_init(mtx, &attr);
+	pthread_mutexattr_destroy(&attr);
+	return rc;
 }
 
 /**
