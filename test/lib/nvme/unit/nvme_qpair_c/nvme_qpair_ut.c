@@ -382,15 +382,24 @@ static void test_nvme_qpair_destroy(void)
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.regs = &regs;
-	nvme_qpair_construct(&qpair, 1, 128, 32, &ctrlr);
 
+	nvme_qpair_construct(&qpair, 1, 128, 32, &ctrlr);
+	nvme_qpair_destroy(&qpair);
+	CU_ASSERT(LIST_EMPTY(&qpair.free_tr));
+
+
+	nvme_qpair_construct(&qpair, 0, 128, 32, &ctrlr);
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
-	nvme_alloc_request(&tr_temp->req);
+	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
+	CU_ASSERT_FATAL(tr_temp->req != NULL);
 
-	LIST_INSERT_HEAD(&qpair.free_tr, tr_temp, list);
+	tr_temp->req->cmd.opc = NVME_OPC_ASYNC_EVENT_REQUEST;
+	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
 
 	nvme_qpair_destroy(&qpair);
+	CU_ASSERT(LIST_EMPTY(&qpair.outstanding_tr));
+	CU_ASSERT(LIST_EMPTY(&qpair.free_tr));
 }
 
 static void test_nvme_completion_is_retry(void)
