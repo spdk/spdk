@@ -46,6 +46,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/pci.h"
+#include "spdk/string.h"
 
 struct ctrlr_entry {
 	struct nvme_controller	*ctrlr;
@@ -528,7 +529,7 @@ unregister_controllers(void)
 	}
 }
 
-static const char *ealargs[] = {
+static char *ealargs[] = {
 	"perf",
 	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
 	"-n 4",
@@ -537,7 +538,6 @@ static const char *ealargs[] = {
 int main(int argc, char **argv)
 {
 	int rc;
-	char core_mask_arg[128];
 	struct worker_thread *worker;
 
 	rc = parse_args(argc, argv);
@@ -545,13 +545,12 @@ int main(int argc, char **argv)
 		return rc;
 	}
 
-	if (g_core_mask != NULL) {
-		snprintf(core_mask_arg, sizeof(core_mask_arg), "-c %s", g_core_mask);
-		ealargs[1] = strdup(core_mask_arg);
-	}
+	ealargs[1] = sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
-			  (char **)(void *)(uintptr_t)ealargs);
+	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
+
+	free(ealargs[1]);
+
 	if (rc < 0) {
 		fprintf(stderr, "could not initialize dpdk\n");
 		return 1;
