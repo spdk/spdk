@@ -2,15 +2,15 @@
 
 set -xe
 
-DPDK_DIR=/usr/local/dpdk-2.1.0/x86_64-native-linuxapp-gcc
-
 src=$(readlink -f $(dirname $0))
+source "$src/scripts/autotest_common.sh"
+
 out=$PWD
 
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $src
 
-make clean
+$MAKE clean
 
 if [ `git status --porcelain | wc -l` -ne 0 ]; then
 	echo make clean left the following files:
@@ -36,6 +36,6 @@ tar -C "$tmpdir" -xf $out/$tarball
 	cd "$tmpdir"/spdk-*
 	cp CONFIG CONFIG.orig
 	sed -e 's/CONFIG_DEBUG=y/CONFIG_DEBUG=n/' <CONFIG.orig >CONFIG
-	time make ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR
+	time $MAKE ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR
 )
 rm -rf "$tmpdir"

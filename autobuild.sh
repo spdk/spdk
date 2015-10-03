@@ -3,10 +3,9 @@
 set -e
 
 src=$(readlink -f $(dirname $0))
-out=$PWD
+source "$src/scripts/autotest_common.sh"
 
-MAKEFLAGS=${MAKEFLAGS:--j16}
-DPDK_DIR=/usr/local/dpdk-2.1.0/x86_64-native-linuxapp-gcc
+out=$PWD
 
 umask 022
 
@@ -19,16 +18,16 @@ if hash scan-build; then
 	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
 fi
 
-make $MAKEFLAGS clean
+$MAKE $MAKEFLAGS clean
 fail=0
-time $scanbuild make $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
+time $scanbuild $MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
 
 # Check that header file dependencies are working correctly by
 #  capturing a binary's stat data before and after touching a
 #  header file and re-making.
 STAT1=`stat examples/nvme/identify/identify`
 touch lib/nvme/nvme_internal.h
-make $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
+$MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
 STAT2=`stat examples/nvme/identify/identify`
 
 if [ "$STAT1" == "$STAT2" ]; then
@@ -43,7 +42,7 @@ if [ -d $out/scan-build-tmp ]; then
 fi
 
 if hash doxygen; then
-	(cd "$src"/doc; make $MAKEFLAGS)
+	(cd "$src"/doc; $MAKE $MAKEFLAGS)
 	mkdir -p "$out"/doc
 	for d in "$src"/doc/output.*; do
 		component=$(basename "$d" | sed -e 's/^output.//')

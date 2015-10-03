@@ -18,9 +18,10 @@ function configure_linux {
 }
 
 function configure_freebsd {
+	kldunload contigmem.ko || true
 	kenv hw.contigmem.num_buffers=16
 	kenv hw.contigmem.buffer_size=33554432
-	kldload `find . -name contigmem.ko | head -1`
+	kldload contigmem.ko
 }
 
 if [ `uname` = Linux ]; then

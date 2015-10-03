@@ -10,7 +10,7 @@ if [ $EUID -ne 0 ]; then
 	exit 1
 fi
 
-trap "process_core; exit 1" SIGINT SIGTERM EXIT
+trap "process_core; $rootdir/scripts/cleanup.sh; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
@@ -36,17 +36,7 @@ time test/lib/memory/memory.sh
 
 timing_exit lib
 
-# detach pci devices from uio driver
-grep -q "^uio_pci_generic" /proc/modules && rmmod uio_pci_generic
-
-# bind NVMe devices to NVMe driver if no kernel device
-if [ -d "/sys/bus/pci/drivers/nvme" ]; then
-	device=`find /sys/bus/pci/drivers/nvme -name "0000*" -print`
-	if [ -z "$device" ]; then
-		rmmod nvme
-		modprobe nvme
-	fi
-fi
+./scripts/cleanup.sh
 
 timing_exit autotest
 chmod a+r $output_dir/timing.txt

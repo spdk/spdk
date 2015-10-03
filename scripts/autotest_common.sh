@@ -1,6 +1,23 @@
 set -xe
 ulimit -c unlimited
 
+case `uname` in
+	FreeBSD)
+		DPDK_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
+		MAKE=gmake
+		;;
+	Linux)
+		DPDK_DIR=/usr/local/dpdk-2.1.0/x86_64-native-linuxapp-gcc
+		MAKE=make
+		;;
+	*)
+		echo "Unknown OS in $0"
+		exit 1
+		;;
+esac
+
+MAKEFLAGS=${MAKEFLAGS:--j16}
+
 if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then
 	output_dir=.
 else
