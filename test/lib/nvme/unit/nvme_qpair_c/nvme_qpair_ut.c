@@ -63,6 +63,44 @@ void prepare_for_test(void)
 {
 }
 
+struct nvme_request *
+nvme_allocate_request(void *payload, uint32_t payload_size,
+		      nvme_cb_fn_t cb_fn, void *cb_arg)
+{
+	struct nvme_request *req = NULL;
+
+	nvme_alloc_request(&req);
+
+	if (req == NULL) {
+		return req;
+	}
+
+	/*
+	 * Only memset up to (but not including) the children
+	 *  TAILQ_ENTRY.  children, and following members, are
+	 *  only used as part of I/O splitting so we avoid
+	 *  memsetting them until it is actually needed.
+	 *  They will be initialized in nvme_request_add_child()
+	 *  if the request is split.
+	 */
+	memset(req, 0, offsetof(struct nvme_request, children));
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->timeout = true;
+	nvme_assert((payload == NULL && payload_size == 0) ||
+		    (payload != NULL && payload_size != 0),
+		    ("Invalid argument combination of payload and payload_size\n"));
+	if (payload == NULL || payload_size == 0) {
+		req->u.payload = NULL;
+		req->payload_size = 0;
+	} else {
+		req->u.payload = payload;
+		req->payload_size = payload_size;
+	}
+
+	return req;
+}
+
 void
 test1(void)
 {
@@ -148,9 +186,8 @@ test3(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
-	nvme_alloc_request(&req);
-	req->payload_size = 4096;
-	req->cb_fn = expected_success_callback;
+	req = nvme_allocate_request(NULL, 0, expected_success_callback, NULL);
+	CU_ASSERT_FATAL(req != NULL);
 
 	CU_ASSERT(qpair.sq_tail == 0);
 
@@ -169,12 +206,12 @@ test4(void)
 	struct nvme_request	*req;
 	struct nvme_controller	ctrlr = {};
 	struct nvme_registers	regs = {};
+	char			payload[4096];
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
-	nvme_alloc_request(&req);
-	req->payload_size = 4096;
-	req->cb_fn = expected_failure_callback;
+	req = nvme_allocate_request(payload, sizeof(payload), expected_failure_callback, NULL);
+	CU_ASSERT_FATAL(req != NULL);
 
 	/* Force vtophys to return a failure.  This should
 	 *  result in the nvme_qpair manually failing
@@ -202,12 +239,12 @@ test_ctrlr_failed(void)
 	struct nvme_request	*req;
 	struct nvme_controller	ctrlr = {};
 	struct nvme_registers	regs = {};
+	char			payload[4096];
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
-	nvme_alloc_request(&req);
-	req->payload_size = 4096;
-	req->cb_fn = expected_failure_callback;
+	req = nvme_allocate_request(payload, sizeof(payload), expected_failure_callback, NULL);
+	CU_ASSERT_FATAL(req != NULL);
 
 	/* Disable the queue and set the controller to failed.
 	 * Set the controller to resetting so that the qpair won't get re-enabled.
@@ -251,13 +288,16 @@ void test_nvme_qpair_fail(void)
 
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
-	nvme_alloc_request(&tr_temp->req);
+	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
+	CU_ASSERT_FATAL(tr_temp->req != NULL);
 
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
 	nvme_qpair_fail(&qpair);
 	CU_ASSERT_TRUE(LIST_EMPTY(&qpair.outstanding_tr));
 
-	nvme_alloc_request(&req);
+	req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
+	CU_ASSERT_FATAL(req != NULL);
+
 	STAILQ_INSERT_HEAD(&qpair.queued_req, req, stailq);
 	nvme_qpair_fail(&qpair);
 	CU_ASSERT_TRUE(STAILQ_EMPTY(&qpair.queued_req));
