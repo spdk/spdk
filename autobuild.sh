@@ -8,6 +8,8 @@ out=$PWD
 MAKEFLAGS=${MAKEFLAGS:--j16}
 DPDK_DIR=/usr/local/dpdk-2.1.0/x86_64-native-linuxapp-gcc
 
+umask 022
+
 cd $src
 
 ./scripts/check_format.sh

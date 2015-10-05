@@ -7,6 +7,13 @@ else
 	output_dir=$rootdir/../output
 fi
 
+if hash valgrind &> /dev/null; then
+	# TODO: add --error-exitcode=2 when all Valgrind warnings are fixed
+	valgrind='valgrind --leak-check=full'
+else
+	valgrind=''
+fi
+
 function timing() {
 	direction="$1"
 	testname="$2"
