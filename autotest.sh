@@ -23,7 +23,7 @@ timing_enter afterboot
 ./scripts/configure_hugepages.sh 3072
 timing_exit afterboot
 
-lsmod | grep -q ^nvme && rmmod nvme || true
+./scripts/unbind_nvme.sh
 
 #####################
 # Unit Tests

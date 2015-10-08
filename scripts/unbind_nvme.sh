@@ -3,7 +3,7 @@
 set -e
 
 function configure_linux {
-	lsmod | grep nvme && rmmod nvme
+	rmmod nvme || true
 }
 
 function configure_freebsd {
@@ -12,8 +12,9 @@ function configure_freebsd {
 	echo $AWK_PROG > $TMP
 	NVME_PCICONF=`pciconf -l | grep class=0x010802`
 	BDFS=`echo $NVME_PCICONF | awk -F: -f $TMP`
+	kldunload nic_uio.ko || true
 	kenv hw.nic_uio.bdfs=$BDFS
-	kldload `find . -name nic_uio.ko | head -1`
+	kldload nic_uio.ko
 	rm $TMP
 }
 

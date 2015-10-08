@@ -18,6 +18,7 @@ function cleanup_linux() {
 
 function cleanup_freebsd {
 	kldunload contigmem.ko || true
+	kldunload nic_uio.ko || true
 }
 
 if [ `uname` = Linux ]; then
