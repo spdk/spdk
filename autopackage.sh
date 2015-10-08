@@ -2,13 +2,15 @@
 
 set -xe
 
-src=$(readlink -f $(dirname $0))
-source "$src/scripts/autotest_common.sh"
+rootdir=$(readlink -f $(dirname $0))
+source "$rootdir/scripts/autotest_common.sh"
 
 out=$PWD
 
 MAKEFLAGS=${MAKEFLAGS:--j16}
-cd $src
+cd $rootdir
+
+timing_enter autopackage
 
 $MAKE clean
 
@@ -39,3 +41,7 @@ tar -C "$tmpdir" -xf $out/$tarball
 	time $MAKE ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR
 )
 rm -rf "$tmpdir"
+
+timing_exit autopackage
+
+timing_finish

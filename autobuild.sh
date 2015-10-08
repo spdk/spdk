@@ -2,16 +2,20 @@
 
 set -e
 
-src=$(readlink -f $(dirname $0))
-source "$src/scripts/autotest_common.sh"
+rootdir=$(readlink -f $(dirname $0))
+source "$rootdir/scripts/autotest_common.sh"
 
 out=$PWD
 
 umask 022
 
-cd $src
+cd $rootdir
 
+timing_enter autobuild
+
+timing_enter check_format
 ./scripts/check_format.sh
+timing_exit check_format
 
 scanbuild=''
 if hash scan-build; then
@@ -19,8 +23,11 @@ if hash scan-build; then
 fi
 
 $MAKE $MAKEFLAGS clean
+
+timing_enter scanbuild_make
 fail=0
 time $scanbuild $MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
+timing_exit scanbuild_make
 
 # Check that header file dependencies are working correctly by
 #  capturing a binary's stat data before and after touching a
@@ -41,14 +48,18 @@ if [ -d $out/scan-build-tmp ]; then
 	chmod -R a+rX $out/scan-build
 fi
 
+timing_enter doxygen
 if hash doxygen; then
-	(cd "$src"/doc; $MAKE $MAKEFLAGS)
+	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS)
 	mkdir -p "$out"/doc
-	for d in "$src"/doc/output.*; do
+	for d in "$rootdir"/doc/output.*; do
 		component=$(basename "$d" | sed -e 's/^output.//')
 		mv "$d"/html "$out"/doc/$component
 		rm -rf "$d"
 	done
 fi
+timing_exit doxygen
+
+timing_exit autobuild
 
 exit $fail

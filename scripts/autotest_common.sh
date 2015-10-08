@@ -38,16 +38,18 @@ function timing() {
 	now=$(date +%s)
 
 	if [ "$direction" = "enter" ]; then
-		export timing_stack="${timing_stack}/${now}"
-		export test_stack="${test_stack}/${testname}"
+		export timing_stack="${timing_stack};${now}"
+		export test_stack="${test_stack};${testname}"
 	else
-		start_time=$(echo "$timing_stack" | sed -e 's@^.*/@@')
-		timing_stack=$(echo "$timing_stack" | sed -e 's@/[^/]*$@@')
+		child_time=$(grep "^${test_stack:1};" $output_dir/timing.txt | awk '{s+=$2} END {print s}')
 
-		elapsed=$((now - start_time))
-		echo "$elapsed $test_stack" >> $output_dir/timing.txt
+		start_time=$(echo "$timing_stack" | sed -e 's@^.*;@@')
+		timing_stack=$(echo "$timing_stack" | sed -e 's@;[^;]*$@@')
 
-		test_stack=$(echo "$test_stack" | sed -e 's@/[^/]*$@@')
+		elapsed=$((now - start_time - child_time))
+		echo "${test_stack:1} $elapsed" >> $output_dir/timing.txt
+
+		test_stack=$(echo "$test_stack" | sed -e 's@;[^;]*$@@')
 	fi
 }
 
@@ -57,6 +59,18 @@ function timing_enter() {
 
 function timing_exit() {
 	timing "exit" "$1"
+}
+
+function timing_finish() {
+	flamegraph='/usr/local/FlameGraph/flamegraph.pl'
+	if [ -x "$flamegraph" ]; then
+		"$flamegraph" \
+			--title 'Build Timing' \
+			--nametype 'Step:' \
+			--countname seconds \
+			$output_dir/timing.txt \
+			>$output_dir/timing.svg
+	fi
 }
 
 function process_core() {
