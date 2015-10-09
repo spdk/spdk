@@ -18,10 +18,13 @@ esac
 
 MAKEFLAGS=${MAKEFLAGS:--j16}
 
-if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then
-	output_dir=.
-else
-	output_dir=$rootdir/../output
+if [ -z "$output_dir" ]; then
+	if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then
+		output_dir=.
+	else
+		output_dir=$rootdir/../output
+	fi
+	export output_dir
 fi
 
 if hash valgrind &> /dev/null; then
