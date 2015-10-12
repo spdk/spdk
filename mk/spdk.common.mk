@@ -49,6 +49,10 @@ COMMON_CFLAGS = -g $(C_OPT) -Wall -Werror -fno-strict-aliasing -march=native -m6
 # This allows the GOT to be made read-only early in the loading process.
 LDFLAGS += -Wl,-z,relro,-z,now
 
+# Make the stack non-executable.
+# This is the default in most environments, but it doesn't hurt to set it explicitly.
+LDFLAGS += -Wl,-z,noexecstack
+
 ifeq ($(OS),FreeBSD)
 LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
