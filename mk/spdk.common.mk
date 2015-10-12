@@ -45,6 +45,8 @@ OS := $(shell uname)
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Werror -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
 
+COMMON_CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
+
 # Enable full RELRO - no lazy relocation (resolve everything at load time).
 # This allows the GOT to be made read-only early in the loading process.
 LDFLAGS += -Wl,-z,relro,-z,now
