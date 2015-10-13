@@ -47,6 +47,9 @@ COMMON_CFLAGS = -g $(C_OPT) -Wall -Werror -fno-strict-aliasing -march=native -m6
 
 COMMON_CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
 
+# Enable stack buffer overflow checking
+COMMON_CFLAGS += -fstack-protector
+
 # Enable full RELRO - no lazy relocation (resolve everything at load time).
 # This allows the GOT to be made read-only early in the loading process.
 LDFLAGS += -Wl,-z,relro,-z,now
