@@ -47,6 +47,9 @@ COMMON_CFLAGS = -g $(C_OPT) -Wall -Werror -fno-strict-aliasing -march=native -m6
 
 COMMON_CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
 
+# Always build PIC code so that objects can be used in shared libs and position-independent executables
+COMMON_CFLAGS += -fPIC
+
 # Enable stack buffer overflow checking
 COMMON_CFLAGS += -fstack-protector
 
