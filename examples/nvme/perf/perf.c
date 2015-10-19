@@ -44,18 +44,44 @@
 #include <rte_malloc.h>
 #include <rte_lcore.h>
 
+#include "spdk/file.h"
 #include "spdk/nvme.h"
 #include "spdk/pci.h"
 #include "spdk/string.h"
+
+#if HAVE_LIBAIO
+#include <libaio.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
 
 struct ctrlr_entry {
 	struct nvme_controller	*ctrlr;
 	struct ctrlr_entry	*next;
 };
 
+enum entry_type {
+	ENTRY_TYPE_NVME_NS,
+	ENTRY_TYPE_AIO_FILE,
+};
+
 struct ns_entry {
-	struct nvme_controller	*ctrlr;
-	struct nvme_namespace	*ns;
+	enum entry_type		type;
+
+	union {
+		struct {
+			struct nvme_controller	*ctrlr;
+			struct nvme_namespace	*ns;
+		} nvme;
+#if HAVE_LIBAIO
+		struct {
+			int			fd;
+			io_context_t		ctx;
+			struct io_event		*events;
+		} aio;
+#endif
+	} u;
+
 	struct ns_entry		*next;
 	uint32_t		io_size_blocks;
 	int			io_completed;
@@ -69,6 +95,9 @@ struct ns_entry {
 struct perf_task {
 	struct ns_entry		*entry;
 	void			*buf;
+#if HAVE_LIBAIO
+	struct iocb		iocb;
+#endif
 };
 
 struct worker_thread {
@@ -94,6 +123,10 @@ static int g_time_in_sec;
 
 static const char *g_core_mask;
 
+static int g_aio_optind; /* Index of first AIO filename in argv */
+
+static void
+task_complete(struct perf_task *task);
 
 static void
 register_ns(struct nvme_controller *ctrlr, struct pci_device *pci_dev, struct nvme_namespace *ns)
@@ -104,8 +137,9 @@ register_ns(struct nvme_controller *ctrlr, struct pci_device *pci_dev, struct nv
 
 	worker = g_current_worker;
 
-	entry->ctrlr = ctrlr;
-	entry->ns = ns;
+	entry->type = ENTRY_TYPE_NVME_NS;
+	entry->u.nvme.ctrlr = ctrlr;
+	entry->u.nvme.ns = ns;
 	entry->next = worker->namespaces;
 	entry->io_completed = 0;
 	entry->current_queue_depth = 0;
@@ -143,6 +177,120 @@ register_ctrlr(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 
 }
 
+#if HAVE_LIBAIO
+static int
+register_aio_file(const char *path)
+{
+	struct worker_thread *worker;
+	struct ns_entry *entry;
+
+	int flags, fd;
+	uint64_t size;
+	uint32_t blklen;
+
+	if (g_rw_percentage == 100) {
+		flags = O_RDONLY;
+	} else {
+		flags = O_RDWR;
+	}
+
+	flags |= O_DIRECT;
+
+	fd = open(path, flags);
+	if (fd < 0) {
+		fprintf(stderr, "Could not open AIO device %s: %s\n", path, strerror(errno));
+		return -1;
+	}
+
+	size = file_get_size(fd);
+	if (size == 0) {
+		fprintf(stderr, "Could not determine size of AIO device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	blklen = dev_get_blocklen(fd);
+	if (blklen == 0) {
+		fprintf(stderr, "Could not determine block size of AIO device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	worker = g_current_worker;
+
+	entry = malloc(sizeof(struct ns_entry));
+
+	entry->type = ENTRY_TYPE_AIO_FILE;
+	entry->u.aio.fd = fd;
+	entry->u.aio.ctx = 0;
+	if (io_setup(g_queue_depth, &entry->u.aio.ctx) < 0) {
+		perror("io_setup");
+		return -1;
+	}
+	entry->u.aio.events = calloc(g_queue_depth, sizeof(struct io_event));
+	entry->next = worker->namespaces;
+	entry->io_completed = 0;
+	entry->current_queue_depth = 0;
+	entry->offset_in_ios = 0;
+	entry->size_in_ios = size / g_io_size_bytes;
+	entry->io_size_blocks = g_io_size_bytes / blklen;
+	entry->is_draining = false;
+
+	snprintf(entry->name, sizeof(entry->name), "%s", path);
+
+	printf("Assigning AIO device %s to lcore %u\n", entry->name, worker->lcore);
+	worker->namespaces = entry;
+
+	if (worker->next == NULL) {
+		g_current_worker = g_workers;
+	} else {
+		g_current_worker = worker->next;
+	}
+
+	return 0;
+}
+
+static int
+aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd, void *buf,
+	   unsigned long nbytes, uint64_t offset, void *cb_ctx)
+{
+	iocb->aio_fildes = fd;
+	iocb->aio_reqprio = 0;
+	iocb->aio_lio_opcode = cmd;
+	iocb->u.c.buf = buf;
+	iocb->u.c.nbytes = nbytes;
+	iocb->u.c.offset = offset;
+	iocb->data = cb_ctx;
+
+	if (io_submit(aio_ctx, 1, &iocb) < 0) {
+		perror("io_submit");
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+aio_check_io(struct ns_entry *entry)
+{
+	int count, i;
+	struct timespec timeout;
+
+	timeout.tv_sec = 0;
+	timeout.tv_nsec = 0;
+
+	count = io_getevents(entry->u.aio.ctx, 1, g_queue_depth, entry->u.aio.events, &timeout);
+	if (count < 0) {
+		fprintf(stderr, "io_getevents error\n");
+		exit(1);
+	}
+
+	for (i = 0; i < count; i++) {
+		task_complete(entry->u.aio.events[i].data);
+	}
+}
+#endif /* HAVE_LIBAIO */
+
 void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
@@ -175,11 +323,27 @@ submit_single_io(struct ns_entry *entry)
 
 	if ((g_rw_percentage == 100) ||
 	    (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
-		rc = nvme_ns_cmd_read(entry->ns, task->buf, offset_in_ios * entry->io_size_blocks,
-				      entry->io_size_blocks, io_complete, task);
+#if HAVE_LIBAIO
+		if (entry->type == ENTRY_TYPE_AIO_FILE) {
+			rc = aio_submit(entry->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD, task->buf,
+					g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
+		} else
+#endif
+		{
+			rc = nvme_ns_cmd_read(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
+					      entry->io_size_blocks, io_complete, task);
+		}
 	} else {
-		rc = nvme_ns_cmd_write(entry->ns, task->buf, offset_in_ios * entry->io_size_blocks,
-				       entry->io_size_blocks, io_complete, task);
+#if HAVE_LIBAIO
+		if (entry->type == ENTRY_TYPE_AIO_FILE) {
+			rc = aio_submit(entry->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE, task->buf,
+					g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
+		} else
+#endif
+		{
+			rc = nvme_ns_cmd_write(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
+					       entry->io_size_blocks, io_complete, task);
+		}
 	}
 
 	if (rc != 0) {
@@ -190,12 +354,9 @@ submit_single_io(struct ns_entry *entry)
 }
 
 static void
-io_complete(void *ctx, const struct nvme_completion *completion)
+task_complete(struct perf_task *task)
 {
-	struct perf_task	*task;
 	struct ns_entry		*entry;
-
-	task = (struct perf_task *)ctx;
 
 	entry = task->entry;
 	entry->current_queue_depth--;
@@ -215,9 +376,22 @@ io_complete(void *ctx, const struct nvme_completion *completion)
 }
 
 static void
+io_complete(void *ctx, const struct nvme_completion *completion)
+{
+	task_complete((struct perf_task *)ctx);
+}
+
+static void
 check_io(struct ns_entry *entry)
 {
-	nvme_ctrlr_process_io_completions(entry->ctrlr);
+#if HAVE_LIBAIO
+	if (entry->type == ENTRY_TYPE_AIO_FILE) {
+		aio_check_io(entry);
+	} else
+#endif
+	{
+		nvme_ctrlr_process_io_completions(entry->u.nvme.ctrlr);
+	}
 }
 
 static void
@@ -286,7 +460,11 @@ work_fn(void *arg)
 
 static void usage(char *program_name)
 {
-	printf("%s options\n", program_name);
+	printf("%s options", program_name);
+#if HAVE_LIBAIO
+	printf(" [AIO device(s)]...");
+#endif
+	printf("\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-s io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
@@ -438,6 +616,7 @@ parse_args(int argc, char **argv)
 		g_is_random = 1;
 	}
 
+	g_aio_optind = optind;
 	optind = 1;
 	return 0;
 }
@@ -529,6 +708,23 @@ unregister_controllers(void)
 	}
 }
 
+static int
+register_aio_files(int argc, char **argv)
+{
+#if HAVE_LIBAIO
+	int i;
+
+	/* Treat everything after the options as files for AIO */
+	for (i = g_aio_optind; i < argc; i++) {
+		if (register_aio_file(argv[i]) != 0) {
+			return 1;
+		}
+	}
+#endif /* HAVE_LIBAIO */
+
+	return 0;
+}
+
 static char *ealargs[] = {
 	"perf",
 	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
@@ -574,6 +770,9 @@ int main(int argc, char **argv)
 	g_tsc_rate = rte_get_timer_hz();
 
 	register_workers();
+	if (register_aio_files(argc, argv) != 0) {
+		return 1;
+	}
 	register_controllers();
 
 	/* Launch all of the slave workers */

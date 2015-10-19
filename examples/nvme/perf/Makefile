@@ -45,6 +45,11 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
 
 LIBS += $(SPDK_LIBS) -lpciaccess -lpthread $(DPDK_LIB) -lrt
 
+ifeq ($(OS),Linux)
+LIBS += -laio
+CFLAGS += -DHAVE_LIBAIO
+endif
+
 OBJS  = $(C_SRCS:.c=.o)
 
 all : $(APP)
