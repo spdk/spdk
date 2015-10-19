@@ -35,7 +35,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
 
-C_SRCS = string.c pci.c
+C_SRCS = file.c string.c pci.c
 
 C_OBJS := $(patsubst %.c,%.o,$(C_SRCS))
 
