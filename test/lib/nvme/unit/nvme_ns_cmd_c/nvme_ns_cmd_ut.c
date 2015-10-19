@@ -175,6 +175,7 @@ split_test2(void)
 	CU_ASSERT(child->payload_size == 128 * 1024);
 	CU_ASSERT(cmd_lba == 0);
 	CU_ASSERT(cmd_lba_count == 256); /* 256 * 512 byte blocks = 128 KB */
+	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);
@@ -183,6 +184,7 @@ split_test2(void)
 	CU_ASSERT(child->payload_size == 128 * 1024);
 	CU_ASSERT(cmd_lba == 256);
 	CU_ASSERT(cmd_lba_count == 256);
+	nvme_free_request(child);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
 
@@ -228,6 +230,7 @@ split_test3(void)
 	CU_ASSERT(child->payload_size == 128 * 1024);
 	CU_ASSERT(cmd_lba == 10);
 	CU_ASSERT(cmd_lba_count == 256);
+	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);
@@ -236,6 +239,7 @@ split_test3(void)
 	CU_ASSERT(child->payload_size == 128 * 1024);
 	CU_ASSERT(cmd_lba == 266);
 	CU_ASSERT(cmd_lba_count == 256);
+	nvme_free_request(child);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
 
@@ -283,6 +287,7 @@ split_test4(void)
 	CU_ASSERT(child->payload_size == (256 - 10) * 512);
 	CU_ASSERT(cmd_lba == 10);
 	CU_ASSERT(cmd_lba_count == 256 - 10);
+	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);
@@ -291,6 +296,7 @@ split_test4(void)
 	CU_ASSERT(child->payload_size == 128 * 1024);
 	CU_ASSERT(cmd_lba == 256);
 	CU_ASSERT(cmd_lba_count == 256);
+	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);
@@ -299,6 +305,7 @@ split_test4(void)
 	CU_ASSERT(child->payload_size == 10 * 512);
 	CU_ASSERT(cmd_lba == 512);
 	CU_ASSERT(cmd_lba_count == 10);
+	nvme_free_request(child);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
 
