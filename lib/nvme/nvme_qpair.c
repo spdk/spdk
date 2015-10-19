@@ -798,6 +798,7 @@ _nvme_io_qpair_enable(struct nvme_qpair *qpair)
 	struct nvme_tracker		*tr_temp;
 	struct nvme_request		*req;
 
+	qpair->is_enabled = true;
 	/*
 	 * Manually abort each outstanding I/O.  This normally results in a
 	 *  retry, unless the retry count on the associated request has
@@ -809,7 +810,6 @@ _nvme_io_qpair_enable(struct nvme_qpair *qpair)
 						   NVME_SC_ABORTED_BY_REQUEST, 0, true);
 	}
 
-	qpair->is_enabled = true;
 
 	STAILQ_INIT(&temp);
 	STAILQ_SWAP(&qpair->queued_req, &temp, nvme_request);

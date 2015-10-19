@@ -31,14 +31,33 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/../../..
+SPDK_ROOT_DIR := $(CURDIR)/../../../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = unit aer reset
+APP = reset
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := reset.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CFLAGS += -I. $(DPDK_INC)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
+	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
+
+LIBS += $(SPDK_LIBS) -lpciaccess -lpthread $(DPDK_LIB) -lrt
+
+
+OBJS  = $(C_SRCS:.c=.o)
+
+all : $(APP)
+
+objs : $(OBJS)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	@echo "  LINK $@"
+	$(Q)$(CC) $(CPPFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+clean :
+	$(Q)rm -f $(OBJS) *.d $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
