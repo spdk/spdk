@@ -432,5 +432,6 @@ void	nvme_ns_destruct(struct nvme_namespace *ns);
 struct nvme_request *
 nvme_allocate_request(void *payload, uint32_t payload_size,
 		      nvme_cb_fn_t cb_fn, void *cb_arg);
+void	nvme_free_request(struct nvme_request *req);
 
 #endif /* __NVME_INTERNAL_H__ */

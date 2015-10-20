@@ -111,7 +111,7 @@ extern struct rte_mempool *request_mempool;
 /**
  * Free a buffer previously allocated with nvme_alloc_request().
  */
-#define nvme_free_request(buf)		rte_mempool_put(request_mempool, buf)
+#define nvme_dealloc_request(buf)	rte_mempool_put(request_mempool, buf)
 
 /**
  *

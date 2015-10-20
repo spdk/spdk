@@ -102,6 +102,12 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 }
 
 void
+nvme_free_request(struct nvme_request *req)
+{
+	nvme_dealloc_request(req);
+}
+
+void
 test1(void)
 {
 	struct nvme_qpair qpair = {};

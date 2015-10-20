@@ -159,6 +159,13 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 	return req;
 }
 
+void
+nvme_free_request(struct nvme_request *req)
+{
+	nvme_assert(req != NULL, ("nvme_free_request(NULL)\n"));
+	nvme_dealloc_request(req);
+}
+
 static int
 nvme_allocate_ioq_index(void)
 {
