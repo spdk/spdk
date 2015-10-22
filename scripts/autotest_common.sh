@@ -1,6 +1,8 @@
 set -xe
 ulimit -c unlimited
 
+MAKECONFIG='CONFIG_DEBUG=y'
+
 case `uname` in
 	FreeBSD)
 		DPDK_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
@@ -9,6 +11,7 @@ case `uname` in
 	Linux)
 		DPDK_DIR=/usr/local/dpdk-2.1.0/x86_64-native-linuxapp-gcc
 		MAKE=make
+		MAKECONFIG="$MAKECONFIG CONFIG_COVERAGE=y"
 		;;
 	*)
 		echo "Unknown OS in $0"

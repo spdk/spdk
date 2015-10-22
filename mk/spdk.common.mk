@@ -76,6 +76,14 @@ COMMON_CFLAGS += -DNDEBUG -O2
 COMMON_CFLAGS += -D_FORTIFY_SOURCE=2
 endif
 
+ifeq ($(CONFIG_COVERAGE), y)
+COMMON_CFLAGS += -fprofile-arcs -ftest-coverage
+LDFLAGS += -fprofile-arcs -ftest-coverage
+ifeq ($(OS),FreeBSD)
+LDFLAGS += --coverage
+endif
+endif
+
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu11
 
 MAKEFLAGS += --no-print-directory

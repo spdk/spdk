@@ -18,6 +18,11 @@ src=$(readlink -f $(dirname $0))
 out=$PWD
 cd $src
 
+if hash lcov; then
+	# zero out coverage data
+	lcov -q -c -i -d $src -o cov_base.info
+fi
+
 # set up huge pages
 timing_enter afterboot
 ./scripts/configure_hugepages.sh 3072
@@ -45,3 +50,16 @@ trap - SIGINT SIGTERM EXIT
 
 # catch any stray core files
 process_core
+
+if hash lcov; then
+	# generate coverage data and combine with baseline
+	lcov -q -c -d $src -o cov_test.info
+	lcov -q -a cov_base.info -a cov_test.info -o cov_total.info
+	lcov -q -r cov_total.info '/usr/*' -o cov_total.info
+	lcov -q -r cov_total.info 'test/*' -o cov_total.info
+	genhtml cov_total.info --legend -t "SPDK" -o $out/coverage
+	chmod -R a+rX $out/coverage
+	rm cov_base.info cov_test.info
+	mv cov_total.info $out/cov_total.info
+	find . -name "*.gcda" -delete
+fi
