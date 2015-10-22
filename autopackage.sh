@@ -36,9 +36,7 @@ echo "tmpdir=$tmpdir"
 tar -C "$tmpdir" -xf $out/$tarball
 (
 	cd "$tmpdir"/spdk-*
-	cp CONFIG CONFIG.orig
-	sed -e 's/CONFIG_DEBUG=y/CONFIG_DEBUG=n/' <CONFIG.orig >CONFIG
-	time $MAKE ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR
+	time $MAKE ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR CONFIG_DEBUG=n
 )
 rm -rf "$tmpdir"
 

@@ -26,7 +26,7 @@ $MAKE $MAKEFLAGS clean
 
 timing_enter scanbuild_make
 fail=0
-time $scanbuild $MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
+time $scanbuild $MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR CONFIG_DEBUG=y || fail=1
 timing_exit scanbuild_make
 
 # Check that header file dependencies are working correctly by
@@ -34,7 +34,7 @@ timing_exit scanbuild_make
 #  header file and re-making.
 STAT1=`stat examples/nvme/identify/identify`
 touch lib/nvme/nvme_internal.h
-$MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR || fail=1
+$MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR CONFIG_DEBUG=y || fail=1
 STAT2=`stat examples/nvme/identify/identify`
 
 if [ "$STAT1" == "$STAT2" ]; then
