@@ -113,7 +113,7 @@ void verify_abort_cmd(struct nvme_request *req)
 
 void verify_io_raw_cmd(struct nvme_request *req)
 {
-	struct nvme_command	command = {0};
+	struct nvme_command	command = {};
 
 	CU_ASSERT(memcmp(&req->cmd, &command, sizeof(req->cmd)) == 0);
 }

@@ -77,7 +77,7 @@ static void set_feature_completion(void *arg, const struct nvme_completion *cpl)
 static int
 set_temp_threshold(struct dev *dev, uint32_t temp)
 {
-	struct nvme_command cmd = {0};
+	struct nvme_command cmd = {};
 
 	cmd.opc = NVME_OPC_SET_FEATURES;
 	cmd.cdw10 = NVME_FEAT_TEMPERATURE_THRESHOLD;
@@ -106,7 +106,7 @@ get_feature_completion(void *cb_arg, const struct nvme_completion *cpl)
 static int
 get_temp_threshold(struct dev *dev)
 {
-	struct nvme_command cmd = {0};
+	struct nvme_command cmd = {};
 
 	cmd.opc = NVME_OPC_GET_FEATURES;
 	cmd.cdw10 = NVME_FEAT_TEMPERATURE_THRESHOLD;
@@ -138,7 +138,7 @@ get_log_page_completion(void *cb_arg, const struct nvme_completion *cpl)
 static int
 get_health_log_page(struct dev *dev)
 {
-	struct nvme_command cmd = {0};
+	struct nvme_command cmd = {};
 
 	cmd.opc = NVME_OPC_GET_LOG_PAGE;
 	cmd.cdw10 = NVME_LOG_HEALTH_INFORMATION;

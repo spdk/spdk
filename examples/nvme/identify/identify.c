@@ -82,7 +82,7 @@ get_log_page_completion(void *cb_arg, const struct nvme_completion *cpl)
 static int
 get_feature(struct nvme_controller *ctrlr, uint8_t fid)
 {
-	struct nvme_command cmd = {0};
+	struct nvme_command cmd = {};
 
 	cmd.opc = NVME_OPC_GET_FEATURES;
 	cmd.cdw10 = fid;
@@ -120,7 +120,7 @@ get_features(struct nvme_controller *ctrlr)
 static int
 get_health_log_page(struct nvme_controller *ctrlr)
 {
-	struct nvme_command cmd = {0};
+	struct nvme_command cmd = {};
 
 	if (health_page == NULL) {
 		health_page = rte_zmalloc("nvme health", sizeof(*health_page), 4096);
