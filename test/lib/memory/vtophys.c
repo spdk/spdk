@@ -50,7 +50,7 @@ static const char *ealargs[] = {
 };
 
 static int
-vtophys_negative_test()
+vtophys_negative_test(void)
 {
 	void *p = NULL;
 	int i;
@@ -82,7 +82,7 @@ vtophys_negative_test()
 }
 
 static int
-vtophys_positive_test()
+vtophys_positive_test(void)
 {
 	void *p = NULL;
 	int i;

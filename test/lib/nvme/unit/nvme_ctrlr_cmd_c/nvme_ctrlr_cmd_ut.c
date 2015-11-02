@@ -160,7 +160,7 @@ nvme_ctrlr_submit_admin_request(struct nvme_controller *ctrlr, struct nvme_reque
 
 
 static void
-test_firmware_get_log_page()
+test_firmware_get_log_page(void)
 {
 	struct nvme_controller			ctrlr = {};
 	struct nvme_firmware_page		payload = {};
@@ -171,7 +171,7 @@ test_firmware_get_log_page()
 }
 
 static void
-test_health_get_log_page()
+test_health_get_log_page(void)
 {
 	struct nvme_controller			ctrlr = {};
 	struct nvme_health_information_page	payload = {};
@@ -182,7 +182,7 @@ test_health_get_log_page()
 }
 
 static void
-test_error_get_log_page()
+test_error_get_log_page(void)
 {
 	struct nvme_controller			ctrlr = {};
 	struct nvme_error_information_entry	payload = {};
@@ -197,7 +197,7 @@ test_error_get_log_page()
 }
 
 static void
-test_set_feature_cmd()
+test_set_feature_cmd(void)
 {
 	struct nvme_controller  ctrlr = {};
 
@@ -208,7 +208,7 @@ test_set_feature_cmd()
 
 
 static void
-test_get_feature_cmd()
+test_get_feature_cmd(void)
 {
 	struct nvme_controller	ctrlr = {};
 
@@ -218,7 +218,7 @@ test_get_feature_cmd()
 }
 
 static void
-test_abort_cmd()
+test_abort_cmd(void)
 {
 	struct nvme_controller	ctrlr = {};
 
@@ -228,7 +228,7 @@ test_abort_cmd()
 }
 
 static void
-test_io_raw_cmd()
+test_io_raw_cmd(void)
 {
 	struct nvme_controller	ctrlr = {};
 	struct nvme_command	cmd = {};
