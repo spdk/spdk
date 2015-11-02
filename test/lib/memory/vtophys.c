@@ -62,7 +62,7 @@ vtophys_negative_test()
 		if (p == NULL)
 			continue;
 
-		if (vtophys(p) != -1) {
+		if (vtophys(p) != VTOPHYS_ERROR) {
 			rc = -1;
 			printf("Err: VA=%p is mapped to a huge_page,\n", p);
 			free(p);
@@ -94,7 +94,7 @@ vtophys_positive_test()
 		if (p == NULL)
 			continue;
 
-		if (vtophys(p) == -1) {
+		if (vtophys(p) == VTOPHYS_ERROR) {
 			rc = -1;
 			printf("Err: VA=%p is not mapped to a huge_page,\n", p);
 			rte_free(p);

@@ -709,7 +709,7 @@ nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 		 */
 
 		phys_addr = nvme_vtophys(req->u.payload);
-		if (phys_addr == -1) {
+		if (phys_addr == NVME_VTOPHYS_ERROR) {
 			_nvme_fail_request_bad_vtophys(qpair, tr);
 			return;
 		}
@@ -731,7 +731,7 @@ nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 			while (cur_nseg < nseg) {
 				seg_addr = req->u.payload + cur_nseg * PAGE_SIZE - unaligned;
 				phys_addr = nvme_vtophys(seg_addr);
-				if (phys_addr == -1) {
+				if (phys_addr == NVME_VTOPHYS_ERROR) {
 					_nvme_fail_request_bad_vtophys(qpair, tr);
 					return;
 				}

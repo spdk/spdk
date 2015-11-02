@@ -108,7 +108,7 @@ void verify_get_feature_cmd(struct nvme_request *req)
 void verify_abort_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == NVME_OPC_ABORT);
-	CU_ASSERT(req->cmd.cdw10 == ((abort_cid << 16) | abort_sqid));
+	CU_ASSERT(req->cmd.cdw10 == (((uint32_t)abort_cid << 16) | abort_sqid));
 }
 
 void verify_io_raw_cmd(struct nvme_request *req)

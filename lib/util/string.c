@@ -63,7 +63,7 @@ sprintf_alloc(const char *format, ...)
 		 * If vsnprintf() returned a count within our current buffer size, we are done.
 		 * The count does not include the \0 terminator, so rc == bufsize is not OK.
 		 */
-		if (rc >= 0 && rc < bufsize) {
+		if (rc >= 0 && (size_t)rc < bufsize) {
 			return buf;
 		}
 

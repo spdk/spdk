@@ -65,6 +65,8 @@ do							\
 	while (0)
 
 uint64_t nvme_vtophys(void *buf);
+#define NVME_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
+
 #define nvme_alloc_request(bufp)	\
 do					\
 	{				\

@@ -56,7 +56,8 @@ nvme_ctrlr_construct_io_qpairs(struct nvme_controller *ctrlr)
 {
 	struct nvme_qpair		*qpair;
 	union nvme_cap_lo_register	cap_lo;
-	int				i, num_entries, num_trackers, rc;
+	uint32_t			i, num_entries, num_trackers;
+	int				rc;
 
 	if (ctrlr->ioq != NULL) {
 		/*
@@ -112,7 +113,7 @@ nvme_ctrlr_construct_io_qpairs(struct nvme_controller *ctrlr)
 static void
 nvme_ctrlr_fail(struct nvme_controller *ctrlr)
 {
-	int i;
+	uint32_t i;
 
 	ctrlr->is_failed = true;
 	nvme_qpair_fail(&ctrlr->adminq);
@@ -261,7 +262,8 @@ nvme_ctrlr_enable(struct nvme_controller *ctrlr)
 int
 nvme_ctrlr_hw_reset(struct nvme_controller *ctrlr)
 {
-	int i, rc;
+	uint32_t i;
+	int rc;
 	union nvme_cc_register cc;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
@@ -396,7 +398,7 @@ nvme_ctrlr_create_qpairs(struct nvme_controller *ctrlr)
 {
 	struct nvme_completion_poll_status	status;
 	struct nvme_qpair			*qpair;
-	int					i;
+	uint32_t				i;
 
 	if (nvme_ctrlr_construct_io_qpairs(ctrlr)) {
 		nvme_printf(ctrlr, "nvme_ctrlr_construct_io_qpairs failed!\n");
@@ -687,7 +689,7 @@ nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle)
 void
 nvme_ctrlr_destruct(struct nvme_controller *ctrlr)
 {
-	int	i;
+	uint32_t	i;
 
 	nvme_ctrlr_disable(ctrlr);
 	nvme_ctrlr_shutdown(ctrlr);

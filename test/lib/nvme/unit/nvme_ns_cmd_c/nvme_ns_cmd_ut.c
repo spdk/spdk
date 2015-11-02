@@ -347,7 +347,7 @@ test_nvme_ns_cmd_deallocate(void)
 	nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
 	CU_ASSERT(g_request->cmd.opc == NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == num_ranges - 1);
+	CU_ASSERT(g_request->cmd.cdw10 == num_ranges - 1u);
 	CU_ASSERT(g_request->cmd.cdw11 == NVME_DSM_ATTR_DEALLOCATE);
 	free(payload);
 	nvme_free_request(g_request);

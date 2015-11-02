@@ -43,7 +43,7 @@ endif
 
 OS := $(shell uname)
 
-COMMON_CFLAGS = -g $(C_OPT) -Wall -Werror -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
+COMMON_CFLAGS = -g $(C_OPT) -Wall -Wsign-compare -Werror -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
 
 COMMON_CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
 

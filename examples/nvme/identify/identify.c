@@ -93,7 +93,7 @@ get_feature(struct nvme_controller *ctrlr, uint8_t fid)
 static void
 get_features(struct nvme_controller *ctrlr)
 {
-	int i;
+	size_t i;
 
 	uint8_t features_to_get[] = {
 		NVME_FEAT_ARBITRATION,
