@@ -67,13 +67,13 @@ dev_get_blocklen(int fd)
 #if defined(DKIOCGETBLOCKSIZE) /* FreeBSD */
 	uint32_t blocklen;
 
-	if (ioctl(fd, DKIOCGETBLOCKSIZE, &blocklen) != 0) {
+	if (ioctl(fd, DKIOCGETBLOCKSIZE, &blocklen) == 0) {
 		return blocklen;
 	}
 #elif defined(__linux__) && defined(BLKSSZGET)
 	uint32_t blocklen;
 
-	if (ioctl(fd, BLKSSZGET, &blocklen) != 0) {
+	if (ioctl(fd, BLKSSZGET, &blocklen) == 0) {
 		return blocklen;
 	}
 #endif
