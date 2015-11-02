@@ -20,7 +20,7 @@ cd $src
 
 if hash lcov; then
 	# zero out coverage data
-	lcov -q -c -i -d $src -o cov_base.info
+	lcov -q -c -i -t "Baseline" -d $src -o cov_base.info
 fi
 
 # set up huge pages
@@ -53,11 +53,11 @@ process_core
 
 if hash lcov; then
 	# generate coverage data and combine with baseline
-	lcov -q -c -d $src -o cov_test.info
+	lcov -q -c -d $src -t "$(hostname)" -o cov_test.info
 	lcov -q -a cov_base.info -a cov_test.info -o cov_total.info
 	lcov -q -r cov_total.info '/usr/*' -o cov_total.info
 	lcov -q -r cov_total.info 'test/*' -o cov_total.info
-	genhtml cov_total.info --legend -t "SPDK" -o $out/coverage
+	genhtml cov_total.info --legend -t "$(hostname)" -o $out/coverage
 	chmod -R a+rX $out/coverage
 	rm cov_base.info cov_test.info
 	mv cov_total.info $out/cov_total.info
