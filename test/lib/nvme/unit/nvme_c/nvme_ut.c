@@ -69,7 +69,7 @@ nvme_ctrlr_start(struct nvme_controller *ctrlr)
 	return 0;
 }
 
-void prepare_for_test(uint32_t max_io_queues)
+static void prepare_for_test(uint32_t max_io_queues)
 {
 	struct nvme_driver *driver = &g_nvme_driver;
 
@@ -86,7 +86,7 @@ void prepare_for_test(uint32_t max_io_queues)
 	threads_fail = 0;
 }
 
-void *
+static void *
 nvme_thread(void *arg)
 {
 	int rc;
@@ -108,7 +108,7 @@ nvme_thread(void *arg)
 	pthread_exit(NULL);
 }
 
-void
+static void
 test1(void)
 {
 	struct nvme_driver *driver = &g_nvme_driver;
@@ -136,7 +136,7 @@ test1(void)
 	CU_ASSERT(driver->ioq_index_pool_next == 0);
 }
 
-void
+static void
 test2(void)
 {
 	int num_threads = 16;

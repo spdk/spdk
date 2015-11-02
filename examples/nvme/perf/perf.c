@@ -291,7 +291,7 @@ aio_check_io(struct ns_entry *entry)
 }
 #endif /* HAVE_LIBAIO */
 
-void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
+static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
 	task->buf = rte_malloc(NULL, g_io_size_bytes, 0x200);

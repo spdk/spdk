@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/file.h"
+
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>

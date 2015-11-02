@@ -55,14 +55,6 @@ uint64_t nvme_vtophys(void *buf)
 	}
 }
 
-void nvme_dump_completion(struct nvme_completion *cpl)
-{
-}
-
-void prepare_for_test(void)
-{
-}
-
 struct nvme_request *
 nvme_allocate_request(void *payload, uint32_t payload_size,
 		      nvme_cb_fn_t cb_fn, void *cb_arg)
@@ -107,7 +99,7 @@ nvme_free_request(struct nvme_request *req)
 	nvme_dealloc_request(req);
 }
 
-void
+static void
 test1(void)
 {
 	struct nvme_qpair qpair = {};
@@ -128,7 +120,7 @@ test1(void)
 	CU_ASSERT(strstr(outbuf, "IDENTIFY") != NULL);
 }
 
-void
+static void
 test2(void)
 {
 	struct nvme_qpair qpair = {};
@@ -149,7 +141,7 @@ test2(void)
 	CU_ASSERT(strstr(outbuf, "DATASET MANAGEMENT") != NULL);
 }
 
-void
+static void
 prepare_submit_request_test(struct nvme_qpair *qpair,
 			    struct nvme_controller *ctrlr,
 			    struct nvme_registers *regs)
@@ -164,25 +156,25 @@ prepare_submit_request_test(struct nvme_qpair *qpair,
 	fail_vtophys = false;
 }
 
-void
+static void
 cleanup_submit_request_test(struct nvme_qpair *qpair)
 {
 	nvme_qpair_destroy(qpair);
 }
 
-void
+static void
 expected_success_callback(void *arg, const struct nvme_completion *cpl)
 {
 	CU_ASSERT(!nvme_completion_is_error(cpl));
 }
 
-void
+static void
 expected_failure_callback(void *arg, const struct nvme_completion *cpl)
 {
 	CU_ASSERT(nvme_completion_is_error(cpl));
 }
 
-void
+static void
 test3(void)
 {
 	struct nvme_qpair	qpair = {};
@@ -205,7 +197,7 @@ test3(void)
 	nvme_free_request(req);
 }
 
-void
+static void
 test4(void)
 {
 	struct nvme_qpair	qpair = {};
@@ -238,7 +230,7 @@ test4(void)
 	cleanup_submit_request_test(&qpair);
 }
 
-void
+static void
 test_ctrlr_failed(void)
 {
 	struct nvme_qpair	qpair = {};
@@ -272,7 +264,7 @@ test_ctrlr_failed(void)
 	cleanup_submit_request_test(&qpair);
 }
 
-void struct_packing(void)
+static void struct_packing(void)
 {
 	/* ctrlr is the first field in nvme_qpair after the fields
 	 * that are used in the I/O path. Make sure the I/O path fields
@@ -281,7 +273,7 @@ void struct_packing(void)
 	CU_ASSERT(offsetof(struct nvme_qpair, ctrlr) <= 128);
 }
 
-void test_nvme_qpair_fail(void)
+static void test_nvme_qpair_fail(void)
 {
 	struct nvme_qpair	qpair = {};
 	struct nvme_request	*req = NULL;
@@ -311,7 +303,7 @@ void test_nvme_qpair_fail(void)
 	cleanup_submit_request_test(&qpair);
 }
 
-void test_nvme_qpair_process_completions(void)
+static void test_nvme_qpair_process_completions(void)
 {
 	struct nvme_qpair	qpair = {};
 	struct nvme_controller	ctrlr = {};
@@ -325,7 +317,7 @@ void test_nvme_qpair_process_completions(void)
 	cleanup_submit_request_test(&qpair);
 }
 
-void test_nvme_qpair_destroy(void)
+static void test_nvme_qpair_destroy(void)
 {
 	struct nvme_qpair	qpair = {};
 	struct nvme_controller	ctrlr = {};
@@ -346,7 +338,7 @@ void test_nvme_qpair_destroy(void)
 	nvme_qpair_destroy(&qpair);
 }
 
-void test_nvme_completion_is_retry(void)
+static void test_nvme_completion_is_retry(void)
 {
 	struct nvme_completion	cpl = {};
 
@@ -407,7 +399,7 @@ void test_nvme_completion_is_retry(void)
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 }
 
-void
+static void
 test_get_status_string(void)
 {
 	const char	*status_string;

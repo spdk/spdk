@@ -55,7 +55,7 @@ uint16_t abort_sqid = 1;
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
 
-void verify_firmware_log_page(struct nvme_request *req)
+static void verify_firmware_log_page(struct nvme_request *req)
 {
 	uint32_t temp_cdw10;
 
@@ -67,7 +67,7 @@ void verify_firmware_log_page(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
-void verify_health_log_page(struct nvme_request *req)
+static void verify_health_log_page(struct nvme_request *req)
 {
 	uint32_t temp_cdw10;
 
@@ -79,7 +79,7 @@ void verify_health_log_page(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
-void verify_error_log_page(struct nvme_request *req)
+static void verify_error_log_page(struct nvme_request *req)
 {
 	uint32_t temp_cdw10;
 
@@ -91,27 +91,27 @@ void verify_error_log_page(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
-void verify_set_feature_cmd(struct nvme_request *req)
+static void verify_set_feature_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == NVME_OPC_SET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10 == feature);
 	CU_ASSERT(req->cmd.cdw11 == feature_cdw11);
 }
 
-void verify_get_feature_cmd(struct nvme_request *req)
+static void verify_get_feature_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10 == get_feature);
 	CU_ASSERT(req->cmd.cdw11 == get_feature_cdw11);
 }
 
-void verify_abort_cmd(struct nvme_request *req)
+static void verify_abort_cmd(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == NVME_OPC_ABORT);
 	CU_ASSERT(req->cmd.cdw10 == (((uint32_t)abort_cid << 16) | abort_sqid));
 }
 
-void verify_io_raw_cmd(struct nvme_request *req)
+static void verify_io_raw_cmd(struct nvme_request *req)
 {
 	struct nvme_command	command = {};
 
@@ -159,7 +159,7 @@ nvme_ctrlr_submit_admin_request(struct nvme_controller *ctrlr, struct nvme_reque
 }
 
 
-void
+static void
 test_firmware_get_log_page()
 {
 	struct nvme_controller			ctrlr = {};
@@ -170,7 +170,7 @@ test_firmware_get_log_page()
 	nvme_ctrlr_cmd_get_firmware_page(&ctrlr, &payload, NULL, NULL);
 }
 
-void
+static void
 test_health_get_log_page()
 {
 	struct nvme_controller			ctrlr = {};
@@ -181,7 +181,7 @@ test_health_get_log_page()
 	nvme_ctrlr_cmd_get_health_information_page(&ctrlr, health_log_nsid, &payload, NULL, NULL);
 }
 
-void
+static void
 test_error_get_log_page()
 {
 	struct nvme_controller			ctrlr = {};
@@ -196,7 +196,7 @@ test_error_get_log_page()
 	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, error_num_entries, NULL, NULL);
 }
 
-void
+static void
 test_set_feature_cmd()
 {
 	struct nvme_controller  ctrlr = {};
@@ -207,7 +207,7 @@ test_set_feature_cmd()
 }
 
 
-void
+static void
 test_get_feature_cmd()
 {
 	struct nvme_controller	ctrlr = {};
@@ -217,7 +217,7 @@ test_get_feature_cmd()
 	nvme_ctrlr_cmd_get_feature(&ctrlr, get_feature, get_feature_cdw11, NULL, 0, NULL, NULL);
 }
 
-void
+static void
 test_abort_cmd()
 {
 	struct nvme_controller	ctrlr = {};
@@ -227,7 +227,7 @@ test_abort_cmd()
 	nvme_ctrlr_cmd_abort(&ctrlr, abort_cid, abort_sqid, NULL, NULL);
 }
 
-void
+static void
 test_io_raw_cmd()
 {
 	struct nvme_controller	ctrlr = {};

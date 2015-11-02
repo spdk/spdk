@@ -86,7 +86,7 @@ nvme_ctrlr_submit_io_request(struct nvme_controller *ctrlr,
 	g_request = req;
 }
 
-void
+static void
 prepare_for_test(struct nvme_namespace *ns, struct nvme_controller *ctrlr,
 		 uint32_t sector_size, uint32_t max_xfer_size,
 		 uint32_t stripe_size)
@@ -102,7 +102,7 @@ prepare_for_test(struct nvme_namespace *ns, struct nvme_controller *ctrlr,
 	g_request = NULL;
 }
 
-void
+static void
 nvme_cmd_interpret_rw(const struct nvme_command *cmd,
 		      uint64_t *lba, uint32_t *num_blocks)
 {
@@ -110,7 +110,7 @@ nvme_cmd_interpret_rw(const struct nvme_command *cmd,
 	*num_blocks = (cmd->cdw12 & 0xFFFFu) + 1;
 }
 
-void
+static void
 split_test(void)
 {
 	struct nvme_namespace	ns;
@@ -139,7 +139,7 @@ split_test(void)
 	nvme_free_request(g_request);
 }
 
-void
+static void
 split_test2(void)
 {
 	struct nvme_namespace	ns;
@@ -192,7 +192,7 @@ split_test2(void)
 	nvme_free_request(g_request);
 }
 
-void
+static void
 split_test3(void)
 {
 	struct nvme_namespace	ns;
@@ -247,7 +247,7 @@ split_test3(void)
 	nvme_free_request(g_request);
 }
 
-void
+static void
 split_test4(void)
 {
 	struct nvme_namespace	ns;
@@ -313,7 +313,7 @@ split_test4(void)
 	nvme_free_request(g_request);
 }
 
-void
+static void
 test_nvme_ns_cmd_flush(void)
 {
 	struct nvme_namespace	ns;
@@ -330,7 +330,7 @@ test_nvme_ns_cmd_flush(void)
 	nvme_free_request(g_request);
 }
 
-void
+static void
 test_nvme_ns_cmd_deallocate(void)
 {
 	struct nvme_namespace	ns;

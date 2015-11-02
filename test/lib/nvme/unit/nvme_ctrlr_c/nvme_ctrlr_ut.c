@@ -163,7 +163,7 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 	return req;
 }
 
-void
+static void
 test_nvme_ctrlr_fail(void)
 {
 	struct nvme_controller	ctrlr = {};

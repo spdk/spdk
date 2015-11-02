@@ -127,7 +127,7 @@ vtophys_get_map(uint64_t vfn_2mb)
 	return map_2mb;
 }
 
-uint64_t
+static uint64_t
 vtophys_get_pfn_2mb(uint64_t vfn_2mb)
 {
 	uintptr_t vaddr, paddr;
