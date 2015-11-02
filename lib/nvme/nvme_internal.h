@@ -283,7 +283,7 @@ struct nvme_controller {
 	struct nvme_namespace_data	*nsdata;
 };
 
-extern int __thread nvme_thread_ioq_index;
+extern __thread int nvme_thread_ioq_index;
 
 struct nvme_driver {
 	nvme_mutex_t	lock;

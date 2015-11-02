@@ -43,7 +43,7 @@ struct nvme_driver g_nvme_driver = {
 };
 
 int32_t		nvme_retry_count;
-int __thread	nvme_thread_ioq_index = -1;
+__thread int	nvme_thread_ioq_index = -1;
 
 
 /**

@@ -299,7 +299,7 @@ void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 
 static void io_complete(void *ctx, const struct nvme_completion *completion);
 
-static unsigned int __thread seed = 0;
+static __thread unsigned int seed = 0;
 
 static void
 submit_single_io(struct ns_entry *entry)

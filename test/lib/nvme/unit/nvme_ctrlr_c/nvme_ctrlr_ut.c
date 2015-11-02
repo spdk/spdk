@@ -42,7 +42,7 @@ struct nvme_driver g_nvme_driver = {
 
 char outbuf[OUTBUF_SIZE];
 
-int __thread    nvme_thread_ioq_index = -1;
+__thread int    nvme_thread_ioq_index = -1;
 
 int nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries, uint16_t num_trackers,
