@@ -426,7 +426,10 @@ work_fn(void *arg)
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
-	nvme_register_io_thread();
+	if (nvme_register_io_thread() != 0) {
+		fprintf(stderr, "nvme_register_io_thread() failed on core %u\n", worker->lcore);
+		return -1;
+	}
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
