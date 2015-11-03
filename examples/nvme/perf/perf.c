@@ -834,7 +834,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	task_pool = rte_mempool_create("task_pool", 2048,
+	task_pool = rte_mempool_create("task_pool", 8192,
 				       sizeof(struct perf_task),
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
