@@ -33,6 +33,7 @@ timing_exit scanbuild_make
 #  capturing a binary's stat data before and after touching a
 #  header file and re-making.
 STAT1=`stat examples/nvme/identify/identify`
+sleep 1
 touch lib/nvme/nvme_internal.h
 $MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR $MAKECONFIG || fail=1
 STAT2=`stat examples/nvme/identify/identify`
