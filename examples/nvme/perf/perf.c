@@ -142,8 +142,16 @@ task_complete(struct perf_task *task);
 static void
 register_ns(struct nvme_controller *ctrlr, struct pci_device *pci_dev, struct nvme_namespace *ns)
 {
-	struct ns_entry *entry = malloc(sizeof(struct ns_entry));
-	const struct nvme_controller_data *cdata = nvme_ctrlr_get_data(ctrlr);
+	struct ns_entry *entry;
+	const struct nvme_controller_data *cdata;
+
+	entry = malloc(sizeof(struct ns_entry));
+	if (entry == NULL) {
+		perror("ns_entry malloc");
+		exit(1);
+	}
+
+	cdata = nvme_ctrlr_get_data(ctrlr);
 
 	entry->type = ENTRY_TYPE_NVME_NS;
 	entry->u.nvme.ctrlr = ctrlr;
@@ -164,6 +172,11 @@ register_ctrlr(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 {
 	int nsid, num_ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
+
+	if (entry == NULL) {
+		perror("ctrlr_entry malloc");
+		exit(1);
+	}
 
 	entry->ctrlr = ctrlr;
 	entry->next = g_controllers;
@@ -215,6 +228,11 @@ register_aio_file(const char *path)
 	}
 
 	entry = malloc(sizeof(struct ns_entry));
+	if (entry == NULL) {
+		close(fd);
+		perror("aio ns_entry malloc");
+		return -1;
+	}
 
 	entry->type = ENTRY_TYPE_AIO_FILE;
 	entry->u.aio.fd = fd;
@@ -275,6 +293,10 @@ static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned 
 {
 	struct perf_task *task = __task;
 	task->buf = rte_malloc(NULL, g_io_size_bytes, 0x200);
+	if (task->buf == NULL) {
+		fprintf(stderr, "task->buf rte_malloc failed\n");
+		exit(1);
+	}
 }
 
 static void io_complete(void *ctx, const struct nvme_completion *completion);
@@ -289,7 +311,10 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 	int			rc;
 	struct ns_entry		*entry = ns_ctx->entry;
 
-	rte_mempool_get(task_pool, (void **)&task);
+	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
+		fprintf(stderr, "task_pool rte_mempool_get failed\n");
+		exit(1);
+	}
 
 	task->ns_ctx = ns_ctx;
 
@@ -608,6 +633,11 @@ register_workers(void)
 	struct worker_thread *prev_worker;
 
 	worker = malloc(sizeof(struct worker_thread));
+	if (worker == NULL) {
+		perror("worker_thread malloc");
+		return -1;
+	}
+
 	memset(worker, 0, sizeof(struct worker_thread));
 	worker->lcore = rte_get_master_lcore();
 
@@ -617,6 +647,11 @@ register_workers(void)
 	RTE_LCORE_FOREACH_SLAVE(lcore) {
 		prev_worker = worker;
 		worker = malloc(sizeof(struct worker_thread));
+		if (worker == NULL) {
+			perror("worker_thread malloc");
+			return -1;
+		}
+
 		memset(worker, 0, sizeof(struct worker_thread));
 		worker->lcore = lcore;
 		prev_worker->next = worker;
@@ -772,6 +807,10 @@ int main(int argc, char **argv)
 	}
 
 	ealargs[1] = sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
+	if (ealargs[1] == NULL) {
+		perror("ealargs sprintf_alloc");
+		return 1;
+	}
 
 	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
 
