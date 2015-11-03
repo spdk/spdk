@@ -233,7 +233,7 @@ struct nvme_controller {
 	/** I/O queue pairs */
 	struct nvme_qpair		*ioq;
 
-	uint32_t			is_resetting;
+	bool				is_resetting;
 
 	uint32_t			num_ns;
 

@@ -308,7 +308,7 @@ nvme_ctrlr_reset(struct nvme_controller *ctrlr)
 		return 0;
 	}
 
-	ctrlr->is_resetting = 1;
+	ctrlr->is_resetting = true;
 
 	nvme_printf(ctrlr, "resetting controller\n");
 	/* nvme_ctrlr_start() issues a reset as its first step */
@@ -317,7 +317,7 @@ nvme_ctrlr_reset(struct nvme_controller *ctrlr)
 		nvme_ctrlr_fail(ctrlr);
 	}
 
-	ctrlr->is_resetting = 0;
+	ctrlr->is_resetting = false;
 
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 
@@ -678,7 +678,7 @@ nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle)
 	if (rc)
 		return rc;
 
-	ctrlr->is_resetting = 0;
+	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
 
 	nvme_mutex_init_recursive(&ctrlr->ctrlr_lock);
