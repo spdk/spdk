@@ -866,7 +866,7 @@ int main(int argc, char **argv)
 		worker = worker->next;
 	}
 
-	work_fn(g_workers);
+	rc = work_fn(g_workers);
 
 	worker = g_workers->next;
 	while (worker != NULL) {
@@ -880,5 +880,5 @@ int main(int argc, char **argv)
 
 	unregister_controllers();
 
-	return 0;
+	return rc;
 }
