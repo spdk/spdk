@@ -871,7 +871,7 @@ int main(int argc, char **argv)
 	worker = g_workers->next;
 	while (worker != NULL) {
 		if (rte_eal_wait_lcore(worker->lcore) < 0) {
-			return -1;
+			rc = -1;
 		}
 		worker = worker->next;
 	}
@@ -879,6 +879,10 @@ int main(int argc, char **argv)
 	print_stats();
 
 	unregister_controllers();
+
+	if (rc != 0) {
+		fprintf(stderr, "%s: errors occured\n", argv[0]);
+	}
 
 	return rc;
 }
