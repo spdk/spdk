@@ -233,13 +233,14 @@ struct nvme_controller {
 	/** I/O queue pairs */
 	struct nvme_qpair		*ioq;
 
-	bool				is_resetting;
-
-	uint32_t			num_ns;
-
 	/** Array of namespaces indexed by nsid - 1 */
 	struct nvme_namespace		*ns;
 
+	uint32_t			num_ns;
+
+	bool				is_resetting;
+
+	bool				is_failed;
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
@@ -261,8 +262,6 @@ struct nvme_controller {
 	struct nvme_async_event_request	aer[NVME_MAX_ASYNC_EVENTS];
 	nvme_aer_cb_fn_t		aer_cb_fn;
 	void				*aer_cb_arg;
-
-	bool				is_failed;
 
 	/** guards access to the controller itself, including admin queues */
 	nvme_mutex_t			ctrlr_lock;
