@@ -92,6 +92,11 @@ endif
 
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu99
 
+ifeq ($(CONFIG_ADDRESS_SANITIZER),y)
+COMMON_CFLAGS += -fsanitize=address
+LDFLAGS += -fsanitize=address
+endif
+
 MAKEFLAGS += --no-print-directory
 
 OBJS = $(C_SRCS:.c=.o)
