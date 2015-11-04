@@ -1,6 +1,8 @@
 Storage Performance Development Kit
 ===================================
 
+[![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
+
 [SPDK on 01.org](https://01.org/spdk)
 
 The Storage Performance Development Kit (SPDK) provides a set of tools
