@@ -84,7 +84,7 @@ LDFLAGS += --coverage
 endif
 endif
 
-CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu11
+CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu99
 
 MAKEFLAGS += --no-print-directory
 
