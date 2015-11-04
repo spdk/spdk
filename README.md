@@ -13,6 +13,11 @@ userspace and operating in a polled mode instead of relying on interrupts,
 which avoids kernel context switches and eliminates interrupt handling
 overhead.
 
+Documentation
+=============
+
+[Doxygen API documentation](https://spdk.github.io/spdk/doc/)
+
 [Porting Guide](PORTING.md)
 
 Prerequisites
