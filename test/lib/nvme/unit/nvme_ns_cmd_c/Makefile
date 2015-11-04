@@ -31,6 +31,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+SPDK_ROOT_DIR := $(CURDIR)/../../../../..
+
 TEST_FILE = nvme_ns_cmd_ut.c
 OTHER_FILES = nvme.c
 
