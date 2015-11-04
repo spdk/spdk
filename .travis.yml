@@ -1,0 +1,14 @@
+language: c
+
+compiler:
+  - gcc
+  - clang
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - libcunit1-dev
+
+script: ./unittest.sh
