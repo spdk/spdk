@@ -131,6 +131,7 @@ static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
 static int g_time_in_sec;
+static uint32_t g_max_completions;
 
 static const char *g_core_mask;
 
@@ -396,7 +397,7 @@ check_io(struct ns_worker_ctx *ns_ctx)
 	} else
 #endif
 	{
-		nvme_ctrlr_process_io_completions(ns_ctx->entry->u.nvme.ctrlr, 0);
+		nvme_ctrlr_process_io_completions(ns_ctx->entry->u.nvme.ctrlr, g_max_completions);
 	}
 }
 
@@ -481,6 +482,8 @@ static void usage(char *program_name)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
+	printf("\t[-m max completions per poll]\n");
+	printf("\t\t(default: 0 - unlimited)\n");
 }
 
 static void
@@ -528,11 +531,15 @@ parse_args(int argc, char **argv)
 	g_time_in_sec = 0;
 	g_rw_percentage = -1;
 	g_core_mask = NULL;
+	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:q:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "c:m:q:s:t:w:M:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
+			break;
+		case 'm':
+			g_max_completions = atoi(optarg);
 			break;
 		case 'q':
 			g_queue_depth = atoi(optarg);
