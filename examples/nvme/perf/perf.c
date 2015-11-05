@@ -396,7 +396,7 @@ check_io(struct ns_worker_ctx *ns_ctx)
 	} else
 #endif
 	{
-		nvme_ctrlr_process_io_completions(ns_ctx->entry->u.nvme.ctrlr);
+		nvme_ctrlr_process_io_completions(ns_ctx->entry->u.nvme.ctrlr, 0);
 	}
 }
 

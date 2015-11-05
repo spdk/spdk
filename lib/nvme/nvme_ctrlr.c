@@ -333,7 +333,7 @@ nvme_ctrlr_identify(struct nvme_controller *ctrlr)
 	nvme_ctrlr_cmd_identify_controller(ctrlr, &ctrlr->cdata,
 					   nvme_completion_poll_cb, &status);
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq);
+		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (nvme_completion_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_controller failed!\n");
@@ -369,7 +369,7 @@ nvme_ctrlr_set_num_qpairs(struct nvme_controller *ctrlr)
 	nvme_ctrlr_cmd_set_num_queues(ctrlr, max_io_queues,
 				      nvme_completion_poll_cb, &status);
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq);
+		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (nvme_completion_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_set_num_queues failed!\n");
@@ -412,7 +412,7 @@ nvme_ctrlr_create_qpairs(struct nvme_controller *ctrlr)
 		nvme_ctrlr_cmd_create_io_cq(ctrlr, qpair,
 					    nvme_completion_poll_cb, &status);
 		while (status.done == false) {
-			nvme_qpair_process_completions(&ctrlr->adminq);
+			nvme_qpair_process_completions(&ctrlr->adminq, 0);
 		}
 		if (nvme_completion_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "nvme_create_io_cq failed!\n");
@@ -423,7 +423,7 @@ nvme_ctrlr_create_qpairs(struct nvme_controller *ctrlr)
 		nvme_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair,
 					    nvme_completion_poll_cb, &status);
 		while (status.done == false) {
-			nvme_qpair_process_completions(&ctrlr->adminq);
+			nvme_qpair_process_completions(&ctrlr->adminq, 0);
 		}
 		if (nvme_completion_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "nvme_create_io_sq failed!\n");
@@ -566,7 +566,7 @@ nvme_ctrlr_configure_aer(struct nvme_controller *ctrlr)
 	nvme_ctrlr_cmd_set_async_event_config(ctrlr, state, nvme_completion_poll_cb, &status);
 
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq);
+		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (nvme_completion_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_set_async_event_config failed!\n");
@@ -728,17 +728,17 @@ nvme_ctrlr_submit_io_request(struct nvme_controller *ctrlr,
 }
 
 void
-nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr)
+nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_t max_completions)
 {
 	nvme_assert(nvme_thread_ioq_index >= 0, ("no ioq_index assigned for thread\n"));
-	nvme_qpair_process_completions(&ctrlr->ioq[nvme_thread_ioq_index]);
+	nvme_qpair_process_completions(&ctrlr->ioq[nvme_thread_ioq_index], max_completions);
 }
 
 void
 nvme_ctrlr_process_admin_completions(struct nvme_controller *ctrlr)
 {
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
-	nvme_qpair_process_completions(&ctrlr->adminq);
+	nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 

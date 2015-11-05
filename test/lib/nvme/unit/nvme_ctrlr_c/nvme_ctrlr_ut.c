@@ -63,7 +63,7 @@ nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 }
 
 void
-nvme_qpair_process_completions(struct nvme_qpair *qpair)
+nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions)
 {
 }
 

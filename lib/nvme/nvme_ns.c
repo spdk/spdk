@@ -106,7 +106,7 @@ nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 	nvme_ctrlr_cmd_identify_namespace(ctrlr, id, nsdata,
 					  nvme_completion_poll_cb, &status);
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq);
+		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (nvme_completion_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");

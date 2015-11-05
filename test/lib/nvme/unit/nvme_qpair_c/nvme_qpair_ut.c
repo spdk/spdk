@@ -163,6 +163,29 @@ cleanup_submit_request_test(struct nvme_qpair *qpair)
 }
 
 static void
+ut_insert_cq_entry(struct nvme_qpair *qpair, uint32_t slot)
+{
+	struct nvme_request *req;
+	struct nvme_tracker *tr;
+	struct nvme_completion	*cpl;
+
+	nvme_alloc_request(&req);
+	memset(req, 0, sizeof(*req));
+	req->cmd.cid = slot;
+
+	tr = LIST_FIRST(&qpair->free_tr);
+	LIST_REMOVE(tr, list); /* remove tr from free_tr */
+	LIST_INSERT_HEAD(&qpair->outstanding_tr, tr, list);
+	tr->cid = slot;
+	tr->req = req;
+	qpair->act_tr[tr->cid] = tr;
+
+	cpl = &qpair->cpl[slot];
+	cpl->status.p = qpair->phase;
+	cpl->cid = slot;
+}
+
+static void
 expected_success_callback(void *arg, const struct nvme_completion *cpl)
 {
 	CU_ASSERT(!nvme_completion_is_error(cpl));
@@ -313,7 +336,39 @@ static void test_nvme_qpair_process_completions(void)
 	qpair.is_enabled = false;
 	qpair.ctrlr->is_resetting = true;
 
-	nvme_qpair_process_completions(&qpair);
+	nvme_qpair_process_completions(&qpair, 0);
+	cleanup_submit_request_test(&qpair);
+}
+
+static void
+test_nvme_qpair_process_completions_limit(void)
+{
+	struct nvme_qpair	qpair = {};
+	struct nvme_controller	ctrlr = {};
+	struct nvme_registers	regs = {};
+
+	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	qpair.is_enabled = true;
+
+	/* Insert 4 entries into the completion queue */
+	CU_ASSERT(qpair.cq_head == 0);
+	ut_insert_cq_entry(&qpair, 0);
+	ut_insert_cq_entry(&qpair, 1);
+	ut_insert_cq_entry(&qpair, 2);
+	ut_insert_cq_entry(&qpair, 3);
+
+	/* This should only process 2 completions, and 2 should be left in the queue */
+	nvme_qpair_process_completions(&qpair, 2);
+	CU_ASSERT(qpair.cq_head == 2);
+
+	/* This should only process 1 completion, and 1 should be left in the queue */
+	nvme_qpair_process_completions(&qpair, 1);
+	CU_ASSERT(qpair.cq_head == 3);
+
+	/* This should process the remaining completion */
+	nvme_qpair_process_completions(&qpair, 5);
+	CU_ASSERT(qpair.cq_head == 4);
+
 	cleanup_submit_request_test(&qpair);
 }
 
@@ -444,6 +499,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "struct_packing", struct_packing) == NULL
 		|| CU_add_test(suite, "nvme_qpair_fail", test_nvme_qpair_fail) == NULL
 		|| CU_add_test(suite, "nvme_qpair_process_completions", test_nvme_qpair_process_completions) == NULL
+		|| CU_add_test(suite, "nvme_qpair_process_completions_limit",
+			       test_nvme_qpair_process_completions_limit) == NULL
 		|| CU_add_test(suite, "nvme_qpair_destroy", test_nvme_qpair_destroy) == NULL
 		|| CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
 		|| CU_add_test(suite, "get_status_string", test_get_status_string) == NULL

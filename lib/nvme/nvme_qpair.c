@@ -443,7 +443,7 @@ nvme_qpair_check_enabled(struct nvme_qpair *qpair)
  * \sa nvme_cb_fn_t
  */
 void
-nvme_qpair_process_completions(struct nvme_qpair *qpair)
+nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tracker	*tr;
 	struct nvme_completion	*cpl;
@@ -481,6 +481,10 @@ nvme_qpair_process_completions(struct nvme_qpair *qpair)
 		}
 
 		_nvme_mmio_write_4(qpair->cq_hdbl, qpair->cq_head);
+
+		if (max_completions > 0 && --max_completions == 0) {
+			break;
+		}
 	}
 }
 

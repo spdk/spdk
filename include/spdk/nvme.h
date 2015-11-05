@@ -155,12 +155,15 @@ int nvme_ctrlr_cmd_io_raw(struct nvme_controller *ctrlr,
  * This will only process completions for I/O that were submitted on the same thread
  * that this function is called from. This call is also non-blocking, i.e. it only
  * processes completions that are ready at the time of this function call. It does not
- * wait for outstanding commands to finish
+ * wait for outstanding commands to finish.
+ *
+ * \param max_completions Limit the number of completions to be processed in one call, or 0
+ * for unlimited.
  *
  * This function is thread safe and can be called at any point after nvme_attach().
  *
  */
-void nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr);
+void nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_t max_completions);
 
 /**
  * \brief Send the given admin command to the NVMe controller.
