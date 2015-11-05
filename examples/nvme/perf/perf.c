@@ -479,7 +479,7 @@ static void usage(char *program_name)
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
 	printf("\t[-t time in seconds]\n");
-	printf("\t[-m core mask for I/O submission/completion.]\n");
+	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
 }
 
@@ -529,9 +529,9 @@ parse_args(int argc, char **argv)
 	g_rw_percentage = -1;
 	g_core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "m:q:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "c:q:s:t:w:M:")) != -1) {
 		switch (op) {
-		case 'm':
+		case 'c':
 			g_core_mask = optarg;
 			break;
 		case 'q':
