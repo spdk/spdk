@@ -55,14 +55,9 @@ $(UT_APP) : $(OBJS)
 clean:
 	$(Q)rm -f $(UT_APP) $(OBJS) *.d
 
-%.o: $(NVME_DIR)/%.c
+%.o: $(NVME_DIR)/%.c %.d $(MAKEFILE_LIST)
 	@echo "  CC $@"
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
-	$(Q)$(CC) -MM $(CFLAGS) $(NVME_DIR)/$*.c > $*.d
-	@mv -f $*.d $*.d.tmp
-	@sed -e 's|.*:|$*.o:|' < $*.d.tmp > $*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> $*.d
-	@rm -f $*.d.tmp
+	$(Q)$(CC) $(DEPFLAGS) $(CFLAGS) -c $< -o $@
+	$(Q)mv -f $*.d.tmp $*.d
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

@@ -88,15 +88,14 @@ CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu99
 
 MAKEFLAGS += --no-print-directory
 
-%.o : %.c
+DEPFLAGS = -MMD -MP -MF $*.d.tmp
+
+%.o: %.c %.d $(MAKEFILE_LIST)
 	@echo "  CC $@"
-	$(Q)$(CC) $(CFLAGS) -c $<
-	$(Q)$(CC) -MM $(CFLAGS) $*.c > $*.d
-	@mv -f $*.d $*.d.tmp
-	@sed -e 's|.*:|$*.o:|' < $*.d.tmp > $*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> $*.d
-	@rm -f $*.d.tmp
+	$(Q)$(CC) $(DEPFLAGS) $(CFLAGS) -c $<
+	$(Q)mv -f $*.d.tmp $*.d
+
+%.d: ;
 
 DPDK_DIR ?= $(CONFIG_DPDK_DIR)
 DPDK_INC_DIR ?= $(DPDK_DIR)/include
