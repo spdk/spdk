@@ -34,18 +34,25 @@
 SPDK_ROOT_DIR := $(CURDIR)/../../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+APP = vtophys
+
 C_SRCS = vtophys.c
 
 CFLAGS += $(DPDK_INC)
-OBJS =	$(SPDK_ROOT_DIR)/lib/memory/vtophys.o
 
-all: vtophys
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
 
-vtophys: vtophys.o $(OBJS)
+LIBS += $(SPDK_LIBS) -lpthread $(DPDK_LIB) -lrt
+
+OBJS  = $(C_SRCS:.c=.o)
+
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIBS)
 	@echo "  LINK $@"
-	$(Q)$(CC) $(LDFLAGS) -o vtophys vtophys.o $(OBJS) -lpthread $(DPDK_LIB) -lrt
+	$(Q)$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
-	$(Q)rm -f vtophys vtophys.o *.d
+	$(Q)rm -f $(OBJS) *.d $(APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
