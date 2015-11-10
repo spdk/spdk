@@ -44,15 +44,15 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib -include $(SPDK_ROOT_DIR)/test/lib/nvme/unit/nv
 
 LIBS += -lcunit -lpthread
 
-UT_APP = $(TEST_FILE:.c=)
+APP = $(TEST_FILE:.c=)
 
-all: $(UT_APP)
+all: $(APP)
 
-$(UT_APP) : $(OBJS)
+$(APP) : $(OBJS)
 	$(LINK_C)
 
 clean:
-	$(Q)rm -f $(UT_APP) $(OBJS) *.d
+	$(Q)rm -f $(APP) $(OBJS) *.d
 
 %.o: $(NVME_DIR)/%.c %.d $(MAKEFILE_LIST)
 	$(COMPILE_C)
