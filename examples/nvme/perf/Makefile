@@ -51,8 +51,6 @@ LIBS += -laio
 CFLAGS += -DHAVE_LIBAIO
 endif
 
-OBJS  = $(C_SRCS:.c=.o)
-
 all : $(APP)
 
 $(APP) : $(OBJS) $(SPDK_LIBS)

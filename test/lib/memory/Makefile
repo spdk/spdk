@@ -44,8 +44,6 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
 
 LIBS += $(SPDK_LIBS) -lpthread $(DPDK_LIB) -lrt
 
-OBJS  = $(C_SRCS:.c=.o)
-
 all: $(APP)
 
 $(APP): $(OBJS) $(SPDK_LIBS)

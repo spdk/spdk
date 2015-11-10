@@ -88,6 +88,8 @@ CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu99
 
 MAKEFLAGS += --no-print-directory
 
+OBJS = $(C_SRCS:.c=.o)
+
 DEPFLAGS = -MMD -MP -MF $*.d.tmp
 
 # Compile first input $< (.c) into $@ (.o)

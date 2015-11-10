@@ -38,10 +38,6 @@ CFLAGS += $(DPDK_INC)
 
 C_SRCS = vtophys.c
 
-C_OBJS := $(patsubst %.c,%.o,$(C_SRCS))
-
-OBJS = $(C_OBJS)
-
 LIB = libspdk_memory.a
 
 all : $(LIB)

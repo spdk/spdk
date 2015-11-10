@@ -38,10 +38,6 @@ CFLAGS += $(DPDK_INC)
 
 C_SRCS = file.c string.c pci.c
 
-C_OBJS := $(patsubst %.c,%.o,$(C_SRCS))
-
-OBJS = $(C_OBJS)
-
 all : libspdk_util.a
 
 clean :

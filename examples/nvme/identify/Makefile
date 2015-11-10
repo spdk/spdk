@@ -46,8 +46,6 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
 
 LIBS += $(SPDK_LIBS) -lpciaccess -lpthread $(DPDK_LIB) -lrt
 
-OBJS  = $(C_SRCS:.c=.o)
-
 all : $(APP)
 
 $(APP) : $(OBJS) $(SPDK_LIBS)
