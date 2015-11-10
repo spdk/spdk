@@ -49,15 +49,12 @@ UT_APP = $(TEST_FILE:.c=)
 all: $(UT_APP)
 
 $(UT_APP) : $(OBJS)
-	@echo "  LINK $@"
-	$(Q)$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(LINK_C)
 
 clean:
 	$(Q)rm -f $(UT_APP) $(OBJS) *.d
 
 %.o: $(NVME_DIR)/%.c %.d $(MAKEFILE_LIST)
-	@echo "  CC $@"
-	$(Q)$(CC) $(DEPFLAGS) $(CFLAGS) -c $< -o $@
-	$(Q)mv -f $*.d.tmp $*.d
+	$(COMPILE_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

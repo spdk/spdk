@@ -49,8 +49,7 @@ OBJS  = $(C_SRCS:.c=.o)
 all: $(APP)
 
 $(APP): $(OBJS) $(SPDK_LIBS)
-	@echo "  LINK $@"
-	$(Q)$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(LINK_C)
 
 clean:
 	$(Q)rm -f $(OBJS) *.d $(APP)

@@ -90,10 +90,24 @@ MAKEFLAGS += --no-print-directory
 
 DEPFLAGS = -MMD -MP -MF $*.d.tmp
 
+# Compile first input $< (.c) into $@ (.o)
+COMPILE_C=\
+	$(Q)echo "  CC $@"; \
+	$(CC) -o $@ $(DEPFLAGS) $(CFLAGS) -c $< && \
+	mv -f $*.d.tmp $*.d
+
+# Link $(OBJS) and $(LIBS) into $@ (app)
+LINK_C=\
+	$(Q)echo "  LINK $@"; \
+	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS)
+
+# Archive $(OBJS) into $@ (.a)
+LIB_C=\
+	$(Q)echo "  LIB $@"; \
+	ar crDs $@ $(OBJS)
+
 %.o: %.c %.d $(MAKEFILE_LIST)
-	@echo "  CC $@"
-	$(Q)$(CC) $(DEPFLAGS) $(CFLAGS) -c $<
-	$(Q)mv -f $*.d.tmp $*.d
+	$(COMPILE_C)
 
 %.d: ;
 

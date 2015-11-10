@@ -50,6 +50,6 @@ clean :
 	$(Q)rm -f libspdk_util.a $(OBJS) *.d
 
 libspdk_util.a : $(OBJS)
-	$(Q)ar crDs libspdk_util.a $(OBJS)
+	$(LIB_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

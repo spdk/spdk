@@ -52,6 +52,6 @@ clean :
 	$(Q)rm -f $(LIB) $(OBJS) *.d
 
 $(LIB) : $(OBJS)
-	$(Q)ar crDs $(LIB) $(OBJS)
+	$(LIB_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

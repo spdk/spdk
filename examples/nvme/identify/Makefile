@@ -53,8 +53,7 @@ all : $(APP)
 objs : $(OBJS)
 
 $(APP) : $(OBJS) $(SPDK_LIBS)
-	@echo "  LINK $@"
-	$(Q)$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(LINK_C)
 
 clean :
 	$(Q)rm -f $(OBJS) *.d $(APP)

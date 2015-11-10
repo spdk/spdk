@@ -50,6 +50,6 @@ clean :
 	$(Q)rm -f libspdk_nvme.a $(OBJS) *.d
 
 libspdk_nvme.a : $(OBJS)
-	$(Q)ar crDs libspdk_nvme.a $(OBJS)
+	$(LIB_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
