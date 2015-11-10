@@ -38,12 +38,14 @@ CFLAGS += $(DPDK_INC) -include $(CONFIG_NVME_IMPL)
 
 C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_qpair.c nvme.c
 
-all : libspdk_nvme.a
+LIB = libspdk_nvme.a
+
+all : $(LIB)
 
 clean :
-	$(Q)rm -f libspdk_nvme.a $(OBJS) *.d
+	$(Q)rm -f $(LIB) $(OBJS) *.d
 
-libspdk_nvme.a : $(OBJS)
+$(LIB) : $(OBJS)
 	$(LIB_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

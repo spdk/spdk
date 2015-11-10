@@ -38,12 +38,14 @@ CFLAGS += $(DPDK_INC)
 
 C_SRCS = file.c string.c pci.c
 
-all : libspdk_util.a
+LIB = libspdk_util.a
+
+all : $(LIB)
 
 clean :
-	$(Q)rm -f libspdk_util.a $(OBJS) *.d
+	$(Q)rm -f $(LIB) $(OBJS) *.d
 
-libspdk_util.a : $(OBJS)
+$(LIB) : $(OBJS)
 	$(LIB_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
