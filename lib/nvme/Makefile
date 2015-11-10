@@ -44,8 +44,6 @@ OBJS = $(C_OBJS)
 
 all : libspdk_nvme.a
 
-objs : $(OBJS)
-
 clean :
 	$(Q)rm -f libspdk_nvme.a $(OBJS) *.d
 

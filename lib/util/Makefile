@@ -44,8 +44,6 @@ OBJS = $(C_OBJS)
 
 all : libspdk_util.a
 
-objs : $(OBJS)
-
 clean :
 	$(Q)rm -f libspdk_util.a $(OBJS) *.d
 

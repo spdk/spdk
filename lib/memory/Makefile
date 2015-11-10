@@ -46,8 +46,6 @@ LIB = libspdk_memory.a
 
 all : $(LIB)
 
-objs : $(OBJS)
-
 clean :
 	$(Q)rm -f $(LIB) $(OBJS) *.d
 

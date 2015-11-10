@@ -55,8 +55,6 @@ OBJS  = $(C_SRCS:.c=.o)
 
 all : $(APP)
 
-objs : $(OBJS)
-
 $(APP) : $(OBJS) $(SPDK_LIBS)
 	$(LINK_C)
 
