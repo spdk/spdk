@@ -19,8 +19,18 @@ out=$PWD
 cd $src
 
 if hash lcov; then
+	export LCOV_OPTS="
+		--rc lcov_branch_coverage=1
+		--rc lcov_function_coverage=1
+		--rc genhtml_branch_coverage=1
+		--rc genhtml_function_coverage=1
+		--rc genhtml_legend=1
+		--rc geninfo_all_blocks=1
+		"
+	export LCOV="lcov $LCOV_OPTS"
+	export GENHTML="genhtml $LCOV_OPTS"
 	# zero out coverage data
-	lcov -q -c -i -t "Baseline" -d $src -o cov_base.info
+	$LCOV -q -c -i -t "Baseline" -d $src -o cov_base.info
 fi
 
 # set up huge pages
@@ -53,11 +63,11 @@ process_core
 
 if hash lcov; then
 	# generate coverage data and combine with baseline
-	lcov -q -c -d $src -t "$(hostname)" -o cov_test.info
-	lcov -q -a cov_base.info -a cov_test.info -o cov_total.info
-	lcov -q -r cov_total.info '/usr/*' -o cov_total.info
-	lcov -q -r cov_total.info 'test/*' -o cov_total.info
-	genhtml cov_total.info --legend -t "$(hostname)" -o $out/coverage
+	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info
+	$LCOV -q -a cov_base.info -a cov_test.info -o cov_total.info
+	$LCOV -q -r cov_total.info '/usr/*' -o cov_total.info
+	$LCOV -q -r cov_total.info 'test/*' -o cov_total.info
+	$GENHTML cov_total.info -t "$(hostname)" -o $out/coverage
 	chmod -R a+rX $out/coverage
 	rm cov_base.info cov_test.info
 	mv cov_total.info $out/cov_total.info
