@@ -95,6 +95,13 @@
 /* Maximum log page size to fetch for AERs. */
 #define NVME_MAX_AER_LOG_SIZE		(4096)
 
+/*
+ * NVME_MAX_IO_QUEUES in nvme_spec.h defines the 64K spec-limit, but this
+ *  define specifies the maximum number of queues this driver will actually
+ *  try to configure, if available.
+ */
+#define DEFAULT_MAX_IO_QUEUES		(1024)
+
 struct nvme_request {
 	struct nvme_command		cmd;
 

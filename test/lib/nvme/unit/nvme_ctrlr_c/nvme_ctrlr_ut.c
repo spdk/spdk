@@ -37,7 +37,7 @@
 
 struct nvme_driver g_nvme_driver = {
 	.lock = NVME_MUTEX_INITIALIZER,
-	.max_io_queues = NVME_MAX_IO_QUEUES
+	.max_io_queues = DEFAULT_MAX_IO_QUEUES
 };
 
 char outbuf[OUTBUF_SIZE];
