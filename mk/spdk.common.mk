@@ -118,7 +118,13 @@ DPDK_INC_DIR ?= $(DPDK_DIR)/include
 DPDK_LIB_DIR ?= $(DPDK_DIR)/lib
 
 DPDK_INC = -I$(DPDK_INC_DIR)
-DPDK_LIB = -L$(DPDK_LIB_DIR) -lrte_eal -lrte_malloc -lrte_mempool -lrte_ring -Wl,-rpath=$(DPDK_LIB_DIR)
+DPDK_LIB = -L$(DPDK_LIB_DIR) -lrte_eal -lrte_mempool -lrte_ring -Wl,-rpath=$(DPDK_LIB_DIR)
+# librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
+#  existence to maintain backward compatibility.
+ifneq ($(wildcard $(DPDK_DIR)/lib/librte_malloc.*),)
+DPDK_LIB += -lrte_malloc
+endif
+
 # DPDK requires dl library for dlopen/dlclose on Linux.
 ifeq ($(OS),Linux)
 DPDK_LIB += -ldl
