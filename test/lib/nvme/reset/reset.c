@@ -93,8 +93,6 @@ static struct ctrlr_entry *g_controllers = NULL;
 static struct ns_entry *g_namespaces = NULL;
 static int g_num_namespaces = 0;
 static struct worker_thread *g_workers = NULL;
-static int g_num_workers = 0;
-uint32_t g_max_completions = 0;
 
 static uint64_t g_tsc_rate;
 
@@ -103,9 +101,6 @@ static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
 static int g_time_in_sec;
-
-static void
-task_complete(struct reset_task *task, const struct nvme_completion *completion);
 
 static void
 register_ns(struct nvme_controller *ctrlr, struct pci_device *pci_dev, struct nvme_namespace *ns)
@@ -152,12 +147,12 @@ register_ctrlr(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 	for (nsid = 1; nsid <= num_ns; nsid++) {
 		register_ns(ctrlr, pci_dev, nvme_ctrlr_get_ns(ctrlr, nsid));
 	}
-
 }
 
 static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct reset_task *task = __task;
+
 	task->buf = rte_malloc(NULL, g_io_size_bytes, 0x200);
 	if (task->buf == NULL) {
 		fprintf(stderr, "task->buf rte_malloc failed\n");
@@ -246,7 +241,7 @@ io_complete(void *ctx, const struct nvme_completion *completion)
 static void
 check_io(struct ns_worker_ctx *ns_ctx)
 {
-	nvme_ctrlr_process_io_completions(ns_ctx->ctr_entry->ctrlr, g_max_completions);
+	nvme_ctrlr_process_io_completions(ns_ctx->ctr_entry->ctrlr, 0);
 }
 
 static void
@@ -272,7 +267,6 @@ work_fn(void *arg)
 	uint64_t tsc_end = rte_get_timer_cycles() + g_time_in_sec * g_tsc_rate;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
-	int rc = 0;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
@@ -304,10 +298,9 @@ work_fn(void *arg)
 		    ((tsc_end - rte_get_timer_cycles()) / g_tsc_rate) < (uint64_t)(g_time_in_sec / 5 + 10)) {
 			ns_ctx = worker->ns_ctx;
 			while (ns_ctx != NULL) {
-				rc = nvme_ctrlr_reset(ns_ctx->ctr_entry->ctrlr);
-				if (rc < 0) {
+				if (nvme_ctrlr_reset(ns_ctx->ctr_entry->ctrlr) < 0) {
 					fprintf(stderr, "nvme reset failed.\n");
-					return rc;
+					return -1;
 				}
 				ns_ctx = ns_ctx->next;
 			}
@@ -343,7 +336,7 @@ static void usage(char *program_name)
 	printf("\t\t(default:0 - unlimited)\n");
 }
 
-static void
+static int
 print_stats(void)
 {
 	uint64_t io_completed, io_submitted, io_completed_error;
@@ -367,13 +360,19 @@ print_stats(void)
 		ns_ctx = ns_ctx->next;
 	}
 
+	printf("========================================================\n");
+	printf("%16lu IO completed successfully\n", total_completed_io);
+	printf("%16lu IO completed with error\n", total_completed_err_io);
+	printf("--------------------------------------------------------\n");
+	printf("%16lu IO completed total\n", total_completed_io + total_completed_err_io);
+	printf("%16lu IO submitted\n", total_submitted_io);
+
 	if (total_submitted_io != (total_completed_io + total_completed_err_io)) {
 		fprintf(stderr, "Some IO are missing......\n");
-		exit(1);
+		return -1;
 	}
-	printf("========================================================\n");
-	printf("%-10s: %lu completion IO %lu completion with error IO %lu submission IO\n",
-	       "Total", total_completed_io, total_completed_err_io, total_submitted_io);
+
+	return 0;
 }
 
 static int
@@ -500,7 +499,6 @@ register_workers(void)
 	worker->lcore = rte_get_master_lcore();
 
 	g_workers = worker;
-	g_num_workers = 1;
 
 	return 0;
 }
@@ -608,18 +606,18 @@ associate_workers_with_ns(void)
 static int
 run_nvme_reset_cycle(int retry_count)
 {
-	int rc;
 	struct worker_thread *worker;
 	struct ns_worker_ctx *ns_ctx;
 
 	nvme_retry_count = retry_count;
 
-	rc = work_fn(g_workers);
-	if (rc != 0) {
-		return rc;;
+	if (work_fn(g_workers) != 0) {
+		return -1;
 	}
 
-	print_stats();
+	if (print_stats() != 0) {
+		return -1;
+	}
 
 	worker = g_workers;
 	ns_ctx = worker->ns_ctx;
@@ -636,7 +634,7 @@ run_nvme_reset_cycle(int retry_count)
 
 static char *ealargs[] = {
 	"reset",
-	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
+	"-c 0x1",
 	"-n 4",
 };
 
@@ -683,7 +681,8 @@ int main(int argc, char **argv)
 	}
 
 	if (associate_workers_with_ns() != 0) {
-		goto error_return;
+		rc = 1;
+		goto cleanup;
 	}
 
 	printf("Initialization complete. Launching workers.\n");
@@ -691,15 +690,11 @@ int main(int argc, char **argv)
 	for (i = 2; i >= 0; i--) {
 		rc = run_nvme_reset_cycle(i);
 		if (rc != 0) {
-			goto error_return;
+			goto cleanup;
 		}
 	}
 
-	unregister_controllers();
-	return 0;
-
-error_return:
-
+cleanup:
 	unregister_controllers();
 
 	if (rc != 0) {
