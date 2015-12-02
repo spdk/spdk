@@ -82,7 +82,7 @@ function timing_finish() {
 function process_core() {
 	ret=0
 	for core in $(find . -type f -name 'core*'); do
-		exe=$(eu-readelf -n "$core" | grep psargs | awk '{ print $2 }')
+		exe=$(eu-readelf -n "$core" | grep psargs | sed "s/.*psargs: \([^ \'\" ]*\).*/\1/")
 		echo "exe for $core is $exe"
 		if [[ ! -z "$exe" ]]; then
 			if hash gdb; then
