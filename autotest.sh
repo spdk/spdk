@@ -38,7 +38,7 @@ timing_enter afterboot
 ./scripts/configure_hugepages.sh 1024
 timing_exit afterboot
 
-./scripts/unbind_nvme.sh
+./scripts/unbind.sh
 
 #####################
 # Unit Tests
@@ -48,6 +48,7 @@ timing_enter lib
 
 time test/lib/nvme/nvme.sh
 time test/lib/memory/memory.sh
+time test/lib/ioat/ioat.sh
 
 timing_exit lib
 

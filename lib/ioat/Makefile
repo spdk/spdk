@@ -31,14 +31,21 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/..
+SPDK_ROOT_DIR := $(CURDIR)/../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += memory util nvme ioat
+CFLAGS += $(DPDK_INC) -include $(CONFIG_IOAT_IMPL)
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = ioat.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+LIB = libspdk_ioat.a
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all: $(LIB)
+
+clean:
+	$(CLEAN_C)
+
+$(LIB): $(OBJS)
+	$(LIB_C)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

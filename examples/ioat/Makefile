@@ -31,10 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/..
+SPDK_ROOT_DIR := $(CURDIR)/../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += memory util nvme ioat
+DIRS-y += perf verify
 
 .PHONY: all clean $(DIRS-y)
 

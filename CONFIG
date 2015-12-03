@@ -45,3 +45,7 @@ CONFIG_DPDK_DIR?=/path/to/dpdk
 # Header file to use for NVMe implementation specific functions.
 # Defaults to depending on DPDK.
 CONFIG_NVME_IMPL?=nvme_impl.h
+
+# Header file to use for IOAT implementation specific functions.
+# Defaults to depending on DPDK.
+CONFIG_IOAT_IMPL?=ioat_impl.h

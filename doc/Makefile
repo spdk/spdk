@@ -1,4 +1,4 @@
-DOXYFILES = Doxyfile.nvme
+DOXYFILES = Doxyfile.ioat Doxyfile.nvme
 OUTPUT_DIRS = $(patsubst Doxyfile.%,output.%,$(DOXYFILES))
 
 all: doc

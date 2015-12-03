@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(CURDIR)/../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = nvme memory
+DIRS-y = nvme memory ioat
 
 .PHONY: all clean $(DIRS-y)
 
