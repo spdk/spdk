@@ -159,6 +159,13 @@ struct nvme_request {
 	 *  status once all child requests are completed.
 	 */
 	struct nvme_completion		parent_status;
+
+	/**
+	 * Functions for retrieving physical addresses for scattered payloads.
+	 */
+	nvme_req_reset_sgl_fn_t reset_sgl_fn;
+	nvme_req_next_sge_fn_t next_sge_fn;
+	uint32_t sgl_offset;
 };
 
 struct nvme_completion_poll_status {

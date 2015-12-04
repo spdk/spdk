@@ -145,16 +145,11 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->timeout = true;
-	nvme_assert((payload == NULL && payload_size == 0) ||
-		    (payload != NULL && payload_size != 0),
-		    ("Invalid argument combination of payload and payload_size\n"));
-	if (payload == NULL || payload_size == 0) {
-		req->u.payload = NULL;
-		req->payload_size = 0;
-	} else {
-		req->u.payload = payload;
-		req->payload_size = payload_size;
-	}
+	req->sgl_offset = 0;
+	req->parent = NULL;
+
+	req->u.payload = payload;
+	req->payload_size = payload_size;
 
 	return req;
 }

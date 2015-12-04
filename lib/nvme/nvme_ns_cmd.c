@@ -41,7 +41,8 @@
 static struct nvme_request *
 _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 		uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
-		uint32_t opc);
+		uint32_t opc, nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		nvme_req_next_sge_fn_t next_sge_fn);
 
 static void
 nvme_cb_complete_child(void *child_arg, const struct nvme_completion *cpl)
@@ -91,10 +92,13 @@ _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 			   uint64_t lba, uint32_t lba_count,
 			   nvme_cb_fn_t cb_fn, void *cb_arg, uint32_t opc,
 			   struct nvme_request *req,
-			   uint32_t sectors_per_max_io, uint32_t sector_mask)
+			   uint32_t sectors_per_max_io, uint32_t sector_mask,
+			   nvme_req_reset_sgl_fn_t reset_sgl_fn,
+			   nvme_req_next_sge_fn_t next_sge_fn)
 {
 	uint32_t		sector_size = ns->sector_size;
 	uint32_t		remaining_lba_count = lba_count;
+	uint32_t		offset = 0;
 	struct nvme_request	*child;
 
 	while (remaining_lba_count > 0) {
@@ -102,7 +106,7 @@ _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 		lba_count = nvme_min(remaining_lba_count, lba_count);
 
 		child = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn,
-					cb_arg, opc);
+					cb_arg, opc, reset_sgl_fn, next_sge_fn);
 		if (child == NULL) {
 			nvme_free_request(req);
 			return NULL;
@@ -110,7 +114,11 @@ _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 		nvme_request_add_child(req, child);
 		remaining_lba_count -= lba_count;
 		lba += lba_count;
-		payload = (void *)((uintptr_t)payload + (lba_count * sector_size));
+		if (req->u.payload == NULL) {
+			child->sgl_offset = offset;
+			offset += lba_count * ns->sector_size;
+		} else
+			payload = (void *)((uintptr_t)payload + (lba_count * sector_size));
 	}
 
 	return req;
@@ -119,7 +127,8 @@ _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 static struct nvme_request *
 _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 		uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
-		uint32_t opc)
+		uint32_t opc, nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		nvme_req_next_sge_fn_t next_sge_fn)
 {
 	struct nvme_request	*req;
 	struct nvme_command	*cmd;
@@ -137,6 +146,9 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 		return NULL;
 	}
 
+	req->reset_sgl_fn = reset_sgl_fn;
+	req->next_sge_fn = next_sge_fn;
+
 	/*
 	 * Intel DC P3*00 NVMe controllers benefit from driver-assisted striping.
 	 * If this controller defines a stripe boundary and this I/O spans a stripe
@@ -147,10 +159,12 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 	    (((lba & (sectors_per_stripe - 1)) + lba_count) > sectors_per_stripe)) {
 
 		return _nvme_ns_cmd_split_request(ns, payload, lba, lba_count, cb_fn, cb_arg, opc,
-						  req, sectors_per_stripe, sectors_per_stripe - 1);
+						  req, sectors_per_stripe, sectors_per_stripe - 1,
+						  reset_sgl_fn, next_sge_fn);
 	} else if (lba_count > sectors_per_max_io) {
 		return _nvme_ns_cmd_split_request(ns, payload, lba, lba_count, cb_fn, cb_arg, opc,
-						  req, sectors_per_max_io, 0);
+						  req, sectors_per_max_io, 0,
+						  reset_sgl_fn, next_sge_fn);
 	} else {
 		cmd = &req->cmd;
 		cmd->opc = opc;
@@ -170,7 +184,25 @@ nvme_ns_cmd_read(struct nvme_namespace *ns, void *payload, uint64_t lba,
 {
 	struct nvme_request *req;
 
-	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_READ);
+	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_READ, NULL, NULL);
+	if (req != NULL) {
+		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
+		return 0;
+	} else {
+		return ENOMEM;
+	}
+}
+
+int
+nvme_ns_cmd_readv(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
+		  nvme_cb_fn_t cb_fn, void *cb_arg,
+		  nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		  nvme_req_next_sge_fn_t next_sge_fn)
+{
+	struct nvme_request *req;
+
+	req = _nvme_ns_cmd_rw(ns, NULL, lba, lba_count, cb_fn, cb_arg, NVME_OPC_READ, reset_sgl_fn,
+			      next_sge_fn);
 	if (req != NULL) {
 		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
 		return 0;
@@ -185,7 +217,25 @@ nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload, uint64_t lba,
 {
 	struct nvme_request *req;
 
-	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_WRITE);
+	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_WRITE, NULL, NULL);
+	if (req != NULL) {
+		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
+		return 0;
+	} else {
+		return ENOMEM;
+	}
+}
+
+int
+nvme_ns_cmd_writev(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
+		   nvme_cb_fn_t cb_fn, void *cb_arg,
+		   nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		   nvme_req_next_sge_fn_t next_sge_fn)
+{
+	struct nvme_request *req;
+
+	req = _nvme_ns_cmd_rw(ns, NULL, lba, lba_count, cb_fn, cb_arg, NVME_OPC_WRITE, reset_sgl_fn,
+			      next_sge_fn);
 	if (req != NULL) {
 		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
 		return 0;

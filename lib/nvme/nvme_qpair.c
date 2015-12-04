@@ -668,9 +668,94 @@ _nvme_fail_request_ctrlr_failed(struct nvme_qpair *qpair, struct nvme_request *r
 					   NVME_SC_ABORTED_BY_REQUEST, true);
 }
 
+static int
+_nvme_qpair_build_sgl_request(struct nvme_qpair *qpair, struct nvme_request *req,
+			      struct nvme_tracker *tr)
+{
+	int rc;
+	uint64_t phys_addr;
+	uint32_t data_transfered, remaining_transfer_len, length;
+	uint32_t nseg, cur_nseg, total_nseg, last_nseg, modulo, unaligned;
+	uint32_t sge_count = 0;
+	uint64_t prp2 = 0;
+	struct nvme_request *parent;
+
+	/*
+	 * Build scattered payloads.
+	 */
+
+	parent = req->parent ? req->parent : req;
+	nvme_assert(req->reset_sgl_fn != NULL, ("sgl reset callback required\n"));
+	req->reset_sgl_fn(parent->cb_arg, req->sgl_offset);
+
+	remaining_transfer_len = req->payload_size;
+	total_nseg = 0;
+	last_nseg = 0;
+
+	while (remaining_transfer_len > 0) {
+		nvme_assert(req->next_sge_fn != NULL, ("sgl callback required\n"));
+		rc = req->next_sge_fn(parent->cb_arg, &phys_addr, &length);
+		if (rc)
+			return -1;
+
+		data_transfered = nvme_min(remaining_transfer_len, length);
+
+		nseg = data_transfered >> nvme_u32log2(PAGE_SIZE);
+		modulo = data_transfered & (PAGE_SIZE - 1);
+		unaligned = phys_addr & (PAGE_SIZE - 1);
+		if (modulo || unaligned) {
+			nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+		}
+
+		if (total_nseg == 0) {
+			req->cmd.psdt = NVME_PSDT_PRP;
+			req->cmd.dptr.prp.prp1 = phys_addr;
+		}
+
+		total_nseg += nseg;
+		sge_count++;
+		remaining_transfer_len -= data_transfered;
+
+		if (total_nseg == 2) {
+			if (sge_count == 1)
+				tr->req->cmd.dptr.prp.prp2 = phys_addr + PAGE_SIZE - unaligned;
+			else if (sge_count == 2)
+				tr->req->cmd.dptr.prp.prp2 = phys_addr;
+			/* save prp2 value */
+			prp2 = tr->req->cmd.dptr.prp.prp2;
+		} else if (total_nseg > 2) {
+			if (sge_count == 1)
+				cur_nseg = 1;
+			else
+				cur_nseg = 0;
+
+			tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_bus_addr;
+			while (cur_nseg < nseg) {
+				if (prp2) {
+					tr->prp[0] = prp2;
+					tr->prp[last_nseg + 1] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
+				} else
+					tr->prp[last_nseg] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
+
+				last_nseg++;
+				cur_nseg++;
+
+				/* physical address and length check */
+				if (remaining_transfer_len || (!remaining_transfer_len && (cur_nseg < nseg))) {
+					if ((length & (PAGE_SIZE - 1)) || unaligned)
+						return -1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 void
 nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 {
+	int			rc;
 	struct nvme_tracker	*tr;
 	struct nvme_request	*child_req;
 	uint64_t phys_addr;
@@ -718,7 +803,7 @@ nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 	tr->req = req;
 	req->cmd.cid = tr->cid;
 
-	if (req->payload_size) {
+	if (req->u.payload) {
 		/*
 		 * Build PRP list describing payload buffer.
 		 */
@@ -753,6 +838,12 @@ nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 				tr->prp[cur_nseg - 1] = phys_addr;
 				cur_nseg++;
 			}
+		}
+	} else if (req->u.payload == NULL && req->payload_size != 0) {
+		rc = _nvme_qpair_build_sgl_request(qpair, req, tr);
+		if (rc < 0) {
+			_nvme_fail_request_bad_vtophys(qpair, tr);
+			return;
 		}
 	}
 

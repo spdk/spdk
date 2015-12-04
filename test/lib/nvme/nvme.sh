@@ -33,5 +33,8 @@ timing_enter reset
 $testdir/reset/reset -q 64 -w write -s 4096 -t 15
 timing_exit reset
 
+timing_enter sgl
+$testdir/sgl/sgl
+timing_exit sgl
 
 timing_exit nvme

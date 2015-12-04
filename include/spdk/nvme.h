@@ -365,6 +365,23 @@ enum nvme_namespace_flags {
 uint32_t nvme_ns_get_flags(struct nvme_namespace *ns);
 
 /**
+ * Restart the SGL walk to the specified offset when the command has scattered payloads.
+ *
+ * The cb_arg parameter is the value passed to readv/writev.
+ */
+typedef void (*nvme_req_reset_sgl_fn_t)(void *cb_arg, uint32_t offset);
+
+/**
+ * Fill out *address and *length with the current SGL entry and advance to the next
+ * entry for the next time the callback is invoked.
+ *
+ * The cb_arg parameter is the value passed to readv/writev.
+ * The address parameter contains the physical address of this segment.
+ * The length parameter contains the length of this physical segment.
+ */
+typedef int (*nvme_req_next_sge_fn_t)(void *cb_arg, uint64_t *address, uint32_t *length);
+
+/**
  * \brief Submits a write I/O to the specified NVMe namespace.
  *
  * \param ns NVMe namespace to submit the write I/O
@@ -385,6 +402,29 @@ int nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload,
 		      void *cb_arg);
 
 /**
+ * \brief Submits a write I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the write I/O
+ * \param lba starting LBA to write the data
+ * \param lba_count length (in sectors) for the write operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param reset_sgl_fn callback function to reset scattered payload
+ * \param next_sge_fn callback function to iterate each scattered
+ * payload memory segment
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_writev(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
+		       nvme_cb_fn_t cb_fn, void *cb_arg,
+		       nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		       nvme_req_next_sge_fn_t next_sge_fn);
+
+/**
  * \brief Submits a read I/O to the specified NVMe namespace.
  *
  * \param ns NVMe namespace to submit the read I/O
@@ -403,6 +443,30 @@ int nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload,
 int nvme_ns_cmd_read(struct nvme_namespace *ns, void *payload,
 		     uint64_t lba, uint32_t lba_count, nvme_cb_fn_t cb_fn,
 		     void *cb_arg);
+
+/**
+ * \brief Submits a read I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the read I/O
+ * \param lba starting LBA to read the data
+ * \param lba_count length (in sectors) for the read operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param reset_sgl_fn callback function to reset scattered payload
+ * \param next_sge_fn callback function to iterate each scattered
+ * payload memory segment
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_readv(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
+		      nvme_cb_fn_t cb_fn, void *cb_arg,
+		      nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		      nvme_req_next_sge_fn_t next_sge_fn);
+
 
 /**
  * \brief Submits a deallocation request to the specified NVMe namespace.
