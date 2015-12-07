@@ -35,7 +35,7 @@ fi
 
 # set up huge pages
 timing_enter afterboot
-./scripts/configure_hugepages.sh 3072
+./scripts/configure_hugepages.sh 1024
 timing_exit afterboot
 
 ./scripts/unbind_nvme.sh
