@@ -112,7 +112,9 @@ ioat_exit(void)
 	while (!TAILQ_EMPTY(&g_devices)) {
 		dev = TAILQ_FIRST(&g_devices);
 		TAILQ_REMOVE(&g_devices, dev, tailq);
-		ioat_detach(dev->ioat);
+		if (dev->ioat) {
+			ioat_detach(dev->ioat);
+		}
 		rte_free(dev);
 	}
 }
@@ -406,6 +408,7 @@ main(int argc, char **argv)
 {
 	unsigned lcore_id;
 	struct thread_entry threads[RTE_MAX_LCORE] = {};
+	int rc;
 
 	if (parse_args(argc, argv) != 0) {
 		return 1;
@@ -422,14 +425,21 @@ main(int argc, char **argv)
 	}
 
 	if (work_fn(&threads[rte_get_master_lcore()]) != 0) {
-		return 1;
+		rc = 1;
+		goto cleanup;
 	}
 
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
 		if (rte_eal_wait_lcore(lcore_id) != 0) {
-			return 1;
+			rc = 1;
+			goto cleanup;
 		}
 	}
 
-	return dump_result(threads, RTE_MAX_LCORE);
+	rc = dump_result(threads, RTE_MAX_LCORE);
+
+cleanup:
+	ioat_exit();
+
+	return rc;
 }
