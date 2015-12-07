@@ -1,3 +1,3 @@
 $(DIRS-y) :
 	@echo "== $S/$@ ($(MAKECMDGOALS))"
-	$(Q)$(MAKE) -C $@ S=$S/$@ $(MAKECMDGOALS) $(MAKESUBDIRFLAGS)
+	$(Q)$(MAKE) -e -C $@ S=$S/$@ $(MAKECMDGOALS) $(MAKESUBDIRFLAGS)

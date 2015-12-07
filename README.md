@@ -72,11 +72,11 @@ If you followed the instructions above for building DPDK:
 
 Linux:
 
-    make DPDK_DIR=`pwd`/dpdk-2.1.0/x86_64-native-linuxapp-gcc
+    make DPDK_DIR=./dpdk-2.1.0/x86_64-native-linuxapp-gcc
 
 FreeBSD:
 
-    gmake DPDK_DIR=`pwd`/dpdk-2.1.0/x86_64-native-bsdapp-clang
+    gmake DPDK_DIR=./dpdk-2.1.0/x86_64-native-bsdapp-clang
 
 Hugepages and Device Binding
 ============================
