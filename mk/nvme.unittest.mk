@@ -50,7 +50,7 @@ $(APP) : $(OBJS)
 	$(LINK_C)
 
 clean:
-	$(Q)rm -f $(APP) $(OBJS) *.d
+	$(CLEAN_C) $(APP)
 
 %.o: $(NVME_DIR)/%.c %.d $(MAKEFILE_LIST)
 	$(COMPILE_C)

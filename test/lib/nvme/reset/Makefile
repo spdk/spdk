@@ -58,6 +58,6 @@ $(APP) : $(OBJS) $(SPDK_LIBS)
 	$(Q)$(CC) $(CPPFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean :
-	$(Q)rm -f $(OBJS) *.d $(APP)
+	$(CLEAN_C) $(APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

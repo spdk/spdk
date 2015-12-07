@@ -43,7 +43,7 @@ LIB = libspdk_nvme.a
 all : $(LIB)
 
 clean :
-	$(Q)rm -f $(LIB) $(OBJS) *.d
+	$(CLEAN_C)
 
 $(LIB) : $(OBJS)
 	$(LIB_C)

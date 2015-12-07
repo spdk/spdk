@@ -108,6 +108,10 @@ LIB_C=\
 	$(Q)echo "  LIB $@"; \
 	ar crDs $@ $(OBJS)
 
+# Clean up generated files listed as arguments plus a default list
+CLEAN_C=\
+	$(Q)rm -f *.a *.o *.d *.d.tmp *.gcno *.gcda
+
 %.o: %.c %.d $(MAKEFILE_LIST)
 	$(COMPILE_C)
 
