@@ -32,7 +32,7 @@
 #
 
 # Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=y
+CONFIG_DEBUG?=n
 
 # Build with code coverage instrumentation.
 CONFIG_COVERAGE=n
