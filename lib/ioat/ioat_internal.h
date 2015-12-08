@@ -52,16 +52,6 @@
 struct ioat_descriptor {
 	ioat_callback_t		callback_fn;
 	void			*callback_arg;
-	union {
-		struct ioat_dma_hw_descriptor		*dma;
-		struct ioat_fill_hw_descriptor		*fill;
-		struct ioat_xor_hw_descriptor		*xor;
-		struct ioat_xor_ext_hw_descriptor	*xor_ext;
-		struct ioat_pq_hw_descriptor		*pq;
-		struct ioat_pq_ext_hw_descriptor	*pq_ext;
-		struct ioat_raw_hw_descriptor		*raw;
-	} u;
-	uint64_t		hw_desc_bus_addr;
 };
 
 /* One of these per allocated PCI device. */
@@ -81,7 +71,9 @@ struct ioat_channel {
 	uint32_t            ring_size_order;
 	uint64_t            last_seen;
 
-	struct ioat_descriptor **ring;
+	struct ioat_descriptor		*ring;
+	struct ioat_dma_hw_descriptor	*hw_ring;
+	uint64_t			hw_ring_phys_addr;
 };
 
 static inline uint32_t

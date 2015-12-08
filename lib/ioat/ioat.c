@@ -199,44 +199,28 @@ ioat_get_ring_space(struct ioat_channel *ioat)
 	return (1 << ioat->ring_size_order) - ioat_get_active(ioat) - 1;
 }
 
-static struct ioat_descriptor *
-ioat_alloc_ring_entry(struct ioat_channel *ioat)
+static uint32_t
+ioat_get_ring_index(struct ioat_channel *ioat, uint32_t index)
 {
-	struct ioat_descriptor          *desc;
-	struct ioat_dma_hw_descriptor	*hw_desc;
-
-	desc = malloc(sizeof(*desc));
-	if (desc == NULL) {
-		return NULL;
-	}
-	hw_desc = ioat_zmalloc(NULL, sizeof(*hw_desc), 64, &desc->hw_desc_bus_addr);
-	if (hw_desc == NULL) {
-		free(desc);
-		return NULL;
-	}
-	if (desc->hw_desc_bus_addr == 0) {
-		free(desc);
-		ioat_free(hw_desc);
-		return NULL;
-	}
-	desc->u.dma = hw_desc;
-
-	return desc;
+	return index & ((1 << ioat->ring_size_order) - 1);
 }
 
 static void
-ioat_free_ring_entry(struct ioat_channel *ioat, struct ioat_descriptor *desc)
+ioat_get_ring_entry(struct ioat_channel *ioat, uint32_t index,
+		    struct ioat_descriptor **desc,
+		    struct ioat_dma_hw_descriptor **hw_desc)
 {
-	if (desc) {
-		ioat_free(desc->u.dma);
-		free(desc);
-	}
+	uint32_t i = ioat_get_ring_index(ioat, index);
+
+	*desc = &ioat->ring[i];
+	*hw_desc = &ioat->hw_ring[i];
 }
 
-static struct ioat_descriptor *
-ioat_get_ring_entry(struct ioat_channel *ioat, uint32_t index)
+static uint64_t
+ioat_get_desc_phys_addr(struct ioat_channel *ioat, uint32_t index)
 {
-	return ioat->ring[index % (1 << ioat->ring_size_order)];
+	return ioat->hw_ring_phys_addr +
+	       ioat_get_ring_index(ioat, index) * sizeof(struct ioat_dma_hw_descriptor);
 }
 
 static void
@@ -261,8 +245,7 @@ ioat_prep_null(struct ioat_channel *ioat)
 		return NULL;
 	}
 
-	desc = ioat_get_ring_entry(ioat, ioat->head);
-	hw_desc = desc->u.dma;
+	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
 
 	hw_desc->u.control_raw = 0;
 	hw_desc->u.control.op = IOAT_OP_COPY;
@@ -294,8 +277,7 @@ ioat_prep_copy(struct ioat_channel *ioat, uint64_t dst,
 		return NULL;
 	}
 
-	desc = ioat_get_ring_entry(ioat, ioat->head);
-	hw_desc = desc->u.dma;
+	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
 
 	hw_desc->u.control_raw = 0;
 	hw_desc->u.control.op = IOAT_OP_COPY;
@@ -361,7 +343,8 @@ static void
 ioat_process_channel_events(struct ioat_channel *ioat)
 {
 	struct ioat_descriptor *desc;
-	uint64_t status, completed_descriptor;
+	uint64_t status, completed_descriptor, hw_desc_phys_addr;
+	uint32_t tail;
 
 	if (ioat->head == ioat->tail) {
 		return;
@@ -380,21 +363,19 @@ ioat_process_channel_events(struct ioat_channel *ioat)
 		return;
 	}
 
-	while (1) {
-		desc = ioat_get_ring_entry(ioat, ioat->tail);
+	do {
+		tail = ioat_get_ring_index(ioat, ioat->tail);
+		desc = &ioat->ring[tail];
 
 		if (desc->callback_fn) {
 			desc->callback_fn(desc->callback_arg);
 		}
 
+		hw_desc_phys_addr = ioat_get_desc_phys_addr(ioat, ioat->tail);
 		ioat->tail++;
+	} while (hw_desc_phys_addr != completed_descriptor);
 
-		if (desc->hw_desc_bus_addr == completed_descriptor)
-			break;
-
-	}
-
-	ioat->last_seen = desc->hw_desc_bus_addr;
+	ioat->last_seen = hw_desc_phys_addr;
 }
 
 static int
@@ -403,11 +384,11 @@ ioat_channel_destruct(struct ioat_channel *ioat)
 	ioat_unmap_pci_bar(ioat);
 
 	if (ioat->ring) {
-		int i;
-		for (i = 0; i < (1 << ioat->ring_size_order); i++)
-			ioat_free_ring_entry(ioat, ioat->ring[i]);
-
 		free(ioat->ring);
+	}
+
+	if (ioat->hw_ring) {
+		ioat_free(ioat->hw_ring);
 	}
 
 	if (ioat->comp_update) {
@@ -421,12 +402,9 @@ ioat_channel_destruct(struct ioat_channel *ioat)
 static int
 ioat_channel_start(struct ioat_channel *ioat)
 {
-	struct ioat_descriptor **ring;
 	uint8_t xfercap, version;
 	uint64_t status;
 	int i, num_descriptors;
-	struct ioat_descriptor *next;
-	struct ioat_dma_hw_descriptor *dma_hw_desc;
 	uint64_t comp_update_bus_addr;
 
 	if (ioat_map_pci_bar(ioat) != 0) {
@@ -466,32 +444,20 @@ ioat_channel_start(struct ioat_channel *ioat)
 
 	num_descriptors = 1 << ioat->ring_size_order;
 
-	ioat->ring = calloc(num_descriptors, sizeof(*ring));
-
+	ioat->ring = calloc(num_descriptors, sizeof(struct ioat_descriptor));
 	if (!ioat->ring) {
-		ioat_channel_destruct(ioat);
 		return -1;
 	}
 
-	ring = ioat->ring;
+	ioat->hw_ring = ioat_zmalloc(NULL, num_descriptors * sizeof(struct ioat_dma_hw_descriptor), 64,
+				     &ioat->hw_ring_phys_addr);
+	if (!ioat->hw_ring) {
+		return -1;
+	}
 
 	for (i = 0; i < num_descriptors; i++) {
-		ring[i] = ioat_alloc_ring_entry(ioat);
-
-		if (!ring[i]) {
-			ioat_channel_destruct(ioat);
-			return -1;
-		}
+		ioat->hw_ring[i].next = ioat_get_desc_phys_addr(ioat, i + 1);
 	}
-
-	for (i = 0; i < num_descriptors - 1; i++) {
-		next = ring[i + 1];
-		dma_hw_desc = ring[i]->u.dma;
-
-		dma_hw_desc->next = next->hw_desc_bus_addr;
-	}
-
-	ring[i]->u.dma->next = ring[0]->hw_desc_bus_addr;
 
 	ioat->head = 0;
 	ioat->tail = 0;
@@ -501,7 +467,7 @@ ioat_channel_start(struct ioat_channel *ioat)
 
 	ioat->regs->chanctrl = IOAT_CHANCTRL_ANY_ERR_ABORT_EN;
 	ioat_write_chancmp(ioat, comp_update_bus_addr);
-	ioat_write_chainaddr(ioat, ring[0]->hw_desc_bus_addr);
+	ioat_write_chainaddr(ioat, ioat->hw_ring_phys_addr);
 
 	ioat_prep_null(ioat);
 	ioat_flush(ioat);
@@ -519,7 +485,6 @@ ioat_channel_start(struct ioat_channel *ioat)
 	} else {
 		ioat_printf(ioat, "%s: could not start channel: status = %p\n error = %#x\n",
 			    __func__, (void *)status, ioat->regs->chanerr);
-		ioat_channel_destruct(ioat);
 		return -1;
 	}
 
@@ -546,6 +511,7 @@ ioat_attach(void *device)
 	ioat->device = device;
 
 	if (ioat_channel_start(ioat) != 0) {
+		ioat_channel_destruct(ioat);
 		free(ioat);
 		return NULL;
 	}
