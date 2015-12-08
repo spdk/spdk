@@ -35,7 +35,7 @@
 CONFIG_DEBUG?=n
 
 # Build with code coverage instrumentation.
-CONFIG_COVERAGE=n
+CONFIG_COVERAGE?=n
 
 # This directory should contain 'include' and 'lib' directories for your DPDK
 # installation. Alternatively you can specify this on the command line
