@@ -480,7 +480,7 @@ nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completion
 			qpair->phase = !qpair->phase;
 		}
 
-		_nvme_mmio_write_4(qpair->cq_hdbl, qpair->cq_head);
+		spdk_mmio_write_4(qpair->cq_hdbl, qpair->cq_head);
 
 		if (max_completions > 0 && --max_completions == 0) {
 			break;
@@ -635,7 +635,7 @@ nvme_qpair_submit_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr)
 	}
 
 	wmb();
-	_nvme_mmio_write_4(qpair->sq_tdbl, qpair->sq_tail);
+	spdk_mmio_write_4(qpair->sq_tdbl, qpair->sq_tail);
 }
 
 static void

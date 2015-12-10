@@ -116,53 +116,22 @@ ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id)
 	return false;
 }
 
-
-static uint64_t
-ioat_mmio_read_8(volatile uint64_t *addr)
-{
-	uint64_t val;
-	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
-
-	if (IOAT_64BIT_IO) {
-		val = *addr;
-	} else {
-		/* Must read lower 4 bytes before upper 4 bytes. */
-		val = addr32[0];
-		val |= (uint64_t)addr32[1] << 32;
-	}
-
-	return val;
-}
-
-static void
-ioat_mmio_write_8(volatile uint64_t *addr, uint64_t val)
-{
-	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
-
-	if (IOAT_64BIT_IO) {
-		*addr = val;
-	} else {
-		addr32[0] = (uint32_t)val;
-		addr32[1] = (uint32_t)(val >> 32);
-	}
-}
-
 static uint64_t
 ioat_get_chansts(struct ioat_channel *ioat)
 {
-	return ioat_mmio_read_8(&ioat->regs->chansts);
+	return spdk_mmio_read_8(&ioat->regs->chansts);
 }
 
 static void
 ioat_write_chancmp(struct ioat_channel *ioat, uint64_t addr)
 {
-	ioat_mmio_write_8(&ioat->regs->chancmp, addr);
+	spdk_mmio_write_8(&ioat->regs->chancmp, addr);
 }
 
 static void
 ioat_write_chainaddr(struct ioat_channel *ioat, uint64_t addr)
 {
-	ioat_mmio_write_8(&ioat->regs->chainaddr, addr);
+	spdk_mmio_write_8(&ioat->regs->chainaddr, addr);
 }
 
 static inline void

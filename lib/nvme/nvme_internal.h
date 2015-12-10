@@ -51,6 +51,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/barrier.h"
+#include "spdk/mmio.h"
 
 #define NVME_MAX_PRP_LIST_ENTRIES	(32)
 
@@ -304,32 +305,14 @@ extern struct nvme_driver g_nvme_driver;
 
 #define INTEL_DC_P3X00_DEVID	0x09538086
 
-static inline uint32_t
-_nvme_mmio_read_4(const volatile uint32_t *addr)
-{
-	return *addr;
-}
-
-static inline void
-_nvme_mmio_write_4(volatile uint32_t *addr, uint32_t val)
-{
-	*addr = val;
-}
-
-static inline void
-_nvme_mmio_write_8(volatile uint64_t *addr, uint64_t val)
-{
-	*addr = val;
-}
-
 #define nvme_mmio_read_4(sc, reg) \
-	_nvme_mmio_read_4(&(sc)->regs->reg)
+	spdk_mmio_read_4(&(sc)->regs->reg)
 
 #define nvme_mmio_write_4(sc, reg, val) \
-	_nvme_mmio_write_4(&(sc)->regs->reg, val)
+	spdk_mmio_write_4(&(sc)->regs->reg, val)
 
 #define nvme_mmio_write_8(sc, reg, val) \
-	_nvme_mmio_write_8(&(sc)->regs->reg, val)
+	spdk_mmio_write_8(&(sc)->regs->reg, val)
 
 #define nvme_delay		usleep
 

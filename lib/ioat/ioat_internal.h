@@ -44,15 +44,10 @@
 #include <inttypes.h>
 
 #include "spdk/queue.h"
+#include "spdk/mmio.h"
 
 /* Allocate 2 << 15 (32K) descriptors per channel by default. */
 #define IOAT_DEFAULT_ORDER			15
-
-#ifdef __x86_64__
-#define IOAT_64BIT_IO	1 /* Can do atomic 64-bit memory read/write (over PCIe) */
-#else
-#define IOAT_64BIT_IO	0
-#endif
 
 struct ioat_descriptor {
 	ioat_callback_t		callback_fn;
