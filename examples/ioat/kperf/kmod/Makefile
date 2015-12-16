@@ -31,14 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/../..
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+obj-m := dmaperf.o
+dmaperf-y := dma_perf.o
 
-DIRS-y += perf verify kperf
+KDIR := /lib/modules/$(shell uname -r)/build
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all:
+	make -C $(KDIR) M=$(shell pwd) modules
+clean:
+	make -C $(KDIR) M=$(shell pwd) clean

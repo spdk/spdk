@@ -31,14 +31,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/../..
+SPDK_ROOT_DIR := $(CURDIR)/../../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += perf verify kperf
+APP = ioat_kperf
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := ioat_kperf.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CFLAGS += -I.
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += -lrt
+
+all: $(APP)
+
+$(APP): $(OBJS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
