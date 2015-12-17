@@ -339,7 +339,7 @@ static int ioat_reset_hw(struct ioat_channel *ioat)
 	return 0;
 }
 
-static void
+static int
 ioat_process_channel_events(struct ioat_channel *ioat)
 {
 	struct ioat_descriptor *desc;
@@ -347,7 +347,7 @@ ioat_process_channel_events(struct ioat_channel *ioat)
 	uint32_t tail;
 
 	if (ioat->head == ioat->tail) {
-		return;
+		return 0;
 	}
 
 	status = *ioat->comp_update;
@@ -355,12 +355,11 @@ ioat_process_channel_events(struct ioat_channel *ioat)
 
 	if (is_ioat_halted(status)) {
 		ioat_printf(ioat, "%s: Channel halted (%x)\n", __func__, ioat->regs->chanerr);
-		/* TODO: report error */
-		return;
+		return -1;
 	}
 
 	if (completed_descriptor == ioat->last_seen) {
-		return;
+		return 0;
 	}
 
 	do {
@@ -376,6 +375,7 @@ ioat_process_channel_events(struct ioat_channel *ioat)
 	} while (hw_desc_phys_addr != completed_descriptor);
 
 	ioat->last_seen = hw_desc_phys_addr;
+	return 0;
 }
 
 static int
@@ -663,11 +663,11 @@ ioat_submit_copy(void *cb_arg, ioat_callback_t cb_fn,
 	return nbytes;
 }
 
-void ioat_process_events(void)
+int ioat_process_events(void)
 {
 	if (!ioat_thread_channel) {
-		return;
+		return -1;
 	}
 
-	ioat_process_channel_events(ioat_thread_channel);
+	return ioat_process_channel_events(ioat_thread_channel);
 }

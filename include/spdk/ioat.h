@@ -90,12 +90,14 @@ void ioat_unregister_thread(void);
 int64_t ioat_submit_copy(void *cb_arg, ioat_callback_t cb_fn,
 			 void *dst, const void *src, uint64_t nbytes);
 
-/*
+/**
  * Check for completed requests on the current thread.
  *
  * Before submitting any requests on a thread, the thread must be registered
  * using the \ref ioat_register_thread() function.
+ *
+ * \returns 0 on success or negative if something went wrong.
  */
-void ioat_process_events(void);
+int ioat_process_events(void);
 
 #endif
