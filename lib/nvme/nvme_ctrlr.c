@@ -180,7 +180,6 @@ nvme_ctrlr_disable(struct nvme_controller *ctrlr)
 
 	cc.bits.en = 0;
 	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
-	nvme_delay(5000);
 
 	_nvme_ctrlr_wait_for_ready(ctrlr, 0);
 }
@@ -232,16 +231,13 @@ nvme_ctrlr_enable(struct nvme_controller *ctrlr)
 	}
 
 	nvme_mmio_write_8(ctrlr, asq, ctrlr->adminq.cmd_bus_addr);
-	nvme_delay(5000);
 	nvme_mmio_write_8(ctrlr, acq, ctrlr->adminq.cpl_bus_addr);
-	nvme_delay(5000);
 
 	aqa.raw = 0;
 	/* acqs and asqs are 0-based. */
 	aqa.bits.acqs = ctrlr->adminq.num_entries - 1;
 	aqa.bits.asqs = ctrlr->adminq.num_entries - 1;
 	nvme_mmio_write_4(ctrlr, aqa.raw, aqa.raw);
-	nvme_delay(5000);
 
 	cc.bits.en = 1;
 	cc.bits.css = 0;
@@ -254,7 +250,6 @@ nvme_ctrlr_enable(struct nvme_controller *ctrlr)
 	cc.bits.mps = nvme_u32log2(PAGE_SIZE) - 12;
 
 	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
-	nvme_delay(5000);
 
 	return nvme_ctrlr_wait_for_ready(ctrlr);
 }
@@ -272,8 +267,6 @@ nvme_ctrlr_hw_reset(struct nvme_controller *ctrlr)
 		for (i = 0; i < ctrlr->num_io_queues; i++) {
 			nvme_qpair_disable(&ctrlr->ioq[i]);
 		}
-
-		nvme_delay(100 * 1000);
 	} else {
 		/*
 		 * Ensure we do a transition from cc.en==1 to cc.en==0.
@@ -285,8 +278,6 @@ nvme_ctrlr_hw_reset(struct nvme_controller *ctrlr)
 
 	nvme_ctrlr_disable(ctrlr);
 	rc = nvme_ctrlr_enable(ctrlr);
-
-	nvme_delay(100 * 1000);
 
 	return rc;
 }
