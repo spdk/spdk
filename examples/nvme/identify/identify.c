@@ -309,8 +309,23 @@ print_controller(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 	       cdata->oncs.write_unc ? "Supported" : "Not Supported");
 	printf("Dataset Management Command:  %s\n",
 	       cdata->oncs.dsm ? "Supported" : "Not Supported");
+	printf("Write Zeroes Command:        %s\n",
+	       cdata->oncs.write_zeroes ? "Supported" : "Not Supported");
+	printf("Set Features Save Field:     %s\n",
+	       cdata->oncs.set_features_save ? "Supported" : "Not Supported");
+	printf("Reservations:                %s\n",
+	       cdata->oncs.reservations ? "Supported" : "Not Supported");
 	printf("Volatile Write Cache:        %s\n",
 	       cdata->vwc.present ? "Present" : "Not Present");
+	printf("Scatter-Gather List\n");
+	printf("  SGL Command Set:           %s\n",
+	       cdata->sgls.supported ? "Supported" : "Not Supported");
+	printf("  SGL Bit Bucket Descriptor: %s\n",
+	       cdata->sgls.bit_bucket_descriptor_supported ? "Supported" : "Not Supported");
+	printf("  SGL Metadata Pointer:      %s\n",
+	       cdata->sgls.metadata_pointer_supported ? "Supported" : "Not Supported");
+	printf("  Oversized SGL:             %s\n",
+	       cdata->sgls.oversized_sgl_supported ? "Supported" : "Not Supported");
 	printf("\n");
 
 	if (features[NVME_FEAT_ARBITRATION].valid) {

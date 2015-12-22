@@ -650,7 +650,10 @@ struct __attribute__((packed)) nvme_controller_data {
 		uint16_t	compare : 1;
 		uint16_t	write_unc : 1;
 		uint16_t	dsm: 1;
-		uint16_t	reserved: 13;
+		uint16_t	write_zeroes: 1;
+		uint16_t	set_features_save: 1;
+		uint16_t	reservations: 1;
+		uint16_t	reserved: 10;
 	} oncs;
 
 	/** fused operation support */
