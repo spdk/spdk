@@ -32,6 +32,7 @@
  */
 
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <pciaccess.h>
 
@@ -55,6 +56,54 @@ struct feature {
 static struct feature features[256];
 
 static struct nvme_health_information_page *health_page;
+
+static bool g_hex_dump = false;
+
+static void
+hex_dump(const void *data, size_t size)
+{
+	size_t offset = 0, i;
+	const uint8_t *bytes = data;
+
+	while (size) {
+		printf("%08zX:", offset);
+
+		for (i = 0; i < 16; i++) {
+			if (i == 8) {
+				printf("-");
+			} else {
+				printf(" ");
+			}
+
+			if (i < size) {
+				printf("%02X", bytes[offset + i]);
+			} else {
+				printf("  ");
+			}
+		}
+
+		printf("  ");
+
+		for (i = 0; i < 16; i++) {
+			if (i < size) {
+				if (bytes[offset + i] > 0x20 && bytes[offset + i] < 0x7F) {
+					printf("%c", bytes[offset + i]);
+				} else {
+					printf(".");
+				}
+			}
+		}
+
+		printf("\n");
+
+		offset += 16;
+		if (size > 16) {
+			size -= 16;
+		} else {
+			break;
+		}
+	}
+}
 
 static void
 get_feature_completion(void *cb_arg, const struct nvme_completion *cpl)
@@ -198,6 +247,12 @@ print_namespace(struct nvme_namespace *ns)
 	flags  = nvme_ns_get_flags(ns);
 
 	printf("Namespace ID:%d\n", nvme_ns_get_id(ns));
+
+	if (g_hex_dump) {
+		hex_dump(nsdata, sizeof(*nsdata));
+		printf("\n");
+	}
+
 	printf("Deallocate:                  %s\n",
 	       (flags & NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Flush:                       %s\n",
@@ -238,6 +293,12 @@ print_controller(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
 	       pci_dev->bus, pci_dev->dev, pci_dev->func);
 	printf("=====================================================\n");
+
+	if (g_hex_dump) {
+		hex_dump(cdata, sizeof(*cdata));
+		printf("\n");
+	}
+
 	printf("Controller Capabilities/Features\n");
 	printf("================================\n");
 	printf("Vendor ID:                  %04x\n", cdata->vid);
@@ -379,6 +440,12 @@ print_controller(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 	if (features[NVME_FEAT_TEMPERATURE_THRESHOLD].valid && health_page) {
 		printf("Health Information\n");
 		printf("==================\n");
+
+		if (g_hex_dump) {
+			hex_dump(health_page, sizeof(*health_page));
+			printf("\n");
+		}
+
 		printf("Critical Warnings:\n");
 		printf("  Available Spare Space:     %s\n",
 		       health_page->critical_warning.bits.available_spare ? "WARNING" : "OK");
@@ -436,6 +503,36 @@ print_controller(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 	}
 }
 
+static void
+usage(const char *program_name)
+{
+	printf("%s [options]", program_name);
+	printf("\n");
+	printf("options:\n");
+	printf("  -x  print hex dump of raw data\n");
+}
+
+static int
+parse_args(int argc, char **argv)
+{
+	int op;
+
+	while ((op = getopt(argc, argv, "x")) != -1) {
+		switch (op) {
+		case 'x':
+			g_hex_dump = true;
+			break;
+		default:
+			usage(argv[0]);
+			return 1;
+		}
+	}
+
+	optind = 1;
+
+	return 0;
+}
+
 static const char *ealargs[] = {
 	"identify",
 	"-c 0x1",
@@ -448,6 +545,11 @@ int main(int argc, char **argv)
 	struct pci_device		*pci_dev;
 	struct pci_id_match		match;
 	int				rc;
+
+	rc = parse_args(argc, argv);
+	if (rc != 0) {
+		return rc;
+	}
 
 	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
 			  (char **)(void *)(uintptr_t)ealargs);
