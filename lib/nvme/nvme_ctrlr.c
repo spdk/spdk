@@ -254,7 +254,7 @@ nvme_ctrlr_enable(struct nvme_controller *ctrlr)
 	return nvme_ctrlr_wait_for_ready(ctrlr);
 }
 
-int
+static int
 nvme_ctrlr_hw_reset(struct nvme_controller *ctrlr)
 {
 	uint32_t i;

@@ -386,7 +386,6 @@ void	nvme_completion_poll_cb(void *arg, const struct nvme_completion *cpl);
 int	nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle);
 void	nvme_ctrlr_destruct(struct nvme_controller *ctrlr);
 int	nvme_ctrlr_start(struct nvme_controller *ctrlr);
-int	nvme_ctrlr_hw_reset(struct nvme_controller *ctrlr);
 
 void	nvme_ctrlr_submit_admin_request(struct nvme_controller *ctrlr,
 					struct nvme_request *req);
@@ -402,17 +401,11 @@ int	nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 void	nvme_qpair_destroy(struct nvme_qpair *qpair);
 void	nvme_qpair_enable(struct nvme_qpair *qpair);
 void	nvme_qpair_disable(struct nvme_qpair *qpair);
-void	nvme_qpair_submit_tracker(struct nvme_qpair *qpair,
-				  struct nvme_tracker *tr);
 void	nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions);
 void	nvme_qpair_submit_request(struct nvme_qpair *qpair,
 				  struct nvme_request *req);
 void	nvme_qpair_reset(struct nvme_qpair *qpair);
 void	nvme_qpair_fail(struct nvme_qpair *qpair);
-void	nvme_qpair_manual_complete_request(struct nvme_qpair *qpair,
-		struct nvme_request *req,
-		uint32_t sct, uint32_t sc,
-		bool print_on_error);
 
 int	nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 			  struct nvme_controller *ctrlr);

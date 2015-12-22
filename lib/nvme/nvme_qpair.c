@@ -294,6 +294,25 @@ nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phy
 }
 
 static void
+nvme_qpair_submit_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr)
+{
+	struct nvme_request	*req;
+
+	req = tr->req;
+	qpair->act_tr[tr->cid] = tr;
+
+	/* Copy the command from the tracker to the submission queue. */
+	nvme_copy_command(&qpair->cmd[qpair->sq_tail], &req->cmd);
+
+	if (++qpair->sq_tail == qpair->num_entries) {
+		qpair->sq_tail = 0;
+	}
+
+	wmb();
+	spdk_mmio_write_4(qpair->sq_tdbl, qpair->sq_tail);
+}
+
+static void
 nvme_qpair_complete_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr,
 			    struct nvme_completion *cpl, bool print_on_error)
 {
@@ -361,7 +380,7 @@ nvme_qpair_manual_complete_tracker(struct nvme_qpair *qpair,
 	nvme_qpair_complete_tracker(qpair, tr, &cpl, print_on_error);
 }
 
-void
+static void
 nvme_qpair_manual_complete_request(struct nvme_qpair *qpair,
 				   struct nvme_request *req, uint32_t sct, uint32_t sc,
 				   bool print_on_error)
@@ -617,26 +636,6 @@ nvme_qpair_destroy(struct nvme_qpair *qpair)
  * \sa nvme_ns_cmd_read, nvme_ns_cmd_write, nvme_ns_cmd_deallocate,
  *     nvme_ns_cmd_flush, nvme_get_ioq_idx
  */
-
-
-void
-nvme_qpair_submit_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr)
-{
-	struct nvme_request	*req;
-
-	req = tr->req;
-	qpair->act_tr[tr->cid] = tr;
-
-	/* Copy the command from the tracker to the submission queue. */
-	nvme_copy_command(&qpair->cmd[qpair->sq_tail], &req->cmd);
-
-	if (++qpair->sq_tail == qpair->num_entries) {
-		qpair->sq_tail = 0;
-	}
-
-	wmb();
-	spdk_mmio_write_4(qpair->sq_tdbl, qpair->sq_tail);
-}
 
 static void
 _nvme_fail_request_bad_vtophys(struct nvme_qpair *qpair, struct nvme_tracker *tr)

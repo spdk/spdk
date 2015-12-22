@@ -47,12 +47,6 @@ uint64_t nvme_vtophys(void *buf)
 }
 
 int
-nvme_ctrlr_hw_reset(struct nvme_controller *ctrlr)
-{
-	return 0;
-}
-
-int
 nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle)
 {
 	return 0;
