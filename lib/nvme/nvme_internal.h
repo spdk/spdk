@@ -106,11 +106,6 @@
 struct nvme_request {
 	struct nvme_command		cmd;
 
-	/**
-	 * Points to a parent request if part of a split request,
-	 *   NULL otherwise.
-	 */
-	struct nvme_request		*parent;
 	union {
 		void			*payload;
 	} u;
@@ -147,6 +142,12 @@ struct nvme_request {
 	 * Linked-list pointers for a child request in its parent's list.
 	 */
 	TAILQ_ENTRY(nvme_request)	child_tailq;
+
+	/**
+	 * Points to a parent request if part of a split request,
+	 *   NULL otherwise.
+	 */
+	struct nvme_request		*parent;
 
 	/**
 	 * Completion status for a parent request.  Initialized to all 0's

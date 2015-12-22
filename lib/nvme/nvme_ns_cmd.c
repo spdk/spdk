@@ -75,6 +75,7 @@ nvme_request_add_child(struct nvme_request *parent, struct nvme_request *child)
 		 *  relatively rare.
 		 */
 		TAILQ_INIT(&parent->children);
+		parent->parent = NULL;
 		memset(&parent->parent_status, 0, sizeof(struct nvme_completion));
 	}
 
