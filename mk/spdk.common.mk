@@ -73,7 +73,7 @@ COMMON_CFLAGS += -DDEBUG -O0
 else
 COMMON_CFLAGS += -DNDEBUG -O2
 # Enable _FORTIFY_SOURCE checks - these only work when optimizations are enabled.
-COMMON_CFLAGS += -D_FORTIFY_SOURCE=2
+COMMON_CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 endif
 
 ifeq ($(CONFIG_COVERAGE), y)
