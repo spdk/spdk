@@ -196,12 +196,12 @@ nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload, uint64_t lba,
 
 int
 nvme_ns_cmd_deallocate(struct nvme_namespace *ns, void *payload,
-		       uint8_t num_ranges, nvme_cb_fn_t cb_fn, void *cb_arg)
+		       uint16_t num_ranges, nvme_cb_fn_t cb_fn, void *cb_arg)
 {
 	struct nvme_request	*req;
 	struct nvme_command	*cmd;
 
-	if (num_ranges == 0) {
+	if (num_ranges == 0 || num_ranges > NVME_DATASET_MANAGEMENT_MAX_RANGES) {
 		return EINVAL;
 	}
 

@@ -59,6 +59,12 @@
 
 #define NVME_MAX_IO_QUEUES		(1 << 16)
 
+/**
+ * Indicates the maximum number of range sets that may be specified
+ *  in the dataset mangement command.
+ */
+#define NVME_DATASET_MANAGEMENT_MAX_RANGES	256
+
 union nvme_cap_lo_register {
 	uint32_t	raw;
 	struct {

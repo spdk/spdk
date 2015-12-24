@@ -324,7 +324,8 @@ int nvme_ns_cmd_read(struct nvme_namespace *ns, void *payload,
  * \param ns NVMe namespace to submit the deallocation request
  * \param payload virtual address pointer to the list of LBA ranges to
  *                deallocate
- * \param num_ranges number of ranges in the list pointed to by payload
+ * \param num_ranges number of ranges in the list pointed to by payload; must be
+ *                between 1 and \ref NVME_DATASET_MANAGEMENT_MAX_RANGES, inclusive.
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function
  *
@@ -335,7 +336,7 @@ int nvme_ns_cmd_read(struct nvme_namespace *ns, void *payload,
  * nvme_register_io_thread().
  */
 int nvme_ns_cmd_deallocate(struct nvme_namespace *ns, void *payload,
-			   uint8_t num_ranges, nvme_cb_fn_t cb_fn,
+			   uint16_t num_ranges, nvme_cb_fn_t cb_fn,
 			   void *cb_arg);
 
 /**
