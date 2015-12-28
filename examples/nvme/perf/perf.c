@@ -126,7 +126,7 @@ static int g_num_workers = 0;
 
 static uint64_t g_tsc_rate;
 
-static int g_io_size_bytes;
+static uint32_t g_io_size_bytes;
 static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
@@ -146,13 +146,22 @@ register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
 	struct ns_entry *entry;
 	const struct nvme_controller_data *cdata;
 
+	cdata = nvme_ctrlr_get_data(ctrlr);
+
+	if (nvme_ns_get_size(ns) < g_io_size_bytes ||
+	    nvme_ns_get_sector_size(ns) > g_io_size_bytes) {
+		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
+		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
+		       cdata->mn, cdata->sn, nvme_ns_get_id(ns),
+		       nvme_ns_get_size(ns), nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		return;
+	}
+
 	entry = malloc(sizeof(struct ns_entry));
 	if (entry == NULL) {
 		perror("ns_entry malloc");
 		exit(1);
 	}
-
-	cdata = nvme_ctrlr_get_data(ctrlr);
 
 	entry->type = ENTRY_TYPE_NVME_NS;
 	entry->u.nvme.ctrlr = ctrlr;
