@@ -331,13 +331,23 @@ test_nvme_ns_cmd_deallocate(void)
 	struct nvme_controller	ctrlr;
 	nvme_cb_fn_t		cb_fn = NULL;
 	void			*cb_arg = NULL;
-	uint8_t			num_ranges = 1;
+	uint16_t		num_ranges = 1;
 	void			*payload = NULL;
 	int			rc = 0;
 
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 	payload = malloc(num_ranges * sizeof(struct nvme_dsm_range));
 
+	nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
+	CU_ASSERT(g_request->cmd.opc == NVME_OPC_DATASET_MANAGEMENT);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT(g_request->cmd.cdw10 == num_ranges - 1u);
+	CU_ASSERT(g_request->cmd.cdw11 == NVME_DSM_ATTR_DEALLOCATE);
+	free(payload);
+	nvme_free_request(g_request);
+
+	num_ranges = 256;
+	payload = malloc(num_ranges * sizeof(struct nvme_dsm_range));
 	nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
 	CU_ASSERT(g_request->cmd.opc == NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
