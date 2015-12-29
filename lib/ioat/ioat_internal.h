@@ -72,7 +72,7 @@ struct ioat_channel {
 	uint64_t            last_seen;
 
 	struct ioat_descriptor		*ring;
-	struct ioat_dma_hw_descriptor	*hw_ring;
+	union ioat_hw_descriptor	*hw_ring;
 	uint64_t			hw_ring_phys_addr;
 };
 

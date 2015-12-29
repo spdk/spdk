@@ -94,6 +94,31 @@ struct ioat_registers {
 
 #define IOAT_CHANCMP_ALIGN		8	/* CHANCMP address must be 64-bit aligned */
 
+struct ioat_generic_hw_descriptor {
+	uint32_t size;
+	union {
+		uint32_t control_raw;
+		struct {
+			uint32_t int_enable: 1;
+			uint32_t src_snoop_disable: 1;
+			uint32_t dest_snoop_disable: 1;
+			uint32_t completion_update: 1;
+			uint32_t fence: 1;
+			uint32_t reserved2: 1;
+			uint32_t src_page_break: 1;
+			uint32_t dest_page_break: 1;
+			uint32_t bundle: 1;
+			uint32_t dest_dca: 1;
+			uint32_t hint: 1;
+			uint32_t reserved: 13;
+			uint32_t op: 8;
+		} control;
+	} u;
+	uint64_t src_addr;
+	uint64_t dest_addr;
+	uint64_t next;
+	uint64_t op_specific[4];
+};
 
 struct ioat_dma_hw_descriptor {
 	uint32_t size;
@@ -264,5 +289,18 @@ struct ioat_pq_update_hw_descriptor {
 struct ioat_raw_hw_descriptor {
 	uint64_t field[8];
 };
+
+union ioat_hw_descriptor {
+	struct ioat_raw_hw_descriptor raw;
+	struct ioat_generic_hw_descriptor generic;
+	struct ioat_dma_hw_descriptor dma;
+	struct ioat_fill_hw_descriptor fill;
+	struct ioat_xor_hw_descriptor xor;
+	struct ioat_xor_ext_hw_descriptor xor_ext;
+	struct ioat_pq_hw_descriptor pq;
+	struct ioat_pq_ext_hw_descriptor pq_ext;
+	struct ioat_pq_update_hw_descriptor pq_update;
+};
+_Static_assert(sizeof(union ioat_hw_descriptor) == 64, "incorrect ioat_hw_descriptor layout");
 
 #endif /* __IOAT_SPEC_H__ */

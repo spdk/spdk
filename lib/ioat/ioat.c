@@ -208,7 +208,7 @@ ioat_get_ring_index(struct ioat_channel *ioat, uint32_t index)
 static void
 ioat_get_ring_entry(struct ioat_channel *ioat, uint32_t index,
 		    struct ioat_descriptor **desc,
-		    struct ioat_dma_hw_descriptor **hw_desc)
+		    union ioat_hw_descriptor **hw_desc)
 {
 	uint32_t i = ioat_get_ring_index(ioat, index);
 
@@ -220,7 +220,7 @@ static uint64_t
 ioat_get_desc_phys_addr(struct ioat_channel *ioat, uint32_t index)
 {
 	return ioat->hw_ring_phys_addr +
-	       ioat_get_ring_index(ioat, index) * sizeof(struct ioat_dma_hw_descriptor);
+	       ioat_get_ring_index(ioat, index) * sizeof(union ioat_hw_descriptor);
 }
 
 static void
@@ -239,7 +239,7 @@ static struct ioat_descriptor *
 ioat_prep_null(struct ioat_channel *ioat)
 {
 	struct ioat_descriptor *desc;
-	struct ioat_dma_hw_descriptor *hw_desc;
+	union ioat_hw_descriptor *hw_desc;
 
 	if (ioat_get_ring_space(ioat) < 1) {
 		return NULL;
@@ -247,14 +247,14 @@ ioat_prep_null(struct ioat_channel *ioat)
 
 	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
 
-	hw_desc->u.control_raw = 0;
-	hw_desc->u.control.op = IOAT_OP_COPY;
-	hw_desc->u.control.null = 1;
-	hw_desc->u.control.completion_update = 1;
+	hw_desc->dma.u.control_raw = 0;
+	hw_desc->dma.u.control.op = IOAT_OP_COPY;
+	hw_desc->dma.u.control.null = 1;
+	hw_desc->dma.u.control.completion_update = 1;
 
-	hw_desc->size = 8;
-	hw_desc->src_addr = 0;
-	hw_desc->dest_addr = 0;
+	hw_desc->dma.size = 8;
+	hw_desc->dma.src_addr = 0;
+	hw_desc->dma.dest_addr = 0;
 
 	desc->callback_fn = NULL;
 	desc->callback_arg = NULL;
@@ -269,7 +269,7 @@ ioat_prep_copy(struct ioat_channel *ioat, uint64_t dst,
 	       uint64_t src, uint32_t len)
 {
 	struct ioat_descriptor *desc;
-	struct ioat_dma_hw_descriptor *hw_desc;
+	union ioat_hw_descriptor *hw_desc;
 
 	ioat_assert(len <= ioat->max_xfer_size);
 
@@ -279,13 +279,13 @@ ioat_prep_copy(struct ioat_channel *ioat, uint64_t dst,
 
 	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
 
-	hw_desc->u.control_raw = 0;
-	hw_desc->u.control.op = IOAT_OP_COPY;
-	hw_desc->u.control.completion_update = 1;
+	hw_desc->dma.u.control_raw = 0;
+	hw_desc->dma.u.control.op = IOAT_OP_COPY;
+	hw_desc->dma.u.control.completion_update = 1;
 
-	hw_desc->size = len;
-	hw_desc->src_addr = src;
-	hw_desc->dest_addr = dst;
+	hw_desc->dma.size = len;
+	hw_desc->dma.src_addr = src;
+	hw_desc->dma.dest_addr = dst;
 
 	desc->callback_fn = NULL;
 	desc->callback_arg = NULL;
@@ -449,14 +449,14 @@ ioat_channel_start(struct ioat_channel *ioat)
 		return -1;
 	}
 
-	ioat->hw_ring = ioat_zmalloc(NULL, num_descriptors * sizeof(struct ioat_dma_hw_descriptor), 64,
+	ioat->hw_ring = ioat_zmalloc(NULL, num_descriptors * sizeof(union ioat_hw_descriptor), 64,
 				     &ioat->hw_ring_phys_addr);
 	if (!ioat->hw_ring) {
 		return -1;
 	}
 
 	for (i = 0; i < num_descriptors; i++) {
-		ioat->hw_ring[i].next = ioat_get_desc_phys_addr(ioat, i + 1);
+		ioat->hw_ring[i].generic.next = ioat_get_desc_phys_addr(ioat, i + 1);
 	}
 
 	ioat->head = 0;
