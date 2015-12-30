@@ -41,7 +41,8 @@
 static struct nvme_request *
 _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 		uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
-		uint32_t opc, nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		uint32_t opc, uint32_t io_flags,
+		nvme_req_reset_sgl_fn_t reset_sgl_fn,
 		nvme_req_next_sge_fn_t next_sge_fn);
 
 static void
@@ -91,7 +92,7 @@ static struct nvme_request *
 _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 			   uint64_t lba, uint32_t lba_count,
 			   nvme_cb_fn_t cb_fn, void *cb_arg, uint32_t opc,
-			   struct nvme_request *req,
+			   uint32_t io_flags, struct nvme_request *req,
 			   uint32_t sectors_per_max_io, uint32_t sector_mask,
 			   nvme_req_reset_sgl_fn_t reset_sgl_fn,
 			   nvme_req_next_sge_fn_t next_sge_fn)
@@ -106,7 +107,7 @@ _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 		lba_count = nvme_min(remaining_lba_count, lba_count);
 
 		child = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn,
-					cb_arg, opc, reset_sgl_fn, next_sge_fn);
+					cb_arg, opc, io_flags, reset_sgl_fn, next_sge_fn);
 		if (child == NULL) {
 			nvme_free_request(req);
 			return NULL;
@@ -127,7 +128,8 @@ _nvme_ns_cmd_split_request(struct nvme_namespace *ns, void *payload,
 static struct nvme_request *
 _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 		uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
-		uint32_t opc, nvme_req_reset_sgl_fn_t reset_sgl_fn,
+		uint32_t opc, uint32_t io_flags,
+		nvme_req_reset_sgl_fn_t reset_sgl_fn,
 		nvme_req_next_sge_fn_t next_sge_fn)
 {
 	struct nvme_request	*req;
@@ -136,6 +138,11 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 	uint32_t		sector_size;
 	uint32_t		sectors_per_max_io;
 	uint32_t		sectors_per_stripe;
+
+	if (io_flags & 0xFFFF) {
+		/* The bottom 16 bits must be empty */
+		return NULL;
+	}
 
 	sector_size = ns->sector_size;
 	sectors_per_max_io = ns->sectors_per_max_io;
@@ -159,11 +166,11 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 	    (((lba & (sectors_per_stripe - 1)) + lba_count) > sectors_per_stripe)) {
 
 		return _nvme_ns_cmd_split_request(ns, payload, lba, lba_count, cb_fn, cb_arg, opc,
-						  req, sectors_per_stripe, sectors_per_stripe - 1,
+						  io_flags, req, sectors_per_stripe, sectors_per_stripe - 1,
 						  reset_sgl_fn, next_sge_fn);
 	} else if (lba_count > sectors_per_max_io) {
 		return _nvme_ns_cmd_split_request(ns, payload, lba, lba_count, cb_fn, cb_arg, opc,
-						  req, sectors_per_max_io, 0,
+						  io_flags, req, sectors_per_max_io, 0,
 						  reset_sgl_fn, next_sge_fn);
 	} else {
 		cmd = &req->cmd;
@@ -172,7 +179,9 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 
 		tmp_lba = (uint64_t *)&cmd->cdw10;
 		*tmp_lba = lba;
+
 		cmd->cdw12 = lba_count - 1;
+		cmd->cdw12 |= io_flags;
 	}
 
 	return req;
@@ -180,11 +189,13 @@ _nvme_ns_cmd_rw(struct nvme_namespace *ns, void *payload, uint64_t lba,
 
 int
 nvme_ns_cmd_read(struct nvme_namespace *ns, void *payload, uint64_t lba,
-		 uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg)
+		 uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
+		 uint32_t io_flags)
 {
 	struct nvme_request *req;
 
-	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_READ, NULL, NULL);
+	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_READ, io_flags,
+			      NULL, NULL);
 	if (req != NULL) {
 		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
 		return 0;
@@ -195,14 +206,14 @@ nvme_ns_cmd_read(struct nvme_namespace *ns, void *payload, uint64_t lba,
 
 int
 nvme_ns_cmd_readv(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
-		  nvme_cb_fn_t cb_fn, void *cb_arg,
+		  nvme_cb_fn_t cb_fn, void *cb_arg, uint32_t io_flags,
 		  nvme_req_reset_sgl_fn_t reset_sgl_fn,
 		  nvme_req_next_sge_fn_t next_sge_fn)
 {
 	struct nvme_request *req;
 
-	req = _nvme_ns_cmd_rw(ns, NULL, lba, lba_count, cb_fn, cb_arg, NVME_OPC_READ, reset_sgl_fn,
-			      next_sge_fn);
+	req = _nvme_ns_cmd_rw(ns, NULL, lba, lba_count, cb_fn, cb_arg, NVME_OPC_READ, io_flags,
+			      reset_sgl_fn, next_sge_fn);
 	if (req != NULL) {
 		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
 		return 0;
@@ -213,11 +224,13 @@ nvme_ns_cmd_readv(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
 
 int
 nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload, uint64_t lba,
-		  uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg)
+		  uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
+		  uint32_t io_flags)
 {
 	struct nvme_request *req;
 
-	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_WRITE, NULL, NULL);
+	req = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn, cb_arg, NVME_OPC_WRITE, io_flags,
+			      NULL, NULL);
 	if (req != NULL) {
 		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
 		return 0;
@@ -228,14 +241,14 @@ nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload, uint64_t lba,
 
 int
 nvme_ns_cmd_writev(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
-		   nvme_cb_fn_t cb_fn, void *cb_arg,
+		   nvme_cb_fn_t cb_fn, void *cb_arg, uint32_t io_flags,
 		   nvme_req_reset_sgl_fn_t reset_sgl_fn,
 		   nvme_req_next_sge_fn_t next_sge_fn)
 {
 	struct nvme_request *req;
 
-	req = _nvme_ns_cmd_rw(ns, NULL, lba, lba_count, cb_fn, cb_arg, NVME_OPC_WRITE, reset_sgl_fn,
-			      next_sge_fn);
+	req = _nvme_ns_cmd_rw(ns, NULL, lba, lba_count, cb_fn, cb_arg, NVME_OPC_WRITE, io_flags,
+			      reset_sgl_fn, next_sge_fn);
 	if (req != NULL) {
 		nvme_ctrlr_submit_io_request(ns->ctrlr, req);
 		return 0;

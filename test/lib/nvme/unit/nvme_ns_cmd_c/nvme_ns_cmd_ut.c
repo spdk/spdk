@@ -119,7 +119,7 @@ split_test(void)
 	lba = 0;
 	lba_count = 1;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -155,7 +155,7 @@ split_test2(void)
 	lba = 0;
 	lba_count = (256 * 1024) / 512;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -210,7 +210,7 @@ split_test3(void)
 	lba = 10; /* Start at an LBA that isn't aligned to the stripe size */
 	lba_count = (256 * 1024) / 512;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -267,7 +267,8 @@ split_test4(void)
 	lba = 10; /* Start at an LBA that isn't aligned to the stripe size */
 	lba_count = (256 * 1024) / 512;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
+			      NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -281,6 +282,8 @@ split_test4(void)
 	CU_ASSERT(child->payload_size == (256 - 10) * 512);
 	CU_ASSERT(cmd_lba == 10);
 	CU_ASSERT(cmd_lba_count == 256 - 10);
+	CU_ASSERT((child->cmd.cdw12 & NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
+	CU_ASSERT((child->cmd.cdw12 & NVME_IO_FLAGS_LIMITED_RETRY) == 0);
 	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
@@ -290,6 +293,8 @@ split_test4(void)
 	CU_ASSERT(child->payload_size == 128 * 1024);
 	CU_ASSERT(cmd_lba == 256);
 	CU_ASSERT(cmd_lba_count == 256);
+	CU_ASSERT((child->cmd.cdw12 & NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
+	CU_ASSERT((child->cmd.cdw12 & NVME_IO_FLAGS_LIMITED_RETRY) == 0);
 	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
@@ -299,6 +304,8 @@ split_test4(void)
 	CU_ASSERT(child->payload_size == 10 * 512);
 	CU_ASSERT(cmd_lba == 512);
 	CU_ASSERT(cmd_lba_count == 10);
+	CU_ASSERT((child->cmd.cdw12 & NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
+	CU_ASSERT((child->cmd.cdw12 & NVME_IO_FLAGS_LIMITED_RETRY) == 0);
 	nvme_free_request(child);
 
 	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
@@ -362,6 +369,40 @@ test_nvme_ns_cmd_deallocate(void)
 	CU_ASSERT(rc != 0);
 }
 
+static void
+test_io_flags(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	void			*payload;
+	uint64_t		lba;
+	uint32_t		lba_count;
+	int			rc;
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 128 * 1024);
+	payload = malloc(256 * 1024);
+	lba = 0;
+	lba_count = (4 * 1024) / 512;
+
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
+			      NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT((g_request->cmd.cdw12 & NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
+	CU_ASSERT((g_request->cmd.cdw12 & NVME_IO_FLAGS_LIMITED_RETRY) == 0);
+	nvme_free_request(g_request);
+
+	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
+			      NVME_IO_FLAGS_LIMITED_RETRY);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT((g_request->cmd.cdw12 & NVME_IO_FLAGS_FORCE_UNIT_ACCESS) == 0);
+	CU_ASSERT((g_request->cmd.cdw12 & NVME_IO_FLAGS_LIMITED_RETRY) != 0);
+	nvme_free_request(g_request);
+
+	free(payload);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -384,6 +425,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "split_test4", split_test4) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_flush testing", test_nvme_ns_cmd_flush) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_deallocate testing", test_nvme_ns_cmd_deallocate) == NULL
+		|| CU_add_test(suite, "io_flags", test_io_flags) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

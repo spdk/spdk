@@ -1104,4 +1104,7 @@ SPDK_STATIC_ASSERT(sizeof(struct nvme_firmware_page) == 512, "Incorrect size");
 #define nvme_completion_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
 
+#define NVME_IO_FLAGS_FORCE_UNIT_ACCESS (1U << 30)
+#define NVME_IO_FLAGS_LIMITED_RETRY (1U << 31)
+
 #endif

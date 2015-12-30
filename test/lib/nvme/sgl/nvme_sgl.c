@@ -304,7 +304,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	}
 
 	rc = nvme_ns_cmd_writev(ns, BASE_LBA_START, lba_count,
-				io_complete, req,
+				io_complete, req, 0,
 				nvme_request_reset_sgl,
 				nvme_request_next_sge);
 
@@ -333,7 +333,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	}
 
 	rc = nvme_ns_cmd_readv(ns, BASE_LBA_START, lba_count,
-			       io_complete, req,
+			       io_complete, req, 0,
 			       nvme_request_reset_sgl,
 			       nvme_request_next_sge);
 
