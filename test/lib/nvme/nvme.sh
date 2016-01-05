@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 testdir=$(readlink -f $(dirname $0))
 rootdir="$testdir/../../.."
 source $rootdir/scripts/autotest_common.sh
@@ -16,23 +18,19 @@ timing_exit unit
 
 timing_enter aer
 $testdir/aer/aer
-process_core
 timing_exit aer
 
 timing_enter identify
 $rootdir/examples/nvme/identify/identify
-process_core
 timing_exit identify
 
 timing_enter perf
 $rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 5
-process_core
 timing_exit perf
 
 #Now test nvme reset function
 timing_enter reset
 $testdir/reset/reset -q 64 -w write -s 4096 -t 15
-process_core
 timing_exit reset
 
 
