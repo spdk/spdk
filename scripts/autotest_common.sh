@@ -10,7 +10,7 @@ case `uname` in
 		MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
 		;;
 	Linux)
-		DPDK_DIR=/usr/local/dpdk-2.1.0/x86_64-native-linuxapp-gcc
+		DPDK_DIR=/usr/local/share/dpdk/x86_64-native-linuxapp-gcc
 		MAKE=make
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		MAKECONFIG="$MAKECONFIG CONFIG_COVERAGE=y"
