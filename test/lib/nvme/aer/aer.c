@@ -66,9 +66,18 @@ static int aer_done = 0;
 
 
 static int temperature_done = 0;
+static int failed = 0;
 
-static void set_feature_completion(void *arg, const struct nvme_completion *cpl)
+static void set_feature_completion(void *cb_arg, const struct nvme_completion *cpl)
 {
+	struct dev *dev = cb_arg;
+
+	if (nvme_completion_is_error(cpl)) {
+		printf("%s: set feature (temp threshold) failed\n", dev->name);
+		failed = 1;
+		return;
+	}
+
 	/* Admin command completions are synchronized by the NVMe driver,
 	 * so we don't need to do any special locking here. */
 	temperature_done++;
@@ -93,11 +102,13 @@ get_feature_completion(void *cb_arg, const struct nvme_completion *cpl)
 
 	if (nvme_completion_is_error(cpl)) {
 		printf("%s: get feature (temp threshold) failed\n", dev->name);
-	} else {
-		dev->orig_temp_threshold = cpl->cdw0;
-		printf("%s: original temperature threshold: %u Kelvin (%d Celsius)\n",
-		       dev->name, dev->orig_temp_threshold, dev->orig_temp_threshold - 273);
+		failed = 1;
+		return;
 	}
+
+	dev->orig_temp_threshold = cpl->cdw0;
+	printf("%s: original temperature threshold: %u Kelvin (%d Celsius)\n",
+	       dev->name, dev->orig_temp_threshold, dev->orig_temp_threshold - 273);
 
 	/* Set temperature threshold to a low value so the AER will trigger. */
 	set_temp_threshold(dev, 200);
@@ -128,10 +139,11 @@ get_log_page_completion(void *cb_arg, const struct nvme_completion *cpl)
 
 	if (nvme_completion_is_error(cpl)) {
 		printf("%s: get log page failed\n", dev->name);
-	} else {
-		print_health_page(dev, dev->health_page);
+		failed = 1;
+		return;
 	}
 
+	print_health_page(dev, dev->health_page);
 	aer_done++;
 }
 
@@ -165,6 +177,12 @@ static void aer_cb(void *arg, const struct nvme_completion *cpl)
 {
 	uint32_t log_page_id = (cpl->cdw0 & 0xFF0000) >> 16;
 	struct dev *dev = arg;
+
+	if (nvme_completion_is_error(cpl)) {
+		printf("%s: AER failed\n", dev->name);
+		failed = 1;
+		return;
+	}
 
 	printf("%s: aer_cb for log page %d\n", dev->name, log_page_id);
 
@@ -221,7 +239,6 @@ int main(int argc, char **argv)
 
 	pci_dev_iter = pci_id_match_iterator_create(&match);
 
-	rc = 0;
 	while ((pci_dev = pci_device_next(pci_dev_iter))) {
 		struct dev *dev;
 
@@ -248,15 +265,15 @@ int main(int argc, char **argv)
 		dev->health_page = rte_zmalloc("nvme health", sizeof(*dev->health_page), 4096);
 		if (dev->health_page == NULL) {
 			printf("Allocation error (health page)\n");
-			rc = 1;
-			continue; /* TODO: just abort */
+			failed = 1;
+			goto done;
 		}
 
 		dev->ctrlr = nvme_attach(pci_dev);
 		if (dev->ctrlr == NULL) {
 			fprintf(stderr, "failed to attach to NVMe controller %s\n", dev->name);
-			rc = 1;
-			continue; /* TODO: just abort */
+			failed = 1;
+			goto done;
 		}
 	}
 
@@ -271,15 +288,19 @@ int main(int argc, char **argv)
 		get_temp_threshold(dev);
 	}
 
-	while (temperature_done < num_devs) {
+	while (!failed && temperature_done < num_devs) {
 		foreach_dev(dev) {
 			nvme_ctrlr_process_admin_completions(dev->ctrlr);
 		}
 	}
 
+	if (failed) {
+		goto done;
+	}
+
 	printf("Waiting for all controllers to trigger AER...\n");
 
-	while (aer_done < num_devs) {
+	while (!failed && aer_done < num_devs) {
 		foreach_dev(dev) {
 			nvme_ctrlr_process_admin_completions(dev->ctrlr);
 		}
@@ -293,8 +314,9 @@ int main(int argc, char **argv)
 		nvme_detach(dev->ctrlr);
 	}
 
+done:
 	cleanup();
 
 	pci_iterator_destroy(pci_dev_iter);
-	return rc;
+	return failed;
 }
