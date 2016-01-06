@@ -579,6 +579,9 @@ associate_workers_with_ns(void)
 	count = g_num_namespaces;
 
 	for (i = 0; i < count; i++) {
+		if (entry == NULL) {
+			break;
+		}
 		ns_ctx = malloc(sizeof(struct ns_worker_ctx));
 		if (!ns_ctx) {
 			return -1;
