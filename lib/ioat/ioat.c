@@ -498,7 +498,7 @@ ioat_attach(void *device)
 	struct ioat_channel 	*ioat;
 	uint32_t cmd_reg;
 
-	ioat = malloc(sizeof(struct ioat_channel));
+	ioat = calloc(1, sizeof(struct ioat_channel));
 	if (ioat == NULL) {
 		return NULL;
 	}
