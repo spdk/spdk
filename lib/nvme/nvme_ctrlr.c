@@ -38,7 +38,7 @@
  *
  */
 
-static void nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
+static int nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 		struct nvme_async_event_request *aer);
 
 static int
@@ -520,10 +520,16 @@ nvme_ctrlr_async_event_cb(void *arg, const struct nvme_completion *cpl)
 	 * Repost another asynchronous event request to replace the one
 	 *  that just completed.
 	 */
-	nvme_ctrlr_construct_and_submit_aer(aer->ctrlr, aer);
+	if (nvme_ctrlr_construct_and_submit_aer(ctrlr, aer)) {
+		/*
+		 * We can't do anything to recover from a failure here,
+		 * so just print a warning message and leave the AER unsubmitted.
+		 */
+		nvme_printf(ctrlr, "resubmitting AER failed!\n");
+	}
 }
 
-static void
+static int
 nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 				    struct nvme_async_event_request *aer)
 {
@@ -532,6 +538,9 @@ nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 	aer->ctrlr = ctrlr;
 	req = nvme_allocate_request(NULL, 0, nvme_ctrlr_async_event_cb, aer);
 	aer->req = req;
+	if (req == NULL) {
+		return -1;
+	}
 
 	/*
 	 * Disable timeout here, since asynchronous event requests should by
@@ -540,6 +549,8 @@ nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 	req->timeout = false;
 	req->cmd.opc = NVME_OPC_ASYNC_EVENT_REQUEST;
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+
+	return 0;
 }
 
 static int
@@ -569,7 +580,10 @@ nvme_ctrlr_configure_aer(struct nvme_controller *ctrlr)
 
 	for (i = 0; i < ctrlr->num_aers; i++) {
 		aer = &ctrlr->aer[i];
-		nvme_ctrlr_construct_and_submit_aer(ctrlr, aer);
+		if (nvme_ctrlr_construct_and_submit_aer(ctrlr, aer)) {
+			nvme_printf(ctrlr, "nvme_ctrlr_construct_and_submit_aer failed!\n");
+			return -1;
+		}
 	}
 
 	return 0;
