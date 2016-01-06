@@ -50,6 +50,12 @@ int nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 {
 	return 0;
 }
+void
+nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
+			    uint32_t nsid, void *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
+			    void *cb_arg)
+{
+}
 
 void
 nvme_qpair_fail(struct nvme_qpair *qpair)
@@ -175,6 +181,34 @@ test_nvme_ctrlr_fail(void)
 	CU_ASSERT(ctrlr.is_failed == true);
 }
 
+static void
+test_nvme_ctrlr_construct_intel_support_log_page_list(void)
+{
+	bool	res;
+	struct nvme_controller			ctrlr = {};
+	struct nvme_intel_log_page_directory	payload = {};
+
+	/* set a invalid vendor id */
+	ctrlr.cdata.vid = 0xFFFF;
+	memset(&payload, 0, sizeof(struct nvme_intel_log_page_directory));
+
+	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
+	CU_ASSERT(res == false);
+
+	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
+	payload.temperature_statistics_log_len = 1;
+	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY);
+	CU_ASSERT(res == true);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
+	CU_ASSERT(res == true);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_READ_CMD_LATENCY);
+	CU_ASSERT(res == false);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_SMART);
+	CU_ASSERT(res == false);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -192,6 +226,8 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test nvme_ctrlr function nvme_ctrlr_fail", test_nvme_ctrlr_fail) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_construct_intel_support_log_page_list",
+			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

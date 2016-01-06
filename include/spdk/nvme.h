@@ -108,6 +108,13 @@ const struct nvme_controller_data *nvme_ctrlr_get_data(struct nvme_controller *c
 uint32_t nvme_ctrlr_get_num_ns(struct nvme_controller *ctrlr);
 
 /**
+ * \brief Figure out if it is supported for the given NVMe controller and page identifier.
+ *
+ * This function is thread safe and can be called at any point after nvme_attach().
+ */
+bool nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, int log_page);
+
+/**
  * Signature for callback function invoked when a command is completed.
  *
  * The nvme_completion parameter contains the completion status.
@@ -218,6 +225,25 @@ struct nvme_namespace;
  *
  */
 struct nvme_namespace *nvme_ctrlr_get_ns(struct nvme_controller *ctrlr, uint32_t ns_id);
+
+/**
+ * \brief Get a specific log page from the NVMe controllerr.
+ *
+ * This function can be called at any point after nvme_attach().
+ * \param log_page - the log page identifier.
+ * \param nsid - this is one of the cases where NVME_GLOBAL_NAMESPACE_TAG can
+ * be used for certain log pages.
+ * \param payload - the pointer to the payload buffer.
+ * \param payload_size - the size of payload buffer.
+ * \param cb_fn - call back funciton pointer which will be called after get log page.
+ * \param cb_arg - input parameter for the cb_fn.
+ * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ */
+void nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr,
+				 uint8_t log_page, uint32_t nsid,
+				 void *payload, uint32_t payload_size,
+				 nvme_cb_fn_t cb_fn, void *cb_arg);
 
 /**
  * \brief Get the identify namespace data as defined by the NVMe specification.

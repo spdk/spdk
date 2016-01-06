@@ -52,6 +52,8 @@
 #include "spdk/queue.h"
 #include "spdk/barrier.h"
 #include "spdk/mmio.h"
+#include "spdk/pci_ids.h"
+#include "spdk/nvme_intel.h"
 
 #define NVME_MAX_PRP_LIST_ENTRIES	(32)
 
@@ -230,6 +232,23 @@ struct nvme_namespace {
 	uint16_t			flags;
 };
 
+/** \brief supported log pages. */
+struct nvme_supported_log_pages {
+	uint32_t	vendor_id;
+	/**
+	 * List of supported generic log page IDs, terminated with 0.
+	 */
+	uint8_t	generic_page_id[128];
+	/**
+	 * List of supported command set page IDs, terminated with 0.
+	 */
+	uint8_t	command_set_page_id[64];
+	/**
+	 * List of supported vendor specific page IDs, terminated with 0.
+	 */
+	uint8_t	vendor_specific_page_id[64];
+};
+
 /*
  * One of these per allocated PCI device.
  */
@@ -252,6 +271,9 @@ struct nvme_controller {
 	bool				is_failed;
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
+
+	/** All the log pages supported */
+	struct nvme_supported_log_pages	supported_log_pages;
 
 	/* Opaque handle to associated PCI device. */
 	void				*devhandle;
@@ -342,31 +364,12 @@ void	nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr,
 				   uint8_t feature, uint32_t cdw11,
 				   void *payload, uint32_t payload_size,
 				   nvme_cb_fn_t cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr,
-				    uint8_t log_page, uint32_t nsid,
-				    void *payload, uint32_t payload_size,
-				    nvme_cb_fn_t cb_fn, void *cb_arg);
-
 void	nvme_ctrlr_cmd_identify_controller(struct nvme_controller *ctrlr,
 		void *payload,
 		nvme_cb_fn_t cb_fn, void *cb_arg);
 void	nvme_ctrlr_cmd_identify_namespace(struct nvme_controller *ctrlr,
 		uint16_t nsid, void *payload,
 		nvme_cb_fn_t cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_get_error_page(struct nvme_controller *ctrlr,
-				      struct nvme_error_information_entry *payload,
-				      uint32_t num_entries, /* 0 = max */
-				      nvme_cb_fn_t cb_fn,
-				      void *cb_arg);
-void	nvme_ctrlr_cmd_get_health_information_page(struct nvme_controller *ctrlr,
-		uint32_t nsid,
-		struct nvme_health_information_page *payload,
-		nvme_cb_fn_t cb_fn,
-		void *cb_arg);
-void	nvme_ctrlr_cmd_get_firmware_page(struct nvme_controller *ctrlr,
-		struct nvme_firmware_page *payload,
-		nvme_cb_fn_t cb_fn,
-		void *cb_arg);
 void	nvme_ctrlr_cmd_create_io_cq(struct nvme_controller *ctrlr,
 				    struct nvme_qpair *io_que,
 				    nvme_cb_fn_t cb_fn, void *cb_arg);

@@ -81,6 +81,20 @@ enum nvme_intel_smart_attribute_code {
 	NVME_INTEL_SMART_HOST_BYTES_WRITTEN			= 0xF5,
 };
 
+struct nvme_intel_log_page_directory {
+	uint8_t		version[2];
+	uint8_t		reserved[384];
+	uint8_t		read_latency_log_len;
+	uint8_t		reserved2;
+	uint8_t		write_latency_log_len;
+	uint8_t		reserved3[5];
+	uint8_t		temperature_statistics_log_len;
+	uint8_t		reserved4[9];
+	uint8_t		smart_log_len;
+	uint8_t		reserved5[107];
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_intel_log_page_directory) == 512, "Incorrect size");
+
 struct nvme_intel_rw_latency_page {
 	uint16_t		major_revison;
 	uint16_t		minor_revison;

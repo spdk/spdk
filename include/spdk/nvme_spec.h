@@ -573,8 +573,9 @@ struct __attribute__((packed)) nvme_controller_data {
 	struct {
 		/* per namespace smart/health log page */
 		uint8_t		ns_smart : 1;
-
-		uint8_t		lpa_rsvd : 7;
+		/* command effects log page */
+		uint8_t		celp : 1;
+		uint8_t		lpa_rsvd : 6;
 	} lpa;
 
 	/** error log page entries */
@@ -876,8 +877,11 @@ enum nvme_log_page {
 	NVME_LOG_ERROR			= 0x01,
 	NVME_LOG_HEALTH_INFORMATION	= 0x02,
 	NVME_LOG_FIRMWARE_SLOT		= 0x03,
-	/* 0x04-0x7F - reserved */
-	/* 0x80-0xBF - I/O command set specific */
+	NVME_LOG_CHANGED_NS_LIST	= 0x04,
+	NVME_LOG_COMMAND_EFFECTS_LOG	= 0x05,
+	/* 0x06-0x7F - reserved */
+	NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
+	/* 0x81-0xBF - I/O command set specific */
 	/* 0xC0-0xFF - vendor specific */
 };
 

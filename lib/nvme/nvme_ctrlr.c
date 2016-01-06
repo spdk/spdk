@@ -32,7 +32,7 @@
  */
 
 #include "nvme_internal.h"
-
+#include "spdk/nvme_intel.h"
 /**
  * \file
  *
@@ -40,6 +40,84 @@
 
 static int nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 		struct nvme_async_event_request *aer);
+
+static void
+nvme_ctrlr_construct_intel_support_log_page_list(struct nvme_controller *ctrlr,
+		struct nvme_intel_log_page_directory *log_page_directory)
+{
+	int i = 0;
+
+	if (ctrlr->cdata.vid != PCI_VENDOR_ID_INTEL || log_page_directory == NULL)
+		return;
+
+	ctrlr->supported_log_pages.vendor_specific_page_id[i] = NVME_INTEL_LOG_PAGE_DIRECTORY;
+	i++;
+
+	if (log_page_directory->read_latency_log_len) {
+		ctrlr->supported_log_pages.vendor_specific_page_id[i] = NVME_INTEL_LOG_READ_CMD_LATENCY;
+		i++;
+	}
+	if (log_page_directory->write_latency_log_len) {
+		ctrlr->supported_log_pages.vendor_specific_page_id[i] = NVME_INTEL_LOG_WRITE_CMD_LATENCY;
+		i++;
+	}
+	if (log_page_directory->temperature_statistics_log_len) {
+		ctrlr->supported_log_pages.vendor_specific_page_id[i] = NVME_INTEL_LOG_TEMPERATURE;
+		i++;
+	}
+	if (log_page_directory->smart_log_len) {
+		ctrlr->supported_log_pages.vendor_specific_page_id[i] = NVME_INTEL_LOG_SMART;
+	}
+}
+
+static int nvme_ctrlr_set_intel_support_log_pages(struct nvme_controller *ctrlr)
+{
+	uint64_t phys_addr = 0;
+	struct nvme_completion_poll_status	status;
+	struct nvme_intel_log_page_directory *log_page_directory;
+
+	log_page_directory = nvme_malloc("nvme_log_page_directory",
+					 sizeof(struct nvme_intel_log_page_directory),
+					 64, &phys_addr);
+	if (log_page_directory == NULL) {
+		nvme_printf(NULL, "could not allocate log_page_directory\n");
+		return ENXIO;
+	}
+
+	status.done = false;
+	nvme_ctrlr_cmd_get_log_page(ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY, NVME_GLOBAL_NAMESPACE_TAG,
+				    log_page_directory, sizeof(struct nvme_intel_log_page_directory),
+				    nvme_completion_poll_cb,
+				    &status);
+	while (status.done == false) {
+		nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	}
+	if (nvme_completion_is_error(&status.cpl)) {
+		nvme_free(log_page_directory);
+		nvme_printf(ctrlr, "nvme_ctrlr_cmd_get_log_page failed!\n");
+		return ENXIO;
+	}
+
+	nvme_ctrlr_construct_intel_support_log_page_list(ctrlr, log_page_directory);
+	nvme_free(log_page_directory);
+	return 0;
+}
+
+static void
+nvme_ctrlr_set_supported_log_pages(struct nvme_controller *ctrlr)
+{
+	memset(&ctrlr->supported_log_pages, 0, sizeof(struct nvme_supported_log_pages));
+	ctrlr->supported_log_pages.vendor_id = ctrlr->cdata.vid;
+	ctrlr->supported_log_pages.generic_page_id[0] = NVME_LOG_ERROR;
+	ctrlr->supported_log_pages.generic_page_id[1] = NVME_LOG_HEALTH_INFORMATION;
+	ctrlr->supported_log_pages.generic_page_id[2] = NVME_LOG_FIRMWARE_SLOT;
+	if (ctrlr->cdata.lpa.celp) {
+		ctrlr->supported_log_pages.generic_page_id[3] = NVME_LOG_COMMAND_EFFECTS_LOG;
+	}
+	if (ctrlr->supported_log_pages.vendor_id == PCI_VENDOR_ID_INTEL) {
+		nvme_ctrlr_set_intel_support_log_pages(ctrlr);
+	}
+}
 
 static int
 nvme_ctrlr_construct_admin_qpair(struct nvme_controller *ctrlr)
@@ -620,6 +698,7 @@ nvme_ctrlr_start(struct nvme_controller *ctrlr)
 		return -1;
 	}
 
+	nvme_ctrlr_set_supported_log_pages(ctrlr);
 	return 0;
 }
 
@@ -781,4 +860,35 @@ nvme_ctrlr_register_aer_callback(struct nvme_controller *ctrlr,
 {
 	ctrlr->aer_cb_fn = aer_cb_fn;
 	ctrlr->aer_cb_arg = aer_cb_arg;
+}
+
+bool
+nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, int log_page)
+{
+	unsigned int i = 0;
+
+	while (i < sizeof(ctrlr->supported_log_pages.generic_page_id)) {
+		if (log_page == ctrlr->supported_log_pages.generic_page_id[i]) {
+			return true;
+		}
+		i++;
+	}
+
+	i = 0;
+	while (i < sizeof(ctrlr->supported_log_pages.command_set_page_id)) {
+		if (log_page == ctrlr->supported_log_pages.command_set_page_id[i]) {
+			return true;
+		}
+		i++;
+	}
+
+	i = 0;
+	while (i < sizeof(ctrlr->supported_log_pages.vendor_specific_page_id)) {
+		if (log_page == ctrlr->supported_log_pages.vendor_specific_page_id[i]) {
+			return true;
+		}
+		i++;
+	}
+
+	return false;
 }

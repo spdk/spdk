@@ -118,6 +118,62 @@ static void verify_io_raw_cmd(struct nvme_request *req)
 	CU_ASSERT(memcmp(&req->cmd, &command, sizeof(req->cmd)) == 0);
 }
 
+static void verify_intel_smart_log_page(struct nvme_request *req)
+{
+	uint32_t temp_cdw10;
+
+	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+	CU_ASSERT(req->cmd.nsid == health_log_nsid);
+
+	temp_cdw10 = ((sizeof(struct nvme_intel_smart_information_page) / sizeof(uint32_t) - 1) << 16) |
+		     NVME_INTEL_LOG_SMART;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
+static void verify_intel_temperature_log_page(struct nvme_request *req)
+{
+	uint32_t temp_cdw10;
+
+	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+
+	temp_cdw10 = ((sizeof(struct nvme_intel_temperature_page) / sizeof(uint32_t) - 1) << 16) |
+		     NVME_INTEL_LOG_TEMPERATURE;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
+static void verify_intel_read_latency_log_page(struct nvme_request *req)
+{
+	uint32_t temp_cdw10;
+
+	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+
+	temp_cdw10 = ((sizeof(struct nvme_intel_rw_latency_page) / sizeof(uint32_t) - 1) << 16) |
+		     NVME_INTEL_LOG_READ_CMD_LATENCY;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
+static void verify_intel_write_latency_log_page(struct nvme_request *req)
+{
+	uint32_t temp_cdw10;
+
+	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+
+	temp_cdw10 = ((sizeof(struct nvme_intel_rw_latency_page) / sizeof(uint32_t) - 1) << 16) |
+		     NVME_INTEL_LOG_WRITE_CMD_LATENCY;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
+static void verify_intel_get_log_page_directory(struct nvme_request *req)
+{
+	uint32_t temp_cdw10;
+
+	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
+
+	temp_cdw10 = ((sizeof(struct nvme_intel_log_page_directory) / sizeof(uint32_t) - 1) << 16) |
+		     NVME_INTEL_LOG_PAGE_DIRECTORY;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
 struct nvme_request *
 nvme_allocate_request(void *payload, uint32_t payload_size,
 		      nvme_cb_fn_t cb_fn, void *cb_arg)
@@ -158,7 +214,6 @@ nvme_ctrlr_submit_admin_request(struct nvme_controller *ctrlr, struct nvme_reque
 	memset(req, 0, sizeof(*req));
 }
 
-
 static void
 test_firmware_get_log_page(void)
 {
@@ -167,7 +222,9 @@ test_firmware_get_log_page(void)
 
 	verify_fn = verify_firmware_log_page;
 
-	nvme_ctrlr_cmd_get_firmware_page(&ctrlr, &payload, NULL, NULL);
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_LOG_FIRMWARE_SLOT, NVME_GLOBAL_NAMESPACE_TAG,
+				    &payload,
+				    sizeof(payload), NULL, NULL);
 }
 
 static void
@@ -178,7 +235,8 @@ test_health_get_log_page(void)
 
 	verify_fn = verify_health_log_page;
 
-	nvme_ctrlr_cmd_get_health_information_page(&ctrlr, health_log_nsid, &payload, NULL, NULL);
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_LOG_HEALTH_INFORMATION, health_log_nsid, &payload,
+				    sizeof(payload), NULL, NULL);
 }
 
 static void
@@ -193,7 +251,82 @@ test_error_get_log_page(void)
 
 	/* valid page */
 	error_num_entries = 1;
-	nvme_ctrlr_cmd_get_error_page(&ctrlr, &payload, error_num_entries, NULL, NULL);
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_LOG_ERROR, NVME_GLOBAL_NAMESPACE_TAG, &payload,
+				    sizeof(payload), NULL, NULL);
+}
+
+static void test_intel_smart_get_log_page(void)
+{
+	struct nvme_controller			ctrlr = {};
+	struct nvme_intel_smart_information_page	payload = {};
+
+	verify_fn = verify_intel_smart_log_page;
+
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_SMART, health_log_nsid, &payload,
+				    sizeof(payload), NULL, NULL);
+}
+
+static void test_intel_temperature_get_log_page(void)
+{
+	struct nvme_controller			ctrlr = {};
+	struct nvme_intel_temperature_page	payload = {};
+
+	verify_fn = verify_intel_temperature_log_page;
+
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_TEMPERATURE, NVME_GLOBAL_NAMESPACE_TAG,
+				    &payload,
+				    sizeof(payload), NULL, NULL);
+}
+
+static void test_intel_read_latency_get_log_page(void)
+{
+	struct nvme_controller			ctrlr = {};
+	struct nvme_intel_rw_latency_page	payload = {};
+
+	verify_fn = verify_intel_read_latency_log_page;
+
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_READ_CMD_LATENCY,
+				    NVME_GLOBAL_NAMESPACE_TAG,
+				    &payload, sizeof(payload), NULL, NULL);
+}
+
+static void test_intel_write_latency_get_log_page(void)
+{
+	struct nvme_controller			ctrlr = {};
+	struct nvme_intel_rw_latency_page	payload = {};
+
+	verify_fn = verify_intel_write_latency_log_page;
+
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_WRITE_CMD_LATENCY,
+				    NVME_GLOBAL_NAMESPACE_TAG,
+				    &payload, sizeof(payload), NULL, NULL);
+}
+
+static void test_intel_get_log_page_directory(void)
+{
+	struct nvme_controller			ctrlr = {};
+	struct nvme_intel_log_page_directory	payload = {};
+
+	verify_fn = verify_intel_get_log_page_directory;
+
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY, NVME_GLOBAL_NAMESPACE_TAG,
+				    &payload, sizeof(payload), NULL, NULL);
+}
+
+static void test_generic_get_log_pages(void)
+{
+	test_error_get_log_page();
+	test_health_get_log_page();
+	test_firmware_get_log_page();
+}
+
+static void test_intel_get_log_pages(void)
+{
+	test_intel_get_log_page_directory();
+	test_intel_smart_get_log_page();
+	test_intel_temperature_get_log_page();
+	test_intel_read_latency_get_log_page();
+	test_intel_write_latency_get_log_page();
 }
 
 static void
@@ -238,6 +371,12 @@ test_io_raw_cmd(void)
 	nvme_ctrlr_cmd_io_raw(&ctrlr, &cmd, NULL, 1, NULL, NULL);
 }
 
+static void
+test_get_log_pages(void)
+{
+	test_generic_get_log_pages();
+	test_intel_get_log_pages();
+}
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -254,9 +393,7 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test ctrlr cmd get_firmware_page", test_firmware_get_log_page) == NULL
-		|| CU_add_test(suite, "test ctrlr cmd get_health_page", test_health_get_log_page) == NULL
-		|| CU_add_test(suite, "test ctrlr cmd get_error_page", test_error_get_log_page) == NULL
+		CU_add_test(suite, "test ctrlr cmd get_log_pages", test_get_log_pages) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd set_feature", test_set_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd) == NULL

@@ -34,6 +34,8 @@
 #ifndef __IOAT_PCI_H__
 #define __IOAT_PCI_H__
 
+#include "spdk/pci_ids.h"
+
 #define PCI_DEVICE_ID_INTEL_IOAT_SNB0	0x3c20
 #define PCI_DEVICE_ID_INTEL_IOAT_SNB1	0x3c21
 #define PCI_DEVICE_ID_INTEL_IOAT_SNB2	0x3c22
@@ -87,8 +89,6 @@
 #define PCI_DEVICE_ID_INTEL_IOAT_BDX7	0x6f27
 #define PCI_DEVICE_ID_INTEL_IOAT_BDX8	0x6f2e
 #define PCI_DEVICE_ID_INTEL_IOAT_BDX9	0x6f2f
-
-#define PCI_VENDOR_ID_INTEL	0x8086
 
 #endif /* __IOAT_PCI_H__ */
 

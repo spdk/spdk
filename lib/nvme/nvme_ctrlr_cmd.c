@@ -241,6 +241,7 @@ nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
+	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request(payload, payload_size, cb_fn, cb_arg);
 
 	cmd = &req->cmd;
@@ -250,47 +251,7 @@ nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
 	cmd->cdw10 |= log_page;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
-}
-
-void
-nvme_ctrlr_cmd_get_error_page(struct nvme_controller *ctrlr,
-			      struct nvme_error_information_entry *payload, uint32_t num_entries,
-			      nvme_cb_fn_t cb_fn, void *cb_arg)
-{
-
-	nvme_assert(num_entries > 0, ("%s called with num_entries==0\n", __func__));
-
-	/* Controller's error log page entries is 0-based. */
-	nvme_assert(num_entries <= (ctrlr->cdata.elpe + 1u),
-		    ("%s called with num_entries=%d but (elpe+1)=%d\n", __func__,
-		     num_entries, ctrlr->cdata.elpe + 1));
-
-	if (num_entries > (ctrlr->cdata.elpe + 1u))
-		num_entries = ctrlr->cdata.elpe + 1u;
-
-	nvme_ctrlr_cmd_get_log_page(ctrlr, NVME_LOG_ERROR,
-				    NVME_GLOBAL_NAMESPACE_TAG, payload, sizeof(*payload) * num_entries,
-				    cb_fn, cb_arg);
-}
-
-void
-nvme_ctrlr_cmd_get_health_information_page(struct nvme_controller *ctrlr,
-		uint32_t nsid, struct nvme_health_information_page *payload,
-		nvme_cb_fn_t cb_fn, void *cb_arg)
-{
-
-	nvme_ctrlr_cmd_get_log_page(ctrlr, NVME_LOG_HEALTH_INFORMATION,
-				    nsid, payload, sizeof(*payload), cb_fn, cb_arg);
-}
-
-void
-nvme_ctrlr_cmd_get_firmware_page(struct nvme_controller *ctrlr,
-				 struct nvme_firmware_page *payload, nvme_cb_fn_t cb_fn, void *cb_arg)
-{
-
-	nvme_ctrlr_cmd_get_log_page(ctrlr, NVME_LOG_FIRMWARE_SLOT,
-				    NVME_GLOBAL_NAMESPACE_TAG, payload, sizeof(*payload), cb_fn,
-				    cb_arg);
+	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
 void
