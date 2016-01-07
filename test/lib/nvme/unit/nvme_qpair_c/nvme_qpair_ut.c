@@ -170,6 +170,7 @@ ut_insert_cq_entry(struct nvme_qpair *qpair, uint32_t slot)
 	struct nvme_completion	*cpl;
 
 	nvme_alloc_request(&req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 	memset(req, 0, sizeof(*req));
 	req->cmd.cid = slot;
 
@@ -309,6 +310,7 @@ static void test_nvme_qpair_fail(void)
 
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
+	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
 	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
@@ -391,6 +393,7 @@ static void test_nvme_qpair_destroy(void)
 	nvme_qpair_construct(&qpair, 0, 128, 32, &ctrlr);
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
+	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
 	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
