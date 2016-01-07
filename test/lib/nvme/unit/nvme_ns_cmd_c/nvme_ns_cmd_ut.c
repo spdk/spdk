@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 
 #include "nvme/nvme_ns_cmd.c"
 
@@ -122,7 +122,7 @@ split_test(void)
 	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 
 	CU_ASSERT(g_request->num_children == 0);
 	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);
@@ -158,7 +158,7 @@ split_test2(void)
 	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 
 	CU_ASSERT(g_request->num_children == 2);
 
@@ -213,9 +213,9 @@ split_test3(void)
 	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 
-	CU_ASSERT_FATAL(g_request->num_children == 2);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 2);
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);
@@ -270,9 +270,9 @@ split_test4(void)
 	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL);
 
 	CU_ASSERT(rc == 0);
-	CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 
-	CU_ASSERT_FATAL(g_request->num_children == 3);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 3);
 
 	child = TAILQ_FIRST(&g_request->children);
 	TAILQ_REMOVE(&g_request->children, child, child_tailq);

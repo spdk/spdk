@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 
 #include "nvme/nvme.c"
 

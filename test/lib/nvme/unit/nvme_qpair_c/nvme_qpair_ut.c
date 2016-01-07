@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 
 #include "nvme/nvme_qpair.c"
 
@@ -208,7 +208,7 @@ test3(void)
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
 	req = nvme_allocate_request(NULL, 0, expected_success_callback, NULL);
-	CU_ASSERT_FATAL(req != NULL);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	CU_ASSERT(qpair.sq_tail == 0);
 
@@ -232,7 +232,7 @@ test4(void)
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
 	req = nvme_allocate_request(payload, sizeof(payload), expected_failure_callback, NULL);
-	CU_ASSERT_FATAL(req != NULL);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	/* Force vtophys to return a failure.  This should
 	 *  result in the nvme_qpair manually failing
@@ -265,7 +265,7 @@ test_ctrlr_failed(void)
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
 	req = nvme_allocate_request(payload, sizeof(payload), expected_failure_callback, NULL);
-	CU_ASSERT_FATAL(req != NULL);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	/* Disable the queue and set the controller to failed.
 	 * Set the controller to resetting so that the qpair won't get re-enabled.
@@ -310,14 +310,14 @@ static void test_nvme_qpair_fail(void)
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
 	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
-	CU_ASSERT_FATAL(tr_temp->req != NULL);
+	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
 	nvme_qpair_fail(&qpair);
 	CU_ASSERT_TRUE(LIST_EMPTY(&qpair.outstanding_tr));
 
 	req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
-	CU_ASSERT_FATAL(req != NULL);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	STAILQ_INSERT_HEAD(&qpair.queued_req, req, stailq);
 	nvme_qpair_fail(&qpair);
@@ -392,7 +392,7 @@ static void test_nvme_qpair_destroy(void)
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
 	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
-	CU_ASSERT_FATAL(tr_temp->req != NULL);
+	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
 	tr_temp->req->cmd.opc = NVME_OPC_ASYNC_EVENT_REQUEST;
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
