@@ -37,6 +37,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "spdk/assert.h"
+
 /**
  * \file
  *
@@ -83,7 +85,7 @@ union nvme_cap_lo_register {
 		uint32_t to		: 8;
 	} bits;
 };
-_Static_assert(sizeof(union nvme_cap_lo_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union nvme_cap_lo_register) == 4, "Incorrect size");
 
 union nvme_cap_hi_register {
 	uint32_t	raw;
@@ -108,7 +110,7 @@ union nvme_cap_hi_register {
 		uint32_t reserved1	: 8;
 	} bits;
 };
-_Static_assert(sizeof(union nvme_cap_hi_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union nvme_cap_hi_register) == 4, "Incorrect size");
 
 union nvme_cc_register {
 	uint32_t	raw;
@@ -139,7 +141,7 @@ union nvme_cc_register {
 		uint32_t reserved2	: 8;
 	} bits;
 };
-_Static_assert(sizeof(union nvme_cc_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union nvme_cc_register) == 4, "Incorrect size");
 
 enum nvme_shn_value {
 	NVME_SHN_NORMAL		= 0x1,
@@ -161,7 +163,7 @@ union nvme_csts_register {
 		uint32_t reserved1	: 28;
 	} bits;
 };
-_Static_assert(sizeof(union nvme_csts_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union nvme_csts_register) == 4, "Incorrect size");
 
 enum nvme_shst_value {
 	NVME_SHST_NORMAL	= 0x0,
@@ -183,7 +185,7 @@ union nvme_aqa_register {
 		uint32_t reserved2	: 4;
 	} bits;
 };
-_Static_assert(sizeof(union nvme_aqa_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union nvme_aqa_register) == 4, "Incorrect size");
 
 struct nvme_registers {
 	/** controller capabilities */
@@ -215,16 +217,16 @@ struct nvme_registers {
 };
 
 /* NVMe controller register space offsets */
-_Static_assert(0x00 == offsetof(struct nvme_registers, cap_lo), "Incorrect register offset");
-_Static_assert(0x08 == offsetof(struct nvme_registers, vs), "Incorrect register offset");
-_Static_assert(0x0C == offsetof(struct nvme_registers, intms), "Incorrect register offset");
-_Static_assert(0x10 == offsetof(struct nvme_registers, intmc), "Incorrect register offset");
-_Static_assert(0x14 == offsetof(struct nvme_registers, cc), "Incorrect register offset");
-_Static_assert(0x1C == offsetof(struct nvme_registers, csts), "Incorrect register offset");
-_Static_assert(0x20 == offsetof(struct nvme_registers, nssr), "Incorrect register offset");
-_Static_assert(0x24 == offsetof(struct nvme_registers, aqa), "Incorrect register offset");
-_Static_assert(0x28 == offsetof(struct nvme_registers, asq), "Incorrect register offset");
-_Static_assert(0x30 == offsetof(struct nvme_registers, acq), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x00 == offsetof(struct nvme_registers, cap_lo), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x08 == offsetof(struct nvme_registers, vs), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x0C == offsetof(struct nvme_registers, intms), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x10 == offsetof(struct nvme_registers, intmc), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x14 == offsetof(struct nvme_registers, cc), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x1C == offsetof(struct nvme_registers, csts), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x20 == offsetof(struct nvme_registers, nssr), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x24 == offsetof(struct nvme_registers, aqa), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x28 == offsetof(struct nvme_registers, asq), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x30 == offsetof(struct nvme_registers, acq), "Incorrect register offset");
 
 enum nvme_sgl_descriptor_type {
 	NVME_SGL_TYPE_DATA_BLOCK	= 0x0,
@@ -246,7 +248,7 @@ struct __attribute__((packed)) nvme_sgl_descriptor {
 	/** SGL descriptor type specific */
 	uint8_t type_specific : 4;
 };
-_Static_assert(sizeof(struct nvme_sgl_descriptor) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_sgl_descriptor) == 16, "Incorrect size");
 
 enum nvme_psdt_value {
 	NVME_PSDT_PRP			= 0x0,
@@ -291,7 +293,7 @@ struct nvme_command {
 	uint32_t cdw14;		/* command-specific */
 	uint32_t cdw15;		/* command-specific */
 };
-_Static_assert(sizeof(struct nvme_command) == 64, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_command) == 64, "Incorrect size");
 
 struct nvme_status {
 	uint16_t p	:  1;	/* phase tag */
@@ -301,7 +303,7 @@ struct nvme_status {
 	uint16_t m	:  1;	/* more */
 	uint16_t dnr	:  1;	/* do not retry */
 };
-_Static_assert(sizeof(struct nvme_status) == 2, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_status) == 2, "Incorrect size");
 
 struct nvme_completion {
 	/* dword 0 */
@@ -318,14 +320,14 @@ struct nvme_completion {
 	uint16_t		cid;	/* command identifier */
 	struct nvme_status	status;
 };
-_Static_assert(sizeof(struct nvme_completion) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_completion) == 16, "Incorrect size");
 
 struct nvme_dsm_range {
 	uint32_t attributes;
 	uint32_t length;
 	uint64_t starting_lba;
 };
-_Static_assert(sizeof(struct nvme_dsm_range) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_dsm_range) == 16, "Incorrect size");
 
 /* status code types */
 enum nvme_status_code_type {
@@ -485,7 +487,7 @@ struct nvme_power_state {
 
 	uint8_t reserved7[16];
 };
-_Static_assert(sizeof(struct nvme_power_state) == 32, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_power_state) == 32, "Incorrect size");
 
 struct __attribute__((packed)) nvme_controller_data {
 	/* bytes 0-255: controller capabilities and features */
@@ -710,7 +712,7 @@ struct __attribute__((packed)) nvme_controller_data {
 	/* bytes 3072-4095: vendor specific */
 	uint8_t			vs[1024];
 };
-_Static_assert(sizeof(struct nvme_controller_data) == 4096, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_controller_data) == 4096, "Incorrect size");
 
 struct nvme_namespace_data {
 	/** namespace size */
@@ -867,7 +869,7 @@ struct nvme_namespace_data {
 
 	uint8_t			vendor_specific[3712];
 };
-_Static_assert(sizeof(struct nvme_namespace_data) == 4096, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_namespace_data) == 4096, "Incorrect size");
 
 enum nvme_log_page {
 	/* 0x00 - reserved */
@@ -890,7 +892,7 @@ struct nvme_error_information_entry {
 	uint8_t			vendor_specific;
 	uint8_t			reserved[35];
 };
-_Static_assert(sizeof(struct nvme_error_information_entry) == 64, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_error_information_entry) == 64, "Incorrect size");
 
 union nvme_critical_warning_state {
 	uint8_t		raw;
@@ -904,7 +906,7 @@ union nvme_critical_warning_state {
 		uint8_t	reserved		: 3;
 	} bits;
 };
-_Static_assert(sizeof(union nvme_critical_warning_state) == 1, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union nvme_critical_warning_state) == 1, "Incorrect size");
 
 struct __attribute__((packed)) nvme_health_information_page {
 	union nvme_critical_warning_state	critical_warning;
@@ -937,7 +939,7 @@ struct __attribute__((packed)) nvme_health_information_page {
 
 	uint8_t			reserved2[320];
 };
-_Static_assert(sizeof(struct nvme_health_information_page) == 512, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_health_information_page) == 512, "Incorrect size");
 
 struct nvme_firmware_page {
 	struct {
@@ -949,7 +951,7 @@ struct nvme_firmware_page {
 	uint64_t		revision[7]; /* revisions for 7 slots */
 	uint8_t			reserved2[448];
 };
-_Static_assert(sizeof(struct nvme_firmware_page) == 512, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_firmware_page) == 512, "Incorrect size");
 
 #define nvme_completion_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)

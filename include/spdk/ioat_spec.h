@@ -36,6 +36,8 @@
 
 #include <inttypes.h>
 
+#include "spdk/assert.h"
+
 #define IOAT_INTRCTRL_MASTER_INT_EN	0x01
 
 #define IOAT_VER_3_0                0x30
@@ -301,6 +303,6 @@ union ioat_hw_descriptor {
 	struct ioat_pq_ext_hw_descriptor pq_ext;
 	struct ioat_pq_update_hw_descriptor pq_update;
 };
-_Static_assert(sizeof(union ioat_hw_descriptor) == 64, "incorrect ioat_hw_descriptor layout");
+SPDK_STATIC_ASSERT(sizeof(union ioat_hw_descriptor) == 64, "incorrect ioat_hw_descriptor layout");
 
 #endif /* __IOAT_SPEC_H__ */

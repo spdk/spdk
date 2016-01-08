@@ -37,6 +37,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "spdk/assert.h"
+
 /**
  * \file
  *
@@ -86,7 +88,7 @@ struct nvme_intel_rw_latency_page {
 	uint32_t		buckets_1ms[31];
 	uint32_t		buckets_32ms[31];
 };
-_Static_assert(sizeof(struct nvme_intel_rw_latency_page) == 380, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_intel_rw_latency_page) == 380, "Incorrect size");
 
 struct nvme_intel_temperature_page {
 	uint64_t		current_temperature;
@@ -100,7 +102,7 @@ struct nvme_intel_temperature_page {
 	uint64_t		specified_min_op_temperature;
 	uint64_t		estimated_offset;
 };
-_Static_assert(sizeof(struct nvme_intel_temperature_page) == 112, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_intel_temperature_page) == 112, "Incorrect size");
 
 struct nvme_intel_smart_attribute {
 	uint8_t			code;
@@ -114,6 +116,6 @@ struct nvme_intel_smart_attribute {
 struct __attribute__((packed)) nvme_intel_smart_information_page {
 	struct nvme_intel_smart_attribute	nvme_intel_smart_attributes[13];
 };
-_Static_assert(sizeof(struct nvme_intel_smart_information_page) == 156, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_intel_smart_information_page) == 156, "Incorrect size");
 
 #endif
