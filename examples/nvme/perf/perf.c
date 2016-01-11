@@ -784,10 +784,13 @@ associate_workers_with_ns(void)
 #ifdef HAVE_LIBAIO
 		ns_ctx->events = calloc(g_queue_depth, sizeof(struct io_event));
 		if (!ns_ctx->events) {
+			free(ns_ctx);
 			return -1;
 		}
 		ns_ctx->ctx = 0;
 		if (io_setup(g_queue_depth, &ns_ctx->ctx) < 0) {
+			free(ns_ctx->events);
+			free(ns_ctx);
 			perror("io_setup");
 			return -1;
 		}
