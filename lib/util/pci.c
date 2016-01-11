@@ -96,39 +96,36 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 }
 
 #ifdef __linux__
-static int
-pci_device_has_uio_driver(struct pci_device *dev)
+int
+pci_device_has_non_uio_driver(struct pci_device *dev)
 {
-	struct dirent *e;
-	DIR *dir;
-	char dirname[SPDK_PCI_PATH_MAX];
+	char linkname[SPDK_PCI_PATH_MAX];
+	char driver[SPDK_PCI_PATH_MAX];
+	ssize_t driver_len;
+	char *driver_begin;
 
-	snprintf(dirname, sizeof(dirname),
-		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/uio",
+	snprintf(linkname, sizeof(linkname),
+		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/driver",
 		 dev->domain, dev->bus, dev->dev, dev->func);
 
-	dir = opendir(dirname);
-	if (!dir) {
-		snprintf(dirname, sizeof(dirname),
-			 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT,
-			 dev->domain, dev->bus, dev->dev, dev->func);
-		dir = opendir(dirname);
-		if (!dir)
-			return 0;
-	}
+	driver_len = readlink(linkname, driver, sizeof(driver));
 
-	while ((e = readdir(dir)) != NULL) {
-		if (strncmp(e->d_name, "uio", 3) == 0) {
-			break;
-		}
-	}
-
-	closedir(dir);
-
-	if (!e)
+	if (driver_len < 0 || driver_len >= SPDK_PCI_PATH_MAX) {
 		return 0;
+	}
 
-	return 1;
+	driver[driver_len] = '\0'; /* readlink() doesn't null terminate, so we have to */
+
+	driver_begin = strrchr(driver, '/');
+	if (driver_begin) {
+		/* Advance to the character after the slash */
+		driver_begin++;
+	} else {
+		/* This shouldn't normally happen - driver should be a relative path with slashes */
+		driver_begin = driver;
+	}
+
+	return strcmp(driver_begin, "uio_pci_generic") != 0;
 }
 #endif
 
@@ -182,12 +179,6 @@ pci_device_has_non_uio_driver(struct pci_device *dev)
 	} else {
 		return 1;
 	}
-}
-#else
-int
-pci_device_has_non_uio_driver(struct pci_device *dev)
-{
-	return pci_device_has_kernel_driver(dev) && !pci_device_has_uio_driver(dev);
 }
 #endif
 
