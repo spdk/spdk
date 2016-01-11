@@ -95,7 +95,8 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 	return -1;
 }
 
-int
+#ifdef __linux__
+static int
 pci_device_has_uio_driver(struct pci_device *dev)
 {
 	struct dirent *e;
@@ -129,10 +130,11 @@ pci_device_has_uio_driver(struct pci_device *dev)
 
 	return 1;
 }
+#endif
 
 #ifdef __FreeBSD__
 int
-pci_device_has_non_null_driver(struct pci_device *dev)
+pci_device_has_non_uio_driver(struct pci_device *dev)
 {
 	struct pci_conf_io	configsel;
 	struct pci_match_conf	pattern;
@@ -183,7 +185,7 @@ pci_device_has_non_null_driver(struct pci_device *dev)
 }
 #else
 int
-pci_device_has_non_null_driver(struct pci_device *dev)
+pci_device_has_non_uio_driver(struct pci_device *dev)
 {
 	return pci_device_has_kernel_driver(dev) && !pci_device_has_uio_driver(dev);
 }

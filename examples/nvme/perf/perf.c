@@ -705,8 +705,8 @@ register_controllers(void)
 	while ((pci_dev = pci_device_next(pci_dev_iter))) {
 		struct nvme_controller *ctrlr;
 
-		if (pci_device_has_non_null_driver(pci_dev)) {
-			fprintf(stderr, "non-null kernel driver attached to nvme\n");
+		if (pci_device_has_non_uio_driver(pci_dev)) {
+			fprintf(stderr, "non-uio kernel driver attached to nvme\n");
 			fprintf(stderr, " controller at pci bdf %d:%d:%d\n",
 				pci_dev->bus, pci_dev->dev, pci_dev->func);
 			fprintf(stderr, " skipping...\n");

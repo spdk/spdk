@@ -191,8 +191,8 @@ ioat_init(void)
 		       pci_dev->vendor_id, pci_dev->device_id,
 		       pci_device_get_device_name(pci_dev));
 
-		if (pci_device_has_non_null_driver(pci_dev)) {
-			printf("Device has kernel driver, skipping...\n");
+		if (pci_device_has_non_uio_driver(pci_dev)) {
+			printf("Device has non-uio kernel driver, skipping...\n");
 			continue;
 		}
 
