@@ -62,9 +62,10 @@ nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == NVME_OPC_ASYNC_EVENT_REQUEST);
 }
 
-void
+int32_t
 nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions)
 {
+	return 0;
 }
 
 void

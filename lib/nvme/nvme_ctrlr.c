@@ -732,19 +732,23 @@ nvme_ctrlr_submit_io_request(struct nvme_controller *ctrlr,
 	nvme_qpair_submit_request(qpair, req);
 }
 
-void
+int32_t
 nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_t max_completions)
 {
 	nvme_assert(nvme_thread_ioq_index >= 0, ("no ioq_index assigned for thread\n"));
-	nvme_qpair_process_completions(&ctrlr->ioq[nvme_thread_ioq_index], max_completions);
+	return nvme_qpair_process_completions(&ctrlr->ioq[nvme_thread_ioq_index], max_completions);
 }
 
-void
+int32_t
 nvme_ctrlr_process_admin_completions(struct nvme_controller *ctrlr)
 {
+	int32_t num_completions;
+
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
-	nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	num_completions = nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return num_completions;
 }
 
 const struct nvme_controller_data *

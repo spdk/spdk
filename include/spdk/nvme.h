@@ -160,10 +160,12 @@ int nvme_ctrlr_cmd_io_raw(struct nvme_controller *ctrlr,
  * \param max_completions Limit the number of completions to be processed in one call, or 0
  * for unlimited.
  *
+ * \return Number of completions processed (may be 0) or negative on error.
+ *
  * This function is thread safe and can be called at any point after nvme_attach().
  *
  */
-void nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_t max_completions);
+int32_t nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_t max_completions);
 
 /**
  * \brief Send the given admin command to the NVMe controller.
@@ -195,9 +197,11 @@ int nvme_ctrlr_cmd_admin_raw(struct nvme_controller *ctrlr,
  * at the time of this function call. It does not wait for outstanding commands to
  * finish.
  *
+ * \return Number of completions processed (may be 0) or negative on error.
+ *
  * This function is thread safe and can be called at any point after nvme_attach().
  */
-void nvme_ctrlr_process_admin_completions(struct nvme_controller *ctrlr);
+int32_t nvme_ctrlr_process_admin_completions(struct nvme_controller *ctrlr);
 
 
 /** \brief Opaque handle to a namespace. Obtained by calling nvme_ctrlr_get_ns(). */

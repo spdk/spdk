@@ -461,11 +461,12 @@ nvme_qpair_check_enabled(struct nvme_qpair *qpair)
  *
  * \sa nvme_cb_fn_t
  */
-void
+int32_t
 nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tracker	*tr;
 	struct nvme_completion	*cpl;
+	uint32_t num_completions = 0;
 
 	if (!nvme_qpair_check_enabled(qpair)) {
 		/*
@@ -474,7 +475,16 @@ nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completion
 		 *  associated with this interrupt will get retried when the
 		 *  reset is complete.
 		 */
-		return;
+		return 0;
+	}
+
+	if (max_completions == 0) {
+		/*
+		 * max_completions == 0 means unlimited; set it to the max uint32_t value
+		 *  to avoid a special case in the loop.  The maximum possible queue size is
+		 *  only 64K, so num_completions will never reach this value.
+		 */
+		max_completions = UINT32_MAX;
 	}
 
 	while (1) {
@@ -501,10 +511,12 @@ nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completion
 
 		spdk_mmio_write_4(qpair->cq_hdbl, qpair->cq_head);
 
-		if (max_completions > 0 && --max_completions == 0) {
+		if (++num_completions == max_completions) {
 			break;
 		}
 	}
+
+	return num_completions;
 }
 
 int

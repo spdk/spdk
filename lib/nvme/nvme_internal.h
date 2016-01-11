@@ -402,7 +402,7 @@ int	nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 void	nvme_qpair_destroy(struct nvme_qpair *qpair);
 void	nvme_qpair_enable(struct nvme_qpair *qpair);
 void	nvme_qpair_disable(struct nvme_qpair *qpair);
-void	nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions);
+int32_t	nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions);
 void	nvme_qpair_submit_request(struct nvme_qpair *qpair,
 				  struct nvme_request *req);
 void	nvme_qpair_reset(struct nvme_qpair *qpair);
