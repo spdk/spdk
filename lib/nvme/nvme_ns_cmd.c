@@ -194,6 +194,32 @@ nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload, uint64_t lba,
 }
 
 int
+nvme_ns_cmd_zero(struct nvme_namespace *ns, uint64_t lba,
+		  uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct nvme_command	*cmd;
+	uint64_t		*tmp_lba;
+
+	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = NVME_OPC_WRITE_ZEROES;
+	cmd->nsid = ns->id;
+
+	tmp_lba = (uint64_t *)&cmd->cdw10;
+	*tmp_lba = lba;
+	cmd->cdw12 = lba_count - 1;
+
+	nvme_ctrlr_submit_io_request(ns->ctrlr, req);
+
+	return 0;
+}
+
+int
 nvme_ns_cmd_deallocate(struct nvme_namespace *ns, void *payload,
 		       uint8_t num_ranges, nvme_cb_fn_t cb_fn, void *cb_arg)
 {

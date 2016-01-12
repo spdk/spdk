@@ -46,6 +46,7 @@
 - nvme_ns_cmd_write() \copybrief nvme_ns_cmd_write()
 - nvme_ns_cmd_deallocate() \copybrief nvme_ns_cmd_deallocate()
 - nvme_ns_cmd_flush() \copybrief nvme_ns_cmd_flush()
+- nvme_ns_cmd_zero() \copybrief nvme_ns_cmd_zero()
 - nvme_ctrlr_process_io_completions() \copybrief nvme_ctrlr_process_io_completions()
 
 \section key_concepts Key Concepts

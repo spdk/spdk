@@ -299,6 +299,24 @@ int nvme_ns_cmd_write(struct nvme_namespace *ns, void *payload,
 		      void *cb_arg);
 
 /**
+ * \brief Submits a zero write I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the zero write I/O
+ * \param lba starting LBA to write zero
+ * \param lba_count length (in sectors) for the write zero operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_zero(struct nvme_namespace *ns, uint64_t lba,
+		      uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg);
+
+/**
  * \brief Submits a read I/O to the specified NVMe namespace.
  *
  * \param ns NVMe namespace to submit the read I/O
