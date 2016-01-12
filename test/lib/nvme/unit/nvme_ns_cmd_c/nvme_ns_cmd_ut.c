@@ -331,6 +331,23 @@ test_nvme_ns_cmd_flush(void)
 }
 
 static void
+test_nvme_ns_cmd_zero(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	nvme_cb_fn_t		cb_fn = NULL;
+	void			*cb_arg = NULL;
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+
+	nvme_ns_cmd_zero(&ns, 0, 2, cb_fn, cb_arg);
+	CU_ASSERT(g_request->cmd.opc == NVME_OPC_WRITE_ZEROES);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	nvme_free_request(g_request);
+}
+
+static void
 test_nvme_ns_cmd_deallocate(void)
 {
 	struct nvme_namespace	ns;
@@ -380,6 +397,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "split_test4", split_test4) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_flush testing", test_nvme_ns_cmd_flush) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_deallocate testing", test_nvme_ns_cmd_deallocate) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_zero testing", test_nvme_ns_cmd_zero) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
