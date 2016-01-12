@@ -365,6 +365,7 @@ enum nvme_namespace_flags {
 	NVME_NS_DEALLOCATE_SUPPORTED	= 0x1, /**< The deallocate command is supported */
 	NVME_NS_FLUSH_SUPPORTED		= 0x2, /**< The flush command is supported */
 	NVME_NS_RESERVATION_SUPPORTED	= 0x4, /**< The reservation command is supported */
+	NVME_NS_WRITE_ZEROES_SUPPORTED	= 0x8, /**< The write zeroes command is supported */
 };
 
 /**
@@ -439,6 +440,27 @@ int nvme_ns_cmd_writev(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_cou
 		       nvme_cb_fn_t cb_fn, void *cb_arg, uint32_t io_flags,
 		       nvme_req_reset_sgl_fn_t reset_sgl_fn,
 		       nvme_req_next_sge_fn_t next_sge_fn);
+
+/**
+ * \brief Submits a write zeroes I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the write zeroes I/O
+ * \param lba starting LBA for this command
+ * \param lba_count length (in sectors) for the write zero operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined by the NVME_IO_FLAGS_* entries
+ * 			in spdk/nvme_spec.h, for this I/O.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_write_zeroes(struct nvme_namespace *ns, uint64_t lba,
+			     uint32_t lba_count, nvme_cb_fn_t cb_fn, void *cb_arg,
+			     uint32_t io_flags);
 
 /**
  * \brief Submits a read I/O to the specified NVMe namespace.

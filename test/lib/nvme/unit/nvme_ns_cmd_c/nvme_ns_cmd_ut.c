@@ -332,6 +332,28 @@ test_nvme_ns_cmd_flush(void)
 }
 
 static void
+test_nvme_ns_cmd_write_zeroes(void)
+{
+	struct nvme_namespace	ns = { 0 };
+	struct nvme_controller	ctrlr = { 0 };
+	nvme_cb_fn_t		cb_fn = NULL;
+	void			*cb_arg = NULL;
+	uint64_t		cmd_lba;
+	uint32_t		cmd_lba_count;
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+
+	nvme_ns_cmd_write_zeroes(&ns, 0, 2, cb_fn, cb_arg, 0);
+	CU_ASSERT(g_request->cmd.opc == NVME_OPC_WRITE_ZEROES);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT_EQUAL(cmd_lba, 0);
+	CU_ASSERT_EQUAL(cmd_lba_count, 2);
+
+	nvme_free_request(g_request);
+}
+
+static void
 test_nvme_ns_cmd_deallocate(void)
 {
 	struct nvme_namespace	ns;
@@ -426,6 +448,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_ns_cmd_flush testing", test_nvme_ns_cmd_flush) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_deallocate testing", test_nvme_ns_cmd_deallocate) == NULL
 		|| CU_add_test(suite, "io_flags", test_io_flags) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_write_zeroes testing", test_nvme_ns_cmd_write_zeroes) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
