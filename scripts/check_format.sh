@@ -14,6 +14,7 @@ if hash astyle; then
 	astyle --options=.astylerc "*.h" >> astyle.log
 	if grep -q "^Formatted" astyle.log; then
 		echo " errors detected"
+		git diff
 		sed -i -e 's/  / /g' astyle.log
 		grep --color=auto "^Formatted.*" astyle.log
 		echo "Incorrect code style detected in one or more files."
