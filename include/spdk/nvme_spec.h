@@ -872,19 +872,40 @@ struct nvme_namespace_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_namespace_data) == 4096, "Incorrect size");
 
+/**
+ * Log page identifiers for NVME_OPC_GET_LOG_PAGE
+ */
 enum nvme_log_page {
 	/* 0x00 - reserved */
+
+	/** Error information (mandatory) - \ref nvme_error_information_entry */
 	NVME_LOG_ERROR			= 0x01,
+
+	/** SMART / health information (mandatory) - \ref nvme_health_information_page */
 	NVME_LOG_HEALTH_INFORMATION	= 0x02,
+
+	/** Firmware slot information (mandatory) - \ref nvme_firmware_page */
 	NVME_LOG_FIRMWARE_SLOT		= 0x03,
+
+	/** Changed namespace list (optional) */
 	NVME_LOG_CHANGED_NS_LIST	= 0x04,
+
+	/** Command effects log (optional) */
 	NVME_LOG_COMMAND_EFFECTS_LOG	= 0x05,
+
 	/* 0x06-0x7F - reserved */
+
+	/** Reservation notification (optional) */
 	NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
+
 	/* 0x81-0xBF - I/O command set specific */
+
 	/* 0xC0-0xFF - vendor specific */
 };
 
+/**
+ * Error information log page (\ref NVME_LOG_ERROR)
+ */
 struct nvme_error_information_entry {
 	uint64_t		error_count;
 	uint16_t		sqid;
@@ -912,6 +933,9 @@ union nvme_critical_warning_state {
 };
 SPDK_STATIC_ASSERT(sizeof(union nvme_critical_warning_state) == 1, "Incorrect size");
 
+/**
+ * SMART / health information page (\ref NVME_LOG_HEALTH_INFORMATION)
+ */
 struct __attribute__((packed)) nvme_health_information_page {
 	union nvme_critical_warning_state	critical_warning;
 
@@ -945,6 +969,9 @@ struct __attribute__((packed)) nvme_health_information_page {
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_health_information_page) == 512, "Incorrect size");
 
+/**
+ * Firmware slot information page (\ref NVME_LOG_FIRMWARE_SLOT)
+ */
 struct nvme_firmware_page {
 	struct {
 		uint8_t	slot		: 3; /* slot for current FW */
