@@ -232,23 +232,6 @@ struct nvme_namespace {
 	uint16_t			flags;
 };
 
-/** \brief supported log pages. */
-struct nvme_supported_log_pages {
-	uint32_t	vendor_id;
-	/**
-	 * List of supported generic log page IDs, terminated with 0.
-	 */
-	uint8_t	generic_page_id[128];
-	/**
-	 * List of supported command set page IDs, terminated with 0.
-	 */
-	uint8_t	command_set_page_id[64];
-	/**
-	 * List of supported vendor specific page IDs, terminated with 0.
-	 */
-	uint8_t	vendor_specific_page_id[64];
-};
-
 /*
  * One of these per allocated PCI device.
  */
@@ -273,7 +256,7 @@ struct nvme_controller {
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
 	/** All the log pages supported */
-	struct nvme_supported_log_pages	supported_log_pages;
+	bool				log_page_supported[256];
 
 	/* Opaque handle to associated PCI device. */
 	void				*devhandle;
