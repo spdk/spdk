@@ -114,7 +114,7 @@ uint32_t nvme_ctrlr_get_num_ns(struct nvme_controller *ctrlr);
  *
  * \sa nvme_ctrlr_cmd_get_log_page()
  */
-bool nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, int log_page);
+bool nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, uint8_t log_page);
 
 /**
  * Signature for callback function invoked when a command is completed.

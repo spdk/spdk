@@ -863,7 +863,7 @@ nvme_ctrlr_register_aer_callback(struct nvme_controller *ctrlr,
 }
 
 bool
-nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, int log_page)
+nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, uint8_t log_page)
 {
 	unsigned int i = 0;
 
