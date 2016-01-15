@@ -237,13 +237,16 @@ struct nvme_namespace *nvme_ctrlr_get_ns(struct nvme_controller *ctrlr, uint32_t
  * \param payload_size - the size of payload buffer.
  * \param cb_fn - call back funciton pointer which will be called after get log page.
  * \param cb_arg - input parameter for the cb_fn.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
  * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
  */
-void nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr,
-				 uint8_t log_page, uint32_t nsid,
-				 void *payload, uint32_t payload_size,
-				 nvme_cb_fn_t cb_fn, void *cb_arg);
+int nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr,
+				uint8_t log_page, uint32_t nsid,
+				void *payload, uint32_t payload_size,
+				nvme_cb_fn_t cb_fn, void *cb_arg);
 
 /**
  * \brief Get the identify namespace data as defined by the NVMe specification.

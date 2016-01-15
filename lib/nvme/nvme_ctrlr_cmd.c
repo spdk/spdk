@@ -233,7 +233,7 @@ nvme_ctrlr_cmd_set_async_event_config(struct nvme_controller *ctrlr,
 				   cb_arg);
 }
 
-void
+int
 nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
 			    uint32_t nsid, void *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
 			    void *cb_arg)
@@ -243,6 +243,10 @@ nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request(payload, payload_size, cb_fn, cb_arg);
+	if (req == NULL) {
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_GET_LOG_PAGE;
@@ -252,6 +256,8 @@ nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return 0;
 }
 
 void
