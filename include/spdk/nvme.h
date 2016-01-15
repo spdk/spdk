@@ -108,9 +108,11 @@ const struct nvme_controller_data *nvme_ctrlr_get_data(struct nvme_controller *c
 uint32_t nvme_ctrlr_get_num_ns(struct nvme_controller *ctrlr);
 
 /**
- * \brief Figure out if it is supported for the given NVMe controller and page identifier.
+ * \brief Determine if a particular log page is supported by the given NVMe controller.
  *
  * This function is thread safe and can be called at any point after nvme_attach().
+ *
+ * \sa nvme_ctrlr_cmd_get_log_page()
  */
 bool nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, int log_page);
 
@@ -227,21 +229,23 @@ struct nvme_namespace;
 struct nvme_namespace *nvme_ctrlr_get_ns(struct nvme_controller *ctrlr, uint32_t ns_id);
 
 /**
- * \brief Get a specific log page from the NVMe controllerr.
+ * \brief Get a specific log page from the NVMe controller.
  *
- * This function can be called at any point after nvme_attach().
- * \param log_page - the log page identifier.
- * \param nsid - this is one of the cases where NVME_GLOBAL_NAMESPACE_TAG can
- * be used for certain log pages.
- * \param payload - the pointer to the payload buffer.
- * \param payload_size - the size of payload buffer.
- * \param cb_fn - call back funciton pointer which will be called after get log page.
- * \param cb_arg - input parameter for the cb_fn.
+ * \param log_page The log page identifier.
+ * \param nsid Depending on the log page, this may be 0, a namespace identifier, or NVME_GLOBAL_NAMESPACE_TAG.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the log page has been retrieved.
+ * \param cb_arg Argument to pass to the callback function.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
+ * This function is thread safe and can be called at any point after nvme_attach().
+ *
  * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
+ *
+ * \sa nvme_ctrlr_is_log_page_supported()
  */
 int nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr,
 				uint8_t log_page, uint32_t nsid,
