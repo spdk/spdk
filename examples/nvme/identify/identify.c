@@ -169,8 +169,6 @@ get_features(struct nvme_controller *ctrlr)
 static int
 get_health_log_page(struct nvme_controller *ctrlr)
 {
-	struct nvme_command cmd = {};
-
 	if (health_page == NULL) {
 		health_page = rte_zmalloc("nvme health", sizeof(*health_page), 4096);
 	}
@@ -179,13 +177,13 @@ get_health_log_page(struct nvme_controller *ctrlr)
 		exit(1);
 	}
 
-	cmd.opc = NVME_OPC_GET_LOG_PAGE;
-	cmd.cdw10 = NVME_LOG_HEALTH_INFORMATION;
-	cmd.cdw10 |= ((sizeof(*health_page) / 4) - 1) << 16; // number of dwords
-	cmd.nsid = NVME_GLOBAL_NAMESPACE_TAG;
+	if (nvme_ctrlr_cmd_get_log_page(ctrlr, NVME_LOG_HEALTH_INFORMATION, NVME_GLOBAL_NAMESPACE_TAG,
+					health_page, sizeof(*health_page), get_log_page_completion, NULL)) {
+		printf("nvme_ctrlr_cmd_get_log_page() failed\n");
+		exit(1);
+	}
 
-	return nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, health_page, sizeof(*health_page),
-					get_log_page_completion, NULL);
+	return 0;
 }
 
 static void
