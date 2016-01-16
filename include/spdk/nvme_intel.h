@@ -57,6 +57,12 @@ enum nvme_intel_feature {
 	NVME_INTEL_FEAT_LATENCY_TRACKING		= 0xE2,
 };
 
+enum nvme_intel_set_max_lba_command_status_code {
+	NVME_INTEL_EXCEEDS_AVAILABLE_CAPACITY		= 0xC0,
+	NVME_INTEL_SMALLER_THAN_MIN_LIMIT		= 0xC1,
+	NVME_INTEL_SMALLER_THAN_NS_REQUIREMENTS		= 0xC2,
+};
+
 enum nvme_intel_log_page {
 	NVME_INTEL_LOG_PAGE_DIRECTORY		= 0xC0,
 	NVME_INTEL_LOG_READ_CMD_LATENCY		= 0xC1,
@@ -132,4 +138,59 @@ struct __attribute__((packed)) nvme_intel_smart_information_page {
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_intel_smart_information_page) == 156, "Incorrect size");
 
+union nvme_intel_power_governor_feature {
+	uint32_t	raw;
+	struct {
+		/** power governor setting : 00h = 25W 01h = 20W 02h = 10W */
+		uint32_t power_governor_setting		: 8;
+		uint32_t reserved	: 24;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvme_intel_power_governor_feature) == 4, "Incorrect size");
+
+union nvme_intel_smbus_address_feature {
+	uint32_t	raw;
+	struct {
+		uint32_t reserved	: 1;
+		uint32_t smbus_controller_address	: 8;
+		uint32_t reserved2	: 23;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvme_intel_smbus_address_feature) == 4, "Incorrect size");
+
+union nvme_intel_led_pattern_feature {
+	uint32_t	raw;
+	struct {
+		uint32_t feature_options	: 24;
+		uint32_t value	: 8;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvme_intel_led_pattern_feature) == 4, "Incorrect size");
+
+union nvme_intel_reset_timed_workload_counters_feature {
+	uint32_t	raw;
+	struct {
+		/**
+		 * Write Usage: 00 = NOP, 1 = Reset E2, E3,E4 counters;
+		 * Read Usage: Not Supported
+		 */
+		uint32_t reset	: 1;
+		uint32_t reserved	: 31;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvme_intel_reset_timed_workload_counters_feature) == 4,
+		   "Incorrect size");
+
+union nvme_intel_enable_latency_tracking_feature {
+	uint32_t	raw;
+	struct {
+		/**
+		 * Write Usage:
+		 * 00h = Disable Latency Tracking (Default)
+		 * 01h = Enable Latency Tracking
+		 */
+		uint32_t enable	: 32;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvme_intel_enable_latency_tracking_feature) == 4, "Incorrect size");
 #endif
