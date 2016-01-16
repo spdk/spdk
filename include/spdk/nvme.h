@@ -253,6 +253,55 @@ int nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr,
 				nvme_cb_fn_t cb_fn, void *cb_arg);
 
 /**
+ * \brief Set specific feature for the given NVMe controller.
+ *
+ * \param feature The feature identifier.
+ * \param cdw11 as defined by the specification for this command.
+ * \param cdw12 as defined by the specification for this command.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been set.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point after nvme_attach().
+ *
+ * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ *
+ * \sa nvme_ctrlr_cmd_set_feature()
+ */
+int nvme_ctrlr_cmd_set_feature(struct nvme_controller *ctrlr,
+			       uint8_t feature, uint32_t cdw11, uint32_t cdw12,
+			       void *payload, uint32_t payload_size,
+			       nvme_cb_fn_t cb_fn, void *cb_arg);
+
+/**
+ * \brief Get specific feature from given NVMe controller.
+ *
+ * \param feature The feature identifier.
+ * \param cdw11 as defined by the specification for this command.
+ * \param payload The pointer to the payload buffer.
+ * \param payload_size The size of payload buffer.
+ * \param cb_fn Callback function to invoke when the feature has been retrieved.
+ * \param cb_arg Argument to pass to the callback function.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point after nvme_attach().
+ *
+ * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ *
+ * \sa nvme_ctrlr_cmd_get_feature()
+ */
+int nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr,
+			       uint8_t feature, uint32_t cdw11,
+			       void *payload, uint32_t payload_size,
+			       nvme_cb_fn_t cb_fn, void *cb_arg);
+
+/**
  * \brief Get the identify namespace data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point after nvme_attach().

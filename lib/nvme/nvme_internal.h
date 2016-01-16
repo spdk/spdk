@@ -339,14 +339,6 @@ nvme_align32pow2(uint32_t x)
 }
 
 /* Admin functions */
-void	nvme_ctrlr_cmd_set_feature(struct nvme_controller *ctrlr,
-				   uint8_t feature, uint32_t cdw11,
-				   void *payload, uint32_t payload_size,
-				   nvme_cb_fn_t cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr,
-				   uint8_t feature, uint32_t cdw11,
-				   void *payload, uint32_t payload_size,
-				   nvme_cb_fn_t cb_fn, void *cb_arg);
 void	nvme_ctrlr_cmd_identify_controller(struct nvme_controller *ctrlr,
 		void *payload,
 		nvme_cb_fn_t cb_fn, void *cb_arg);

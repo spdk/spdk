@@ -173,25 +173,34 @@ nvme_ctrlr_cmd_create_io_sq(struct nvme_controller *ctrlr,
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
-void
+int
 nvme_ctrlr_cmd_set_feature(struct nvme_controller *ctrlr, uint8_t feature,
-			   uint32_t cdw11, void *payload, uint32_t payload_size,
+			   uint32_t cdw11, uint32_t cdw12, void *payload, uint32_t payload_size,
 			   nvme_cb_fn_t cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
+	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	if (req == NULL) {
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_SET_FEATURES;
 	cmd->cdw10 = feature;
 	cmd->cdw11 = cdw11;
+	cmd->cdw12 = cdw12;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return 0;
 }
 
-void
+int
 nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr, uint8_t feature,
 			   uint32_t cdw11, void *payload, uint32_t payload_size,
 			   nvme_cb_fn_t cb_fn, void *cb_arg)
@@ -199,7 +208,12 @@ nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr, uint8_t feature,
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
+	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	if (req == NULL) {
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_GET_FEATURES;
@@ -207,6 +221,9 @@ nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr, uint8_t feature,
 	cmd->cdw11 = cdw11;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return 0;
 }
 
 void
@@ -216,7 +233,7 @@ nvme_ctrlr_cmd_set_num_queues(struct nvme_controller *ctrlr,
 	uint32_t cdw11;
 
 	cdw11 = ((num_queues - 1) << 16) | (num_queues - 1);
-	nvme_ctrlr_cmd_set_feature(ctrlr, NVME_FEAT_NUMBER_OF_QUEUES, cdw11,
+	nvme_ctrlr_cmd_set_feature(ctrlr, NVME_FEAT_NUMBER_OF_QUEUES, cdw11, 0,
 				   NULL, 0, cb_fn, cb_arg);
 }
 
@@ -229,7 +246,7 @@ nvme_ctrlr_cmd_set_async_event_config(struct nvme_controller *ctrlr,
 
 	cdw11 = state.raw;
 	nvme_ctrlr_cmd_set_feature(ctrlr,
-				   NVME_FEAT_ASYNC_EVENT_CONFIGURATION, cdw11, NULL, 0, cb_fn,
+				   NVME_FEAT_ASYNC_EVENT_CONFIGURATION, cdw11, 0, NULL, 0, cb_fn,
 				   cb_arg);
 }
 

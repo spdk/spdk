@@ -46,6 +46,7 @@ uint32_t error_num_entries;
 uint32_t health_log_nsid = 1;
 uint8_t feature = 1;
 uint32_t feature_cdw11 = 1;
+uint32_t feature_cdw12 = 1;
 uint8_t get_feature = 1;
 uint32_t get_feature_cdw11 = 1;
 uint16_t abort_cid = 1;
@@ -96,6 +97,7 @@ static void verify_set_feature_cmd(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == NVME_OPC_SET_FEATURES);
 	CU_ASSERT(req->cmd.cdw10 == feature);
 	CU_ASSERT(req->cmd.cdw11 == feature_cdw11);
+	CU_ASSERT(req->cmd.cdw12 == feature_cdw12);
 }
 
 static void verify_get_feature_cmd(struct nvme_request *req)
@@ -336,7 +338,7 @@ test_set_feature_cmd(void)
 
 	verify_fn = verify_set_feature_cmd;
 
-	nvme_ctrlr_cmd_set_feature(&ctrlr, feature, feature_cdw11, NULL, 0, NULL, NULL);
+	nvme_ctrlr_cmd_set_feature(&ctrlr, feature, feature_cdw11, feature_cdw12, NULL, 0, NULL, NULL);
 }
 
 
