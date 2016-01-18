@@ -48,6 +48,7 @@
 #include "spdk/nvme.h"
 #include "spdk/pci.h"
 #include "spdk/string.h"
+#include "spdk/nvme_intel.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -56,9 +57,10 @@
 #endif
 
 struct ctrlr_entry {
-	struct nvme_controller	*ctrlr;
-	struct ctrlr_entry	*next;
-	char			name[1024];
+	struct nvme_controller			*ctrlr;
+	struct nvme_intel_rw_latency_page	*latency_page;
+	struct ctrlr_entry			*next;
+	char					name[1024];
 };
 
 enum entry_type {
@@ -114,6 +116,10 @@ struct worker_thread {
 	struct worker_thread	*next;
 	unsigned		lcore;
 };
+
+static int g_outstanding_commands;
+
+static bool g_latency_tracking_enable = false;
 
 struct rte_mempool *request_mempool;
 static struct rte_mempool *task_pool;
@@ -178,19 +184,66 @@ register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
 }
 
 static void
+enable_latency_tracking_complete(void *cb_arg, const struct nvme_completion *cpl)
+{
+	if (nvme_completion_is_error(cpl)) {
+		printf("enable_latency_tracking_complete failed\n");
+	}
+	g_outstanding_commands--;
+}
+
+static void
+set_latency_tracking_feature(struct nvme_controller *ctrlr, bool enable)
+{
+	int res;
+	union nvme_intel_enable_latency_tracking_feature enable_latency_tracking;
+
+	if (enable) {
+		enable_latency_tracking.bits.enable = 0x01;
+	} else {
+		enable_latency_tracking.bits.enable = 0x00;
+	}
+
+	res = nvme_ctrlr_cmd_set_feature(ctrlr, NVME_INTEL_FEAT_LATENCY_TRACKING,
+					 enable_latency_tracking.raw, 0, NULL, 0, enable_latency_tracking_complete, NULL);
+	if (res) {
+		printf("fail to allocate nvme request.\n");
+		return;
+	}
+	g_outstanding_commands++;
+
+	while (g_outstanding_commands) {
+		nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+}
+
+static void
 register_ctrlr(struct nvme_controller *ctrlr)
 {
 	int nsid, num_ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
+	const struct nvme_controller_data *cdata = nvme_ctrlr_get_data(ctrlr);
 
 	if (entry == NULL) {
 		perror("ctrlr_entry malloc");
 		exit(1);
 	}
 
+	entry->latency_page = rte_zmalloc("nvme latency", sizeof(struct nvme_intel_rw_latency_page), 4096);
+	if (entry->latency_page == NULL) {
+		printf("Allocation error (latency page)\n");
+		exit(1);
+	}
+
+	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
+
 	entry->ctrlr = ctrlr;
 	entry->next = g_controllers;
 	g_controllers = entry;
+
+	if (g_latency_tracking_enable &&
+	    nvme_ctrlr_is_feature_supported(ctrlr, NVME_INTEL_FEAT_LATENCY_TRACKING))
+		set_latency_tracking_feature(ctrlr, true);
 
 	num_ns = nvme_ctrlr_get_num_ns(ctrlr);
 	for (nsid = 1; nsid <= num_ns; nsid++) {
@@ -271,7 +324,7 @@ aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd
 	iocb->data = cb_ctx;
 
 	if (io_submit(aio_ctx, 1, &iocb) < 0) {
-		perror("io_submit");
+		printf("io_submit");
 		return -1;
 	}
 
@@ -488,6 +541,7 @@ static void usage(char *program_name)
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
+	printf("\t[-l enable latency tracking, default: disabled]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
@@ -496,7 +550,7 @@ static void usage(char *program_name)
 }
 
 static void
-print_stats(void)
+print_performance(void)
 {
 	float io_per_second, mb_per_second;
 	float total_io_per_second, total_mb_per_second;
@@ -524,6 +578,88 @@ print_stats(void)
 	printf("========================================================\n");
 	printf("%-55s: %10.2f IO/s %10.2f MB/s\n",
 	       "Total", total_io_per_second, total_mb_per_second);
+
+	printf("\n");
+}
+
+static void
+print_latency_page(struct ctrlr_entry *entry)
+{
+	int i;
+
+	printf("\n");
+	printf("%s\n", entry->name);
+	printf("--------------------------------------------------------\n");
+
+	for (i = 0; i < 32; i++) {
+		if (entry->latency_page->buckets_32us[i])
+			printf("Bucket %dus - %dus: %d\n", i * 32, (i + 1) * 32, entry->latency_page->buckets_32us[i]);
+	}
+	for (i = 0; i < 31; i++) {
+		if (entry->latency_page->buckets_1ms[i])
+			printf("Bucket %dms - %dms: %d\n", i + 1, i + 2, entry->latency_page->buckets_1ms[i]);
+	}
+	for (i = 0; i < 31; i++) {
+		if (entry->latency_page->buckets_32ms[i])
+			printf("Bucket %dms - %dms: %d\n", (i + 1) * 32, (i + 2) * 32,
+			       entry->latency_page->buckets_32ms[i]);
+	}
+}
+
+static void
+print_latency_statistics(const char *op_name, enum nvme_intel_log_page log_page)
+{
+	struct ctrlr_entry	*ctrlr;
+
+	printf("%s Latency Statistics:\n", op_name);
+	printf("========================================================\n");
+	ctrlr = g_controllers;
+	while (ctrlr) {
+		if (nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
+			if (nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, NVME_GLOBAL_NAMESPACE_TAG,
+							ctrlr->latency_page, sizeof(struct nvme_intel_rw_latency_page), enable_latency_tracking_complete,
+							NULL)) {
+				printf("nvme_ctrlr_cmd_get_log_page() failed\n");
+				exit(1);
+			}
+
+			g_outstanding_commands++;
+		} else {
+			printf("Controller %s: %s latency statistics not supported\n", ctrlr->name, op_name);
+		}
+		ctrlr = ctrlr->next;
+	}
+
+	while (g_outstanding_commands) {
+		ctrlr = g_controllers;
+		while (ctrlr) {
+			nvme_ctrlr_process_admin_completions(ctrlr->ctrlr);
+			ctrlr = ctrlr->next;
+		}
+	}
+
+	ctrlr = g_controllers;
+	while (ctrlr) {
+		if (nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
+			print_latency_page(ctrlr);
+		}
+		ctrlr = ctrlr->next;
+	}
+	printf("\n");
+}
+
+static void
+print_stats(void)
+{
+	print_performance();
+	if (g_latency_tracking_enable) {
+		if (g_rw_percentage != 0) {
+			print_latency_statistics("Read", NVME_INTEL_LOG_READ_CMD_LATENCY);
+		}
+		if (g_rw_percentage != 100) {
+			print_latency_statistics("Write", NVME_INTEL_LOG_WRITE_CMD_LATENCY);
+		}
+	}
 }
 
 static int
@@ -542,10 +678,13 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:m:q:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "c:lm:q:s:t:w:M:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
+			break;
+		case 'l':
+			g_latency_tracking_enable = true;
 			break;
 		case 'm':
 			g_max_completions = atoi(optarg);
@@ -738,6 +877,10 @@ unregister_controllers(void)
 
 	while (entry) {
 		struct ctrlr_entry *next = entry->next;
+		rte_free(entry->latency_page);
+		if (g_latency_tracking_enable &&
+		    nvme_ctrlr_is_feature_supported(entry->ctrlr, NVME_INTEL_FEAT_LATENCY_TRACKING))
+			set_latency_tracking_feature(entry->ctrlr, false);
 		nvme_detach(entry->ctrlr);
 		free(entry);
 		entry = next;
