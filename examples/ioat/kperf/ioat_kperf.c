@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 #include <inttypes.h>
 #include <assert.h>
 
@@ -148,6 +149,29 @@ get_u64_from_file(const char *sysfs_file, uint64_t *value)
 	return 0;
 }
 
+static int
+get_dma_channel_count(void)
+{
+	int count = 0;
+	struct dirent *e;
+	DIR *dir;
+	char *str;
+
+	dir = opendir("/sys/bus/pci/drivers/ioatdma");
+	if (dir == NULL) {
+		return 0;
+	}
+
+	while ((e = readdir(dir)) != NULL) {
+		str = strstr(e->d_name, ":");
+		if (str != NULL)
+			count++;
+	}
+	closedir(dir);
+
+	return count;
+}
+
 static void
 usage(char *program_name)
 {
@@ -164,6 +188,7 @@ int main(int argc, char *argv[])
 	int op;
 	int rc;
 	char buf[BUFSIZ];
+	uint32_t count = 0;
 	uint32_t i, threads = 0;
 	uint32_t ring_size, queue_depth = 0;
 	uint32_t transfer_size, order = 0;
@@ -181,6 +206,11 @@ int main(int argc, char *argv[])
 			" run `insmod dmaperf.ko` in the kmod directory\n");
 		return -1;
 	}
+	count = get_dma_channel_count();
+	if (!count) {
+		fprintf(stderr, "No DMA channel found\n");
+		return -1;
+	}
 
 	rc = get_u32_from_file("/sys/module/ioatdma/parameters/ioat_ring_alloc_order",
 			       &order);
@@ -194,6 +224,10 @@ int main(int argc, char *argv[])
 		switch (op) {
 		case 'n':
 			threads = atoi(optarg);
+			if (threads > count) {
+				fprintf(stderr, "Error: Total channel count %u\n", count);
+				return -1;
+			}
 			rc = put_u32_to_file("/sys/kernel/debug/dmaperf/dmaperf/threads", threads);
 			if (rc < 0) {
 				fprintf(stderr, "Cannot set dma channels\n");
