@@ -16,7 +16,7 @@ Building & Usage
 1. Compile and load the kernel test module first.
 
     modprobe -v ioatdma
-    cd kmod && make && insmod dmaperf.ko
+    ./scripts/build_kmod.sh build && insmod dmaperf.ko
 
 2. Run the test application.
 
@@ -36,6 +36,9 @@ Building & Usage
     Channel 2 Performance Data 1413 MB/s
     Channel 3 Performance Data 1415 MB/s
     Total Channel Performance Data 5655 MB/s
+
+3. Cleanup
+    ./scripts/build_kmod.sh clean
 
 OS Support
 ==========

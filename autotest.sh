@@ -53,6 +53,7 @@ time test/lib/ioat/ioat.sh
 timing_exit lib
 
 ./scripts/cleanup.sh
+./scripts/build_kmod.sh clean
 
 timing_exit autotest
 chmod a+r $output_dir/timing.txt

@@ -17,6 +17,10 @@ timing_enter check_format
 ./scripts/check_format.sh
 timing_exit check_format
 
+timing_enter build_kmod
+./scripts/build_kmod.sh build
+timing_exit build_kmod
+
 scanbuild=''
 if hash scan-build; then
 	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
