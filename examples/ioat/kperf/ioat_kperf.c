@@ -194,6 +194,8 @@ int main(int argc, char *argv[])
 	uint32_t transfer_size, order = 0;
 	uint64_t total_size, copied = 0;
 	uint64_t elapsed_time = 0;
+	uint64_t total_time = 0;
+	uint64_t perf, total_copied = 0;
 	char channel[1024];
 
 	if (check_modules("ioatdma")) {
@@ -346,9 +348,15 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 		assert(elapsed_time != 0);
+		perf = copied / elapsed_time;
+		total_copied += copied;
+		total_time += elapsed_time;
 		fprintf(stdout, "Channel %d Performance Data %"PRIu64" MB/s\n",
-			i, copied / elapsed_time);
+			i, perf);
 	}
 
+	if (total_time && threads)
+		fprintf(stdout, "Total Channel Performance Data %"PRIu64" MB/s\n",
+			total_copied / total_time / threads);
 	return 0;
 }
