@@ -30,6 +30,7 @@ Fedora/CentOS:
 - gcc
 - libpciaccess-devel
 - CUnit-devel
+- libaio-devel
 
 Ubuntu/Debian:
 
@@ -37,6 +38,7 @@ Ubuntu/Debian:
 - libpciaccess-dev
 - make
 - libcunit1-dev
+- libaio-dev
 
 FreeBSD:
 
