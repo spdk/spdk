@@ -105,12 +105,46 @@
  */
 #define DEFAULT_MAX_IO_QUEUES		(1024)
 
+enum nvme_payload_type {
+	NVME_PAYLOAD_TYPE_INVALID = 0,
+
+	/** nvme_request::u.payload.contig_buffer is valid for this request */
+	NVME_PAYLOAD_TYPE_CONTIG,
+
+	/** nvme_request::u.sgl is valid for this request */
+	NVME_PAYLOAD_TYPE_SGL,
+};
+
+/**
+ * Descriptor for a request data payload.
+ *
+ * This struct is arranged so that it fits nicely in struct nvme_request.
+ */
+struct __attribute__((packed)) nvme_payload {
+	union {
+		/** Virtual memory address of a single physically contiguous buffer */
+		void *contig;
+
+		/**
+		 * Functions for retrieving physical addresses for scattered payloads.
+		 */
+		struct {
+			nvme_req_reset_sgl_fn_t reset_sgl_fn;
+			nvme_req_next_sge_fn_t next_sge_fn;
+		} sgl;
+	} u;
+
+	/** \ref nvme_payload_type */
+	uint8_t type;
+};
+
 struct nvme_request {
 	struct nvme_command		cmd;
 
-	union {
-		void			*payload;
-	} u;
+	/**
+	 * Data payload for this request's command.
+	 */
+	struct nvme_payload		payload;
 
 	uint8_t				timeout;
 	uint8_t				retries;
@@ -121,6 +155,13 @@ struct nvme_request {
 	 */
 	uint8_t				num_children;
 	uint32_t			payload_size;
+
+	/**
+	 * Offset in bytes from the beginning of payload for this request.
+	 * This is used for I/O commands that are split into multiple requests.
+	 */
+	uint32_t			payload_offset;
+
 	nvme_cb_fn_t			cb_fn;
 	void				*cb_arg;
 	STAILQ_ENTRY(nvme_request)	stailq;
@@ -159,13 +200,6 @@ struct nvme_request {
 	 *  status once all child requests are completed.
 	 */
 	struct nvme_completion		parent_status;
-
-	/**
-	 * Functions for retrieving physical addresses for scattered payloads.
-	 */
-	nvme_req_reset_sgl_fn_t reset_sgl_fn;
-	nvme_req_next_sge_fn_t next_sge_fn;
-	uint32_t sgl_offset;
 };
 
 struct nvme_completion_poll_status {
@@ -397,9 +431,11 @@ int	nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 			  struct nvme_controller *ctrlr);
 void	nvme_ns_destruct(struct nvme_namespace *ns);
 
-struct nvme_request *
-nvme_allocate_request(void *payload, uint32_t payload_size,
-		      nvme_cb_fn_t cb_fn, void *cb_arg);
+struct nvme_request *nvme_allocate_request(const struct nvme_payload *payload,
+		uint32_t payload_size, nvme_cb_fn_t cb_fn, void *cb_arg);
+struct nvme_request *nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg);
+struct nvme_request *nvme_allocate_request_contig(void *buffer, uint32_t payload_size,
+		nvme_cb_fn_t cb_fn, void *cb_arg);
 void	nvme_free_request(struct nvme_request *req);
 
 #endif /* __NVME_INTERNAL_H__ */

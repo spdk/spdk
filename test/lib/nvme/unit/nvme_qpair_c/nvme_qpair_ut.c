@@ -56,8 +56,8 @@ uint64_t nvme_vtophys(void *buf)
 }
 
 struct nvme_request *
-nvme_allocate_request(void *payload, uint32_t payload_size,
-		      nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
+		      void *cb_arg)
 {
 	struct nvme_request *req = NULL;
 
@@ -79,18 +79,27 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->timeout = true;
-	nvme_assert((payload == NULL && payload_size == 0) ||
-		    (payload != NULL && payload_size != 0),
-		    ("Invalid argument combination of payload and payload_size\n"));
-	if (payload == NULL || payload_size == 0) {
-		req->u.payload = NULL;
-		req->payload_size = 0;
-	} else {
-		req->u.payload = payload;
-		req->payload_size = payload_size;
-	}
+	req->payload = *payload;
+	req->payload_size = payload_size;
 
 	return req;
+}
+
+struct nvme_request *
+nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t cb_fn, void *cb_arg)
+{
+	struct nvme_payload payload;
+
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = buffer;
+
+	return nvme_allocate_request(&payload, payload_size, cb_fn, cb_arg);
+}
+
+struct nvme_request *
+nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
+{
+	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
 
 void
@@ -208,7 +217,7 @@ test3(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
-	req = nvme_allocate_request(NULL, 0, expected_success_callback, NULL);
+	req = nvme_allocate_request_null(expected_success_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	CU_ASSERT(qpair.sq_tail == 0);
@@ -232,7 +241,7 @@ test4(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
-	req = nvme_allocate_request(payload, sizeof(payload), expected_failure_callback, NULL);
+	req = nvme_allocate_request_contig(payload, sizeof(payload), expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	/* Force vtophys to return a failure.  This should
@@ -265,7 +274,7 @@ test_ctrlr_failed(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
-	req = nvme_allocate_request(payload, sizeof(payload), expected_failure_callback, NULL);
+	req = nvme_allocate_request_contig(payload, sizeof(payload), expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	/* Disable the queue and set the controller to failed.
@@ -311,14 +320,14 @@ static void test_nvme_qpair_fail(void)
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
-	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
+	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
 	nvme_qpair_fail(&qpair);
 	CU_ASSERT_TRUE(LIST_EMPTY(&qpair.outstanding_tr));
 
-	req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
+	req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	STAILQ_INSERT_HEAD(&qpair.queued_req, req, stailq);
@@ -394,7 +403,7 @@ static void test_nvme_qpair_destroy(void)
 	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
 			      64, &phys_addr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
-	tr_temp->req = nvme_allocate_request(NULL, 0, expected_failure_callback, NULL);
+	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
 	tr_temp->req->cmd.opc = NVME_OPC_ASYNC_EVENT_REQUEST;

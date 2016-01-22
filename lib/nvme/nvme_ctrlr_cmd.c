@@ -41,7 +41,7 @@ nvme_ctrlr_cmd_io_raw(struct nvme_controller *ctrlr,
 {
 	struct nvme_request	*req;
 
-	req = nvme_allocate_request(buf, len, cb_fn, cb_arg);
+	req = nvme_allocate_request_contig(buf, len, cb_fn, cb_arg);
 
 	if (req == NULL) {
 		return ENOMEM;
@@ -62,7 +62,7 @@ nvme_ctrlr_cmd_admin_raw(struct nvme_controller *ctrlr,
 	struct nvme_request	*req;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request(buf, len, cb_fn, cb_arg);
+	req = nvme_allocate_request_contig(buf, len, cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 		return ENOMEM;
@@ -83,9 +83,9 @@ nvme_ctrlr_cmd_identify_controller(struct nvme_controller *ctrlr, void *payload,
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
-	req = nvme_allocate_request(payload,
-				    sizeof(struct nvme_controller_data),
-				    cb_fn, cb_arg);
+	req = nvme_allocate_request_contig(payload,
+					   sizeof(struct nvme_controller_data),
+					   cb_fn, cb_arg);
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_IDENTIFY;
@@ -106,9 +106,9 @@ nvme_ctrlr_cmd_identify_namespace(struct nvme_controller *ctrlr, uint16_t nsid,
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
-	req = nvme_allocate_request(payload,
-				    sizeof(struct nvme_namespace_data),
-				    cb_fn, cb_arg);
+	req = nvme_allocate_request_contig(payload,
+					   sizeof(struct nvme_namespace_data),
+					   cb_fn, cb_arg);
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_IDENTIFY;
@@ -129,7 +129,7 @@ nvme_ctrlr_cmd_create_io_cq(struct nvme_controller *ctrlr,
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
-	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_CREATE_IO_CQ;
@@ -156,7 +156,7 @@ nvme_ctrlr_cmd_create_io_sq(struct nvme_controller *ctrlr,
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
-	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_CREATE_IO_SQ;
@@ -182,7 +182,7 @@ nvme_ctrlr_cmd_set_feature(struct nvme_controller *ctrlr, uint8_t feature,
 	struct nvme_command *cmd;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 		return ENOMEM;
@@ -209,7 +209,7 @@ nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr, uint8_t feature,
 	struct nvme_command *cmd;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 		return ENOMEM;
@@ -259,7 +259,7 @@ nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
 	struct nvme_command *cmd;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request(payload, payload_size, cb_fn, cb_arg);
+	req = nvme_allocate_request_contig(payload, payload_size, cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 		return ENOMEM;
@@ -284,7 +284,7 @@ nvme_ctrlr_cmd_abort(struct nvme_controller *ctrlr, uint16_t cid,
 	struct nvme_request *req;
 	struct nvme_command *cmd;
 
-	req = nvme_allocate_request(NULL, 0, cb_fn, cb_arg);
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
 
 	cmd = &req->cmd;
 	cmd->opc = NVME_OPC_ABORT;

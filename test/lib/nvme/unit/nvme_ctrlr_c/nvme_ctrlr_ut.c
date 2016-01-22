@@ -148,8 +148,8 @@ nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 
 
 struct nvme_request *
-nvme_allocate_request(void *payload, uint32_t payload_size,
-		      nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
+		      void *cb_arg)
 {
 	struct nvme_request *req = NULL;
 	nvme_alloc_request(&req);
@@ -157,19 +157,33 @@ nvme_allocate_request(void *payload, uint32_t payload_size,
 	if (req != NULL) {
 		memset(req, 0, offsetof(struct nvme_request, children));
 
-		if (payload == NULL || payload_size == 0) {
-			req->u.payload = NULL;
-			req->payload_size = 0;
-		} else {
-			req->u.payload = payload;
-			req->payload_size = payload_size;
-		}
+		req->payload = *payload;
+		req->payload_size = payload_size;
 
 		req->cb_fn = cb_fn;
 		req->cb_arg = cb_arg;
 		req->timeout = true;
 	}
+
 	return req;
+}
+
+struct nvme_request *
+nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t cb_fn, void *cb_arg)
+{
+	struct nvme_payload payload;
+
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = buffer;
+
+	return nvme_allocate_request(&payload, payload_size, cb_fn, cb_arg);
+}
+
+
+struct nvme_request *
+nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
+{
+	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
 
 static void
