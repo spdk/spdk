@@ -506,6 +506,96 @@ int nvme_ns_cmd_flush(struct nvme_namespace *ns, nvme_cb_fn_t cb_fn,
 		      void *cb_arg);
 
 /**
+ * \brief Submits a reservation register to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the reservation register request
+ * \param payload virtual address pointer to the reservation register data
+ * \param ignore_key '1' the current reservation key check is disabled
+ * \param action specifies the registration action
+ * \param cptpl change the Persist Through Power Loss state
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_reservation_register(struct nvme_namespace *ns,
+				     struct nvme_reservation_register_data *payload,
+				     bool ignore_key,
+				     enum nvme_reservation_register_action action,
+				     enum nvme_reservation_register_cptpl cptpl,
+				     nvme_cb_fn_t cb_fn, void *cb_arg);
+
+/**
+ * \brief Submits a reservation release to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the reservation release request
+ * \param payload virtual address pointer to current reservation key
+ * \param ignore_key '1' the current reservation key check is disabled
+ * \param action specifies the reservation release action
+ * \param type reservation type for the namespace
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_reservation_release(struct nvme_namespace *ns,
+				    struct nvme_reservation_key_data *payload,
+				    bool ignore_key,
+				    enum nvme_reservation_release_action action,
+				    enum nvme_reservation_type type,
+				    nvme_cb_fn_t cb_fn, void *cb_arg);
+
+/**
+ * \brief Submits a reservation acquire to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the reservation acquire request
+ * \param payload virtual address pointer to reservation acquire data
+ * \param ignore_key '1' the current reservation key check is disabled
+ * \param action specifies the reservation acquire action
+ * \param type reservation type for the namespace
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_reservation_acquire(struct nvme_namespace *ns,
+				    struct nvme_reservation_acquire_data *payload,
+				    bool ignore_key,
+				    enum nvme_reservation_acquire_action action,
+				    enum nvme_reservation_type type,
+				    nvme_cb_fn_t cb_fn, void *cb_arg);
+
+/**
+ * \brief Submits a reservation report to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the reservation report request
+ * \param payload virtual address pointer for reservation status data
+ * \param len length bytes for reservation status data structure
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * This function is thread safe and can be called at any point after
+ * nvme_register_io_thread().
+ */
+int nvme_ns_cmd_reservation_report(struct nvme_namespace *ns, void *payload,
+				   uint32_t len, nvme_cb_fn_t cb_fn, void *cb_arg);
+
+/**
  * \brief Get the size, in bytes, of an nvme_request.
  *
  * This is the size of the request objects that need to be allocated by the

@@ -451,7 +451,10 @@ enum nvme_feature {
 	NVME_FEAT_ASYNC_EVENT_CONFIGURATION	= 0x0B,
 	/* 0x0C-0x7F - reserved */
 	NVME_FEAT_SOFTWARE_PROGRESS_MARKER	= 0x80,
-	/* 0x81-0xBF - command set specific (reserved) */
+	/* 0x81-0xBF - command set specific */
+	NVME_FEAT_HOST_IDENTIFIER		= 0x81,
+	NVME_FEAT_HOST_RESERVE_MASK		= 0x82,
+	NVME_FEAT_HOST_RESERVE_PERSIST		= 0x83,
 	/* 0xC0-0xFF - vendor specific */
 };
 
@@ -871,6 +874,120 @@ struct nvme_namespace_data {
 	uint8_t			vendor_specific[3712];
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_namespace_data) == 4096, "Incorrect size");
+
+/**
+ * Reservation Type Encoding
+ */
+enum nvme_reservation_type {
+	/* 0x00 - reserved */
+
+	/* Write Exclusive Reservation */
+	NVME_RESERVE_WRITE_EXCLUSIVE	= 0x1,
+
+	/* Exclusive Access Reservation */
+	NVME_RESERVE_EXCLUSIVE_ACCESS	= 0x2,
+
+	/* Write Exclusive - Registrants Only Reservation */
+	NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY	= 0x3,
+
+	/* Exclusive Access - Registrants Only Reservation */
+	NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY	= 0x4,
+
+	/* Write Exclusive - All Registrants Reservation */
+	NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS	= 0x5,
+
+	/* Exclusive Access - All Registrants Reservation */
+	NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS	= 0x6,
+
+	/* 0x7-0xFF - Reserved */
+};
+
+struct nvme_reservation_acquire_data {
+	/** current reservation key */
+	uint64_t		crkey;
+	/** preempt reservation key */
+	uint64_t		prkey;
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_acquire_data) == 16, "Incorrect size");
+
+/**
+ * Reservation Acquire action
+ */
+enum nvme_reservation_acquire_action {
+	NVME_RESERVE_ACQUIRE		= 0x0,
+	NVME_RESERVE_PREEMPT		= 0x1,
+	NVME_RESERVE_PREEMPT_ABORT	= 0x2,
+};
+
+struct __attribute__((packed)) nvme_reservation_status_data {
+	/** reservation action generation counter */
+	uint32_t		generation;
+	/** reservation type */
+	uint8_t			type;
+	/** number of registered controllers */
+	uint16_t		nr_regctl;
+	uint16_t		reserved1;
+	/** persist through power loss state */
+	uint8_t			ptpl_state;
+	uint8_t			reserved[14];
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_status_data) == 24, "Incorrect size");
+
+struct __attribute__((packed)) nvme_reservation_controller_data {
+	uint16_t		ctrlr_id;
+	/** reservation status */
+	struct {
+		uint8_t		status    : 1;
+		uint8_t		reserved1 : 7;
+	} rcsts;
+	uint8_t			reserved2[5];
+	/** host identifier */
+	uint64_t		host_id;
+	/** reservation key */
+	uint64_t		key;
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_controller_data) == 24, "Incorrect size");
+
+/**
+ * Change persist through power loss state for
+ *  Reservation Register command
+ */
+enum nvme_reservation_register_cptpl {
+	NVME_RESERVE_PTPL_NO_CHANGES		= 0x0,
+	NVME_RESERVE_PTPL_CLEAR_POWER_ON	= 0x2,
+	NVME_RESERVE_PTPL_PERSIST_POWER_LOSS	= 0x3,
+};
+
+/**
+ * Registration action for Reservation Register command
+ */
+enum nvme_reservation_register_action {
+	NVME_RESERVE_REGISTER_KEY	= 0x0,
+	NVME_RESERVE_UNREGISTER_KEY	= 0x1,
+	NVME_RESERVE_REPLACE_KEY	= 0x2,
+};
+
+struct nvme_reservation_register_data {
+	/** current reservation key */
+	uint64_t		crkey;
+	/** new reservation key */
+	uint64_t		nrkey;
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_register_data) == 16, "Incorrect size");
+
+struct nvme_reservation_key_data {
+	/** current reservation key */
+	uint64_t		crkey;
+};
+SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_key_data) == 8, "Incorrect size");
+
+/**
+ * Reservation Release action
+ */
+enum nvme_reservation_release_action {
+	NVME_RESERVE_RELEASE		= 0x0,
+	NVME_RESERVE_CLEAR		= 0x1,
+};
 
 /**
  * Log page identifiers for NVME_OPC_GET_LOG_PAGE

@@ -28,6 +28,10 @@ timing_enter perf
 $rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 5
 timing_exit perf
 
+timing_enter reserve
+$rootdir/examples/nvme/reserve/reserve
+timing_exit reserve
+
 #Now test nvme reset function
 timing_enter reset
 $testdir/reset/reset -q 64 -w write -s 4096 -t 15
