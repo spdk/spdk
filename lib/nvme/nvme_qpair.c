@@ -509,11 +509,13 @@ nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completion
 			qpair->phase = !qpair->phase;
 		}
 
-		spdk_mmio_write_4(qpair->cq_hdbl, qpair->cq_head);
-
 		if (++num_completions == max_completions) {
 			break;
 		}
+	}
+
+	if (num_completions > 0) {
+		spdk_mmio_write_4(qpair->cq_hdbl, qpair->cq_head);
 	}
 
 	return num_completions;
