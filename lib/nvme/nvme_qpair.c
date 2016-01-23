@@ -743,8 +743,10 @@ _nvme_qpair_build_sgl_request(struct nvme_qpair *qpair, struct nvme_request *req
 	while (remaining_transfer_len > 0) {
 		nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
 		rc = req->payload.u.sgl.next_sge_fn(parent->cb_arg, &phys_addr, &length);
-		if (rc)
+		if (rc) {
+			_nvme_fail_request_bad_vtophys(qpair, tr);
 			return -1;
+		}
 
 		data_transfered = nvme_min(remaining_transfer_len, length);
 
@@ -790,8 +792,10 @@ _nvme_qpair_build_sgl_request(struct nvme_qpair *qpair, struct nvme_request *req
 
 				/* physical address and length check */
 				if (remaining_transfer_len || (!remaining_transfer_len && (cur_nseg < nseg))) {
-					if ((length & (PAGE_SIZE - 1)) || unaligned)
+					if ((length & (PAGE_SIZE - 1)) || unaligned) {
+						_nvme_fail_request_bad_vtophys(qpair, tr);
 						return -1;
+					}
 				}
 			}
 		}
@@ -858,7 +862,6 @@ nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL) {
 		rc = _nvme_qpair_build_sgl_request(qpair, req, tr);
 		if (rc < 0) {
-			_nvme_fail_request_bad_vtophys(qpair, tr);
 			return;
 		}
 	} else {
