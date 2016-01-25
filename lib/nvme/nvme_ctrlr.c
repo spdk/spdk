@@ -113,6 +113,47 @@ nvme_ctrlr_set_supported_log_pages(struct nvme_controller *ctrlr)
 	}
 }
 
+static void
+nvme_ctrlr_set_intel_supported_features(struct nvme_controller *ctrlr)
+{
+	ctrlr->feature_supported[NVME_INTEL_FEAT_MAX_LBA] = true;
+	ctrlr->feature_supported[NVME_INTEL_FEAT_NATIVE_MAX_LBA] = true;
+	ctrlr->feature_supported[NVME_INTEL_FEAT_POWER_GOVERNOR_SETTING] = true;
+	ctrlr->feature_supported[NVME_INTEL_FEAT_SMBUS_ADDRESS] = true;
+	ctrlr->feature_supported[NVME_INTEL_FEAT_LED_PATTERN] = true;
+	ctrlr->feature_supported[NVME_INTEL_FEAT_RESET_TIMED_WORKLOAD_COUNTERS] = true;
+	ctrlr->feature_supported[NVME_INTEL_FEAT_LATENCY_TRACKING] = true;
+}
+
+static void
+nvme_ctrlr_set_supported_features(struct nvme_controller *ctrlr)
+{
+	memset(ctrlr->feature_supported, 0, sizeof(ctrlr->feature_supported));
+	/* Mandatory features */
+	ctrlr->feature_supported[NVME_FEAT_ARBITRATION] = true;
+	ctrlr->feature_supported[NVME_FEAT_POWER_MANAGEMENT] = true;
+	ctrlr->feature_supported[NVME_FEAT_TEMPERATURE_THRESHOLD] = true;
+	ctrlr->feature_supported[NVME_FEAT_ERROR_RECOVERY] = true;
+	ctrlr->feature_supported[NVME_FEAT_NUMBER_OF_QUEUES] = true;
+	ctrlr->feature_supported[NVME_FEAT_INTERRUPT_COALESCING] = true;
+	ctrlr->feature_supported[NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION] = true;
+	ctrlr->feature_supported[NVME_FEAT_WRITE_ATOMICITY] = true;
+	ctrlr->feature_supported[NVME_FEAT_ASYNC_EVENT_CONFIGURATION] = true;
+	/* Optional features */
+	if (ctrlr->cdata.vwc.present) {
+		ctrlr->feature_supported[NVME_FEAT_VOLATILE_WRITE_CACHE] = true;
+	}
+	if (ctrlr->cdata.apsta.supported) {
+		ctrlr->feature_supported[NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION] = true;
+	}
+	if (ctrlr->cdata.hmpre) {
+		ctrlr->feature_supported[NVME_FEAT_HOST_MEM_BUFFER] = true;
+	}
+	if (ctrlr->cdata.vid == PCI_VENDOR_ID_INTEL) {
+		nvme_ctrlr_set_intel_supported_features(ctrlr);
+	}
+}
+
 static int
 nvme_ctrlr_construct_admin_qpair(struct nvme_controller *ctrlr)
 {
@@ -693,6 +734,7 @@ nvme_ctrlr_start(struct nvme_controller *ctrlr)
 	}
 
 	nvme_ctrlr_set_supported_log_pages(ctrlr);
+	nvme_ctrlr_set_supported_features(ctrlr);
 	return 0;
 }
 
@@ -862,4 +904,12 @@ nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, uint8_t log_page
 	/* No bounds check necessary, since log_page is uint8_t and log_page_supported has 256 entries */
 	SPDK_STATIC_ASSERT(sizeof(ctrlr->log_page_supported) == 256, "log_page_supported size mismatch");
 	return ctrlr->log_page_supported[log_page];
+}
+
+bool
+nvme_ctrlr_is_feature_supported(struct nvme_controller *ctrlr, uint8_t feature_code)
+{
+	/* No bounds check necessary, since feature_code is uint8_t and feature_supported has 256 entries */
+	SPDK_STATIC_ASSERT(sizeof(ctrlr->feature_supported) == 256, "feature_supported size mismatch");
+	return ctrlr->feature_supported[feature_code];
 }

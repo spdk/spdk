@@ -225,6 +225,28 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	CU_ASSERT(res == false);
 }
 
+static void
+test_nvme_ctrlr_set_supported_features(void)
+{
+	bool	res;
+	struct nvme_controller			ctrlr = {};
+
+	/* set a invalid vendor id */
+	ctrlr.cdata.vid = 0xFFFF;
+	nvme_ctrlr_set_supported_features(&ctrlr);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_FEAT_ARBITRATION);
+	CU_ASSERT(res == true);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_INTEL_FEAT_MAX_LBA);
+	CU_ASSERT(res == false);
+
+	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
+	nvme_ctrlr_set_supported_features(&ctrlr);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_FEAT_ARBITRATION);
+	CU_ASSERT(res == true);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_INTEL_FEAT_MAX_LBA);
+	CU_ASSERT(res == true);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -244,6 +266,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "test nvme_ctrlr function nvme_ctrlr_fail", test_nvme_ctrlr_fail) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_construct_intel_support_log_page_list",
 			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_supported_features",
+			       test_nvme_ctrlr_set_supported_features) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

@@ -117,6 +117,15 @@ uint32_t nvme_ctrlr_get_num_ns(struct nvme_controller *ctrlr);
 bool nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, uint8_t log_page);
 
 /**
+ * \brief Determine if a particular feature is supported by the given NVMe controller.
+ *
+ * This function is thread safe and can be called at any point after nvme_attach().
+ *
+ * \sa nvme_ctrlr_cmd_get_feature()
+ */
+bool nvme_ctrlr_is_feature_supported(struct nvme_controller *ctrlr, uint8_t feature_code);
+
+/**
  * Signature for callback function invoked when a command is completed.
  *
  * The nvme_completion parameter contains the completion status.

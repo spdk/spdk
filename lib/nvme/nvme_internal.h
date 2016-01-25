@@ -299,6 +299,9 @@ struct nvme_controller {
 	/** All the log pages supported */
 	bool				log_page_supported[256];
 
+	/** All the features supported */
+	bool				feature_supported[256];
+
 	/* Opaque handle to associated PCI device. */
 	void				*devhandle;
 
