@@ -35,8 +35,9 @@
 #define __NVME_IMPL_H__
 
 #include "spdk/vtophys.h"
+#include "spdk/pci.h"
+#include "spdk/nvme_spec.h"
 #include <assert.h>
-#include <pciaccess.h>
 #include <rte_malloc.h>
 #include <rte_config.h>
 #include <rte_mempool.h>
@@ -172,7 +173,52 @@ nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 
 	return pci_device_unmap_range(dev, addr, dev->regions[bar].size);
 }
-#endif
+
+#else
+
+/* var should be the pointer */
+#define nvme_pcicfg_read32(handle, var, offset)  rte_eal_pci_read_config(handle, var, 4, offset)
+#define nvme_pcicfg_write32(handle, var, offset) rte_eal_pci_write_config(handle, var, 4, offset)
+
+static inline int
+nvme_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **mapped_addr)
+{
+	struct rte_pci_device *dev = devhandle;
+	*mapped_addr = dev->mem_resource[bar].addr;
+	return 0;
+}
+
+static inline int
+nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
+{
+	return 0;
+}
+
+static struct rte_pci_id nvme_pci_driver_id[] = {
+	{RTE_PCI_DEVICE(0x8086, 0x0953)},
+	{ .vendor_id = 0, /* sentinel */ },
+};
+
+static struct rte_pci_driver nvme_rte_driver = {
+	.name = "nvme_driver",
+	.devinit = NULL,
+	.id_table = nvme_pci_driver_id,
+	.drv_flags = RTE_PCI_DRV_NEED_MAPPING,
+};
+
+static inline int nvme_driver_register_dev_init(pci_driver_init fn_t)
+{
+	int rc;
+
+	nvme_rte_driver.devinit = fn_t;
+	rte_eal_pci_register(&nvme_rte_driver);
+	rc = rte_eal_pci_probe();
+	rte_eal_pci_unregister(&nvme_rte_driver);
+
+	return rc;
+}
+
+#endif /* !USE_PCIACCESS */
 
 typedef pthread_mutex_t nvme_mutex_t;
 

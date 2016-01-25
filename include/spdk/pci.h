@@ -35,6 +35,7 @@
 #define SPDK_PCI_H
 
 #ifdef USE_PCIACCESS
+#include <pciaccess.h>
 #define spdk_pci_device_get_domain(dev)	(dev->domain)
 #define spdk_pci_device_get_bus(dev)	(dev->bus)
 #define spdk_pci_device_get_dev(pdev)	(pdev->dev)
@@ -43,6 +44,17 @@
 #define spdk_pci_device_get_device_id(dev) (dev->device_id)
 #define spdk_pci_device_get_subvendor_id(dev) (dev->subvendor_id)
 #define spdk_pci_device_get_subdevice_id(dev) (dev->subdevice_id)
+
+#else
+#include <rte_pci.h>
+typedef struct rte_pci_device spdk_pci_device;
+typedef struct rte_pci_driver spdk_pci_driver;
+
+#define spdk_pci_device_get_domain(dev)	(dev->addr.domain)
+#define spdk_pci_device_get_bus(dev)	(dev->addr.bus)
+#define spdk_pci_device_get_dev(dev)	(dev->addr.devid)
+#define spdk_pci_device_get_func(dev)	(dev->addr.function)
+
 #endif
 
 #define PCI_CFG_SIZE		256

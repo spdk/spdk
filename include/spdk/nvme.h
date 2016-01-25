@@ -35,6 +35,7 @@
 #define SPDK_NVME_H
 
 #include <stddef.h>
+#include "spdk/pci.h"
 #include "nvme_spec.h"
 
 /** \file

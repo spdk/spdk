@@ -41,8 +41,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <pciaccess.h>
-
 #ifdef __FreeBSD__
 #include <sys/pciio.h>
 #endif
@@ -51,13 +49,51 @@
 
 #define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
-#define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
 #define SPDK_PCI_PATH_MAX	256
 
 #ifdef USE_PCIACCESS
+#define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
 /* var should be the pointer */
 #define spdk_pcicfg_read32(handle, var, offset)  pci_device_cfg_read_u32(handle, var, offset)
 #define spdk_pcicfg_write32(handle, var, offset) pci_device_cfg_write_u32(handle, *var, offset)
+#else
+/* var should be the pointer */
+#define spdk_pcicfg_read32(handle, var, offset)  rte_eal_pci_read_config(handle, var, 4, offset)
+#define spdk_pcicfg_write32(handle, var, offset) rte_eal_pci_write_config(handle, var, 4, offset)
+#endif
+
+#ifndef USE_PCIACCESS
+static int pci_device_get_info(struct pci_device *dev, const char *file, uint32_t *val)
+{
+	char filename[SPDK_PCI_PATH_MAX];
+	FILE *fd;
+	char buf[10];
+	char *end = NULL;
+
+	snprintf(filename, sizeof(filename),
+		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/%s",
+		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
+		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev), file);
+
+	fd = fopen(filename, "r");
+	if (!fd)
+		return -1;
+
+	if (fgets(buf, sizeof(buf), fd) == NULL) {
+		fclose(fd);
+		return -1;
+	}
+
+	*val = strtoul(buf, &end, 0);
+	if ((buf[0] == '\0') || (end == NULL) || (*end != '\n')) {
+		fclose(fd);
+		return -1;
+	}
+
+	fclose(fd);
+	return 0;
+
+}
 #endif
 
 int

@@ -40,6 +40,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include "spdk/pci.h"
 
 /**
  * Signature for callback function invoked when a request is completed.
