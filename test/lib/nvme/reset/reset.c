@@ -103,7 +103,7 @@ static int g_queue_depth;
 static int g_time_in_sec;
 
 static void
-register_ns(struct nvme_controller *ctrlr, struct pci_device *pci_dev, struct nvme_namespace *ns)
+register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
 {
 	struct ns_entry *entry;
 	const struct nvme_controller_data *cdata;
@@ -129,7 +129,7 @@ register_ns(struct nvme_controller *ctrlr, struct pci_device *pci_dev, struct nv
 }
 
 static void
-register_ctrlr(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
+register_ctrlr(struct nvme_controller *ctrlr)
 {
 	int nsid, num_ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
@@ -145,7 +145,7 @@ register_ctrlr(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 
 	num_ns = nvme_ctrlr_get_num_ns(ctrlr);
 	for (nsid = 1; nsid <= num_ns; nsid++) {
-		register_ns(ctrlr, pci_dev, nvme_ctrlr_get_ns(ctrlr, nsid));
+		register_ns(ctrlr, nvme_ctrlr_get_ns(ctrlr, nsid));
 	}
 }
 
@@ -546,7 +546,7 @@ register_controllers(void)
 			continue;
 		}
 
-		register_ctrlr(ctrlr, pci_dev);
+		register_ctrlr(ctrlr);
 	}
 
 	pci_iterator_destroy(pci_dev_iter);
