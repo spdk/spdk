@@ -54,6 +54,11 @@
 #define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
 #define SPDK_PCI_PATH_MAX	256
 
+
+/* var should be the pointer */
+#define spdk_pcicfg_read32(handle, var, offset)  pci_device_cfg_read_u32(handle, var, offset)
+#define spdk_pcicfg_write32(handle, var, offset) pci_device_cfg_write_u32(handle, *var, offset)
+
 int
 pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 {
@@ -64,7 +69,7 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 	if (len < 17)
 		return -1;
 
-	err = pci_device_cfg_read_u32(dev, &header, PCI_CFG_SIZE);
+	err = spdk_pcicfg_read32(dev, &header, PCI_CFG_SIZE);
 	if (err || !header)
 		return -1;
 
@@ -75,8 +80,8 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 				/*skip the header*/
 				pos += 4;
 				for (i = 0; i < 2; i++) {
-					err = pci_device_cfg_read_u32(dev,
-								      &buf[i], pos + 4 * i);
+					err = spdk_pcicfg_read32(dev,
+								 &buf[i], pos + 4 * i);
 					if (err)
 						return -1;
 				}
@@ -88,7 +93,7 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 		/*0 if no other items exist*/
 		if (pos < PCI_CFG_SIZE)
 			return -1;
-		err = pci_device_cfg_read_u32(dev, &header, pos);
+		err = spdk_pcicfg_read32(dev, &header, pos);
 		if (err)
 			return -1;
 	}
@@ -106,7 +111,8 @@ pci_device_has_non_uio_driver(struct pci_device *dev)
 
 	snprintf(linkname, sizeof(linkname),
 		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/driver",
-		 dev->domain, dev->bus, dev->dev, dev->func);
+		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
+		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev));
 
 	driver_len = readlink(linkname, driver, sizeof(driver));
 
@@ -139,10 +145,10 @@ pci_device_has_non_uio_driver(struct pci_device *dev)
 	int			fd;
 
 	memset(&pattern, 0, sizeof(pattern));
-	pattern.pc_sel.pc_domain = dev->domain;
-	pattern.pc_sel.pc_bus = dev->bus;
-	pattern.pc_sel.pc_dev = dev->dev;
-	pattern.pc_sel.pc_func = dev->func;
+	pattern.pc_sel.pc_domain = spdk_pci_device_get_domain(dev);
+	pattern.pc_sel.pc_bus = spdk_pci_device_get_bus(dev);
+	pattern.pc_sel.pc_dev = spdk_pci_device_get_dev(dev);
+	pattern.pc_sel.pc_func = spdk_pci_device_get_func(dev);
 	pattern.flags = PCI_GETCONF_MATCH_DOMAIN |
 			PCI_GETCONF_MATCH_BUS |
 			PCI_GETCONF_MATCH_DEV |
@@ -192,14 +198,16 @@ pci_device_unbind_kernel_driver(struct pci_device *dev)
 
 	snprintf(filename, sizeof(filename),
 		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/driver/unbind",
-		 dev->domain, dev->bus, dev->dev, dev->func);
+		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
+		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev));
 
 	fd = fopen(filename, "w");
 	if (!fd)
 		return 0;
 
 	n = snprintf(buf, sizeof(buf), PCI_PRI_FMT,
-		     dev->domain, dev->bus, dev->dev, dev->func);
+		     spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
+		     spdk_pci_device_get_dev(dev), spdk_pci_device_get_dev(dev));
 
 	if (fwrite(buf, n, 1, fd) == 0)
 		goto error;
@@ -259,7 +267,8 @@ pci_device_bind_uio_driver(struct pci_device *dev, char *driver_name)
 	}
 
 	n = snprintf(buf, sizeof(buf), "%04x %04x",
-		     dev->vendor_id, dev->device_id);
+		     spdk_pci_device_get_vendor_id(dev),
+		     spdk_pci_device_get_device_id(dev));
 
 	if (fwrite(buf, n, 1, fd) == 0)
 		goto error;
@@ -273,25 +282,27 @@ error:
 }
 
 int
-pci_device_switch_to_uio_driver(struct pci_device *pci_dev)
+pci_device_switch_to_uio_driver(struct pci_device *dev)
 {
-	if (pci_device_unbind_kernel_driver(pci_dev)) {
-		fprintf(stderr, "Device %s %d:%d:%d unbind from "
+	if (pci_device_unbind_kernel_driver(dev)) {
+		fprintf(stderr, "Device %d:%d:%d unbind from "
 			"kernel driver failed\n",
-			pci_device_get_device_name(pci_dev), pci_dev->bus,
-			pci_dev->dev, pci_dev->func);
+			spdk_pci_device_get_bus(dev),
+			spdk_pci_device_get_dev(dev),
+			spdk_pci_device_get_func(dev));
 		return -1;
 	}
-	if (pci_device_bind_uio_driver(pci_dev, PCI_UIO_DRIVER)) {
-		fprintf(stderr, "Device %s %d:%d:%d bind to "
+	if (pci_device_bind_uio_driver(dev, PCI_UIO_DRIVER)) {
+		fprintf(stderr, "Device %d:%d:%d bind to "
 			"uio driver failed\n",
-			pci_device_get_device_name(pci_dev), pci_dev->bus,
-			pci_dev->dev, pci_dev->func);
+			spdk_pci_device_get_bus(dev),
+			spdk_pci_device_get_dev(dev),
+			spdk_pci_device_get_func(dev));
 		return -1;
 	}
-	printf("Device %s %d:%d:%d bind to uio driver success\n",
-	       pci_device_get_device_name(pci_dev), pci_dev->bus,
-	       pci_dev->dev, pci_dev->func);
+	printf("Device %d:%d:%d bind to uio driver success\n",
+	       spdk_pci_device_get_bus(dev), spdk_pci_device_get_dev(dev),
+	       spdk_pci_device_get_func(dev));
 	return 0;
 }
 
@@ -309,8 +320,9 @@ pci_device_claim(struct pci_device *dev)
 		.l_len = 0,
 	};
 
-	sprintf(shm_name, PCI_PRI_FMT, dev->domain, dev->bus,
-		dev->dev, dev->func);
+	sprintf(shm_name, PCI_PRI_FMT, spdk_pci_device_get_domain(dev),
+		spdk_pci_device_get_bus(dev), spdk_pci_device_get_dev(dev),
+		spdk_pci_device_get_func(dev));
 
 	dev_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (dev_fd == -1) {

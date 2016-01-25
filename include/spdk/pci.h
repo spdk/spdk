@@ -34,6 +34,13 @@
 #ifndef SPDK_PCI_H
 #define SPDK_PCI_H
 
+#define spdk_pci_device_get_domain(dev)	(dev->domain)
+#define spdk_pci_device_get_bus(dev)	(dev->bus)
+#define spdk_pci_device_get_dev(dev)	(dev->dev)
+#define spdk_pci_device_get_func(dev)	(dev->func)
+#define spdk_pci_device_get_vendor_id(dev) (dev->vendor_id)
+#define spdk_pci_device_get_device_id(dev) (dev->device_id)
+
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
 #define PCI_UIO_DRIVER		"uio_pci_generic"
