@@ -40,6 +40,8 @@
 #define spdk_pci_device_get_func(dev)	(dev->func)
 #define spdk_pci_device_get_vendor_id(dev) (dev->vendor_id)
 #define spdk_pci_device_get_device_id(dev) (dev->device_id)
+#define spdk_pci_device_get_subvendor_id(dev) (dev->subvendor_id)
+#define spdk_pci_device_get_subdevice_id(dev) (dev->subdevice_id)
 
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03

@@ -146,7 +146,6 @@ nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 	return 0;
 }
 
-
 struct nvme_request *
 nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
 		      void *cb_arg)
@@ -179,7 +178,6 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t c
 	return nvme_allocate_request(&payload, payload_size, cb_fn, cb_arg);
 }
 
-
 struct nvme_request *
 nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
 {
@@ -203,17 +201,20 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	bool	res;
 	struct nvme_controller			ctrlr = {};
 	struct nvme_intel_log_page_directory	payload = {};
-
+	struct pci_device			device = {};
 	/* set a invalid vendor id */
 	ctrlr.cdata.vid = 0xFFFF;
-	memset(&payload, 0, sizeof(struct nvme_intel_log_page_directory));
+	ctrlr.devhandle = &device;
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
 	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == false);
 
+	/* set valid vendor id and log page directory*/
 	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
 	payload.temperature_statistics_log_len = 1;
+	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
+
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
 	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY);
 	CU_ASSERT(res == true);
@@ -221,6 +222,25 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	CU_ASSERT(res == true);
 	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_READ_CMD_LATENCY);
 	CU_ASSERT(res == false);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_SMART);
+	CU_ASSERT(res == false);
+
+	/* set valid vendor id, device id and sub device id*/
+	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
+	payload.temperature_statistics_log_len = 0;
+	device.vendor_id = PCI_VENDOR_ID_INTEL;
+	device.device_id = 0x0953;
+	device.subvendor_id = PCI_VENDOR_ID_INTEL;
+	device.subdevice_id = 0x3702;
+	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
+
+	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY);
+	CU_ASSERT(res == true);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
+	CU_ASSERT(res == false);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_READ_CMD_LATENCY);
+	CU_ASSERT(res == true);
 	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_SMART);
 	CU_ASSERT(res == false);
 }

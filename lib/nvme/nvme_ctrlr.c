@@ -30,9 +30,10 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include <pciaccess.h>
 #include "nvme_internal.h"
-#include "spdk/nvme_intel.h"
+#include "spdk/pci.h"
+
 /**
  * \file
  *
@@ -45,15 +46,26 @@ static void
 nvme_ctrlr_construct_intel_support_log_page_list(struct nvme_controller *ctrlr,
 		struct nvme_intel_log_page_directory *log_page_directory)
 {
+	struct pci_device *dev;
+	struct pci_id pci_id;
+
 	if (ctrlr->cdata.vid != PCI_VENDOR_ID_INTEL || log_page_directory == NULL)
 		return;
 
+	dev = ctrlr->devhandle;
+	pci_id.vendor_id = spdk_pci_device_get_vendor_id(dev);
+	pci_id.dev_id = spdk_pci_device_get_device_id(dev);
+	pci_id.sub_vendor_id = spdk_pci_device_get_subvendor_id(dev);
+	pci_id.sub_dev_id = spdk_pci_device_get_subdevice_id(dev);
+
 	ctrlr->log_page_supported[NVME_INTEL_LOG_PAGE_DIRECTORY] = true;
 
-	if (log_page_directory->read_latency_log_len) {
+	if (log_page_directory->read_latency_log_len ||
+	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_READ_LATENCY)) {
 		ctrlr->log_page_supported[NVME_INTEL_LOG_READ_CMD_LATENCY] = true;
 	}
-	if (log_page_directory->write_latency_log_len) {
+	if (log_page_directory->write_latency_log_len ||
+	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_WRITE_LATENCY)) {
 		ctrlr->log_page_supported[NVME_INTEL_LOG_WRITE_CMD_LATENCY] = true;
 	}
 	if (log_page_directory->temperature_statistics_log_len) {

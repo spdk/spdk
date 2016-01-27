@@ -31,18 +31,34 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PCI_IDS_H__
-#define __PCI_IDS_H__
+#include "nvme_internal.h"
 
-#include <stdint.h>
-
-#define PCI_VENDOR_ID_INTEL		0x8086
-
-struct pci_id {
-	uint16_t	vendor_id;
-	uint16_t	dev_id;
-	uint16_t	sub_vendor_id;
-	uint16_t	sub_dev_id;
+/** \file
+ * Intel specific data structures and functions.
+ */
+struct nvme_intel_quirk {
+	struct pci_id	id;
+	uint64_t	flags;
 };
 
-#endif /* __PCI_IDS_H__ */
+static const struct nvme_intel_quirk intel_p3x00[] = {
+	{{PCI_VENDOR_ID_INTEL, 0x0953, PCI_VENDOR_ID_INTEL, 0x3702}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
+	{{PCI_VENDOR_ID_INTEL, 0x0953, PCI_VENDOR_ID_INTEL, 0x3703}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
+	{{PCI_VENDOR_ID_INTEL, 0x0953, PCI_VENDOR_ID_INTEL, 0x3704}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
+	{{PCI_VENDOR_ID_INTEL, 0x0953, PCI_VENDOR_ID_INTEL, 0x3705}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
+	{{PCI_VENDOR_ID_INTEL, 0x0953, PCI_VENDOR_ID_INTEL, 0x3709}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
+	{{PCI_VENDOR_ID_INTEL, 0x0953, PCI_VENDOR_ID_INTEL, 0x370a}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
+	{{0x0000, 0x0000, 0x0000, 0x0000}, 0												}
+};
+
+bool nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk)
+{
+	const struct nvme_intel_quirk *intel_quirk = intel_p3x00;
+
+	while (intel_quirk->id.vendor_id) {
+		if (!memcmp(&intel_quirk->id, id, sizeof(*id)) && (intel_quirk->flags & quirk))
+			return true;
+		intel_quirk++;
+	}
+	return false;
+}
