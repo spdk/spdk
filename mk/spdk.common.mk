@@ -84,6 +84,12 @@ LDFLAGS += --coverage
 endif
 endif
 
+ifeq ($(CONFIG_PCIACCESS), y)
+PCIACCESS_LIB=-lpciaccess
+SPDK_PCIACCESS_CFLAGS=-DUSE_PCIACCESS
+COMMON_CFLAGS += $(SPDK_PCIACCESS_CFLAGS)
+endif
+
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -std=gnu99
 
 MAKEFLAGS += --no-print-directory

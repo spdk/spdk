@@ -60,6 +60,7 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
  */
 #define ioat_printf(chan, fmt, args...) printf(fmt, ##args)
 
+#ifdef USE_PCIACCESS
 /**
  *
  */
@@ -83,6 +84,7 @@ ioat_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 
 	return pci_device_unmap_range(dev, addr, dev->regions[bar].size);
 }
+#endif
 
 typedef pthread_mutex_t ioat_mutex_t;
 

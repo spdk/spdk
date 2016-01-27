@@ -49,3 +49,8 @@ CONFIG_NVME_IMPL?=nvme_impl.h
 # Header file to use for IOAT implementation specific functions.
 # Defaults to depending on DPDK.
 CONFIG_IOAT_IMPL?=ioat_impl.h
+
+# This item indicates using libpciaccess library or not. If enabled with y,
+# libpciaccess library is used to map pci devices; else DPDK library is used to
+# map pci devices.
+CONFIG_PCIACCESS?=y

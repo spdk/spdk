@@ -34,6 +34,7 @@
 #ifndef SPDK_PCI_H
 #define SPDK_PCI_H
 
+#ifdef USE_PCIACCESS
 #define spdk_pci_device_get_domain(dev)	(dev->domain)
 #define spdk_pci_device_get_bus(dev)	(dev->bus)
 #define spdk_pci_device_get_dev(pdev)	(pdev->dev)
@@ -42,6 +43,7 @@
 #define spdk_pci_device_get_device_id(dev) (dev->device_id)
 #define spdk_pci_device_get_subvendor_id(dev) (dev->subvendor_id)
 #define spdk_pci_device_get_subdevice_id(dev) (dev->subdevice_id)
+#endif
 
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03

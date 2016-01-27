@@ -117,6 +117,7 @@ extern struct rte_mempool *request_mempool;
  */
 #define nvme_dealloc_request(buf)	rte_mempool_put(request_mempool, buf)
 
+#ifdef USE_PCIACCESS
 static inline int
 nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
 {
@@ -171,6 +172,7 @@ nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 
 	return pci_device_unmap_range(dev, addr, dev->regions[bar].size);
 }
+#endif
 
 typedef pthread_mutex_t nvme_mutex_t;
 

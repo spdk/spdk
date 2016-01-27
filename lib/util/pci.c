@@ -54,10 +54,11 @@
 #define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
 #define SPDK_PCI_PATH_MAX	256
 
-
+#ifdef USE_PCIACCESS
 /* var should be the pointer */
 #define spdk_pcicfg_read32(handle, var, offset)  pci_device_cfg_read_u32(handle, var, offset)
 #define spdk_pcicfg_write32(handle, var, offset) pci_device_cfg_write_u32(handle, *var, offset)
+#endif
 
 int
 pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
