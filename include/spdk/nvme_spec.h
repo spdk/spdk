@@ -794,31 +794,33 @@ struct nvme_namespace_data {
 	} nmic;
 
 	/** reservation capabilities */
-	struct {
-		/** supports persist through power loss */
-		uint8_t		persist : 1;
+	union {
+		struct {
+			/** supports persist through power loss */
+			uint8_t		persist : 1;
 
-		/** supports write exclusive */
-		uint8_t		write_exclusive : 1;
+			/** supports write exclusive */
+			uint8_t		write_exclusive : 1;
 
-		/** supports exclusive access */
-		uint8_t		exclusive_access : 1;
+			/** supports exclusive access */
+			uint8_t		exclusive_access : 1;
 
-		/** supports write exclusive - registrants only */
-		uint8_t		write_exclusive_reg_only : 1;
+			/** supports write exclusive - registrants only */
+			uint8_t		write_exclusive_reg_only : 1;
 
-		/** supports exclusive access - registrants only */
-		uint8_t		exclusive_access_reg_only : 1;
+			/** supports exclusive access - registrants only */
+			uint8_t		exclusive_access_reg_only : 1;
 
-		/** supports write exclusive - all registrants */
-		uint8_t		write_exclusive_all_reg : 1;
+			/** supports write exclusive - all registrants */
+			uint8_t		write_exclusive_all_reg : 1;
 
-		/** supports exclusive access - all registrants */
-		uint8_t		exclusive_access_all_reg : 1;
+			/** supports exclusive access - all registrants */
+			uint8_t		exclusive_access_all_reg : 1;
 
-		uint8_t		reserved : 1;
-	} rescap;
-
+			uint8_t		reserved : 1;
+		} rescap;
+		uint8_t		raw;
+	} nsrescap;
 	/** format progress indicator */
 	uint8_t			fpi;
 

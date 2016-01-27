@@ -342,6 +342,8 @@ print_namespace(struct nvme_namespace *ns)
 	       (flags & NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Flush:                       %s\n",
 	       (flags & NVME_NS_FLUSH_SUPPORTED) ? "Supported" : "Not Supported");
+	printf("Reservation:                 %s\n",
+	       (flags & NVME_NS_RESERVATION_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Size (in LBAs):              %lld (%lldM)\n",
 	       (long long)nsdata->nsze,
 	       (long long)nsdata->nsze / 1024 / 1024);

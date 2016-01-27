@@ -126,6 +126,10 @@ nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 		ns->flags |= NVME_NS_FLUSH_SUPPORTED;
 	}
 
+	if (nsdata->nsrescap.raw) {
+		ns->flags |= NVME_NS_RESERVATION_SUPPORTED;
+	}
+
 	return 0;
 }
 

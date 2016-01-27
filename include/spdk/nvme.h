@@ -355,6 +355,7 @@ uint64_t nvme_ns_get_size(struct nvme_namespace *ns);
 enum nvme_namespace_flags {
 	NVME_NS_DEALLOCATE_SUPPORTED	= 0x1, /**< The deallocate command is supported */
 	NVME_NS_FLUSH_SUPPORTED		= 0x2, /**< The flush command is supported */
+	NVME_NS_RESERVATION_SUPPORTED	= 0x4, /**< The reservation command is supported */
 };
 
 /**
