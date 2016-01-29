@@ -378,6 +378,36 @@ reserve_controller(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 	reservation_ns_release(ctrlr, 1);
 }
 
+static bool
+probe_cb(void *cb_ctx, void *pci_dev)
+{
+	struct pci_device *dev = pci_dev;
+
+	if (pci_device_has_non_uio_driver(dev)) {
+		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
+		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
+			spdk_pci_device_get_domain(dev),
+			spdk_pci_device_get_bus(dev),
+			spdk_pci_device_get_dev(dev),
+			spdk_pci_device_get_func(dev));
+		fprintf(stderr, " skipping...\n");
+		return false;
+	}
+
+	return true;
+}
+
+static void
+attach_cb(void *cb_ctx, void *pci_dev, struct nvme_controller *ctrlr)
+{
+	struct dev *dev;
+
+	/* add to dev list */
+	dev = &devs[num_devs++];
+	dev->pci_dev = pci_dev;
+	dev->ctrlr = ctrlr;
+}
+
 static const char *ealargs[] = {
 	"reserve",
 	"-c 0x1",
@@ -386,10 +416,7 @@ static const char *ealargs[] = {
 
 int main(int argc, char **argv)
 {
-	struct pci_device_iterator	*pci_dev_iter;
-	struct pci_device		*pci_dev;
 	struct dev			*iter;
-	struct pci_id_match		match;
 	int				rc, i;
 
 	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
@@ -412,44 +439,10 @@ int main(int argc, char **argv)
 
 	pci_system_init();
 
-	match.vendor_id =	PCI_MATCH_ANY;
-	match.subvendor_id =	PCI_MATCH_ANY;
-	match.subdevice_id =	PCI_MATCH_ANY;
-	match.device_id =	PCI_MATCH_ANY;
-	match.device_class =	NVME_CLASS_CODE;
-	match.device_class_mask = 0xFFFFFF;
-
-	pci_dev_iter = pci_id_match_iterator_create(&match);
-
-	rc = 0;
-	while ((pci_dev = pci_device_next(pci_dev_iter))) {
-		struct nvme_controller *ctrlr;
-		struct dev *dev;
-
-		if (pci_device_has_non_uio_driver(pci_dev)) {
-			fprintf(stderr, "non-uio kernel driver attached to nvme\n");
-			fprintf(stderr, " controller at pci bdf %d:%d:%d\n",
-				pci_dev->bus, pci_dev->dev, pci_dev->func);
-			fprintf(stderr, " skipping...\n");
-			continue;
-		}
-
-		pci_device_probe(pci_dev);
-
-		ctrlr = nvme_attach(pci_dev);
-		if (ctrlr == NULL) {
-			fprintf(stderr, "failed to attach to NVMe controller at PCI BDF %d:%d:%d\n",
-				pci_dev->bus, pci_dev->dev, pci_dev->func);
-			rc = 1;
-			continue;
-		}
-		/* add to dev list */
-		dev = &devs[num_devs++];
-		dev->pci_dev = pci_dev;
-		dev->ctrlr = ctrlr;
+	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
+		fprintf(stderr, "nvme_probe() failed\n");
+		return 1;
 	}
-
-	pci_iterator_destroy(pci_dev_iter);
 
 	if (num_devs) {
 		rc = nvme_register_io_thread();

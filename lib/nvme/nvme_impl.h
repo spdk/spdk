@@ -42,6 +42,9 @@
 #include <rte_mempool.h>
 #include <rte_memcpy.h>
 
+#include "spdk/pci.h"
+#include "spdk/nvme_spec.h"
+
 /**
  * \file
  *
@@ -113,6 +116,37 @@ extern struct rte_mempool *request_mempool;
  * Free a buffer previously allocated with nvme_alloc_request().
  */
 #define nvme_dealloc_request(buf)	rte_mempool_put(request_mempool, buf)
+
+static inline int
+nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
+{
+	struct pci_device_iterator *pci_dev_iter;
+	struct pci_device *pci_dev;
+	struct pci_id_match match;
+	int rc;
+
+	match.vendor_id = PCI_MATCH_ANY;
+	match.subvendor_id = PCI_MATCH_ANY;
+	match.subdevice_id = PCI_MATCH_ANY;
+	match.device_id = PCI_MATCH_ANY;
+	match.device_class = NVME_CLASS_CODE;
+	match.device_class_mask = 0xFFFFFF;
+
+	pci_dev_iter = pci_id_match_iterator_create(&match);
+
+	rc = 0;
+	while ((pci_dev = pci_device_next(pci_dev_iter))) {
+		pci_device_probe(pci_dev);
+
+		if (enum_cb(enum_ctx, pci_dev)) {
+			rc = -1;
+		}
+	}
+
+	pci_iterator_destroy(pci_dev_iter);
+
+	return rc;
+}
 
 /**
  *

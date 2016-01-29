@@ -309,6 +309,8 @@ struct nvme_controller {
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
+	TAILQ_ENTRY(nvme_controller)	tailq;
+
 	/** All the log pages supported */
 	bool				log_page_supported[256];
 
@@ -360,6 +362,8 @@ struct nvme_driver {
 	uint16_t	*ioq_index_pool;
 	uint32_t	max_io_queues;
 	uint16_t	ioq_index_pool_next;
+	TAILQ_HEAD(, nvme_controller)	init_ctrlrs;
+	TAILQ_HEAD(, nvme_controller)	attached_ctrlrs;
 };
 
 extern struct nvme_driver g_nvme_driver;

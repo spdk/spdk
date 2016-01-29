@@ -75,6 +75,14 @@ do					\
 	while (0)
 
 #define nvme_dealloc_request(buf)	free(buf)
+
+static inline int
+nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
+{
+	/* TODO: enumeration is not needed in any unit tests yet, so it's not implemented */
+	return -1;
+}
+
 #define nvme_pcicfg_read32(handle, var, offset)		do { *(var) = 0xFFFFFFFFu; } while (0)
 #define nvme_pcicfg_write32(handle, var, offset)	do { (void)(var); } while (0)
 

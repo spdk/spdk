@@ -39,7 +39,9 @@
 
 struct nvme_driver g_nvme_driver = {
 	.lock = NVME_MUTEX_INITIALIZER,
-	.max_io_queues = DEFAULT_MAX_IO_QUEUES
+	.max_io_queues = DEFAULT_MAX_IO_QUEUES,
+	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_driver.init_ctrlrs),
+	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_driver.attached_ctrlrs),
 };
 
 int32_t		nvme_retry_count;
@@ -52,19 +54,21 @@ __thread int	nvme_thread_ioq_index = -1;
 \msc
 
 	app [label="Application"], nvme [label="NVMe Driver"];
-	app=>nvme [label="nvme_attach(devhandle)"];
-	app<<nvme [label="nvme_controller ptr"];
-	app=>nvme [label="nvme_ctrlr_start(nvme_controller ptr)"];
+	app=>nvme [label="nvme_probe()"];
+	app<<nvme [label="probe_cb(pci_dev)"];
+	nvme=>nvme [label="nvme_attach(devhandle)"];
+	nvme=>nvme [label="nvme_ctrlr_start(nvme_controller ptr)"];
 	nvme=>nvme [label="identify controller"];
 	nvme=>nvme [label="create queue pairs"];
 	nvme=>nvme [label="identify namespace(s)"];
+	app<<nvme [label="attach_cb(pci_dev, nvme_controller)"];
 	app=>app [label="create block devices based on controller's namespaces"];
 
 \endmsc
 
  */
 
-struct nvme_controller *
+static struct nvme_controller *
 nvme_attach(void *devhandle)
 {
 	struct nvme_controller	*ctrlr;
@@ -84,20 +88,21 @@ nvme_attach(void *devhandle)
 		return NULL;
 	}
 
-	if (nvme_ctrlr_start(ctrlr) != 0) {
-		nvme_ctrlr_destruct(ctrlr);
-		nvme_free(ctrlr);
-		return NULL;
-	}
-
 	return ctrlr;
 }
 
 int
 nvme_detach(struct nvme_controller *ctrlr)
 {
+	struct nvme_driver	*driver = &g_nvme_driver;
+
+	nvme_mutex_lock(&driver->lock);
+
 	nvme_ctrlr_destruct(ctrlr);
+	TAILQ_REMOVE(&g_nvme_driver.attached_ctrlrs, ctrlr, tailq);
 	nvme_free(ctrlr);
+
+	nvme_mutex_unlock(&driver->lock);
 	return 0;
 }
 
@@ -247,3 +252,94 @@ nvme_unregister_io_thread(void)
 	nvme_free_ioq_index();
 }
 
+struct nvme_enum_ctx {
+	nvme_probe_cb probe_cb;
+	void *cb_ctx;
+};
+
+/* This function must only be called while holding g_nvme_driver.lock */
+static int
+nvme_enum_cb(void *ctx, void *pci_dev)
+{
+	struct nvme_enum_ctx *enum_ctx = ctx;
+	struct nvme_controller *ctrlr;
+
+	/* Verify that this controller is not already attached */
+	TAILQ_FOREACH(ctrlr, &g_nvme_driver.attached_ctrlrs, tailq) {
+		/* NOTE: This assumes that the PCI abstraction layer will use the same device handle
+		 *  across enumerations; we could compare by BDF instead if this is not true.
+		 */
+		if (pci_dev == ctrlr->devhandle) {
+			return 0;
+		}
+	}
+
+	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev)) {
+		ctrlr = nvme_attach(pci_dev);
+		if (ctrlr == NULL) {
+			nvme_printf(NULL, "nvme_attach() failed\n");
+			return -1;
+		}
+
+		TAILQ_INSERT_TAIL(&g_nvme_driver.init_ctrlrs, ctrlr, tailq);
+	}
+
+	return 0;
+}
+
+int
+nvme_probe(void *cb_ctx, nvme_probe_cb probe_cb, nvme_attach_cb attach_cb)
+{
+	int rc, start_rc;
+	struct nvme_enum_ctx enum_ctx;
+	struct nvme_controller *ctrlr;
+
+	nvme_mutex_lock(&g_nvme_driver.lock);
+
+	enum_ctx.probe_cb = probe_cb;
+	enum_ctx.cb_ctx = cb_ctx;
+
+	rc = nvme_pci_enumerate(nvme_enum_cb, &enum_ctx);
+	/*
+	 * Keep going even if one or more nvme_attach() calls failed,
+	 *  but maintain the value of rc to signal errors when we return.
+	 */
+
+	/* TODO: This could be reworked to start all the controllers in parallel. */
+	while (!TAILQ_EMPTY(&g_nvme_driver.init_ctrlrs)) {
+		/* Remove ctrlr from init_ctrlrs and attempt to start it */
+		ctrlr = TAILQ_FIRST(&g_nvme_driver.init_ctrlrs);
+		TAILQ_REMOVE(&g_nvme_driver.init_ctrlrs, ctrlr, tailq);
+
+		/*
+		 * Drop the driver lock while calling nvme_ctrlr_start() since it needs to acquire
+		 *  the driver lock internally.
+		 *
+		 * TODO: Rethink the locking - maybe reset should take the lock so that start() and
+		 *  the functions it calls (in particular nvme_ctrlr_set_num_qpairs())
+		 *  can assume it is held.
+		 */
+		nvme_mutex_unlock(&g_nvme_driver.lock);
+		start_rc = nvme_ctrlr_start(ctrlr);
+		nvme_mutex_lock(&g_nvme_driver.lock);
+
+		if (start_rc == 0) {
+			TAILQ_INSERT_TAIL(&g_nvme_driver.attached_ctrlrs, ctrlr, tailq);
+
+			/*
+			 * Unlock while calling attach_cb() so the user can call other functions
+			 *  that may take the driver lock, like nvme_detach().
+			 */
+			nvme_mutex_unlock(&g_nvme_driver.lock);
+			attach_cb(cb_ctx, ctrlr->devhandle, ctrlr);
+			nvme_mutex_lock(&g_nvme_driver.lock);
+		} else {
+			nvme_ctrlr_destruct(ctrlr);
+			nvme_free(ctrlr);
+			rc = -1;
+		}
+	}
+
+	nvme_mutex_unlock(&g_nvme_driver.lock);
+	return rc;
+}

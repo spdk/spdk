@@ -41,7 +41,7 @@
 
 \section key_functions Key Functions
 
-- nvme_attach() \copybrief nvme_attach()
+- nvme_probe() \copybrief nvme_probe()
 - nvme_ns_cmd_read() \copybrief nvme_ns_cmd_read()
 - nvme_ns_cmd_write() \copybrief nvme_ns_cmd_write()
 - nvme_ns_cmd_deallocate() \copybrief nvme_ns_cmd_deallocate()

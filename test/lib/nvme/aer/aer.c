@@ -188,6 +188,56 @@ static void aer_cb(void *arg, const struct nvme_completion *cpl)
 	get_health_log_page(dev);
 }
 
+
+static bool
+probe_cb(void *cb_ctx, void *pci_dev)
+{
+	struct pci_device *dev = pci_dev;
+
+	if (pci_device_has_non_uio_driver(dev)) {
+		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
+		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
+			spdk_pci_device_get_domain(dev),
+			spdk_pci_device_get_bus(dev),
+			spdk_pci_device_get_dev(dev),
+			spdk_pci_device_get_func(dev));
+		fprintf(stderr, " skipping...\n");
+		return false;
+	}
+
+	printf("Attaching to %04x:%02x:%02x.%02x\n",
+	       spdk_pci_device_get_domain(dev),
+	       spdk_pci_device_get_bus(dev),
+	       spdk_pci_device_get_dev(dev),
+	       spdk_pci_device_get_func(dev));
+
+	return true;
+}
+
+static void
+attach_cb(void *cb_ctx, void *pdev, struct nvme_controller *ctrlr)
+{
+	struct dev *dev;
+	struct pci_device *pci_dev = pdev;
+
+	/* add to dev list */
+	dev = &devs[num_devs++];
+
+	dev->ctrlr = ctrlr;
+	dev->pci_dev = pci_dev;
+
+	snprintf(dev->name, sizeof(dev->name), "%04x:%02x:%02x.%02x",
+		 pci_dev->domain, pci_dev->bus, pci_dev->dev, pci_dev->func);
+
+	printf("Attached to %s\n", dev->name);
+
+	dev->health_page = rte_zmalloc("nvme health", sizeof(*dev->health_page), 4096);
+	if (dev->health_page == NULL) {
+		printf("Allocation error (health page)\n");
+		failed = 1;
+	}
+}
+
 static const char *ealargs[] = {
 	"aer",
 	"-c 0x1",
@@ -196,10 +246,7 @@ static const char *ealargs[] = {
 
 int main(int argc, char **argv)
 {
-	struct pci_device_iterator	*pci_dev_iter;
-	struct pci_device		*pci_dev;
 	struct dev			*dev;
-	struct pci_id_match		match;
 	int				rc, i;
 
 	printf("Asynchronous Event Request test\n");
@@ -224,51 +271,13 @@ int main(int argc, char **argv)
 
 	pci_system_init();
 
-	match.vendor_id =	PCI_MATCH_ANY;
-	match.subvendor_id =	PCI_MATCH_ANY;
-	match.subdevice_id =	PCI_MATCH_ANY;
-	match.device_id =	PCI_MATCH_ANY;
-	match.device_class =	NVME_CLASS_CODE;
-	match.device_class_mask = 0xFFFFFF;
+	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
+		fprintf(stderr, "nvme_probe() failed\n");
+		return 1;
+	}
 
-	pci_dev_iter = pci_id_match_iterator_create(&match);
-
-	while ((pci_dev = pci_device_next(pci_dev_iter))) {
-		struct dev *dev;
-
-		if (pci_device_has_non_uio_driver(pci_dev)) {
-			fprintf(stderr, "non-uio kernel driver attached to nvme\n");
-			fprintf(stderr, " controller at pci bdf %d:%d:%d\n",
-				pci_dev->bus, pci_dev->dev, pci_dev->func);
-			fprintf(stderr, " skipping...\n");
-			continue;
-		}
-
-		pci_device_probe(pci_dev);
-
-		/* add to dev list */
-		dev = &devs[num_devs++];
-
-		dev->pci_dev = pci_dev;
-
-		snprintf(dev->name, sizeof(dev->name), "%04X:%02X:%02X.%02X",
-			 pci_dev->domain, pci_dev->bus, pci_dev->dev, pci_dev->func);
-
-		printf("%s: attaching NVMe driver...\n", dev->name);
-
-		dev->health_page = rte_zmalloc("nvme health", sizeof(*dev->health_page), 4096);
-		if (dev->health_page == NULL) {
-			printf("Allocation error (health page)\n");
-			failed = 1;
-			goto done;
-		}
-
-		dev->ctrlr = nvme_attach(pci_dev);
-		if (dev->ctrlr == NULL) {
-			fprintf(stderr, "failed to attach to NVMe controller %s\n", dev->name);
-			failed = 1;
-			goto done;
-		}
+	if (failed) {
+		goto done;
 	}
 
 	printf("Registering asynchronous event callbacks...\n");
@@ -311,6 +320,5 @@ int main(int argc, char **argv)
 done:
 	cleanup();
 
-	pci_iterator_destroy(pci_dev_iter);
 	return failed;
 }

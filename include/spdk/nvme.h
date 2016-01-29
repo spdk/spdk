@@ -48,25 +48,39 @@ extern int32_t		nvme_retry_count;
 extern "C" {
 #endif
 
-/** \brief Opaque handle to a controller. Obtained by calling nvme_attach(). */
+/** \brief Opaque handle to a controller. Returned by \ref nvme_probe()'s attach_cb. */
 struct nvme_controller;
 
 /**
- * \brief Attaches specified device to the NVMe driver.
+ * Callback for nvme_probe() enumeration.
  *
- * On success, the nvme_controller handle is valid for other nvme_ctrlr_* functions.
- * On failure, the return value will be NULL.
+ * \return true to attach to this device.
+ */
+typedef bool (*nvme_probe_cb)(void *cb_ctx, void *pci_dev);
+
+/**
+ * Callback for nvme_probe() to report a device that has been attached to the userspace NVMe driver.
+ */
+typedef void (*nvme_attach_cb)(void *cb_ctx, void *pci_dev, struct nvme_controller *ctrlr);
+
+/**
+ * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver
+ * to them if desired.
  *
- * This function should be called from a single thread while no other threads or drivers
- * are actively using the NVMe device.
+ * \param probe_cb will be called once per NVMe device found in the system.
+ * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
+ * controller has been attached to the userspace driver.
+ *
+ * If called more than once, only devices that are not already attached to the SPDK NVMe driver
+ * will be reported.
  *
  * To stop using the the controller and release its associated resources,
  * call \ref nvme_detach with the nvme_controller instance returned by this function.
  */
-struct nvme_controller *nvme_attach(void *devhandle);
+int nvme_probe(void *cb_ctx, nvme_probe_cb probe_cb, nvme_attach_cb attach_cb);
 
 /**
- * \brief Detaches specified device returned by \ref nvme_attach() from the NVMe driver.
+ * \brief Detaches specified device returned by \ref nvme_probe()'s attach_cb from the NVMe driver.
  *
  * On success, the nvme_controller handle is no longer valid.
  *
@@ -91,7 +105,8 @@ int nvme_ctrlr_reset(struct nvme_controller *ctrlr);
 /**
  * \brief Get the identify controller data as defined by the NVMe specification.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  */
 const struct nvme_controller_data *nvme_ctrlr_get_data(struct nvme_controller *ctrlr);
@@ -99,7 +114,8 @@ const struct nvme_controller_data *nvme_ctrlr_get_data(struct nvme_controller *c
 /**
  * \brief Get the number of namespaces for the given NVMe controller.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  * This is equivalent to calling nvme_ctrlr_get_data() to get the
  * nvme_controller_data and then reading the nn field.
@@ -110,7 +126,8 @@ uint32_t nvme_ctrlr_get_num_ns(struct nvme_controller *ctrlr);
 /**
  * \brief Determine if a particular log page is supported by the given NVMe controller.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  * \sa nvme_ctrlr_cmd_get_log_page()
  */
@@ -119,7 +136,8 @@ bool nvme_ctrlr_is_log_page_supported(struct nvme_controller *ctrlr, uint8_t log
 /**
  * \brief Determine if a particular feature is supported by the given NVMe controller.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  * \sa nvme_ctrlr_cmd_get_feature()
  */
@@ -180,7 +198,8 @@ int nvme_ctrlr_cmd_io_raw(struct nvme_controller *ctrlr,
  *
  * \return Number of completions processed (may be 0) or negative on error.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  */
 int32_t nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_t max_completions);
@@ -195,8 +214,8 @@ int32_t nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_
  * When constructing the nvme_command it is not necessary to fill out the PRP
  * list/SGL or the CID. The driver will handle both of those for you.
  *
- * This function is thread safe and can be called at any point after
- * \ref nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
@@ -217,7 +236,8 @@ int nvme_ctrlr_cmd_admin_raw(struct nvme_controller *ctrlr,
  *
  * \return Number of completions processed (may be 0) or negative on error.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 int32_t nvme_ctrlr_process_admin_completions(struct nvme_controller *ctrlr);
 
@@ -232,8 +252,8 @@ struct nvme_namespace;
  * be any gaps in the numbering. The number of namespaces is obtained by calling
  * nvme_ctrlr_get_num_ns().
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 struct nvme_namespace *nvme_ctrlr_get_ns(struct nvme_controller *ctrlr, uint32_t ns_id);
 
@@ -249,7 +269,8 @@ struct nvme_namespace *nvme_ctrlr_get_ns(struct nvme_controller *ctrlr, uint32_t
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
@@ -274,7 +295,8 @@ int nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr,
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
@@ -298,7 +320,8 @@ int nvme_ctrlr_cmd_set_feature(struct nvme_controller *ctrlr,
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
- * This function is thread safe and can be called at any point after nvme_attach().
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  *
  * Call \ref nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
@@ -313,48 +336,48 @@ int nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr,
 /**
  * \brief Get the identify namespace data as defined by the NVMe specification.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 const struct nvme_namespace_data *nvme_ns_get_data(struct nvme_namespace *ns);
 
 /**
  * \brief Get the namespace id (index number) from the given namespace handle.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 uint32_t nvme_ns_get_id(struct nvme_namespace *ns);
 
 /**
  * \brief Get the maximum transfer size, in bytes, for an I/O sent to the given namespace.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 uint32_t nvme_ns_get_max_io_xfer_size(struct nvme_namespace *ns);
 
 /**
  * \brief Get the sector size, in bytes, of the given namespace.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 uint32_t nvme_ns_get_sector_size(struct nvme_namespace *ns);
 
 /**
  * \brief Get the number of sectors for the given namespace.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 uint64_t nvme_ns_get_num_sectors(struct nvme_namespace *ns);
 
 /**
  * \brief Get the size, in bytes, of the given namespace.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 uint64_t nvme_ns_get_size(struct nvme_namespace *ns);
 
@@ -373,8 +396,8 @@ enum nvme_namespace_flags {
  *
  * See nvme_namespace_flags for the possible flags returned.
  *
- * This function is thread safe and can be called at any point after nvme_attach().
- *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
  */
 uint32_t nvme_ns_get_flags(struct nvme_namespace *ns);
 
