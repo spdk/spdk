@@ -1105,6 +1105,32 @@ struct nvme_firmware_page {
 };
 SPDK_STATIC_ASSERT(sizeof(struct nvme_firmware_page) == 512, "Incorrect size");
 
+/**
+ * Namespace attachment Type Encoding
+ */
+enum nvme_namespace_attach_type {
+	/* Controller attach */
+	NVME_NAMESPACE_CONTROLLER_ATTACH	= 0x0,
+
+	/* Controller detach */
+	NVME_NAMESPACE_CONTROLLER_DETACH	= 0x1,
+
+	/* 0x2-0xF - Reserved */
+};
+
+/**
+ * Namespace management Type Encoding
+ */
+enum nvme_namespace_management_type {
+	/* Create */
+	NVME_NAMESPACE_MANAGEMENT_CREATE	= 0x0,
+
+	/* Delete */
+	NVME_NAMESPACE_MANAGEMENT_DELETE	= 0x1,
+
+	/* 0x2-0xF - Reserved */
+};
+
 #define nvme_completion_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
 
