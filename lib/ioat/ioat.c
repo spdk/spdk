@@ -295,6 +295,37 @@ ioat_prep_copy(struct ioat_channel *ioat, uint64_t dst,
 	return desc;
 }
 
+static struct ioat_descriptor *
+ioat_prep_fill(struct ioat_channel *ioat, uint64_t dst,
+	       uint64_t fill_pattern, uint32_t len)
+{
+	struct ioat_descriptor *desc;
+	union ioat_hw_descriptor *hw_desc;
+
+	ioat_assert(len <= ioat->max_xfer_size);
+
+	if (ioat_get_ring_space(ioat) < 1) {
+		return NULL;
+	}
+
+	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
+
+	hw_desc->fill.u.control_raw = 0;
+	hw_desc->fill.u.control.op = IOAT_OP_FILL;
+	hw_desc->fill.u.control.completion_update = 1;
+
+	hw_desc->fill.size = len;
+	hw_desc->fill.src_data = fill_pattern;
+	hw_desc->fill.dest_addr = dst;
+
+	desc->callback_fn = NULL;
+	desc->callback_arg = NULL;
+
+	ioat_submit_single(ioat);
+
+	return desc;
+}
+
 static int ioat_reset_hw(struct ioat_channel *ioat)
 {
 	int timeout;
@@ -419,6 +450,10 @@ ioat_channel_start(struct ioat_channel *ioat)
 		return -1;
 	}
 
+	/* Always support DMA copy */
+	ioat->dma_capabilities = IOAT_ENGINE_COPY_SUPPORTED;
+	if (ioat->regs->dmacapability & IOAT_DMACAP_BFILL)
+		ioat->dma_capabilities |= IOAT_ENGINE_FILL_SUPPORTED;
 	xfercap = ioat->regs->xfercap;
 
 	/* Only bits [4:0] are valid. */
@@ -661,6 +696,75 @@ ioat_submit_copy(void *cb_arg, ioat_callback_t cb_fn,
 
 	ioat_flush(ioat);
 	return nbytes;
+}
+
+int64_t
+ioat_submit_fill(void *cb_arg, ioat_callback_t cb_fn,
+		 void *dst, uint64_t fill_pattern, uint64_t nbytes)
+{
+	struct ioat_channel	*ioat;
+	struct ioat_descriptor	*last_desc = NULL;
+	uint64_t	remaining, op_size;
+	uint64_t	vdst;
+	uint32_t	orig_head;
+
+	ioat = ioat_thread_channel;
+	if (!ioat) {
+		return -1;
+	}
+
+	if (!(ioat->dma_capabilities & IOAT_ENGINE_FILL_SUPPORTED)) {
+		ioat_printf(ioat, "Channel does not support memory fill\n");
+		return -1;
+	}
+
+	orig_head = ioat->head;
+
+	vdst = (uint64_t)dst;
+	remaining = nbytes;
+
+	while (remaining) {
+		op_size = remaining;
+		op_size = min(op_size, ioat->max_xfer_size);
+		remaining -= op_size;
+
+		last_desc = ioat_prep_fill(ioat,
+					   ioat_vtophys((void *)vdst),
+					   fill_pattern,
+					   op_size);
+
+		if (remaining == 0 || last_desc == NULL) {
+			break;
+		}
+
+		vdst += op_size;
+	}
+
+	if (last_desc) {
+		last_desc->callback_fn = cb_fn;
+		last_desc->callback_arg = cb_arg;
+	} else {
+		/*
+		 * Ran out of descriptors in the ring - reset head to leave things as they were
+		 * in case we managed to fill out any descriptors.
+		 */
+		ioat->head = orig_head;
+		return -1;
+	}
+
+	ioat_flush(ioat);
+	return nbytes;
+}
+
+uint32_t ioat_get_dma_capabilities(void)
+{
+	struct ioat_channel	*ioat;
+
+	ioat = ioat_thread_channel;
+	if (!ioat) {
+		return 0;
+	}
+	return ioat->dma_capabilities;
 }
 
 int ioat_process_events(void)

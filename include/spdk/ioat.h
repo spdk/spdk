@@ -91,6 +91,15 @@ int64_t ioat_submit_copy(void *cb_arg, ioat_callback_t cb_fn,
 			 void *dst, const void *src, uint64_t nbytes);
 
 /**
+ * Submit a DMA engine memory fill request.
+ *
+ * Before submitting any requests on a thread, the thread must be registered
+ * using the \ref ioat_register_thread() function.
+ */
+int64_t ioat_submit_fill(void *cb_arg, ioat_callback_t cb_fn,
+			 void *dst, uint64_t fill_pattern, uint64_t nbytes);
+
+/**
  * Check for completed requests on the current thread.
  *
  * Before submitting any requests on a thread, the thread must be registered
@@ -99,5 +108,21 @@ int64_t ioat_submit_copy(void *cb_arg, ioat_callback_t cb_fn,
  * \returns 0 on success or negative if something went wrong.
  */
 int ioat_process_events(void);
+
+/**
+ * DMA engine capability flags
+ */
+enum ioat_dma_capability_flags {
+	IOAT_ENGINE_COPY_SUPPORTED	= 0x1, /**< The memory copy is supported */
+	IOAT_ENGINE_FILL_SUPPORTED	= 0x2, /**< The memory fill is supported */
+};
+
+/**
+ * Get the DMA engine capabilities.
+ *
+ * Before submitting any requests on a thread, the thread must be registered
+ * using the \ref ioat_register_thread() function.
+ */
+uint32_t ioat_get_dma_capabilities(void);
 
 #endif

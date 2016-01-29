@@ -53,6 +53,13 @@
 #define IOAT_CHANCTRL_ERR_COMPLETION_EN		0x0004
 #define IOAT_CHANCTRL_INT_REARM			0x0001
 
+/* DMA Channel Capabilities */
+#define	IOAT_DMACAP_PB			(1 << 0)
+#define	IOAT_DMACAP_DCA			(1 << 4)
+#define	IOAT_DMACAP_BFILL		(1 << 6)
+#define	IOAT_DMACAP_XOR			(1 << 8)
+#define	IOAT_DMACAP_PQ			(1 << 9)
+#define	IOAT_DMACAP_DMA_DIF		(1 << 10)
 
 struct ioat_registers {
 	uint8_t		chancnt;

@@ -74,6 +74,7 @@ struct ioat_channel {
 	struct ioat_descriptor		*ring;
 	union ioat_hw_descriptor	*hw_ring;
 	uint64_t			hw_ring_phys_addr;
+	uint32_t			dma_capabilities;
 };
 
 static inline uint32_t

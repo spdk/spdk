@@ -49,6 +49,11 @@
 
 #define SRC_BUFFER_SIZE (512*1024)
 
+enum ioat_task_type {
+	IOAT_COPY_TYPE,
+	IOAT_FILL_TYPE,
+};
+
 struct user_config {
 	int queue_depth;
 	int time_in_sec;
@@ -67,6 +72,8 @@ static struct user_config g_user_config;
 struct thread_entry {
 	uint64_t xfer_completed;
 	uint64_t xfer_failed;
+	uint64_t fill_completed;
+	uint64_t fill_failed;
 	uint64_t current_queue_depth;
 	unsigned lcore_id;
 	bool is_draining;
@@ -75,9 +82,11 @@ struct thread_entry {
 };
 
 struct ioat_task {
+	enum ioat_task_type type;
 	struct thread_entry *thread_entry;
 	void *buffer;
 	int len;
+	uint64_t fill_pattern;
 	void *src;
 	void *dst;
 };
@@ -124,14 +133,29 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 	int len;
 	int src_offset;
 	int dst_offset;
+	int num_ddwords;
+	uint64_t fill_pattern;
 
-	src_offset = rand_r(&seed) % SRC_BUFFER_SIZE;
-	len = rand_r(&seed) % (SRC_BUFFER_SIZE - src_offset);
-	dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
+	if (ioat_task->type == IOAT_FILL_TYPE) {
+		fill_pattern = rand_r(&seed);
+		fill_pattern = fill_pattern << 32 | rand_r(&seed);
 
-	memset(ioat_task->buffer, 0, SRC_BUFFER_SIZE);
+		/* ensure that the length of memset block is 8 Bytes aligned */
+		num_ddwords = (rand_r(&seed) % SRC_BUFFER_SIZE) / 8;
+		len = num_ddwords * 8;
+		if (len < 8)
+			len = 8;
+		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
+		ioat_task->fill_pattern = fill_pattern;
+	} else {
+		src_offset = rand_r(&seed) % SRC_BUFFER_SIZE;
+		len = rand_r(&seed) % (SRC_BUFFER_SIZE - src_offset);
+		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
+
+		memset(ioat_task->buffer, 0, SRC_BUFFER_SIZE);
+		ioat_task->src =  g_src + src_offset;
+	}
 	ioat_task->len = len;
-	ioat_task->src =  g_src + src_offset;
 	ioat_task->dst = ioat_task->buffer + dst_offset;
 	ioat_task->thread_entry = thread_entry;
 }
@@ -139,14 +163,31 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 static void
 ioat_done(void *cb_arg)
 {
+	uint64_t *value;
+	int i, failed = 0;
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct thread_entry *thread_entry = ioat_task->thread_entry;
 
-	if (memcmp(ioat_task->src, ioat_task->dst, ioat_task->len)) {
-		thread_entry->xfer_failed++;
+	if (ioat_task->type == IOAT_FILL_TYPE) {
+		value = (uint64_t *)ioat_task->dst;
+		for (i = 0; i < ioat_task->len / 8; i++) {
+			if (*value != ioat_task->fill_pattern) {
+				thread_entry->fill_failed++;
+				failed = 1;
+				break;
+			}
+			value++;
+		}
+		if (!failed)
+			thread_entry->fill_completed++;
 	} else {
-		thread_entry->xfer_completed++;
+		if (memcmp(ioat_task->src, ioat_task->dst, ioat_task->len)) {
+			thread_entry->xfer_failed++;
+		} else {
+			thread_entry->xfer_completed++;
+		}
 	}
+
 	thread_entry->current_queue_depth--;
 	if (thread_entry->is_draining) {
 		rte_mempool_put(thread_entry->data_pool, ioat_task->buffer);
@@ -278,7 +319,10 @@ drain_xfers(struct thread_entry *thread_entry)
 static void
 submit_single_xfer(struct ioat_task *ioat_task)
 {
-	ioat_submit_copy(ioat_task, ioat_done, ioat_task->dst, ioat_task->src, ioat_task->len);
+	if (ioat_task->type == IOAT_FILL_TYPE)
+		ioat_submit_fill(ioat_task, ioat_done, ioat_task->dst, ioat_task->fill_pattern, ioat_task->len);
+	else
+		ioat_submit_copy(ioat_task, ioat_done, ioat_task->dst, ioat_task->src, ioat_task->len);
 	ioat_task->thread_entry->current_queue_depth++;
 }
 
@@ -290,6 +334,11 @@ submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
 		rte_mempool_get(thread_entry->task_pool, (void **)&ioat_task);
 		rte_mempool_get(thread_entry->data_pool, &(ioat_task->buffer));
 
+		ioat_task->type = IOAT_COPY_TYPE;
+		if (ioat_get_dma_capabilities() & IOAT_ENGINE_FILL_SUPPORTED) {
+			if (queue_depth % 2)
+				ioat_task->type = IOAT_FILL_TYPE;
+		}
 		prepare_ioat_task(thread_entry, ioat_task);
 		submit_single_xfer(ioat_task);
 	}
@@ -397,10 +446,12 @@ dump_result(struct thread_entry *threads, int len)
 	for (i = 0; i < len; i++) {
 		struct thread_entry *t = &threads[i];
 		total_completed += t->xfer_completed;
+		total_completed += t->fill_completed;
 		total_failed += t->xfer_failed;
+		total_failed += t->fill_failed;
 		if (t->xfer_completed || t->xfer_failed)
-			printf("lcore = %d, success = %ld, failed = %ld \n",
-			       t->lcore_id, t->xfer_completed, t->xfer_failed);
+			printf("lcore = %d, copy success = %ld, copy failed = %ld, fill success = %ld, fill failed = %ld \n",
+			       t->lcore_id, t->xfer_completed, t->xfer_failed, t->fill_completed, t->fill_failed);
 	}
 	return total_failed ? 1 : 0;
 }
