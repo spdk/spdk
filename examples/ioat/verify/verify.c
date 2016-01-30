@@ -262,7 +262,7 @@ cleanup:
 	if (err != 0) {
 		ioat_exit();
 	}
-	return 0;
+	return err;
 }
 
 static void
