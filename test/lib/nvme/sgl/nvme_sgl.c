@@ -279,8 +279,11 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	const struct nvme_namespace_data *nsdata;
 
 	ns = nvme_ctrlr_get_ns(dev->ctrlr, 1);
+	if (!ns) {
+		return -1;
+	}
 	nsdata = nvme_ns_get_data(ns);
-	if (!ns || !nsdata || !nvme_ns_get_sector_size(ns))
+	if (!nsdata || !nvme_ns_get_sector_size(ns))
 		return -1;
 
 	req = rte_zmalloc(NULL, sizeof(*req), 0);
