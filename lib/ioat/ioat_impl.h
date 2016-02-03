@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <rte_malloc.h>
 #include <rte_config.h>
 #include <rte_atomic.h>
@@ -14,6 +15,8 @@
 #include "spdk/ioat.h"
 #include "ioat_pci.h"
 
+
+#include "ioat_pci.h"
 
 /**
  * \file
@@ -64,6 +67,99 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 #define ioat_printf(chan, fmt, args...) printf(fmt, ##args)
 
 #ifdef USE_PCIACCESS
+
+static inline bool
+ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id)
+{
+	if (vendor_id != PCI_VENDOR_ID_INTEL) {
+		return false;
+	}
+
+	switch (device_id) {
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB0:
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB1:
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB2:
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB3:
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB4:
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB5:
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB6:
+	case PCI_DEVICE_ID_INTEL_IOAT_SNB7:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB0:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB1:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB2:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB3:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB4:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB5:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB6:
+	case PCI_DEVICE_ID_INTEL_IOAT_IVB7:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW0:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW1:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW2:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW3:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW4:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW5:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW6:
+	case PCI_DEVICE_ID_INTEL_IOAT_HSW7:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX0:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX1:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX2:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX3:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX4:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX5:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX6:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX7:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX8:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDX9:
+	case PCI_DEVICE_ID_INTEL_IOAT_BWD0:
+	case PCI_DEVICE_ID_INTEL_IOAT_BWD1:
+	case PCI_DEVICE_ID_INTEL_IOAT_BWD2:
+	case PCI_DEVICE_ID_INTEL_IOAT_BWD3:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDXDE0:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDXDE1:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDXDE2:
+	case PCI_DEVICE_ID_INTEL_IOAT_BDXDE3:
+		return true;
+	}
+
+	return false;
+}
+
+static inline int
+ioat_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
+{
+	struct pci_device_iterator *pci_dev_iter;
+	struct pci_device *pci_dev;
+	struct pci_id_match match;
+	int rc;
+
+	match.vendor_id = PCI_VENDOR_ID_INTEL;
+	match.subvendor_id = PCI_MATCH_ANY;
+	match.subdevice_id = PCI_MATCH_ANY;
+	match.device_id = PCI_MATCH_ANY;
+	match.device_class = 0x088000;
+	match.device_class_mask = 0xFFFFFF;
+
+	pci_dev_iter = pci_id_match_iterator_create(&match);
+
+	rc = 0;
+	while ((pci_dev = pci_device_next(pci_dev_iter))) {
+		if (!(ioat_pci_device_match_id(pci_dev->vendor_id,
+					       pci_dev->device_id))) {
+			continue;
+		}
+
+		pci_device_probe(pci_dev);
+
+		if (enum_cb(enum_ctx, pci_dev)) {
+			rc = -1;
+		}
+	}
+
+	pci_iterator_destroy(pci_dev_iter);
+
+	return rc;
+}
+
 /**
  *
  */

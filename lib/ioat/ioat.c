@@ -45,76 +45,13 @@ static __thread struct ioat_channel *ioat_thread_channel;
 
 struct ioat_driver {
 	ioat_mutex_t	lock;
+	TAILQ_HEAD(, ioat_channel)	attached_chans;
 };
 
 static struct ioat_driver g_ioat_driver = {
 	.lock = IOAT_MUTEX_INITIALIZER,
+	.attached_chans = TAILQ_HEAD_INITIALIZER(g_ioat_driver.attached_chans),
 };
-
-struct pci_device_id {
-	uint16_t vendor;
-	uint16_t device;
-};
-
-static const struct pci_device_id ioat_pci_table[] = {
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB0},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB1},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB2},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB3},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB4},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB5},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB6},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_SNB7},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB0},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB1},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB2},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB3},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB4},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB5},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB6},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_IVB7},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW0},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW1},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW2},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW3},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW4},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW5},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW6},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_HSW7},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX0},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX1},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX2},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX3},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX4},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX5},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX6},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX7},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX8},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX9},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BWD0},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BWD1},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BWD2},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BWD3},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDXDE0},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDXDE1},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDXDE2},
-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDXDE3},
-};
-
-bool
-ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id)
-{
-	size_t i;
-	const struct pci_device_id *ids;
-
-	for (i = 0; i < sizeof(ioat_pci_table) / sizeof(struct pci_device_id); i++) {
-		ids = &ioat_pci_table[i];
-		if (ids->device == device_id && ids->vendor == vendor_id) {
-			return true;
-		}
-	}
-	return false;
-}
 
 static uint64_t
 ioat_get_chansts(struct ioat_channel *ioat)
@@ -526,10 +463,10 @@ ioat_channel_start(struct ioat_channel *ioat)
 	return 0;
 }
 
-struct ioat_channel *
+/* Caller must hold g_ioat_driver.lock */
+static struct ioat_channel *
 ioat_attach(void *device)
 {
-	struct ioat_driver	*driver = &g_ioat_driver;
 	struct ioat_channel 	*ioat;
 	uint32_t cmd_reg;
 
@@ -551,11 +488,72 @@ ioat_attach(void *device)
 		return NULL;
 	}
 
-	ioat_mutex_lock(&driver->lock);
 	SLIST_INSERT_HEAD(&ioat_free_channels, ioat, next);
-	ioat_mutex_unlock(&driver->lock);
 
 	return ioat;
+}
+
+struct ioat_enum_ctx {
+	ioat_probe_cb probe_cb;
+	ioat_attach_cb attach_cb;
+	void *cb_ctx;
+};
+
+/* This function must only be called while holding g_ioat_driver.lock */
+static int
+ioat_enum_cb(void *ctx, void *pci_dev)
+{
+	struct ioat_enum_ctx *enum_ctx = ctx;
+	struct ioat_channel *ioat;
+
+	/* Verify that this device is not already attached */
+	TAILQ_FOREACH(ioat, &g_ioat_driver.attached_chans, tailq) {
+		/*
+		 * NOTE: This assumes that the PCI abstraction layer will use the same device handle
+		 *  across enumerations; we could compare by BDF instead if this is not true.
+		 */
+		if (pci_dev == ioat->device) {
+			return 0;
+		}
+	}
+
+	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev)) {
+		/*
+		 * Since I/OAT init is relatively quick, just perform the full init during probing.
+		 *  If this turns out to be a bottleneck later, this can be changed to work like
+		 *  NVMe with a list of devices to initialize in parallel.
+		 */
+		ioat = ioat_attach(pci_dev);
+		if (ioat == NULL) {
+			ioat_printf(NULL, "ioat_attach() failed\n");
+			return -1;
+		}
+
+		TAILQ_INSERT_TAIL(&g_ioat_driver.attached_chans, ioat, tailq);
+
+		enum_ctx->attach_cb(enum_ctx->cb_ctx, pci_dev, ioat);
+	}
+
+	return 0;
+}
+
+int
+ioat_probe(void *cb_ctx, ioat_probe_cb probe_cb, ioat_attach_cb attach_cb)
+{
+	int rc;
+	struct ioat_enum_ctx enum_ctx;
+
+	ioat_mutex_lock(&g_ioat_driver.lock);
+
+	enum_ctx.probe_cb = probe_cb;
+	enum_ctx.attach_cb = attach_cb;
+	enum_ctx.cb_ctx = cb_ctx;
+
+	rc = ioat_pci_enumerate(ioat_enum_cb, &enum_ctx);
+
+	ioat_mutex_unlock(&g_ioat_driver.lock);
+
+	return rc;
 }
 
 int
@@ -568,6 +566,7 @@ ioat_detach(struct ioat_channel *ioat)
 	 */
 	ioat_mutex_lock(&driver->lock);
 	SLIST_REMOVE(&ioat_free_channels, ioat, ioat_channel, next);
+	TAILQ_REMOVE(&driver->attached_chans, ioat, tailq);
 	ioat_mutex_unlock(&driver->lock);
 
 	ioat_channel_destruct(ioat);

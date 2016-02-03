@@ -198,71 +198,53 @@ ioat_done(void *cb_arg)
 	}
 }
 
+static bool
+probe_cb(void *cb_ctx, void *pdev)
+{
+	struct pci_device *pci_dev = pdev;
+
+	printf(" Found matching device at %d:%d:%d "
+	       "vendor:0x%04x device:0x%04x\n   name:%s\n",
+	       pci_dev->bus, pci_dev->dev, pci_dev->func,
+	       pci_dev->vendor_id, pci_dev->device_id,
+	       pci_device_get_device_name(pci_dev));
+
+	if (pci_device_has_non_uio_driver(pci_dev)) {
+		printf("Device has non-uio kernel driver, skipping...\n");
+		return false;
+	}
+
+	return true;
+}
+
+static void
+attach_cb(void *cb_ctx, void *pdev, struct ioat_channel *ioat)
+{
+	struct ioat_device *dev;
+
+	dev = malloc(sizeof(*dev));
+	if (dev == NULL) {
+		printf("Failed to allocate device struct\n");
+		return;
+	}
+	memset(dev, 0, sizeof(*dev));
+
+	dev->ioat = ioat;
+	TAILQ_INSERT_TAIL(&g_devices, dev, tailq);
+}
+
 static int
 ioat_init(void)
 {
-	struct pci_device_iterator *iter;
-	struct pci_device *pci_dev;
-	int err = 0;
-	struct pci_id_match match;
-	struct ioat_device *dev;
-
 	pci_system_init();
 	TAILQ_INIT(&g_devices);
 
-	match.vendor_id		= PCI_MATCH_ANY;
-	match.subvendor_id	= PCI_MATCH_ANY;
-	match.subdevice_id	= PCI_MATCH_ANY;
-	match.device_id		= PCI_MATCH_ANY;
-	match.device_class	= 0x088000;
-	match.device_class_mask	= 0xFFFFFF;
-
-	iter = pci_id_match_iterator_create(&match);
-
-	while ((pci_dev = pci_device_next(iter)) != NULL) {
-		/* Check if the PCI devices is a supported IOAT channel. */
-		if (!(ioat_pci_device_match_id(pci_dev->vendor_id,
-					       pci_dev->device_id))) {
-			continue;
-		}
-
-		printf(" Found matching device at %d:%d:%d "
-		       "vendor:0x%04x device:0x%04x\n   name:%s\n",
-		       pci_dev->bus, pci_dev->dev, pci_dev->func,
-		       pci_dev->vendor_id, pci_dev->device_id,
-		       pci_device_get_device_name(pci_dev));
-
-		if (pci_device_has_non_uio_driver(pci_dev)) {
-			printf("Device has non-uio kernel driver, skipping...\n");
-			continue;
-		}
-
-		pci_device_probe(pci_dev);
-
-		dev = malloc(sizeof(*dev));
-		if (dev == NULL) {
-			printf("Failed to allocate device struct\n");
-			err = -1;
-			goto cleanup;
-		}
-		memset(dev, 0, sizeof(*dev));
-
-		dev->ioat = ioat_attach(pci_dev);
-		if (dev->ioat == NULL) {
-			free(dev);
-			/* Likely no device found. */
-			err = -1;
-			goto cleanup;
-		}
-		TAILQ_INSERT_TAIL(&g_devices, dev, tailq);
+	if (ioat_probe(NULL, probe_cb, attach_cb) != 0) {
+		fprintf(stderr, "ioat_probe() failed\n");
+		return 1;
 	}
 
-cleanup:
-	pci_iterator_destroy(iter);
-	if (err != 0) {
-		ioat_exit();
-	}
-	return err;
+	return 0;
 }
 
 static void

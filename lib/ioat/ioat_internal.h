@@ -75,6 +75,9 @@ struct ioat_channel {
 	union ioat_hw_descriptor	*hw_ring;
 	uint64_t			hw_ring_phys_addr;
 	uint32_t			dma_capabilities;
+
+	/* tailq entry for attached_chans */
+	TAILQ_ENTRY(ioat_channel)	tailq;
 };
 
 static inline uint32_t

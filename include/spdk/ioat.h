@@ -43,25 +43,45 @@
 #include "spdk/pci.h"
 
 /**
+ * Opaque handle for a single I/OAT channel returned by \ref ioat_probe().
+ */
+struct ioat_channel;
+
+/**
  * Signature for callback function invoked when a request is completed.
  */
 typedef void (*ioat_callback_t)(void *arg);
 
 /**
- * Returns true if vendor_id and device_id match a known IOAT PCI device ID.
+ * Callback for ioat_probe() enumeration.
+ *
+ * \return true to attach to this device.
  */
-bool ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id);
+typedef bool (*ioat_probe_cb)(void *cb_ctx, void *pci_dev);
 
 /**
- * Attach an I/OAT PCI device to the I/OAT userspace driver.
+ * Callback for ioat_probe() to report a device that has been attached to the userspace I/OAT driver.
+ */
+typedef void (*ioat_attach_cb)(void *cb_ctx, void *pci_dev, struct ioat_channel *ioat);
+
+/**
+ * \brief Enumerate the I/OAT devices attached to the system and attach the userspace I/OAT driver
+ * to them if desired.
  *
- * To stop using the the device and release its associated resources,
+ * \param probe_cb will be called once per I/OAT device found in the system.
+ * \param attach_cb will be called for devices for which probe_cb returned true once the I/OAT
+ * controller has been attached to the userspace driver.
+ *
+ * If called more than once, only devices that are not already attached to the SPDK I/OAT driver
+ * will be reported.
+ *
+ * To stop using the the controller and release its associated resources,
  * call \ref ioat_detach with the ioat_channel instance returned by this function.
  */
-struct ioat_channel *ioat_attach(void *device);
+int ioat_probe(void *cb_ctx, ioat_probe_cb probe_cb, ioat_attach_cb attach_cb);
 
 /**
- * Detaches specified device returned by \ref ioat_attach() from the I/OAT driver.
+ * Detaches specified device returned by \ref ioat_probe() from the I/OAT driver.
  */
 int ioat_detach(struct ioat_channel *ioat);
 
