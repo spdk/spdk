@@ -31,6 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+#include <sys/uio.h>
+
 #include "spdk_cunit.h"
 
 #include "nvme/nvme_qpair.c"
@@ -44,7 +47,11 @@ int32_t spdk_nvme_retry_count = 1;
 
 char outbuf[OUTBUF_SIZE];
 
+struct nvme_request *g_request = NULL;
+
 bool fail_vtophys = false;
+
+bool fail_next_sge = false;
 
 uint64_t nvme_vtophys(void *buf)
 {
@@ -53,6 +60,43 @@ uint64_t nvme_vtophys(void *buf)
 	} else {
 		return (uintptr_t)buf;
 	}
+}
+
+struct io_request {
+	uint64_t address_offset;
+	bool	invalid_addr;
+};
+
+static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
+{
+	struct io_request *req = (struct io_request *)cb_arg;
+
+	req->address_offset = 0;
+	if (sgl_offset == 0)
+		req->invalid_addr = false;
+	else
+		req->invalid_addr = true;
+
+	return;
+}
+
+static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
+{
+	struct io_request *req = (struct io_request *)cb_arg;
+	if (req->invalid_addr)
+		*address = 7;
+	else {
+		*address = 4096 * req->address_offset;
+	}
+	req->address_offset += 1;
+	*length = 4096;
+
+	if (fail_next_sge) {
+		return - 1;
+	} else {
+		return 0;
+	}
+
 }
 
 struct nvme_request *
@@ -279,6 +323,81 @@ test4(void)
 	CU_ASSERT(strlen(outbuf) > 0);
 
 	cleanup_submit_request_test(&qpair);
+}
+
+
+static void
+test_sgl_req(void)
+{
+	struct nvme_qpair	qpair = {};
+	struct nvme_request	*req;
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
+	struct nvme_payload	payload = {};
+	struct nvme_tracker 	*sgl_tr = NULL;
+	uint64_t 		i;
+	struct io_request	io_req = {};
+
+	payload.type = NVME_PAYLOAD_TYPE_SGL;
+	payload.u.sgl.reset_sgl_fn = nvme_request_reset_sgl;
+	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
+	payload.u.sgl.cb_arg = &io_req;
+
+	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	req = nvme_allocate_request(&payload, PAGE_SIZE, NULL, &io_req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_WRITE;
+	req->cmd.cdw10 = 10000;
+	req->cmd.cdw12 = 255 | 0;
+	req->payload_offset = 1;
+
+	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(req->cmd.psdt == SPDK_NVME_PSDT_PRP);
+	CU_ASSERT(req->cmd.dptr.prp.prp1 == 7);
+	CU_ASSERT(req->cmd.dptr.prp.prp2 == 4096);
+
+	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
+	LIST_REMOVE(sgl_tr, list);
+	free(sgl_tr);
+	cleanup_submit_request_test(&qpair);
+	nvme_free_request(req);
+
+	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	req = nvme_allocate_request(&payload, PAGE_SIZE, NULL, &io_req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_WRITE;
+	req->cmd.cdw10 = 10000;
+	req->cmd.cdw12 = 255 | 0;
+	spdk_nvme_retry_count = 1;
+	fail_next_sge = true;
+
+	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(qpair.sq_tail == 0);
+	cleanup_submit_request_test(&qpair);
+
+	fail_next_sge = false;
+
+	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	req = nvme_allocate_request(&payload, 33 * PAGE_SIZE, NULL, &io_req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_WRITE;
+	req->cmd.cdw10 = 10000;
+	req->cmd.cdw12 = 255 | 0;
+
+	nvme_qpair_submit_request(&qpair, req);
+
+	CU_ASSERT(req->cmd.dptr.prp.prp1 == 0);
+	CU_ASSERT(qpair.sq_tail == 1);
+	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
+	CU_ASSERT(sgl_tr != NULL);
+	for (i = 0; i < 32; i++) {
+		CU_ASSERT(sgl_tr->prp[i] == (PAGE_SIZE * (i + 1)));
+	}
+
+	LIST_REMOVE(sgl_tr, list);
+	free(sgl_tr);
+	cleanup_submit_request_test(&qpair);
+	nvme_free_request(req);
 }
 
 static void
@@ -544,6 +663,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_qpair_destroy", test_nvme_qpair_destroy) == NULL
 		|| CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
 		|| CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
+		|| CU_add_test(suite, "sgl_request", test_sgl_req) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
