@@ -36,6 +36,8 @@
 
 #ifdef USE_PCIACCESS
 #include <pciaccess.h>
+int spdk_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx);
+
 #define spdk_pci_device_get_domain(dev)	(dev->domain)
 #define spdk_pci_device_get_bus(dev)	(dev->bus)
 #define spdk_pci_device_get_dev(pdev)	(pdev->dev)
@@ -44,6 +46,7 @@
 #define spdk_pci_device_get_device_id(dev) (dev->device_id)
 #define spdk_pci_device_get_subvendor_id(dev) (dev->subvendor_id)
 #define spdk_pci_device_get_subdevice_id(dev) (dev->subdevice_id)
+#define spdk_pci_device_get_class(dev) (dev->device_class)
 
 #else
 #include <rte_pci.h>

@@ -97,6 +97,34 @@ static int pci_device_get_info(struct pci_device *dev, const char *file, uint32_
 #endif
 
 int
+spdk_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
+{
+	struct pci_device_iterator *pci_dev_iter;
+	struct pci_device *pci_dev;
+	struct pci_slot_match match;
+	int rc;
+
+	match.domain = PCI_MATCH_ANY;
+	match.bus = PCI_MATCH_ANY;
+	match.dev = PCI_MATCH_ANY;
+	match.func = PCI_MATCH_ANY;
+
+	pci_dev_iter = pci_slot_match_iterator_create(&match);
+
+	rc = 0;
+	while ((pci_dev = pci_device_next(pci_dev_iter))) {
+		pci_device_probe(pci_dev);
+		if (enum_cb(enum_ctx, pci_dev)) {
+			rc = -1;
+		}
+	}
+
+	pci_iterator_destroy(pci_dev_iter);
+
+	return rc;
+}
+
+int
 pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 {
 	int err;

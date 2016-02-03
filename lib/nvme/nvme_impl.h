@@ -119,35 +119,33 @@ extern struct rte_mempool *request_mempool;
 #define nvme_dealloc_request(buf)	rte_mempool_put(request_mempool, buf)
 
 #ifdef USE_PCIACCESS
+struct nvme_pci_enum_ctx {
+	int (*user_enum_cb)(void *enum_ctx, void *pci_dev);
+	void *user_enum_ctx;
+};
+
+static int
+nvme_pci_enum_cb(void *enum_ctx, void *pdev)
+{
+	struct nvme_pci_enum_ctx *ctx = enum_ctx;
+	struct pci_device *pci_dev = pdev;
+
+	if (spdk_pci_device_get_class(pci_dev) != NVME_CLASS_CODE) {
+		return 0;
+	}
+
+	return ctx->user_enum_cb(ctx->user_enum_ctx, pci_dev);
+}
+
 static inline int
 nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
 {
-	struct pci_device_iterator *pci_dev_iter;
-	struct pci_device *pci_dev;
-	struct pci_id_match match;
-	int rc;
+	struct nvme_pci_enum_ctx nvme_enum_ctx;
 
-	match.vendor_id = PCI_MATCH_ANY;
-	match.subvendor_id = PCI_MATCH_ANY;
-	match.subdevice_id = PCI_MATCH_ANY;
-	match.device_id = PCI_MATCH_ANY;
-	match.device_class = NVME_CLASS_CODE;
-	match.device_class_mask = 0xFFFFFF;
+	nvme_enum_ctx.user_enum_cb = enum_cb;
+	nvme_enum_ctx.user_enum_ctx = enum_ctx;
 
-	pci_dev_iter = pci_id_match_iterator_create(&match);
-
-	rc = 0;
-	while ((pci_dev = pci_device_next(pci_dev_iter))) {
-		pci_device_probe(pci_dev);
-
-		if (enum_cb(enum_ctx, pci_dev)) {
-			rc = -1;
-		}
-	}
-
-	pci_iterator_destroy(pci_dev_iter);
-
-	return rc;
+	return spdk_pci_enumerate(nvme_pci_enum_cb, &nvme_enum_ctx);
 }
 
 /**

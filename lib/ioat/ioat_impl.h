@@ -10,6 +10,7 @@
 #include <rte_atomic.h>
 #include <rte_cycles.h>
 
+#include "spdk/pci.h"
 #include "spdk/vtophys.h"
 #include "spdk/pci.h"
 #include "spdk/ioat.h"
@@ -124,40 +125,35 @@ ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id)
 	return false;
 }
 
+struct ioat_pci_enum_ctx {
+	int (*user_enum_cb)(void *enum_ctx, void *pci_dev);
+	void *user_enum_ctx;
+};
+
+static int
+ioat_pci_enum_cb(void *enum_ctx, void *pdev)
+{
+	struct ioat_pci_enum_ctx *ctx = enum_ctx;
+	struct pci_device *pci_dev = pdev;
+	uint16_t vendor_id = spdk_pci_device_get_vendor_id(pci_dev);
+	uint16_t device_id = spdk_pci_device_get_device_id(pci_dev);
+
+	if (!ioat_pci_device_match_id(vendor_id, device_id)) {
+		return 0;
+	}
+
+	return ctx->user_enum_cb(ctx->user_enum_ctx, pci_dev);
+}
+
 static inline int
 ioat_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
 {
-	struct pci_device_iterator *pci_dev_iter;
-	struct pci_device *pci_dev;
-	struct pci_id_match match;
-	int rc;
+	struct ioat_pci_enum_ctx ioat_enum_ctx;
 
-	match.vendor_id = PCI_VENDOR_ID_INTEL;
-	match.subvendor_id = PCI_MATCH_ANY;
-	match.subdevice_id = PCI_MATCH_ANY;
-	match.device_id = PCI_MATCH_ANY;
-	match.device_class = 0x088000;
-	match.device_class_mask = 0xFFFFFF;
+	ioat_enum_ctx.user_enum_cb = enum_cb;
+	ioat_enum_ctx.user_enum_ctx = enum_ctx;
 
-	pci_dev_iter = pci_id_match_iterator_create(&match);
-
-	rc = 0;
-	while ((pci_dev = pci_device_next(pci_dev_iter))) {
-		if (!(ioat_pci_device_match_id(pci_dev->vendor_id,
-					       pci_dev->device_id))) {
-			continue;
-		}
-
-		pci_device_probe(pci_dev);
-
-		if (enum_cb(enum_ctx, pci_dev)) {
-			rc = -1;
-		}
-	}
-
-	pci_iterator_destroy(pci_dev_iter);
-
-	return rc;
+	return spdk_pci_enumerate(ioat_pci_enum_cb, &ioat_enum_ctx);
 }
 
 /**
