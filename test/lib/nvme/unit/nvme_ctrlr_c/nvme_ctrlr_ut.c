@@ -40,9 +40,38 @@ struct nvme_driver g_nvme_driver = {
 	.max_io_queues = DEFAULT_MAX_IO_QUEUES
 };
 
+static uint16_t g_pci_vendor_id;
+static uint16_t g_pci_device_id;
+static uint16_t g_pci_subvendor_id;
+static uint16_t g_pci_subdevice_id;
+
 char outbuf[OUTBUF_SIZE];
 
 __thread int    nvme_thread_ioq_index = -1;
+
+uint16_t
+spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
+{
+	return g_pci_vendor_id;
+}
+
+uint16_t
+spdk_pci_device_get_device_id(struct spdk_pci_device *dev)
+{
+	return g_pci_device_id;
+}
+
+uint16_t
+spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev)
+{
+	return g_pci_subvendor_id;
+}
+
+uint16_t
+spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
+{
+	return g_pci_subdevice_id;
+}
 
 int nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries, uint16_t num_trackers,
@@ -201,10 +230,9 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	bool	res;
 	struct nvme_controller			ctrlr = {};
 	struct nvme_intel_log_page_directory	payload = {};
-	struct pci_device			device = {};
+
 	/* set a invalid vendor id */
 	ctrlr.cdata.vid = 0xFFFF;
-	ctrlr.devhandle = &device;
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
 	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
@@ -228,10 +256,10 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	/* set valid vendor id, device id and sub device id*/
 	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
 	payload.temperature_statistics_log_len = 0;
-	device.vendor_id = PCI_VENDOR_ID_INTEL;
-	device.device_id = 0x0953;
-	device.subvendor_id = PCI_VENDOR_ID_INTEL;
-	device.subdevice_id = 0x3702;
+	g_pci_vendor_id = PCI_VENDOR_ID_INTEL;
+	g_pci_device_id = 0x0953;
+	g_pci_subvendor_id = PCI_VENDOR_ID_INTEL;
+	g_pci_subdevice_id = 0x3702;
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);

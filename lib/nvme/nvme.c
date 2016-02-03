@@ -259,7 +259,7 @@ struct nvme_enum_ctx {
 
 /* This function must only be called while holding g_nvme_driver.lock */
 static int
-nvme_enum_cb(void *ctx, void *pci_dev)
+nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
 	struct nvme_enum_ctx *enum_ctx = ctx;
 	struct nvme_controller *ctrlr;

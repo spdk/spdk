@@ -42,6 +42,8 @@
 #include <stdbool.h>
 #include "spdk/pci.h"
 
+#include "spdk/pci.h"
+
 /**
  * Opaque handle for a single I/OAT channel returned by \ref ioat_probe().
  */
@@ -57,12 +59,13 @@ typedef void (*ioat_callback_t)(void *arg);
  *
  * \return true to attach to this device.
  */
-typedef bool (*ioat_probe_cb)(void *cb_ctx, void *pci_dev);
+typedef bool (*ioat_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
 
 /**
  * Callback for ioat_probe() to report a device that has been attached to the userspace I/OAT driver.
  */
-typedef void (*ioat_attach_cb)(void *cb_ctx, void *pci_dev, struct ioat_channel *ioat);
+typedef void (*ioat_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+			       struct ioat_channel *ioat);
 
 /**
  * \brief Enumerate the I/OAT devices attached to the system and attach the userspace I/OAT driver

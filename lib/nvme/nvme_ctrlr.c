@@ -30,7 +30,7 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <pciaccess.h>
+
 #include "nvme_internal.h"
 #include "spdk/pci.h"
 
@@ -46,7 +46,7 @@ static void
 nvme_ctrlr_construct_intel_support_log_page_list(struct nvme_controller *ctrlr,
 		struct nvme_intel_log_page_directory *log_page_directory)
 {
-	struct pci_device *dev;
+	struct spdk_pci_device *dev;
 	struct pci_id pci_id;
 
 	if (ctrlr->cdata.vid != PCI_VENDOR_ID_INTEL || log_page_directory == NULL)

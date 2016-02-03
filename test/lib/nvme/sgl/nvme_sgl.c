@@ -36,8 +36,6 @@
 #include <string.h>
 #include <sys/uio.h> /* for struct iovec */
 
-#include <pciaccess.h>
-
 #include <rte_config.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
@@ -57,7 +55,7 @@ struct rte_mempool *request_mempool;
 #define BASE_LBA_START 0x100000
 
 struct dev {
-	struct pci_device			*pci_dev;
+	struct spdk_pci_device			*pci_dev;
 	struct nvme_controller 			*ctrlr;
 	char 					name[100];
 };
@@ -372,11 +370,9 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 }
 
 static bool
-probe_cb(void *cb_ctx, void *pci_dev)
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 {
-	struct pci_device *dev = pci_dev;
-
-	if (pci_device_has_non_uio_driver(dev)) {
+	if (spdk_pci_device_has_non_uio_driver(dev)) {
 		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
 		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
 			spdk_pci_device_get_domain(dev),
@@ -397,10 +393,9 @@ probe_cb(void *cb_ctx, void *pci_dev)
 }
 
 static void
-attach_cb(void *cb_ctx, void *pdev, struct nvme_controller *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct nvme_controller *ctrlr)
 {
 	struct dev *dev;
-	struct pci_device *pci_dev = pdev;
 
 	/* add to dev list */
 	dev = &devs[num_devs++];
@@ -448,8 +443,6 @@ int main(int argc, char **argv)
 		fprintf(stderr, "could not initialize request mempool\n");
 		exit(1);
 	}
-
-	pci_system_init();
 
 	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
 		fprintf(stderr, "nvme_probe() failed\n");

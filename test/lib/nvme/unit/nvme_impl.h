@@ -40,6 +40,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+struct spdk_pci_device;
+
 static inline void *
 nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 {
@@ -77,7 +79,7 @@ do					\
 #define nvme_dealloc_request(buf)	free(buf)
 
 static inline int
-nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
+nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
 {
 	/* TODO: enumeration is not needed in any unit tests yet, so it's not implemented */
 	return -1;

@@ -318,7 +318,7 @@ struct nvme_controller {
 	bool				feature_supported[256];
 
 	/* Opaque handle to associated PCI device. */
-	void				*devhandle;
+	struct spdk_pci_device		*devhandle;
 
 	uint32_t			num_io_queues;
 

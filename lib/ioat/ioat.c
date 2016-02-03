@@ -501,7 +501,7 @@ struct ioat_enum_ctx {
 
 /* This function must only be called while holding g_ioat_driver.lock */
 static int
-ioat_enum_cb(void *ctx, void *pci_dev)
+ioat_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
 	struct ioat_enum_ctx *enum_ctx = ctx;
 	struct ioat_channel *ioat;

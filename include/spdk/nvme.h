@@ -57,12 +57,13 @@ struct nvme_controller;
  *
  * \return true to attach to this device.
  */
-typedef bool (*nvme_probe_cb)(void *cb_ctx, void *pci_dev);
+typedef bool (*nvme_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
 
 /**
  * Callback for nvme_probe() to report a device that has been attached to the userspace NVMe driver.
  */
-typedef void (*nvme_attach_cb)(void *cb_ctx, void *pci_dev, struct nvme_controller *ctrlr);
+typedef void (*nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+			       struct nvme_controller *ctrlr);
 
 /**
  * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver

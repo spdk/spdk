@@ -43,6 +43,12 @@
 #include <rte_mempool.h>
 #include <rte_memcpy.h>
 
+#ifdef USE_PCIACCESS
+#include <pciaccess.h>
+#else
+#include <rte_pci.h>
+#endif
+
 #include "spdk/pci.h"
 #include "spdk/nvme_spec.h"
 
@@ -118,17 +124,22 @@ extern struct rte_mempool *request_mempool;
  */
 #define nvme_dealloc_request(buf)	rte_mempool_put(request_mempool, buf)
 
+/**
+ *
+ */
+#define nvme_pcicfg_read32(handle, var, offset)  spdk_pci_device_cfg_read32(handle, var, offset)
+#define nvme_pcicfg_write32(handle, var, offset) spdk_pci_device_cfg_write32(handle, var, offset)
+
 #ifdef USE_PCIACCESS
 struct nvme_pci_enum_ctx {
-	int (*user_enum_cb)(void *enum_ctx, void *pci_dev);
+	int (*user_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 	void *user_enum_ctx;
 };
 
 static int
-nvme_pci_enum_cb(void *enum_ctx, void *pdev)
+nvme_pci_enum_cb(void *enum_ctx, struct spdk_pci_device *pci_dev)
 {
 	struct nvme_pci_enum_ctx *ctx = enum_ctx;
-	struct pci_device *pci_dev = pdev;
 
 	if (spdk_pci_device_get_class(pci_dev) != NVME_CLASS_CODE) {
 		return 0;
@@ -138,7 +149,7 @@ nvme_pci_enum_cb(void *enum_ctx, void *pdev)
 }
 
 static inline int
-nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
+nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
 {
 	struct nvme_pci_enum_ctx nvme_enum_ctx;
 
@@ -147,12 +158,6 @@ nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx
 
 	return spdk_pci_enumerate(nvme_pci_enum_cb, &nvme_enum_ctx);
 }
-
-/**
- *
- */
-#define nvme_pcicfg_read32(handle, var, offset)  pci_device_cfg_read_u32(handle, var, offset)
-#define nvme_pcicfg_write32(handle, var, offset) pci_device_cfg_write_u32(handle, var, offset)
 
 static inline int
 nvme_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **mapped_addr)
@@ -172,16 +177,13 @@ nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 	return pci_device_unmap_range(dev, addr, dev->regions[bar].size);
 }
 
-#else
-
-/* var should be the pointer */
-#define nvme_pcicfg_read32(handle, var, offset)  rte_eal_pci_read_config(handle, var, 4, offset)
-#define nvme_pcicfg_write32(handle, var, offset) rte_eal_pci_write_config(handle, var, 4, offset)
+#else /* !USE_PCIACCESS */
 
 static inline int
 nvme_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **mapped_addr)
 {
 	struct rte_pci_device *dev = devhandle;
+
 	*mapped_addr = dev->mem_resource[bar].addr;
 	return 0;
 }
@@ -192,23 +194,54 @@ nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 	return 0;
 }
 
+/*
+ * TODO: once DPDK supports matching class code instead of device ID, switch to NVME_CLASS_CODE
+ */
 static struct rte_pci_id nvme_pci_driver_id[] = {
 	{RTE_PCI_DEVICE(0x8086, 0x0953)},
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
+struct nvme_pci_enum_ctx {
+	int (*user_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
+	void *user_enum_ctx;
+};
+
+/*
+ * TODO: eliminate this global if possible (does rte_pci_driver have a context field for this?)
+ *
+ * This should be protected by the NVMe driver lock, since nvme_probe() holds the lock
+ *  while calling nvme_pci_enumerate(), but we shouldn't have to depend on that.
+ */
+static struct nvme_pci_enum_ctx g_nvme_pci_enum_ctx;
+
+static int
+nvme_driver_init(struct rte_pci_driver *dr, struct rte_pci_device *rte_dev)
+{
+	/*
+	 * These are actually the same type internally.
+	 * TODO: refactor this so it's inside pci.c
+	 */
+	struct spdk_pci_device *pci_dev = (struct spdk_pci_device *)rte_dev;
+
+	return g_nvme_pci_enum_ctx.user_enum_cb(g_nvme_pci_enum_ctx.user_enum_ctx, pci_dev);
+}
+
 static struct rte_pci_driver nvme_rte_driver = {
 	.name = "nvme_driver",
-	.devinit = NULL,
+	.devinit = nvme_driver_init,
 	.id_table = nvme_pci_driver_id,
 	.drv_flags = RTE_PCI_DRV_NEED_MAPPING,
 };
 
-static inline int nvme_driver_register_dev_init(pci_driver_init fn_t)
+static inline int
+nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
 {
 	int rc;
 
-	nvme_rte_driver.devinit = fn_t;
+	g_nvme_pci_enum_ctx.user_enum_cb = enum_cb;
+	g_nvme_pci_enum_ctx.user_enum_ctx = enum_ctx;
+
 	rte_eal_pci_register(&nvme_rte_driver);
 	rc = rte_eal_pci_probe();
 	rte_eal_pci_unregister(&nvme_rte_driver);

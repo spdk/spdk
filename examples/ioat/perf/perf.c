@@ -42,7 +42,7 @@
 #include <rte_lcore.h>
 #include <rte_cycles.h>
 #include <rte_mempool.h>
-#include <pciaccess.h>
+
 #include "spdk/ioat.h"
 #include "spdk/pci.h"
 #include "spdk/string.h"
@@ -143,17 +143,16 @@ ioat_done(void *cb_arg)
 }
 
 static bool
-probe_cb(void *cb_ctx, void *pdev)
+probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
-	struct pci_device *pci_dev = pdev;
-
 	printf(" Found matching device at %d:%d:%d "
 	       "vendor:0x%04x device:0x%04x\n   name:%s\n",
-	       pci_dev->bus, pci_dev->dev, pci_dev->func,
-	       pci_dev->vendor_id, pci_dev->device_id,
-	       pci_device_get_device_name(pci_dev));
+	       spdk_pci_device_get_bus(pci_dev), spdk_pci_device_get_dev(pci_dev),
+	       spdk_pci_device_get_func(pci_dev),
+	       spdk_pci_device_get_vendor_id(pci_dev), spdk_pci_device_get_device_id(pci_dev),
+	       spdk_pci_device_get_device_name(pci_dev));
 
-	if (pci_device_has_non_uio_driver(pci_dev)) {
+	if (spdk_pci_device_has_non_uio_driver(pci_dev)) {
 		printf("Device has non-uio kernel driver, skipping...\n");
 		return false;
 	}
@@ -162,7 +161,7 @@ probe_cb(void *cb_ctx, void *pdev)
 }
 
 static void
-attach_cb(void *cb_ctx, void *pdev, struct ioat_channel *ioat)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct ioat_channel *ioat)
 {
 	struct ioat_device *dev;
 
@@ -179,7 +178,6 @@ attach_cb(void *cb_ctx, void *pdev, struct ioat_channel *ioat)
 static int
 ioat_init(void)
 {
-	pci_system_init();
 	TAILQ_INIT(&g_devices);
 
 	if (ioat_probe(NULL, probe_cb, attach_cb) != 0) {

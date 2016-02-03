@@ -34,8 +34,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <pciaccess.h>
-
 #include <rte_config.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
@@ -365,7 +363,7 @@ print_namespace(struct nvme_namespace *ns)
 }
 
 static void
-print_controller(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
+print_controller(struct nvme_controller *ctrlr, struct spdk_pci_device *pci_dev)
 {
 	const struct nvme_controller_data	*cdata;
 	uint8_t					str[128];
@@ -378,7 +376,8 @@ print_controller(struct nvme_controller *ctrlr, struct pci_device *pci_dev)
 
 	printf("=====================================================\n");
 	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
-	       pci_dev->bus, pci_dev->dev, pci_dev->func);
+	       spdk_pci_device_get_bus(pci_dev), spdk_pci_device_get_dev(pci_dev),
+	       spdk_pci_device_get_func(pci_dev));
 	printf("=====================================================\n");
 
 	if (g_hex_dump) {
@@ -769,11 +768,9 @@ parse_args(int argc, char **argv)
 }
 
 static bool
-probe_cb(void *cb_ctx, void *pci_dev)
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 {
-	struct pci_device *dev = pci_dev;
-
-	if (pci_device_has_non_uio_driver(dev)) {
+	if (spdk_pci_device_has_non_uio_driver(dev)) {
 		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
 		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
 			spdk_pci_device_get_domain(dev),
@@ -788,7 +785,7 @@ probe_cb(void *cb_ctx, void *pci_dev)
 }
 
 static void
-attach_cb(void *cb_ctx, void *pci_dev, struct nvme_controller *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct nvme_controller *ctrlr)
 {
 	print_controller(ctrlr, pci_dev);
 	nvme_detach(ctrlr);
@@ -826,8 +823,6 @@ int main(int argc, char **argv)
 		fprintf(stderr, "could not initialize request mempool\n");
 		exit(1);
 	}
-
-	pci_system_init();
 
 	rc = 0;
 	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {

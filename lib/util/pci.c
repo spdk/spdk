@@ -40,6 +40,18 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <pthread.h>
+#include <stdbool.h>
+
+#ifdef USE_PCIACCESS
+#include <pciaccess.h>
+/* When using libpciaccess, struct spdk_pci_device * is actually struct pci_device * internally. */
+#define spdk_pci_device pci_device
+#else
+#include <rte_pci.h>
+/* When using DPDK PCI, struct spdk_pci_device * is actually struct rte_pci_device * internally. */
+#define spdk_pci_device rte_pci_device
+#endif
 
 #ifdef __FreeBSD__
 #include <sys/pciio.h>
@@ -49,60 +61,131 @@
 
 #define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
+
+#ifndef PCI_PRI_FMT /* This is defined by rte_pci.h when USE_PCIACCESS is not set */
+#define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
+#endif
+
 #define SPDK_PCI_PATH_MAX	256
+#define PCI_CFG_SIZE		256
+#define PCI_EXT_CAP_ID_SN	0x03
+#define PCI_UIO_DRIVER		"uio_pci_generic"
 
 #ifdef USE_PCIACCESS
-#define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
-/* var should be the pointer */
-#define spdk_pcicfg_read32(handle, var, offset)  pci_device_cfg_read_u32(handle, var, offset)
-#define spdk_pcicfg_write32(handle, var, offset) pci_device_cfg_write_u32(handle, *var, offset)
-#else
-/* var should be the pointer */
-#define spdk_pcicfg_read32(handle, var, offset)  rte_eal_pci_read_config(handle, var, 4, offset)
-#define spdk_pcicfg_write32(handle, var, offset) rte_eal_pci_write_config(handle, var, 4, offset)
-#endif
 
-#ifndef USE_PCIACCESS
-static int pci_device_get_info(struct pci_device *dev, const char *file, uint32_t *val)
+/*
+ * libpciaccess wrapper functions
+ */
+
+static pthread_mutex_t g_pci_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool g_pci_initialized = false;
+
+static int
+spdk_pci_init(void)
 {
-	char filename[SPDK_PCI_PATH_MAX];
-	FILE *fd;
-	char buf[10];
-	char *end = NULL;
+	int rc;
 
-	snprintf(filename, sizeof(filename),
-		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/%s",
-		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
-		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev), file);
+	pthread_mutex_lock(&g_pci_init_mutex);
 
-	fd = fopen(filename, "r");
-	if (!fd)
-		return -1;
-
-	if (fgets(buf, sizeof(buf), fd) == NULL) {
-		fclose(fd);
-		return -1;
+	if (!g_pci_initialized) {
+		rc = pci_system_init();
+		if (rc == 0) {
+			g_pci_initialized = true;
+		}
+	} else {
+		rc = 0;
 	}
 
-	*val = strtoul(buf, &end, 0);
-	if ((buf[0] == '\0') || (end == NULL) || (*end != '\n')) {
-		fclose(fd);
-		return -1;
-	}
+	pthread_mutex_unlock(&g_pci_init_mutex);
 
-	fclose(fd);
-	return 0;
-
+	return rc;
 }
-#endif
+
+uint16_t
+spdk_pci_device_get_domain(struct spdk_pci_device *dev)
+{
+	return dev->domain;
+}
+
+uint8_t
+spdk_pci_device_get_bus(struct spdk_pci_device *dev)
+{
+	return dev->bus;
+}
+
+
+uint8_t
+spdk_pci_device_get_dev(struct spdk_pci_device *dev)
+{
+	return dev->dev;
+}
+
+uint8_t
+spdk_pci_device_get_func(struct spdk_pci_device *dev)
+{
+	return dev->func;
+}
+
+uint16_t
+spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
+{
+	return dev->vendor_id;
+}
+
+uint16_t
+spdk_pci_device_get_device_id(struct spdk_pci_device *dev)
+{
+	return dev->device_id;
+}
+
+uint16_t
+spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev)
+{
+	return dev->subvendor_id;
+}
+
+uint16_t
+spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
+{
+	return dev->subdevice_id;
+}
+
+uint32_t
+spdk_pci_device_get_class(struct spdk_pci_device *dev)
+{
+	return dev->device_class;
+}
+
+const char *
+spdk_pci_device_get_device_name(struct spdk_pci_device *dev)
+{
+	return pci_device_get_device_name(dev);
+}
 
 int
-spdk_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx)
+spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset)
+{
+	return pci_device_cfg_read_u32(dev, value, offset);
+}
+
+int
+spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset)
+{
+	return pci_device_cfg_write_u32(dev, value, offset);
+}
+
+int
+spdk_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
 {
 	struct pci_device_iterator *pci_dev_iter;
 	struct pci_device *pci_dev;
 	struct pci_slot_match match;
 	int rc;
+
+	rc = spdk_pci_init();
+	if (rc != 0) {
+		return rc;
+	}
 
 	match.domain = PCI_MATCH_ANY;
 	match.bus = PCI_MATCH_ANY;
@@ -124,8 +207,130 @@ spdk_pci_enumerate(int (*enum_cb)(void *enum_ctx, void *pci_dev), void *enum_ctx
 	return rc;
 }
 
+#else /* !USE_PCIACCESS */
+
+/*
+ * DPDK PCI wrapper functions
+ */
+
+static int
+pci_device_get_u32(struct spdk_pci_device *dev, const char *file, uint32_t *val)
+{
+	char filename[SPDK_PCI_PATH_MAX];
+	FILE *fd;
+	char buf[10];
+	char *end;
+
+	snprintf(filename, sizeof(filename),
+		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/%s",
+		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
+		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev), file);
+
+	fd = fopen(filename, "r");
+	if (!fd) {
+		return -1;
+	}
+
+	if (fgets(buf, sizeof(buf), fd) == NULL) {
+		fclose(fd);
+		return -1;
+	}
+
+	*val = strtoul(buf, &end, 0);
+	if ((buf[0] == '\0') || (end == NULL) || (*end != '\n')) {
+		fclose(fd);
+		return -1;
+	}
+
+	fclose(fd);
+	return 0;
+
+}
+
+uint16_t
+spdk_pci_device_get_domain(struct spdk_pci_device *dev)
+{
+	return dev->addr.domain;
+}
+
+uint8_t
+spdk_pci_device_get_bus(struct spdk_pci_device *dev)
+{
+	return dev->addr.bus;
+}
+
+uint8_t
+spdk_pci_device_get_dev(struct spdk_pci_device *dev)
+{
+	return dev->addr.devid;
+}
+
+uint8_t
+spdk_pci_device_get_func(struct spdk_pci_device *dev)
+{
+	return dev->addr.function;
+}
+
+uint16_t
+spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
+{
+	return dev->id.vendor_id;
+}
+
+uint16_t
+spdk_pci_device_get_device_id(struct spdk_pci_device *dev)
+{
+	return dev->id.device_id;
+}
+
+uint16_t
+spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev)
+{
+	return dev->id.subsystem_vendor_id;
+}
+
+uint16_t
+spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
+{
+	return dev->id.subsystem_device_id;
+}
+
+uint32_t
+spdk_pci_device_get_class(struct spdk_pci_device *dev)
+{
+	uint32_t class_code;
+
+	if (pci_device_get_u32(dev, "class", &class_code) < 0) {
+		return 0xFFFFFFFFu;
+	}
+
+	return class_code;
+}
+
+const char *
+spdk_pci_device_get_device_name(struct spdk_pci_device *dev)
+{
+	/* TODO */
+	return NULL;
+}
+
 int
-pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
+spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset)
+{
+	return rte_eal_pci_read_config(dev, value, 4, offset) == 4 ? 0 : -1;
+}
+
+int
+spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset)
+{
+	return rte_eal_pci_write_config(dev, &value, 4, offset) == 4 ? 0 : -1;
+}
+
+#endif /* !USE_PCIACCESS */
+
+
+int
+spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len)
 {
 	int err;
 	uint32_t pos, header = 0;
@@ -134,7 +339,7 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 	if (len < 17)
 		return -1;
 
-	err = spdk_pcicfg_read32(dev, &header, PCI_CFG_SIZE);
+	err = spdk_pci_device_cfg_read32(dev, &header, PCI_CFG_SIZE);
 	if (err || !header)
 		return -1;
 
@@ -145,8 +350,7 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 				/*skip the header*/
 				pos += 4;
 				for (i = 0; i < 2; i++) {
-					err = spdk_pcicfg_read32(dev,
-								 &buf[i], pos + 4 * i);
+					err = spdk_pci_device_cfg_read32(dev, &buf[i], pos + 4 * i);
 					if (err)
 						return -1;
 				}
@@ -158,7 +362,7 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 		/*0 if no other items exist*/
 		if (pos < PCI_CFG_SIZE)
 			return -1;
-		err = spdk_pcicfg_read32(dev, &header, pos);
+		err = spdk_pci_device_cfg_read32(dev, &header, pos);
 		if (err)
 			return -1;
 	}
@@ -167,7 +371,7 @@ pci_device_get_serial_number(struct pci_device *dev, char *sn, int len)
 
 #ifdef __linux__
 int
-pci_device_has_non_uio_driver(struct pci_device *dev)
+spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
 {
 	char linkname[SPDK_PCI_PATH_MAX];
 	char driver[SPDK_PCI_PATH_MAX];
@@ -202,7 +406,7 @@ pci_device_has_non_uio_driver(struct pci_device *dev)
 
 #ifdef __FreeBSD__
 int
-pci_device_has_non_uio_driver(struct pci_device *dev)
+spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
 {
 	struct pci_conf_io	configsel;
 	struct pci_match_conf	pattern;
@@ -254,7 +458,7 @@ pci_device_has_non_uio_driver(struct pci_device *dev)
 #endif
 
 int
-pci_device_unbind_kernel_driver(struct pci_device *dev)
+spdk_pci_device_unbind_kernel_driver(struct spdk_pci_device *dev)
 {
 	int n;
 	FILE *fd;
@@ -286,7 +490,7 @@ error:
 }
 
 static int
-check_modules(char *driver_name)
+check_modules(const char *driver_name)
 {
 	FILE *fd;
 	const char *proc_modules = "/proc/modules";
@@ -310,12 +514,13 @@ check_modules(char *driver_name)
 }
 
 int
-pci_device_bind_uio_driver(struct pci_device *dev, char *driver_name)
+spdk_pci_device_bind_uio_driver(struct spdk_pci_device *dev)
 {
 	int err, n;
 	FILE *fd;
 	char filename[SPDK_PCI_PATH_MAX];
 	char buf[256];
+	const char *driver_name = PCI_UIO_DRIVER;
 
 	err = check_modules(driver_name);
 	if (err < 0) {
@@ -347,9 +552,9 @@ error:
 }
 
 int
-pci_device_switch_to_uio_driver(struct pci_device *dev)
+spdk_pci_device_switch_to_uio_driver(struct spdk_pci_device *dev)
 {
-	if (pci_device_unbind_kernel_driver(dev)) {
+	if (spdk_pci_device_unbind_kernel_driver(dev)) {
 		fprintf(stderr, "Device %d:%d:%d unbind from "
 			"kernel driver failed\n",
 			spdk_pci_device_get_bus(dev),
@@ -357,7 +562,7 @@ pci_device_switch_to_uio_driver(struct pci_device *dev)
 			spdk_pci_device_get_func(dev));
 		return -1;
 	}
-	if (pci_device_bind_uio_driver(dev, PCI_UIO_DRIVER)) {
+	if (spdk_pci_device_bind_uio_driver(dev)) {
 		fprintf(stderr, "Device %d:%d:%d bind to "
 			"uio driver failed\n",
 			spdk_pci_device_get_bus(dev),
@@ -372,7 +577,7 @@ pci_device_switch_to_uio_driver(struct pci_device *dev)
 }
 
 int
-pci_device_claim(struct pci_device *dev)
+spdk_pci_device_claim(struct spdk_pci_device *dev)
 {
 	int dev_fd;
 	char shm_name[64];
