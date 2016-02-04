@@ -203,6 +203,9 @@ nvme_ns_cmd_readv(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
+		return EINVAL;
+
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.u.sgl.reset_sgl_fn = reset_sgl_fn;
 	payload.u.sgl.next_sge_fn = next_sge_fn;
@@ -244,6 +247,9 @@ nvme_ns_cmd_writev(struct nvme_namespace *ns, uint64_t lba, uint32_t lba_count,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
+		return EINVAL;
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.u.sgl.reset_sgl_fn = reset_sgl_fn;
