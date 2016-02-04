@@ -2,6 +2,8 @@
 
 set -e
 
+rootdir=$(readlink -f $(dirname $0))/..
+
 function prep_nvme {
 	TMP=`mktemp`
 	# Get vendor_id:device_id by nvme's class_id and subcalss_id
@@ -24,8 +26,7 @@ function prep_ioat {
 
 	for device in `cat $TMP`
 	do
-		result=`lspci -n | grep "$vendor:$device"`
-		if [ "$result" ]
+		if lspci -n | grep "$vendor:$device"
 		then
 			echo $vendor $device > /sys/bus/pci/drivers/uio_pci_generic/new_id
 		fi
