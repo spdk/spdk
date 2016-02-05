@@ -423,6 +423,139 @@ test_io_flags(void)
 	nvme_free_request(g_request);
 
 	free(payload);
+
+}
+
+static void
+test_nvme_ns_cmd_reservation_register(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	struct nvme_reservation_register_data *payload;
+	bool			ignore_key = 1;
+	nvme_cb_fn_t		cb_fn = NULL;
+	void			*cb_arg = NULL;
+	int			rc = 0;
+	uint32_t		tmp_cdw10;
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+	payload = (struct nvme_reservation_register_data *)malloc(sizeof(struct
+			nvme_reservation_register_data));
+
+	rc = nvme_ns_cmd_reservation_register(&ns, payload, ignore_key,
+					      NVME_RESERVE_REGISTER_KEY,
+					      NVME_RESERVE_PTPL_NO_CHANGES,
+					      cb_fn, cb_arg);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->cmd.opc == NVME_OPC_RESERVATION_REGISTER);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	tmp_cdw10 = NVME_RESERVE_REGISTER_KEY;
+	tmp_cdw10 |= ignore_key ? 1 << 3 : 0;
+	tmp_cdw10 |= (uint32_t)NVME_RESERVE_PTPL_NO_CHANGES << 30;
+
+	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+
+	nvme_free_request(g_request);
+	free(payload);
+}
+
+static void
+test_nvme_ns_cmd_reservation_release(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	struct nvme_reservation_key_data *payload;
+	bool			ignore_key = 1;
+	nvme_cb_fn_t		cb_fn = NULL;
+	void			*cb_arg = NULL;
+	int			rc = 0;
+	uint32_t		tmp_cdw10;
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+	payload = (struct nvme_reservation_key_data *)malloc(sizeof(struct
+			nvme_reservation_key_data));
+
+	rc = nvme_ns_cmd_reservation_release(&ns, payload, ignore_key,
+					     NVME_RESERVE_RELEASE,
+					     NVME_RESERVE_WRITE_EXCLUSIVE,
+					     cb_fn, cb_arg);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->cmd.opc == NVME_OPC_RESERVATION_RELEASE);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	tmp_cdw10 = NVME_RESERVE_RELEASE;
+	tmp_cdw10 |= ignore_key ? 1 << 3 : 0;
+	tmp_cdw10 |= (uint32_t)NVME_RESERVE_WRITE_EXCLUSIVE << 8;
+
+	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+
+	nvme_free_request(g_request);
+	free(payload);
+}
+
+static void
+test_nvme_ns_cmd_reservation_acquire(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	struct nvme_reservation_acquire_data *payload;
+	bool			ignore_key = 1;
+	nvme_cb_fn_t		cb_fn = NULL;
+	void			*cb_arg = NULL;
+	int			rc = 0;
+	uint32_t		tmp_cdw10;
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+	payload = (struct nvme_reservation_acquire_data *)malloc(sizeof(struct
+			nvme_reservation_acquire_data));
+
+	rc = nvme_ns_cmd_reservation_acquire(&ns, payload, ignore_key,
+					     NVME_RESERVE_ACQUIRE,
+					     NVME_RESERVE_WRITE_EXCLUSIVE,
+					     cb_fn, cb_arg);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->cmd.opc == NVME_OPC_RESERVATION_ACQUIRE);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	tmp_cdw10 = NVME_RESERVE_ACQUIRE;
+	tmp_cdw10 |= ignore_key ? 1 << 3 : 0;
+	tmp_cdw10 |= (uint32_t)NVME_RESERVE_WRITE_EXCLUSIVE << 8;
+
+	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
+
+	nvme_free_request(g_request);
+	free(payload);
+}
+
+static void
+test_nvme_ns_cmd_reservation_report(void)
+{
+	struct nvme_namespace	ns;
+	struct nvme_controller	ctrlr;
+	struct nvme_reservation_status_data *payload;
+	nvme_cb_fn_t		cb_fn = NULL;
+	void			*cb_arg = NULL;
+	int			rc = 0;
+
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+	payload = (struct nvme_reservation_status_data *)malloc(sizeof(struct
+			nvme_reservation_status_data));
+
+	rc = nvme_ns_cmd_reservation_report(&ns, payload, 0x1000,
+					    cb_fn, cb_arg);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->cmd.opc == NVME_OPC_RESERVATION_REPORT);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	CU_ASSERT(g_request->cmd.cdw10 == (0x1000 / 4));
+
+	nvme_free_request(g_request);
+	free(payload);
 }
 
 int main(int argc, char **argv)
@@ -445,10 +578,17 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "split_test2", split_test2) == NULL
 		|| CU_add_test(suite, "split_test3", split_test3) == NULL
 		|| CU_add_test(suite, "split_test4", split_test4) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_flush testing", test_nvme_ns_cmd_flush) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_deallocate testing", test_nvme_ns_cmd_deallocate) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_flush", test_nvme_ns_cmd_flush) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_deallocate", test_nvme_ns_cmd_deallocate) == NULL
 		|| CU_add_test(suite, "io_flags", test_io_flags) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_write_zeroes testing", test_nvme_ns_cmd_write_zeroes) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_write_zeroes", test_nvme_ns_cmd_write_zeroes) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_reservation_register",
+			       test_nvme_ns_cmd_reservation_register) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_reservation_release",
+			       test_nvme_ns_cmd_reservation_release) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_reservation_acquire",
+			       test_nvme_ns_cmd_reservation_acquire) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_reservation_report", test_nvme_ns_cmd_reservation_report) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
