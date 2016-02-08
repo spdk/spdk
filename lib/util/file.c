@@ -64,7 +64,7 @@ dev_get_size(int fd)
 }
 
 uint32_t
-dev_get_blocklen(int fd)
+spdk_dev_get_blocklen(int fd)
 {
 #if defined(DKIOCGETBLOCKSIZE) /* FreeBSD */
 	uint32_t blocklen;
@@ -85,7 +85,7 @@ dev_get_blocklen(int fd)
 }
 
 uint64_t
-file_get_size(int fd)
+spdk_file_get_size(int fd)
 {
 	struct stat st;
 

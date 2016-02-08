@@ -274,14 +274,14 @@ register_aio_file(const char *path)
 		return -1;
 	}
 
-	size = file_get_size(fd);
+	size = spdk_file_get_size(fd);
 	if (size == 0) {
 		fprintf(stderr, "Could not determine size of AIO device %s\n", path);
 		close(fd);
 		return -1;
 	}
 
-	blklen = dev_get_blocklen(fd);
+	blklen = spdk_dev_get_blocklen(fd);
 	if (blklen == 0) {
 		fprintf(stderr, "Could not determine block size of AIO device %s\n", path);
 		close(fd);

@@ -36,7 +36,7 @@
 
 #include <stdint.h>
 
-uint64_t file_get_size(int fd);
-uint32_t dev_get_blocklen(int fd);
+uint64_t spdk_file_get_size(int fd);
+uint32_t spdk_dev_get_blocklen(int fd);
 
 #endif
