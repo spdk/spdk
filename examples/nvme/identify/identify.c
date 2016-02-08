@@ -243,7 +243,7 @@ get_log_pages(struct nvme_controller *ctrlr)
 	}
 
 	ctrlr_data = nvme_ctrlr_get_data(ctrlr);
-	if (ctrlr_data->vid == PCI_VENDOR_ID_INTEL) {
+	if (ctrlr_data->vid == SPDK_PCI_VID_INTEL) {
 		if (nvme_ctrlr_is_log_page_supported(ctrlr, NVME_INTEL_LOG_SMART)) {
 			if (get_intel_smart_log_page(ctrlr) == 0) {
 				outstanding_commands++;

@@ -49,7 +49,7 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct nvme_controller *ctrlr,
 	struct spdk_pci_device *dev;
 	struct pci_id pci_id;
 
-	if (ctrlr->cdata.vid != PCI_VENDOR_ID_INTEL || log_page_directory == NULL)
+	if (ctrlr->cdata.vid != SPDK_PCI_VID_INTEL || log_page_directory == NULL)
 		return;
 
 	dev = ctrlr->devhandle;
@@ -120,7 +120,7 @@ nvme_ctrlr_set_supported_log_pages(struct nvme_controller *ctrlr)
 	if (ctrlr->cdata.lpa.celp) {
 		ctrlr->log_page_supported[NVME_LOG_COMMAND_EFFECTS_LOG] = true;
 	}
-	if (ctrlr->cdata.vid == PCI_VENDOR_ID_INTEL) {
+	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL) {
 		nvme_ctrlr_set_intel_support_log_pages(ctrlr);
 	}
 }
@@ -161,7 +161,7 @@ nvme_ctrlr_set_supported_features(struct nvme_controller *ctrlr)
 	if (ctrlr->cdata.hmpre) {
 		ctrlr->feature_supported[NVME_FEAT_HOST_MEM_BUFFER] = true;
 	}
-	if (ctrlr->cdata.vid == PCI_VENDOR_ID_INTEL) {
+	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL) {
 		nvme_ctrlr_set_intel_supported_features(ctrlr);
 	}
 }

@@ -81,7 +81,7 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 static inline bool
 ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id)
 {
-	if (vendor_id != PCI_VENDOR_ID_INTEL) {
+	if (vendor_id != SPDK_PCI_VID_INTEL) {
 		return false;
 	}
 

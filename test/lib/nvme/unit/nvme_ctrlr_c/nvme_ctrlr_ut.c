@@ -239,7 +239,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	CU_ASSERT(res == false);
 
 	/* set valid vendor id and log page directory*/
-	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
+	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 1;
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
@@ -254,11 +254,11 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	CU_ASSERT(res == false);
 
 	/* set valid vendor id, device id and sub device id*/
-	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
+	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 0;
-	g_pci_vendor_id = PCI_VENDOR_ID_INTEL;
+	g_pci_vendor_id = SPDK_PCI_VID_INTEL;
 	g_pci_device_id = 0x0953;
-	g_pci_subvendor_id = PCI_VENDOR_ID_INTEL;
+	g_pci_subvendor_id = SPDK_PCI_VID_INTEL;
 	g_pci_subdevice_id = 0x3702;
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
@@ -287,7 +287,7 @@ test_nvme_ctrlr_set_supported_features(void)
 	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_INTEL_FEAT_MAX_LBA);
 	CU_ASSERT(res == false);
 
-	ctrlr.cdata.vid = PCI_VENDOR_ID_INTEL;
+	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	nvme_ctrlr_set_supported_features(&ctrlr);
 	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_FEAT_ARBITRATION);
 	CU_ASSERT(res == true);

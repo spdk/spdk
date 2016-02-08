@@ -31,11 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PCI_IDS_H__
-#define __PCI_IDS_H__
+#ifndef SPDK_PCI_IDS
+#define SPDK_PCI_IDS
 
 #include <stdint.h>
 
-#define PCI_VENDOR_ID_INTEL		0x8086
+#define SPDK_PCI_VID_INTEL		0x8086
 
-#endif /* __PCI_IDS_H__ */
+#endif /* SPDK_PCI_IDS */
