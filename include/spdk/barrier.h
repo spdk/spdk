@@ -34,7 +34,7 @@
 #ifndef SPDK_BARRIER_H
 #define SPDK_BARRIER_H
 
-#define wmb()	__asm volatile("sfence" ::: "memory")
-#define mb()	__asm volatile("mfence" ::: "memory")
+#define spdk_wmb()	__asm volatile("sfence" ::: "memory")
+#define spdk_mb()	__asm volatile("mfence" ::: "memory")
 
 #endif

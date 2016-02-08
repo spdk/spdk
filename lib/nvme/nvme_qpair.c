@@ -308,7 +308,7 @@ nvme_qpair_submit_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr)
 		qpair->sq_tail = 0;
 	}
 
-	wmb();
+	spdk_wmb();
 	spdk_mmio_write_4(qpair->sq_tdbl, qpair->sq_tail);
 }
 
