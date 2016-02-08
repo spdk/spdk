@@ -69,7 +69,7 @@ struct map_2mb {
 };
 
 /* Second-level map table indexed by bits [21..29] of the virtual address.
- * Each entry contains the 2MB physical page frame number or VTOPHYS_ERROR for entries that haven't
+ * Each entry contains the 2MB physical page frame number or SPDK_VTOPHYS_ERROR for entries that haven't
  * been retrieved yet.
  */
 struct map_1gb {
@@ -109,7 +109,7 @@ vtophys_get_map(uint64_t vfn_2mb)
 		if (!map_1gb) {
 			map_1gb = malloc(sizeof(struct map_1gb));
 			if (map_1gb) {
-				/* initialize all entries to all 0xFF (VTOPHYS_ERROR) */
+				/* initialize all entries to all 0xFF (SPDK_VTOPHYS_ERROR) */
 				memset(map_1gb, 0xFF, sizeof(struct map_1gb));
 				vtophys_map_128tb.map[idx_128tb] = map_1gb;
 			}
@@ -157,7 +157,7 @@ vtophys_get_pfn_2mb(uint64_t vfn_2mb)
 }
 
 uint64_t
-vtophys(void *buf)
+spdk_vtophys(void *buf)
 {
 	struct map_2mb *map_2mb;
 	uint64_t vfn_2mb, pfn_2mb;
@@ -167,14 +167,14 @@ vtophys(void *buf)
 
 	map_2mb = vtophys_get_map(vfn_2mb);
 	if (!map_2mb) {
-		return VTOPHYS_ERROR;
+		return SPDK_VTOPHYS_ERROR;
 	}
 
 	pfn_2mb = map_2mb->pfn_2mb;
-	if (pfn_2mb == VTOPHYS_ERROR) {
+	if (pfn_2mb == SPDK_VTOPHYS_ERROR) {
 		pfn_2mb = vtophys_get_pfn_2mb(vfn_2mb);
-		if (pfn_2mb == VTOPHYS_ERROR) {
-			return VTOPHYS_ERROR;
+		if (pfn_2mb == SPDK_VTOPHYS_ERROR) {
+			return SPDK_VTOPHYS_ERROR;
 		}
 		map_2mb->pfn_2mb = pfn_2mb;
 	}

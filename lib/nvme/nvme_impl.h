@@ -108,8 +108,8 @@ nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 /**
  * Return the physical address for the specified virtual address.
  */
-#define nvme_vtophys(buf)		vtophys(buf)
-#define NVME_VTOPHYS_ERROR		VTOPHYS_ERROR
+#define nvme_vtophys(buf)		spdk_vtophys(buf)
+#define NVME_VTOPHYS_ERROR		SPDK_VTOPHYS_ERROR
 
 extern struct rte_mempool *request_mempool;
 

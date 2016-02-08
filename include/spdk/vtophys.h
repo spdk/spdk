@@ -40,9 +40,9 @@
 extern "C" {
 #endif
 
-#define VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
+#define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
-uint64_t vtophys(void *buf);
+uint64_t spdk_vtophys(void *buf);
 
 #ifdef __cplusplus
 }

@@ -52,7 +52,7 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 /**
  * Return the physical address for the specified virtual address.
  */
-#define ioat_vtophys(buf)		vtophys(buf)
+#define ioat_vtophys(buf)		spdk_vtophys(buf)
 
 /**
  * Delay us.
