@@ -38,11 +38,4 @@
 
 #define PCI_VENDOR_ID_INTEL		0x8086
 
-struct pci_id {
-	uint16_t	vendor_id;
-	uint16_t	dev_id;
-	uint16_t	sub_vendor_id;
-	uint16_t	sub_dev_id;
-};
-
 #endif /* __PCI_IDS_H__ */

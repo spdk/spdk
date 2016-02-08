@@ -366,6 +366,13 @@ struct nvme_driver {
 	TAILQ_HEAD(, nvme_controller)	attached_ctrlrs;
 };
 
+struct pci_id {
+	uint16_t	vendor_id;
+	uint16_t	dev_id;
+	uint16_t	sub_vendor_id;
+	uint16_t	sub_dev_id;
+};
+
 extern struct nvme_driver g_nvme_driver;
 
 #define nvme_min(a,b) (((a)<(b))?(a):(b))
