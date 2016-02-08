@@ -970,9 +970,9 @@ int main(int argc, char **argv)
 		return rc;
 	}
 
-	ealargs[1] = sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
+	ealargs[1] = spdk_sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
 	if (ealargs[1] == NULL) {
-		perror("ealargs sprintf_alloc");
+		perror("ealargs spdk_sprintf_alloc");
 		return 1;
 	}
 

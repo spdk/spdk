@@ -38,7 +38,7 @@
 #include "spdk/string.h"
 
 char *
-sprintf_alloc(const char *format, ...)
+spdk_sprintf_alloc(const char *format, ...)
 {
 	va_list args;
 	char *buf;

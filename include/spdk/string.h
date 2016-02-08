@@ -41,6 +41,6 @@
  * which should be passed to free() when no longer needed,
  * or NULL on failure.
  */
-char *sprintf_alloc(const char *format, ...) __attribute__((format(printf, 1, 2)));
+char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
 #endif

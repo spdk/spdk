@@ -324,7 +324,7 @@ init(void)
 {
 	char *core_mask_conf;
 
-	core_mask_conf = sprintf_alloc("-c %s", g_user_config.core_mask);
+	core_mask_conf = spdk_sprintf_alloc("-c %s", g_user_config.core_mask);
 	if (!core_mask_conf) {
 		return 1;
 	}
