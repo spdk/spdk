@@ -56,7 +56,7 @@
 
 struct ctrlr_entry {
 	struct nvme_controller			*ctrlr;
-	struct nvme_intel_rw_latency_page	*latency_page;
+	struct spdk_nvme_intel_rw_latency_page	*latency_page;
 	struct ctrlr_entry			*next;
 	char					name[1024];
 };
@@ -194,16 +194,16 @@ static void
 set_latency_tracking_feature(struct nvme_controller *ctrlr, bool enable)
 {
 	int res;
-	union nvme_intel_enable_latency_tracking_feature enable_latency_tracking;
+	union spdk_nvme_intel_feat_latency_tracking latency_tracking;
 
 	if (enable) {
-		enable_latency_tracking.bits.enable = 0x01;
+		latency_tracking.bits.enable = 0x01;
 	} else {
-		enable_latency_tracking.bits.enable = 0x00;
+		latency_tracking.bits.enable = 0x00;
 	}
 
-	res = nvme_ctrlr_cmd_set_feature(ctrlr, NVME_INTEL_FEAT_LATENCY_TRACKING,
-					 enable_latency_tracking.raw, 0, NULL, 0, enable_latency_tracking_complete, NULL);
+	res = nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING,
+					 latency_tracking.raw, 0, NULL, 0, enable_latency_tracking_complete, NULL);
 	if (res) {
 		printf("fail to allocate nvme request.\n");
 		return;
@@ -227,7 +227,8 @@ register_ctrlr(struct nvme_controller *ctrlr)
 		exit(1);
 	}
 
-	entry->latency_page = rte_zmalloc("nvme latency", sizeof(struct nvme_intel_rw_latency_page), 4096);
+	entry->latency_page = rte_zmalloc("nvme latency", sizeof(struct spdk_nvme_intel_rw_latency_page),
+					  4096);
 	if (entry->latency_page == NULL) {
 		printf("Allocation error (latency page)\n");
 		exit(1);
@@ -240,7 +241,7 @@ register_ctrlr(struct nvme_controller *ctrlr)
 	g_controllers = entry;
 
 	if (g_latency_tracking_enable &&
-	    nvme_ctrlr_is_feature_supported(ctrlr, NVME_INTEL_FEAT_LATENCY_TRACKING))
+	    nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 		set_latency_tracking_feature(ctrlr, true);
 
 	num_ns = nvme_ctrlr_get_num_ns(ctrlr);
@@ -605,7 +606,7 @@ print_latency_page(struct ctrlr_entry *entry)
 }
 
 static void
-print_latency_statistics(const char *op_name, enum nvme_intel_log_page log_page)
+print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_page)
 {
 	struct ctrlr_entry	*ctrlr;
 
@@ -615,7 +616,8 @@ print_latency_statistics(const char *op_name, enum nvme_intel_log_page log_page)
 	while (ctrlr) {
 		if (nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
 			if (nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, NVME_GLOBAL_NAMESPACE_TAG,
-							ctrlr->latency_page, sizeof(struct nvme_intel_rw_latency_page), enable_latency_tracking_complete,
+							ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page),
+							enable_latency_tracking_complete,
 							NULL)) {
 				printf("nvme_ctrlr_cmd_get_log_page() failed\n");
 				exit(1);
@@ -652,10 +654,10 @@ print_stats(void)
 	print_performance();
 	if (g_latency_tracking_enable) {
 		if (g_rw_percentage != 0) {
-			print_latency_statistics("Read", NVME_INTEL_LOG_READ_CMD_LATENCY);
+			print_latency_statistics("Read", SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
 		}
 		if (g_rw_percentage != 100) {
-			print_latency_statistics("Write", NVME_INTEL_LOG_WRITE_CMD_LATENCY);
+			print_latency_statistics("Write", SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY);
 		}
 	}
 }
@@ -874,7 +876,7 @@ unregister_controllers(void)
 		struct ctrlr_entry *next = entry->next;
 		rte_free(entry->latency_page);
 		if (g_latency_tracking_enable &&
-		    nvme_ctrlr_is_feature_supported(entry->ctrlr, NVME_INTEL_FEAT_LATENCY_TRACKING))
+		    nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 			set_latency_tracking_feature(entry->ctrlr, false);
 		nvme_detach(entry->ctrlr);
 		free(entry);

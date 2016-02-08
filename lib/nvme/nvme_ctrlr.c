@@ -44,7 +44,7 @@ static int nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 
 static void
 nvme_ctrlr_construct_intel_support_log_page_list(struct nvme_controller *ctrlr,
-		struct nvme_intel_log_page_directory *log_page_directory)
+		struct spdk_nvme_intel_log_page_directory *log_page_directory)
 {
 	struct spdk_pci_device *dev;
 	struct pci_id pci_id;
@@ -58,21 +58,21 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct nvme_controller *ctrlr,
 	pci_id.sub_vendor_id = spdk_pci_device_get_subvendor_id(dev);
 	pci_id.sub_dev_id = spdk_pci_device_get_subdevice_id(dev);
 
-	ctrlr->log_page_supported[NVME_INTEL_LOG_PAGE_DIRECTORY] = true;
+	ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY] = true;
 
 	if (log_page_directory->read_latency_log_len ||
 	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_READ_LATENCY)) {
-		ctrlr->log_page_supported[NVME_INTEL_LOG_READ_CMD_LATENCY] = true;
+		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY] = true;
 	}
 	if (log_page_directory->write_latency_log_len ||
 	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_WRITE_LATENCY)) {
-		ctrlr->log_page_supported[NVME_INTEL_LOG_WRITE_CMD_LATENCY] = true;
+		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY] = true;
 	}
 	if (log_page_directory->temperature_statistics_log_len) {
-		ctrlr->log_page_supported[NVME_INTEL_LOG_TEMPERATURE] = true;
+		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_TEMPERATURE] = true;
 	}
 	if (log_page_directory->smart_log_len) {
-		ctrlr->log_page_supported[NVME_INTEL_LOG_SMART] = true;
+		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_SMART] = true;
 	}
 }
 
@@ -80,10 +80,10 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct nvme_controller *ctrlr)
 {
 	uint64_t phys_addr = 0;
 	struct nvme_completion_poll_status	status;
-	struct nvme_intel_log_page_directory *log_page_directory;
+	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
 	log_page_directory = nvme_malloc("nvme_log_page_directory",
-					 sizeof(struct nvme_intel_log_page_directory),
+					 sizeof(struct spdk_nvme_intel_log_page_directory),
 					 64, &phys_addr);
 	if (log_page_directory == NULL) {
 		nvme_printf(NULL, "could not allocate log_page_directory\n");
@@ -91,8 +91,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct nvme_controller *ctrlr)
 	}
 
 	status.done = false;
-	nvme_ctrlr_cmd_get_log_page(ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY, NVME_GLOBAL_NAMESPACE_TAG,
-				    log_page_directory, sizeof(struct nvme_intel_log_page_directory),
+	nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY, NVME_GLOBAL_NAMESPACE_TAG,
+				    log_page_directory, sizeof(struct spdk_nvme_intel_log_page_directory),
 				    nvme_completion_poll_cb,
 				    &status);
 	while (status.done == false) {
@@ -128,13 +128,13 @@ nvme_ctrlr_set_supported_log_pages(struct nvme_controller *ctrlr)
 static void
 nvme_ctrlr_set_intel_supported_features(struct nvme_controller *ctrlr)
 {
-	ctrlr->feature_supported[NVME_INTEL_FEAT_MAX_LBA] = true;
-	ctrlr->feature_supported[NVME_INTEL_FEAT_NATIVE_MAX_LBA] = true;
-	ctrlr->feature_supported[NVME_INTEL_FEAT_POWER_GOVERNOR_SETTING] = true;
-	ctrlr->feature_supported[NVME_INTEL_FEAT_SMBUS_ADDRESS] = true;
-	ctrlr->feature_supported[NVME_INTEL_FEAT_LED_PATTERN] = true;
-	ctrlr->feature_supported[NVME_INTEL_FEAT_RESET_TIMED_WORKLOAD_COUNTERS] = true;
-	ctrlr->feature_supported[NVME_INTEL_FEAT_LATENCY_TRACKING] = true;
+	ctrlr->feature_supported[SPDK_NVME_INTEL_FEAT_MAX_LBA] = true;
+	ctrlr->feature_supported[SPDK_NVME_INTEL_FEAT_NATIVE_MAX_LBA] = true;
+	ctrlr->feature_supported[SPDK_NVME_INTEL_FEAT_POWER_GOVERNOR_SETTING] = true;
+	ctrlr->feature_supported[SPDK_NVME_INTEL_FEAT_SMBUS_ADDRESS] = true;
+	ctrlr->feature_supported[SPDK_NVME_INTEL_FEAT_LED_PATTERN] = true;
+	ctrlr->feature_supported[SPDK_NVME_INTEL_FEAT_RESET_TIMED_WORKLOAD_COUNTERS] = true;
+	ctrlr->feature_supported[SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING] = true;
 }
 
 static void

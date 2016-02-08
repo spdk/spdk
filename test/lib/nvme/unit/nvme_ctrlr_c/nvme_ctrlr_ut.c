@@ -228,14 +228,14 @@ static void
 test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 {
 	bool	res;
-	struct nvme_controller			ctrlr = {};
-	struct nvme_intel_log_page_directory	payload = {};
+	struct nvme_controller				ctrlr = {};
+	struct spdk_nvme_intel_log_page_directory	payload = {};
 
 	/* set a invalid vendor id */
 	ctrlr.cdata.vid = 0xFFFF;
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == false);
 
 	/* set valid vendor id and log page directory*/
@@ -244,13 +244,13 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_READ_CMD_LATENCY);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
 	CU_ASSERT(res == false);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_SMART);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_SMART);
 	CU_ASSERT(res == false);
 
 	/* set valid vendor id, device id and sub device id*/
@@ -263,13 +263,13 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_TEMPERATURE);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == false);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_READ_CMD_LATENCY);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, NVME_INTEL_LOG_SMART);
+	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_SMART);
 	CU_ASSERT(res == false);
 }
 
@@ -284,14 +284,14 @@ test_nvme_ctrlr_set_supported_features(void)
 	nvme_ctrlr_set_supported_features(&ctrlr);
 	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_FEAT_ARBITRATION);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_INTEL_FEAT_MAX_LBA);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
 	CU_ASSERT(res == false);
 
 	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	nvme_ctrlr_set_supported_features(&ctrlr);
 	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_FEAT_ARBITRATION);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_INTEL_FEAT_MAX_LBA);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
 	CU_ASSERT(res == true);
 }
 

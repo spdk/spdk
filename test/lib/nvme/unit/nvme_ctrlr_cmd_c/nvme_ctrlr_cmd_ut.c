@@ -127,8 +127,9 @@ static void verify_intel_smart_log_page(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
 	CU_ASSERT(req->cmd.nsid == health_log_nsid);
 
-	temp_cdw10 = ((sizeof(struct nvme_intel_smart_information_page) / sizeof(uint32_t) - 1) << 16) |
-		     NVME_INTEL_LOG_SMART;
+	temp_cdw10 = ((sizeof(struct spdk_nvme_intel_smart_information_page) /
+		       sizeof(uint32_t) - 1) << 16) |
+		     SPDK_NVME_INTEL_LOG_SMART;
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
@@ -138,8 +139,8 @@ static void verify_intel_temperature_log_page(struct nvme_request *req)
 
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
 
-	temp_cdw10 = ((sizeof(struct nvme_intel_temperature_page) / sizeof(uint32_t) - 1) << 16) |
-		     NVME_INTEL_LOG_TEMPERATURE;
+	temp_cdw10 = ((sizeof(struct spdk_nvme_intel_temperature_page) / sizeof(uint32_t) - 1) << 16) |
+		     SPDK_NVME_INTEL_LOG_TEMPERATURE;
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
@@ -149,8 +150,8 @@ static void verify_intel_read_latency_log_page(struct nvme_request *req)
 
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
 
-	temp_cdw10 = ((sizeof(struct nvme_intel_rw_latency_page) / sizeof(uint32_t) - 1) << 16) |
-		     NVME_INTEL_LOG_READ_CMD_LATENCY;
+	temp_cdw10 = ((sizeof(struct spdk_nvme_intel_rw_latency_page) / sizeof(uint32_t) - 1) << 16) |
+		     SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY;
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
@@ -160,8 +161,8 @@ static void verify_intel_write_latency_log_page(struct nvme_request *req)
 
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
 
-	temp_cdw10 = ((sizeof(struct nvme_intel_rw_latency_page) / sizeof(uint32_t) - 1) << 16) |
-		     NVME_INTEL_LOG_WRITE_CMD_LATENCY;
+	temp_cdw10 = ((sizeof(struct spdk_nvme_intel_rw_latency_page) / sizeof(uint32_t) - 1) << 16) |
+		     SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY;
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
@@ -171,8 +172,8 @@ static void verify_intel_get_log_page_directory(struct nvme_request *req)
 
 	CU_ASSERT(req->cmd.opc == NVME_OPC_GET_LOG_PAGE);
 
-	temp_cdw10 = ((sizeof(struct nvme_intel_log_page_directory) / sizeof(uint32_t) - 1) << 16) |
-		     NVME_INTEL_LOG_PAGE_DIRECTORY;
+	temp_cdw10 = ((sizeof(struct spdk_nvme_intel_log_page_directory) / sizeof(uint32_t) - 1) << 16) |
+		     SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY;
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
@@ -272,34 +273,33 @@ test_error_get_log_page(void)
 static void test_intel_smart_get_log_page(void)
 {
 	struct nvme_controller			ctrlr = {};
-	struct nvme_intel_smart_information_page	payload = {};
+	struct spdk_nvme_intel_smart_information_page	payload = {};
 
 	verify_fn = verify_intel_smart_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_SMART, health_log_nsid, &payload,
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_SMART, health_log_nsid, &payload,
 				    sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_temperature_get_log_page(void)
 {
 	struct nvme_controller			ctrlr = {};
-	struct nvme_intel_temperature_page	payload = {};
+	struct spdk_nvme_intel_temperature_page	payload = {};
 
 	verify_fn = verify_intel_temperature_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_TEMPERATURE, NVME_GLOBAL_NAMESPACE_TAG,
-				    &payload,
-				    sizeof(payload), NULL, NULL);
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE, NVME_GLOBAL_NAMESPACE_TAG,
+				    &payload, sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_read_latency_get_log_page(void)
 {
 	struct nvme_controller			ctrlr = {};
-	struct nvme_intel_rw_latency_page	payload = {};
+	struct spdk_nvme_intel_rw_latency_page	payload = {};
 
 	verify_fn = verify_intel_read_latency_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_READ_CMD_LATENCY,
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY,
 				    NVME_GLOBAL_NAMESPACE_TAG,
 				    &payload, sizeof(payload), NULL, NULL);
 }
@@ -307,23 +307,23 @@ static void test_intel_read_latency_get_log_page(void)
 static void test_intel_write_latency_get_log_page(void)
 {
 	struct nvme_controller			ctrlr = {};
-	struct nvme_intel_rw_latency_page	payload = {};
+	struct spdk_nvme_intel_rw_latency_page	payload = {};
 
 	verify_fn = verify_intel_write_latency_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_WRITE_CMD_LATENCY,
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY,
 				    NVME_GLOBAL_NAMESPACE_TAG,
 				    &payload, sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_get_log_page_directory(void)
 {
-	struct nvme_controller			ctrlr = {};
-	struct nvme_intel_log_page_directory	payload = {};
+	struct nvme_controller				ctrlr = {};
+	struct spdk_nvme_intel_log_page_directory	payload = {};
 
 	verify_fn = verify_intel_get_log_page_directory;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, NVME_INTEL_LOG_PAGE_DIRECTORY, NVME_GLOBAL_NAMESPACE_TAG,
+	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY, NVME_GLOBAL_NAMESPACE_TAG,
 				    &payload, sizeof(payload), NULL, NULL);
 }
 
