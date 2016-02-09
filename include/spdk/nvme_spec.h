@@ -48,17 +48,17 @@
  * Use to mark a command to apply to all namespaces, or to retrieve global
  *  log pages.
  */
-#define NVME_GLOBAL_NAMESPACE_TAG	((uint32_t)0xFFFFFFFF)
+#define SPDK_NVME_GLOBAL_NS_TAG		((uint32_t)0xFFFFFFFF)
 
-#define NVME_MAX_IO_QUEUES		(1 << 16)
+#define SPDK_NVME_MAX_IO_QUEUES		(1 << 16)
 
 /**
  * Indicates the maximum number of range sets that may be specified
  *  in the dataset mangement command.
  */
-#define NVME_DATASET_MANAGEMENT_MAX_RANGES	256
+#define SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES	256
 
-union nvme_cap_lo_register {
+union spdk_nvme_cap_lo_register {
 	uint32_t	raw;
 	struct {
 		/** maximum queue entries supported */
@@ -76,9 +76,9 @@ union nvme_cap_lo_register {
 		uint32_t to		: 8;
 	} bits;
 };
-SPDK_STATIC_ASSERT(sizeof(union nvme_cap_lo_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_lo_register) == 4, "Incorrect size");
 
-union nvme_cap_hi_register {
+union spdk_nvme_cap_hi_register {
 	uint32_t	raw;
 	struct {
 		/** doorbell stride */
@@ -101,9 +101,9 @@ union nvme_cap_hi_register {
 		uint32_t reserved1	: 8;
 	} bits;
 };
-SPDK_STATIC_ASSERT(sizeof(union nvme_cap_hi_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_hi_register) == 4, "Incorrect size");
 
-union nvme_cc_register {
+union spdk_nvme_cc_register {
 	uint32_t	raw;
 	struct {
 		/** enable */
@@ -132,14 +132,14 @@ union nvme_cc_register {
 		uint32_t reserved2	: 8;
 	} bits;
 };
-SPDK_STATIC_ASSERT(sizeof(union nvme_cc_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cc_register) == 4, "Incorrect size");
 
-enum nvme_shn_value {
-	NVME_SHN_NORMAL		= 0x1,
-	NVME_SHN_ABRUPT		= 0x2,
+enum spdk_nvme_shn_value {
+	SPDK_NVME_SHN_NORMAL		= 0x1,
+	SPDK_NVME_SHN_ABRUPT		= 0x2,
 };
 
-union nvme_csts_register {
+union spdk_nvme_csts_register {
 	uint32_t	raw;
 	struct {
 		/** ready */
@@ -154,15 +154,15 @@ union nvme_csts_register {
 		uint32_t reserved1	: 28;
 	} bits;
 };
-SPDK_STATIC_ASSERT(sizeof(union nvme_csts_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_csts_register) == 4, "Incorrect size");
 
-enum nvme_shst_value {
-	NVME_SHST_NORMAL	= 0x0,
-	NVME_SHST_OCCURRING	= 0x1,
-	NVME_SHST_COMPLETE	= 0x2,
+enum spdk_nvme_shst_value {
+	SPDK_NVME_SHST_NORMAL		= 0x0,
+	SPDK_NVME_SHST_OCCURRING	= 0x1,
+	SPDK_NVME_SHST_COMPLETE		= 0x2,
 };
 
-union nvme_aqa_register {
+union spdk_nvme_aqa_register {
 	uint32_t	raw;
 	struct {
 		/** admin submission queue size */
@@ -176,26 +176,26 @@ union nvme_aqa_register {
 		uint32_t reserved2	: 4;
 	} bits;
 };
-SPDK_STATIC_ASSERT(sizeof(union nvme_aqa_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_aqa_register) == 4, "Incorrect size");
 
-struct nvme_registers {
+struct spdk_nvme_registers {
 	/** controller capabilities */
-	union nvme_cap_lo_register	cap_lo;
-	union nvme_cap_hi_register	cap_hi;
+	union spdk_nvme_cap_lo_register	cap_lo;
+	union spdk_nvme_cap_hi_register	cap_hi;
 
 	uint32_t	vs;		/* version */
 	uint32_t	intms;		/* interrupt mask set */
 	uint32_t	intmc;		/* interrupt mask clear */
 
 	/** controller configuration */
-	union nvme_cc_register	cc;
+	union spdk_nvme_cc_register	cc;
 
 	uint32_t	reserved1;
 	uint32_t	csts;		/* controller status */
 	uint32_t	nssr;		/* NVM subsystem reset */
 
 	/** admin queue attributes */
-	union nvme_aqa_register	aqa;
+	union spdk_nvme_aqa_register	aqa;
 
 	uint64_t	asq;		/* admin submission queue base addr */
 	uint64_t	acq;		/* admin completion queue base addr */
@@ -208,27 +208,30 @@ struct nvme_registers {
 };
 
 /* NVMe controller register space offsets */
-SPDK_STATIC_ASSERT(0x00 == offsetof(struct nvme_registers, cap_lo), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x08 == offsetof(struct nvme_registers, vs), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x0C == offsetof(struct nvme_registers, intms), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x10 == offsetof(struct nvme_registers, intmc), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x14 == offsetof(struct nvme_registers, cc), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x1C == offsetof(struct nvme_registers, csts), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x20 == offsetof(struct nvme_registers, nssr), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x24 == offsetof(struct nvme_registers, aqa), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x28 == offsetof(struct nvme_registers, asq), "Incorrect register offset");
-SPDK_STATIC_ASSERT(0x30 == offsetof(struct nvme_registers, acq), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x00 == offsetof(struct spdk_nvme_registers, cap_lo),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x08 == offsetof(struct spdk_nvme_registers, vs), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x0C == offsetof(struct spdk_nvme_registers, intms),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x10 == offsetof(struct spdk_nvme_registers, intmc),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x14 == offsetof(struct spdk_nvme_registers, cc), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x1C == offsetof(struct spdk_nvme_registers, csts), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x20 == offsetof(struct spdk_nvme_registers, nssr), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x24 == offsetof(struct spdk_nvme_registers, aqa), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x28 == offsetof(struct spdk_nvme_registers, asq), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x30 == offsetof(struct spdk_nvme_registers, acq), "Incorrect register offset");
 
-enum nvme_sgl_descriptor_type {
-	NVME_SGL_TYPE_DATA_BLOCK	= 0x0,
-	NVME_SGL_TYPE_BIT_BUCKET	= 0x1,
-	NVME_SGL_TYPE_SEGMENT		= 0x2,
-	NVME_SGL_TYPE_LAST_SEGMENT	= 0x3,
+enum spdk_nvme_sgl_descriptor_type {
+	SPDK_NVME_SGL_TYPE_DATA_BLOCK		= 0x0,
+	SPDK_NVME_SGL_TYPE_BIT_BUCKET		= 0x1,
+	SPDK_NVME_SGL_TYPE_SEGMENT		= 0x2,
+	SPDK_NVME_SGL_TYPE_LAST_SEGMENT		= 0x3,
 	/* 0x4 - 0xe reserved */
-	NVME_SGL_TYPE_VENDOR_SPECIFIC	= 0xf
+	SPDK_NVME_SGL_TYPE_VENDOR_SPECIFIC	= 0xf
 };
 
-struct __attribute__((packed)) nvme_sgl_descriptor {
+struct __attribute__((packed)) spdk_nvme_sgl_descriptor {
 	uint64_t address;
 	uint32_t length;
 	uint8_t reserved[3];
@@ -239,16 +242,16 @@ struct __attribute__((packed)) nvme_sgl_descriptor {
 	/** SGL descriptor type specific */
 	uint8_t type_specific : 4;
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_sgl_descriptor) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_sgl_descriptor) == 16, "Incorrect size");
 
-enum nvme_psdt_value {
-	NVME_PSDT_PRP			= 0x0,
-	NVME_PSDT_SGL_MPTR_CONTIG	= 0x1,
-	NVME_PSDT_SGL_MPTR_SGL		= 0x2,
-	NVME_PSDT_RESERVED		= 0x3
+enum spdk_nvme_psdt_value {
+	SPDK_NVME_PSDT_PRP		= 0x0,
+	SPDK_NVME_PSDT_SGL_MPTR_CONTIG	= 0x1,
+	SPDK_NVME_PSDT_SGL_MPTR_SGL	= 0x2,
+	SPDK_NVME_PSDT_RESERVED		= 0x3
 };
 
-struct nvme_command {
+struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */
 	uint16_t fuse	:  2;	/* fused operation */
@@ -273,7 +276,7 @@ struct nvme_command {
 			uint64_t prp2;		/* prp entry 2 */
 		} prp;
 
-		struct nvme_sgl_descriptor sgl1;
+		struct spdk_nvme_sgl_descriptor sgl1;
 	} dptr;
 
 	/* dword 10-15 */
@@ -284,9 +287,9 @@ struct nvme_command {
 	uint32_t cdw14;		/* command-specific */
 	uint32_t cdw15;		/* command-specific */
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_command) == 64, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cmd) == 64, "Incorrect size");
 
-struct nvme_status {
+struct spdk_nvme_status {
 	uint16_t p	:  1;	/* phase tag */
 	uint16_t sc	:  8;	/* status code */
 	uint16_t sct	:  3;	/* status code type */
@@ -294,9 +297,12 @@ struct nvme_status {
 	uint16_t m	:  1;	/* more */
 	uint16_t dnr	:  1;	/* do not retry */
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_status) == 2, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_status) == 2, "Incorrect size");
 
-struct nvme_completion {
+/**
+ * Completion queue entry
+ */
+struct spdk_nvme_cpl {
 	/* dword 0 */
 	uint32_t		cdw0;	/* command-specific */
 
@@ -309,155 +315,170 @@ struct nvme_completion {
 
 	/* dword 3 */
 	uint16_t		cid;	/* command identifier */
-	struct nvme_status	status;
+	struct spdk_nvme_status	status;
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_completion) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cpl) == 16, "Incorrect size");
 
-struct nvme_dsm_range {
+/**
+ * Dataset Management range
+ */
+struct spdk_nvme_dsm_range {
 	uint32_t attributes;
 	uint32_t length;
 	uint64_t starting_lba;
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_dsm_range) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_dsm_range) == 16, "Incorrect size");
 
-/* status code types */
-enum nvme_status_code_type {
-	NVME_SCT_GENERIC		= 0x0,
-	NVME_SCT_COMMAND_SPECIFIC	= 0x1,
-	NVME_SCT_MEDIA_ERROR		= 0x2,
+/**
+ * Status code types
+ */
+enum spdk_nvme_status_code_type {
+	SPDK_NVME_SCT_GENERIC		= 0x0,
+	SPDK_NVME_SCT_COMMAND_SPECIFIC	= 0x1,
+	SPDK_NVME_SCT_MEDIA_ERROR	= 0x2,
 	/* 0x3-0x6 - reserved */
-	NVME_SCT_VENDOR_SPECIFIC	= 0x7,
+	SPDK_NVME_SCT_VENDOR_SPECIFIC	= 0x7,
 };
 
-/* generic command status codes */
-enum nvme_generic_command_status_code {
-	NVME_SC_SUCCESS				= 0x00,
-	NVME_SC_INVALID_OPCODE			= 0x01,
-	NVME_SC_INVALID_FIELD			= 0x02,
-	NVME_SC_COMMAND_ID_CONFLICT		= 0x03,
-	NVME_SC_DATA_TRANSFER_ERROR		= 0x04,
-	NVME_SC_ABORTED_POWER_LOSS		= 0x05,
-	NVME_SC_INTERNAL_DEVICE_ERROR		= 0x06,
-	NVME_SC_ABORTED_BY_REQUEST		= 0x07,
-	NVME_SC_ABORTED_SQ_DELETION		= 0x08,
-	NVME_SC_ABORTED_FAILED_FUSED		= 0x09,
-	NVME_SC_ABORTED_MISSING_FUSED		= 0x0a,
-	NVME_SC_INVALID_NAMESPACE_OR_FORMAT	= 0x0b,
-	NVME_SC_COMMAND_SEQUENCE_ERROR		= 0x0c,
+/**
+ * Generic command status codes
+ */
+enum spdk_nvme_generic_command_status_code {
+	SPDK_NVME_SC_SUCCESS				= 0x00,
+	SPDK_NVME_SC_INVALID_OPCODE			= 0x01,
+	SPDK_NVME_SC_INVALID_FIELD			= 0x02,
+	SPDK_NVME_SC_COMMAND_ID_CONFLICT		= 0x03,
+	SPDK_NVME_SC_DATA_TRANSFER_ERROR		= 0x04,
+	SPDK_NVME_SC_ABORTED_POWER_LOSS			= 0x05,
+	SPDK_NVME_SC_INTERNAL_DEVICE_ERROR		= 0x06,
+	SPDK_NVME_SC_ABORTED_BY_REQUEST			= 0x07,
+	SPDK_NVME_SC_ABORTED_SQ_DELETION		= 0x08,
+	SPDK_NVME_SC_ABORTED_FAILED_FUSED		= 0x09,
+	SPDK_NVME_SC_ABORTED_MISSING_FUSED		= 0x0a,
+	SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT	= 0x0b,
+	SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR		= 0x0c,
 
-	NVME_SC_LBA_OUT_OF_RANGE		= 0x80,
-	NVME_SC_CAPACITY_EXCEEDED		= 0x81,
-	NVME_SC_NAMESPACE_NOT_READY		= 0x82,
+	SPDK_NVME_SC_LBA_OUT_OF_RANGE			= 0x80,
+	SPDK_NVME_SC_CAPACITY_EXCEEDED			= 0x81,
+	SPDK_NVME_SC_NAMESPACE_NOT_READY		= 0x82,
 };
 
-/* command specific status codes */
-enum nvme_command_specific_status_code {
-	NVME_SC_COMPLETION_QUEUE_INVALID	= 0x00,
-	NVME_SC_INVALID_QUEUE_IDENTIFIER	= 0x01,
-	NVME_SC_MAXIMUM_QUEUE_SIZE_EXCEEDED	= 0x02,
-	NVME_SC_ABORT_COMMAND_LIMIT_EXCEEDED	= 0x03,
+/**
+ * Command specific status codes
+ */
+enum spdk_nvme_command_specific_status_code {
+	SPDK_NVME_SC_COMPLETION_QUEUE_INVALID		= 0x00,
+	SPDK_NVME_SC_INVALID_QUEUE_IDENTIFIER		= 0x01,
+	SPDK_NVME_SC_MAXIMUM_QUEUE_SIZE_EXCEEDED	= 0x02,
+	SPDK_NVME_SC_ABORT_COMMAND_LIMIT_EXCEEDED	= 0x03,
 	/* 0x04 - reserved */
-	NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED = 0x05,
-	NVME_SC_INVALID_FIRMWARE_SLOT		= 0x06,
-	NVME_SC_INVALID_FIRMWARE_IMAGE		= 0x07,
-	NVME_SC_INVALID_INTERRUPT_VECTOR	= 0x08,
-	NVME_SC_INVALID_LOG_PAGE		= 0x09,
-	NVME_SC_INVALID_FORMAT			= 0x0a,
-	NVME_SC_FIRMWARE_REQUIRES_RESET		= 0x0b,
+	SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED = 0x05,
+	SPDK_NVME_SC_INVALID_FIRMWARE_SLOT		= 0x06,
+	SPDK_NVME_SC_INVALID_FIRMWARE_IMAGE		= 0x07,
+	SPDK_NVME_SC_INVALID_INTERRUPT_VECTOR		= 0x08,
+	SPDK_NVME_SC_INVALID_LOG_PAGE			= 0x09,
+	SPDK_NVME_SC_INVALID_FORMAT			= 0x0a,
+	SPDK_NVME_SC_FIRMWARE_REQUIRES_RESET		= 0x0b,
 
-	NVME_SC_CONFLICTING_ATTRIBUTES		= 0x80,
-	NVME_SC_INVALID_PROTECTION_INFO		= 0x81,
-	NVME_SC_ATTEMPTED_WRITE_TO_RO_PAGE	= 0x82,
+	SPDK_NVME_SC_CONFLICTING_ATTRIBUTES		= 0x80,
+	SPDK_NVME_SC_INVALID_PROTECTION_INFO		= 0x81,
+	SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_PAGE		= 0x82,
 };
 
-/* media error status codes */
-enum nvme_media_error_status_code {
-	NVME_SC_WRITE_FAULTS			= 0x80,
-	NVME_SC_UNRECOVERED_READ_ERROR		= 0x81,
-	NVME_SC_GUARD_CHECK_ERROR		= 0x82,
-	NVME_SC_APPLICATION_TAG_CHECK_ERROR	= 0x83,
-	NVME_SC_REFERENCE_TAG_CHECK_ERROR	= 0x84,
-	NVME_SC_COMPARE_FAILURE			= 0x85,
-	NVME_SC_ACCESS_DENIED			= 0x86,
+/**
+ * Media error status codes
+ */
+enum spdk_nvme_media_error_status_code {
+	SPDK_NVME_SC_WRITE_FAULTS			= 0x80,
+	SPDK_NVME_SC_UNRECOVERED_READ_ERROR		= 0x81,
+	SPDK_NVME_SC_GUARD_CHECK_ERROR			= 0x82,
+	SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR	= 0x83,
+	SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR		= 0x84,
+	SPDK_NVME_SC_COMPARE_FAILURE			= 0x85,
+	SPDK_NVME_SC_ACCESS_DENIED			= 0x86,
 };
 
-/* admin opcodes */
-enum nvme_admin_opcode {
-	NVME_OPC_DELETE_IO_SQ			= 0x00,
-	NVME_OPC_CREATE_IO_SQ			= 0x01,
-	NVME_OPC_GET_LOG_PAGE			= 0x02,
+/**
+ * Admin opcodes
+ */
+enum spdk_nvme_admin_opcode {
+	SPDK_NVME_OPC_DELETE_IO_SQ			= 0x00,
+	SPDK_NVME_OPC_CREATE_IO_SQ			= 0x01,
+	SPDK_NVME_OPC_GET_LOG_PAGE			= 0x02,
 	/* 0x03 - reserved */
-	NVME_OPC_DELETE_IO_CQ			= 0x04,
-	NVME_OPC_CREATE_IO_CQ			= 0x05,
-	NVME_OPC_IDENTIFY			= 0x06,
+	SPDK_NVME_OPC_DELETE_IO_CQ			= 0x04,
+	SPDK_NVME_OPC_CREATE_IO_CQ			= 0x05,
+	SPDK_NVME_OPC_IDENTIFY				= 0x06,
 	/* 0x07 - reserved */
-	NVME_OPC_ABORT				= 0x08,
-	NVME_OPC_SET_FEATURES			= 0x09,
-	NVME_OPC_GET_FEATURES			= 0x0a,
+	SPDK_NVME_OPC_ABORT				= 0x08,
+	SPDK_NVME_OPC_SET_FEATURES			= 0x09,
+	SPDK_NVME_OPC_GET_FEATURES			= 0x0a,
 	/* 0x0b - reserved */
-	NVME_OPC_ASYNC_EVENT_REQUEST		= 0x0c,
-	NVME_OPC_NAMESPACE_MANAGEMENT		= 0x0d,
+	SPDK_NVME_OPC_ASYNC_EVENT_REQUEST		= 0x0c,
+	SPDK_NVME_OPC_NS_MANAGEMENT			= 0x0d,
 	/* 0x0e-0x0f - reserved */
-	NVME_OPC_FIRMWARE_COMMIT		= 0x10,
-	NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD	= 0x11,
+	SPDK_NVME_OPC_FIRMWARE_COMMIT			= 0x10,
+	SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD		= 0x11,
 
-	NVME_OPC_NAMESPACE_ATTACHMENT		= 0x15,
+	SPDK_NVME_OPC_NS_ATTACHMENT			= 0x15,
 
-	NVME_OPC_FORMAT_NVM			= 0x80,
-	NVME_OPC_SECURITY_SEND			= 0x81,
-	NVME_OPC_SECURITY_RECEIVE		= 0x82,
+	SPDK_NVME_OPC_FORMAT_NVM			= 0x80,
+	SPDK_NVME_OPC_SECURITY_SEND			= 0x81,
+	SPDK_NVME_OPC_SECURITY_RECEIVE			= 0x82,
 };
 
-/* nvme nvm opcodes */
-enum nvme_nvm_opcode {
-	NVME_OPC_FLUSH				= 0x00,
-	NVME_OPC_WRITE				= 0x01,
-	NVME_OPC_READ				= 0x02,
+/**
+ * NVM command set opcodes
+ */
+enum spdk_nvme_nvm_opcode {
+	SPDK_NVME_OPC_FLUSH				= 0x00,
+	SPDK_NVME_OPC_WRITE				= 0x01,
+	SPDK_NVME_OPC_READ				= 0x02,
 	/* 0x03 - reserved */
-	NVME_OPC_WRITE_UNCORRECTABLE		= 0x04,
-	NVME_OPC_COMPARE			= 0x05,
+	SPDK_NVME_OPC_WRITE_UNCORRECTABLE		= 0x04,
+	SPDK_NVME_OPC_COMPARE				= 0x05,
 	/* 0x06-0x07 - reserved */
-	NVME_OPC_WRITE_ZEROES			= 0x08,
-	NVME_OPC_DATASET_MANAGEMENT		= 0x09,
+	SPDK_NVME_OPC_WRITE_ZEROES			= 0x08,
+	SPDK_NVME_OPC_DATASET_MANAGEMENT		= 0x09,
 
-	NVME_OPC_RESERVATION_REGISTER		= 0x0d,
-	NVME_OPC_RESERVATION_REPORT		= 0x0e,
+	SPDK_NVME_OPC_RESERVATION_REGISTER		= 0x0d,
+	SPDK_NVME_OPC_RESERVATION_REPORT		= 0x0e,
 
-	NVME_OPC_RESERVATION_ACQUIRE		= 0x11,
-	NVME_OPC_RESERVATION_RELEASE		= 0x15,
+	SPDK_NVME_OPC_RESERVATION_ACQUIRE		= 0x11,
+	SPDK_NVME_OPC_RESERVATION_RELEASE		= 0x15,
 };
 
-enum nvme_feature {
+enum spdk_nvme_feat {
 	/* 0x00 - reserved */
-	NVME_FEAT_ARBITRATION			= 0x01,
-	NVME_FEAT_POWER_MANAGEMENT		= 0x02,
-	NVME_FEAT_LBA_RANGE_TYPE		= 0x03,
-	NVME_FEAT_TEMPERATURE_THRESHOLD		= 0x04,
-	NVME_FEAT_ERROR_RECOVERY		= 0x05,
-	NVME_FEAT_VOLATILE_WRITE_CACHE		= 0x06,
-	NVME_FEAT_NUMBER_OF_QUEUES		= 0x07,
-	NVME_FEAT_INTERRUPT_COALESCING		= 0x08,
-	NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION = 0x09,
-	NVME_FEAT_WRITE_ATOMICITY		= 0x0A,
-	NVME_FEAT_ASYNC_EVENT_CONFIGURATION	= 0x0B,
-	NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION	= 0x0C,
-	NVME_FEAT_HOST_MEM_BUFFER		= 0x0D,
+	SPDK_NVME_FEAT_ARBITRATION				= 0x01,
+	SPDK_NVME_FEAT_POWER_MANAGEMENT				= 0x02,
+	SPDK_NVME_FEAT_LBA_RANGE_TYPE				= 0x03,
+	SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD			= 0x04,
+	SPDK_NVME_FEAT_ERROR_RECOVERY				= 0x05,
+	SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE			= 0x06,
+	SPDK_NVME_FEAT_NUMBER_OF_QUEUES				= 0x07,
+	SPDK_NVME_FEAT_INTERRUPT_COALESCING			= 0x08,
+	SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION		= 0x09,
+	SPDK_NVME_FEAT_WRITE_ATOMICITY				= 0x0A,
+	SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION		= 0x0B,
+	SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION	= 0x0C,
+	SPDK_NVME_FEAT_HOST_MEM_BUFFER				= 0x0D,
 	/* 0x0C-0x7F - reserved */
-	NVME_FEAT_SOFTWARE_PROGRESS_MARKER	= 0x80,
+	SPDK_NVME_FEAT_SOFTWARE_PROGRESS_MARKER			= 0x80,
 	/* 0x81-0xBF - command set specific */
-	NVME_FEAT_HOST_IDENTIFIER		= 0x81,
-	NVME_FEAT_HOST_RESERVE_MASK		= 0x82,
-	NVME_FEAT_HOST_RESERVE_PERSIST		= 0x83,
+	SPDK_NVME_FEAT_HOST_IDENTIFIER				= 0x81,
+	SPDK_NVME_FEAT_HOST_RESERVE_MASK			= 0x82,
+	SPDK_NVME_FEAT_HOST_RESERVE_PERSIST			= 0x83,
 	/* 0xC0-0xFF - vendor specific */
 };
 
-enum nvme_dsm_attribute {
-	NVME_DSM_ATTR_INTEGRAL_READ		= 0x1,
-	NVME_DSM_ATTR_INTEGRAL_WRITE		= 0x2,
-	NVME_DSM_ATTR_DEALLOCATE		= 0x4,
+enum spdk_nvme_dsm_attribute {
+	SPDK_NVME_DSM_ATTR_INTEGRAL_READ		= 0x1,
+	SPDK_NVME_DSM_ATTR_INTEGRAL_WRITE		= 0x2,
+	SPDK_NVME_DSM_ATTR_DEALLOCATE			= 0x4,
 };
 
-struct nvme_power_state {
+struct spdk_nvme_power_state {
 	uint16_t mp;				/* bits 15:00: maximum power */
 
 	uint8_t reserved1;
@@ -483,9 +504,9 @@ struct nvme_power_state {
 
 	uint8_t reserved7[16];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_power_state) == 32, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_power_state) == 32, "Incorrect size");
 
-struct __attribute__((packed)) nvme_controller_data {
+struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
 	/** pci vendor id */
@@ -704,14 +725,14 @@ struct __attribute__((packed)) nvme_controller_data {
 	uint8_t			reserved5[1344];
 
 	/* bytes 2048-3071: power state descriptors */
-	struct nvme_power_state	psd[32];
+	struct spdk_nvme_power_state	psd[32];
 
 	/* bytes 3072-4095: vendor specific */
 	uint8_t			vs[1024];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_controller_data) == 4096, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_data) == 4096, "Incorrect size");
 
-struct nvme_namespace_data {
+struct spdk_nvme_ns_data {
 	/** namespace size */
 	uint64_t		nsze;
 
@@ -868,53 +889,53 @@ struct nvme_namespace_data {
 
 	uint8_t			vendor_specific[3712];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_namespace_data) == 4096, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data) == 4096, "Incorrect size");
 
 /**
  * Reservation Type Encoding
  */
-enum nvme_reservation_type {
+enum spdk_nvme_reservation_type {
 	/* 0x00 - reserved */
 
 	/* Write Exclusive Reservation */
-	NVME_RESERVE_WRITE_EXCLUSIVE	= 0x1,
+	SPDK_NVME_RESERVE_WRITE_EXCLUSIVE		= 0x1,
 
 	/* Exclusive Access Reservation */
-	NVME_RESERVE_EXCLUSIVE_ACCESS	= 0x2,
+	SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS		= 0x2,
 
 	/* Write Exclusive - Registrants Only Reservation */
-	NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY	= 0x3,
+	SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY	= 0x3,
 
 	/* Exclusive Access - Registrants Only Reservation */
-	NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY	= 0x4,
+	SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY	= 0x4,
 
 	/* Write Exclusive - All Registrants Reservation */
-	NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS	= 0x5,
+	SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS	= 0x5,
 
 	/* Exclusive Access - All Registrants Reservation */
-	NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS	= 0x6,
+	SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS	= 0x6,
 
 	/* 0x7-0xFF - Reserved */
 };
 
-struct nvme_reservation_acquire_data {
+struct spdk_nvme_reservation_acquire_data {
 	/** current reservation key */
 	uint64_t		crkey;
 	/** preempt reservation key */
 	uint64_t		prkey;
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_acquire_data) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_acquire_data) == 16, "Incorrect size");
 
 /**
  * Reservation Acquire action
  */
-enum nvme_reservation_acquire_action {
-	NVME_RESERVE_ACQUIRE		= 0x0,
-	NVME_RESERVE_PREEMPT		= 0x1,
-	NVME_RESERVE_PREEMPT_ABORT	= 0x2,
+enum spdk_nvme_reservation_acquire_action {
+	SPDK_NVME_RESERVE_ACQUIRE		= 0x0,
+	SPDK_NVME_RESERVE_PREEMPT		= 0x1,
+	SPDK_NVME_RESERVE_PREEMPT_ABORT		= 0x2,
 };
 
-struct __attribute__((packed)) nvme_reservation_status_data {
+struct __attribute__((packed)) spdk_nvme_reservation_status_data {
 	/** reservation action generation counter */
 	uint32_t		generation;
 	/** reservation type */
@@ -926,9 +947,9 @@ struct __attribute__((packed)) nvme_reservation_status_data {
 	uint8_t			ptpl_state;
 	uint8_t			reserved[14];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_status_data) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_status_data) == 24, "Incorrect size");
 
-struct __attribute__((packed)) nvme_reservation_controller_data {
+struct __attribute__((packed)) spdk_nvme_reservation_ctrlr_data {
 	uint16_t		ctrlr_id;
 	/** reservation status */
 	struct {
@@ -941,74 +962,74 @@ struct __attribute__((packed)) nvme_reservation_controller_data {
 	/** reservation key */
 	uint64_t		key;
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_controller_data) == 24, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_ctrlr_data) == 24, "Incorrect size");
 
 /**
  * Change persist through power loss state for
  *  Reservation Register command
  */
-enum nvme_reservation_register_cptpl {
-	NVME_RESERVE_PTPL_NO_CHANGES		= 0x0,
-	NVME_RESERVE_PTPL_CLEAR_POWER_ON	= 0x2,
-	NVME_RESERVE_PTPL_PERSIST_POWER_LOSS	= 0x3,
+enum spdk_nvme_reservation_register_cptpl {
+	SPDK_NVME_RESERVE_PTPL_NO_CHANGES		= 0x0,
+	SPDK_NVME_RESERVE_PTPL_CLEAR_POWER_ON		= 0x2,
+	SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS	= 0x3,
 };
 
 /**
  * Registration action for Reservation Register command
  */
-enum nvme_reservation_register_action {
-	NVME_RESERVE_REGISTER_KEY	= 0x0,
-	NVME_RESERVE_UNREGISTER_KEY	= 0x1,
-	NVME_RESERVE_REPLACE_KEY	= 0x2,
+enum spdk_nvme_reservation_register_action {
+	SPDK_NVME_RESERVE_REGISTER_KEY		= 0x0,
+	SPDK_NVME_RESERVE_UNREGISTER_KEY	= 0x1,
+	SPDK_NVME_RESERVE_REPLACE_KEY		= 0x2,
 };
 
-struct nvme_reservation_register_data {
+struct spdk_nvme_reservation_register_data {
 	/** current reservation key */
 	uint64_t		crkey;
 	/** new reservation key */
 	uint64_t		nrkey;
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_register_data) == 16, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_register_data) == 16, "Incorrect size");
 
-struct nvme_reservation_key_data {
+struct spdk_nvme_reservation_key_data {
 	/** current reservation key */
 	uint64_t		crkey;
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_reservation_key_data) == 8, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_key_data) == 8, "Incorrect size");
 
 /**
  * Reservation Release action
  */
-enum nvme_reservation_release_action {
-	NVME_RESERVE_RELEASE		= 0x0,
-	NVME_RESERVE_CLEAR		= 0x1,
+enum spdk_nvme_reservation_release_action {
+	SPDK_NVME_RESERVE_RELEASE		= 0x0,
+	SPDK_NVME_RESERVE_CLEAR			= 0x1,
 };
 
 /**
- * Log page identifiers for NVME_OPC_GET_LOG_PAGE
+ * Log page identifiers for SPDK_NVME_OPC_GET_LOG_PAGE
  */
-enum nvme_log_page {
+enum spdk_nvme_log_page {
 	/* 0x00 - reserved */
 
-	/** Error information (mandatory) - \ref nvme_error_information_entry */
-	NVME_LOG_ERROR			= 0x01,
+	/** Error information (mandatory) - \ref spdk_nvme_error_information_entry */
+	SPDK_NVME_LOG_ERROR			= 0x01,
 
-	/** SMART / health information (mandatory) - \ref nvme_health_information_page */
-	NVME_LOG_HEALTH_INFORMATION	= 0x02,
+	/** SMART / health information (mandatory) - \ref spdk_nvme_health_information_page */
+	SPDK_NVME_LOG_HEALTH_INFORMATION	= 0x02,
 
-	/** Firmware slot information (mandatory) - \ref nvme_firmware_page */
-	NVME_LOG_FIRMWARE_SLOT		= 0x03,
+	/** Firmware slot information (mandatory) - \ref spdk_nvme_firmware_page */
+	SPDK_NVME_LOG_FIRMWARE_SLOT		= 0x03,
 
 	/** Changed namespace list (optional) */
-	NVME_LOG_CHANGED_NS_LIST	= 0x04,
+	SPDK_NVME_LOG_CHANGED_NS_LIST	= 0x04,
 
 	/** Command effects log (optional) */
-	NVME_LOG_COMMAND_EFFECTS_LOG	= 0x05,
+	SPDK_NVME_LOG_COMMAND_EFFECTS_LOG	= 0x05,
 
 	/* 0x06-0x7F - reserved */
 
 	/** Reservation notification (optional) */
-	NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
+	SPDK_NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
 
 	/* 0x81-0xBF - I/O command set specific */
 
@@ -1016,22 +1037,22 @@ enum nvme_log_page {
 };
 
 /**
- * Error information log page (\ref NVME_LOG_ERROR)
+ * Error information log page (\ref SPDK_NVME_LOG_ERROR)
  */
-struct nvme_error_information_entry {
+struct spdk_nvme_error_information_entry {
 	uint64_t		error_count;
 	uint16_t		sqid;
 	uint16_t		cid;
-	struct nvme_status	status;
+	struct spdk_nvme_status	status;
 	uint16_t		error_location;
 	uint64_t		lba;
 	uint32_t		nsid;
 	uint8_t			vendor_specific;
 	uint8_t			reserved[35];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_error_information_entry) == 64, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_error_information_entry) == 64, "Incorrect size");
 
-union nvme_critical_warning_state {
+union spdk_nvme_critical_warning_state {
 	uint8_t		raw;
 
 	struct {
@@ -1043,13 +1064,13 @@ union nvme_critical_warning_state {
 		uint8_t	reserved		: 3;
 	} bits;
 };
-SPDK_STATIC_ASSERT(sizeof(union nvme_critical_warning_state) == 1, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_critical_warning_state) == 1, "Incorrect size");
 
 /**
- * SMART / health information page (\ref NVME_LOG_HEALTH_INFORMATION)
+ * SMART / health information page (\ref SPDK_NVME_LOG_HEALTH_INFORMATION)
  */
-struct __attribute__((packed)) nvme_health_information_page {
-	union nvme_critical_warning_state	critical_warning;
+struct __attribute__((packed)) spdk_nvme_health_information_page {
+	union spdk_nvme_critical_warning_state	critical_warning;
 
 	uint16_t		temperature;
 	uint8_t			available_spare;
@@ -1079,12 +1100,12 @@ struct __attribute__((packed)) nvme_health_information_page {
 
 	uint8_t			reserved2[320];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_health_information_page) == 512, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_health_information_page) == 512, "Incorrect size");
 
 /**
- * Firmware slot information page (\ref NVME_LOG_FIRMWARE_SLOT)
+ * Firmware slot information page (\ref SPDK_NVME_LOG_FIRMWARE_SLOT)
  */
-struct nvme_firmware_page {
+struct spdk_nvme_firmware_page {
 	struct {
 		uint8_t	slot		: 3; /* slot for current FW */
 		uint8_t	reserved	: 5;
@@ -1094,17 +1115,17 @@ struct nvme_firmware_page {
 	uint64_t		revision[7]; /* revisions for 7 slots */
 	uint8_t			reserved2[448];
 };
-SPDK_STATIC_ASSERT(sizeof(struct nvme_firmware_page) == 512, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_firmware_page) == 512, "Incorrect size");
 
 /**
  * Namespace attachment Type Encoding
  */
-enum nvme_namespace_attach_type {
+enum spdk_nvme_ns_attach_type {
 	/* Controller attach */
-	NVME_NAMESPACE_CONTROLLER_ATTACH	= 0x0,
+	SPDK_NVME_NS_CTRLR_ATTACH	= 0x0,
 
 	/* Controller detach */
-	NVME_NAMESPACE_CONTROLLER_DETACH	= 0x1,
+	SPDK_NVME_NS_CTRLR_DETACH	= 0x1,
 
 	/* 0x2-0xF - Reserved */
 };
@@ -1112,20 +1133,20 @@ enum nvme_namespace_attach_type {
 /**
  * Namespace management Type Encoding
  */
-enum nvme_namespace_management_type {
+enum spdk_nvme_ns_management_type {
 	/* Create */
-	NVME_NAMESPACE_MANAGEMENT_CREATE	= 0x0,
+	SPDK_NVME_NS_MANAGEMENT_CREATE	= 0x0,
 
 	/* Delete */
-	NVME_NAMESPACE_MANAGEMENT_DELETE	= 0x1,
+	SPDK_NVME_NS_MANAGEMENT_DELETE	= 0x1,
 
 	/* 0x2-0xF - Reserved */
 };
 
-#define nvme_completion_is_error(cpl)					\
+#define spdk_nvme_cpl_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
 
-#define NVME_IO_FLAGS_FORCE_UNIT_ACCESS (1U << 30)
-#define NVME_IO_FLAGS_LIMITED_RETRY (1U << 31)
+#define SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS (1U << 30)
+#define SPDK_NVME_IO_FLAGS_LIMITED_RETRY (1U << 31)
 
 #endif

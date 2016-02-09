@@ -33,7 +33,7 @@
 
 #include "nvme_internal.h"
 
-static inline struct nvme_namespace_data *
+static inline struct spdk_nvme_ns_data *
 _nvme_ns_get_data(struct nvme_namespace *ns)
 {
 	return &ns->ctrlr->nsdata[ns->id - 1];
@@ -75,7 +75,7 @@ nvme_ns_get_flags(struct nvme_namespace *ns)
 	return ns->flags;
 }
 
-const struct nvme_namespace_data *
+const struct spdk_nvme_ns_data *
 nvme_ns_get_data(struct nvme_namespace *ns)
 {
 	return _nvme_ns_get_data(ns);
@@ -86,7 +86,7 @@ nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 		  struct nvme_controller *ctrlr)
 {
 	struct nvme_completion_poll_status	status;
-	struct nvme_namespace_data		*nsdata;
+	struct spdk_nvme_ns_data		*nsdata;
 	uint32_t				pci_devid;
 
 	nvme_assert(id > 0, ("invalid namespace id %d", id));
@@ -108,7 +108,7 @@ nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 	while (status.done == false) {
 		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
-	if (nvme_completion_is_error(&status.cpl)) {
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");
 		return ENXIO;
 	}

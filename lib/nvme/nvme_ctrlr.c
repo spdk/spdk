@@ -91,14 +91,14 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct nvme_controller *ctrlr)
 	}
 
 	status.done = false;
-	nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY, NVME_GLOBAL_NAMESPACE_TAG,
+	nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY, SPDK_NVME_GLOBAL_NS_TAG,
 				    log_page_directory, sizeof(struct spdk_nvme_intel_log_page_directory),
 				    nvme_completion_poll_cb,
 				    &status);
 	while (status.done == false) {
 		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
-	if (nvme_completion_is_error(&status.cpl)) {
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_free(log_page_directory);
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_get_log_page failed!\n");
 		return ENXIO;
@@ -114,11 +114,11 @@ nvme_ctrlr_set_supported_log_pages(struct nvme_controller *ctrlr)
 {
 	memset(ctrlr->log_page_supported, 0, sizeof(ctrlr->log_page_supported));
 	/* Mandatory pages */
-	ctrlr->log_page_supported[NVME_LOG_ERROR] = true;
-	ctrlr->log_page_supported[NVME_LOG_HEALTH_INFORMATION] = true;
-	ctrlr->log_page_supported[NVME_LOG_FIRMWARE_SLOT] = true;
+	ctrlr->log_page_supported[SPDK_NVME_LOG_ERROR] = true;
+	ctrlr->log_page_supported[SPDK_NVME_LOG_HEALTH_INFORMATION] = true;
+	ctrlr->log_page_supported[SPDK_NVME_LOG_FIRMWARE_SLOT] = true;
 	if (ctrlr->cdata.lpa.celp) {
-		ctrlr->log_page_supported[NVME_LOG_COMMAND_EFFECTS_LOG] = true;
+		ctrlr->log_page_supported[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] = true;
 	}
 	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL) {
 		nvme_ctrlr_set_intel_support_log_pages(ctrlr);
@@ -142,24 +142,24 @@ nvme_ctrlr_set_supported_features(struct nvme_controller *ctrlr)
 {
 	memset(ctrlr->feature_supported, 0, sizeof(ctrlr->feature_supported));
 	/* Mandatory features */
-	ctrlr->feature_supported[NVME_FEAT_ARBITRATION] = true;
-	ctrlr->feature_supported[NVME_FEAT_POWER_MANAGEMENT] = true;
-	ctrlr->feature_supported[NVME_FEAT_TEMPERATURE_THRESHOLD] = true;
-	ctrlr->feature_supported[NVME_FEAT_ERROR_RECOVERY] = true;
-	ctrlr->feature_supported[NVME_FEAT_NUMBER_OF_QUEUES] = true;
-	ctrlr->feature_supported[NVME_FEAT_INTERRUPT_COALESCING] = true;
-	ctrlr->feature_supported[NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION] = true;
-	ctrlr->feature_supported[NVME_FEAT_WRITE_ATOMICITY] = true;
-	ctrlr->feature_supported[NVME_FEAT_ASYNC_EVENT_CONFIGURATION] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_ARBITRATION] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_POWER_MANAGEMENT] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_ERROR_RECOVERY] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_NUMBER_OF_QUEUES] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_INTERRUPT_COALESCING] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_WRITE_ATOMICITY] = true;
+	ctrlr->feature_supported[SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION] = true;
 	/* Optional features */
 	if (ctrlr->cdata.vwc.present) {
-		ctrlr->feature_supported[NVME_FEAT_VOLATILE_WRITE_CACHE] = true;
+		ctrlr->feature_supported[SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE] = true;
 	}
 	if (ctrlr->cdata.apsta.supported) {
-		ctrlr->feature_supported[NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION] = true;
+		ctrlr->feature_supported[SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION] = true;
 	}
 	if (ctrlr->cdata.hmpre) {
-		ctrlr->feature_supported[NVME_FEAT_HOST_MEM_BUFFER] = true;
+		ctrlr->feature_supported[SPDK_NVME_FEAT_HOST_MEM_BUFFER] = true;
 	}
 	if (ctrlr->cdata.vid == SPDK_PCI_VID_INTEL) {
 		nvme_ctrlr_set_intel_supported_features(ctrlr);
@@ -180,7 +180,7 @@ static int
 nvme_ctrlr_construct_io_qpairs(struct nvme_controller *ctrlr)
 {
 	struct nvme_qpair		*qpair;
-	union nvme_cap_lo_register	cap_lo;
+	union spdk_nvme_cap_lo_register	cap_lo;
 	uint32_t			i, num_entries, num_trackers;
 	int				rc;
 
@@ -251,8 +251,8 @@ static int
 _nvme_ctrlr_wait_for_ready(struct nvme_controller *ctrlr, int desired_ready_value)
 {
 	int ms_waited, ready_timeout_in_ms;
-	union nvme_csts_register csts;
-	union nvme_cap_lo_register cap_lo;
+	union spdk_nvme_csts_register csts;
+	union spdk_nvme_cap_lo_register cap_lo;
 
 	/* Get ready timeout value from controller, in units of 500ms. */
 	cap_lo.raw = nvme_mmio_read_4(ctrlr, cap_lo.raw);
@@ -278,7 +278,7 @@ _nvme_ctrlr_wait_for_ready(struct nvme_controller *ctrlr, int desired_ready_valu
 static int
 nvme_ctrlr_wait_for_ready(struct nvme_controller *ctrlr)
 {
-	union nvme_cc_register cc;
+	union spdk_nvme_cc_register cc;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 
@@ -293,8 +293,8 @@ nvme_ctrlr_wait_for_ready(struct nvme_controller *ctrlr)
 static void
 nvme_ctrlr_disable(struct nvme_controller *ctrlr)
 {
-	union nvme_cc_register cc;
-	union nvme_csts_register csts;
+	union spdk_nvme_cc_register cc;
+	union spdk_nvme_csts_register csts;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 	csts.raw = nvme_mmio_read_4(ctrlr, csts);
@@ -312,12 +312,12 @@ nvme_ctrlr_disable(struct nvme_controller *ctrlr)
 static void
 nvme_ctrlr_shutdown(struct nvme_controller *ctrlr)
 {
-	union nvme_cc_register		cc;
-	union nvme_csts_register	csts;
+	union spdk_nvme_cc_register	cc;
+	union spdk_nvme_csts_register	csts;
 	int				ms_waited = 0;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
-	cc.bits.shn = NVME_SHN_NORMAL;
+	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
 	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
 
 	csts.raw = nvme_mmio_read_4(ctrlr, csts);
@@ -327,22 +327,22 @@ nvme_ctrlr_shutdown(struct nvme_controller *ctrlr)
 	 *  5 seconds as a reasonable amount of time to
 	 *  wait before proceeding.
 	 */
-	while (csts.bits.shst != NVME_SHST_COMPLETE) {
+	while (csts.bits.shst != SPDK_NVME_SHST_COMPLETE) {
 		nvme_delay(1000);
 		csts.raw = nvme_mmio_read_4(ctrlr, csts);
 		if (ms_waited++ >= 5000)
 			break;
 	}
-	if (csts.bits.shst != NVME_SHST_COMPLETE)
+	if (csts.bits.shst != SPDK_NVME_SHST_COMPLETE)
 		nvme_printf(ctrlr, "did not shutdown within 5 seconds\n");
 }
 
 static int
 nvme_ctrlr_enable(struct nvme_controller *ctrlr)
 {
-	union nvme_cc_register		cc;
-	union nvme_csts_register	csts;
-	union nvme_aqa_register		aqa;
+	union spdk_nvme_cc_register	cc;
+	union spdk_nvme_csts_register	csts;
+	union spdk_nvme_aqa_register	aqa;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 	csts.raw = nvme_mmio_read_4(ctrlr, csts);
@@ -384,7 +384,7 @@ nvme_ctrlr_hw_reset(struct nvme_controller *ctrlr)
 {
 	uint32_t i;
 	int rc;
-	union nvme_cc_register cc;
+	union spdk_nvme_cc_register cc;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 	if (cc.bits.en) {
@@ -451,7 +451,7 @@ nvme_ctrlr_identify(struct nvme_controller *ctrlr)
 	while (status.done == false) {
 		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
-	if (nvme_completion_is_error(&status.cpl)) {
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_controller failed!\n");
 		return ENXIO;
 	}
@@ -487,7 +487,7 @@ nvme_ctrlr_set_num_qpairs(struct nvme_controller *ctrlr)
 	while (status.done == false) {
 		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
-	if (nvme_completion_is_error(&status.cpl)) {
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_set_num_queues failed!\n");
 		return ENXIO;
 	}
@@ -530,7 +530,7 @@ nvme_ctrlr_create_qpairs(struct nvme_controller *ctrlr)
 		while (status.done == false) {
 			nvme_qpair_process_completions(&ctrlr->adminq, 0);
 		}
-		if (nvme_completion_is_error(&status.cpl)) {
+		if (spdk_nvme_cpl_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "nvme_create_io_cq failed!\n");
 			return ENXIO;
 		}
@@ -541,7 +541,7 @@ nvme_ctrlr_create_qpairs(struct nvme_controller *ctrlr)
 		while (status.done == false) {
 			nvme_qpair_process_completions(&ctrlr->adminq, 0);
 		}
-		if (nvme_completion_is_error(&status.cpl)) {
+		if (spdk_nvme_cpl_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "nvme_create_io_sq failed!\n");
 			return ENXIO;
 		}
@@ -596,7 +596,7 @@ nvme_ctrlr_construct_namespaces(struct nvme_controller *ctrlr)
 		}
 
 		ctrlr->nsdata = nvme_malloc("nvme_namespaces",
-					    nn * sizeof(struct nvme_namespace_data), 64,
+					    nn * sizeof(struct spdk_nvme_ns_data), 64,
 					    &phys_addr);
 		if (ctrlr->nsdata == NULL) {
 			goto fail;
@@ -622,12 +622,12 @@ fail:
 }
 
 static void
-nvme_ctrlr_async_event_cb(void *arg, const struct nvme_completion *cpl)
+nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_async_event_request	*aer = arg;
 	struct nvme_controller		*ctrlr = aer->ctrlr;
 
-	if (cpl->status.sc == NVME_SC_ABORTED_SQ_DELETION) {
+	if (cpl->status.sc == SPDK_NVME_SC_ABORTED_SQ_DELETION) {
 		/*
 		 *  This is simulated when controller is being shut down, to
 		 *  effectively abort outstanding asynchronous event requests
@@ -672,7 +672,7 @@ nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 	 *  nature never be timed out.
 	 */
 	req->timeout = false;
-	req->cmd.opc = NVME_OPC_ASYNC_EVENT_REQUEST;
+	req->cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
 
 	return 0;
@@ -681,7 +681,7 @@ nvme_ctrlr_construct_and_submit_aer(struct nvme_controller *ctrlr,
 static int
 nvme_ctrlr_configure_aer(struct nvme_controller *ctrlr)
 {
-	union nvme_critical_warning_state	state;
+	union spdk_nvme_critical_warning_state	state;
 	struct nvme_async_event_request		*aer;
 	uint32_t				i;
 	struct nvme_completion_poll_status	status;
@@ -695,7 +695,7 @@ nvme_ctrlr_configure_aer(struct nvme_controller *ctrlr)
 	while (status.done == false) {
 		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
-	if (nvme_completion_is_error(&status.cpl)) {
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_set_async_event_config failed!\n");
 		return ENXIO;
 	}
@@ -757,7 +757,7 @@ nvme_ctrlr_allocate_bars(struct nvme_controller *ctrlr)
 	void *addr;
 
 	rc = nvme_pcicfg_map_bar(ctrlr->devhandle, 0, 0 /* writable */, &addr);
-	ctrlr->regs = (volatile struct nvme_registers *)addr;
+	ctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
 	if ((ctrlr->regs == NULL) || (rc != 0)) {
 		nvme_printf(ctrlr, "pci_device_map_range failed with error code %d\n", rc);
 		return -1;
@@ -781,7 +781,7 @@ nvme_ctrlr_free_bars(struct nvme_controller *ctrlr)
 int
 nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle)
 {
-	union nvme_cap_hi_register	cap_hi;
+	union spdk_nvme_cap_hi_register	cap_hi;
 	uint32_t			cmd_reg;
 	int				status;
 	int				rc;
@@ -878,7 +878,7 @@ nvme_ctrlr_process_admin_completions(struct nvme_controller *ctrlr)
 	return num_completions;
 }
 
-const struct nvme_controller_data *
+const struct spdk_nvme_ctrlr_data *
 nvme_ctrlr_get_data(struct nvme_controller *ctrlr)
 {
 

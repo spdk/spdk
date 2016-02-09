@@ -121,9 +121,9 @@ static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *leng
 }
 
 static void
-io_complete(void *ctx, const struct nvme_completion *cpl)
+io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	if (nvme_completion_is_error(cpl))
+	if (spdk_nvme_cpl_is_error(cpl))
 		io_complete_flag = 2;
 	else
 		io_complete_flag = 1;
@@ -274,7 +274,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 
 	struct io_request *req;
 	struct nvme_namespace *ns;
-	const struct nvme_namespace_data *nsdata;
+	const struct spdk_nvme_ns_data *nsdata;
 
 	ns = nvme_ctrlr_get_ns(dev->ctrlr, 1);
 	if (!ns) {

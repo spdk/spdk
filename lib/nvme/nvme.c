@@ -107,7 +107,7 @@ nvme_detach(struct nvme_controller *ctrlr)
 }
 
 void
-nvme_completion_poll_cb(void *arg, const struct nvme_completion *cpl)
+nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_completion_poll_status	*status = arg;
 

@@ -152,7 +152,7 @@ struct __attribute__((packed)) nvme_payload {
 };
 
 struct nvme_request {
-	struct nvme_command		cmd;
+	struct spdk_nvme_cmd		cmd;
 
 	/**
 	 * Data payload for this request's command.
@@ -212,18 +212,18 @@ struct nvme_request {
 	 *  to ensure that the parent request is also completed with error
 	 *  status once all child requests are completed.
 	 */
-	struct nvme_completion		parent_status;
+	struct spdk_nvme_cpl		parent_status;
 };
 
 struct nvme_completion_poll_status {
-	struct nvme_completion	cpl;
+	struct spdk_nvme_cpl	cpl;
 	bool			done;
 };
 
 struct nvme_async_event_request {
 	struct nvme_controller		*ctrlr;
 	struct nvme_request		*req;
-	struct nvme_completion		cpl;
+	struct spdk_nvme_cpl		cpl;
 };
 
 struct nvme_tracker {
@@ -243,12 +243,12 @@ struct nvme_qpair {
 	/**
 	 * Submission queue
 	 */
-	struct nvme_command		*cmd;
+	struct spdk_nvme_cmd		*cmd;
 
 	/**
 	 * Completion queue
 	 */
-	struct nvme_completion		*cpl;
+	struct spdk_nvme_cpl		*cpl;
 
 	LIST_HEAD(, nvme_tracker)	free_tr;
 	LIST_HEAD(, nvme_tracker)	outstanding_tr;
@@ -293,7 +293,7 @@ struct nvme_controller {
 	/* Hot data (accessed in I/O path) starts here. */
 
 	/** NVMe MMIO register space */
-	volatile struct nvme_registers	*regs;
+	volatile struct spdk_nvme_registers	*regs;
 
 	/** I/O queue pairs */
 	struct nvme_qpair		*ioq;
@@ -345,14 +345,14 @@ struct nvme_controller {
 	/**
 	 * Identify Controller data.
 	 */
-	struct nvme_controller_data	cdata;
+	struct spdk_nvme_ctrlr_data	cdata;
 
 	/**
 	 * Array of Identify Namespace data.
 	 *
 	 * Stored separately from ns since nsdata should not normally be accessed during I/O.
 	 */
-	struct nvme_namespace_data	*nsdata;
+	struct spdk_nvme_ns_data	*nsdata;
 };
 
 extern __thread int nvme_thread_ioq_index;
@@ -423,12 +423,12 @@ void	nvme_ctrlr_cmd_set_num_queues(struct nvme_controller *ctrlr,
 				      uint32_t num_queues, nvme_cb_fn_t cb_fn,
 				      void *cb_arg);
 void	nvme_ctrlr_cmd_set_async_event_config(struct nvme_controller *ctrlr,
-		union nvme_critical_warning_state state,
+		union spdk_nvme_critical_warning_state state,
 		nvme_cb_fn_t cb_fn, void *cb_arg);
 void	nvme_ctrlr_cmd_abort(struct nvme_controller *ctrlr, uint16_t cid,
 			     uint16_t sqid, nvme_cb_fn_t cb_fn, void *cb_arg);
 
-void	nvme_completion_poll_cb(void *arg, const struct nvme_completion *cpl);
+void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 
 int	nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle);
 void	nvme_ctrlr_destruct(struct nvme_controller *ctrlr);

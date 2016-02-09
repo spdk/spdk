@@ -104,7 +104,7 @@ static void
 register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
 {
 	struct ns_entry *entry;
-	const struct nvme_controller_data *cdata;
+	const struct spdk_nvme_ctrlr_data *cdata;
 
 	entry = malloc(sizeof(struct ns_entry));
 	if (entry == NULL) {
@@ -158,7 +158,7 @@ static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned 
 	}
 }
 
-static void io_complete(void *ctx, const struct nvme_completion *completion);
+static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
 static __thread unsigned int seed = 0;
 
@@ -204,14 +204,14 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-task_complete(struct reset_task *task, const struct nvme_completion *completion)
+task_complete(struct reset_task *task, const struct spdk_nvme_cpl *completion)
 {
 	struct ns_worker_ctx	*ns_ctx;
 
 	ns_ctx = task->ns_ctx;
 	ns_ctx->current_queue_depth--;
 
-	if (nvme_completion_is_error(completion)) {
+	if (spdk_nvme_cpl_is_error(completion)) {
 		ns_ctx->io_completed_error++;
 	} else {
 		ns_ctx->io_completed++;
@@ -231,7 +231,7 @@ task_complete(struct reset_task *task, const struct nvme_completion *completion)
 }
 
 static void
-io_complete(void *ctx, const struct nvme_completion *completion)
+io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 {
 	task_complete((struct reset_task *)ctx, completion);
 }

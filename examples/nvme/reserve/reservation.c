@@ -74,11 +74,12 @@ static struct feature features[256];
 #define CR_KEY		0xDEADBEAF5A5A5A5B
 
 static void
-get_feature_completion(void *cb_arg, const struct nvme_completion *cpl)
+get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct feature *feature = cb_arg;
 	int fid = feature - features;
-	if (nvme_completion_is_error(cpl)) {
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		fprintf(stdout, "get_feature(0x%02X) failed\n", fid);
 	} else {
 		feature->result = cpl->cdw0;
@@ -88,11 +89,12 @@ get_feature_completion(void *cb_arg, const struct nvme_completion *cpl)
 }
 
 static void
-set_feature_completion(void *cb_arg, const struct nvme_completion *cpl)
+set_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct feature *feature = cb_arg;
 	int fid = feature - features;
-	if (nvme_completion_is_error(cpl)) {
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		fprintf(stdout, "set_feature(0x%02X) failed\n", fid);
 		set_feature_result = -1;
 	} else {
@@ -106,16 +108,16 @@ get_host_identifier(struct nvme_controller *ctrlr)
 {
 	int ret;
 	uint64_t *host_id;
-	struct nvme_command cmd = {};
+	struct spdk_nvme_cmd cmd = {};
 
-	cmd.opc = NVME_OPC_GET_FEATURES;
-	cmd.cdw10 = NVME_FEAT_HOST_IDENTIFIER;
+	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.cdw10 = SPDK_NVME_FEAT_HOST_IDENTIFIER;
 
 	outstanding_commands = 0;
 
 	host_id = rte_malloc(NULL, 8, 0);
 	ret = nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, 8,
-				       get_feature_completion, &features[NVME_FEAT_HOST_IDENTIFIER]);
+				       get_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
 	if (ret) {
 		fprintf(stdout, "Get Feature: Failed\n");
 		return -1;
@@ -127,7 +129,7 @@ get_host_identifier(struct nvme_controller *ctrlr)
 		nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 
-	if (features[NVME_FEAT_HOST_IDENTIFIER].valid) {
+	if (features[SPDK_NVME_FEAT_HOST_IDENTIFIER].valid) {
 		fprintf(stdout, "Get Feature: Host Identifier 0x%"PRIx64"\n", *host_id);
 	}
 
@@ -139,10 +141,10 @@ set_host_identifier(struct nvme_controller *ctrlr)
 {
 	int ret;
 	uint64_t *host_id;
-	struct nvme_command cmd = {};
+	struct spdk_nvme_cmd cmd = {};
 
-	cmd.opc = NVME_OPC_SET_FEATURES;
-	cmd.cdw10 = NVME_FEAT_HOST_IDENTIFIER;
+	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	cmd.cdw10 = SPDK_NVME_FEAT_HOST_IDENTIFIER;
 
 	host_id = rte_malloc(NULL, 8, 0);
 	*host_id = HOST_ID;
@@ -152,7 +154,7 @@ set_host_identifier(struct nvme_controller *ctrlr)
 
 	fprintf(stdout, "Set Feature: Host Identifier 0x%"PRIx64"\n", *host_id);
 	ret = nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, 8,
-				       set_feature_completion, &features[NVME_FEAT_HOST_IDENTIFIER]);
+				       set_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
 	if (ret) {
 		fprintf(stdout, "Set Feature: Failed\n");
 		rte_free(host_id);
@@ -173,9 +175,9 @@ set_host_identifier(struct nvme_controller *ctrlr)
 }
 
 static void
-reservation_ns_completion(void *cb_arg, const struct nvme_completion *cpl)
+reservation_ns_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
-	if (nvme_completion_is_error(cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		reserve_command_result = -1;
 	} else {
 		reserve_command_result = 0;
@@ -188,12 +190,12 @@ static int
 reservation_ns_register(struct nvme_controller *ctrlr, uint16_t ns_id)
 {
 	int ret;
-	struct nvme_reservation_register_data *rr_data;
+	struct spdk_nvme_reservation_register_data *rr_data;
 	struct nvme_namespace *ns;
 
 	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
 
-	rr_data = rte_zmalloc(NULL, sizeof(struct nvme_reservation_register_data), 0);
+	rr_data = rte_zmalloc(NULL, sizeof(struct spdk_nvme_reservation_register_data), 0);
 	rr_data->crkey = CR_KEY;
 	rr_data->nrkey = CR_KEY;
 
@@ -201,8 +203,8 @@ reservation_ns_register(struct nvme_controller *ctrlr, uint16_t ns_id)
 	reserve_command_result = -1;
 
 	ret = nvme_ns_cmd_reservation_register(ns, rr_data, 1,
-					       NVME_RESERVE_REGISTER_KEY,
-					       NVME_RESERVE_PTPL_NO_CHANGES,
+					       SPDK_NVME_RESERVE_REGISTER_KEY,
+					       SPDK_NVME_RESERVE_PTPL_NO_CHANGES,
 					       reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Register Failed\n");
@@ -227,8 +229,8 @@ reservation_ns_report(struct nvme_controller *ctrlr, uint16_t ns_id)
 {
 	int ret, i;
 	uint8_t *payload;
-	struct nvme_reservation_status_data *status;
-	struct nvme_reservation_controller_data *cdata;
+	struct spdk_nvme_reservation_status_data *status;
+	struct spdk_nvme_reservation_ctrlr_data *cdata;
 	struct nvme_namespace *ns;
 
 	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
@@ -256,14 +258,14 @@ reservation_ns_report(struct nvme_controller *ctrlr, uint16_t ns_id)
 		return 0;
 	}
 
-	status = (struct nvme_reservation_status_data *)payload;
+	status = (struct spdk_nvme_reservation_status_data *)payload;
 	fprintf(stdout, "Reservation Generation Counter                  %u\n", status->generation);
 	fprintf(stdout, "Reservation type                                %u\n", status->type);
 	fprintf(stdout, "Reservation Number of Registered Controllers    %u\n", status->nr_regctl);
 	fprintf(stdout, "Reservation Persist Through Power Loss State    %u\n", status->ptpl_state);
 	for (i = 0; i < status->nr_regctl; i++) {
-		cdata = (struct nvme_reservation_controller_data *)(payload + sizeof(struct
-				nvme_reservation_status_data) * (i + 1));
+		cdata = (struct spdk_nvme_reservation_ctrlr_data *)(payload + sizeof(struct
+				spdk_nvme_reservation_status_data) * (i + 1));
 		fprintf(stdout, "Controller ID                           %u\n", cdata->ctrlr_id);
 		fprintf(stdout, "Controller Reservation Status           %u\n", cdata->rcsts.status);
 		fprintf(stdout, "Controller Host ID                      0x%"PRIx64"\n", cdata->host_id);
@@ -278,11 +280,11 @@ static int
 reservation_ns_acquire(struct nvme_controller *ctrlr, uint16_t ns_id)
 {
 	int ret;
-	struct nvme_reservation_acquire_data *cdata;
+	struct spdk_nvme_reservation_acquire_data *cdata;
 	struct nvme_namespace *ns;
 
 	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
-	cdata = rte_zmalloc(NULL, sizeof(struct nvme_reservation_acquire_data), 0);
+	cdata = rte_zmalloc(NULL, sizeof(struct spdk_nvme_reservation_acquire_data), 0);
 	cdata->crkey = CR_KEY;
 
 	outstanding_commands = 0;
@@ -290,8 +292,8 @@ reservation_ns_acquire(struct nvme_controller *ctrlr, uint16_t ns_id)
 
 	ret = nvme_ns_cmd_reservation_acquire(ns, cdata,
 					      0,
-					      NVME_RESERVE_ACQUIRE,
-					      NVME_RESERVE_WRITE_EXCLUSIVE,
+					      SPDK_NVME_RESERVE_ACQUIRE,
+					      SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
 					      reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Acquire Failed\n");
@@ -315,11 +317,11 @@ static int
 reservation_ns_release(struct nvme_controller *ctrlr, uint16_t ns_id)
 {
 	int ret;
-	struct nvme_reservation_key_data *cdata;
+	struct spdk_nvme_reservation_key_data *cdata;
 	struct nvme_namespace *ns;
 
 	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
-	cdata = rte_zmalloc(NULL, sizeof(struct nvme_reservation_key_data), 0);
+	cdata = rte_zmalloc(NULL, sizeof(struct spdk_nvme_reservation_key_data), 0);
 	cdata->crkey = CR_KEY;
 
 	outstanding_commands = 0;
@@ -327,8 +329,8 @@ reservation_ns_release(struct nvme_controller *ctrlr, uint16_t ns_id)
 
 	ret = nvme_ns_cmd_reservation_release(ns, cdata,
 					      0,
-					      NVME_RESERVE_RELEASE,
-					      NVME_RESERVE_WRITE_EXCLUSIVE,
+					      SPDK_NVME_RESERVE_RELEASE,
+					      SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
 					      reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Release Failed\n");
@@ -351,7 +353,7 @@ reservation_ns_release(struct nvme_controller *ctrlr, uint16_t ns_id)
 static void
 reserve_controller(struct nvme_controller *ctrlr, struct spdk_pci_device *pci_dev)
 {
-	const struct nvme_controller_data	*cdata;
+	const struct spdk_nvme_ctrlr_data	*cdata;
 
 	cdata = nvme_ctrlr_get_data(ctrlr);
 

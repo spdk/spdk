@@ -280,6 +280,6 @@ nvme_mutex_init_recursive(nvme_mutex_t *mtx)
 /**
  * Copy a struct nvme_command from one memory location to another.
  */
-#define nvme_copy_command(dst, src)	rte_memcpy((dst), (src), sizeof(struct nvme_command))
+#define nvme_copy_command(dst, src)	rte_memcpy((dst), (src), sizeof(struct spdk_nvme_cmd))
 
 #endif /* __NVME_IMPL_H__ */

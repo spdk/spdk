@@ -112,7 +112,7 @@ static void
 test1(void)
 {
 	struct nvme_qpair qpair = {};
-	struct nvme_command cmd = {};
+	struct spdk_nvme_cmd cmd = {};
 
 	outbuf[0] = '\0';
 
@@ -122,7 +122,7 @@ test1(void)
 	 *  I/o opc.
 	 */
 	qpair.id = 0;
-	cmd.opc = NVME_OPC_IDENTIFY;
+	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
 
 	nvme_qpair_print_command(&qpair, &cmd);
 
@@ -133,7 +133,7 @@ static void
 test2(void)
 {
 	struct nvme_qpair qpair = {};
-	struct nvme_command cmd = {};
+	struct spdk_nvme_cmd cmd = {};
 
 	outbuf[0] = '\0';
 
@@ -143,7 +143,7 @@ test2(void)
 	 *  admin opc.
 	 */
 	qpair.id = 1;
-	cmd.opc = NVME_OPC_DATASET_MANAGEMENT;
+	cmd.opc = SPDK_NVME_OPC_DATASET_MANAGEMENT;
 
 	nvme_qpair_print_command(&qpair, &cmd);
 
@@ -153,7 +153,7 @@ test2(void)
 static void
 prepare_submit_request_test(struct nvme_qpair *qpair,
 			    struct nvme_controller *ctrlr,
-			    struct nvme_registers *regs)
+			    struct spdk_nvme_registers *regs)
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
 	ctrlr->regs = regs;
@@ -174,9 +174,9 @@ cleanup_submit_request_test(struct nvme_qpair *qpair)
 static void
 ut_insert_cq_entry(struct nvme_qpair *qpair, uint32_t slot)
 {
-	struct nvme_request *req;
-	struct nvme_tracker *tr;
-	struct nvme_completion	*cpl;
+	struct nvme_request	*req;
+	struct nvme_tracker 	*tr;
+	struct spdk_nvme_cpl	*cpl;
 
 	nvme_alloc_request(&req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -196,24 +196,24 @@ ut_insert_cq_entry(struct nvme_qpair *qpair, uint32_t slot)
 }
 
 static void
-expected_success_callback(void *arg, const struct nvme_completion *cpl)
+expected_success_callback(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	CU_ASSERT(!nvme_completion_is_error(cpl));
+	CU_ASSERT(!spdk_nvme_cpl_is_error(cpl));
 }
 
 static void
-expected_failure_callback(void *arg, const struct nvme_completion *cpl)
+expected_failure_callback(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	CU_ASSERT(nvme_completion_is_error(cpl));
+	CU_ASSERT(spdk_nvme_cpl_is_error(cpl));
 }
 
 static void
 test3(void)
 {
-	struct nvme_qpair	qpair = {};
-	struct nvme_request	*req;
-	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {};
+	struct nvme_qpair		qpair = {};
+	struct nvme_request		*req;
+	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
@@ -233,11 +233,11 @@ test3(void)
 static void
 test4(void)
 {
-	struct nvme_qpair	qpair = {};
-	struct nvme_request	*req;
-	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {};
-	char			payload[4096];
+	struct nvme_qpair		qpair = {};
+	struct nvme_request		*req;
+	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
+	char				payload[4096];
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
@@ -266,11 +266,11 @@ test4(void)
 static void
 test_ctrlr_failed(void)
 {
-	struct nvme_qpair	qpair = {};
-	struct nvme_request	*req;
-	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {};
-	char			payload[4096];
+	struct nvme_qpair		qpair = {};
+	struct nvme_request		*req;
+	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
+	char				payload[4096];
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
@@ -308,12 +308,12 @@ static void struct_packing(void)
 
 static void test_nvme_qpair_fail(void)
 {
-	struct nvme_qpair	qpair = {};
-	struct nvme_request	*req = NULL;
-	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {};
-	struct nvme_tracker	*tr_temp;
-	uint64_t		phys_addr = 0;
+	struct nvme_qpair		qpair = {};
+	struct nvme_request		*req = NULL;
+	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
+	struct nvme_tracker		*tr_temp;
+	uint64_t			phys_addr = 0;
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
@@ -339,9 +339,9 @@ static void test_nvme_qpair_fail(void)
 
 static void test_nvme_qpair_process_completions(void)
 {
-	struct nvme_qpair	qpair = {};
-	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {};
+	struct nvme_qpair		qpair = {};
+	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 	qpair.is_enabled = false;
@@ -354,9 +354,9 @@ static void test_nvme_qpair_process_completions(void)
 static void
 test_nvme_qpair_process_completions_limit(void)
 {
-	struct nvme_qpair	qpair = {};
-	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {};
+	struct nvme_qpair		qpair = {};
+	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 	qpair.is_enabled = true;
@@ -385,11 +385,11 @@ test_nvme_qpair_process_completions_limit(void)
 
 static void test_nvme_qpair_destroy(void)
 {
-	struct nvme_qpair	qpair = {};
-	struct nvme_controller	ctrlr = {};
-	struct nvme_registers	regs = {};
-	struct nvme_tracker	*tr_temp;
-	uint64_t		phys_addr = 0;
+	struct nvme_qpair		qpair = {};
+	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
+	struct nvme_tracker		*tr_temp;
+	uint64_t			phys_addr = 0;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.regs = &regs;
@@ -406,7 +406,7 @@ static void test_nvme_qpair_destroy(void)
 	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
-	tr_temp->req->cmd.opc = NVME_OPC_ASYNC_EVENT_REQUEST;
+	tr_temp->req->cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
 
 	nvme_qpair_destroy(&qpair);
@@ -416,59 +416,59 @@ static void test_nvme_qpair_destroy(void)
 
 static void test_nvme_completion_is_retry(void)
 {
-	struct nvme_completion	cpl = {};
+	struct spdk_nvme_cpl	cpl = {};
 
-	cpl.status.sct = NVME_SCT_GENERIC;
-	cpl.status.sc = NVME_SC_ABORTED_BY_REQUEST;
+	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
 	cpl.status.dnr = 0;
 	CU_ASSERT_TRUE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_INVALID_OPCODE;
+	cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_INVALID_FIELD;
+	cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_COMMAND_ID_CONFLICT;
+	cpl.status.sc = SPDK_NVME_SC_COMMAND_ID_CONFLICT;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_DATA_TRANSFER_ERROR;
+	cpl.status.sc = SPDK_NVME_SC_DATA_TRANSFER_ERROR;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_ABORTED_POWER_LOSS;
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_POWER_LOSS;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_INTERNAL_DEVICE_ERROR;
+	cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_ABORTED_FAILED_FUSED;
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_FAILED_FUSED;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_ABORTED_MISSING_FUSED;
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_MISSING_FUSED;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+	cpl.status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_COMMAND_SEQUENCE_ERROR;
+	cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_LBA_OUT_OF_RANGE;
+	cpl.status.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sc = NVME_SC_CAPACITY_EXCEEDED;
+	cpl.status.sc = SPDK_NVME_SC_CAPACITY_EXCEEDED;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
 	cpl.status.sc = 0x70;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sct = NVME_SCT_COMMAND_SPECIFIC;
+	cpl.status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sct = NVME_SCT_MEDIA_ERROR;
+	cpl.status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
-	cpl.status.sct = NVME_SCT_VENDOR_SPECIFIC;
+	cpl.status.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
 	cpl.status.sct = 0x4;
@@ -480,16 +480,17 @@ test_get_status_string(void)
 {
 	const char	*status_string;
 
-	status_string = get_status_string(NVME_SCT_GENERIC, NVME_SC_SUCCESS);
+	status_string = get_status_string(SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT(strcmp(status_string, "SUCCESS") == 0);
 
-	status_string = get_status_string(NVME_SCT_COMMAND_SPECIFIC, NVME_SC_COMPLETION_QUEUE_INVALID);
+	status_string = get_status_string(SPDK_NVME_SCT_COMMAND_SPECIFIC,
+					  SPDK_NVME_SC_COMPLETION_QUEUE_INVALID);
 	CU_ASSERT(strcmp(status_string, "INVALID COMPLETION QUEUE") == 0);
 
-	status_string = get_status_string(NVME_SCT_MEDIA_ERROR, NVME_SC_UNRECOVERED_READ_ERROR);
+	status_string = get_status_string(SPDK_NVME_SCT_MEDIA_ERROR, SPDK_NVME_SC_UNRECOVERED_READ_ERROR);
 	CU_ASSERT(strcmp(status_string, "UNRECOVERED READ ERROR") == 0);
 
-	status_string = get_status_string(NVME_SCT_VENDOR_SPECIFIC, 0);
+	status_string = get_status_string(SPDK_NVME_SCT_VENDOR_SPECIFIC, 0);
 	CU_ASSERT(strcmp(status_string, "VENDOR SPECIFIC") == 0);
 
 	status_string = get_status_string(100, 0);

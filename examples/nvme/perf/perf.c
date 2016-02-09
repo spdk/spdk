@@ -148,7 +148,7 @@ static void
 register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
 {
 	struct ns_entry *entry;
-	const struct nvme_controller_data *cdata;
+	const struct spdk_nvme_ctrlr_data *cdata;
 
 	cdata = nvme_ctrlr_get_data(ctrlr);
 
@@ -182,9 +182,9 @@ register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
 }
 
 static void
-enable_latency_tracking_complete(void *cb_arg, const struct nvme_completion *cpl)
+enable_latency_tracking_complete(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
-	if (nvme_completion_is_error(cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("enable_latency_tracking_complete failed\n");
 	}
 	g_outstanding_commands--;
@@ -220,7 +220,7 @@ register_ctrlr(struct nvme_controller *ctrlr)
 {
 	int nsid, num_ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
-	const struct nvme_controller_data *cdata = nvme_ctrlr_get_data(ctrlr);
+	const struct spdk_nvme_ctrlr_data *cdata = nvme_ctrlr_get_data(ctrlr);
 
 	if (entry == NULL) {
 		perror("ctrlr_entry malloc");
@@ -361,7 +361,7 @@ static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned 
 	}
 }
 
-static void io_complete(void *ctx, const struct nvme_completion *completion);
+static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
 static __thread unsigned int seed = 0;
 
@@ -444,7 +444,7 @@ task_complete(struct perf_task *task)
 }
 
 static void
-io_complete(void *ctx, const struct nvme_completion *completion)
+io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 {
 	task_complete((struct perf_task *)ctx);
 }
@@ -615,7 +615,7 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 	ctrlr = g_controllers;
 	while (ctrlr) {
 		if (nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
-			if (nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, NVME_GLOBAL_NAMESPACE_TAG,
+			if (nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, SPDK_NVME_GLOBAL_NS_TAG,
 							ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page),
 							enable_latency_tracking_complete,
 							NULL)) {

@@ -111,7 +111,7 @@ int nvme_ctrlr_reset(struct nvme_controller *ctrlr);
  *  the SPDK NVMe driver.
  *
  */
-const struct nvme_controller_data *nvme_ctrlr_get_data(struct nvme_controller *ctrlr);
+const struct spdk_nvme_ctrlr_data *nvme_ctrlr_get_data(struct nvme_controller *ctrlr);
 
 /**
  * \brief Get the number of namespaces for the given NVMe controller.
@@ -150,7 +150,7 @@ bool nvme_ctrlr_is_feature_supported(struct nvme_controller *ctrlr, uint8_t feat
  *
  * The nvme_completion parameter contains the completion status.
  */
-typedef void (*nvme_cb_fn_t)(void *, const struct nvme_completion *);
+typedef void (*nvme_cb_fn_t)(void *, const struct spdk_nvme_cpl *);
 
 /**
  * Signature for callback function invoked when an asynchronous error
@@ -162,7 +162,7 @@ typedef void (*nvme_cb_fn_t)(void *, const struct nvme_completion *);
  *  asynchronous event request that was completed.
  */
 typedef void (*nvme_aer_cb_fn_t)(void *aer_cb_arg,
-				 const struct nvme_completion *);
+				 const struct spdk_nvme_cpl *);
 
 void nvme_ctrlr_register_aer_callback(struct nvme_controller *ctrlr,
 				      nvme_aer_cb_fn_t aer_cb_fn,
@@ -183,7 +183,7 @@ void nvme_ctrlr_register_aer_callback(struct nvme_controller *ctrlr,
  *
  */
 int nvme_ctrlr_cmd_io_raw(struct nvme_controller *ctrlr,
-			  struct nvme_command *cmd,
+			  struct spdk_nvme_cmd *cmd,
 			  void *buf, uint32_t len,
 			  nvme_cb_fn_t cb_fn, void *cb_arg);
 
@@ -223,7 +223,7 @@ int32_t nvme_ctrlr_process_io_completions(struct nvme_controller *ctrlr, uint32_
  * of commands submitted through this function.
  */
 int nvme_ctrlr_cmd_admin_raw(struct nvme_controller *ctrlr,
-			     struct nvme_command *cmd,
+			     struct spdk_nvme_cmd *cmd,
 			     void *buf, uint32_t len,
 			     nvme_cb_fn_t cb_fn, void *cb_arg);
 
@@ -341,7 +341,7 @@ int nvme_ctrlr_cmd_get_feature(struct nvme_controller *ctrlr,
  * This function is thread safe and can be called at any point while the controller is attached to
  *  the SPDK NVMe driver.
  */
-const struct nvme_namespace_data *nvme_ns_get_data(struct nvme_namespace *ns);
+const struct spdk_nvme_ns_data *nvme_ns_get_data(struct nvme_namespace *ns);
 
 /**
  * \brief Get the namespace id (index number) from the given namespace handle.
@@ -588,10 +588,10 @@ int nvme_ns_cmd_flush(struct nvme_namespace *ns, nvme_cb_fn_t cb_fn,
  * nvme_register_io_thread().
  */
 int nvme_ns_cmd_reservation_register(struct nvme_namespace *ns,
-				     struct nvme_reservation_register_data *payload,
+				     struct spdk_nvme_reservation_register_data *payload,
 				     bool ignore_key,
-				     enum nvme_reservation_register_action action,
-				     enum nvme_reservation_register_cptpl cptpl,
+				     enum spdk_nvme_reservation_register_action action,
+				     enum spdk_nvme_reservation_register_cptpl cptpl,
 				     nvme_cb_fn_t cb_fn, void *cb_arg);
 
 /**
@@ -612,10 +612,10 @@ int nvme_ns_cmd_reservation_register(struct nvme_namespace *ns,
  * nvme_register_io_thread().
  */
 int nvme_ns_cmd_reservation_release(struct nvme_namespace *ns,
-				    struct nvme_reservation_key_data *payload,
+				    struct spdk_nvme_reservation_key_data *payload,
 				    bool ignore_key,
-				    enum nvme_reservation_release_action action,
-				    enum nvme_reservation_type type,
+				    enum spdk_nvme_reservation_release_action action,
+				    enum spdk_nvme_reservation_type type,
 				    nvme_cb_fn_t cb_fn, void *cb_arg);
 
 /**
@@ -636,10 +636,10 @@ int nvme_ns_cmd_reservation_release(struct nvme_namespace *ns,
  * nvme_register_io_thread().
  */
 int nvme_ns_cmd_reservation_acquire(struct nvme_namespace *ns,
-				    struct nvme_reservation_acquire_data *payload,
+				    struct spdk_nvme_reservation_acquire_data *payload,
 				    bool ignore_key,
-				    enum nvme_reservation_acquire_action action,
-				    enum nvme_reservation_type type,
+				    enum spdk_nvme_reservation_acquire_action action,
+				    enum spdk_nvme_reservation_type type,
 				    nvme_cb_fn_t cb_fn, void *cb_arg);
 
 /**

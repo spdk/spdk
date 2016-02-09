@@ -96,7 +96,7 @@ nvme_qpair_fail(struct nvme_qpair *qpair)
 void
 nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
 {
-	CU_ASSERT(req->cmd.opc == NVME_OPC_ASYNC_EVENT_REQUEST);
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST);
 }
 
 int32_t
@@ -126,13 +126,13 @@ nvme_qpair_reset(struct nvme_qpair *qpair)
 }
 
 void
-nvme_completion_poll_cb(void *arg, const struct nvme_completion *cpl)
+nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 }
 
 void
 nvme_ctrlr_cmd_set_async_event_config(struct nvme_controller *ctrlr,
-				      union nvme_critical_warning_state state, nvme_cb_fn_t cb_fn,
+				      union spdk_nvme_critical_warning_state state, nvme_cb_fn_t cb_fn,
 				      void *cb_arg)
 {
 }
@@ -282,14 +282,14 @@ test_nvme_ctrlr_set_supported_features(void)
 	/* set a invalid vendor id */
 	ctrlr.cdata.vid = 0xFFFF;
 	nvme_ctrlr_set_supported_features(&ctrlr);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_FEAT_ARBITRATION);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_FEAT_ARBITRATION);
 	CU_ASSERT(res == true);
 	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
 	CU_ASSERT(res == false);
 
 	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	nvme_ctrlr_set_supported_features(&ctrlr);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, NVME_FEAT_ARBITRATION);
+	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_FEAT_ARBITRATION);
 	CU_ASSERT(res == true);
 	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
 	CU_ASSERT(res == true);
