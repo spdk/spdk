@@ -50,6 +50,7 @@
 #endif
 
 #include "spdk/pci.h"
+#include "spdk/pci_ids.h"
 #include "spdk/nvme_spec.h"
 
 /**
@@ -141,7 +142,7 @@ nvme_pci_enum_cb(void *enum_ctx, struct spdk_pci_device *pci_dev)
 {
 	struct nvme_pci_enum_ctx *ctx = enum_ctx;
 
-	if (spdk_pci_device_get_class(pci_dev) != NVME_CLASS_CODE) {
+	if (spdk_pci_device_get_class(pci_dev) != SPDK_PCI_CLASS_NVME) {
 		return 0;
 	}
 
@@ -195,7 +196,7 @@ nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 }
 
 /*
- * TODO: once DPDK supports matching class code instead of device ID, switch to NVME_CLASS_CODE
+ * TODO: once DPDK supports matching class code instead of device ID, switch to SPDK_PCI_CLASS_NVME
  */
 static struct rte_pci_id nvme_pci_driver_id[] = {
 	{RTE_PCI_DEVICE(0x8086, 0x0953)},

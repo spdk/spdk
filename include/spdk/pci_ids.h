@@ -38,4 +38,13 @@
 
 #define SPDK_PCI_VID_INTEL		0x8086
 
+/**
+ * PCI class code for NVMe devices.
+ *
+ * Base class code 01h: mass storage
+ * Subclass code 08h: non-volatile memory
+ * Programming interface 02h: NVM Express
+ */
+#define SPDK_PCI_CLASS_NVME		0x010802
+
 #endif /* SPDK_PCI_IDS */

@@ -45,15 +45,6 @@
  */
 
 /**
- * PCI class code for NVMe devices.
- *
- * Base class code 01h: mass storage
- * Subclass code 08h: non-volatile memory
- * Programming interface 02h: NVM Express
- */
-#define NVME_CLASS_CODE 0x10802
-
-/**
  * Use to mark a command to apply to all namespaces, or to retrieve global
  *  log pages.
  */
