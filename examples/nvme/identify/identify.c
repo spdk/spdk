@@ -134,18 +134,18 @@ get_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-get_feature(struct nvme_controller *ctrlr, uint8_t fid)
+get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t fid)
 {
 	struct spdk_nvme_cmd cmd = {};
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10 = fid;
 
-	return nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, &features[fid]);
+	return spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, NULL, 0, get_feature_completion, &features[fid]);
 }
 
 static void
-get_features(struct nvme_controller *ctrlr)
+get_features(struct spdk_nvme_ctrlr *ctrlr)
 {
 	size_t i;
 
@@ -167,12 +167,12 @@ get_features(struct nvme_controller *ctrlr)
 	}
 
 	while (outstanding_commands) {
-		nvme_ctrlr_process_admin_completions(ctrlr);
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 }
 
 static int
-get_health_log_page(struct nvme_controller *ctrlr)
+get_health_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (health_page == NULL) {
 		health_page = rte_zmalloc("nvme health", sizeof(*health_page), 4096);
@@ -182,9 +182,9 @@ get_health_log_page(struct nvme_controller *ctrlr)
 		exit(1);
 	}
 
-	if (nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION, SPDK_NVME_GLOBAL_NS_TAG,
-					health_page, sizeof(*health_page), get_log_page_completion, NULL)) {
-		printf("nvme_ctrlr_cmd_get_log_page() failed\n");
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
+					     SPDK_NVME_GLOBAL_NS_TAG, health_page, sizeof(*health_page), get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
 
@@ -192,7 +192,7 @@ get_health_log_page(struct nvme_controller *ctrlr)
 }
 
 static int
-get_intel_smart_log_page(struct nvme_controller *ctrlr)
+get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (intel_smart_page == NULL) {
 		intel_smart_page = rte_zmalloc("nvme intel smart", sizeof(*intel_smart_page), 4096);
@@ -202,9 +202,9 @@ get_intel_smart_log_page(struct nvme_controller *ctrlr)
 		exit(1);
 	}
 
-	if (nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
-					intel_smart_page, sizeof(*intel_smart_page), get_log_page_completion, NULL)) {
-		printf("nvme_ctrlr_cmd_get_log_page() failed\n");
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
+					     intel_smart_page, sizeof(*intel_smart_page), get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
 
@@ -212,7 +212,7 @@ get_intel_smart_log_page(struct nvme_controller *ctrlr)
 }
 
 static int
-get_intel_temperature_log_page(struct nvme_controller *ctrlr)
+get_intel_temperature_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (intel_temperature_page == NULL) {
 		intel_temperature_page = rte_zmalloc("nvme intel temperature", sizeof(*intel_temperature_page),
@@ -223,16 +223,17 @@ get_intel_temperature_log_page(struct nvme_controller *ctrlr)
 		exit(1);
 	}
 
-	if (nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE, SPDK_NVME_GLOBAL_NS_TAG,
-					intel_temperature_page, sizeof(*intel_temperature_page), get_log_page_completion, NULL)) {
-		printf("nvme_ctrlr_cmd_get_log_page() failed\n");
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE,
+					     SPDK_NVME_GLOBAL_NS_TAG, intel_temperature_page, sizeof(*intel_temperature_page),
+					     get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
 	return 0;
 }
 
 static void
-get_log_pages(struct nvme_controller *ctrlr)
+get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
 	const struct spdk_nvme_ctrlr_data *ctrlr_data;
 	outstanding_commands = 0;
@@ -243,16 +244,16 @@ get_log_pages(struct nvme_controller *ctrlr)
 		printf("Get Log Page (SMART/health) failed\n");
 	}
 
-	ctrlr_data = nvme_ctrlr_get_data(ctrlr);
+	ctrlr_data = spdk_nvme_ctrlr_get_data(ctrlr);
 	if (ctrlr_data->vid == SPDK_PCI_VID_INTEL) {
-		if (nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_SMART)) {
+		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_SMART)) {
 			if (get_intel_smart_log_page(ctrlr) == 0) {
 				outstanding_commands++;
 			} else {
 				printf("Get Log Page (Intel SMART/health) failed\n");
 			}
 		}
-		if (nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE)) {
+		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE)) {
 			if (get_intel_temperature_log_page(ctrlr) == 0) {
 				outstanding_commands++;
 			} else {
@@ -262,7 +263,7 @@ get_log_pages(struct nvme_controller *ctrlr)
 	}
 
 	while (outstanding_commands) {
-		nvme_ctrlr_process_admin_completions(ctrlr);
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 }
 
@@ -321,16 +322,16 @@ print_uint_var_dec(uint8_t *array, unsigned int len)
 }
 
 static void
-print_namespace(struct nvme_namespace *ns)
+print_namespace(struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ns_data		*nsdata;
 	uint32_t				i;
 	uint32_t				flags;
 
-	nsdata = nvme_ns_get_data(ns);
-	flags  = nvme_ns_get_flags(ns);
+	nsdata = spdk_nvme_ns_get_data(ns);
+	flags  = spdk_nvme_ns_get_flags(ns);
 
-	printf("Namespace ID:%d\n", nvme_ns_get_id(ns));
+	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
 
 	if (g_hex_dump) {
 		hex_dump(nsdata, sizeof(*nsdata));
@@ -338,11 +339,11 @@ print_namespace(struct nvme_namespace *ns)
 	}
 
 	printf("Deallocate:                  %s\n",
-	       (flags & NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
+	       (flags & SPDK_NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Flush:                       %s\n",
-	       (flags & NVME_NS_FLUSH_SUPPORTED) ? "Supported" : "Not Supported");
+	       (flags & SPDK_NVME_NS_FLUSH_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Reservation:                 %s\n",
-	       (flags & NVME_NS_RESERVATION_SUPPORTED) ? "Supported" : "Not Supported");
+	       (flags & SPDK_NVME_NS_RESERVATION_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Size (in LBAs):              %lld (%lldM)\n",
 	       (long long)nsdata->nsze,
 	       (long long)nsdata->nsze / 1024 / 1024);
@@ -364,7 +365,7 @@ print_namespace(struct nvme_namespace *ns)
 }
 
 static void
-print_controller(struct nvme_controller *ctrlr, struct spdk_pci_device *pci_dev)
+print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	uint8_t					str[128];
@@ -373,7 +374,7 @@ print_controller(struct nvme_controller *ctrlr, struct spdk_pci_device *pci_dev)
 	get_features(ctrlr);
 	get_log_pages(ctrlr);
 
-	cdata = nvme_ctrlr_get_data(ctrlr);
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
 	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
@@ -729,8 +730,8 @@ print_controller(struct nvme_controller *ctrlr, struct spdk_pci_device *pci_dev)
 		printf("\n");
 
 	}
-	for (i = 1; i <= nvme_ctrlr_get_num_ns(ctrlr); i++) {
-		print_namespace(nvme_ctrlr_get_ns(ctrlr, i));
+	for (i = 1; i <= spdk_nvme_ctrlr_get_num_ns(ctrlr); i++) {
+		print_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, i));
 	}
 }
 
@@ -782,10 +783,10 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct nvme_controller *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr)
 {
 	print_controller(ctrlr, pci_dev);
-	nvme_detach(ctrlr);
+	spdk_nvme_detach(ctrlr);
 }
 
 static const char *ealargs[] = {
@@ -812,7 +813,7 @@ int main(int argc, char **argv)
 	}
 
 	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     nvme_request_size(), 128, 0,
+					     spdk_nvme_request_size(), 128, 0,
 					     NULL, NULL, NULL, NULL,
 					     SOCKET_ID_ANY, 0);
 
@@ -822,8 +823,8 @@ int main(int argc, char **argv)
 	}
 
 	rc = 0;
-	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
-		fprintf(stderr, "nvme_probe() failed\n");
+	if (spdk_nvme_probe(NULL, probe_cb, attach_cb) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;
 	}
 

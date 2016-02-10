@@ -45,43 +45,43 @@ uint64_t nvme_vtophys(void *buf)
 }
 
 int
-nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle)
+nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
 	return 0;
 }
 
 void
-nvme_ctrlr_destruct(struct nvme_controller *ctrlr)
+nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 }
 
 int
-nvme_ctrlr_start(struct nvme_controller *ctrlr)
+nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
 }
 
 uint32_t
-nvme_ns_get_sector_size(struct nvme_namespace *ns)
+spdk_nvme_ns_get_sector_size(struct spdk_nvme_ns *ns)
 {
 	return ns->sector_size;
 }
 
 uint32_t
-nvme_ns_get_max_io_xfer_size(struct nvme_namespace *ns)
+spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns)
 {
 	return ns->ctrlr->max_xfer_size;
 }
 
 void
-nvme_ctrlr_submit_io_request(struct nvme_controller *ctrlr,
+nvme_ctrlr_submit_io_request(struct spdk_nvme_ctrlr *ctrlr,
 			     struct nvme_request *req)
 {
 	g_request = req;
 }
 
 static void
-prepare_for_test(struct nvme_namespace *ns, struct nvme_controller *ctrlr,
+prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 		 uint32_t sector_size, uint32_t max_xfer_size,
 		 uint32_t stripe_size)
 {
@@ -90,7 +90,7 @@ prepare_for_test(struct nvme_namespace *ns, struct nvme_controller *ctrlr,
 	ns->ctrlr = ctrlr;
 	ns->sector_size = sector_size;
 	ns->stripe_size = stripe_size;
-	ns->sectors_per_max_io = nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
+	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
 	ns->sectors_per_stripe = ns->stripe_size / ns->sector_size;
 
 	g_request = NULL;
@@ -107,8 +107,8 @@ nvme_cmd_interpret_rw(const struct spdk_nvme_cmd *cmd,
 static void
 split_test(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	void			*payload;
 	uint64_t		lba, cmd_lba;
 	uint32_t		lba_count, cmd_lba_count;
@@ -119,7 +119,7 @@ split_test(void)
 	lba = 0;
 	lba_count = 1;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -136,8 +136,8 @@ split_test(void)
 static void
 split_test2(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	struct nvme_request	*child;
 	void			*payload;
 	uint64_t		lba, cmd_lba;
@@ -155,7 +155,7 @@ split_test2(void)
 	lba = 0;
 	lba_count = (256 * 1024) / 512;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -189,8 +189,8 @@ split_test2(void)
 static void
 split_test3(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	struct nvme_request	*child;
 	void			*payload;
 	uint64_t		lba, cmd_lba;
@@ -210,7 +210,7 @@ split_test3(void)
 	lba = 10; /* Start at an LBA that isn't aligned to the stripe size */
 	lba_count = (256 * 1024) / 512;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL, 0);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -244,8 +244,8 @@ split_test3(void)
 static void
 split_test4(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	struct nvme_request	*child;
 	void			*payload;
 	uint64_t		lba, cmd_lba;
@@ -267,8 +267,8 @@ split_test4(void)
 	lba = 10; /* Start at an LBA that isn't aligned to the stripe size */
 	lba_count = (256 * 1024) / 512;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
-			      SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
+				   SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
 
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -317,14 +317,14 @@ split_test4(void)
 static void
 test_nvme_ns_cmd_flush(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
-	nvme_cb_fn_t		cb_fn = NULL;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 
-	nvme_ns_cmd_flush(&ns, cb_fn, cb_arg);
+	spdk_nvme_ns_cmd_flush(&ns, cb_fn, cb_arg);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_FLUSH);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
@@ -334,16 +334,16 @@ test_nvme_ns_cmd_flush(void)
 static void
 test_nvme_ns_cmd_write_zeroes(void)
 {
-	struct nvme_namespace	ns = { 0 };
-	struct nvme_controller	ctrlr = { 0 };
-	nvme_cb_fn_t		cb_fn = NULL;
+	struct spdk_nvme_ns	ns = { 0 };
+	struct spdk_nvme_ctrlr	ctrlr = { 0 };
+	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	uint64_t		cmd_lba;
 	uint32_t		cmd_lba_count;
 
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 
-	nvme_ns_cmd_write_zeroes(&ns, 0, 2, cb_fn, cb_arg, 0);
+	spdk_nvme_ns_cmd_write_zeroes(&ns, 0, 2, cb_fn, cb_arg, 0);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE_ZEROES);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	nvme_cmd_interpret_rw(&g_request->cmd, &cmd_lba, &cmd_lba_count);
@@ -356,9 +356,9 @@ test_nvme_ns_cmd_write_zeroes(void)
 static void
 test_nvme_ns_cmd_deallocate(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
-	nvme_cb_fn_t		cb_fn = NULL;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	uint16_t		num_ranges = 1;
 	void			*payload = NULL;
@@ -367,7 +367,7 @@ test_nvme_ns_cmd_deallocate(void)
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 	payload = malloc(num_ranges * sizeof(struct spdk_nvme_dsm_range));
 
-	nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
+	spdk_nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	CU_ASSERT(g_request->cmd.cdw10 == num_ranges - 1u);
@@ -377,7 +377,7 @@ test_nvme_ns_cmd_deallocate(void)
 
 	num_ranges = 256;
 	payload = malloc(num_ranges * sizeof(struct spdk_nvme_dsm_range));
-	nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
+	spdk_nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	CU_ASSERT(g_request->cmd.cdw10 == num_ranges - 1u);
@@ -387,15 +387,15 @@ test_nvme_ns_cmd_deallocate(void)
 
 	payload = NULL;
 	num_ranges = 0;
-	rc = nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
+	rc = spdk_nvme_ns_cmd_deallocate(&ns, payload, num_ranges, cb_fn, cb_arg);
 	CU_ASSERT(rc != 0);
 }
 
 static void
 test_io_flags(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	void			*payload;
 	uint64_t		lba;
 	uint32_t		lba_count;
@@ -406,16 +406,16 @@ test_io_flags(void)
 	lba = 0;
 	lba_count = (4 * 1024) / 512;
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
-			      SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
+				   SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_LIMITED_RETRY) == 0);
 	nvme_free_request(g_request);
 
-	rc = nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
-			      SPDK_NVME_IO_FLAGS_LIMITED_RETRY);
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, lba_count, NULL, NULL,
+				   SPDK_NVME_IO_FLAGS_LIMITED_RETRY);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS) == 0);
@@ -429,11 +429,11 @@ test_io_flags(void)
 static void
 test_nvme_ns_cmd_reservation_register(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	struct spdk_nvme_reservation_register_data *payload;
 	bool			ignore_key = 1;
-	nvme_cb_fn_t		cb_fn = NULL;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	int			rc = 0;
 	uint32_t		tmp_cdw10;
@@ -441,10 +441,10 @@ test_nvme_ns_cmd_reservation_register(void)
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 	payload = malloc(sizeof(struct spdk_nvme_reservation_register_data));
 
-	rc = nvme_ns_cmd_reservation_register(&ns, payload, ignore_key,
-					      SPDK_NVME_RESERVE_REGISTER_KEY,
-					      SPDK_NVME_RESERVE_PTPL_NO_CHANGES,
-					      cb_fn, cb_arg);
+	rc = spdk_nvme_ns_cmd_reservation_register(&ns, payload, ignore_key,
+			SPDK_NVME_RESERVE_REGISTER_KEY,
+			SPDK_NVME_RESERVE_PTPL_NO_CHANGES,
+			cb_fn, cb_arg);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_RESERVATION_REGISTER);
@@ -463,11 +463,11 @@ test_nvme_ns_cmd_reservation_register(void)
 static void
 test_nvme_ns_cmd_reservation_release(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	struct spdk_nvme_reservation_key_data *payload;
 	bool			ignore_key = 1;
-	nvme_cb_fn_t		cb_fn = NULL;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	int			rc = 0;
 	uint32_t		tmp_cdw10;
@@ -475,10 +475,10 @@ test_nvme_ns_cmd_reservation_release(void)
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 	payload = malloc(sizeof(struct spdk_nvme_reservation_key_data));
 
-	rc = nvme_ns_cmd_reservation_release(&ns, payload, ignore_key,
-					     SPDK_NVME_RESERVE_RELEASE,
-					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
-					     cb_fn, cb_arg);
+	rc = spdk_nvme_ns_cmd_reservation_release(&ns, payload, ignore_key,
+			SPDK_NVME_RESERVE_RELEASE,
+			SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
+			cb_fn, cb_arg);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_RESERVATION_RELEASE);
@@ -497,11 +497,11 @@ test_nvme_ns_cmd_reservation_release(void)
 static void
 test_nvme_ns_cmd_reservation_acquire(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	struct spdk_nvme_reservation_acquire_data *payload;
 	bool			ignore_key = 1;
-	nvme_cb_fn_t		cb_fn = NULL;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	int			rc = 0;
 	uint32_t		tmp_cdw10;
@@ -509,10 +509,10 @@ test_nvme_ns_cmd_reservation_acquire(void)
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 	payload = malloc(sizeof(struct spdk_nvme_reservation_acquire_data));
 
-	rc = nvme_ns_cmd_reservation_acquire(&ns, payload, ignore_key,
-					     SPDK_NVME_RESERVE_ACQUIRE,
-					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
-					     cb_fn, cb_arg);
+	rc = spdk_nvme_ns_cmd_reservation_acquire(&ns, payload, ignore_key,
+			SPDK_NVME_RESERVE_ACQUIRE,
+			SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
+			cb_fn, cb_arg);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_RESERVATION_ACQUIRE);
@@ -531,18 +531,18 @@ test_nvme_ns_cmd_reservation_acquire(void)
 static void
 test_nvme_ns_cmd_reservation_report(void)
 {
-	struct nvme_namespace	ns;
-	struct nvme_controller	ctrlr;
+	struct spdk_nvme_ns	ns;
+	struct spdk_nvme_ctrlr	ctrlr;
 	struct spdk_nvme_reservation_status_data *payload;
-	nvme_cb_fn_t		cb_fn = NULL;
+	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	int			rc = 0;
 
 	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
 	payload = malloc(sizeof(struct spdk_nvme_reservation_status_data));
 
-	rc = nvme_ns_cmd_reservation_report(&ns, payload, 0x1000,
-					    cb_fn, cb_arg);
+	rc = spdk_nvme_ns_cmd_reservation_report(&ns, payload, 0x1000,
+			cb_fn, cb_arg);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_RESERVATION_REPORT);

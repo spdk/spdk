@@ -47,7 +47,7 @@ struct rte_mempool *request_mempool;
 
 struct dev {
 	struct spdk_pci_device				*pci_dev;
-	struct nvme_controller 				*ctrlr;
+	struct spdk_nvme_ctrlr				*ctrlr;
 	struct spdk_nvme_health_information_page	*health_page;
 	uint32_t					orig_temp_threshold;
 	char 						name[100];
@@ -90,7 +90,7 @@ set_temp_threshold(struct dev *dev, uint32_t temp)
 	cmd.cdw10 = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
 	cmd.cdw11 = temp;
 
-	return nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, set_feature_completion, dev);
+	return spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, set_feature_completion, dev);
 }
 
 static void
@@ -120,7 +120,7 @@ get_temp_threshold(struct dev *dev)
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10 = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
 
-	return nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, get_feature_completion, dev);
+	return spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, get_feature_completion, dev);
 }
 
 static void
@@ -148,9 +148,9 @@ get_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 static int
 get_health_log_page(struct dev *dev)
 {
-	return nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-					   SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page),
-					   get_log_page_completion, dev);
+	return spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
+						SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page),
+						get_log_page_completion, dev);
 }
 
 static void
@@ -211,7 +211,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct nvme_controller *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct dev *dev;
 
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
 	}
 
 	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     nvme_request_size(), 128, 0,
+					     spdk_nvme_request_size(), 128, 0,
 					     NULL, NULL, NULL, NULL,
 					     SOCKET_ID_ANY, 0);
 
@@ -265,8 +265,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
-		fprintf(stderr, "nvme_probe() failed\n");
+	if (spdk_nvme_probe(NULL, probe_cb, attach_cb) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
 
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 
 	printf("Registering asynchronous event callbacks...\n");
 	foreach_dev(dev) {
-		nvme_ctrlr_register_aer_callback(dev->ctrlr, aer_cb, dev);
+		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, aer_cb, dev);
 	}
 
 	printf("Setting temperature thresholds...\n");
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
 
 	while (!failed && temperature_done < num_devs) {
 		foreach_dev(dev) {
-			nvme_ctrlr_process_admin_completions(dev->ctrlr);
+			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
 		}
 	}
 
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
 
 	while (!failed && aer_done < num_devs) {
 		foreach_dev(dev) {
-			nvme_ctrlr_process_admin_completions(dev->ctrlr);
+			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
 		}
 	}
 
@@ -308,7 +308,7 @@ int main(int argc, char **argv)
 	for (i = 0; i < num_devs; i++) {
 		struct dev *dev = &devs[i];
 
-		nvme_detach(dev->ctrlr);
+		spdk_nvme_detach(dev->ctrlr);
 	}
 
 done:

@@ -325,7 +325,7 @@ nvme_qpair_complete_tracker(struct nvme_qpair *qpair, struct nvme_tracker *tr,
 
 	error = spdk_nvme_cpl_is_error(cpl);
 	retry = error && nvme_completion_is_retry(cpl) &&
-		req->retries < nvme_retry_count;
+		req->retries < spdk_nvme_retry_count;
 
 	if (error && print_on_error) {
 		nvme_qpair_print_command(qpair, &req->cmd);
@@ -524,7 +524,7 @@ nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completion
 int
 nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 		     uint16_t num_entries, uint16_t num_trackers,
-		     struct nvme_controller *ctrlr)
+		     struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_tracker	*tr;
 	uint16_t		i;

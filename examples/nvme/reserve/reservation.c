@@ -49,7 +49,7 @@ struct rte_mempool *request_mempool;
 
 struct dev {
 	struct spdk_pci_device			*pci_dev;
-	struct nvme_controller 			*ctrlr;
+	struct spdk_nvme_ctrlr 			*ctrlr;
 	char 					name[100];
 };
 
@@ -104,7 +104,7 @@ set_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-get_host_identifier(struct nvme_controller *ctrlr)
+get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int ret;
 	uint64_t *host_id;
@@ -116,8 +116,8 @@ get_host_identifier(struct nvme_controller *ctrlr)
 	outstanding_commands = 0;
 
 	host_id = rte_malloc(NULL, 8, 0);
-	ret = nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, 8,
-				       get_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
+	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, 8,
+					    get_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
 	if (ret) {
 		fprintf(stdout, "Get Feature: Failed\n");
 		return -1;
@@ -126,7 +126,7 @@ get_host_identifier(struct nvme_controller *ctrlr)
 	outstanding_commands++;
 
 	while (outstanding_commands) {
-		nvme_ctrlr_process_admin_completions(ctrlr);
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 
 	if (features[SPDK_NVME_FEAT_HOST_IDENTIFIER].valid) {
@@ -137,7 +137,7 @@ get_host_identifier(struct nvme_controller *ctrlr)
 }
 
 static int
-set_host_identifier(struct nvme_controller *ctrlr)
+set_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int ret;
 	uint64_t *host_id;
@@ -153,8 +153,8 @@ set_host_identifier(struct nvme_controller *ctrlr)
 	set_feature_result = -1;
 
 	fprintf(stdout, "Set Feature: Host Identifier 0x%"PRIx64"\n", *host_id);
-	ret = nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, 8,
-				       set_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
+	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, 8,
+					    set_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
 	if (ret) {
 		fprintf(stdout, "Set Feature: Failed\n");
 		rte_free(host_id);
@@ -164,7 +164,7 @@ set_host_identifier(struct nvme_controller *ctrlr)
 	outstanding_commands++;
 
 	while (outstanding_commands) {
-		nvme_ctrlr_process_admin_completions(ctrlr);
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 
 	if (set_feature_result)
@@ -187,13 +187,13 @@ reservation_ns_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-reservation_ns_register(struct nvme_controller *ctrlr, uint16_t ns_id)
+reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_register_data *rr_data;
-	struct nvme_namespace *ns;
+	struct spdk_nvme_ns *ns;
 
-	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
 
 	rr_data = rte_zmalloc(NULL, sizeof(struct spdk_nvme_reservation_register_data), 0);
 	rr_data->crkey = CR_KEY;
@@ -202,10 +202,10 @@ reservation_ns_register(struct nvme_controller *ctrlr, uint16_t ns_id)
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = nvme_ns_cmd_reservation_register(ns, rr_data, 1,
-					       SPDK_NVME_RESERVE_REGISTER_KEY,
-					       SPDK_NVME_RESERVE_PTPL_NO_CHANGES,
-					       reservation_ns_completion, NULL);
+	ret = spdk_nvme_ns_cmd_reservation_register(ns, rr_data, 1,
+			SPDK_NVME_RESERVE_REGISTER_KEY,
+			SPDK_NVME_RESERVE_PTPL_NO_CHANGES,
+			reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Register Failed\n");
 		rte_free(rr_data);
@@ -214,7 +214,7 @@ reservation_ns_register(struct nvme_controller *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
 	}
 
 	if (reserve_command_result)
@@ -225,22 +225,22 @@ reservation_ns_register(struct nvme_controller *ctrlr, uint16_t ns_id)
 }
 
 static int
-reservation_ns_report(struct nvme_controller *ctrlr, uint16_t ns_id)
+reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 {
 	int ret, i;
 	uint8_t *payload;
 	struct spdk_nvme_reservation_status_data *status;
 	struct spdk_nvme_reservation_ctrlr_data *cdata;
-	struct nvme_namespace *ns;
+	struct spdk_nvme_ns *ns;
 
-	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
 	payload = rte_zmalloc(NULL, 0x1000, 0x1000);
 
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = nvme_ns_cmd_reservation_report(ns, payload, 0x1000,
-					     reservation_ns_completion, NULL);
+	ret = spdk_nvme_ns_cmd_reservation_report(ns, payload, 0x1000,
+			reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Report Failed\n");
 		rte_free(payload);
@@ -249,7 +249,7 @@ reservation_ns_report(struct nvme_controller *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
 	}
 
 	if (reserve_command_result) {
@@ -277,24 +277,24 @@ reservation_ns_report(struct nvme_controller *ctrlr, uint16_t ns_id)
 }
 
 static int
-reservation_ns_acquire(struct nvme_controller *ctrlr, uint16_t ns_id)
+reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_acquire_data *cdata;
-	struct nvme_namespace *ns;
+	struct spdk_nvme_ns *ns;
 
-	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
 	cdata = rte_zmalloc(NULL, sizeof(struct spdk_nvme_reservation_acquire_data), 0);
 	cdata->crkey = CR_KEY;
 
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = nvme_ns_cmd_reservation_acquire(ns, cdata,
-					      0,
-					      SPDK_NVME_RESERVE_ACQUIRE,
-					      SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
-					      reservation_ns_completion, NULL);
+	ret = spdk_nvme_ns_cmd_reservation_acquire(ns, cdata,
+			0,
+			SPDK_NVME_RESERVE_ACQUIRE,
+			SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
+			reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Acquire Failed\n");
 		rte_free(cdata);
@@ -303,7 +303,7 @@ reservation_ns_acquire(struct nvme_controller *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
 	}
 
 	if (reserve_command_result)
@@ -314,24 +314,24 @@ reservation_ns_acquire(struct nvme_controller *ctrlr, uint16_t ns_id)
 }
 
 static int
-reservation_ns_release(struct nvme_controller *ctrlr, uint16_t ns_id)
+reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_key_data *cdata;
-	struct nvme_namespace *ns;
+	struct spdk_nvme_ns *ns;
 
-	ns = nvme_ctrlr_get_ns(ctrlr, ns_id);
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
 	cdata = rte_zmalloc(NULL, sizeof(struct spdk_nvme_reservation_key_data), 0);
 	cdata->crkey = CR_KEY;
 
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = nvme_ns_cmd_reservation_release(ns, cdata,
-					      0,
-					      SPDK_NVME_RESERVE_RELEASE,
-					      SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
-					      reservation_ns_completion, NULL);
+	ret = spdk_nvme_ns_cmd_reservation_release(ns, cdata,
+			0,
+			SPDK_NVME_RESERVE_RELEASE,
+			SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
+			reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Release Failed\n");
 		rte_free(cdata);
@@ -340,7 +340,7 @@ reservation_ns_release(struct nvme_controller *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
 	}
 
 	if (reserve_command_result)
@@ -351,11 +351,11 @@ reservation_ns_release(struct nvme_controller *ctrlr, uint16_t ns_id)
 }
 
 static void
-reserve_controller(struct nvme_controller *ctrlr, struct spdk_pci_device *pci_dev)
+reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 
-	cdata = nvme_ctrlr_get_data(ctrlr);
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
 	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
@@ -397,7 +397,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct nvme_controller *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct dev *dev;
 
@@ -427,7 +427,7 @@ int main(int argc, char **argv)
 	}
 
 	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     nvme_request_size(), 128, 0,
+					     spdk_nvme_request_size(), 128, 0,
 					     NULL, NULL, NULL, NULL,
 					     SOCKET_ID_ANY, 0);
 
@@ -436,13 +436,13 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
-		fprintf(stderr, "nvme_probe() failed\n");
+	if (spdk_nvme_probe(NULL, probe_cb, attach_cb) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
 
 	if (num_devs) {
-		rc = nvme_register_io_thread();
+		rc = spdk_nvme_register_io_thread();
 		if (rc != 0)
 			return rc;
 	}
@@ -455,11 +455,11 @@ int main(int argc, char **argv)
 
 	for (i = 0; i < num_devs; i++) {
 		struct dev *dev = &devs[i];
-		nvme_detach(dev->ctrlr);
+		spdk_nvme_detach(dev->ctrlr);
 	}
 
 	if (num_devs)
-		nvme_unregister_io_thread();
+		spdk_nvme_unregister_io_thread();
 
 	return rc;
 }

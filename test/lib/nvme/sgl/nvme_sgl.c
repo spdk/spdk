@@ -56,7 +56,7 @@ struct rte_mempool *request_mempool;
 
 struct dev {
 	struct spdk_pci_device			*pci_dev;
-	struct nvme_controller 			*ctrlr;
+	struct spdk_nvme_ctrlr			*ctrlr;
 	char 					name[100];
 };
 
@@ -273,15 +273,15 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	char *buf;
 
 	struct io_request *req;
-	struct nvme_namespace *ns;
+	struct spdk_nvme_ns *ns;
 	const struct spdk_nvme_ns_data *nsdata;
 
-	ns = nvme_ctrlr_get_ns(dev->ctrlr, 1);
+	ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, 1);
 	if (!ns) {
 		return -1;
 	}
-	nsdata = nvme_ns_get_data(ns);
-	if (!nsdata || !nvme_ns_get_sector_size(ns))
+	nsdata = spdk_nvme_ns_get_data(ns);
+	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns))
 		return -1;
 
 	req = rte_zmalloc(NULL, sizeof(*req), 0);
@@ -293,7 +293,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	if (!len)
 		return 0;
 
-	lba_count = len / nvme_ns_get_sector_size(ns);
+	lba_count = len / spdk_nvme_ns_get_sector_size(ns);
 	if (BASE_LBA_START + lba_count > (uint32_t)nsdata->nsze) {
 		rte_free(req);
 		return -1;
@@ -304,10 +304,10 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 		memset(req->iovs[i].iov_base, DATA_PATTERN, req->iovs[i].iov_len);
 	}
 
-	rc = nvme_ns_cmd_writev(ns, BASE_LBA_START, lba_count,
-				io_complete, req, 0,
-				nvme_request_reset_sgl,
-				nvme_request_next_sge);
+	rc = spdk_nvme_ns_cmd_writev(ns, BASE_LBA_START, lba_count,
+				     io_complete, req, 0,
+				     nvme_request_reset_sgl,
+				     nvme_request_next_sge);
 
 	if (rc != 0) {
 		fprintf(stderr, "Writev Failed\n");
@@ -318,7 +318,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	io_complete_flag = 0;
 
 	while (!io_complete_flag)
-		nvme_ctrlr_process_io_completions(dev->ctrlr, 1);
+		spdk_nvme_ctrlr_process_io_completions(dev->ctrlr, 1);
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s Writev Failed\n", dev->name);
@@ -333,10 +333,10 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 		memset(req->iovs[i].iov_base, 0, req->iovs[i].iov_len);
 	}
 
-	rc = nvme_ns_cmd_readv(ns, BASE_LBA_START, lba_count,
-			       io_complete, req, 0,
-			       nvme_request_reset_sgl,
-			       nvme_request_next_sge);
+	rc = spdk_nvme_ns_cmd_readv(ns, BASE_LBA_START, lba_count,
+				    io_complete, req, 0,
+				    nvme_request_reset_sgl,
+				    nvme_request_next_sge);
 
 	if (rc != 0) {
 		fprintf(stderr, "Readv Failed\n");
@@ -345,7 +345,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	}
 
 	while (!io_complete_flag)
-		nvme_ctrlr_process_io_completions(dev->ctrlr, 1);
+		spdk_nvme_ctrlr_process_io_completions(dev->ctrlr, 1);
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s Readv Failed\n", dev->name);
@@ -393,7 +393,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct nvme_controller *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct dev *dev;
 
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
 	}
 
 	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     nvme_request_size(), 128, 0,
+					     spdk_nvme_request_size(), 128, 0,
 					     NULL, NULL, NULL, NULL,
 					     SOCKET_ID_ANY, 0);
 
@@ -444,13 +444,13 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
+	if (spdk_nvme_probe(NULL, probe_cb, attach_cb) != 0) {
 		fprintf(stderr, "nvme_probe() failed\n");
 		exit(1);
 	}
 
 	if (num_devs) {
-		rc = nvme_register_io_thread();
+		rc = spdk_nvme_register_io_thread();
 		if (rc != 0)
 			return rc;
 	}
@@ -471,11 +471,11 @@ int main(int argc, char **argv)
 	for (i = 0; i < num_devs; i++) {
 		struct dev *dev = &devs[i];
 
-		nvme_detach(dev->ctrlr);
+		spdk_nvme_detach(dev->ctrlr);
 	}
 
 	if (num_devs)
-		nvme_unregister_io_thread();
+		spdk_nvme_unregister_io_thread();
 
 	return rc;
 }

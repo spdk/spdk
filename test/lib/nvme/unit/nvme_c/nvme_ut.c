@@ -47,18 +47,18 @@ uint64_t nvme_vtophys(void *buf)
 }
 
 int
-nvme_ctrlr_construct(struct nvme_controller *ctrlr, void *devhandle)
+nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
 	return 0;
 }
 
 void
-nvme_ctrlr_destruct(struct nvme_controller *ctrlr)
+nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 }
 
 int
-nvme_ctrlr_start(struct nvme_controller *ctrlr)
+nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
 }
@@ -92,7 +92,7 @@ nvme_thread(void *arg)
 	while (sync_start == 0)
 		;
 
-	rc = nvme_register_io_thread();
+	rc = spdk_nvme_register_io_thread();
 	if (rc == 0) {
 		__sync_fetch_and_add(&threads_pass, 1);
 	} else {
@@ -113,19 +113,19 @@ test1(void)
 
 	CU_ASSERT(nvme_thread_ioq_index == -1);
 
-	rc = nvme_register_io_thread();
+	rc = spdk_nvme_register_io_thread();
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_thread_ioq_index >= 0);
 	CU_ASSERT(driver->ioq_index_pool_next == 1);
 
 	/* try to register thread again - this should fail */
 	last_index = nvme_thread_ioq_index;
-	rc = nvme_register_io_thread();
+	rc = spdk_nvme_register_io_thread();
 	CU_ASSERT(rc != 0);
 	/* assert that the ioq_index was unchanged */
 	CU_ASSERT(nvme_thread_ioq_index == last_index);
 
-	nvme_unregister_io_thread();
+	spdk_nvme_unregister_io_thread();
 	CU_ASSERT(nvme_thread_ioq_index == -1);
 	CU_ASSERT(driver->ioq_index_pool_next == 0);
 }

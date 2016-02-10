@@ -75,15 +75,15 @@ spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
 
 int nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries, uint16_t num_trackers,
-			 struct nvme_controller *ctrlr)
+			 struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
 }
 
 int
-nvme_ctrlr_cmd_get_log_page(struct nvme_controller *ctrlr, uint8_t log_page,
-			    uint32_t nsid, void *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
-			    void *cb_arg)
+spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
+				 uint32_t nsid, void *payload, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+				 void *cb_arg)
 {
 	return 0;
 }
@@ -131,52 +131,53 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 void
-nvme_ctrlr_cmd_set_async_event_config(struct nvme_controller *ctrlr,
-				      union spdk_nvme_critical_warning_state state, nvme_cb_fn_t cb_fn,
+nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
+				      union spdk_nvme_critical_warning_state state, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg)
 {
 }
 
 void
-nvme_ctrlr_cmd_identify_controller(struct nvme_controller *ctrlr, void *payload,
-				   nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 }
 
 void
-nvme_ctrlr_cmd_set_num_queues(struct nvme_controller *ctrlr,
-			      uint32_t num_queues, nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
+			      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 }
 
 void
-nvme_ctrlr_cmd_create_io_cq(struct nvme_controller *ctrlr,
-			    struct nvme_qpair *io_que, nvme_cb_fn_t cb_fn,
+nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
+			    struct nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
 			    void *cb_arg)
 {
 }
 
 void
-nvme_ctrlr_cmd_create_io_sq(struct nvme_controller *ctrlr,
-			    struct nvme_qpair *io_que, nvme_cb_fn_t cb_fn,
+nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
+			    struct nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
 			    void *cb_arg)
 {
 }
 
 void
-nvme_ns_destruct(struct nvme_namespace *ns)
+nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {
 }
 
 int
-nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
-		  struct nvme_controller *ctrlr)
+nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
+		  struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
 }
 
 struct nvme_request *
-nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
+nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
+		      spdk_nvme_cmd_cb cb_fn,
 		      void *cb_arg)
 {
 	struct nvme_request *req = NULL;
@@ -197,7 +198,8 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 }
 
 struct nvme_request *
-nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg)
 {
 	struct nvme_payload payload;
 
@@ -208,7 +210,7 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t c
 }
 
 struct nvme_request *
-nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
@@ -216,7 +218,7 @@ nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
 static void
 test_nvme_ctrlr_fail(void)
 {
-	struct nvme_controller	ctrlr = {};
+	struct spdk_nvme_ctrlr	ctrlr = {};
 
 	ctrlr.num_io_queues = 0;
 	nvme_ctrlr_fail(&ctrlr);
@@ -228,14 +230,14 @@ static void
 test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 {
 	bool	res;
-	struct nvme_controller				ctrlr = {};
+	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_intel_log_page_directory	payload = {};
 
 	/* set a invalid vendor id */
 	ctrlr.cdata.vid = 0xFFFF;
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == false);
 
 	/* set valid vendor id and log page directory*/
@@ -244,13 +246,13 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
 	CU_ASSERT(res == false);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_SMART);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_SMART);
 	CU_ASSERT(res == false);
 
 	/* set valid vendor id, device id and sub device id*/
@@ -263,13 +265,13 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == false);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_SMART);
+	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_SMART);
 	CU_ASSERT(res == false);
 }
 
@@ -277,21 +279,21 @@ static void
 test_nvme_ctrlr_set_supported_features(void)
 {
 	bool	res;
-	struct nvme_controller			ctrlr = {};
+	struct spdk_nvme_ctrlr			ctrlr = {};
 
 	/* set a invalid vendor id */
 	ctrlr.cdata.vid = 0xFFFF;
 	nvme_ctrlr_set_supported_features(&ctrlr);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_FEAT_ARBITRATION);
+	res = spdk_nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_FEAT_ARBITRATION);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
+	res = spdk_nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
 	CU_ASSERT(res == false);
 
 	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	nvme_ctrlr_set_supported_features(&ctrlr);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_FEAT_ARBITRATION);
+	res = spdk_nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_FEAT_ARBITRATION);
 	CU_ASSERT(res == true);
-	res = nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
+	res = spdk_nvme_ctrlr_is_feature_supported(&ctrlr, SPDK_NVME_INTEL_FEAT_MAX_LBA);
 	CU_ASSERT(res == true);
 }
 

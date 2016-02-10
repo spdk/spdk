@@ -44,7 +44,7 @@ struct nvme_driver g_nvme_driver = {
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_driver.attached_ctrlrs),
 };
 
-int32_t		nvme_retry_count;
+int32_t		spdk_nvme_retry_count;
 __thread int	nvme_thread_ioq_index = -1;
 
 
@@ -68,14 +68,14 @@ __thread int	nvme_thread_ioq_index = -1;
 
  */
 
-static struct nvme_controller *
+static struct spdk_nvme_ctrlr *
 nvme_attach(void *devhandle)
 {
-	struct nvme_controller	*ctrlr;
+	struct spdk_nvme_ctrlr	*ctrlr;
 	int			status;
 	uint64_t		phys_addr = 0;
 
-	ctrlr = nvme_malloc("nvme_ctrlr", sizeof(struct nvme_controller),
+	ctrlr = nvme_malloc("nvme_ctrlr", sizeof(struct spdk_nvme_ctrlr),
 			    64, &phys_addr);
 	if (ctrlr == NULL) {
 		nvme_printf(NULL, "could not allocate ctrlr\n");
@@ -92,7 +92,7 @@ nvme_attach(void *devhandle)
 }
 
 int
-nvme_detach(struct nvme_controller *ctrlr)
+spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_driver	*driver = &g_nvme_driver;
 
@@ -121,14 +121,14 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 size_t
-nvme_request_size(void)
+spdk_nvme_request_size(void)
 {
 	return sizeof(struct nvme_request);
 }
 
 struct nvme_request *
 nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
-		      nvme_cb_fn_t cb_fn, void *cb_arg)
+		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req = NULL;
 
@@ -158,7 +158,8 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 }
 
 struct nvme_request *
-nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg)
 {
 	struct nvme_payload payload;
 
@@ -169,7 +170,7 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t c
 }
 
 struct nvme_request *
-nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
@@ -229,7 +230,7 @@ nvme_free_ioq_index(void)
 }
 
 int
-nvme_register_io_thread(void)
+spdk_nvme_register_io_thread(void)
 {
 	int rc = 0;
 
@@ -247,13 +248,13 @@ nvme_register_io_thread(void)
 }
 
 void
-nvme_unregister_io_thread(void)
+spdk_nvme_unregister_io_thread(void)
 {
 	nvme_free_ioq_index();
 }
 
 struct nvme_enum_ctx {
-	nvme_probe_cb probe_cb;
+	spdk_nvme_probe_cb probe_cb;
 	void *cb_ctx;
 };
 
@@ -262,7 +263,7 @@ static int
 nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
 	struct nvme_enum_ctx *enum_ctx = ctx;
-	struct nvme_controller *ctrlr;
+	struct spdk_nvme_ctrlr *ctrlr;
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_nvme_driver.attached_ctrlrs, tailq) {
@@ -288,11 +289,11 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 int
-nvme_probe(void *cb_ctx, nvme_probe_cb probe_cb, nvme_attach_cb attach_cb)
+spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb)
 {
 	int rc, start_rc;
 	struct nvme_enum_ctx enum_ctx;
-	struct nvme_controller *ctrlr;
+	struct spdk_nvme_ctrlr *ctrlr;
 
 	nvme_mutex_lock(&g_nvme_driver.lock);
 

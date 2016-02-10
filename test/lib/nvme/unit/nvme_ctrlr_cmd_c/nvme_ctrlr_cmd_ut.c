@@ -178,7 +178,8 @@ static void verify_intel_get_log_page_directory(struct nvme_request *req)
 }
 
 struct nvme_request *
-nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
+nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
+		      spdk_nvme_cmd_cb cb_fn,
 		      void *cb_arg)
 {
 	struct nvme_request *req = &g_req;
@@ -196,7 +197,8 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 }
 
 struct nvme_request *
-nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg)
 {
 	struct nvme_payload payload;
 
@@ -207,13 +209,13 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t c
 }
 
 struct nvme_request *
-nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
 
 void
-nvme_ctrlr_submit_io_request(struct nvme_controller *ctrlr,
+nvme_ctrlr_submit_io_request(struct spdk_nvme_ctrlr *ctrlr,
 			     struct nvme_request *req)
 {
 	verify_fn(req);
@@ -222,7 +224,7 @@ nvme_ctrlr_submit_io_request(struct nvme_controller *ctrlr,
 }
 
 void
-nvme_ctrlr_submit_admin_request(struct nvme_controller *ctrlr, struct nvme_request *req)
+nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_request *req)
 {
 	verify_fn(req);
 	/* stop analyzer from thinking stack variable addresses are stored in a global */
@@ -232,32 +234,33 @@ nvme_ctrlr_submit_admin_request(struct nvme_controller *ctrlr, struct nvme_reque
 static void
 test_firmware_get_log_page(void)
 {
-	struct nvme_controller			ctrlr = {};
+	struct spdk_nvme_ctrlr			ctrlr = {};
 	struct spdk_nvme_firmware_page		payload = {};
 
 	verify_fn = verify_firmware_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_FIRMWARE_SLOT, SPDK_NVME_GLOBAL_NS_TAG,
-				    &payload,
-				    sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_FIRMWARE_SLOT, SPDK_NVME_GLOBAL_NS_TAG,
+					 &payload,
+					 sizeof(payload), NULL, NULL);
 }
 
 static void
 test_health_get_log_page(void)
 {
-	struct nvme_controller				ctrlr = {};
+	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_health_information_page	payload = {};
 
 	verify_fn = verify_health_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION, health_log_nsid, &payload,
-				    sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION, health_log_nsid,
+					 &payload,
+					 sizeof(payload), NULL, NULL);
 }
 
 static void
 test_error_get_log_page(void)
 {
-	struct nvme_controller				ctrlr = {};
+	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_error_information_entry	payload = {};
 
 	ctrlr.cdata.elpe = CTRLR_CDATA_ELPE;
@@ -266,65 +269,66 @@ test_error_get_log_page(void)
 
 	/* valid page */
 	error_num_entries = 1;
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_ERROR, SPDK_NVME_GLOBAL_NS_TAG, &payload,
-				    sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_ERROR, SPDK_NVME_GLOBAL_NS_TAG, &payload,
+					 sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_smart_get_log_page(void)
 {
-	struct nvme_controller			ctrlr = {};
+	struct spdk_nvme_ctrlr			ctrlr = {};
 	struct spdk_nvme_intel_smart_information_page	payload = {};
 
 	verify_fn = verify_intel_smart_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_SMART, health_log_nsid, &payload,
-				    sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_SMART, health_log_nsid, &payload,
+					 sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_temperature_get_log_page(void)
 {
-	struct nvme_controller			ctrlr = {};
+	struct spdk_nvme_ctrlr			ctrlr = {};
 	struct spdk_nvme_intel_temperature_page	payload = {};
 
 	verify_fn = verify_intel_temperature_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE, SPDK_NVME_GLOBAL_NS_TAG,
-				    &payload, sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE, SPDK_NVME_GLOBAL_NS_TAG,
+					 &payload, sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_read_latency_get_log_page(void)
 {
-	struct nvme_controller			ctrlr = {};
+	struct spdk_nvme_ctrlr			ctrlr = {};
 	struct spdk_nvme_intel_rw_latency_page	payload = {};
 
 	verify_fn = verify_intel_read_latency_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY,
-				    SPDK_NVME_GLOBAL_NS_TAG,
-				    &payload, sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY,
+					 SPDK_NVME_GLOBAL_NS_TAG,
+					 &payload, sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_write_latency_get_log_page(void)
 {
-	struct nvme_controller			ctrlr = {};
+	struct spdk_nvme_ctrlr			ctrlr = {};
 	struct spdk_nvme_intel_rw_latency_page	payload = {};
 
 	verify_fn = verify_intel_write_latency_log_page;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY,
-				    SPDK_NVME_GLOBAL_NS_TAG,
-				    &payload, sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY,
+					 SPDK_NVME_GLOBAL_NS_TAG,
+					 &payload, sizeof(payload), NULL, NULL);
 }
 
 static void test_intel_get_log_page_directory(void)
 {
-	struct nvme_controller				ctrlr = {};
+	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_intel_log_page_directory	payload = {};
 
 	verify_fn = verify_intel_get_log_page_directory;
 
-	nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY, SPDK_NVME_GLOBAL_NS_TAG,
-				    &payload, sizeof(payload), NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY,
+					 SPDK_NVME_GLOBAL_NS_TAG,
+					 &payload, sizeof(payload), NULL, NULL);
 }
 
 static void test_generic_get_log_pages(void)
@@ -346,28 +350,28 @@ static void test_intel_get_log_pages(void)
 static void
 test_set_feature_cmd(void)
 {
-	struct nvme_controller  ctrlr = {};
+	struct spdk_nvme_ctrlr  ctrlr = {};
 
 	verify_fn = verify_set_feature_cmd;
 
-	nvme_ctrlr_cmd_set_feature(&ctrlr, feature, feature_cdw11, feature_cdw12, NULL, 0, NULL, NULL);
+	spdk_nvme_ctrlr_cmd_set_feature(&ctrlr, feature, feature_cdw11, feature_cdw12, NULL, 0, NULL, NULL);
 }
 
 
 static void
 test_get_feature_cmd(void)
 {
-	struct nvme_controller	ctrlr = {};
+	struct spdk_nvme_ctrlr	ctrlr = {};
 
 	verify_fn = verify_get_feature_cmd;
 
-	nvme_ctrlr_cmd_get_feature(&ctrlr, get_feature, get_feature_cdw11, NULL, 0, NULL, NULL);
+	spdk_nvme_ctrlr_cmd_get_feature(&ctrlr, get_feature, get_feature_cdw11, NULL, 0, NULL, NULL);
 }
 
 static void
 test_abort_cmd(void)
 {
-	struct nvme_controller	ctrlr = {};
+	struct spdk_nvme_ctrlr	ctrlr = {};
 
 	verify_fn = verify_abort_cmd;
 
@@ -377,12 +381,12 @@ test_abort_cmd(void)
 static void
 test_io_raw_cmd(void)
 {
-	struct nvme_controller	ctrlr = {};
+	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct spdk_nvme_cmd	cmd = {};
 
 	verify_fn = verify_io_raw_cmd;
 
-	nvme_ctrlr_cmd_io_raw(&ctrlr, &cmd, NULL, 1, NULL, NULL);
+	spdk_nvme_ctrlr_cmd_io_raw(&ctrlr, &cmd, NULL, 1, NULL, NULL);
 }
 
 static void

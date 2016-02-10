@@ -34,56 +34,56 @@
 #include "nvme_internal.h"
 
 static inline struct spdk_nvme_ns_data *
-_nvme_ns_get_data(struct nvme_namespace *ns)
+_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
 	return &ns->ctrlr->nsdata[ns->id - 1];
 }
 
 uint32_t
-nvme_ns_get_id(struct nvme_namespace *ns)
+spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns)
 {
 	return ns->id;
 }
 
 uint32_t
-nvme_ns_get_max_io_xfer_size(struct nvme_namespace *ns)
+spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns)
 {
 	return ns->ctrlr->max_xfer_size;
 }
 
 uint32_t
-nvme_ns_get_sector_size(struct nvme_namespace *ns)
+spdk_nvme_ns_get_sector_size(struct spdk_nvme_ns *ns)
 {
 	return ns->sector_size;
 }
 
 uint64_t
-nvme_ns_get_num_sectors(struct nvme_namespace *ns)
+spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns)
 {
 	return _nvme_ns_get_data(ns)->nsze;
 }
 
 uint64_t
-nvme_ns_get_size(struct nvme_namespace *ns)
+spdk_nvme_ns_get_size(struct spdk_nvme_ns *ns)
 {
-	return nvme_ns_get_num_sectors(ns) * nvme_ns_get_sector_size(ns);
+	return spdk_nvme_ns_get_num_sectors(ns) * spdk_nvme_ns_get_sector_size(ns);
 }
 
 uint32_t
-nvme_ns_get_flags(struct nvme_namespace *ns)
+spdk_nvme_ns_get_flags(struct spdk_nvme_ns *ns)
 {
 	return ns->flags;
 }
 
 const struct spdk_nvme_ns_data *
-nvme_ns_get_data(struct nvme_namespace *ns)
+spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
 	return _nvme_ns_get_data(ns);
 }
 
 int
-nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
-		  struct nvme_controller *ctrlr)
+nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
+		  struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_ns_data		*nsdata;
@@ -115,29 +115,29 @@ nvme_ns_construct(struct nvme_namespace *ns, uint16_t id,
 
 	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
 
-	ns->sectors_per_max_io = nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
+	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
 	ns->sectors_per_stripe = ns->stripe_size / ns->sector_size;
 
 	if (ctrlr->cdata.oncs.dsm) {
-		ns->flags |= NVME_NS_DEALLOCATE_SUPPORTED;
+		ns->flags |= SPDK_NVME_NS_DEALLOCATE_SUPPORTED;
 	}
 
 	if (ctrlr->cdata.vwc.present) {
-		ns->flags |= NVME_NS_FLUSH_SUPPORTED;
+		ns->flags |= SPDK_NVME_NS_FLUSH_SUPPORTED;
 	}
 
 	if (ctrlr->cdata.oncs.write_zeroes) {
-		ns->flags |= NVME_NS_WRITE_ZEROES_SUPPORTED;
+		ns->flags |= SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED;
 	}
 
 	if (nsdata->nsrescap.raw) {
-		ns->flags |= NVME_NS_RESERVATION_SUPPORTED;
+		ns->flags |= SPDK_NVME_NS_RESERVATION_SUPPORTED;
 	}
 
 	return 0;
 }
 
-void nvme_ns_destruct(struct nvme_namespace *ns)
+void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {
 
 }

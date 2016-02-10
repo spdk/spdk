@@ -55,7 +55,7 @@
 #endif
 
 struct ctrlr_entry {
-	struct nvme_controller			*ctrlr;
+	struct spdk_nvme_ctrlr			*ctrlr;
 	struct spdk_nvme_intel_rw_latency_page	*latency_page;
 	struct ctrlr_entry			*next;
 	char					name[1024];
@@ -71,8 +71,8 @@ struct ns_entry {
 
 	union {
 		struct {
-			struct nvme_controller	*ctrlr;
-			struct nvme_namespace	*ns;
+			struct spdk_nvme_ctrlr	*ctrlr;
+			struct spdk_nvme_ns	*ns;
 		} nvme;
 #if HAVE_LIBAIO
 		struct {
@@ -145,19 +145,19 @@ static void
 task_complete(struct perf_task *task);
 
 static void
-register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
+register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
 
-	cdata = nvme_ctrlr_get_data(ctrlr);
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	if (nvme_ns_get_size(ns) < g_io_size_bytes ||
-	    nvme_ns_get_sector_size(ns) > g_io_size_bytes) {
+	if (spdk_nvme_ns_get_size(ns) < g_io_size_bytes ||
+	    spdk_nvme_ns_get_sector_size(ns) > g_io_size_bytes) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
-		       cdata->mn, cdata->sn, nvme_ns_get_id(ns),
-		       nvme_ns_get_size(ns), nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
+		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
 		return;
 	}
 
@@ -170,9 +170,9 @@ register_ns(struct nvme_controller *ctrlr, struct nvme_namespace *ns)
 	entry->type = ENTRY_TYPE_NVME_NS;
 	entry->u.nvme.ctrlr = ctrlr;
 	entry->u.nvme.ns = ns;
-	entry->size_in_ios = nvme_ns_get_size(ns) /
+	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
 			     g_io_size_bytes;
-	entry->io_size_blocks = g_io_size_bytes / nvme_ns_get_sector_size(ns);
+	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
@@ -191,7 +191,7 @@ enable_latency_tracking_complete(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-set_latency_tracking_feature(struct nvme_controller *ctrlr, bool enable)
+set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
 {
 	int res;
 	union spdk_nvme_intel_feat_latency_tracking latency_tracking;
@@ -202,8 +202,8 @@ set_latency_tracking_feature(struct nvme_controller *ctrlr, bool enable)
 		latency_tracking.bits.enable = 0x00;
 	}
 
-	res = nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING,
-					 latency_tracking.raw, 0, NULL, 0, enable_latency_tracking_complete, NULL);
+	res = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING,
+					      latency_tracking.raw, 0, NULL, 0, enable_latency_tracking_complete, NULL);
 	if (res) {
 		printf("fail to allocate nvme request.\n");
 		return;
@@ -211,16 +211,16 @@ set_latency_tracking_feature(struct nvme_controller *ctrlr, bool enable)
 	g_outstanding_commands++;
 
 	while (g_outstanding_commands) {
-		nvme_ctrlr_process_admin_completions(ctrlr);
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 }
 
 static void
-register_ctrlr(struct nvme_controller *ctrlr)
+register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int nsid, num_ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
-	const struct spdk_nvme_ctrlr_data *cdata = nvme_ctrlr_get_data(ctrlr);
+	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	if (entry == NULL) {
 		perror("ctrlr_entry malloc");
@@ -241,12 +241,12 @@ register_ctrlr(struct nvme_controller *ctrlr)
 	g_controllers = entry;
 
 	if (g_latency_tracking_enable &&
-	    nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 		set_latency_tracking_feature(ctrlr, true);
 
-	num_ns = nvme_ctrlr_get_num_ns(ctrlr);
+	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	for (nsid = 1; nsid <= num_ns; nsid++) {
-		register_ns(ctrlr, nvme_ctrlr_get_ns(ctrlr, nsid));
+		register_ns(ctrlr, spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
 	}
 
 }
@@ -398,8 +398,8 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		} else
 #endif
 		{
-			rc = nvme_ns_cmd_read(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
-					      entry->io_size_blocks, io_complete, task, 0);
+			rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
+						   entry->io_size_blocks, io_complete, task, 0);
 		}
 	} else {
 #if HAVE_LIBAIO
@@ -409,8 +409,8 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		} else
 #endif
 		{
-			rc = nvme_ns_cmd_write(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
-					       entry->io_size_blocks, io_complete, task, 0);
+			rc = spdk_nvme_ns_cmd_write(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
+						    entry->io_size_blocks, io_complete, task, 0);
 		}
 	}
 
@@ -458,7 +458,7 @@ check_io(struct ns_worker_ctx *ns_ctx)
 	} else
 #endif
 	{
-		nvme_ctrlr_process_io_completions(ns_ctx->entry->u.nvme.ctrlr, g_max_completions);
+		spdk_nvme_ctrlr_process_io_completions(ns_ctx->entry->u.nvme.ctrlr, g_max_completions);
 	}
 }
 
@@ -488,8 +488,8 @@ work_fn(void *arg)
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
-	if (nvme_register_io_thread() != 0) {
-		fprintf(stderr, "nvme_register_io_thread() failed on core %u\n", worker->lcore);
+	if (spdk_nvme_register_io_thread() != 0) {
+		fprintf(stderr, "spdk_nvme_register_io_thread() failed on core %u\n", worker->lcore);
 		return -1;
 	}
 
@@ -523,7 +523,7 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	nvme_unregister_io_thread();
+	spdk_nvme_unregister_io_thread();
 
 	return 0;
 }
@@ -614,11 +614,11 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 	printf("========================================================\n");
 	ctrlr = g_controllers;
 	while (ctrlr) {
-		if (nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
-			if (nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, SPDK_NVME_GLOBAL_NS_TAG,
-							ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page),
-							enable_latency_tracking_complete,
-							NULL)) {
+		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
+			if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, SPDK_NVME_GLOBAL_NS_TAG,
+							     ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page),
+							     enable_latency_tracking_complete,
+							     NULL)) {
 				printf("nvme_ctrlr_cmd_get_log_page() failed\n");
 				exit(1);
 			}
@@ -633,14 +633,14 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 	while (g_outstanding_commands) {
 		ctrlr = g_controllers;
 		while (ctrlr) {
-			nvme_ctrlr_process_admin_completions(ctrlr->ctrlr);
+			spdk_nvme_ctrlr_process_admin_completions(ctrlr->ctrlr);
 			ctrlr = ctrlr->next;
 		}
 	}
 
 	ctrlr = g_controllers;
 	while (ctrlr) {
-		if (nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
+		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
 			print_latency_page(ctrlr);
 		}
 		ctrlr = ctrlr->next;
@@ -843,7 +843,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct nvme_controller *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr)
 {
 	printf("Attached to %04x:%02x:%02x.%02x\n",
 	       spdk_pci_device_get_domain(dev),
@@ -859,8 +859,8 @@ register_controllers(void)
 {
 	printf("Initializing NVMe Controllers\n");
 
-	if (nvme_probe(NULL, probe_cb, attach_cb) != 0) {
-		fprintf(stderr, "nvme_probe() failed\n");
+	if (spdk_nvme_probe(NULL, probe_cb, attach_cb) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
 
@@ -876,9 +876,9 @@ unregister_controllers(void)
 		struct ctrlr_entry *next = entry->next;
 		rte_free(entry->latency_page);
 		if (g_latency_tracking_enable &&
-		    nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 			set_latency_tracking_feature(entry->ctrlr, false);
-		nvme_detach(entry->ctrlr);
+		spdk_nvme_detach(entry->ctrlr);
 		free(entry);
 		entry = next;
 	}
@@ -988,7 +988,7 @@ int main(int argc, char **argv)
 	}
 
 	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     nvme_request_size(), 128, 0,
+					     spdk_nvme_request_size(), 128, 0,
 					     NULL, NULL, NULL, NULL,
 					     SOCKET_ID_ANY, 0);
 

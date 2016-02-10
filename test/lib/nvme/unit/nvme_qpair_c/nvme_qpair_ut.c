@@ -40,7 +40,7 @@ struct nvme_driver g_nvme_driver = {
 	.max_io_queues = DEFAULT_MAX_IO_QUEUES,
 };
 
-int32_t nvme_retry_count = 1;
+int32_t spdk_nvme_retry_count = 1;
 
 char outbuf[OUTBUF_SIZE];
 
@@ -56,7 +56,8 @@ uint64_t nvme_vtophys(void *buf)
 }
 
 struct nvme_request *
-nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size, nvme_cb_fn_t cb_fn,
+nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
+		      spdk_nvme_cmd_cb cb_fn,
 		      void *cb_arg)
 {
 	struct nvme_request *req = NULL;
@@ -86,7 +87,8 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 }
 
 struct nvme_request *
-nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg)
 {
 	struct nvme_payload payload;
 
@@ -97,7 +99,7 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, nvme_cb_fn_t c
 }
 
 struct nvme_request *
-nvme_allocate_request_null(nvme_cb_fn_t cb_fn, void *cb_arg)
+nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
@@ -152,7 +154,7 @@ test2(void)
 
 static void
 prepare_submit_request_test(struct nvme_qpair *qpair,
-			    struct nvme_controller *ctrlr,
+			    struct spdk_nvme_ctrlr *ctrlr,
 			    struct spdk_nvme_registers *regs)
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
@@ -212,7 +214,7 @@ test3(void)
 {
 	struct nvme_qpair		qpair = {};
 	struct nvme_request		*req;
-	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
@@ -235,7 +237,7 @@ test4(void)
 {
 	struct nvme_qpair		qpair = {};
 	struct nvme_request		*req;
-	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 	char				payload[4096];
 
@@ -268,7 +270,7 @@ test_ctrlr_failed(void)
 {
 	struct nvme_qpair		qpair = {};
 	struct nvme_request		*req;
-	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 	char				payload[4096];
 
@@ -310,7 +312,7 @@ static void test_nvme_qpair_fail(void)
 {
 	struct nvme_qpair		qpair = {};
 	struct nvme_request		*req = NULL;
-	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 	struct nvme_tracker		*tr_temp;
 	uint64_t			phys_addr = 0;
@@ -340,7 +342,7 @@ static void test_nvme_qpair_fail(void)
 static void test_nvme_qpair_process_completions(void)
 {
 	struct nvme_qpair		qpair = {};
-	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
@@ -355,7 +357,7 @@ static void
 test_nvme_qpair_process_completions_limit(void)
 {
 	struct nvme_qpair		qpair = {};
-	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
@@ -386,7 +388,7 @@ test_nvme_qpair_process_completions_limit(void)
 static void test_nvme_qpair_destroy(void)
 {
 	struct nvme_qpair		qpair = {};
-	struct nvme_controller		ctrlr = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 	struct nvme_tracker		*tr_temp;
 	uint64_t			phys_addr = 0;
