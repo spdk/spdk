@@ -41,12 +41,12 @@
 
 \section key_functions Key Functions
 
-- nvme_probe() \copybrief nvme_probe()
-- nvme_ns_cmd_read() \copybrief nvme_ns_cmd_read()
-- nvme_ns_cmd_write() \copybrief nvme_ns_cmd_write()
-- nvme_ns_cmd_deallocate() \copybrief nvme_ns_cmd_deallocate()
-- nvme_ns_cmd_flush() \copybrief nvme_ns_cmd_flush()
-- nvme_ctrlr_process_io_completions() \copybrief nvme_ctrlr_process_io_completions()
+- spdk_nvme_probe() \copybrief spdk_nvme_probe()
+- spdk_nvme_ns_cmd_read() \copybrief spdk_nvme_ns_cmd_read()
+- spdk_nvme_ns_cmd_write() \copybrief spdk_nvme_ns_cmd_write()
+- spdk_nvme_ns_cmd_deallocate() \copybrief spdk_nvme_ns_cmd_deallocate()
+- spdk_nvme_ns_cmd_flush() \copybrief spdk_nvme_ns_cmd_flush()
+- spdk_nvme_ctrlr_process_io_completions() \copybrief spdk_nvme_ctrlr_process_io_completions()
 
 \section key_concepts Key Concepts
 
