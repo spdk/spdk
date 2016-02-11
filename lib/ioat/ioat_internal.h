@@ -61,7 +61,7 @@ struct ioat_channel {
 	/* Opaque handle to upper layer */
 	void                *device;
 	uint64_t            max_xfer_size;
-	volatile struct ioat_registers *regs;
+	volatile struct spdk_ioat_registers *regs;
 
 	volatile uint64_t   *comp_update;
 
@@ -72,7 +72,7 @@ struct ioat_channel {
 	uint64_t            last_seen;
 
 	struct ioat_descriptor		*ring;
-	union ioat_hw_descriptor	*hw_ring;
+	union spdk_ioat_hw_desc		*hw_ring;
 	uint64_t			hw_ring_phys_addr;
 	uint32_t			dma_capabilities;
 
@@ -83,25 +83,25 @@ struct ioat_channel {
 static inline uint32_t
 is_ioat_active(uint64_t status)
 {
-	return (status & IOAT_CHANSTS_STATUS) == IOAT_CHANSTS_ACTIVE;
+	return (status & SPDK_IOAT_CHANSTS_STATUS) == SPDK_IOAT_CHANSTS_ACTIVE;
 }
 
 static inline uint32_t
 is_ioat_idle(uint64_t status)
 {
-	return (status & IOAT_CHANSTS_STATUS) == IOAT_CHANSTS_IDLE;
+	return (status & SPDK_IOAT_CHANSTS_STATUS) == SPDK_IOAT_CHANSTS_IDLE;
 }
 
 static inline uint32_t
 is_ioat_halted(uint64_t status)
 {
-	return (status & IOAT_CHANSTS_STATUS) == IOAT_CHANSTS_HALTED;
+	return (status & SPDK_IOAT_CHANSTS_STATUS) == SPDK_IOAT_CHANSTS_HALTED;
 }
 
 static inline uint32_t
 is_ioat_suspended(uint64_t status)
 {
-	return (status & IOAT_CHANSTS_STATUS) == IOAT_CHANSTS_SUSPENDED;
+	return (status & SPDK_IOAT_CHANSTS_STATUS) == SPDK_IOAT_CHANSTS_SUSPENDED;
 }
 
 #endif /* __IOAT_INTERNAL_H__ */

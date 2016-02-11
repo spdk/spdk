@@ -31,37 +31,37 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __IOAT_SPEC_H__
-#define __IOAT_SPEC_H__
+#ifndef SPDK_IOAT_SPEC_H
+#define SPDK_IOAT_SPEC_H
 
 #include <inttypes.h>
 
 #include "spdk/assert.h"
 
-#define IOAT_INTRCTRL_MASTER_INT_EN	0x01
+#define SPDK_IOAT_INTRCTRL_MASTER_INT_EN	0x01
 
-#define IOAT_VER_3_0                0x30
-#define IOAT_VER_3_3                0x33
+#define SPDK_IOAT_VER_3_0                0x30
+#define SPDK_IOAT_VER_3_3                0x33
 
 /* DMA Channel Registers */
-#define IOAT_CHANCTRL_CHANNEL_PRIORITY_MASK	0xF000
-#define IOAT_CHANCTRL_COMPL_DCA_EN		0x0200
-#define IOAT_CHANCTRL_CHANNEL_IN_USE		0x0100
-#define IOAT_CHANCTRL_DESCRIPTOR_ADDR_SNOOP_CONTROL	0x0020
-#define IOAT_CHANCTRL_ERR_INT_EN		0x0010
-#define IOAT_CHANCTRL_ANY_ERR_ABORT_EN		0x0008
-#define IOAT_CHANCTRL_ERR_COMPLETION_EN		0x0004
-#define IOAT_CHANCTRL_INT_REARM			0x0001
+#define SPDK_IOAT_CHANCTRL_CHANNEL_PRIORITY_MASK	0xF000
+#define SPDK_IOAT_CHANCTRL_COMPL_DCA_EN		0x0200
+#define SPDK_IOAT_CHANCTRL_CHANNEL_IN_USE		0x0100
+#define SPDK_IOAT_CHANCTRL_DESCRIPTOR_ADDR_SNOOP_CONTROL	0x0020
+#define SPDK_IOAT_CHANCTRL_ERR_INT_EN		0x0010
+#define SPDK_IOAT_CHANCTRL_ANY_ERR_ABORT_EN		0x0008
+#define SPDK_IOAT_CHANCTRL_ERR_COMPLETION_EN		0x0004
+#define SPDK_IOAT_CHANCTRL_INT_REARM			0x0001
 
 /* DMA Channel Capabilities */
-#define	IOAT_DMACAP_PB			(1 << 0)
-#define	IOAT_DMACAP_DCA			(1 << 4)
-#define	IOAT_DMACAP_BFILL		(1 << 6)
-#define	IOAT_DMACAP_XOR			(1 << 8)
-#define	IOAT_DMACAP_PQ			(1 << 9)
-#define	IOAT_DMACAP_DMA_DIF		(1 << 10)
+#define	SPDK_IOAT_DMACAP_PB		(1 << 0)
+#define	SPDK_IOAT_DMACAP_DCA		(1 << 4)
+#define	SPDK_IOAT_DMACAP_BFILL		(1 << 6)
+#define	SPDK_IOAT_DMACAP_XOR		(1 << 8)
+#define	SPDK_IOAT_DMACAP_PQ		(1 << 9)
+#define	SPDK_IOAT_DMACAP_DMA_DIF	(1 << 10)
 
-struct ioat_registers {
+struct spdk_ioat_registers {
 	uint8_t		chancnt;
 	uint8_t		xfercap;
 	uint8_t		genctrl;
@@ -86,24 +86,24 @@ struct ioat_registers {
 	uint32_t	chanerrmask;	/* 0xAC */
 } __attribute__((packed));
 
-#define IOAT_CHANCMD_RESET		0x20
-#define IOAT_CHANCMD_SUSPEND		0x04
+#define SPDK_IOAT_CHANCMD_RESET			0x20
+#define SPDK_IOAT_CHANCMD_SUSPEND		0x04
 
-#define IOAT_CHANSTS_STATUS		0x7ULL
-#define IOAT_CHANSTS_ACTIVE		0x0
-#define IOAT_CHANSTS_IDLE		0x1
-#define IOAT_CHANSTS_SUSPENDED		0x2
-#define IOAT_CHANSTS_HALTED		0x3
-#define IOAT_CHANSTS_ARMED		0x4
+#define SPDK_IOAT_CHANSTS_STATUS		0x7ULL
+#define SPDK_IOAT_CHANSTS_ACTIVE		0x0
+#define SPDK_IOAT_CHANSTS_IDLE			0x1
+#define SPDK_IOAT_CHANSTS_SUSPENDED		0x2
+#define SPDK_IOAT_CHANSTS_HALTED		0x3
+#define SPDK_IOAT_CHANSTS_ARMED			0x4
 
-#define IOAT_CHANSTS_UNAFFILIATED_ERROR	0x8ULL
-#define IOAT_CHANSTS_SOFT_ERROR		0x10ULL
+#define SPDK_IOAT_CHANSTS_UNAFFILIATED_ERROR	0x8ULL
+#define SPDK_IOAT_CHANSTS_SOFT_ERROR		0x10ULL
 
-#define IOAT_CHANSTS_COMPLETED_DESCRIPTOR_MASK	(~0x3FULL)
+#define SPDK_IOAT_CHANSTS_COMPLETED_DESCRIPTOR_MASK	(~0x3FULL)
 
-#define IOAT_CHANCMP_ALIGN		8	/* CHANCMP address must be 64-bit aligned */
+#define SPDK_IOAT_CHANCMP_ALIGN			8	/* CHANCMP address must be 64-bit aligned */
 
-struct ioat_generic_hw_descriptor {
+struct spdk_ioat_generic_hw_desc {
 	uint32_t size;
 	union {
 		uint32_t control_raw;
@@ -129,7 +129,7 @@ struct ioat_generic_hw_descriptor {
 	uint64_t op_specific[4];
 };
 
-struct ioat_dma_hw_descriptor {
+struct spdk_ioat_dma_hw_desc {
 	uint32_t size;
 	union {
 		uint32_t control_raw;
@@ -146,7 +146,7 @@ struct ioat_dma_hw_descriptor {
 			uint32_t dest_dca: 1;
 			uint32_t hint: 1;
 			uint32_t reserved: 13;
-#define IOAT_OP_COPY 0x00
+#define SPDK_IOAT_OP_COPY 0x00
 			uint32_t op: 8;
 		} control;
 	} u;
@@ -159,7 +159,7 @@ struct ioat_dma_hw_descriptor {
 	uint64_t user2;
 };
 
-struct ioat_fill_hw_descriptor {
+struct spdk_ioat_fill_hw_desc {
 	uint32_t size;
 	union {
 		uint32_t control_raw;
@@ -173,7 +173,7 @@ struct ioat_fill_hw_descriptor {
 			uint32_t dest_page_break: 1;
 			uint32_t bundle: 1;
 			uint32_t reserved3: 15;
-#define IOAT_OP_FILL 0x01
+#define SPDK_IOAT_OP_FILL 0x01
 			uint32_t op: 8;
 		} control;
 	} u;
@@ -186,7 +186,7 @@ struct ioat_fill_hw_descriptor {
 	uint64_t user2;
 };
 
-struct ioat_xor_hw_descriptor {
+struct spdk_ioat_xor_hw_desc {
 	uint32_t size;
 	union {
 		uint32_t control_raw;
@@ -201,8 +201,8 @@ struct ioat_xor_hw_descriptor {
 			uint32_t dest_dca: 1;
 			uint32_t hint: 1;
 			uint32_t reserved: 13;
-#define IOAT_OP_XOR 0x87
-#define IOAT_OP_XOR_VAL 0x88
+#define SPDK_IOAT_OP_XOR 0x87
+#define SPDK_IOAT_OP_XOR_VAL 0x88
 			uint32_t op: 8;
 		} control;
 	} u;
@@ -215,7 +215,7 @@ struct ioat_xor_hw_descriptor {
 	uint64_t src_addr5;
 };
 
-struct ioat_xor_ext_hw_descriptor {
+struct spdk_ioat_xor_ext_hw_desc {
 	uint64_t src_addr6;
 	uint64_t src_addr7;
 	uint64_t src_addr8;
@@ -223,7 +223,7 @@ struct ioat_xor_ext_hw_descriptor {
 	uint64_t reserved[4];
 };
 
-struct ioat_pq_hw_descriptor {
+struct spdk_ioat_pq_hw_desc {
 	uint32_t size;
 	union {
 		uint32_t control_raw;
@@ -240,8 +240,8 @@ struct ioat_pq_hw_descriptor {
 			uint32_t p_disable: 1;
 			uint32_t q_disable: 1;
 			uint32_t reserved: 11;
-#define IOAT_OP_PQ 0x89
-#define IOAT_OP_PQ_VAL 0x8a
+#define SPDK_IOAT_OP_PQ 0x89
+#define SPDK_IOAT_OP_PQ_VAL 0x8a
 			uint32_t op: 8;
 		} control;
 	} u;
@@ -254,7 +254,7 @@ struct ioat_pq_hw_descriptor {
 	uint64_t q_addr;
 };
 
-struct ioat_pq_ext_hw_descriptor {
+struct spdk_ioat_pq_ext_hw_desc {
 	uint64_t src_addr4;
 	uint64_t src_addr5;
 	uint64_t src_addr6;
@@ -264,7 +264,7 @@ struct ioat_pq_ext_hw_descriptor {
 	uint64_t reserved[2];
 };
 
-struct ioat_pq_update_hw_descriptor {
+struct spdk_ioat_pq_update_hw_desc {
 	uint32_t size;
 	union {
 		uint32_t control_raw;
@@ -282,7 +282,7 @@ struct ioat_pq_update_hw_descriptor {
 			uint32_t q_disable: 1;
 			uint32_t reserved: 3;
 			uint32_t coef: 8;
-#define IOAT_OP_PQ_UP 0x8b
+#define SPDK_IOAT_OP_PQ_UP 0x8b
 			uint32_t op: 8;
 		} control;
 	} u;
@@ -295,21 +295,21 @@ struct ioat_pq_update_hw_descriptor {
 	uint64_t q_addr;
 };
 
-struct ioat_raw_hw_descriptor {
+struct spdk_ioat_raw_hw_desc {
 	uint64_t field[8];
 };
 
-union ioat_hw_descriptor {
-	struct ioat_raw_hw_descriptor raw;
-	struct ioat_generic_hw_descriptor generic;
-	struct ioat_dma_hw_descriptor dma;
-	struct ioat_fill_hw_descriptor fill;
-	struct ioat_xor_hw_descriptor xor;
-	struct ioat_xor_ext_hw_descriptor xor_ext;
-	struct ioat_pq_hw_descriptor pq;
-	struct ioat_pq_ext_hw_descriptor pq_ext;
-	struct ioat_pq_update_hw_descriptor pq_update;
+union spdk_ioat_hw_desc {
+	struct spdk_ioat_raw_hw_desc raw;
+	struct spdk_ioat_generic_hw_desc generic;
+	struct spdk_ioat_dma_hw_desc dma;
+	struct spdk_ioat_fill_hw_desc fill;
+	struct spdk_ioat_xor_hw_desc xor;
+	struct spdk_ioat_xor_ext_hw_desc xor_ext;
+	struct spdk_ioat_pq_hw_desc pq;
+	struct spdk_ioat_pq_ext_hw_desc pq_ext;
+	struct spdk_ioat_pq_update_hw_desc pq_update;
 };
-SPDK_STATIC_ASSERT(sizeof(union ioat_hw_descriptor) == 64, "incorrect ioat_hw_descriptor layout");
+SPDK_STATIC_ASSERT(sizeof(union spdk_ioat_hw_desc) == 64, "incorrect spdk_ioat_hw_desc layout");
 
-#endif /* __IOAT_SPEC_H__ */
+#endif /* SPDK_IOAT_SPEC_H */

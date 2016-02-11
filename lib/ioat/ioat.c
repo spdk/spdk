@@ -74,13 +74,13 @@ ioat_write_chainaddr(struct ioat_channel *ioat, uint64_t addr)
 static inline void
 ioat_suspend(struct ioat_channel *ioat)
 {
-	ioat->regs->chancmd = IOAT_CHANCMD_SUSPEND;
+	ioat->regs->chancmd = SPDK_IOAT_CHANCMD_SUSPEND;
 }
 
 static inline void
 ioat_reset(struct ioat_channel *ioat)
 {
-	ioat->regs->chancmd = IOAT_CHANCMD_RESET;
+	ioat->regs->chancmd = SPDK_IOAT_CHANCMD_RESET;
 }
 
 static inline uint32_t
@@ -89,7 +89,7 @@ ioat_reset_pending(struct ioat_channel *ioat)
 	uint8_t cmd;
 
 	cmd = ioat->regs->chancmd;
-	return (cmd & IOAT_CHANCMD_RESET) == IOAT_CHANCMD_RESET;
+	return (cmd & SPDK_IOAT_CHANCMD_RESET) == SPDK_IOAT_CHANCMD_RESET;
 }
 
 static int
@@ -106,7 +106,7 @@ ioat_map_pci_bar(struct ioat_channel *ioat)
 		return -1;
 	}
 
-	ioat->regs = (volatile struct ioat_registers *)addr;
+	ioat->regs = (volatile struct spdk_ioat_registers *)addr;
 
 	return 0;
 }
@@ -145,7 +145,7 @@ ioat_get_ring_index(struct ioat_channel *ioat, uint32_t index)
 static void
 ioat_get_ring_entry(struct ioat_channel *ioat, uint32_t index,
 		    struct ioat_descriptor **desc,
-		    union ioat_hw_descriptor **hw_desc)
+		    union spdk_ioat_hw_desc **hw_desc)
 {
 	uint32_t i = ioat_get_ring_index(ioat, index);
 
@@ -157,7 +157,7 @@ static uint64_t
 ioat_get_desc_phys_addr(struct ioat_channel *ioat, uint32_t index)
 {
 	return ioat->hw_ring_phys_addr +
-	       ioat_get_ring_index(ioat, index) * sizeof(union ioat_hw_descriptor);
+	       ioat_get_ring_index(ioat, index) * sizeof(union spdk_ioat_hw_desc);
 }
 
 static void
@@ -176,7 +176,7 @@ static struct ioat_descriptor *
 ioat_prep_null(struct ioat_channel *ioat)
 {
 	struct ioat_descriptor *desc;
-	union ioat_hw_descriptor *hw_desc;
+	union spdk_ioat_hw_desc *hw_desc;
 
 	if (ioat_get_ring_space(ioat) < 1) {
 		return NULL;
@@ -185,7 +185,7 @@ ioat_prep_null(struct ioat_channel *ioat)
 	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
 
 	hw_desc->dma.u.control_raw = 0;
-	hw_desc->dma.u.control.op = IOAT_OP_COPY;
+	hw_desc->dma.u.control.op = SPDK_IOAT_OP_COPY;
 	hw_desc->dma.u.control.null = 1;
 	hw_desc->dma.u.control.completion_update = 1;
 
@@ -206,7 +206,7 @@ ioat_prep_copy(struct ioat_channel *ioat, uint64_t dst,
 	       uint64_t src, uint32_t len)
 {
 	struct ioat_descriptor *desc;
-	union ioat_hw_descriptor *hw_desc;
+	union spdk_ioat_hw_desc *hw_desc;
 
 	ioat_assert(len <= ioat->max_xfer_size);
 
@@ -217,7 +217,7 @@ ioat_prep_copy(struct ioat_channel *ioat, uint64_t dst,
 	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
 
 	hw_desc->dma.u.control_raw = 0;
-	hw_desc->dma.u.control.op = IOAT_OP_COPY;
+	hw_desc->dma.u.control.op = SPDK_IOAT_OP_COPY;
 	hw_desc->dma.u.control.completion_update = 1;
 
 	hw_desc->dma.size = len;
@@ -237,7 +237,7 @@ ioat_prep_fill(struct ioat_channel *ioat, uint64_t dst,
 	       uint64_t fill_pattern, uint32_t len)
 {
 	struct ioat_descriptor *desc;
-	union ioat_hw_descriptor *hw_desc;
+	union spdk_ioat_hw_desc *hw_desc;
 
 	ioat_assert(len <= ioat->max_xfer_size);
 
@@ -248,7 +248,7 @@ ioat_prep_fill(struct ioat_channel *ioat, uint64_t dst,
 	ioat_get_ring_entry(ioat, ioat->head, &desc, &hw_desc);
 
 	hw_desc->fill.u.control_raw = 0;
-	hw_desc->fill.u.control.op = IOAT_OP_FILL;
+	hw_desc->fill.u.control.op = SPDK_IOAT_OP_FILL;
 	hw_desc->fill.u.control.completion_update = 1;
 
 	hw_desc->fill.size = len;
@@ -319,7 +319,7 @@ ioat_process_channel_events(struct ioat_channel *ioat)
 	}
 
 	status = *ioat->comp_update;
-	completed_descriptor = status & IOAT_CHANSTS_COMPLETED_DESCRIPTOR_MASK;
+	completed_descriptor = status & SPDK_IOAT_CHANSTS_COMPLETED_DESCRIPTOR_MASK;
 
 	if (is_ioat_halted(status)) {
 		ioat_printf(ioat, "%s: Channel halted (%x)\n", __func__, ioat->regs->chanerr);
@@ -381,7 +381,7 @@ ioat_channel_start(struct ioat_channel *ioat)
 	}
 
 	version = ioat->regs->cbver;
-	if (version < IOAT_VER_3_0) {
+	if (version < SPDK_IOAT_VER_3_0) {
 		ioat_printf(ioat, "%s: unsupported IOAT version %u.%u\n",
 			    __func__, version >> 4, version & 0xF);
 		return -1;
@@ -389,7 +389,7 @@ ioat_channel_start(struct ioat_channel *ioat)
 
 	/* Always support DMA copy */
 	ioat->dma_capabilities = IOAT_ENGINE_COPY_SUPPORTED;
-	if (ioat->regs->dmacapability & IOAT_DMACAP_BFILL)
+	if (ioat->regs->dmacapability & SPDK_IOAT_DMACAP_BFILL)
 		ioat->dma_capabilities |= IOAT_ENGINE_FILL_SUPPORTED;
 	xfercap = ioat->regs->xfercap;
 
@@ -406,7 +406,7 @@ ioat_channel_start(struct ioat_channel *ioat)
 		ioat->max_xfer_size = 1U << xfercap;
 	}
 
-	ioat->comp_update = ioat_zmalloc(NULL, sizeof(*ioat->comp_update), IOAT_CHANCMP_ALIGN,
+	ioat->comp_update = ioat_zmalloc(NULL, sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
 					 &comp_update_bus_addr);
 	if (ioat->comp_update == NULL) {
 		return -1;
@@ -421,7 +421,7 @@ ioat_channel_start(struct ioat_channel *ioat)
 		return -1;
 	}
 
-	ioat->hw_ring = ioat_zmalloc(NULL, num_descriptors * sizeof(union ioat_hw_descriptor), 64,
+	ioat->hw_ring = ioat_zmalloc(NULL, num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
 				     &ioat->hw_ring_phys_addr);
 	if (!ioat->hw_ring) {
 		return -1;
@@ -437,7 +437,7 @@ ioat_channel_start(struct ioat_channel *ioat)
 
 	ioat_reset_hw(ioat);
 
-	ioat->regs->chanctrl = IOAT_CHANCTRL_ANY_ERR_ABORT_EN;
+	ioat->regs->chanctrl = SPDK_IOAT_CHANCTRL_ANY_ERR_ABORT_EN;
 	ioat_write_chancmp(ioat, comp_update_bus_addr);
 	ioat_write_chainaddr(ioat, ioat->hw_ring_phys_addr);
 
