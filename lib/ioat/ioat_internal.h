@@ -50,13 +50,13 @@
 #define IOAT_DEFAULT_ORDER			15
 
 struct ioat_descriptor {
-	ioat_callback_t		callback_fn;
+	spdk_ioat_req_cb	callback_fn;
 	void			*callback_arg;
 };
 
 /* One of these per allocated PCI device. */
-struct ioat_channel {
-	SLIST_ENTRY(ioat_channel) next;
+struct spdk_ioat_chan {
+	SLIST_ENTRY(spdk_ioat_chan) next;
 
 	/* Opaque handle to upper layer */
 	void                *device;
@@ -77,7 +77,7 @@ struct ioat_channel {
 	uint32_t			dma_capabilities;
 
 	/* tailq entry for attached_chans */
-	TAILQ_ENTRY(ioat_channel)	tailq;
+	TAILQ_ENTRY(spdk_ioat_chan)	tailq;
 };
 
 static inline uint32_t

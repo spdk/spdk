@@ -61,7 +61,7 @@ struct user_config {
 };
 
 struct ioat_device {
-	struct ioat_channel *ioat;
+	struct spdk_ioat_chan *ioat;
 	TAILQ_ENTRY(ioat_device) tailq;
 };
 
@@ -123,7 +123,7 @@ ioat_exit(void)
 		dev = TAILQ_FIRST(&g_devices);
 		TAILQ_REMOVE(&g_devices, dev, tailq);
 		if (dev->ioat) {
-			ioat_detach(dev->ioat);
+			spdk_ioat_detach(dev->ioat);
 		}
 		free(dev);
 	}
@@ -217,7 +217,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct ioat_channel *ioat)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *ioat)
 {
 	struct ioat_device *dev;
 
@@ -237,7 +237,7 @@ ioat_init(void)
 {
 	TAILQ_INIT(&g_devices);
 
-	if (ioat_probe(NULL, probe_cb, attach_cb) != 0) {
+	if (spdk_ioat_probe(NULL, probe_cb, attach_cb) != 0) {
 		fprintf(stderr, "ioat_probe() failed\n");
 		return 1;
 	}
@@ -292,7 +292,7 @@ static void
 drain_xfers(struct thread_entry *thread_entry)
 {
 	while (thread_entry->current_queue_depth > 0) {
-		ioat_process_events();
+		spdk_ioat_process_events();
 	}
 }
 
@@ -300,9 +300,10 @@ static void
 submit_single_xfer(struct ioat_task *ioat_task)
 {
 	if (ioat_task->type == IOAT_FILL_TYPE)
-		ioat_submit_fill(ioat_task, ioat_done, ioat_task->dst, ioat_task->fill_pattern, ioat_task->len);
+		spdk_ioat_submit_fill(ioat_task, ioat_done, ioat_task->dst, ioat_task->fill_pattern,
+				      ioat_task->len);
 	else
-		ioat_submit_copy(ioat_task, ioat_done, ioat_task->dst, ioat_task->src, ioat_task->len);
+		spdk_ioat_submit_copy(ioat_task, ioat_done, ioat_task->dst, ioat_task->src, ioat_task->len);
 	ioat_task->thread_entry->current_queue_depth++;
 }
 
@@ -315,7 +316,7 @@ submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
 		rte_mempool_get(thread_entry->data_pool, &(ioat_task->buffer));
 
 		ioat_task->type = IOAT_COPY_TYPE;
-		if (ioat_get_dma_capabilities() & IOAT_ENGINE_FILL_SUPPORTED) {
+		if (spdk_ioat_get_dma_capabilities() & SPDK_IOAT_ENGINE_FILL_SUPPORTED) {
 			if (queue_depth % 2)
 				ioat_task->type = IOAT_FILL_TYPE;
 		}
@@ -346,7 +347,7 @@ work_fn(void *arg)
 		return 1;
 	}
 
-	if (ioat_register_thread() != 0) {
+	if (spdk_ioat_register_thread() != 0) {
 		fprintf(stderr, "lcore %u: No ioat channels found. Check that ioatdma driver is unloaded.\n",
 			rte_lcore_id());
 		return 0;
@@ -356,13 +357,13 @@ work_fn(void *arg)
 
 	submit_xfers(t, g_user_config.queue_depth);
 	while (rte_get_timer_cycles() < tsc_end) {
-		ioat_process_events();
+		spdk_ioat_process_events();
 	}
 
 	t->is_draining = true;
 	drain_xfers(t);
 
-	ioat_unregister_thread();
+	spdk_ioat_unregister_thread();
 
 	return 0;
 }

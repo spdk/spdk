@@ -35,8 +35,8 @@
  * This file defines the public interface to the I/OAT DMA engine driver.
  */
 
-#ifndef __IOAT_H__
-#define __IOAT_H__
+#ifndef SPDK_IOAT_H
+#define SPDK_IOAT_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -45,27 +45,27 @@
 #include "spdk/pci.h"
 
 /**
- * Opaque handle for a single I/OAT channel returned by \ref ioat_probe().
+ * Opaque handle for a single I/OAT channel returned by \ref spdk_ioat_probe().
  */
-struct ioat_channel;
+struct spdk_ioat_chan;
 
 /**
  * Signature for callback function invoked when a request is completed.
  */
-typedef void (*ioat_callback_t)(void *arg);
+typedef void (*spdk_ioat_req_cb)(void *arg);
 
 /**
- * Callback for ioat_probe() enumeration.
+ * Callback for spdk_ioat_probe() enumeration.
  *
  * \return true to attach to this device.
  */
-typedef bool (*ioat_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
+typedef bool (*spdk_ioat_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
 
 /**
- * Callback for ioat_probe() to report a device that has been attached to the userspace I/OAT driver.
+ * Callback for spdk_ioat_probe() to report a device that has been attached to the userspace I/OAT driver.
  */
-typedef void (*ioat_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
-			       struct ioat_channel *ioat);
+typedef void (*spdk_ioat_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+				    struct spdk_ioat_chan *ioat);
 
 /**
  * \brief Enumerate the I/OAT devices attached to the system and attach the userspace I/OAT driver
@@ -79,74 +79,74 @@ typedef void (*ioat_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
  * will be reported.
  *
  * To stop using the the controller and release its associated resources,
- * call \ref ioat_detach with the ioat_channel instance returned by this function.
+ * call \ref spdk_ioat_detach with the ioat_channel instance returned by this function.
  */
-int ioat_probe(void *cb_ctx, ioat_probe_cb probe_cb, ioat_attach_cb attach_cb);
+int spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_cb attach_cb);
 
 /**
- * Detaches specified device returned by \ref ioat_probe() from the I/OAT driver.
+ * Detaches specified device returned by \ref spdk_ioat_probe() from the I/OAT driver.
  */
-int ioat_detach(struct ioat_channel *ioat);
+int spdk_ioat_detach(struct spdk_ioat_chan *ioat);
 
 /**
  * Request a DMA engine channel for the calling thread.
  *
  * Must be called before submitting any requests from a thread.
  *
- * The \ref ioat_unregister_thread() function can be called to release the channel.
+ * The \ref spdk_ioat_unregister_thread() function can be called to release the channel.
  */
-int ioat_register_thread(void);
+int spdk_ioat_register_thread(void);
 
 /**
  * Unregister the current thread's I/OAT channel.
  *
- * This function can be called after \ref ioat_register_thread() to release the thread's
+ * This function can be called after \ref spdk_ioat_register_thread() to release the thread's
  * DMA engine channel for use by other threads.
  */
-void ioat_unregister_thread(void);
+void spdk_ioat_unregister_thread(void);
 
 /**
  * Submit a DMA engine memory copy request.
  *
  * Before submitting any requests on a thread, the thread must be registered
- * using the \ref ioat_register_thread() function.
+ * using the \ref spdk_ioat_register_thread() function.
  */
-int64_t ioat_submit_copy(void *cb_arg, ioat_callback_t cb_fn,
-			 void *dst, const void *src, uint64_t nbytes);
+int64_t spdk_ioat_submit_copy(void *cb_arg, spdk_ioat_req_cb cb_fn,
+			      void *dst, const void *src, uint64_t nbytes);
 
 /**
  * Submit a DMA engine memory fill request.
  *
  * Before submitting any requests on a thread, the thread must be registered
- * using the \ref ioat_register_thread() function.
+ * using the \ref spdk_ioat_register_thread() function.
  */
-int64_t ioat_submit_fill(void *cb_arg, ioat_callback_t cb_fn,
-			 void *dst, uint64_t fill_pattern, uint64_t nbytes);
+int64_t spdk_ioat_submit_fill(void *cb_arg, spdk_ioat_req_cb cb_fn,
+			      void *dst, uint64_t fill_pattern, uint64_t nbytes);
 
 /**
  * Check for completed requests on the current thread.
  *
  * Before submitting any requests on a thread, the thread must be registered
- * using the \ref ioat_register_thread() function.
+ * using the \ref spdk_ioat_register_thread() function.
  *
  * \returns 0 on success or negative if something went wrong.
  */
-int ioat_process_events(void);
+int spdk_ioat_process_events(void);
 
 /**
  * DMA engine capability flags
  */
-enum ioat_dma_capability_flags {
-	IOAT_ENGINE_COPY_SUPPORTED	= 0x1, /**< The memory copy is supported */
-	IOAT_ENGINE_FILL_SUPPORTED	= 0x2, /**< The memory fill is supported */
+enum spdk_ioat_dma_capability_flags {
+	SPDK_IOAT_ENGINE_COPY_SUPPORTED	= 0x1, /**< The memory copy is supported */
+	SPDK_IOAT_ENGINE_FILL_SUPPORTED	= 0x2, /**< The memory fill is supported */
 };
 
 /**
  * Get the DMA engine capabilities.
  *
  * Before submitting any requests on a thread, the thread must be registered
- * using the \ref ioat_register_thread() function.
+ * using the \ref spdk_ioat_register_thread() function.
  */
-uint32_t ioat_get_dma_capabilities(void);
+uint32_t spdk_ioat_get_dma_capabilities(void);
 
 #endif

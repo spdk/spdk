@@ -41,8 +41,10 @@
 
 \section key_functions Key Functions
 
-- ioat_attach() \copybrief ioat_attach()
-- ioat_register_thread() \copybrief ioat_register_thread()
-- ioat_submit_copy() \copybrief ioat_submit_copy()
+- spdk_ioat_probe() \copybrief spdk_ioat_probe()
+- spdk_ioat_register_thread() \copybrief spdk_ioat_register_thread()
+- spdk_ioat_get_dma_capabilities() \copybrief spdk_ioat_get_dma_capabilities()
+- spdk_ioat_submit_copy() \copybrief spdk_ioat_submit_copy()
+- spdk_ioat_submit_fill() \copybrief spdk_ioat_submit_fill()
 
 */
