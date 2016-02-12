@@ -38,6 +38,10 @@
 #ifndef SPDK_IOAT_H
 #define SPDK_IOAT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include "spdk/pci.h"
@@ -148,5 +152,9 @@ enum spdk_ioat_dma_capability_flags {
  * using the \ref spdk_ioat_register_thread() function.
  */
 uint32_t spdk_ioat_get_dma_capabilities(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

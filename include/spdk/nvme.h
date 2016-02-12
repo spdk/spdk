@@ -34,6 +34,10 @@
 #ifndef SPDK_NVME_H
 #define SPDK_NVME_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include "spdk/pci.h"
 #include "nvme_spec.h"
@@ -45,9 +49,7 @@
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
 
 /** \brief Opaque handle to a controller. Returned by \ref spdk_nvme_probe()'s attach_cb. */
 struct spdk_nvme_ctrlr;

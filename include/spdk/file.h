@@ -34,9 +34,17 @@
 #ifndef SPDK_FILE_H
 #define SPDK_FILE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 uint64_t spdk_file_get_size(int fd);
 uint32_t spdk_dev_get_blocklen(int fd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

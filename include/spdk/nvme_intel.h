@@ -34,6 +34,10 @@
 #ifndef SPDK_NVME_INTEL_H
 #define SPDK_NVME_INTEL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -192,5 +196,9 @@ union spdk_nvme_intel_feat_latency_tracking {
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_intel_feat_latency_tracking) == 4, "Incorrect size");
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

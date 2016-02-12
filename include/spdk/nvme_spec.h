@@ -34,6 +34,10 @@
 #ifndef SPDK_NVME_SPEC_H
 #define SPDK_NVME_SPEC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -1148,5 +1152,9 @@ enum spdk_nvme_ns_management_type {
 
 #define SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS (1U << 30)
 #define SPDK_NVME_IO_FLAGS_LIMITED_RETRY (1U << 31)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

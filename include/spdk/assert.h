@@ -34,6 +34,10 @@
 #ifndef SPDK_ASSERT_H
 #define SPDK_ASSERT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <assert.h>
 
 #define SPDK_CONCAT_(x, y) x##y
@@ -50,6 +54,10 @@
  */
 #define SPDK_STATIC_ASSERT(cond, msg) \
         typedef char SPDK_CONCAT(SPDK_STATIC_ASSERT_, __LINE__)[!!(cond) - 1]
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* SPDK_ASSERT_H */

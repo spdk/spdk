@@ -34,6 +34,10 @@
 #ifndef SPDK_PCI_H
 #define SPDK_PCI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <inttypes.h>
 #include <stddef.h>
 
@@ -62,5 +66,9 @@ int spdk_pci_device_unbind_kernel_driver(struct spdk_pci_device *dev);
 int spdk_pci_device_bind_uio_driver(struct spdk_pci_device *dev);
 int spdk_pci_device_switch_to_uio_driver(struct spdk_pci_device *pci_dev);
 int spdk_pci_device_claim(struct spdk_pci_device *dev);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

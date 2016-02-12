@@ -34,7 +34,15 @@
 #ifndef SPDK_BARRIER_H
 #define SPDK_BARRIER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define spdk_wmb()	__asm volatile("sfence" ::: "memory")
 #define spdk_mb()	__asm volatile("mfence" ::: "memory")
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

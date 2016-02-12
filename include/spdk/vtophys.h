@@ -34,11 +34,11 @@
 #ifndef SPDK_VTOPHYS_H
 #define SPDK_VTOPHYS_H
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
 
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 

@@ -34,6 +34,10 @@
 #ifndef SPDK_IOAT_SPEC_H
 #define SPDK_IOAT_SPEC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <inttypes.h>
 
 #include "spdk/assert.h"
@@ -311,5 +315,9 @@ union spdk_ioat_hw_desc {
 	struct spdk_ioat_pq_update_hw_desc pq_update;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_ioat_hw_desc) == 64, "incorrect spdk_ioat_hw_desc layout");
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_IOAT_SPEC_H */

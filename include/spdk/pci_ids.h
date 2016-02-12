@@ -34,6 +34,10 @@
 #ifndef SPDK_PCI_IDS
 #define SPDK_PCI_IDS
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #define SPDK_PCI_VID_INTEL		0x8086
@@ -46,5 +50,9 @@
  * Programming interface 02h: NVM Express
  */
 #define SPDK_PCI_CLASS_NVME		0x010802
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_PCI_IDS */

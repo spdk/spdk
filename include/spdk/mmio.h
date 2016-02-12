@@ -34,6 +34,10 @@
 #ifndef SPDK_MMIO_H
 #define SPDK_MMIO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <inttypes.h>
 
 #ifdef __x86_64__
@@ -87,5 +91,9 @@ spdk_mmio_write_8(volatile uint64_t *addr, uint64_t val)
 		addr32[1] = (uint32_t)(val >> 32);
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
