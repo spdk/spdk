@@ -39,6 +39,16 @@ char outbuf[OUTBUF_SIZE];
 
 struct nvme_request *g_request = NULL;
 
+
+static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
+{
+}
+
+static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
+{
+	return 0;
+}
+
 uint64_t nvme_vtophys(void *buf)
 {
 	return (uintptr_t)buf;
@@ -449,6 +459,65 @@ test_nvme_ns_cmd_deallocate(void)
 }
 
 static void
+test_nvme_ns_cmd_readv(void)
+{
+	struct spdk_nvme_ns		ns;
+	struct spdk_nvme_ctrlr		ctrlr;
+	int				rc = 0;
+	void				*cb_arg;
+
+	cb_arg = malloc(512);
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+	rc = spdk_nvme_ns_cmd_readv(&ns, 0x1000, 256, NULL, cb_arg, 0, nvme_request_reset_sgl,
+				    nvme_request_next_sge);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_READ);
+	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(g_request->payload.u.sgl.reset_sgl_fn == nvme_request_reset_sgl);
+	CU_ASSERT(g_request->payload.u.sgl.next_sge_fn == nvme_request_next_sge);
+	CU_ASSERT(g_request->payload.u.sgl.cb_arg == cb_arg);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	rc = spdk_nvme_ns_cmd_readv(&ns, 0x1000, 256, NULL, cb_arg, 0, nvme_request_reset_sgl,
+				    NULL);
+	CU_ASSERT(rc != 0);
+
+	free(cb_arg);
+	nvme_free_request(g_request);
+}
+
+static void
+test_nvme_ns_cmd_writev(void)
+{
+	struct spdk_nvme_ns		ns;
+	struct spdk_nvme_ctrlr		ctrlr;
+	int				rc = 0;
+	void				*cb_arg;
+
+	cb_arg = malloc(512);
+	prepare_for_test(&ns, &ctrlr, 512, 128 * 1024, 0);
+	rc = spdk_nvme_ns_cmd_writev(&ns, 0x1000, 256, NULL, cb_arg, 0,
+				     nvme_request_reset_sgl,
+				     nvme_request_next_sge);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE);
+	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	CU_ASSERT(g_request->payload.u.sgl.reset_sgl_fn == nvme_request_reset_sgl);
+	CU_ASSERT(g_request->payload.u.sgl.next_sge_fn == nvme_request_next_sge);
+	CU_ASSERT(g_request->payload.u.sgl.cb_arg == cb_arg);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	rc = spdk_nvme_ns_cmd_writev(&ns, 0x1000, 256, NULL, cb_arg, 0,
+				     NULL, nvme_request_next_sge);
+	CU_ASSERT(rc != 0);
+
+	free(cb_arg);
+	nvme_free_request(g_request);
+}
+
+static void
 test_io_flags(void)
 {
 	struct spdk_nvme_ns	ns;
@@ -643,6 +712,8 @@ int main(int argc, char **argv)
 			       test_nvme_ns_cmd_reservation_acquire) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_reservation_report", test_nvme_ns_cmd_reservation_report) == NULL
 		|| CU_add_test(suite, "test_cmd_child_request", test_cmd_child_request) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_readv", test_nvme_ns_cmd_readv) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_writev", test_nvme_ns_cmd_writev) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
