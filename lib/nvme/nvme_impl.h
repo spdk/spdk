@@ -131,11 +131,12 @@ extern struct rte_mempool *request_mempool;
 #define nvme_pcicfg_read32(handle, var, offset)  spdk_pci_device_cfg_read32(handle, var, offset)
 #define nvme_pcicfg_write32(handle, var, offset) spdk_pci_device_cfg_write32(handle, var, offset)
 
-#ifdef USE_PCIACCESS
 struct nvme_pci_enum_ctx {
 	int (*user_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 	void *user_enum_ctx;
 };
+
+#ifdef USE_PCIACCESS
 
 static int
 nvme_pci_enum_cb(void *enum_ctx, struct spdk_pci_device *pci_dev)
@@ -201,11 +202,6 @@ nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 static struct rte_pci_id nvme_pci_driver_id[] = {
 	{RTE_PCI_DEVICE(0x8086, 0x0953)},
 	{ .vendor_id = 0, /* sentinel */ },
-};
-
-struct nvme_pci_enum_ctx {
-	int (*user_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
-	void *user_enum_ctx;
 };
 
 /*

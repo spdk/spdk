@@ -76,6 +76,11 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 #define ioat_pcicfg_read32(handle, var, offset)  spdk_pci_device_cfg_read32(handle, var, offset)
 #define ioat_pcicfg_write32(handle, var, offset) spdk_pci_device_cfg_write32(handle, var, offset)
 
+struct ioat_pci_enum_ctx {
+	int (*user_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
+	void *user_enum_ctx;
+};
+
 #ifdef USE_PCIACCESS
 
 static inline bool
@@ -133,11 +138,6 @@ ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id)
 
 	return false;
 }
-
-struct ioat_pci_enum_ctx {
-	int (*user_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
-	void *user_enum_ctx;
-};
 
 static int
 ioat_pci_enum_cb(void *enum_ctx, struct spdk_pci_device *pci_dev)
@@ -242,11 +242,6 @@ static struct rte_pci_id ioat_driver_id[] = {
 	{RTE_PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX8)},
 	{RTE_PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_BDX9)},
 	{ .vendor_id = 0, /* sentinel */ },
-};
-
-struct ioat_pci_enum_ctx {
-	int (*user_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
-	void *user_enum_ctx;
 };
 
 /*
