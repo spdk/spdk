@@ -182,12 +182,59 @@ union spdk_nvme_aqa_register {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_aqa_register) == 4, "Incorrect size");
 
+union spdk_nvme_vs_register {
+	uint32_t	raw;
+	struct {
+		uint32_t reserved1	: 8;
+		/** indicates the minor version */
+		uint32_t mnr		: 8;
+		/** indicates the major version */
+		uint32_t mjr		: 16;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_vs_register) == 4, "Incorrect size");
+
+union spdk_nvme_cmbloc_register {
+	uint32_t	raw;
+	struct {
+		/** indicator of BAR which contains controller memory buffer(CMB) */
+		uint32_t bir		: 3;
+		uint32_t reserved1	: 9;
+		/** offset of CMB in multiples of the size unit */
+		uint32_t ofst		: 20;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbloc_register) == 4, "Incorrect size");
+
+union spdk_nvme_cmbsz_register {
+	uint32_t	raw;
+	struct {
+		/** support submission queues in CMB */
+		uint32_t sqs		: 1;
+		/** support completion queues in CMB */
+		uint32_t cqs		: 1;
+		/** support PRP and SGLs lists in CMB */
+		uint32_t lists		: 1;
+		/** support read data and metadata in CMB */
+		uint32_t rds		: 1;
+		/** support write data and metadata in CMB */
+		uint32_t wds		: 1;
+		uint32_t reserved1	: 3;
+		/** indicates the granularity of the size unit */
+		uint32_t szu		: 4;
+		/** size of CMB in multiples of the size unit */
+		uint32_t sz		: 20;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbsz_register) == 4, "Incorrect size");
+
 struct spdk_nvme_registers {
 	/** controller capabilities */
 	union spdk_nvme_cap_lo_register	cap_lo;
 	union spdk_nvme_cap_hi_register	cap_hi;
 
-	uint32_t	vs;		/* version */
+	/** version of NVMe specification */
+	union spdk_nvme_vs_register vs;
 	uint32_t	intms;		/* interrupt mask set */
 	uint32_t	intmc;		/* interrupt mask clear */
 
@@ -203,7 +250,11 @@ struct spdk_nvme_registers {
 
 	uint64_t	asq;		/* admin submission queue base addr */
 	uint64_t	acq;		/* admin completion queue base addr */
-	uint32_t	reserved3[0x3f2];
+	/** controller memory buffer location */
+	union spdk_nvme_cmbloc_register	cmbloc;
+	/** controller memory buffer size */
+	union spdk_nvme_cmbsz_register cmbsz;
+	uint32_t	reserved3[0x3f0];
 
 	struct {
 		uint32_t	sq_tdbl;	/* submission queue tail doorbell */
@@ -225,6 +276,10 @@ SPDK_STATIC_ASSERT(0x20 == offsetof(struct spdk_nvme_registers, nssr), "Incorrec
 SPDK_STATIC_ASSERT(0x24 == offsetof(struct spdk_nvme_registers, aqa), "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x28 == offsetof(struct spdk_nvme_registers, asq), "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x30 == offsetof(struct spdk_nvme_registers, acq), "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x38 == offsetof(struct spdk_nvme_registers, cmbloc),
+		   "Incorrect register offset");
+SPDK_STATIC_ASSERT(0x3C == offsetof(struct spdk_nvme_registers, cmbsz),
+		   "Incorrect register offset");
 
 enum spdk_nvme_sgl_descriptor_type {
 	SPDK_NVME_SGL_TYPE_DATA_BLOCK		= 0x0,
