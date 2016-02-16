@@ -5,8 +5,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <rte_malloc.h>
 #include <rte_config.h>
+#include <rte_malloc.h>
 #include <rte_atomic.h>
 #include <rte_cycles.h>
 
