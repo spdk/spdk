@@ -57,6 +57,10 @@ uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
 uint32_t spdk_pci_device_get_class(struct spdk_pci_device *dev);
 const char *spdk_pci_device_get_device_name(struct spdk_pci_device *dev);
 
+int spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset);
+int spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset);
+int spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset);
+int spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset);
 int spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset);
 int spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset);
 

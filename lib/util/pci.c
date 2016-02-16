@@ -163,6 +163,30 @@ spdk_pci_device_get_device_name(struct spdk_pci_device *dev)
 }
 
 int
+spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
+{
+	return pci_device_cfg_read_u8(dev, value, offset);
+}
+
+int
+spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset)
+{
+	return pci_device_cfg_write_u8(dev, value, offset);
+}
+
+int
+spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset)
+{
+	return pci_device_cfg_read_u16(dev, value, offset);
+}
+
+int
+spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset)
+{
+	return pci_device_cfg_write_u16(dev, value, offset);
+}
+
+int
 spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset)
 {
 	return pci_device_cfg_read_u32(dev, value, offset);
@@ -312,6 +336,30 @@ spdk_pci_device_get_device_name(struct spdk_pci_device *dev)
 {
 	/* TODO */
 	return NULL;
+}
+
+int
+spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
+{
+	return rte_eal_pci_read_config(dev, value, 1, offset) == 1 ? 0 : -1;
+}
+
+int
+spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset)
+{
+	return rte_eal_pci_write_config(dev, &value, 1, offset) == 1 ? 0 : -1;
+}
+
+int
+spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset)
+{
+	return rte_eal_pci_read_config(dev, value, 2, offset) == 2 ? 0 : -1;
+}
+
+int
+spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset)
+{
+	return rte_eal_pci_write_config(dev, &value, 2, offset) == 2 ? 0 : -1;
 }
 
 int
