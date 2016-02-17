@@ -37,7 +37,7 @@
 
 \section interface Public Interface
 
-- nvme.h
+- spdk/nvme.h
 
 \section key_functions Key Functions
 
