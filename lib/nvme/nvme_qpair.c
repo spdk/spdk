@@ -727,16 +727,13 @@ _nvme_qpair_build_sgl_request(struct nvme_qpair *qpair, struct nvme_request *req
 	uint32_t nseg, cur_nseg, total_nseg, last_nseg, modulo, unaligned;
 	uint32_t sge_count = 0;
 	uint64_t prp2 = 0;
-	struct nvme_request *parent;
 
 	/*
 	 * Build scattered payloads.
 	 */
-
-	parent = req->parent ? req->parent : req;
 	nvme_assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL, ("sgl payload type required\n"));
 	nvme_assert(req->payload.u.sgl.reset_sgl_fn != NULL, ("sgl reset callback required\n"));
-	req->payload.u.sgl.reset_sgl_fn(parent->cb_arg, req->payload_offset);
+	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
 	remaining_transfer_len = req->payload_size;
 	total_nseg = 0;
@@ -744,7 +741,7 @@ _nvme_qpair_build_sgl_request(struct nvme_qpair *qpair, struct nvme_request *req
 
 	while (remaining_transfer_len > 0) {
 		nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
-		rc = req->payload.u.sgl.next_sge_fn(parent->cb_arg, &phys_addr, &length);
+		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
 		if (rc) {
 			_nvme_fail_request_bad_vtophys(qpair, tr);
 			return -1;

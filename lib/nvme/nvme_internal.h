@@ -144,6 +144,7 @@ struct __attribute__((packed)) nvme_payload {
 		struct {
 			spdk_nvme_req_reset_sgl_cb reset_sgl_fn;
 			spdk_nvme_req_next_sge_cb next_sge_fn;
+			void *cb_arg;
 		} sgl;
 	} u;
 

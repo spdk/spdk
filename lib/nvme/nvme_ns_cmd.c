@@ -209,6 +209,7 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, uint64_t lba, uint32_t lba_count
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.u.sgl.reset_sgl_fn = reset_sgl_fn;
 	payload.u.sgl.next_sge_fn = next_sge_fn;
+	payload.u.sgl.cb_arg = cb_arg;
 
 	req = _nvme_ns_cmd_rw(ns, &payload, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ, io_flags);
 	if (req != NULL) {
@@ -254,6 +255,7 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, uint64_t lba, uint32_t lba_coun
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.u.sgl.reset_sgl_fn = reset_sgl_fn;
 	payload.u.sgl.next_sge_fn = next_sge_fn;
+	payload.u.sgl.cb_arg = cb_arg;
 
 	req = _nvme_ns_cmd_rw(ns, &payload, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE, io_flags);
 	if (req != NULL) {
