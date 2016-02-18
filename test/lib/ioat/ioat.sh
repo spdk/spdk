@@ -9,7 +9,7 @@ source $rootdir/scripts/autotest_common.sh
 timing_enter ioat
 
 timing_enter unit
-$testdir/unit/ioat_ut
+$valgrind $testdir/unit/ioat_ut
 timing_exit unit
 
 timing_enter perf
