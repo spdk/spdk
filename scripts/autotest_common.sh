@@ -33,8 +33,7 @@ if [ -z "$output_dir" ]; then
 fi
 
 if hash valgrind &> /dev/null; then
-	# TODO: add --error-exitcode=2 when all Valgrind warnings are fixed
-	valgrind='valgrind --leak-check=full'
+	valgrind='valgrind --leak-check=full --error-exitcode=2'
 else
 	valgrind=''
 fi
