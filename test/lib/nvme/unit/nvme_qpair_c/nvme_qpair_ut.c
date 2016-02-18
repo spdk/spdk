@@ -214,8 +214,10 @@ test3(void)
 {
 	struct nvme_qpair		qpair = {};
 	struct nvme_request		*req;
+	struct nvme_tracker		*tr;
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
+	uint16_t			cid;
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
@@ -228,8 +230,22 @@ test3(void)
 
 	CU_ASSERT(qpair.sq_tail == 1);
 
+	/*
+	 * Since sq_tail was 0 when the command was submitted, it is in cmd[0].
+	 * Extract its command ID to retrieve its tracker.
+	 */
+	cid = qpair.cmd[0].cid;
+	tr = qpair.act_tr[cid];
+	SPDK_CU_ASSERT_FATAL(tr != NULL);
+
+	/*
+	 * Complete the tracker so that it is returned to the free list.
+	 * This also frees the request.
+	 */
+	nvme_qpair_manual_complete_tracker(&qpair, tr, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS, 0,
+					   false);
+
 	cleanup_submit_request_test(&qpair);
-	nvme_free_request(req);
 }
 
 static void
