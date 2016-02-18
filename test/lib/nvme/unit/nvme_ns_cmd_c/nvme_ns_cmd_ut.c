@@ -315,6 +315,57 @@ split_test4(void)
 }
 
 static void
+test_cmd_child_request(void)
+{
+
+	struct spdk_nvme_ns		ns;
+	struct spdk_nvme_ctrlr		ctrlr;
+	int				rc = 0;
+	struct nvme_request		*child;
+	void				*payload;
+	uint64_t			lba = 0x1000;
+	uint32_t			i;
+	uint32_t			offset = 0;
+	uint32_t			sector_size = 512;
+	uint32_t			max_io_size = 128 * 1024;
+	uint32_t			sectors_per_max_io = max_io_size / sector_size;
+
+	prepare_for_test(&ns, &ctrlr, sector_size, max_io_size, 0);
+
+	payload = malloc(128 * 1024);
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, sectors_per_max_io, NULL, NULL, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->payload_offset == 0);
+	CU_ASSERT(g_request->num_children == 0);
+	nvme_free_request(g_request);
+
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, sectors_per_max_io - 1, NULL, NULL, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->payload_offset == 0);
+	CU_ASSERT(g_request->num_children == 0);
+	nvme_free_request(g_request);
+
+	rc = spdk_nvme_ns_cmd_read(&ns, payload, lba, sectors_per_max_io * 4, NULL, NULL, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->num_children == 4);
+
+	for (i = 0; i < g_request->num_children; i++) {
+		child = TAILQ_FIRST(&g_request->children);
+		TAILQ_REMOVE(&g_request->children, child, child_tailq);
+		CU_ASSERT(child->payload_offset == offset);
+		CU_ASSERT(child->cmd.opc == SPDK_NVME_OPC_READ);
+		CU_ASSERT(child->cmd.nsid == ns.id);
+		CU_ASSERT(child->cmd.cdw10 == (lba + sectors_per_max_io * i));
+		CU_ASSERT(child->cmd.cdw12 == ((sectors_per_max_io - 1) | 0));
+		offset += max_io_size;
+		nvme_free_request(child);
+	}
+
+	free(payload);
+	nvme_free_request(g_request);
+}
+
+static void
 test_nvme_ns_cmd_flush(void)
 {
 	struct spdk_nvme_ns	ns;
@@ -585,6 +636,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_ns_cmd_reservation_acquire",
 			       test_nvme_ns_cmd_reservation_acquire) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_reservation_report", test_nvme_ns_cmd_reservation_report) == NULL
+		|| CU_add_test(suite, "test_cmd_child_request", test_cmd_child_request) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
