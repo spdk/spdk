@@ -34,6 +34,8 @@
 #ifndef __NVME_INTERNAL_H__
 #define __NVME_INTERNAL_H__
 
+#include "spdk/nvme.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -46,8 +48,6 @@
 #include <x86intrin.h>
 
 #include <sys/user.h>
-
-#include "spdk/nvme.h"
 
 #include "spdk/queue.h"
 #include "spdk/barrier.h"

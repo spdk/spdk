@@ -38,7 +38,9 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include "spdk/pci.h"
 #include "nvme_spec.h"
 
