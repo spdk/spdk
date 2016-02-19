@@ -10,7 +10,7 @@ if [ $EUID -ne 0 ]; then
 	exit 1
 fi
 
-trap "process_core; $rootdir/scripts/cleanup.sh; exit 1" SIGINT SIGTERM EXIT
+trap "process_core; $rootdir/scripts/setup.sh reset; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
@@ -38,7 +38,7 @@ timing_enter afterboot
 ./scripts/configure_hugepages.sh 1024
 timing_exit afterboot
 
-./scripts/unbind.sh
+./scripts/setup.sh
 
 #####################
 # Unit Tests
@@ -52,7 +52,7 @@ time test/lib/ioat/ioat.sh
 
 timing_exit lib
 
-./scripts/cleanup.sh
+./scripts/setup.sh reset
 ./scripts/build_kmod.sh clean
 
 timing_exit autotest

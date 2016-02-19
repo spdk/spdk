@@ -448,7 +448,8 @@ spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
 		driver_begin = driver;
 	}
 
-	return strcmp(driver_begin, "uio_pci_generic") != 0;
+	return (strcmp(driver_begin, "uio_pci_generic") != 0 &&
+		strcmp(driver_begin, "vfio-pci") != 0);
 }
 #endif
 

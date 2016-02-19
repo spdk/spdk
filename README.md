@@ -88,4 +88,4 @@ any NVMe and I/OAT devices must be unbound from the native kernel drivers.
 SPDK includes scripts to automate this process on both Linux and FreeBSD.
 
     1) scripts/configure_hugepages.sh
-    2) scripts/unbind.sh
+    2) scripts/setup.sh
