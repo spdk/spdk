@@ -462,7 +462,7 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns, void *payload,
 		return EINVAL;
 	num_dwords = len / 4;
 
-	req = nvme_allocate_request(payload, num_dwords, cb_fn, cb_arg);
+	req = nvme_allocate_request_contig(payload, len, cb_fn, cb_arg);
 	if (req == NULL) {
 		return ENOMEM;
 	}
