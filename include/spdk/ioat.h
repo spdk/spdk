@@ -44,7 +44,6 @@ extern "C" {
 
 #include <inttypes.h>
 #include <stdbool.h>
-#include "spdk/pci.h"
 
 #include "spdk/pci.h"
 
