@@ -248,7 +248,7 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
-_nvme_ctrlr_wait_for_ready(struct spdk_nvme_ctrlr *ctrlr, int desired_ready_value)
+nvme_ctrlr_wait_for_ready(struct spdk_nvme_ctrlr *ctrlr, int desired_ready_value)
 {
 	int ms_waited, ready_timeout_in_ms;
 	union spdk_nvme_csts_register csts;
@@ -275,21 +275,6 @@ _nvme_ctrlr_wait_for_ready(struct spdk_nvme_ctrlr *ctrlr, int desired_ready_valu
 	return 0;
 }
 
-static int
-nvme_ctrlr_wait_for_ready(struct spdk_nvme_ctrlr *ctrlr)
-{
-	union spdk_nvme_cc_register cc;
-
-	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
-
-	if (!cc.bits.en) {
-		nvme_printf(ctrlr, "%s called with cc.en = 0\n", __func__);
-		return ENXIO;
-	}
-
-	return _nvme_ctrlr_wait_for_ready(ctrlr, 1);
-}
-
 static void
 nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -300,13 +285,13 @@ nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
 	csts.raw = nvme_mmio_read_4(ctrlr, csts);
 
 	if (cc.bits.en == 1 && csts.bits.rdy == 0) {
-		_nvme_ctrlr_wait_for_ready(ctrlr, 1);
+		nvme_ctrlr_wait_for_ready(ctrlr, 1);
 	}
 
 	cc.bits.en = 0;
 	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
 
-	_nvme_ctrlr_wait_for_ready(ctrlr, 0);
+	nvme_ctrlr_wait_for_ready(ctrlr, 0);
 }
 
 static void
@@ -351,7 +336,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 		if (csts.bits.rdy == 1) {
 			return 0;
 		} else {
-			return nvme_ctrlr_wait_for_ready(ctrlr);
+			return nvme_ctrlr_wait_for_ready(ctrlr, 1);
 		}
 	}
 
@@ -376,7 +361,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
 
-	return nvme_ctrlr_wait_for_ready(ctrlr);
+	return nvme_ctrlr_wait_for_ready(ctrlr, 1);
 }
 
 static int
