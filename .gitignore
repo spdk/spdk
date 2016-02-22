@@ -1,7 +1,9 @@
 *.a
+*.cmd
 *.d
 *.gcda
 *.gcno
+*.ko
 *.o
 *~
 *.swp
