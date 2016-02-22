@@ -39,6 +39,7 @@
 #include "spdk/nvme_spec.h"
 #include <assert.h>
 #include <rte_config.h>
+#include <rte_cycles.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_memcpy.h>
@@ -124,6 +125,16 @@ extern struct rte_mempool *request_mempool;
  * Free a buffer previously allocated with nvme_alloc_request().
  */
 #define nvme_dealloc_request(buf)	rte_mempool_put(request_mempool, buf)
+
+/**
+ * Get a monotonic timestamp counter (used for measuring timeouts during initialization).
+ */
+#define nvme_get_tsc()			rte_get_timer_cycles()
+
+/**
+ * Get the tick rate of nvme_get_tsc() per second.
+ */
+#define nvme_get_tsc_hz()		rte_get_timer_hz()
 
 /**
  *

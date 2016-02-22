@@ -78,6 +78,10 @@ do					\
 
 #define nvme_dealloc_request(buf)	free(buf)
 
+extern uint64_t g_ut_tsc;
+#define nvme_get_tsc()			(g_ut_tsc)
+#define nvme_get_tsc_hz()		(1000000)
+
 static inline int
 nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
 {
