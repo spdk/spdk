@@ -394,11 +394,11 @@ nvme_ctrlr_hw_reset(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	} else {
 		/*
-		 * Ensure we do a transition from cc.en==1 to cc.en==0.
-		 *  If we started disabled (cc.en==0), then we have to enable
-		 *  first to get a reset.
+		 * The controller was already disabled. We will assume that nothing
+		 *  has been changed since cc.en was set to 0,
+		 *  meaning that we don't need to do an extra reset, and we can just
+		 *  re-enable the controller.
 		 */
-		nvme_ctrlr_enable(ctrlr);
 	}
 
 	nvme_ctrlr_disable(ctrlr);
