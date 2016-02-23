@@ -474,7 +474,7 @@ vbdev_passthru_examine(struct spdk_bdev *bdev)
 						sizeof(struct pt_io_channel));
 			SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
-			rc = spdk_bdev_open(bdev, false, vbdev_passthru_examine_hotremove_cb,
+			rc = spdk_bdev_open(bdev, true, vbdev_passthru_examine_hotremove_cb,
 					    bdev, &pt_node->base_desc);
 			if (rc) {
 				SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
