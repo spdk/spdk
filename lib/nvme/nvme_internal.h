@@ -287,6 +287,38 @@ struct spdk_nvme_ns {
 	uint16_t			flags;
 };
 
+/**
+ * State of struct spdk_nvme_ctrlr (in particular, during initialization).
+ */
+enum nvme_ctrlr_state {
+	/**
+	 * Controller has not been initialized yet.
+	 */
+	NVME_CTRLR_STATE_INIT,
+
+	/**
+	 * Waiting for CSTS.RDY to transition from 0 to 1 so that CC.EN may be set to 0.
+	 */
+	NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1,
+
+	/**
+	 * Waiting for CSTS.RDY to transition from 1 to 0 so that CC.EN may be set to 1.
+	 */
+	NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
+
+	/**
+	 * Waiting for CSTS.RDY to transition from 0 to 1 after enabling the controller.
+	 */
+	NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1,
+
+	/**
+	 * Controller initialization has completed and the controller is ready.
+	 */
+	NVME_CTRLR_STATE_READY
+};
+
+#define NVME_TIMEOUT_INFINITE	UINT64_MAX
+
 /*
  * One of these per allocated PCI device.
  */
@@ -309,6 +341,9 @@ struct spdk_nvme_ctrlr {
 	bool				is_failed;
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
+
+	enum nvme_ctrlr_state		state;
+	uint64_t			state_timeout_tsc;
 
 	TAILQ_ENTRY(spdk_nvme_ctrlr)	tailq;
 
@@ -433,6 +468,7 @@ void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
+int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 
 void	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,

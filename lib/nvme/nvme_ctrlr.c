@@ -326,18 +326,13 @@ static int
 nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register	cc;
-	union spdk_nvme_csts_register	csts;
 	union spdk_nvme_aqa_register	aqa;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
-	csts.raw = nvme_mmio_read_4(ctrlr, csts);
 
-	if (cc.bits.en == 1) {
-		if (csts.bits.rdy == 1) {
-			return 0;
-		} else {
-			return nvme_ctrlr_wait_for_ready(ctrlr, 1);
-		}
+	if (cc.bits.en != 0) {
+		nvme_printf(ctrlr, "%s called with CC.EN = 1\n", __func__);
+		return EINVAL;
 	}
 
 	nvme_mmio_write_8(ctrlr, asq, ctrlr->adminq.cmd_bus_addr);
@@ -361,41 +356,26 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
 
-	return nvme_ctrlr_wait_for_ready(ctrlr, 1);
+	return 0;
 }
 
-static int
-nvme_ctrlr_hw_reset(struct spdk_nvme_ctrlr *ctrlr)
+static void
+nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
+		     uint64_t timeout_in_ms)
 {
-	uint32_t i;
-	int rc;
-	union spdk_nvme_cc_register cc;
-
-	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
-	if (cc.bits.en) {
-		nvme_qpair_disable(&ctrlr->adminq);
-		for (i = 0; i < ctrlr->num_io_queues; i++) {
-			nvme_qpair_disable(&ctrlr->ioq[i]);
-		}
+	ctrlr->state = state;
+	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
+		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
 	} else {
-		/*
-		 * The controller was already disabled. We will assume that nothing
-		 *  has been changed since cc.en was set to 0,
-		 *  meaning that we don't need to do an extra reset, and we can just
-		 *  re-enable the controller.
-		 */
+		ctrlr->state_timeout_tsc = nvme_get_tsc() + (timeout_in_ms * nvme_get_tsc_hz()) / 1000;
 	}
-
-	nvme_ctrlr_disable(ctrlr);
-	rc = nvme_ctrlr_enable(ctrlr);
-
-	return rc;
 }
 
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int rc;
+	int rc = 0;
+	uint32_t i;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -412,10 +392,23 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_resetting = true;
 
 	nvme_printf(ctrlr, "resetting controller\n");
-	/* nvme_ctrlr_start() issues a reset as its first step */
-	rc = nvme_ctrlr_start(ctrlr);
-	if (rc) {
-		nvme_ctrlr_fail(ctrlr);
+
+	/* Disable all queues before disabling the controller hardware. */
+	nvme_qpair_disable(&ctrlr->adminq);
+	for (i = 0; i < ctrlr->num_io_queues; i++) {
+		nvme_qpair_disable(&ctrlr->ioq[i]);
+	}
+
+	/* Set the state back to INIT to cause a full hardware reset. */
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
+
+	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
+		if (nvme_ctrlr_process_init(ctrlr) != 0) {
+			nvme_printf(ctrlr, "%s: controller reinitialization failed\n", __func__);
+			nvme_ctrlr_fail(ctrlr);
+			rc = -1;
+			break;
+		}
 	}
 
 	ctrlr->is_resetting = false;
@@ -699,13 +692,107 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+/**
+ * This function will be called repeatedly during initialization until the controller is ready.
+ */
 int
-nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
+nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (nvme_ctrlr_hw_reset(ctrlr) != 0) {
+	union spdk_nvme_cc_register cc;
+	union spdk_nvme_csts_register csts;
+	union spdk_nvme_cap_lo_register cap_lo;
+	uint32_t ready_timeout_in_ms;
+	int rc;
+
+	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
+	csts.raw = nvme_mmio_read_4(ctrlr, csts);
+	cap_lo.raw = nvme_mmio_read_4(ctrlr, cap_lo.raw);
+
+	ready_timeout_in_ms = 500 * cap_lo.bits.to;
+
+	/*
+	 * Check if the current initialization step is done or has timed out.
+	 */
+	switch (ctrlr->state) {
+	case NVME_CTRLR_STATE_INIT:
+		/* Begin the hardware initialization by making sure the controller is disabled. */
+		if (cc.bits.en) {
+			/*
+			 * Controller is currently enabled. We need to disable it to cause a reset.
+			 *
+			 * If CC.EN = 1 && CSTS.RDY = 0, the controller is in the process of becoming ready.
+			 *  Wait for the ready bit to be 1 before disabling the controller.
+			 */
+			if (csts.bits.rdy == 0) {
+				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
+				return 0;
+			}
+
+			/* CC.EN = 1 && CSTS.RDY == 1, so we can immediately disable the controller. */
+			cc.bits.en = 0;
+			nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
+			return 0;
+		} else {
+			/*
+			 * Controller is currently disabled. We can jump straight to enabling it.
+			 */
+			nvme_ctrlr_enable(ctrlr);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
+			return 0;
+		}
+		break;
+
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
+		if (csts.bits.rdy == 1) {
+			/* CC.EN = 1 && CSTS.RDY = 1, so we can set CC.EN = 0 now. */
+			cc.bits.en = 0;
+			nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
+			return 0;
+		}
+		break;
+
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
+		if (csts.bits.rdy == 0) {
+			/* CC.EN = 0 && CSTS.RDY = 0, so we can enable the controller now. */
+			nvme_ctrlr_enable(ctrlr);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
+			return 0;
+		}
+		break;
+
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
+		if (csts.bits.rdy == 1) {
+			/*
+			 * The controller has been enabled.
+			 *  Perform the rest of initialization in nvme_ctrlr_start() serially.
+			 */
+			rc = nvme_ctrlr_start(ctrlr);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_READY, NVME_TIMEOUT_INFINITE);
+			return rc;
+		}
+		break;
+
+	default:
+		nvme_assert(0, ("unhandled ctrlr state %d\n", ctrlr->state));
+		nvme_ctrlr_fail(ctrlr);
 		return -1;
 	}
 
+	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
+	    nvme_get_tsc() > ctrlr->state_timeout_tsc) {
+		nvme_printf(ctrlr, "Initialization timed out in state %d\n", ctrlr->state);
+		nvme_ctrlr_fail(ctrlr);
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
+{
 	nvme_qpair_reset(&ctrlr->adminq);
 
 	nvme_qpair_enable(&ctrlr->adminq);
@@ -771,6 +858,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	int				status;
 	int				rc;
 
+	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->devhandle = devhandle;
 
 	status = nvme_ctrlr_allocate_bars(ctrlr);

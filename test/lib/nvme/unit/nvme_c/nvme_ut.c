@@ -58,6 +58,12 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
+nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;

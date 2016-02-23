@@ -47,6 +47,8 @@ static uint16_t g_pci_subdevice_id;
 
 char outbuf[OUTBUF_SIZE];
 
+uint64_t g_ut_tsc = 0;
+
 __thread int    nvme_thread_ioq_index = -1;
 
 uint16_t
