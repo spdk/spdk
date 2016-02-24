@@ -1,5 +1,14 @@
 # Automated script for NVMe performance test
 
+## Compile SPDK with LTO
+
+The link time optimization (lto) gcc flag allows the linker to run a post-link optimization pass on the code. During that pass the linker inlines thin wrappers such as those around DPDK calls which results in a shallow call stack and significantly improves performance. Therefore, we recommend compiling SPDK with the lto flag prior to running this benchmark script to archieve optimal performance.
+Link time optimization can be enabled in SPDK by doing the following:
+
+~{.sh}
+./configure --enable-lto
+~
+
 ## Configuration
 Test is configured by using command-line options.
 
