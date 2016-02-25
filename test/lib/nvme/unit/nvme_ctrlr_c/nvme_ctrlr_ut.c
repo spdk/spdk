@@ -170,6 +170,34 @@ nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+int
+nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data *payload,
+			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_cmd_cb cb_fn,
+			 void *cb_arg)
+{
+	return 0;
+}
+
 void
 nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {

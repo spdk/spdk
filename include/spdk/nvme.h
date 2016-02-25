@@ -341,6 +341,64 @@ int spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * \brief attach the specified namespace to controllers.
+ *
+ * \param payload The pointer to the controller list.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ */
+int spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			      struct spdk_nvme_ctrlr_list *payload);
+
+/**
+ * \brief detach the specified namespace from controllers.
+ *
+ * \param payload The pointer to the controller list.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ */
+int spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			      struct spdk_nvme_ctrlr_list *payload);
+
+/**
+ * \brief create a namespace.
+ *
+ * \param payload The pointer to the nvme namespace data.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ */
+int spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data *payload);
+
+/**
+ * \brief delete a namespace.
+ *
+ * \param nsid the name space identifier.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ *
+ * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
+ * of commands submitted through this function.
+ */
+int spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+
+/**
  * \brief Get the identify namespace data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point while the controller is attached to

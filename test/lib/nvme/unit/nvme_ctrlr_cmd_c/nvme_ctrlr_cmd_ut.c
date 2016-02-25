@@ -51,7 +51,7 @@ uint8_t get_feature = 1;
 uint32_t get_feature_cdw11 = 1;
 uint16_t abort_cid = 1;
 uint16_t abort_sqid = 1;
-
+uint32_t namespace_management_nsid = 1;
 
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
@@ -175,6 +175,34 @@ static void verify_intel_get_log_page_directory(struct nvme_request *req)
 	temp_cdw10 = ((sizeof(struct spdk_nvme_intel_log_page_directory) / sizeof(uint32_t) - 1) << 16) |
 		     SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY;
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
+static void verify_namespace_attach(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_NS_ATTACHMENT);
+	CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_NS_CTRLR_ATTACH);
+	CU_ASSERT(req->cmd.nsid == namespace_management_nsid);
+}
+
+static void verify_namespace_detach(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_NS_ATTACHMENT);
+	CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_NS_CTRLR_DETACH);
+	CU_ASSERT(req->cmd.nsid == namespace_management_nsid);
+}
+
+static void verify_namespace_create(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_NS_MANAGEMENT);
+	CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_NS_MANAGEMENT_CREATE);
+	CU_ASSERT(req->cmd.nsid == 0);
+}
+
+static void verify_namespace_delete(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_NS_MANAGEMENT);
+	CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_NS_MANAGEMENT_DELETE);
+	CU_ASSERT(req->cmd.nsid == namespace_management_nsid);
 }
 
 struct nvme_request *
@@ -395,6 +423,48 @@ test_get_log_pages(void)
 	test_generic_get_log_pages();
 	test_intel_get_log_pages();
 }
+
+static void
+test_namespace_attach(void)
+{
+	struct spdk_nvme_ctrlr			ctrlr = {};
+	struct spdk_nvme_ctrlr_list		payload = {};
+
+	verify_fn = verify_namespace_attach;
+
+	nvme_ctrlr_cmd_attach_ns(&ctrlr, namespace_management_nsid, &payload, NULL, NULL);
+}
+
+static void
+test_namespace_detach(void)
+{
+	struct spdk_nvme_ctrlr			ctrlr = {};
+	struct spdk_nvme_ctrlr_list		payload = {};
+
+	verify_fn = verify_namespace_detach;
+
+	nvme_ctrlr_cmd_detach_ns(&ctrlr, namespace_management_nsid, &payload, NULL, NULL);
+}
+
+static void
+test_namespace_create(void)
+{
+	struct spdk_nvme_ctrlr			ctrlr = {};
+	struct spdk_nvme_ns_data		payload = {};
+
+	verify_fn = verify_namespace_create;
+	nvme_ctrlr_cmd_create_ns(&ctrlr, &payload, NULL, NULL);
+}
+
+static void
+test_namespace_delete(void)
+{
+	struct spdk_nvme_ctrlr			ctrlr = {};
+
+	verify_fn = verify_namespace_delete;
+	nvme_ctrlr_cmd_delete_ns(&ctrlr, namespace_management_nsid, NULL, NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -416,6 +486,10 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd get_feature", test_get_feature_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd abort_cmd", test_abort_cmd) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd io_raw_cmd", test_io_raw_cmd) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd namespace_attach", test_namespace_attach) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd namespace_detach", test_namespace_detach) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd namespace_create", test_namespace_create) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd namespace_delete", test_namespace_delete) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

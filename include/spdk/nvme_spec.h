@@ -637,7 +637,10 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		/* supports firmware activate/download commands */
 		uint16_t	firmware  : 1;
 
-		uint16_t	oacs_rsvd : 13;
+		/* supports ns manage/ns attach commands */
+		uint16_t	ns_manage  : 1;
+
+		uint16_t	oacs_rsvd : 12;
 	} oacs;
 
 	/** abort command limit */
@@ -1213,6 +1216,17 @@ enum spdk_nvme_ns_management_type {
 
 	/* 0x2-0xF - Reserved */
 };
+
+struct spdk_nvme_ns_list {
+	uint32_t ns_list[1024];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_list) == 4096, "Incorrect size");
+
+struct spdk_nvme_ctrlr_list {
+	uint16_t ctrlr_count;
+	uint16_t ctrlr_list[2047];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_list) == 4096, "Incorrect size");
 
 #define spdk_nvme_cpl_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
