@@ -55,6 +55,7 @@ struct ctrlr_entry {
 
 struct ns_entry {
 	struct spdk_nvme_ns	*ns;
+	struct spdk_nvme_ctrlr	*ctrlr;
 	struct ns_entry		*next;
 	uint32_t		io_size_blocks;
 	uint64_t		size_in_ios;
@@ -63,7 +64,6 @@ struct ns_entry {
 
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
-	struct ctrlr_entry	*ctr_entry;
 	uint64_t		io_completed;
 	uint64_t		io_completed_error;
 	uint64_t		io_submitted;
@@ -115,6 +115,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	entry->ns = ns;
+	entry->ctrlr = ctrlr;
 	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
 			     g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
@@ -239,7 +240,7 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 static void
 check_io(struct ns_worker_ctx *ns_ctx)
 {
-	spdk_nvme_ctrlr_process_io_completions(ns_ctx->ctr_entry->ctrlr, 0);
+	spdk_nvme_ctrlr_process_io_completions(ns_ctx->entry->ctrlr, 0);
 }
 
 static void
@@ -296,7 +297,7 @@ work_fn(void *arg)
 		    ((tsc_end - rte_get_timer_cycles()) / g_tsc_rate) < (uint64_t)(g_time_in_sec / 5 + 10)) {
 			ns_ctx = worker->ns_ctx;
 			while (ns_ctx != NULL) {
-				if (spdk_nvme_ctrlr_reset(ns_ctx->ctr_entry->ctrlr) < 0) {
+				if (spdk_nvme_ctrlr_reset(ns_ctx->entry->ctrlr) < 0) {
 					fprintf(stderr, "nvme reset failed.\n");
 					return -1;
 				}
@@ -555,7 +556,6 @@ static int
 associate_workers_with_ns(void)
 {
 	struct ns_entry		*entry = g_namespaces;
-	struct ctrlr_entry	*controller_entry = g_controllers;
 	struct worker_thread	*worker = g_workers;
 	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
@@ -574,13 +574,11 @@ associate_workers_with_ns(void)
 
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
 		ns_ctx->entry = entry;
-		ns_ctx->ctr_entry = controller_entry;
 		ns_ctx->next = worker->ns_ctx;
 		worker->ns_ctx = ns_ctx;
 
 		worker = g_workers;
 
-		controller_entry = controller_entry->next;
 		entry = entry->next;
 		if (entry == NULL) {
 			entry = g_namespaces;
