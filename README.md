@@ -49,14 +49,14 @@ FreeBSD:
 
 - gcc
 - libpciaccess
-- gmakes
+- gmake
 - cunit
 
 Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.
 
     1) cd /path/to/spdk
     2) wget http://dpdk.org/browse/dpdk/snapshot/dpdk-2.2.0.tar.gz
-    3) tar xfv dpdk-2.2.0.tar.gz
+    3) tar xfz dpdk-2.2.0.tar.gz
 
 Linux:
 
