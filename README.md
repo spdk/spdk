@@ -1,6 +1,8 @@
 Storage Performance Development Kit
 ===================================
 
+[![Join the chat at https://gitter.im/spdk/spdk](https://badges.gitter.im/spdk/spdk.svg)](https://gitter.im/spdk/spdk?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
 
 [SPDK on 01.org](https://01.org/spdk)
