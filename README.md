@@ -7,7 +7,7 @@ Storage Performance Development Kit
 
 The Storage Performance Development Kit (SPDK) provides a set of tools 
 and libraries for writing high performance, scalable, user-mode storage 
-applications. To date SPDK contains a userspace NVMe driver and also a 
+applications. SPDK currently contains a userspace NVMe driver and a  
 userspace I/OAT driver. 
 
 SPDK achieves high performance by moving all of the necessary drivers into
