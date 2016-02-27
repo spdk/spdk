@@ -69,8 +69,8 @@ FreeBSD:
 Building
 ========
 
-Once the prerequisites and SPDK are installed, run 'make' within the SPDK
-directory to build the SPDK libraries and examples.
+Once the prerequisites are installed, run 'make' within the SPDK directory
+to build the SPDK libraries and examples.
 
     make DPDK_DIR=/path/to/dpdk
 
