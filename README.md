@@ -8,13 +8,18 @@ Storage Performance Development Kit
 
 [SPDK on 01.org](https://01.org/spdk)
 
-The Storage Performance Development Kit (SPDK) provides a set of tools
-and libraries for writing high performance, scalable, user-mode storage
-applications.
-It achieves high performance by moving all of the necessary drivers into
+The Storage Performance Development Kit (SPDK) provides a set of tools 
+and libraries for writing high performance, scalable, user-mode storage 
+applications. SPDK currently contains a userspace NVMe driver and a  
+userspace I/OAT driver. 
+
+SPDK achieves high performance by moving all of the necessary drivers into
 userspace and operating in a polled mode instead of relying on interrupts,
 which avoids kernel context switches and eliminates interrupt handling
 overhead.
+
+See documentation below, as well as a sample SPDK program at location
+examples/nvme/perf/perf.c
 
 Documentation
 =============
@@ -67,8 +72,8 @@ FreeBSD:
 Building
 ========
 
-Once the prerequisites are installed, run 'make' within the SPDK directory
-to build the SPDK libraries and examples.
+Once the prerequisites and SPDK are installed, run 'make' within the SPDK
+directory to build the SPDK libraries and examples.
 
     make DPDK_DIR=/path/to/dpdk
 
@@ -81,6 +86,12 @@ Linux:
 FreeBSD:
 
     gmake DPDK_DIR=./dpdk-2.2.0/x86_64-native-bsdapp-clang
+
+At the end of the SPDK build you will see this, or similar:
+
+	== spdk/examples/nvme/perf (all)
+	CC perf.o
+	LINK perf
 
 Hugepages and Device Binding
 ============================
