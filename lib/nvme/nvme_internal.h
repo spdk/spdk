@@ -443,25 +443,25 @@ nvme_align32pow2(uint32_t x)
 }
 
 /* Admin functions */
-void	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
+int	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
 		void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr,
+int	nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr,
 		uint16_t nsid, void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
+int	nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 				    struct spdk_nvme_qpair *io_que,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
+int	nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 				    struct spdk_nvme_qpair *io_que,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
+int	nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 				      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg);
-void	nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
+int	nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 		union spdk_nvme_critical_warning_state state,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-void	nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
+int	nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
 			     uint16_t sqid, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);

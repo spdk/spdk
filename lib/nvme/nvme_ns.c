@@ -101,6 +101,7 @@ nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_ns_data		*nsdata;
 	uint32_t				pci_devid;
+	int					rc;
 
 	nvme_assert(id > 0, ("invalid namespace id %d", id));
 
@@ -116,8 +117,12 @@ nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 	nsdata = _nvme_ns_get_data(ns);
 
 	status.done = false;
-	nvme_ctrlr_cmd_identify_namespace(ctrlr, id, nsdata,
-					  nvme_completion_poll_cb, &status);
+	rc = nvme_ctrlr_cmd_identify_namespace(ctrlr, id, nsdata,
+					       nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
 	while (status.done == false) {
 		nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}

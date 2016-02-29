@@ -76,7 +76,7 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
-void
+int
 nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 				   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
@@ -86,6 +86,9 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 	req = nvme_allocate_request_contig(payload,
 					   sizeof(struct spdk_nvme_ctrlr_data),
 					   cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
@@ -97,9 +100,10 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 	cmd->cdw10 = 1;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	return 0;
 }
 
-void
+int
 nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 				  void *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
@@ -109,6 +113,9 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 	req = nvme_allocate_request_contig(payload,
 					   sizeof(struct spdk_nvme_ns_data),
 					   cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_IDENTIFY;
@@ -119,9 +126,10 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 	cmd->nsid = nsid;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	return 0;
 }
 
-void
+int
 nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
 			    void *cb_arg)
@@ -130,6 +138,9 @@ nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_cmd *cmd;
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_CREATE_IO_CQ;
@@ -147,9 +158,10 @@ nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->dptr.prp.prp1 = io_que->cpl_bus_addr;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	return 0;
 }
 
-void
+int
 nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
@@ -157,6 +169,9 @@ nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_cmd *cmd;
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_CREATE_IO_SQ;
@@ -171,6 +186,7 @@ nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->dptr.prp.prp1 = io_que->cmd_bus_addr;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	return 0;
 }
 
 int
@@ -226,18 +242,18 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	return 0;
 }
 
-void
+int
 nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 			      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	uint32_t cdw11;
 
 	cdw11 = ((num_queues - 1) << 16) | (num_queues - 1);
-	spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_NUMBER_OF_QUEUES, cdw11, 0,
-					NULL, 0, cb_fn, cb_arg);
+	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_NUMBER_OF_QUEUES, cdw11, 0,
+					       NULL, 0, cb_fn, cb_arg);
 }
 
-void
+int
 nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 				      union spdk_nvme_critical_warning_state state, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg)
@@ -245,8 +261,9 @@ nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 	uint32_t cdw11;
 
 	cdw11 = state.raw;
-	spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION, cdw11, 0, NULL, 0,
-					cb_fn, cb_arg);
+	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION, cdw11, 0,
+					       NULL, 0,
+					       cb_fn, cb_arg);
 }
 
 int
@@ -276,7 +293,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	return 0;
 }
 
-void
+int
 nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
 		     uint16_t sqid, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
@@ -284,10 +301,14 @@ nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
 	struct spdk_nvme_cmd *cmd;
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_ABORT;
 	cmd->cdw10 = (cid << 16) | sqid;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	return 0;
 }
