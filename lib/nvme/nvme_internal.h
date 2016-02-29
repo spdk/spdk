@@ -275,6 +275,8 @@ struct spdk_nvme_qpair {
 
 	uint64_t			cmd_bus_addr;
 	uint64_t			cpl_bus_addr;
+
+	uint8_t				qprio;
 };
 
 struct spdk_nvme_ns {

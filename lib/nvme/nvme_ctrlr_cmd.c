@@ -182,7 +182,7 @@ nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	cmd->cdw10 = ((io_que->num_entries - 1) << 16) | io_que->id;
 	/* 0x1 = physically contiguous */
-	cmd->cdw11 = (io_que->id << 16) | 0x1;
+	cmd->cdw11 = (io_que->id << 16) | (io_que->qprio << 1) | 0x1;
 	cmd->dptr.prp.prp1 = io_que->cmd_bus_addr;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);

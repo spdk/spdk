@@ -536,6 +536,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	qpair->id = id;
 	qpair->num_entries = num_entries;
+	qpair->qprio = 0;
 
 	qpair->ctrlr = ctrlr;
 
