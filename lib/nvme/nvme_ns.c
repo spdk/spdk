@@ -124,7 +124,7 @@ nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 	}
 
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");

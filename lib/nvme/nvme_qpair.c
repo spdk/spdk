@@ -462,7 +462,7 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
  * \sa nvme_cb_fn_t
  */
 int32_t
-nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tracker	*tr;
 	struct spdk_nvme_cpl	*cpl;

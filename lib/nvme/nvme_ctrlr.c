@@ -96,7 +96,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 					 nvme_completion_poll_cb,
 					 &status);
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_free(log_page_directory);
@@ -432,7 +432,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_controller failed!\n");
@@ -473,7 +473,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_set_num_queues failed!\n");
@@ -521,7 +521,7 @@ nvme_ctrlr_create_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		}
 
 		while (status.done == false) {
-			nvme_qpair_process_completions(&ctrlr->adminq, 0);
+			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 		}
 		if (spdk_nvme_cpl_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "nvme_create_io_cq failed!\n");
@@ -536,7 +536,7 @@ nvme_ctrlr_create_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		}
 
 		while (status.done == false) {
-			nvme_qpair_process_completions(&ctrlr->adminq, 0);
+			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 		}
 		if (spdk_nvme_cpl_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "nvme_create_io_sq failed!\n");
@@ -694,7 +694,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	while (status.done == false) {
-		nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_set_async_event_config failed!\n");
@@ -959,7 +959,7 @@ int32_t
 spdk_nvme_ctrlr_process_io_completions(struct spdk_nvme_ctrlr *ctrlr, uint32_t max_completions)
 {
 	nvme_assert(nvme_thread_ioq_index >= 0, ("no ioq_index assigned for thread\n"));
-	return nvme_qpair_process_completions(&ctrlr->ioq[nvme_thread_ioq_index], max_completions);
+	return spdk_nvme_qpair_process_completions(&ctrlr->ioq[nvme_thread_ioq_index], max_completions);
 }
 
 int32_t
@@ -968,7 +968,7 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	int32_t num_completions;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
-	num_completions = nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	num_completions = spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return num_completions;

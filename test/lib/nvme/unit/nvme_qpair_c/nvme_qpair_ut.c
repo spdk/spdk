@@ -484,7 +484,7 @@ static void test_nvme_qpair_process_completions(void)
 	qpair.is_enabled = false;
 	qpair.ctrlr->is_resetting = true;
 
-	nvme_qpair_process_completions(&qpair, 0);
+	spdk_nvme_qpair_process_completions(&qpair, 0);
 	cleanup_submit_request_test(&qpair);
 }
 
@@ -506,15 +506,15 @@ test_nvme_qpair_process_completions_limit(void)
 	ut_insert_cq_entry(&qpair, 3);
 
 	/* This should only process 2 completions, and 2 should be left in the queue */
-	nvme_qpair_process_completions(&qpair, 2);
+	spdk_nvme_qpair_process_completions(&qpair, 2);
 	CU_ASSERT(qpair.cq_head == 2);
 
 	/* This should only process 1 completion, and 1 should be left in the queue */
-	nvme_qpair_process_completions(&qpair, 1);
+	spdk_nvme_qpair_process_completions(&qpair, 1);
 	CU_ASSERT(qpair.cq_head == 3);
 
 	/* This should process the remaining completion */
-	nvme_qpair_process_completions(&qpair, 5);
+	spdk_nvme_qpair_process_completions(&qpair, 5);
 	CU_ASSERT(qpair.cq_head == 4);
 
 	cleanup_submit_request_test(&qpair);
@@ -657,8 +657,9 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "ctrlr_failed", test_ctrlr_failed) == NULL
 		|| CU_add_test(suite, "struct_packing", struct_packing) == NULL
 		|| CU_add_test(suite, "nvme_qpair_fail", test_nvme_qpair_fail) == NULL
-		|| CU_add_test(suite, "nvme_qpair_process_completions", test_nvme_qpair_process_completions) == NULL
-		|| CU_add_test(suite, "nvme_qpair_process_completions_limit",
+		|| CU_add_test(suite, "spdk_nvme_qpair_process_completions",
+			       test_nvme_qpair_process_completions) == NULL
+		|| CU_add_test(suite, "spdk_nvme_qpair_process_completions_limit",
 			       test_nvme_qpair_process_completions_limit) == NULL
 		|| CU_add_test(suite, "nvme_qpair_destroy", test_nvme_qpair_destroy) == NULL
 		|| CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
