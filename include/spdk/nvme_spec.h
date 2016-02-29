@@ -310,6 +310,18 @@ enum spdk_nvme_psdt_value {
 	SPDK_NVME_PSDT_RESERVED		= 0x3
 };
 
+/**
+ * Submission queue priority values for Create I/O Submission Queue Command.
+ *
+ * Only valid for weighted round robin arbitration method.
+ */
+enum spdk_nvme_qprio {
+	SPDK_NVME_QPRIO_URGENT		= 0x0,
+	SPDK_NVME_QPRIO_HIGH		= 0x1,
+	SPDK_NVME_QPRIO_MEDIUM		= 0x2,
+	SPDK_NVME_QPRIO_LOW		= 0x3
+};
+
 struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */
