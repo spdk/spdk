@@ -157,7 +157,7 @@ nvme_free_request(struct nvme_request *req)
 static void
 test1(void)
 {
-	struct nvme_qpair qpair = {};
+	struct spdk_nvme_qpair qpair = {};
 	struct spdk_nvme_cmd cmd = {};
 
 	outbuf[0] = '\0';
@@ -178,7 +178,7 @@ test1(void)
 static void
 test2(void)
 {
-	struct nvme_qpair qpair = {};
+	struct spdk_nvme_qpair qpair = {};
 	struct spdk_nvme_cmd cmd = {};
 
 	outbuf[0] = '\0';
@@ -197,7 +197,7 @@ test2(void)
 }
 
 static void
-prepare_submit_request_test(struct nvme_qpair *qpair,
+prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_ctrlr *ctrlr,
 			    struct spdk_nvme_registers *regs)
 {
@@ -212,13 +212,13 @@ prepare_submit_request_test(struct nvme_qpair *qpair,
 }
 
 static void
-cleanup_submit_request_test(struct nvme_qpair *qpair)
+cleanup_submit_request_test(struct spdk_nvme_qpair *qpair)
 {
 	nvme_qpair_destroy(qpair);
 }
 
 static void
-ut_insert_cq_entry(struct nvme_qpair *qpair, uint32_t slot)
+ut_insert_cq_entry(struct spdk_nvme_qpair *qpair, uint32_t slot)
 {
 	struct nvme_request	*req;
 	struct nvme_tracker 	*tr;
@@ -256,7 +256,7 @@ expected_failure_callback(void *arg, const struct spdk_nvme_cpl *cpl)
 static void
 test3(void)
 {
-	struct nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req;
 	struct nvme_tracker		*tr;
 	struct spdk_nvme_ctrlr		ctrlr = {};
@@ -295,7 +295,7 @@ test3(void)
 static void
 test4(void)
 {
-	struct nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req;
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
@@ -329,7 +329,7 @@ test4(void)
 static void
 test_sgl_req(void)
 {
-	struct nvme_qpair	qpair = {};
+	struct spdk_nvme_qpair	qpair = {};
 	struct nvme_request	*req;
 	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
@@ -403,7 +403,7 @@ test_sgl_req(void)
 static void
 test_ctrlr_failed(void)
 {
-	struct nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req;
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
@@ -440,12 +440,12 @@ static void struct_packing(void)
 	 * that are used in the I/O path. Make sure the I/O path fields
 	 * all fit into two cache lines.
 	 */
-	CU_ASSERT(offsetof(struct nvme_qpair, ctrlr) <= 128);
+	CU_ASSERT(offsetof(struct spdk_nvme_qpair, ctrlr) <= 128);
 }
 
 static void test_nvme_qpair_fail(void)
 {
-	struct nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req = NULL;
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
@@ -476,7 +476,7 @@ static void test_nvme_qpair_fail(void)
 
 static void test_nvme_qpair_process_completions(void)
 {
-	struct nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		qpair = {};
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 
@@ -491,7 +491,7 @@ static void test_nvme_qpair_process_completions(void)
 static void
 test_nvme_qpair_process_completions_limit(void)
 {
-	struct nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		qpair = {};
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 
@@ -522,7 +522,7 @@ test_nvme_qpair_process_completions_limit(void)
 
 static void test_nvme_qpair_destroy(void)
 {
-	struct nvme_qpair		qpair = {};
+	struct spdk_nvme_qpair		qpair = {};
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 	struct nvme_tracker		*tr_temp;

@@ -75,7 +75,7 @@ spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
 	return g_pci_subdevice_id;
 }
 
-int nvme_qpair_construct(struct nvme_qpair *qpair, uint16_t id,
+int nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries, uint16_t num_trackers,
 			 struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -91,39 +91,39 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 }
 
 void
-nvme_qpair_fail(struct nvme_qpair *qpair)
+nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 {
 }
 
 void
-nvme_qpair_submit_request(struct nvme_qpair *qpair, struct nvme_request *req)
+nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST);
 }
 
 int32_t
-nvme_qpair_process_completions(struct nvme_qpair *qpair, uint32_t max_completions)
+nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	return 0;
 }
 
 void
-nvme_qpair_disable(struct nvme_qpair *qpair)
+nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
 }
 
 void
-nvme_qpair_destroy(struct nvme_qpair *qpair)
+nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
 }
 
 void
-nvme_qpair_enable(struct nvme_qpair *qpair)
+nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 }
 
 void
-nvme_qpair_reset(struct nvme_qpair *qpair)
+nvme_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 }
 
@@ -153,14 +153,14 @@ nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 
 void
 nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
-			    struct nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
+			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
 			    void *cb_arg)
 {
 }
 
 void
 nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
-			    struct nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
+			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
 			    void *cb_arg)
 {
 }

@@ -123,7 +123,7 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 
 void
 nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
-			    struct nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
+			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
 			    void *cb_arg)
 {
 	struct nvme_request *req;
@@ -151,7 +151,7 @@ nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 
 void
 nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
-			    struct nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;

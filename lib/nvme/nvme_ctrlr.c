@@ -179,7 +179,7 @@ nvme_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_qpair		*qpair;
+	struct spdk_nvme_qpair		*qpair;
 	union spdk_nvme_cap_lo_register	cap_lo;
 	uint32_t			i, num_entries, num_trackers;
 	int				rc;
@@ -211,7 +211,7 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->max_xfer_size = NVME_MAX_XFER_SIZE;
 
-	ctrlr->ioq = calloc(ctrlr->num_io_queues, sizeof(struct nvme_qpair));
+	ctrlr->ioq = calloc(ctrlr->num_io_queues, sizeof(struct spdk_nvme_qpair));
 
 	if (ctrlr->ioq == NULL)
 		return -1;
@@ -491,7 +491,7 @@ static int
 nvme_ctrlr_create_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status	status;
-	struct nvme_qpair			*qpair;
+	struct spdk_nvme_qpair			*qpair;
 	uint32_t				i;
 
 	if (nvme_ctrlr_construct_io_qpairs(ctrlr)) {
@@ -924,7 +924,7 @@ void
 nvme_ctrlr_submit_io_request(struct spdk_nvme_ctrlr *ctrlr,
 			     struct nvme_request *req)
 {
-	struct nvme_qpair       *qpair;
+	struct spdk_nvme_qpair       *qpair;
 
 	nvme_assert(nvme_thread_ioq_index >= 0, ("no ioq_index assigned for thread\n"));
 	qpair = &ctrlr->ioq[nvme_thread_ioq_index];
