@@ -290,6 +290,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 
 	struct io_request *req;
 	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_qpair *qpair;
 	const struct spdk_nvme_ns_data *nsdata;
 
 	ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, 1);
@@ -318,18 +319,25 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 		return 0;
 	}
 
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(dev->ctrlr, 0);
+	if (!qpair) {
+		rte_free(req);
+		return -1;
+	}
+
 	nseg = req->nseg;
 	for (i = 0; i < nseg; i++) {
 		memset(req->iovs[i].iov_base, DATA_PATTERN, req->iovs[i].iov_len);
 	}
 
-	rc = spdk_nvme_ns_cmd_writev(ns, BASE_LBA_START, lba_count,
+	rc = spdk_nvme_ns_cmd_writev(ns, qpair, BASE_LBA_START, lba_count,
 				     io_complete, req, 0,
 				     nvme_request_reset_sgl,
 				     nvme_request_next_sge);
 
 	if (rc != 0) {
 		fprintf(stderr, "Writev Failed\n");
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 		rte_free(req);
 		return -1;
 	}
@@ -337,10 +345,11 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	io_complete_flag = 0;
 
 	while (!io_complete_flag)
-		spdk_nvme_ctrlr_process_io_completions(dev->ctrlr, 1);
+		spdk_nvme_qpair_process_completions(qpair, 1);
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s Writev Failed\n", dev->name);
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 		rte_free(req);
 		return -1;
 	}
@@ -352,22 +361,24 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 		memset(req->iovs[i].iov_base, 0, req->iovs[i].iov_len);
 	}
 
-	rc = spdk_nvme_ns_cmd_readv(ns, BASE_LBA_START, lba_count,
+	rc = spdk_nvme_ns_cmd_readv(ns, qpair, BASE_LBA_START, lba_count,
 				    io_complete, req, 0,
 				    nvme_request_reset_sgl,
 				    nvme_request_next_sge);
 
 	if (rc != 0) {
 		fprintf(stderr, "Readv Failed\n");
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 		rte_free(req);
 		return -1;
 	}
 
 	while (!io_complete_flag)
-		spdk_nvme_ctrlr_process_io_completions(dev->ctrlr, 1);
+		spdk_nvme_qpair_process_completions(qpair, 1);
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s Readv Failed\n", dev->name);
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 		rte_free(req);
 		return -1;
 	}
@@ -377,6 +388,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 		for (j = 0; j < req->iovs[i].iov_len; j++) {
 			if (buf[j] != DATA_PATTERN) {
 				fprintf(stderr, "Write/Read Sucess, But %s Memcmp Failed\n", dev->name);
+				spdk_nvme_ctrlr_free_io_qpair(qpair);
 				rte_free(req);
 				return -1;
 			}
@@ -384,6 +396,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 	}
 
 	fprintf(stdout, "%s %s Test Passed\n", dev->name, __func__);
+	spdk_nvme_ctrlr_free_io_qpair(qpair);
 	rte_free(req);
 	return rc;
 }
@@ -468,12 +481,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (num_devs) {
-		rc = spdk_nvme_register_io_thread();
-		if (rc != 0)
-			return rc;
-	}
-
+	rc = 0;
 	foreach_dev(iter) {
 		if (writev_readv_tests(iter, build_io_request_0)
 		    || writev_readv_tests(iter, build_io_request_1)
@@ -482,6 +490,7 @@ int main(int argc, char **argv)
 		    || writev_readv_tests(iter, build_io_request_4)
 		    || writev_readv_tests(iter, build_io_request_5)
 		    || writev_readv_tests(iter, build_io_request_6)) {
+			rc = 1;
 			printf("%s: failed sgl tests\n", iter->name);
 		}
 	}
@@ -493,9 +502,6 @@ int main(int argc, char **argv)
 
 		spdk_nvme_detach(dev->ctrlr);
 	}
-
-	if (num_devs)
-		spdk_nvme_unregister_io_thread();
 
 	return rc;
 }

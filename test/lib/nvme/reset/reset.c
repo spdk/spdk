@@ -64,6 +64,7 @@ struct ns_entry {
 
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
+	struct spdk_nvme_qpair	*qpair;
 	uint64_t		io_completed;
 	uint64_t		io_completed_error;
 	uint64_t		io_submitted;
@@ -195,10 +196,12 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 
 	if ((g_rw_percentage == 100) ||
 	    (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
-		rc = spdk_nvme_ns_cmd_read(entry->ns, task->buf, offset_in_ios * entry->io_size_blocks,
+		rc = spdk_nvme_ns_cmd_read(entry->ns, ns_ctx->qpair, task->buf,
+					   offset_in_ios * entry->io_size_blocks,
 					   entry->io_size_blocks, io_complete, task, 0);
 	} else {
-		rc = spdk_nvme_ns_cmd_write(entry->ns, task->buf, offset_in_ios * entry->io_size_blocks,
+		rc = spdk_nvme_ns_cmd_write(entry->ns, ns_ctx->qpair, task->buf,
+					    offset_in_ios * entry->io_size_blocks,
 					    entry->io_size_blocks, io_complete, task, 0);
 	}
 
@@ -245,7 +248,7 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 static void
 check_io(struct ns_worker_ctx *ns_ctx)
 {
-	spdk_nvme_ctrlr_process_io_completions(ns_ctx->entry->ctrlr, 0);
+	spdk_nvme_qpair_process_completions(ns_ctx->qpair, 0);
 }
 
 static void
@@ -275,14 +278,14 @@ work_fn(void *arg)
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
-	if (spdk_nvme_register_io_thread() != 0) {
-		fprintf(stderr, "spdk_nvme_register_io_thread() failed on core %u\n", worker->lcore);
-		return -1;
-	}
-
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
+		ns_ctx->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->ctrlr, 0);
+		if (ns_ctx->qpair == NULL) {
+			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair() failed on core %u\n", worker->lcore);
+			return -1;
+		}
 		submit_io(ns_ctx, g_queue_depth);
 		ns_ctx = ns_ctx->next;
 	}
@@ -319,10 +322,9 @@ work_fn(void *arg)
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
 		drain_io(ns_ctx);
+		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->qpair);
 		ns_ctx = ns_ctx->next;
 	}
-
-	spdk_nvme_unregister_io_thread();
 
 	return 0;
 }

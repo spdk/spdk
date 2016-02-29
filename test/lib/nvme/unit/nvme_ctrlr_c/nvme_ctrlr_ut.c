@@ -37,7 +37,6 @@
 
 struct nvme_driver g_nvme_driver = {
 	.lock = NVME_MUTEX_INITIALIZER,
-	.max_io_queues = DEFAULT_MAX_IO_QUEUES
 };
 
 static uint16_t g_pci_vendor_id;
@@ -80,6 +79,11 @@ int nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries, uint16_t num_trackers,
 			 struct spdk_nvme_ctrlr *ctrlr)
 {
+	qpair->id = id;
+	qpair->num_entries = num_entries;
+	qpair->qprio = 0;
+	qpair->ctrlr = ctrlr;
+
 	return 0;
 }
 
@@ -191,6 +195,22 @@ int
 nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
 			    void *cb_arg)
+{
+	fake_cpl_success(cb_fn, cb_arg);
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	fake_cpl_success(cb_fn, cb_arg);
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	fake_cpl_success(cb_fn, cb_arg);
 	return 0;
@@ -397,6 +417,78 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 }
 
 static void
+setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
+{
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr, NULL) == 0);
+
+	/* Fake out the parts of ctrlr needed for I/O qpair allocation */
+	ctrlr->num_io_queues = num_io_queues;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct_io_qpairs(ctrlr) == 0);
+}
+
+static void
+cleanup_qpairs(struct spdk_nvme_ctrlr *ctrlr)
+{
+	nvme_ctrlr_destruct(ctrlr);
+}
+
+static void
+test_alloc_io_qpair_1(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair *q0;
+
+	setup_qpairs(&ctrlr, 1);
+
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q0 != NULL);
+	/* Only 1 I/O qpair was allocated, so this should fail */
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0) == NULL);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
+
+	/*
+	 * Now that the qpair has been returned to the free list,
+	 *  we should be able to allocate it again
+	 */
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q0 != NULL);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
+
+	cleanup_qpairs(&ctrlr);
+}
+
+static void
+test_alloc_io_qpair_2(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair *q0, *q1;
+
+	setup_qpairs(&ctrlr, 2);
+
+	/*
+	 * Allocate 2 qpairs and free them
+	 */
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q0 != NULL);
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q1 != NULL);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
+
+	/*
+	 * Allocate 2 qpairs and free them in the reverse order
+	 */
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q0 != NULL);
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q1 != NULL);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
+
+	cleanup_qpairs(&ctrlr);
+}
+
+static void
 test_nvme_ctrlr_fail(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
@@ -500,6 +592,8 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_init_en_1_rdy_1) == NULL
 		|| CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0",
 			       test_nvme_ctrlr_init_en_0_rdy_0) == NULL
+		|| CU_add_test(suite, "alloc_io_qpair 1", test_alloc_io_qpair_1) == NULL
+		|| CU_add_test(suite, "alloc_io_qpair 2", test_alloc_io_qpair_2) == NULL
 		|| CU_add_test(suite, "test nvme_ctrlr function nvme_ctrlr_fail", test_nvme_ctrlr_fail) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_construct_intel_support_log_page_list",
 			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL

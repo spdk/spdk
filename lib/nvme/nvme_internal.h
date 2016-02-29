@@ -292,7 +292,11 @@ struct spdk_nvme_qpair {
 	/*
 	 * Fields below this point should not be touched on the normal I/O happy path.
 	 */
+
 	struct spdk_nvme_ctrlr		*ctrlr;
+
+	/* List entry for spdk_nvme_ctrlr::free_io_qpairs and active_io_qpairs */
+	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
 
 	uint64_t			cmd_bus_addr;
 	uint64_t			cpl_bus_addr;
@@ -415,15 +419,13 @@ struct spdk_nvme_ctrlr {
 	 * Stored separately from ns since nsdata should not normally be accessed during I/O.
 	 */
 	struct spdk_nvme_ns_data	*nsdata;
-};
 
-extern __thread int nvme_thread_ioq_index;
+	TAILQ_HEAD(, spdk_nvme_qpair)	free_io_qpairs;
+	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
+};
 
 struct nvme_driver {
 	nvme_mutex_t	lock;
-	uint16_t	*ioq_index_pool;
-	uint32_t	max_io_queues;
-	uint16_t	ioq_index_pool_next;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
 };
@@ -481,6 +483,10 @@ int	nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 				    struct spdk_nvme_qpair *io_que,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 				      uint32_t num_queues, spdk_nvme_cmd_cb cb_fn,
 				      void *cb_arg);
@@ -506,8 +512,6 @@ int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 
 void	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
-void	nvme_ctrlr_submit_io_request(struct spdk_nvme_ctrlr *ctrlr,
-				     struct nvme_request *req);
 
 int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			     uint16_t num_entries,
@@ -516,8 +520,6 @@ int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 void	nvme_qpair_destroy(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
-int32_t	spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair,
-		uint32_t max_completions);
 void	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
 void	nvme_qpair_reset(struct spdk_nvme_qpair *qpair);

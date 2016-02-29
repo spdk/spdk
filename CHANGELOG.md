@@ -13,6 +13,13 @@ user code.
   moves device detection into the NVMe library.  The new API also allows
   parallel initialization of NVMe controllers, providing a major reduction in
   startup time when using multiple controllers.
+  - I/O queue allocation was changed to be explicit in the API.  Each function
+  that generates I/O requests now takes a queue pair (`spdk_nvme_qpair *`)
+  argument, and I/O queues may be allocated using
+  `spdk_nvme_ctrlr_alloc_io_qpair()`.  This allows more flexible assignment of
+  queue pairs than the previous model, which only allowed a single queue
+  per thread and limited the total number of I/O queues to the lowest number
+  supported on any attached controller.
   - Added support for the Write Zeroes command.
   - `examples/nvme/perf` can now report I/O command latency from the
    the controller's viewpoint using the Intel vendor-specific read/write latency

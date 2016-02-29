@@ -462,12 +462,6 @@ int main(int argc, char **argv)
 
 	qsort(devs, num_devs, sizeof(devs[0]), cmp_devs);
 
-	if (num_devs) {
-		rc = spdk_nvme_register_io_thread();
-		if (rc != 0)
-			return rc;
-	}
-
 	usage();
 
 	while (1) {
@@ -518,9 +512,6 @@ int main(int argc, char **argv)
 		struct dev *dev = &devs[i];
 		spdk_nvme_detach(dev->ctrlr);
 	}
-
-	if (num_devs)
-		spdk_nvme_unregister_io_thread();
 
 	return rc;
 }

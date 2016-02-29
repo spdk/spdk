@@ -242,8 +242,7 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 }
 
 void
-nvme_ctrlr_submit_io_request(struct spdk_nvme_ctrlr *ctrlr,
-			     struct nvme_request *req)
+nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	verify_fn(req);
 	/* stop analyzer from thinking stack variable addresses are stored in a global */
@@ -409,11 +408,12 @@ static void
 test_io_raw_cmd(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_qpair	qpair = {};
 	struct spdk_nvme_cmd	cmd = {};
 
 	verify_fn = verify_io_raw_cmd;
 
-	spdk_nvme_ctrlr_cmd_io_raw(&ctrlr, &cmd, NULL, 1, NULL, NULL);
+	spdk_nvme_ctrlr_cmd_io_raw(&ctrlr, &qpair, &cmd, NULL, 1, NULL, NULL);
 }
 
 static void

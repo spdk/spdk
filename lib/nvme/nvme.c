@@ -39,13 +39,11 @@
 
 struct nvme_driver g_nvme_driver = {
 	.lock = NVME_MUTEX_INITIALIZER,
-	.max_io_queues = DEFAULT_MAX_IO_QUEUES,
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_driver.attached_ctrlrs),
 };
 
 int32_t		spdk_nvme_retry_count;
-__thread int	nvme_thread_ioq_index = -1;
 
 
 /**
@@ -178,77 +176,6 @@ nvme_free_request(struct nvme_request *req)
 {
 	nvme_assert(req != NULL, ("nvme_free_request(NULL)\n"));
 	nvme_dealloc_request(req);
-}
-
-static int
-nvme_allocate_ioq_index(void)
-{
-	struct nvme_driver	*driver = &g_nvme_driver;
-	uint32_t		i;
-
-	nvme_mutex_lock(&driver->lock);
-	if (driver->ioq_index_pool == NULL) {
-		driver->ioq_index_pool =
-			calloc(driver->max_io_queues, sizeof(*driver->ioq_index_pool));
-		if (driver->ioq_index_pool) {
-			for (i = 0; i < driver->max_io_queues; i++) {
-				driver->ioq_index_pool[i] = i;
-			}
-		} else {
-			nvme_mutex_unlock(&driver->lock);
-			return -1;
-		}
-		driver->ioq_index_pool_next = 0;
-	}
-
-	if (driver->ioq_index_pool_next < driver->max_io_queues) {
-		nvme_thread_ioq_index = driver->ioq_index_pool[driver->ioq_index_pool_next];
-		driver->ioq_index_pool[driver->ioq_index_pool_next] = -1;
-		driver->ioq_index_pool_next++;
-	} else {
-		nvme_thread_ioq_index = -1;
-	}
-
-	nvme_mutex_unlock(&driver->lock);
-	return 0;
-}
-
-static void
-nvme_free_ioq_index(void)
-{
-	struct nvme_driver	*driver = &g_nvme_driver;
-
-	nvme_mutex_lock(&driver->lock);
-	if (nvme_thread_ioq_index >= 0) {
-		driver->ioq_index_pool_next--;
-		driver->ioq_index_pool[driver->ioq_index_pool_next] = nvme_thread_ioq_index;
-		nvme_thread_ioq_index = -1;
-	}
-	nvme_mutex_unlock(&driver->lock);
-}
-
-int
-spdk_nvme_register_io_thread(void)
-{
-	int rc = 0;
-
-	if (nvme_thread_ioq_index >= 0) {
-		nvme_printf(NULL, "thread already registered\n");
-		return -1;
-	}
-
-	rc = nvme_allocate_ioq_index();
-	if (rc) {
-		nvme_printf(NULL, "ioq_index_pool alloc failed\n");
-		return rc;
-	}
-	return (nvme_thread_ioq_index >= 0) ? 0 : -1;
-}
-
-void
-spdk_nvme_unregister_io_thread(void)
-{
-	nvme_free_ioq_index();
 }
 
 struct nvme_enum_ctx {

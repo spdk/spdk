@@ -425,27 +425,27 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
  *
  * \section async_io I/O commands
  *
- * The application may submit I/O from one or more threads
- * and must call nvme_ctrlr_process_io_completions()
- * from each thread that submitted I/O.
+ * The application may submit I/O from one or more threads on one or more queue pairs
+ * and must call spdk_nvme_qpair_process_completions()
+ * for each queue pair that submitted I/O.
  *
- * When the application calls nvme_ctrlr_process_io_completions(),
- * if the NVMe driver detects completed I/Os that were submitted on that thread,
+ * When the application calls spdk_nvme_qpair_process_completions(),
+ * if the NVMe driver detects completed I/Os that were submitted on that queue,
  * it will invoke the registered callback function
- * for each I/O within the context of nvme_ctrlr_process_io_completions().
+ * for each I/O within the context of spdk_nvme_qpair_process_completions().
  *
  * \section async_admin Admin commands
  *
  * The application may submit admin commands from one or more threads
- * and must call nvme_ctrlr_process_admin_completions()
+ * and must call spdk_nvme_ctrlr_process_admin_completions()
  * from at least one thread to receive admin command completions.
  * The thread that processes admin completions need not be the same thread that submitted the
  * admin commands.
  *
- * When the application calls nvme_ctrlr_process_admin_completions(),
+ * When the application calls spdk_nvme_ctrlr_process_admin_completions(),
  * if the NVMe driver detects completed admin commands submitted from any thread,
  * it will invote the registered callback function
- * for each command within the context of nvme_ctrlr_process_admin_completions().
+ * for each command within the context of spdk_nvme_ctrlr_process_admin_completions().
  *
  * It is the application's responsibility to manage the order of submitted admin commands.
  * If certain admin commands must be submitted while no other commands are outstanding,

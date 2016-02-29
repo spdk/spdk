@@ -94,10 +94,19 @@ struct ns_worker_ctx {
 	uint64_t		offset_in_ios;
 	bool			is_draining;
 
+	union {
+		struct {
+			struct spdk_nvme_qpair	*qpair;
+		} nvme;
+
 #if HAVE_LIBAIO
-	struct io_event		*events;
-	io_context_t		ctx;
+		struct {
+			struct io_event		*events;
+			io_context_t		ctx;
+		} aio;
 #endif
+	} u;
+
 	struct ns_worker_ctx	*next;
 };
 
@@ -177,6 +186,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->type = ENTRY_TYPE_NVME_NS;
 	entry->u.nvme.ctrlr = ctrlr;
 	entry->u.nvme.ns = ns;
+
 	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
 			     g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
@@ -346,14 +356,14 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
 
-	count = io_getevents(ns_ctx->ctx, 1, g_queue_depth, ns_ctx->events, &timeout);
+	count = io_getevents(ns_ctx->u.aio.ctx, 1, g_queue_depth, ns_ctx->u.aio.events, &timeout);
 	if (count < 0) {
 		fprintf(stderr, "io_getevents error\n");
 		exit(1);
 	}
 
 	for (i = 0; i < count; i++) {
-		task_complete(ns_ctx->events[i].data);
+		task_complete(ns_ctx->u.aio.events[i].data);
 	}
 }
 #endif /* HAVE_LIBAIO */
@@ -400,23 +410,25 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 	    (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 #if HAVE_LIBAIO
 		if (entry->type == ENTRY_TYPE_AIO_FILE) {
-			rc = aio_submit(ns_ctx->ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD, task->buf,
+			rc = aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD, task->buf,
 					g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
 		} else
 #endif
 		{
-			rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
+			rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, task->buf,
+						   offset_in_ios * entry->io_size_blocks,
 						   entry->io_size_blocks, io_complete, task, 0);
 		}
 	} else {
 #if HAVE_LIBAIO
 		if (entry->type == ENTRY_TYPE_AIO_FILE) {
-			rc = aio_submit(ns_ctx->ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE, task->buf,
+			rc = aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE, task->buf,
 					g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
 		} else
 #endif
 		{
-			rc = spdk_nvme_ns_cmd_write(entry->u.nvme.ns, task->buf, offset_in_ios * entry->io_size_blocks,
+			rc = spdk_nvme_ns_cmd_write(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, task->buf,
+						    offset_in_ios * entry->io_size_blocks,
 						    entry->io_size_blocks, io_complete, task, 0);
 		}
 	}
@@ -465,7 +477,7 @@ check_io(struct ns_worker_ctx *ns_ctx)
 	} else
 #endif
 	{
-		spdk_nvme_ctrlr_process_io_completions(ns_ctx->entry->u.nvme.ctrlr, g_max_completions);
+		spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
 	}
 }
 
@@ -487,18 +499,64 @@ drain_io(struct ns_worker_ctx *ns_ctx)
 }
 
 static int
+init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	if (ns_ctx->entry->type == ENTRY_TYPE_AIO_FILE) {
+#ifdef HAVE_LIBAIO
+		ns_ctx->u.aio.events = calloc(g_queue_depth, sizeof(struct io_event));
+		if (!ns_ctx->u.aio.events) {
+			return -1;
+		}
+		ns_ctx->u.aio.ctx = 0;
+		if (io_setup(g_queue_depth, &ns_ctx->u.aio.ctx) < 0) {
+			free(ns_ctx->u.aio.events);
+			perror("io_setup");
+			return -1;
+		}
+#endif
+	} else {
+		/*
+		 * TODO: If a controller has multiple namespaces, they could all use the same queue.
+		 *  For now, give each namespace/thread combination its own queue.
+		 */
+		ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->u.nvme.ctrlr, 0);
+		if (!ns_ctx->u.nvme.qpair) {
+			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static void
+cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	if (ns_ctx->entry->type == ENTRY_TYPE_NVME_NS) {
+		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair);
+	}
+}
+
+static int
 work_fn(void *arg)
 {
-	uint64_t tsc_end = rte_get_timer_cycles() + g_time_in_sec * g_tsc_rate;
+	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
-	if (spdk_nvme_register_io_thread() != 0) {
-		fprintf(stderr, "spdk_nvme_register_io_thread() failed on core %u\n", worker->lcore);
-		return -1;
+	/* Allocate a queue pair for each namespace. */
+	ns_ctx = worker->ns_ctx;
+	while (ns_ctx != NULL) {
+		if (init_ns_worker_ctx(ns_ctx) != 0) {
+			printf("ERROR: init_ns_worker_ctx() failed\n");
+			return 1;
+		}
+		ns_ctx = ns_ctx->next;
 	}
+
+	tsc_end = rte_get_timer_cycles() + g_time_in_sec * g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -527,10 +585,9 @@ work_fn(void *arg)
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
 		drain_io(ns_ctx);
+		cleanup_ns_worker_ctx(ns_ctx);
 		ns_ctx = ns_ctx->next;
 	}
-
-	spdk_nvme_unregister_io_thread();
 
 	return 0;
 }
@@ -928,20 +985,6 @@ associate_workers_with_ns(void)
 			return -1;
 		}
 		memset(ns_ctx, 0, sizeof(*ns_ctx));
-#ifdef HAVE_LIBAIO
-		ns_ctx->events = calloc(g_queue_depth, sizeof(struct io_event));
-		if (!ns_ctx->events) {
-			free(ns_ctx);
-			return -1;
-		}
-		ns_ctx->ctx = 0;
-		if (io_setup(g_queue_depth, &ns_ctx->ctx) < 0) {
-			free(ns_ctx->events);
-			free(ns_ctx);
-			perror("io_setup");
-			return -1;
-		}
-#endif
 
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
 		ns_ctx->entry = entry;

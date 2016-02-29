@@ -40,7 +40,6 @@
 
 struct nvme_driver g_nvme_driver = {
 	.lock = NVME_MUTEX_INITIALIZER,
-	.max_io_queues = DEFAULT_MAX_IO_QUEUES,
 };
 
 int32_t spdk_nvme_retry_count = 1;
@@ -226,6 +225,8 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
 	ctrlr->regs = regs;
+	TAILQ_INIT(&ctrlr->free_io_qpairs);
+	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	nvme_qpair_construct(qpair, 1, 128, 32, ctrlr);
 
 	CU_ASSERT(qpair->sq_tail == 0);
@@ -566,6 +567,8 @@ static void test_nvme_qpair_destroy(void)
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.regs = &regs;
+	TAILQ_INIT(&ctrlr.free_io_qpairs);
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
 
 	nvme_qpair_construct(&qpair, 1, 128, 32, &ctrlr);
 	nvme_qpair_destroy(&qpair);

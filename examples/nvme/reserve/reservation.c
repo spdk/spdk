@@ -187,7 +187,8 @@ reservation_ns_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static int
-reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
+reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+			uint16_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_register_data *rr_data;
@@ -202,7 +203,7 @@ reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = spdk_nvme_ns_cmd_reservation_register(ns, rr_data, 1,
+	ret = spdk_nvme_ns_cmd_reservation_register(ns, qpair, rr_data, 1,
 			SPDK_NVME_RESERVE_REGISTER_KEY,
 			SPDK_NVME_RESERVE_PTPL_NO_CHANGES,
 			reservation_ns_completion, NULL);
@@ -214,7 +215,7 @@ reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_qpair_process_completions(qpair, 100);
 	}
 
 	if (reserve_command_result)
@@ -225,7 +226,7 @@ reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 }
 
 static int
-reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
+reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint16_t ns_id)
 {
 	int ret, i;
 	uint8_t *payload;
@@ -239,7 +240,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = spdk_nvme_ns_cmd_reservation_report(ns, payload, 0x1000,
+	ret = spdk_nvme_ns_cmd_reservation_report(ns, qpair, payload, 0x1000,
 			reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Report Failed\n");
@@ -249,7 +250,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_qpair_process_completions(qpair, 100);
 	}
 
 	if (reserve_command_result) {
@@ -277,7 +278,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 }
 
 static int
-reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
+reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint16_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_acquire_data *cdata;
@@ -290,7 +291,7 @@ reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = spdk_nvme_ns_cmd_reservation_acquire(ns, cdata,
+	ret = spdk_nvme_ns_cmd_reservation_acquire(ns, qpair, cdata,
 			0,
 			SPDK_NVME_RESERVE_ACQUIRE,
 			SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
@@ -303,7 +304,7 @@ reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_qpair_process_completions(qpair, 100);
 	}
 
 	if (reserve_command_result)
@@ -314,7 +315,7 @@ reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 }
 
 static int
-reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
+reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint16_t ns_id)
 {
 	int ret;
 	struct spdk_nvme_reservation_key_data *cdata;
@@ -327,7 +328,7 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
-	ret = spdk_nvme_ns_cmd_reservation_release(ns, cdata,
+	ret = spdk_nvme_ns_cmd_reservation_release(ns, qpair, cdata,
 			0,
 			SPDK_NVME_RESERVE_RELEASE,
 			SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
@@ -340,7 +341,7 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 
 	outstanding_commands++;
 	while (outstanding_commands) {
-		spdk_nvme_ctrlr_process_io_completions(ctrlr, 100);
+		spdk_nvme_qpair_process_completions(qpair, 100);
 	}
 
 	if (reserve_command_result)
@@ -351,7 +352,8 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, uint16_t ns_id)
 }
 
 static void
-reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
+reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+		   struct spdk_pci_device *pci_dev)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 
@@ -373,10 +375,10 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_de
 	get_host_identifier(ctrlr);
 
 	/* tested 1 namespace */
-	reservation_ns_register(ctrlr, 1);
-	reservation_ns_acquire(ctrlr, 1);
-	reservation_ns_report(ctrlr, 1);
-	reservation_ns_release(ctrlr, 1);
+	reservation_ns_register(ctrlr, qpair, 1);
+	reservation_ns_acquire(ctrlr, qpair, 1);
+	reservation_ns_report(ctrlr, qpair, 1);
+	reservation_ns_release(ctrlr, qpair, 1);
 }
 
 static bool
@@ -441,14 +443,18 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if (num_devs) {
-		rc = spdk_nvme_register_io_thread();
-		if (rc != 0)
-			return rc;
-	}
+	rc = 0;
 
 	foreach_dev(iter) {
-		reserve_controller(iter->ctrlr, iter->pci_dev);
+		struct spdk_nvme_qpair *qpair;
+
+		qpair = spdk_nvme_ctrlr_alloc_io_qpair(iter->ctrlr, 0);
+		if (!qpair) {
+			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+			rc = 1;
+		} else {
+			reserve_controller(iter->ctrlr, qpair, iter->pci_dev);
+		}
 	}
 
 	printf("Cleaning up...\n");
@@ -457,9 +463,6 @@ int main(int argc, char **argv)
 		struct dev *dev = &devs[i];
 		spdk_nvme_detach(dev->ctrlr);
 	}
-
-	if (num_devs)
-		spdk_nvme_unregister_io_thread();
 
 	return rc;
 }

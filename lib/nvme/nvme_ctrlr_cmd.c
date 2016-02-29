@@ -35,6 +35,7 @@
 
 int
 spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
+			   struct spdk_nvme_qpair *qpair,
 			   struct spdk_nvme_cmd *cmd,
 			   void *buf, uint32_t len,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
@@ -49,7 +50,7 @@ spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
 
-	nvme_ctrlr_submit_io_request(ctrlr, req);
+	nvme_qpair_submit_request(qpair, req);
 	return 0;
 }
 
@@ -184,6 +185,46 @@ nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	/* 0x1 = physically contiguous */
 	cmd->cdw11 = (io_que->id << 16) | (io_que->qprio << 1) | 0x1;
 	cmd->dptr.prp.prp1 = io_que->cmd_bus_addr;
+
+	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_DELETE_IO_CQ;
+	cmd->cdw10 = qpair->id;
+
+	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+			    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_DELETE_IO_SQ;
+	cmd->cdw10 = qpair->id;
 
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
 	return 0;
