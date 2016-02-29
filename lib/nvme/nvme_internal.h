@@ -475,8 +475,6 @@ void	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
 void	nvme_ctrlr_submit_io_request(struct spdk_nvme_ctrlr *ctrlr,
 				     struct nvme_request *req);
-void	nvme_ctrlr_post_failed_request(struct spdk_nvme_ctrlr *ctrlr,
-				       struct nvme_request *req);
 
 int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			     uint16_t num_entries,
