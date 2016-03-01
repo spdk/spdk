@@ -842,6 +842,11 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_set_supported_log_pages(ctrlr);
 	nvme_ctrlr_set_supported_features(ctrlr);
+
+	if (ctrlr->cdata.sgls.supported) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+	}
+
 	return 0;
 }
 
@@ -908,6 +913,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
+	ctrlr->flags = 0;
 
 	nvme_mutex_init_recursive(&ctrlr->ctrlr_lock);
 

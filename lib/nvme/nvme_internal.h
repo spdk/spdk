@@ -99,6 +99,12 @@
 #define NVME_MAX_IO_TRACKERS	(1024)
 
 /*
+ * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
+ *  segment.
+ */
+#define NVME_MAX_SGL_DESCRIPTORS	(256)
+
+/*
  * NVME_MAX_IO_ENTRIES is not defined, since it is specified in CC.MQES
  *  for each controller.
  */
@@ -126,6 +132,13 @@ enum nvme_payload_type {
 
 	/** nvme_request::u.sgl is valid for this request */
 	NVME_PAYLOAD_TYPE_SGL,
+};
+
+/*
+ * Controller support flags.
+ */
+enum spdk_nvme_ctrlr_flags {
+	SPDK_NVME_CTRLR_SGL_SUPPORTED	= 0x1, /**< The SGL is supported */
 };
 
 /**
@@ -233,8 +246,11 @@ struct nvme_tracker {
 	struct nvme_request		*req;
 	uint16_t			cid;
 
-	uint64_t			prp_bus_addr;
-	uint64_t			prp[NVME_MAX_PRP_LIST_ENTRIES];
+	uint64_t			prp_sgl_bus_addr;
+	union {
+		uint64_t			prp[NVME_MAX_PRP_LIST_ENTRIES];
+		struct spdk_nvme_sgl_descriptor	sgl[NVME_MAX_SGL_DESCRIPTORS];
+	} u;
 };
 
 struct spdk_nvme_qpair {
@@ -341,6 +357,9 @@ struct spdk_nvme_ctrlr {
 	bool				is_resetting;
 
 	bool				is_failed;
+
+	/** Controller support flags */
+	uint64_t			flags;
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 

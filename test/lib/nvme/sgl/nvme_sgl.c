@@ -129,6 +129,22 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 		io_complete_flag = 1;
 }
 
+static uint32_t build_io_request_0(struct io_request *req)
+{
+	int i;
+	uint32_t len = 0;
+
+	req->nseg = 1;
+
+	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x800, 4);
+	req->iovs[0].iov_len = 0x800;
+
+	for (i = 0; i < req->nseg; i++)
+		len += req->iovs[i].iov_len;
+
+	return len;
+}
+
 static uint32_t build_io_request_1(struct io_request *req)
 {
 	int i, found = 0;
@@ -456,7 +472,8 @@ int main(int argc, char **argv)
 	}
 
 	foreach_dev(iter) {
-		if (writev_readv_tests(iter, build_io_request_1)
+		if (writev_readv_tests(iter, build_io_request_0)
+		    || writev_readv_tests(iter, build_io_request_1)
 		    || writev_readv_tests(iter, build_io_request_2)
 		    || writev_readv_tests(iter, build_io_request_3)
 		    || writev_readv_tests(iter, build_io_request_4)

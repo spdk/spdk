@@ -289,7 +289,7 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 static void
 nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phys_addr)
 {
-	tr->prp_bus_addr = phys_addr + offsetof(struct nvme_tracker, prp);
+	tr->prp_sgl_bus_addr = phys_addr + offsetof(struct nvme_tracker, u.prp);
 	tr->cid = cid;
 }
 
@@ -702,7 +702,7 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 		tr->req->cmd.dptr.prp.prp2 = nvme_vtophys(seg_addr);
 	} else if (nseg > 2) {
 		cur_nseg = 1;
-		tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_bus_addr;
+		tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
 		while (cur_nseg < nseg) {
 			seg_addr = payload + cur_nseg * PAGE_SIZE - unaligned;
 			phys_addr = nvme_vtophys(seg_addr);
@@ -710,7 +710,7 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 				_nvme_fail_request_bad_vtophys(qpair, tr);
 				return -1;
 			}
-			tr->prp[cur_nseg - 1] = phys_addr;
+			tr->u.prp[cur_nseg - 1] = phys_addr;
 			cur_nseg++;
 		}
 	}
@@ -718,9 +718,79 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	return 0;
 }
 
+/**
+ * Build SGL list describing scattered payload buffer.
+ */
 static int
-_nvme_qpair_build_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
-			      struct nvme_tracker *tr)
+_nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				 struct nvme_tracker *tr)
+{
+	int rc;
+	uint64_t phys_addr;
+	uint32_t remaining_transfer_len, length;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	uint32_t nseg = 0;
+
+	/*
+	 * Build scattered payloads.
+	 */
+	nvme_assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL, ("sgl payload type required\n"));
+	nvme_assert(req->payload.u.sgl.reset_sgl_fn != NULL, ("sgl reset callback required\n"));
+	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
+
+	sgl = (struct spdk_nvme_sgl_descriptor *)tr->u.sgl;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+	req->cmd.dptr.sgl1.type_specific = 0;
+
+	remaining_transfer_len = req->payload_size;
+
+	while (remaining_transfer_len > 0) {
+		nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
+		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
+		if (rc) {
+			_nvme_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
+		remaining_transfer_len -= length;
+
+		sgl->type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		sgl->length = length;
+		sgl->address = phys_addr;
+		sgl->type_specific = 0;
+
+		sgl++;
+		nseg++;
+
+		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+			_nvme_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+	}
+
+	if (nseg == 1) {
+		req->cmd.dptr.sgl1.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		req->cmd.dptr.sgl1.address = phys_addr;
+		req->cmd.dptr.sgl1.length = length;
+	} else if (nseg > 1) {
+		/* For now we can only support 1 SGL segment in NVMe controller */
+		req->cmd.dptr.sgl1.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
+		req->cmd.dptr.sgl1.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
+	} else {
+		_nvme_fail_request_bad_vtophys(qpair, tr);
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
+ * Build PRP list describing scattered payload buffer.
+ */
+static int
+_nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				   struct nvme_tracker *tr)
 {
 	int rc;
 	uint64_t phys_addr;
@@ -779,13 +849,13 @@ _nvme_qpair_build_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request
 			else
 				cur_nseg = 0;
 
-			tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_bus_addr;
+			tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
 			while (cur_nseg < nseg) {
 				if (prp2) {
-					tr->prp[0] = prp2;
-					tr->prp[last_nseg + 1] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
+					tr->u.prp[0] = prp2;
+					tr->u.prp[last_nseg + 1] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
 				} else
-					tr->prp[last_nseg] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
+					tr->u.prp[last_nseg] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
 
 				last_nseg++;
 				cur_nseg++;
@@ -810,6 +880,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	int			rc;
 	struct nvme_tracker	*tr;
 	struct nvme_request	*child_req;
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 
 	nvme_qpair_check_enabled(qpair);
 
@@ -860,7 +931,10 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 			return;
 		}
 	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL) {
-		rc = _nvme_qpair_build_sgl_request(qpair, req, tr);
+		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED)
+			rc = _nvme_qpair_build_hw_sgl_request(qpair, req, tr);
+		else
+			rc = _nvme_qpair_build_prps_sgl_request(qpair, req, tr);
 		if (rc < 0) {
 			return;
 		}

@@ -389,13 +389,14 @@ test_sgl_req(void)
 	CU_ASSERT(req->cmd.dptr.prp.prp1 == 0);
 	CU_ASSERT(qpair.sq_tail == 1);
 	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
-	CU_ASSERT(sgl_tr != NULL);
-	for (i = 0; i < 32; i++) {
-		CU_ASSERT(sgl_tr->prp[i] == (PAGE_SIZE * (i + 1)));
-	}
+	if (sgl_tr != NULL) {
+		for (i = 0; i < 32; i++) {
+			CU_ASSERT(sgl_tr->u.prp[i] == (PAGE_SIZE * (i + 1)));
+		}
 
-	LIST_REMOVE(sgl_tr, list);
-	free(sgl_tr);
+		LIST_REMOVE(sgl_tr, list);
+		free(sgl_tr);
+	}
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
 }
