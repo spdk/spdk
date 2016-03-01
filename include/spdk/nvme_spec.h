@@ -242,7 +242,7 @@ struct spdk_nvme_registers {
 	union spdk_nvme_cc_register	cc;
 
 	uint32_t	reserved1;
-	uint32_t	csts;		/* controller status */
+	union spdk_nvme_csts_register	csts;		/* controller status */
 	uint32_t	nssr;		/* NVM subsystem reset */
 
 	/** admin queue attributes */
