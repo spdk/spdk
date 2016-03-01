@@ -106,6 +106,11 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
 
+	if (!spdk_nvme_ns_is_active(ns)) {
+		printf("Skipping inactive NS %u\n", spdk_nvme_ns_get_id(ns));
+		return;
+	}
+
 	entry = malloc(sizeof(struct ns_entry));
 	if (entry == NULL) {
 		perror("ns_entry malloc");

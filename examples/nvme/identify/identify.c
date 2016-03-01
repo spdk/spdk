@@ -338,6 +338,11 @@ print_namespace(struct spdk_nvme_ns *ns)
 		printf("\n");
 	}
 
+	if (!spdk_nvme_ns_is_active(ns)) {
+		printf("Inactive namespace ID\n\n");
+		return;
+	}
+
 	printf("Deallocate:                  %s\n",
 	       (flags & SPDK_NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Flush:                       %s\n",
