@@ -40,6 +40,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include "spdk/nvme_spec.h"
+
 struct spdk_pci_device;
 
 static inline void *
@@ -92,10 +94,12 @@ nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_de
 #define nvme_pcicfg_read32(handle, var, offset)		do { *(var) = 0xFFFFFFFFu; } while (0)
 #define nvme_pcicfg_write32(handle, var, offset)	do { (void)(var); } while (0)
 
+extern struct spdk_nvme_registers g_ut_nvme_regs;
+
 static inline
 int nvme_pcicfg_map_bar(void *pci_handle, int bar, int read_only, void **addr)
 {
-	*addr = NULL;
+	*addr = &g_ut_nvme_regs;
 	return 0;
 }
 
