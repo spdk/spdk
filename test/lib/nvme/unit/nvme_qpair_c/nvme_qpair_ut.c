@@ -65,6 +65,7 @@ uint64_t nvme_vtophys(void *buf)
 struct io_request {
 	uint64_t address_offset;
 	bool	invalid_addr;
+	bool	invalid_second_addr;
 };
 
 static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
@@ -72,22 +73,45 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 	struct io_request *req = (struct io_request *)cb_arg;
 
 	req->address_offset = 0;
-	if (sgl_offset == 0)
+	req->invalid_addr = false;
+	req->invalid_second_addr = false;
+	switch (sgl_offset) {
+	case 0:
 		req->invalid_addr = false;
-	else
+		break;
+	case 1:
 		req->invalid_addr = true;
-
+		break;
+	case 2:
+		req->invalid_addr = false;
+		req->invalid_second_addr = true;
+		break;
+	default:
+		break;
+	}
 	return;
 }
 
 static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
-	if (req->invalid_addr)
-		*address = 7;
-	else {
+
+	if (req->address_offset == 0) {
+		if (req->invalid_addr) {
+			*address = 7;
+		} else {
+			*address = 4096 * req->address_offset;
+		}
+	} else if (req->address_offset == 1) {
+		if (req->invalid_second_addr) {
+			*address = 7;
+		} else {
+			*address = 4096 * req->address_offset;
+		}
+	} else {
 		*address = 4096 * req->address_offset;
 	}
+
 	req->address_offset += 1;
 	*length = 4096;
 
@@ -376,6 +400,18 @@ test_sgl_req(void)
 	cleanup_submit_request_test(&qpair);
 
 	fail_next_sge = false;
+
+	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	req = nvme_allocate_request(&payload, 2 * PAGE_SIZE, NULL, &io_req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_WRITE;
+	req->cmd.cdw10 = 10000;
+	req->cmd.cdw12 = 255 | 0;
+	req->payload_offset = 2;
+
+	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(qpair.sq_tail == 0);
+	cleanup_submit_request_test(&qpair);
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 	req = nvme_allocate_request(&payload, 33 * PAGE_SIZE, NULL, &io_req);
