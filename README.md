@@ -10,18 +10,23 @@ Storage Performance Development Kit
 
 The Storage Performance Development Kit (SPDK) provides a set of tools
 and libraries for writing high performance, scalable, user-mode storage
-applications.
-It achieves high performance by moving all of the necessary drivers into
-userspace and operating in a polled mode instead of relying on interrupts,
-which avoids kernel context switches and eliminates interrupt handling
-overhead.
+applications. It achieves high performance by moving all of the necessary
+drivers into userspace and operating in a polled mode instead of relying on
+interrupts, which avoids kernel context switches and eliminates interrupt
+handling overhead.
+
+The development kit currently includes:
+* NVMe driver
+* I/OAT (DMA engine) driver
 
 Documentation
 =============
 
-[Doxygen API documentation](https://spdk.github.io/spdk/doc/)
+[Doxygen API documentation](https://spdk.github.io/spdk/doc/) is available, as
+well as a [Porting Guide](PORTING.md) for porting SPDK to different frameworks
+and operating systems.
 
-[Porting Guide](PORTING.md)
+Many examples are available in the `examples` directory.
 
 [Changelog](CHANGELOG.md)
 
@@ -32,18 +37,11 @@ To build SPDK, some dependencies must be installed.
 
 Fedora/CentOS:
 
-- gcc
-- libpciaccess-devel
-- CUnit-devel
-- libaio-devel
+    sudo dnf install -y gcc libpciaccess-devel CUnit-devel libaio-devel
 
 Ubuntu/Debian:
 
-- gcc
-- libpciaccess-dev
-- make
-- libcunit1-dev
-- libaio-dev
+    sudo apt-get install -y gcc libpciaccess-dev make libcunit1-dev libaio-dev
 
 FreeBSD:
 
