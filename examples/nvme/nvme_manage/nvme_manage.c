@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
 #include <rte_config.h>
 #include <rte_malloc.h>
@@ -58,6 +59,35 @@ static int num_devs = 0;
 
 #define foreach_dev(iter) \
 	for (iter = devs; iter - devs < num_devs; iter++)
+
+static uint64_t
+get_pci_addr(struct spdk_pci_device *pci_dev)
+{
+	uint64_t cmp;
+
+	cmp = (uint64_t)spdk_pci_device_get_domain(pci_dev) << 24;
+	cmp |= (uint64_t)spdk_pci_device_get_bus(pci_dev) << 16;
+	cmp |= (uint64_t)spdk_pci_device_get_dev(pci_dev) << 8;
+	cmp |= (uint64_t)spdk_pci_device_get_func(pci_dev);
+
+	return cmp;
+}
+
+static int
+cmp_devs(const void *ap, const void *bp)
+{
+	const struct dev *a = ap, *b = bp;
+	uint64_t cmp_a = get_pci_addr(a->pci_dev);
+	uint64_t cmp_b = get_pci_addr(b->pci_dev);
+
+	if (cmp_a < cmp_b) {
+		return -1;
+	} else if (cmp_a > cmp_b) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
 
 static struct dev *
 get_controller(void)
@@ -402,6 +432,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
+
+	qsort(devs, num_devs, sizeof(devs[0]), cmp_devs);
 
 	if (num_devs) {
 		rc = spdk_nvme_register_io_thread();
