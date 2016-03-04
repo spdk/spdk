@@ -51,7 +51,6 @@ struct dev {
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_nvme_ctrlr 			*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
-	struct spdk_nvme_ctrlr_list 		*ctrlr_list;
 };
 
 static struct dev devs[MAX_DEVS];
@@ -104,28 +103,29 @@ static void
 ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
 {
 	int ret = 0;
+	struct spdk_nvme_ctrlr_list *ctrlr_list;
 
-	device->ctrlr_list = rte_zmalloc("nvme controller list", sizeof(struct spdk_nvme_ctrlr_list),
-					 4096);
-	if (device->ctrlr_list == NULL) {
+	ctrlr_list = rte_zmalloc("nvme controller list", sizeof(struct spdk_nvme_ctrlr_list),
+				 4096);
+	if (ctrlr_list == NULL) {
 		printf("Allocation error (controller list)\n");
 		exit(1);
 	}
 
-	device->ctrlr_list->ctrlr_count = 1;
-	device->ctrlr_list->ctrlr_list[0] = ctrlr_id;
+	ctrlr_list->ctrlr_count = 1;
+	ctrlr_list->ctrlr_list[0] = ctrlr_id;
 
 	if (attachment_op == SPDK_NVME_NS_CTRLR_ATTACH) {
-		ret = spdk_nvme_ctrlr_attach_ns(device->ctrlr, ns_id, device->ctrlr_list);
+		ret = spdk_nvme_ctrlr_attach_ns(device->ctrlr, ns_id, ctrlr_list);
 	} else if (attachment_op == SPDK_NVME_NS_CTRLR_DETACH) {
-		ret = spdk_nvme_ctrlr_detach_ns(device->ctrlr, ns_id, device->ctrlr_list);
+		ret = spdk_nvme_ctrlr_detach_ns(device->ctrlr, ns_id, ctrlr_list);
 	}
 
 	if (ret) {
 		fprintf(stdout, "ns attach: Failed\n");
 	}
 
-	rte_free(device->ctrlr_list);
+	rte_free(ctrlr_list);
 }
 
 static void
