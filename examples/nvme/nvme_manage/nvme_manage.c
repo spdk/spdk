@@ -291,6 +291,11 @@ attach_and_detach_ns(int attachment_op)
 		return;
 	}
 
+	if (!ctrlr->cdata->oacs.ns_manage) {
+		printf("Controller does not support ns management\n");
+		return;
+	}
+
 	printf("Please Input Namespace ID: \n");
 	if (!scanf("%d", &ns_id)) {
 		printf("Invalid Namespace ID\n");
@@ -298,11 +303,7 @@ attach_and_detach_ns(int attachment_op)
 		return;
 	}
 
-	if (ctrlr->cdata->oacs.ns_manage) {
-		ns_attach(ctrlr, attachment_op, ctrlr->cdata->cntlid, ns_id);
-	} else {
-		printf("Controller does not support ns management\n");
-	}
+	ns_attach(ctrlr, attachment_op, ctrlr->cdata->cntlid, ns_id);
 }
 
 static void
@@ -316,6 +317,11 @@ add_ns(void)
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
 		printf("Invalid controller PCI BDF.\n");
+		return;
+	}
+
+	if (!ctrlr->cdata->oacs.ns_manage) {
+		printf("Controller does not support ns management\n");
 		return;
 	}
 
@@ -340,11 +346,7 @@ add_ns(void)
 		return;
 	}
 
-	if (ctrlr->cdata->oacs.ns_manage) {
-		ns_manage_add(ctrlr, ns_size, ns_capacity, ns_lbasize);
-	} else {
-		printf("Controller does not support ns management\n");
-	}
+	ns_manage_add(ctrlr, ns_size, ns_capacity, ns_lbasize);
 }
 
 static void
@@ -359,6 +361,11 @@ delete_ns(void)
 		return;
 	}
 
+	if (!ctrlr->cdata->oacs.ns_manage) {
+		printf("Controller does not support ns management\n");
+		return;
+	}
+
 	printf("Please Input Namespace ID: \n");
 	if (!scanf("%d", &ns_id)) {
 		printf("Invalid Namespace ID\n");
@@ -366,11 +373,7 @@ delete_ns(void)
 		return;
 	}
 
-	if (ctrlr->cdata->oacs.ns_manage) {
-		ns_manage_delete(ctrlr, ns_id);
-	} else {
-		printf("Controller does not support ns management\n");
-	}
+	ns_manage_delete(ctrlr, ns_id);
 }
 
 int main(int argc, char **argv)
