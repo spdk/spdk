@@ -296,6 +296,7 @@ split_test4(void)
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == (256 - 10) * 512);
+	CU_ASSERT(child->payload_offset == 0);
 	CU_ASSERT(cmd_lba == 10);
 	CU_ASSERT(cmd_lba_count == 256 - 10);
 	CU_ASSERT((child->cmd.cdw12 & SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
@@ -307,6 +308,7 @@ split_test4(void)
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
+	CU_ASSERT(child->payload_offset == (256 - 10) * 512);
 	CU_ASSERT(cmd_lba == 256);
 	CU_ASSERT(cmd_lba_count == 256);
 	CU_ASSERT((child->cmd.cdw12 & SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
@@ -318,6 +320,7 @@ split_test4(void)
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 10 * 512);
+	CU_ASSERT(child->payload_offset == (512 - 10) * 512);
 	CU_ASSERT(cmd_lba == 512);
 	CU_ASSERT(cmd_lba_count == 10);
 	CU_ASSERT((child->cmd.cdw12 & SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
