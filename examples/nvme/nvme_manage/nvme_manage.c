@@ -50,7 +50,6 @@ struct rte_mempool *request_mempool;
 struct dev {
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_nvme_ctrlr 			*ctrlr;
-	struct spdk_nvme_ns_data 		*ndata;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvme_ctrlr_list 		*ctrlr_list;
 };
@@ -133,22 +132,23 @@ static void
 ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns_lbasize)
 {
 	int ret = 0;
+	struct spdk_nvme_ns_data *ndata;
 
-	device->ndata = rte_zmalloc("nvme namespace data", sizeof(struct spdk_nvme_ns_data), 4096);
-	if (device->ndata == NULL) {
+	ndata = rte_zmalloc("nvme namespace data", sizeof(struct spdk_nvme_ns_data), 4096);
+	if (ndata == NULL) {
 		printf("Allocation error (namespace data)\n");
 		exit(1);
 	}
 
-	device->ndata->nsze = ns_size;
-	device->ndata->ncap = ns_capacity;
-	device->ndata->flbas.format = ns_lbasize;
-	ret = spdk_nvme_ctrlr_create_ns(device->ctrlr, device->ndata);
+	ndata->nsze = ns_size;
+	ndata->ncap = ns_capacity;
+	ndata->flbas.format = ns_lbasize;
+	ret = spdk_nvme_ctrlr_create_ns(device->ctrlr, ndata);
 	if (ret) {
 		fprintf(stdout, "ns manage: Failed\n");
 	}
 
-	rte_free(device->ndata);
+	rte_free(ndata);
 }
 
 static void
