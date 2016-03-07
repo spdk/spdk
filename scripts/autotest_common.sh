@@ -21,8 +21,6 @@ case `uname` in
 		;;
 esac
 
-MAKEFLAGS=${MAKEFLAGS:--j16}
-
 if [ -z "$output_dir" ]; then
 	if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then
 		output_dir=.
