@@ -356,14 +356,14 @@ add_ns(void)
 	}
 
 	printf("Please Input Namespace Size (in LBAs): \n");
-	if (!scanf("%ld", &ns_size)) {
+	if (!scanf("%" SCNi64, &ns_size)) {
 		printf("Invalid Namespace Size\n");
 		while (getchar() != '\n');
 		return;
 	}
 
 	printf("Please Input Namespace Capacity (in LBAs): \n");
-	if (!scanf("%ld", &ns_capacity)) {
+	if (!scanf("%" SCNi64, &ns_capacity)) {
 		printf("Invalid Namespace Capacity\n");
 		while (getchar() != '\n');
 		return;
