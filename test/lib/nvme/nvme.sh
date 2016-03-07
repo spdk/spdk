@@ -34,7 +34,7 @@ timing_exit reserve
 
 #Now test nvme reset function
 timing_enter reset
-$testdir/reset/reset -q 64 -w write -s 4096 -t 15
+$testdir/reset/reset -q 64 -w write -s 4096 -t 2
 timing_exit reset
 
 timing_enter sgl

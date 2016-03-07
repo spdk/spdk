@@ -271,6 +271,7 @@ work_fn(void *arg)
 	uint64_t tsc_end = rte_get_timer_cycles() + g_time_in_sec * g_tsc_rate;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
+	bool did_reset = false;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
@@ -298,8 +299,7 @@ work_fn(void *arg)
 			ns_ctx = ns_ctx->next;
 		}
 
-		if (((tsc_end - rte_get_timer_cycles()) / g_tsc_rate) > (uint64_t)g_time_in_sec / 5 &&
-		    ((tsc_end - rte_get_timer_cycles()) / g_tsc_rate) < (uint64_t)(g_time_in_sec / 5 + 10)) {
+		if (!did_reset && ((tsc_end - rte_get_timer_cycles()) / g_tsc_rate) > (uint64_t)g_time_in_sec / 2) {
 			ns_ctx = worker->ns_ctx;
 			while (ns_ctx != NULL) {
 				if (spdk_nvme_ctrlr_reset(ns_ctx->entry->ctrlr) < 0) {
@@ -308,6 +308,7 @@ work_fn(void *arg)
 				}
 				ns_ctx = ns_ctx->next;
 			}
+			did_reset = true;
 		}
 
 		if (rte_get_timer_cycles() > tsc_end) {
