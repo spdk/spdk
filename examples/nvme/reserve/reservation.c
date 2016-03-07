@@ -382,7 +382,7 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
 {
 	if (spdk_pci_device_has_non_uio_driver(dev)) {
 		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
@@ -399,7 +399,8 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr,
+	  const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
 

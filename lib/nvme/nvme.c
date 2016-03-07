@@ -189,6 +189,7 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
 	struct nvme_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_ctrlr_opts opts;
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_nvme_driver.attached_ctrlrs, tailq) {
@@ -200,12 +201,16 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		}
 	}
 
-	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev)) {
+	spdk_nvme_ctrlr_opts_set_defaults(&opts);
+
+	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev, &opts)) {
 		ctrlr = nvme_attach(pci_dev);
 		if (ctrlr == NULL) {
 			nvme_printf(NULL, "nvme_attach() failed\n");
 			return -1;
 		}
+
+		ctrlr->opts = opts;
 
 		TAILQ_INSERT_TAIL(&g_nvme_driver.init_ctrlrs, ctrlr, tailq);
 	}
@@ -268,7 +273,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 				 *  that may take the driver lock, like nvme_detach().
 				 */
 				nvme_mutex_unlock(&g_nvme_driver.lock);
-				attach_cb(cb_ctx, ctrlr->devhandle, ctrlr);
+				attach_cb(cb_ctx, ctrlr->devhandle, ctrlr, &ctrlr->opts);
 				nvme_mutex_lock(&g_nvme_driver.lock);
 
 				break;

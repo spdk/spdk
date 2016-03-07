@@ -77,6 +77,12 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+void
+spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
+{
+	memset(opts, 0, sizeof(*opts));
+}
+
 uint32_t
 spdk_nvme_ns_get_sector_size(struct spdk_nvme_ns *ns)
 {

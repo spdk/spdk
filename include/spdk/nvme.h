@@ -57,17 +57,40 @@ extern int32_t		spdk_nvme_retry_count;
 struct spdk_nvme_ctrlr;
 
 /**
+ * \brief NVMe controller initialization options.
+ *
+ * A pointer to this structure will be provided for each probe callback from spdk_nvme_probe() to
+ * allow the user to request non-default options, and the actual options enabled on the controller
+ * will be provided during the attach callback.
+ */
+struct spdk_nvme_ctrlr_opts {
+	/**
+	 * Number of I/O queues to request (used to set Number of Queues feature)
+	 */
+	uint32_t num_io_queues;
+};
+
+/**
  * Callback for spdk_nvme_probe() enumeration.
  *
+ * \param opts NVMe controller initialization options.  This structure will be populated with the
+ * default values on entry, and the user callback may update any options to request a different
+ * value.  The controller may not support all requested parameters, so the final values will be
+ * provided during the attach callback.
  * \return true to attach to this device.
  */
-typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev);
+typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+				   struct spdk_nvme_ctrlr_opts *opts);
 
 /**
  * Callback for spdk_nvme_probe() to report a device that has been attached to the userspace NVMe driver.
+ *
+ * \param opts NVMe controller initialization options that were actually used.  Options may differ
+ * from the requested options from the probe call depending on what the controller supports.
  */
 typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
-				    struct spdk_nvme_ctrlr *ctrlr);
+				    struct spdk_nvme_ctrlr *ctrlr,
+				    const struct spdk_nvme_ctrlr_opts *opts);
 
 /**
  * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver

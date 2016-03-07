@@ -42,6 +42,13 @@
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
+
+void
+spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
+{
+	opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
+}
+
 static int
 spdk_nvme_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -357,12 +364,12 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->max_xfer_size = NVME_MAX_XFER_SIZE;
 
-	ctrlr->ioq = calloc(ctrlr->num_io_queues, sizeof(struct spdk_nvme_qpair));
+	ctrlr->ioq = calloc(ctrlr->opts.num_io_queues, sizeof(struct spdk_nvme_qpair));
 
 	if (ctrlr->ioq == NULL)
 		return -1;
 
-	for (i = 0; i < ctrlr->num_io_queues; i++) {
+	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
 		qpair = &ctrlr->ioq[i];
 
 		/*
@@ -390,7 +397,7 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->is_failed = true;
 	nvme_qpair_fail(&ctrlr->adminq);
-	for (i = 0; i < ctrlr->num_io_queues; i++) {
+	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
 		nvme_qpair_fail(&ctrlr->ioq[i]);
 	}
 }
@@ -544,7 +551,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Disable all queues before disabling the controller hardware. */
 	nvme_qpair_disable(&ctrlr->adminq);
-	for (i = 0; i < ctrlr->num_io_queues; i++) {
+	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
 		nvme_qpair_disable(&ctrlr->ioq[i]);
 	}
 
@@ -616,13 +623,10 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_completion_poll_status	status;
 	int					cq_allocated, sq_allocated;
 	int					rc;
-	uint32_t				max_io_queues;
 
 	status.done = false;
 
-	max_io_queues = DEFAULT_MAX_IO_QUEUES;
-
-	rc = nvme_ctrlr_cmd_set_num_queues(ctrlr, max_io_queues,
+	rc = nvme_ctrlr_cmd_set_num_queues(ctrlr, ctrlr->opts.num_io_queues,
 					   nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
@@ -644,7 +648,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	sq_allocated = (status.cpl.cdw0 & 0xFFFF) + 1;
 	cq_allocated = (status.cpl.cdw0 >> 16) + 1;
 
-	ctrlr->num_io_queues = nvme_min(sq_allocated, cq_allocated);
+	ctrlr->opts.num_io_queues = nvme_min(sq_allocated, cq_allocated);
 
 	return 0;
 }
@@ -1028,7 +1032,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
 
-	for (i = 0; i < ctrlr->num_io_queues; i++) {
+	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
 		nvme_qpair_destroy(&ctrlr->ioq[i]);
 	}
 

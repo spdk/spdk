@@ -65,6 +65,12 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+void
+spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
+{
+	memset(opts, 0, sizeof(*opts));
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;

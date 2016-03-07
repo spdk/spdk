@@ -397,8 +397,6 @@ struct spdk_nvme_ctrlr {
 	/* Opaque handle to associated PCI device. */
 	struct spdk_pci_device		*devhandle;
 
-	uint32_t			num_io_queues;
-
 	/** maximum i/o size in bytes */
 	uint32_t			max_xfer_size;
 
@@ -433,6 +431,8 @@ struct spdk_nvme_ctrlr {
 
 	TAILQ_HEAD(, spdk_nvme_qpair)	free_io_qpairs;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
+
+	struct spdk_nvme_ctrlr_opts	opts;
 };
 
 struct nvme_driver {
@@ -547,5 +547,7 @@ struct nvme_request *nvme_allocate_request_contig(void *buffer, uint32_t payload
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_free_request(struct nvme_request *req);
 bool	nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk);
+
+void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);
 
 #endif /* __NVME_INTERNAL_H__ */

@@ -884,7 +884,7 @@ register_workers(void)
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
 {
 	if (spdk_pci_device_has_non_uio_driver(dev)) {
 		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
@@ -907,7 +907,8 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr)
+attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr,
+	  const struct spdk_nvme_ctrlr_opts *opts)
 {
 	printf("Attached to %04x:%02x:%02x.%02x\n",
 	       spdk_pci_device_get_domain(dev),

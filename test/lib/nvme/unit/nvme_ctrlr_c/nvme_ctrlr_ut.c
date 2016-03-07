@@ -422,7 +422,7 @@ setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr, NULL) == 0);
 
 	/* Fake out the parts of ctrlr needed for I/O qpair allocation */
-	ctrlr->num_io_queues = num_io_queues;
+	ctrlr->opts.num_io_queues = num_io_queues;
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct_io_qpairs(ctrlr) == 0);
 }
 
@@ -500,7 +500,7 @@ test_nvme_ctrlr_fail(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.num_io_queues = 0;
+	ctrlr.opts.num_io_queues = 0;
 	nvme_ctrlr_fail(&ctrlr);
 
 	CU_ASSERT(ctrlr.is_failed == true);
