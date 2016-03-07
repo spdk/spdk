@@ -36,9 +36,8 @@ fi
 # set up huge pages
 timing_enter afterboot
 ./scripts/configure_hugepages.sh 1024
-timing_exit afterboot
-
 ./scripts/setup.sh
+timing_exit afterboot
 
 #####################
 # Unit Tests
@@ -52,8 +51,10 @@ time test/lib/ioat/ioat.sh
 
 timing_exit lib
 
+timing_enter cleanup
 ./scripts/setup.sh reset
 ./scripts/build_kmod.sh clean
+timing_exit cleanup
 
 timing_exit autotest
 chmod a+r $output_dir/timing.txt
