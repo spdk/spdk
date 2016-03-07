@@ -52,6 +52,7 @@ uint32_t get_feature_cdw11 = 1;
 uint16_t abort_cid = 1;
 uint16_t abort_sqid = 1;
 uint32_t namespace_management_nsid = 1;
+uint32_t format_nvme_nsid = 1;
 
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
@@ -203,6 +204,13 @@ static void verify_namespace_delete(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_NS_MANAGEMENT);
 	CU_ASSERT(req->cmd.cdw10 == SPDK_NVME_NS_MANAGEMENT_DELETE);
 	CU_ASSERT(req->cmd.nsid == namespace_management_nsid);
+}
+
+static void verify_format_nvme(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FORMAT_NVM);
+	CU_ASSERT(req->cmd.cdw10 == 0);
+	CU_ASSERT(req->cmd.nsid == format_nvme_nsid);
 }
 
 struct nvme_request *
@@ -468,6 +476,17 @@ test_namespace_delete(void)
 	nvme_ctrlr_cmd_delete_ns(&ctrlr, namespace_management_nsid, NULL, NULL);
 }
 
+static void
+test_format_nvme(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_format format = {};
+
+	verify_fn = verify_format_nvme;
+
+	nvme_ctrlr_cmd_format(&ctrlr, format_nvme_nsid, &format, NULL, NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -493,6 +512,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd namespace_detach", test_namespace_detach) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd namespace_create", test_namespace_create) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd namespace_delete", test_namespace_delete) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd format_nvme", test_format_nvme) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

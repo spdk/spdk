@@ -760,7 +760,12 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	uint16_t		fuses;
 
 	/** format nvm attributes */
-	uint8_t			fna;
+	struct {
+		uint8_t		format_all_ns: 1;
+		uint8_t		erase_all_ns: 1;
+		uint8_t		crypto_erase_supported: 1;
+		uint8_t		reserved: 5;
+	} fna;
 
 	/** volatile write cache */
 	struct {
@@ -1230,6 +1235,39 @@ struct spdk_nvme_ctrlr_list {
 	uint16_t ctrlr_list[2047];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_list) == 4096, "Incorrect size");
+
+enum spdk_nvme_secure_erase_setting {
+	SPDK_NVME_FMT_NVM_SES_NO_SECURE_ERASE	= 0x0,
+	SPDK_NVME_FMT_NVM_SES_USER_DATA_ERASE	= 0x1,
+	SPDK_NVME_FMT_NVM_SES_CRYPTO_ERASE	= 0x2,
+};
+
+enum spdk_nvme_protection_information_location {
+	SPDK_NVME_FMT_NVM_PROTECTION_AT_TAIL	= 0x0,
+	SPDK_NVME_FMT_NVM_PROTECTION_AT_HEAD	= 0x1,
+};
+
+enum spdk_nvme_protection_information {
+	SPDK_NVME_FMT_NVM_PROTECTION_DISABLE		= 0x0,
+	SPDK_NVME_FMT_NVM_PROTECTION_TYPE1		= 0x1,
+	SPDK_NVME_FMT_NVM_PROTECTION_TYPE2		= 0x2,
+	SPDK_NVME_FMT_NVM_PROTECTION_TYPE3		= 0x3,
+};
+
+enum spdk_nvme_metadata_setting {
+	SPDK_NVME_FMT_NVM_METADATA_TRANSFER_AS_BUFFER	= 0x0,
+	SPDK_NVME_FMT_NVM_METADATA_TRANSFER_AS_LBA	= 0x1,
+};
+
+struct spdk_nvme_format {
+	uint32_t	lbaf		: 4;
+	uint32_t	ms		: 1;
+	uint32_t	pi		: 3;
+	uint32_t	pil		: 1;
+	uint32_t	ses		: 3;
+	uint32_t	reserved	: 20;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_format) == 4, "Incorrect size");
 
 #define spdk_nvme_cpl_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)

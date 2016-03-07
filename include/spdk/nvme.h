@@ -448,6 +448,20 @@ int spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns
 int spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
 /**
+ * \brief format NVMe.
+ *
+ * \param nsid the name space identifier.
+ * \param format the format information for the command.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ *
+ */
+int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+			   struct spdk_nvme_format *format);
+
+/**
  * \brief Get the identify namespace data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point while the controller is attached to

@@ -1203,3 +1203,28 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
 }
+
+int
+spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+		       struct spdk_nvme_format *format)
+{
+	struct nvme_completion_poll_status	status;
+	int					res;
+
+	status.done = false;
+	res = nvme_ctrlr_cmd_format(ctrlr, nsid, format, nvme_completion_poll_cb,
+				    &status);
+	if (res)
+		return res;
+	while (status.done == false) {
+		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		nvme_printf(ctrlr, "spdk_nvme_ctrlr_format failed!\n");
+		return ENXIO;
+	}
+
+	return spdk_nvme_ctrlr_reset(ctrlr);
+}

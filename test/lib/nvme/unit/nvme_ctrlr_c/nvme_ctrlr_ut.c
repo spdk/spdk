@@ -246,6 +246,13 @@ nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme
 	return 0;
 }
 
+int
+nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_nvme_format *format,
+		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
 void
 nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {

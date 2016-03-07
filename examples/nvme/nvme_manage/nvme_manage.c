@@ -139,7 +139,8 @@ static void usage(void)
 	printf("\t[3: delete namespace]\n");
 	printf("\t[4: attach namespace to controller]\n");
 	printf("\t[5: detach namespace from controller]\n");
-	printf("\t[6: quit]\n");
+	printf("\t[6: format namespace or controller]\n");
+	printf("\t[7: quit]\n");
 }
 
 static void
@@ -198,6 +199,16 @@ display_controller(struct dev *dev, int model)
 	printf("============================\n");
 	printf("Namespace Manage And Attach:		%s\n",
 	       cdata->oacs.ns_manage ? "Supported" : "Not Supported");
+	printf("Namespace Format:			%s\n",
+	       cdata->oacs.format ? "Supported" : "Not Supported");
+	printf("\n");
+	printf("NVM Command Set Attributes\n");
+	printf("============================\n");
+	if (cdata->fna.format_all_ns) {
+		printf("Namespace format operation applies to all namespaces\n");
+	} else {
+		printf("Namespace format operation applies to per namespace\n");
+	}
 	printf("\n");
 	printf("Namespace Attributes\n");
 	printf("============================\n");
@@ -341,6 +352,24 @@ ns_manage_delete(struct dev *device, int ns_id)
 }
 
 static void
+nvme_manage_format(struct dev *device, int ns_id, int ses, int pi, int pil, int ms, int lbaf)
+{
+	int ret = 0;
+	struct spdk_nvme_format format = {};
+
+	format.lbaf	= lbaf;
+	format.ms	= ms;
+	format.pi	= pi;
+	format.pil	= pil;
+	format.ses	= ses;
+	ret = spdk_nvme_ctrlr_format(device->ctrlr, ns_id, &format);
+	if (ret) {
+		fprintf(stdout, "nvme format: Failed\n");
+		return;
+	}
+}
+
+static void
 attach_and_detach_ns(int attachment_op)
 {
 	int		ns_id;
@@ -437,6 +466,105 @@ delete_ns(void)
 	ns_manage_delete(ctrlr, ns_id);
 }
 
+static void
+format_nvm(void)
+{
+	int 					ns_id;
+	int					ses;
+	int					pil;
+	int					pi;
+	int					ms;
+	int					lbaf;
+	char				option;
+	struct dev				*ctrlr;
+
+	ctrlr = get_controller();
+	if (ctrlr == NULL) {
+		printf("Invalid controller PCI BDF.\n");
+		return;
+	}
+	if (!ctrlr->cdata->oacs.format) {
+		printf("Controller does not support Format NVM command\n");
+		return;
+	}
+
+	if (ctrlr->cdata->fna.format_all_ns) {
+		ns_id = 0xffffffff;
+	} else {
+		printf("Please Input Namespace ID (1 - %d): \n", ctrlr->cdata->nn);
+		if (!scanf("%d", &ns_id)) {
+			printf("Invalid Namespace ID\n");
+			while (getchar() != '\n');
+			return;
+		}
+	}
+
+	printf("Please Input Secure Erase Setting: \n");
+	printf("	0: No secure erase operation requested\n");
+	printf("	1: User data erase\n");
+	printf("	2: Cryptographic erase\n");
+	if (!scanf("%d", &ses)) {
+		printf("Invalid Secure Erase Setting\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	printf("Please Input Protection Information: \n");
+	printf("	0: Protection information is not enabled\n");
+	printf("	1: Protection information is enabled, Type 1\n");
+	printf("	2: Protection information is enabled, Type 2\n");
+	printf("	3: Protection information is enabled, Type 3\n");
+	if (!scanf("%d", &pi)) {
+		printf("Invalid protection information\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	printf("Please Input Protection Information Location: \n");
+	printf("	0: Protection information transferred as the last eight bytes of metadata\n");
+	printf("	1: Protection information transferred as the first eight bytes of metadata\n");
+	if (!scanf("%d", &pil)) {
+		printf("Invalid protection information location\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	printf("Please Input Metadata Setting: \n");
+	printf("	0: Metadata is transferred as part of a separate buffer\n");
+	printf("	1: Metadata is transferred as part of an extended data LBA\n");
+	if (!scanf("%d", &ms)) {
+		printf("Invalid metadata setting\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	printf("Please Input LBA Format Number (0 - 15): \n");
+	if (!scanf("%d", &lbaf)) {
+		printf("Invalid LBA format size\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	printf("Warning: use this utility at your own risk.\n"
+	       "This command will format your namespace and all data will be lost.\n"
+	       "This command may take several minutes to complete,\n"
+	       "so do not interrupt the utility until it completes.\n"
+	       "Press 'Y' to continue with the format operation.\n");
+
+	while (getchar() != '\n');
+	if (!scanf("%c", &option)) {
+		printf("Invalid option\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	if (option == 'y' || option == 'Y') {
+		nvme_manage_format(ctrlr, ns_id, ses, pi, pil, ms, lbaf);
+	} else {
+		printf("NVMe format abort\n");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int				rc, i;
@@ -494,6 +622,9 @@ int main(int argc, char **argv)
 			attach_and_detach_ns(SPDK_NVME_NS_CTRLR_DETACH);
 			break;
 		case 6:
+			format_nvm();
+			break;
+		case 7:
 			exit_flag = true;
 			break;
 		default:
