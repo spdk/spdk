@@ -678,6 +678,11 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	remaining_transfer_len = req->payload_size;
 
 	while (remaining_transfer_len > 0) {
+		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+			_nvme_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
 		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
 		if (rc) {
 			_nvme_fail_request_bad_vtophys(qpair, tr);
@@ -694,11 +699,6 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 
 		sgl++;
 		nseg++;
-
-		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
-			_nvme_fail_request_bad_vtophys(qpair, tr);
-			return -1;
-		}
 	}
 
 	if (nseg == 1) {

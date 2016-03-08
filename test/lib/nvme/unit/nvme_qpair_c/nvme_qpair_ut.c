@@ -443,6 +443,71 @@ test_sgl_req(void)
 }
 
 static void
+test_hw_sgl_req(void)
+{
+	struct spdk_nvme_qpair	qpair = {};
+	struct nvme_request	*req;
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_registers	regs = {};
+	struct nvme_payload	payload = {};
+	struct nvme_tracker 	*sgl_tr = NULL;
+	uint64_t 		i;
+	struct io_request	io_req = {};
+
+	payload.type = NVME_PAYLOAD_TYPE_SGL;
+	payload.u.sgl.reset_sgl_fn = nvme_request_reset_sgl;
+	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
+	payload.u.sgl.cb_arg = &io_req;
+
+	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	req = nvme_allocate_request(&payload, PAGE_SIZE, NULL, &io_req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_WRITE;
+	req->cmd.cdw10 = 10000;
+	req->cmd.cdw12 = 7 | 0;
+	req->payload_offset = 0;
+	ctrlr.flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+
+	nvme_qpair_submit_request(&qpair, req);
+
+	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
+	CU_ASSERT(sgl_tr != NULL);
+	CU_ASSERT(sgl_tr->u.sgl[0].type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(sgl_tr->u.sgl[0].type_specific == 0);
+	CU_ASSERT(sgl_tr->u.sgl[0].length == 4096);
+	CU_ASSERT(sgl_tr->u.sgl[0].address == 0);
+	CU_ASSERT(req->cmd.dptr.sgl1.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	LIST_REMOVE(sgl_tr, list);
+	cleanup_submit_request_test(&qpair);
+	nvme_free_request(req);
+
+	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	req = nvme_allocate_request(&payload, NVME_MAX_SGL_DESCRIPTORS * PAGE_SIZE, NULL, &io_req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_WRITE;
+	req->cmd.cdw10 = 10000;
+	req->cmd.cdw12 = 2023 | 0;
+	req->payload_offset = 0;
+	ctrlr.flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+
+	nvme_qpair_submit_request(&qpair, req);
+
+	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
+	CU_ASSERT(sgl_tr != NULL);
+	for (i = 0; i < NVME_MAX_SGL_DESCRIPTORS; i++) {
+		CU_ASSERT(sgl_tr->u.sgl[i].type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+		CU_ASSERT(sgl_tr->u.sgl[i].type_specific == 0);
+		CU_ASSERT(sgl_tr->u.sgl[i].length == 4096);
+		CU_ASSERT(sgl_tr->u.sgl[i].address == i * 4096);
+	}
+	CU_ASSERT(req->cmd.dptr.sgl1.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	LIST_REMOVE(sgl_tr, list);
+	cleanup_submit_request_test(&qpair);
+	nvme_free_request(req);
+}
+
+
+static void
 test_ctrlr_failed(void)
 {
 	struct spdk_nvme_qpair		qpair = {};
@@ -705,6 +770,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
 		|| CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
 		|| CU_add_test(suite, "sgl_request", test_sgl_req) == NULL
+		|| CU_add_test(suite, "hw_sgl_request", test_hw_sgl_req) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
