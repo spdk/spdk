@@ -88,6 +88,17 @@ Hugepages and Device Binding
 Before running an SPDK application, some hugepages must be allocated and
 any NVMe and I/OAT devices must be unbound from the native kernel drivers.
 SPDK includes scripts to automate this process on both Linux and FreeBSD.
+Both of these scripts should be run as root.
 
     1) scripts/configure_hugepages.sh
     2) scripts/setup.sh
+
+Examples
+========
+
+Example code is located in the examples directory. The examples are compiled
+automatically as part of the build process. Simply call any of the examples
+with no arguments to see the help output. You'll likely need to run the examples
+as a privileged user (root) unless you've done additional configuration
+to grant your user permission to allocate huge pages and map devices through
+vfio.
