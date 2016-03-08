@@ -50,8 +50,7 @@ spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
 
-	nvme_qpair_submit_request(qpair, req);
-	return 0;
+	return nvme_qpair_submit_request(qpair, req);
 }
 
 int
@@ -61,6 +60,7 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 			      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request	*req;
+	int			rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_contig(buf, len, cb_fn, cb_arg);
@@ -71,10 +71,10 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-	return 0;
+	return rc;
 }
 
 int
@@ -100,8 +100,7 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 	 */
 	cmd->cdw10 = 1;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 int
@@ -126,8 +125,7 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 	 */
 	cmd->nsid = nsid;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 int
@@ -158,8 +156,7 @@ nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->cdw11 = 0x1;
 	cmd->dptr.prp.prp1 = io_que->cpl_bus_addr;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 int
@@ -186,8 +183,7 @@ nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->cdw11 = (io_que->id << 16) | (io_que->qprio << 1) | 0x1;
 	cmd->dptr.prp.prp1 = io_que->cmd_bus_addr;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 int
@@ -206,8 +202,7 @@ nvme_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	cmd->opc = SPDK_NVME_OPC_DELETE_IO_CQ;
 	cmd->cdw10 = qpair->id;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 int
@@ -226,8 +221,7 @@ nvme_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 	cmd->opc = SPDK_NVME_OPC_DELETE_IO_SQ;
 	cmd->cdw10 = qpair->id;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 int
@@ -236,6 +230,7 @@ nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 {
 	struct nvme_request			*req;
 	struct spdk_nvme_cmd			*cmd;
+	int					rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_ctrlr_list),
@@ -250,10 +245,10 @@ nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	cmd->nsid = nsid;
 	cmd->cdw10 = SPDK_NVME_NS_CTRLR_ATTACH;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-	return 0;
+	return rc;
 }
 
 int
@@ -262,6 +257,7 @@ nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 {
 	struct nvme_request			*req;
 	struct spdk_nvme_cmd			*cmd;
+	int					rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_ctrlr_list),
@@ -276,10 +272,10 @@ nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	cmd->nsid = nsid;
 	cmd->cdw10 = SPDK_NVME_NS_CTRLR_DETACH;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-	return 0;
+	return rc;
 }
 
 int
@@ -288,6 +284,7 @@ nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data
 {
 	struct nvme_request			*req;
 	struct spdk_nvme_cmd			*cmd;
+	int					rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_ns_data),
@@ -301,10 +298,10 @@ nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data
 	cmd->opc = SPDK_NVME_OPC_NS_MANAGEMENT;
 	cmd->cdw10 = SPDK_NVME_NS_MANAGEMENT_CREATE;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-	return 0;
+	return rc;
 }
 
 int
@@ -313,6 +310,7 @@ nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme
 {
 	struct nvme_request			*req;
 	struct spdk_nvme_cmd			*cmd;
+	int					rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
@@ -326,10 +324,10 @@ nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme
 	cmd->cdw10 = SPDK_NVME_NS_MANAGEMENT_DELETE;
 	cmd->nsid = nsid;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-	return 0;
+	return rc;
 }
 
 int
@@ -339,6 +337,7 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+	int rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
@@ -353,10 +352,10 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	cmd->cdw11 = cdw11;
 	cmd->cdw12 = cdw12;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 
-	return 0;
+	return rc;
 }
 
 int
@@ -366,6 +365,7 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+	int rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
@@ -379,10 +379,10 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	cmd->cdw10 = feature;
 	cmd->cdw11 = cdw11;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 
-	return 0;
+	return rc;
 }
 
 int
@@ -416,6 +416,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+	int rc;
 
 	nvme_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_contig(payload, payload_size, cb_fn, cb_arg);
@@ -430,10 +431,10 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	cmd->cdw10 = ((payload_size / sizeof(uint32_t)) - 1) << 16;
 	cmd->cdw10 |= log_page;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
 
-	return 0;
+	return rc;
 }
 
 int
@@ -452,6 +453,5 @@ nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
 	cmd->opc = SPDK_NVME_OPC_ABORT;
 	cmd->cdw10 = (cid << 16) | sqid;
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }

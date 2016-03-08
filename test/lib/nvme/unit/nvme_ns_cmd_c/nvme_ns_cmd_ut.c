@@ -95,10 +95,12 @@ spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns)
 	return ns->ctrlr->max_xfer_size;
 }
 
-void
+int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	g_request = req;
+
+	return 0;
 }
 
 static void

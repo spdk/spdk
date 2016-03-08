@@ -521,7 +521,7 @@ void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 
-void	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
+int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
 
 int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
@@ -531,7 +531,7 @@ int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 void	nvme_qpair_destroy(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
-void	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
+int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
 void	nvme_qpair_reset(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_fail(struct spdk_nvme_qpair *qpair);

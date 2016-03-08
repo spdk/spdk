@@ -769,9 +769,7 @@ nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	req->cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
-
-	return 0;
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
 
 static int
@@ -1044,11 +1042,11 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_mutex_destroy(&ctrlr->ctrlr_lock);
 }
 
-void
+int
 nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 				struct nvme_request *req)
 {
-	nvme_qpair_submit_request(&ctrlr->adminq, req);
+	return nvme_qpair_submit_request(&ctrlr->adminq, req);
 }
 
 int32_t

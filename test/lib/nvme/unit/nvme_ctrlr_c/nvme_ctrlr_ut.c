@@ -110,7 +110,7 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 {
 }
 
-void
+int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST);
@@ -120,6 +120,8 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	 * For the purposes of this unit test, we don't need to bother emulating request submission.
 	 */
 	nvme_dealloc_request(req);
+
+	return 0;
 }
 
 int32_t

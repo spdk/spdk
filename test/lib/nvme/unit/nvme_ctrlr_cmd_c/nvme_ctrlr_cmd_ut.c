@@ -241,20 +241,24 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
 
-void
+int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	verify_fn(req);
 	/* stop analyzer from thinking stack variable addresses are stored in a global */
 	memset(req, 0, sizeof(*req));
+
+	return 0;
 }
 
-void
+int
 nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_request *req)
 {
 	verify_fn(req);
 	/* stop analyzer from thinking stack variable addresses are stored in a global */
 	memset(req, 0, sizeof(*req));
+
+	return 0;
 }
 
 static void

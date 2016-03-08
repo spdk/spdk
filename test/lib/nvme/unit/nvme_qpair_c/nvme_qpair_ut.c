@@ -293,7 +293,7 @@ test3(void)
 
 	CU_ASSERT(qpair.sq_tail == 0);
 
-	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
 
 	CU_ASSERT(qpair.sq_tail == 1);
 
@@ -339,7 +339,7 @@ test4(void)
 
 	CU_ASSERT(qpair.sq_tail == 0);
 
-	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
 
 	CU_ASSERT(qpair.sq_tail == 0);
 	/* Assert that command/completion data was printed to log. */
@@ -374,7 +374,7 @@ test_sgl_req(void)
 	req->cmd.cdw12 = 255 | 0;
 	req->payload_offset = 1;
 
-	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
 	CU_ASSERT(req->cmd.psdt == SPDK_NVME_PSDT_PRP);
 	CU_ASSERT(req->cmd.dptr.prp.prp1 == 7);
 	CU_ASSERT(req->cmd.dptr.prp.prp2 == 4096);
@@ -393,7 +393,7 @@ test_sgl_req(void)
 	spdk_nvme_retry_count = 1;
 	fail_next_sge = true;
 
-	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
 	CU_ASSERT(qpair.sq_tail == 0);
 	cleanup_submit_request_test(&qpair);
 
@@ -407,7 +407,7 @@ test_sgl_req(void)
 	req->cmd.cdw12 = 255 | 0;
 	req->payload_offset = 2;
 
-	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
 	CU_ASSERT(qpair.sq_tail == 0);
 	cleanup_submit_request_test(&qpair);
 
@@ -418,7 +418,7 @@ test_sgl_req(void)
 	req->cmd.cdw10 = 10000;
 	req->cmd.cdw12 = 255 | 0;
 
-	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
 
 	CU_ASSERT(req->cmd.dptr.prp.prp1 == 0);
 	CU_ASSERT(qpair.sq_tail == 1);
@@ -459,11 +459,9 @@ test_ctrlr_failed(void)
 
 	CU_ASSERT(qpair.sq_tail == 0);
 
-	nvme_qpair_submit_request(&qpair, req);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
 
 	CU_ASSERT(qpair.sq_tail == 0);
-	/* Assert that command/completion data was printed to log. */
-	CU_ASSERT(strlen(outbuf) > 0);
 
 	cleanup_submit_request_test(&qpair);
 }

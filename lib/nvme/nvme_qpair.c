@@ -867,13 +867,18 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 	return 0;
 }
 
-void
+int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	int			rc;
 	struct nvme_tracker	*tr;
 	struct nvme_request	*child_req;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+
+	if (ctrlr->is_failed) {
+		nvme_free_request(req);
+		return ENXIO;
+	}
 
 	nvme_qpair_check_enabled(qpair);
 
@@ -883,9 +888,12 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		 * request itself, since the parent is the original unsplit request.
 		 */
 		TAILQ_FOREACH(child_req, &req->children, child_tailq) {
-			nvme_qpair_submit_request(qpair, child_req);
+			rc = nvme_qpair_submit_request(qpair, child_req);
+			if (rc != 0) {
+				return rc;
+			}
 		}
-		return;
+		return 0;
 	}
 
 	tr = LIST_FIRST(&qpair->free_tr);
@@ -893,22 +901,15 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	if (tr == NULL || !qpair->is_enabled) {
 		/*
 		 * No tracker is available, or the qpair is disabled due to
-		 *  an in-progress controller-level reset or controller
-		 *  failure.
+		 *  an in-progress controller-level reset.
+		 *
+		 * Put the request on the qpair's request queue to be
+		 *  processed when a tracker frees up via a command
+		 *  completion or when the controller reset is
+		 *  completed.
 		 */
-
-		if (qpair->ctrlr->is_failed) {
-			_nvme_fail_request_ctrlr_failed(qpair, req);
-		} else {
-			/*
-			 * Put the request on the qpair's request queue to be
-			 *  processed when a tracker frees up via a command
-			 *  completion or when the controller reset is
-			 *  completed.
-			 */
-			STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		}
-		return;
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
 	}
 
 	LIST_REMOVE(tr, list); /* remove tr from free_tr */
@@ -921,7 +922,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	} else if (req->payload.type == NVME_PAYLOAD_TYPE_CONTIG) {
 		rc = _nvme_qpair_build_contig_request(qpair, req, tr);
 		if (rc < 0) {
-			return;
+			return rc;
 		}
 	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL) {
 		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED)
@@ -929,15 +930,16 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		else
 			rc = _nvme_qpair_build_prps_sgl_request(qpair, req, tr);
 		if (rc < 0) {
-			return;
+			return rc;
 		}
 	} else {
 		nvme_assert(0, ("invalid NVMe payload type %d\n", req->payload.type));
 		_nvme_fail_request_bad_vtophys(qpair, tr);
-		return;
+		return EINVAL;
 	}
 
 	nvme_qpair_submit_tracker(qpair, tr);
+	return 0;
 }
 
 void
@@ -1012,7 +1014,9 @@ _nvme_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 
 		nvme_printf(qpair->ctrlr, "resubmitting queued i/o\n");
 		nvme_qpair_print_command(qpair, &req->cmd);
-		nvme_qpair_submit_request(qpair, req);
+		if (nvme_qpair_submit_request(qpair, req) != 0) {
+			_nvme_fail_request_ctrlr_failed(qpair, req);
+		}
 	}
 }
 
