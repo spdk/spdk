@@ -39,6 +39,56 @@ _nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return &ns->ctrlr->nsdata[ns->id - 1];
 }
 
+static
+int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
+{
+	struct nvme_completion_poll_status	status;
+	struct spdk_nvme_ns_data		*nsdata;
+	int					rc;
+
+	nsdata = _nvme_ns_get_data(ns);
+	status.done = false;
+	rc = nvme_ctrlr_cmd_identify_namespace(ns->ctrlr, ns->id, nsdata,
+					       nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (status.done == false) {
+		nvme_mutex_lock(&ns->ctrlr->ctrlr_lock);
+		spdk_nvme_qpair_process_completions(&ns->ctrlr->adminq, 0);
+		nvme_mutex_unlock(&ns->ctrlr->ctrlr_lock);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");
+		return ENXIO;
+	}
+
+	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
+
+	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
+	ns->sectors_per_stripe = ns->stripe_size / ns->sector_size;
+
+	ns->flags = 0x0000;
+
+	if (ns->ctrlr->cdata.oncs.dsm) {
+		ns->flags |= SPDK_NVME_NS_DEALLOCATE_SUPPORTED;
+	}
+
+	if (ns->ctrlr->cdata.vwc.present) {
+		ns->flags |= SPDK_NVME_NS_FLUSH_SUPPORTED;
+	}
+
+	if (ns->ctrlr->cdata.oncs.write_zeroes) {
+		ns->flags |= SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED;
+	}
+
+	if (nsdata->nsrescap.raw) {
+		ns->flags |= SPDK_NVME_NS_RESERVATION_SUPPORTED;
+	}
+	return rc;
+}
+
 uint32_t
 spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns)
 {
@@ -91,17 +141,14 @@ spdk_nvme_ns_get_flags(struct spdk_nvme_ns *ns)
 const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
+	nvme_ns_identify_update(ns);
 	return _nvme_ns_get_data(ns);
 }
 
-int
-nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
-		  struct spdk_nvme_ctrlr *ctrlr)
+int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
+		      struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_completion_poll_status	status;
-	struct spdk_nvme_ns_data		*nsdata;
 	uint32_t				pci_devid;
-	int					rc;
 
 	nvme_assert(id > 0, ("invalid namespace id %d", id));
 
@@ -114,45 +161,7 @@ nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 		ns->stripe_size = (1 << ctrlr->cdata.vs[3]) * ctrlr->min_page_size;
 	}
 
-	nsdata = _nvme_ns_get_data(ns);
-
-	status.done = false;
-	rc = nvme_ctrlr_cmd_identify_namespace(ctrlr, id, nsdata,
-					       nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
-
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");
-		return ENXIO;
-	}
-
-	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
-
-	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
-	ns->sectors_per_stripe = ns->stripe_size / ns->sector_size;
-
-	if (ctrlr->cdata.oncs.dsm) {
-		ns->flags |= SPDK_NVME_NS_DEALLOCATE_SUPPORTED;
-	}
-
-	if (ctrlr->cdata.vwc.present) {
-		ns->flags |= SPDK_NVME_NS_FLUSH_SUPPORTED;
-	}
-
-	if (ctrlr->cdata.oncs.write_zeroes) {
-		ns->flags |= SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED;
-	}
-
-	if (nsdata->nsrescap.raw) {
-		ns->flags |= SPDK_NVME_NS_RESERVATION_SUPPORTED;
-	}
-
-	return 0;
+	return nvme_ns_identify_update(ns);
 }
 
 void nvme_ns_destruct(struct spdk_nvme_ns *ns)

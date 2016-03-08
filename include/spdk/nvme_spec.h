@@ -910,7 +910,10 @@ struct spdk_nvme_ns_data {
 		uint8_t		raw;
 	} nsrescap;
 	/** format progress indicator */
-	uint8_t			fpi;
+	struct {
+		uint8_t		percentage_remaining : 7;
+		uint8_t		fpi_supported : 1;
+	} fpi;
 
 	uint8_t			reserved33;
 
