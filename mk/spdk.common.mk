@@ -105,18 +105,18 @@ DEPFLAGS = -MMD -MP -MF $*.d.tmp
 
 # Compile first input $< (.c) into $@ (.o)
 COMPILE_C=\
-	$(Q)echo "  CC $@"; \
+	$(Q)echo "  CC $S/$@"; \
 	$(CC) -o $@ $(DEPFLAGS) $(CFLAGS) -c $< && \
 	mv -f $*.d.tmp $*.d
 
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
-	$(Q)echo "  LINK $@"; \
+	$(Q)echo "  LINK $S/$@"; \
 	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS)
 
 # Archive $(OBJS) into $@ (.a)
 LIB_C=\
-	$(Q)echo "  LIB $@"; \
+	$(Q)echo "  LIB $S/$@"; \
 	ar crDs $@ $(OBJS)
 
 # Clean up generated files listed as arguments plus a default list
