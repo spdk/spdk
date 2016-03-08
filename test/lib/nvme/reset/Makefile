@@ -46,16 +46,10 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
 
 LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) -lpthread $(DPDK_LIB) -lrt
 
-
-OBJS  = $(C_SRCS:.c=.o)
-
 all : $(APP)
 
-objs : $(OBJS)
-
 $(APP) : $(OBJS) $(SPDK_LIBS)
-	@echo "  LINK $@"
-	$(Q)$(CC) $(CPPFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(LINK_C)
 
 clean :
 	$(CLEAN_C) $(APP)
