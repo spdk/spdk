@@ -23,6 +23,8 @@ Documentation
 
 [Porting Guide](PORTING.md)
 
+[Changelog](CHANGELOG.md)
+
 Prerequisites
 =============
 
