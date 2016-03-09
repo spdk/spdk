@@ -173,7 +173,6 @@ struct nvme_request {
 	 */
 	struct nvme_payload		payload;
 
-	uint8_t				timeout;
 	uint8_t				retries;
 
 	/**

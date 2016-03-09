@@ -664,11 +664,6 @@ nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		return -1;
 	}
 
-	/*
-	 * Disable timeout here, since asynchronous event requests should by
-	 *  nature never be timed out.
-	 */
-	req->timeout = false;
 	req->cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 	nvme_ctrlr_submit_admin_request(ctrlr, req);
 

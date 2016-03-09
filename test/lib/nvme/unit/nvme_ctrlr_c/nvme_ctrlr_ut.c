@@ -252,7 +252,6 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 
 		req->cb_fn = cb_fn;
 		req->cb_arg = cb_arg;
-		req->timeout = true;
 	}
 
 	return req;

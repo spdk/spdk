@@ -147,7 +147,6 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 	memset(req, 0, offsetof(struct nvme_request, children));
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
-	req->timeout = true;
 	req->payload = *payload;
 	req->payload_size = payload_size;
 
