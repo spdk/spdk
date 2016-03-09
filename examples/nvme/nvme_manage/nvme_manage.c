@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <inttypes.h>
@@ -60,6 +61,11 @@ static int num_devs = 0;
 #define foreach_dev(iter) \
 	for (iter = devs; iter - devs < num_devs; iter++)
 
+enum controller_display_model {
+	CONTROLLER_DISPLAY_ALL			= 0x0,
+	CONTROLLER_DISPLAY_SIMPLISTIC		= 0x1,
+};
+
 static uint64_t
 get_pci_addr(struct spdk_pci_device *pci_dev)
 {
@@ -86,110 +92,6 @@ cmp_devs(const void *ap, const void *bp)
 		return 1;
 	} else {
 		return 0;
-	}
-}
-
-static struct dev *
-get_controller(void)
-{
-	int 					bus;
-	int 					devid;
-	int 					function;
-	struct dev				*iter;
-	const struct spdk_nvme_ctrlr_data	*cdata;
-
-	printf("Please Input Bus ID: \n");
-	if (!scanf("%d", &bus)) {
-		printf("Invalid Bus ID\n");
-		while (getchar() != '\n');
-		return NULL;
-	}
-	printf("Please Input Dev ID: \n");
-	if (!scanf("%d", &devid)) {
-		printf("Invalid Dev ID\n");
-		while (getchar() != '\n');
-		return NULL;
-	}
-	printf("Please Input Function ID: \n");
-	if (!scanf("%d", &function)) {
-		printf("Invalid Function ID\n");
-		while (getchar() != '\n');
-		return NULL;
-	}
-
-	foreach_dev(iter) {
-		if (spdk_pci_device_get_bus(iter->pci_dev) == bus &&
-		    spdk_pci_device_get_dev(iter->pci_dev) == devid &&
-		    spdk_pci_device_get_func(iter->pci_dev) == function) {
-			cdata = spdk_nvme_ctrlr_get_data(iter->ctrlr);
-			iter->cdata = cdata;
-			return iter;
-		}
-	}
-	return NULL;
-}
-
-static void
-ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
-{
-	int ret = 0;
-	struct spdk_nvme_ctrlr_list *ctrlr_list;
-
-	ctrlr_list = rte_zmalloc("nvme controller list", sizeof(struct spdk_nvme_ctrlr_list),
-				 4096);
-	if (ctrlr_list == NULL) {
-		printf("Allocation error (controller list)\n");
-		exit(1);
-	}
-
-	ctrlr_list->ctrlr_count = 1;
-	ctrlr_list->ctrlr_list[0] = ctrlr_id;
-
-	if (attachment_op == SPDK_NVME_NS_CTRLR_ATTACH) {
-		ret = spdk_nvme_ctrlr_attach_ns(device->ctrlr, ns_id, ctrlr_list);
-	} else if (attachment_op == SPDK_NVME_NS_CTRLR_DETACH) {
-		ret = spdk_nvme_ctrlr_detach_ns(device->ctrlr, ns_id, ctrlr_list);
-	}
-
-	if (ret) {
-		fprintf(stdout, "ns attach: Failed\n");
-	}
-
-	rte_free(ctrlr_list);
-}
-
-static void
-ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns_lbasize)
-{
-	int ret = 0;
-	struct spdk_nvme_ns_data *ndata;
-
-	ndata = rte_zmalloc("nvme namespace data", sizeof(struct spdk_nvme_ns_data), 4096);
-	if (ndata == NULL) {
-		printf("Allocation error (namespace data)\n");
-		exit(1);
-	}
-
-	ndata->nsze = ns_size;
-	ndata->ncap = ns_capacity;
-	ndata->flbas.format = ns_lbasize;
-	ret = spdk_nvme_ctrlr_create_ns(device->ctrlr, ndata);
-	if (ret) {
-		fprintf(stdout, "ns manage: Failed\n");
-	}
-
-	rte_free(ndata);
-}
-
-static void
-ns_manage_delete(struct dev *device, int ns_id)
-{
-	int ret = 0;
-
-	ret = spdk_nvme_ctrlr_delete_ns(device->ctrlr, ns_id);
-	if (ret) {
-		fprintf(stdout, "ns manage: Failed\n");
-		return;
 	}
 }
 
@@ -272,24 +174,25 @@ display_namespace(struct spdk_nvme_ns *ns)
 }
 
 static void
-display_controller(struct dev *dev)
+display_controller(struct dev *dev, int model)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	uint8_t					str[128];
 	uint32_t				i;
 
 	cdata = spdk_nvme_ctrlr_get_data(dev->ctrlr);
-
 	printf("=====================================================\n");
-	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
-	       spdk_pci_device_get_bus(dev->pci_dev), spdk_pci_device_get_dev(dev->pci_dev),
-	       spdk_pci_device_get_func(dev->pci_dev));
-	printf("=====================================================\n");
+	printf("NVMe Controller:	%04x:%02x:%02x.%02x\n",
+	       spdk_pci_device_get_domain(dev->pci_dev), spdk_pci_device_get_bus(dev->pci_dev),
+	       spdk_pci_device_get_dev(dev->pci_dev), spdk_pci_device_get_func(dev->pci_dev));
+	printf("============================\n");
 	printf("Controller Capabilities/Features\n");
 	printf("Controller ID:		%d\n", cdata->cntlid);
 	snprintf(str, sizeof(cdata->sn) + 1, "%s", cdata->sn);
 	printf("Serial Number:		%s\n", str);
 	printf("\n");
+	if (model == CONTROLLER_DISPLAY_SIMPLISTIC)
+		return;
 	printf("Admin Command Set Attributes\n");
 	printf("============================\n");
 	printf("Namespace Manage And Attach:		%s\n",
@@ -308,7 +211,116 @@ display_controller_list(void)
 	struct dev			*iter;
 
 	foreach_dev(iter) {
-		display_controller(iter);
+		display_controller(iter, CONTROLLER_DISPLAY_ALL);
+	}
+}
+
+static struct dev *
+get_controller(void)
+{
+	unsigned int				domain;
+	unsigned int				bus;
+	unsigned int				devid;
+	unsigned int				function;
+	uint64_t				pci_addr;
+	char					address[64];
+	char					*p;
+	int					ch;
+	struct dev				*iter;
+	const struct spdk_nvme_ctrlr_data	*cdata;
+
+	memset(address, 0, sizeof(address));
+
+	foreach_dev(iter) {
+		display_controller(iter, CONTROLLER_DISPLAY_SIMPLISTIC);
+	}
+
+	printf("Please Input PCI Address(domain:bus:dev.func): \n");
+
+	while ((ch = getchar()) != '\n' && ch != EOF);
+	p = fgets(address, 64, stdin);
+
+	while (isspace(*p)) {
+		p++;
+	}
+
+	sscanf(p, "%x:%x:%x.%x", &domain, &bus, &devid, &function);
+	pci_addr = (uint64_t)domain << 24;
+	pci_addr |= (uint64_t)bus << 16;
+	pci_addr |= (uint64_t)devid << 8;
+	pci_addr |= (uint64_t)function;
+
+	foreach_dev(iter) {
+		if (pci_addr == get_pci_addr(iter->pci_dev)) {
+			cdata = spdk_nvme_ctrlr_get_data(iter->ctrlr);
+			iter->cdata = cdata;
+			return iter;
+		}
+	}
+	return NULL;
+}
+
+static void
+ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
+{
+	int ret = 0;
+	struct spdk_nvme_ctrlr_list *ctrlr_list;
+
+	ctrlr_list = rte_zmalloc("nvme controller list", sizeof(struct spdk_nvme_ctrlr_list),
+				 4096);
+	if (ctrlr_list == NULL) {
+		printf("Allocation error (controller list)\n");
+		exit(1);
+	}
+
+	ctrlr_list->ctrlr_count = 1;
+	ctrlr_list->ctrlr_list[0] = ctrlr_id;
+
+	if (attachment_op == SPDK_NVME_NS_CTRLR_ATTACH) {
+		ret = spdk_nvme_ctrlr_attach_ns(device->ctrlr, ns_id, ctrlr_list);
+	} else if (attachment_op == SPDK_NVME_NS_CTRLR_DETACH) {
+		ret = spdk_nvme_ctrlr_detach_ns(device->ctrlr, ns_id, ctrlr_list);
+	}
+
+	if (ret) {
+		fprintf(stdout, "ns attach: Failed\n");
+	}
+
+	rte_free(ctrlr_list);
+}
+
+static void
+ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns_lbasize)
+{
+	int ret = 0;
+	struct spdk_nvme_ns_data *ndata;
+
+	ndata = rte_zmalloc("nvme namespace data", sizeof(struct spdk_nvme_ns_data), 4096);
+	if (ndata == NULL) {
+		printf("Allocation error (namespace data)\n");
+		exit(1);
+	}
+
+	ndata->nsze = ns_size;
+	ndata->ncap = ns_capacity;
+	ndata->flbas.format = ns_lbasize;
+	ret = spdk_nvme_ctrlr_create_ns(device->ctrlr, ndata);
+	if (ret) {
+		fprintf(stdout, "ns manage: Failed\n");
+	}
+
+	rte_free(ndata);
+}
+
+static void
+ns_manage_delete(struct dev *device, int ns_id)
+{
+	int ret = 0;
+
+	ret = spdk_nvme_ctrlr_delete_ns(device->ctrlr, ns_id);
+	if (ret) {
+		fprintf(stdout, "ns manage: Failed\n");
+		return;
 	}
 }
 
@@ -320,7 +332,7 @@ attach_and_detach_ns(int attachment_op)
 
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
-		printf("Invalid controller PCI BDF.\n");
+		printf("Invalid controller PCI Address.\n");
 		return;
 	}
 
@@ -349,7 +361,7 @@ add_ns(void)
 
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
-		printf("Invalid controller PCI BDF.\n");
+		printf("Invalid controller PCI Address.\n");
 		return;
 	}
 
@@ -390,7 +402,7 @@ delete_ns(void)
 
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
-		printf("Invalid controller PCI BDF.\n");
+		printf("Invalid controller PCI Address.\n");
 		return;
 	}
 
