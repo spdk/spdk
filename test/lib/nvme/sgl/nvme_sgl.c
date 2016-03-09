@@ -147,6 +147,40 @@ static uint32_t build_io_request_0(struct io_request *req)
 
 static uint32_t build_io_request_1(struct io_request *req)
 {
+	int i;
+	uint32_t len = 0;
+
+	req->nseg = 1;
+
+	/* 512B for 1st sge */
+	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x200, 0x200);
+	req->iovs[0].iov_len = 0x200;
+
+	for (i = 0; i < req->nseg; i++)
+		len += req->iovs[i].iov_len;
+
+	return len;
+}
+
+static uint32_t build_io_request_2(struct io_request *req)
+{
+	int i;
+	uint32_t len = 0;
+
+	req->nseg = 1;
+
+	/* 256KB for 1st sge */
+	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x40000, 0x1000);
+	req->iovs[0].iov_len = 0x40000;
+
+	for (i = 0; i < req->nseg; i++)
+		len += req->iovs[i].iov_len;
+
+	return len;
+}
+
+static uint32_t build_io_request_3(struct io_request *req)
+{
 	int i, found = 0;
 	uint8_t *buf;
 	uint64_t v_addr;
@@ -183,7 +217,7 @@ static uint32_t build_io_request_1(struct io_request *req)
 	return len;
 }
 
-static uint32_t build_io_request_2(struct io_request *req)
+static uint32_t build_io_request_4(struct io_request *req)
 {
 	int i;
 	uint32_t len = 0;
@@ -206,7 +240,7 @@ static uint32_t build_io_request_2(struct io_request *req)
 	return len;
 }
 
-static uint32_t build_io_request_3(struct io_request *req)
+static uint32_t build_io_request_5(struct io_request *req)
 {
 	int i;
 	uint32_t len = 0;
@@ -223,7 +257,7 @@ static uint32_t build_io_request_3(struct io_request *req)
 	return len;
 }
 
-static uint32_t build_io_request_4(struct io_request *req)
+static uint32_t build_io_request_6(struct io_request *req)
 {
 	int i;
 	uint32_t len = 0;
@@ -237,40 +271,6 @@ static uint32_t build_io_request_4(struct io_request *req)
 	/* 4KB for 2st sge */
 	req->iovs[1].iov_base = rte_zmalloc(NULL, 0x1000, 0x1000);
 	req->iovs[1].iov_len = 0x1000;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
-
-	return len;
-}
-
-static uint32_t build_io_request_5(struct io_request *req)
-{
-	int i;
-	uint32_t len = 0;
-
-	req->nseg = 1;
-
-	/* 256KB for 1st sge */
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x40000, 0x1000);
-	req->iovs[0].iov_len = 0x40000;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
-
-	return len;
-}
-
-static uint32_t build_io_request_6(struct io_request *req)
-{
-	int i;
-	uint32_t len = 0;
-
-	req->nseg = 1;
-
-	/* 512B for 1st sge */
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x200, 0x200);
-	req->iovs[0].iov_len = 0x200;
 
 	for (i = 0; i < req->nseg; i++)
 		len += req->iovs[i].iov_len;
@@ -294,25 +294,28 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn)
 
 	ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, 1);
 	if (!ns) {
-		return -1;
+		fprintf(stderr, "Null namespace\n");
+		return 0;
 	}
 	nsdata = spdk_nvme_ns_get_data(ns);
-	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns))
-		return -1;
+	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns)) {
+		fprintf(stderr, "Empty nsdata or wrong sector size\n");
+		return 0;
+	}
 
 	req = rte_zmalloc(NULL, sizeof(*req), 0);
-	if (!req)
-		return -1;
+	if (!req) {
+		fprintf(stderr, "Allocate request failed\n");
+		return 0;
+	}
 
 	/* IO parameters setting */
 	len = build_io_fn(req);
-	if (!len)
-		return 0;
-
 	lba_count = len / spdk_nvme_ns_get_sector_size(ns);
-	if (BASE_LBA_START + lba_count > (uint32_t)nsdata->nsze) {
+	if (!lba_count || (BASE_LBA_START + lba_count > (uint32_t)nsdata->nsze)) {
+		fprintf(stderr, "Invalid IO length parameter\n");
 		rte_free(req);
-		return -1;
+		return 0;
 	}
 
 	nseg = req->nseg;

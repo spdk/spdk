@@ -727,7 +727,7 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 {
 	int rc;
 	uint64_t phys_addr;
-	uint32_t remaining_transfer_len, length;
+	uint32_t data_transfered, remaining_transfer_len, length;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	uint32_t nseg = 0;
 
@@ -752,10 +752,11 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 			return -1;
 		}
 
-		remaining_transfer_len -= length;
+		data_transfered = nvme_min(remaining_transfer_len, length);
+		remaining_transfer_len -= data_transfered;
 
 		sgl->type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
-		sgl->length = length;
+		sgl->length = data_transfered;
 		sgl->address = phys_addr;
 		sgl->type_specific = 0;
 
@@ -771,7 +772,7 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	if (nseg == 1) {
 		req->cmd.dptr.sgl1.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 		req->cmd.dptr.sgl1.address = phys_addr;
-		req->cmd.dptr.sgl1.length = length;
+		req->cmd.dptr.sgl1.length = data_transfered;
 	} else if (nseg > 1) {
 		/* For now we can only support 1 SGL segment in NVMe controller */
 		req->cmd.dptr.sgl1.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
