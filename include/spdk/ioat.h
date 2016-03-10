@@ -92,49 +92,25 @@ int spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_
 int spdk_ioat_detach(struct spdk_ioat_chan *ioat);
 
 /**
- * Request a DMA engine channel for the calling thread.
- *
- * Must be called before submitting any requests from a thread.
- *
- * The \ref spdk_ioat_unregister_thread() function can be called to release the channel.
- */
-int spdk_ioat_register_thread(void);
-
-/**
- * Unregister the current thread's I/OAT channel.
- *
- * This function can be called after \ref spdk_ioat_register_thread() to release the thread's
- * DMA engine channel for use by other threads.
- */
-void spdk_ioat_unregister_thread(void);
-
-/**
  * Submit a DMA engine memory copy request.
- *
- * Before submitting any requests on a thread, the thread must be registered
- * using the \ref spdk_ioat_register_thread() function.
  */
-int64_t spdk_ioat_submit_copy(void *cb_arg, spdk_ioat_req_cb cb_fn,
+int64_t spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
+			      void *cb_arg, spdk_ioat_req_cb cb_fn,
 			      void *dst, const void *src, uint64_t nbytes);
 
 /**
  * Submit a DMA engine memory fill request.
- *
- * Before submitting any requests on a thread, the thread must be registered
- * using the \ref spdk_ioat_register_thread() function.
  */
-int64_t spdk_ioat_submit_fill(void *cb_arg, spdk_ioat_req_cb cb_fn,
+int64_t spdk_ioat_submit_fill(struct spdk_ioat_chan *chan,
+			      void *cb_arg, spdk_ioat_req_cb cb_fn,
 			      void *dst, uint64_t fill_pattern, uint64_t nbytes);
 
 /**
- * Check for completed requests on the current thread.
- *
- * Before submitting any requests on a thread, the thread must be registered
- * using the \ref spdk_ioat_register_thread() function.
+ * Check for completed requests on an I/OAT channel.
  *
  * \returns 0 on success or negative if something went wrong.
  */
-int spdk_ioat_process_events(void);
+int spdk_ioat_process_events(struct spdk_ioat_chan *chan);
 
 /**
  * DMA engine capability flags
@@ -146,11 +122,8 @@ enum spdk_ioat_dma_capability_flags {
 
 /**
  * Get the DMA engine capabilities.
- *
- * Before submitting any requests on a thread, the thread must be registered
- * using the \ref spdk_ioat_register_thread() function.
  */
-uint32_t spdk_ioat_get_dma_capabilities(void);
+uint32_t spdk_ioat_get_dma_capabilities(struct spdk_ioat_chan *chan);
 
 #ifdef __cplusplus
 }

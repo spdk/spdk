@@ -34,15 +34,6 @@
 #include "ioat_internal.h"
 #include "ioat_pci.h"
 
-/** List of channels that have been attached but are not yet assigned to a thread.
- *
- * Must hold g_ioat_driver.lock while manipulating this list.
- */
-static SLIST_HEAD(, spdk_ioat_chan) ioat_free_channels;
-
-/** IOAT channel assigned to this thread (or NULL if not assigned yet). */
-static __thread struct spdk_ioat_chan *ioat_thread_channel;
-
 struct ioat_driver {
 	ioat_mutex_t	lock;
 	TAILQ_HEAD(, spdk_ioat_chan)	attached_chans;
@@ -488,8 +479,6 @@ ioat_attach(void *device)
 		return NULL;
 	}
 
-	SLIST_INSERT_HEAD(&ioat_free_channels, ioat, next);
-
 	return ioat;
 }
 
@@ -565,7 +554,6 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 	 * when calling ioat_detach().
 	 */
 	ioat_mutex_lock(&driver->lock);
-	SLIST_REMOVE(&ioat_free_channels, ioat, spdk_ioat_chan, next);
 	TAILQ_REMOVE(&driver->attached_chans, ioat, tailq);
 	ioat_mutex_unlock(&driver->lock);
 
@@ -575,55 +563,15 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 	return 0;
 }
 
-int
-spdk_ioat_register_thread(void)
-{
-	struct ioat_driver	*driver = &g_ioat_driver;
-
-	if (ioat_thread_channel) {
-		ioat_printf(NULL, "%s: thread already registered\n", __func__);
-		return -1;
-	}
-
-	ioat_mutex_lock(&driver->lock);
-
-	ioat_thread_channel = SLIST_FIRST(&ioat_free_channels);
-	if (ioat_thread_channel) {
-		SLIST_REMOVE_HEAD(&ioat_free_channels, next);
-	}
-
-	ioat_mutex_unlock(&driver->lock);
-
-	return ioat_thread_channel ? 0 : -1;
-}
-
-void
-spdk_ioat_unregister_thread(void)
-{
-	struct ioat_driver	*driver = &g_ioat_driver;
-
-	if (!ioat_thread_channel) {
-		return;
-	}
-
-	ioat_mutex_lock(&driver->lock);
-
-	SLIST_INSERT_HEAD(&ioat_free_channels, ioat_thread_channel, next);
-	ioat_thread_channel = NULL;
-
-	ioat_mutex_unlock(&driver->lock);
-}
-
 #define min(a, b) (((a)<(b))?(a):(b))
 
 #define _2MB_PAGE(ptr)		((ptr) & ~(0x200000 - 1))
 #define _2MB_OFFSET(ptr)	((ptr) &  (0x200000 - 1))
 
 int64_t
-spdk_ioat_submit_copy(void *cb_arg, spdk_ioat_req_cb cb_fn,
+spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
 		      void *dst, const void *src, uint64_t nbytes)
 {
-	struct spdk_ioat_chan	*ioat;
 	struct ioat_descriptor	*last_desc;
 	uint64_t	remaining, op_size;
 	uint64_t	vdst, vsrc;
@@ -631,7 +579,6 @@ spdk_ioat_submit_copy(void *cb_arg, spdk_ioat_req_cb cb_fn,
 	uint64_t	pdst_page, psrc_page;
 	uint32_t	orig_head;
 
-	ioat = ioat_thread_channel;
 	if (!ioat) {
 		return -1;
 	}
@@ -698,16 +645,14 @@ spdk_ioat_submit_copy(void *cb_arg, spdk_ioat_req_cb cb_fn,
 }
 
 int64_t
-spdk_ioat_submit_fill(void *cb_arg, spdk_ioat_req_cb cb_fn,
+spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
 		      void *dst, uint64_t fill_pattern, uint64_t nbytes)
 {
-	struct spdk_ioat_chan	*ioat;
 	struct ioat_descriptor	*last_desc = NULL;
 	uint64_t	remaining, op_size;
 	uint64_t	vdst;
 	uint32_t	orig_head;
 
-	ioat = ioat_thread_channel;
 	if (!ioat) {
 		return -1;
 	}
@@ -756,11 +701,8 @@ spdk_ioat_submit_fill(void *cb_arg, spdk_ioat_req_cb cb_fn,
 }
 
 uint32_t
-spdk_ioat_get_dma_capabilities(void)
+spdk_ioat_get_dma_capabilities(struct spdk_ioat_chan *ioat)
 {
-	struct spdk_ioat_chan	*ioat;
-
-	ioat = ioat_thread_channel;
 	if (!ioat) {
 		return 0;
 	}
@@ -768,11 +710,7 @@ spdk_ioat_get_dma_capabilities(void)
 }
 
 int
-spdk_ioat_process_events(void)
+spdk_ioat_process_events(struct spdk_ioat_chan *ioat)
 {
-	if (!ioat_thread_channel) {
-		return -1;
-	}
-
-	return ioat_process_channel_events(ioat_thread_channel);
+	return ioat_process_channel_events(ioat);
 }

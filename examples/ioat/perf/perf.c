@@ -61,10 +61,12 @@ struct ioat_device {
 };
 
 static TAILQ_HEAD(, ioat_device) g_devices;
+static struct ioat_device *g_next_device;
 
 static struct user_config g_user_config;
 
 struct thread_entry {
+	struct spdk_ioat_chan *chan;
 	uint64_t xfer_completed;
 	uint64_t xfer_failed;
 	uint64_t current_queue_depth;
@@ -244,7 +246,7 @@ static void
 drain_io(struct thread_entry *thread_entry)
 {
 	while (thread_entry->current_queue_depth > 0) {
-		spdk_ioat_process_events();
+		spdk_ioat_process_events(thread_entry->chan);
 	}
 }
 
@@ -256,7 +258,8 @@ submit_single_xfer(struct thread_entry *thread_entry, struct ioat_task *ioat_tas
 	ioat_task->src = src;
 	ioat_task->dst = dst;
 
-	spdk_ioat_submit_copy(ioat_task, ioat_done, dst, src, g_user_config.xfer_size_bytes);
+	spdk_ioat_submit_copy(thread_entry->chan, ioat_task, ioat_done, dst, src,
+			      g_user_config.xfer_size_bytes);
 
 	thread_entry->current_queue_depth++;
 }
@@ -283,6 +286,10 @@ work_fn(void *arg)
 	uint64_t tsc_end;
 	struct thread_entry *t = (struct thread_entry *)arg;
 
+	if (!t->chan) {
+		return 0;
+	}
+
 	t->lcore_id = rte_lcore_id();
 
 	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
@@ -297,24 +304,17 @@ work_fn(void *arg)
 		return 1;
 	}
 
-	if (spdk_ioat_register_thread() != 0) {
-		fprintf(stderr, "lcore %u: No ioat channels found. Check that ioatdma driver is unloaded.\n",
-			rte_lcore_id());
-		return 0;
-	}
-
 	tsc_end = rte_get_timer_cycles() + g_user_config.time_in_sec * rte_get_timer_hz();
 
 	// begin to submit transfers
 	submit_xfers(t, g_user_config.queue_depth);
 	while (rte_get_timer_cycles() < tsc_end) {
-		spdk_ioat_process_events();
+		spdk_ioat_process_events(t->chan);
 	}
 
 	// begin to drain io
 	t->is_draining = true;
 	drain_io(t);
-	spdk_ioat_unregister_thread();
 
 	return 0;
 }
@@ -383,6 +383,23 @@ dump_result(struct thread_entry *threads, int len)
 	return total_failed ? 1 : 0;
 }
 
+static struct spdk_ioat_chan *
+get_next_chan(void)
+{
+	struct spdk_ioat_chan *chan;
+
+	if (g_next_device == NULL) {
+		fprintf(stderr, "Not enough ioat channels found. Check that ioatdma driver is unloaded.\n");
+		return NULL;
+	}
+
+	chan = g_next_device->ioat;
+
+	g_next_device = TAILQ_NEXT(g_next_device, tailq);
+
+	return chan;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -400,10 +417,13 @@ main(int argc, char **argv)
 
 	dump_user_config(&g_user_config);
 
+	g_next_device = TAILQ_FIRST(&g_devices);
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+		threads[lcore_id].chan = get_next_chan();
 		rte_eal_remote_launch(work_fn, &threads[lcore_id], lcore_id);
 	}
 
+	threads[rte_get_master_lcore()].chan = get_next_chan();
 	if (work_fn(&threads[rte_get_master_lcore()]) != 0) {
 		rc = 1;
 		goto cleanup;
