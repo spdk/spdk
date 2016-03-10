@@ -244,7 +244,19 @@ get_controller(void)
 		p++;
 	}
 
-	sscanf(p, "%x:%x:%x.%x", &domain, &bus, &devid, &function);
+	if (sscanf(p, "%x:%x:%x.%x", &domain, &bus, &devid, &function) == 4) {
+		/* Matched a full address - all variables are initialized */
+	} else if (sscanf(p, "%x:%x:%x", &domain, &bus, &devid) == 3) {
+		function = 0;
+	} else if (sscanf(p, "%x:%x.%x", &bus, &devid, &function) == 3) {
+		domain = 0;
+	} else if (sscanf(p, "%x:%x", &bus, &devid) == 2) {
+		domain = 0;
+		function = 0;
+	} else {
+		return NULL;
+	}
+
 	pci_addr = (uint64_t)domain << 24;
 	pci_addr |= (uint64_t)bus << 16;
 	pci_addr |= (uint64_t)devid << 8;
