@@ -102,7 +102,7 @@
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
  *  segment.
  */
-#define NVME_MAX_SGL_DESCRIPTORS	(256)
+#define NVME_MAX_SGL_DESCRIPTORS	(253)
 
 /*
  * NVME_MAX_IO_ENTRIES is not defined, since it is specified in CC.MQES
@@ -251,6 +251,12 @@ struct nvme_tracker {
 		struct spdk_nvme_sgl_descriptor	sgl[NVME_MAX_SGL_DESCRIPTORS];
 	} u;
 };
+/*
+ * struct nvme_tracker must fit in 4K (min page size) so that the alignment math in
+ * nvme_qpair_construct() works correctly to ensure prp[] does not cross a page boundary.
+ */
+SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) <= 4096, "nvme_tracker too large");
+
 
 struct spdk_nvme_qpair {
 	volatile uint32_t		*sq_tdbl;
