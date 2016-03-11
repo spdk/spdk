@@ -68,14 +68,14 @@
  */
 #define NVME_INTEL_QUIRK_WRITE_LATENCY 0x2
 
-#define NVME_MAX_PRP_LIST_ENTRIES	(32)
+#define NVME_MAX_PRP_LIST_ENTRIES	(506)
 
 /*
  * For commands requiring more than 2 PRP entries, one PRP will be
  *  embedded in the command (prp1), and the rest of the PRP entries
  *  will be in a list pointed to by the command (prp2).  This means
- *  that real max number of PRP entries we support is 32+1, which
- *  results in a max xfer size of 32*PAGE_SIZE.
+ *  that real max number of PRP entries we support is 506+1, which
+ *  results in a max xfer size of 506*PAGE_SIZE.
  */
 #define NVME_MAX_XFER_SIZE	NVME_MAX_PRP_LIST_ENTRIES * PAGE_SIZE
 
