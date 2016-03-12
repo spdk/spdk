@@ -245,17 +245,25 @@ struct nvme_tracker {
 	struct nvme_request		*req;
 	uint16_t			cid;
 
+	uint16_t			rsvd1: 15;
+	uint16_t			active: 1;
+
+	uint32_t			rsvd2;
+
 	uint64_t			prp_sgl_bus_addr;
+
 	union {
 		uint64_t			prp[NVME_MAX_PRP_LIST_ENTRIES];
 		struct spdk_nvme_sgl_descriptor	sgl[NVME_MAX_SGL_DESCRIPTORS];
 	} u;
+
+	uint64_t			rsvd3;
 };
 /*
- * struct nvme_tracker must fit in 4K (min page size) so that the alignment math in
- * nvme_qpair_construct() works correctly to ensure prp[] does not cross a page boundary.
+ * struct nvme_tracker must be exactly 4K so that the prp[] array does not cross a page boundary
+ * and so that there is no padding required to meet alignment requirements.
  */
-SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) <= 4096, "nvme_tracker too large");
+SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) == 4096, "nvme_tracker is not 4K");
 
 
 struct spdk_nvme_qpair {
@@ -275,9 +283,12 @@ struct spdk_nvme_qpair {
 	LIST_HEAD(, nvme_tracker)	free_tr;
 	LIST_HEAD(, nvme_tracker)	outstanding_tr;
 
-	STAILQ_HEAD(, nvme_request)	queued_req;
+	/**
+	 * Array of trackers indexed by command ID.
+	 */
+	struct nvme_tracker		*tr;
 
-	struct nvme_tracker		**act_tr;
+	STAILQ_HEAD(, nvme_request)	queued_req;
 
 	uint16_t			id;
 

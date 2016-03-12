@@ -291,6 +291,7 @@ nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phy
 {
 	tr->prp_sgl_bus_addr = phys_addr + offsetof(struct nvme_tracker, u.prp);
 	tr->cid = cid;
+	tr->active = false;
 }
 
 static void
@@ -299,7 +300,7 @@ nvme_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr
 	struct nvme_request	*req;
 
 	req = tr->req;
-	qpair->act_tr[tr->cid] = tr;
+	qpair->tr[tr->cid].active = true;
 
 	/* Copy the command from the tracker to the submission queue. */
 	nvme_copy_command(&qpair->cmd[qpair->sq_tail], &req->cmd);
@@ -332,7 +333,7 @@ nvme_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *
 		nvme_qpair_print_completion(qpair, cpl);
 	}
 
-	qpair->act_tr[cpl->cid] = NULL;
+	qpair->tr[cpl->cid].active = false;
 
 	nvme_assert(cpl->cid == req->cmd.cid, ("cpl cid does not match cmd cid\n"));
 
@@ -493,9 +494,9 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		if (cpl->status.p != qpair->phase)
 			break;
 
-		tr = qpair->act_tr[cpl->cid];
+		tr = &qpair->tr[cpl->cid];
 
-		if (tr != NULL) {
+		if (tr->active) {
 			nvme_qpair_complete_tracker(qpair, tr, cpl, true);
 		} else {
 			nvme_printf(qpair->ctrlr,
@@ -566,26 +567,25 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	LIST_INIT(&qpair->outstanding_tr);
 	STAILQ_INIT(&qpair->queued_req);
 
-	for (i = 0; i < num_trackers; i++) {
-		/*
-		 * Round alignment up to next power of 2.  This ensures the PRP
-		 *  list embedded in the nvme_tracker object will not span a
-		 *  4KB boundary.
-		 */
-		tr = nvme_malloc("nvme_tr", sizeof(*tr), nvme_align32pow2(sizeof(*tr)), &phys_addr);
-		if (tr == NULL) {
-			nvme_printf(ctrlr, "nvme_tr failed\n");
-			goto fail;
-		}
-		nvme_qpair_construct_tracker(tr, i, phys_addr);
-		LIST_INSERT_HEAD(&qpair->free_tr, tr, list);
-	}
-
-	qpair->act_tr = calloc(num_trackers, sizeof(struct nvme_tracker *));
-	if (qpair->act_tr == NULL) {
-		nvme_printf(ctrlr, "alloc nvme_act_tr failed\n");
+	/*
+	 * Reserve space for all of the trackers in a single allocation.
+	 *   struct nvme_tracker must be padded so that its size is already a power of 2.
+	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
+	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
+	 */
+	qpair->tr = nvme_malloc("nvme_tr", num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
+	if (qpair->tr == NULL) {
+		nvme_printf(ctrlr, "nvme_tr failed\n");
 		goto fail;
 	}
+
+	for (i = 0; i < num_trackers; i++) {
+		tr = &qpair->tr[i];
+		nvme_qpair_construct_tracker(tr, i, phys_addr);
+		LIST_INSERT_HEAD(&qpair->free_tr, tr, list);
+		phys_addr += sizeof(struct nvme_tracker);
+	}
+
 	nvme_qpair_reset(qpair);
 	return 0;
 fail:
@@ -621,8 +621,6 @@ _nvme_admin_qpair_destroy(struct spdk_nvme_qpair *qpair)
 void
 nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_tracker	*tr;
-
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		_nvme_admin_qpair_destroy(qpair);
 	}
@@ -630,14 +628,8 @@ nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		nvme_free(qpair->cmd);
 	if (qpair->cpl)
 		nvme_free(qpair->cpl);
-	if (qpair->act_tr)
-		free(qpair->act_tr);
-
-	while (!LIST_EMPTY(&qpair->free_tr)) {
-		tr = LIST_FIRST(&qpair->free_tr);
-		LIST_REMOVE(tr, list);
-		nvme_free(tr);
-	}
+	if (qpair->tr)
+		nvme_free(qpair->tr);
 }
 
 /**

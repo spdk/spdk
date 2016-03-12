@@ -251,18 +251,17 @@ ut_insert_cq_entry(struct spdk_nvme_qpair *qpair, uint32_t slot)
 	nvme_alloc_request(&req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	memset(req, 0, sizeof(*req));
-	req->cmd.cid = slot;
 
 	tr = LIST_FIRST(&qpair->free_tr);
 	LIST_REMOVE(tr, list); /* remove tr from free_tr */
 	LIST_INSERT_HEAD(&qpair->outstanding_tr, tr, list);
-	tr->cid = slot;
+	req->cmd.cid = tr->cid;
 	tr->req = req;
-	qpair->act_tr[tr->cid] = tr;
+	qpair->tr[tr->cid].active = true;
 
 	cpl = &qpair->cpl[slot];
 	cpl->status.p = qpair->phase;
-	cpl->cid = slot;
+	cpl->cid = tr->cid;
 }
 
 static void
@@ -303,7 +302,7 @@ test3(void)
 	 * Extract its command ID to retrieve its tracker.
 	 */
 	cid = qpair.cmd[0].cid;
-	tr = qpair.act_tr[cid];
+	tr = &qpair.tr[cid];
 	SPDK_CU_ASSERT_FATAL(tr != NULL);
 
 	/*
@@ -382,7 +381,6 @@ test_sgl_req(void)
 
 	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
 	LIST_REMOVE(sgl_tr, list);
-	free(sgl_tr);
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
 
@@ -431,7 +429,6 @@ test_sgl_req(void)
 		}
 
 		LIST_REMOVE(sgl_tr, list);
-		free(sgl_tr);
 	}
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
@@ -487,15 +484,15 @@ static void test_nvme_qpair_fail(void)
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 	struct nvme_tracker		*tr_temp;
-	uint64_t			phys_addr = 0;
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 
-	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
-			      64, &phys_addr);
+	tr_temp = LIST_FIRST(&qpair.free_tr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
+	LIST_REMOVE(tr_temp, list);
 	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
+	tr_temp->req->cmd.cid = tr_temp->cid;
 
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
 	nvme_qpair_fail(&qpair);
@@ -563,7 +560,6 @@ static void test_nvme_qpair_destroy(void)
 	struct spdk_nvme_ctrlr		ctrlr = {};
 	struct spdk_nvme_registers	regs = {};
 	struct nvme_tracker		*tr_temp;
-	uint64_t			phys_addr = 0;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	ctrlr.regs = &regs;
@@ -572,22 +568,21 @@ static void test_nvme_qpair_destroy(void)
 
 	nvme_qpair_construct(&qpair, 1, 128, 32, &ctrlr);
 	nvme_qpair_destroy(&qpair);
-	CU_ASSERT(LIST_EMPTY(&qpair.free_tr));
 
 
 	nvme_qpair_construct(&qpair, 0, 128, 32, &ctrlr);
-	tr_temp = nvme_malloc("nvme_tracker", sizeof(struct nvme_tracker),
-			      64, &phys_addr);
+	tr_temp = LIST_FIRST(&qpair.free_tr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
+	LIST_REMOVE(tr_temp, list);
 	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
 	tr_temp->req->cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+	tr_temp->req->cmd.cid = tr_temp->cid;
 	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
 
 	nvme_qpair_destroy(&qpair);
 	CU_ASSERT(LIST_EMPTY(&qpair.outstanding_tr));
-	CU_ASSERT(LIST_EMPTY(&qpair.free_tr));
 }
 
 static void test_nvme_completion_is_retry(void)
