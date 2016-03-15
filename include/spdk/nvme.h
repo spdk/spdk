@@ -104,12 +104,12 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_de
  * will be reported.
  *
  * To stop using the the controller and release its associated resources,
- * call \ref nvme_detach with the spdk_nvme_ctrlr instance returned by this function.
+ * call \ref spdk_nvme_detach with the spdk_nvme_ctrlr instance returned by this function.
  */
 int spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb);
 
 /**
- * \brief Detaches specified device returned by \ref nvme_probe()'s attach_cb from the NVMe driver.
+ * \brief Detaches specified device returned by \ref spdk_nvme_probe()'s attach_cb from the NVMe driver.
  *
  * On success, the spdk_nvme_ctrlr handle is no longer valid.
  *
