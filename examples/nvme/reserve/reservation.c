@@ -116,10 +116,15 @@ get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	outstanding_commands = 0;
 
 	host_id = rte_malloc(NULL, 8, 0);
+	if (host_id == NULL) {
+		fprintf(stderr, "host_id allocation failed\n");
+		return -1;
+	}
 	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, 8,
 					    get_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
 	if (ret) {
 		fprintf(stdout, "Get Feature: Failed\n");
+		rte_free(host_id);
 		return -1;
 	}
 
@@ -133,6 +138,7 @@ get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 		fprintf(stdout, "Get Feature: Host Identifier 0x%"PRIx64"\n", *host_id);
 	}
 
+	rte_free(host_id);
 	return 0;
 }
 
@@ -147,6 +153,10 @@ set_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	cmd.cdw10 = SPDK_NVME_FEAT_HOST_IDENTIFIER;
 
 	host_id = rte_malloc(NULL, 8, 0);
+	if (host_id == NULL) {
+		fprintf(stderr, "host_id allocation failed\n");
+		return -1;
+	}
 	*host_id = HOST_ID;
 
 	outstanding_commands = 0;
