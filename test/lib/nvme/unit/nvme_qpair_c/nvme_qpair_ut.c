@@ -379,7 +379,7 @@ test_sgl_req(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
 	req->cmd.cdw10 = 10000;
-	req->cmd.cdw12 = 255 | 0;
+	req->cmd.cdw12 = 7 | 0;
 	req->payload_offset = 1;
 
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
@@ -397,7 +397,7 @@ test_sgl_req(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
 	req->cmd.cdw10 = 10000;
-	req->cmd.cdw12 = 255 | 0;
+	req->cmd.cdw12 = 7 | 0;
 	spdk_nvme_retry_count = 1;
 	fail_next_sge = true;
 
@@ -412,7 +412,7 @@ test_sgl_req(void)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
 	req->cmd.cdw10 = 10000;
-	req->cmd.cdw12 = 255 | 0;
+	req->cmd.cdw12 = 15 | 0;
 	req->payload_offset = 2;
 
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
@@ -420,11 +420,11 @@ test_sgl_req(void)
 	cleanup_submit_request_test(&qpair);
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
-	req = nvme_allocate_request(&payload, 33 * PAGE_SIZE, NULL, &io_req);
+	req = nvme_allocate_request(&payload, (NVME_MAX_PRP_LIST_ENTRIES + 1) * PAGE_SIZE, NULL, &io_req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
 	req->cmd.cdw10 = 10000;
-	req->cmd.cdw12 = 255 | 0;
+	req->cmd.cdw12 = 4095 | 0;
 
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
 
@@ -432,7 +432,7 @@ test_sgl_req(void)
 	CU_ASSERT(qpair.sq_tail == 1);
 	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
 	if (sgl_tr != NULL) {
-		for (i = 0; i < 32; i++) {
+		for (i = 0; i < NVME_MAX_PRP_LIST_ENTRIES; i++) {
 			CU_ASSERT(sgl_tr->u.prp[i] == (PAGE_SIZE * (i + 1)));
 		}
 
