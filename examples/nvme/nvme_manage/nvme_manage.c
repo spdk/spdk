@@ -240,6 +240,9 @@ get_controller(void)
 
 	while ((ch = getchar()) != '\n' && ch != EOF);
 	p = fgets(address, 64, stdin);
+	if (p == NULL) {
+		return NULL;
+	}
 
 	while (isspace(*p)) {
 		p++;
