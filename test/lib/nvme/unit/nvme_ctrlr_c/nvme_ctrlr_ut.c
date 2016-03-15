@@ -442,6 +442,7 @@ test_alloc_io_qpair_1(void)
 
 	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
+	SPDK_CU_ASSERT_FATAL(q0->qprio == 0);
 	/* Only 1 I/O qpair was allocated, so this should fail */
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0) == NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
@@ -450,9 +451,11 @@ test_alloc_io_qpair_1(void)
 	 * Now that the qpair has been returned to the free list,
 	 *  we should be able to allocate it again
 	 */
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 1);
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
+	SPDK_CU_ASSERT_FATAL(q0->qprio == 1);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 4) == NULL);
 
 	cleanup_qpairs(&ctrlr);
 }
@@ -470,18 +473,22 @@ test_alloc_io_qpair_2(void)
 	 */
 	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
-	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q0->qprio == 0);
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 1);
 	SPDK_CU_ASSERT_FATAL(q1 != NULL);
+	SPDK_CU_ASSERT_FATAL(q1->qprio == 1);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
 
 	/*
 	 * Allocate 2 qpairs and free them in the reverse order
 	 */
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 2);
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
-	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(q0->qprio == 2);
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 3);
 	SPDK_CU_ASSERT_FATAL(q1 != NULL);
+	SPDK_CU_ASSERT_FATAL(q1->qprio == 3);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
 
