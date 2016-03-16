@@ -34,7 +34,6 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <string.h>
-#include <sys/uio.h> /* for struct iovec */
 
 #include <rte_config.h>
 #include <rte_malloc.h>
@@ -68,10 +67,15 @@ static int num_devs = 0;
 
 static int io_complete_flag = 0;
 
+struct sgl_element {
+	void *base;
+	size_t len;
+};
+
 struct io_request {
 	int current_iov_index;
 	uint32_t current_iov_bytes_left;
-	struct iovec iovs[MAX_IOVS];
+	struct sgl_element iovs[MAX_IOVS];
 	int nseg;
 };
 
@@ -79,12 +83,12 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 {
 	int i;
 	uint32_t offset = 0;
-	struct iovec *iov;
+	struct sgl_element *iov;
 	struct io_request *req = (struct io_request *)cb_arg;
 
 	for (i = 0; i < req->nseg; i++) {
 		iov = &req->iovs[i];
-		offset += iov->iov_len;
+		offset += iov->len;
 		if (offset > sgl_offset)
 			break;
 	}
@@ -96,7 +100,7 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
-	struct iovec *iov;
+	struct sgl_element *iov;
 
 	if (req->current_iov_index >= req->nseg) {
 		*length = 0;
@@ -107,12 +111,12 @@ static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *leng
 	iov = &req->iovs[req->current_iov_index];
 
 	if (req->current_iov_bytes_left) {
-		*address = rte_malloc_virt2phy(iov->iov_base) + iov->iov_len - req->current_iov_bytes_left;
+		*address = rte_malloc_virt2phy(iov->base) + iov->len - req->current_iov_bytes_left;
 		*length = req->current_iov_bytes_left;
 		req->current_iov_bytes_left = 0;
 	} else {
-		*address = rte_malloc_virt2phy(iov->iov_base);
-		*length = iov->iov_len;
+		*address = rte_malloc_virt2phy(iov->base);
+		*length = iov->len;
 	}
 
 	req->current_iov_index++;
@@ -136,11 +140,11 @@ static uint32_t build_io_request_0(struct io_request *req)
 
 	req->nseg = 1;
 
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x800, 4);
-	req->iovs[0].iov_len = 0x800;
+	req->iovs[0].base = rte_zmalloc(NULL, 0x800, 4);
+	req->iovs[0].len = 0x800;
 
 	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
+		len += req->iovs[i].len;
 
 	return len;
 }
@@ -153,11 +157,11 @@ static uint32_t build_io_request_1(struct io_request *req)
 	req->nseg = 1;
 
 	/* 512B for 1st sge */
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x200, 0x200);
-	req->iovs[0].iov_len = 0x200;
+	req->iovs[0].base = rte_zmalloc(NULL, 0x200, 0x200);
+	req->iovs[0].len = 0x200;
 
 	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
+		len += req->iovs[i].len;
 
 	return len;
 }
@@ -170,11 +174,11 @@ static uint32_t build_io_request_2(struct io_request *req)
 	req->nseg = 1;
 
 	/* 256KB for 1st sge */
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x40000, 0x1000);
-	req->iovs[0].iov_len = 0x40000;
+	req->iovs[0].base = rte_zmalloc(NULL, 0x40000, 0x1000);
+	req->iovs[0].len = 0x40000;
 
 	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
+		len += req->iovs[i].len;
 
 	return len;
 }
@@ -200,19 +204,19 @@ static uint32_t build_io_request_3(struct io_request *req)
 	}
 	if (!found)
 		return 0;
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x800, 0x800);
-	req->iovs[0].iov_len = 0x800;
+	req->iovs[0].base = rte_zmalloc(NULL, 0x800, 0x800);
+	req->iovs[0].len = 0x800;
 
 	/* 4KB for 2th sge */
-	req->iovs[1].iov_base = rte_zmalloc(NULL, 0x1000, 0x1000);
-	req->iovs[1].iov_len = 0x1000;
+	req->iovs[1].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[1].len = 0x1000;
 
 	/* 12KB for 3th sge */
-	req->iovs[2].iov_base = rte_zmalloc(NULL, 0x3000, 0x1000);
-	req->iovs[2].iov_len = 0x3000;
+	req->iovs[2].base = rte_zmalloc(NULL, 0x3000, 0x1000);
+	req->iovs[2].len = 0x3000;
 
 	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
+		len += req->iovs[i].len;
 
 	return len;
 }
@@ -225,17 +229,17 @@ static uint32_t build_io_request_4(struct io_request *req)
 	req->nseg = 32;
 
 	/* 4KB for 1st sge */
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x1000, 0x1000);
-	req->iovs[0].iov_len = 0x1000;
+	req->iovs[0].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[0].len = 0x1000;
 
 	/* 8KB for the rest 31 sge */
 	for (i = 1; i < req->nseg; i++) {
-		req->iovs[i].iov_base = rte_zmalloc(NULL, 0x2000, 0x1000);
-		req->iovs[i].iov_len = 0x2000;
+		req->iovs[i].base = rte_zmalloc(NULL, 0x2000, 0x1000);
+		req->iovs[i].len = 0x2000;
 	}
 
 	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
+		len += req->iovs[i].len;
 
 	return len;
 }
@@ -248,11 +252,11 @@ static uint32_t build_io_request_5(struct io_request *req)
 	req->nseg = 1;
 
 	/* 8KB for 1st sge */
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x2000, 0x1000);
-	req->iovs[0].iov_len = 0x2000;
+	req->iovs[0].base = rte_zmalloc(NULL, 0x2000, 0x1000);
+	req->iovs[0].len = 0x2000;
 
 	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
+		len += req->iovs[i].len;
 
 	return len;
 }
@@ -265,15 +269,15 @@ static uint32_t build_io_request_6(struct io_request *req)
 	req->nseg = 2;
 
 	/* 4KB for 1st sge */
-	req->iovs[0].iov_base = rte_zmalloc(NULL, 0x1000, 0x1000);
-	req->iovs[0].iov_len = 0x1000;
+	req->iovs[0].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[0].len = 0x1000;
 
 	/* 4KB for 2st sge */
-	req->iovs[1].iov_base = rte_zmalloc(NULL, 0x1000, 0x1000);
-	req->iovs[1].iov_len = 0x1000;
+	req->iovs[1].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[1].len = 0x1000;
 
 	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].iov_len;
+		len += req->iovs[i].len;
 
 	return len;
 }
@@ -327,7 +331,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 
 	nseg = req->nseg;
 	for (i = 0; i < nseg; i++) {
-		memset(req->iovs[i].iov_base, DATA_PATTERN, req->iovs[i].iov_len);
+		memset(req->iovs[i].base, DATA_PATTERN, req->iovs[i].len);
 	}
 
 	rc = spdk_nvme_ns_cmd_writev(ns, qpair, BASE_LBA_START, lba_count,
@@ -358,7 +362,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	io_complete_flag = 0;
 
 	for (i = 0; i < nseg; i++) {
-		memset(req->iovs[i].iov_base, 0, req->iovs[i].iov_len);
+		memset(req->iovs[i].base, 0, req->iovs[i].len);
 	}
 
 	rc = spdk_nvme_ns_cmd_readv(ns, qpair, BASE_LBA_START, lba_count,
@@ -384,8 +388,8 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	}
 
 	for (i = 0; i < nseg; i++) {
-		buf = (char *)req->iovs[i].iov_base;
-		for (j = 0; j < req->iovs[i].iov_len; j++) {
+		buf = (char *)req->iovs[i].base;
+		for (j = 0; j < req->iovs[i].len; j++) {
 			if (buf[j] != DATA_PATTERN) {
 				fprintf(stderr, "%s: %s write/read success, but memcmp Failed\n", dev->name, test_name);
 				spdk_nvme_ctrlr_free_io_qpair(qpair);
