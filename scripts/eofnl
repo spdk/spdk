@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Make sure file has a trailing newline
+
+f="$1"
+
+if [ -z "$f" ]; then
+	echo "usage: $0 <file>"
+	exit 1
+fi
+
+if [[ -f "$f" && $(tail -c1 "$f") ]]; then
+	echo "$f: No newline at end of file"
+	echo '' >> "$f"
+	exit 1
+else
+	exit 0
+fi
