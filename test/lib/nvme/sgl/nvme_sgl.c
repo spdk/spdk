@@ -74,15 +74,15 @@ struct sgl_element {
 };
 
 struct io_request {
-	int current_iov_index;
+	uint32_t current_iov_index;
 	uint32_t current_iov_bytes_left;
 	struct sgl_element iovs[MAX_IOVS];
-	int nseg;
+	uint32_t nseg;
 };
 
 static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 {
-	int i;
+	uint32_t i;
 	uint32_t offset = 0;
 	struct sgl_element *iov;
 	struct io_request *req = (struct io_request *)cb_arg;
@@ -134,61 +134,34 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 		io_complete_flag = 1;
 }
 
-static uint32_t build_io_request_0(struct io_request *req)
+static void build_io_request_0(struct io_request *req)
 {
-	int i;
-	uint32_t len = 0;
-
 	req->nseg = 1;
 
 	req->iovs[0].base = rte_zmalloc(NULL, 0x800, 4);
 	req->iovs[0].len = 0x800;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].len;
-
-	return len;
 }
 
-static uint32_t build_io_request_1(struct io_request *req)
+static void build_io_request_1(struct io_request *req)
 {
-	int i;
-	uint32_t len = 0;
-
 	req->nseg = 1;
 
 	/* 512B for 1st sge */
 	req->iovs[0].base = rte_zmalloc(NULL, 0x200, 0x200);
 	req->iovs[0].len = 0x200;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].len;
-
-	return len;
 }
 
-static uint32_t build_io_request_2(struct io_request *req)
+static void build_io_request_2(struct io_request *req)
 {
-	int i;
-	uint32_t len = 0;
-
 	req->nseg = 1;
 
 	/* 256KB for 1st sge */
 	req->iovs[0].base = rte_zmalloc(NULL, 0x40000, 0x1000);
 	req->iovs[0].len = 0x40000;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].len;
-
-	return len;
 }
 
-static uint32_t build_io_request_3(struct io_request *req)
+static void build_io_request_3(struct io_request *req)
 {
-	int i;
-	uint32_t len = 0;
-
 	req->nseg = 3;
 
 	/* 2KB for 1st sge, make sure the iov address start at 0x800 boundary,
@@ -204,17 +177,11 @@ static uint32_t build_io_request_3(struct io_request *req)
 	/* 12KB for 3th sge */
 	req->iovs[2].base = rte_zmalloc(NULL, 0x3000, 0x1000);
 	req->iovs[2].len = 0x3000;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].len;
-
-	return len;
 }
 
-static uint32_t build_io_request_4(struct io_request *req)
+static void build_io_request_4(struct io_request *req)
 {
-	int i;
-	uint32_t len = 0;
+	uint32_t i;
 
 	req->nseg = 32;
 
@@ -227,35 +194,19 @@ static uint32_t build_io_request_4(struct io_request *req)
 		req->iovs[i].base = rte_zmalloc(NULL, 0x2000, 0x1000);
 		req->iovs[i].len = 0x2000;
 	}
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].len;
-
-	return len;
 }
 
-static uint32_t build_io_request_5(struct io_request *req)
+static void build_io_request_5(struct io_request *req)
 {
-	int i;
-	uint32_t len = 0;
-
 	req->nseg = 1;
 
 	/* 8KB for 1st sge */
 	req->iovs[0].base = rte_zmalloc(NULL, 0x2000, 0x1000);
 	req->iovs[0].len = 0x2000;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].len;
-
-	return len;
 }
 
-static uint32_t build_io_request_6(struct io_request *req)
+static void build_io_request_6(struct io_request *req)
 {
-	int i;
-	uint32_t len = 0;
-
 	req->nseg = 2;
 
 	/* 4KB for 1st sge */
@@ -265,14 +216,9 @@ static uint32_t build_io_request_6(struct io_request *req)
 	/* 4KB for 2st sge */
 	req->iovs[1].base = rte_zmalloc(NULL, 0x1000, 0x1000);
 	req->iovs[1].len = 0x1000;
-
-	for (i = 0; i < req->nseg; i++)
-		len += req->iovs[i].len;
-
-	return len;
 }
 
-typedef uint32_t (*nvme_build_io_req_fn_t)(struct io_request *req);
+typedef void (*nvme_build_io_req_fn_t)(struct io_request *req);
 
 static int
 writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const char *test_name)
@@ -305,7 +251,13 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	}
 
 	/* IO parameters setting */
-	len = build_io_fn(req);
+	build_io_fn(req);
+
+	len = 0;
+	for (i = 0; i < req->nseg; i++) {
+		len += req->iovs[i].len;
+	}
+
 	lba_count = len / spdk_nvme_ns_get_sector_size(ns);
 	if (!lba_count || (BASE_LBA_START + lba_count > (uint32_t)nsdata->nsze)) {
 		fprintf(stderr, "%s: %s Invalid IO length parameter\n", dev->name, test_name);
