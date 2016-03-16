@@ -69,6 +69,7 @@ static int io_complete_flag = 0;
 
 struct sgl_element {
 	void *base;
+	size_t offset;
 	size_t len;
 };
 
@@ -111,11 +112,11 @@ static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *leng
 	iov = &req->iovs[req->current_iov_index];
 
 	if (req->current_iov_bytes_left) {
-		*address = rte_malloc_virt2phy(iov->base) + iov->len - req->current_iov_bytes_left;
+		*address = rte_malloc_virt2phy(iov->base) + iov->offset + iov->len - req->current_iov_bytes_left;
 		*length = req->current_iov_bytes_left;
 		req->current_iov_bytes_left = 0;
 	} else {
-		*address = rte_malloc_virt2phy(iov->base);
+		*address = rte_malloc_virt2phy(iov->base) + iov->offset;
 		*length = iov->len;
 	}
 
@@ -185,26 +186,15 @@ static uint32_t build_io_request_2(struct io_request *req)
 
 static uint32_t build_io_request_3(struct io_request *req)
 {
-	int i, found = 0;
-	uint8_t *buf;
-	uint64_t v_addr;
+	int i;
 	uint32_t len = 0;
 
 	req->nseg = 3;
 
 	/* 2KB for 1st sge, make sure the iov address start at 0x800 boundary,
 	 *  and end with 0x1000 boundary */
-	for (i = 0; i < 8; i++) {
-		buf = rte_zmalloc(NULL, 0x800, 0x800);
-		v_addr = (uint64_t)buf;
-		if (v_addr & 0x800ULL) {
-			found = 1;
-			break;
-		}
-	}
-	if (!found)
-		return 0;
-	req->iovs[0].base = rte_zmalloc(NULL, 0x800, 0x800);
+	req->iovs[0].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[0].offset = 0x800;
 	req->iovs[0].len = 0x800;
 
 	/* 4KB for 2th sge */
@@ -331,7 +321,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 
 	nseg = req->nseg;
 	for (i = 0; i < nseg; i++) {
-		memset(req->iovs[i].base, DATA_PATTERN, req->iovs[i].len);
+		memset(req->iovs[i].base + req->iovs[i].offset, DATA_PATTERN, req->iovs[i].len);
 	}
 
 	rc = spdk_nvme_ns_cmd_writev(ns, qpair, BASE_LBA_START, lba_count,
@@ -362,7 +352,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	io_complete_flag = 0;
 
 	for (i = 0; i < nseg; i++) {
-		memset(req->iovs[i].base, 0, req->iovs[i].len);
+		memset(req->iovs[i].base + req->iovs[i].offset, 0, req->iovs[i].len);
 	}
 
 	rc = spdk_nvme_ns_cmd_readv(ns, qpair, BASE_LBA_START, lba_count,
@@ -388,7 +378,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	}
 
 	for (i = 0; i < nseg; i++) {
-		buf = (char *)req->iovs[i].base;
+		buf = (char *)req->iovs[i].base + req->iovs[i].offset;
 		for (j = 0; j < req->iovs[i].len; j++) {
 			if (buf[j] != DATA_PATTERN) {
 				fprintf(stderr, "%s: %s write/read success, but memcmp Failed\n", dev->name, test_name);
