@@ -54,7 +54,6 @@ struct rte_mempool *request_mempool;
 #define BASE_LBA_START 0x100000
 
 struct dev {
-	struct spdk_pci_device			*pci_dev;
 	struct spdk_nvme_ctrlr			*ctrlr;
 	char 					name[100];
 };
@@ -380,7 +379,6 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	dev = &devs[num_devs++];
 
 	dev->ctrlr = ctrlr;
-	dev->pci_dev = pci_dev;
 
 	snprintf(dev->name, sizeof(dev->name), "%04X:%02X:%02X.%02X",
 		 spdk_pci_device_get_domain(pci_dev),
