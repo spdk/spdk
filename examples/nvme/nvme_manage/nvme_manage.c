@@ -469,14 +469,17 @@ delete_ns(void)
 static void
 format_nvm(void)
 {
+	int					i;
 	int 					ns_id;
 	int					ses;
 	int					pil;
 	int					pi;
 	int					ms;
 	int					lbaf;
-	char				option;
+	char					option;
 	struct dev				*ctrlr;
+	struct spdk_nvme_ns			*ns;
+	const struct spdk_nvme_ns_data		*nsdata;
 
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
@@ -490,6 +493,7 @@ format_nvm(void)
 
 	if (ctrlr->cdata->fna.format_all_ns) {
 		ns_id = 0xffffffff;
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr->ctrlr, 1);
 	} else {
 		printf("Please Input Namespace ID (1 - %d): \n", ctrlr->cdata->nn);
 		if (!scanf("%d", &ns_id)) {
@@ -497,7 +501,16 @@ format_nvm(void)
 			while (getchar() != '\n');
 			return;
 		}
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr->ctrlr, ns_id);
 	}
+
+	if (ns == NULL) {
+		printf("Namespace ID %d not found\n", ns_id);
+		while (getchar() != '\n');
+		return;
+	}
+
+	nsdata = spdk_nvme_ns_get_data(ns);
 
 	printf("Please Input Secure Erase Setting: \n");
 	printf("	0: No secure erase operation requested\n");
@@ -538,7 +551,12 @@ format_nvm(void)
 		return;
 	}
 
-	printf("Please Input LBA Format Number (0 - 15): \n");
+	for (i = 0; i <= nsdata->nlbaf; i++) {
+		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
+		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
+	}
+
+	printf("Please Input LBA Format Number (0 - %d): \n", nsdata->nlbaf);
 	if (!scanf("%d", &lbaf)) {
 		printf("Invalid LBA format size\n");
 		while (getchar() != '\n');
