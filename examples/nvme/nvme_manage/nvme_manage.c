@@ -478,6 +478,7 @@ format_nvm(void)
 	int					lbaf;
 	char					option;
 	struct dev				*ctrlr;
+	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvme_ns			*ns;
 	const struct spdk_nvme_ns_data		*nsdata;
 
@@ -486,16 +487,19 @@ format_nvm(void)
 		printf("Invalid controller PCI BDF.\n");
 		return;
 	}
-	if (!ctrlr->cdata->oacs.format) {
+
+	cdata = ctrlr->cdata;
+
+	if (!cdata->oacs.format) {
 		printf("Controller does not support Format NVM command\n");
 		return;
 	}
 
-	if (ctrlr->cdata->fna.format_all_ns) {
+	if (cdata->fna.format_all_ns) {
 		ns_id = 0xffffffff;
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr->ctrlr, 1);
 	} else {
-		printf("Please Input Namespace ID (1 - %d): \n", ctrlr->cdata->nn);
+		printf("Please Input Namespace ID (1 - %d): \n", cdata->nn);
 		if (!scanf("%d", &ns_id)) {
 			printf("Invalid Namespace ID\n");
 			while (getchar() != '\n');
@@ -515,38 +519,11 @@ format_nvm(void)
 	printf("Please Input Secure Erase Setting: \n");
 	printf("	0: No secure erase operation requested\n");
 	printf("	1: User data erase\n");
-	printf("	2: Cryptographic erase\n");
+	if (cdata->fna.crypto_erase_supported) {
+		printf("	2: Cryptographic erase\n");
+	}
 	if (!scanf("%d", &ses)) {
 		printf("Invalid Secure Erase Setting\n");
-		while (getchar() != '\n');
-		return;
-	}
-
-	printf("Please Input Protection Information: \n");
-	printf("	0: Protection information is not enabled\n");
-	printf("	1: Protection information is enabled, Type 1\n");
-	printf("	2: Protection information is enabled, Type 2\n");
-	printf("	3: Protection information is enabled, Type 3\n");
-	if (!scanf("%d", &pi)) {
-		printf("Invalid protection information\n");
-		while (getchar() != '\n');
-		return;
-	}
-
-	printf("Please Input Protection Information Location: \n");
-	printf("	0: Protection information transferred as the last eight bytes of metadata\n");
-	printf("	1: Protection information transferred as the first eight bytes of metadata\n");
-	if (!scanf("%d", &pil)) {
-		printf("Invalid protection information location\n");
-		while (getchar() != '\n');
-		return;
-	}
-
-	printf("Please Input Metadata Setting: \n");
-	printf("	0: Metadata is transferred as part of a separate buffer\n");
-	printf("	1: Metadata is transferred as part of an extended data LBA\n");
-	if (!scanf("%d", &ms)) {
-		printf("Invalid metadata setting\n");
 		while (getchar() != '\n');
 		return;
 	}
@@ -561,6 +538,51 @@ format_nvm(void)
 		printf("Invalid LBA format size\n");
 		while (getchar() != '\n');
 		return;
+	}
+
+	if (lbaf > nsdata->nlbaf) {
+		printf("Invalid LBA format number\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	if (nsdata->lbaf[lbaf].ms) {
+		printf("Please Input Protection Information: \n");
+		printf("	0: Protection information is not enabled\n");
+		printf("	1: Protection information is enabled, Type 1\n");
+		printf("	2: Protection information is enabled, Type 2\n");
+		printf("	3: Protection information is enabled, Type 3\n");
+		if (!scanf("%d", &pi)) {
+			printf("Invalid protection information\n");
+			while (getchar() != '\n');
+			return;
+		}
+
+		if (pi) {
+			printf("Please Input Protection Information Location: \n");
+			printf("	0: Protection information transferred as the last eight bytes of metadata\n");
+			printf("	1: Protection information transferred as the first eight bytes of metadata\n");
+			if (!scanf("%d", &pil)) {
+				printf("Invalid protection information location\n");
+				while (getchar() != '\n');
+				return;
+			}
+		} else {
+			pil = 0;
+		}
+
+		printf("Please Input Metadata Setting: \n");
+		printf("	0: Metadata is transferred as part of a separate buffer\n");
+		printf("	1: Metadata is transferred as part of an extended data LBA\n");
+		if (!scanf("%d", &ms)) {
+			printf("Invalid metadata setting\n");
+			while (getchar() != '\n');
+			return;
+		}
+	} else {
+		ms = 0;
+		pi = 0;
+		pil = 0;
 	}
 
 	printf("Warning: use this utility at your own risk.\n"
