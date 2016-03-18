@@ -1,7 +1,7 @@
 set -xe
 ulimit -c unlimited
 
-MAKECONFIG='CONFIG_DEBUG=y'
+MAKECONFIG='CONFIG_DEBUG=y CONFIG_WERROR=y'
 
 case `uname` in
 	FreeBSD)

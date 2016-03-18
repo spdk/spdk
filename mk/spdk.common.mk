@@ -43,7 +43,11 @@ endif
 
 OS := $(shell uname)
 
-COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -Wstrict-prototypes -Werror -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
+COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -Wstrict-prototypes -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
+
+ifeq ($(CONFIG_WERROR), y)
+COMMON_CFLAGS += -Werror
+endif
 
 COMMON_CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
 
