@@ -183,6 +183,18 @@ display_controller(struct dev *dev, int model)
 	uint32_t				i;
 
 	cdata = spdk_nvme_ctrlr_get_data(dev->ctrlr);
+
+	if (model == CONTROLLER_DISPLAY_SIMPLISTIC) {
+		printf("%04x:%02x:%02x.%02x ",
+		       spdk_pci_device_get_domain(dev->pci_dev), spdk_pci_device_get_bus(dev->pci_dev),
+		       spdk_pci_device_get_dev(dev->pci_dev), spdk_pci_device_get_func(dev->pci_dev));
+		printf("%-40.40s %-20.20s ",
+		       cdata->mn, cdata->sn);
+		printf("%5d ", cdata->cntlid);
+		printf("\n");
+		return;
+	}
+
 	printf("=====================================================\n");
 	printf("NVMe Controller:	%04x:%02x:%02x.%02x\n",
 	       spdk_pci_device_get_domain(dev->pci_dev), spdk_pci_device_get_bus(dev->pci_dev),
@@ -193,8 +205,7 @@ display_controller(struct dev *dev, int model)
 	snprintf(str, sizeof(cdata->sn) + 1, "%s", cdata->sn);
 	printf("Serial Number:		%s\n", str);
 	printf("\n");
-	if (model == CONTROLLER_DISPLAY_SIMPLISTIC)
-		return;
+
 	printf("Admin Command Set Attributes\n");
 	printf("============================\n");
 	printf("Namespace Manage And Attach:		%s\n",
