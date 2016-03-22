@@ -264,6 +264,7 @@ struct nvme_tracker {
  * and so that there is no padding required to meet alignment requirements.
  */
 SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) == 4096, "nvme_tracker is not 4K");
+SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, u.sgl) & 7) == 0, "SGL must be Qword aligned");
 
 
 struct spdk_nvme_qpair {
