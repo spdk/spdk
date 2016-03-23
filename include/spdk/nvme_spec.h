@@ -54,7 +54,7 @@ extern "C" {
  */
 #define SPDK_NVME_GLOBAL_NS_TAG		((uint32_t)0xFFFFFFFF)
 
-#define SPDK_NVME_MAX_IO_QUEUES		(1 << 16)
+#define SPDK_NVME_MAX_IO_QUEUES		(65535)
 
 /**
  * Indicates the maximum number of range sets that may be specified
