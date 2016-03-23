@@ -1,6 +1,8 @@
 set -xe
 ulimit -c unlimited
 
+export RUN_NIGHTLY=0
+
 MAKECONFIG='CONFIG_DEBUG=y CONFIG_WERROR=y'
 
 case `uname` in

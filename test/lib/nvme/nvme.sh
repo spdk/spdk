@@ -16,9 +16,11 @@ $valgrind $testdir/unit/nvme_ctrlr_c/nvme_ctrlr_ut
 $valgrind $testdir/unit/nvme_ctrlr_cmd_c/nvme_ctrlr_cmd_ut
 timing_exit unit
 
-timing_enter aer
-$testdir/aer/aer
-timing_exit aer
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	timing_enter aer
+	$testdir/aer/aer
+	timing_exit aer
+fi
 
 timing_enter identify
 $rootdir/examples/nvme/identify/identify
