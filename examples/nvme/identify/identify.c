@@ -55,11 +55,13 @@ struct feature {
 
 static struct feature features[256];
 
-static struct spdk_nvme_health_information_page *health_page;
+static struct spdk_nvme_error_information_entry *error_page = NULL;
 
-static struct spdk_nvme_intel_smart_information_page *intel_smart_page;
+static struct spdk_nvme_health_information_page *health_page = NULL;
 
-static struct spdk_nvme_intel_temperature_page *intel_temperature_page;
+static struct spdk_nvme_intel_smart_information_page *intel_smart_page = NULL;
+
+static struct spdk_nvme_intel_temperature_page *intel_temperature_page = NULL;
 
 static bool g_hex_dump = false;
 
@@ -172,6 +174,30 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+get_error_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	if (error_page == NULL) {
+		error_page = rte_calloc("nvme error", cdata->elpe + 1, sizeof(*error_page), 4096);
+	}
+	if (error_page == NULL) {
+		printf("Allocation error (error page)\n");
+		exit(1);
+	}
+
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_ERROR,
+					     SPDK_NVME_GLOBAL_NS_TAG, error_page, sizeof(*error_page), get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+		exit(1);
+	}
+
+	return 0;
+}
+
+static int
 get_health_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (health_page == NULL) {
@@ -235,8 +261,16 @@ get_intel_temperature_log_page(struct spdk_nvme_ctrlr *ctrlr)
 static void
 get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
-	const struct spdk_nvme_ctrlr_data *ctrlr_data;
+	const struct spdk_nvme_ctrlr_data *cdata;
 	outstanding_commands = 0;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	if (get_error_log_page(ctrlr) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("Get Error Log Page failed\n");
+	}
 
 	if (get_health_log_page(ctrlr) == 0) {
 		outstanding_commands++;
@@ -244,8 +278,7 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		printf("Get Log Page (SMART/health) failed\n");
 	}
 
-	ctrlr_data = spdk_nvme_ctrlr_get_data(ctrlr);
-	if (ctrlr_data->vid == SPDK_PCI_VID_INTEL) {
+	if (cdata->vid == SPDK_PCI_VID_INTEL) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_SMART)) {
 			if (get_intel_smart_log_page(ctrlr) == 0) {
 				outstanding_commands++;
@@ -270,6 +303,10 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 static void
 cleanup(void)
 {
+	if (error_page) {
+		rte_free(error_page);
+		error_page = NULL;
+	}
 	if (health_page) {
 		rte_free(health_page);
 		health_page = NULL;
@@ -375,6 +412,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	uint8_t					str[128];
 	uint32_t				i;
+	struct spdk_nvme_error_information_entry *error_entry;
 
 	get_features(ctrlr);
 	get_log_pages(ctrlr);
@@ -425,27 +463,27 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 
 	printf("Admin Command Set Attributes\n");
 	printf("============================\n");
-	printf("Security Send/Receive:       %s\n",
+	printf("Security Send/Receive:                 %s\n",
 	       cdata->oacs.security ? "Supported" : "Not Supported");
-	printf("Format NVM:                  %s\n",
+	printf("Format NVM:                            %s\n",
 	       cdata->oacs.format ? "Supported" : "Not Supported");
-	printf("Firmware Activate/Download:  %s\n",
+	printf("Firmware Activate/Download:            %s\n",
 	       cdata->oacs.firmware ? "Supported" : "Not Supported");
-	printf("Abort Command Limit:         %d\n", cdata->acl + 1);
-	printf("Async Event Request Limit:   %d\n", cdata->aerl + 1);
-	printf("Number of Firmware Slots:    ");
+	printf("Abort Command Limit:                   %d\n", cdata->acl + 1);
+	printf("Async Event Request Limit:             %d\n", cdata->aerl + 1);
+	printf("Number of Firmware Slots:              ");
 	if (cdata->oacs.firmware != 0)
 		printf("%d\n", cdata->frmw.num_slots);
 	else
 		printf("N/A\n");
-	printf("Firmware Slot 1 Read-Only:   ");
+	printf("Firmware Slot 1 Read-Only:             ");
 	if (cdata->oacs.firmware != 0)
 		printf("%s\n", cdata->frmw.slot1_ro ? "Yes" : "No");
 	else
 		printf("N/A\n");
-	printf("Per-Namespace SMART Log:     %s\n",
+	printf("Per-Namespace SMART Log:               %s\n",
 	       cdata->lpa.ns_smart ? "Yes" : "No");
-	printf("Error Log Page Entries:      %d\n", cdata->elpe + 1);
+	printf("Error Log Page Entries Supported:      %d\n", cdata->elpe + 1);
 	printf("\n");
 
 	printf("NVM Command Set Attributes\n");
@@ -480,6 +518,33 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	       cdata->sgls.metadata_pointer_supported ? "Supported" : "Not Supported");
 	printf("  Oversized SGL:             %s\n",
 	       cdata->sgls.oversized_sgl_supported ? "Supported" : "Not Supported");
+	printf("\n");
+
+	printf("Error Log\n");
+	printf("=========\n");
+	for (i = 0; i <= cdata->elpe; i++) {
+		error_entry = &error_page[i];
+		if (error_entry->error_count == 0) {
+			continue;
+		}
+		if (i != 0) {
+			printf("-----------\n");
+		}
+
+		printf("Entry: %u\n", i);
+		printf("Error Count:            0x%"PRIx64"\n", error_entry->error_count);
+		printf("Submission Queue Id:    0x%x\n", error_entry->sqid);
+		printf("Command Id:             0x%x\n", error_entry->cid);
+		printf("Phase Bit:              %x\n", error_entry->status.p);
+		printf("Status Code:            0x%x\n", error_entry->status.sc);
+		printf("Status Code Type:       0x%x\n", error_entry->status.sct);
+		printf("Do Not Retry:           %x\n", error_entry->status.dnr);
+		printf("Error Location:         0x%x\n", error_entry->error_location);
+		printf("LBA:                    0x%"PRIx64"\n", error_entry->lba);
+		printf("Namespace:              0x%x\n", error_entry->nsid);
+		printf("Vendor Log Page:        0x%x\n", error_entry->vendor_specific);
+
+	}
 	printf("\n");
 
 	if (features[SPDK_NVME_FEAT_ARBITRATION].valid) {
