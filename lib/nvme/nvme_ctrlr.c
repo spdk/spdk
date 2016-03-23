@@ -628,6 +628,15 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 
 	status.done = false;
 
+	if (ctrlr->opts.num_io_queues > SPDK_NVME_MAX_IO_QUEUES) {
+		nvme_printf(ctrlr, "Limiting requested num_io_queues %u to max %d\n",
+			    ctrlr->opts.num_io_queues, SPDK_NVME_MAX_IO_QUEUES);
+		ctrlr->opts.num_io_queues = SPDK_NVME_MAX_IO_QUEUES;
+	} else if (ctrlr->opts.num_io_queues < 1) {
+		nvme_printf(ctrlr, "Requested num_io_queues 0, increasing to 1\n");
+		ctrlr->opts.num_io_queues = 1;
+	}
+
 	rc = nvme_ctrlr_cmd_set_num_queues(ctrlr, ctrlr->opts.num_io_queues,
 					   nvme_completion_poll_cb, &status);
 	if (rc != 0) {
