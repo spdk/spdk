@@ -397,8 +397,10 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->is_failed = true;
 	nvme_qpair_fail(&ctrlr->adminq);
-	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
-		nvme_qpair_fail(&ctrlr->ioq[i]);
+	if (ctrlr->ioq) {
+		for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
+			nvme_qpair_fail(&ctrlr->ioq[i]);
+		}
 	}
 }
 
@@ -1029,9 +1031,10 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_shutdown(ctrlr);
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
-
-	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
-		nvme_qpair_destroy(&ctrlr->ioq[i]);
+	if (ctrlr->ioq) {
+		for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
+			nvme_qpair_destroy(&ctrlr->ioq[i]);
+		}
 	}
 
 	free(ctrlr->ioq);
