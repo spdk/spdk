@@ -37,6 +37,9 @@ CONFIG_DEBUG?=n
 # Treat warnings as errors (fail the build on any warning).
 CONFIG_WERROR?=n
 
+# Build with link-time optimization.
+CONFIG_LTO?=n
+
 # Build with code coverage instrumentation.
 CONFIG_COVERAGE?=n
 

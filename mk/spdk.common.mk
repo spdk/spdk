@@ -34,6 +34,8 @@
 -include $(SPDK_ROOT_DIR)/CONFIG.local
 include $(SPDK_ROOT_DIR)/CONFIG
 
+-include $(SPDK_ROOT_DIR)/mk/cc.mk
+
 C_OPT ?= -fno-omit-frame-pointer
 ifneq ($(V),1)
 Q ?= @
@@ -52,6 +54,11 @@ COMMON_CFLAGS += -include $(SPDK_ROOT_DIR)/config.h
 
 ifeq ($(CONFIG_WERROR), y)
 COMMON_CFLAGS += -Werror
+endif
+
+ifeq ($(CONFIG_LTO),y)
+COMMON_CFLAGS += -flto
+LDFLAGS += -flto
 endif
 
 COMMON_CFLAGS += -Wformat -Wformat-security
@@ -149,7 +156,7 @@ LINK_CXX=\
 LIB_C=\
 	$(Q)echo "  LIB $(notdir $@)"; \
 	rm -f $@; \
-	ar crDs $@ $(OBJS)
+	$(CCAR) crDs $@ $(OBJS)
 
 # Clean up generated files listed as arguments plus a default list
 CLEAN_C=\

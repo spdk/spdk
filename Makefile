@@ -38,17 +38,23 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += lib test examples app
 
-.PHONY: all clean $(DIRS-y) config.h CONFIG.local
+.PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
+	$(Q)rm -f mk/cc.mk
 	$(Q)rm -f config.h
 
 app: lib
 test: lib
 examples: lib
 
-$(DIRS-y): config.h
+$(DIRS-y): mk/cc.mk config.h
+
+mk/cc.mk:
+	$(Q)scripts/detect_cc.sh --cc=$(CC) --cxx=$(CXX) --lto=$(CONFIG_LTO) > $@.tmp; \
+	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
+	rm -f $@.tmp
 
 config.h: CONFIG CONFIG.local scripts/genconfig.py
 	$(Q)python scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
