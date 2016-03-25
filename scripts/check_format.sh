@@ -30,7 +30,7 @@ else
 	exit 0
 fi
 
-git ls-files -z '*.c' '*.cpp' '*.h' '*.txt' '*.md' '*.mk' '*.txt' '*.sh' '*.py' | \
+git grep -I -l -e . -z | \
 	xargs -0 -P8 -n1 scripts/eofnl
 
 exit 0
