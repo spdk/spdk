@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "SPDK Userspace NVMe Driver"
+PROJECT_NAME           = "SPDK"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = output.nvme
+OUTPUT_DIRECTORY       = output
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -760,6 +760,8 @@ WARN_LOGFILE           =
 
 INPUT                  = ../lib/nvme \
                          ../include/spdk \
+                         mainpage.txt \
+                         ioat.index.txt \
                          nvme.index.txt
 
 # This tag can be used to specify the character encoding of the source files

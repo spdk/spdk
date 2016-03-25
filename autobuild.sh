@@ -57,11 +57,8 @@ timing_enter doxygen
 if hash doxygen; then
 	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS)
 	mkdir -p "$out"/doc
-	for d in "$rootdir"/doc/output.*; do
-		component=$(basename "$d" | sed -e 's/^output.//')
-		mv "$d"/html "$out"/doc/$component
-		rm -rf "$d"
-	done
+	mv "$rootdir"/doc/output/html "$out"/doc
+	rm -rf "$rootdir"/doc/output
 fi
 timing_exit doxygen
 

@@ -33,7 +33,7 @@
 
 /*!
 
-\mainpage SPDK Userspace I/OAT Driver
+\page ioat I/OAT Driver
 
 \section interface Public Interface
 

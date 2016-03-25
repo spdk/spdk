@@ -33,26 +33,11 @@
 
 /*!
 
-\page nvme NVMe Driver
+\mainpage SPDK Documentation
 
-\section interface Public Interface
+\section modules Modules
 
-- spdk/nvme.h
-
-\section key_functions Key Functions
-
-- spdk_nvme_probe() \copybrief spdk_nvme_probe()
-- spdk_nvme_ns_cmd_read() \copybrief spdk_nvme_ns_cmd_read()
-- spdk_nvme_ns_cmd_write() \copybrief spdk_nvme_ns_cmd_write()
-- spdk_nvme_ns_cmd_deallocate() \copybrief spdk_nvme_ns_cmd_deallocate()
-- spdk_nvme_ns_cmd_flush() \copybrief spdk_nvme_ns_cmd_flush()
-- spdk_nvme_qpair_process_completions() \copybrief spdk_nvme_qpair_process_completions()
-
-\section key_concepts Key Concepts
-
-- \ref nvme_driver_integration
-- \ref nvme_initialization
-- \ref nvme_io_submission
-- \ref nvme_async_completion
+- \ref nvme
+- \ref ioat
 
 */

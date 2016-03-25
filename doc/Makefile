@@ -1,15 +1,12 @@
-DOXYFILES = Doxyfile.ioat Doxyfile.nvme
-OUTPUT_DIRS = $(patsubst Doxyfile.%,output.%,$(DOXYFILES))
-
 all: doc
 
 .PHONY: all doc clean
 
-doc: $(OUTPUT_DIRS)
+doc: output
 
-output.%: Doxyfile.%
+output: Doxyfile
 	rm -rf $@
-	doxygen $^
+	doxygen Doxyfile
 
 clean:
-	rm -rf $(OUTPUT_DIRS)
+	rm -rf output
