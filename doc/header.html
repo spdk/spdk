@@ -9,10 +9,13 @@
 <!--BEGIN !PROJECT_NAME--><title>$title</title><!--END !PROJECT_NAME-->
 <link href="$relpath^tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="$relpath^jquery.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Roboto:400,900" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="$relpath^dynsections.js"></script>
 $treeview
 $search
 $mathjax
+<link href="http://www.spdk.io/css/bootstrap.min.css" rel="stylesheet">
+<link href="http://www.spdk.io/css/spdk.css" rel="stylesheet" type="text/css">
 <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
 $extrastylesheet
 </head>
@@ -20,36 +23,18 @@ $extrastylesheet
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
 
 <!--BEGIN TITLEAREA-->
-<div id="titlearea">
-<table cellspacing="0" cellpadding="0">
- <tbody>
- <tr style="height: 56px;">
-  <!--BEGIN PROJECT_LOGO-->
-  <td id="projectlogo"><img alt="Logo" src="$relpath^$projectlogo"/></td>
-  <!--END PROJECT_LOGO-->
-  <!--BEGIN PROJECT_NAME-->
-  <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">$projectname
-   <!--BEGIN PROJECT_NUMBER-->&#160;<span id="projectnumber">$projectnumber</span><!--END PROJECT_NUMBER-->
-   </div>
-   <!--BEGIN PROJECT_BRIEF--><div id="projectbrief">$projectbrief</div><!--END PROJECT_BRIEF-->
-  </td>
-  <!--END PROJECT_NAME-->
-  <!--BEGIN !PROJECT_NAME-->
-   <!--BEGIN PROJECT_BRIEF-->
-    <td style="padding-left: 0.5em;">
-    <div id="projectbrief">$projectbrief</div>
-    </td>
-   <!--END PROJECT_BRIEF-->
-  <!--END !PROJECT_NAME-->
-  <!--BEGIN DISABLE_INDEX-->
-   <!--BEGIN SEARCHENGINE-->
-   <td>$searchbox</td>
-   <!--END SEARCHENGINE-->
-  <!--END DISABLE_INDEX-->
- </tr>
- </tbody>
-</table>
-</div>
+<section id="page">
+  <div class="page-header">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="page-title">
+            <h1>Storage Performance Development Kit</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 <!--END TITLEAREA-->
 <!-- end header part -->

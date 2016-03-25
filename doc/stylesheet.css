@@ -1,20 +1,7 @@
-/* The standard CSS for doxygen 1.8.10 */
-
-body, table, div, p, dl {
-	font: 400 14px/22px Roboto,sans-serif;
-}
-
 /* @group Heading Levels */
 
 h1.groupheader {
 	font-size: 150%;
-}
-
-.title {
-	font: 400 14px/28px Roboto,sans-serif;
-	font-size: 150%;
-	font-weight: bold;
-	margin: 10px 2px;
 }
 
 h2.groupheader {
@@ -30,19 +17,6 @@ h2.groupheader {
 
 h3.groupheader {
 	font-size: 100%;
-}
-
-h1, h2, h3, h4, h5, h6 {
-	-webkit-transition: text-shadow 0.5s linear;
-	-moz-transition: text-shadow 0.5s linear;
-	-ms-transition: text-shadow 0.5s linear;
-	-o-transition: text-shadow 0.5s linear;
-	transition: text-shadow 0.5s linear;
-	margin-right: 15px;
-}
-
-h1.glow, h2.glow, h3.glow, h4.glow, h5.glow, h6.glow {
-	text-shadow: 0 0 15px cyan;
 }
 
 dt {
@@ -106,54 +80,6 @@ div.qindex, div.navpath {
 div.navtab {
 	margin-right: 15px;
 }
-
-/* @group Link Styling */
-
-a {
-	color: #3D578C;
-	font-weight: normal;
-	text-decoration: none;
-}
-
-.contents a:visited {
-	color: #4665A2;
-}
-
-a:hover {
-	text-decoration: underline;
-}
-
-a.qindex {
-	font-weight: bold;
-}
-
-a.qindexHL {
-	font-weight: bold;
-	background-color: #9CAFD4;
-	color: #ffffff;
-	border: 1px double #869DCA;
-}
-
-.contents a.qindexHL:visited {
-        color: #ffffff;
-}
-
-a.el {
-	font-weight: bold;
-}
-
-a.elRef {
-}
-
-a.code, a.code:visited, a.line, a.line:visited {
-	color: #4665A2; 
-}
-
-a.codeRef, a.codeRef:visited, a.lineRef, a.lineRef:visited {
-	color: #4665A2; 
-}
-
-/* @end */
 
 dl.el {
 	margin-left: -1cm;
@@ -265,16 +191,54 @@ div.groupText {
 	font-style: italic;
 }
 
-body {
-	background-color: white;
-	color: black;
-        margin: 0;
+div.contents {
+	margin-right: auto;
+	margin-left: auto;
+	padding-left: 15px;
+	padding-right: 15px;
+	margin-top: 50px;
+	margin-bottom: 100px;
+	font-size: 18px;
+	font-weight: 400;
 }
 
-div.contents {
-	margin-top: 10px;
-	margin-left: 12px;
-	margin-right: 8px;
+div.header {
+	margin-right: auto;
+	margin-left: auto;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+div.headertitle {
+	font-size: 36px;
+	margin-left: 0;
+	margin-right: 0;
+	margin-top: 20px;
+	margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+	div.contents, div.header {
+		width: 750px;
+		padding-left: 0;
+		padding-right: 0;
+	}
+}
+
+@media (min-width: 992px) {
+	div.contents, div.header {
+		width:970px;
+		padding-left: 0;
+		padding-right: 0;
+	}
+}
+
+@media (min-width: 1200px) {
+	div.contents, div.header {
+		width: 1170px;
+		padding-left: 0;
+		padding-right: 0;
+	}
 }
 
 td.indexkey {
@@ -1009,20 +973,6 @@ div.ingroups a
 	white-space: nowrap;
 }
 
-div.header
-{
-        background-image:url('nav_h.png');
-        background-repeat:repeat-x;
-	background-color: #F9FAFC;
-	margin:  0px;
-	border-bottom: 1px solid #C4CFE5;
-}
-
-div.headertitle
-{
-	padding: 5px 5px 5px 10px;
-}
-
 dl
 {
         padding: 0 0 0 10px;
@@ -1093,53 +1043,6 @@ dl.bug
 
 dl.section dd {
 	margin-bottom: 6px;
-}
-
-
-#projectlogo
-{
-	text-align: center;
-	vertical-align: bottom;
-	border-collapse: separate;
-}
- 
-#projectlogo img
-{ 
-	border: 0px none;
-}
- 
-#projectalign
-{
-        vertical-align: middle;
-}
-
-#projectname
-{
-	font: 300% Tahoma, Arial,sans-serif;
-	margin: 0px;
-	padding: 2px 0px;
-}
-    
-#projectbrief
-{
-	font: 120% Tahoma, Arial,sans-serif;
-	margin: 0px;
-	padding: 0px;
-}
-
-#projectnumber
-{
-	font: 50% Tahoma, Arial,sans-serif;
-	margin: 0px;
-	padding: 0px;
-}
-
-#titlearea
-{
-	padding: 0px;
-	margin: 0px;
-	width: 100%;
-	border-bottom: 1px solid #5373B4;
 }
 
 .image
