@@ -46,14 +46,7 @@ extern "C" {
 #ifdef static_assert
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
 #else
-/*
- * Fallback for older compilers that don't support static_assert
- *
- * The array size will expand to 0 if the condition is true, or
- * -1 if the condition is false (causing compilation to fail).
- */
-#define SPDK_STATIC_ASSERT(cond, msg) \
-        typedef char SPDK_CONCAT(SPDK_STATIC_ASSERT_, __LINE__)[!!(cond) - 1]
+#define SPDK_STATIC_ASSERT(cond, msg)
 #endif
 
 #ifdef __cplusplus
