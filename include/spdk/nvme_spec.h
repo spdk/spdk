@@ -295,11 +295,12 @@ struct __attribute__((packed)) spdk_nvme_sgl_descriptor {
 	uint32_t length;
 	uint8_t reserved[3];
 
+	/** SGL descriptor type specific */
+	uint8_t type_specific : 4;
+
 	/** SGL descriptor type */
 	uint8_t type : 4;
 
-	/** SGL descriptor type specific */
-	uint8_t type_specific : 4;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_sgl_descriptor) == 16, "Incorrect size");
 
