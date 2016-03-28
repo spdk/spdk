@@ -144,6 +144,37 @@ static void usage(void)
 }
 
 static void
+display_namespace_dpc(const struct spdk_nvme_ns_data *nsdata)
+{
+	if (nsdata->dpc.pit1 || nsdata->dpc.pit2 || nsdata->dpc.pit3) {
+		if (nsdata->dpc.pit1) {
+			printf("PIT1 ");
+		}
+
+		if (nsdata->dpc.pit2) {
+			printf("PIT2 ");
+		}
+
+		if (nsdata->dpc.pit3) {
+			printf("PIT3 ");
+		}
+	} else {
+		printf("Not Supported\n");
+		return;
+	}
+
+	if (nsdata->dpc.md_start && nsdata->dpc.md_end) {
+		printf("Location: Head or Tail\n");
+	} else if (nsdata->dpc.md_start) {
+		printf("Location: Head\n");
+	} else if (nsdata->dpc.md_end) {
+		printf("Location: Tail\n");
+	} else {
+		printf("Not Supported\n");
+	}
+}
+
+static void
 display_namespace(struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ns_data		*nsdata;
@@ -162,7 +193,7 @@ display_namespace(struct spdk_nvme_ns *ns)
 	printf("Utilization (in LBAs):       %lld (%lldM)\n",
 	       (long long)nsdata->nuse,
 	       (long long)nsdata->nuse / 1024 / 1024);
-	printf("Format Progress Indicator:	%s\n",
+	printf("Format Progress Indicator:   %s\n",
 	       nsdata->fpi.fpi_supported ? "Supported" : "Not Supported");
 	if (nsdata->fpi.fpi_supported && nsdata->fpi.percentage_remaining)
 		printf("Formatted Percentage:	%d%%\n", 100 - nsdata->fpi.percentage_remaining);
@@ -172,6 +203,16 @@ display_namespace(struct spdk_nvme_ns *ns)
 	for (i = 0; i <= nsdata->nlbaf; i++)
 		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
 		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
+	printf("Data Protection Capabilities:");
+	display_namespace_dpc(nsdata);
+	if (SPDK_NVME_FMT_NVM_PROTECTION_DISABLE == nsdata->dps.pit) {
+		printf("Data Protection Setting:     N/A\n");
+	} else {
+		printf("Data Protection Setting:     PIT%d Location: %s\n",
+		       nsdata->dps.pit, nsdata->dps.md_start ? "Head" : "Tail");
+	}
+	printf("Multipath IO and Sharing:    %s\n",
+	       nsdata->nmic.can_share ? "Supported" : "Not Supported");
 	printf("\n");
 }
 
@@ -328,7 +369,8 @@ ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
 }
 
 static void
-ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns_lbasize)
+ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns_lbasize,
+	      uint8_t ns_dps_type, uint8_t ns_dps_location, uint8_t ns_nmic)
 {
 	int ret = 0;
 	struct spdk_nvme_ns_data *ndata;
@@ -342,6 +384,11 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 	ndata->nsze = ns_size;
 	ndata->ncap = ns_capacity;
 	ndata->flbas.format = ns_lbasize;
+	if (SPDK_NVME_FMT_NVM_PROTECTION_DISABLE != ns_dps_type) {
+		ndata->dps.pit = ns_dps_type;
+		ndata->dps.md_start = ns_dps_location;
+	}
+	ndata->nmic.can_share = ns_nmic;
 	ret = spdk_nvme_ctrlr_create_ns(device->ctrlr, ndata);
 	if (ret) {
 		fprintf(stdout, "ns manage: Failed\n");
@@ -410,10 +457,13 @@ attach_and_detach_ns(int attachment_op)
 static void
 add_ns(void)
 {
-	uint64_t	ns_size;
-	uint64_t	ns_capacity;
-	int		ns_lbasize;
-	struct dev	*ctrlr;
+	uint64_t	ns_size		= 0;
+	uint64_t	ns_capacity	= 0;
+	int		ns_lbasize	= 0;
+	int 		ns_dps_type  	= 0;
+	int 		ns_dps_location = 0;
+	int	 	ns_nmic 	= 0;
+	struct dev	*ctrlr		= NULL;
 
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
@@ -447,7 +497,31 @@ add_ns(void)
 		return;
 	}
 
-	ns_manage_add(ctrlr, ns_size, ns_capacity, ns_lbasize);
+	printf("Please Input Data Protection Type (0 - 3): \n");
+	if (!scanf("%d", &ns_dps_type)) {
+		printf("Invalid Data Protection Type\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	if (SPDK_NVME_FMT_NVM_PROTECTION_DISABLE != ns_dps_type) {
+		printf("Please Input Data Protection Location (1: Head; 0: Tail): \n");
+		if (!scanf("%d", &ns_dps_location)) {
+			printf("Invalid Data Protection Location\n");
+			while (getchar() != '\n');
+			return;
+		}
+	}
+
+	printf("Please Input Multi-path IO and Sharing Capabilities (1: Share; 0: Private): \n");
+	if (!scanf("%d", &ns_nmic)) {
+		printf("Invalid Multi-path IO and Sharing Capabilities\n");
+		while (getchar() != '\n');
+		return;
+	}
+
+	ns_manage_add(ctrlr, ns_size, ns_capacity, ns_lbasize,
+		      ns_dps_type, ns_dps_location, ns_nmic);
 }
 
 static void
