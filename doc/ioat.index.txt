@@ -35,11 +35,11 @@
 
 \page ioat I/OAT Driver
 
-\section interface Public Interface
+\section ioat_interface Public Interface
 
 - spdk/ioat.h
 
-\section key_functions Key Functions
+\section ioat_key_functions Key Functions
 
 - spdk_ioat_probe() \copybrief spdk_ioat_probe()
 - spdk_ioat_get_dma_capabilities() \copybrief spdk_ioat_get_dma_capabilities()

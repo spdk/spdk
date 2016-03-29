@@ -35,11 +35,11 @@
 
 \page nvme NVMe Driver
 
-\section interface Public Interface
+\section nvme_interface Public Interface
 
 - spdk/nvme.h
 
-\section key_functions Key Functions
+\section nvme_key_functions Key Functions
 
 - spdk_nvme_probe() \copybrief spdk_nvme_probe()
 - spdk_nvme_ns_cmd_read() \copybrief spdk_nvme_ns_cmd_read()
@@ -48,7 +48,7 @@
 - spdk_nvme_ns_cmd_flush() \copybrief spdk_nvme_ns_cmd_flush()
 - spdk_nvme_qpair_process_completions() \copybrief spdk_nvme_qpair_process_completions()
 
-\section key_concepts Key Concepts
+\section nvme_key_concepts Key Concepts
 
 - \ref nvme_driver_integration
 - \ref nvme_initialization
