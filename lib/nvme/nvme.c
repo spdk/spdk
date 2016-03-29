@@ -33,10 +33,6 @@
 
 #include "nvme_internal.h"
 
-/** \file
- *
- */
-
 struct nvme_driver g_nvme_driver = {
 	.lock = NVME_MUTEX_INITIALIZER,
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_driver.init_ctrlrs),
@@ -44,27 +40,6 @@ struct nvme_driver g_nvme_driver = {
 };
 
 int32_t		spdk_nvme_retry_count;
-
-
-/**
- * \page nvme_initialization NVMe Initialization
-
-\msc
-
-	app [label="Application"], nvme [label="NVMe Driver"];
-	app=>nvme [label="nvme_probe()"];
-	app<<nvme [label="probe_cb(pci_dev)"];
-	nvme=>nvme [label="nvme_attach(devhandle)"];
-	nvme=>nvme [label="nvme_ctrlr_start(nvme_controller ptr)"];
-	nvme=>nvme [label="identify controller"];
-	nvme=>nvme [label="create queue pairs"];
-	nvme=>nvme [label="identify namespace(s)"];
-	app<<nvme [label="attach_cb(pci_dev, nvme_controller)"];
-	app=>app [label="create block devices based on controller's namespaces"];
-
-\endmsc
-
- */
 
 static struct spdk_nvme_ctrlr *
 nvme_attach(void *devhandle)

@@ -34,11 +34,6 @@
 #include "nvme_internal.h"
 #include "spdk/pci.h"
 
-/**
- * \file
- *
- */
-
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 

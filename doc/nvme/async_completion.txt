@@ -31,33 +31,40 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "nvme_internal.h"
+/**
 
-/* Intel specific data structures and functions. */
+\page nvme_async_completion NVMe Asynchronous Completion
 
-struct nvme_intel_quirk {
-	struct pci_id	id;
-	uint64_t	flags;
-};
+The userspace NVMe driver follows an asynchronous polled model for
+I/O completion.
 
-static const struct nvme_intel_quirk intel_p3x00[] = {
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3702}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3703}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3704}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3705}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3709}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x370a}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{0x0000, 0x0000, 0x0000, 0x0000}, 0												}
-};
+\section nvme_async_io I/O commands
 
-bool nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk)
-{
-	const struct nvme_intel_quirk *intel_quirk = intel_p3x00;
+The application may submit I/O from one or more threads on one or more queue pairs
+and must call spdk_nvme_qpair_process_completions()
+for each queue pair that submitted I/O.
 
-	while (intel_quirk->id.vendor_id) {
-		if (!memcmp(&intel_quirk->id, id, sizeof(*id)) && (intel_quirk->flags & quirk))
-			return true;
-		intel_quirk++;
-	}
-	return false;
-}
+When the application calls spdk_nvme_qpair_process_completions(),
+if the NVMe driver detects completed I/Os that were submitted on that queue,
+it will invoke the registered callback function
+for each I/O within the context of spdk_nvme_qpair_process_completions().
+
+\section nvme_async_admin Admin commands
+
+The application may submit admin commands from one or more threads
+and must call spdk_nvme_ctrlr_process_admin_completions()
+from at least one thread to receive admin command completions.
+The thread that processes admin completions need not be the same thread that submitted the
+admin commands.
+
+When the application calls spdk_nvme_ctrlr_process_admin_completions(),
+if the NVMe driver detects completed admin commands submitted from any thread,
+it will invote the registered callback function
+for each command within the context of spdk_nvme_ctrlr_process_admin_completions().
+
+It is the application's responsibility to manage the order of submitted admin commands.
+If certain admin commands must be submitted while no other commands are outstanding,
+it is the application's responsibility to enforce this rule
+using its own synchronization method.
+
+*/

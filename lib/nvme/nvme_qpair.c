@@ -33,11 +33,6 @@
 
 #include "nvme_internal.h"
 
-/**
- * \file
- *
- */
-
 static inline bool nvme_qpair_is_admin_queue(struct spdk_nvme_qpair *qpair)
 {
 	return qpair->id == 0;
@@ -418,42 +413,6 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 	return qpair->is_enabled;
 }
 
-/**
- * \page nvme_async_completion NVMe Asynchronous Completion
- *
- * The userspace NVMe driver follows an asynchronous polled model for
- * I/O completion.
- *
- * \section async_io I/O commands
- *
- * The application may submit I/O from one or more threads on one or more queue pairs
- * and must call spdk_nvme_qpair_process_completions()
- * for each queue pair that submitted I/O.
- *
- * When the application calls spdk_nvme_qpair_process_completions(),
- * if the NVMe driver detects completed I/Os that were submitted on that queue,
- * it will invoke the registered callback function
- * for each I/O within the context of spdk_nvme_qpair_process_completions().
- *
- * \section async_admin Admin commands
- *
- * The application may submit admin commands from one or more threads
- * and must call spdk_nvme_ctrlr_process_admin_completions()
- * from at least one thread to receive admin command completions.
- * The thread that processes admin completions need not be the same thread that submitted the
- * admin commands.
- *
- * When the application calls spdk_nvme_ctrlr_process_admin_completions(),
- * if the NVMe driver detects completed admin commands submitted from any thread,
- * it will invote the registered callback function
- * for each command within the context of spdk_nvme_ctrlr_process_admin_completions().
- *
- * It is the application's responsibility to manage the order of submitted admin commands.
- * If certain admin commands must be submitted while no other commands are outstanding,
- * it is the application's responsibility to enforce this rule
- * using its own synchronization method.
- */
-
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -623,18 +582,6 @@ nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	if (qpair->tr)
 		nvme_free(qpair->tr);
 }
-
-/**
- * \page nvme_io_submission NVMe I/O Submission
- *
- * I/O is submitted to an NVMe namespace using nvme_ns_cmd_xxx functions
- * defined in nvme_ns_cmd.c.  The NVMe driver submits the I/O request
- * as an NVMe submission queue entry on the nvme_qpair associated with
- * the logical core that submits the I/O.
- *
- * \sa nvme_ns_cmd_read, nvme_ns_cmd_write, nvme_ns_cmd_deallocate,
- *     nvme_ns_cmd_flush, nvme_get_ioq_idx
- */
 
 static void
 _nvme_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)

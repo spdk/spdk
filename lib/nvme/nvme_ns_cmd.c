@@ -33,11 +33,6 @@
 
 #include "nvme_internal.h"
 
-/**
- * \file
- *
- */
-
 static struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns,
 		const struct nvme_payload *payload, uint64_t lba,
 		uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
