@@ -96,6 +96,7 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_de
  * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver
  * to them if desired.
  *
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
  * \param probe_cb will be called once per NVMe device found in the system.
  * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
  * controller has been attached to the userspace driver.
@@ -321,6 +322,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 /**
  * \brief Get a specific log page from the NVMe controller.
  *
+ * \param ctrlr NVMe controller to query.
  * \param log_page The log page identifier.
  * \param nsid Depending on the log page, this may be 0, a namespace identifier, or SPDK_NVME_GLOBAL_NS_TAG.
  * \param payload The pointer to the payload buffer.
@@ -346,6 +348,7 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
 /**
  * \brief Set specific feature for the given NVMe controller.
  *
+ * \param ctrlr NVMe controller to manipulate.
  * \param feature The feature identifier.
  * \param cdw11 as defined by the specification for this command.
  * \param cdw12 as defined by the specification for this command.
@@ -372,6 +375,7 @@ int spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr,
 /**
  * \brief Get specific feature from given NVMe controller.
  *
+ * \param ctrlr NVMe controller to query.
  * \param feature The feature identifier.
  * \param cdw11 as defined by the specification for this command.
  * \param payload The pointer to the payload buffer.
@@ -395,8 +399,10 @@ int spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
- * \brief attach the specified namespace to controllers.
+ * \brief Attach the specified namespace to controllers.
  *
+ * \param ctrlr NVMe controller to use for command submission.
+ * \param nsid Namespace identifier for namespace to attach.
  * \param payload The pointer to the controller list.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
@@ -410,8 +416,10 @@ int spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			      struct spdk_nvme_ctrlr_list *payload);
 
 /**
- * \brief detach the specified namespace from controllers.
+ * \brief Detach the specified namespace from controllers.
  *
+ * \param ctrlr NVMe controller to use for command submission.
+ * \param nsid Namespace ID to detach.
  * \param payload The pointer to the controller list.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
@@ -425,9 +433,10 @@ int spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			      struct spdk_nvme_ctrlr_list *payload);
 
 /**
- * \brief create a namespace.
+ * \brief Create a namespace.
  *
- * \param payload The pointer to the nvme namespace data.
+ * \param ctrlr NVMe controller to create namespace on.
+ * \param payload The pointer to the NVMe namespace data.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
@@ -439,9 +448,10 @@ int spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 int spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data *payload);
 
 /**
- * \brief delete a namespace.
+ * \brief Delete a namespace.
  *
- * \param nsid the name space identifier.
+ * \param ctrlr NVMe controller to delete namespace from.
+ * \param nsid The namespace identifier.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
@@ -453,15 +463,17 @@ int spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns
 int spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 
 /**
- * \brief format NVMe.
+ * \brief Format NVM.
  *
- * \param nsid the name space identifier.
- * \param format the format information for the command.
+ * This function requests a low-level format of the media.
+ *
+ * \param ctrlr NVMe controller to format.
+ * \param nsid The namespace identifier.  May be SPDK_NVME_GLOBAL_NS_TAG to format all namespaces.
+ * \param format The format information for the command.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
  * This function is thread safe and can be called at any point after spdk_nvme_attach().
- *
  */
 int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			   struct spdk_nvme_format *format);
@@ -823,7 +835,6 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
  * nvme_alloc_request macro in nvme_impl.h
  *
  * This function is thread safe and can be called at any time.
- *
  */
 size_t spdk_nvme_request_size(void);
 
