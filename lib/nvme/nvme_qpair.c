@@ -454,14 +454,6 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
  * using its own synchronization method.
  */
 
-/**
- * \brief Checks for and processes completions on the specified qpair.
- *
- * For each completed command, the request's callback function will
- *  be called if specified as non-NULL when the request was submitted.
- *
- * \sa nvme_cb_fn_t
- */
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {

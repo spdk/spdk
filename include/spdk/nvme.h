@@ -246,11 +246,16 @@ int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
  * processes completions that are ready at the time of this function call. It does not
  * wait for outstanding commands to finish.
  *
+ * For each completed command, the request's callback function will
+ *  be called if specified as non-NULL when the request was submitted.
+ *
  * \param qpair Queue pair to check for completions.
  * \param max_completions Limit the number of completions to be processed in one call, or 0
  * for unlimited.
  *
  * \return Number of completions processed (may be 0) or negative on error.
+ *
+ * \sa spdk_nvme_cmd_cb
  *
  * This function may be called at any point while the controller is attached to
  *  the SPDK NVMe driver.
