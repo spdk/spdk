@@ -667,6 +667,7 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	 */
 	nvme_assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL, ("sgl payload type required\n"));
 	nvme_assert(req->payload.u.sgl.reset_sgl_fn != NULL, ("sgl reset callback required\n"));
+	nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
 	sgl = (struct spdk_nvme_sgl_descriptor *)tr->u.sgl;
@@ -676,7 +677,6 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	remaining_transfer_len = req->payload_size;
 
 	while (remaining_transfer_len > 0) {
-		nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
 		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
 		if (rc) {
 			_nvme_fail_request_bad_vtophys(qpair, tr);
