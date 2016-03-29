@@ -761,8 +761,8 @@ WARN_LOGFILE           =
 INPUT                  = ../lib/nvme \
                          ../include/spdk \
                          mainpage.txt \
-                         ioat.index.txt \
-                         nvme.index.txt
+                         ioat/index.txt \
+                         nvme/index.txt
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
