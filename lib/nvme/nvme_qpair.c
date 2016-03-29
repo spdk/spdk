@@ -671,7 +671,7 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
-	sgl = (struct spdk_nvme_sgl_descriptor *)tr->u.sgl;
+	sgl = tr->u.sgl;
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
 	req->cmd.dptr.sgl1.type_specific = 0;
 
