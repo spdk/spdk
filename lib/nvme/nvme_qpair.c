@@ -702,9 +702,15 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	}
 
 	if (nseg == 1) {
+		/*
+		 * The whole transfer can be described by a single SGL descriptor.
+		 *  Use the special case described by the spec where SGL1's type is Data Block.
+		 *  This means the SGL in the tracker is not used at all, so copy the first (and only)
+		 *  SGL element into SGL1.
+		 */
 		req->cmd.dptr.sgl1.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
-		req->cmd.dptr.sgl1.address = phys_addr;
-		req->cmd.dptr.sgl1.length = data_transfered;
+		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
+		req->cmd.dptr.sgl1.length = tr->u.sgl[0].length;
 	} else {
 		/* For now we can only support 1 SGL segment in NVMe controller */
 		req->cmd.dptr.sgl1.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
