@@ -44,8 +44,7 @@ nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 	struct nvme_request *child = child_arg;
 	struct nvme_request *parent = child->parent;
 
-	parent->num_children--;
-	TAILQ_REMOVE(&parent->children, child, child_tailq);
+	nvme_remove_child_request(parent, child);
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		memcpy(&parent->parent_status, cpl, sizeof(*cpl));

@@ -176,6 +176,14 @@ nvme_free_request(struct nvme_request *req)
 	nvme_dealloc_request(req);
 }
 
+void
+nvme_remove_child_request(struct nvme_request *parent,
+			  struct nvme_request *child)
+{
+	parent->num_children--;
+	TAILQ_REMOVE(&parent->children, child, child_tailq);
+}
+
 static void
 test1(void)
 {

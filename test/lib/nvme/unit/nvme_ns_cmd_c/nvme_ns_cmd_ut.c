@@ -191,7 +191,7 @@ split_test2(void)
 	CU_ASSERT(g_request->num_children == 2);
 
 	child = TAILQ_FIRST(&g_request->children);
-	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_remove_child_request(g_request, child);
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
@@ -200,7 +200,7 @@ split_test2(void)
 	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
-	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_remove_child_request(g_request, child);
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
@@ -247,7 +247,7 @@ split_test3(void)
 	SPDK_CU_ASSERT_FATAL(g_request->num_children == 2);
 
 	child = TAILQ_FIRST(&g_request->children);
-	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_remove_child_request(g_request, child);
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
@@ -256,7 +256,7 @@ split_test3(void)
 	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
-	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_remove_child_request(g_request, child);
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
@@ -306,7 +306,7 @@ split_test4(void)
 	SPDK_CU_ASSERT_FATAL(g_request->num_children == 3);
 
 	child = TAILQ_FIRST(&g_request->children);
-	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_remove_child_request(g_request, child);
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == (256 - 10) * 512);
@@ -318,7 +318,7 @@ split_test4(void)
 	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
-	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_remove_child_request(g_request, child);
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 128 * 1024);
@@ -330,7 +330,7 @@ split_test4(void)
 	nvme_free_request(child);
 
 	child = TAILQ_FIRST(&g_request->children);
-	TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	nvme_remove_child_request(g_request, child);
 	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
 	CU_ASSERT(child->num_children == 0);
 	CU_ASSERT(child->payload_size == 10 * 512);
@@ -355,10 +355,10 @@ test_cmd_child_request(void)
 	struct spdk_nvme_ctrlr		ctrlr;
 	struct spdk_nvme_qpair		qpair;
 	int				rc = 0;
-	struct nvme_request		*child;
+	struct nvme_request		*child, *tmp;
 	void				*payload;
 	uint64_t			lba = 0x1000;
-	uint32_t			i;
+	uint32_t			i = 0;
 	uint32_t			offset = 0;
 	uint32_t			sector_size = 512;
 	uint32_t			max_io_size = 128 * 1024;
@@ -383,9 +383,8 @@ test_cmd_child_request(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_request->num_children == 4);
 
-	for (i = 0; i < g_request->num_children; i++) {
-		child = TAILQ_FIRST(&g_request->children);
-		TAILQ_REMOVE(&g_request->children, child, child_tailq);
+	TAILQ_FOREACH_SAFE(child, &g_request->children, child_tailq, tmp) {
+		nvme_remove_child_request(g_request, child);
 		CU_ASSERT(child->payload_offset == offset);
 		CU_ASSERT(child->cmd.opc == SPDK_NVME_OPC_READ);
 		CU_ASSERT(child->cmd.nsid == ns.id);
@@ -393,6 +392,7 @@ test_cmd_child_request(void)
 		CU_ASSERT(child->cmd.cdw12 == ((sectors_per_max_io - 1) | 0));
 		offset += max_io_size;
 		nvme_free_request(child);
+		i++;
 	}
 
 	free(payload);
