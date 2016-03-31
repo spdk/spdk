@@ -813,10 +813,11 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
-	int			rc;
+	int			rc = 0;
 	struct nvme_tracker	*tr;
-	struct nvme_request	*child_req;
+	struct nvme_request	*child_req, *tmp;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	bool			child_req_failed = false;
 
 	if (ctrlr->is_failed) {
 		nvme_free_request(req);
@@ -830,13 +831,18 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		 * This is a split (parent) request. Submit all of the children but not the parent
 		 * request itself, since the parent is the original unsplit request.
 		 */
-		TAILQ_FOREACH(child_req, &req->children, child_tailq) {
-			rc = nvme_qpair_submit_request(qpair, child_req);
-			if (rc != 0) {
-				return rc;
+		TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
+			if (!child_req_failed) {
+				rc = nvme_qpair_submit_request(qpair, child_req);
+				if (rc != 0)
+					child_req_failed = true;
+			} else { /* free remaining child_reqs since one child_req fails */
+				nvme_remove_child_request(req, child_req);
+				nvme_free_request(child_req);
 			}
 		}
-		return 0;
+
+		return rc;
 	}
 
 	tr = LIST_FIRST(&qpair->free_tr);

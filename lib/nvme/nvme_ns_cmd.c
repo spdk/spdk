@@ -91,7 +91,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 	uint32_t		sector_size = ns->sector_size;
 	uint32_t		remaining_lba_count = lba_count;
 	uint32_t		offset = 0;
-	struct nvme_request	*child;
+	struct nvme_request	*child, *tmp;
 
 	while (remaining_lba_count > 0) {
 		lba_count = sectors_per_max_io - (lba & sector_mask);
@@ -100,7 +100,14 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 		child = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn,
 					cb_arg, opc, io_flags);
 		if (child == NULL) {
-			nvme_free_request(req);
+			if (req->num_children) {
+				/* free all child nvme_request  */
+				TAILQ_FOREACH_SAFE(child, &req->children,
+						   child_tailq, tmp) {
+					nvme_remove_child_request(req, child);
+					nvme_free_request(child);
+				}
+			}
 			return NULL;
 		}
 		child->payload_offset = offset;
