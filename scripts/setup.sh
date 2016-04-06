@@ -32,6 +32,11 @@ function linux_bind_driver() {
 
 	echo "$ven_dev_id" > "/sys/bus/pci/drivers/$driver_name/new_id" 2> /dev/null || true
 	echo "$bdf" > "/sys/bus/pci/drivers/$driver_name/bind" 2> /dev/null || true
+
+	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
+	if [ -e "/dev/vfio/$iommu_group" ]; then
+		chown "$username" "/dev/vfio/$iommu_group"
+	fi
 }
 
 function configure_linux {
@@ -69,6 +74,29 @@ function configure_linux {
 		mount -t hugetlbfs nodev /mnt/huge
 	fi
 	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
+
+	if [ "$driver_name" = "vfio-pci" ]; then
+		chown "$username" /dev/hugepages
+
+		MEMLOCK_AMNT=`ulimit -l`
+		if [ "$MEMLOCK_AMNT" != "unlimited" ] ; then
+			MEMLOCK_MB=`expr $MEMLOCK_AMNT / 1024`
+			echo ""
+			echo "Current user memlock limit: ${MEMLOCK_MB} MB"
+			echo ""
+			echo "This is the maximum amount of memory you will be"
+			echo "able to use with DPDK and VFIO if run as current user."
+			echo -n "To change this, please adjust limits.conf memlock "
+			echo "limit for current user."
+
+			if [ $MEMLOCK_AMNT -lt 65536 ] ; then
+				echo ""
+				echo "## WARNING: memlock limit is less than 64MB"
+				echo -n "## DPDK with VFIO may not be able to initialize "
+				echo "if run as current user."
+			fi
+		fi
+	fi
 }
 
 function reset_linux {
@@ -121,9 +149,20 @@ function reset_freebsd {
 
 NRHUGE=1024
 
-mode=$1
+username=$1
+mode=$2
+
+if [ "$username" = "reset" -o "$username" = "config" ]; then
+	mode="$username"
+	username=""
+fi
+
 if [ "$mode" == "" ]; then
 	mode="config"
+fi
+
+if [ "$username" = "" ]; then
+	username=`logname`
 fi
 
 if [ `uname` = Linux ]; then
@@ -139,4 +178,3 @@ else
 		reset_freebsd
 	fi
 fi
-
