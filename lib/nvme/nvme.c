@@ -136,6 +136,7 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
+	payload.md = NULL;
 
 	return nvme_allocate_request(&payload, payload_size, cb_fn, cb_arg);
 }

@@ -612,6 +612,7 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	uint64_t phys_addr;
 	void *seg_addr;
 	uint32_t nseg, cur_nseg, modulo, unaligned;
+	void *md_payload;
 	void *payload = req->payload.u.contig + req->payload_offset;
 
 	phys_addr = nvme_vtophys(payload);
@@ -624,6 +625,15 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	unaligned = phys_addr & (PAGE_SIZE - 1);
 	if (modulo || unaligned) {
 		nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+	}
+
+	if (req->payload.md) {
+		md_payload = req->payload.md + req->md_offset;
+		tr->req->cmd.mptr = nvme_vtophys(md_payload);
+		if (tr->req->cmd.mptr == NVME_VTOPHYS_ERROR) {
+			_nvme_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
 	}
 
 	tr->req->cmd.psdt = SPDK_NVME_PSDT_PRP;

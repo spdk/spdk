@@ -43,4 +43,8 @@ timing_enter sgl
 $testdir/sgl/sgl
 timing_exit sgl
 
+timing_enter e2edp
+$testdir/e2edp/nvme_dp
+timing_exit e2edp
+
 timing_exit nvme

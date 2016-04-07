@@ -1270,9 +1270,24 @@ struct spdk_nvme_format {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_format) == 4, "Incorrect size");
 
+struct spdk_nvme_protection_info {
+	uint16_t	guard;
+	uint16_t	app_tag;
+	uint32_t	ref_tag;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_protection_info) == 8, "Incorrect size");
+
 #define spdk_nvme_cpl_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
 
+/** Enable protection information checking of the Logical Block Reference Tag field */
+#define SPDK_NVME_IO_FLAGS_PRCHK_REFTAG (1U << 26)
+/** Enable protection information checking of the Application Tag field */
+#define SPDK_NVME_IO_FLAGS_PRCHK_APPTAG (1U << 27)
+/** Enable protection information checking of the Guard field */
+#define SPDK_NVME_IO_FLAGS_PRCHK_GUARD (1U << 28)
+/** The protection information is stripped or inserted when set this bit */
+#define SPDK_NVME_IO_FLAGS_PRACT (1U << 29)
 #define SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS (1U << 30)
 #define SPDK_NVME_IO_FLAGS_LIMITED_RETRY (1U << 31)
 

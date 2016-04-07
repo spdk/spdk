@@ -86,6 +86,15 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 	if (nsdata->nsrescap.raw) {
 		ns->flags |= SPDK_NVME_NS_RESERVATION_SUPPORTED;
 	}
+
+	ns->md_size = nsdata->lbaf[nsdata->flbas.format].ms;
+	ns->pi_type = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
+	if (nsdata->lbaf[nsdata->flbas.format].ms && nsdata->dps.pit) {
+		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
+		ns->pi_type = nsdata->dps.pit;
+		if (nsdata->flbas.extended)
+			ns->flags |= SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED;
+	}
 	return rc;
 }
 
@@ -136,6 +145,23 @@ uint32_t
 spdk_nvme_ns_get_flags(struct spdk_nvme_ns *ns)
 {
 	return ns->flags;
+}
+
+enum spdk_nvme_pi_type
+spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns) {
+	return ns->pi_type;
+}
+
+bool
+spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns)
+{
+	return (ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) ? true : false;
+}
+
+uint32_t
+spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
+{
+	return ns->md_size;
 }
 
 const struct spdk_nvme_ns_data *

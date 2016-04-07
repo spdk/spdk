@@ -534,6 +534,30 @@ uint64_t spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns);
 uint64_t spdk_nvme_ns_get_size(struct spdk_nvme_ns *ns);
 
 /**
+ * \brief Get the end-to-end data protection information type of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ */
+enum spdk_nvme_pi_type spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns);
+
+/**
+ * \brief Get the metadata size, in bytes, of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ */
+uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
+
+/**
+ * \brief True if the namespace can support extended LBA when end-to-end data protection enabled.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ */
+bool spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns);
+
+/**
  * \brief Namespace command support flags.
  */
 enum spdk_nvme_ns_flags {
@@ -541,6 +565,10 @@ enum spdk_nvme_ns_flags {
 	SPDK_NVME_NS_FLUSH_SUPPORTED		= 0x2, /**< The flush command is supported */
 	SPDK_NVME_NS_RESERVATION_SUPPORTED	= 0x4, /**< The reservation command is supported */
 	SPDK_NVME_NS_WRITE_ZEROES_SUPPORTED	= 0x8, /**< The write zeroes command is supported */
+	SPDK_NVME_NS_DPS_PI_SUPPORTED		= 0x10, /**< The end-to-end data protection is supported */
+	SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED	= 0x20, /**< The extended lba format is supported,
+							      metadata is transferred as a contiguous
+							      part of the logical block that it is associated with */
 };
 
 /**
@@ -620,6 +648,35 @@ int spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
 			    spdk_nvme_req_next_sge_cb next_sge_fn);
 
 /**
+ * \brief Submits a write I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the write I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload virtual address pointer to the data payload
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ * \param lba starting LBA to write the data
+ * \param lba_count length (in sectors) for the write operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined by the SPDK_NVME_IO_FLAGS_* entries
+ * 			in spdk/nvme_spec.h, for this I/O.
+ * \param apptag_mask application tag mask.
+ * \param apptag application tag to use end-to-end protection information.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				   void *payload, void *metadata,
+				   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+				   void *cb_arg, uint32_t io_flags,
+				   uint16_t apptag_mask, uint16_t apptag);
+
+/**
  * \brief Submits a write zeroes I/O to the specified NVMe namespace.
  *
  * \param ns NVMe namespace to submit the write zeroes I/O
@@ -689,6 +746,34 @@ int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
 			   spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
 			   spdk_nvme_req_next_sge_cb next_sge_fn);
+
+/**
+ * \brief Submits a read I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the read I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload virtual address pointer to the data payload
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ * \param lba starting LBA to read the data
+ * \param lba_count length (in sectors) for the read operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ * \param apptag_mask application tag mask.
+ * \param apptag application tag to use end-to-end protection information.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				  void *payload, void *metadata,
+				  uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+				  void *cb_arg, uint32_t io_flags,
+				  uint16_t apptag_mask, uint16_t apptag);
 
 /**
  * \brief Submits a deallocation request to the specified NVMe namespace.

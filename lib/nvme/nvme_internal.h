@@ -161,6 +161,9 @@ struct __attribute__((packed)) nvme_payload {
 		} sgl;
 	} u;
 
+	/** Virtual memory address of a single physically contiguous metadata buffer */
+	void *md;
+
 	/** \ref nvme_payload_type */
 	uint8_t type;
 };
@@ -187,6 +190,7 @@ struct nvme_request {
 	 * This is used for I/O commands that are split into multiple requests.
 	 */
 	uint32_t			payload_offset;
+	uint32_t			md_offset;
 
 	spdk_nvme_cmd_cb		cb_fn;
 	void				*cb_arg;
@@ -320,6 +324,8 @@ struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	uint32_t			stripe_size;
 	uint32_t			sector_size;
+	uint32_t			md_size;
+	uint32_t			pi_type;
 	uint32_t			sectors_per_max_io;
 	uint32_t			sectors_per_stripe;
 	uint16_t			id;
