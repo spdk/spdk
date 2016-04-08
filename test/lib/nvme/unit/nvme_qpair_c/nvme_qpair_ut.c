@@ -177,7 +177,7 @@ nvme_free_request(struct nvme_request *req)
 }
 
 void
-nvme_remove_child_request(struct nvme_request *parent,
+nvme_request_remove_child(struct nvme_request *parent,
 			  struct nvme_request *child)
 {
 	parent->num_children--;

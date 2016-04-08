@@ -549,7 +549,7 @@ struct nvme_request *nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb
 struct nvme_request *nvme_allocate_request_contig(void *buffer, uint32_t payload_size,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_free_request(struct nvme_request *req);
-void	nvme_remove_child_request(struct nvme_request *parent, struct nvme_request *child);
+void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
 bool	nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk);
 
 void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);

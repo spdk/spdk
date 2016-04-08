@@ -44,7 +44,7 @@ nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 	struct nvme_request *child = child_arg;
 	struct nvme_request *parent = child->parent;
 
-	nvme_remove_child_request(parent, child);
+	nvme_request_remove_child(parent, child);
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		memcpy(&parent->parent_status, cpl, sizeof(*cpl));
@@ -80,6 +80,13 @@ nvme_request_add_child(struct nvme_request *parent, struct nvme_request *child)
 	child->cb_arg = child;
 }
 
+void
+nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child)
+{
+	parent->num_children--;
+	TAILQ_REMOVE(&parent->children, child, child_tailq);
+}
+
 static struct nvme_request *
 _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 			   const struct nvme_payload *payload,
@@ -104,7 +111,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 				/* free all child nvme_request  */
 				TAILQ_FOREACH_SAFE(child, &req->children,
 						   child_tailq, tmp) {
-					nvme_remove_child_request(req, child);
+					nvme_request_remove_child(req, child);
 					nvme_free_request(child);
 				}
 			}

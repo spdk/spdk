@@ -147,14 +147,6 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 }
 
 void
-nvme_remove_child_request(struct nvme_request *parent,
-			  struct nvme_request *child)
-{
-	parent->num_children--;
-	TAILQ_REMOVE(&parent->children, child, child_tailq);
-}
-
-void
 nvme_free_request(struct nvme_request *req)
 {
 	nvme_assert(req != NULL, ("nvme_free_request(NULL)\n"));

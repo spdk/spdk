@@ -837,7 +837,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 				if (rc != 0)
 					child_req_failed = true;
 			} else { /* free remaining child_reqs since one child_req fails */
-				nvme_remove_child_request(req, child_req);
+				nvme_request_remove_child(req, child_req);
 				nvme_free_request(child_req);
 			}
 		}
