@@ -993,6 +993,12 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t	i;
 
+	while (!TAILQ_EMPTY(&ctrlr->active_io_qpairs)) {
+		struct spdk_nvme_qpair *qpair = TAILQ_FIRST(&ctrlr->active_io_qpairs);
+
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	}
+
 	nvme_ctrlr_shutdown(ctrlr);
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
