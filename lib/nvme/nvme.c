@@ -150,6 +150,8 @@ void
 nvme_free_request(struct nvme_request *req)
 {
 	nvme_assert(req != NULL, ("nvme_free_request(NULL)\n"));
+	nvme_assert(req->num_children == 0, ("num_children != 0\n"));
+
 	nvme_dealloc_request(req);
 }
 
