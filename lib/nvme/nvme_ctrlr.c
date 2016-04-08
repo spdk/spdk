@@ -860,6 +860,15 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
 			return 0;
 		} else {
+			if (csts.bits.rdy == 1) {
+				/*
+				 * Controller is in the process of shutting down.
+				 * We need to wait for RDY to become 0.
+				 */
+				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
+				return 0;
+			}
+
 			/*
 			 * Controller is currently disabled. We can jump straight to enabling it.
 			 */

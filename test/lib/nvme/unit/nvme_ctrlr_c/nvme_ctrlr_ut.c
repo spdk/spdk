@@ -426,6 +426,45 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 }
 
 static void
+test_nvme_ctrlr_init_en_0_rdy_1(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+
+	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
+
+	/*
+	 * Initial state: CC.EN = 0, CSTS.RDY = 1
+	 */
+	g_ut_nvme_regs.cc.bits.en = 0;
+	g_ut_nvme_regs.csts.bits.rdy = 1;
+
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr, NULL) == 0);
+	ctrlr.cdata.nn = 1;
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0);
+
+	/*
+	 * Transition to CSTS.RDY = 0.
+	 * init() should set CC.EN = 1.
+	 */
+	g_ut_nvme_regs.csts.bits.rdy = 0;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
+	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 1);
+
+	/*
+	 * Transition to CSTS.RDY = 1.
+	 */
+	g_ut_nvme_regs.csts.bits.rdy = 1;
+	CU_ASSERT(nvme_ctrlr_process_init(&ctrlr) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_READY);
+
+	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
+static void
 setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 {
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr, NULL) == 0);
@@ -608,6 +647,8 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_init_en_1_rdy_1) == NULL
 		|| CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0",
 			       test_nvme_ctrlr_init_en_0_rdy_0) == NULL
+		|| CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 1",
+			       test_nvme_ctrlr_init_en_0_rdy_1) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair 1", test_alloc_io_qpair_1) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair 2", test_alloc_io_qpair_2) == NULL
 		|| CU_add_test(suite, "test nvme_ctrlr function nvme_ctrlr_fail", test_nvme_ctrlr_fail) == NULL
