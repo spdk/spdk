@@ -399,53 +399,6 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static int
-nvme_ctrlr_wait_for_ready(struct spdk_nvme_ctrlr *ctrlr, int desired_ready_value)
-{
-	int ms_waited, ready_timeout_in_ms;
-	union spdk_nvme_csts_register csts;
-	union spdk_nvme_cap_lo_register cap_lo;
-
-	/* Get ready timeout value from controller, in units of 500ms. */
-	cap_lo.raw = nvme_mmio_read_4(ctrlr, cap_lo.raw);
-	ready_timeout_in_ms = cap_lo.bits.to * 500;
-
-	csts.raw = nvme_mmio_read_4(ctrlr, csts.raw);
-
-	ms_waited = 0;
-
-	while (csts.bits.rdy != desired_ready_value) {
-		nvme_delay(1000);
-		if (ms_waited++ > ready_timeout_in_ms) {
-			nvme_printf(ctrlr, "controller ready did not become %d "
-				    "within %d ms\n", desired_ready_value, ready_timeout_in_ms);
-			return ENXIO;
-		}
-		csts.raw = nvme_mmio_read_4(ctrlr, csts.raw);
-	}
-
-	return 0;
-}
-
-static void
-nvme_ctrlr_disable(struct spdk_nvme_ctrlr *ctrlr)
-{
-	union spdk_nvme_cc_register cc;
-	union spdk_nvme_csts_register csts;
-
-	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
-	csts.raw = nvme_mmio_read_4(ctrlr, csts.raw);
-
-	if (cc.bits.en == 1 && csts.bits.rdy == 0) {
-		nvme_ctrlr_wait_for_ready(ctrlr, 1);
-	}
-
-	cc.bits.en = 0;
-	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
-
-	nvme_ctrlr_wait_for_ready(ctrlr, 0);
-}
-
 static void
 nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1040,7 +993,6 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t	i;
 
-	nvme_ctrlr_disable(ctrlr);
 	nvme_ctrlr_shutdown(ctrlr);
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
