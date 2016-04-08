@@ -83,6 +83,11 @@ nvme_request_add_child(struct nvme_request *parent, struct nvme_request *child)
 void
 nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child)
 {
+	nvme_assert(parent != NULL, ("parent == NULL\n"));
+	nvme_assert(child != NULL, ("child == NULL\n"));
+	nvme_assert(child->parent == parent, ("child->parent != parent\n"));
+	nvme_assert(parent->num_children != 0, ("num_children == 0\n"));
+
 	parent->num_children--;
 	TAILQ_REMOVE(&parent->children, child, child_tailq);
 }
