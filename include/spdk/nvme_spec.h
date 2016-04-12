@@ -1243,12 +1243,12 @@ enum spdk_nvme_secure_erase_setting {
 	SPDK_NVME_FMT_NVM_SES_CRYPTO_ERASE	= 0x2,
 };
 
-enum spdk_nvme_protection_information_location {
+enum spdk_nvme_pi_location {
 	SPDK_NVME_FMT_NVM_PROTECTION_AT_TAIL	= 0x0,
 	SPDK_NVME_FMT_NVM_PROTECTION_AT_HEAD	= 0x1,
 };
 
-enum spdk_nvme_protection_information {
+enum spdk_nvme_pi_type {
 	SPDK_NVME_FMT_NVM_PROTECTION_DISABLE		= 0x0,
 	SPDK_NVME_FMT_NVM_PROTECTION_TYPE1		= 0x1,
 	SPDK_NVME_FMT_NVM_PROTECTION_TYPE2		= 0x2,
