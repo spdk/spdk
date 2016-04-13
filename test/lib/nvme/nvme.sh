@@ -6,6 +6,10 @@ testdir=$(readlink -f $(dirname $0))
 rootdir="$testdir/../../.."
 source $rootdir/scripts/autotest_common.sh
 
+function linux_iter_pci {
+	lspci -mm -n | grep $1 | tr -d '"' | awk -F " " '{print "0000:"$1}'
+}
+
 timing_enter nvme
 
 timing_enter unit
@@ -33,6 +37,16 @@ timing_exit perf
 timing_enter reserve
 $rootdir/examples/nvme/reserve/reserve
 timing_exit reserve
+
+if [ -d /usr/src/fio ]; then
+	timing_enter fio_plugin
+	for bdf in $(linux_iter_pci 0108); do
+		/usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename=${bdf//:/.}/1
+		break
+	done
+
+	timing_exit fio_plugin
+fi
 
 #Now test nvme reset function
 timing_enter reset
