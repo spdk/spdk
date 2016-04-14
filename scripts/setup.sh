@@ -11,6 +11,29 @@ function linux_iter_pci {
 	lspci -mm -n | grep $1 | tr -d '"' | awk -F " " '{print "0000:"$1}'
 }
 
+function linux_bind_driver() {
+	bdf="$1"
+	driver_name="$2"
+	old_driver_name="no driver"
+	ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
+
+	if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
+		old_driver_name=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
+
+		if [ "$driver_name" = "$old_driver_name" ]; then
+			return 0
+		fi
+
+		echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
+		echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
+	fi
+
+	echo "$bdf ($ven_dev_id): $old_driver_name -> $driver_name"
+
+	echo "$ven_dev_id" > "/sys/bus/pci/drivers/$driver_name/new_id" 2> /dev/null || true
+	echo "$bdf" > "/sys/bus/pci/drivers/$driver_name/bind" 2> /dev/null || true
+}
+
 function configure_linux {
 	driver_name=vfio-pci
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
@@ -21,14 +44,7 @@ function configure_linux {
 	# NVMe
 	modprobe $driver_name || true
 	for bdf in $(linux_iter_pci 0108); do
-		if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-			# Unbind the device from whatever driver it is currently bound to
-			echo $bdf > "/sys/bus/pci/devices/$bdf/driver/unbind"
-		fi
-		# Bind this device to the new driver
-		ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
-		echo "Binding $bdf ($ven_dev_id) to $driver_name"
-		echo $ven_dev_id > "/sys/bus/pci/drivers/$driver_name/new_id"
+		linux_bind_driver "$bdf" "$driver_name"
 	done
 
 
@@ -41,14 +57,7 @@ function configure_linux {
 	for dev_id in `cat $TMP`; do
 		# Abuse linux_iter_pci by giving it a device ID instead of a class code
 		for bdf in $(linux_iter_pci $dev_id); do
-			if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-				# Unbind the device from whatever driver it is currently bound to
-				echo $bdf > "/sys/bus/pci/devices/$bdf/driver/unbind"
-			fi
-			# Bind this device to the new driver
-			ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
-			echo "Binding $bdf ($ven_dev_id) to $driver_name"
-			echo $ven_dev_id > "/sys/bus/pci/drivers/$driver_name/new_id"
+			linux_bind_driver "$bdf" "$driver_name"
 		done
 	done
 	rm $TMP
@@ -60,16 +69,7 @@ function reset_linux {
 	# NVMe
 	modprobe nvme || true
 	for bdf in $(linux_iter_pci 0108); do
-		ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
-		if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-			# Unregister this device from the driver it was bound to.
-			echo $ven_dev_id > "/sys/bus/pci/devices/$bdf/driver/remove_id"
-			# Unbind the device from whatever driver it is currently bound to
-			echo $bdf > "/sys/bus/pci/devices/$bdf/driver/unbind"
-		fi
-		# Bind this device back to the nvme driver
-		echo "Binding $bdf ($ven_dev_id) to nvme"
-		echo $bdf > "/sys/bus/pci/drivers/nvme/bind"
+		linux_bind_driver "$bdf" nvme
 	done
 
 
@@ -83,16 +83,7 @@ function reset_linux {
 	for dev_id in `cat $TMP`; do
 		# Abuse linux_iter_pci by giving it a device ID instead of a class code
 		for bdf in $(linux_iter_pci $dev_id); do
-			ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
-			if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-				# Unregister this device from the driver it was bound to.
-				echo $ven_dev_id > "/sys/bus/pci/devices/$bdf/driver/remove_id"
-				# Unbind the device from whatever driver it is currently bound to
-				echo $bdf > "/sys/bus/pci/devices/$bdf/driver/unbind"
-			fi
-			# Bind this device back to the nvme driver
-			echo "Binding $bdf ($ven_dev_id) to ioatdma"
-			echo $bdf > "/sys/bus/pci/drivers/ioatdma/bind"
+			linux_bind_driver "$bdf" ioatdma
 		done
 	done
 	rm $TMP
