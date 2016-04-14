@@ -38,6 +38,7 @@
 #include "spdk/pci.h"
 #include "spdk/nvme_spec.h"
 #include <assert.h>
+#include <unistd.h>
 #include <rte_config.h>
 #include <rte_cycles.h>
 #include <rte_malloc.h>
@@ -231,6 +232,12 @@ nvme_driver_init(struct rte_pci_driver *dr, struct rte_pci_device *rte_dev)
 	 * TODO: refactor this so it's inside pci.c
 	 */
 	struct spdk_pci_device *pci_dev = (struct spdk_pci_device *)rte_dev;
+
+	/*
+	 * TODO: This is a workaround for an issue where the device is not ready after VFIO reset.
+	 * Figure out what is actually going wrong and remove this sleep.
+	 */
+	usleep(500 * 1000);
 
 	return g_nvme_pci_enum_ctx.user_enum_cb(g_nvme_pci_enum_ctx.user_enum_ctx, pci_dev);
 }
