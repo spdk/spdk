@@ -63,6 +63,12 @@ function configure_linux {
 	rm $TMP
 
 	echo "1" > "/sys/bus/pci/rescan"
+
+	if ! mount | grep -q hugetlbs; then
+		mkdir -p /mnt/huge
+		mount -t hugetlbfs nodev /mnt/huge
+	fi
+	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
 }
 
 function reset_linux {
@@ -101,12 +107,19 @@ function configure_freebsd {
 	kenv hw.nic_uio.bdfs=$BDFS
 	kldload nic_uio.ko
 	rm $TMP
+
+	kldunload contigmem.ko || true
+	kenv hw.contigmem.num_buffers=$((NRHUGE * 2 / 32))
+	kenv hw.contigmem.buffer_size=$((32 * 1024 * 1024))
+	kldload contigmem.ko
 }
 
 function reset_freebsd {
 	kldunload contigmem.ko || true
 	kldunload nic_uio.ko || true
 }
+
+NRHUGE=1024
 
 mode=$1
 if [ "$mode" == "" ]; then

@@ -35,7 +35,6 @@ fi
 
 # set up huge pages
 timing_enter afterboot
-./scripts/configure_hugepages.sh 1024
 ./scripts/setup.sh
 timing_exit afterboot
 
