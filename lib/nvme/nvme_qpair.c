@@ -730,7 +730,7 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 {
 	int rc;
 	uint64_t phys_addr;
-	uint32_t data_transfered, remaining_transfer_len, length;
+	uint32_t data_transferred, remaining_transfer_len, length;
 	uint32_t nseg, cur_nseg, total_nseg, last_nseg, modulo, unaligned;
 	uint32_t sge_count = 0;
 	uint64_t prp2 = 0;
@@ -754,10 +754,10 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 			return -1;
 		}
 
-		data_transfered = nvme_min(remaining_transfer_len, length);
+		data_transferred = nvme_min(remaining_transfer_len, length);
 
-		nseg = data_transfered >> nvme_u32log2(PAGE_SIZE);
-		modulo = data_transfered & (PAGE_SIZE - 1);
+		nseg = data_transferred >> nvme_u32log2(PAGE_SIZE);
+		modulo = data_transferred & (PAGE_SIZE - 1);
 		unaligned = phys_addr & (PAGE_SIZE - 1);
 		if (modulo || unaligned) {
 			nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
@@ -770,7 +770,7 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 
 		total_nseg += nseg;
 		sge_count++;
-		remaining_transfer_len -= data_transfered;
+		remaining_transfer_len -= data_transferred;
 
 		if (total_nseg == 2) {
 			if (sge_count == 1)
