@@ -47,6 +47,13 @@ extern "C" {
  */
 char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
+/**
+ * Convert string to lowercase in place.
+ *
+ * \param s String to convert to lowercase.
+ */
+char *spdk_strlwr(char *s);
+
 #ifdef __cplusplus
 }
 #endif

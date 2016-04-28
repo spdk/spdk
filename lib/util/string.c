@@ -1,6 +1,7 @@
 /*-
  *   BSD LICENSE
  *
+ *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
@@ -34,6 +35,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "spdk/string.h"
 
@@ -79,4 +81,22 @@ spdk_sprintf_alloc(const char *format, ...)
 	}
 
 	return NULL;
+}
+
+char *
+spdk_strlwr(char *s)
+{
+	char *p;
+
+	if (s == NULL) {
+		return NULL;
+	}
+
+	p = s;
+	while (*p != '\0') {
+		*p = tolower(*p);
+		p++;
+	}
+
+	return s;
 }
