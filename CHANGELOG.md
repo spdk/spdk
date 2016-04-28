@@ -29,13 +29,21 @@ user code.
   - Added hardware SGL support, which enables use of scattered buffers that
    don't conform to the PRP list alignment and length requirements on supported
    NVMe controllers.
+  - Added end-to-end data protection support, including the ability to write and
+  read metadata in extended LBA (metadata appended to each block of data in the
+  buffer) and separate metadata buffer modes.
+  See `spdk_nvme_ns_cmd_write_with_md()` and `spdk_nvme_ns_cmd_read_with_md()`
+  for details.
 - IOAT
   - The DMA block fill feature is now exposed via the `ioat_submit_fill()`
   function.  This is functionally similar to `memset()`, except the memory is
   filled with an 8-byte repeating pattern instead of a single byte like memset.
 - PCI
   - Added support for using DPDK for PCI device mapping in addition to the
-  existing libpciaccess option.
+  existing libpciaccess option.  Using the DPDK PCI support also allows use of
+  the Linux VFIO driver model, which means that SPDK userspace drivers will work
+  with the IOMMU enabled.  Additionally, SPDK applications may be run as an
+  unprivileged user with access restricted to a specific set of PCIe devices.
   - The PCI library API was made more generic to abstract away differences
   between the underlying PCI access implementations.
 
