@@ -67,6 +67,13 @@ char *spdk_strlwr(char *s);
  */
 char *spdk_strsepq(char **stringp, const char *delim);
 
+/**
+ * Trim whitespace from a string in place.
+ *
+ * \param s String to trim.
+ */
+char *spdk_str_trim(char *s);
+
 #ifdef __cplusplus
 }
 #endif

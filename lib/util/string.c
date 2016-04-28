@@ -166,3 +166,37 @@ spdk_strsepq(char **stringp, const char *delim)
 
 	return p;
 }
+
+char *
+spdk_str_trim(char *s)
+{
+	char *p, *q;
+
+	if (s == NULL) {
+		return NULL;
+	}
+
+	/* remove header */
+	p = s;
+	while (*p != '\0' && isspace(*p)) {
+		p++;
+	}
+
+	/* remove tailer */
+	q = p + strlen(p);
+	while (q - 1 >= p && isspace(*(q - 1))) {
+		q--;
+		*q = '\0';
+	}
+
+	/* if remove header, move */
+	if (p != s) {
+		q = s;
+		while (*p != '\0') {
+			*q++ = *p++;
+		}
+		*q = '\0';
+	}
+
+	return s;
+}
