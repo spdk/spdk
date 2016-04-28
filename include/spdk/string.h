@@ -54,6 +54,19 @@ char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 
  */
 char *spdk_strlwr(char *s);
 
+/**
+ * Parse a delimited string with quote handling.
+ *
+ * \param stringp Pointer to starting location in string. *stringp will be updated to point to the
+ * start of the next field, or NULL if the end of the string has been reached.
+ * \param delim Null-terminated string containing the list of accepted delimiters.
+ *
+ * \return Pointer to beginning of the current field.
+ *
+ * Note that the string will be modified in place to add the string terminator to each field.
+ */
+char *spdk_strsepq(char **stringp, const char *delim);
+
 #ifdef __cplusplus
 }
 #endif

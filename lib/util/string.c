@@ -35,6 +35,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 
 #include "spdk/string.h"
@@ -99,4 +100,69 @@ spdk_strlwr(char *s)
 	}
 
 	return s;
+}
+
+char *
+spdk_strsepq(char **stringp, const char *delim)
+{
+	char *p, *q, *r;
+	int quoted = 0, bslash = 0;
+
+	p = *stringp;
+	if (p == NULL) {
+		return NULL;
+	}
+
+	r = q = p;
+	while (*q != '\0' && *q != '\n') {
+		/* eat quoted characters */
+		if (bslash) {
+			bslash = 0;
+			*r++ = *q++;
+			continue;
+		} else if (quoted) {
+			if (quoted == '"' && *q == '\\') {
+				bslash = 1;
+				q++;
+				continue;
+			} else if (*q == quoted) {
+				quoted = 0;
+				q++;
+				continue;
+			}
+			*r++ = *q++;
+			continue;
+		} else if (*q == '\\') {
+			bslash = 1;
+			q++;
+			continue;
+		} else if (*q == '"' || *q == '\'') {
+			quoted = *q;
+			q++;
+			continue;
+		}
+
+		/* separator? */
+		if (strchr(delim, *q) == NULL) {
+			*r++ = *q++;
+			continue;
+		}
+
+		/* new string */
+		q++;
+		break;
+	}
+	*r = '\0';
+
+	/* skip tailer */
+	while (*q != '\0' && strchr(delim, *q) != NULL) {
+		q++;
+	}
+	if (*q != '\0') {
+		*stringp = q;
+	} else {
+		*stringp = NULL;
+	}
+
+	return p;
 }
