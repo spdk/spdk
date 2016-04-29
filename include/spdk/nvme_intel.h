@@ -31,6 +31,14 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * \file
+ * Intel NVMe vendor-specific definitions
+ *
+ * Reference:
+ * http://www.intel.com/content/dam/www/public/us/en/documents/product-specifications/ssd-dc-p3700-spec.pdf
+ */
+
 #ifndef SPDK_NVME_INTEL_H
 #define SPDK_NVME_INTEL_H
 
@@ -42,13 +50,6 @@ extern "C" {
 #include <stddef.h>
 
 #include "spdk/assert.h"
-
-/**
- * \file
- *
- * reference:
- * http://www.intel.com/content/dam/www/public/us/en/documents/product-specifications/ssd-dc-p3700-spec.pdf
- */
 
 enum spdk_nvme_intel_feat {
 	SPDK_NVME_INTEL_FEAT_MAX_LBA				= 0xC1,

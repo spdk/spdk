@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * PCI device ID list
+ */
+
 #ifndef SPDK_PCI_IDS
 #define SPDK_PCI_IDS
 

@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * NVMe driver public API
+ */
+
 #ifndef SPDK_NVME_H
 #define SPDK_NVME_H
 
@@ -43,10 +47,6 @@ extern "C" {
 #include <stdint.h>
 #include "spdk/pci.h"
 #include "nvme_spec.h"
-
-/** \file
- *
- */
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;

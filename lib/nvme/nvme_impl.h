@@ -31,6 +31,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * \file
+ * NVMe driver integration callbacks
+ *
+ * This file describes the callback functions required to integrate
+ * the userspace NVMe driver for a specific implementation.  This
+ * implementation is specific for DPDK.  Users would
+ * revise it as necessary for their own particular environment if not
+ * using it within the DPDK framework.
+ */
+
 #ifndef __NVME_IMPL_H__
 #define __NVME_IMPL_H__
 
@@ -54,16 +65,6 @@
 #include "spdk/pci.h"
 #include "spdk/pci_ids.h"
 #include "spdk/nvme_spec.h"
-
-/**
- * \file
- *
- * This file describes the callback functions required to integrate
- * the userspace NVMe driver for a specific implementation.  This
- * implementation is specific for DPDK for Storage.  Users would
- * revise it as necessary for their own particular environment if not
- * using it within the DPDK for Storage framework.
- */
 
 /**
  * \page nvme_driver_integration NVMe Driver Integration

@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * PCI driver abstraction layer
+ */
+
 #ifndef SPDK_PCI_H
 #define SPDK_PCI_H
 

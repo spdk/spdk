@@ -31,6 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * \file
+ * NVMe specification definitions
+ */
+
 #ifndef SPDK_NVME_SPEC_H
 #define SPDK_NVME_SPEC_H
 
@@ -42,11 +47,6 @@ extern "C" {
 #include <stddef.h>
 
 #include "spdk/assert.h"
-
-/**
- * \file
- *
- */
 
 /**
  * Use to mark a command to apply to all namespaces, or to retrieve global

@@ -31,6 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * \file
+ * I/OAT specification definitions
+ */
+
 #ifndef SPDK_IOAT_SPEC_H
 #define SPDK_IOAT_SPEC_H
 

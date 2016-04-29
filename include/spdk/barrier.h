@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * Memory barriers
+ */
+
 #ifndef SPDK_BARRIER_H
 #define SPDK_BARRIER_H
 

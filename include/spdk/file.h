@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * OS filesystem utility functions
+ */
+
 #ifndef SPDK_FILE_H
 #define SPDK_FILE_H
 

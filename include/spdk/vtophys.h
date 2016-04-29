@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * Virtual to physical address translation
+ */
+
 #ifndef SPDK_VTOPHYS_H
 #define SPDK_VTOPHYS_H
 

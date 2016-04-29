@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * String utility functions
+ */
+
 #ifndef SPDK_STRING_H
 #define SPDK_STRING_H
 

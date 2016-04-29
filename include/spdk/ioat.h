@@ -32,7 +32,7 @@
  */
 
 /** \file
- * This file defines the public interface to the I/OAT DMA engine driver.
+ * I/OAT DMA engine driver public interface
  */
 
 #ifndef SPDK_IOAT_H

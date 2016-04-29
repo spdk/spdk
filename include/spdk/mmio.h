@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * Memory-mapped I/O utility functions
+ */
+
 #ifndef SPDK_MMIO_H
 #define SPDK_MMIO_H
 

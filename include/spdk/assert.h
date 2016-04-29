@@ -31,6 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file
+ * Runtime and compile-time assert macros
+ */
+
 #ifndef SPDK_ASSERT_H
 #define SPDK_ASSERT_H
 
