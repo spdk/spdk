@@ -253,6 +253,21 @@ nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_
 	return 0;
 }
 
+int
+nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_fw_commit *fw_commit,
+			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
+				 uint32_t size, uint32_t offset, void *payload,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
 void
 nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {

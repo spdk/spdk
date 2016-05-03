@@ -479,6 +479,21 @@ int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			   struct spdk_nvme_format *format);
 
 /**
+ * \brief Download a new firmware image.
+ *
+ * \param payload The data buffer for the firmware image.
+ * \param size The data size will be downloaded.
+ * \param slot The slot that the firmware image will be committed to.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request,
+ * -1 if the size is not multiple of 4.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ */
+int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
+				    int slot);
+
+/**
  * \brief Get the identify namespace data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point while the controller is attached to

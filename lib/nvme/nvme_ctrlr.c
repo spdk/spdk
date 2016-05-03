@@ -1205,3 +1205,74 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
 }
+
+int
+spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
+				int slot)
+{
+	struct spdk_nvme_fw_commit		fw_commit;
+	struct nvme_completion_poll_status	status;
+	int					res;
+	unsigned int				size_remaining;
+	unsigned int				offset;
+	unsigned int				transfer;
+	void					*p;
+
+	if (size % 4) {
+		nvme_printf(ctrlr, "spdk_nvme_ctrlr_update_firmware invalid size!\n");
+		return -1;
+	}
+
+	/* Firmware download */
+	size_remaining = size;
+	offset = 0;
+	p = payload;
+
+	while (size_remaining > 0) {
+		transfer = nvme_min(size_remaining, ctrlr->min_page_size);
+		status.done = false;
+
+		res = nvme_ctrlr_cmd_fw_image_download(ctrlr, transfer, offset, p,
+						       nvme_completion_poll_cb,
+						       &status);
+		if (res)
+			return res;
+
+		while (status.done == false) {
+			nvme_mutex_lock(&ctrlr->ctrlr_lock);
+			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+			nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		}
+		if (spdk_nvme_cpl_is_error(&status.cpl)) {
+			nvme_printf(ctrlr, "spdk_nvme_ctrlr_fw_image_download failed!\n");
+			return ENXIO;
+		}
+		p += transfer;
+		offset += transfer;
+		size_remaining -= transfer;
+	}
+
+	/* Firmware commit */
+	memset(&fw_commit, 0, sizeof(struct spdk_nvme_fw_commit));
+	fw_commit.fs = slot;
+	fw_commit.ca = SPDK_NVME_FW_COMMIT_REPLACE_IMG;
+
+	status.done = false;
+
+	res = nvme_ctrlr_cmd_fw_commit(ctrlr, &fw_commit, nvme_completion_poll_cb,
+				       &status);
+	if (res)
+		return res;
+
+	while (status.done == false) {
+		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		nvme_printf(ctrlr, "nvme_ctrlr_cmd_fw_commit failed!\n");
+		return ENXIO;
+	}
+
+	return spdk_nvme_ctrlr_reset(ctrlr);
+}
