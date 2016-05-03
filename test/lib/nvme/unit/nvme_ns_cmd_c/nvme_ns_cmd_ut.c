@@ -708,6 +708,37 @@ test_nvme_ns_cmd_reservation_report(void)
 	free(payload);
 }
 
+static void
+test_nvme_ns_cmd_write_with_md(void)
+{
+	struct spdk_nvme_ns             ns;
+	struct spdk_nvme_ctrlr          ctrlr;
+	struct spdk_nvme_qpair          qpair;
+	int                             rc = 0;
+	void				*buffer = NULL;
+	void				*metadata = NULL;
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128 * 1024, 0);
+	ns.md_size = 128;
+	buffer = malloc(512);
+	metadata = malloc(512);
+
+	rc = spdk_nvme_ns_cmd_write_with_md(&ns, &qpair, buffer, metadata, 0x1000, 256, NULL, NULL, 0, 0,
+					    0);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE);
+	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(g_request->payload.u.contig == buffer);
+	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+
+	free(buffer);
+	free(metadata);
+	nvme_free_request(g_request);
+}
+
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -742,6 +773,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test_cmd_child_request", test_cmd_child_request) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_readv", test_nvme_ns_cmd_readv) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_writev", test_nvme_ns_cmd_writev) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_write_with_md", test_nvme_ns_cmd_write_with_md) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
