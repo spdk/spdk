@@ -222,6 +222,9 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 	if (log_page_directory->smart_log_len) {
 		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_SMART] = true;
 	}
+	if (log_page_directory->marketing_description_log_len) {
+		ctrlr->log_page_supported[SPDK_NVME_INTEL_MARKETING_DESCRIPTION] = true;
+	}
 }
 
 static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)

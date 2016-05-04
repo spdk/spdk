@@ -178,6 +178,18 @@ static void verify_intel_get_log_page_directory(struct nvme_request *req)
 	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
 }
 
+static void verify_intel_marketing_description_log_page(struct nvme_request *req)
+{
+	uint32_t temp_cdw10;
+
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_GET_LOG_PAGE);
+
+	temp_cdw10 = ((sizeof(struct spdk_nvme_intel_marketing_description_page) / sizeof(
+			       uint32_t) - 1) << 16) |
+		     SPDK_NVME_INTEL_MARKETING_DESCRIPTION;
+	CU_ASSERT(req->cmd.cdw10 == temp_cdw10);
+}
+
 static void verify_namespace_attach(struct nvme_request *req)
 {
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_NS_ATTACHMENT);
@@ -369,6 +381,18 @@ static void test_intel_get_log_page_directory(void)
 					 &payload, sizeof(payload), NULL, NULL);
 }
 
+static void test_intel_marketing_description_get_log_page(void)
+{
+	struct spdk_nvme_ctrlr					ctrlr = {};
+	struct spdk_nvme_intel_marketing_description_page	payload = {};
+
+	verify_fn = verify_intel_marketing_description_log_page;
+
+	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION,
+					 SPDK_NVME_GLOBAL_NS_TAG,
+					 &payload, sizeof(payload), NULL, NULL);
+}
+
 static void test_generic_get_log_pages(void)
 {
 	test_error_get_log_page();
@@ -383,6 +407,7 @@ static void test_intel_get_log_pages(void)
 	test_intel_temperature_get_log_page();
 	test_intel_read_latency_get_log_page();
 	test_intel_write_latency_get_log_page();
+	test_intel_marketing_description_get_log_page();
 }
 
 static void

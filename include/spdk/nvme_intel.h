@@ -73,6 +73,7 @@ enum spdk_nvme_intel_log_page {
 	SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY			= 0xC2,
 	SPDK_NVME_INTEL_LOG_TEMPERATURE				= 0xC5,
 	SPDK_NVME_INTEL_LOG_SMART				= 0xCA,
+	SPDK_NVME_INTEL_MARKETING_DESCRIPTION			= 0xDD,
 };
 
 enum spdk_nvme_intel_smart_attribute_code {
@@ -101,7 +102,9 @@ struct spdk_nvme_intel_log_page_directory {
 	uint8_t		temperature_statistics_log_len;
 	uint8_t		reserved4[9];
 	uint8_t		smart_log_len;
-	uint8_t		reserved5[107];
+	uint8_t		reserved5[37];
+	uint8_t		marketing_description_log_len;
+	uint8_t		reserved6[69];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_intel_log_page_directory) == 512, "Incorrect size");
 
@@ -198,6 +201,11 @@ union spdk_nvme_intel_feat_latency_tracking {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_intel_feat_latency_tracking) == 4, "Incorrect size");
 
+struct spdk_nvme_intel_marketing_description_page {
+	uint8_t		marketing_product[512];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_intel_marketing_description_page) == 512,
+		   "Incorrect size");
 #ifdef __cplusplus
 }
 #endif
