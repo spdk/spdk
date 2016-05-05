@@ -68,6 +68,10 @@ struct spdk_nvme_ctrlr_opts {
 	 * Number of I/O queues to request (used to set Number of Queues feature)
 	 */
 	uint32_t num_io_queues;
+	/**
+	 * Enable submission queue in controller memory buffer
+	 */
+	bool use_cmb_sqs;
 };
 
 /**

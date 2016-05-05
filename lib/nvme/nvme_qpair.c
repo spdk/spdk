@@ -482,6 +482,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	uint16_t		i;
 	volatile uint32_t	*doorbell_base;
 	uint64_t		phys_addr = 0;
+	uint64_t		offset;
 
 	nvme_assert(num_entries != 0, ("invalid num_entries\n"));
 	nvme_assert(num_trackers != 0, ("invalid num_trackers\n"));
@@ -489,18 +490,30 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->id = id;
 	qpair->num_entries = num_entries;
 	qpair->qprio = 0;
+	qpair->sq_in_cmb = false;
 
 	qpair->ctrlr = ctrlr;
 
 	/* cmd and cpl rings must be aligned on 4KB boundaries. */
-	qpair->cmd = nvme_malloc("qpair_cmd",
-				 qpair->num_entries * sizeof(struct spdk_nvme_cmd),
-				 0x1000,
-				 &qpair->cmd_bus_addr);
-	if (qpair->cmd == NULL) {
-		nvme_printf(ctrlr, "alloc qpair_cmd failed\n");
-		goto fail;
+	if (ctrlr->opts.use_cmb_sqs) {
+		if (nvme_ctrlr_alloc_cmb(ctrlr, qpair->num_entries * sizeof(struct spdk_nvme_cmd),
+					 0x1000, &offset) == 0) {
+			qpair->cmd = ctrlr->cmb_bar_virt_addr + offset;
+			qpair->cmd_bus_addr = ctrlr->cmb_bar_phys_addr + offset;
+			qpair->sq_in_cmb = true;
+		}
 	}
+	if (qpair->sq_in_cmb == false) {
+		qpair->cmd = nvme_malloc("qpair_cmd",
+					 qpair->num_entries * sizeof(struct spdk_nvme_cmd),
+					 0x1000,
+					 &qpair->cmd_bus_addr);
+		if (qpair->cmd == NULL) {
+			nvme_printf(ctrlr, "alloc qpair_cmd failed\n");
+			goto fail;
+		}
+	}
+
 	qpair->cpl = nvme_malloc("qpair_cpl",
 				 qpair->num_entries * sizeof(struct spdk_nvme_cpl),
 				 0x1000,
@@ -575,7 +588,7 @@ nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		_nvme_admin_qpair_destroy(qpair);
 	}
-	if (qpair->cmd)
+	if (qpair->cmd && !qpair->sq_in_cmb)
 		nvme_free(qpair->cmd);
 	if (qpair->cpl)
 		nvme_free(qpair->cpl);
