@@ -22,7 +22,7 @@ The development kit currently includes:
 Documentation
 =============
 
-[Doxygen API documentation](https://spdk.github.io/spdk/doc/) is available, as
+[Doxygen API documentation](http://spdk.io/spdk/doc/) is available, as
 well as a [Porting Guide](PORTING.md) for porting SPDK to different frameworks
 and operating systems.
 
