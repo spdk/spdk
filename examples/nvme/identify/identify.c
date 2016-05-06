@@ -63,6 +63,8 @@ static struct spdk_nvme_intel_smart_information_page *intel_smart_page = NULL;
 
 static struct spdk_nvme_intel_temperature_page *intel_temperature_page = NULL;
 
+static struct spdk_nvme_intel_marketing_description_page *intel_md_page = NULL;
+
 static bool g_hex_dump = false;
 
 static void
@@ -258,6 +260,27 @@ get_intel_temperature_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static int
+get_intel_md_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (intel_md_page == NULL) {
+		intel_md_page = rte_zmalloc("nvme intel marketing description", 4096,
+					    4096);
+	}
+	if (intel_md_page == NULL) {
+		printf("Allocation error (nvme intel marketing description page)\n");
+		exit(1);
+	}
+
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION,
+					     SPDK_NVME_GLOBAL_NS_TAG, intel_md_page, sizeof(*intel_md_page),
+					     get_log_page_completion, NULL)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+		exit(1);
+	}
+	return 0;
+}
+
 static void
 get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -293,8 +316,15 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 				printf("Get Log Page (Intel temperature) failed\n");
 			}
 		}
-	}
+		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION)) {
+			if (get_intel_md_log_page(ctrlr) == 0) {
+				outstanding_commands++;
+			} else {
+				printf("Get Log Page (Intel Marketing Description) failed\n");
+			}
+		}
 
+	}
 	while (outstanding_commands) {
 		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
@@ -318,6 +348,10 @@ cleanup(void)
 	if (intel_temperature_page) {
 		rte_free(intel_temperature_page);
 		intel_temperature_page = NULL;
+	}
+	if (intel_md_page) {
+		rte_free(intel_md_page);
+		intel_md_page = NULL;
 	}
 }
 
@@ -410,7 +444,7 @@ static void
 print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
-	uint8_t					str[128];
+	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
 
@@ -800,6 +834,16 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 		printf("\n");
 
 	}
+
+	if (intel_md_page) {
+		printf("Intel Marketing Information\n");
+		printf("==================\n");
+		snprintf(str, sizeof(intel_md_page->marketing_product), "%s", intel_md_page->marketing_product);
+		printf("Marketing Product Information:		%s\n", str);
+		printf("\n");
+		printf("\n");
+	}
+
 	for (i = 1; i <= spdk_nvme_ctrlr_get_num_ns(ctrlr); i++) {
 		print_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, i));
 	}
