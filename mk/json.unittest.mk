@@ -31,14 +31,30 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/../..
+SPDK_ROOT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = json nvme memory ioat
+JSON_DIR := $(SPDK_ROOT_DIR)/lib/json
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CFLAGS += -I$(JSON_DIR)
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += -lcunit -lpthread
+
+APP = $(TEST_FILE:.c=)
+
+all: $(APP)
+
+$(APP) : $(OBJS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+%.o: $(JSON_DIR)/%.c %.d $(MAKEFILE_LIST)
+	$(COMPILE_C)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

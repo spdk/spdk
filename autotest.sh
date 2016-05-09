@@ -47,6 +47,7 @@ timing_enter lib
 time test/lib/nvme/nvme.sh
 time test/lib/memory/memory.sh
 time test/lib/ioat/ioat.sh
+time test/lib/json/json.sh
 
 timing_exit lib
 
