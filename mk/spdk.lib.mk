@@ -31,10 +31,16 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/../..
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(DPDK_INC) -include $(CONFIG_IOAT_IMPL)
-C_SRCS = ioat.c
-LIBNAME = ioat
+LIB := libspdk_$(LIBNAME).a
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+all: $(LIB)
+
+clean:
+	$(CLEAN_C)
+
+$(LIB): $(OBJS)
+	$(LIB_C)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

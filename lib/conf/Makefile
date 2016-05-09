@@ -32,18 +32,8 @@
 #
 
 SPDK_ROOT_DIR := $(CURDIR)/../..
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = conf.c
+LIBNAME = conf
 
-LIB = libspdk_conf.a
-
-all : $(LIB)
-
-clean :
-	$(CLEAN_C)
-
-$(LIB) : $(OBJS)
-	$(LIB_C)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

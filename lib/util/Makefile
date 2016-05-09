@@ -32,20 +32,9 @@
 #
 
 SPDK_ROOT_DIR := $(CURDIR)/../..
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
-
 C_SRCS = file.c string.c pci.c
+LIBNAME = util
 
-LIB = libspdk_util.a
-
-all : $(LIB)
-
-clean :
-	$(CLEAN_C)
-
-$(LIB) : $(OBJS)
-	$(LIB_C)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -32,20 +32,9 @@
 #
 
 SPDK_ROOT_DIR := $(CURDIR)/../..
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC) -include $(CONFIG_NVME_IMPL)
-
 C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_qpair.c nvme.c nvme_intel.c
+LIBNAME = nvme
 
-LIB = libspdk_nvme.a
-
-all : $(LIB)
-
-clean :
-	$(CLEAN_C)
-
-$(LIB) : $(OBJS)
-	$(LIB_C)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
