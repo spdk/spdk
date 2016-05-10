@@ -343,12 +343,18 @@ spdk_json_write_val(struct spdk_json_write_ctx *w, const struct spdk_json_val *v
 		}
 
 		// Loop up to and including the _END value
-		for (i = 0; i < num_values + 1; i++) {
+		for (i = 0; i < num_values + 1;) {
 			if (spdk_json_write_val(w, &val[i + 1])) {
 				return fail(w);
 			}
+			if (val[i + 1].type == SPDK_JSON_VAL_ARRAY_BEGIN ||
+			    val[i + 1].type == SPDK_JSON_VAL_OBJECT_BEGIN) {
+				i += val[i + 1].len + 2;
+			} else {
+				i++;
+			}
 		}
-		break;
+		return 0;
 
 	case SPDK_JSON_VAL_ARRAY_END:
 		return spdk_json_write_array_end(w);

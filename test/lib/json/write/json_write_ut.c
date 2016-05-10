@@ -101,6 +101,8 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 #define VAL_OBJECT_BEGIN() CU_ASSERT(spdk_json_write_object_begin(w) == 0)
 #define VAL_OBJECT_END() CU_ASSERT(spdk_json_write_object_end(w) == 0)
 
+#define VAL(v) CU_ASSERT(spdk_json_write_val(w, v) == 0)
+
 static void
 test_write_literal(void)
 {
@@ -580,6 +582,22 @@ test_write_nesting(void)
 		"}");
 }
 
+/* Round-trip parse and write test */
+static void
+test_write_val(void)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_json_val values[100];
+	char src[] = "{\"a\":[1,2,3],\"b\":{\"c\":\"d\"},\"e\":true,\"f\":false,\"g\":null}";
+
+	CU_ASSERT(spdk_json_parse(src, strlen(src), values, sizeof(values) / sizeof(*values), NULL,
+				  SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == 19);
+
+	BEGIN();
+	VAL(values);
+	END("{\"a\":[1,2,3],\"b\":{\"c\":\"d\"},\"e\":true,\"f\":false,\"g\":null}");
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -603,7 +621,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "write_number_uint32", test_write_number_uint32) == NULL ||
 		CU_add_test(suite, "write_array", test_write_array) == NULL ||
 		CU_add_test(suite, "write_object", test_write_object) == NULL ||
-		CU_add_test(suite, "write_nesting", test_write_nesting) == NULL) {
+		CU_add_test(suite, "write_nesting", test_write_nesting) == NULL ||
+		CU_add_test(suite, "write_val", test_write_val) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
