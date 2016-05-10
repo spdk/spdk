@@ -31,20 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-S :=
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 
-SPDK_ROOT_DIR := $(CURDIR)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+CFLAGS += $(DPDK_INC)
+C_SRCS = trace.c
+LIBNAME = trace
 
-DIRS-y += lib test examples app
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-app: lib
-test: lib
-examples: lib
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
