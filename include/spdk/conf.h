@@ -70,6 +70,10 @@ void spdk_conf_free(struct spdk_conf *cp);
 int spdk_conf_read(struct spdk_conf *cp, const char *file);
 struct spdk_conf_section *spdk_conf_find_section(struct spdk_conf *cp, const char *name);
 
+/* Configuration file iteration */
+struct spdk_conf_section *spdk_conf_first_section(struct spdk_conf *cp);
+struct spdk_conf_section *spdk_conf_next_section(struct spdk_conf_section *sp);
+
 bool spdk_conf_section_match_prefix(const struct spdk_conf_section *sp, const char *name_prefix);
 char *spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key,
 				  int idx1, int idx2);
