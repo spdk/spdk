@@ -31,20 +31,81 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_CUNIT_H
-#define SPDK_CUNIT_H
+#include "spdk_cunit.h"
 
-#include <stdlib.h>
-#include <CUnit/Basic.h>
+static int
+spdk_cunit_get_test_result(CU_pTest test)
+{
+	CU_pFailureRecord failure = CU_get_failure_list();
 
-/*
- * CU_ASSERT_FATAL calls a function that does a longjmp() internally, but only for fatal asserts,
- * so the function itself is not marked as noreturn.  Add an abort() after the assert to help
- * static analyzers figure out that it really doesn't return.
- * The abort() will never actually execute.
- */
-#define SPDK_CU_ASSERT_FATAL(cond) do { CU_ASSERT_FATAL(cond); if (!(cond)) { abort(); } } while (0)
+	while (failure != NULL) {
+		if (failure->pTest == test) {
+			return 1;
+		}
+		failure = failure->pNext;
+	}
 
-int spdk_cunit_print_results(const char *filename);
+	return 0;
+}
 
-#endif /* SPDK_CUNIT_H */
+static void
+spdk_cunit_print_test_result(FILE *out, CU_pTest test)
+{
+	fprintf(out, "    {\n");
+	fprintf(out, "      \"Name\" : \"%s\",\n", test->pName);
+	fprintf(out, "      \"Result\" : \"%s\"\n",
+		spdk_cunit_get_test_result(test) ? "FAIL" : "PASS");
+	fprintf(out, "    }\n");
+}
+
+static void
+spdk_cunit_print_suite_result(FILE *out, CU_pSuite suite)
+{
+	CU_pTest test = suite->pTest;
+
+	while (test != NULL) {
+		spdk_cunit_print_test_result(out, test);
+		test = test->pNext;
+		if (test != NULL) {
+			fprintf(out, "    ,\n");
+		}
+	}
+}
+
+static void
+spdk_cunit_print_registry_result(FILE *out, CU_pTestRegistry registry)
+{
+	CU_pSuite suite = registry->pSuite;
+
+	if (suite == NULL) {
+		return;
+	}
+
+	fprintf(out, "{\n");
+	fprintf(out, "  \"%s unit tests\": [\n", suite->pName);
+
+	while (suite != NULL) {
+		spdk_cunit_print_suite_result(out, suite);
+		suite = suite->pNext;
+	}
+
+	fprintf(out, "  ]\n");
+	fprintf(out, "}\n");
+}
+
+int
+spdk_cunit_print_results(const char *filename)
+{
+	FILE *out;
+
+	out = fopen(filename, "w");
+	if (out == NULL) {
+		fprintf(stderr, "could not open results file %s\n", filename);
+		return -1;
+	}
+
+	spdk_cunit_print_registry_result(out, CU_get_registry());
+	fclose(out);
+	return 0;
+}
+
