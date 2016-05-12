@@ -139,7 +139,6 @@ enum nvme_payload_type {
  */
 enum spdk_nvme_ctrlr_flags {
 	SPDK_NVME_CTRLR_SGL_SUPPORTED		= 0x1, /**< The SGL is supported */
-	SPDK_NVME_CTRLR_CMB_SQ_SUPPORTED	= 0x2, /**< The submission queue in controller memory buffer is supported */
 };
 
 /**

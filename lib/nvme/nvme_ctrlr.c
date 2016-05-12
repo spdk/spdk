@@ -963,9 +963,7 @@ nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->cmb_size = size;
 	ctrlr->cmb_current_offset = offset;
 
-	if (cmbsz.bits.sqs) {
-		ctrlr->flags |= SPDK_NVME_CTRLR_CMB_SQ_SUPPORTED;
-	} else {
+	if (!cmbsz.bits.sqs) {
 		ctrlr->opts.use_cmb_sqs = false;
 	}
 
