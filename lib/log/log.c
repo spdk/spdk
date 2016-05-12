@@ -313,8 +313,17 @@ spdk_log_get_trace_flag(const char *name)
 static int
 set_trace_flag(const char *name, bool value)
 {
-	struct spdk_trace_flag *flag = get_trace_flag(name);
+	struct spdk_trace_flag *flag;
+	size_t i;
 
+	if (strcasecmp(name, "all") == 0) {
+		for (i = 0; i < g_num_trace_flags; i++) {
+			*g_trace_flags[i].enabled = value;
+		}
+		return 0;
+	}
+
+	flag = get_trace_flag(name);
 	if (flag == NULL) {
 		return -1;
 	}
