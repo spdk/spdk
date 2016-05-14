@@ -93,18 +93,33 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 uint64_t
 spdk_trace_get_tpoint_mask(uint32_t group_id)
 {
+	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
+		fprintf(stderr, "%s: invalid group ID %d\n", __func__, group_id);
+		return 0ULL;
+	}
+
 	return g_trace_histories->tpoint_mask[group_id];
 }
 
 void
 spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
+		fprintf(stderr, "%s: invalid group ID %d\n", __func__, group_id);
+		return;
+	}
+
 	g_trace_histories->tpoint_mask[group_id] |= tpoint_mask;
 }
 
 void
 spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
+	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
+		fprintf(stderr, "%s: invalid group ID %d\n", __func__, group_id);
+		return;
+	}
+
 	g_trace_histories->tpoint_mask[group_id] &= ~tpoint_mask;
 }
 
