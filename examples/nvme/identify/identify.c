@@ -585,7 +585,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 		uint32_t arb = features[SPDK_NVME_FEAT_ARBITRATION].result;
 		unsigned ab, lpw, mpw, hpw;
 
-		ab = arb & 0x3;
+		ab = arb & 0x7;
 		lpw = ((arb >> 8) & 0xFF) + 1;
 		mpw = ((arb >> 16) & 0xFF) + 1;
 		hpw = ((arb >> 24) & 0xFF) + 1;
@@ -593,7 +593,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 		printf("Arbitration\n");
 		printf("===========\n");
 		printf("Arbitration Burst:           ");
-		if (ab == 7) {
+		if (ab == 0x7) {
 			printf("no limit\n");
 		} else {
 			printf("%u\n", 1u << ab);
