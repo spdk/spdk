@@ -590,12 +590,18 @@ nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		_nvme_admin_qpair_destroy(qpair);
 	}
-	if (qpair->cmd && !qpair->sq_in_cmb)
+	if (qpair->cmd && !qpair->sq_in_cmb) {
 		nvme_free(qpair->cmd);
-	if (qpair->cpl)
+		qpair->cmd = NULL;
+	}
+	if (qpair->cpl) {
 		nvme_free(qpair->cpl);
-	if (qpair->tr)
+		qpair->cpl = NULL;
+	}
+	if (qpair->tr) {
 		nvme_free(qpair->tr);
+		qpair->tr = NULL;
+	}
 }
 
 static void
