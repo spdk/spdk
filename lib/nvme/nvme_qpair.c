@@ -115,7 +115,8 @@ static void
 nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_cmd *cmd)
 {
-
+	nvme_assert(qpair != NULL, ("print_command: qpair == NULL\n"));
+	nvme_assert(cmd != NULL, ("print_command: cmd == NULL\n"));
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_WRITE:
 	case SPDK_NVME_OPC_READ:
