@@ -559,7 +559,7 @@ test_io_flags(void)
 	rc = spdk_nvme_ns_cmd_read(&ns, &qpair, payload, lba, lba_count, NULL, NULL,
 				   SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS) != 0);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_LIMITED_RETRY) == 0);
 	nvme_free_request(g_request);
@@ -567,7 +567,7 @@ test_io_flags(void)
 	rc = spdk_nvme_ns_cmd_read(&ns, &qpair, payload, lba, lba_count, NULL, NULL,
 				   SPDK_NVME_IO_FLAGS_LIMITED_RETRY);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS) == 0);
 	CU_ASSERT((g_request->cmd.cdw12 & SPDK_NVME_IO_FLAGS_LIMITED_RETRY) != 0);
 	nvme_free_request(g_request);
