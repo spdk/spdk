@@ -565,6 +565,7 @@ nvme_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 
 	tr = LIST_FIRST(&qpair->outstanding_tr);
 	while (tr != NULL) {
+		nvme_assert(tr->req != NULL, ("tr->req == NULL in abort_aers\n"));
 		if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 			nvme_qpair_manual_complete_tracker(qpair, tr,
 							   SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_SQ_DELETION, 0,
