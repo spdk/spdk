@@ -104,9 +104,23 @@ int nvme_pcicfg_map_bar(void *pci_handle, int bar, int read_only, void **addr)
 }
 
 static inline int
+nvme_pcicfg_map_bar_write_combine(void *devhandle, uint32_t bar, void **addr)
+{
+	*addr = &g_ut_nvme_regs;
+	return 0;
+}
+
+static inline int
 nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 {
 	return 0;
+}
+
+static inline void
+nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint64_t *size)
+{
+	*addr = 0;
+	*size = 0;
 }
 
 typedef pthread_mutex_t nvme_mutex_t;

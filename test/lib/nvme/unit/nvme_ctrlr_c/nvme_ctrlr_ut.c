@@ -253,6 +253,21 @@ nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_
 	return 0;
 }
 
+int
+nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_fw_commit *fw_commit,
+			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+int
+nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
+				 uint32_t size, uint32_t offset, void *payload,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
 void
 nvme_ns_destruct(struct spdk_nvme_ns *ns)
 {
@@ -625,6 +640,34 @@ test_nvme_ctrlr_set_supported_features(void)
 	CU_ASSERT(res == true);
 }
 
+static void
+test_nvme_ctrlr_alloc_cmb(void)
+{
+	int			rc;
+	uint64_t		offset;
+	struct spdk_nvme_ctrlr	ctrlr = {};
+
+	ctrlr.cmb_size = 0x1000000;
+	ctrlr.cmb_current_offset = 0x100;
+	rc = nvme_ctrlr_alloc_cmb(&ctrlr, 0x200, 0x1000, &offset);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(offset == 0x1000);
+	CU_ASSERT(ctrlr.cmb_current_offset == 0x1200);
+
+	rc = nvme_ctrlr_alloc_cmb(&ctrlr, 0x800, 0x1000, &offset);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(offset == 0x2000);
+	CU_ASSERT(ctrlr.cmb_current_offset == 0x2800);
+
+	rc = nvme_ctrlr_alloc_cmb(&ctrlr, 0x800000, 0x100000, &offset);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(offset == 0x100000);
+	CU_ASSERT(ctrlr.cmb_current_offset == 0x900000);
+
+	rc = nvme_ctrlr_alloc_cmb(&ctrlr, 0x8000000, 0x1000, &offset);
+	CU_ASSERT(rc == -1);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -656,6 +699,8 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_supported_features",
 			       test_nvme_ctrlr_set_supported_features) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_alloc_cmb",
+			       test_nvme_ctrlr_alloc_cmb) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

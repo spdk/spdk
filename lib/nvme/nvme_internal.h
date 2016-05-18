@@ -138,7 +138,7 @@ enum nvme_payload_type {
  * Controller support flags.
  */
 enum spdk_nvme_ctrlr_flags {
-	SPDK_NVME_CTRLR_SGL_SUPPORTED	= 0x1, /**< The SGL is supported */
+	SPDK_NVME_CTRLR_SGL_SUPPORTED		= 0x1, /**< The SGL is supported */
 };
 
 /**
@@ -304,6 +304,7 @@ struct spdk_nvme_qpair {
 	uint8_t				phase;
 
 	bool				is_enabled;
+	bool				sq_in_cmb;
 
 	/*
 	 * Fields below this point should not be touched on the normal I/O happy path.
@@ -440,6 +441,15 @@ struct spdk_nvme_ctrlr {
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
 	struct spdk_nvme_ctrlr_opts	opts;
+
+	/** BAR mapping address which contains controller memory buffer */
+	void				*cmb_bar_virt_addr;
+	/** BAR physical address which contains controller memory buffer */
+	uint64_t			cmb_bar_phys_addr;
+	/** Controller memory buffer size in Bytes */
+	uint64_t			cmb_size;
+	/** Current offset of controller memory buffer */
+	uint64_t			cmb_current_offset;
 };
 
 struct nvme_driver {
@@ -523,6 +533,12 @@ int	nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_
 				 void *cb_arg);
 int	nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			      struct spdk_nvme_format *format, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr,
+				 const struct spdk_nvme_fw_commit *fw_commit,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
+		uint32_t size, uint32_t offset, void *payload,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
@@ -532,7 +548,8 @@ int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 
 int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
-
+int	nvme_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
+			     uint64_t *offset);
 int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			     uint16_t num_entries,
 			     uint16_t num_trackers,

@@ -36,6 +36,9 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <rte_config.h>
 #include <rte_malloc.h>
@@ -140,7 +143,8 @@ static void usage(void)
 	printf("\t[4: attach namespace to controller]\n");
 	printf("\t[5: detach namespace from controller]\n");
 	printf("\t[6: format namespace or controller]\n");
-	printf("\t[7: quit]\n");
+	printf("\t[7: firmware update]\n");
+	printf("\t[8: quit]\n");
 }
 
 static void
@@ -690,6 +694,93 @@ format_nvm(void)
 	}
 }
 
+static void
+update_firmware_image(void)
+{
+	int					rc;
+	int					fd = -1;
+	int					slot;
+	unsigned int				size;
+	struct stat				fw_stat;
+	char					path[256];
+	void					*fw_image;
+	struct dev				*ctrlr;
+	const struct spdk_nvme_ctrlr_data	*cdata;
+
+	ctrlr = get_controller();
+	if (ctrlr == NULL) {
+		printf("Invalid controller PCI BDF.\n");
+		return;
+	}
+
+	cdata = ctrlr->cdata;
+
+	if (!cdata->oacs.firmware) {
+		printf("Controller does not support firmware download and commit command\n");
+		return;
+	}
+
+	printf("Please Input The Path Of Firmware Image\n");
+
+	if (fgets(path, 256, stdin) == NULL) {
+		printf("Invalid path setting\n");
+		while (getchar() != '\n');
+		return;
+	}
+	path[strlen(path) - 1] = '\0';
+
+	fd = open(path, O_RDONLY);
+	if (fd < 0) {
+		perror("Open file failed");
+		return;
+	}
+	rc = fstat(fd, &fw_stat);
+	if (rc < 0) {
+		printf("Fstat failed\n");
+		close(fd);
+		return;
+	}
+
+	if (fw_stat.st_size % 4) {
+		printf("Firmware image size is not multiple of 4\n");
+		close(fd);
+		return;
+	}
+
+	size = fw_stat.st_size;
+
+	fw_image = rte_zmalloc("firmware image", size, 4096);
+	if (fw_image == NULL) {
+		printf("Allocation error\n");
+		close(fd);
+		return;
+	}
+
+	if (read(fd, fw_image, size) != ((ssize_t)(size))) {
+		printf("Read firmware image failed\n");
+		close(fd);
+		rte_free(fw_image);
+		return;
+	}
+	close(fd);
+
+	printf("Please Input Slot(0 - 7): \n");
+	if (!scanf("%d", &slot)) {
+		printf("Invalid Slot\n");
+		rte_free(fw_image);
+		while (getchar() != '\n');
+		return;
+	}
+
+	rc = spdk_nvme_ctrlr_update_firmware(ctrlr->ctrlr, fw_image, size, slot);
+	if (rc) {
+		printf("spdk_nvme_ctrlr_update_firmware failed\n");
+	} else {
+		printf("spdk_nvme_ctrlr_update_firmware success\n");
+	}
+	rte_free(fw_image);
+}
+
 int main(int argc, char **argv)
 {
 	int				rc, i;
@@ -750,6 +841,9 @@ int main(int argc, char **argv)
 			format_nvm();
 			break;
 		case 7:
+			update_firmware_image();
+			break;
+		case 8:
 			exit_flag = true;
 			break;
 		default:

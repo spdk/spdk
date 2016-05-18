@@ -68,6 +68,10 @@ struct spdk_nvme_ctrlr_opts {
 	 * Number of I/O queues to request (used to set Number of Queues feature)
 	 */
 	uint32_t num_io_queues;
+	/**
+	 * Enable submission queue in controller memory buffer
+	 */
+	bool use_cmb_sqs;
 };
 
 /**
@@ -477,6 +481,21 @@ int spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
  */
 int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			   struct spdk_nvme_format *format);
+
+/**
+ * \brief Download a new firmware image.
+ *
+ * \param payload The data buffer for the firmware image.
+ * \param size The data size will be downloaded.
+ * \param slot The slot that the firmware image will be committed to.
+ *
+ * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request,
+ * -1 if the size is not multiple of 4.
+ *
+ * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ */
+int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
+				    int slot);
 
 /**
  * \brief Get the identify namespace data as defined by the NVMe specification.

@@ -49,6 +49,8 @@ uint32_t feature_cdw11 = 1;
 uint32_t feature_cdw12 = 1;
 uint8_t get_feature = 1;
 uint32_t get_feature_cdw11 = 1;
+uint32_t fw_img_size = 1024;
+uint32_t fw_img_offset = 0;
 uint16_t abort_cid = 1;
 uint16_t abort_sqid = 1;
 uint32_t namespace_management_nsid = 1;
@@ -223,6 +225,19 @@ static void verify_format_nvme(struct nvme_request *req)
 	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FORMAT_NVM);
 	CU_ASSERT(req->cmd.cdw10 == 0);
 	CU_ASSERT(req->cmd.nsid == format_nvme_nsid);
+}
+
+static void verify_fw_commit(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FIRMWARE_COMMIT);
+	CU_ASSERT(req->cmd.cdw10 == 0x09);
+}
+
+static void verify_fw_image_download(struct nvme_request *req)
+{
+	CU_ASSERT(req->cmd.opc == SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD);
+	CU_ASSERT(req->cmd.cdw10 == (fw_img_size >> 2) - 1);
+	CU_ASSERT(req->cmd.cdw11 == fw_img_offset >> 2);
 }
 
 struct nvme_request *
@@ -513,6 +528,31 @@ test_format_nvme(void)
 	nvme_ctrlr_cmd_format(&ctrlr, format_nvme_nsid, &format, NULL, NULL);
 }
 
+static void
+test_fw_commit(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_fw_commit fw_commit = {};
+
+	fw_commit.ca = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
+	fw_commit.fs = 1;
+
+	verify_fn = verify_fw_commit;
+
+	nvme_ctrlr_cmd_fw_commit(&ctrlr, &fw_commit, NULL, NULL);
+}
+
+static void
+test_fw_image_download(void)
+{
+	struct spdk_nvme_ctrlr	ctrlr = {};
+
+	verify_fn = verify_fw_image_download;
+
+	nvme_ctrlr_cmd_fw_image_download(&ctrlr, fw_img_size, fw_img_offset, NULL,
+					 NULL, NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -539,6 +579,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test ctrlr cmd namespace_create", test_namespace_create) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd namespace_delete", test_namespace_delete) == NULL
 		|| CU_add_test(suite, "test ctrlr cmd format_nvme", test_format_nvme) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd fw_commit", test_fw_commit) == NULL
+		|| CU_add_test(suite, "test ctrlr cmd fw_image_download", test_fw_image_download) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

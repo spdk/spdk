@@ -11,6 +11,7 @@ if hash astyle; then
 	rm -f astyle.log
 	touch astyle.log
 	astyle --options=.astylerc "*.c" >> astyle.log
+	astyle --options=.astylerc "*.cpp" >> astyle.log
 	astyle --options=.astylerc "*.h" >> astyle.log
 	if grep -q "^Formatted" astyle.log; then
 		echo " errors detected"

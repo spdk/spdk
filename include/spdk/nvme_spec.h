@@ -664,7 +664,10 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		/* number of firmware slots */
 		uint8_t		num_slots : 3;
 
-		uint8_t		frmw_rsvd : 4;
+		/* support activation without reset */
+		uint8_t		activation_without_reset : 1;
+
+		uint8_t		frmw_rsvd : 3;
 	} frmw;
 
 	/** log page attributes */
@@ -1282,6 +1285,48 @@ struct spdk_nvme_protection_info {
 	uint32_t	ref_tag;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_protection_info) == 8, "Incorrect size");
+
+/** Parameters for SPDK_NVME_OPC_FIRMWARE_COMMIT cdw10: commit action */
+enum spdk_nvme_fw_commit_action {
+	/**
+	 * Downloaded image replaces the image specified by
+	 * the Firmware Slot field. This image is not activated.
+	 */
+	SPDK_NVME_FW_COMMIT_REPLACE_IMG			= 0x0,
+	/**
+	 * Downloaded image replaces the image specified by
+	 * the Firmware Slot field. This image is activated at the next reset.
+	 */
+	SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG	= 0x1,
+	/**
+	 * The image specified by the Firmware Slot field is
+	 * activated at the next reset.
+	 */
+	SPDK_NVME_FW_COMMIT_ENABLE_IMG			= 0x2,
+	/**
+	 * The image specified by the Firmware Slot field is
+	 * requested to be activated immediately without reset.
+	 */
+	SPDK_NVME_FW_COMMIT_RUN_IMG			= 0x3,
+};
+
+/** Parameters for SPDK_NVME_OPC_FIRMWARE_COMMIT cdw10 */
+struct spdk_nvme_fw_commit {
+	/**
+	 * Firmware Slot. Specifies the firmware slot that shall be used for the
+	 * Commit Action. The controller shall choose the firmware slot (slot 1 - 7)
+	 * to use for the operation if the value specified is 0h.
+	 */
+	uint32_t	fs		: 3;
+	/**
+	 * Commit Action. Specifies the action that is taken on the image downloaded
+	 * with the Firmware Image Download command or on a previously downloaded and
+	 * placed image.
+	 */
+	uint32_t	ca		: 3;
+	uint32_t	reserved	: 26;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 
 #define spdk_nvme_cpl_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)

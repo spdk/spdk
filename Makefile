@@ -36,13 +36,14 @@ S :=
 SPDK_ROOT_DIR := $(CURDIR)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += lib test examples
+DIRS-y += lib test examples app
 
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
 
+app: lib
 test: lib
 examples: lib
 

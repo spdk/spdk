@@ -185,11 +185,30 @@ nvme_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **ma
 }
 
 static inline int
+nvme_pcicfg_map_bar_write_combine(void *devhandle, uint32_t bar, void **mapped_addr)
+{
+	struct pci_device *dev = devhandle;
+	uint32_t flags = PCI_DEV_MAP_FLAG_WRITABLE | PCI_DEV_MAP_FLAG_WRITE_COMBINE;
+
+	return pci_device_map_range(dev, dev->regions[bar].base_addr, dev->regions[bar].size,
+				    flags, mapped_addr);
+}
+
+static inline int
 nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 {
 	struct pci_device *dev = devhandle;
 
 	return pci_device_unmap_range(dev, addr, dev->regions[bar].size);
+}
+
+static inline void
+nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint64_t *size)
+{
+	struct pci_device *dev = devhandle;
+
+	*addr = (uint64_t)dev->regions[bar].base_addr;
+	*size = (uint64_t)dev->regions[bar].size;
 }
 
 #else /* !USE_PCIACCESS */
@@ -204,9 +223,25 @@ nvme_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **ma
 }
 
 static inline int
+nvme_pcicfg_map_bar_write_combine(void *devhandle, uint32_t bar, void **mapped_addr)
+{
+	nvme_printf(NULL, "DPDK cannot support write combine now\n");
+	return -1;
+}
+
+static inline int
 nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 {
 	return 0;
+}
+
+static inline void
+nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint64_t *size)
+{
+	struct rte_pci_device *dev = devhandle;
+
+	*addr = (uint64_t)dev->mem_resource[bar].phys_addr;
+	*size = (uint64_t)dev->mem_resource[bar].len;
 }
 
 /*

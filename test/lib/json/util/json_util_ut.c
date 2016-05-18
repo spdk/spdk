@@ -83,7 +83,7 @@ test_num_to_int32(void)
 {
 	struct spdk_json_val v;
 	char buf[100];
-	int32_t i32;
+	int32_t i32 = 0;
 
 	NUM_SETUP("1234");
 	CU_ASSERT(spdk_json_number_to_int32(&v, &i32) == 0);

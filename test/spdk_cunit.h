@@ -45,4 +45,6 @@
  */
 #define SPDK_CU_ASSERT_FATAL(cond) do { CU_ASSERT_FATAL(cond); if (!(cond)) { abort(); } } while (0)
 
+int spdk_cunit_print_results(const char *filename);
+
 #endif /* SPDK_CUNIT_H */

@@ -215,6 +215,27 @@ spdk_conf_find_section(struct spdk_conf *cp, const char *name)
 	return NULL;
 }
 
+struct spdk_conf_section *
+spdk_conf_first_section(struct spdk_conf *cp)
+{
+	cp = CHECK_CP_OR_USE_DEFAULT(cp);
+	if (cp == NULL) {
+		return NULL;
+	}
+
+	return cp->section;
+}
+
+struct spdk_conf_section *
+spdk_conf_next_section(struct spdk_conf_section *sp)
+{
+	if (sp == NULL) {
+		return NULL;
+	}
+
+	return sp->next;
+}
+
 static void
 append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp)
 {

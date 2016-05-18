@@ -42,6 +42,7 @@ void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
 	opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
+	opts->use_cmb_sqs = false;
 }
 
 static int
@@ -918,6 +919,93 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static void
+nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+	void *addr;
+	uint32_t bir;
+	union spdk_nvme_cmbsz_register cmbsz;
+	union spdk_nvme_cmbloc_register cmbloc;
+	uint64_t size, unit_size, offset, bar_size, bar_phys_addr;
+
+	cmbsz.raw = nvme_mmio_read_4(ctrlr, cmbsz.raw);
+	cmbloc.raw = nvme_mmio_read_4(ctrlr, cmbloc.raw);
+	if (!cmbsz.bits.sz)
+		goto exit;
+
+	bir = cmbloc.bits.bir;
+	/* Values 0 2 3 4 5 are valid for BAR */
+	if (bir > 5 || bir == 1)
+		goto exit;
+
+	/* unit size for 4KB/64KB/1MB/16MB/256MB/4GB/64GB */
+	unit_size = (uint64_t)1 << (12 + 4 * cmbsz.bits.szu);
+	/* controller memory buffer size in Bytes */
+	size = unit_size * cmbsz.bits.sz;
+	/* controller memory buffer offset from BAR in Bytes */
+	offset = unit_size * cmbloc.bits.ofst;
+
+	nvme_pcicfg_get_bar_addr_len(ctrlr->devhandle, bir, &bar_phys_addr, &bar_size);
+
+	if (offset > bar_size)
+		goto exit;
+
+	if (size > bar_size - offset)
+		goto exit;
+
+	rc = nvme_pcicfg_map_bar_write_combine(ctrlr->devhandle, bir, &addr);
+	if (addr == NULL || (rc != 0))
+		goto exit;
+
+	ctrlr->cmb_bar_virt_addr = addr;
+	ctrlr->cmb_bar_phys_addr = bar_phys_addr;
+	ctrlr->cmb_size = size;
+	ctrlr->cmb_current_offset = offset;
+
+	if (!cmbsz.bits.sqs) {
+		ctrlr->opts.use_cmb_sqs = false;
+	}
+
+	return;
+exit:
+	ctrlr->cmb_bar_virt_addr = NULL;
+	ctrlr->opts.use_cmb_sqs = false;
+	return;
+}
+
+static int
+nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc = 0;
+	union spdk_nvme_cmbloc_register cmbloc;
+	void *addr = ctrlr->cmb_bar_virt_addr;
+
+	if (addr) {
+		cmbloc.raw = nvme_mmio_read_4(ctrlr, cmbloc.raw);
+		rc = nvme_pcicfg_unmap_bar(ctrlr->devhandle, cmbloc.bits.bir, addr);
+	}
+	return rc;
+}
+
+int
+nvme_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
+		     uint64_t *offset)
+{
+	uint64_t round_offset;
+
+	round_offset = ctrlr->cmb_current_offset;
+	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
+
+	if (round_offset + length > ctrlr->cmb_size)
+		return -1;
+
+	*offset = round_offset;
+	ctrlr->cmb_current_offset = round_offset + length;
+
+	return 0;
+}
+
 static int
 nvme_ctrlr_allocate_bars(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -931,6 +1019,8 @@ nvme_ctrlr_allocate_bars(struct spdk_nvme_ctrlr *ctrlr)
 		return -1;
 	}
 
+	nvme_ctrlr_map_cmb(ctrlr);
+
 	return 0;
 }
 
@@ -939,6 +1029,12 @@ nvme_ctrlr_free_bars(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	void *addr = (void *)ctrlr->regs;
+
+	rc = nvme_ctrlr_unmap_cmb(ctrlr);
+	if (rc != 0) {
+		nvme_printf(ctrlr, "nvme_ctrlr_unmap_cmb failed with error code %d\n", rc);
+		return -1;
+	}
 
 	if (addr) {
 		rc = nvme_pcicfg_unmap_bar(ctrlr->devhandle, 0, addr);
@@ -956,6 +1052,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->devhandle = devhandle;
+	ctrlr->flags = 0;
 
 	status = nvme_ctrlr_allocate_bars(ctrlr);
 	if (status != 0) {
@@ -981,7 +1078,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
-	ctrlr->flags = 0;
 
 	TAILQ_INIT(&ctrlr->free_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
@@ -1200,6 +1296,77 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_format failed!\n");
+		return ENXIO;
+	}
+
+	return spdk_nvme_ctrlr_reset(ctrlr);
+}
+
+int
+spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
+				int slot)
+{
+	struct spdk_nvme_fw_commit		fw_commit;
+	struct nvme_completion_poll_status	status;
+	int					res;
+	unsigned int				size_remaining;
+	unsigned int				offset;
+	unsigned int				transfer;
+	void					*p;
+
+	if (size % 4) {
+		nvme_printf(ctrlr, "spdk_nvme_ctrlr_update_firmware invalid size!\n");
+		return -1;
+	}
+
+	/* Firmware download */
+	size_remaining = size;
+	offset = 0;
+	p = payload;
+
+	while (size_remaining > 0) {
+		transfer = nvme_min(size_remaining, ctrlr->min_page_size);
+		status.done = false;
+
+		res = nvme_ctrlr_cmd_fw_image_download(ctrlr, transfer, offset, p,
+						       nvme_completion_poll_cb,
+						       &status);
+		if (res)
+			return res;
+
+		while (status.done == false) {
+			nvme_mutex_lock(&ctrlr->ctrlr_lock);
+			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+			nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		}
+		if (spdk_nvme_cpl_is_error(&status.cpl)) {
+			nvme_printf(ctrlr, "spdk_nvme_ctrlr_fw_image_download failed!\n");
+			return ENXIO;
+		}
+		p += transfer;
+		offset += transfer;
+		size_remaining -= transfer;
+	}
+
+	/* Firmware commit */
+	memset(&fw_commit, 0, sizeof(struct spdk_nvme_fw_commit));
+	fw_commit.fs = slot;
+	fw_commit.ca = SPDK_NVME_FW_COMMIT_REPLACE_IMG;
+
+	status.done = false;
+
+	res = nvme_ctrlr_cmd_fw_commit(ctrlr, &fw_commit, nvme_completion_poll_cb,
+				       &status);
+	if (res)
+		return res;
+
+	while (status.done == false) {
+		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		nvme_printf(ctrlr, "nvme_ctrlr_cmd_fw_commit failed!\n");
 		return ENXIO;
 	}
 

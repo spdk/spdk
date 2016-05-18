@@ -104,7 +104,7 @@ endif
 
 MAKEFLAGS += --no-print-directory
 
-OBJS = $(C_SRCS:.c=.o)
+OBJS = $(C_SRCS:.c=.o) $(CXX_SRCS:.cpp=.o)
 
 DEPFLAGS = -MMD -MP -MF $*.d.tmp
 
@@ -114,10 +114,19 @@ COMPILE_C=\
 	$(CC) -o $@ $(DEPFLAGS) $(CFLAGS) -c $< && \
 	mv -f $*.d.tmp $*.d
 
+COMPILE_CXX=\
+	$(Q)echo "  CXX $S/$@"; \
+	$(CXX) -o $@ $(DEPFLAGS) $(CXXFLAGS) -c $< && \
+	mv -f $*.d.tmp $*.d
+
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
 	$(Q)echo "  LINK $S/$@"; \
 	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS)
+
+LINK_CXX=\
+	$(Q)echo "  LINK $S/$@"; \
+	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS)
 
 # Archive $(OBJS) into $@ (.a)
 LIB_C=\
@@ -130,6 +139,9 @@ CLEAN_C=\
 
 %.o: %.c %.d $(MAKEFILE_LIST)
 	$(COMPILE_C)
+
+%.o: %.cpp %.d $(MAKEFILE_LIST)
+	$(COMPILE_CXX)
 
 %.d: ;
 

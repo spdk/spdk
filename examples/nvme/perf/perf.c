@@ -90,6 +90,7 @@ struct ns_entry {
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
 	uint64_t		io_completed;
+	uint64_t		total_tsc;
 	uint64_t		current_queue_depth;
 	uint64_t		offset_in_ios;
 	bool			is_draining;
@@ -113,6 +114,7 @@ struct ns_worker_ctx {
 struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
 	void			*buf;
+	uint64_t		submit_tsc;
 #if HAVE_LIBAIO
 	struct iocb		iocb;
 #endif
@@ -406,6 +408,8 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		}
 	}
 
+	task->submit_tsc = rte_get_timer_cycles();
+
 	if ((g_rw_percentage == 100) ||
 	    (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 #if HAVE_LIBAIO
@@ -448,6 +452,7 @@ task_complete(struct perf_task *task)
 	ns_ctx = task->ns_ctx;
 	ns_ctx->current_queue_depth--;
 	ns_ctx->io_completed++;
+	ns_ctx->total_tsc += rte_get_timer_cycles() - task->submit_tsc;
 
 	rte_mempool_put(task_pool, task);
 
@@ -615,13 +620,16 @@ static void usage(char *program_name)
 static void
 print_performance(void)
 {
-	float io_per_second, mb_per_second;
-	float total_io_per_second, total_mb_per_second;
+	uint64_t total_tsc, total_io_completed;
+	float io_per_second, mb_per_second, average_latency;
+	float total_io_per_second, total_mb_per_second, total_average_latency;
 	struct worker_thread	*worker;
 	struct ns_worker_ctx	*ns_ctx;
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
+	total_tsc = 0;
+	total_io_completed = 0;
 
 	worker = g_workers;
 	while (worker) {
@@ -629,18 +637,26 @@ print_performance(void)
 		while (ns_ctx) {
 			io_per_second = (float)ns_ctx->io_completed / g_time_in_sec;
 			mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
-			printf("%-43.43s from core %u: %10.2f IO/s %10.2f MB/s\n",
+			average_latency = (float)(ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
+			printf("%-43.43s from core %u: %10.2f IO/s %10.2f MB/s %10.2f us(average latency)\n",
 			       ns_ctx->entry->name, worker->lcore,
-			       io_per_second, mb_per_second);
+			       io_per_second, mb_per_second,
+			       average_latency);
 			total_io_per_second += io_per_second;
 			total_mb_per_second += mb_per_second;
+			total_tsc += ns_ctx->total_tsc;
+			total_io_completed += ns_ctx->io_completed;
 			ns_ctx = ns_ctx->next;
 		}
 		worker = worker->next;
 	}
+
+	assert(total_io_completed != 0);
+	total_average_latency = (float)(total_tsc / total_io_completed) * 1000 * 1000 / g_tsc_rate;;
+
 	printf("========================================================\n");
-	printf("%-55s: %10.2f IO/s %10.2f MB/s\n",
-	       "Total", total_io_per_second, total_mb_per_second);
+	printf("%-55s: %10.2f IO/s %10.2f MB/s %10.2f us(average latency)\n",
+	       "Total", total_io_per_second, total_mb_per_second, total_average_latency);
 
 	printf("\n");
 }

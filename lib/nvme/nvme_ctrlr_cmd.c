@@ -480,3 +480,58 @@ nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
+
+int
+nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr,
+			 const struct spdk_nvme_fw_commit *fw_commit,
+			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+
+	nvme_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		return ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_FIRMWARE_COMMIT;
+	memcpy(&cmd->cdw10, fw_commit, sizeof(uint32_t));
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+
+}
+
+int
+nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
+				 uint32_t size, uint32_t offset, void *payload,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+
+	nvme_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_contig(payload, size,
+					   cb_fn, cb_arg);
+	if (req == NULL) {
+		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		return ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD;
+	cmd->cdw10 = (size >> 2) - 1;
+	cmd->cdw11 = offset >> 2;
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return rc;
+}

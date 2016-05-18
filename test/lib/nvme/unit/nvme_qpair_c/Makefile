@@ -31,7 +31,7 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/../../../../..
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
 TEST_FILE = nvme_qpair_ut.c
 
