@@ -56,6 +56,8 @@ struct dev {
 	struct spdk_pci_device			*pci_dev;
 	struct spdk_nvme_ctrlr 			*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
+	struct spdk_nvme_ns_data		*common_ns_data;
+	int					outstanding_admin_cmds;
 };
 
 static struct dev devs[MAX_DEVS];
@@ -116,15 +118,57 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 }
 
 static void
+identify_common_ns_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct dev *dev = cb_arg;
+
+	if (cpl->status.sc != SPDK_NVME_SC_SUCCESS) {
+		/* Identify Namespace for NSID = FFFFFFFFh is optional, so failure is not fatal. */
+		rte_free(dev->common_ns_data);
+		dev->common_ns_data = NULL;
+	}
+
+	dev->outstanding_admin_cmds--;
+}
+
+static void
 attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr,
 	  const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
+	struct spdk_nvme_cmd cmd;
 
 	/* add to dev list */
 	dev = &devs[num_devs++];
 	dev->pci_dev = pci_dev;
 	dev->ctrlr = ctrlr;
+
+	/* Retrieve controller data */
+	dev->cdata = spdk_nvme_ctrlr_get_data(dev->ctrlr);
+
+	dev->common_ns_data = rte_zmalloc("common_ns_data", sizeof(struct spdk_nvme_ns_data), 4096);
+	if (dev->common_ns_data == NULL) {
+		fprintf(stderr, "common_ns_data allocation failure\n");
+		return;
+	}
+
+	/* Identify Namespace with NSID set to FFFFFFFFh to get common namespace capabilities. */
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.cdw10 = 0; /* CNS = 0 (Identify Namespace) */
+	cmd.nsid = SPDK_NVME_GLOBAL_NS_TAG;
+
+	dev->outstanding_admin_cmds++;
+	if (spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, dev->common_ns_data,
+					  sizeof(struct spdk_nvme_ns_data), identify_common_ns_cb, dev) != 0) {
+		dev->outstanding_admin_cmds--;
+		rte_free(dev->common_ns_data);
+		dev->common_ns_data = NULL;
+	}
+
+	while (dev->outstanding_admin_cmds) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
 }
 
 static const char *ealargs[] = {
@@ -295,7 +339,6 @@ get_controller(void)
 	char					*p;
 	int					ch;
 	struct dev				*iter;
-	const struct spdk_nvme_ctrlr_data	*cdata;
 
 	memset(address, 0, sizeof(address));
 
@@ -335,12 +378,32 @@ get_controller(void)
 
 	foreach_dev(iter) {
 		if (pci_addr == get_pci_addr(iter->pci_dev)) {
-			cdata = spdk_nvme_ctrlr_get_data(iter->ctrlr);
-			iter->cdata = cdata;
 			return iter;
 		}
 	}
 	return NULL;
+}
+
+static int
+get_lba_format(const struct spdk_nvme_ns_data *ns_data)
+{
+	int lbaf, i;
+
+	printf("\nSupported LBA formats:\n");
+	for (i = 0; i <= ns_data->nlbaf; i++) {
+		printf("%2d: %d data bytes", i, 1 << ns_data->lbaf[i].lbads);
+		if (ns_data->lbaf[i].ms) {
+			printf(" + %d metadata bytes", ns_data->lbaf[i].ms);
+		}
+		printf("\n");
+	}
+
+	printf("Please input LBA format index (0 - %d):\n", ns_data->nlbaf);
+	if (scanf("%d", &lbaf) != 1 || lbaf > ns_data->nlbaf) {
+		return -1;
+	}
+
+	return lbaf;
 }
 
 static void
@@ -463,7 +526,7 @@ add_ns(void)
 {
 	uint64_t	ns_size		= 0;
 	uint64_t	ns_capacity	= 0;
-	int		ns_lbasize	= 0;
+	int		ns_lbasize;
 	int 		ns_dps_type  	= 0;
 	int 		ns_dps_location = 0;
 	int	 	ns_nmic 	= 0;
@@ -480,6 +543,17 @@ add_ns(void)
 		return;
 	}
 
+	if (!ctrlr->common_ns_data) {
+		printf("Controller did not return common namespace capabilities\n");
+		return;
+	}
+
+	ns_lbasize = get_lba_format(ctrlr->common_ns_data);
+	if (ns_lbasize < 0) {
+		printf("Invalid LBA format number\n");
+		return;
+	}
+
 	printf("Please Input Namespace Size (in LBAs): \n");
 	if (!scanf("%" SCNi64, &ns_size)) {
 		printf("Invalid Namespace Size\n");
@@ -490,13 +564,6 @@ add_ns(void)
 	printf("Please Input Namespace Capacity (in LBAs): \n");
 	if (!scanf("%" SCNi64, &ns_capacity)) {
 		printf("Invalid Namespace Capacity\n");
-		while (getchar() != '\n');
-		return;
-	}
-
-	printf("Please Input LBA Format Number (0 - 15): \n");
-	if (!scanf("%d", &ns_lbasize)) {
-		printf("Invalid LBA format size\n");
 		while (getchar() != '\n');
 		return;
 	}
@@ -558,7 +625,6 @@ delete_ns(void)
 static void
 format_nvm(void)
 {
-	int					i;
 	int 					ns_id;
 	int					ses;
 	int					pil;
@@ -617,21 +683,9 @@ format_nvm(void)
 		return;
 	}
 
-	for (i = 0; i <= nsdata->nlbaf; i++) {
-		printf("LBA Format #%02d: Data Size: %5d  Metadata Size: %5d\n",
-		       i, 1 << nsdata->lbaf[i].lbads, nsdata->lbaf[i].ms);
-	}
-
-	printf("Please Input LBA Format Number (0 - %d): \n", nsdata->nlbaf);
-	if (!scanf("%d", &lbaf)) {
-		printf("Invalid LBA format size\n");
-		while (getchar() != '\n');
-		return;
-	}
-
-	if (lbaf > nsdata->nlbaf) {
+	lbaf = get_lba_format(nsdata);
+	if (lbaf < 0) {
 		printf("Invalid LBA format number\n");
-		while (getchar() != '\n');
 		return;
 	}
 
