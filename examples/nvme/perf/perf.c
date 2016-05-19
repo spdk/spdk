@@ -899,6 +899,19 @@ register_workers(void)
 	return 0;
 }
 
+static void
+unregister_worker(void)
+{
+        struct worker_thread *worker = g_workers;
+
+        while (worker) {
+                struct worker_thread *next = worker->next;
+                free(worker);
+                worker = next;
+        }
+}
+
+
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -1023,6 +1036,36 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
+static void
+dissociate_worker_from_ns(void)
+{
+	struct ns_entry         *entry = g_namespaces;
+	struct worker_thread    *worker = g_workers;
+	struct ns_worker_ctx    *ns_ctx;
+
+	if (worker == NULL) {
+		return;
+	}
+	ns_ctx = worker->ns_ctx;
+
+	/* Free namespace context */
+	while (worker) {
+		while (ns_ctx) {
+			struct ns_worker_ctx *next = ns_ctx->next;
+			free(ns_ctx);
+			ns_ctx = next;
+		}
+		worker = worker->next;
+	}
+
+	/* Free namespace */
+	while (entry) {
+		struct ns_entry *next = entry->next;
+		free(entry);
+		entry = next;
+	}
+}
+
 static char *ealargs[] = {
 	"perf",
 	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
@@ -1072,19 +1115,23 @@ int main(int argc, char **argv)
 	g_tsc_rate = rte_get_timer_hz();
 
 	if (register_workers() != 0) {
-		return 1;
+		rc = -1;
+		goto FAIL;
 	}
 
 	if (register_aio_files(argc, argv) != 0) {
-		return 1;
+		rc = -1;
+		goto FAIL;
 	}
 
 	if (register_controllers() != 0) {
-		return 1;
+		rc = -1;
+		goto FAIL;
 	}
 
 	if (associate_workers_with_ns() != 0) {
-		return 1;
+		rc = -1;
+		goto FAIL;
 	}
 
 	printf("Initialization complete. Launching workers.\n");
@@ -1108,7 +1155,10 @@ int main(int argc, char **argv)
 
 	print_stats();
 
+FAIL:
+	dissociate_worker_from_ns();
 	unregister_controllers();
+	unregister_worker();
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occured\n", argv[0]);
