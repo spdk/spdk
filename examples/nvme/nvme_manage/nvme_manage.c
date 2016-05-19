@@ -439,7 +439,7 @@ static void
 ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns_lbasize,
 	      uint8_t ns_dps_type, uint8_t ns_dps_location, uint8_t ns_nmic)
 {
-	int ret = 0;
+	uint32_t nsid;
 	struct spdk_nvme_ns_data *ndata;
 
 	ndata = rte_zmalloc("nvme namespace data", sizeof(struct spdk_nvme_ns_data), 4096);
@@ -456,9 +456,11 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 		ndata->dps.md_start = ns_dps_location;
 	}
 	ndata->nmic.can_share = ns_nmic;
-	ret = spdk_nvme_ctrlr_create_ns(device->ctrlr, ndata);
-	if (ret) {
+	nsid = spdk_nvme_ctrlr_create_ns(device->ctrlr, ndata);
+	if (nsid == 0) {
 		fprintf(stdout, "ns manage: Failed\n");
+	} else {
+		printf("Created namespace ID %u\n", nsid);
 	}
 
 	rte_free(ndata);

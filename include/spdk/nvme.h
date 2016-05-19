@@ -442,14 +442,12 @@ int spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  * \param ctrlr NVMe controller to create namespace on.
  * \param payload The pointer to the NVMe namespace data.
  *
- * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
+ * \return Namespace ID (>= 1) if successfully created, or 0 if the request failed.
  *
  * This function is thread safe and can be called at any point after spdk_nvme_attach().
- *
- * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
- * of commands submitted through this function.
  */
-int spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data *payload);
+uint32_t spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr,
+				   struct spdk_nvme_ns_data *payload);
 
 /**
  * \brief Delete a namespace.
