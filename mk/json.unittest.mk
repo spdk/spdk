@@ -34,10 +34,12 @@
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 JSON_DIR := $(SPDK_ROOT_DIR)/lib/json
+JSONRPC_DIR := $(SPDK_ROOT_DIR)/lib/jsonrpc
 
 C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
 CFLAGS += -I$(JSON_DIR)
+CFLAGS += -I$(JSONRPC_DIR)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 

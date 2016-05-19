@@ -20,6 +20,10 @@ test/lib/json/parse/json_parse_ut
 test/lib/json/util/json_util_ut
 test/lib/json/write/json_write_ut
 
+make -C test/lib/jsonrpc CONFIG_WERROR=y
+
+test/lib/jsonrpc/server/jsonrpc_server_ut
+
 make -C test/lib/log CONFIG_WERROR=y
 
 test/lib/log/log_ut

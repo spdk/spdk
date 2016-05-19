@@ -31,14 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 
-DIRS-y += conf cunit json jsonrpc log memory trace util nvme ioat
+TEST_FILE = jsonrpc_server_ut.c
 
-.PHONY: all clean $(DIRS-y)
+LIBS += $(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
+	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/json.unittest.mk
