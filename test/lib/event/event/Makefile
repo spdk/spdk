@@ -31,14 +31,27 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += conf cunit event json jsonrpc log memory trace util nvme ioat
+CFLAGS += $(DPDK_INC)
+APP = event
+C_SRCS := event.c
 
-.PHONY: all clean $(DIRS-y)
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
+	     $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
+	     $(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
+	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+LIBS += $(SPDK_LIBS) -lpthread $(DPDK_LIB) -lrt
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
