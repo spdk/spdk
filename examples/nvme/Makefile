@@ -36,6 +36,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += identify perf reserve nvme_manage
 
+DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)

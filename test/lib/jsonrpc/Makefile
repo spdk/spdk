@@ -31,40 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=n
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-# Treat warnings as errors (fail the build on any warning).
-CONFIG_WERROR?=n
+DIRS-y = server
 
-# Build with code coverage instrumentation.
-CONFIG_COVERAGE?=n
+.PHONY: all clean $(DIRS-y)
 
-# Build with Address Sanitizer enabled
-CONFIG_ADDRESS_SANITIZER?=n
+all: $(DIRS-y)
+clean: $(DIRS-y)
 
-# This directory should contain 'include' and 'lib' directories for your DPDK
-# installation. Alternatively you can specify this on the command line
-# with 'make DPDK_DIR=/path/to/dpdk'.
-CONFIG_DPDK_DIR?=/path/to/dpdk
-
-# Header file to use for NVMe implementation specific functions.
-# Defaults to depending on DPDK.
-CONFIG_NVME_IMPL?=nvme_impl.h
-
-# Header file to use for IOAT implementation specific functions.
-# Defaults to depending on DPDK.
-CONFIG_IOAT_IMPL?=ioat_impl.h
-
-# This item indicates using libpciaccess library or not. If enabled with y,
-# libpciaccess library is used to map pci devices; else DPDK library is used to
-# map pci devices.
-CONFIG_PCIACCESS?=y
-
-# Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
-# fio source code directory.
-CONFIG_FIO_PLUGIN?=n
-
-# This directory should contain the source code directory for fio
-# which is required for building the SPDK FIO plugin.
-FIO_SOURCE_DIR?=/usr/src/fio
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

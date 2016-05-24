@@ -310,6 +310,8 @@ struct spdk_nvme_qpair {
 	 * Fields below this point should not be touched on the normal I/O happy path.
 	 */
 
+	uint8_t				qprio;
+
 	struct spdk_nvme_ctrlr		*ctrlr;
 
 	/* List entry for spdk_nvme_ctrlr::free_io_qpairs and active_io_qpairs */
@@ -317,8 +319,6 @@ struct spdk_nvme_qpair {
 
 	uint64_t			cmd_bus_addr;
 	uint64_t			cpl_bus_addr;
-
-	uint8_t				qprio;
 };
 
 struct spdk_nvme_ns {

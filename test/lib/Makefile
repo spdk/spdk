@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = log json nvme memory ioat
+DIRS-y = log json jsonrpc nvme memory ioat
 
 .PHONY: all clean $(DIRS-y)
 

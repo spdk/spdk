@@ -201,6 +201,18 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 }
 
 static void
+unregister_namespaces(void)
+{
+	struct ns_entry *entry = g_namespaces;
+
+	while (entry) {
+		struct ns_entry *next = entry->next;
+		free(entry);
+		entry = next;
+	}
+}
+
+static void
 enable_latency_tracking_complete(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	if (spdk_nvme_cpl_is_error(cpl)) {
@@ -899,6 +911,27 @@ register_workers(void)
 	return 0;
 }
 
+static void
+unregister_workers(void)
+{
+	struct worker_thread *worker = g_workers;
+
+	/* Free namespace context and worker thread */
+	while (worker) {
+		struct worker_thread *next_worker = worker->next;
+		struct ns_worker_ctx *ns_ctx = worker->ns_ctx;
+
+		while (ns_ctx) {
+			struct ns_worker_ctx *next_ns_ctx = ns_ctx->next;
+			free(ns_ctx);
+			ns_ctx = next_ns_ctx;
+		}
+
+		free(worker);
+		worker = next_worker;
+	}
+}
+
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -1072,19 +1105,23 @@ int main(int argc, char **argv)
 	g_tsc_rate = rte_get_timer_hz();
 
 	if (register_workers() != 0) {
-		return 1;
+		rc = -1;
+		goto cleanup;
 	}
 
 	if (register_aio_files(argc, argv) != 0) {
-		return 1;
+		rc = -1;
+		goto cleanup;
 	}
 
 	if (register_controllers() != 0) {
-		return 1;
+		rc = -1;
+		goto cleanup;
 	}
 
 	if (associate_workers_with_ns() != 0) {
-		return 1;
+		rc = -1;
+		goto cleanup;
 	}
 
 	printf("Initialization complete. Launching workers.\n");
@@ -1108,7 +1145,10 @@ int main(int argc, char **argv)
 
 	print_stats();
 
+cleanup:
+	unregister_namespaces();
 	unregister_controllers();
+	unregister_workers();
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occured\n", argv[0]);

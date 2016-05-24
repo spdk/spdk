@@ -1231,7 +1231,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	return spdk_nvme_ctrlr_reset(ctrlr);
 }
 
-int
+uint32_t
 spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data *payload)
 {
 	struct nvme_completion_poll_status	status;
@@ -1240,7 +1240,7 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 	status.done = false;
 	res = nvme_ctrlr_cmd_create_ns(ctrlr, payload, nvme_completion_poll_cb, &status);
 	if (res)
-		return res;
+		return 0;
 	while (status.done == false) {
 		nvme_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
@@ -1248,10 +1248,16 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_create_ns failed!\n");
-		return ENXIO;
+		return 0;
 	}
 
-	return spdk_nvme_ctrlr_reset(ctrlr);
+	res = spdk_nvme_ctrlr_reset(ctrlr);
+	if (res) {
+		return 0;
+	}
+
+	/* Return the namespace ID that was created */
+	return status.cpl.cdw0;
 }
 
 int

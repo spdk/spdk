@@ -2,6 +2,7 @@
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
+#  Copyright (c) 2015-2016, Micron Technology, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,40 +32,32 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=n
+SPDK_ROOT_DIR := $(CURDIR)/../../..
 
-# Treat warnings as errors (fail the build on any warning).
-CONFIG_WERROR?=n
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-# Build with code coverage instrumentation.
-CONFIG_COVERAGE?=n
+APP := fio_plugin
 
-# Build with Address Sanitizer enabled
-CONFIG_ADDRESS_SANITIZER?=n
+C_SRCS := fio_plugin.c
 
-# This directory should contain 'include' and 'lib' directories for your DPDK
-# installation. Alternatively you can specify this on the command line
-# with 'make DPDK_DIR=/path/to/dpdk'.
-CONFIG_DPDK_DIR?=/path/to/dpdk
+CFLAGS += -I. $(DPDK_INC) -I$(FIO_SOURCE_DIR)
 
-# Header file to use for NVMe implementation specific functions.
-# Defaults to depending on DPDK.
-CONFIG_NVME_IMPL?=nvme_impl.h
+LDFLAGS += -shared -rdynamic
 
-# Header file to use for IOAT implementation specific functions.
-# Defaults to depending on DPDK.
-CONFIG_IOAT_IMPL?=ioat_impl.h
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
+	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
 
-# This item indicates using libpciaccess library or not. If enabled with y,
-# libpciaccess library is used to map pci devices; else DPDK library is used to
-# map pci devices.
-CONFIG_PCIACCESS?=y
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) $(DPDK_LIB) -lpthread -lrt
 
-# Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
-# fio source code directory.
-CONFIG_FIO_PLUGIN?=n
+all : $(APP)
 
-# This directory should contain the source code directory for fio
-# which is required for building the SPDK FIO plugin.
-FIO_SOURCE_DIR?=/usr/src/fio
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+.PHONY: all clean
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
