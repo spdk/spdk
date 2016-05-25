@@ -137,8 +137,8 @@ function configure_freebsd {
 	rm $TMP
 
 	kldunload contigmem.ko || true
-	kenv hw.contigmem.num_buffers=$((NRHUGE * 2 / 32))
-	kenv hw.contigmem.buffer_size=$((32 * 1024 * 1024))
+	kenv hw.contigmem.num_buffers=$((NRHUGE * 2 / 64))
+	kenv hw.contigmem.buffer_size=$((64 * 1024 * 1024))
 	kldload contigmem.ko
 }
 
