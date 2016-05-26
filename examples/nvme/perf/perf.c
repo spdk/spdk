@@ -294,6 +294,8 @@ register_aio_file(const char *path)
 
 	if (g_rw_percentage == 100) {
 		flags = O_RDONLY;
+	} else if (g_rw_percentage == 0) {
+		flags = O_WRONLY;
 	} else {
 		flags = O_RDWR;
 	}
@@ -549,7 +551,12 @@ init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static void
 cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
-	if (ns_ctx->entry->type == ENTRY_TYPE_NVME_NS) {
+	if (ns_ctx->entry->type == ENTRY_TYPE_AIO_FILE) {
+#ifdef HAVE_LIBAIO
+		io_destroy(ns_ctx->u.aio.ctx);
+		free(ns_ctx->u.aio.events);
+#endif
+	} else {
 		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair);
 	}
 }

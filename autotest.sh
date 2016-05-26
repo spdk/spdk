@@ -48,6 +48,7 @@ time test/lib/nvme/nvme.sh
 time test/lib/memory/memory.sh
 time test/lib/ioat/ioat.sh
 time test/lib/json/json.sh
+time test/lib/jsonrpc/jsonrpc.sh
 time test/lib/log/log.sh
 
 timing_exit lib
