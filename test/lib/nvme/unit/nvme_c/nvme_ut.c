@@ -71,6 +71,24 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	memset(opts, 0, sizeof(*opts));
 }
 
+static void
+test_opc_data_transfer(void)
+{
+	enum spdk_nvme_data_transfer xfer;
+
+	xfer = spdk_nvme_opc_get_data_transfer(SPDK_NVME_OPC_FLUSH);
+	CU_ASSERT(xfer == SPDK_NVME_DATA_NONE);
+
+	xfer = spdk_nvme_opc_get_data_transfer(SPDK_NVME_OPC_WRITE);
+	CU_ASSERT(xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
+
+	xfer = spdk_nvme_opc_get_data_transfer(SPDK_NVME_OPC_READ);
+	CU_ASSERT(xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
+
+	xfer = spdk_nvme_opc_get_data_transfer(SPDK_NVME_OPC_GET_LOG_PAGE);
+	CU_ASSERT(xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -86,15 +104,12 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-#if 0
 	if (
-		CU_add_test(suite, "test1", test1) == NULL
-		|| CU_add_test(suite, "test2", test2) == NULL
+		CU_add_test(suite, "test_opc_data_transfer", test_opc_data_transfer) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
-#endif
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

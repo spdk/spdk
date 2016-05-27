@@ -526,6 +526,34 @@ enum spdk_nvme_nvm_opcode {
 	SPDK_NVME_OPC_RESERVATION_RELEASE		= 0x15,
 };
 
+/**
+ * Data transfer (bits 1:0) of an NVMe opcode.
+ *
+ * \sa spdk_nvme_opc_get_data_transfer
+ */
+enum spdk_nvme_data_transfer {
+	/** Opcode does not transfer data */
+	SPDK_NVME_DATA_NONE				= 0,
+	/** Opcode transfers data from host to controller (e.g. Write) */
+	SPDK_NVME_DATA_HOST_TO_CONTROLLER		= 1,
+	/** Opcode transfers data from controller to host (e.g. Read) */
+	SPDK_NVME_DATA_CONTROLLER_TO_HOST		= 2,
+	/** Opcode transfers data both directions */
+	SPDK_NVME_DATA_BIDIRECTIONAL			= 3
+};
+
+/**
+ * Extract the Data Transfer bits from an NVMe opcode.
+ *
+ * This determines whether a command requires a data buffer and
+ * which direction (host to controller or controller to host) it is
+ * transferred.
+ */
+static inline enum spdk_nvme_data_transfer spdk_nvme_opc_get_data_transfer(uint8_t opc)
+{
+	return opc & 3;
+}
+
 enum spdk_nvme_feat {
 	/* 0x00 - reserved */
 	SPDK_NVME_FEAT_ARBITRATION				= 0x01,
