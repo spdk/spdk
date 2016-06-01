@@ -350,7 +350,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	snprintf(shm_name, sizeof(shm_name), "%s_trace.%d", app_name, g_instance_id);
+	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, g_instance_id);
 	fd = shm_open(shm_name, O_RDONLY, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "Could not open shm %s.\n", shm_name);
