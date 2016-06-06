@@ -38,10 +38,14 @@ To build SPDK, some dependencies must be installed.
 Fedora/CentOS:
 
     sudo dnf install -y gcc libpciaccess-devel CUnit-devel libaio-devel
+    # Additional dependencies for NVMf:
+    sudo dnf install -y libibverbs-devel librdmacm-devel
 
 Ubuntu/Debian:
 
     sudo apt-get install -y gcc libpciaccess-dev make libcunit1-dev libaio-dev
+    # Additional dependencies for NVMf:
+    sudo apt-get install -y libibverbs-dev librdmacm-dev
 
 FreeBSD:
 
