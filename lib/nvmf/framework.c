@@ -62,6 +62,9 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
  *
  * SPDK_NVMF_DESC_POOL_SIZE: The total number of RDMA descriptors
  * needed for all possible admin and I/O queue requests.
+ *
+ * SPDK_NVMF_TX_DESC_POOL_SIZE: The total number of RDMA descriptors
+ * needed for all possible admin and I/O queue tx requests.
  */
 #define SPDK_NVMF_ADMINQ_POOL_SIZE(spdk)	(MAX_SUBSYSTEMS * \
 						 (spdk->MaxSessionsPerSubsystem) * \
@@ -74,6 +77,10 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 #define SPDK_NVMF_DESC_POOL_SIZE(spdk)	(SPDK_NVMF_ADMINQ_POOL_SIZE(spdk) + \
 					 SPDK_NVMF_IOQ_POOL_SIZE(spdk))
+
+/* Per each connection, cq depth is double of sq depth. Double the memory accordingly. */
+#define SPDK_NVMF_TX_DESC_POOL_SIZE(spdk)	((SPDK_NVMF_ADMINQ_POOL_SIZE(spdk) + \
+						 SPDK_NVMF_IOQ_POOL_SIZE(spdk)) * 2)
 
 #define SPDK_NVMF_MAX_CONNECTIONS(spdk)	(MAX_SUBSYSTEMS * \
 					 ((spdk)->MaxSessionsPerSubsystem) * \
@@ -152,7 +159,7 @@ spdk_nvmf_initialize_pools(struct spdk_nvmf_globals *spdk_nvmf)
 
 	spdk_nvmf->tx_desc_pool =
 		rte_mempool_create("RDMA TX Desc Pool",
-				   SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf),
+				   SPDK_NVMF_TX_DESC_POOL_SIZE(spdk_nvmf),
 				   sizeof(struct nvme_qp_tx_desc),
 				   0, 0,
 				   NULL, NULL, NULL, NULL,
@@ -163,7 +170,7 @@ spdk_nvmf_initialize_pools(struct spdk_nvmf_globals *spdk_nvmf)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA Tx descriptor pool %p, size 0x%lx bytes\n",
 		      spdk_nvmf->tx_desc_pool,
-		      (SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf) * sizeof(struct nvme_qp_tx_desc)));
+		      (SPDK_NVMF_TX_DESC_POOL_SIZE(spdk_nvmf) * sizeof(struct nvme_qp_tx_desc)));
 
 	return 0;
 }
@@ -186,7 +193,7 @@ spdk_nvmf_check_pools(struct spdk_nvmf_globals *spdk_nvmf)
 
 	rc += spdk_nvmf_check_pool(spdk_nvmf->nvme_request_pool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
 	rc += spdk_nvmf_check_pool(spdk_nvmf->rx_desc_pool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
-	rc += spdk_nvmf_check_pool(spdk_nvmf->tx_desc_pool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
+	rc += spdk_nvmf_check_pool(spdk_nvmf->tx_desc_pool, SPDK_NVMF_TX_DESC_POOL_SIZE(spdk_nvmf));
 	rc += spdk_nvmf_check_pool(spdk_nvmf->bb_small_pool, SPDK_NVMF_ADMINQ_POOL_SIZE(spdk_nvmf));
 	rc += spdk_nvmf_check_pool(spdk_nvmf->bb_large_pool, SPDK_NVMF_IOQ_POOL_SIZE(spdk_nvmf));
 
