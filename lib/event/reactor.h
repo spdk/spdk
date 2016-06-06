@@ -34,10 +34,10 @@
 #ifndef SPDK_REACTOR_H_
 #define SPDK_REACTOR_H_
 
-int spdk_reactor_subsystem_init(const char *mask);
-int spdk_reactor_subsystem_fini(void);
+int spdk_reactors_init(const char *mask);
+int spdk_reactors_fini(void);
 
-void spdk_reactor_subsystem_start(void);
-void spdk_reactor_subsystem_stop(void);
+void spdk_reactors_start(void);
+void spdk_reactors_stop(void);
 
 #endif

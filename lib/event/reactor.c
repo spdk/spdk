@@ -404,7 +404,7 @@ spdk_reactor_get_socket_mask(void)
 }
 
 void
-spdk_reactor_subsystem_start(void)
+spdk_reactors_start(void)
 {
 	struct spdk_reactor *reactor;
 	uint32_t i;
@@ -429,13 +429,13 @@ spdk_reactor_subsystem_start(void)
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
 }
 
-void spdk_reactor_subsystem_stop(void)
+void spdk_reactors_stop(void)
 {
 	g_reactor_state = SPDK_REACTOR_STATE_EXITING;
 }
 
 int
-spdk_reactor_subsystem_init(const char *mask)
+spdk_reactors_init(const char *mask)
 {
 	uint32_t i;
 	int rc;
@@ -474,7 +474,7 @@ spdk_reactor_subsystem_init(const char *mask)
 }
 
 int
-spdk_reactor_subsystem_fini(void)
+spdk_reactors_fini(void)
 {
 	/* TODO: free rings and mempool */
 	return 0;

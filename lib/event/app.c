@@ -318,7 +318,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	 *  reactor_mask will be NULL which will enable all cores to run
 	 *  reactors.
 	 */
-	if (spdk_reactor_subsystem_init(opts->reactor_mask)) {
+	if (spdk_reactors_init(opts->reactor_mask)) {
 		fprintf(stderr, "Invalid reactor mask.\n");
 		exit(EXIT_FAILURE);
 	}
@@ -423,7 +423,7 @@ spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 	spdk_event_call(event);
 
 	/* This blocks until spdk_app_stop is called */
-	spdk_reactor_subsystem_start();
+	spdk_reactors_start();
 
 	return g_spdk_app.rc;
 }
@@ -431,7 +431,7 @@ spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 void
 spdk_app_stop(int rc)
 {
-	spdk_reactor_subsystem_stop();
+	spdk_reactors_stop();
 	g_spdk_app.rc = rc;
 }
 
