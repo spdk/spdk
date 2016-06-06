@@ -1,0 +1,85 @@
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright (c) Intel Corporation.
+ *   All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of Intel Corporation nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * \page nvmf_getting_started NVMf Getting Started Guide
+
+
+\section nvmf_prereqs Prerequisites
+
+To build nvmf there are some package dependencies.
+
+Fedora:
+\verbatim
+dnf install libibverbs-devel librdmacm-devel
+\endverbatim
+
+Ubuntu:
+\verbatim
+apt-get install libibverbs-dev librdmacm-dev
+\endverbatim
+
+
+\section nvmf_config Configuring NVMf
+
+An NVMf specific configuration file is used to configure, or 'provision',
+the NVMf target. This file defines the following:
+
+ - general application parameters
+ - global NVMf parameters
+ - ports that define local RDMA interface ports the nvmf target will
+     use for network access
+ - initiator groups with names and addresses to allow access to nvmf target
+     subsystems
+ - list of NVMe HW device candidates to share via NVMf
+ - NVMf target subsystem(s) that define the provision mappings between remote
+     initiator groups and local target ports, and NVMe device
+     namespaces
+
+An example nvmf configuration file included with this package at
+`etc/spdk/nvmf.conf.in`.
+
+You must edit a version of this file for use in your environment and copy it
+to /usr/local/etc/spdk/nvmf.conf.  Alternatively, you may also specify the
+configuration file explicitly using `-c /path/to/nvmf.conf` when starting `nvmf_tgt`.
+
+The `Port` and `InitiatorGroup` sections must be updated in all cases to
+match the IP addresses in your network environment.
+
+The `Nvme` section must also be updated with a the list of NVMe devices
+that will be exported.  Each device is identified by a PCI bus, device, and function.
+The NVMf target will display a list of NVMe devices discovered
+in the system.  This information can then be used to select the list of devices
+to populate this configuration file section.
+
+*/

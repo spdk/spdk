@@ -33,23 +33,8 @@
 
 /*!
 
-\mainpage SPDK Documentation
+\page nvmf NVMf (NVMe over Fabrics)
 
-\section intro Storage Performance Development Kit
-
-- <a href="https://github.com/spdk/spdk">SPDK on GitHub</a>
-- <a href="http://www.spdk.io/">SPDK.io</a>
-
-The Storage Performance Development Kit (SPDK) provides a set of tools and libraries
-for writing high performance, scalable, user-mode storage applications.
-It achieves high performance by moving all of the necessary drivers
-into userspace and operating in a polled mode instead of relying on interrupts,
-which avoids kernel context switches and eliminates interrupt handling overhead.
-
-\section modules Modules
-
-- \ref nvme
-- \ref nvmf
-- \ref ioat
+- \ref nvmf_getting_started
 
 */

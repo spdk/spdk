@@ -765,7 +765,9 @@ INPUT                  = ../lib/nvme/nvme_impl.h \
                          nvme/index.txt \
                          nvme/async_completion.txt \
                          nvme/initialization.txt \
-                         nvme/io_submission.txt
+                         nvme/io_submission.txt \
+                         nvmf/index.txt \
+                         nvmf/getting_started.txt
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
