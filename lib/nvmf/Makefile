@@ -31,16 +31,13 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 
-DIRS-y += conf cunit event json jsonrpc log memory trace util nvme ioat
+CFLAGS += $(DPDK_INC)
+LIBNAME = nvmf
+C_SRCS = nvmf_admin_cmd.c nvmf_io_cmd.c nvmf.c \
+	 rdma.c port.c conn.c controller.c \
+	 init_grp.c subsystem_grp.c conf.c \
+	 framework.c session.c
 
-DIRS-$(CONFIG_NVMF) += nvmf
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

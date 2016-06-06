@@ -1,0 +1,134 @@
+# nvmf target configuration file
+#
+# Please write all parameters using ASCII.
+# The parameter must be quoted if it includes whitespace.
+#
+# Configuration syntax:
+# Spaces at head of line are deleted, other spaces are as separator
+# Lines starting with '#' are comments and not evaluated.
+# Lines ending with '\' are concatenated with the next line.
+# Bracketed keys are section keys grouping the following value keys.
+# Number of section key is used as a tag number.
+#  Ex. [TargetNode1] = TargetNode section key with tag number 1
+[Global]
+  Comment "Global section"
+
+  # Users can restrict work items to only run on certain cores by
+  #  specifying a ReactorMask.  Default ReactorMask mask is defined as
+  #  -c option in the 'ealargs' setting at beginning of file nvmf_tgt.c.
+  #ReactorMask 0x00FF
+
+  # Tracepoint group mask for spdk trace buffers
+  # Default: 0x0 (all tracepoint groups disabled)
+  # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
+  #TpointGroupMask 0x0
+
+  # syslog facility
+  LogFacility "local7"
+
+[Rpc]
+  # Defines whether nvmf will enable configuration via RPC
+  #RpcConfiguration Yes
+
+# This next section defines NVMf protocol specific global options
+[Nvmf]
+  # node name (not include optional part)
+  # Users can optionally change this to fit their environment.
+  NodeBase "iqn.2013-06.com.intel.ch.spdk"
+
+  # files
+  AuthFile /usr/local/etc/nvmf/auth.conf
+
+  # Set the optional in-capsule data byte length for I/O queue capsule size.
+  # Accepted values must be divisible by 16 and less than or equal to
+  # the default maximum transfer length NVMF_MAX_RECV_DATA_TRANSFER_SIZE.
+  # A minimum recommended value of 1024 bytes allows NVMf connect
+  # commands to use in-capsule data.  Specifying a value greater than 4096
+  # will allow NVMf write requests <= 4096 in length to use in-capsule
+  # immediate data and bypass the need to perfrom an rdma_read operation
+  # to pull the data from the host.
+  MaxInCapsuleData 1024
+
+  # Set the maximum number of NVMf logical controller sessions allowed
+  # for each subsystem provisioned below.  The default value (1) is used if
+  # not set here.
+  #MaxSessionsPerSubsystem 1
+
+  # Set the maximum number of NVMf per-controller connections [admin_q + io_q(s)]
+  MaxConnectionsPerSession 4
+
+  # Set the global default maximum queue depth to a value less than the
+  # default (128).  This value used for initial global pool allocation of
+  # QP Rx/Tx descriptors and staging buffers.  The actual queue depth
+  # used is negotiated during connection establishment, the remote
+  # initiator having the opportunity to specify a smaller value.
+  #MaxQueueDepth 128
+
+# Users must change the Port section(s) to match the IP addresses
+#  for their environment.
+# Port sections define which fabric network ports the NVMf server
+#  will use to listen and accept incoming connections.  A Port is
+#  also used to control which ports will be used for each individual
+#  NVM subsystem controller session, providing a means to distribute NVMf
+#  traffic across all network ports.
+[Port1]
+  FabricIntf 15.15.15.2:7174
+
+[Port2]
+  FabricIntf 192.168.2.21:7174
+
+# Users must change the InitiatorGroup section(s) to match the IP
+#  addresses and initiator configuration in their environment.
+# Netmask can be used to specify a single IP address or a range of IP addresses
+#  Netmask 192.168.1.20   <== single IP address
+#  Netmask 192.168.1.0/24 <== IP range 192.168.1.*
+[InitiatorGroup1]
+  Netmask 15.15.15.0/24
+
+[InitiatorGroup2]
+  Netmask 192.168.2.0/24
+
+# NVMe Device Whitelist
+# Users may specify which NVMe devices to claim by their PCI
+# domain, bus, device, and function. The format is dddd:bb:dd.f, which is
+# the same format displayed by lspci or in /sys/bus/pci/devices. The second
+# argument is a "name" for the device that can be anything. The name
+# is referenced later in the SubsystemGroup section.
+#
+# Alternatively, the user can specify ClaimAllDevices. All
+# NVMe devices will be claimed and named Nvme0, Nvme1, etc.
+[Nvme]
+  BDF 0000:00:00.0 Nvme0
+  BDF 0000:01:00.0 Nvme1
+  # ClaimAllDevices Yes
+
+# Users should change the NVMfSubsystem section(s) below to define the
+#   set of local NVMe resources that will be accessible by specific groups
+#   of remote initiators.  These mappings will be inspected to approve
+#   remote fabric transport and NVMf protocol connection requests.
+#
+# Each approved NVMf connection represents a specific virtual controller
+#   session within the NVMf subsystem.  Any such session is allowed access
+#   to all NVMe namespaces within the subsystem.
+#
+# SubsystemName, Mapping, Controller0 are minimum required
+# The SubsystemName is concatenated with NodeBase above to form the NVMf
+#   subsystem NQN that will be used by remote initiator to identify the
+#   target subsystem for connection.
+# The Mapping defines the local fabric network port to be used by remote
+#   connecting initiator.  Multiple mappings can be used to permit shared
+#   access to the same subsystem.
+# Each Controller identifies a specific HW device from the Nvme whitelist
+#   section above.
+[SubsystemGroup1]
+  SubsystemName cnode1
+  Mapping Port1 InitiatorGroup1
+  # Using NVME 0 namespace 1
+  Controller0 Nvme0
+
+[SubsystemGroup2]
+  SubsystemName cnode2
+  Mapping Port2 InitiatorGroup2
+  # Using NVME 1 namespace 1
+  Controller0 Nvme1
+

@@ -31,16 +31,40 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += conf cunit event json jsonrpc log memory trace util nvme ioat
+APP = nvmf_tgt
 
-DIRS-$(CONFIG_NVMF) += nvmf
+CFLAGS += $(DPDK_INC)
 
-.PHONY: all clean $(DIRS-y)
+# Add NVMf library directory to include path
+# TODO: remove this once NVMf has a public API header
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+C_SRCS := nvmf_tgt.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIBS = \
+	$(SPDK_ROOT_DIR)/lib/nvmf/libspdk_nvmf.a \
+	$(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
+	$(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
+	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
+	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
+	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	$(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
+
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB)
+
+LIBS += -libverbs -lrdmacm
+LIBS += $(DPDK_LIB) -lpthread -lrt
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

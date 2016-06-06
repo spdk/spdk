@@ -23,6 +23,10 @@ case `uname` in
 		;;
 esac
 
+if [ -f /usr/include/infiniband/verbs.h ]; then
+	MAKECONFIG="$MAKECONFIG CONFIG_NVMF=y"
+fi
+
 if [ -z "$output_dir" ]; then
 	if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then
 		output_dir=.

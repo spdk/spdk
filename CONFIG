@@ -68,3 +68,7 @@ CONFIG_FIO_PLUGIN?=n
 # This directory should contain the source code directory for fio
 # which is required for building the SPDK FIO plugin.
 FIO_SOURCE_DIR?=/usr/src/fio
+
+# Build NVMf (NVMe over Fabrics) target.
+# Requires ibverbs development libraries.
+CONFIG_NVMF?=n
