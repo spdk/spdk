@@ -1,8 +1,14 @@
 Changelog
 =========
 
-Upcoming release
-----------------
+v16.06: NVMf userspace target
+-----------------------------
+
+This release adds a userspace NVMf (NVMe over Fabrics) target, conforming to the
+newly-released NVMf 1.0/NVMe 1.2.1 specification.  The NVMf target exports NVMe
+devices from a host machine over the network via RDMA.  Currently, the target is
+limited to directly exporting physical NVMe devices, and the discovery subsystem
+is not supported.
 
 This release includes a general API cleanup, including renaming all declarations
 in public headers to include a `spdk` prefix to prevent namespace clashes with
