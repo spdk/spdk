@@ -45,6 +45,7 @@
 #include "subsystem_grp.h"
 #include "spdk/trace.h"
 
+SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 #define MAX_SUBSYSTEMS 4
 
@@ -343,6 +344,24 @@ nvmf_tgt_subsystem_fini(void)
 	return 0;
 }
 
+int
+nvmf_initialize(void)
+{
+	if (request_mempool == NULL) {
+		fprintf(stderr, "NVMf application has not created request mempool!\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+void
+nvmf_shutdown(void)
+{
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_shutdown\n");
+
+	spdk_nvmf_shutdown_nvme();
+}
 
 SPDK_SUBSYSTEM_REGISTER(nvmf, nvmf_tgt_subsystem_initialize, nvmf_tgt_subsystem_fini, NULL)
 
