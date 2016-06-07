@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
+#include <rdma/rdma_verbs.h>
 #include <unistd.h>
 
 #include <rte_config.h>
@@ -94,7 +95,7 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	rc = fcntl(conn->comp_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
 		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
-		goto comp_ch_error;
+		goto cq_error;
 	}
 
 	/*
@@ -146,7 +147,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 	STAILQ_FOREACH(tmp_rx, &conn->qp_rx_desc, link) {
 		STAILQ_REMOVE(&conn->qp_rx_desc, tmp_rx, nvme_qp_rx_desc, link);
 
-		rc = ibv_dereg_mr(tmp_rx->bb_mr);
+		rc = rdma_dereg_mr(tmp_rx->bb_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register rx bb mr\n");
 		}
@@ -157,7 +158,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 			rte_mempool_put(g_nvmf_tgt.bb_large_pool, (void *)tmp_rx->bb);
 		}
 
-		rc = ibv_dereg_mr(tmp_rx->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp_rx->msg_buf_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register rx mr\n");
 		}
@@ -168,7 +169,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 	STAILQ_FOREACH(tmp_tx, &conn->qp_tx_desc, link) {
 		STAILQ_REMOVE(&conn->qp_tx_desc, tmp_tx, nvme_qp_tx_desc, link);
 
-		rc = ibv_dereg_mr(tmp_tx->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp_tx->msg_buf_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register tx mr\n");
 		}
@@ -928,10 +929,9 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 			goto fail;
 		}
 
-		rx_desc->msg_buf_mr = ibv_reg_mr(conn->pd,
-						 (void *)&rx_desc->msg_buf,
-						 sizeof(rx_desc->msg_buf),
-						 IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE);
+		rx_desc->msg_buf_mr = rdma_reg_msgs(conn->cm_id,
+						    (void *)&rx_desc->msg_buf,
+						    sizeof(rx_desc->msg_buf));
 		if (rx_desc->msg_buf_mr == NULL) {
 			SPDK_ERRLOG("Unable to register rx desc buffer mr\n");
 			goto fail;
@@ -967,12 +967,9 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 			}
 			rx_desc->bb_len = LARGE_BB_MAX_SIZE;
 		}
-		rx_desc->bb_mr = ibv_reg_mr(conn->pd,
-					    (void *)rx_desc->bb,
-					    rx_desc->bb_len,
-					    IBV_ACCESS_LOCAL_WRITE |
-					    IBV_ACCESS_REMOTE_READ |
-					    IBV_ACCESS_REMOTE_WRITE);
+		rx_desc->bb_mr = rdma_reg_read(conn->cm_id,
+					       (void *)rx_desc->bb,
+					       rx_desc->bb_len);
 		if (rx_desc->bb_mr == NULL) {
 			SPDK_ERRLOG("Unable to register rx bb mr\n");
 			goto fail;
@@ -992,7 +989,7 @@ fail:
 	/* cleanup any partial descriptor that failed during init loop */
 	if (rx_desc != NULL) {
 		if (rx_desc->bb_mr) {
-			rc = ibv_dereg_mr(rx_desc->bb_mr);
+			rc = rdma_dereg_mr(rx_desc->bb_mr);
 			if (rc) {
 				SPDK_ERRLOG("Unable to de-register rx bb mr\n");
 			}
@@ -1007,7 +1004,7 @@ fail:
 		}
 
 		if (rx_desc->msg_buf_mr) {
-			rc = ibv_dereg_mr(rx_desc->msg_buf_mr);
+			rc = rdma_dereg_mr(rx_desc->msg_buf_mr);
 			if (rc) {
 				SPDK_ERRLOG("Unable to de-register rx mr\n");
 			}
@@ -1019,7 +1016,7 @@ fail:
 	STAILQ_FOREACH(tmp, &conn->qp_rx_desc, link) {
 		STAILQ_REMOVE(&conn->qp_rx_desc, tmp, nvme_qp_rx_desc, link);
 
-		rc = ibv_dereg_mr(tmp->bb_mr);
+		rc = rdma_dereg_mr(tmp->bb_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register rx bb mr\n");
 		}
@@ -1030,7 +1027,7 @@ fail:
 			rte_mempool_put(g_nvmf_tgt.bb_large_pool, (void *)tmp->bb);
 		}
 
-		rc = ibv_dereg_mr(tmp->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp->msg_buf_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register rx mr\n");
 		}
@@ -1058,11 +1055,9 @@ alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
 			goto fail;
 		}
 
-		tx_desc->msg_buf_mr = ibv_reg_mr(conn->pd,
-						 (void *)&tx_desc->msg_buf,
-						 sizeof(tx_desc->msg_buf),
-						 IBV_ACCESS_LOCAL_WRITE |
-						 IBV_ACCESS_REMOTE_WRITE);
+		tx_desc->msg_buf_mr = rdma_reg_msgs(conn->cm_id,
+						    (void *)&tx_desc->msg_buf,
+						    sizeof(tx_desc->msg_buf));
 		if (tx_desc->msg_buf_mr == NULL) {
 			SPDK_ERRLOG("Unable to register tx desc buffer mr\n");
 			goto fail;
@@ -1090,7 +1085,7 @@ fail:
 	if (tx_desc != NULL) {
 
 		if (tx_desc->msg_buf_mr) {
-			rc = ibv_dereg_mr(tx_desc->msg_buf_mr);
+			rc = rdma_dereg_mr(tx_desc->msg_buf_mr);
 			if (rc) {
 				SPDK_ERRLOG("Unable to de-register tx mr\n");
 			}
@@ -1102,7 +1097,7 @@ fail:
 	STAILQ_FOREACH(tmp, &conn->qp_tx_desc, link) {
 		STAILQ_REMOVE(&conn->qp_tx_desc, tmp, nvme_qp_tx_desc, link);
 
-		rc = ibv_dereg_mr(tmp->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp->msg_buf_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register tx mr\n");
 		}
