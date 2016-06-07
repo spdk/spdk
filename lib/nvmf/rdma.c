@@ -218,6 +218,45 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 	rdma_destroy_id(conn->cm_id);
 }
 
+static void
+nvmf_trace_ibv_sge(struct ibv_sge *sg_list)
+{
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p\n", (void *)sg_list->addr);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "length %x\n", sg_list->length);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "lkey %x\n", sg_list->lkey);
+}
+
+static void
+nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
+		      struct nvmf_request *req,
+		      struct ibv_sge *sg_list,
+		      uint64_t wr_id,
+		      enum ibv_wr_opcode opcode,
+		      int send_flags)
+{
+	RTE_VERIFY(wr != NULL);
+	RTE_VERIFY(sg_list != NULL);
+
+	memset(wr, 0, sizeof(*wr));
+	wr->wr_id = wr_id;
+	wr->next = NULL;
+	wr->opcode = opcode;
+	wr->send_flags = send_flags;
+	wr->sg_list = sg_list;
+	wr->num_sge = 1;
+
+	if (req != NULL) {
+		wr->wr.rdma.rkey = req->rkey;
+		wr->wr.rdma.remote_addr = req->remote_addr;
+
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rkey %x\n", wr->wr.rdma.rkey);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "remote addr %p\n",
+			      (void *)wr->wr.rdma.remote_addr);
+	}
+
+	nvmf_trace_ibv_sge(wr->sg_list);
+}
+
 int
 nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 		    struct nvme_qp_tx_desc *tx_desc)
@@ -245,24 +284,8 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	}
 	conn->pending_rdma_read_count++;
 
-	memset(&wr, 0, sizeof(wr));
-
-	wr.wr_id = (uintptr_t)tx_desc;
-	wr.next = NULL;
-	wr.opcode = IBV_WR_RDMA_READ;
-	wr.send_flags = IBV_SEND_SIGNALED;
-	wr.wr.rdma.rkey = req->rkey;
-	wr.wr.rdma.remote_addr = req->remote_addr;
-	wr.sg_list = &rx_desc->bb_sgl; /* sender sets correct length */
-	wr.num_sge = 1;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "rkey %x\n", wr.wr.rdma.rkey);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "remote addr %p\n",
-		      (void *)wr.wr.rdma.remote_addr);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p\n", (void *)wr.sg_list->addr);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "length %x\n", wr.sg_list->length);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "lkey %x\n", wr.sg_list->lkey);
-
+	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
+			      IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
 
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uint64_t)rx_desc, 0);
 	rc = ibv_post_send(conn->qp, &wr, &bad_wr);
@@ -286,24 +309,8 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 		return -1;
 	}
 
-	memset(&wr, 0, sizeof(wr));
-
-	wr.wr_id = (uintptr_t)tx_desc;
-	wr.next = NULL;
-	wr.opcode = IBV_WR_RDMA_WRITE;
-	//wr.send_flags = IBV_SEND_SIGNALED; /* set if we want to get completion event */
-	wr.wr.rdma.rkey = req->rkey;
-	wr.wr.rdma.remote_addr = req->remote_addr;
-	wr.sg_list = &rx_desc->bb_sgl; /* sender sets correct length */
-	wr.num_sge = 1;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "rkey %x\n", wr.wr.rdma.rkey);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "remote addr %p\n",
-		      (void *)wr.wr.rdma.remote_addr);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p\n", (void *)wr.sg_list->addr);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "length %x\n", wr.sg_list->length);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "lkey %x\n", wr.sg_list->lkey);
-
+	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
+			      IBV_WR_RDMA_WRITE, 0);
 
 	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uint64_t)rx_desc, 0);
 	rc = ibv_post_send(conn->qp, &wr, &bad_wr);
@@ -333,19 +340,9 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	}
 	tx_desc->rx_desc = NULL;
 
-	memset(&wr, 0, sizeof(wr));
+	nvmf_ibv_send_wr_init(&wr, NULL, &tx_desc->send_sgl, (uint64_t)tx_desc,
+			      IBV_WR_SEND, IBV_SEND_SIGNALED);
 
-	wr.wr_id = (uintptr_t)tx_desc;
-	wr.next = NULL;
-	wr.opcode = IBV_WR_SEND;
-	wr.send_flags = IBV_SEND_SIGNALED;
-	wr.sg_list = &tx_desc->send_sgl;
-	wr.num_sge = 1;
-
-	/* caller responsible in setting up SGE */
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p\n", (void *)wr.sg_list->addr);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "length %x\n", wr.sg_list->length);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "lkey %x\n", wr.sg_list->lkey);
 #ifdef DEBUG
 	{
 		struct nvmf_request *req = &tx_desc->req_state;
@@ -383,9 +380,8 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	wr.next = NULL;
 	wr.sg_list = &rx_desc->recv_sgl;
 	wr.num_sge = 1;
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "local addr %p\n", (void *)wr.sg_list->addr);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "length %x\n", wr.sg_list->length);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "lkey %x\n", wr.sg_list->lkey);
+
+	nvmf_trace_ibv_sge(&rx_desc->recv_sgl);
 
 	/* for I/O queues we add bb sgl for in-capsule data use */
 	if (conn->type == CONN_TYPE_IOQ) {
