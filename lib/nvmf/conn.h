@@ -94,7 +94,6 @@ struct spdk_nvmf_conn {
 	struct rdma_cm_id		*cm_id;
 	struct ibv_context		*ctx;
 	struct ibv_comp_channel		*comp_channel;
-	struct ibv_pd			*pd;
 	struct ibv_cq			*cq;
 	struct ibv_qp			*qp;
 

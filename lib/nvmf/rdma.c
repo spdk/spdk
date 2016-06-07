@@ -81,16 +81,10 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	}
 	conn->ctx = verbs;
 
-	conn->pd = ibv_alloc_pd(verbs);
-	if (!conn->pd) {
-		SPDK_ERRLOG("alloc pd error!\n");
-		goto return_error;
-	}
-
 	conn->comp_channel = ibv_create_comp_channel(verbs);
 	if (!conn->comp_channel) {
 		SPDK_ERRLOG("create completion channel error!\n");
-		goto comp_ch_error;
+		goto return_error;
 	}
 	rc = fcntl(conn->comp_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
@@ -118,7 +112,7 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(conn->cm_id, conn->pd, &attr);
+	rc = rdma_create_qp(conn->cm_id, NULL, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		goto cq_error;
@@ -129,8 +123,6 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 
 cq_error:
 	ibv_destroy_comp_channel(conn->comp_channel);
-comp_ch_error:
-	ibv_dealloc_pd(conn->pd);
 return_error:
 	return -1;
 }
@@ -223,7 +215,6 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 	}
 
 	ibv_destroy_comp_channel(conn->comp_channel);
-	ibv_dealloc_pd(conn->pd);
 	rdma_destroy_id(conn->cm_id);
 }
 
