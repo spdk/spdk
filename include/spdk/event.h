@@ -137,7 +137,6 @@ struct spdk_app_opts {
 	int instance_id;
 
 	spdk_app_shutdown_cb	shutdown_cb;
-	spdk_event_fn		start_fn;
 	spdk_sighandler_t	usr1_handler;
 
 	bool			enable_coredump;

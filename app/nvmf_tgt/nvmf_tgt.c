@@ -224,7 +224,6 @@ main(int argc, char **argv)
 	printf("Total cores available: %d\n", rte_lcore_count());
 
 	opts.shutdown_cb = spdk_nvmf_shutdown_cb;
-	opts.start_fn = spdk_nvmf_startup;
 	spdk_app_init(&opts);
 
 	/* Blocks until the application is exiting */
