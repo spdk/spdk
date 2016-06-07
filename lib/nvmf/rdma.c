@@ -68,31 +68,32 @@ static struct rdma_cm_id 		*g_cm_id = NULL;
 */
 
 static int
-nvmf_rdma_conn_init(struct spdk_nvmf_conn *conn,
-		    struct ibv_context *verbs)
+nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
+		     struct ibv_context *verbs)
 {
-	int rc;
+	int			rc;
+	struct ibv_qp_init_attr	attr;
 
 	if (conn->ctx) {
-		SPDK_ERRLOG("rdma_conn_init: context already set!\n");
+		SPDK_ERRLOG("context already set!\n");
 		goto return_error;
 	}
 	conn->ctx = verbs;
 
 	conn->pd = ibv_alloc_pd(verbs);
 	if (!conn->pd) {
-		SPDK_ERRLOG("rdma_conn_init: alloc pd error!\n");
+		SPDK_ERRLOG("alloc pd error!\n");
 		goto return_error;
 	}
 
 	conn->comp_channel = ibv_create_comp_channel(verbs);
 	if (!conn->comp_channel) {
-		SPDK_ERRLOG("rdma_conn_init: create completion channel error!\n");
+		SPDK_ERRLOG("create completion channel error!\n");
 		goto comp_ch_error;
 	}
 	rc = fcntl(conn->comp_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
-		SPDK_ERRLOG("rdma_conn_init: fcntl to set comp channel to non-blocking failed\n");
+		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
 		goto comp_ch_error;
 	}
 
@@ -103,9 +104,25 @@ nvmf_rdma_conn_init(struct spdk_nvmf_conn *conn,
 	 */
 	conn->cq = ibv_create_cq(verbs, (conn->sq_depth * 3), conn, conn->comp_channel, 0);
 	if (!conn->cq) {
-		SPDK_ERRLOG("rdma_conn_init: create cq error!\n");
+		SPDK_ERRLOG("create cq error!\n");
 		goto cq_error;
 	}
+
+	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
+	attr.qp_type		= IBV_QPT_RC;
+	attr.send_cq		= conn->cq;
+	attr.recv_cq		= conn->cq;
+	attr.cap.max_send_wr	= conn->cq_depth;
+	attr.cap.max_recv_wr	= conn->sq_depth;
+	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
+	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
+
+	rc = rdma_create_qp(conn->cm_id, conn->pd, &attr);
+	if (rc) {
+		SPDK_ERRLOG("rdma_create_qp failed\n");
+		goto cq_error;
+	}
+	conn->qp = conn->cm_id->qp;
 
 	return 0;
 
@@ -207,32 +224,6 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 	ibv_destroy_comp_channel(conn->comp_channel);
 	ibv_dealloc_pd(conn->pd);
 	rdma_destroy_id(conn->cm_id);
-}
-
-static int
-nvmf_rdma_qp_init(struct spdk_nvmf_conn *conn)
-{
-	struct ibv_qp_init_attr	attr;
-	int			ret;
-
-	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
-
-	attr.qp_type		= IBV_QPT_RC;
-	attr.send_cq		= conn->cq;
-	attr.recv_cq		= conn->cq;
-	attr.cap.max_send_wr	= conn->cq_depth;
-	attr.cap.max_recv_wr	= conn->sq_depth;
-	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
-	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
-
-	ret = rdma_create_qp(conn->cm_id, conn->pd, &attr);
-	if (ret) {
-		SPDK_ERRLOG("rdma_create_qp failed\n");
-		return -1;
-	}
-	conn->qp = conn->cm_id->qp;
-
-	return 0;
 }
 
 int
@@ -560,20 +551,12 @@ nvmf_rdma_cm_connect(struct rdma_cm_event *event)
 		}
 	}
 
-	rc = nvmf_rdma_conn_init(conn, conn_id->verbs);
+	rc = nvmf_rdma_queue_init(conn, conn_id->verbs);
 	if (rc) {
 		SPDK_ERRLOG("connect request: rdma conn init failure!\n");
 		goto err2;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMf fabric connection initialized\n");
-
-	/* Allocate the AQ QP Channel */
-	rc = nvmf_rdma_qp_init(conn);
-	if (rc) {
-		SPDK_ERRLOG("Unable to allocate connection qp\n");
-		goto err2;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "QPs allocated\n");
 
 	STAILQ_INIT(&conn->qp_pending_desc);
 	STAILQ_INIT(&conn->qp_rx_desc);
