@@ -207,7 +207,7 @@ nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
 }
 
 static struct nvmf_session *
-nvmf_find_session_by_id(const char *subnqn, uint16_t session_id)
+nvmf_find_session_by_id(const char *subnqn, uint16_t cntl_id)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_session *sess, *tsess;
@@ -217,8 +217,8 @@ nvmf_find_session_by_id(const char *subnqn, uint16_t session_id)
 		return NULL;
 
 	TAILQ_FOREACH_SAFE(sess, &subsystem->sessions, entries, tsess) {
-		if (sess->cntlid == session_id) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Session Match cntlid %d, sess %p\n", session_id, sess);
+		if (sess->cntlid == cntl_id) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Session Match cntlid %d, sess %p\n", cntl_id, sess);
 			return sess;
 		}
 	}
