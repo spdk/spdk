@@ -144,7 +144,6 @@ spdk_nvmf_port_create(int tag)
 void
 spdk_nvmf_port_destroy(struct spdk_nvmf_port *port)
 {
-#if 0 // TODO: fix bogus scan-build warning about use-after-free
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
 
 	RTE_VERIFY(port != NULL);
@@ -153,11 +152,14 @@ spdk_nvmf_port_destroy(struct spdk_nvmf_port *port)
 	while (!TAILQ_EMPTY(&port->head)) {
 		fabric_intf = TAILQ_FIRST(&port->head);
 		TAILQ_REMOVE(&port->head, fabric_intf, tailq);
+#if 0 // TODO: fix bogus scan-build warning about use-after-free
 		spdk_nvmf_fabric_intf_destroy(fabric_intf);
+#endif
 	}
 
 	TAILQ_REMOVE(&g_port_head, port, tailq);
 
+#if 0 // TODO: fix bogus scan-build warning about use-after-free
 	free(port);
 #endif
 }
