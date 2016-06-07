@@ -54,6 +54,13 @@ time test/lib/log/log.sh
 
 timing_exit lib
 
+timing_enter nvmf
+
+time test/nvmf/fio/fio.sh
+time test/nvmf/filesystem/filesystem.sh
+
+timing_exit nvmf
+
 timing_enter cleanup
 ./scripts/setup.sh reset
 ./scripts/build_kmod.sh clean

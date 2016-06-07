@@ -102,3 +102,13 @@ function process_core() {
 	return $ret
 }
 
+function killprocess() {
+	# $1 = process pid
+	if [ -z "$1" ]; then
+		exit 1
+	fi
+
+	echo "killing process with pid $1"
+	kill $1
+	wait $1 || true
+}
