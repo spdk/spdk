@@ -53,10 +53,9 @@ nvmf_create_session(const char *subnqn)
 	if (subsystem == NULL)
 		return NULL;
 
-	session = malloc(sizeof(struct nvmf_session));
+	session = calloc(1, sizeof(struct nvmf_session));
 	if (session == NULL)
 		goto exit;
-	memset(session, 0, sizeof(struct nvmf_session));
 
 	subsystem->num_sessions++;
 	/* define cntlid that is unique across all subsystems */
@@ -235,7 +234,7 @@ nvmf_connect(void *fabric_conn,
 	struct nvmf_session *session;
 	struct nvmf_connection_entry *connection = NULL;
 
-	connection = malloc(sizeof(struct nvmf_connection_entry));
+	connection = calloc(1, sizeof(struct nvmf_connection_entry));
 	if (connection == NULL)
 		goto connect_fail;
 

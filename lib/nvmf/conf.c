@@ -118,14 +118,14 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 		}
 		p++;
 		n = p - listen_addr;
-		*host = malloc(n + 1);
+		*host = calloc(1, n + 1);
 		if (!*host) {
 			return -1;
 		}
 		memcpy(*host, listen_addr, n);
 		(*host)[n] = '\0';
 		if (p[0] == '\0') {
-			*port = malloc(PORTNUMSTRLEN);
+			*port = calloc(1, PORTNUMSTRLEN);
 			if (!*port) {
 				free(*host);
 				return -1;
@@ -142,12 +142,11 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 			}
 			len = q - p - 1;
 
-			*port = malloc(len + 1);
+			*port = calloc(1, len + 1);
 			if (!*port) {
 				free(*host);
 				return -1;
 			}
-			memset(*port, 0, len + 1);
 			memcpy(*port, p + 1, len);
 		}
 	} else {
@@ -157,14 +156,14 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 			p = listen_addr + strlen(listen_addr);
 		}
 		n = p - listen_addr;
-		*host = malloc(n + 1);
+		*host = calloc(1, n + 1);
 		if (!*host) {
 			return -1;
 		}
 		memcpy(*host, listen_addr, n);
 		(*host)[n] = '\0';
 		if (p[0] == '\0') {
-			*port = malloc(PORTNUMSTRLEN);
+			*port = calloc(1, PORTNUMSTRLEN);
 			if (!*port) {
 				free(*host);
 				return -1;
@@ -186,12 +185,11 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 			}
 
 			len = q - p - 1;
-			*port = malloc(len + 1);
+			*port = calloc(1, len + 1);
 			if (!*port) {
 				free(*host);
 				return -1;
 			}
-			memset(*port, 0, len + 1);
 			memcpy(*port, p + 1, len);
 
 		}
