@@ -48,34 +48,13 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
-/*
- * The NVMf library maintains context for a list of subsystems. Each
- * subsystem will be associated with one or more NVMe controllers
- * that the library discovers.  It is expected that the NVMf library
- * consumer will make requests to create the desired subsystems.
- */
-struct nvmf_driver {
-	pthread_mutex_t mutex;
-};
-
-static struct nvmf_driver g_nvmf_driver;
-
 extern struct rte_mempool *request_mempool;
 
 int
 nvmf_initialize(void)
 {
-	struct nvmf_driver		*system = &g_nvmf_driver;
-	int err;
-
 	if (request_mempool == NULL) {
 		fprintf(stderr, "NVMf application has not created request mempool!\n");
-		return -1;
-	}
-
-	err = pthread_mutex_init(&system->mutex, NULL);
-	if (err < 0) {
-		fprintf(stderr, "NVMf system pthread_mutex_init() failed\n");
 		return -1;
 	}
 
