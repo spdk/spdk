@@ -46,6 +46,7 @@ timing_enter lib
 
 time test/lib/event/event.sh
 time test/lib/nvme/nvme.sh
+time test/lib/nvmf/nvmf.sh
 time test/lib/memory/memory.sh
 time test/lib/ioat/ioat.sh
 time test/lib/json/json.sh

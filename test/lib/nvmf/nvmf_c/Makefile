@@ -31,15 +31,17 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 
-DIRS-y = event log json jsonrpc nvme memory ioat
-DIRS-$(CONFIG_NVMF) += nvmf
+CFLAGS += $(DPDK_INC)
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+             $(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
+             $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+             $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
+             $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
 
-.PHONY: all clean $(DIRS-y)
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) -lpthread $(DPDK_LIB) -lrt
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+TEST_FILE = nvmf_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.unittest.mk
