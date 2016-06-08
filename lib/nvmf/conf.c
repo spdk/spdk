@@ -222,7 +222,7 @@ spdk_nvmf_parse_port(struct spdk_conf_section *sp)
 
 	/* Loop over the fabric interfaces and add them to the port */
 	for (i = 0; ; i++) {
-		listen_addr = spdk_conf_section_get_nmval(sp, "FabricIntf", i, 1);
+		listen_addr = spdk_conf_section_get_nmval(sp, "FabricIntf", i, 0);
 		if (listen_addr == NULL) {
 			break;
 		}
@@ -236,6 +236,11 @@ spdk_nvmf_parse_port(struct spdk_conf_section *sp)
 		}
 
 		spdk_nvmf_port_add_fabric_intf(port, fabric_intf);
+	}
+
+	if (TAILQ_EMPTY(&port->head)) {
+		SPDK_ERRLOG("No fabric interface found\n");
+		return -1;
 	}
 
 	return 0;
