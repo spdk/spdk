@@ -51,6 +51,7 @@ struct nvme_bdf_whitelist {
 
 struct spdk_nvmf_probe_ctx {
 	bool claim_all;
+	bool unbind_from_kernel;
 	int whitelist_count;
 	struct nvme_bdf_whitelist whitelist[SPDK_NVMF_MAX_NVME_DEVICES];
 };
@@ -139,27 +140,37 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 	uint8_t found_dev    = spdk_pci_device_get_dev(dev);
 	uint8_t found_func   = spdk_pci_device_get_func(dev);
 	int i;
+	bool claim_device = false;
 
 	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
 		       found_domain, found_bus, found_dev, found_func);
 
-	if (spdk_pci_device_has_non_uio_driver(dev)) {
-		SPDK_NOTICELOG("Skipping device %x:%x:%x.%x because it is bound to the kernel\n",
-			       found_domain, found_bus, found_dev, found_func);
+	if (ctx->claim_all) {
+		claim_device = true;
+	} else {
+		for (i = 0; i < SPDK_NVMF_MAX_NVME_DEVICES; i++) {
+			if (found_domain == ctx->whitelist[i].domain &&
+			    found_bus == ctx->whitelist[i].bus &&
+			    found_dev == ctx->whitelist[i].dev &&
+			    found_func == ctx->whitelist[i].func) {
+				claim_device = true;
+				break;
+			}
+		}
+	}
+
+	if (!claim_device) {
 		return false;
 	}
 
-	if (ctx->claim_all) {
-		return true;
-	}
-
-	for (i = 0; i < SPDK_NVMF_MAX_NVME_DEVICES; i++) {
-		if (found_domain == ctx->whitelist[i].domain &&
-		    found_bus == ctx->whitelist[i].bus &&
-		    found_dev == ctx->whitelist[i].dev &&
-		    found_func == ctx->whitelist[i].func) {
-			return true;
+	if (spdk_pci_device_has_non_uio_driver(dev)) {
+		if (ctx->unbind_from_kernel) {
+			if (spdk_pci_device_switch_to_uio_driver(dev) == 0) {
+				return true;
+			}
 		}
+	} else {
+		return true;
 	}
 
 	return false;
@@ -221,6 +232,13 @@ spdk_nvmf_init_nvme(void)
 	if (val != NULL) {
 		if (!strcmp(val, "Yes")) {
 			ctx.claim_all = true;
+		}
+	}
+
+	val = spdk_conf_section_get_val(sp, "UnbindFromKernel");
+	if (val != NULL) {
+		if (!strcmp(val, "Yes")) {
+			ctx.unbind_from_kernel = true;
 		}
 	}
 
