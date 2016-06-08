@@ -33,6 +33,9 @@
 
 #include <arpa/inet.h>
 
+#include <rte_config.h>
+#include <rte_mempool.h>
+
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "nvmf.h"

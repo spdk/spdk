@@ -36,13 +36,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <pthread.h>
-
-#include <rte_config.h>
-#include <rte_mempool.h>
-
-#include "spdk/nvmf_spec.h"
-#include "spdk/nvme.h"
 
 /**
  * \file

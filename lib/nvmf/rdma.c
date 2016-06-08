@@ -41,6 +41,7 @@
 #include <rte_debug.h>
 #include <rte_cycles.h>
 #include <rte_timer.h>
+#include <rte_mempool.h>
 
 #include "conn.h"
 #include "rdma.h"

@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ctype.h>
+
 #include "controller.h"
 #include "port.h"
 #include "init_grp.h"
