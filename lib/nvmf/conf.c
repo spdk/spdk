@@ -267,7 +267,7 @@ spdk_nvmf_parse_init_grp(struct spdk_conf_section *sp)
 	const char *mask;
 	char **netmasks;
 	int num_netmasks;
-	struct spdk_nvmf_init_grp *init_grp;
+	struct spdk_nvmf_host *host;
 
 
 	for (num_netmasks = 0; ; num_netmasks++) {
@@ -296,9 +296,9 @@ spdk_nvmf_parse_init_grp(struct spdk_conf_section *sp)
 		}
 	}
 
-	init_grp = spdk_nvmf_init_grp_create(sp->num, num_netmasks, netmasks);
+	host = spdk_nvmf_init_grp_create(sp->num, num_netmasks, netmasks);
 
-	if (!init_grp) {
+	if (!host) {
 		free(netmasks);
 		return -1;
 	}

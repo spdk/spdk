@@ -67,8 +67,8 @@ struct spdk_nvmf_subsystem {
 };
 
 struct spdk_nvmf_access_map {
-	struct spdk_nvmf_port		*port;
-	struct spdk_nvmf_init_grp	*ig;
+	struct spdk_nvmf_port	*port;
+	struct spdk_nvmf_host	*host;
 };
 
 struct spdk_nvmf_subsystem_grp {

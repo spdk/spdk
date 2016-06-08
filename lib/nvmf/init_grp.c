@@ -49,15 +49,15 @@
 #define MAX_INITIATOR_NAME 256
 #define MAX_NETMASK 256
 
-static TAILQ_HEAD(, spdk_nvmf_init_grp)	g_ig_head = TAILQ_HEAD_INITIALIZER(g_ig_head);
+static TAILQ_HEAD(, spdk_nvmf_host) g_host_head = TAILQ_HEAD_INITIALIZER(g_host_head);
 
-struct spdk_nvmf_init_grp *
+struct spdk_nvmf_host *
 spdk_nvmf_init_grp_create(int tag,
 			  int num_netmasks,
 			  char **netmasks)
 {
 	int i;
-	struct spdk_nvmf_init_grp *ig = NULL;
+	struct spdk_nvmf_host *host = NULL;
 
 	/* Make sure there are no duplicate initiator group tags */
 	if (nvmf_initiator_group_find_by_tag(tag)) {
@@ -75,46 +75,46 @@ spdk_nvmf_init_grp_create(int tag,
 		      "add initiator group (from initiator list) tag=%d, #masks=%d\n",
 		      tag, num_netmasks);
 
-	ig = calloc(1, sizeof(*ig));
-	if (!ig) {
-		SPDK_ERRLOG("initiator group malloc error (%d)\n", tag);
+	host = calloc(1, sizeof(*host));
+	if (!host) {
+		SPDK_ERRLOG("Unable to allocate host (%d)\n", tag);
 		return NULL;
 	}
 
-	ig->tag = tag;
+	host->tag = tag;
 
-	ig->nnetmasks = num_netmasks;
-	ig->netmasks = netmasks;
+	host->nnetmasks = num_netmasks;
+	host->netmasks = netmasks;
 	for (i = 0; i < num_netmasks; i++) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Netmask %s\n", ig->netmasks[i]);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Netmask %s\n", host->netmasks[i]);
 	}
 
-	ig->state = GROUP_INIT;
+	host->state = GROUP_INIT;
 
 	pthread_mutex_lock(&g_nvmf_tgt.mutex);
-	ig->state = GROUP_READY;
-	TAILQ_INSERT_TAIL(&g_ig_head, ig, tailq);
+	host->state = GROUP_READY;
+	TAILQ_INSERT_TAIL(&g_host_head, host, tailq);
 	pthread_mutex_unlock(&g_nvmf_tgt.mutex);
 
-	return ig;
+	return host;
 }
 
 static void
-nvmf_initiator_group_destroy(struct spdk_nvmf_init_grp *ig)
+nvmf_initiator_group_destroy(struct spdk_nvmf_host *host)
 {
 #if 0 // TODO: fix bogus scan-build warning about use-after-free
 	int i;
 
-	if (!ig) {
+	if (!host) {
 		return;
 	}
 
-	for (i = 0; i < ig->nnetmasks; i++) {
-		free(ig->netmasks[i]);
+	for (i = 0; i < host->nnetmasks; i++) {
+		free(host->netmasks[i]);
 	}
 
-	free(ig->netmasks);
-	free(ig);
+	free(host->netmasks);
+	free(host);
 #endif
 }
 
@@ -239,25 +239,25 @@ spdk_nvmf_allow_netmask(const char *netmask, const char *addr)
 	return 0;
 }
 
-struct spdk_nvmf_init_grp *
+struct spdk_nvmf_host *
 nvmf_initiator_group_find_by_addr(char *addr)
 {
-	struct spdk_nvmf_init_grp	*ig;
+	struct spdk_nvmf_host	*host;
 	int i;
 	int rc;
 
 	if (addr == NULL)
 		return NULL;
 
-	TAILQ_FOREACH(ig, &g_ig_head, tailq) {
+	TAILQ_FOREACH(host, &g_host_head, tailq) {
 		/* check netmask of each group looking for permission */
-		for (i = 0; i < ig->nnetmasks; i++) {
+		for (i = 0; i < host->nnetmasks; i++) {
 			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "netmask=%s, addr=%s\n",
-				      ig->netmasks[i], addr);
-			rc = spdk_nvmf_allow_netmask(ig->netmasks[i], addr);
+				      host->netmasks[i], addr);
+			rc = spdk_nvmf_allow_netmask(host->netmasks[i], addr);
 			if (rc > 0) {
 				/* OK netmask */
-				return ig;
+				return host;
 			}
 		}
 	}
@@ -267,15 +267,15 @@ nvmf_initiator_group_find_by_addr(char *addr)
 	return NULL;
 }
 
-struct spdk_nvmf_init_grp *
+struct spdk_nvmf_host *
 nvmf_initiator_group_find_by_tag(int tag)
 {
-	struct spdk_nvmf_init_grp *ig;
+	struct spdk_nvmf_host *host;
 
-	TAILQ_FOREACH(ig, &g_ig_head, tailq) {
-		if (ig->tag == tag) {
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, " found initiator group with tag: ig %p\n", ig);
-			return ig;
+	TAILQ_FOREACH(host, &g_host_head, tailq) {
+		if (host->tag == tag) {
+			SPDK_TRACELOG(SPDK_TRACE_DEBUG, " found initiator group with tag: host %p\n", host);
+			return host;
 		}
 	}
 
@@ -285,15 +285,15 @@ nvmf_initiator_group_find_by_tag(int tag)
 void
 nvmf_initiator_group_array_destroy(void)
 {
-	struct spdk_nvmf_init_grp *ig;
+	struct spdk_nvmf_host *host;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Enter\n");
 	pthread_mutex_lock(&g_nvmf_tgt.mutex);
-	while (!TAILQ_EMPTY(&g_ig_head)) {
-		ig = TAILQ_FIRST(&g_ig_head);
-		ig->state = GROUP_DESTROY;
-		TAILQ_REMOVE(&g_ig_head, ig, tailq);
-		nvmf_initiator_group_destroy(ig);
+	while (!TAILQ_EMPTY(&g_host_head)) {
+		host = TAILQ_FIRST(&g_host_head);
+		host->state = GROUP_DESTROY;
+		TAILQ_REMOVE(&g_host_head, host, tailq);
+		nvmf_initiator_group_destroy(host);
 	}
 	pthread_mutex_unlock(&g_nvmf_tgt.mutex);
 }

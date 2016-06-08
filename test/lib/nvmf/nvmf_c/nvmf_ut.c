@@ -111,7 +111,7 @@ void spdk_nvmf_port_destroy_all(void)
 {
 }
 
-struct spdk_nvmf_init_grp *nvmf_initiator_group_find_by_tag(int tag)
+struct spdk_nvmf_host *nvmf_initiator_group_find_by_tag(int tag)
 {
 	return NULL;
 }

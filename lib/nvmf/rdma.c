@@ -406,7 +406,7 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 static int
 nvmf_rdma_cm_connect(struct rdma_cm_event *event)
 {
-	struct spdk_nvmf_init_grp	*ig;
+	struct spdk_nvmf_host		*host;
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
 	struct rdma_cm_id		*conn_id;
 	struct spdk_nvmf_conn		*conn;
@@ -453,12 +453,12 @@ nvmf_rdma_cm_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Route: peer addr %s\n",
 		      addr_str);
 
-	ig = nvmf_initiator_group_find_by_addr(addr_str);
-	if (ig == NULL) {
+	host = nvmf_initiator_group_find_by_addr(addr_str);
+	if (host == NULL) {
 		SPDK_ERRLOG("connect request: remote host addr not provisioned!\n");
 		goto err1;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Found approved remote host initiator group %p\n", ig);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Found approved remote host %p\n", host);
 
 	/* Init the NVMf rdma transport connection */
 	conn = spdk_nvmf_allocate_conn();

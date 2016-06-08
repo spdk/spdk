@@ -37,25 +37,25 @@
 #include "spdk/queue.h"
 #include "port.h" // For enum group_state
 
-struct spdk_nvmf_init_grp {
+struct spdk_nvmf_host {
 	int nnetmasks;
 	char **netmasks;
 	int ref;
 	int tag;
 	enum group_state state;
-	TAILQ_ENTRY(spdk_nvmf_init_grp)	tailq;
+	TAILQ_ENTRY(spdk_nvmf_host)	tailq;
 };
 
 /* NVMf Initiator Group management API */
-struct spdk_nvmf_init_grp *
+struct spdk_nvmf_host *
 spdk_nvmf_init_grp_create(int tag,
 			  int num_netmasks,
 			  char **netmasks);
 
-struct spdk_nvmf_init_grp *
+struct spdk_nvmf_host *
 nvmf_initiator_group_find_by_tag(int tag);
 
-struct spdk_nvmf_init_grp *
+struct spdk_nvmf_host *
 nvmf_initiator_group_find_by_addr(char *addr);
 
 void

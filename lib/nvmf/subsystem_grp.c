@@ -218,7 +218,7 @@ spdk_nvmf_subsystem_destruct(struct spdk_nvmf_subsystem_grp *ss_group)
 	free(ss_group->name);
 
 	for (i = 0; i < ss_group->map_count; i++) {
-		ss_group->map[i].ig->ref--;
+		ss_group->map[i].host->ref--;
 	}
 
 	/* Call NVMf library to free the subsystem */
@@ -229,11 +229,11 @@ spdk_nvmf_subsystem_destruct(struct spdk_nvmf_subsystem_grp *ss_group)
 
 static int
 spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
-			    int port_tag, int ig_tag)
+			    int port_tag, int host_tag)
 {
-	struct spdk_nvmf_access_map		*map;
-	struct spdk_nvmf_port			*port;
-	struct spdk_nvmf_init_grp		*ig;
+	struct spdk_nvmf_access_map	*map;
+	struct spdk_nvmf_port		*port;
+	struct spdk_nvmf_host		*host;
 
 	port = spdk_nvmf_port_find_by_tag(port_tag);
 	if (port == NULL) {
@@ -244,19 +244,19 @@ spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
 		SPDK_ERRLOG("%s: Port%d not active\n", ss_group->name, port_tag);
 		return -1;
 	}
-	ig = nvmf_initiator_group_find_by_tag(ig_tag);
-	if (ig == NULL) {
-		SPDK_ERRLOG("%s: Host%d not found\n", ss_group->name, ig_tag);
+	host = nvmf_initiator_group_find_by_tag(host_tag);
+	if (host == NULL) {
+		SPDK_ERRLOG("%s: Host%d not found\n", ss_group->name, host_tag);
 		return -1;
 	}
-	if (ig->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: Host%d not active\n", ss_group->name, ig_tag);
+	if (host->state != GROUP_READY) {
+		SPDK_ERRLOG("%s: Host%d not active\n", ss_group->name, host_tag);
 		return -1;
 	}
-	ig->ref++;
+	host->ref++;
 	map = &ss_group->map[ss_group->map_count];
 	map->port = port;
-	map->ig = ig;
+	map->host = host;
 	ss_group->map_count++;
 
 	return 0;
