@@ -93,7 +93,7 @@
 # domain, bus, device, and function. The format is dddd:bb:dd.f, which is
 # the same format displayed by lspci or in /sys/bus/pci/devices. The second
 # argument is a "name" for the device that can be anything. The name
-# is referenced later in the SubsystemGroup section.
+# is referenced later in the Subsystem section.
 #
 # Alternatively, the user can specify ClaimAllDevices. All
 # NVMe devices will be claimed and named Nvme0, Nvme1, etc.
@@ -102,9 +102,9 @@
   BDF 0000:01:00.0 Nvme1
   # ClaimAllDevices Yes
 
-# Users should change the NVMfSubsystem section(s) below to define the
+# Users should change the Subsystem section(s) below to define the
 #   set of local NVMe resources that will be accessible by specific groups
-#   of remote initiators.  These mappings will be inspected to approve
+#   of hosts.  These mappings will be inspected to approve
 #   remote fabric transport and NVMf protocol connection requests.
 #
 # Each approved NVMf connection represents a specific virtual controller
@@ -120,13 +120,13 @@
 #   access to the same subsystem.
 # Each Controller identifies a specific HW device from the Nvme whitelist
 #   section above.
-[SubsystemGroup1]
+[Subsystem1]
   SubsystemName cnode1
   Mapping Port1 Host1
   # Using NVME 0 namespace 1
   Controller0 Nvme0
 
-[SubsystemGroup2]
+[Subsystem2]
   SubsystemName cnode2
   Mapping Port2 Host2
   # Using NVME 1 namespace 1

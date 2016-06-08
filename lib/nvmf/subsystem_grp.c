@@ -413,7 +413,7 @@ spdk_initialize_nvmf_subsystems(void)
 
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "SubsystemGroup")) {
+		if (spdk_conf_section_match_prefix(sp, "Subsystem")) {
 			if (sp->num > SPDK_CN_TAG_MAX) {
 				SPDK_ERRLOG("tag %d is invalid\n", sp->num);
 				SPDK_TRACELOG(SPDK_TRACE_DEBUG, "tag %d is invalid\n", sp->num);
