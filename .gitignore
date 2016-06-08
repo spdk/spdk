@@ -10,3 +10,4 @@
 tags
 dpdk-*
 CUnit-Memory-Dump.xml
+config.h
