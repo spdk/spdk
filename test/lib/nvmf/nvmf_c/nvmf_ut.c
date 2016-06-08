@@ -46,7 +46,7 @@
 #include "spdk/string.h"
 
 #include "nvmf/controller.c"
-#include "nvmf/framework.c"
+#include "nvmf/nvmf.c"
 #include "nvmf/nvmf_admin_cmd.c"
 #include "nvmf/nvmf_io_cmd.c"
 #include "nvmf/session.c"
