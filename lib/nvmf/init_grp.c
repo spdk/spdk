@@ -35,7 +35,7 @@
 #include <string.h>
 
 #include "init_grp.h"
-#include "nvmf.h"
+#include "nvmf_internal.h"
 #include "subsystem_grp.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"

@@ -125,7 +125,30 @@ struct __attribute__((packed)) nvme_read_cdw13 {
 	uint8_t		rsvd[3];
 };
 
+struct spdk_nvmf_globals {
+	char *authfile;
+
+	char *nodebase;
+
+	pthread_mutex_t mutex;
+
+	int MaxInCapsuleData;
+	int MaxSessionsPerSubsystem;
+	int MaxQueueDepth;
+	int MaxConnectionsPerSession;
+	int MaxRecvDataSegmentLength;
+
+	struct rte_mempool *rx_desc_pool;
+	struct rte_mempool *tx_desc_pool;
+	struct rte_mempool *nvme_request_pool;
+	struct rte_mempool *bb_small_pool;
+	struct rte_mempool *bb_large_pool;
+	uint16_t	   sin_port;
+};
+
 void
 nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);
+
+extern struct spdk_nvmf_globals g_nvmf_tgt;
 
 #endif /* __NVMF_INTERNAL_H__ */

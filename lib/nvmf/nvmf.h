@@ -82,29 +82,6 @@
 #define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
-struct spdk_nvmf_globals {
-	char *authfile;
-
-	char *nodebase;
-
-	pthread_mutex_t mutex;
-
-	int MaxInCapsuleData;
-	int MaxSessionsPerSubsystem;
-	int MaxQueueDepth;
-	int MaxConnectionsPerSession;
-	int MaxRecvDataSegmentLength;
-
-	struct rte_mempool *rx_desc_pool;
-	struct rte_mempool *tx_desc_pool;
-	struct rte_mempool *nvme_request_pool;
-	struct rte_mempool *bb_small_pool;
-	struct rte_mempool *bb_large_pool;
-	uint16_t	   sin_port;
-};
-
-extern struct spdk_nvmf_globals g_nvmf_tgt;
-
 int
 nvmf_tgt_init(char *authfile, char *nodebase, int max_in_capsule_data, int max_sessions,
 	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len, int listen_port);
