@@ -123,6 +123,8 @@ allocate_conn(void)
 static void
 free_conn(struct spdk_nvmf_conn *conn)
 {
+	conn->sess = NULL;
+	conn->cm_id = 0;
 	conn->is_valid = 0;
 }
 
@@ -303,8 +305,6 @@ _conn_destruct(spdk_event_t event)
 	nvmf_rdma_conn_cleanup(conn);
 
 	pthread_mutex_lock(&g_conns_mutex);
-	conn->sess = NULL;
-	conn->cm_id = 0;
 	free_conn(conn);
 	pthread_mutex_unlock(&g_conns_mutex);
 }
