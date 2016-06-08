@@ -41,8 +41,6 @@
 #include "spdk/pci.h"
 #include "spdk/trace.h"
 
-extern struct rte_mempool *request_mempool;
-
 int
 nvmf_process_admin_cmd(struct nvmf_session *session,
 		       struct spdk_nvme_cmd *cmd,
