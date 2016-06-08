@@ -112,7 +112,7 @@ nvmf_tgt_init(char *authfile, char *nodebase, int max_in_capsule_data, int max_s
 struct nvmf_request;
 
 int
-spdk_nvmf_check_pools(struct spdk_nvmf_globals *spdk_nvmf);
+spdk_nvmf_check_pools(void);
 
 int
 nvmf_initialize(void);

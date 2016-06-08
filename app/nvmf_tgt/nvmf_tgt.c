@@ -231,7 +231,7 @@ main(int argc, char **argv)
 
 	spdk_app_fini();
 
-	if (spdk_nvmf_check_pools(&g_nvmf_tgt) != 0) {
+	if (spdk_nvmf_check_pools() != 0) {
 		rc = -1;
 	}
 

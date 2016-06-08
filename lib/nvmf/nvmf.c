@@ -187,8 +187,9 @@ static int spdk_nvmf_check_pool(struct rte_mempool *pool, uint32_t count)
 }
 
 int
-spdk_nvmf_check_pools(struct spdk_nvmf_globals *spdk_nvmf)
+spdk_nvmf_check_pools(void)
 {
+	struct spdk_nvmf_globals *spdk_nvmf = &g_nvmf_tgt;
 	int rc = 0;
 
 	rc += spdk_nvmf_check_pool(spdk_nvmf->nvme_request_pool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
