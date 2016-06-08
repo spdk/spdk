@@ -36,7 +36,7 @@
 
 #include "conf.h"
 #include "init_grp.h"
-#include "nvmf.h"
+#include "nvmf_internal.h"
 #include "port.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"

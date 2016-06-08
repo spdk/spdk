@@ -42,44 +42,13 @@
  *
  */
 
-#define SMALL_BB_MAX_SIZE 4096
-#define LARGE_BB_MAX_SIZE (128 * 1024)
-
-/*
- * NVMf target supports a maximum transfer size that is equal to
- * a single allocated bounce buffer per request.
- */
-#define SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE  LARGE_BB_MAX_SIZE
-
 
 #define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
-#define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
-#define SPDK_NVMF_DEFAULT_AUTHFILE SPDK_NVMF_BUILD_ETC "/auth.conf"
-#define SPDK_NVMF_DEFAULT_NODEBASE "iqn.2013-10.com.intel.spdk"
-#define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 1024
-#define SPDK_NVMF_DEFAULT_MAX_SESSIONS_PER_SUBSYSTEM 1
-#define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
-#define SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION 4
-#define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)7174)
 
-#define OBJECT_NVMF_IO				0x30
-
-#define TRACE_GROUP_NVMF			0x3
-#define TRACE_NVMF_IO_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0)
-#define TRACE_RDMA_READ_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x1)
-#define TRACE_RDMA_WRITE_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x2)
-#define TRACE_RDMA_READ_COMPLETE      		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x3)
-#define TRACE_RDMA_WRITE_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x4)
-#define TRACE_NVMF_LIB_READ_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x5)
-#define TRACE_NVMF_LIB_WRITE_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x6)
-#define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
-#define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
 int
 nvmf_tgt_init(char *authfile, char *nodebase, int max_in_capsule_data, int max_sessions,
 	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len, int listen_port);
-
-struct nvmf_request;
 
 int
 spdk_nvmf_check_pools(void);
