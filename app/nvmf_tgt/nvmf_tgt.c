@@ -47,7 +47,7 @@
 #include "nvmf/conn.h"
 #include "nvmf/rdma.h"
 #include "nvmf/port.h"
-#include "nvmf/init_grp.h"
+#include "nvmf/host.h"
 #include "nvmf/nvmf.h"
 
 #include "spdk/log.h"

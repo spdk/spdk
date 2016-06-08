@@ -48,7 +48,7 @@
 #include "rdma.h"
 #include "nvmf.h"
 #include "port.h"
-#include "init_grp.h"
+#include "host.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
 

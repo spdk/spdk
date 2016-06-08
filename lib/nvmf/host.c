@@ -34,7 +34,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-#include "init_grp.h"
+#include "host.h"
 #include "nvmf_internal.h"
 #include "subsystem_grp.h"
 #include "spdk/log.h"

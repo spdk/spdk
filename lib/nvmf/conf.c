@@ -35,7 +35,7 @@
 #include <string.h>
 
 #include "conf.h"
-#include "init_grp.h"
+#include "host.h"
 #include "nvmf_internal.h"
 #include "port.h"
 #include "spdk/conf.h"

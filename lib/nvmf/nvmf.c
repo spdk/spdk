@@ -43,7 +43,7 @@
 #include "conn.h"
 #include "controller.h"
 #include "port.h"
-#include "init_grp.h"
+#include "host.h"
 #include "rdma.h"
 #include "subsystem_grp.h"
 #include "spdk/trace.h"

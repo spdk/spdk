@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMF_INIT_GRP_H
-#define NVMF_INIT_GRP_H
+#ifndef NVMF_HOST_H
+#define NVMF_HOST_H
 
 #include "spdk/queue.h"
 #include "port.h" // For enum group_state
@@ -61,4 +61,4 @@ spdk_nvmf_host_find_by_addr(char *addr);
 void
 spdk_nvmf_host_destroy_all(void);
 
-#endif /* NVMF_INIT_GRP_H */
+#endif

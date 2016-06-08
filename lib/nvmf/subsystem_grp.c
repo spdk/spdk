@@ -35,7 +35,7 @@
 
 #include "controller.h"
 #include "port.h"
-#include "init_grp.h"
+#include "host.h"
 #include "nvmf_internal.h"
 #include "nvmf.h"
 #include "session.h"
