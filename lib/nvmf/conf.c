@@ -47,7 +47,6 @@ static int
 spdk_nvmf_parse_nvmf_tgt(void)
 {
 	struct spdk_conf_section *sp;
-	char *authfile;
 	char *nodebase;
 	int max_in_capsule_data;
 	int max_sessions_per_subsystem;
@@ -61,11 +60,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	if (sp == NULL) {
 		SPDK_ERRLOG("No Nvmf section in configuration file.\n");
 		return -1;
-	}
-
-	authfile = spdk_conf_section_get_val(sp, "AuthFile");
-	if (authfile == NULL) {
-		authfile = SPDK_NVMF_DEFAULT_AUTHFILE;
 	}
 
 	nodebase = spdk_conf_section_get_val(sp, "NodeBase");
@@ -96,7 +90,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	max_recv_seg_len = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE;
 	listen_port = SPDK_NVMF_DEFAULT_SIN_PORT;
 
-	rc = nvmf_tgt_init(authfile, nodebase, max_in_capsule_data, max_sessions_per_subsystem,
+	rc = nvmf_tgt_init(nodebase, max_in_capsule_data, max_sessions_per_subsystem,
 			   max_queue_depth, max_conn_per_sess, max_recv_seg_len, listen_port);
 
 	return rc;

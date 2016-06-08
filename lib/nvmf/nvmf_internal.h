@@ -58,7 +58,6 @@
 #define SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE  LARGE_BB_MAX_SIZE
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
-#define SPDK_NVMF_DEFAULT_AUTHFILE SPDK_NVMF_BUILD_ETC "/auth.conf"
 #define SPDK_NVMF_DEFAULT_NODEBASE "iqn.2013-10.com.intel.spdk"
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 1024
 #define SPDK_NVMF_DEFAULT_MAX_SESSIONS_PER_SUBSYSTEM 1
@@ -159,8 +158,6 @@ struct __attribute__((packed)) nvme_read_cdw13 {
 };
 
 struct spdk_nvmf_globals {
-	char *authfile;
-
 	char *nodebase;
 
 	pthread_mutex_t mutex;

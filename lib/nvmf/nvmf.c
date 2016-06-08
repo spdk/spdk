@@ -209,22 +209,15 @@ spdk_nvmf_check_pools(void)
 }
 
 int
-nvmf_tgt_init(char *authfile, char *nodebase, int max_in_capsule_data,
+nvmf_tgt_init(char *nodebase, int max_in_capsule_data,
 	      int max_sessions_per_subsystem,
 	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len, int listen_port)
 {
 	int rc;
 
-	g_nvmf_tgt.authfile = strdup(authfile);
-	if (!g_nvmf_tgt.authfile) {
-		SPDK_ERRLOG("No authfile provided\n");
-		return -EINVAL;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "AuthFile: %s\n", g_nvmf_tgt.authfile);
-
 	g_nvmf_tgt.nodebase = strdup(nodebase);
 	if (!g_nvmf_tgt.nodebase) {
-		SPDK_ERRLOG("No authfile provided\n");
+		SPDK_ERRLOG("No NodeBase provided\n");
 		return -EINVAL;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NodeBase: %s\n", g_nvmf_tgt.nodebase);
@@ -348,7 +341,6 @@ nvmf_tgt_subsystem_fini(void)
 	nvmf_shutdown();
 	nvmf_initiator_group_array_destroy();
 	spdk_nvmf_port_destroy_all();
-	free(g_nvmf_tgt.authfile);
 	free(g_nvmf_tgt.nodebase);
 
 	pthread_mutex_destroy(&g_nvmf_tgt.mutex);

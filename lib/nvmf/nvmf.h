@@ -42,12 +42,8 @@
  *
  */
 
-
-#define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
-
-
 int
-nvmf_tgt_init(char *authfile, char *nodebase, int max_in_capsule_data, int max_sessions,
+nvmf_tgt_init(char *nodebase, int max_in_capsule_data, int max_sessions,
 	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len, int listen_port);
 
 int
