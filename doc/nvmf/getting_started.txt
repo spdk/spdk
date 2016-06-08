@@ -73,7 +73,7 @@ You must edit a version of this file for use in your environment and copy it
 to /usr/local/etc/spdk/nvmf.conf.  Alternatively, you may also specify the
 configuration file explicitly using `-c /path/to/nvmf.conf` when starting `nvmf_tgt`.
 
-The `Port` and `InitiatorGroup` sections must be updated in all cases to
+The `Port` and `Host` sections must be updated in all cases to
 match the IP addresses in your network environment.
 
 The `Nvme` section must also be updated with a the list of NVMe devices

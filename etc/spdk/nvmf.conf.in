@@ -77,15 +77,15 @@
 [Port2]
   FabricIntf 192.168.2.21:7174
 
-# Users must change the InitiatorGroup section(s) to match the IP
-#  addresses and initiator configuration in their environment.
+# Users must change the Host section(s) to match the IP
+#  addresses of the clients that will connect to this target.
 # Netmask can be used to specify a single IP address or a range of IP addresses
 #  Netmask 192.168.1.20   <== single IP address
 #  Netmask 192.168.1.0/24 <== IP range 192.168.1.*
-[InitiatorGroup1]
+[Host1]
   Netmask 15.15.15.0/24
 
-[InitiatorGroup2]
+[Host2]
   Netmask 192.168.2.0/24
 
 # NVMe Device Whitelist
@@ -122,13 +122,13 @@
 #   section above.
 [SubsystemGroup1]
   SubsystemName cnode1
-  Mapping Port1 InitiatorGroup1
+  Mapping Port1 Host1
   # Using NVME 0 namespace 1
   Controller0 Nvme0
 
 [SubsystemGroup2]
   SubsystemName cnode2
-  Mapping Port2 InitiatorGroup2
+  Mapping Port2 Host2
   # Using NVME 1 namespace 1
   Controller0 Nvme1
 

@@ -319,7 +319,7 @@ spdk_nvmf_parse_init_grps(void)
 
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "InitiatorGroup")) {
+		if (spdk_conf_section_match_prefix(sp, "Host")) {
 			rc = spdk_nvmf_parse_init_grp(sp);
 			if (rc < 0) {
 				return -1;

@@ -244,11 +244,11 @@ spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
 	}
 	ig = nvmf_initiator_group_find_by_tag(ig_tag);
 	if (ig == NULL) {
-		SPDK_ERRLOG("%s: InitiatorGroup%d not found\n", ss_group->name, ig_tag);
+		SPDK_ERRLOG("%s: Host%d not found\n", ss_group->name, ig_tag);
 		return -1;
 	}
 	if (ig->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: InitiatorGroup%d not active\n", ss_group->name, ig_tag);
+		SPDK_ERRLOG("%s: Host%d not active\n", ss_group->name, ig_tag);
 		return -1;
 	}
 	ig->ref++;
@@ -334,10 +334,10 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 			SPDK_ERRLOG("LU%d: mapping port error\n", ss_group->num);
 			goto err0;
 		}
-		if (strncasecmp(ig_tag, "InitiatorGroup",
-				strlen("InitiatorGroup")) != 0
+		if (strncasecmp(ig_tag, "Host",
+				strlen("Host")) != 0
 		    || sscanf(ig_tag, "%*[^0-9]%d", &ig_tag_i) != 1) {
-			SPDK_ERRLOG("LU%d: mapping initiator error\n", ss_group->num);
+			SPDK_ERRLOG("LU%d: mapping host error\n", ss_group->num);
 			goto err0;
 		}
 		if (port_tag_i < 1 || ig_tag_i < 1) {
