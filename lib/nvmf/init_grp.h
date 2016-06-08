@@ -48,17 +48,17 @@ struct spdk_nvmf_host {
 
 /* NVMf Initiator Group management API */
 struct spdk_nvmf_host *
-spdk_nvmf_init_grp_create(int tag,
-			  int num_netmasks,
-			  char **netmasks);
+spdk_nvmf_host_create(int tag,
+		      int num_netmasks,
+		      char **netmasks);
 
 struct spdk_nvmf_host *
-nvmf_initiator_group_find_by_tag(int tag);
+spdk_nvmf_host_find_by_tag(int tag);
 
 struct spdk_nvmf_host *
-nvmf_initiator_group_find_by_addr(char *addr);
+spdk_nvmf_host_find_by_addr(char *addr);
 
 void
-nvmf_initiator_group_array_destroy(void);
+spdk_nvmf_host_destroy_all(void);
 
 #endif /* NVMF_INIT_GRP_H */

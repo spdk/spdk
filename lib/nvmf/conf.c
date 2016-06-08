@@ -296,7 +296,7 @@ spdk_nvmf_parse_init_grp(struct spdk_conf_section *sp)
 		}
 	}
 
-	host = spdk_nvmf_init_grp_create(sp->num, num_netmasks, netmasks);
+	host = spdk_nvmf_host_create(sp->num, num_netmasks, netmasks);
 
 	if (!host) {
 		free(netmasks);

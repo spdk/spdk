@@ -339,7 +339,7 @@ nvmf_tgt_subsystem_fini(void)
 {
 	spdk_shutdown_nvmf_subsystems();
 	nvmf_shutdown();
-	nvmf_initiator_group_array_destroy();
+	spdk_nvmf_host_destroy_all();
 	spdk_nvmf_port_destroy_all();
 	free(g_nvmf_tgt.nodebase);
 

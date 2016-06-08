@@ -244,7 +244,7 @@ spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
 		SPDK_ERRLOG("%s: Port%d not active\n", ss_group->name, port_tag);
 		return -1;
 	}
-	host = nvmf_initiator_group_find_by_tag(host_tag);
+	host = spdk_nvmf_host_find_by_tag(host_tag);
 	if (host == NULL) {
 		SPDK_ERRLOG("%s: Host%d not found\n", ss_group->name, host_tag);
 		return -1;

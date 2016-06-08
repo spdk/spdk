@@ -98,7 +98,7 @@ int spdk_initialize_nvmf_conns(int max_connections)
 	return 0;
 }
 
-void nvmf_initiator_group_array_destroy(void)
+void spdk_nvmf_host_destroy_all(void)
 {
 }
 
@@ -111,7 +111,7 @@ void spdk_nvmf_port_destroy_all(void)
 {
 }
 
-struct spdk_nvmf_host *nvmf_initiator_group_find_by_tag(int tag)
+struct spdk_nvmf_host *spdk_nvmf_host_find_by_tag(int tag)
 {
 	return NULL;
 }

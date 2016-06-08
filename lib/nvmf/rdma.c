@@ -453,7 +453,7 @@ nvmf_rdma_cm_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Route: peer addr %s\n",
 		      addr_str);
 
-	host = nvmf_initiator_group_find_by_addr(addr_str);
+	host = spdk_nvmf_host_find_by_addr(addr_str);
 	if (host == NULL) {
 		SPDK_ERRLOG("connect request: remote host addr not provisioned!\n");
 		goto err1;

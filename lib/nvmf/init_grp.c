@@ -52,15 +52,15 @@
 static TAILQ_HEAD(, spdk_nvmf_host) g_host_head = TAILQ_HEAD_INITIALIZER(g_host_head);
 
 struct spdk_nvmf_host *
-spdk_nvmf_init_grp_create(int tag,
-			  int num_netmasks,
-			  char **netmasks)
+spdk_nvmf_host_create(int tag,
+		      int num_netmasks,
+		      char **netmasks)
 {
 	int i;
 	struct spdk_nvmf_host *host = NULL;
 
 	/* Make sure there are no duplicate initiator group tags */
-	if (nvmf_initiator_group_find_by_tag(tag)) {
+	if (spdk_nvmf_host_find_by_tag(tag)) {
 		SPDK_ERRLOG("Initiator group creation failed due to duplicate initiator group tag (%d)\n",
 			    tag);
 		return NULL;
@@ -240,7 +240,7 @@ spdk_nvmf_allow_netmask(const char *netmask, const char *addr)
 }
 
 struct spdk_nvmf_host *
-nvmf_initiator_group_find_by_addr(char *addr)
+spdk_nvmf_host_find_by_addr(char *addr)
 {
 	struct spdk_nvmf_host	*host;
 	int i;
@@ -268,7 +268,7 @@ nvmf_initiator_group_find_by_addr(char *addr)
 }
 
 struct spdk_nvmf_host *
-nvmf_initiator_group_find_by_tag(int tag)
+spdk_nvmf_host_find_by_tag(int tag)
 {
 	struct spdk_nvmf_host *host;
 
@@ -283,7 +283,7 @@ nvmf_initiator_group_find_by_tag(int tag)
 }
 
 void
-nvmf_initiator_group_array_destroy(void)
+spdk_nvmf_host_destroy_all(void)
 {
 	struct spdk_nvmf_host *host;
 
