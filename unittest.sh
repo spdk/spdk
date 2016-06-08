@@ -2,6 +2,8 @@
 
 set -xe
 
+make config.h CONFIG_WERROR=y
+
 make -C test/lib/nvme/unit CONFIG_WERROR=y
 
 test/lib/nvme/unit/nvme_c/nvme_ut
