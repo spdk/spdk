@@ -153,7 +153,7 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
 /**
  * \brief Initialize DPDK via opts.
 */
-void spdk_init_dpdk(struct spdk_app_opts *opts);
+void spdk_dpdk_framework_init(struct spdk_app_opts *opts);
 
 /**
  * \brief Initialize an application to use the event framework. This must be called prior to using

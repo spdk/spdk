@@ -162,7 +162,7 @@ spdk_build_eal_cmdline(struct spdk_app_opts *opts)
 	memcpy(g_ealargs, g_arg_strings, sizeof(g_arg_strings));
 }
 
-void
+static void
 spdk_init_dpdk(struct spdk_app_opts *opts)
 {
 	int i, rc;
@@ -191,4 +191,10 @@ spdk_init_dpdk(struct spdk_app_opts *opts)
 	g_dpdk_initialized = true;
 
 	printf("done.\n");
+}
+
+__attribute__((weak))
+void spdk_dpdk_framework_init(struct spdk_app_opts *opts)
+{
+	spdk_init_dpdk(opts);
 }

@@ -152,7 +152,6 @@ main(int argc, char **argv)
 
 	optind = 1;  /*reset the optind */
 
-	spdk_init_dpdk(&opts);
 	spdk_app_init(&opts);
 
 	g_tsc_rate = rte_get_timer_hz();

@@ -220,7 +220,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->dpdk_mem_size = -1;
 	opts->dpdk_master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->dpdk_mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
-	opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
+	opts->reactor_mask = NULL;
 }
 
 void
@@ -303,15 +303,17 @@ spdk_app_init(struct spdk_app_opts *opts)
 	if (opts->reactor_mask == NULL) {
 		sp = spdk_conf_find_section(g_spdk_app.config, "Global");
 		if (sp != NULL) {
-			if (spdk_conf_section_get_val(sp, "WorkerMask")) {
-				fprintf(stderr, "WorkerMask not valid key name."
-					"  Use ReactorMask instead.\n");
-				spdk_conf_free(g_spdk_app.config);
-				exit(EXIT_FAILURE);
+			if (spdk_conf_section_get_val(sp, "ReactorMask")) {
+				opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
+			} else {
+				opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
 			}
-			opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
+		} else {
+			opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
 		}
 	}
+
+	spdk_dpdk_framework_init(opts);
 
 	/*
 	 * If mask not specified on command line or in configuration file,

@@ -220,12 +220,10 @@ main(int argc, char **argv)
 		sleep(10);
 	}
 
-	spdk_init_dpdk(&opts);
-	printf("Total cores available: %d\n", rte_lcore_count());
-
 	opts.shutdown_cb = spdk_nvmf_shutdown_cb;
 	spdk_app_init(&opts);
 
+	printf("Total cores available: %d\n", rte_lcore_count());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(spdk_nvmf_startup, NULL, NULL);
 
