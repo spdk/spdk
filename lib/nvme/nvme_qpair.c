@@ -852,7 +852,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 
 	if (ctrlr->is_failed) {
 		nvme_free_request(req);
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	nvme_qpair_check_enabled(qpair);
@@ -915,7 +915,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	} else {
 		nvme_assert(0, ("invalid NVMe payload type %d\n", req->payload.type));
 		_nvme_fail_request_bad_vtophys(qpair, tr);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	nvme_qpair_submit_tracker(qpair, tr);
