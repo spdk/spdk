@@ -329,6 +329,28 @@ enum spdk_nvme_qprio {
 	SPDK_NVME_QPRIO_LOW		= 0x3
 };
 
+/**
+ * Optional Arbitration Mechanism Supported by the controller.
+ *
+ * Two bits for CAP.AMS (18:17) field are set to '1' when the controller supports.
+ * There is no bit for AMS_RR where all controllers support and set to 0x0 by default.
+ */
+enum spdk_nvme_cap_ams {
+	SPDK_NVME_CAP_AMS_WRR		= 0x1,	/**< weighted round robin */
+	SPDK_NVME_CAP_AMS_VS		= 0x2,	/**< vendor specific */
+};
+
+/**
+ * Arbitration Mechanism Selected to the controller.
+ *
+ * Value 0x2 to 0x6 is reserved.
+ */
+enum spdk_nvme_cc_ams {
+	SPDK_NVME_CC_AMS_RR		= 0x0,	/**< default round robin */
+	SPDK_NVME_CC_AMS_WRR		= 0x1,	/**< weighted round robin */
+	SPDK_NVME_CC_AMS_VS		= 0x7,	/**< vendor specific */
+};
+
 struct spdk_nvme_cmd {
 	/* dword 0 */
 	uint16_t opc	:  8;	/* opcode */

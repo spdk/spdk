@@ -72,6 +72,10 @@ struct spdk_nvme_ctrlr_opts {
 	 * Enable submission queue in controller memory buffer
 	 */
 	bool use_cmb_sqs;
+	/**
+	 * Type of arbitration mechanism
+	 */
+	enum spdk_nvme_cc_ams arb_mechanism;
 };
 
 /**

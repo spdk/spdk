@@ -48,6 +48,10 @@ if [ -d /usr/src/fio ]; then
 	timing_exit fio_plugin
 fi
 
+timing_enter arbitration
+$rootdir/examples/nvme/arbitration/arbitration -t 3
+timing_exit arbitration
+
 #Now test nvme reset function
 timing_enter reset
 $testdir/reset/reset -q 64 -w write -s 4096 -t 2

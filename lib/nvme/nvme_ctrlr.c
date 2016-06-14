@@ -43,6 +43,7 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
 	opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
 	opts->use_cmb_sqs = false;
+	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 }
 
 static int
@@ -98,9 +99,22 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			       enum spdk_nvme_qprio qprio)
 {
 	struct spdk_nvme_qpair			*qpair;
+	union spdk_nvme_cc_register		cc;
+
+	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 
 	/* Only the low 2 bits (values 0, 1, 2, 3) of QPRIO are valid. */
 	if ((qprio & 3) != qprio) {
+		return NULL;
+	}
+
+	/*
+	 * Only value SPDK_NVME_QPRIO_URGENT(0) is valid for the
+	 * default round robin arbitration method.
+	 */
+	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (qprio != SPDK_NVME_QPRIO_URGENT)) {
+		nvme_printf(ctrlr,
+			    "invalid queue priority for default round robin arbitration method\n");
 		return NULL;
 	}
 
@@ -436,6 +450,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register	cc;
 	union spdk_nvme_aqa_register	aqa;
+	union spdk_nvme_cap_lo_register	cap_lo;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 
@@ -455,13 +470,33 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	cc.bits.en = 1;
 	cc.bits.css = 0;
-	cc.bits.ams = 0;
 	cc.bits.shn = 0;
 	cc.bits.iosqes = 6; /* SQ entry size == 64 == 2^6 */
 	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
 
 	/* Page size is 2 ^ (12 + mps). */
 	cc.bits.mps = nvme_u32log2(PAGE_SIZE) - 12;
+
+	cap_lo.raw = nvme_mmio_read_4(ctrlr, cap_lo.raw);
+
+	switch (ctrlr->opts.arb_mechanism) {
+	case SPDK_NVME_CC_AMS_RR:
+		break;
+	case SPDK_NVME_CC_AMS_WRR:
+		if (SPDK_NVME_CAP_AMS_WRR & cap_lo.bits.ams) {
+			break;
+		}
+		return -EINVAL;
+	case SPDK_NVME_CC_AMS_VS:
+		if (SPDK_NVME_CAP_AMS_VS & cap_lo.bits.ams) {
+			break;
+		}
+		return -EINVAL;
+	default:
+		return -EINVAL;
+	}
+
+	cc.bits.ams = ctrlr->opts.arb_mechanism;
 
 	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
 

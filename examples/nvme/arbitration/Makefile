@@ -31,16 +31,27 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(CURDIR)/../../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += hello_world identify perf reserve nvme_manage arbitration
+APP = arbitration
 
-DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
+C_SRCS := arbitration.c
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += -I. $(DPDK_INC)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
+	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) -lpthread $(DPDK_LIB) -lrt
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
