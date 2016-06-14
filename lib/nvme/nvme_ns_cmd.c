@@ -237,7 +237,7 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 }
 
@@ -260,7 +260,7 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 }
 
@@ -275,7 +275,7 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_payload payload;
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
-		return EINVAL;
+		return -EINVAL;
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.md = NULL;
@@ -288,7 +288,7 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 }
 
@@ -310,7 +310,7 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 }
 
@@ -332,7 +332,7 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 }
 
@@ -347,7 +347,7 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_payload payload;
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
-		return EINVAL;
+		return -EINVAL;
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.md = NULL;
@@ -360,7 +360,7 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 }
 
@@ -375,12 +375,12 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	uint64_t		*tmp_lba;
 
 	if (lba_count == 0) {
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -403,14 +403,14 @@ spdk_nvme_ns_cmd_deallocate(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
 	struct spdk_nvme_cmd	*cmd;
 
 	if (num_ranges == 0 || num_ranges > SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES) {
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	req = nvme_allocate_request_contig(payload,
 					   num_ranges * sizeof(struct spdk_nvme_dsm_range),
 					   cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -433,7 +433,7 @@ spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -459,7 +459,7 @@ spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
 					   sizeof(struct spdk_nvme_reservation_register_data),
 					   cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -491,7 +491,7 @@ spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
 	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_reservation_key_data), cb_fn,
 					   cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -524,7 +524,7 @@ spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
 					   sizeof(struct spdk_nvme_reservation_acquire_data),
 					   cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -552,12 +552,12 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	struct spdk_nvme_cmd	*cmd;
 
 	if (len % 4)
-		return EINVAL;
+		return -EINVAL;
 	num_dwords = len / 4;
 
 	req = nvme_allocate_request_contig(payload, len, cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;

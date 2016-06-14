@@ -45,7 +45,7 @@ spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 	req = nvme_allocate_request_contig(buf, len, cb_fn, cb_arg);
 
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
@@ -66,7 +66,7 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 	req = nvme_allocate_request_contig(buf, len, cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
@@ -88,7 +88,7 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 					   sizeof(struct spdk_nvme_ctrlr_data),
 					   cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -114,7 +114,7 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 					   sizeof(struct spdk_nvme_ns_data),
 					   cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -138,7 +138,7 @@ nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -168,7 +168,7 @@ nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -195,7 +195,7 @@ nvme_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -214,7 +214,7 @@ nvme_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -237,7 +237,7 @@ nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 					   cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -264,7 +264,7 @@ nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 					   cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -291,7 +291,7 @@ nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data
 					   cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -316,7 +316,7 @@ nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -341,7 +341,7 @@ nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -368,7 +368,7 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -396,7 +396,7 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -447,7 +447,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	req = nvme_allocate_request_contig(payload, payload_size, cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -471,7 +471,7 @@ nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -494,7 +494,7 @@ nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr,
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;
@@ -522,7 +522,7 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 					   cb_fn, cb_arg);
 	if (req == NULL) {
 		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
-		return ENOMEM;
+		return -ENOMEM;
 	}
 
 	cmd = &req->cmd;

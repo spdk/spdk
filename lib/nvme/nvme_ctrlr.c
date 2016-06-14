@@ -239,7 +239,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 					 64, &phys_addr);
 	if (log_page_directory == NULL) {
 		nvme_printf(NULL, "could not allocate log_page_directory\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	status.done = false;
@@ -253,7 +253,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_free(log_page_directory);
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_get_log_page failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	nvme_ctrlr_construct_intel_support_log_page_list(ctrlr, log_page_directory);
@@ -441,7 +441,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (cc.bits.en != 0) {
 		nvme_printf(ctrlr, "%s called with CC.EN = 1\n", __func__);
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	nvme_mmio_write_8(ctrlr, asq, ctrlr->adminq.cmd_bus_addr);
@@ -556,7 +556,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_controller failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	/*
@@ -600,7 +600,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_set_num_queues failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	/*
@@ -758,7 +758,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_set_async_event_config failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	/* aerl is a zero-based value, so we need to add 1 here. */
@@ -1200,7 +1200,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_attach_ns failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
@@ -1225,7 +1225,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_detach_ns failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
@@ -1277,7 +1277,7 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_delete_ns failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
@@ -1302,7 +1302,7 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_format failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
@@ -1347,7 +1347,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		}
 		if (spdk_nvme_cpl_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "spdk_nvme_ctrlr_fw_image_download failed!\n");
-			return ENXIO;
+			return -ENXIO;
 		}
 		p += transfer;
 		offset += transfer;
@@ -1373,7 +1373,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_fw_commit failed!\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);

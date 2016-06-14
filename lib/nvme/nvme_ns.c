@@ -61,7 +61,7 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");
-		return ENXIO;
+		return -ENXIO;
 	}
 
 	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
