@@ -149,14 +149,16 @@ spdk_subsystem_fini(void)
 	struct spdk_subsystem *cur;
 
 	cur = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
-	do {
+
+	while (cur) {
 		if (cur->fini) {
 			rc = cur->fini();
 			if (rc)
 				return rc;
 		}
 		cur = TAILQ_PREV(cur, spdk_subsystem_list, tailq);
-	} while (cur);
+	}
+
 	return rc;
 }
 
