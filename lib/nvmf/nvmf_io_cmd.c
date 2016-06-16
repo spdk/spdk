@@ -109,30 +109,35 @@ nvmf_process_io_cmd(struct nvmf_session *session,
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0,
 					  (uint64_t)req_state->fabric_rx_ctx, 0);
-			spdk_nvme_ns_cmd_read(ns, qpair,
-					      buf, lba_address, lba_count,
-					      nvmf_complete_cmd,
-					      (void *)req_state, io_flags);
+			rc = spdk_nvme_ns_cmd_read(ns, qpair,
+						   buf, lba_address, lba_count,
+						   nvmf_complete_cmd,
+						   (void *)req_state, io_flags);
 		} else {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Write; lba address %lx, lba count %x\n",
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0,
 					  (uint64_t)req_state->fabric_rx_ctx, 0);
-			spdk_nvme_ns_cmd_write(ns, qpair,
-					       buf, lba_address, lba_count,
-					       nvmf_complete_cmd,
-					       (void *)req_state, io_flags);
+			rc = spdk_nvme_ns_cmd_write(ns, qpair,
+						    buf, lba_address, lba_count,
+						    nvmf_complete_cmd,
+						    (void *)req_state, io_flags);
 		}
 		break;
 	default:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "RAW Passthrough: I/O Opcode %x\n", cmd->opc);
 		cmd->nsid = nsid;
-		spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
-					   cmd,
-					   buf, len,
-					   nvmf_complete_cmd,
-					   (void *)req_state);
+		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
+						cmd,
+						buf, len,
+						nvmf_complete_cmd,
+						(void *)req_state);
 		break;
+	}
+
+	if (rc) {
+		SPDK_ERRLOG("nvmf_process_io_cmd: Failed to submit Opcode %x\n", cmd->opc);
+		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
 	return rc;
 }
