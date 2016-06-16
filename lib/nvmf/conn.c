@@ -1062,6 +1062,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	if (ret == 1) {
 		tx_desc->rx_desc = NULL;
 		nvmf_deactive_tx_desc(tx_desc);
+		tx_desc = NULL;
 		if (nvmf_post_rdma_recv(conn, rx_desc)) {
 			SPDK_ERRLOG("Unable to re-post aq rx descriptor\n");
 			goto recv_error;
