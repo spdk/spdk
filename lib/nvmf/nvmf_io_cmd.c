@@ -69,22 +69,21 @@ nvmf_process_io_cmd(struct nvmf_session *session,
 
 	/* verify subsystem */
 	if (subsystem == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Subsystem Not Initialized!\n");
+		SPDK_ERRLOG("nvmf_process_io_cmd: Subsystem Not Initialized!\n");
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return -1;
 	}
 
 	/* verify that the contoller is ready to process commands */
 	if (session->vcprop.csts.bits.rdy == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Subsystem Controller Not Ready!\n");
+		SPDK_ERRLOG("nvmf_process_io_cmd: Subsystem Controller Not Ready!\n");
 		response->status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
 		return -1;
 	}
 
 	/* verify namespace id */
 	if (cmd->nsid == 0 || cmd->nsid > MAX_PER_SUBSYSTEM_NAMESPACES) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Invalid NS_ID %x\n",
-			      cmd->nsid);
+		SPDK_ERRLOG("nvmf_process_io_cmd: Invalid NS_ID %x\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return -1;
 	}
