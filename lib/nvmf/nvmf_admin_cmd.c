@@ -305,11 +305,15 @@ passthrough:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "RAW Passthrough: Admin Opcode %x for ctrlr %p\n",
 			      cmd->opc, ctrlr);
 		cmd->nsid = nsid;
-		spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
-					      cmd,
-					      buf, len,
-					      nvmf_complete_cmd,
-					      (void *)req_state);
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
+						   cmd,
+						   buf, len,
+						   nvmf_complete_cmd,
+						   (void *)req_state);
+		if (rc) {
+			SPDK_ERRLOG("nvmf_process_admin_cmd: Error to submit Admin Opcode %x\n", cmd->opc);
+			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		}
 		break;
 	}
 
