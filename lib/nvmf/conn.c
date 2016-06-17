@@ -1248,7 +1248,8 @@ nvmf_allocate_reactor(uint64_t cpumask)
 	min_pollers = INT_MAX;
 	selected_core = 0;
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	/* we use u64 as CPU core mask */
+	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
 		if (!((1ULL << i) & cpumask)) {
 			continue;
 		}
