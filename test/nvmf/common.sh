@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
 NVMF_PORT=7174
-NVMF_IP_PREFIX="192.168.100."
+NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
-NVMF_FIRST_TARGET_IP=$NVMF_IP_PREFIX$NVMF_IP_LEAST_ADDR
-
-nvmf_nic_bdfs=""
+NVMF_FIRST_TARGET_IP=$NVMF_IP_PREFIX.$NVMF_IP_LEAST_ADDR
 
 function load_ib_rdma_modules()
 {
@@ -13,7 +11,6 @@ function load_ib_rdma_modules()
 		exit 0
 	fi
 
-	modprobe ib_addr ib_mad ib_sa || true # part of core since 4.7
 	modprobe ib_cm
 	modprobe ib_core
 	modprobe ib_ucm
@@ -68,6 +65,10 @@ function detect_mellanox_nics()
 		modprobe $mlx_en_driver
 	fi
 
+	# The mlx4 driver takes an extra few seconds to load after modprobe returns,
+	# otherwise ifconfig operations will do nothing.
+	sleep 5
+
 	trap - SIGINT SIGTERM EXIT
 }
 
@@ -79,19 +80,14 @@ function detect_rdma_nics()
 
 function allocate_nic_ips()
 {
-	LEAST_ADDR=$NVMF_IP_LEAST_ADDR
-	for bdf in $1; do
-		dir=`find /sys -name $bdf | grep "/sys/devices"`
-		if [ -e $dir ]; then
-			if [ -e $dir"/net" ]; then
-				nic_name=`ls $dir"/net"`
-				# just get the first nic
-				nic_name=`echo $nic_name | awk '{ print $1; }'`
-				ifconfig $nic_name $NVMF_IP_PREFIX$LEAST_ADDR netmask 255.255.255.0 up
-				LEAST_ADDR=$[$LEAST_ADDR + 1]
-			fi
-		fi
+	let count=$NVMF_IP_LEAST_ADDR
+	for nic_type in `ls /sys/class/infiniband`; do
+		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
+			ifconfig $nic_name $NVMF_IP_PREFIX.$count netmask 255.255.255.0 up
+			let count=$count+1
+		done
 	done
+
 	# check whether the IP is configured
 	result=`ifconfig | grep $NVMF_IP_PREFIX`
 	if [ -z "$result" ]; then
@@ -110,6 +106,6 @@ function rdma_device_init()
 {
 	load_ib_rdma_modules
 	detect_rdma_nics
-	allocate_nic_ips $nvmf_nic_bdfs
+	allocate_nic_ips
 }
 
