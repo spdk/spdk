@@ -418,7 +418,7 @@ nvmf_io_cmd_continue(struct spdk_nvmf_conn *conn, struct nvme_qp_tx_desc *tx_des
 	req->fabric_rx_ctx = rx_desc;
 
 	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_io_cmd(req->session, cmd, (void *)rx_desc->bb, rx_desc->bb_sgl.length, req);
+	ret = nvmf_process_io_cmd(req->session, cmd, req->data, req->length, req);
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */
@@ -584,7 +584,6 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 	struct spdk_nvmf_keyed_sgl_descriptor *keyed_sgl;
 	struct spdk_nvme_cmd *cmd;
 	enum spdk_nvme_data_transfer xfer;
-	void *buf = NULL;
 	int	ret;
 
 	req = &tx_desc->req_state;
@@ -614,7 +613,7 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 				goto command_fail;
 			}
 
-			buf = (void *)rx_desc->bb;
+			req->data = rx_desc->bb;
 			req->remote_addr = keyed_sgl->address;
 			req->rkey = keyed_sgl->key;
 			req->length = keyed_sgl->length;
@@ -636,7 +635,7 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 				goto command_fail;
 			}
 
-			buf = rx_desc->bb + offset;
+			req->data = rx_desc->bb + offset;
 			req->length = sgl->length;
 		} else {
 			SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type %2x, Subtype %2x\n",
@@ -676,7 +675,7 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 	}
 
 	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_io_cmd(req->session, cmd, buf, req->length, req);
+	ret = nvmf_process_io_cmd(req->session, cmd, req->data, req->length, req);
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */
@@ -703,8 +702,6 @@ nvmf_process_admin_command(struct spdk_nvmf_conn *conn,
 	struct spdk_nvme_cmd *cmd;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	struct spdk_nvmf_keyed_sgl_descriptor *keyed_sgl;
-	void *buf = NULL;
-	uint32_t len = 0;
 	int	ret;
 
 	req = &tx_desc->req_state;
@@ -721,8 +718,7 @@ nvmf_process_admin_command(struct spdk_nvmf_conn *conn,
 	if (sgl->type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 	    (sgl->type_specific == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 	     sgl->type_specific == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
-		buf = (void *)rx_desc->bb;
-		len = rx_desc->bb_sgl.length;
+		req->data = rx_desc->bb;
 		req->remote_addr = keyed_sgl->address;
 		req->rkey = keyed_sgl->key;
 		req->length = keyed_sgl->length;
@@ -735,7 +731,7 @@ nvmf_process_admin_command(struct spdk_nvmf_conn *conn,
 		      tx_desc, req, (void *)req->rsp, (void *)tx_desc->send_sgl.addr);
 
 	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_admin_cmd(req->session, cmd, buf, len, req);
+	ret = nvmf_process_admin_cmd(req->session, cmd, req->data, req->length, req);
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */
@@ -794,7 +790,6 @@ static void
 nvmf_connect_continue(struct spdk_nvmf_conn *conn,
 		      struct nvme_qp_tx_desc *tx_desc)
 {
-	struct nvme_qp_rx_desc *rx_desc;
 	struct nvmf_request *req;
 	struct spdk_nvmf_fabric_connect_cmd *connect;
 	struct spdk_nvmf_fabric_connect_data *connect_data;
@@ -806,15 +801,12 @@ nvmf_connect_continue(struct spdk_nvmf_conn *conn,
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, " tx_desc does not exist!\n");
 		return;
 	}
-	rx_desc = tx_desc->rx_desc;
-	if (rx_desc == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, " rx_desc does not exist!\n");
-		return;
-	}
 
 	req = &tx_desc->req_state;
 	connect = &req->cmd->connect_cmd;
-	connect_data = (struct spdk_nvmf_fabric_connect_data *)rx_desc->bb;
+	connect_data = (struct spdk_nvmf_fabric_connect_data *)req->data;
+
+	RTE_VERIFY(connect_data != NULL);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** Connect Capsule Data *** %p\n", connect_data);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** cntlid  = %x ***\n", connect_data->cntlid);
@@ -898,11 +890,14 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 			SPDK_ERRLOG("insufficient in-capsule data to satisfy connect!\n");
 			goto connect_fail;
 		}
+		req->data = rx_desc->bb;
+		req->length = sgl->nvmf_sgl.length;
 		nvmf_connect_continue(conn, tx_desc);
 	} else if (sgl->nvmf_sgl.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 		   (sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 		    sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
 		/* setup a new SQE that uses local bounce buffer */
+		req->data = rx_desc->bb;
 		req->remote_addr = sgl->nvmf_sgl.address;
 		req->rkey = sgl->nvmf_sgl.key;
 		req->pending = NVMF_PENDING_CONNECT;
@@ -1026,6 +1021,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	req->cb_fn = nvmf_process_async_completion;
 	req->length = 0;
 	req->xfer = SPDK_NVME_DATA_NONE;
+	req->data = NULL;
 	req->cid = cap_hdr->cid;
 	req->cmd = &rx_desc->msg_buf;
 
