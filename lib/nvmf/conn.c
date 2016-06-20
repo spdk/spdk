@@ -585,7 +585,6 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 	struct spdk_nvme_cmd *cmd;
 	enum spdk_nvme_data_transfer xfer;
 	void *buf = NULL;
-	uint32_t len = 0;
 	int	ret;
 
 	req = &tx_desc->req_state;
@@ -616,7 +615,6 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 			}
 
 			buf = (void *)rx_desc->bb;
-			len = rx_desc->bb_sgl.length;
 			req->remote_addr = keyed_sgl->address;
 			req->rkey = keyed_sgl->key;
 			req->length = keyed_sgl->length;
@@ -639,14 +637,14 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 			}
 
 			buf = rx_desc->bb + offset;
-			len = sgl->length;
+			req->length = sgl->length;
 		} else {
 			SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type %2x, Subtype %2x\n",
 				    sgl->type, sgl->type_specific);
 			goto command_fail;
 		}
 
-		if (len == 0) {
+		if (req->length == 0) {
 			xfer = SPDK_NVME_DATA_NONE;
 		}
 
@@ -678,7 +676,7 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 	}
 
 	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_io_cmd(req->session, cmd, buf, len, req);
+	ret = nvmf_process_io_cmd(req->session, cmd, buf, req->length, req);
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */
@@ -908,13 +906,14 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 		req->remote_addr = sgl->nvmf_sgl.address;
 		req->rkey = sgl->nvmf_sgl.key;
 		req->pending = NVMF_PENDING_CONNECT;
+		req->length = sgl->nvmf_sgl.length;
 		req->xfer = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "	Issuing RDMA Read to get host connect data\n");
 		/* data to be copied from host via memory RDMA */
 
 		/* temporarily adjust SGE to only copy what the host is prepared to send. */
-		rx_desc->bb_sgl.length = sgl->nvmf_sgl.length;
+		rx_desc->bb_sgl.length = req->length;
 
 		ret = nvmf_post_rdma_read(tx_desc->conn, tx_desc);
 		if (ret) {
