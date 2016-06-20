@@ -448,14 +448,10 @@ nvmf_process_async_completion(struct nvmf_request *req)
 	/* Was the command successful */
 	if ((response->status.sc == SPDK_NVME_SC_SUCCESS) && req->length > 0) {
 		/* data to be copied to host via memory RDMA */
-		if (req->length < rx_desc->bb_len) {
-			/* temporarily adjust SGE to only copy what the
-				host is prepared to receive.
-			*/
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, " *** modify sgl length from %x to %x\n",
-				      rx_desc->bb_sgl.length, req->length);
-			rx_desc->bb_sgl.length = req->length;
-		}
+
+		/* temporarily adjust SGE to only copy what the host is prepared to receive. */
+		rx_desc->bb_sgl.length = req->length;
+
 		ret = nvmf_post_rdma_write(tx_desc->conn, tx_desc);
 		if (ret) {
 			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
@@ -660,14 +656,9 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 			if (len > 0 && sgl->type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "	Issuing RDMA Read to get host data\n");
 				/* data to be copied from remote host via memory RDMA */
-				if (req->length < rx_desc->bb_len) {
-					/* temporarily adjust SGE to only copy what the
-					host is prepared to send.
-					*/
-					SPDK_TRACELOG(SPDK_TRACE_DEBUG, " *** modify bb sgl length from %x to %x\n",
-						      rx_desc->bb_sgl.length, req->length);
-					rx_desc->bb_sgl.length = req->length;
-				}
+
+				/* temporarily adjust SGE to only copy what the host is prepared to send. */
+				rx_desc->bb_sgl.length = req->length;
 
 				req->pending = NVMF_PENDING_WRITE;
 				ret = nvmf_post_rdma_read(tx_desc->conn, tx_desc);
@@ -916,14 +907,9 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "	Issuing RDMA Read to get host connect data\n");
 		/* data to be copied from host via memory RDMA */
-		if (sgl->nvmf_sgl.length < rx_desc->bb_len) {
-			/* temporarily adjust SGE to only copy what the
-			   host is prepared to send.
-			*/
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, " *** modify bb sgl length from %x to %x\n",
-				      rx_desc->bb_sgl.length, sgl->nvmf_sgl.length);
-			rx_desc->bb_sgl.length = sgl->nvmf_sgl.length;
-		}
+
+		/* temporarily adjust SGE to only copy what the host is prepared to send. */
+		rx_desc->bb_sgl.length = sgl->nvmf_sgl.length;
 
 		ret = nvmf_post_rdma_read(tx_desc->conn, tx_desc);
 		if (ret) {
