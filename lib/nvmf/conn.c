@@ -417,9 +417,6 @@ nvmf_io_cmd_continue(struct spdk_nvmf_conn *conn, struct nvme_qp_tx_desc *tx_des
 	cmd = &req->cmd->nvme_cmd;
 	req->fabric_rx_ctx = rx_desc;
 
-	/* clear the SGL details for RDMA performed */
-	req->length = 0;
-
 	/* send to NVMf library for backend NVMe processing */
 	ret = nvmf_process_io_cmd(req->session, cmd, (void *)rx_desc->bb, rx_desc->bb_sgl.length, req);
 	if (ret) {
@@ -446,7 +443,8 @@ nvmf_process_async_completion(struct nvmf_request *req)
 	response = &req->rsp->nvme_cpl;
 
 	/* Was the command successful */
-	if ((response->status.sc == SPDK_NVME_SC_SUCCESS) && req->length > 0) {
+	if (response->status.sc == SPDK_NVME_SC_SUCCESS &&
+	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		/* data to be copied to host via memory RDMA */
 
 		/* temporarily adjust SGE to only copy what the host is prepared to receive. */
@@ -648,12 +646,18 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 			goto command_fail;
 		}
 
+		if (len == 0) {
+			xfer = SPDK_NVME_DATA_NONE;
+		}
+
+		req->xfer = xfer;
+
 		/* for any I/O that requires rdma data to be
 		   pulled into target BB before processing by
 		   the backend NVMe device
 		*/
 		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			if (len > 0 && sgl->type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+			if (sgl->type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "	Issuing RDMA Read to get host data\n");
 				/* data to be copied from remote host via memory RDMA */
 
@@ -724,6 +728,9 @@ nvmf_process_admin_command(struct spdk_nvmf_conn *conn,
 		req->remote_addr = keyed_sgl->address;
 		req->rkey = keyed_sgl->key;
 		req->length = keyed_sgl->length;
+		if (req->length) {
+			req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
+		}
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "	tx_desc %p: req_state %p, rsp %p, addr %p\n",
@@ -810,9 +817,6 @@ nvmf_connect_continue(struct spdk_nvmf_conn *conn,
 	req = &tx_desc->req_state;
 	connect = &req->cmd->connect_cmd;
 	connect_data = (struct spdk_nvmf_fabric_connect_data *)rx_desc->bb;
-
-	/* clear the SGL details for any RDMA previously performed */
-	req->length = 0;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** Connect Capsule Data *** %p\n", connect_data);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** cntlid  = %x ***\n", connect_data->cntlid);
@@ -904,6 +908,7 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 		req->remote_addr = sgl->nvmf_sgl.address;
 		req->rkey = sgl->nvmf_sgl.key;
 		req->pending = NVMF_PENDING_CONNECT;
+		req->xfer = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "	Issuing RDMA Read to get host connect data\n");
 		/* data to be copied from host via memory RDMA */
@@ -1021,6 +1026,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	req->fabric_rx_ctx = rx_desc;
 	req->cb_fn = nvmf_process_async_completion;
 	req->length = 0;
+	req->xfer = SPDK_NVME_DATA_NONE;
 	req->cid = cap_hdr->cid;
 	req->cmd = &rx_desc->msg_buf;
 

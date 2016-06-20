@@ -127,6 +127,7 @@ struct nvmf_request {
 	uint64_t			remote_addr;
 	uint32_t			rkey;
 	uint32_t			length;
+	enum spdk_nvme_data_transfer	xfer;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 	enum pending_rdma_action	pending;
