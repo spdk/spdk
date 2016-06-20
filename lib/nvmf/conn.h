@@ -40,15 +40,6 @@
 #include "nvmf_internal.h"
 #include "spdk/queue.h"
 
-/* NVMF Connection States */
-enum nvmf_cstate {
-	NVMF_CSTATE_INIT,
-	NVMF_CSTATE_ACCEPT,
-	NVMF_CSTATE_CONNECTED,
-	NVMF_CSTATE_TERMINATING,
-	NVMF_CSTATE_DISCONNECTED,
-};
-
 /* RDMA transport connection states */
 enum conn_state {
 	CONN_STATE_INVALID = 0,
