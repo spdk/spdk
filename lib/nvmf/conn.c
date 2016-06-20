@@ -816,10 +816,9 @@ nvmf_connect_continue(struct spdk_nvmf_conn *conn,
 		return;
 	}
 
-	connect = (struct spdk_nvmf_fabric_connect_cmd *)&rx_desc->msg_buf;
-	connect_data = (struct spdk_nvmf_fabric_connect_data *)rx_desc->bb;
-
 	req = &tx_desc->req_state;
+	connect = &req->cmd->connect_cmd;
+	connect_data = (struct spdk_nvmf_fabric_connect_data *)rx_desc->bb;
 
 	/* clear the SGL details for any RDMA previously performed */
 	req->length = 0;
@@ -878,12 +877,12 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 		     struct nvme_qp_tx_desc *tx_desc)
 {
 	struct spdk_nvmf_fabric_connect_cmd *connect;
-	struct nvmf_request *req;
+	struct nvmf_request *req = &tx_desc->req_state;
 	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
 	union sgl_shift *sgl;
 	int	ret;
 
-	connect = (struct spdk_nvmf_fabric_connect_cmd *)&rx_desc->msg_buf;
+	connect = &req->cmd->connect_cmd;
 	sgl = (union sgl_shift *)&connect->sgl1;
 
 	/* debug - display the connect capsule */
@@ -911,7 +910,6 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 		   (sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 		    sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
 		/* setup a new SQE that uses local bounce buffer */
-		req = &tx_desc->req_state;
 		req->remote_addr = sgl->nvmf_sgl.address;
 		req->rkey = sgl->nvmf_sgl.key;
 		req->pending = NVMF_PENDING_CONNECT;
