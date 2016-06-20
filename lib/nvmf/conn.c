@@ -403,7 +403,6 @@ nvmf_io_cmd_continue(struct spdk_nvmf_conn *conn, struct nvme_qp_tx_desc *tx_des
 {
 	struct nvme_qp_rx_desc *rx_desc;
 	struct nvmf_request *req;
-	struct spdk_nvme_cmd *cmd;
 	int ret;
 
 
@@ -414,11 +413,10 @@ nvmf_io_cmd_continue(struct spdk_nvmf_conn *conn, struct nvme_qp_tx_desc *tx_des
 	}
 
 	req = &tx_desc->req_state;
-	cmd = &req->cmd->nvme_cmd;
 	req->fabric_rx_ctx = rx_desc;
 
 	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_io_cmd(req->session, cmd, req->data, req->length, req);
+	ret = nvmf_process_io_cmd(req);
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */
@@ -675,7 +673,7 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 	}
 
 	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_io_cmd(req->session, cmd, req->data, req->length, req);
+	ret = nvmf_process_io_cmd(req);
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */

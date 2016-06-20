@@ -126,10 +126,7 @@ nvmf_process_admin_cmd(struct nvmf_session *session,
 		       struct nvmf_request *req_state);
 
 int
-nvmf_process_io_cmd(struct nvmf_session *session,
-		    struct spdk_nvme_cmd *cmd,
-		    void *buf, uint32_t len,
-		    struct nvmf_request *req_state);
+nvmf_process_io_cmd(struct nvmf_request *req);
 
 void
 nvmf_property_get(struct nvmf_session *session,

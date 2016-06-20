@@ -42,11 +42,10 @@
 #include "spdk/trace.h"
 
 int
-nvmf_process_io_cmd(struct nvmf_session *session,
-		    struct spdk_nvme_cmd *cmd,
-		    void *buf, uint32_t len,
-		    struct nvmf_request *req_state)
+nvmf_process_io_cmd(struct nvmf_request *req)
 {
+	struct nvmf_session *session = req->session;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
 	struct spdk_nvmf_namespace *nvmf_ns;
@@ -60,10 +59,10 @@ nvmf_process_io_cmd(struct nvmf_session *session,
 	uint32_t io_flags;
 	int rc = 0;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: req_state %p\n", req_state);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: req %p\n", req);
 
 	/* pre-set response details for this command */
-	response = &req_state->rsp->nvme_cpl;
+	response = &req->rsp->nvme_cpl;
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	response->cid = cmd->cid;
 
@@ -108,20 +107,20 @@ nvmf_process_io_cmd(struct nvmf_session *session,
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Read; lba address %lx, lba count %x\n",
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0,
-					  (uint64_t)req_state->fabric_rx_ctx, 0);
+					  (uint64_t)req->fabric_rx_ctx, 0);
 			rc = spdk_nvme_ns_cmd_read(ns, qpair,
-						   buf, lba_address, lba_count,
+						   req->data, lba_address, lba_count,
 						   nvmf_complete_cmd,
-						   (void *)req_state, io_flags);
+						   req, io_flags);
 		} else {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Write; lba address %lx, lba count %x\n",
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0,
-					  (uint64_t)req_state->fabric_rx_ctx, 0);
+					  (uint64_t)req->fabric_rx_ctx, 0);
 			rc = spdk_nvme_ns_cmd_write(ns, qpair,
-						    buf, lba_address, lba_count,
+						    req->data, lba_address, lba_count,
 						    nvmf_complete_cmd,
-						    (void *)req_state, io_flags);
+						    req, io_flags);
 		}
 		break;
 	default:
@@ -129,9 +128,9 @@ nvmf_process_io_cmd(struct nvmf_session *session,
 		cmd->nsid = nsid;
 		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
 						cmd,
-						buf, len,
+						req->data, req->length,
 						nvmf_complete_cmd,
-						(void *)req_state);
+						req);
 		break;
 	}
 
