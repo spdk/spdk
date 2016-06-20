@@ -479,10 +479,9 @@ command_fail:
 
 static int
 nvmf_process_property_get(struct spdk_nvmf_conn *conn,
-			  struct nvme_qp_tx_desc *tx_desc)
+			  struct nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_get_rsp *response;
-	struct nvmf_request *req = &tx_desc->req_state;
 	struct spdk_nvmf_fabric_prop_get_cmd *cmd;
 	int	ret;
 
@@ -504,10 +503,9 @@ nvmf_process_property_get(struct spdk_nvmf_conn *conn,
 
 static int
 nvmf_process_property_set(struct spdk_nvmf_conn *conn,
-			  struct nvme_qp_tx_desc *tx_desc)
+			  struct nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_set_rsp *response;
-	struct nvmf_request *req = &tx_desc->req_state;
 	struct spdk_nvmf_fabric_prop_set_cmd *cmd;
 	bool	shutdown = false;
 	int	ret;
@@ -950,6 +948,7 @@ connect_fail:
 static int
 nvmf_process_fabrics_command(struct spdk_nvmf_conn *conn, struct nvme_qp_tx_desc *tx_desc)
 {
+	struct nvmf_request *req = &tx_desc->req_state;
 	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
 
@@ -957,9 +956,9 @@ nvmf_process_fabrics_command(struct spdk_nvmf_conn *conn, struct nvme_qp_tx_desc
 
 	switch (cap_hdr->fctype) {
 	case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET:
-		return nvmf_process_property_set(conn, tx_desc);
+		return nvmf_process_property_set(conn, req);
 	case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
-		return nvmf_process_property_get(conn, tx_desc);
+		return nvmf_process_property_get(conn, req);
 	case SPDK_NVMF_FABRIC_COMMAND_CONNECT:
 		return nvmf_process_connect(conn, tx_desc);
 	default:
