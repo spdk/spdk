@@ -49,12 +49,6 @@ enum nvmf_cstate {
 	NVMF_CSTATE_DISCONNECTED,
 };
 
-/*
- RDMA Connection Resouce Defaults
- */
-#define NVMF_DEFAULT_TX_SGE		1
-#define NVMF_DEFAULT_RX_SGE		2
-
 /* RDMA transport connection states */
 enum conn_state {
 	CONN_STATE_INVALID = 0,

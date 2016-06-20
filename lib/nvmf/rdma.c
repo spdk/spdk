@@ -56,6 +56,12 @@
 #define MAX_RDMA_DEVICES 4
 #define MAX_SESSIONS_PER_DEVICE	1 /* for now accept only single session per device */
 
+/*
+ RDMA Connection Resouce Defaults
+ */
+#define NVMF_DEFAULT_TX_SGE		1
+#define NVMF_DEFAULT_RX_SGE		2
+
 static int alloc_qp_rx_desc(struct spdk_nvmf_conn *conn);
 static int alloc_qp_tx_desc(struct spdk_nvmf_conn *conn);
 
