@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMF_FABRIC_INTF_H
-#define NVMF_FABRIC_INTF_H
+#ifndef NVMF_CONN_H
+#define NVMF_CONN_H
 
 #include <stdint.h>
 
@@ -105,4 +105,4 @@ int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);
 struct spdk_nvmf_conn *
 spdk_find_nvmf_conn_by_cm_id(struct rdma_cm_id *cm_id);
 
-#endif /* NVMF_FABRIC_INTF_H */
+#endif /* NVMF_CONN_H */
