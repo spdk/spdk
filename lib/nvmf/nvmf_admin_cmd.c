@@ -119,13 +119,13 @@ nvmf_process_admin_cmd(struct nvmf_request *req)
 			}
 			nsdata = spdk_nvme_ns_get_data(ns);
 			memcpy(req->data, (char *)nsdata, sizeof(struct spdk_nvme_ns_data));
-			req->cb_fn(req);
+			spdk_nvmf_request_complete(req);
 		} else if (cmd->cdw10 == 1) {
 			/* identify controller */
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
 			/* pull from virtual controller context */
 			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
-			req->cb_fn(req);
+			spdk_nvmf_request_complete(req);
 		} else {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace List\n");
 			response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;

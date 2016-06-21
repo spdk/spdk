@@ -351,7 +351,7 @@ nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp)
 	response = &req_state->rsp->nvme_cpl;
 	memcpy(response, cmp, sizeof(*cmp));
 
-	req_state->cb_fn(req_state);
+	spdk_nvmf_request_complete(req_state);
 }
 
 void

@@ -398,8 +398,8 @@ spdk_nvmf_send_response(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
 	return nvmf_post_rdma_send(conn, req->fabric_tx_ctx);
 }
 
-static void
-nvmf_process_async_completion(struct nvmf_request *req)
+void
+spdk_nvmf_request_complete(struct nvmf_request *req)
 {
 	struct nvme_qp_tx_desc *tx_desc = (struct nvme_qp_tx_desc *)req->fabric_tx_ctx;
 	struct spdk_nvme_cpl *response;
@@ -916,7 +916,6 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	req->session = conn->sess;
 	req->fabric_tx_ctx = tx_desc;
 	req->fabric_rx_ctx = rx_desc;
-	req->cb_fn = nvmf_process_async_completion;
 	req->length = 0;
 	req->xfer = SPDK_NVME_DATA_NONE;
 	req->data = NULL;

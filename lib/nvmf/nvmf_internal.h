@@ -78,10 +78,6 @@
 #define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
-struct nvmf_request;
-
-typedef void (*nvmf_cb_fn_t)(struct nvmf_request *);
-
 union sgl_shift {
 	struct spdk_nvmf_keyed_sgl_descriptor	nvmf_sgl;
 	struct spdk_nvme_sgl_descriptor		nvme_sgl;
@@ -123,7 +119,6 @@ struct nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
-	nvmf_cb_fn_t			cb_fn;
 
 	TAILQ_ENTRY(nvmf_request) 	entries;
 };
@@ -168,6 +163,11 @@ struct spdk_nvmf_globals {
 	struct rte_mempool *bb_large_pool;
 	uint16_t	   sin_port;
 };
+
+/**
+ * Send the response and transfer data from controller to host if required.
+ */
+void spdk_nvmf_request_complete(struct nvmf_request *req);
 
 void
 nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);

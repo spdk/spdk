@@ -116,18 +116,9 @@ struct spdk_nvmf_host *spdk_nvmf_host_find_by_tag(int tag)
 	return NULL;
 }
 
-static void io_nvmf_cmd_complete(struct nvmf_request *req)
+void
+spdk_nvmf_request_complete(struct nvmf_request *req)
 {
-	struct spdk_nvme_cpl *rsp;
-
-	rsp = &req->rsp->nvme_cpl;
-	CU_ASSERT_EQUAL(rsp->cdw0, 0xff);
-	CU_ASSERT_EQUAL(rsp->status.sc, SPDK_NVME_SC_SUCCESS);
-}
-
-static void admin_nvmf_cmd_complete(struct nvmf_request *req)
-{
-
 }
 
 int
@@ -534,7 +525,6 @@ nvmf_test_process_io_cmd(void)
 	nvmf_cmd.cid = 3;
 	nvmf_req.cmd = (union nvmf_h2c_msg *)&nvmf_cmd;
 	nvmf_req.rsp = malloc(sizeof(union nvmf_c2h_msg));
-	nvmf_req.cb_fn = io_nvmf_cmd_complete;
 	nvmf_req.cid = nvmf_cmd.cid;
 	cdw12 = (struct nvme_read_cdw12 *)&nvmf_cmd.cdw12;
 	cdw12->nlb = 16; //read 16 lb, check in nvme read
@@ -588,7 +578,6 @@ nvmf_test_process_admin_cmd(void)
 	nvmf_req.session = sess;
 	nvmf_req.cmd = (union nvmf_h2c_msg *)&nvmf_cmd;
 	nvmf_req.rsp = malloc(sizeof(union nvmf_c2h_msg));
-	nvmf_req.cb_fn = admin_nvmf_cmd_complete;
 #define BUILD_CMD(cmd_opc, cmd_nsid, cmd_cid, cmd_cdw10) \
 	do { \
 		nvmf_cmd.opc = cmd_opc; \
