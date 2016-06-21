@@ -784,7 +784,7 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 
 }
 
-static void
+static int
 nvmf_connect_continue(struct spdk_nvmf_conn *conn,
 		      struct nvme_qp_tx_desc *tx_desc)
 {
@@ -797,7 +797,7 @@ nvmf_connect_continue(struct spdk_nvmf_conn *conn,
 
 	if (tx_desc == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, " tx_desc does not exist!\n");
-		return;
+		return -1;
 	}
 
 	req = &tx_desc->req_state;
@@ -843,16 +843,10 @@ nvmf_connect_continue(struct spdk_nvmf_conn *conn,
 	ret = spdk_nvmf_send_response(conn, req);
 	if (ret) {
 		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-		goto connect_error;
+		return ret;
 	}
-	return;
 
-connect_error:
-	/* recover the tx_desc */
-	if (tx_desc != NULL) {
-		tx_desc->rx_desc = NULL;
-		nvmf_deactive_tx_desc(tx_desc);
-	}
+	return 0;
 }
 
 static int
@@ -890,7 +884,7 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 		}
 		req->data = rx_desc->bb;
 		req->length = sgl->nvmf_sgl.length;
-		nvmf_connect_continue(conn, tx_desc);
+		return nvmf_connect_continue(conn, tx_desc);
 	} else if (sgl->nvmf_sgl.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 		   (sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 		    sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
@@ -1151,7 +1145,10 @@ static int nvmf_cq_event_handler(struct spdk_nvmf_conn *conn)
 				}
 			} else if (req->pending == NVMF_PENDING_CONNECT) {
 				req->pending = NVMF_PENDING_NONE;
-				nvmf_connect_continue(conn, tx_desc);
+				if (nvmf_connect_continue(conn, tx_desc)) {
+					SPDK_ERRLOG("nvmf_connect_continue() failed\n");
+					goto handler_error;
+				}
 			}
 			break;
 
