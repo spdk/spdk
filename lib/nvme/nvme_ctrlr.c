@@ -864,9 +864,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			/*
 			 * Controller is currently disabled. We can jump straight to enabling it.
 			 */
-			nvme_ctrlr_enable(ctrlr);
+			rc = nvme_ctrlr_enable(ctrlr);
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
-			return 0;
+			return rc;
 		}
 		break;
 
@@ -883,9 +883,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		if (csts.bits.rdy == 0) {
 			/* CC.EN = 0 && CSTS.RDY = 0, so we can enable the controller now. */
-			nvme_ctrlr_enable(ctrlr);
+			rc = nvme_ctrlr_enable(ctrlr);
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
-			return 0;
+			return rc;
 		}
 		break;
 
