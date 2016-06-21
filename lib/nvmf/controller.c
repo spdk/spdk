@@ -279,7 +279,7 @@ spdk_nvmf_init_nvme(void)
 	}
 
 	/* Probe the physical NVMe devices */
-	if (spdk_nvme_probe(&ctx, probe_cb, attach_cb)) {
+	if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
 		SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 	}
 

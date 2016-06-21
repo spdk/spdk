@@ -101,6 +101,14 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_de
 				    const struct spdk_nvme_ctrlr_opts *opts);
 
 /**
+ * Callback for spdk_nvme_probe() to report that a device attached to the userspace NVMe driver
+ * has been removed from the system.
+ *
+ * \param ctrlr NVMe controller instance that was removed.
+ */
+typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver
  * to them if desired.
  *
@@ -108,6 +116,9 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_de
  * \param probe_cb will be called once per NVMe device found in the system.
  * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
  * controller has been attached to the userspace driver.
+ * \param remove_cb will be called for devices that were attached in a previous spdk_nvme_probe()
+ * call but are no longer attached to the system. Optional; specify NULL if removal notices are not
+ * desired.
  *
  * If called more than once, only devices that are not already attached to the SPDK NVMe driver
  * will be reported.
@@ -115,7 +126,10 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_de
  * To stop using the the controller and release its associated resources,
  * call \ref spdk_nvme_detach with the spdk_nvme_ctrlr instance returned by this function.
  */
-int spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb);
+int spdk_nvme_probe(void *cb_ctx,
+		    spdk_nvme_probe_cb probe_cb,
+		    spdk_nvme_attach_cb attach_cb,
+		    spdk_nvme_remove_cb remove_cb);
 
 /**
  * \brief Detaches specified device returned by \ref spdk_nvme_probe()'s attach_cb from the NVMe driver.

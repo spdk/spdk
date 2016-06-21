@@ -123,7 +123,8 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 }
 
 int
-spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb)
+spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_remove_cb remove_cb)
 {
 	return -1;
 }

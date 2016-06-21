@@ -197,7 +197,8 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 int
-spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb)
+spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_remove_cb remove_cb)
 {
 	int rc, start_rc;
 	struct nvme_enum_ctx enum_ctx;
