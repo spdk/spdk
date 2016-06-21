@@ -399,21 +399,9 @@ spdk_nvmf_send_response(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
 }
 
 static int
-nvmf_io_cmd_continue(struct spdk_nvmf_conn *conn, struct nvme_qp_tx_desc *tx_desc)
+nvmf_io_cmd_continue(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
 {
-	struct nvme_qp_rx_desc *rx_desc;
-	struct nvmf_request *req;
 	int ret;
-
-
-	rx_desc = tx_desc->rx_desc;
-	if (rx_desc == NULL) {
-		SPDK_ERRLOG(" rx_desc does not exist!\n");
-		return -1;
-	}
-
-	req = &tx_desc->req_state;
-	req->fabric_rx_ctx = rx_desc;
 
 	/* send to NVMf library for backend NVMe processing */
 	ret = nvmf_process_io_cmd(req);
@@ -1112,7 +1100,7 @@ static int nvmf_cq_event_handler(struct spdk_nvmf_conn *conn)
 			req = &tx_desc->req_state;
 			if (req->pending == NVMF_PENDING_WRITE) {
 				req->pending = NVMF_PENDING_NONE;
-				rc = nvmf_io_cmd_continue(conn, tx_desc);
+				rc = nvmf_io_cmd_continue(conn, req);
 				if (rc) {
 					SPDK_ERRLOG("error from io cmd continue\n");
 					goto handler_error;
