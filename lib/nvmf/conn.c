@@ -62,13 +62,13 @@
 static rte_atomic32_t g_num_connections[RTE_MAX_LCORE];
 
 static int g_max_conns;
-struct spdk_nvmf_conn *g_conns_array;
-char g_shm_name[64];
-int g_conns_array_fd;
+static struct spdk_nvmf_conn *g_conns_array;
+static char g_shm_name[64];
+static int g_conns_array_fd;
 
-pthread_mutex_t g_conns_mutex;
+static pthread_mutex_t g_conns_mutex;
 
-struct rte_timer g_shutdown_timer;
+static struct rte_timer g_shutdown_timer;
 
 static int nvmf_allocate_reactor(uint64_t cpumask);
 static void spdk_nvmf_conn_do_work(void *arg);
