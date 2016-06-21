@@ -786,21 +786,14 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 
 static int
 nvmf_connect_continue(struct spdk_nvmf_conn *conn,
-		      struct nvme_qp_tx_desc *tx_desc)
+		      struct nvmf_request *req)
 {
-	struct nvmf_request *req;
 	struct spdk_nvmf_fabric_connect_cmd *connect;
 	struct spdk_nvmf_fabric_connect_data *connect_data;
 	struct spdk_nvmf_fabric_connect_rsp *response;
 	struct nvmf_session *session;
 	int ret;
 
-	if (tx_desc == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, " tx_desc does not exist!\n");
-		return -1;
-	}
-
-	req = &tx_desc->req_state;
 	connect = &req->cmd->connect_cmd;
 	connect_data = (struct spdk_nvmf_fabric_connect_data *)req->data;
 
@@ -884,7 +877,7 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 		}
 		req->data = rx_desc->bb;
 		req->length = sgl->nvmf_sgl.length;
-		return nvmf_connect_continue(conn, tx_desc);
+		return nvmf_connect_continue(conn, req);
 	} else if (sgl->nvmf_sgl.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 		   (sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 		    sgl->nvmf_sgl.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
@@ -1145,7 +1138,7 @@ static int nvmf_cq_event_handler(struct spdk_nvmf_conn *conn)
 				}
 			} else if (req->pending == NVMF_PENDING_CONNECT) {
 				req->pending = NVMF_PENDING_NONE;
-				if (nvmf_connect_continue(conn, tx_desc)) {
+				if (nvmf_connect_continue(conn, req)) {
 					SPDK_ERRLOG("nvmf_connect_continue() failed\n");
 					goto handler_error;
 				}
