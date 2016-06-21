@@ -647,7 +647,6 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 				/* temporarily adjust SGE to only copy what the host is prepared to send. */
 				rx_desc->bb_sgl.length = req->length;
 
-				req->pending = NVMF_PENDING_WRITE;
 				ret = nvmf_post_rdma_read(tx_desc->conn, tx_desc);
 				if (ret) {
 					SPDK_ERRLOG("Unable to post rdma read tx descriptor\n");
@@ -873,7 +872,6 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 		req->data = rx_desc->bb;
 		req->remote_addr = sgl->nvmf_sgl.address;
 		req->rkey = sgl->nvmf_sgl.key;
-		req->pending = NVMF_PENDING_CONNECT;
 		req->length = sgl->nvmf_sgl.length;
 		req->xfer = SPDK_NVME_DATA_HOST_TO_CONTROLLER;
 
@@ -1098,36 +1096,43 @@ static int nvmf_cq_event_handler(struct spdk_nvmf_conn *conn)
 			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)tx_desc->rx_desc, 0);
 			req = &tx_desc->req_state;
-			if (req->pending == NVMF_PENDING_WRITE) {
-				req->pending = NVMF_PENDING_NONE;
+			if (req->cmd->nvme_cmd.opc == SPDK_NVMF_FABRIC_OPCODE) {
+				switch (req->cmd->nvmf_cmd.fctype) {
+				case SPDK_NVMF_FABRIC_COMMAND_CONNECT:
+					if (nvmf_connect_continue(conn, req)) {
+						SPDK_ERRLOG("nvmf_connect_continue() failed\n");
+						goto handler_error;
+					}
+					break;
+				default:
+					SPDK_ERRLOG("Unhandled fctype 0x%02X\n", req->cmd->nvmf_cmd.fctype);
+					return -1;
+				}
+			} else if (conn->type == CONN_TYPE_AQ) {
+				rte_panic("AQ continuation not implemented yet\n");
+			} else {
 				rc = nvmf_io_cmd_continue(conn, req);
 				if (rc) {
 					SPDK_ERRLOG("error from io cmd continue\n");
 					goto handler_error;
 				}
+			}
 
-				/*
-				 * Check for any pending rdma_reads to start
-				 */
-				conn->pending_rdma_read_count--;
-				if (!STAILQ_EMPTY(&conn->qp_pending_desc)) {
-					tx_desc = STAILQ_FIRST(&conn->qp_pending_desc);
-					STAILQ_REMOVE_HEAD(&conn->qp_pending_desc, link);
-					STAILQ_INSERT_TAIL(&conn->qp_tx_active_desc, tx_desc, link);
+			/*
+			 * Check for any pending rdma_reads to start
+			 */
+			conn->pending_rdma_read_count--;
+			if (!STAILQ_EMPTY(&conn->qp_pending_desc)) {
+				tx_desc = STAILQ_FIRST(&conn->qp_pending_desc);
+				STAILQ_REMOVE_HEAD(&conn->qp_pending_desc, link);
+				STAILQ_INSERT_TAIL(&conn->qp_tx_active_desc, tx_desc, link);
 
-					SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: tx_desc %p\n",
-						      tx_desc);
+				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: tx_desc %p\n",
+					      tx_desc);
 
-					rc = nvmf_post_rdma_read(conn, tx_desc);
-					if (rc) {
-						SPDK_ERRLOG("Unable to post pending rdma read descriptor\n");
-						goto handler_error;
-					}
-				}
-			} else if (req->pending == NVMF_PENDING_CONNECT) {
-				req->pending = NVMF_PENDING_NONE;
-				if (nvmf_connect_continue(conn, req)) {
-					SPDK_ERRLOG("nvmf_connect_continue() failed\n");
+				rc = nvmf_post_rdma_read(conn, tx_desc);
+				if (rc) {
+					SPDK_ERRLOG("Unable to post pending rdma read descriptor\n");
 					goto handler_error;
 				}
 			}

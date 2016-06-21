@@ -111,14 +111,6 @@ SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
 #define NVMF_CNTLID_SUBS_SHIFT 8
 
-enum pending_rdma_action {
-	NVMF_PENDING_NONE = 0,
-	NVMF_PENDING_CONNECT,
-	NVMF_PENDING_READ,
-	NVMF_PENDING_WRITE,
-	NVMF_PENDING_ADMIN,
-};
-
 struct nvmf_request {
 	struct nvmf_session		*session;
 	void				*fabric_tx_ctx;
@@ -131,7 +123,6 @@ struct nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
-	enum pending_rdma_action	pending;
 	nvmf_cb_fn_t			cb_fn;
 
 	TAILQ_ENTRY(nvmf_request) 	entries;
