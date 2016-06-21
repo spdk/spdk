@@ -704,7 +704,9 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		uint8_t		ns_smart : 1;
 		/* command effects log page */
 		uint8_t		celp : 1;
-		uint8_t		lpa_rsvd : 6;
+		/* extended data for get log page */
+		uint8_t		edlp: 1;
+		uint8_t		lpa_rsvd : 5;
 	} lpa;
 
 	/** error log page entries */
@@ -1146,7 +1148,12 @@ enum spdk_nvme_log_page {
 	/** Command effects log (optional) */
 	SPDK_NVME_LOG_COMMAND_EFFECTS_LOG	= 0x05,
 
-	/* 0x06-0x7F - reserved */
+	/* 0x06-0x6F - reserved */
+
+	/** Discovery(refer to the NVMe over Fabrics specification) */
+	SPDK_NVME_LOG_DISCOVERY		= 0x70,
+
+	/* 0x71-0x7f - reserved for NVMe over Fabrics */
 
 	/** Reservation notification (optional) */
 	SPDK_NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
