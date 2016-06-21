@@ -729,7 +729,7 @@ nvmf_process_admin_command(struct spdk_nvmf_conn *conn,
 		      tx_desc, req, (void *)req->rsp, (void *)tx_desc->send_sgl.addr);
 
 	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_admin_cmd(req->session, cmd, req->data, req->length, req);
+	ret = nvmf_process_admin_cmd(req);
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */

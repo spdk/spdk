@@ -583,9 +583,10 @@ nvmf_test_process_admin_cmd(void)
 	struct nvmf_request nvmf_req = {};
 	struct spdk_nvmf_subsystem *subsystem;
 	int buf_len = sizeof(struct spdk_nvme_ns_data);
-	uint8_t *buf;
 
 	sess = nvmf_find_session_by_id("subsystem1", SS_SC_CNTLID);
+	nvmf_req.session = sess;
+	nvmf_req.cmd = (union nvmf_h2c_msg *)&nvmf_cmd;
 	nvmf_req.rsp = malloc(sizeof(union nvmf_c2h_msg));
 	nvmf_req.cb_fn = admin_nvmf_cmd_complete;
 #define BUILD_CMD(cmd_opc, cmd_nsid, cmd_cid, cmd_cdw10) \
@@ -598,13 +599,13 @@ nvmf_test_process_admin_cmd(void)
 
 #define RUN_AND_CHECK_PROPERT_GET_RESULT(expect_ret, cmd_cid, sts) \
 	do { \
-		CU_ASSERT_EQUAL(nvmf_process_admin_cmd(sess, &nvmf_cmd, buf, buf_len, &nvmf_req), expect_ret); \
+		CU_ASSERT_EQUAL(nvmf_process_admin_cmd(&nvmf_req), expect_ret); \
 		CU_ASSERT_EQUAL(nvmf_req.rsp->nvme_cpl.cid, cmd_cid); \
 		CU_ASSERT_EQUAL(nvmf_req.rsp->nvme_cpl.status.sc, sts); \
 	} while (0)
 
 	/* check subsys=NULL condition */
-	buf = malloc(buf_len);
+	nvmf_req.data = malloc(buf_len);
 	subsystem = sess->subsys;
 	sess->subsys = NULL;
 	BUILD_CMD(SPDK_NVME_OPC_IDENTIFY, 2, 100, 0);
@@ -622,16 +623,16 @@ nvmf_test_process_admin_cmd(void)
 	/* identify namespace */
 	BUILD_CMD(SPDK_NVME_OPC_IDENTIFY, 2, 8, 0);
 	RUN_AND_CHECK_PROPERT_GET_RESULT(0, 8, SPDK_NVME_SC_SUCCESS);
-	free(buf);
+	free(nvmf_req.data);
 	/* identify controller */
 	buf_len = sizeof(struct spdk_nvme_ctrlr_data);
-	buf = malloc(buf_len);
+	nvmf_req.data = malloc(buf_len);
 	BUILD_CMD(SPDK_NVME_OPC_IDENTIFY, 2, 9, 1);
 	RUN_AND_CHECK_PROPERT_GET_RESULT(0, 9, SPDK_NVME_SC_SUCCESS);
-	free(buf);
+	free(nvmf_req.data);
 	/* identify controller with invalid cdw10=2 */
 	buf_len = sizeof(struct spdk_nvme_ctrlr_data);
-	buf = malloc(buf_len);
+	nvmf_req.data = malloc(buf_len);
 	BUILD_CMD(SPDK_NVME_OPC_IDENTIFY, 2, 9, 2);
 	RUN_AND_CHECK_PROPERT_GET_RESULT(-1, 9, SPDK_NVME_SC_INVALID_OPCODE);
 	/* create IO SQ whose qid > MAX_SESSION_IO_QUEUES */
@@ -699,8 +700,8 @@ nvmf_test_process_admin_cmd(void)
 	BUILD_CMD(SPDK_NVME_OPC_SET_FEATURES, 2, 19, SPDK_NVME_FEAT_NUMBER_OF_QUEUES);
 	RUN_AND_CHECK_PROPERT_GET_RESULT(1, 19, SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT_EQUAL(nvmf_req.rsp->nvme_cpl.cdw0 & 0xffff, 63);
-	free(buf);
-	buf = NULL;
+	free(nvmf_req.data);
+	nvmf_req.data = NULL;
 }
 /* for property get and set only */
 #define BUILD_PROPERTY_CMD(property_name, cmd_attr, cmd_cid) \

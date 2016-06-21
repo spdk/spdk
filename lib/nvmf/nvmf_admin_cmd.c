@@ -42,23 +42,21 @@
 #include "spdk/trace.h"
 
 int
-nvmf_process_admin_cmd(struct nvmf_session *session,
-		       struct spdk_nvme_cmd *cmd,
-		       void *buf, uint32_t len,
-		       struct nvmf_request *req_state)
+nvmf_process_admin_cmd(struct nvmf_request *req)
 {
-	struct spdk_nvme_cpl *response;
+	struct nvmf_session *session = req->session;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
 	struct spdk_nvme_ctrlr *ctrlr = NULL;
 	uint32_t nsid = 0;
 	int rc = 0;
 	uint8_t feature;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: req_state %p\n",
-		      req_state);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: req %p\n",
+		      req);
 
 	/* pre-set response details for this command */
-	response = &req_state->rsp->nvme_cpl;
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	response->cid = cmd->cid;
 
@@ -94,7 +92,7 @@ nvmf_process_admin_cmd(struct nvmf_session *session,
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
-		if (buf == NULL) {
+		if (req->data == NULL) {
 			SPDK_ERRLOG("identify command with no buffer\n");
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 			rc = -1;
@@ -120,14 +118,14 @@ nvmf_process_admin_cmd(struct nvmf_session *session,
 				break;
 			}
 			nsdata = spdk_nvme_ns_get_data(ns);
-			memcpy((char *)buf, (char *)nsdata, sizeof(struct spdk_nvme_ns_data));
-			req_state->cb_fn(req_state);
+			memcpy(req->data, (char *)nsdata, sizeof(struct spdk_nvme_ns_data));
+			req->cb_fn(req);
 		} else if (cmd->cdw10 == 1) {
 			/* identify controller */
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
 			/* pull from virtual controller context */
-			memcpy(buf, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
-			req_state->cb_fn(req_state);
+			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
+			req->cb_fn(req);
 		} else {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace List\n");
 			response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
@@ -279,7 +277,7 @@ nvmf_process_admin_cmd(struct nvmf_session *session,
 		  until NVMe library indicates some event.
 		*/
 		if (session->aer_req_state == NULL) {
-			session->aer_req_state = req_state;
+			session->aer_req_state = req;
 		} else {
 			/* AER already recorded, send error response */
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "AER already active!\n");
@@ -307,9 +305,9 @@ passthrough:
 		cmd->nsid = nsid;
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
 						   cmd,
-						   buf, len,
+						   req->data, req->length,
 						   nvmf_complete_cmd,
-						   (void *)req_state);
+						   req);
 		if (rc) {
 			SPDK_ERRLOG("nvmf_process_admin_cmd: Error to submit Admin Opcode %x\n", cmd->opc);
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
