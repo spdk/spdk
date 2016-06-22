@@ -73,6 +73,13 @@ vtophys_negative_test(void)
 		size = size << 1;
 	}
 
+	/* Test addresses that are not in the valid x86-64 usermode range */
+
+	if (spdk_vtophys((void *)0x0000800000000000ULL) != SPDK_VTOPHYS_ERROR) {
+		rc = -1;
+		printf("Err: kernel-mode address incorrectly allowed\n");
+	}
+
 	if (!rc)
 		printf("vtophys_negative_test passed\n");
 	else

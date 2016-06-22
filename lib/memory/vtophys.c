@@ -94,11 +94,6 @@ vtophys_get_map(uint64_t vfn_2mb)
 	uint64_t idx_128tb = MAP_128TB_IDX(vfn_2mb);
 	uint64_t idx_1gb = MAP_1GB_IDX(vfn_2mb);
 
-	if (vfn_2mb & ~MASK_128TB) {
-		printf("invalid usermode virtual address\n");
-		return NULL;
-	}
-
 	map_1gb = vtophys_map_128tb.map[idx_128tb];
 
 	if (!map_1gb) {
@@ -160,10 +155,15 @@ uint64_t
 spdk_vtophys(void *buf)
 {
 	struct map_2mb *map_2mb;
-	uint64_t vfn_2mb, pfn_2mb;
+	uint64_t vaddr, vfn_2mb, pfn_2mb;
 
-	vfn_2mb = (uint64_t)buf;
-	vfn_2mb >>= SHIFT_2MB;
+	vaddr = (uint64_t)buf;
+	if (vaddr & ~MASK_128TB) {
+		printf("invalid usermode virtual address %p\n", buf);
+		return SPDK_VTOPHYS_ERROR;
+	}
+
+	vfn_2mb = vaddr >> SHIFT_2MB;
 
 	map_2mb = vtophys_get_map(vfn_2mb);
 	if (!map_2mb) {
