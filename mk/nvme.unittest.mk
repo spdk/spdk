@@ -40,7 +40,7 @@ C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib -include $(SPDK_ROOT_DIR)/test/lib/nvme/unit/nvme_impl.h
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-LIBS += -lcunit -lpthread
+LIBS += -lcunit
 
 APP = $(TEST_FILE:.c=)
 

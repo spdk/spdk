@@ -42,7 +42,7 @@ CFLAGS += $(DPDK_INC)
 
 SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
 
-LIBS += $(SPDK_LIBS) -lpthread $(DPDK_LIB) -lrt
+LIBS += $(SPDK_LIBS) $(DPDK_LIB)
 
 all: $(APP)
 

@@ -40,7 +40,7 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
              $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
              $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
 
-LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) -lpthread $(DPDK_LIB) -lrt
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) $(DPDK_LIB)
 
 TEST_FILE = nvmf_ut.c
 

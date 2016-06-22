@@ -43,7 +43,7 @@ CFLAGS += -I$(JSONRPC_DIR)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-LIBS += -lcunit -lpthread
+LIBS += -lcunit
 
 APP = $(TEST_FILE:.c=)
 

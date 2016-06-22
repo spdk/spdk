@@ -44,7 +44,7 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 
-LIBS += $(SPDK_LIBS) -lpthread $(DPDK_LIB) -lrt
+LIBS += $(SPDK_LIBS) $(DPDK_LIB)
 
 all : $(APP)
 

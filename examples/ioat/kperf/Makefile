@@ -40,8 +40,6 @@ C_SRCS := ioat_kperf.c
 
 CFLAGS += -I.
 
-LIBS += -lrt
-
 all: $(APP)
 
 $(APP): $(OBJS)

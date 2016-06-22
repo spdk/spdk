@@ -44,7 +44,7 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
 
-LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) -lpthread $(DPDK_LIB) -lrt
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) $(DPDK_LIB)
 
 ifeq ($(OS),Linux)
 LIBS += -laio

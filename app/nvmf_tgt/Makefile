@@ -57,7 +57,7 @@ SPDK_LIBS = \
 LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB)
 
 LIBS += -libverbs -lrdmacm
-LIBS += $(DPDK_LIB) -lpthread -lrt
+LIBS += $(DPDK_LIB)
 
 all : $(APP)
 

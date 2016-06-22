@@ -104,6 +104,8 @@ COMMON_CFLAGS += -fsanitize=address
 LDFLAGS += -fsanitize=address
 endif
 
+LDFLAGS += -lpthread -lrt
+
 MAKEFLAGS += --no-print-directory
 
 OBJS = $(C_SRCS:.c=.o) $(CXX_SRCS:.cpp=.o)
