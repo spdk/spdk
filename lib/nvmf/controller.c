@@ -108,7 +108,7 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	spdk_nvmf_complete_ctrlr_aer(ctrlr, cpl);
 }
 
-static struct spdk_nvmf_ctrlr *
+static void
 spdk_nvmf_ctrlr_create(char *name, int domain, int bus, int dev, int func,
 		       struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -116,7 +116,8 @@ spdk_nvmf_ctrlr_create(char *name, int domain, int bus, int dev, int func,
 
 	nvmf_ctrlr = calloc(1, sizeof(struct spdk_nvmf_ctrlr));
 	if (nvmf_ctrlr == NULL) {
-		return NULL;
+		SPDK_ERRLOG("allocate nvmf_ctrlr failed.\n");
+		return;
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Found physical NVMe device. Name: %s\n", name);
@@ -127,8 +128,6 @@ spdk_nvmf_ctrlr_create(char *name, int domain, int bus, int dev, int func,
 	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, ctrlr);
 
 	TAILQ_INSERT_HEAD(&g_ctrlrs, nvmf_ctrlr, entry);
-
-	return nvmf_ctrlr;
 }
 
 static bool
