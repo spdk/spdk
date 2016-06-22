@@ -59,6 +59,7 @@ timing_enter nvmf
 
 time test/nvmf/fio/fio.sh
 time test/nvmf/filesystem/filesystem.sh
+time test/nvmf/discovery/discovery.sh
 
 timing_exit nvmf
 

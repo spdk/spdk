@@ -38,6 +38,7 @@
 #include "subsystem_grp.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
+#include "spdk/nvme_spec.h"
 
 static struct nvmf_session *
 nvmf_create_session(const char *subnqn)
@@ -81,8 +82,47 @@ nvmf_delete_session(struct nvmf_session	*session)
 	free(session);
 }
 
-void
-nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
+static void
+nvmf_init_discovery_session_properties(struct nvmf_session *session)
+{
+	struct spdk_nvmf_extended_identify_ctrlr_data *nvmfdata;
+
+	session->vcdata.maxcmd = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+	/* extended data for get log page supportted */
+	session->vcdata.lpa.edlp = 1;
+	/* reset cntlid in vcdata to match the logical cntlid known to NVMf */
+	session->vcdata.cntlid = session->cntlid;
+	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
+	nvmfdata->ioccsz = (NVMF_H2C_MAX_MSG / 16);
+	nvmfdata->iorcsz = (NVMF_C2H_MAX_MSG / 16);
+	nvmfdata->icdoff = 0; /* offset starts directly after SQE */
+	nvmfdata->ctrattr = 0; /* dynamic controller model */
+	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
+	session->vcdata.sgls.keyed_sgl = 1;
+	session->vcdata.sgls.sgl_offset = 1;
+
+	/* Properties */
+	session->vcprop.cap_lo.raw = 0;
+	session->vcprop.cap_lo.bits.cqr = 1;	/* NVMF specification required */
+	session->vcprop.cap_lo.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
+	session->vcprop.cap_lo.bits.ams = 0;	/* optional arb mechanisms */
+
+	session->vcprop.cap_hi.raw = 0;
+	session->vcprop.cap_hi.bits.dstrd = 0;	/* fixed to 0 for NVMf */
+	session->vcprop.cap_hi.bits.css_nvm = 1; /* NVM command set */
+	session->vcprop.cap_hi.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
+	session->vcprop.cap_hi.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
+
+	session->vcprop.vs = 0x10000;	/* Version Supported: Major 1, Minor 0 */
+
+	session->vcprop.cc.raw = 0;
+
+	session->vcprop.csts.raw = 0;
+	session->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
+}
+
+static void
+nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 {
 	/* for now base virtual controller properties on first namespace controller */
 	struct spdk_nvme_ctrlr *ctrlr = session->subsys->ns_list_map[0].ctrlr;
@@ -189,6 +229,16 @@ nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
 		      session->vcprop.capattr_lo.raw);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: capattr_hi %x\n",
 		      session->vcprop.capattr_hi.raw);
+}
+
+void
+nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
+{
+	if (session->subsys->subtype == SPDK_NVMF_SUB_NVME) {
+		nvmf_init_nvme_session_properties(session, aq_depth);
+	} else {
+		nvmf_init_discovery_session_properties(session);
+	}
 }
 
 static struct nvmf_session *

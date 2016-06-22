@@ -343,7 +343,7 @@ nvmf_test_create_subsystem(void)
 	char wrong_name[512];
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
-	subsystem = nvmf_create_subsystem(1, correct_name);
+	subsystem = nvmf_create_subsystem(1, correct_name, SPDK_NVMF_SUB_NVME);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_EQUAL(subsystem->num, 1);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, correct_name);
@@ -353,7 +353,7 @@ nvmf_test_create_subsystem(void)
 
 	/* test long name */
 	memset(wrong_name, 'a', 512);
-	subsystem = nvmf_create_subsystem(2, wrong_name);
+	subsystem = nvmf_create_subsystem(2, wrong_name, SPDK_NVMF_SUB_NVME);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_EQUAL(subsystem->num, 2);
 	CU_ASSERT_STRING_NOT_EQUAL(subsystem->subnqn, wrong_name);

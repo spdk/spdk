@@ -42,6 +42,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
+#include "spdk/nvmf_spec.h"
 
 #define MAX_TMPBUF 1024
 #define SPDK_CN_TAG_MAX 0x0000ffff
@@ -70,7 +71,7 @@ nvmf_find_subsystem(const char *subnqn)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, char *name)
+nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_type)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 
@@ -83,6 +84,7 @@ nvmf_create_subsystem(int num, char *name)
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_subsystem: allocated subsystem %p\n", subsystem);
 
 	subsystem->num = num;
+	subsystem->subtype = sub_type;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
 	TAILQ_INIT(&subsystem->sessions);
 
@@ -332,7 +334,7 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 	}
 
 	/* register this subsystem with the NVMf library */
-	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, ss_group->name);
+	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, ss_group->name, SPDK_NVMF_SUB_NVME);
 	if (ss_group->subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating new nvmf library subsystem\n");
 		goto err0;
@@ -380,6 +382,87 @@ err0:
 	return -1;
 }
 
+static int
+spdk_add_nvmf_discovery_subsystem(void)
+{
+	struct spdk_nvmf_subsystem_grp *ss_group;
+
+	ss_group = calloc(1, sizeof(*ss_group));
+	if (!ss_group) {
+		SPDK_ERRLOG("could not allocate discovery subsystem group\n");
+		return -1;
+	}
+
+	ss_group->num = 0xffff;
+	ss_group->name = strdup(SPDK_NVMF_DISCOVERY_NQN);
+	if (ss_group->name == NULL) {
+		SPDK_ERRLOG("strdup ss_group->name error\n");
+		free(ss_group);
+		return -1;
+	}
+
+	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, ss_group->name, SPDK_NVMF_SUB_DISCOVERY);
+	if (ss_group->subsystem == NULL) {
+		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
+		free(ss_group);
+		return -1;
+	}
+	TAILQ_INSERT_TAIL(&g_ssg_head, ss_group, tailq);
+
+	return 0;
+}
+
+void
+spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length)
+{
+	int i, numrec = 0;
+	struct spdk_nvmf_subsystem_grp *ss_group;
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_access_map *map;
+	struct spdk_nvmf_port *port;
+	struct spdk_nvmf_fabric_intf *fabric_intf;
+	struct spdk_nvmf_discovery_log_page_entry *entry;
+
+	TAILQ_FOREACH(ss_group, &g_ssg_head, tailq) {
+		subsystem = ss_group->subsystem;
+		if (subsystem->subtype == SPDK_NVMF_SUB_DISCOVERY)
+			continue;
+
+		for (i = 0; i < ss_group->map_count; i++) {
+			map = &ss_group->map[i];
+			port = map->port;
+			if (port != NULL) {
+				TAILQ_FOREACH(fabric_intf, &port->head, tailq) {
+					/* include the discovery log entry */
+					if (length > sizeof(struct spdk_nvmf_discovery_log_page)) {
+						if (sizeof(struct spdk_nvmf_discovery_log_page) + (numrec + 1) * sizeof(
+							    struct spdk_nvmf_discovery_log_page_entry) > length) {
+							break;
+						}
+						entry = &disc_log->entries[numrec];
+						entry->trtype = fabric_intf->trtype;
+						entry->adrfam = fabric_intf->adrfam;
+						entry->treq = fabric_intf->treq;
+						entry->portid = port->tag;
+						/* Dynamic controllers */
+						entry->cntlid = 0xffff;
+						entry->subtype = subsystem->subtype;
+						snprintf(entry->trsvcid, 32, "%s", fabric_intf->sin_port);
+						snprintf(entry->traddr, 256, "%s", fabric_intf->host);
+						snprintf(entry->subnqn, 256, "%s", subsystem->subnqn);
+						entry->tsas.rdma.rdma_qptype = port->rdma.rdma_qptype;
+						entry->tsas.rdma.rdma_prtype = port->rdma.rdma_prtype;
+						entry->tsas.rdma.rdma_cms = port->rdma.rdma_cms;
+					}
+					numrec++;
+				}
+			}
+		}
+	}
+
+	disc_log->numrec = numrec;
+}
+
 int
 spdk_initialize_nvmf_subsystems(void)
 {
@@ -407,7 +490,13 @@ spdk_initialize_nvmf_subsystems(void)
 		}
 		sp = spdk_conf_next_section(sp);
 	}
-	return 0;
+
+	/* Discovery subsystem */
+	rc = spdk_add_nvmf_discovery_subsystem();
+	if (rc == 0)
+		printf("    Discovery Service Enabled\n");
+
+	return rc;
 }
 
 int

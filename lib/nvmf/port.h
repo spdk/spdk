@@ -38,6 +38,7 @@
 
 #include "spdk/conf.h"
 #include "spdk/queue.h"
+#include "spdk/nvmf_spec.h"
 
 /** \file
 * An NVMf subsystem port, referred to as simply "port" is defined by the
@@ -65,6 +66,9 @@ struct spdk_nvmf_fabric_intf {
 	char					*host;
 	char					*sin_port;
 	struct spdk_nvmf_port			*port;
+	enum spdk_nvmf_transport_types		trtype;
+	enum spdk_nvmf_address_family_types	adrfam;
+	enum spdk_nvmf_transport_requirements	treq;
 	uint32_t				num_sessions;
 	TAILQ_ENTRY(spdk_nvmf_fabric_intf)	tailq;
 };
@@ -73,6 +77,7 @@ struct spdk_nvmf_port {
 	int tag;
 	enum group_state state;
 	enum fabric_type type;
+	struct spdk_nvmf_rdma_transport_specific_address rdma;
 	TAILQ_HEAD(, spdk_nvmf_fabric_intf)	head;
 	TAILQ_ENTRY(spdk_nvmf_port)		tailq;
 };

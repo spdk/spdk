@@ -92,6 +92,64 @@ spdk_nvmf_request_release(struct spdk_nvmf_request *req)
 }
 
 static bool
+nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
+{
+	struct nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_discovery_log_page *log;
+
+	/* pre-set response details for this command */
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	response->cid = cmd->cid;
+
+	if (req->data == NULL) {
+		SPDK_ERRLOG("discovery command with no buffer\n");
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return true;
+	}
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_IDENTIFY:
+		/* Only identify controller can be supported */
+		if (cmd->cdw10 == 1) {
+			/* identify controller */
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
+			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
+			return true;
+		} else {
+			SPDK_ERRLOG("Unsupported identify command\n");
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return true;
+		}
+		break;
+	case SPDK_NVME_OPC_GET_LOG_PAGE:
+		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_LOG_DISCOVERY) {
+			log = (struct spdk_nvmf_discovery_log_page *)req->data;
+			/*
+			 * Does not support change discovery
+			 *  information at runtime now.
+			 */
+			log->genctr = 0;
+			log->numrec = 0;
+			spdk_format_discovery_log(log, req->length);
+			return true;
+		} else {
+			SPDK_ERRLOG("Unsupported log page %u\n", cmd->cdw10 & 0xFF);
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return true;
+		}
+		break;
+	default:
+		SPDK_ERRLOG("Unsupported Opcode 0x%x for Discovery service\n", cmd->opc);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return true;
+	}
+
+	return true;
+}
+
+static bool
 nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 {
 	struct nvmf_session *session = req->conn->sess;
@@ -106,13 +164,6 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	response->cid = cmd->cid;
-
-	/* verify subsystem */
-	if (subsystem == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Subsystem Not Initialized!\n");
-		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		return true;
-	}
 
 	if (cmd->nsid == 0) {
 		/* may be valid for the requested command. but need
@@ -653,7 +704,18 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		done = nvmf_process_fabrics_command(req);
 	} else if (req->conn->type == CONN_TYPE_AQ) {
-		done = nvmf_process_admin_cmd(req);
+		struct nvmf_session *session;
+		struct spdk_nvmf_subsystem *subsystem;
+
+		session = req->conn->sess;
+		RTE_VERIFY(session != NULL);
+		subsystem = session->subsys;
+		RTE_VERIFY(subsystem != NULL);
+		if (subsystem->subtype == SPDK_NVMF_SUB_DISCOVERY) {
+			done = nvmf_process_discovery_cmd(req);
+		} else {
+			done = nvmf_process_admin_cmd(req);
+		}
 	} else {
 		done = nvmf_process_io_cmd(req);
 	}

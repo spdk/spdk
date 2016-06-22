@@ -59,6 +59,7 @@ struct spdk_nvmf_subsystem {
 	uint16_t num;
 	char subnqn[MAX_NQN_SIZE];
 	int num_sessions;
+	enum spdk_nvmf_subsystem_types subtype;
 	TAILQ_HEAD(session_q, nvmf_session) sessions;
 	struct spdk_nvmf_namespace ns_list_map[MAX_PER_SUBSYSTEM_NAMESPACES];
 	int ns_count;
@@ -73,7 +74,7 @@ struct spdk_nvmf_access_map {
 
 struct spdk_nvmf_subsystem_grp {
 	int num;
-	char *name;;
+	char *name;
 	struct spdk_nvmf_subsystem *subsystem;
 	int map_count;
 	struct spdk_nvmf_access_map map[MAX_PER_SUBSYSTEM_ACCESS_MAP];
@@ -81,7 +82,7 @@ struct spdk_nvmf_subsystem_grp {
 };
 
 struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, char *name);
+nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_type);
 
 int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
@@ -98,5 +99,8 @@ spdk_initialize_nvmf_subsystems(void);
 
 int
 spdk_shutdown_nvmf_subsystems(void);
+
+void
+spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);
 
 #endif /* _NVMF_SUBSYSTEM_GROUP_H_ */
