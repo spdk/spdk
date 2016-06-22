@@ -87,6 +87,74 @@ enum spdk_nvmf_fabric_cmd_status_code {
 	SPDK_NVMF_FABRIC_SC_AUTH_REQUIRED		= 0x91,
 };
 
+/**
+ * RDMA Queue Pair service types
+ */
+enum spdk_nvmf_rdma_qp_service_types {
+	/** Reliable connected */
+	SPDK_NVMF_QP_TYPE_RELIABLE_CONNECTED	= 0x1,
+	/** Reliable datagram */
+	SPDK_NVMF_OQ_TYPE_RELIABLE_DATAGRAM	= 0x2,
+};
+
+/**
+ * RDMA provider types
+ */
+enum spdk_nvmf_rdma_provider_types {
+	SPDK_NVMF_RDMA_NO_PROVIDER	= 0x1,
+	SPDK_NVMF_RDMA_PRTYPE_IB	= 0x2,
+	SPDK_NVMF_RDMA_PRTYPE_ROCE	= 0x3,
+	SPDK_NVMF_RDMA_PRTYPE_ROCE2	= 0x4,
+	SPDK_NVMF_RDMA_PRTYPE_IWARP	= 0x5,
+};
+
+/**
+ * RDMA connection management service types
+ */
+enum spdk_nvmf_rdma_connection_mgmt_service {
+	/** Sockets based endpoint addressing */
+	SPDK_NVMF_RDMA_CMS_RDMA_CM	= 0x1,
+};
+
+/**
+ * NVMe over Fabrics transport types
+ */
+enum spdk_nvmf_transport_types {
+	SPDK_NVMF_TRANS_RDMA		= 0x1,
+	SPDK_NVMF_TRANS_FC		= 0x2,
+	SPDK_NVMF_TRANS_INTRA_HOST	= 0xfe,
+};
+
+/**
+ * Address family types
+ */
+enum spdk_nvmf_address_family_types {
+	SPDK_NVMF_ADDR_FAMILY_IPV4		= 0x1,
+	SPDK_NVMF_ADDR_FAMILY_IPV6		= 0x2,
+	SPDK_NVMF_ADDR_FAMILY_IB		= 0x3,
+	SPDK_NVMF_ADDR_FAMILY_FC		= 0x4,
+	SPDK_NVMF_ADDR_FAMILY_INTRA_HOST	= 0xfe,
+};
+
+/**
+ * NVM subsystem types
+ */
+enum spdk_nvmf_subsystem_types {
+	/** Discovery type for NVM subsystem */
+	SPDK_NVMF_SUB_DISCOVERY		= 0x1,
+	/** NVMe type for NVM subsystem */
+	SPDK_NVMF_SUB_NVME		= 0x2,
+};
+
+/**
+ * Connections shall be made over a fabric secure channel
+ */
+enum spdk_nvmf_tansport_requirements {
+	SPDK_NVMF_TREQ_NOT_SPECIFIED	= 0x0,
+	SPDK_NVMF_TREQ_REQUIRED		= 0x1,
+	SPDK_NVMF_TREQ_NOT_REQUIRED	= 0x2,
+};
+
 struct spdk_nvmf_fabric_auth_recv_cmd {
 	uint8_t		opcode;
 	uint8_t		reserved1;
@@ -442,7 +510,16 @@ struct spdk_nvmf_discovery_identify_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_identify_data) == 4096, "Incorrect size");
 
-#define SPDK_NVMF_LOG_PAGE_DISCOVERY	0x70
+struct spdk_nvmf_rdma_transport_specific_address {
+	uint8_t		rdma_qptype; /* see spdk_nvmf_rdma_qp_service_types */
+	uint8_t		rdma_prtype; /* see spdk_nvmf_rdma_provider_types */
+	uint8_t		rdma_cms; /* see spdk_nvmf_rdma_connection_mgmt_service */
+	uint8_t		reserved0[5];
+	uint16_t	rdma_pkey;
+	uint8_t		reserved2[246];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_rdma_transport_specific_address) == 256,
+		   "Incorrect size");
 
 struct spdk_nvmf_discovery_log_page_entry {
 	uint8_t		trtype; /* transport type */
@@ -456,7 +533,9 @@ struct spdk_nvmf_discovery_log_page_entry {
 	uint8_t		reserved1[192];
 	uint8_t		subnqn[256];
 	uint8_t		traddr[256];
-	uint8_t		tsas[256];
+	union	{
+		struct spdk_nvmf_rdma_transport_specific_address rdma;
+	} tsas;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_log_page_entry) == 1024, "Incorrect size");
 
@@ -499,16 +578,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_keyed_sgl_descriptor) == 16, "Incorre
 
 #define SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY	0xF
 
-struct spdk_nvmf_rdma_transport_specific_address {
-	uint8_t 	rdma_qptype; /* see nvmf_rdma_qp_service_types */
-	uint8_t		rdma_prtype; /* see nvmf_rdma_provider_types */
-	uint8_t		rdma_cms; /* nvmf_rdma_connection_mgmt_service */
-	uint8_t		reserved0[5];
-	uint16_t	rdma_pkey;
-	uint8_t	reserved2[246];
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_rdma_transport_specific_address) == 256,
-		   "Incorrect size");
+
 
 struct spdk_nvmf_rdma_request_private_data {
 	uint16_t	recfmt; /* record format */
