@@ -104,7 +104,8 @@ COMMON_CFLAGS += -fsanitize=address
 LDFLAGS += -fsanitize=address
 endif
 
-LDFLAGS += -lpthread -lrt
+COMMON_CFLAGS += -pthread
+LDFLAGS += -pthread -lrt
 
 MAKEFLAGS += --no-print-directory
 
