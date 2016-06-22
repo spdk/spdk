@@ -17,7 +17,7 @@ Next, edit the CONFIG file located in the root of the SPDK repository and set CO
 to y and FIO_SOURCE_DIR to the location of the fio repository that was just created.
 
 Further, you'll need to build DPDK with -fPIC set. You can do this by modifying your
-DPDK config file (i.e. config/defconfig_x86_64-native-linux-gcc) to include the line
+DPDK config file (i.e. config/defconfig_x86_64-native-linuxapp-gcc) to include the line
 
     EXTRA_CFLAGS=-fPIC
 
