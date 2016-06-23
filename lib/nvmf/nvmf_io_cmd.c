@@ -106,8 +106,7 @@ nvmf_process_io_cmd(struct nvmf_request *req)
 		if (cmd->opc == SPDK_NVME_OPC_READ) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Read; lba address %lx, lba count %x\n",
 				      lba_address, lba_count);
-			spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0,
-					  (uint64_t)req->fabric_rx_ctx, 0);
+			spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvme_ns_cmd_read(ns, qpair,
 						   req->data, lba_address, lba_count,
 						   nvmf_complete_cmd,
@@ -115,8 +114,7 @@ nvmf_process_io_cmd(struct nvmf_request *req)
 		} else {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Write; lba address %lx, lba count %x\n",
 				      lba_address, lba_count);
-			spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0,
-					  (uint64_t)req->fabric_rx_ctx, 0);
+			spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvme_ns_cmd_write(ns, qpair,
 						    req->data, lba_address, lba_count,
 						    nvmf_complete_cmd,

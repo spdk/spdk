@@ -1003,14 +1003,15 @@ static int nvmf_cq_event_handler(struct spdk_nvmf_conn *conn)
 			 */
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma write completion\n");
 			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
-			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)tx_desc->rx_desc, 0);
+			req = &tx_desc->req_state;
+			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
 			break;
 
 		case IBV_WC_RDMA_READ:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma read completion\n");
 			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
-			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)tx_desc->rx_desc, 0);
 			req = &tx_desc->req_state;
+			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_request_exec(conn, req);
 			if (rc) {
 				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);

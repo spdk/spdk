@@ -345,7 +345,7 @@ nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp)
 	struct nvmf_request *req_state = (struct nvmf_request *)rsp;
 	struct spdk_nvme_cpl *response;
 
-	spdk_trace_record(TRACE_NVMF_LIB_COMPLETE, 0, 0, (uint64_t)req_state->fabric_rx_ctx, 0);
+	spdk_trace_record(TRACE_NVMF_LIB_COMPLETE, 0, 0, (uint64_t)req_state, 0);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_complete_cmd callback: req_state %p\n", req_state);
 
 	response = &req_state->rsp->nvme_cpl;

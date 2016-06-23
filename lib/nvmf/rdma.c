@@ -293,7 +293,7 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
 			      IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
 
-	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uint64_t)rx_desc, 0);
+	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uint64_t)req, 0);
 	rc = ibv_post_send(conn->qp, &wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma read send, rc = 0x%x\n", rc);
@@ -318,7 +318,7 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
 			      IBV_WR_RDMA_WRITE, 0);
 
-	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uint64_t)rx_desc, 0);
+	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uint64_t)req, 0);
 	rc = ibv_post_send(conn->qp, &wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma write send, rc = 0x%x\n", rc);
@@ -331,6 +331,7 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 		    struct nvme_qp_tx_desc *tx_desc)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
+	struct nvmf_request *req = &tx_desc->req_state;
 	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
 	int rc;
 
@@ -349,16 +350,10 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	nvmf_ibv_send_wr_init(&wr, NULL, &tx_desc->send_sgl, (uint64_t)tx_desc,
 			      IBV_WR_SEND, IBV_SEND_SIGNALED);
 
-#ifdef DEBUG
-	{
-		struct nvmf_request *req = &tx_desc->req_state;
-		SPDK_TRACELOG(SPDK_TRACE_RDMA,
-			      "tx_desc %p: req_state %p, rsp %p\n",
-			      tx_desc, req, (void *)req->rsp);
-	}
-#endif
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "tx_desc %p: req_state %p, rsp %p\n",
+		      tx_desc, req, req->rsp);
 
-	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uint64_t)rx_desc, 0);
+	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uint64_t)req, 0);
 	rc = ibv_post_send(conn->qp, &wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma send for NVMf completion, rc = 0x%x\n", rc);
