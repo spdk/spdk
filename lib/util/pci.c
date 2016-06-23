@@ -43,7 +43,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#ifdef USE_PCIACCESS
+#ifdef SPDK_CONFIG_PCIACCESS
 #include <pciaccess.h>
 /* When using libpciaccess, struct spdk_pci_device * is actually struct pci_device * internally. */
 #define spdk_pci_device pci_device
@@ -62,7 +62,7 @@
 #define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
-#ifndef PCI_PRI_FMT /* This is defined by rte_pci.h when USE_PCIACCESS is not set */
+#ifndef PCI_PRI_FMT /* This is defined by rte_pci.h when SPDK_CONFIG_PCIACCESS is not set */
 #define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
 #endif
 
@@ -71,7 +71,7 @@
 #define PCI_EXT_CAP_ID_SN	0x03
 #define PCI_UIO_DRIVER		"uio_pci_generic"
 
-#ifdef USE_PCIACCESS
+#ifdef SPDK_CONFIG_PCIACCESS
 
 /*
  * libpciaccess wrapper functions
@@ -231,7 +231,7 @@ spdk_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_de
 	return rc;
 }
 
-#else /* !USE_PCIACCESS */
+#else /* !SPDK_CONFIG_PCIACCESS */
 
 /*
  * DPDK PCI wrapper functions
@@ -374,7 +374,7 @@ spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_
 	return rte_eal_pci_write_config(dev, &value, 4, offset) == 4 ? 0 : -1;
 }
 
-#endif /* !USE_PCIACCESS */
+#endif /* !SPDK_CONFIG_PCIACCESS */
 
 
 int

@@ -92,8 +92,6 @@ endif
 
 ifeq ($(CONFIG_PCIACCESS), y)
 PCIACCESS_LIB=-lpciaccess
-SPDK_PCIACCESS_CFLAGS=-DUSE_PCIACCESS
-COMMON_CFLAGS += $(SPDK_PCIACCESS_CFLAGS)
 endif
 
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -std=gnu99

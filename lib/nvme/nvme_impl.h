@@ -55,7 +55,7 @@
 #include <rte_malloc.h>
 #include <rte_mempool.h>
 
-#ifdef USE_PCIACCESS
+#ifdef SPDK_CONFIG_PCIACCESS
 #include <pciaccess.h>
 #else
 #include <rte_pci.h>
@@ -146,7 +146,7 @@ struct nvme_pci_enum_ctx {
 	void *user_enum_ctx;
 };
 
-#ifdef USE_PCIACCESS
+#ifdef SPDK_CONFIG_PCIACCESS
 
 static int
 nvme_pci_enum_cb(void *enum_ctx, struct spdk_pci_device *pci_dev)
@@ -208,7 +208,7 @@ nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint
 	*size = (uint64_t)dev->regions[bar].size;
 }
 
-#else /* !USE_PCIACCESS */
+#else /* !SPDK_CONFIG_PCIACCESS */
 
 static inline int
 nvme_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **mapped_addr)
@@ -297,7 +297,7 @@ nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_de
 	return rc;
 }
 
-#endif /* !USE_PCIACCESS */
+#endif /* !SPDK_CONFIG_PCIACCESS */
 
 typedef pthread_mutex_t nvme_mutex_t;
 

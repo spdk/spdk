@@ -16,7 +16,7 @@
 
 #include "ioat_pci.h"
 
-#ifdef USE_PCIACCESS
+#ifdef SPDK_CONFIG_PCIACCESS
 #include <pciaccess.h>
 #else
 #include <rte_pci.h>
@@ -81,7 +81,7 @@ struct ioat_pci_enum_ctx {
 	void *user_enum_ctx;
 };
 
-#ifdef USE_PCIACCESS
+#ifdef SPDK_CONFIG_PCIACCESS
 
 static inline bool
 ioat_pci_device_match_id(uint16_t vendor_id, uint16_t device_id)
@@ -182,7 +182,7 @@ ioat_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 	return pci_device_unmap_range(dev, addr, dev->regions[bar].size);
 }
 
-#else /* !USE_PCIACCESS */
+#else /* !SPDK_CONFIG_PCIACCESS */
 
 static inline int
 ioat_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **mapped_addr)
@@ -294,7 +294,7 @@ ioat_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_de
 	return rc;
 }
 
-#endif /* !USE_PCIACCESS */
+#endif /* !SPDK_CONFIG_PCIACCESS */
 
 typedef pthread_mutex_t ioat_mutex_t;
 
