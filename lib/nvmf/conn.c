@@ -434,7 +434,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	int ret = 0;
 
 	rx_desc = (struct nvme_qp_rx_desc *)wc->wr_id;
-	cap_hdr = (struct spdk_nvmf_capsule_cmd *)&rx_desc->msg_buf;
+	cap_hdr = &rx_desc->cmd.nvmf_cmd;
 
 	/* Update Connection SQ Tracking, increment
 	   the SQ tail consuming a free RX recv slot.
@@ -495,7 +495,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	req->xfer = SPDK_NVME_DATA_NONE;
 	req->data = NULL;
 	req->cid = cap_hdr->cid;
-	req->cmd = &rx_desc->msg_buf;
+	req->cmd = &rx_desc->cmd;
 
 	nvmf_trace_command(cap_hdr, conn->type);
 

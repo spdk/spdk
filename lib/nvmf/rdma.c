@@ -177,7 +177,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 
 		rte_free(tmp_rx->bb);
 
-		rc = rdma_dereg_mr(tmp_rx->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp_rx->cmd_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register rx mr\n");
 		}
@@ -188,7 +188,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 	STAILQ_FOREACH(tmp_tx, &conn->rdma.qp_tx_desc, link) {
 		STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tmp_tx, nvme_qp_tx_desc, link);
 
-		rc = rdma_dereg_mr(tmp_tx->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp_tx->rsp_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register tx mr\n");
 		}
@@ -912,10 +912,8 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 			goto fail;
 		}
 
-		rx_desc->msg_buf_mr = rdma_reg_msgs(conn->rdma.cm_id,
-						    (void *)&rx_desc->msg_buf,
-						    sizeof(rx_desc->msg_buf));
-		if (rx_desc->msg_buf_mr == NULL) {
+		rx_desc->cmd_mr = rdma_reg_msgs(conn->rdma.cm_id, &rx_desc->cmd, sizeof(rx_desc->cmd));
+		if (rx_desc->cmd_mr == NULL) {
 			SPDK_ERRLOG("Unable to register rx desc buffer mr\n");
 			goto fail;
 		}
@@ -923,9 +921,9 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 		rx_desc->conn = conn;
 
 		/* initialize recv_sgl of tx_desc */
-		rx_desc->recv_sgl.addr = (uint64_t)&rx_desc->msg_buf;
-		rx_desc->recv_sgl.length = sizeof(rx_desc->msg_buf);
-		rx_desc->recv_sgl.lkey = rx_desc->msg_buf_mr->lkey;
+		rx_desc->recv_sgl.addr = (uint64_t)&rx_desc->cmd;
+		rx_desc->recv_sgl.length = sizeof(rx_desc->cmd);
+		rx_desc->recv_sgl.lkey = rx_desc->cmd_mr->lkey;
 
 		/* pre-assign a data bb (bounce buffer) with each RX descriptor */
 		/*
@@ -975,8 +973,8 @@ fail:
 
 		rte_free(rx_desc->bb);
 
-		if (rx_desc->msg_buf_mr) {
-			rc = rdma_dereg_mr(rx_desc->msg_buf_mr);
+		if (rx_desc->cmd_mr) {
+			rc = rdma_dereg_mr(rx_desc->cmd_mr);
 			if (rc) {
 				SPDK_ERRLOG("Unable to de-register rx mr\n");
 			}
@@ -995,7 +993,7 @@ fail:
 
 		rte_free(tmp->bb);
 
-		rc = rdma_dereg_mr(tmp->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp->cmd_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register rx mr\n");
 		}
@@ -1022,10 +1020,8 @@ alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
 			goto fail;
 		}
 
-		tx_desc->msg_buf_mr = rdma_reg_msgs(conn->rdma.cm_id,
-						    (void *)&tx_desc->msg_buf,
-						    sizeof(tx_desc->msg_buf));
-		if (tx_desc->msg_buf_mr == NULL) {
+		tx_desc->rsp_mr = rdma_reg_msgs(conn->rdma.cm_id, &tx_desc->rsp, sizeof(tx_desc->rsp));
+		if (tx_desc->rsp_mr == NULL) {
 			SPDK_ERRLOG("Unable to register tx desc buffer mr\n");
 			goto fail;
 		}
@@ -1033,12 +1029,12 @@ alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
 		tx_desc->conn = conn;
 
 		/* initialize send_sgl of tx_desc */
-		tx_desc->send_sgl.addr = (uint64_t)&tx_desc->msg_buf;
-		tx_desc->send_sgl.length = sizeof(tx_desc->msg_buf);
-		tx_desc->send_sgl.lkey = tx_desc->msg_buf_mr->lkey;
+		tx_desc->send_sgl.addr = (uint64_t)&tx_desc->rsp;
+		tx_desc->send_sgl.length = sizeof(tx_desc->rsp);
+		tx_desc->send_sgl.lkey = tx_desc->rsp_mr->lkey;
 
 		/* init request state associated with each tx_desc */
-		tx_desc->req_state.rsp = &tx_desc->msg_buf;
+		tx_desc->req_state.rsp = &tx_desc->rsp;
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "tx_desc %p: req_state %p, rsp %p\n",
 			      tx_desc, &tx_desc->req_state,
 			      tx_desc->req_state.rsp);
@@ -1051,8 +1047,8 @@ fail:
 	/* cleanup any partial descriptor that failed during init loop */
 	if (tx_desc != NULL) {
 
-		if (tx_desc->msg_buf_mr) {
-			rc = rdma_dereg_mr(tx_desc->msg_buf_mr);
+		if (tx_desc->rsp_mr) {
+			rc = rdma_dereg_mr(tx_desc->rsp_mr);
 			if (rc) {
 				SPDK_ERRLOG("Unable to de-register tx mr\n");
 			}
@@ -1064,7 +1060,7 @@ fail:
 	STAILQ_FOREACH(tmp, &conn->rdma.qp_tx_desc, link) {
 		STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tmp, nvme_qp_tx_desc, link);
 
-		rc = rdma_dereg_mr(tmp->msg_buf_mr);
+		rc = rdma_dereg_mr(tmp->rsp_mr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to de-register tx mr\n");
 		}

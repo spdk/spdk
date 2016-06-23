@@ -59,9 +59,9 @@ struct spdk_nvmf_rdma_conn {
 /* Define the Admin Queue Rx/Tx Descriptors */
 
 struct nvme_qp_rx_desc {
-	union nvmf_h2c_msg	msg_buf;
+	union nvmf_h2c_msg	cmd;
 	struct spdk_nvmf_conn	*conn;
-	struct ibv_mr		*msg_buf_mr;
+	struct ibv_mr		*cmd_mr;
 	struct ibv_sge		recv_sgl;
 	struct ibv_sge		bb_sgl; /* must follow recv_sgl */
 	struct ibv_mr		*bb_mr;
@@ -72,10 +72,10 @@ struct nvme_qp_rx_desc {
 };
 
 struct nvme_qp_tx_desc {
-	union nvmf_c2h_msg	msg_buf;
+	union nvmf_c2h_msg	rsp;
 	struct spdk_nvmf_conn	*conn;
 	struct nvmf_request	req_state;
-	struct ibv_mr		*msg_buf_mr;
+	struct ibv_mr		*rsp_mr;
 	struct ibv_sge		send_sgl;
 	STAILQ_ENTRY(nvme_qp_tx_desc) link;
 };
