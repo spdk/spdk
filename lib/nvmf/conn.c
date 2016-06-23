@@ -128,21 +128,6 @@ free_conn(struct spdk_nvmf_conn *conn)
 	conn->is_valid = 0;
 }
 
-struct spdk_nvmf_conn *
-spdk_find_nvmf_conn_by_cm_id(struct rdma_cm_id *cm_id)
-{
-	int i;
-
-	for (i = 0; i < g_max_conns; i++) {
-		if ((g_conns_array[i].is_valid == 1) &&
-		    (g_conns_array[i].cm_id == cm_id)) {
-			return &g_conns_array[i];
-		}
-	}
-
-	return NULL;
-}
-
 static struct spdk_nvmf_conn *
 spdk_find_nvmf_conn_by_cntlid(int cntlid)
 {

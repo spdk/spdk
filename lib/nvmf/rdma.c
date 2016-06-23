@@ -475,6 +475,7 @@ nvmf_rdma_cm_connect(struct rdma_cm_event *event)
 	 * and also to ibv_device (cm_id->verbs->device)
 	 */
 	conn->cm_id = conn_id;
+	conn_id->context = conn;
 
 	/* check for private data */
 	if (event->param.conn.private_data_len < sizeof(union spdk_nvmf_rdma_private_data)) {
@@ -655,7 +656,7 @@ nvmf_rdma_cm_disconnect(struct rdma_cm_event *event)
 	}
 	conn_id = event->id;
 
-	conn = spdk_find_nvmf_conn_by_cm_id(conn_id);
+	conn = conn_id->context;
 	if (conn == NULL) {
 		SPDK_ERRLOG("disconnect request: no active connection\n");
 		goto err0;

@@ -102,7 +102,4 @@ spdk_nvmf_allocate_conn(void);
 
 int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);
 
-struct spdk_nvmf_conn *
-spdk_find_nvmf_conn_by_cm_id(struct rdma_cm_id *cm_id);
-
 #endif /* NVMF_CONN_H */
