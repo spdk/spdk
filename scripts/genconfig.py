@@ -24,10 +24,9 @@ with open('CONFIG') as f:
                             val = argval
                 if default.lower() == 'y' or default.lower() == 'n':
                     if val.lower() == 'y':
-                        boolval = 1
+                        print "#define SPDK_{} 1".format(var)
                     else:
-                        boolval = 0
-                    print "#define SPDK_{} {}".format(var, boolval)
+                        print "#undef SPDK_{}".format(var)
                 else:
                     strval = val.replace('"', '\"')
                     print "#define SPDK_{} \"{}\"".format(var, strval)
