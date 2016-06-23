@@ -113,8 +113,6 @@ struct spdk_nvmf_globals {
 	int MaxConnectionsPerSession;
 	int MaxRecvDataSegmentLength;
 
-	struct rte_mempool *rx_desc_pool;
-	struct rte_mempool *tx_desc_pool;
 	struct rte_mempool *nvme_request_pool;
 	struct rte_mempool *bb_small_pool;
 	struct rte_mempool *bb_large_pool;

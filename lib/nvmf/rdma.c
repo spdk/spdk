@@ -42,6 +42,7 @@
 #include <rte_debug.h>
 #include <rte_cycles.h>
 #include <rte_timer.h>
+#include <rte_malloc.h>
 #include <rte_mempool.h>
 
 #include "conn.h"
@@ -186,7 +187,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 			SPDK_ERRLOG("Unable to de-register rx mr\n");
 		}
 
-		rte_mempool_put(g_nvmf_tgt.rx_desc_pool, (void *)tmp_rx);
+		rte_free(tmp_rx);
 	}
 
 	STAILQ_FOREACH(tmp_tx, &conn->rdma.qp_tx_desc, link) {
@@ -197,7 +198,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 			SPDK_ERRLOG("Unable to de-register tx mr\n");
 		}
 
-		rte_mempool_put(g_nvmf_tgt.tx_desc_pool, (void *)tmp_tx);
+		rte_free(tmp_tx);
 	}
 }
 
@@ -910,9 +911,8 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 
 	/* Allocate buffer for rx descriptors (RX WQE + Msg Buffer) */
 	for (i = 0; i < conn->sq_depth; i++) {
-		rx_desc = NULL;
-		rc = rte_mempool_get(g_nvmf_tgt.rx_desc_pool, (void **)&rx_desc);
-		if ((rc < 0) || !rx_desc) {
+		rx_desc = rte_zmalloc("nvmf_rx_desc", sizeof(*rx_desc), 0);
+		if (!rx_desc) {
 			SPDK_ERRLOG("Unable to get rx desc object\n");
 			goto fail;
 		}
@@ -998,7 +998,7 @@ fail:
 			}
 		}
 
-		rte_mempool_put(g_nvmf_tgt.rx_desc_pool, (void *)rx_desc);
+		rte_free(rx_desc);
 	}
 
 	STAILQ_FOREACH(tmp, &conn->rdma.qp_rx_desc, link) {
@@ -1020,7 +1020,7 @@ fail:
 			SPDK_ERRLOG("Unable to de-register rx mr\n");
 		}
 
-		rte_mempool_put(g_nvmf_tgt.rx_desc_pool, (void *)tmp);
+		rte_free(tmp);
 	}
 
 	return -ENOMEM;
@@ -1036,9 +1036,8 @@ alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
 
 	/* Initialize the tx descriptors */
 	for (i = 0; i < conn->cq_depth; i++) {
-		tx_desc = NULL;
-		rc = rte_mempool_get(g_nvmf_tgt.tx_desc_pool, (void **)&tx_desc);
-		if ((rc < 0) || !tx_desc) {
+		tx_desc = rte_zmalloc("nvmf_tx_desc", sizeof(*tx_desc), 0);
+		if (!tx_desc) {
 			SPDK_ERRLOG("Unable to get tx desc object\n");
 			goto fail;
 		}
@@ -1079,7 +1078,7 @@ fail:
 			}
 		}
 
-		rte_mempool_put(g_nvmf_tgt.tx_desc_pool, (void *)tx_desc);
+		rte_free(tx_desc);
 	}
 
 	STAILQ_FOREACH(tmp, &conn->rdma.qp_tx_desc, link) {
@@ -1090,7 +1089,7 @@ fail:
 			SPDK_ERRLOG("Unable to de-register tx mr\n");
 		}
 
-		rte_mempool_put(g_nvmf_tgt.tx_desc_pool, (void *)tmp);
+		rte_free(tmp);
 	}
 
 	return -ENOMEM;
