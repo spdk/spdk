@@ -51,7 +51,6 @@ int
 spdk_nvmf_request_complete(struct nvmf_request *req)
 {
 	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
 	struct spdk_nvme_cpl *response;
 	int ret;
 
@@ -61,10 +60,6 @@ spdk_nvmf_request_complete(struct nvmf_request *req)
 	if (response->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		/* data to be copied to host via memory RDMA */
-
-		/* temporarily adjust SGE to only copy what the host is prepared to receive. */
-		rx_desc->bb_sgl.length = req->length;
-
 		ret = nvmf_post_rdma_write(tx_desc->conn, tx_desc);
 		if (ret) {
 			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
@@ -742,10 +737,6 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issuing RDMA Read to get host data\n");
-
-				/* temporarily adjust SGE to only copy what the host is prepared to send. */
-				rx_desc->bb_sgl.length = req->length;
-
 				ret = nvmf_post_rdma_read(conn, tx_desc);
 				if (ret) {
 					SPDK_ERRLOG("Unable to post rdma read tx descriptor\n");

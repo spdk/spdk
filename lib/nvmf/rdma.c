@@ -311,6 +311,9 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	}
 	conn->rdma.pending_rdma_read_count++;
 
+	/* temporarily adjust SGE to only copy what the host is prepared to send. */
+	rx_desc->bb_sgl.length = req->length;
+
 	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
 			      IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
 
@@ -335,6 +338,9 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 		SPDK_ERRLOG("Rx descriptor does not exist at rdma write!\n");
 		return -1;
 	}
+
+	/* temporarily adjust SGE to only copy what the host is prepared to receive. */
+	rx_desc->bb_sgl.length = req->length;
 
 	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
 			      IBV_WR_RDMA_WRITE, 0);
