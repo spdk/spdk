@@ -161,7 +161,7 @@ struct spdk_nvmf_globals {
 /**
  * Send the response and transfer data from controller to host if required.
  */
-void spdk_nvmf_request_complete(struct nvmf_request *req);
+int spdk_nvmf_request_complete(struct nvmf_request *req);
 
 void
 nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);

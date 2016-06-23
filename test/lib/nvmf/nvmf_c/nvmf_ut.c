@@ -116,9 +116,10 @@ struct spdk_nvmf_host *spdk_nvmf_host_find_by_tag(int tag)
 	return NULL;
 }
 
-void
+int
 spdk_nvmf_request_complete(struct nvmf_request *req)
 {
+	return 0;
 }
 
 int

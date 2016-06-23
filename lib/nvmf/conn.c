@@ -364,26 +364,7 @@ void spdk_shutdown_nvmf_conns(void)
 			rte_get_master_lcore(), spdk_nvmf_conn_check_shutdown, NULL);
 }
 
-static int
-spdk_nvmf_send_response(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
-{
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-
-	/* Zero out fields reserved in NVMf */
-	rsp->sqid = 0;
-	rsp->status.p = 0;
-
-	rsp->sqhd = conn->sq_head;
-	rsp->cid = req->cid;
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF,
-		      "cpl: cdw0=0x%x rsvd1=0x%x sqhd=0x%x sqid=0x%x cid=0x%x status=0x%x\n",
-		      rsp->cdw0, rsp->rsvd1, rsp->sqhd, rsp->sqid, rsp->cid, *(uint16_t *)&rsp->status);
-
-	return nvmf_post_rdma_send(conn, req->tx_desc);
-}
-
-void
+int
 spdk_nvmf_request_complete(struct nvmf_request *req)
 {
 	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
@@ -410,16 +391,28 @@ spdk_nvmf_request_complete(struct nvmf_request *req)
 
 	/* Now send back the response */
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send nvme cmd capsule response\n");
-	ret = spdk_nvmf_send_response(tx_desc->conn, req);
+
+	response->sqid = 0;
+	response->status.p = 0;
+	response->sqhd = tx_desc->conn->sq_head;
+	response->cid = req->cid;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF,
+		      "cpl: cdw0=0x%x rsvd1=0x%x sqhd=0x%x sqid=0x%x cid=0x%x status=0x%x\n",
+		      response->cdw0, response->rsvd1, response->sqhd, response->sqid, response->cid,
+		      *(uint16_t *)&response->status);
+
+	ret = nvmf_post_rdma_send(tx_desc->conn, req->tx_desc);
 	if (ret) {
 		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
 		goto command_fail;
 	}
 
-	return;
+	return ret;
 
 command_fail:
 	nvmf_deactive_tx_desc(tx_desc);
+	return ret;
 }
 
 static int
@@ -437,7 +430,7 @@ nvmf_process_property_get(struct spdk_nvmf_conn *conn,
 
 	/* send the nvmf response if setup by NVMf library */
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send property get capsule response\n");
-	ret = spdk_nvmf_send_response(conn, req);
+	ret = spdk_nvmf_request_complete(req);
 	if (ret) {
 		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
 		return -1;
@@ -466,7 +459,7 @@ nvmf_process_property_set(struct spdk_nvmf_conn *conn,
 
 	/* send the nvmf response if setup by NVMf library */
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send property set capsule response\n");
-	ret = spdk_nvmf_send_response(conn, req);
+	ret = spdk_nvmf_request_complete(req);
 	if (ret) {
 		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
 		return -1;
@@ -537,7 +530,7 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 		/* library failed the request and should have
 		   Updated the response */
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "send nvme io cmd capsule error response\n");
-		ret = spdk_nvmf_send_response(conn, req);
+		ret = spdk_nvmf_request_complete(req);
 		if (ret) {
 			SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
 			return -1;
@@ -558,7 +551,7 @@ nvmf_process_admin_command(struct spdk_nvmf_conn *conn,
 		/* library failed the request and should have
 		   Updated the response */
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "send nvme admin cmd capsule sync response\n");
-		ret = spdk_nvmf_send_response(conn, req);
+		ret = spdk_nvmf_request_complete(req);
 		if (ret) {
 			SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
 			return -1;
@@ -665,7 +658,7 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "send connect capsule response\n");
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** cntlid  = %x ***\n",
 		      response->status_code_specific.success.cntlid);
-	ret = spdk_nvmf_send_response(conn, req);
+	ret = spdk_nvmf_request_complete(req);
 	if (ret) {
 		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
 		return ret;
