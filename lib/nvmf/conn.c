@@ -484,9 +484,9 @@ static void nvmf_trace_command(struct spdk_nvmf_capsule_cmd *cap_hdr, enum conn_
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "NVMf %s%s Command:\n",
 		      conn_type == CONN_TYPE_AQ ? "Admin" : "I/O",
-		      cmd->opc == SPDK_NVMF_FABRIC_OPCODE ? " Fabrics" : "");
+		      cmd->opc == SPDK_NVME_OPC_FABRIC ? " Fabrics" : "");
 
-	if (cmd->opc == SPDK_NVMF_FABRIC_OPCODE) {
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		opc = cap_hdr->fctype;
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  fctype 0x%02x\n", cap_hdr->fctype);
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  cid 0x%x\n", cap_hdr->cid);
@@ -506,21 +506,21 @@ static void nvmf_trace_command(struct spdk_nvmf_capsule_cmd *cap_hdr, enum conn_
 	}
 
 	if (spdk_nvme_opc_get_data_transfer(opc) != SPDK_NVME_DATA_NONE) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL type 0x%x\n", sgl->type);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL subtype 0x%x\n", sgl->type_specific);
-		if (sgl->type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL type 0x%x\n", sgl->generic.type);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL subtype 0x%x\n", sgl->generic.subtype);
+		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL address 0x%lx\n",
-				      ((struct spdk_nvmf_keyed_sgl_descriptor *)sgl)->address);
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL key 0x%x\n",
-				      ((struct spdk_nvmf_keyed_sgl_descriptor *)sgl)->key);
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n",
-				      ((struct spdk_nvmf_keyed_sgl_descriptor *)sgl)->length);
-		} else if (sgl->type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL %s 0x%" PRIx64 "\n",
-				      sgl->type_specific == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offset" : "address",
 				      sgl->address);
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n", sgl->length);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL key 0x%x\n",
+				      sgl->keyed.key);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n",
+				      sgl->keyed.length);
+		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL %s 0x%" PRIx64 "\n",
+				      sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offset" : "address",
+				      sgl->address);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n", sgl->unkeyed.length);
 		}
 	}
 }
@@ -714,7 +714,7 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 	enum spdk_nvme_data_transfer xfer;
 	int ret;
 
-	if (cmd->opc == SPDK_NVMF_FABRIC_OPCODE) {
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd->nvmf_cmd.fctype);
 	} else {
 		xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
@@ -722,31 +722,30 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 
 	if (xfer != SPDK_NVME_DATA_NONE) {
 		struct spdk_nvme_sgl_descriptor *sgl = (struct spdk_nvme_sgl_descriptor *)&cmd->dptr.sgl1;
-		struct spdk_nvmf_keyed_sgl_descriptor *keyed_sgl = (struct spdk_nvmf_keyed_sgl_descriptor *)sgl;
 
-		if (sgl->type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
-		    (sgl->type_specific == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
-		     sgl->type_specific == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
+		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
+		    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
+		     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Keyed data block: raddr 0x%" PRIx64 ", rkey 0x%x, length 0x%x\n",
-				      keyed_sgl->address, keyed_sgl->key, keyed_sgl->length);
+				      sgl->address, sgl->keyed.key, sgl->keyed.length);
 
-			if (keyed_sgl->length > rx_desc->bb_sgl.length) {
+			if (sgl->keyed.length > rx_desc->bb_sgl.length) {
 				SPDK_ERRLOG("SGL length 0x%x exceeds BB length 0x%x\n",
-					    (uint32_t)keyed_sgl->length, rx_desc->bb_sgl.length);
+					    sgl->keyed.length, rx_desc->bb_sgl.length);
 				return -1;
 			}
 
 			req->data = rx_desc->bb;
-			req->remote_addr = keyed_sgl->address;
-			req->rkey = keyed_sgl->key;
-			req->length = keyed_sgl->length;
-		} else if (sgl->type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
-			   sgl->type_specific == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
+			req->remote_addr = sgl->address;
+			req->rkey = sgl->keyed.key;
+			req->length = sgl->keyed.length;
+		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
+			   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 			uint64_t offset = sgl->address;
 			uint32_t max_len = rx_desc->bb_sgl.length;
 
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
-				      offset, sgl->length);
+				      offset, sgl->unkeyed.length);
 
 			if (conn->type == CONN_TYPE_AQ) {
 				SPDK_ERRLOG("In-capsule data not allowed for admin queue\n");
@@ -760,17 +759,17 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 			}
 			max_len -= (uint32_t)offset;
 
-			if (sgl->length > max_len) {
+			if (sgl->unkeyed.length > max_len) {
 				SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-					    sgl->length, max_len);
+					    sgl->unkeyed.length, max_len);
 				return -1;
 			}
 
 			req->data = rx_desc->bb + offset;
-			req->length = sgl->length;
+			req->length = sgl->unkeyed.length;
 		} else {
 			SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
-				    sgl->type, sgl->type_specific);
+				    sgl->generic.type, sgl->generic.subtype);
 			return -1;
 		}
 
@@ -787,7 +786,7 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 		 * the backend NVMe device
 		 */
 		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			if (sgl->type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issuing RDMA Read to get host data\n");
 
 				/* temporarily adjust SGE to only copy what the host is prepared to send. */
@@ -825,7 +824,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	if (cmd->opc == SPDK_NVMF_FABRIC_OPCODE) {
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		return nvmf_process_fabrics_command(conn, req);
 	} else if (conn->type == CONN_TYPE_AQ) {
 		return nvmf_process_admin_command(conn, req);

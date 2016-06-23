@@ -78,12 +78,6 @@
 #define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
-union sgl_shift {
-	struct spdk_nvmf_keyed_sgl_descriptor	nvmf_sgl;
-	struct spdk_nvme_sgl_descriptor		nvme_sgl;
-};
-SPDK_STATIC_ASSERT(sizeof(union sgl_shift) == 16, "Incorrect size");
-
 union nvmf_h2c_msg {
 	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
 	struct spdk_nvme_cmd				nvme_cmd;

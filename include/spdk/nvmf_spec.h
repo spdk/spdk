@@ -66,7 +66,7 @@ struct spdk_nvmf_capsule_rsp {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_capsule_rsp) == 16, "Incorrect size");
 
 /* Fabric Command Set */
-#define SPDK_NVMF_FABRIC_OPCODE 0x7f
+#define SPDK_NVME_OPC_FABRIC 0x7f
 
 enum spdk_nvmf_fabric_cmd_types {
 	SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET			= 0x00,
@@ -149,7 +149,7 @@ enum spdk_nvmf_subsystem_types {
 /**
  * Connections shall be made over a fabric secure channel
  */
-enum spdk_nvmf_tansport_requirements {
+enum spdk_nvmf_transport_requirements {
 	SPDK_NVMF_TREQ_NOT_SPECIFIED	= 0x0,
 	SPDK_NVMF_TREQ_REQUIRED		= 0x1,
 	SPDK_NVMF_TREQ_NOT_REQUIRED	= 0x2,
@@ -455,8 +455,6 @@ struct spdk_nvmf_fabric_prop_set_rsp {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_prop_set_rsp) == 16, "Incorrect size");
 
-/* Overlays on the existing identify controller structure */
-#define SPDK_NVMF_EXTENDED_CTRLR_DATA_OFFSET 1792
 struct spdk_nvmf_extended_identify_ctrlr_data {
 	uint32_t	ioccsz;
 	uint32_t	iorcsz;
@@ -466,29 +464,6 @@ struct spdk_nvmf_extended_identify_ctrlr_data {
 	uint8_t		reserved[244];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_extended_identify_ctrlr_data) == 256, "Incorrect size");
-
-#define SPDK_NVMF_CTRLR_MAXCMD_OFFSET 514
-struct spdk_nvmf_ctrlr_maxcmd {
-	uint16_t maxcmd;
-};
-
-#define SPDK_NVMF_CTRLR_KAS_OFFSET 320
-struct spdk_nvmf_ctrlr_kas {
-	uint16_t kas;
-};
-
-struct spdk_nvmf_sgl_support {
-	uint32_t	supported : 1;
-	uint32_t	reserved1 : 1;
-	uint32_t	keyed_sgls : 1;
-	uint32_t	reserved2 : 13;
-	uint32_t	bit_bucket_descriptor_supported : 1;
-	uint32_t	metadata_pointer_supported : 1;
-	uint32_t	oversized_sgl_supported : 1;
-	uint32_t	single_aligned_sgl_supported : 1;
-	uint32_t	address_as_offset_sgl_supported : 1;
-	uint32_t	reserved3 : 11;
-};
 
 #define SPDK_NVMF_DISCOVERY_NQN "nqn.2014-08.org.nvmexpress.discovery"
 
@@ -548,37 +523,9 @@ struct spdk_nvmf_discovery_log_page {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_log_page) == 1024, "Incorrect size");
 
-/* Add an additional type of SGL */
-#define SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK 0x4
-
-/* Further, add SGL subtypes */
-#define SPDK_NVME_SGL_SUBTYPE_ADDRESS	0x0
-#define SPDK_NVME_SGL_SUBTYPE_OFFSET	0x1
-
-struct spdk_nvmf_keyed_sgl_descriptor {
-	uint64_t	address;
-	uint64_t	length : 24;
-	uint64_t	key : 32;
-	uint64_t	subtype : 4;
-	uint64_t	type : 4; /* SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK */
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_keyed_sgl_descriptor) == 16, "Incorrect size");
-
-/* Add a new admin command */
-#define SPDK_NVME_OPC_KEEP_ALIVE	0x18
-
-/* Add new status codes */
-#define SPDK_NVME_SC_SGL_OFFSET_INVALID		0x16
-#define SPDK_NVME_SC_SGL_SUBTYPE_INVALID	0x17
-#define SPDK_NVME_SC_HOSTID_INCONSISTENT	0x18
-#define SPDK_NVME_SC_KEEP_ALIVE_EXPIRED		0x19
-#define SPDK_NVME_SC_KEEP_ALIVE_TIMEOUT_INVALID 0x1A
-
 /* RDMA Fabric specific definitions below */
 
 #define SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY	0xF
-
-
 
 struct spdk_nvmf_rdma_request_private_data {
 	uint16_t	recfmt; /* record format */

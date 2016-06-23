@@ -479,11 +479,11 @@ test_hw_sgl_req(void)
 
 	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
 	CU_ASSERT(sgl_tr != NULL);
-	CU_ASSERT(sgl_tr->u.sgl[0].type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
-	CU_ASSERT(sgl_tr->u.sgl[0].type_specific == 0);
-	CU_ASSERT(sgl_tr->u.sgl[0].length == 4096);
+	CU_ASSERT(sgl_tr->u.sgl[0].generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(sgl_tr->u.sgl[0].generic.subtype == 0);
+	CU_ASSERT(sgl_tr->u.sgl[0].unkeyed.length == 4096);
 	CU_ASSERT(sgl_tr->u.sgl[0].address == 0);
-	CU_ASSERT(req->cmd.dptr.sgl1.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+	CU_ASSERT(req->cmd.dptr.sgl1.generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	LIST_REMOVE(sgl_tr, list);
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
@@ -502,12 +502,12 @@ test_hw_sgl_req(void)
 	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
 	CU_ASSERT(sgl_tr != NULL);
 	for (i = 0; i < NVME_MAX_SGL_DESCRIPTORS; i++) {
-		CU_ASSERT(sgl_tr->u.sgl[i].type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
-		CU_ASSERT(sgl_tr->u.sgl[i].type_specific == 0);
-		CU_ASSERT(sgl_tr->u.sgl[i].length == 4096);
+		CU_ASSERT(sgl_tr->u.sgl[i].generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
+		CU_ASSERT(sgl_tr->u.sgl[i].generic.subtype == 0);
+		CU_ASSERT(sgl_tr->u.sgl[i].unkeyed.length == 4096);
 		CU_ASSERT(sgl_tr->u.sgl[i].address == i * 4096);
 	}
-	CU_ASSERT(req->cmd.dptr.sgl1.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
+	CU_ASSERT(req->cmd.dptr.sgl1.generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
 	LIST_REMOVE(sgl_tr, list);
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);

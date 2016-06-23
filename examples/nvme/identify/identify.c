@@ -477,7 +477,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	printf("Recommended Arb Burst:      %d\n", cdata->rab);
 	printf("IEEE OUI Identifier:        %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
-	printf("Multi-Interface Cap:        %02x\n", cdata->mic);
+	printf("Multi-path I/O:        %02x\n", *(int *)&cdata->cmic);
 	/* TODO: Use CAP.MPSMIN to determine true memory page size. */
 	printf("Max Data Transfer Size:     ");
 	if (cdata->mdts == 0)
@@ -546,12 +546,18 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	printf("Scatter-Gather List\n");
 	printf("  SGL Command Set:           %s\n",
 	       cdata->sgls.supported ? "Supported" : "Not Supported");
+	printf("  SGL Keyed: %s\n",
+	       cdata->sgls.keyed_sgl ? "Supported" : "Not Supported");
 	printf("  SGL Bit Bucket Descriptor: %s\n",
-	       cdata->sgls.bit_bucket_descriptor_supported ? "Supported" : "Not Supported");
+	       cdata->sgls.bit_bucket_descriptor ? "Supported" : "Not Supported");
 	printf("  SGL Metadata Pointer:      %s\n",
-	       cdata->sgls.metadata_pointer_supported ? "Supported" : "Not Supported");
+	       cdata->sgls.metadata_pointer ? "Supported" : "Not Supported");
 	printf("  Oversized SGL:             %s\n",
-	       cdata->sgls.oversized_sgl_supported ? "Supported" : "Not Supported");
+	       cdata->sgls.oversized_sgl ? "Supported" : "Not Supported");
+	printf("  SGL Metadata Address: %s\n",
+	       cdata->sgls.metadata_address ? "Supported" : "Not Supported");
+	printf("  SGL Offset: %s\n",
+	       cdata->sgls.sgl_offset ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Error Log\n");

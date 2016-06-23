@@ -292,21 +292,39 @@ enum spdk_nvme_sgl_descriptor_type {
 	SPDK_NVME_SGL_TYPE_BIT_BUCKET		= 0x1,
 	SPDK_NVME_SGL_TYPE_SEGMENT		= 0x2,
 	SPDK_NVME_SGL_TYPE_LAST_SEGMENT		= 0x3,
-	/* 0x4 - 0xe reserved */
-	SPDK_NVME_SGL_TYPE_VENDOR_SPECIFIC	= 0xf
+	SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK	= 0x4,
+	/* 0x5 - 0xE reserved */
+	SPDK_NVME_SGL_TYPE_VENDOR_SPECIFIC	= 0xF
+};
+
+enum spdk_nvme_sgl_descriptor_subtype {
+	SPDK_NVME_SGL_SUBTYPE_ADDRESS		= 0x0,
+	SPDK_NVME_SGL_SUBTYPE_OFFSET		= 0x1,
 };
 
 struct __attribute__((packed)) spdk_nvme_sgl_descriptor {
 	uint64_t address;
-	uint32_t length;
-	uint8_t reserved[3];
+	union {
+		struct {
+			uint8_t reserved[7];
+			uint8_t subtype	: 4;
+			uint8_t type	: 4;
+		} generic;
 
-	/** SGL descriptor type specific */
-	uint8_t type_specific : 4;
+		struct {
+			uint32_t length;
+			uint8_t reserved[3];
+			uint8_t subtype	: 4;
+			uint8_t type	: 4;
+		} unkeyed;
 
-	/** SGL descriptor type */
-	uint8_t type : 4;
-
+		struct {
+			uint64_t length 	: 24;
+			uint64_t key		: 32;
+			uint64_t subtype	: 4;
+			uint64_t type		: 4;
+		} keyed;
+	};
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_sgl_descriptor) == 16, "Incorrect size");
 
@@ -457,6 +475,19 @@ enum spdk_nvme_generic_command_status_code {
 	SPDK_NVME_SC_ABORTED_MISSING_FUSED		= 0x0a,
 	SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT	= 0x0b,
 	SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR		= 0x0c,
+	SPDK_NVME_SC_INVALID_SGL_SEG_DESCRIPTOR		= 0x0d,
+	SPDK_NVME_SC_INVALID_NUM_SGL_DESCIRPTORS	= 0x0e,
+	SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID		= 0x0f,
+	SPDK_NVME_SC_METADATA_SGL_LENGTH_INVALID	= 0x10,
+	SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID	= 0x11,
+	SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF		= 0x12,
+	SPDK_NVME_SC_INVALID_PRP_OFFSET			= 0x13,
+	SPDK_NVME_SC_ATOMIC_WRITE_UNIT_EXCEEDED		= 0x14,
+	SPDK_NVME_SC_INVALID_SGL_OFFSET			= 0x16,
+	SPDK_NVME_SC_INVALID_SGL_SUBTYPE		= 0x17,
+	SPDK_NVME_SC_HOSTID_INCONSISTENT_FORMAT		= 0x18,
+	SPDK_NVME_SC_KEEP_ALIVE_EXPIRED			= 0x19,
+	SPDK_NVME_SC_KEEP_ALIVE_INVALID			= 0x1A,
 
 	SPDK_NVME_SC_LBA_OUT_OF_RANGE			= 0x80,
 	SPDK_NVME_SC_CAPACITY_EXCEEDED			= 0x81,
@@ -521,6 +552,8 @@ enum spdk_nvme_admin_opcode {
 	SPDK_NVME_OPC_FIRMWARE_IMAGE_DOWNLOAD		= 0x11,
 
 	SPDK_NVME_OPC_NS_ATTACHMENT			= 0x15,
+
+	SPDK_NVME_OPC_KEEP_ALIVE			= 0x18,
 
 	SPDK_NVME_OPC_FORMAT_NVM			= 0x80,
 	SPDK_NVME_OPC_SECURITY_SEND			= 0x81,
@@ -658,8 +691,13 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/** ieee oui identifier */
 	uint8_t			ieee[3];
 
-	/** multi-interface capabilities */
-	uint8_t			mic;
+	/** controller multi-path I/O and namespace sharing capabilities */
+	struct {
+		uint8_t multi_port	: 1;
+		uint8_t multi_host	: 1;
+		uint8_t sr_iov		: 1;
+		uint8_t reserved	: 5;
+	} cmic;
 
 	/** maximum data transfer size */
 	uint8_t			mdts;
@@ -786,7 +824,11 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		uint8_t		access_size;
 	} rpmbs;
 
-	uint8_t			reserved2[196];
+	uint8_t			reserved2[4];
+
+	uint16_t		kas;
+
+	uint8_t			reserved3[190];
 
 	/* bytes 512-703: nvm command set attributes */
 
@@ -802,7 +844,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		uint8_t		max : 4;
 	} cqes;
 
-	uint8_t			reserved3[2];
+	uint16_t		maxcmd;
 
 	/** number of namespaces */
 	uint32_t		nn;
@@ -854,16 +896,24 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/** SGL support */
 	struct {
 		uint32_t	supported : 1;
-		uint32_t	reserved : 15;
-		uint32_t	bit_bucket_descriptor_supported : 1;
-		uint32_t	metadata_pointer_supported : 1;
-		uint32_t	oversized_sgl_supported : 1;
+		uint32_t	reserved0 : 1;
+		uint32_t	keyed_sgl : 1;
+		uint32_t	reserved1 : 13;
+		uint32_t	bit_bucket_descriptor : 1;
+		uint32_t	metadata_pointer : 1;
+		uint32_t	oversized_sgl : 1;
+		uint32_t	metadata_address : 1;
+		uint32_t	sgl_offset : 1;
+		uint32_t	reserved2: 11;
 	} sgls;
 
-	uint8_t			reserved4[164];
+	uint8_t			reserved4[228];
 
-	/* bytes 704-2047: i/o command set attributes */
-	uint8_t			reserved5[1344];
+	uint8_t			subnqn[256];
+
+	uint8_t			reserved5[768];
+
+	uint8_t			nvmf_specific[256];
 
 	/* bytes 2048-3071: power state descriptors */
 	struct spdk_nvme_power_state	psd[32];

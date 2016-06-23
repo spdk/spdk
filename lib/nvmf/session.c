@@ -88,12 +88,7 @@ nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
 	/* for now base virtual controller properties on first namespace controller */
 	struct spdk_nvme_ctrlr *ctrlr = session->subsys->ns_list_map[0].ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
-	struct spdk_nvmf_ctrlr_maxcmd *maxcmd;
-	struct spdk_nvmf_ctrlr_kas *kas;
 	struct spdk_nvmf_extended_identify_ctrlr_data *nvmfdata;
-	struct spdk_nvmf_sgl_support *nvmfsgl;
-	uint8_t	*vc_data;
-	uint32_t io_depth;
 
 	/*
 	  Here we are going to initialize the features, properties, and
@@ -117,25 +112,19 @@ nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
 	session->vcdata.cntlid = session->cntlid;
 
 	/* initialize the nvmf new and extension details in controller data */
-	vc_data = (uint8_t *)&session->vcdata;
-	kas = (struct spdk_nvmf_ctrlr_kas *)&vc_data[SPDK_NVMF_CTRLR_KAS_OFFSET];
-	kas->kas = 10; /* for keep alive granularity in seconds (10 * 100ms) */
-	maxcmd = (struct spdk_nvmf_ctrlr_maxcmd *)&vc_data[SPDK_NVMF_CTRLR_MAXCMD_OFFSET];
-	io_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
-	maxcmd->maxcmd = io_depth;
-	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)
-		   &vc_data[SPDK_NVMF_EXTENDED_CTRLR_DATA_OFFSET];
+	session->vcdata.kas = 10;
+	session->vcdata.maxcmd = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
 	nvmfdata->ioccsz = (NVMF_H2C_MAX_MSG / 16);
 	nvmfdata->iorcsz = (NVMF_C2H_MAX_MSG / 16);
 	nvmfdata->icdoff = 0; /* offset starts directly after SQE */
 	nvmfdata->ctrattr = 0; /* dynamic controller model */
 	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
-	nvmfsgl = (struct spdk_nvmf_sgl_support *)&session->vcdata.sgls;
-	nvmfsgl->keyed_sgls = 1;
-	nvmfsgl->address_as_offset_sgl_supported = 1;
+	session->vcdata.sgls.keyed_sgl = 1;
+	session->vcdata.sgls.sgl_offset = 1;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ctrlr data: maxcmd %x\n",
-		      maxcmd->maxcmd);
+		      session->vcdata.maxcmd);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: ioccsz %x\n",
 		      nvmfdata->ioccsz);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: iorcsz %x\n",
@@ -147,7 +136,7 @@ nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: msdbd %x\n",
 		      nvmfdata->msdbd);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: sgls data: 0x%x\n",
-		      *(uint32_t *)nvmfsgl);
+		      *(uint32_t *)&session->vcdata.sgls);
 
 	/* feature: Number Of Queues. */
 	/* Init to zero.  Host shall set before enabling the controller */
@@ -156,7 +145,7 @@ nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
 
 	session->vcprop.cap_lo.raw = 0;
 	session->vcprop.cap_lo.bits.cqr = 0;	/* queues not contiguous */
-	session->vcprop.cap_lo.bits.mqes = (io_depth - 1);	/* max queue depth */
+	session->vcprop.cap_lo.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
 	session->vcprop.cap_lo.bits.ams = 0;	/* optional arb mechanisms */
 	session->vcprop.cap_lo.bits.to = 1;	/* ready timeout - 500 msec units */
 
