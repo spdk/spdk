@@ -103,8 +103,8 @@ SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
 struct nvmf_request {
 	struct nvmf_session		*session;
-	void				*fabric_tx_ctx;
-	void				*fabric_rx_ctx;
+	struct nvme_qp_tx_desc		*tx_desc;
+	struct nvme_qp_rx_desc		*rx_desc;
 	uint16_t			cid;		/* command identifier */
 	uint64_t			remote_addr;
 	uint32_t			rkey;

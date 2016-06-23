@@ -60,7 +60,6 @@ struct nvme_qp_tx_desc {
 	struct nvmf_request	req_state;
 	struct ibv_mr		*msg_buf_mr;
 	struct ibv_sge		send_sgl;
-	struct nvme_qp_rx_desc	*rx_desc;
 	STAILQ_ENTRY(nvme_qp_tx_desc) link;
 };
 

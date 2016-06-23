@@ -268,7 +268,7 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 		    struct nvme_qp_tx_desc *tx_desc)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
+	struct nvme_qp_rx_desc *rx_desc = tx_desc->req_state.rx_desc;
 	struct nvmf_request *req = &tx_desc->req_state;
 	int rc;
 
@@ -306,7 +306,7 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 		     struct nvme_qp_tx_desc *tx_desc)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
+	struct nvme_qp_rx_desc *rx_desc = tx_desc->req_state.rx_desc;
 	struct nvmf_request *req = &tx_desc->req_state;
 	int rc;
 
@@ -332,7 +332,7 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct nvmf_request *req = &tx_desc->req_state;
-	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
+	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
 	int rc;
 
 	RTE_VERIFY(rx_desc != NULL);
@@ -345,7 +345,6 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
 	}
-	tx_desc->rx_desc = NULL;
 
 	nvmf_ibv_send_wr_init(&wr, NULL, &tx_desc->send_sgl, (uint64_t)tx_desc,
 			      IBV_WR_SEND, IBV_SEND_SIGNALED);

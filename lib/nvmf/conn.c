@@ -380,15 +380,15 @@ spdk_nvmf_send_response(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
 		      "cpl: cdw0=0x%x rsvd1=0x%x sqhd=0x%x sqid=0x%x cid=0x%x status=0x%x\n",
 		      rsp->cdw0, rsp->rsvd1, rsp->sqhd, rsp->sqid, rsp->cid, *(uint16_t *)&rsp->status);
 
-	return nvmf_post_rdma_send(conn, req->fabric_tx_ctx);
+	return nvmf_post_rdma_send(conn, req->tx_desc);
 }
 
 void
 spdk_nvmf_request_complete(struct nvmf_request *req)
 {
-	struct nvme_qp_tx_desc *tx_desc = (struct nvme_qp_tx_desc *)req->fabric_tx_ctx;
+	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
+	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
 	struct spdk_nvme_cpl *response;
-	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
 	int ret;
 
 	response = &req->rsp->nvme_cpl;
@@ -707,8 +707,8 @@ nvmf_process_fabrics_command(struct spdk_nvmf_conn *conn, struct nvmf_request *r
 static int
 spdk_nvmf_request_prep_data(struct nvmf_request *req)
 {
-	struct nvme_qp_tx_desc *tx_desc = req->fabric_tx_ctx;
-	struct nvme_qp_rx_desc *rx_desc = tx_desc->rx_desc;
+	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
+	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
 	struct spdk_nvmf_conn *conn = tx_desc->conn;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	enum spdk_nvme_data_transfer xfer;
@@ -894,12 +894,11 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	}
 	tx_desc = STAILQ_FIRST(&conn->qp_tx_desc);
 	nvmf_active_tx_desc(tx_desc);
-	tx_desc->rx_desc = rx_desc;
 
 	req = &tx_desc->req_state;
 	req->session = conn->sess;
-	req->fabric_tx_ctx = tx_desc;
-	req->fabric_rx_ctx = rx_desc;
+	req->tx_desc = tx_desc;
+	req->rx_desc = rx_desc;
 	req->length = 0;
 	req->xfer = SPDK_NVME_DATA_NONE;
 	req->data = NULL;
@@ -929,7 +928,6 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 			 * there is not a delayed posting because of
 			 * command processing.
 			 */
-			tx_desc->rx_desc = NULL;
 			nvmf_deactive_tx_desc(tx_desc);
 			if (nvmf_post_rdma_recv(conn, rx_desc)) {
 				SPDK_ERRLOG("Unable to re-post aq rx descriptor\n");
@@ -944,7 +942,6 @@ drop_recv:
 recv_error:
 	/* recover the tx_desc */
 	if (tx_desc != NULL) {
-		tx_desc->rx_desc = NULL;
 		nvmf_deactive_tx_desc(tx_desc);
 	}
 	return -1;
