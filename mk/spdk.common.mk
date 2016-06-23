@@ -105,7 +105,9 @@ LDFLAGS += -fsanitize=address
 endif
 
 COMMON_CFLAGS += -pthread
-LDFLAGS += -pthread -lrt
+LDFLAGS += -pthread
+
+SYS_LIBS += -lrt
 
 MAKEFLAGS += --no-print-directory
 
@@ -127,11 +129,11 @@ COMPILE_CXX=\
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\
 	$(Q)echo "  LINK $S/$@"; \
-	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS)
+	$(CC) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(SYS_LIBS)
 
 LINK_CXX=\
 	$(Q)echo "  LINK $S/$@"; \
-	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS)
+	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $(SYS_LIBS)
 
 # Archive $(OBJS) into $@ (.a)
 LIB_C=\
