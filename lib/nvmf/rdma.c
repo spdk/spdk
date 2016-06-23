@@ -43,7 +43,6 @@
 #include <rte_cycles.h>
 #include <rte_timer.h>
 #include <rte_malloc.h>
-#include <rte_mempool.h>
 
 #include "conn.h"
 #include "rdma.h"
@@ -176,11 +175,7 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 			SPDK_ERRLOG("Unable to de-register rx bb mr\n");
 		}
 
-		if (conn->type == CONN_TYPE_AQ) {
-			rte_mempool_put(g_nvmf_tgt.bb_small_pool, (void *)tmp_rx->bb);
-		} else {
-			rte_mempool_put(g_nvmf_tgt.bb_large_pool, (void *)tmp_rx->bb);
-		}
+		rte_free(tmp_rx->bb);
 
 		rc = rdma_dereg_mr(tmp_rx->msg_buf_mr);
 		if (rc) {
@@ -941,19 +936,14 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 		  data.
 		*/
 		if (conn->type == CONN_TYPE_AQ) {
-			rc = rte_mempool_get(g_nvmf_tgt.bb_small_pool, (void **)&rx_desc->bb);
-			if ((rc < 0) || !rx_desc->bb) {
-				SPDK_ERRLOG("Unable to get small bb object\n");
-				goto fail;
-			}
 			rx_desc->bb_len = SMALL_BB_MAX_SIZE;
 		} else { // for IO queues
-			rc = rte_mempool_get(g_nvmf_tgt.bb_large_pool, (void **)&rx_desc->bb);
-			if ((rc < 0) || !rx_desc->bb) {
-				SPDK_ERRLOG("Unable to get large bb object\n");
-				goto fail;
-			}
 			rx_desc->bb_len = LARGE_BB_MAX_SIZE;
+		}
+		rx_desc->bb = rte_zmalloc("nvmf_bb", rx_desc->bb_len, 0);
+		if (!rx_desc->bb) {
+			SPDK_ERRLOG("Unable to get %u-byte bounce buffer\n", rx_desc->bb_len);
+			goto fail;
 		}
 		rx_desc->bb_mr = rdma_reg_read(conn->rdma.cm_id,
 					       (void *)rx_desc->bb,
@@ -983,13 +973,7 @@ fail:
 			}
 		}
 
-		if (rx_desc->bb) {
-			if (conn->type == CONN_TYPE_AQ) {
-				rte_mempool_put(g_nvmf_tgt.bb_small_pool, (void *)rx_desc->bb);
-			} else {
-				rte_mempool_put(g_nvmf_tgt.bb_large_pool, (void *)rx_desc->bb);
-			}
-		}
+		rte_free(rx_desc->bb);
 
 		if (rx_desc->msg_buf_mr) {
 			rc = rdma_dereg_mr(rx_desc->msg_buf_mr);
@@ -1009,11 +993,7 @@ fail:
 			SPDK_ERRLOG("Unable to de-register rx bb mr\n");
 		}
 
-		if (conn->type == CONN_TYPE_AQ) {
-			rte_mempool_put(g_nvmf_tgt.bb_small_pool, (void *)tmp->bb);
-		} else {
-			rte_mempool_put(g_nvmf_tgt.bb_large_pool, (void *)tmp->bb);
-		}
+		rte_free(tmp->bb);
 
 		rc = rdma_dereg_mr(tmp->msg_buf_mr);
 		if (rc) {

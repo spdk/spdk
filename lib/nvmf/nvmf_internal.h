@@ -114,8 +114,6 @@ struct spdk_nvmf_globals {
 	int MaxRecvDataSegmentLength;
 
 	struct rte_mempool *nvme_request_pool;
-	struct rte_mempool *bb_small_pool;
-	struct rte_mempool *bb_large_pool;
 	uint16_t	   sin_port;
 };
 

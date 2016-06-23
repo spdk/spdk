@@ -108,36 +108,6 @@ spdk_nvmf_initialize_pools(struct spdk_nvmf_globals *spdk_nvmf)
 		      request_mempool,
 		      (unsigned int)(SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf) * spdk_nvme_request_size()));
 
-	spdk_nvmf->bb_small_pool =
-		rte_mempool_create("bb_small_pool",
-				   SPDK_NVMF_ADMINQ_POOL_SIZE(spdk_nvmf),
-				   SMALL_BB_MAX_SIZE,
-				   128, 0,
-				   NULL, NULL, NULL, NULL,
-				   SOCKET_ID_ANY, 0);
-	if (!spdk_nvmf->bb_small_pool) {
-		SPDK_ERRLOG("create bb small pool failed\n");
-		return -1;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Small data buffer pool %p, size 0x%x bytes\n",
-		      spdk_nvmf->bb_small_pool,
-		      (SPDK_NVMF_ADMINQ_POOL_SIZE(spdk_nvmf) * SMALL_BB_MAX_SIZE));
-
-	spdk_nvmf->bb_large_pool =
-		rte_mempool_create("bb_large_pool",
-				   SPDK_NVMF_IOQ_POOL_SIZE(spdk_nvmf),
-				   LARGE_BB_MAX_SIZE,
-				   32, 0,
-				   NULL, NULL, NULL, NULL,
-				   SOCKET_ID_ANY, 0);
-	if (!spdk_nvmf->bb_large_pool) {
-		SPDK_ERRLOG("create bb large pool failed\n");
-		return -1;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Large data buffer pool %p, size 0x%x bytes\n",
-		      spdk_nvmf->bb_large_pool,
-		      (SPDK_NVMF_IOQ_POOL_SIZE(spdk_nvmf) * LARGE_BB_MAX_SIZE));
-
 	return 0;
 }
 
@@ -159,8 +129,6 @@ spdk_nvmf_check_pools(void)
 	int rc = 0;
 
 	rc += spdk_nvmf_check_pool(spdk_nvmf->nvme_request_pool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
-	rc += spdk_nvmf_check_pool(spdk_nvmf->bb_small_pool, SPDK_NVMF_ADMINQ_POOL_SIZE(spdk_nvmf));
-	rc += spdk_nvmf_check_pool(spdk_nvmf->bb_large_pool, SPDK_NVMF_IOQ_POOL_SIZE(spdk_nvmf));
 
 	if (rc == 0) {
 		return 0;
