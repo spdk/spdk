@@ -990,7 +990,7 @@ nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
 		goto exit;
 
 	rc = nvme_pcicfg_map_bar_write_combine(ctrlr->devhandle, bir, &addr);
-	if (addr == NULL || (rc != 0))
+	if ((rc != 0) || addr == NULL)
 		goto exit;
 
 	ctrlr->cmb_bar_virt_addr = addr;
