@@ -402,15 +402,14 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect data:\n");
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  cntlid:  0x%04x\n", connect_data->cntlid);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostid:  %04x%04x-%04x-%04x-%04x-%04x%04x%04x\n",
-		      htons(*(unsigned short *) &connect_data->hostid[0]),
-		      htons(*(unsigned short *) &connect_data->hostid[2]),
-		      htons(*(unsigned short *) &connect_data->hostid[4]),
-		      htons(*(unsigned short *) &connect_data->hostid[6]),
-		      htons(*(unsigned short *) &connect_data->hostid[8]),
-		      htons(*(unsigned short *) &connect_data->hostid[10]),
-		      htons(*(unsigned short *) &connect_data->hostid[12]),
-		      htons(*(unsigned short *) &connect_data->hostid[14]));
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostid: %08x-%04x-%04x-%02x%02x-%04x%08x ***\n",
+		      ntohl(*(uint32_t *)&connect_data->hostid[0]),
+		      ntohs(*(uint16_t *)&connect_data->hostid[4]),
+		      ntohs(*(uint16_t *)&connect_data->hostid[6]),
+		      connect_data->hostid[8],
+		      connect_data->hostid[9],
+		      ntohs(*(uint16_t *)&connect_data->hostid[10]),
+		      ntohl(*(uint32_t *)&connect_data->hostid[12]));
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subsiqn: \"%s\"\n", (char *)&connect_data->subnqn[0]);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostiqn: \"%s\"\n", (char *)&connect_data->hostnqn[0]);
 
