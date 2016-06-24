@@ -87,7 +87,7 @@ nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc)
 	STAILQ_INSERT_TAIL(&conn->qp_tx_active_desc, tx_desc, link);
 }
 
-static void
+void
 nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc)
 {
 	struct spdk_nvmf_conn *conn;
@@ -363,57 +363,6 @@ void spdk_shutdown_nvmf_conns(void)
 	rte_timer_init(&g_shutdown_timer);
 	rte_timer_reset(&g_shutdown_timer, rte_get_timer_hz() / 1000, PERIODICAL,
 			rte_get_master_lcore(), spdk_nvmf_conn_check_shutdown, NULL);
-}
-
-int
-spdk_nvmf_request_complete(struct nvmf_request *req)
-{
-	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
-	struct spdk_nvme_cpl *response;
-	int ret;
-
-	response = &req->rsp->nvme_cpl;
-
-	/* Was the command successful */
-	if (response->status.sc == SPDK_NVME_SC_SUCCESS &&
-	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		/* data to be copied to host via memory RDMA */
-
-		/* temporarily adjust SGE to only copy what the host is prepared to receive. */
-		rx_desc->bb_sgl.length = req->length;
-
-		ret = nvmf_post_rdma_write(tx_desc->conn, tx_desc);
-		if (ret) {
-			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
-			goto command_fail;
-		}
-	}
-
-	/* Now send back the response */
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send nvme cmd capsule response\n");
-
-	response->sqid = 0;
-	response->status.p = 0;
-	response->sqhd = tx_desc->conn->sq_head;
-	response->cid = req->cid;
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF,
-		      "cpl: cdw0=0x%x rsvd1=0x%x sqhd=0x%x sqid=0x%x cid=0x%x status=0x%x\n",
-		      response->cdw0, response->rsvd1, response->sqhd, response->sqid, response->cid,
-		      *(uint16_t *)&response->status);
-
-	ret = nvmf_post_rdma_send(tx_desc->conn, req->tx_desc);
-	if (ret) {
-		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-		goto command_fail;
-	}
-
-	return ret;
-
-command_fail:
-	nvmf_deactive_tx_desc(tx_desc);
-	return ret;
 }
 
 static int

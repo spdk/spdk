@@ -120,12 +120,6 @@ nvmf_disconnect(void *fabric_conn, struct nvmf_session *session);
 void
 nvmf_init_session_properties(struct nvmf_session *session, int aq_depth);
 
-int
-nvmf_process_admin_cmd(struct nvmf_request *req);
-
-int
-nvmf_process_io_cmd(struct nvmf_request *req);
-
 void
 nvmf_property_get(struct nvmf_session *session,
 		  struct spdk_nvmf_fabric_prop_get_cmd *cmd,

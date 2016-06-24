@@ -79,4 +79,10 @@ struct nvmf_request {
  */
 int spdk_nvmf_request_complete(struct nvmf_request *req);
 
+int
+nvmf_process_admin_cmd(struct nvmf_request *req);
+
+int
+nvmf_process_io_cmd(struct nvmf_request *req);
+
 #endif
