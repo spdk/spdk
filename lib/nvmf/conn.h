@@ -38,6 +38,7 @@
 
 #include "spdk/event.h"
 #include "nvmf_internal.h"
+#include "rdma.h"
 #include "spdk/queue.h"
 
 /* RDMA transport connection states */
@@ -76,11 +77,7 @@ struct spdk_nvmf_conn {
 	uint16_t			sq_head;
 	uint16_t			sq_tail;
 
-	struct rdma_cm_id		*cm_id;
-	struct ibv_context		*ctx;
-	struct ibv_comp_channel		*comp_channel;
-	struct ibv_cq			*cq;
-	struct ibv_qp			*qp;
+	struct spdk_nvmf_rdma_conn	rdma;
 
 	uint8_t				pending_rdma_read_count;
 	STAILQ_HEAD(qp_pending_desc, nvme_qp_tx_desc)	qp_pending_desc;

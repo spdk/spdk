@@ -40,6 +40,14 @@
 #include "request.h"
 #include "spdk/nvmf_spec.h"
 
+struct spdk_nvmf_rdma_conn {
+	struct rdma_cm_id		*cm_id;
+	struct ibv_context		*ctx;
+	struct ibv_comp_channel		*comp_channel;
+	struct ibv_cq			*cq;
+	struct ibv_qp			*qp;
+};
+
 /* Define the Admin Queue Rx/Tx Descriptors */
 
 struct nvme_qp_rx_desc {

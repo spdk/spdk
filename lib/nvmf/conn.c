@@ -125,7 +125,6 @@ static void
 free_conn(struct spdk_nvmf_conn *conn)
 {
 	conn->sess = NULL;
-	conn->cm_id = 0;
 	conn->is_valid = 0;
 }
 
@@ -585,7 +584,7 @@ static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		if (conn->state == CONN_STATE_OVERFLOW)
 			break;
 
-		rc = ibv_poll_cq(conn->cq, 1, &wc);
+		rc = ibv_poll_cq(conn->rdma.cq, 1, &wc);
 		if (rc == 0) // No completions at this time
 			break;
 
