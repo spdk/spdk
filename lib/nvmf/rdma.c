@@ -399,7 +399,7 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 }
 
 static int
-nvmf_rdma_cm_connect(struct rdma_cm_event *event)
+nvmf_rdma_connect(struct rdma_cm_event *event)
 {
 	struct spdk_nvmf_host		*host;
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
@@ -637,7 +637,7 @@ err0:
 }
 
 static int
-nvmf_rdma_cm_disconnect(struct rdma_cm_event *event)
+nvmf_rdma_disconnect(struct rdma_cm_event *event)
 {
 	struct rdma_cm_id		*conn_id;
 	struct spdk_nvmf_conn	*conn;
@@ -687,43 +687,8 @@ const char *CM_EVENT_STR[] = {
 	"RDMA_CM_EVENT_TIMEWAIT_EXIT"
 };
 
-static int
-nvmf_rdma_process_event(struct rdma_cm_event *event)
-{
-	int rc = 0;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCM event - %s\n", CM_EVENT_STR[event->event]);
-
-	switch (event->event) {
-	case RDMA_CM_EVENT_CONNECT_REQUEST:
-		rc = nvmf_rdma_cm_connect(event);
-		break;
-	case RDMA_CM_EVENT_ESTABLISHED:
-		break;
-	case RDMA_CM_EVENT_ADDR_CHANGE:
-	case RDMA_CM_EVENT_DISCONNECTED:
-	case RDMA_CM_EVENT_DEVICE_REMOVAL:
-	case RDMA_CM_EVENT_TIMEWAIT_EXIT:
-		rc = nvmf_rdma_cm_disconnect(event);
-		break;
-	default:
-		SPDK_ERRLOG("Unexpected CM event [%d]\n", event->event);
-		goto event_error;
-	}
-	return rc;
-
-event_error:
-	return -1;
-}
-
-
-/*!
-
-\brief This is the main routine for the NVMf rdma acceptor work item.
-
-*/
 static void
-nvmf_rdma_acceptor(struct rte_timer *timer, void *arg)
+nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 {
 	struct rdma_cm_event		*event;
 	int				rc;
@@ -734,28 +699,38 @@ nvmf_rdma_acceptor(struct rte_timer *timer, void *arg)
 
 	while (1) {
 		rc = rdma_get_cm_event(g_rdma.acceptor_event_channel, &event);
-		if (!rc) {
-			/*
-			A memcopy is required if we ack the rdma event.
-			But it may be possible to hold off and not ack
-			until the event is processed.  OFED documentation
-			only states that every event must be acked else
-			any attempt to destroy the cm_id associated with
-			that event shall block.
-			memcpy(&event_copy, event, sizeof(*event));
-			rdma_ack_cm_event(event);
-			*/
+		if (rc == 0) {
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
 
-			rc = nvmf_rdma_process_event(event);
-			rdma_ack_cm_event(event);
-			if (rc < 0) {
-				SPDK_ERRLOG("nvmf_rdma_process_event() failed\n");
+			switch (event->event) {
+			case RDMA_CM_EVENT_CONNECT_REQUEST:
+				rc = nvmf_rdma_connect(event);
+				if (rc < 0) {
+					SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
+					break;
+				}
+				break;
+			case RDMA_CM_EVENT_ESTABLISHED:
+				break;
+			case RDMA_CM_EVENT_ADDR_CHANGE:
+			case RDMA_CM_EVENT_DISCONNECTED:
+			case RDMA_CM_EVENT_DEVICE_REMOVAL:
+			case RDMA_CM_EVENT_TIMEWAIT_EXIT:
+				rc = nvmf_rdma_disconnect(event);
+				if (rc < 0) {
+					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
+					break;
+				}
+				break;
+			default:
+				SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
 				break;
 			}
+
+			rdma_ack_cm_event(event);
 		} else {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				SPDK_ERRLOG("get rdma event error(%d): %s\n",
-					    errno, strerror(errno));
+				SPDK_ERRLOG("Acceptor Event Error: %s\n", strerror(errno));
 			}
 			break;
 		}
@@ -807,7 +782,7 @@ int nvmf_acceptor_start(void)
 
 	rte_timer_init(&g_rdma.acceptor_timer);
 	rte_timer_reset(&g_rdma.acceptor_timer, ACCEPT_TIMEOUT, PERIODICAL,
-			rte_lcore_id(), nvmf_rdma_acceptor, NULL);
+			rte_lcore_id(), nvmf_rdma_accept, NULL);
 	return (rc);
 
 listen_error:
