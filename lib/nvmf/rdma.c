@@ -1070,4 +1070,29 @@ fail:
 	return -ENOMEM;
 }
 
+int
+nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
+{
+	struct nvme_qp_tx_desc *tx_desc;
+	int rc;
+
+	conn->rdma.pending_rdma_read_count--;
+	if (!STAILQ_EMPTY(&conn->rdma.qp_pending_desc)) {
+		tx_desc = STAILQ_FIRST(&conn->rdma.qp_pending_desc);
+		STAILQ_REMOVE_HEAD(&conn->rdma.qp_pending_desc, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_active_desc, tx_desc, link);
+
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: tx_desc %p\n",
+			      tx_desc);
+
+		rc = nvmf_post_rdma_read(conn, tx_desc);
+		if (rc) {
+			SPDK_ERRLOG("Unable to post pending rdma read descriptor\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("rdma", SPDK_TRACE_RDMA)

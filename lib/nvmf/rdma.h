@@ -88,6 +88,7 @@ int nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 			struct nvme_qp_rx_desc *rx_desc);
 int nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 			struct nvme_qp_tx_desc *tx_desc);
+int nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn);
 int nvmf_rdma_init(void);
 void nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn);
 
