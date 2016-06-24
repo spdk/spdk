@@ -65,14 +65,13 @@
 static int alloc_qp_rx_desc(struct spdk_nvmf_conn *conn);
 static int alloc_qp_tx_desc(struct spdk_nvmf_conn *conn);
 
-static struct rte_timer g_acceptor_timer;
+struct spdk_nvmf_rdma {
+	struct rte_timer		acceptor_timer;
+	struct rdma_event_channel	*acceptor_event_channel;
+	struct rdma_cm_id		*acceptor_listen_id;
+};
 
-static struct rdma_event_channel	*g_cm_event_ch = NULL;
-static struct rdma_cm_id 		*g_cm_id = NULL;
-
-/*! \file
-
-*/
+static struct spdk_nvmf_rdma g_rdma = { };
 
 static int
 nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
@@ -729,12 +728,12 @@ nvmf_rdma_acceptor(struct rte_timer *timer, void *arg)
 	struct rdma_cm_event		*event;
 	int				rc;
 
-	if (g_cm_event_ch == NULL) {
+	if (g_rdma.acceptor_event_channel == NULL) {
 		return;
 	}
 
 	while (1) {
-		rc = rdma_get_cm_event(g_cm_event_ch, &event);
+		rc = rdma_get_cm_event(g_rdma.acceptor_event_channel, &event);
 		if (!rc) {
 			/*
 			A memcopy is required if we ack the rdma event.
@@ -775,53 +774,53 @@ int nvmf_acceptor_start(void)
 
 	/* create an event channel with rdmacm to receive
 	   connection oriented requests and notifications */
-	g_cm_event_ch = rdma_create_event_channel();
-	if (g_cm_event_ch == NULL) {
+	g_rdma.acceptor_event_channel = rdma_create_event_channel();
+	if (g_rdma.acceptor_event_channel == NULL) {
 		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
 		return -1;
 	}
-	rc = fcntl(g_cm_event_ch->fd, F_SETFL, O_NONBLOCK);
+	rc = fcntl(g_rdma.acceptor_event_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
 		SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
 		goto create_id_error;
 	}
 
-	rc = rdma_create_id(g_cm_event_ch, &g_cm_id, NULL, RDMA_PS_TCP);
+	rc = rdma_create_id(g_rdma.acceptor_event_channel, &g_rdma.acceptor_listen_id, NULL, RDMA_PS_TCP);
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_create_id() failed\n");
 		goto create_id_error;
 	}
 
-	rc = rdma_bind_addr(g_cm_id, (struct sockaddr *)&addr);
+	rc = rdma_bind_addr(g_rdma.acceptor_listen_id, (struct sockaddr *)&addr);
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_bind_addr() failed\n");
 		goto listen_error;
 	}
 
-	rc = rdma_listen(g_cm_id, 10); /* 10 = backlog */
+	rc = rdma_listen(g_rdma.acceptor_listen_id, 10); /* 10 = backlog */
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_listen() failed\n");
 		goto listen_error;
 	}
-	sin_port = ntohs(rdma_get_src_port(g_cm_id));
+	sin_port = ntohs(rdma_get_src_port(g_rdma.acceptor_listen_id));
 	SPDK_NOTICELOG("\n*** NVMf Target Listening on port %d ***\n", sin_port);
 
-	rte_timer_init(&g_acceptor_timer);
-	rte_timer_reset(&g_acceptor_timer, ACCEPT_TIMEOUT, PERIODICAL,
+	rte_timer_init(&g_rdma.acceptor_timer);
+	rte_timer_reset(&g_rdma.acceptor_timer, ACCEPT_TIMEOUT, PERIODICAL,
 			rte_lcore_id(), nvmf_rdma_acceptor, NULL);
 	return (rc);
 
 listen_error:
-	rdma_destroy_id(g_cm_id);
+	rdma_destroy_id(g_rdma.acceptor_listen_id);
 create_id_error:
-	rdma_destroy_event_channel(g_cm_event_ch);
+	rdma_destroy_event_channel(g_rdma.acceptor_event_channel);
 	return -1;
 }
 
 void nvmf_acceptor_stop(void)
 {
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "nvmf_acceptor_stop: shutdown\n");
-	rte_timer_stop_sync(&g_acceptor_timer);
+	rte_timer_stop_sync(&g_rdma.acceptor_timer);
 }
 
 /*
