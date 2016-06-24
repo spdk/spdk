@@ -67,7 +67,6 @@ struct nvme_qp_rx_desc {
 	struct ibv_mr		*bb_mr;
 	uint8_t			*bb;
 	uint32_t		bb_len;
-	uint32_t		recv_bc;
 	STAILQ_ENTRY(nvme_qp_rx_desc) link;
 };
 

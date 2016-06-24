@@ -74,7 +74,9 @@ struct nvmf_request {
 };
 
 int
-spdk_nvmf_request_prep_data(struct nvmf_request *req);
+spdk_nvmf_request_prep_data(struct nvmf_request *req,
+			    void *in_cap_data, uint32_t in_cap_len,
+			    void *bb, uint32_t bb_len);
 
 int
 spdk_nvmf_request_exec(struct nvmf_request *req);

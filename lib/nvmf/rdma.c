@@ -401,8 +401,6 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	conn->sq_head < (conn->sq_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->sq_depth);
 
-	rx_desc->recv_bc = 0; /* clear previous recv byte count */
-
 	wr.wr_id = (uintptr_t)rx_desc;
 	wr.next = NULL;
 	wr.sg_list = &rx_desc->recv_sgl;

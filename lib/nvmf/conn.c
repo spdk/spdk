@@ -476,8 +476,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 		SPDK_ERRLOG("recv length less than capsule header\n");
 		goto recv_error;
 	}
-	rx_desc->recv_bc = wc->byte_len;
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv byte count %x\n", rx_desc->recv_bc);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv byte count 0x%x\n", wc->byte_len);
 
 	/* get a response buffer */
 	if (STAILQ_EMPTY(&conn->rdma.qp_tx_desc)) {
@@ -499,7 +498,9 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 
 	nvmf_trace_command(cap_hdr, conn->type);
 
-	ret = spdk_nvmf_request_prep_data(req);
+	ret = spdk_nvmf_request_prep_data(req,
+					  rx_desc->bb, wc->byte_len - sizeof(*cap_hdr),
+					  rx_desc->bb, rx_desc->bb_sgl.length);
 	if (ret < 0) {
 		SPDK_ERRLOG("prep_data failed\n");
 		goto recv_error;

@@ -654,10 +654,11 @@ nvmf_process_fabrics_command(struct nvmf_request *req)
 }
 
 int
-spdk_nvmf_request_prep_data(struct nvmf_request *req)
+spdk_nvmf_request_prep_data(struct nvmf_request *req,
+			    void *in_cap_data, uint32_t in_cap_len,
+			    void *bb, uint32_t bb_len)
 {
 	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
 	struct spdk_nvmf_conn *conn = tx_desc->conn;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	enum spdk_nvme_data_transfer xfer;
@@ -678,20 +679,20 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Keyed data block: raddr 0x%" PRIx64 ", rkey 0x%x, length 0x%x\n",
 				      sgl->address, sgl->keyed.key, sgl->keyed.length);
 
-			if (sgl->keyed.length > rx_desc->bb_sgl.length) {
+			if (sgl->keyed.length > bb_len) {
 				SPDK_ERRLOG("SGL length 0x%x exceeds BB length 0x%x\n",
-					    sgl->keyed.length, rx_desc->bb_sgl.length);
+					    sgl->keyed.length, bb_len);
 				return -1;
 			}
 
-			req->data = rx_desc->bb;
+			req->data = bb;
 			req->remote_addr = sgl->address;
 			req->rkey = sgl->keyed.key;
 			req->length = sgl->keyed.length;
 		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 			   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 			uint64_t offset = sgl->address;
-			uint32_t max_len = rx_desc->bb_sgl.length;
+			uint32_t max_len = in_cap_len;
 
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 				      offset, sgl->unkeyed.length);
@@ -714,7 +715,7 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 				return -1;
 			}
 
-			req->data = rx_desc->bb + offset;
+			req->data = in_cap_data + offset;
 			req->length = sgl->unkeyed.length;
 		} else {
 			SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
