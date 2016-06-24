@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "request.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 

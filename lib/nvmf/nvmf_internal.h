@@ -78,44 +78,7 @@
 #define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
-union nvmf_h2c_msg {
-	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
-	struct spdk_nvme_cmd				nvme_cmd;
-	struct spdk_nvmf_fabric_prop_set_cmd		prop_set_cmd;
-	struct spdk_nvmf_fabric_prop_get_cmd		prop_get_cmd;
-	struct spdk_nvmf_fabric_connect_cmd		connect_cmd;
-};
-SPDK_STATIC_ASSERT(sizeof(union nvmf_h2c_msg) == 64, "Incorrect size");
-
-union nvmf_c2h_msg {
-	struct spdk_nvmf_capsule_rsp			nvmf_rsp;
-	struct spdk_nvme_cpl				nvme_cpl;
-	struct spdk_nvmf_fabric_prop_set_rsp		prop_set_rsp;
-	struct spdk_nvmf_fabric_prop_get_rsp		prop_get_rsp;
-	struct spdk_nvmf_fabric_connect_rsp		connect_rsp;
-};
-SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
-
-#define NVMF_H2C_MAX_MSG (sizeof(union nvmf_h2c_msg))
-#define NVMF_C2H_MAX_MSG (sizeof(union nvmf_c2h_msg))
-
 #define NVMF_CNTLID_SUBS_SHIFT 8
-
-struct nvmf_request {
-	struct nvmf_session		*session;
-	struct nvme_qp_tx_desc		*tx_desc;
-	struct nvme_qp_rx_desc		*rx_desc;
-	uint16_t			cid;		/* command identifier */
-	uint64_t			remote_addr;
-	uint32_t			rkey;
-	uint32_t			length;
-	enum spdk_nvme_data_transfer	xfer;
-	void				*data;
-	union nvmf_h2c_msg		*cmd;
-	union nvmf_c2h_msg		*rsp;
-
-	TAILQ_ENTRY(nvmf_request) 	entries;
-};
 
 /*
  * Some NVMe command definitions not provided in the nvme_spec.h file
@@ -157,11 +120,6 @@ struct spdk_nvmf_globals {
 	struct rte_mempool *bb_large_pool;
 	uint16_t	   sin_port;
 };
-
-/**
- * Send the response and transfer data from controller to host if required.
- */
-int spdk_nvmf_request_complete(struct nvmf_request *req);
 
 void
 nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);

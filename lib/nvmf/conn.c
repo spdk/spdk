@@ -49,6 +49,7 @@
 #include "spdk/nvmf_spec.h"
 #include "conn.h"
 #include "rdma.h"
+#include "request.h"
 #include "session.h"
 #include "spdk/queue.h"
 #include "spdk/log.h"

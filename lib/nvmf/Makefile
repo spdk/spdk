@@ -38,6 +38,6 @@ LIBNAME = nvmf
 C_SRCS = nvmf_admin_cmd.c nvmf_io_cmd.c \
 	 rdma.c port.c conn.c controller.c \
 	 host.c subsystem_grp.c conf.c \
-	 nvmf.c session.c
+	 nvmf.c request.c session.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

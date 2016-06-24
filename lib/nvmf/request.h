@@ -31,51 +31,52 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _NVMF_RDMA_H_
-#define _NVMF_RDMA_H_
+#ifndef NVMF_REQUEST_H
+#define NVMF_REQUEST_H
 
-#include <infiniband/verbs.h>
-
-#include "nvmf_internal.h"
-#include "request.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/queue.h"
 
-/* Define the Admin Queue Rx/Tx Descriptors */
+union nvmf_h2c_msg {
+	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
+	struct spdk_nvme_cmd				nvme_cmd;
+	struct spdk_nvmf_fabric_prop_set_cmd		prop_set_cmd;
+	struct spdk_nvmf_fabric_prop_get_cmd		prop_get_cmd;
+	struct spdk_nvmf_fabric_connect_cmd		connect_cmd;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvmf_h2c_msg) == 64, "Incorrect size");
 
-struct nvme_qp_rx_desc {
-	union nvmf_h2c_msg	msg_buf;
-	struct spdk_nvmf_conn	*conn;
-	struct ibv_mr		*msg_buf_mr;
-	struct ibv_sge		recv_sgl;
-	struct ibv_sge		bb_sgl; /* must follow recv_sgl */
-	struct ibv_mr		*bb_mr;
-	uint8_t			*bb;
-	uint32_t		bb_len;
-	uint32_t		recv_bc;
-	STAILQ_ENTRY(nvme_qp_rx_desc) link;
+union nvmf_c2h_msg {
+	struct spdk_nvmf_capsule_rsp			nvmf_rsp;
+	struct spdk_nvme_cpl				nvme_cpl;
+	struct spdk_nvmf_fabric_prop_set_rsp		prop_set_rsp;
+	struct spdk_nvmf_fabric_prop_get_rsp		prop_get_rsp;
+	struct spdk_nvmf_fabric_connect_rsp		connect_rsp;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
+
+#define NVMF_H2C_MAX_MSG (sizeof(union nvmf_h2c_msg))
+#define NVMF_C2H_MAX_MSG (sizeof(union nvmf_c2h_msg))
+
+struct nvmf_request {
+	struct nvmf_session		*session;
+	struct nvme_qp_tx_desc		*tx_desc;
+	struct nvme_qp_rx_desc		*rx_desc;
+	uint16_t			cid;		/* command identifier */
+	uint64_t			remote_addr;
+	uint32_t			rkey;
+	uint32_t			length;
+	enum spdk_nvme_data_transfer	xfer;
+	void				*data;
+	union nvmf_h2c_msg		*cmd;
+	union nvmf_c2h_msg		*rsp;
+
+	TAILQ_ENTRY(nvmf_request) 	entries;
 };
 
-struct nvme_qp_tx_desc {
-	union nvmf_c2h_msg	msg_buf;
-	struct spdk_nvmf_conn	*conn;
-	struct nvmf_request	req_state;
-	struct ibv_mr		*msg_buf_mr;
-	struct ibv_sge		send_sgl;
-	STAILQ_ENTRY(nvme_qp_tx_desc) link;
-};
+/**
+ * Send the response and transfer data from controller to host if required.
+ */
+int spdk_nvmf_request_complete(struct nvmf_request *req);
 
-int nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
-			struct nvme_qp_tx_desc *tx_desc);
-int nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
-			 struct nvme_qp_tx_desc *tx_desc);
-int nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
-			struct nvme_qp_rx_desc *rx_desc);
-int nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
-			struct nvme_qp_tx_desc *tx_desc);
-int nvmf_rdma_init(void);
-void nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn);
-
-int nvmf_acceptor_start(void);
-void nvmf_acceptor_stop(void);
-
-#endif /* _NVMF_RDMA_H_ */
+#endif
