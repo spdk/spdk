@@ -503,3 +503,39 @@ nvmf_property_set(struct nvmf_session *session,
 		break;
 	}
 }
+
+void
+nvmf_check_admin_completions(struct nvmf_session *session)
+{
+	struct spdk_nvmf_subsystem *subsystem = session->subsys;
+	struct spdk_nvme_ctrlr *ctrlr, *prev_ctrlr = NULL;
+	int i;
+
+	for (i = 0; i < MAX_PER_SUBSYSTEM_NAMESPACES; i++) {
+		ctrlr = subsystem->ns_list_map[i].ctrlr;
+		if (ctrlr == NULL)
+			continue;
+		if (ctrlr != NULL && ctrlr != prev_ctrlr) {
+			spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+			prev_ctrlr = ctrlr;
+		}
+	}
+}
+
+void
+nvmf_check_io_completions(struct nvmf_session *session)
+{
+	struct spdk_nvmf_subsystem *subsystem = session->subsys;
+	struct spdk_nvme_qpair *qpair, *prev_qpair = NULL;
+	int i;
+
+	for (i = 0; i < MAX_PER_SUBSYSTEM_NAMESPACES; i++) {
+		qpair = subsystem->ns_list_map[i].qpair;
+		if (qpair == NULL)
+			continue;
+		if (qpair != NULL && qpair != prev_qpair) {
+			spdk_nvme_qpair_process_completions(qpair, 0);
+			prev_qpair = qpair;
+		}
+	}
+}

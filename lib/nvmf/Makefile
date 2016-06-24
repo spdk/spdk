@@ -35,8 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 
 CFLAGS += $(DPDK_INC)
 LIBNAME = nvmf
-C_SRCS = nvmf_admin_cmd.c nvmf_io_cmd.c \
-	 rdma.c port.c conn.c controller.c \
+C_SRCS = rdma.c port.c conn.c controller.c \
 	 host.c subsystem_grp.c conf.c \
 	 nvmf.c request.c session.c
 
