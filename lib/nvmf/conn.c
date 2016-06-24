@@ -366,8 +366,7 @@ void spdk_shutdown_nvmf_conns(void)
 }
 
 static int
-nvmf_process_property_get(struct spdk_nvmf_conn *conn,
-			  struct nvmf_request *req)
+nvmf_process_property_get(struct nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_get_rsp *response;
 	struct spdk_nvmf_fabric_prop_get_cmd *cmd;
@@ -376,7 +375,7 @@ nvmf_process_property_get(struct spdk_nvmf_conn *conn,
 	cmd = &req->cmd->prop_get_cmd;
 	response = &req->rsp->prop_get_rsp;
 
-	nvmf_property_get(conn->sess, cmd, response);
+	nvmf_property_get(req->conn->sess, cmd, response);
 
 	/* send the nvmf response if setup by NVMf library */
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send property get capsule response\n");
@@ -390,8 +389,7 @@ nvmf_process_property_get(struct spdk_nvmf_conn *conn,
 }
 
 static int
-nvmf_process_property_set(struct spdk_nvmf_conn *conn,
-			  struct nvmf_request *req)
+nvmf_process_property_set(struct nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_set_rsp *response;
 	struct spdk_nvmf_fabric_prop_set_cmd *cmd;
@@ -401,11 +399,14 @@ nvmf_process_property_set(struct spdk_nvmf_conn *conn,
 	cmd = &req->cmd->prop_set_cmd;
 	response = &req->rsp->prop_set_rsp;
 
-	nvmf_property_set(conn->sess, cmd, response, &shutdown);
+	nvmf_property_set(req->conn->sess, cmd, response, &shutdown);
+
+	/* TODO: This is not right. It should shut down the whole session.
 	if (shutdown == true) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Call to set properties has indicated shutdown\n");
 		conn->state = CONN_STATE_FABRIC_DISCONNECT;
 	}
+	*/
 
 	/* send the nvmf response if setup by NVMf library */
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send property set capsule response\n");
@@ -469,8 +470,7 @@ static void nvmf_trace_command(struct spdk_nvmf_capsule_cmd *cap_hdr, enum conn_
 }
 
 static int
-nvmf_process_io_command(struct spdk_nvmf_conn *conn,
-			struct nvmf_request *req)
+nvmf_process_io_command(struct nvmf_request *req)
 {
 	int	ret;
 
@@ -491,8 +491,7 @@ nvmf_process_io_command(struct spdk_nvmf_conn *conn,
 }
 
 static int
-nvmf_process_admin_command(struct spdk_nvmf_conn *conn,
-			   struct nvmf_request *req)
+nvmf_process_admin_command(struct nvmf_request *req)
 {
 	int	ret;
 
@@ -549,12 +548,12 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 }
 
 static int
-nvmf_process_connect(struct spdk_nvmf_conn *conn,
-		     struct nvmf_request *req)
+nvmf_process_connect(struct nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_cmd *connect;
 	struct spdk_nvmf_fabric_connect_data *connect_data;
 	struct spdk_nvmf_fabric_connect_rsp *response;
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct nvmf_session *session;
 	int ret;
 
@@ -618,7 +617,7 @@ nvmf_process_connect(struct spdk_nvmf_conn *conn,
 }
 
 static int
-nvmf_process_fabrics_command(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
+nvmf_process_fabrics_command(struct nvmf_request *req)
 {
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
 
@@ -626,11 +625,11 @@ nvmf_process_fabrics_command(struct spdk_nvmf_conn *conn, struct nvmf_request *r
 
 	switch (cap_hdr->fctype) {
 	case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET:
-		return nvmf_process_property_set(conn, req);
+		return nvmf_process_property_set(req);
 	case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
-		return nvmf_process_property_get(conn, req);
+		return nvmf_process_property_get(req);
 	case SPDK_NVMF_FABRIC_COMMAND_CONNECT:
-		return nvmf_process_connect(conn, req);
+		return nvmf_process_connect(req);
 	default:
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "recv capsule header type invalid [%x]!\n",
 			      cap_hdr->fctype);
@@ -763,16 +762,16 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req)
 }
 
 static int
-spdk_nvmf_request_exec(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
+spdk_nvmf_request_exec(struct nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		return nvmf_process_fabrics_command(conn, req);
-	} else if (conn->type == CONN_TYPE_AQ) {
-		return nvmf_process_admin_command(conn, req);
+		return nvmf_process_fabrics_command(req);
+	} else if (req->conn->type == CONN_TYPE_AQ) {
+		return nvmf_process_admin_command(req);
 	} else {
-		return nvmf_process_io_command(conn, req);
+		return nvmf_process_io_command(req);
 	}
 }
 
@@ -858,7 +857,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 
 	if (ret == 0) {
 		/* Data is available now; execute command immediately. */
-		ret = spdk_nvmf_request_exec(conn, req);
+		ret = spdk_nvmf_request_exec(req);
 		if (ret < 0) {
 			SPDK_ERRLOG("Command execution failed\n");
 			goto recv_error;
@@ -951,7 +950,7 @@ static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
 			req = &tx_desc->req_state;
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
-			rc = spdk_nvmf_request_exec(conn, req);
+			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
 				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
 				goto handler_error;
