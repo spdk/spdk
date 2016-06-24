@@ -839,7 +839,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	nvmf_active_tx_desc(tx_desc);
 
 	req = &tx_desc->req_state;
-	req->session = conn->sess;
+	req->conn = conn;
 	req->tx_desc = tx_desc;
 	req->rx_desc = rx_desc;
 	req->length = 0;

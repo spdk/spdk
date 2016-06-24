@@ -59,7 +59,7 @@ SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 #define NVMF_C2H_MAX_MSG (sizeof(union nvmf_c2h_msg))
 
 struct nvmf_request {
-	struct nvmf_session		*session;
+	struct spdk_nvmf_conn		*conn;
 	struct nvme_qp_tx_desc		*tx_desc;
 	struct nvme_qp_rx_desc		*rx_desc;
 	uint16_t			cid;		/* command identifier */

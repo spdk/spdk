@@ -96,7 +96,7 @@ command_fail:
 int
 nvmf_process_admin_cmd(struct nvmf_request *req)
 {
-	struct nvmf_session *session = req->session;
+	struct nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
@@ -373,7 +373,7 @@ passthrough:
 int
 nvmf_process_io_cmd(struct nvmf_request *req)
 {
-	struct nvmf_session *session = req->session;
+	struct nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
