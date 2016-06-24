@@ -50,29 +50,13 @@
 int
 spdk_nvmf_request_complete(struct nvmf_request *req)
 {
-	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct spdk_nvme_cpl *response;
-	int ret;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
-	response = &req->rsp->nvme_cpl;
-
-	/* Was the command successful */
-	if (response->status.sc == SPDK_NVME_SC_SUCCESS &&
-	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		/* data to be copied to host via memory RDMA */
-		ret = nvmf_post_rdma_write(tx_desc->conn, tx_desc);
-		if (ret) {
-			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
-			goto command_fail;
-		}
-	}
-
-	/* Now send back the response */
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send nvme cmd capsule response\n");
 
 	response->sqid = 0;
 	response->status.p = 0;
-	response->sqhd = tx_desc->conn->sq_head;
+	response->sqhd = req->conn->sq_head;
 	response->cid = req->cid;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF,
@@ -80,17 +64,12 @@ spdk_nvmf_request_complete(struct nvmf_request *req)
 		      response->cdw0, response->rsvd1, response->sqhd, response->sqid, response->cid,
 		      *(uint16_t *)&response->status);
 
-	ret = nvmf_post_rdma_send(tx_desc->conn, req->tx_desc);
-	if (ret) {
-		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-		goto command_fail;
+	if (spdk_nvmf_rdma_request_complete(req->conn, req)) {
+		SPDK_ERRLOG("Transport request completion error!\n");
+		return -1;
 	}
 
-	return ret;
-
-command_fail:
-	nvmf_deactive_tx_desc(tx_desc);
-	return ret;
+	return 0;
 }
 
 static int
@@ -658,8 +637,7 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req,
 			    void *in_cap_data, uint32_t in_cap_len,
 			    void *bb, uint32_t bb_len)
 {
-	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct spdk_nvmf_conn *conn = tx_desc->conn;
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	enum spdk_nvme_data_transfer xfer;
 	int ret;

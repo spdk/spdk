@@ -326,13 +326,13 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	return (rc);
 }
 
-int
+static int
 nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
-		     struct nvme_qp_tx_desc *tx_desc)
+		     struct nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvme_qp_rx_desc *rx_desc = tx_desc->req_state.rx_desc;
-	struct nvmf_request *req = &tx_desc->req_state;
+	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
+	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
 	int rc;
 
 	if (rx_desc == NULL) {
@@ -354,12 +354,12 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 	return (rc);
 }
 
-int
+static int
 nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
-		    struct nvme_qp_tx_desc *tx_desc)
+		    struct nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvmf_request *req = &tx_desc->req_state;
+	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
 	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
 	int rc;
 
@@ -386,6 +386,37 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 		SPDK_ERRLOG("Failure posting rdma send for NVMf completion, rc = 0x%x\n", rc);
 	}
 	return (rc);
+}
+
+int
+spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
+{
+	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	int ret;
+
+	/* Was the command successful? */
+	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
+	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		/* Need to transfer data via RDMA Write */
+		ret = nvmf_post_rdma_write(conn, req);
+		if (ret) {
+			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
+			goto command_fail;
+		}
+	}
+
+	ret = nvmf_post_rdma_send(conn, req);
+	if (ret) {
+		SPDK_ERRLOG("Unable to send response capsule\n");
+		goto command_fail;
+	}
+
+	return 0;
+
+command_fail:
+	nvmf_deactive_tx_desc(tx_desc);
+	return -1;
 }
 
 int
