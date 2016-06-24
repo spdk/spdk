@@ -100,6 +100,11 @@ void spdk_shutdown_nvmf_conns(void);
 struct spdk_nvmf_conn *
 spdk_nvmf_allocate_conn(void);
 
+void
+nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
+			  struct nvmf_session *session,
+			  struct spdk_nvmf_fabric_connect_rsp *response);
+
 int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);
 
 void

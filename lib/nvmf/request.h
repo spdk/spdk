@@ -74,15 +74,12 @@ struct nvmf_request {
 	TAILQ_ENTRY(nvmf_request) 	entries;
 };
 
-/**
- * Send the response and transfer data from controller to host if required.
- */
+int
+spdk_nvmf_request_prep_data(struct nvmf_request *req);
+
+int
+spdk_nvmf_request_exec(struct nvmf_request *req);
+
 int spdk_nvmf_request_complete(struct nvmf_request *req);
-
-int
-nvmf_process_admin_cmd(struct nvmf_request *req);
-
-int
-nvmf_process_io_cmd(struct nvmf_request *req);
 
 #endif
