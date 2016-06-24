@@ -940,7 +940,7 @@ recv_error:
 	return -1;
 }
 
-static int nvmf_cq_event_handler(struct spdk_nvmf_conn *conn)
+static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 {
 	struct ibv_wc wc;
 	struct nvme_qp_tx_desc *tx_desc;
@@ -1051,54 +1051,25 @@ handler_error:
 	return -1;
 }
 
-
-static int nvmf_execute_conn(struct spdk_nvmf_conn *conn)
-{
-	int		rc = 0;
-
-	/* for an active session, process any pending NVMf completions */
-	if (conn->sess) {
-		if (conn->type == CONN_TYPE_AQ)
-			nvmf_check_admin_completions(conn->sess);
-		else
-			nvmf_check_io_completions(conn->sess);
-	}
-
-	/* process all pending completions */
-	rc = nvmf_cq_event_handler(conn);
-	if (rc > 0) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ event handler, %d CQ completions\n", rc);
-	} else if (rc < 0) {
-		SPDK_ERRLOG("CQ event handler error!\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-
-/**
-
-\brief This is the main routine for the nvmf connection work item.
-
-Serves mainly as a wrapper for the nvmf_execute_conn() function which
-does the bulk of the work.  This function handles connection cleanup when
-NVMf application is exiting or there is an error on the connection.
-It also drains the connection if the work item is being suspended to
-move to a different reactor.
-
-*/
 static void
 spdk_nvmf_conn_do_work(void *arg)
 {
 	struct spdk_nvmf_conn *conn = arg;
-	int rc;
 
-	rc = nvmf_execute_conn(conn);
+	/* process pending NVMe device completions */
+	if (conn->sess) {
+		if (conn->type == CONN_TYPE_AQ) {
+			nvmf_check_admin_completions(conn->sess);
+		} else {
+			nvmf_check_io_completions(conn->sess);
+		}
+	}
 
-	if (rc != 0 || conn->state == CONN_STATE_EXITING ||
+	/* process pending RDMA completions */
+	nvmf_check_rdma_completions(conn);
+
+	if (conn->state == CONN_STATE_EXITING ||
 	    conn->state == CONN_STATE_FABRIC_DISCONNECT) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "state exiting to shutdown\n");
 		spdk_nvmf_conn_destruct(conn);
 	}
 }
