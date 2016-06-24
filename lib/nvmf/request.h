@@ -47,7 +47,6 @@ union nvmf_h2c_msg {
 SPDK_STATIC_ASSERT(sizeof(union nvmf_h2c_msg) == 64, "Incorrect size");
 
 union nvmf_c2h_msg {
-	struct spdk_nvmf_capsule_rsp			nvmf_rsp;
 	struct spdk_nvme_cpl				nvme_cpl;
 	struct spdk_nvmf_fabric_prop_set_rsp		prop_set_rsp;
 	struct spdk_nvmf_fabric_prop_get_rsp		prop_get_rsp;

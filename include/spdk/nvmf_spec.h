@@ -56,15 +56,6 @@ struct spdk_nvmf_capsule_cmd {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_capsule_cmd) == 64, "Incorrect size");
 
-struct spdk_nvmf_capsule_rsp {
-	uint8_t		fabric_specific[8];
-	uint16_t	sqhd;
-	uint8_t		reserved1[2];
-	uint16_t	cid;
-	struct spdk_nvme_status status;
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_capsule_rsp) == 16, "Incorrect size");
-
 /* Fabric Command Set */
 #define SPDK_NVME_OPC_FABRIC 0x7f
 
