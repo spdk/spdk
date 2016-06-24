@@ -39,6 +39,7 @@
 #include "nvmf_internal.h"
 #include "request.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/queue.h"
 
 struct spdk_nvmf_rdma_conn {
 	struct rdma_cm_id		*cm_id;
@@ -46,6 +47,13 @@ struct spdk_nvmf_rdma_conn {
 	struct ibv_comp_channel		*comp_channel;
 	struct ibv_cq			*cq;
 	struct ibv_qp			*qp;
+
+	uint8_t						pending_rdma_read_count;
+	STAILQ_HEAD(qp_pending_desc, nvme_qp_tx_desc)	qp_pending_desc;
+
+	STAILQ_HEAD(qp_rx_desc, nvme_qp_rx_desc)	qp_rx_desc;
+	STAILQ_HEAD(qp_tx_desc, nvme_qp_tx_desc)	qp_tx_desc;
+	STAILQ_HEAD(qp_tx_active_desc, nvme_qp_tx_desc)	qp_tx_active_desc;
 };
 
 /* Define the Admin Queue Rx/Tx Descriptors */

@@ -83,8 +83,8 @@ nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc)
 	conn = tx_desc->conn;
 	RTE_VERIFY(conn != NULL);
 
-	STAILQ_REMOVE(&conn->qp_tx_desc, tx_desc, nvme_qp_tx_desc, link);
-	STAILQ_INSERT_TAIL(&conn->qp_tx_active_desc, tx_desc, link);
+	STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tx_desc, nvme_qp_tx_desc, link);
+	STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_active_desc, tx_desc, link);
 }
 
 void
@@ -96,8 +96,8 @@ nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc)
 	conn = tx_desc->conn;
 	RTE_VERIFY(tx_desc->conn != NULL);
 
-	STAILQ_REMOVE(&conn->qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
-	STAILQ_INSERT_TAIL(&conn->qp_tx_desc, tx_desc, link);
+	STAILQ_REMOVE(&conn->rdma.qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
+	STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, tx_desc, link);
 }
 
 static struct spdk_nvmf_conn *
@@ -506,11 +506,11 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv byte count %x\n", rx_desc->recv_bc);
 
 	/* get a response buffer */
-	if (STAILQ_EMPTY(&conn->qp_tx_desc)) {
+	if (STAILQ_EMPTY(&conn->rdma.qp_tx_desc)) {
 		SPDK_ERRLOG("tx desc pool empty!\n");
 		goto recv_error;
 	}
-	tx_desc = STAILQ_FIRST(&conn->qp_tx_desc);
+	tx_desc = STAILQ_FIRST(&conn->rdma.qp_tx_desc);
 	nvmf_active_tx_desc(tx_desc);
 
 	req = &tx_desc->req_state;
@@ -635,11 +635,11 @@ static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			/*
 			 * Check for any pending rdma_reads to start
 			 */
-			conn->pending_rdma_read_count--;
-			if (!STAILQ_EMPTY(&conn->qp_pending_desc)) {
-				tx_desc = STAILQ_FIRST(&conn->qp_pending_desc);
-				STAILQ_REMOVE_HEAD(&conn->qp_pending_desc, link);
-				STAILQ_INSERT_TAIL(&conn->qp_tx_active_desc, tx_desc, link);
+			conn->rdma.pending_rdma_read_count--;
+			if (!STAILQ_EMPTY(&conn->rdma.qp_pending_desc)) {
+				tx_desc = STAILQ_FIRST(&conn->rdma.qp_pending_desc);
+				STAILQ_REMOVE_HEAD(&conn->rdma.qp_pending_desc, link);
+				STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_active_desc, tx_desc, link);
 
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: tx_desc %p\n",
 					      tx_desc);

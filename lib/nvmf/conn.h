@@ -79,14 +79,7 @@ struct spdk_nvmf_conn {
 
 	struct spdk_nvmf_rdma_conn	rdma;
 
-	uint8_t				pending_rdma_read_count;
-	STAILQ_HEAD(qp_pending_desc, nvme_qp_tx_desc)	qp_pending_desc;
-
-	STAILQ_HEAD(qp_rx_desc, nvme_qp_rx_desc)	qp_rx_desc;
-	STAILQ_HEAD(qp_tx_desc, nvme_qp_tx_desc)	qp_tx_desc;
-	STAILQ_HEAD(qp_tx_active_desc, nvme_qp_tx_desc)	qp_tx_active_desc;
-
-	TAILQ_ENTRY(spdk_nvmf_conn) link;
+	TAILQ_ENTRY(spdk_nvmf_conn) 	link;
 	struct spdk_poller		poller;
 };
 

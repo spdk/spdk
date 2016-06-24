@@ -141,8 +141,8 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Enter\n");
 
-	STAILQ_FOREACH(tmp_rx, &conn->qp_rx_desc, link) {
-		STAILQ_REMOVE(&conn->qp_rx_desc, tmp_rx, nvme_qp_rx_desc, link);
+	STAILQ_FOREACH(tmp_rx, &conn->rdma.qp_rx_desc, link) {
+		STAILQ_REMOVE(&conn->rdma.qp_rx_desc, tmp_rx, nvme_qp_rx_desc, link);
 
 		rc = rdma_dereg_mr(tmp_rx->bb_mr);
 		if (rc) {
@@ -163,8 +163,8 @@ free_qp_desc(struct spdk_nvmf_conn *conn)
 		rte_mempool_put(g_nvmf_tgt.rx_desc_pool, (void *)tmp_rx);
 	}
 
-	STAILQ_FOREACH(tmp_tx, &conn->qp_tx_desc, link) {
-		STAILQ_REMOVE(&conn->qp_tx_desc, tmp_tx, nvme_qp_tx_desc, link);
+	STAILQ_FOREACH(tmp_tx, &conn->rdma.qp_tx_desc, link) {
+		STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tmp_tx, nvme_qp_tx_desc, link);
 
 		rc = rdma_dereg_mr(tmp_tx->msg_buf_mr);
 		if (rc) {
@@ -198,17 +198,17 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 
 	rdma_destroy_qp(conn->rdma.cm_id);
 
-	while (!STAILQ_EMPTY(&conn->qp_pending_desc)) {
-		pending_desc = STAILQ_FIRST(&conn->qp_pending_desc);
-		STAILQ_REMOVE_HEAD(&conn->qp_pending_desc, link);
-		STAILQ_INSERT_TAIL(&conn->qp_tx_desc, pending_desc, link);
+	while (!STAILQ_EMPTY(&conn->rdma.qp_pending_desc)) {
+		pending_desc = STAILQ_FIRST(&conn->rdma.qp_pending_desc);
+		STAILQ_REMOVE_HEAD(&conn->rdma.qp_pending_desc, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, pending_desc, link);
 	}
 
 	/* Remove tx_desc from qp_tx_active_desc list to qp_tx_desc list */
-	while (!STAILQ_EMPTY(&conn->qp_tx_active_desc)) {
-		active_desc = STAILQ_FIRST(&conn->qp_tx_active_desc);
-		STAILQ_REMOVE_HEAD(&conn->qp_tx_active_desc, link);
-		STAILQ_INSERT_TAIL(&conn->qp_tx_desc, active_desc, link);
+	while (!STAILQ_EMPTY(&conn->rdma.qp_tx_active_desc)) {
+		active_desc = STAILQ_FIRST(&conn->rdma.qp_tx_active_desc);
+		STAILQ_REMOVE_HEAD(&conn->rdma.qp_tx_active_desc, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, active_desc, link);
 	}
 
 	free_qp_desc(conn);
@@ -280,14 +280,14 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	 * Queue the rdma read if it would exceed max outstanding
 	 * RDMA read limit.
 	 */
-	if (conn->pending_rdma_read_count == conn->initiator_depth) {
+	if (conn->rdma.pending_rdma_read_count == conn->initiator_depth) {
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Insert rdma read into pending queue: tx_desc %p\n",
 			      tx_desc);
-		STAILQ_REMOVE(&conn->qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
-		STAILQ_INSERT_TAIL(&conn->qp_pending_desc, tx_desc, link);
+		STAILQ_REMOVE(&conn->rdma.qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.qp_pending_desc, tx_desc, link);
 		return 0;
 	}
-	conn->pending_rdma_read_count++;
+	conn->rdma.pending_rdma_read_count++;
 
 	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
 			      IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
@@ -546,10 +546,10 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMf fabric connection initialized\n");
 
-	STAILQ_INIT(&conn->qp_pending_desc);
-	STAILQ_INIT(&conn->qp_rx_desc);
-	STAILQ_INIT(&conn->qp_tx_desc);
-	STAILQ_INIT(&conn->qp_tx_active_desc);
+	STAILQ_INIT(&conn->rdma.qp_pending_desc);
+	STAILQ_INIT(&conn->rdma.qp_rx_desc);
+	STAILQ_INIT(&conn->rdma.qp_tx_desc);
+	STAILQ_INIT(&conn->rdma.qp_tx_active_desc);
 
 	/* Allocate AQ QP RX Buffers */
 	rc = alloc_qp_rx_desc(conn);
@@ -568,7 +568,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Tx buffers allocated\n");
 
 	/* Post all the RX descriptors */
-	STAILQ_FOREACH(rx_desc, &conn->qp_rx_desc, link) {
+	STAILQ_FOREACH(rx_desc, &conn->rdma.qp_rx_desc, link) {
 		if (nvmf_post_rdma_recv(conn, rx_desc)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
 			goto err2;
@@ -942,7 +942,7 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 		rx_desc->bb_sgl.length = rx_desc->bb_len;
 		rx_desc->bb_sgl.lkey = rx_desc->bb_mr->lkey;
 
-		STAILQ_INSERT_TAIL(&conn->qp_rx_desc, rx_desc, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.qp_rx_desc, rx_desc, link);
 	}
 
 	return 0;
@@ -975,8 +975,8 @@ fail:
 		rte_mempool_put(g_nvmf_tgt.rx_desc_pool, (void *)rx_desc);
 	}
 
-	STAILQ_FOREACH(tmp, &conn->qp_rx_desc, link) {
-		STAILQ_REMOVE(&conn->qp_rx_desc, tmp, nvme_qp_rx_desc, link);
+	STAILQ_FOREACH(tmp, &conn->rdma.qp_rx_desc, link) {
+		STAILQ_REMOVE(&conn->rdma.qp_rx_desc, tmp, nvme_qp_rx_desc, link);
 
 		rc = rdma_dereg_mr(tmp->bb_mr);
 		if (rc) {
@@ -1038,7 +1038,7 @@ alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
 			      tx_desc, &tx_desc->req_state,
 			      tx_desc->req_state.rsp);
 
-		STAILQ_INSERT_TAIL(&conn->qp_tx_desc, tx_desc, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, tx_desc, link);
 	}
 
 	return 0;
@@ -1056,8 +1056,8 @@ fail:
 		rte_mempool_put(g_nvmf_tgt.tx_desc_pool, (void *)tx_desc);
 	}
 
-	STAILQ_FOREACH(tmp, &conn->qp_tx_desc, link) {
-		STAILQ_REMOVE(&conn->qp_tx_desc, tmp, nvme_qp_tx_desc, link);
+	STAILQ_FOREACH(tmp, &conn->rdma.qp_tx_desc, link) {
+		STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tmp, nvme_qp_tx_desc, link);
 
 		rc = rdma_dereg_mr(tmp->msg_buf_mr);
 		if (rc) {
