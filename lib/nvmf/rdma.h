@@ -95,4 +95,7 @@ void nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn);
 int nvmf_acceptor_start(void);
 void nvmf_acceptor_stop(void);
 
+void nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc);
+void nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc);
+
 #endif /* _NVMF_RDMA_H_ */

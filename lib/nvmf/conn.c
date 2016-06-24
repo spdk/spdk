@@ -74,32 +74,6 @@ static struct rte_timer g_shutdown_timer;
 static int nvmf_allocate_reactor(uint64_t cpumask);
 static void spdk_nvmf_conn_do_work(void *arg);
 
-static void
-nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc)
-{
-	struct spdk_nvmf_conn *conn;
-
-	RTE_VERIFY(tx_desc != NULL);
-	conn = tx_desc->conn;
-	RTE_VERIFY(conn != NULL);
-
-	STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tx_desc, nvme_qp_tx_desc, link);
-	STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_active_desc, tx_desc, link);
-}
-
-void
-nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc)
-{
-	struct spdk_nvmf_conn *conn;
-
-	RTE_VERIFY(tx_desc != NULL);
-	conn = tx_desc->conn;
-	RTE_VERIFY(tx_desc->conn != NULL);
-
-	STAILQ_REMOVE(&conn->rdma.qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
-	STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, tx_desc, link);
-}
-
 static struct spdk_nvmf_conn *
 allocate_conn(void)
 {
