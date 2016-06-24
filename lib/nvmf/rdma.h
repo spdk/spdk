@@ -80,7 +80,7 @@ struct nvme_qp_tx_desc {
 };
 
 int nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
-			struct nvme_qp_tx_desc *tx_desc);
+			struct nvmf_request *req);
 int nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 			 struct nvme_qp_tx_desc *tx_desc);
 int nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,

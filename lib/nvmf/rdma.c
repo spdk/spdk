@@ -286,11 +286,12 @@ nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 
 int
 nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
-		    struct nvme_qp_tx_desc *tx_desc)
+		    struct nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvme_qp_rx_desc *rx_desc = tx_desc->req_state.rx_desc;
-	struct nvmf_request *req = &tx_desc->req_state;
+	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
+	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
+
 	int rc;
 
 	if (rx_desc == NULL) {
@@ -1090,7 +1091,7 @@ nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: tx_desc %p\n",
 			      tx_desc);
 
-		rc = nvmf_post_rdma_read(conn, tx_desc);
+		rc = nvmf_post_rdma_read(conn, &tx_desc->req_state);
 		if (rc) {
 			SPDK_ERRLOG("Unable to post pending rdma read descriptor\n");
 			return -1;

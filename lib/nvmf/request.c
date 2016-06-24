@@ -738,7 +738,7 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req,
 		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issuing RDMA Read to get host data\n");
-				ret = nvmf_post_rdma_read(conn, tx_desc);
+				ret = nvmf_post_rdma_read(conn, req);
 				if (ret) {
 					SPDK_ERRLOG("Unable to post rdma read tx descriptor\n");
 					return -1;
