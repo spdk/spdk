@@ -428,10 +428,10 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 {
 	struct nvme_qp_rx_desc *rx_desc;
-	struct nvme_qp_tx_desc *tx_desc = NULL;
+	struct nvme_qp_tx_desc *tx_desc;
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
 	struct nvmf_request *req;
-	int ret = 0;
+	int ret;
 
 	rx_desc = (struct nvme_qp_rx_desc *)wc->wr_id;
 	cap_hdr = &rx_desc->cmd.nvmf_cmd;
@@ -462,26 +462,26 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 			   remote host to query failure
 			   via admin queue
 			 */
-			goto drop_recv;
+			return 0;
 		} else {
 			/* if overflow on the admin queue
 			   there is no recovery, error out
 			   to trigger disconnect
 			 */
-			goto recv_error;
+			return -1;
 		}
 	}
 
 	if (wc->byte_len < sizeof(*cap_hdr)) {
 		SPDK_ERRLOG("recv length less than capsule header\n");
-		goto recv_error;
+		return -1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv byte count 0x%x\n", wc->byte_len);
 
 	/* get a response buffer */
 	if (STAILQ_EMPTY(&conn->rdma.qp_tx_desc)) {
 		SPDK_ERRLOG("tx desc pool empty!\n");
-		goto recv_error;
+		return -1;
 	}
 	tx_desc = STAILQ_FIRST(&conn->rdma.qp_tx_desc);
 	nvmf_active_tx_desc(tx_desc);
@@ -500,27 +500,26 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 					  rx_desc->bb, rx_desc->bb_sgl.length);
 	if (ret < 0) {
 		SPDK_ERRLOG("prep_data failed\n");
-		goto recv_error;
-	}
-
-	if (ret == 0) {
+	} else if (ret == 0) {
 		/* Data is available now; execute command immediately. */
 		ret = spdk_nvmf_request_exec(req);
 		if (ret < 0) {
 			SPDK_ERRLOG("Command execution failed\n");
-			goto recv_error;
 		}
+	} else if (ret > 0) {
+		/*
+		 * Pending transfer from host to controller; command will continue
+		 * once transfer is complete.
+		 */
+		ret = 0;
 	}
 
-drop_recv:
-	return 0;
-
-recv_error:
-	/* recover the tx_desc */
-	if (tx_desc != NULL) {
+	if (ret < 0) {
+		/* recover the tx_desc */
 		nvmf_deactive_tx_desc(tx_desc);
 	}
-	return -1;
+
+	return ret;
 }
 
 static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
