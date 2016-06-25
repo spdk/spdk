@@ -128,7 +128,7 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	 * completions.  Three times the target connection SQ depth should be more
 	 * than enough.
 	 */
-	conn->rdma.cq = ibv_create_cq(verbs, (conn->sq_depth * 3), conn, conn->rdma.comp_channel, 0);
+	conn->rdma.cq = ibv_create_cq(verbs, (conn->rdma.sq_depth * 3), conn, conn->rdma.comp_channel, 0);
 	if (!conn->rdma.cq) {
 		SPDK_ERRLOG("create cq error!\n");
 		goto cq_error;
@@ -138,8 +138,8 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	attr.qp_type		= IBV_QPT_RC;
 	attr.send_cq		= conn->rdma.cq;
 	attr.recv_cq		= conn->rdma.cq;
-	attr.cap.max_send_wr	= conn->cq_depth;
-	attr.cap.max_recv_wr	= conn->sq_depth;
+	attr.cap.max_send_wr	= conn->rdma.cq_depth;
+	attr.cap.max_recv_wr	= conn->rdma.sq_depth;
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
@@ -303,7 +303,7 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	 * Queue the rdma read if it would exceed max outstanding
 	 * RDMA read limit.
 	 */
-	if (conn->rdma.pending_rdma_read_count == conn->initiator_depth) {
+	if (conn->rdma.pending_rdma_read_count == conn->rdma.initiator_depth) {
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Insert rdma read into pending queue: tx_desc %p\n",
 			      tx_desc);
 		STAILQ_REMOVE(&conn->rdma.qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
@@ -430,8 +430,8 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	   the SQ head counter opening up another
 	   RX recv slot.
 	*/
-	conn->sq_head < (conn->sq_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->sq_depth);
+	conn->sq_head < (conn->rdma.sq_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->rdma.sq_depth);
 
 	wr.wr_id = (uintptr_t)rx_desc;
 	wr.next = NULL;
@@ -531,8 +531,8 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	/* check for private data */
 	if (event->param.conn.private_data_len < sizeof(union spdk_nvmf_rdma_private_data)) {
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "No private nvmf connection setup data\n");
-		conn->sq_depth		= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH; /* assume max default */
-		conn->cq_depth		= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH; /* assume max default */
+		conn->rdma.sq_depth	= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH; /* assume max default */
+		conn->rdma.cq_depth	= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH; /* assume max default */
 	} else {
 		pdata = event->param.conn.private_data;
 		if (pdata == NULL) {
@@ -542,17 +542,17 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		}
 
 		/* Save private details for later validation and use */
-		conn->sq_depth		= pdata->pd_request.hsqsize;
-		conn->cq_depth		= pdata->pd_request.hrqsize;
+		conn->rdma.sq_depth	= pdata->pd_request.hsqsize;
+		conn->rdma.cq_depth	= pdata->pd_request.hrqsize;
 		conn->qid		= pdata->pd_request.qid;
 		/* double send queue size for R/W commands */
-		conn->cq_depth *= 2;
+		conn->rdma.cq_depth *= 2;
 		if (conn->qid > 0) {
 			conn->type	= CONN_TYPE_IOQ;
 		}
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: QID %x\n", conn->qid);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: CQ Depth %x\n", conn->cq_depth);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: SQ Depth %x\n", conn->sq_depth);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: CQ Depth %x\n", conn->rdma.cq_depth);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: SQ Depth %x\n", conn->rdma.sq_depth);
 	}
 
 	/* adjust conn settings to device limits */
@@ -562,15 +562,15 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		goto err2;
 	}
 
-	if (conn->cq_depth > ibdev_attr.max_cqe) {
-		conn->cq_depth = ibdev_attr.max_cqe;
+	if (conn->rdma.cq_depth > ibdev_attr.max_cqe) {
+		conn->rdma.cq_depth = ibdev_attr.max_cqe;
 	}
-	if (conn->sq_depth > ibdev_attr.max_qp_wr) {
-		conn->sq_depth = ibdev_attr.max_qp_wr;
+	if (conn->rdma.sq_depth > ibdev_attr.max_qp_wr) {
+		conn->rdma.sq_depth = ibdev_attr.max_qp_wr;
 	}
-	conn->sq_depth = nvmf_min(conn->sq_depth, conn->cq_depth);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted CQ Depth %x\n", conn->cq_depth);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted SQ Depth %x\n", conn->sq_depth);
+	conn->rdma.sq_depth = nvmf_min(conn->rdma.sq_depth, conn->rdma.cq_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted CQ Depth %x\n", conn->rdma.cq_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted SQ Depth %x\n", conn->rdma.sq_depth);
 
 	if (conn_id->ps == RDMA_PS_TCP) {
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect flow control: %x\n", event->param.conn.flow_control);
@@ -584,16 +584,16 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect SRQ %x\n", event->param.conn.srq);
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect qp_num %x\n", event->param.conn.qp_num);
 
-		conn->responder_resources = nvmf_min(event->param.conn.responder_resources,
-						     ibdev_attr.max_qp_rd_atom);
-		conn->initiator_depth = nvmf_min(event->param.conn.initiator_depth,
-						 ibdev_attr.max_qp_init_rd_atom);
-		if (event->param.conn.responder_resources != conn->responder_resources ||
-		    event->param.conn.initiator_depth != conn->initiator_depth) {
+		conn->rdma.responder_resources = nvmf_min(event->param.conn.responder_resources,
+						 ibdev_attr.max_qp_rd_atom);
+		conn->rdma.initiator_depth = nvmf_min(event->param.conn.initiator_depth,
+						      ibdev_attr.max_qp_init_rd_atom);
+		if (event->param.conn.responder_resources != conn->rdma.responder_resources ||
+		    event->param.conn.initiator_depth != conn->rdma.initiator_depth) {
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted Responder Resources %x\n",
-				      conn->responder_resources);
+				      conn->rdma.responder_resources);
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted Initiator Depth %x\n",
-				      conn->initiator_depth);
+				      conn->rdma.initiator_depth);
 		}
 	}
 
@@ -643,14 +643,14 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 
 	param = &event->param.conn;
 	if (conn_id->ps == RDMA_PS_TCP) {
-		event->param.conn.responder_resources = conn->responder_resources;
-		event->param.conn.initiator_depth = conn->initiator_depth;
+		event->param.conn.responder_resources = conn->rdma.responder_resources;
+		event->param.conn.initiator_depth = conn->rdma.initiator_depth;
 	}
 	if (pdata != NULL) {
 		event->param.conn.private_data = &acc_rej_pdata;
 		event->param.conn.private_data_len = sizeof(acc_rej_pdata);
 		memset((uint8_t *)&acc_rej_pdata, 0, sizeof(acc_rej_pdata));
-		acc_rej_pdata.pd_accept.crqsize = conn->sq_depth;
+		acc_rej_pdata.pd_accept.crqsize = conn->rdma.sq_depth;
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept Private Data Length %x\n",
 			      param->private_data_len);
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept Private Data: recfmt %x\n",
@@ -941,7 +941,7 @@ alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
 	int				rc;
 
 	/* Allocate buffer for rx descriptors (RX WQE + Msg Buffer) */
-	for (i = 0; i < conn->sq_depth; i++) {
+	for (i = 0; i < conn->rdma.sq_depth; i++) {
 		rx_desc = rte_zmalloc("nvmf_rx_desc", sizeof(*rx_desc), 0);
 		if (!rx_desc) {
 			SPDK_ERRLOG("Unable to get rx desc object\n");
@@ -1049,7 +1049,7 @@ alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
 	int			rc;
 
 	/* Initialize the tx descriptors */
-	for (i = 0; i < conn->cq_depth; i++) {
+	for (i = 0; i < conn->rdma.cq_depth; i++) {
 		tx_desc = rte_zmalloc("nvmf_tx_desc", sizeof(*tx_desc), 0);
 		if (!tx_desc) {
 			SPDK_ERRLOG("Unable to get tx desc object\n");

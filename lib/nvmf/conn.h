@@ -63,10 +63,6 @@ struct spdk_nvmf_conn {
 	/*
 	 * values saved from fabric connect and private data
 	 */
-	uint8_t				responder_resources;
-	uint8_t				initiator_depth;
-	uint16_t			sq_depth;
-	uint16_t			cq_depth;
 	uint16_t			qid;
 	uint16_t			cntlid;
 

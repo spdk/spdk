@@ -399,7 +399,7 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 
 	conn->cntlid = response->status_code_specific.success.cntlid;
 	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
-	nvmf_init_session_properties(session, conn->sq_depth);
+	nvmf_init_session_properties(session, conn->rdma.sq_depth);
 
 	/* Update the session logical controller data with any
 	 * application fabric side limits
@@ -495,7 +495,7 @@ static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 	int cq_count = 0;
 	int i;
 
-	for (i = 0; i < conn->sq_depth; i++) {
+	for (i = 0; i < conn->rdma.sq_depth; i++) {
 		tx_desc = NULL;
 
 		rc = ibv_poll_cq(conn->rdma.cq, 1, &wc);
