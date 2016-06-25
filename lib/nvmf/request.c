@@ -163,106 +163,6 @@ nvmf_process_admin_cmd(struct nvmf_request *req)
 			rc = -1;
 		}
 		break;
-	case SPDK_NVME_OPC_DELETE_IO_SQ: {
-		uint16_t qid = cmd->cdw10 & 0xffff;
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Delete IO SQ, QID %x\n", qid);
-
-		if (qid >= MAX_SESSION_IO_QUEUES) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, " Exceeded Session QP Index Limit\n");
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			rc = -1;
-		} else if (session->qps[qid].sq_active == 0) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, " Session SQ QP Index %x was not active!\n", qid);
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			rc = -1;
-		} else {
-			session->qps[qid].sq_size = 0;
-			session->qps[qid].sq_active = 0;
-			if (session->qps[qid].cq_active)
-				session->active_queues--;
-			rc = 1;
-		}
-	}
-	break;
-	case SPDK_NVME_OPC_DELETE_IO_CQ: {
-		uint16_t qid = cmd->cdw10 & 0xffff;
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Delete IO CQ, QID %x\n", qid);
-
-		if (qid >= MAX_SESSION_IO_QUEUES) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, " Exceeded Session QP Index Limit\n");
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			rc = -1;
-		} else if (session->qps[qid].cq_active == 0) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, " Session CQ QP Index %x was not active!\n", qid);
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			rc = -1;
-		} else {
-			session->qps[qid].cq_size = 0;
-			session->qps[qid].cq_active = 0;
-			if (session->qps[qid].sq_active)
-				session->active_queues--;
-			rc = 1;
-		}
-	}
-	break;
-	case SPDK_NVME_OPC_CREATE_IO_SQ:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Create IO SQ\n");
-		/* queues have already been initialized for this session.
-		   so for now save details in the session for which QPs
-		   the remote host attempts to enable.
-		*/
-		{
-			uint16_t qid = cmd->cdw10 & 0xffff;
-			uint16_t qsize = cmd->cdw10 >> 16;
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	QID %x, Queue Size %x, CDW11 %x\n",
-				      qid, qsize, cmd->cdw11);
-
-			if (qid >= MAX_SESSION_IO_QUEUES) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, " Exceeded Session QP Index Limit\n");
-				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-				rc = -1;
-			} else if (session->qps[qid].sq_active > 0) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, " Session SQ QP Index %x Already active!\n", qid);
-				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-				rc = -1;
-			} else {
-				session->qps[qid].sq_size = qsize;
-				session->qps[qid].sq_active = 1;
-				if (session->qps[qid].cq_active)
-					session->active_queues++;
-				rc = 1;
-			}
-		}
-		break;
-	case SPDK_NVME_OPC_CREATE_IO_CQ:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Create IO CQ\n");
-		/* queues have already been initialized for this session.
-		   so for now save details in the session for which QPs
-		   the remote host attempts to enable.
-		*/
-		{
-			uint16_t qid = cmd->cdw10 & 0xffff;
-			uint16_t qsize = cmd->cdw10 >> 16;
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	QID %x, Queue Size %x, CDW11 %x\n",
-				      qid, qsize, cmd->cdw11);
-
-			if (qid >= MAX_SESSION_IO_QUEUES) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, " Exceeded Session QP Index Limit\n");
-				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-				rc = -1;
-			} else if (session->qps[qid].cq_active > 0) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, " Session CQ QP Index %x Already active!\n", qid);
-				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-				rc = -1;
-			} else {
-				session->qps[qid].cq_size = qsize;
-				session->qps[qid].cq_active = 1;
-				if (session->qps[qid].sq_active)
-					session->active_queues++;
-				rc = 1;
-			}
-		}
-		break;
 	case SPDK_NVME_OPC_GET_FEATURES:
 		feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 		switch (feature) {
@@ -329,6 +229,16 @@ nvmf_process_admin_cmd(struct nvmf_request *req)
 		//session->keep_alive_timestamp = ;
 		rc = 1; /* immediate completion */
 		break;
+
+	case SPDK_NVME_OPC_CREATE_IO_SQ:
+	case SPDK_NVME_OPC_CREATE_IO_CQ:
+	case SPDK_NVME_OPC_DELETE_IO_SQ:
+	case SPDK_NVME_OPC_DELETE_IO_CQ:
+		SPDK_ERRLOG("Admin opc 0x%02X not allowed in NVMf\n", cmd->opc);
+		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		rc = -1;
+		break;
+
 	default:
 passthrough:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "RAW Passthrough: Admin Opcode %x for ctrlr %p\n",

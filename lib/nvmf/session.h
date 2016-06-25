@@ -56,13 +56,6 @@ struct nvmf_connection_entry {
 /* define a virtual controller limit to the number of QPs supported */
 #define MAX_SESSION_IO_QUEUES 64
 
-struct nvmf_io_queue {
-	uint16_t	sq_size;
-	uint16_t	sq_active;
-	uint16_t	cq_size;
-	uint16_t	cq_active;
-};
-
 struct nvmf_vc_features {
 	uint32_t	arb;	/* arbitration */
 	uint32_t	pm;	/* power management */
@@ -92,7 +85,6 @@ struct nvmf_session {
 
 	uint16_t	cntlid;
 	uint32_t	max_io_queues; /* maximum supported by backend NVMe library */
-	struct nvmf_io_queue	qps[MAX_SESSION_IO_QUEUES];
 	int		active_queues;
 	int		is_valid;
 	struct spdk_nvmf_ctrlr_properties	vcprop;	/* virtual controller properties */
