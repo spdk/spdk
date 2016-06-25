@@ -513,20 +513,6 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 			SPDK_ERRLOG("Command execution failed\n");
 			goto recv_error;
 		}
-
-		if (ret == 1) {
-			/*
-			 * Immediate completion.
-			 * Re-post rx_desc and re-queue tx_desc here,
-			 * there is not a delayed posting because of
-			 * command processing.
-			 */
-			nvmf_deactive_tx_desc(tx_desc);
-			if (nvmf_post_rdma_recv(conn, rx_desc)) {
-				SPDK_ERRLOG("Unable to re-post aq rx descriptor\n");
-				return -1;
-			}
-		}
 	}
 
 drop_recv:

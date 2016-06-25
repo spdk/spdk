@@ -150,13 +150,13 @@ nvmf_process_admin_cmd(struct nvmf_request *req)
 			}
 			nsdata = spdk_nvme_ns_get_data(ns);
 			memcpy(req->data, (char *)nsdata, sizeof(struct spdk_nvme_ns_data));
-			spdk_nvmf_request_complete(req);
+			rc = 1;
 		} else if (cmd->cdw10 == 1) {
 			/* identify controller */
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
 			/* pull from virtual controller context */
 			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
-			spdk_nvmf_request_complete(req);
+			rc = 1;
 		} else {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace List\n");
 			response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
@@ -538,7 +538,8 @@ nvmf_process_fabrics_command(struct nvmf_request *req)
 	default:
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "recv capsule header type invalid [%x]!\n",
 			      cap_hdr->fctype);
-		return 1; /* skip, do nothing */
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		return spdk_nvmf_request_complete(req);
 	}
 }
 
