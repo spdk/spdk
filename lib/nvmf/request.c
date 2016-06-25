@@ -553,6 +553,10 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req,
 	enum spdk_nvme_data_transfer xfer;
 	int ret;
 
+	req->length = 0;
+	req->xfer = SPDK_NVME_DATA_NONE;
+	req->data = NULL;
+
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd->nvmf_cmd.fctype);
 	} else {

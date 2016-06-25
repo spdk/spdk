@@ -490,9 +490,6 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	req->conn = conn;
 	req->tx_desc = tx_desc;
 	req->rx_desc = rx_desc;
-	req->length = 0;
-	req->xfer = SPDK_NVME_DATA_NONE;
-	req->data = NULL;
 	req->cid = cap_hdr->cid;
 	req->cmd = &rx_desc->cmd;
 
