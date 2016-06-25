@@ -177,7 +177,7 @@ spdk_nvmf_allocate_conn(void)
 	conn->sess = NULL;
 
 	conn->state = CONN_STATE_INVALID;
-	conn->sq_head = conn->sq_tail = 0;
+	conn->sq_head = 0;
 
 	return conn;
 
@@ -436,42 +436,6 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	rx_desc = (struct nvme_qp_rx_desc *)wc->wr_id;
 	cap_hdr = &rx_desc->cmd.nvmf_cmd;
 
-	/* Update Connection SQ Tracking, increment
-	   the SQ tail consuming a free RX recv slot.
-	   Check for exceeding queue full - should
-	   never happen.
-	*/
-	conn->sq_tail < (conn->sq_depth - 1) ? (conn->sq_tail++) : (conn->sq_tail = 0);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_tail %x, sq_depth %x\n",
-		      conn->sq_head, conn->sq_tail, conn->sq_depth);
-	/* trap if initiator exceeds qdepth */
-	if (conn->sq_head == conn->sq_tail) {
-		SPDK_ERRLOG("	*** SQ Overflow !! ***\n");
-		/* controller fatal status condition:
-		   set the cfs flag in controller status
-		   and stop processing this and any I/O
-		   on this queue.
-		*/
-		if (conn->sess) {
-			conn->sess->vcprop.csts.bits.cfs = 1;
-			conn->state = CONN_STATE_OVERFLOW;
-		}
-		if (conn->type == CONN_TYPE_IOQ) {
-			/* if overflow on the I/O queue
-			   stop processing, allow for
-			   remote host to query failure
-			   via admin queue
-			 */
-			return 0;
-		} else {
-			/* if overflow on the admin queue
-			   there is no recovery, error out
-			   to trigger disconnect
-			 */
-			return -1;
-		}
-	}
-
 	if (wc->byte_len < sizeof(*cap_hdr)) {
 		SPDK_ERRLOG("recv length less than capsule header\n");
 		return -1;
@@ -533,13 +497,6 @@ static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 
 	for (i = 0; i < conn->sq_depth; i++) {
 		tx_desc = NULL;
-
-		/* if an overflow condition was hit
-		   we want to stop all processing, but
-		   do not disconnect.
-		 */
-		if (conn->state == CONN_STATE_OVERFLOW)
-			break;
 
 		rc = ibv_poll_cq(conn->rdma.cq, 1, &wc);
 		if (rc == 0) // No completions at this time

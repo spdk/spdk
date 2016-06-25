@@ -46,7 +46,6 @@ enum conn_state {
 	CONN_STATE_INVALID = 0,
 	CONN_STATE_RUNNING = 1,
 	CONN_STATE_FABRIC_DISCONNECT = 2,
-	CONN_STATE_OVERFLOW = 3,
 	CONN_STATE_EXITING = 4,
 };
 
@@ -75,7 +74,6 @@ struct spdk_nvmf_conn {
 	volatile enum conn_state	state;
 
 	uint16_t			sq_head;
-	uint16_t			sq_tail;
 
 	struct spdk_nvmf_rdma_conn	rdma;
 
