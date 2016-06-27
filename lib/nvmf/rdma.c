@@ -1176,21 +1176,17 @@ nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 		ret = spdk_nvmf_request_exec(req);
 		if (ret < 0) {
 			SPDK_ERRLOG("Command execution failed\n");
+			return -1;
 		}
-	} else if (ret > 0) {
-		/*
-		 * Pending transfer from host to controller; command will continue
-		 * once transfer is complete.
-		 */
-		ret = 0;
+
+		return 0;
 	}
 
-	if (ret < 0) {
-		/* recover the tx_desc */
-		nvmf_deactive_tx_desc(tx_desc);
-	}
-
-	return ret;
+	/*
+	 * Pending transfer from host to controller; command will continue
+	 * once transfer is complete.
+	 */
+	return 0;
 }
 
 int
