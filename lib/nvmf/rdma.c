@@ -73,7 +73,7 @@ struct spdk_nvmf_rdma {
 
 static struct spdk_nvmf_rdma g_rdma = { };
 
-void
+static void
 nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc)
 {
 	struct spdk_nvmf_conn *conn;
@@ -86,7 +86,7 @@ nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc)
 	STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_active_desc, tx_desc, link);
 }
 
-void
+static void
 nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc)
 {
 	struct spdk_nvmf_conn *conn;
@@ -355,6 +355,43 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 }
 
 static int
+nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
+		    struct nvme_qp_rx_desc *rx_desc)
+{
+	struct ibv_recv_wr wr, *bad_wr = NULL;
+	int rc;
+
+	/* Update Connection SQ Tracking, increment
+	   the SQ head counter opening up another
+	   RX recv slot.
+	*/
+	conn->sq_head < (conn->rdma.sq_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->rdma.sq_depth);
+
+	wr.wr_id = (uintptr_t)rx_desc;
+	wr.next = NULL;
+	wr.sg_list = &rx_desc->recv_sgl;
+	wr.num_sge = 1;
+
+	nvmf_trace_ibv_sge(&rx_desc->recv_sgl);
+
+	/* for I/O queues we add bb sgl for in-capsule data use */
+	if (conn->type == CONN_TYPE_IOQ) {
+		wr.num_sge = 2;
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 local addr %p\n",
+			      (void *)rx_desc->bb_sgl.addr);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 length %x\n", rx_desc->bb_sgl.length);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 lkey %x\n", rx_desc->bb_sgl.lkey);
+	}
+
+	rc = ibv_post_recv(conn->rdma.qp, &wr, &bad_wr);
+	if (rc) {
+		SPDK_ERRLOG("Failure posting rdma recv, rc = 0x%x\n", rc);
+	}
+	return (rc);
+}
+
+static int
 nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 		    struct spdk_nvmf_request *req)
 {
@@ -417,43 +454,6 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_re
 command_fail:
 	nvmf_deactive_tx_desc(tx_desc);
 	return -1;
-}
-
-int
-nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
-		    struct nvme_qp_rx_desc *rx_desc)
-{
-	struct ibv_recv_wr wr, *bad_wr = NULL;
-	int rc;
-
-	/* Update Connection SQ Tracking, increment
-	   the SQ head counter opening up another
-	   RX recv slot.
-	*/
-	conn->sq_head < (conn->rdma.sq_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->rdma.sq_depth);
-
-	wr.wr_id = (uintptr_t)rx_desc;
-	wr.next = NULL;
-	wr.sg_list = &rx_desc->recv_sgl;
-	wr.num_sge = 1;
-
-	nvmf_trace_ibv_sge(&rx_desc->recv_sgl);
-
-	/* for I/O queues we add bb sgl for in-capsule data use */
-	if (conn->type == CONN_TYPE_IOQ) {
-		wr.num_sge = 2;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 local addr %p\n",
-			      (void *)rx_desc->bb_sgl.addr);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 length %x\n", rx_desc->bb_sgl.length);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 lkey %x\n", rx_desc->bb_sgl.lkey);
-	}
-
-	rc = ibv_post_recv(conn->rdma.qp, &wr, &bad_wr);
-	if (rc) {
-		SPDK_ERRLOG("Failure posting rdma recv, rc = 0x%x\n", rc);
-	}
-	return (rc);
 }
 
 static int
@@ -1107,7 +1107,7 @@ fail:
 	return -ENOMEM;
 }
 
-int
+static int
 nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
 {
 	struct nvme_qp_tx_desc *tx_desc;

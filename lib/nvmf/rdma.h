@@ -86,19 +86,13 @@ struct nvme_qp_tx_desc {
 
 int nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 			struct spdk_nvmf_request *req);
-int nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
-			struct nvme_qp_rx_desc *rx_desc);
 int spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn,
 				    struct spdk_nvmf_request *req);
-int nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn);
 int nvmf_rdma_init(void);
 void nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn);
 
 int nvmf_acceptor_start(void);
 void nvmf_acceptor_stop(void);
-
-void nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc);
-void nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc);
 
 int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn);
 

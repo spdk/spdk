@@ -91,7 +91,4 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 
 int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);
 
-void
-nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc);
-
 #endif /* NVMF_CONN_H */
