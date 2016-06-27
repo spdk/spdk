@@ -42,7 +42,6 @@
 #include "rte_mempool.h"
 #include "rte_malloc.h"
 #include "rte_eal.h"
-#include "rte_memcpy.h"
 
 #include "spdk/nvme.h"
 #include "spdk/pci.h"

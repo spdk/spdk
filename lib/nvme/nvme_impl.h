@@ -54,7 +54,6 @@
 #include <rte_cycles.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
-#include <rte_memcpy.h>
 
 #ifdef USE_PCIACCESS
 #include <pciaccess.h>
@@ -326,10 +325,5 @@ nvme_mutex_init_recursive(nvme_mutex_t *mtx)
 	pthread_mutexattr_destroy(&attr);
 	return rc;
 }
-
-/**
- * Copy a struct nvme_command from one memory location to another.
- */
-#define nvme_copy_command(dst, src)	rte_memcpy((dst), (src), sizeof(struct spdk_nvme_cmd))
 
 #endif /* __NVME_IMPL_H__ */
