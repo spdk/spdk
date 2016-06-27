@@ -1138,14 +1138,12 @@ nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 {
 	struct nvme_qp_rx_desc *rx_desc;
 	struct nvme_qp_tx_desc *tx_desc;
-	struct spdk_nvmf_capsule_cmd *cap_hdr;
 	struct spdk_nvmf_request *req;
 	int ret;
 
 	rx_desc = (struct nvme_qp_rx_desc *)wc->wr_id;
-	cap_hdr = &rx_desc->cmd.nvmf_cmd;
 
-	if (wc->byte_len < sizeof(*cap_hdr)) {
+	if (wc->byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
 		SPDK_ERRLOG("recv length less than capsule header\n");
 		return -1;
 	}
@@ -1163,11 +1161,10 @@ nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	req->conn = conn;
 	req->tx_desc = tx_desc;
 	req->rx_desc = rx_desc;
-	req->cid = cap_hdr->cid;
 	req->cmd = &rx_desc->cmd;
 
 	ret = spdk_nvmf_request_prep_data(req,
-					  rx_desc->bb, wc->byte_len - sizeof(*cap_hdr),
+					  rx_desc->bb, wc->byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
 					  rx_desc->bb, rx_desc->bb_sgl.length);
 	if (ret < 0) {
 		SPDK_ERRLOG("prep_data failed\n");

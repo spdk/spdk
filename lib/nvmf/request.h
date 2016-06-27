@@ -61,7 +61,6 @@ struct spdk_nvmf_request {
 	struct spdk_nvmf_conn		*conn;
 	struct nvme_qp_tx_desc		*tx_desc;
 	struct nvme_qp_rx_desc		*rx_desc;
-	uint16_t			cid;		/* command identifier */
 	uint64_t			remote_addr;
 	uint32_t			rkey;
 	uint32_t			length;

@@ -57,7 +57,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	response->sqid = 0;
 	response->status.p = 0;
 	response->sqhd = req->conn->sq_head;
-	response->cid = req->cid;
+	response->cid = req->cmd->nvme_cmd.cid;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF,
 		      "cpl: cdw0=0x%x rsvd1=0x%x sqhd=0x%x sqid=0x%x cid=0x%x status=0x%x\n",
