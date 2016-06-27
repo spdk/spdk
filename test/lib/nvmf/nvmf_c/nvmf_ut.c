@@ -117,7 +117,7 @@ struct spdk_nvmf_host *spdk_nvmf_host_find_by_tag(int tag)
 }
 
 int
-spdk_nvmf_request_complete(struct nvmf_request *req)
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	return 0;
 }
@@ -517,7 +517,7 @@ nvmf_test_process_io_cmd(void)
 {
 	struct spdk_nvme_cmd nvmf_cmd = {};
 	struct nvmf_session *sess;
-	struct nvmf_request nvmf_req = {};
+	struct spdk_nvmf_request nvmf_req = {};
 	struct nvme_read_cdw12 *cdw12;
 	struct spdk_nvmf_subsystem *tmp;
 	uint8_t *buf;
@@ -571,7 +571,7 @@ nvmf_test_process_admin_cmd(void)
 {
 	struct spdk_nvme_cmd nvmf_cmd = {};
 	struct nvmf_session *sess;
-	struct nvmf_request nvmf_req = {};
+	struct spdk_nvmf_request nvmf_req = {};
 	struct spdk_nvmf_subsystem *subsystem;
 	int buf_len = sizeof(struct spdk_nvme_ns_data);
 

@@ -430,7 +430,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	struct nvme_qp_rx_desc *rx_desc;
 	struct nvme_qp_tx_desc *tx_desc;
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
-	struct nvmf_request *req;
+	struct spdk_nvmf_request *req;
 	int ret;
 
 	rx_desc = (struct nvme_qp_rx_desc *)wc->wr_id;
@@ -450,7 +450,7 @@ static int nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	tx_desc = STAILQ_FIRST(&conn->rdma.qp_tx_desc);
 	nvmf_active_tx_desc(tx_desc);
 
-	req = &tx_desc->req_state;
+	req = &tx_desc->req;
 	req->conn = conn;
 	req->tx_desc = tx_desc;
 	req->rx_desc = rx_desc;
@@ -490,7 +490,7 @@ static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 {
 	struct ibv_wc wc;
 	struct nvme_qp_tx_desc *tx_desc;
-	struct nvmf_request *req;
+	struct spdk_nvmf_request *req;
 	int rc;
 	int cq_count = 0;
 	int i;
@@ -531,14 +531,14 @@ static int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			 */
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma write completion\n");
 			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
-			req = &tx_desc->req_state;
+			req = &tx_desc->req;
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
 			break;
 
 		case IBV_WC_RDMA_READ:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma read completion\n");
 			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
-			req = &tx_desc->req_state;
+			req = &tx_desc->req;
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {

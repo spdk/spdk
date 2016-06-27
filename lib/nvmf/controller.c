@@ -77,15 +77,15 @@ spdk_nvmf_complete_ctrlr_aer(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nv
 
 			subsystem = g_whitelist[i].subsystem;
 			TAILQ_FOREACH(sess, &subsystem->sessions, entries) {
-				if (sess->aer_req_state == NULL) {
+				if (sess->aer_req == NULL) {
 					continue;
 				}
 
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Process session AER request, sess %p, req_state %p\n",
-					      sess, sess->aer_req_state);
-				nvmf_complete_cmd(sess->aer_req_state, cpl);
+				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Process session AER request, sess %p, req %p\n",
+					      sess, sess->aer_req);
+				nvmf_complete_cmd(sess->aer_req, cpl);
 				/* clear this AER from the session */
-				sess->aer_req_state = NULL;
+				sess->aer_req = NULL;
 			}
 		}
 	}

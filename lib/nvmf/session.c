@@ -329,18 +329,18 @@ nvmf_disconnect(void *fabric_conn,
 }
 
 void
-nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp)
+nvmf_complete_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
 {
-	struct nvmf_request *req_state = (struct nvmf_request *)rsp;
+	struct spdk_nvmf_request *req  = ctx;
 	struct spdk_nvme_cpl *response;
 
-	spdk_trace_record(TRACE_NVMF_LIB_COMPLETE, 0, 0, (uint64_t)req_state, 0);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_complete_cmd callback: req_state %p\n", req_state);
+	spdk_trace_record(TRACE_NVMF_LIB_COMPLETE, 0, 0, (uint64_t)req, 0);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_complete_cmd callback: req %p\n", req);
 
-	response = &req_state->rsp->nvme_cpl;
+	response = &req->rsp->nvme_cpl;
 	memcpy(response, cmp, sizeof(*cmp));
 
-	spdk_nvmf_request_complete(req_state);
+	spdk_nvmf_request_complete(req);
 }
 
 void

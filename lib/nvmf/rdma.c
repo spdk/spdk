@@ -255,7 +255,7 @@ nvmf_trace_ibv_sge(struct ibv_sge *sg_list)
 
 static void
 nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
-		      struct nvmf_request *req,
+		      struct spdk_nvmf_request *req,
 		      struct ibv_sge *sg_list,
 		      uint64_t wr_id,
 		      enum ibv_wr_opcode opcode,
@@ -286,7 +286,7 @@ nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 
 int
 nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
-		    struct nvmf_request *req)
+		    struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
@@ -328,7 +328,7 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 
 static int
 nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
-		     struct nvmf_request *req)
+		     struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
@@ -356,7 +356,7 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 
 static int
 nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
-		    struct nvmf_request *req)
+		    struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
@@ -377,7 +377,7 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	nvmf_ibv_send_wr_init(&wr, NULL, &tx_desc->send_sgl, (uint64_t)tx_desc,
 			      IBV_WR_SEND, IBV_SEND_SIGNALED);
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "tx_desc %p: req_state %p, rsp %p\n",
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "tx_desc %p: req %p, rsp %p\n",
 		      tx_desc, req, req->rsp);
 
 	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uint64_t)req, 0);
@@ -389,7 +389,7 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 }
 
 int
-spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct nvmf_request *req)
+spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_request *req)
 {
 	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
@@ -1070,10 +1070,10 @@ alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
 		tx_desc->send_sgl.lkey = tx_desc->rsp_mr->lkey;
 
 		/* init request state associated with each tx_desc */
-		tx_desc->req_state.rsp = &tx_desc->rsp;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "tx_desc %p: req_state %p, rsp %p\n",
-			      tx_desc, &tx_desc->req_state,
-			      tx_desc->req_state.rsp);
+		tx_desc->req.rsp = &tx_desc->rsp;
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "tx_desc %p: req %p, rsp %p\n",
+			      tx_desc, &tx_desc->req,
+			      tx_desc->req.rsp);
 
 		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, tx_desc, link);
 	}
@@ -1122,7 +1122,7 @@ nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: tx_desc %p\n",
 			      tx_desc);
 
-		rc = nvmf_post_rdma_read(conn, &tx_desc->req_state);
+		rc = nvmf_post_rdma_read(conn, &tx_desc->req);
 		if (rc) {
 			SPDK_ERRLOG("Unable to post pending rdma read descriptor\n");
 			return -1;

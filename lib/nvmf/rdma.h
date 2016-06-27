@@ -76,20 +76,20 @@ struct nvme_qp_rx_desc {
 };
 
 struct nvme_qp_tx_desc {
-	union nvmf_c2h_msg	rsp;
-	struct spdk_nvmf_conn	*conn;
-	struct nvmf_request	req_state;
-	struct ibv_mr		*rsp_mr;
-	struct ibv_sge		send_sgl;
+	union nvmf_c2h_msg		rsp;
+	struct spdk_nvmf_conn		*conn;
+	struct spdk_nvmf_request	req;
+	struct ibv_mr			*rsp_mr;
+	struct ibv_sge			send_sgl;
 	STAILQ_ENTRY(nvme_qp_tx_desc) link;
 };
 
 int nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
-			struct nvmf_request *req);
+			struct spdk_nvmf_request *req);
 int nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 			struct nvme_qp_rx_desc *rx_desc);
 int spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn,
-				    struct nvmf_request *req);
+				    struct spdk_nvmf_request *req);
 int nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn);
 int nvmf_rdma_init(void);
 void nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn);

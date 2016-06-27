@@ -57,7 +57,7 @@ SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 #define NVMF_H2C_MAX_MSG (sizeof(union nvmf_h2c_msg))
 #define NVMF_C2H_MAX_MSG (sizeof(union nvmf_c2h_msg))
 
-struct nvmf_request {
+struct spdk_nvmf_request {
 	struct spdk_nvmf_conn		*conn;
 	struct nvme_qp_tx_desc		*tx_desc;
 	struct nvme_qp_rx_desc		*rx_desc;
@@ -70,17 +70,17 @@ struct nvmf_request {
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 
-	TAILQ_ENTRY(nvmf_request) 	entries;
+	TAILQ_ENTRY(spdk_nvmf_request) 	entries;
 };
 
 int
-spdk_nvmf_request_prep_data(struct nvmf_request *req,
+spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			    void *in_cap_data, uint32_t in_cap_len,
 			    void *bb, uint32_t bb_len);
 
 int
-spdk_nvmf_request_exec(struct nvmf_request *req);
+spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 
-int spdk_nvmf_request_complete(struct nvmf_request *req);
+int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
 #endif

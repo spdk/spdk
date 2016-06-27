@@ -48,7 +48,7 @@
 #include "spdk/trace.h"
 
 int
-spdk_nvmf_request_complete(struct nvmf_request *req)
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -73,7 +73,7 @@ spdk_nvmf_request_complete(struct nvmf_request *req)
 }
 
 static int
-nvmf_process_admin_cmd(struct nvmf_request *req)
+nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 {
 	struct nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -207,8 +207,8 @@ nvmf_process_admin_cmd(struct nvmf_request *req)
 		  Trap request here and save in the session context
 		  until NVMe library indicates some event.
 		*/
-		if (session->aer_req_state == NULL) {
-			session->aer_req_state = req;
+		if (session->aer_req == NULL) {
+			session->aer_req = req;
 		} else {
 			/* AER already recorded, send error response */
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "AER already active!\n");
@@ -260,7 +260,7 @@ passthrough:
 }
 
 static int
-nvmf_process_admin_command(struct nvmf_request *req)
+nvmf_process_admin_command(struct spdk_nvmf_request *req)
 {
 	int	ret;
 
@@ -280,7 +280,7 @@ nvmf_process_admin_command(struct nvmf_request *req)
 }
 
 static int
-nvmf_process_io_cmd(struct nvmf_request *req)
+nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	struct nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -378,7 +378,7 @@ nvmf_process_io_cmd(struct nvmf_request *req)
 }
 
 static int
-nvmf_process_io_command(struct nvmf_request *req)
+nvmf_process_io_command(struct spdk_nvmf_request *req)
 {
 	int	ret;
 
@@ -399,7 +399,7 @@ nvmf_process_io_command(struct nvmf_request *req)
 }
 
 static int
-nvmf_process_property_get(struct nvmf_request *req)
+nvmf_process_property_get(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_get_rsp *response;
 	struct spdk_nvmf_fabric_prop_get_cmd *cmd;
@@ -422,7 +422,7 @@ nvmf_process_property_get(struct nvmf_request *req)
 }
 
 static int
-nvmf_process_property_set(struct nvmf_request *req)
+nvmf_process_property_set(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_set_rsp *response;
 	struct spdk_nvmf_fabric_prop_set_cmd *cmd;
@@ -453,7 +453,7 @@ nvmf_process_property_set(struct nvmf_request *req)
 }
 
 static int
-nvmf_process_connect(struct nvmf_request *req)
+nvmf_process_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_cmd *connect;
 	struct spdk_nvmf_fabric_connect_data *connect_data;
@@ -522,7 +522,7 @@ nvmf_process_connect(struct nvmf_request *req)
 }
 
 static int
-nvmf_process_fabrics_command(struct nvmf_request *req)
+nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
 
@@ -544,7 +544,7 @@ nvmf_process_fabrics_command(struct nvmf_request *req)
 }
 
 int
-spdk_nvmf_request_prep_data(struct nvmf_request *req,
+spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			    void *in_cap_data, uint32_t in_cap_len,
 			    void *bb, uint32_t bb_len)
 {
@@ -659,7 +659,7 @@ spdk_nvmf_request_prep_data(struct nvmf_request *req,
 }
 
 int
-spdk_nvmf_request_exec(struct nvmf_request *req)
+spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
