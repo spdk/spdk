@@ -47,7 +47,10 @@ struct spdk_pci_device;
 static inline void *
 nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 {
-	void *buf = calloc(1, size);
+	void *buf = NULL;
+	if (posix_memalign(&buf, align, size)) {
+		return NULL;
+	}
 	*phys_addr = (uint64_t)buf;
 	return buf;
 }
@@ -74,7 +77,9 @@ uint64_t nvme_vtophys(void *buf);
 #define nvme_alloc_request(bufp)	\
 do					\
 	{				\
-		*bufp = malloc(sizeof(struct nvme_request));	\
+		if (posix_memalign((void **)(bufp), 64, sizeof(struct nvme_request))) {	\
+			*(bufp) = NULL;	\
+		}			\
 	}				\
 	while (0)
 
