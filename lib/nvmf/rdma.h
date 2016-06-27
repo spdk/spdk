@@ -100,4 +100,6 @@ void nvmf_acceptor_stop(void);
 void nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc);
 void nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc);
 
+int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn);
+
 #endif /* _NVMF_RDMA_H_ */

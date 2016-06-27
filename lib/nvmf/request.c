@@ -543,6 +543,57 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 	}
 }
 
+static void
+nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
+{
+	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
+	struct spdk_nvme_cmd *cmd = &h2c_msg->nvme_cmd;
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+	uint8_t opc;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "NVMf %s%s Command:\n",
+		      conn_type == CONN_TYPE_AQ ? "Admin" : "I/O",
+		      cmd->opc == SPDK_NVME_OPC_FABRIC ? " Fabrics" : "");
+
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
+		opc = cap_hdr->fctype;
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  fctype 0x%02x\n", cap_hdr->fctype);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  cid 0x%x\n", cap_hdr->cid);
+	} else {
+		opc = cmd->opc;
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  opc 0x%02x\n", cmd->opc);
+		if (cmd->fuse) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  fuse %x\n", cmd->fuse);
+		}
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  psdt %u\n", cmd->psdt);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  cid 0x%x\n", cmd->cid);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  nsid %u\n", cmd->nsid);
+		if (cmd->mptr) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  mptr 0x%" PRIx64 "\n", cmd->mptr);
+		}
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  cdw10 0x%08x\n", cmd->cdw10);
+	}
+
+	if (spdk_nvme_opc_get_data_transfer(opc) != SPDK_NVME_DATA_NONE) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL type 0x%x\n", sgl->generic.type);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL subtype 0x%x\n", sgl->generic.subtype);
+		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL address 0x%lx\n",
+				      sgl->address);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL key 0x%x\n",
+				      sgl->keyed.key);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n",
+				      sgl->keyed.length);
+		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL %s 0x%" PRIx64 "\n",
+				      sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offset" : "address",
+				      sgl->address);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n", sgl->unkeyed.length);
+		}
+	}
+}
+
 int
 spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			    void *in_cap_data, uint32_t in_cap_len,
@@ -552,6 +603,8 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	enum spdk_nvme_data_transfer xfer;
 	int ret;
+
+	nvmf_trace_command(req->cmd, conn->type);
 
 	req->length = 0;
 	req->xfer = SPDK_NVME_DATA_NONE;

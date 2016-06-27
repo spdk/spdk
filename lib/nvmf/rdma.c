@@ -1132,4 +1132,156 @@ nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
 	return 0;
 }
 
+
+static int
+nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
+{
+	struct nvme_qp_rx_desc *rx_desc;
+	struct nvme_qp_tx_desc *tx_desc;
+	struct spdk_nvmf_capsule_cmd *cap_hdr;
+	struct spdk_nvmf_request *req;
+	int ret;
+
+	rx_desc = (struct nvme_qp_rx_desc *)wc->wr_id;
+	cap_hdr = &rx_desc->cmd.nvmf_cmd;
+
+	if (wc->byte_len < sizeof(*cap_hdr)) {
+		SPDK_ERRLOG("recv length less than capsule header\n");
+		return -1;
+	}
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv byte count 0x%x\n", wc->byte_len);
+
+	/* get a response buffer */
+	if (STAILQ_EMPTY(&conn->rdma.qp_tx_desc)) {
+		SPDK_ERRLOG("tx desc pool empty!\n");
+		return -1;
+	}
+	tx_desc = STAILQ_FIRST(&conn->rdma.qp_tx_desc);
+	nvmf_active_tx_desc(tx_desc);
+
+	req = &tx_desc->req;
+	req->conn = conn;
+	req->tx_desc = tx_desc;
+	req->rx_desc = rx_desc;
+	req->cid = cap_hdr->cid;
+	req->cmd = &rx_desc->cmd;
+
+	ret = spdk_nvmf_request_prep_data(req,
+					  rx_desc->bb, wc->byte_len - sizeof(*cap_hdr),
+					  rx_desc->bb, rx_desc->bb_sgl.length);
+	if (ret < 0) {
+		SPDK_ERRLOG("prep_data failed\n");
+	} else if (ret == 0) {
+		/* Data is available now; execute command immediately. */
+		ret = spdk_nvmf_request_exec(req);
+		if (ret < 0) {
+			SPDK_ERRLOG("Command execution failed\n");
+		}
+	} else if (ret > 0) {
+		/*
+		 * Pending transfer from host to controller; command will continue
+		 * once transfer is complete.
+		 */
+		ret = 0;
+	}
+
+	if (ret < 0) {
+		/* recover the tx_desc */
+		nvmf_deactive_tx_desc(tx_desc);
+	}
+
+	return ret;
+}
+
+int
+nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
+{
+	struct ibv_wc wc;
+	struct nvme_qp_tx_desc *tx_desc;
+	struct spdk_nvmf_request *req;
+	int rc;
+	int cq_count = 0;
+	int i;
+
+	for (i = 0; i < conn->rdma.sq_depth; i++) {
+		tx_desc = NULL;
+
+		rc = ibv_poll_cq(conn->rdma.cq, 1, &wc);
+		if (rc == 0) // No completions at this time
+			break;
+
+		if (rc < 0) {
+			SPDK_ERRLOG("Poll CQ error!(%d): %s\n",
+				    errno, strerror(errno));
+			goto handler_error;
+		}
+
+		/* OK, process the single successful cq event */
+		cq_count += rc;
+
+		if (wc.status) {
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ completion error status %d, exiting handler\n",
+				      wc.status);
+			break;
+		}
+
+		switch (wc.opcode) {
+		case IBV_WC_SEND:
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ send completion\n");
+			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
+			nvmf_deactive_tx_desc(tx_desc);
+			break;
+
+		case IBV_WC_RDMA_WRITE:
+			/*
+			 * Will get this event only if we set IBV_SEND_SIGNALED
+			 * flag in rdma_write, to trace rdma write latency
+			 */
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma write completion\n");
+			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
+			req = &tx_desc->req;
+			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
+			break;
+
+		case IBV_WC_RDMA_READ:
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma read completion\n");
+			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
+			req = &tx_desc->req;
+			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
+			rc = spdk_nvmf_request_exec(req);
+			if (rc) {
+				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
+				goto handler_error;
+			}
+
+			rc = nvmf_process_pending_rdma(conn);
+			if (rc) {
+				goto handler_error;
+			}
+			break;
+
+		case IBV_WC_RECV:
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ recv completion\n");
+			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, wc.wr_id, 0);
+			rc = nvmf_recv(conn, &wc);
+			if (rc) {
+				SPDK_ERRLOG("nvmf_recv processing failure\n");
+				goto handler_error;
+			}
+			break;
+
+		default:
+			SPDK_ERRLOG("Poll cq opcode type unknown!!!!! completion\n");
+			goto handler_error;
+		}
+	}
+	return cq_count;
+
+handler_error:
+	if (tx_desc != NULL)
+		nvmf_deactive_tx_desc(tx_desc);
+	SPDK_ERRLOG("handler error, exiting!\n");
+	return -1;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("rdma", SPDK_TRACE_RDMA)
