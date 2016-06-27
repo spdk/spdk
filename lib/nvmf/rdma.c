@@ -428,7 +428,6 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 int
 spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_request *req)
 {
-	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	int ret;
 
@@ -439,21 +438,17 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_re
 		ret = nvmf_post_rdma_write(conn, req);
 		if (ret) {
 			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
-			goto command_fail;
+			return -1;
 		}
 	}
 
 	ret = nvmf_post_rdma_send(conn, req);
 	if (ret) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
-		goto command_fail;
+		return -1;
 	}
 
 	return 0;
-
-command_fail:
-	nvmf_deactive_tx_desc(tx_desc);
-	return -1;
 }
 
 static int
@@ -1245,7 +1240,6 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
 				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
-				nvmf_deactive_tx_desc(tx_desc);
 				return -1;
 			}
 
