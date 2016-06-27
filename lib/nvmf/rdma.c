@@ -103,11 +103,10 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	}
 
 	/*
-	 * Size the CQ to handle Rx completions + Tx completions + rdma_read or write
-	 * completions.  Three times the target connection SQ depth should be more
-	 * than enough.
+	 * Size the CQ to handle completions for RECV, SEND, and either READ or WRITE.
 	 */
-	conn->rdma.cq = ibv_create_cq(verbs, (conn->rdma.sq_depth * 3), conn, conn->rdma.comp_channel, 0);
+	conn->rdma.cq = ibv_create_cq(verbs, (conn->rdma.queue_depth * 3), conn, conn->rdma.comp_channel,
+				      0);
 	if (!conn->rdma.cq) {
 		SPDK_ERRLOG("create cq error!\n");
 		goto cq_error;
@@ -117,8 +116,8 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	attr.qp_type		= IBV_QPT_RC;
 	attr.send_cq		= conn->rdma.cq;
 	attr.recv_cq		= conn->rdma.cq;
-	attr.cap.max_send_wr	= conn->rdma.cq_depth;
-	attr.cap.max_recv_wr	= conn->rdma.sq_depth;
+	attr.cap.max_send_wr	= conn->rdma.queue_depth * 2; /* SEND, READ, and WRITE operations */
+	attr.cap.max_recv_wr	= conn->rdma.queue_depth; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
@@ -261,7 +260,7 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	 * Queue the rdma read if it would exceed max outstanding
 	 * RDMA read limit.
 	 */
-	if (conn->rdma.pending_rdma_read_count == conn->rdma.initiator_depth) {
+	if (conn->rdma.pending_rdma_read_count == conn->rdma.queue_depth) {
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Insert rdma read into pending queue: rdma_req %p\n",
 			      rdma_req);
 		STAILQ_REMOVE(&conn->rdma.rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
@@ -317,8 +316,8 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	   the SQ head counter opening up another
 	   RX recv slot.
 	*/
-	conn->sq_head < (conn->rdma.sq_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->rdma.sq_depth);
+	conn->sq_head < (conn->rdma.queue_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->rdma.queue_depth);
 
 	wr.wr_id = (uintptr_t)rdma_req;
 	wr.next = NULL;
@@ -403,7 +402,7 @@ alloc_rdma_reqs(struct spdk_nvmf_conn *conn)
 	struct spdk_nvmf_rdma_request *rdma_req;
 	int i;
 
-	for (i = 0; i < conn->rdma.sq_depth; i++) {
+	for (i = 0; i < conn->rdma.queue_depth; i++) {
 		rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
 		if (!rdma_req) {
 			SPDK_ERRLOG("Unable to get rdma_req\n");
@@ -500,12 +499,12 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
 	struct sockaddr_in		*addr;
-	struct rdma_conn_param		*param = NULL;
-	const union spdk_nvmf_rdma_private_data	*pdata = NULL;
-	union spdk_nvmf_rdma_private_data	acc_rej_pdata;
+	struct rdma_conn_param		*host_event_data = NULL;
+	struct rdma_conn_param		ctrlr_event_data;
+	struct spdk_nvmf_rdma_accept_private_data accept_data;
 	uint16_t			sts = 0;
 	char addr_str[INET_ADDRSTRLEN];
-	int 		rc;
+	int 				rc, qp_depth, rw_depth;
 
 
 	/* Check to make sure we know about this rdma device */
@@ -532,7 +531,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		goto err1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Found existing RDMA Device %p\n", fabric_intf);
-
 
 	/* validate remote address is within a provisioned initiator group */
 	addr = (struct sockaddr_in *)rdma_get_peer_addr(conn_id);
@@ -562,79 +560,35 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	conn->rdma.cm_id = conn_id;
 	conn_id->context = conn;
 
-	/* check for private data */
-	if (event->param.conn.private_data_len < sizeof(union spdk_nvmf_rdma_private_data)) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "No private nvmf connection setup data\n");
-		conn->rdma.sq_depth	= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH; /* assume max default */
-		conn->rdma.cq_depth	= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH; /* assume max default */
-	} else {
-		pdata = event->param.conn.private_data;
-		if (pdata == NULL) {
-			SPDK_ERRLOG("Invalid private nvmf connection setup data pointer\n");
-			sts = SPDK_NVMF_RDMA_ERROR_INVALID_RECFMT;
-			goto err2;
-		}
-
-		/* Save private details for later validation and use */
-		conn->rdma.sq_depth	= pdata->pd_request.hsqsize;
-		conn->rdma.cq_depth	= pdata->pd_request.hrqsize;
-		conn->qid		= pdata->pd_request.qid;
-		/* double send queue size for R/W commands */
-		conn->rdma.cq_depth *= 2;
-		if (conn->qid > 0) {
-			conn->type	= CONN_TYPE_IOQ;
-		}
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: QID %x\n", conn->qid);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: CQ Depth %x\n", conn->rdma.cq_depth);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Private Data: SQ Depth %x\n", conn->rdma.sq_depth);
-	}
-
-	/* adjust conn settings to device limits */
 	rc = ibv_query_device(conn_id->verbs, &ibdev_attr);
 	if (rc) {
 		SPDK_ERRLOG(" Failed on query for device attributes\n");
-		goto err2;
+		goto err1;
 	}
 
-	if (conn->rdma.cq_depth > ibdev_attr.max_cqe) {
-		conn->rdma.cq_depth = ibdev_attr.max_cqe;
+	host_event_data = &event->param.conn;
+	if (host_event_data->private_data == NULL ||
+	    host_event_data->private_data_len < sizeof(struct spdk_nvmf_rdma_request_private_data)) {
+		/* No private data, so use defaults. */
+		qp_depth = nvmf_min(ibdev_attr.max_qp_wr, SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH);
+		rw_depth = nvmf_min(ibdev_attr.max_qp_rd_atom, SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH);
+		conn->qid = 0;
+	} else {
+		const struct spdk_nvmf_rdma_request_private_data *private_data = host_event_data->private_data;
+		qp_depth = nvmf_min(ibdev_attr.max_qp_wr, nvmf_min(private_data->hrqsize,
+				    private_data->hsqsize));
+		rw_depth = nvmf_min(ibdev_attr.max_qp_rd_atom, host_event_data->initiator_depth);
+		conn->qid = private_data->qid;
 	}
-	if (conn->rdma.sq_depth > ibdev_attr.max_qp_wr) {
-		conn->rdma.sq_depth = ibdev_attr.max_qp_wr;
-	}
-	conn->rdma.sq_depth = nvmf_min(conn->rdma.sq_depth, conn->rdma.cq_depth);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted CQ Depth %x\n", conn->rdma.cq_depth);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted SQ Depth %x\n", conn->rdma.sq_depth);
-
-	if (conn_id->ps == RDMA_PS_TCP) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect flow control: %x\n", event->param.conn.flow_control);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect retry count: %x\n", event->param.conn.retry_count);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect rnr retry count: %x\n",
-			      event->param.conn.rnr_retry_count);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Responder Resources %x\n",
-			      event->param.conn.responder_resources);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Initiator Depth %x\n",
-			      event->param.conn.initiator_depth);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect SRQ %x\n", event->param.conn.srq);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect qp_num %x\n", event->param.conn.qp_num);
-
-		conn->rdma.responder_resources = nvmf_min(event->param.conn.responder_resources,
-						 ibdev_attr.max_qp_rd_atom);
-		conn->rdma.initiator_depth = nvmf_min(event->param.conn.initiator_depth,
-						      ibdev_attr.max_qp_init_rd_atom);
-		if (event->param.conn.responder_resources != conn->rdma.responder_resources ||
-		    event->param.conn.initiator_depth != conn->rdma.initiator_depth) {
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted Responder Resources %x\n",
-				      conn->rdma.responder_resources);
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Adjusted Initiator Depth %x\n",
-				      conn->rdma.initiator_depth);
-		}
+	conn->rdma.queue_depth = nvmf_min(qp_depth, rw_depth);
+	if (conn->qid > 0) {
+		conn->type = CONN_TYPE_IOQ;
 	}
 
 	rc = nvmf_rdma_queue_init(conn, conn_id->verbs);
 	if (rc) {
 		SPDK_ERRLOG("connect request: rdma conn init failure!\n");
-		goto err2;
+		goto err1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMf fabric connection initialized\n");
 
@@ -645,7 +599,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	rc = alloc_rdma_reqs(conn);
 	if (rc) {
 		SPDK_ERRLOG("Unable to allocate connection RDMA requests\n");
-		goto err2;
+		goto err1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA requests allocated\n");
 
@@ -653,7 +607,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	STAILQ_FOREACH(rdma_req, &conn->rdma.rdma_reqs, link) {
 		if (nvmf_post_rdma_recv(conn, rdma_req)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
-			goto err2;
+			goto err1;
 		}
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RX buffers posted\n");
@@ -661,59 +615,37 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	rc = spdk_nvmf_startup_conn(conn);
 	if (rc) {
 		SPDK_ERRLOG("Error on startup connection\n");
-		goto err2;
+		goto err1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "New Connection Scheduled\n");
 
-	param = &event->param.conn;
-	if (conn_id->ps == RDMA_PS_TCP) {
-		event->param.conn.responder_resources = conn->rdma.responder_resources;
-		event->param.conn.initiator_depth = conn->rdma.initiator_depth;
+	accept_data.recfmt = 0;
+	accept_data.crqsize = conn->rdma.queue_depth;
+	if (host_event_data != NULL) {
+		memcpy(&ctrlr_event_data, host_event_data, sizeof(ctrlr_event_data));
 	}
-	if (pdata != NULL) {
-		event->param.conn.private_data = &acc_rej_pdata;
-		event->param.conn.private_data_len = sizeof(acc_rej_pdata);
-		memset((uint8_t *)&acc_rej_pdata, 0, sizeof(acc_rej_pdata));
-		acc_rej_pdata.pd_accept.crqsize = conn->rdma.sq_depth;
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept Private Data Length %x\n",
-			      param->private_data_len);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept Private Data: recfmt %x\n",
-			      pdata->pd_accept.recfmt);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept Private Data: crqsize %x\n",
-			      pdata->pd_accept.crqsize);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept flow control: %x\n", param->flow_control);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept retry count: %x\n", param->retry_count);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept rnr retry count: %x\n", param->rnr_retry_count);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept Responder Resources %x\n",
-			      param->responder_resources);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept Initiator Depth %x\n", param->initiator_depth);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept SRQ %x\n", param->srq);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "    Connect Accept qp_num %x\n", param->qp_num);
+	ctrlr_event_data.private_data = &accept_data;
+	ctrlr_event_data.private_data_len = sizeof(accept_data);
+	if (conn_id->ps == RDMA_PS_TCP) {
+		ctrlr_event_data.responder_resources = 0; /* We accept 0 reads from the host */
+		ctrlr_event_data.initiator_depth = conn->rdma.queue_depth;
 	}
 
-	rc = rdma_accept(event->id, param);
+	rc = rdma_accept(event->id, &ctrlr_event_data);
 	if (rc) {
 		SPDK_ERRLOG("Error on rdma_accept\n");
-		goto err3;
+		goto err1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Sent back the accept\n");
 
 	return 0;
 
-err3:
-	/* halt the connection thread */
-err2:
-	/* free the connection and all it's resources */
-err1:
-	if (pdata != NULL) {
-		memset((uint8_t *)&acc_rej_pdata, 0, sizeof(acc_rej_pdata));
-		acc_rej_pdata.pd_reject.status.sc = sts;
-		rc = rdma_reject(conn_id, &acc_rej_pdata, sizeof(acc_rej_pdata));
-	} else {
-		rc = rdma_reject(conn_id, NULL, 0);
+err1: {
+		struct spdk_nvmf_rdma_reject_private_data rej_data;
+
+		rej_data.status.sc = sts;
+		rdma_reject(conn_id, &ctrlr_event_data, sizeof(rej_data));
 	}
-	if (rc)
-		SPDK_ERRLOG("Error on rdma_reject\n");
 err0:
 	return -1;
 }
@@ -1034,7 +966,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 	int cq_count = 0;
 	int i;
 
-	for (i = 0; i < conn->rdma.sq_depth; i++) {
+	for (i = 0; i < conn->rdma.queue_depth; i++) {
 		rc = ibv_poll_cq(conn->rdma.cq, 1, &wc);
 		if (rc == 0) // No completions at this time
 			break;

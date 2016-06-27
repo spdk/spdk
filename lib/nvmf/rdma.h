@@ -48,11 +48,8 @@ struct spdk_nvmf_rdma_conn {
 	struct ibv_cq			*cq;
 	struct ibv_qp			*qp;
 
-	uint16_t					sq_depth;
-	uint16_t					cq_depth;
+	uint16_t			queue_depth;
 
-	uint8_t						responder_resources;
-	uint8_t						initiator_depth;
 	uint8_t						pending_rdma_read_count;
 	STAILQ_HEAD(, spdk_nvmf_rdma_request)		pending_rdma_reqs;
 	STAILQ_HEAD(, spdk_nvmf_rdma_request)		rdma_reqs;

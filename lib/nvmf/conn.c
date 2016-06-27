@@ -346,7 +346,7 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 
 	conn->cntlid = response->status_code_specific.success.cntlid;
 	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
-	nvmf_init_session_properties(session, conn->rdma.sq_depth);
+	nvmf_init_session_properties(session, conn->rdma.queue_depth);
 
 	/* Update the session logical controller data with any
 	 * application fabric side limits
