@@ -390,7 +390,10 @@ spdk_nvmf_conn_do_work(void *arg)
 	}
 
 	/* process pending RDMA completions */
-	nvmf_check_rdma_completions(conn);
+	if (nvmf_check_rdma_completions(conn) < 0) {
+		SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
+		conn->state = CONN_STATE_EXITING;
+	}
 
 	if (conn->state == CONN_STATE_EXITING ||
 	    conn->state == CONN_STATE_FABRIC_DISCONNECT) {
