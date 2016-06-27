@@ -56,25 +56,6 @@ struct nvmf_connection_entry {
 /* define a virtual controller limit to the number of QPs supported */
 #define MAX_SESSION_IO_QUEUES 64
 
-struct nvmf_vc_features {
-	uint32_t	arb;	/* arbitration */
-	uint32_t	pm;	/* power management */
-	uint32_t	temp;	/* temp threshold */
-	uint32_t	err;	/* error recovery */
-	uint32_t	vwc;	/* volatile write cache */
-	uint32_t	noq;	/* number of queues */
-	uint32_t	ic;	/* interrupt coalescing */
-	uint32_t	ivc;	/* interrupt vector config */
-	uint32_t	wan;	/* write atomicity normal */
-	uint32_t	aec;	/* async event config */
-	uint32_t	apst;	/* autonomous power state transition */
-	uint32_t	hmb;	/* host memory buffer */
-	uint32_t	spm;	/* sw progress marker */
-	uint32_t	hostid;	/* host identifier */
-	uint32_t	resnm;	/* reservation notification mask */
-	uint32_t	resp;	/* reservation persistence */
-};
-
 /*
  * This structure maintains the NVMf virtual controller session
  * state. Each NVMf session permits some number of connections.
@@ -88,7 +69,6 @@ struct nvmf_session {
 	int		active_queues;
 	int		is_valid;
 	struct spdk_nvmf_ctrlr_properties	vcprop;	/* virtual controller properties */
-	struct nvmf_vc_features		vcfeat;	/* virtual controller features */
 	struct spdk_nvme_ctrlr_data	vcdata; /* virtual controller data */
 
 	TAILQ_HEAD(connection_q, nvmf_connection_entry) connections;

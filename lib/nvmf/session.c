@@ -139,9 +139,7 @@ nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
 		      *(uint32_t *)&session->vcdata.sgls);
 
 	/* feature: Number Of Queues. */
-	/* Init to zero.  Host shall set before enabling the controller */
 	session->max_io_queues = MAX_SESSION_IO_QUEUES;
-	session->vcfeat.noq = 0;
 
 	session->vcprop.cap_lo.raw = 0;
 	session->vcprop.cap_lo.bits.cqr = 0;	/* queues not contiguous */
