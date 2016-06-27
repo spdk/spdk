@@ -1201,8 +1201,6 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 	int i;
 
 	for (i = 0; i < conn->rdma.sq_depth; i++) {
-		tx_desc = NULL;
-
 		rc = ibv_poll_cq(conn->rdma.cq, 1, &wc);
 		if (rc == 0) // No completions at this time
 			break;
@@ -1210,7 +1208,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		if (rc < 0) {
 			SPDK_ERRLOG("Poll CQ error!(%d): %s\n",
 				    errno, strerror(errno));
-			goto handler_error;
+			return -1;
 		}
 
 		/* OK, process the single successful cq event */
@@ -1248,12 +1246,14 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
 				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
-				goto handler_error;
+				nvmf_deactive_tx_desc(tx_desc);
+				return -1;
 			}
 
 			rc = nvmf_process_pending_rdma(conn);
 			if (rc) {
-				goto handler_error;
+				SPDK_ERRLOG("nvmf_process_pending_rdma() failed: %d\n", rc);
+				return -1;
 			}
 			break;
 
@@ -1263,22 +1263,16 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			rc = nvmf_recv(conn, &wc);
 			if (rc) {
 				SPDK_ERRLOG("nvmf_recv processing failure\n");
-				goto handler_error;
+				return -1;
 			}
 			break;
 
 		default:
 			SPDK_ERRLOG("Poll cq opcode type unknown!!!!! completion\n");
-			goto handler_error;
+			return -1;
 		}
 	}
 	return cq_count;
-
-handler_error:
-	if (tx_desc != NULL)
-		nvmf_deactive_tx_desc(tx_desc);
-	SPDK_ERRLOG("handler error, exiting!\n");
-	return -1;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("rdma", SPDK_TRACE_RDMA)
