@@ -182,18 +182,11 @@ nvmf_drain_cq(struct spdk_nvmf_conn *conn)
 void
 nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 {
-	struct spdk_nvmf_rdma_request *rdma_req;
 	int rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Enter\n");
 
 	rdma_destroy_qp(conn->rdma.cm_id);
-
-	while (!STAILQ_EMPTY(&conn->rdma.pending_rdma_reqs)) {
-		rdma_req = STAILQ_FIRST(&conn->rdma.pending_rdma_reqs);
-		STAILQ_REMOVE_HEAD(&conn->rdma.pending_rdma_reqs, link);
-		STAILQ_INSERT_TAIL(&conn->rdma.rdma_reqs, rdma_req, link);
-	}
 
 	free_rdma_reqs(conn);
 
@@ -255,19 +248,6 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	int rc;
-
-	/*
-	 * Queue the rdma read if it would exceed max outstanding
-	 * RDMA read limit.
-	 */
-	if (conn->rdma.pending_rdma_read_count == conn->rdma.queue_depth) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Insert rdma read into pending queue: rdma_req %p\n",
-			      rdma_req);
-		STAILQ_REMOVE(&conn->rdma.rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
-		STAILQ_INSERT_TAIL(&conn->rdma.pending_rdma_reqs, rdma_req, link);
-		return 0;
-	}
-	conn->rdma.pending_rdma_read_count++;
 
 	/* temporarily adjust SGE to only copy what the host is prepared to send. */
 	rdma_req->bb_sgl.length = req->length;
@@ -592,7 +572,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMf fabric connection initialized\n");
 
-	STAILQ_INIT(&conn->rdma.pending_rdma_reqs);
 	STAILQ_INIT(&conn->rdma.rdma_reqs);
 
 	/* Allocate Buffers */
@@ -889,32 +868,6 @@ nvmf_rdma_init(void)
 }
 
 static int
-nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_nvmf_rdma_request *rdma_req;
-	int rc;
-
-	conn->rdma.pending_rdma_read_count--;
-	if (!STAILQ_EMPTY(&conn->rdma.pending_rdma_reqs)) {
-		rdma_req = STAILQ_FIRST(&conn->rdma.pending_rdma_reqs);
-		STAILQ_REMOVE_HEAD(&conn->rdma.pending_rdma_reqs, link);
-		STAILQ_INSERT_TAIL(&conn->rdma.rdma_reqs, rdma_req, link);
-
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: rdma_req %p\n",
-			      rdma_req);
-
-		rc = nvmf_post_rdma_read(conn, &rdma_req->req);
-		if (rc) {
-			SPDK_ERRLOG("Unable to post pending rdma read descriptor\n");
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-
-static int
 nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
@@ -1010,12 +963,6 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
 				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
-				return -1;
-			}
-
-			rc = nvmf_process_pending_rdma(conn);
-			if (rc) {
-				SPDK_ERRLOG("nvmf_process_pending_rdma() failed: %d\n", rc);
 				return -1;
 			}
 			break;
