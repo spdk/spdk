@@ -525,6 +525,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 {
 	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	enum spdk_nvme_data_transfer xfer;
 	int ret;
 
@@ -552,6 +553,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			if (sgl->keyed.length > bb_len) {
 				SPDK_ERRLOG("SGL length 0x%x exceeds BB length 0x%x\n",
 					    sgl->keyed.length, bb_len);
+				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 				return -1;
 			}
 
@@ -575,6 +577,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			if (offset > max_len) {
 				SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
 					    offset, max_len);
+				rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
 				return -1;
 			}
 			max_len -= (uint32_t)offset;
@@ -582,6 +585,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			if (sgl->unkeyed.length > max_len) {
 				SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
 					    sgl->unkeyed.length, max_len);
+				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 				return -1;
 			}
 
@@ -590,6 +594,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 		} else {
 			SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
 				    sgl->generic.type, sgl->generic.subtype);
+			rsp->status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
 			return -1;
 		}
 
@@ -611,6 +616,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 				ret = nvmf_post_rdma_read(conn, req);
 				if (ret) {
 					SPDK_ERRLOG("Unable to post rdma read tx descriptor\n");
+					rsp->status.sc = SPDK_NVME_SC_DATA_TRANSFER_ERROR;
 					return -1;
 				}
 

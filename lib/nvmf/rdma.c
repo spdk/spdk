@@ -1168,7 +1168,10 @@ nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 					  rx_desc->bb, rx_desc->bb_sgl.length);
 	if (ret < 0) {
 		SPDK_ERRLOG("prep_data failed\n");
-	} else if (ret == 0) {
+		return spdk_nvmf_request_complete(req);
+	}
+
+	if (ret == 0) {
 		/* Data is available now; execute command immediately. */
 		ret = spdk_nvmf_request_exec(req);
 		if (ret < 0) {
