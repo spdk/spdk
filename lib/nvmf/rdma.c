@@ -237,8 +237,12 @@ nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 	wr->num_sge = 1;
 
 	if (req != NULL) {
-		wr->wr.rdma.rkey = req->rkey;
-		wr->wr.rdma.remote_addr = req->remote_addr;
+		struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
+
+		RTE_VERIFY(sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+
+		wr->wr.rdma.rkey = sgl->keyed.key;
+		wr->wr.rdma.remote_addr = sgl->address;
 
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rkey %x\n", wr->wr.rdma.rkey);
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "remote addr %p\n",

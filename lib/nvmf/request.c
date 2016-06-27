@@ -558,8 +558,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			}
 
 			req->data = bb;
-			req->remote_addr = sgl->address;
-			req->rkey = sgl->keyed.key;
 			req->length = sgl->keyed.length;
 		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 			   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
