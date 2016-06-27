@@ -123,8 +123,6 @@ int spdk_initialize_nvmf_conns(int max_connections)
 	size_t conns_size;
 	int i, rc;
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Enter\n");
-
 	rc = pthread_mutex_init(&g_conns_mutex, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("mutex_init() failed\n");
@@ -469,4 +467,3 @@ nvmf_allocate_reactor(uint64_t cpumask)
 
 	return selected_core;
 }
-

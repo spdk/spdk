@@ -333,7 +333,6 @@ nvmf_complete_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
 	struct spdk_nvme_cpl *response;
 
 	spdk_trace_record(TRACE_NVMF_LIB_COMPLETE, 0, 0, (uint64_t)req, 0);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_complete_cmd callback: req %p\n", req);
 
 	response = &req->rsp->nvme_cpl;
 	memcpy(response, cmp, sizeof(*cmp));

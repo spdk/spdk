@@ -52,16 +52,14 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send nvme cmd capsule response\n");
-
 	response->sqid = 0;
 	response->status.p = 0;
 	response->sqhd = req->conn->sq_head;
 	response->cid = req->cmd->nvme_cmd.cid;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF,
-		      "cpl: cdw0=0x%x rsvd1=0x%x sqhd=0x%x sqid=0x%x cid=0x%x status=0x%x\n",
-		      response->cdw0, response->rsvd1, response->sqhd, response->sqid, response->cid,
+		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u sqhd=%u status=0x%04x\n",
+		      response->cid, response->cdw0, response->rsvd1, response->sqhd,
 		      *(uint16_t *)&response->status);
 
 	if (spdk_nvmf_rdma_request_complete(req->conn, req)) {
@@ -84,16 +82,13 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	int rc = 0;
 	uint8_t feature;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: req %p\n",
-		      req);
-
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	response->cid = cmd->cid;
 
 	/* verify subsystem */
 	if (subsystem == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: Subsystem Not Initialized!\n");
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Subsystem Not Initialized!\n");
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return true;
 	}
@@ -110,7 +105,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	} else {
 		/* verify namespace id */
 		if (cmd->nsid > MAX_PER_SUBSYSTEM_NAMESPACES) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: Invalid NS_ID %x\n",
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid NS_ID %u\n",
 				      cmd->nsid);
 			response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 			return true;
@@ -119,7 +114,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		ctrlr = subsystem->ns_list_map[cmd->nsid - 1].ctrlr;
 		nsid = subsystem->ns_list_map[cmd->nsid - 1].nvme_ns_id;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: ctrlr %p nvme ns_id %d\n", ctrlr, nsid);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "ctrlr %p nvme ns_id %u\n", ctrlr, nsid);
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
@@ -135,7 +130,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace\n");
 			if (nsid == 0) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: Invalid NS_ID = 0\n");
+				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid NS_ID = 0\n");
 				response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 				return true;
 			}
@@ -179,7 +174,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 		switch (feature) {
 		case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Number of Queues, cdw11 %x\n", cmd->cdw11);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n", cmd->cdw11);
 
 			/* verify that the contoller is ready to process commands */
 			if (session->active_queues != 0) {
@@ -232,8 +227,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	default:
 passthrough:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "RAW Passthrough: Admin Opcode %x for ctrlr %p\n",
-			      cmd->opc, ctrlr);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "admin_cmd passthrough: opc 0x%02x\n", cmd->opc);
 		cmd->nsid = nsid;
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
 						   cmd,
@@ -241,7 +235,7 @@ passthrough:
 						   nvmf_complete_cmd,
 						   req);
 		if (rc) {
-			SPDK_ERRLOG("nvmf_process_admin_cmd: Error to submit Admin Opcode %x\n", cmd->opc);
+			SPDK_ERRLOG("Error submitting admin opc 0x%02x\n", cmd->opc);
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return true;
 		}
@@ -267,8 +261,6 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	uint32_t io_flags;
 	int rc = 0;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: req %p\n", req);
-
 	/* pre-set response details for this command */
 	response = &req->rsp->nvme_cpl;
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -276,21 +268,21 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 
 	/* verify subsystem */
 	if (subsystem == NULL) {
-		SPDK_ERRLOG("nvmf_process_io_cmd: Subsystem Not Initialized!\n");
+		SPDK_ERRLOG("Subsystem Not Initialized!\n");
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return true;
 	}
 
 	/* verify that the contoller is ready to process commands */
 	if (session->vcprop.csts.bits.rdy == 0) {
-		SPDK_ERRLOG("nvmf_process_io_cmd: Subsystem Controller Not Ready!\n");
+		SPDK_ERRLOG("Subsystem Controller Not Ready!\n");
 		response->status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
 		return true;
 	}
 
 	/* verify namespace id */
 	if (cmd->nsid == 0 || cmd->nsid > MAX_PER_SUBSYSTEM_NAMESPACES) {
-		SPDK_ERRLOG("nvmf_process_io_cmd: Invalid NS_ID %x\n", cmd->nsid);
+		SPDK_ERRLOG("Invalid NS_ID %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return true;
 	}
@@ -312,7 +304,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 		io_flags = cmd->cdw12 & 0xFFFF0000U;
 
 		if (cmd->opc == SPDK_NVME_OPC_READ) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Read; lba address %lx, lba count %x\n",
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Read LBA 0x%" PRIx64 ", 0x%x blocks\n",
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvme_ns_cmd_read(ns, qpair,
@@ -320,7 +312,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 						   nvmf_complete_cmd,
 						   req, io_flags);
 		} else {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_io_cmd: Write; lba address %lx, lba count %x\n",
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Write LBA 0x%" PRIx64 ", 0x%x blocks\n",
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvme_ns_cmd_write(ns, qpair,
@@ -330,7 +322,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 		}
 		break;
 	default:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "RAW Passthrough: I/O Opcode %x\n", cmd->opc);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "io_cmd passthrough: opc 0x%02x\n", cmd->opc);
 		cmd->nsid = nsid;
 		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
 						cmd,
@@ -341,7 +333,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 
 	if (rc) {
-		SPDK_ERRLOG("nvmf_process_io_cmd: Failed to submit Opcode %x\n", cmd->opc);
+		SPDK_ERRLOG("Failed to submit Opcode 0x%02x\n", cmd->opc);
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return true;
 	}
@@ -405,15 +397,12 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 
 	RTE_VERIFY(connect_data != NULL);
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** Connect Capsule *** %p\n", connect);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** cid              = %x ***\n", connect->cid);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** recfmt           = %x ***\n", connect->recfmt);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** qid              = %x ***\n", connect->qid);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** sqsize           = %x ***\n", connect->sqsize);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect cmd: cid 0x%x recfmt 0x%x qid %u sqsize %u\n",
+		      connect->cid, connect->recfmt, connect->qid, connect->sqsize);
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** Connect Capsule Data *** %p\n", connect_data);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** cntlid  = %x ***\n", connect_data->cntlid);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** hostid = %04x%04x-%04x-%04x-%04x-%04x%04x%04x ***\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect data:\n");
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  cntlid:  0x%04x\n", connect_data->cntlid);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostid:  %04x%04x-%04x-%04x-%04x-%04x%04x%04x\n",
 		      htons(*(unsigned short *) &connect_data->hostid[0]),
 		      htons(*(unsigned short *) &connect_data->hostid[2]),
 		      htons(*(unsigned short *) &connect_data->hostid[4]),
@@ -422,8 +411,8 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		      htons(*(unsigned short *) &connect_data->hostid[10]),
 		      htons(*(unsigned short *) &connect_data->hostid[12]),
 		      htons(*(unsigned short *) &connect_data->hostid[14]));
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** subsiqn = %s ***\n", (char *)&connect_data->subnqn[0]);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** hostiqn = %s ***\n", (char *)&connect_data->hostnqn[0]);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subsiqn: \"%s\"\n", (char *)&connect_data->subnqn[0]);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostiqn: \"%s\"\n", (char *)&connect_data->hostnqn[0]);
 
 	response = &req->rsp->connect_rsp;
 
@@ -439,8 +428,7 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		}
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "send connect capsule response\n");
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** cntlid  = %x ***\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      response->status_code_specific.success.cntlid);
 	return true;
 }
@@ -473,47 +461,41 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
 	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
 	struct spdk_nvme_cmd *cmd = &h2c_msg->nvme_cmd;
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+	const char *cmd_type;
 	uint8_t opc;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "NVMf %s%s Command:\n",
-		      conn_type == CONN_TYPE_AQ ? "Admin" : "I/O",
-		      cmd->opc == SPDK_NVME_OPC_FABRIC ? " Fabrics" : "");
+	cmd_type = conn_type == CONN_TYPE_AQ ? "Admin" : "I/O";
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		opc = cap_hdr->fctype;
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  fctype 0x%02x\n", cap_hdr->fctype);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  cid 0x%x\n", cap_hdr->cid);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
+			      cmd_type, cap_hdr->fctype, cap_hdr->cid);
 	} else {
 		opc = cmd->opc;
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  opc 0x%02x\n", cmd->opc);
-		if (cmd->fuse) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  fuse %x\n", cmd->fuse);
-		}
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  psdt %u\n", cmd->psdt);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  cid 0x%x\n", cmd->cid);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  nsid %u\n", cmd->nsid);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
+			      cmd_type, cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
 		if (cmd->mptr) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  mptr 0x%" PRIx64 "\n", cmd->mptr);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
 		}
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  cdw10 0x%08x\n", cmd->cdw10);
+		if (cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_CONTIG &&
+		    cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_SGL) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "psdt %u\n", cmd->psdt);
+		}
 	}
 
 	if (spdk_nvme_opc_get_data_transfer(opc) != SPDK_NVME_DATA_NONE) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL type 0x%x\n", sgl->generic.type);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL subtype 0x%x\n", sgl->generic.subtype);
 		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
-
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL address 0x%lx\n",
-				      sgl->address);
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL key 0x%x\n",
-				      sgl->keyed.key);
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n",
-				      sgl->keyed.length);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF,
+				      "SGL: Keyed%s: addr 0x%" PRIx64 " key 0x%x len 0x%x\n",
+				      sgl->generic.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY ? " (Inv)" : "",
+				      sgl->address, sgl->keyed.key, sgl->keyed.length);
 		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL %s 0x%" PRIx64 "\n",
-				      sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offset" : "address",
-				      sgl->address);
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "	SQE:  SGL length 0x%x\n", sgl->unkeyed.length);
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "SGL: Data block: %s 0x%" PRIx64 " len 0x%x\n",
+				      sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offs" : "addr",
+				      sgl->address, sgl->unkeyed.length);
+		} else {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "SGL type 0x%x subtype 0x%x\n",
+				      sgl->generic.type, sgl->generic.subtype);
 		}
 	}
 }
@@ -547,9 +529,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 		    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 		     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keyed data block: raddr 0x%" PRIx64 ", rkey 0x%x, length 0x%x\n",
-				      sgl->address, sgl->keyed.key, sgl->keyed.length);
-
 			if (sgl->keyed.length > bb_len) {
 				SPDK_ERRLOG("SGL length 0x%x exceeds BB length 0x%x\n",
 					    sgl->keyed.length, bb_len);
