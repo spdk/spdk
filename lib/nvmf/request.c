@@ -387,7 +387,7 @@ nvmf_process_io_command(struct spdk_nvmf_request *req)
 	if (ret) {
 		/* library failed the request and should have
 		   Updated the response */
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "send nvme io cmd capsule error response\n");
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "send nvme io cmd capsule error response\n");
 		ret = spdk_nvmf_request_complete(req);
 		if (ret) {
 			SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
@@ -622,7 +622,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 		    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
 		     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Keyed data block: raddr 0x%" PRIx64 ", rkey 0x%x, length 0x%x\n",
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keyed data block: raddr 0x%" PRIx64 ", rkey 0x%x, length 0x%x\n",
 				      sgl->address, sgl->keyed.key, sgl->keyed.length);
 
 			if (sgl->keyed.length > bb_len) {
@@ -640,7 +640,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			uint64_t offset = sgl->address;
 			uint32_t max_len = in_cap_len;
 
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 				      offset, sgl->unkeyed.length);
 
 			if (conn->type == CONN_TYPE_AQ) {
@@ -683,7 +683,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 		 */
 		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
-				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issuing RDMA Read to get host data\n");
+				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Initiating Host to Controller data transfer\n");
 				ret = nvmf_post_rdma_read(conn, req);
 				if (ret) {
 					SPDK_ERRLOG("Unable to post rdma read tx descriptor\n");
@@ -697,13 +697,13 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 	}
 
 	if (xfer == SPDK_NVME_DATA_NONE) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "No data to transfer\n");
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "No data to transfer\n");
 		RTE_VERIFY(req->data == NULL);
 		RTE_VERIFY(req->length == 0);
 	} else {
 		RTE_VERIFY(req->data != NULL);
 		RTE_VERIFY(req->length != 0);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "%s data ready\n",
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s data ready\n",
 			      xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ? "Host to Controller" :
 			      "Controller to Host");
 	}
