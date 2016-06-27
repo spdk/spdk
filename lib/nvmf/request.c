@@ -72,7 +72,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-static int
+static bool
 nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 {
 	struct nvmf_session *session = req->conn->sess;
@@ -95,7 +95,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	if (subsystem == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: Subsystem Not Initialized!\n");
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		return -1;
+		return true;
 	}
 
 	if (cmd->nsid == 0) {
@@ -113,7 +113,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: Invalid NS_ID %x\n",
 				      cmd->nsid);
 			response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-			return -1;
+			return true;
 		}
 
 		ctrlr = subsystem->ns_list_map[cmd->nsid - 1].ctrlr;
@@ -126,8 +126,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		if (req->data == NULL) {
 			SPDK_ERRLOG("identify command with no buffer\n");
 			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			rc = -1;
-			break;
+			return true;
 		}
 		if (cmd->cdw10 == 0) {
 			/* identify namespace */
@@ -138,29 +137,27 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 			if (nsid == 0) {
 				SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_process_admin_cmd: Invalid NS_ID = 0\n");
 				response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-				rc = -1;
-				break;
+				return true;
 			}
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 			if (ns == NULL) {
 				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Unsuccessful query for Namespace reference\n");
 				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-				rc = -1;
-				break;
+				return true;
 			}
 			nsdata = spdk_nvme_ns_get_data(ns);
 			memcpy(req->data, (char *)nsdata, sizeof(struct spdk_nvme_ns_data));
-			rc = 1;
+			return true;
 		} else if (cmd->cdw10 == 1) {
 			/* identify controller */
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
 			/* pull from virtual controller context */
 			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
-			rc = 1;
+			return true;
 		} else {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace List\n");
 			response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-			rc = -1;
+			return true;
 		}
 		break;
 	case SPDK_NVME_OPC_GET_FEATURES:
@@ -169,16 +166,13 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
 			response->cdw0 = ((session->max_io_queues - 1) << 16) | (session->max_io_queues - 1);
-			rc = 1; /* immediate completion */
-			break;
+			return true;
 		case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - LBA Range Type\n");
 			cmd->nsid = nsid;
 			goto passthrough;
-			break;
 		default:
 			goto passthrough;
-			break;
 		}
 		break;
 	case SPDK_NVME_OPC_SET_FEATURES:
@@ -194,11 +188,9 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 			} else {
 				response->cdw0 = ((session->max_io_queues - 1) << 16) | (session->max_io_queues - 1);
 			}
-			rc = 1; /* immediate completion */
-			break;
+			return true;
 		default:
 			goto passthrough;
-			break;
 		}
 		break;
 	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
@@ -209,11 +201,12 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		*/
 		if (session->aer_req == NULL) {
 			session->aer_req = req;
+			return false;
 		} else {
 			/* AER already recorded, send error response */
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "AER already active!\n");
 			response->status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED;
-			rc = 1; /* immediate completion */
+			return true;
 		}
 		break;
 	case SPDK_NVME_OPC_KEEP_ALIVE:
@@ -227,8 +220,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		  take appropriate action.
 		*/
 		//session->keep_alive_timestamp = ;
-		rc = 1; /* immediate completion */
-		break;
+		return true;
 
 	case SPDK_NVME_OPC_CREATE_IO_SQ:
 	case SPDK_NVME_OPC_CREATE_IO_CQ:
@@ -236,8 +228,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_DELETE_IO_CQ:
 		SPDK_ERRLOG("Admin opc 0x%02X not allowed in NVMf\n", cmd->opc);
 		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-		rc = -1;
-		break;
+		return true;
 
 	default:
 passthrough:
@@ -252,34 +243,13 @@ passthrough:
 		if (rc) {
 			SPDK_ERRLOG("nvmf_process_admin_cmd: Error to submit Admin Opcode %x\n", cmd->opc);
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			return true;
 		}
-		break;
+		return false;
 	}
-
-	return rc;
 }
 
-static int
-nvmf_process_admin_command(struct spdk_nvmf_request *req)
-{
-	int	ret;
-
-	ret = nvmf_process_admin_cmd(req);
-	if (ret) {
-		/* library failed the request and should have
-		   Updated the response */
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "send nvme admin cmd capsule sync response\n");
-		ret = spdk_nvmf_request_complete(req);
-		if (ret) {
-			SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-static int
+static bool
 nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	struct nvmf_session *session = req->conn->sess;
@@ -308,21 +278,21 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("nvmf_process_io_cmd: Subsystem Not Initialized!\n");
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		return -1;
+		return true;
 	}
 
 	/* verify that the contoller is ready to process commands */
 	if (session->vcprop.csts.bits.rdy == 0) {
 		SPDK_ERRLOG("nvmf_process_io_cmd: Subsystem Controller Not Ready!\n");
 		response->status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
-		return -1;
+		return true;
 	}
 
 	/* verify namespace id */
 	if (cmd->nsid == 0 || cmd->nsid > MAX_PER_SUBSYSTEM_NAMESPACES) {
 		SPDK_ERRLOG("nvmf_process_io_cmd: Invalid NS_ID %x\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		return -1;
+		return true;
 	}
 
 	nvmf_ns = &subsystem->ns_list_map[cmd->nsid - 1];
@@ -373,61 +343,32 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	if (rc) {
 		SPDK_ERRLOG("nvmf_process_io_cmd: Failed to submit Opcode %x\n", cmd->opc);
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-	}
-	return rc;
-}
-
-static int
-nvmf_process_io_command(struct spdk_nvmf_request *req)
-{
-	int	ret;
-
-	/* send to NVMf library for backend NVMe processing */
-	ret = nvmf_process_io_cmd(req);
-	if (ret) {
-		/* library failed the request and should have
-		   Updated the response */
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "send nvme io cmd capsule error response\n");
-		ret = spdk_nvmf_request_complete(req);
-		if (ret) {
-			SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-			return -1;
-		}
+		return true;
 	}
 
-	return 0;
+	return false;
 }
 
-static int
+static bool
 nvmf_process_property_get(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_get_rsp *response;
 	struct spdk_nvmf_fabric_prop_get_cmd *cmd;
-	int	ret;
 
 	cmd = &req->cmd->prop_get_cmd;
 	response = &req->rsp->prop_get_rsp;
 
 	nvmf_property_get(req->conn->sess, cmd, response);
 
-	/* send the nvmf response if setup by NVMf library */
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send property get capsule response\n");
-	ret = spdk_nvmf_request_complete(req);
-	if (ret) {
-		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-		return -1;
-	}
-
-	return 0;
+	return true;
 }
 
-static int
+static bool
 nvmf_process_property_set(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_set_rsp *response;
 	struct spdk_nvmf_fabric_prop_set_cmd *cmd;
 	bool	shutdown = false;
-	int	ret;
 
 	cmd = &req->cmd->prop_set_cmd;
 	response = &req->rsp->prop_set_rsp;
@@ -441,18 +382,10 @@ nvmf_process_property_set(struct spdk_nvmf_request *req)
 	}
 	*/
 
-	/* send the nvmf response if setup by NVMf library */
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "send property set capsule response\n");
-	ret = spdk_nvmf_request_complete(req);
-	if (ret) {
-		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-		return -1;
-	}
-
-	return 0;
+	return true;
 }
 
-static int
+static bool
 nvmf_process_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_cmd *connect;
@@ -460,11 +393,11 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_rsp *response;
 	struct spdk_nvmf_conn *conn = req->conn;
 	struct nvmf_session *session;
-	int ret;
 
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
 		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
-		return -1;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return true;
 	}
 
 	connect = &req->cmd->connect_cmd;
@@ -506,22 +439,13 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		}
 	}
 
-	/* synchronous call, nvmf library expected to init
-	   response status.
-	 */
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "send connect capsule response\n");
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "    *** cntlid  = %x ***\n",
 		      response->status_code_specific.success.cntlid);
-	ret = spdk_nvmf_request_complete(req);
-	if (ret) {
-		SPDK_ERRLOG("Unable to send aq qp tx descriptor\n");
-		return ret;
-	}
-
-	return 0;
+	return true;
 }
 
-static int
+static bool
 nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
@@ -539,7 +463,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "recv capsule header type invalid [%x]!\n",
 			      cap_hdr->fctype);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-		return spdk_nvmf_request_complete(req);
+		return true;
 	}
 }
 
@@ -715,12 +639,24 @@ int
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	bool done;
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		return nvmf_process_fabrics_command(req);
+		done = nvmf_process_fabrics_command(req);
 	} else if (req->conn->type == CONN_TYPE_AQ) {
-		return nvmf_process_admin_command(req);
+		done = nvmf_process_admin_cmd(req);
 	} else {
-		return nvmf_process_io_command(req);
+		done = nvmf_process_io_cmd(req);
 	}
+
+	if (done) {
+		/* Synchronous command - response is already filled out */
+		return spdk_nvmf_request_complete(req);
+	}
+
+	/*
+	 * Asynchronous command.
+	 * The completion callback will call spdk_nvmf_request_complete().
+	 */
+	return 0;
 }
