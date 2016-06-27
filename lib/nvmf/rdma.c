@@ -37,6 +37,7 @@
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
 #include <unistd.h>
+#include <stdint.h>
 
 #include <rte_config.h>
 #include <rte_debug.h>
@@ -49,6 +50,7 @@
 #include "nvmf.h"
 #include "port.h"
 #include "host.h"
+#include "spdk/assert.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
 
@@ -62,9 +64,6 @@
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
-static int alloc_qp_rx_desc(struct spdk_nvmf_conn *conn);
-static int alloc_qp_tx_desc(struct spdk_nvmf_conn *conn);
-
 struct spdk_nvmf_rdma {
 	struct rte_timer		acceptor_timer;
 	struct rdma_event_channel	*acceptor_event_channel;
@@ -73,30 +72,11 @@ struct spdk_nvmf_rdma {
 
 static struct spdk_nvmf_rdma g_rdma = { };
 
-static void
-nvmf_active_tx_desc(struct nvme_qp_tx_desc *tx_desc)
+static inline struct spdk_nvmf_rdma_request *
+get_rdma_req(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_conn *conn;
-
-	RTE_VERIFY(tx_desc != NULL);
-	conn = tx_desc->conn;
-	RTE_VERIFY(conn != NULL);
-
-	STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tx_desc, nvme_qp_tx_desc, link);
-	STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_active_desc, tx_desc, link);
-}
-
-static void
-nvmf_deactive_tx_desc(struct nvme_qp_tx_desc *tx_desc)
-{
-	struct spdk_nvmf_conn *conn;
-
-	RTE_VERIFY(tx_desc != NULL);
-	conn = tx_desc->conn;
-	RTE_VERIFY(tx_desc->conn != NULL);
-
-	STAILQ_REMOVE(&conn->rdma.qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
-	STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, tx_desc, link);
+	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req + offsetof(struct spdk_nvmf_rdma_request,
+			req));
 }
 
 static int
@@ -159,41 +139,32 @@ return_error:
 }
 
 static void
-free_qp_desc(struct spdk_nvmf_conn *conn)
+free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
 {
-	struct nvme_qp_rx_desc	*tmp_rx;
-	struct nvme_qp_tx_desc	*tmp_tx;
-	int			rc;
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Enter\n");
-
-	STAILQ_FOREACH(tmp_rx, &conn->rdma.qp_rx_desc, link) {
-		STAILQ_REMOVE(&conn->rdma.qp_rx_desc, tmp_rx, nvme_qp_rx_desc, link);
-
-		rc = rdma_dereg_mr(tmp_rx->bb_mr);
-		if (rc) {
-			SPDK_ERRLOG("Unable to de-register rx bb mr\n");
-		}
-
-		rte_free(tmp_rx->bb);
-
-		rc = rdma_dereg_mr(tmp_rx->cmd_mr);
-		if (rc) {
-			SPDK_ERRLOG("Unable to de-register rx mr\n");
-		}
-
-		rte_free(tmp_rx);
+	if (rdma_req->cmd_mr && rdma_dereg_mr(rdma_req->cmd_mr)) {
+		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
 	}
 
-	STAILQ_FOREACH(tmp_tx, &conn->rdma.qp_tx_desc, link) {
-		STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tmp_tx, nvme_qp_tx_desc, link);
+	if (rdma_req->rsp_mr && rdma_dereg_mr(rdma_req->rsp_mr)) {
+		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
+	}
 
-		rc = rdma_dereg_mr(tmp_tx->rsp_mr);
-		if (rc) {
-			SPDK_ERRLOG("Unable to de-register tx mr\n");
-		}
+	if (rdma_req->bb_mr && rdma_dereg_mr(rdma_req->bb_mr)) {
+		SPDK_ERRLOG("Unable to de-register bb_mr\n");
+	}
 
-		rte_free(tmp_tx);
+	rte_free(rdma_req->bb);
+	rte_free(rdma_req);
+}
+
+static void
+free_rdma_reqs(struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_request *rdma_req;
+
+	STAILQ_FOREACH(rdma_req, &conn->rdma.rdma_reqs, link) {
+		STAILQ_REMOVE(&conn->rdma.rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
+		free_rdma_req(rdma_req);
 	}
 }
 
@@ -213,27 +184,20 @@ nvmf_drain_cq(struct spdk_nvmf_conn *conn)
 void
 nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 {
-	struct nvme_qp_tx_desc *pending_desc, *active_desc;
+	struct spdk_nvmf_rdma_request *rdma_req;
 	int rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Enter\n");
 
 	rdma_destroy_qp(conn->rdma.cm_id);
 
-	while (!STAILQ_EMPTY(&conn->rdma.qp_pending_desc)) {
-		pending_desc = STAILQ_FIRST(&conn->rdma.qp_pending_desc);
-		STAILQ_REMOVE_HEAD(&conn->rdma.qp_pending_desc, link);
-		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, pending_desc, link);
+	while (!STAILQ_EMPTY(&conn->rdma.pending_rdma_reqs)) {
+		rdma_req = STAILQ_FIRST(&conn->rdma.pending_rdma_reqs);
+		STAILQ_REMOVE_HEAD(&conn->rdma.pending_rdma_reqs, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.rdma_reqs, rdma_req, link);
 	}
 
-	/* Remove tx_desc from qp_tx_active_desc list to qp_tx_desc list */
-	while (!STAILQ_EMPTY(&conn->rdma.qp_tx_active_desc)) {
-		active_desc = STAILQ_FIRST(&conn->rdma.qp_tx_active_desc);
-		STAILQ_REMOVE_HEAD(&conn->rdma.qp_tx_active_desc, link);
-		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, active_desc, link);
-	}
-
-	free_qp_desc(conn);
+	free_rdma_reqs(conn);
 
 	nvmf_drain_cq(conn);
 	rc = ibv_destroy_cq(conn->rdma.cq);
@@ -289,33 +253,26 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 		    struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
-
+	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	int rc;
-
-	if (rx_desc == NULL) {
-		SPDK_ERRLOG("Rx descriptor does not exist at rdma read!\n");
-		return -1;
-	}
 
 	/*
 	 * Queue the rdma read if it would exceed max outstanding
 	 * RDMA read limit.
 	 */
 	if (conn->rdma.pending_rdma_read_count == conn->rdma.initiator_depth) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Insert rdma read into pending queue: tx_desc %p\n",
-			      tx_desc);
-		STAILQ_REMOVE(&conn->rdma.qp_tx_active_desc, tx_desc, nvme_qp_tx_desc, link);
-		STAILQ_INSERT_TAIL(&conn->rdma.qp_pending_desc, tx_desc, link);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Insert rdma read into pending queue: rdma_req %p\n",
+			      rdma_req);
+		STAILQ_REMOVE(&conn->rdma.rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.pending_rdma_reqs, rdma_req, link);
 		return 0;
 	}
 	conn->rdma.pending_rdma_read_count++;
 
 	/* temporarily adjust SGE to only copy what the host is prepared to send. */
-	rx_desc->bb_sgl.length = req->length;
+	rdma_req->bb_sgl.length = req->length;
 
-	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
+	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->bb_sgl, (uint64_t)rdma_req,
 			      IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
 
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uint64_t)req, 0);
@@ -331,19 +288,13 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 		     struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
+	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	int rc;
 
-	if (rx_desc == NULL) {
-		SPDK_ERRLOG("Rx descriptor does not exist at rdma write!\n");
-		return -1;
-	}
-
 	/* temporarily adjust SGE to only copy what the host is prepared to receive. */
-	rx_desc->bb_sgl.length = req->length;
+	rdma_req->bb_sgl.length = req->length;
 
-	nvmf_ibv_send_wr_init(&wr, req, &rx_desc->bb_sgl, (uint64_t)tx_desc,
+	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->bb_sgl, (uint64_t)rdma_req,
 			      IBV_WR_RDMA_WRITE, 0);
 
 	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uint64_t)req, 0);
@@ -356,7 +307,7 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 
 static int
 nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
-		    struct nvme_qp_rx_desc *rx_desc)
+		    struct spdk_nvmf_rdma_request *rdma_req)
 {
 	struct ibv_recv_wr wr, *bad_wr = NULL;
 	int rc;
@@ -368,20 +319,20 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	conn->sq_head < (conn->rdma.sq_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, conn->rdma.sq_depth);
 
-	wr.wr_id = (uintptr_t)rx_desc;
+	wr.wr_id = (uintptr_t)rdma_req;
 	wr.next = NULL;
-	wr.sg_list = &rx_desc->recv_sgl;
+	wr.sg_list = &rdma_req->recv_sgl;
 	wr.num_sge = 1;
 
-	nvmf_trace_ibv_sge(&rx_desc->recv_sgl);
+	nvmf_trace_ibv_sge(&rdma_req->recv_sgl);
 
 	/* for I/O queues we add bb sgl for in-capsule data use */
 	if (conn->type == CONN_TYPE_IOQ) {
 		wr.num_sge = 2;
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 local addr %p\n",
-			      (void *)rx_desc->bb_sgl.addr);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 length %x\n", rx_desc->bb_sgl.length);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 lkey %x\n", rx_desc->bb_sgl.lkey);
+			      (void *)rdma_req->bb_sgl.addr);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 length %x\n", rdma_req->bb_sgl.length);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 lkey %x\n", rdma_req->bb_sgl.lkey);
 	}
 
 	rc = ibv_post_recv(conn->rdma.qp, &wr, &bad_wr);
@@ -396,26 +347,23 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 		    struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct nvme_qp_tx_desc *tx_desc = req->tx_desc;
-	struct nvme_qp_rx_desc *rx_desc = req->rx_desc;
+	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	int rc;
 
-	RTE_VERIFY(rx_desc != NULL);
-
 	/* restore the SGL length that may have been modified */
-	rx_desc->bb_sgl.length = rx_desc->bb_len;
+	rdma_req->bb_sgl.length = rdma_req->bb_len;
 
 	/* Re-post recv */
-	if (nvmf_post_rdma_recv(conn, rx_desc)) {
+	if (nvmf_post_rdma_recv(conn, rdma_req)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
 	}
 
-	nvmf_ibv_send_wr_init(&wr, NULL, &tx_desc->send_sgl, (uint64_t)tx_desc,
+	nvmf_ibv_send_wr_init(&wr, NULL, &rdma_req->send_sgl, (uint64_t)rdma_req,
 			      IBV_WR_SEND, IBV_SEND_SIGNALED);
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "tx_desc %p: req %p, rsp %p\n",
-		      tx_desc, req, req->rsp);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "rdma_req %p: req %p, rsp %p\n",
+		      rdma_req, req, req->rsp);
 
 	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uint64_t)req, 0);
 	rc = ibv_post_send(conn->rdma.qp, &wr, &bad_wr);
@@ -452,13 +400,106 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_re
 }
 
 static int
+alloc_rdma_reqs(struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_request *rdma_req;
+	int i;
+
+	for (i = 0; i < conn->rdma.sq_depth; i++) {
+		rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
+		if (!rdma_req) {
+			SPDK_ERRLOG("Unable to get rdma_req\n");
+			goto fail;
+		}
+
+		rdma_req->cmd_mr = rdma_reg_msgs(conn->rdma.cm_id, &rdma_req->cmd, sizeof(rdma_req->cmd));
+		if (rdma_req->cmd_mr == NULL) {
+			SPDK_ERRLOG("Unable to register cmd_mr\n");
+			goto fail;
+		}
+
+		/* initialize recv_sgl */
+		rdma_req->recv_sgl.addr = (uint64_t)&rdma_req->cmd;
+		rdma_req->recv_sgl.length = sizeof(rdma_req->cmd);
+		rdma_req->recv_sgl.lkey = rdma_req->cmd_mr->lkey;
+
+		/* pre-assign a data bb (bounce buffer) with each RX descriptor */
+		/*
+		  For admin queue, assign smaller BB size to support maximum data that
+		  would be exchanged related to admin commands.  For IO queue, assign
+		  the large BB size that is equal to the maximum I/O transfer supported
+		  by the NVMe device. This large BB is also used for in-capsule receive
+		  data.
+		*/
+		if (conn->type == CONN_TYPE_AQ) {
+			rdma_req->bb_len = SMALL_BB_MAX_SIZE;
+		} else { // for IO queues
+			rdma_req->bb_len = LARGE_BB_MAX_SIZE;
+		}
+		rdma_req->bb = rte_zmalloc("nvmf_bb", rdma_req->bb_len, 0);
+		if (!rdma_req->bb) {
+			SPDK_ERRLOG("Unable to get %u-byte bounce buffer\n", rdma_req->bb_len);
+			goto fail;
+		}
+		rdma_req->bb_mr = rdma_reg_read(conn->rdma.cm_id,
+						(void *)rdma_req->bb,
+						rdma_req->bb_len);
+		if (rdma_req->bb_mr == NULL) {
+			SPDK_ERRLOG("Unable to register bb_mr\n");
+			goto fail;
+		}
+
+		/* initialize bb_sgl */
+		rdma_req->bb_sgl.addr = (uint64_t)rdma_req->bb;
+		rdma_req->bb_sgl.length = rdma_req->bb_len;
+		rdma_req->bb_sgl.lkey = rdma_req->bb_mr->lkey;
+
+		rdma_req->rsp_mr = rdma_reg_msgs(conn->rdma.cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
+		if (rdma_req->rsp_mr == NULL) {
+			SPDK_ERRLOG("Unable to register rsp_mr\n");
+			goto fail;
+		}
+
+		/* initialize send_sgl */
+		rdma_req->send_sgl.addr = (uint64_t)&rdma_req->rsp;
+		rdma_req->send_sgl.length = sizeof(rdma_req->rsp);
+		rdma_req->send_sgl.lkey = rdma_req->rsp_mr->lkey;
+
+		rdma_req->req.cmd = &rdma_req->cmd;
+		rdma_req->req.rsp = &rdma_req->rsp;
+		rdma_req->req.conn = conn;
+
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_req %p: req %p, rsp %p\n",
+			      rdma_req, &rdma_req->req,
+			      rdma_req->req.rsp);
+
+		STAILQ_INSERT_TAIL(&conn->rdma.rdma_reqs, rdma_req, link);
+	}
+
+	return 0;
+
+fail:
+	/* cleanup any partial rdma_req that failed during init loop */
+	if (rdma_req != NULL) {
+		free_rdma_req(rdma_req);
+	}
+
+	STAILQ_FOREACH(rdma_req, &conn->rdma.rdma_reqs, link) {
+		STAILQ_REMOVE(&conn->rdma.rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
+		free_rdma_req(rdma_req);
+	}
+
+	return -ENOMEM;
+}
+
+static int
 nvmf_rdma_connect(struct rdma_cm_event *event)
 {
 	struct spdk_nvmf_host		*host;
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
 	struct rdma_cm_id		*conn_id;
 	struct spdk_nvmf_conn		*conn;
-	struct nvme_qp_rx_desc		*rx_desc;
+	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
 	struct sockaddr_in		*addr;
 	struct rdma_conn_param		*param = NULL;
@@ -599,30 +640,20 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMf fabric connection initialized\n");
 
-	STAILQ_INIT(&conn->rdma.qp_pending_desc);
-	STAILQ_INIT(&conn->rdma.qp_rx_desc);
-	STAILQ_INIT(&conn->rdma.qp_tx_desc);
-	STAILQ_INIT(&conn->rdma.qp_tx_active_desc);
+	STAILQ_INIT(&conn->rdma.pending_rdma_reqs);
+	STAILQ_INIT(&conn->rdma.rdma_reqs);
 
-	/* Allocate AQ QP RX Buffers */
-	rc = alloc_qp_rx_desc(conn);
+	/* Allocate Buffers */
+	rc = alloc_rdma_reqs(conn);
 	if (rc) {
-		SPDK_ERRLOG("Unable to allocate connection rx desc\n");
+		SPDK_ERRLOG("Unable to allocate connection RDMA requests\n");
 		goto err2;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Rx buffers allocated\n");
-
-	/* Allocate AQ QP TX Buffers */
-	rc = alloc_qp_tx_desc(conn);
-	if (rc) {
-		SPDK_ERRLOG("Unable to allocate connection tx desc\n");
-		goto err2;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Tx buffers allocated\n");
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA requests allocated\n");
 
 	/* Post all the RX descriptors */
-	STAILQ_FOREACH(rx_desc, &conn->rdma.qp_rx_desc, link) {
-		if (nvmf_post_rdma_recv(conn, rx_desc)) {
+	STAILQ_FOREACH(rdma_req, &conn->rdma.rdma_reqs, link) {
+		if (nvmf_post_rdma_recv(conn, rdma_req)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
 			goto err2;
 		}
@@ -927,197 +958,22 @@ nvmf_rdma_init(void)
 	return num_devices_found;
 }
 
-/* Populate the AQ QP Rx Buffer Resources */
-static int
-alloc_qp_rx_desc(struct spdk_nvmf_conn *conn)
-{
-	struct nvme_qp_rx_desc	*rx_desc, *tmp;
-	int				i;
-	int				rc;
-
-	/* Allocate buffer for rx descriptors (RX WQE + Msg Buffer) */
-	for (i = 0; i < conn->rdma.sq_depth; i++) {
-		rx_desc = rte_zmalloc("nvmf_rx_desc", sizeof(*rx_desc), 0);
-		if (!rx_desc) {
-			SPDK_ERRLOG("Unable to get rx desc object\n");
-			goto fail;
-		}
-
-		rx_desc->cmd_mr = rdma_reg_msgs(conn->rdma.cm_id, &rx_desc->cmd, sizeof(rx_desc->cmd));
-		if (rx_desc->cmd_mr == NULL) {
-			SPDK_ERRLOG("Unable to register rx desc buffer mr\n");
-			goto fail;
-		}
-
-		rx_desc->conn = conn;
-
-		/* initialize recv_sgl of tx_desc */
-		rx_desc->recv_sgl.addr = (uint64_t)&rx_desc->cmd;
-		rx_desc->recv_sgl.length = sizeof(rx_desc->cmd);
-		rx_desc->recv_sgl.lkey = rx_desc->cmd_mr->lkey;
-
-		/* pre-assign a data bb (bounce buffer) with each RX descriptor */
-		/*
-		  For admin queue, assign smaller BB size to support maximum data that
-		  would be exchanged related to admin commands.  For IO queue, assign
-		  the large BB size that is equal to the maximum I/O transfer supported
-		  by the NVMe device. This large BB is also used for in-capsule receive
-		  data.
-		*/
-		if (conn->type == CONN_TYPE_AQ) {
-			rx_desc->bb_len = SMALL_BB_MAX_SIZE;
-		} else { // for IO queues
-			rx_desc->bb_len = LARGE_BB_MAX_SIZE;
-		}
-		rx_desc->bb = rte_zmalloc("nvmf_bb", rx_desc->bb_len, 0);
-		if (!rx_desc->bb) {
-			SPDK_ERRLOG("Unable to get %u-byte bounce buffer\n", rx_desc->bb_len);
-			goto fail;
-		}
-		rx_desc->bb_mr = rdma_reg_read(conn->rdma.cm_id,
-					       (void *)rx_desc->bb,
-					       rx_desc->bb_len);
-		if (rx_desc->bb_mr == NULL) {
-			SPDK_ERRLOG("Unable to register rx bb mr\n");
-			goto fail;
-		}
-
-		/* initialize bb_sgl of rx_desc */
-		rx_desc->bb_sgl.addr = (uint64_t)rx_desc->bb;
-		rx_desc->bb_sgl.length = rx_desc->bb_len;
-		rx_desc->bb_sgl.lkey = rx_desc->bb_mr->lkey;
-
-		STAILQ_INSERT_TAIL(&conn->rdma.qp_rx_desc, rx_desc, link);
-	}
-
-	return 0;
-
-fail:
-	/* cleanup any partial descriptor that failed during init loop */
-	if (rx_desc != NULL) {
-		if (rx_desc->bb_mr) {
-			rc = rdma_dereg_mr(rx_desc->bb_mr);
-			if (rc) {
-				SPDK_ERRLOG("Unable to de-register rx bb mr\n");
-			}
-		}
-
-		rte_free(rx_desc->bb);
-
-		if (rx_desc->cmd_mr) {
-			rc = rdma_dereg_mr(rx_desc->cmd_mr);
-			if (rc) {
-				SPDK_ERRLOG("Unable to de-register rx mr\n");
-			}
-		}
-
-		rte_free(rx_desc);
-	}
-
-	STAILQ_FOREACH(tmp, &conn->rdma.qp_rx_desc, link) {
-		STAILQ_REMOVE(&conn->rdma.qp_rx_desc, tmp, nvme_qp_rx_desc, link);
-
-		rc = rdma_dereg_mr(tmp->bb_mr);
-		if (rc) {
-			SPDK_ERRLOG("Unable to de-register rx bb mr\n");
-		}
-
-		rte_free(tmp->bb);
-
-		rc = rdma_dereg_mr(tmp->cmd_mr);
-		if (rc) {
-			SPDK_ERRLOG("Unable to de-register rx mr\n");
-		}
-
-		rte_free(tmp);
-	}
-
-	return -ENOMEM;
-}
-
-/*  Allocate the AQ QP Tx Buffer Resources */
-static int
-alloc_qp_tx_desc(struct spdk_nvmf_conn *conn)
-{
-	struct nvme_qp_tx_desc	*tx_desc, *tmp;
-	int			i;
-	int			rc;
-
-	/* Initialize the tx descriptors */
-	for (i = 0; i < conn->rdma.cq_depth; i++) {
-		tx_desc = rte_zmalloc("nvmf_tx_desc", sizeof(*tx_desc), 0);
-		if (!tx_desc) {
-			SPDK_ERRLOG("Unable to get tx desc object\n");
-			goto fail;
-		}
-
-		tx_desc->rsp_mr = rdma_reg_msgs(conn->rdma.cm_id, &tx_desc->rsp, sizeof(tx_desc->rsp));
-		if (tx_desc->rsp_mr == NULL) {
-			SPDK_ERRLOG("Unable to register tx desc buffer mr\n");
-			goto fail;
-		}
-
-		tx_desc->conn = conn;
-
-		/* initialize send_sgl of tx_desc */
-		tx_desc->send_sgl.addr = (uint64_t)&tx_desc->rsp;
-		tx_desc->send_sgl.length = sizeof(tx_desc->rsp);
-		tx_desc->send_sgl.lkey = tx_desc->rsp_mr->lkey;
-
-		/* init request state associated with each tx_desc */
-		tx_desc->req.rsp = &tx_desc->rsp;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "tx_desc %p: req %p, rsp %p\n",
-			      tx_desc, &tx_desc->req,
-			      tx_desc->req.rsp);
-
-		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_desc, tx_desc, link);
-	}
-
-	return 0;
-fail:
-	/* cleanup any partial descriptor that failed during init loop */
-	if (tx_desc != NULL) {
-
-		if (tx_desc->rsp_mr) {
-			rc = rdma_dereg_mr(tx_desc->rsp_mr);
-			if (rc) {
-				SPDK_ERRLOG("Unable to de-register tx mr\n");
-			}
-		}
-
-		rte_free(tx_desc);
-	}
-
-	STAILQ_FOREACH(tmp, &conn->rdma.qp_tx_desc, link) {
-		STAILQ_REMOVE(&conn->rdma.qp_tx_desc, tmp, nvme_qp_tx_desc, link);
-
-		rc = rdma_dereg_mr(tmp->rsp_mr);
-		if (rc) {
-			SPDK_ERRLOG("Unable to de-register tx mr\n");
-		}
-
-		rte_free(tmp);
-	}
-
-	return -ENOMEM;
-}
-
 static int
 nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
 {
-	struct nvme_qp_tx_desc *tx_desc;
+	struct spdk_nvmf_rdma_request *rdma_req;
 	int rc;
 
 	conn->rdma.pending_rdma_read_count--;
-	if (!STAILQ_EMPTY(&conn->rdma.qp_pending_desc)) {
-		tx_desc = STAILQ_FIRST(&conn->rdma.qp_pending_desc);
-		STAILQ_REMOVE_HEAD(&conn->rdma.qp_pending_desc, link);
-		STAILQ_INSERT_TAIL(&conn->rdma.qp_tx_active_desc, tx_desc, link);
+	if (!STAILQ_EMPTY(&conn->rdma.pending_rdma_reqs)) {
+		rdma_req = STAILQ_FIRST(&conn->rdma.pending_rdma_reqs);
+		STAILQ_REMOVE_HEAD(&conn->rdma.pending_rdma_reqs, link);
+		STAILQ_INSERT_TAIL(&conn->rdma.rdma_reqs, rdma_req, link);
 
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: tx_desc %p\n",
-			      tx_desc);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Issue rdma read from pending queue: rdma_req %p\n",
+			      rdma_req);
 
-		rc = nvmf_post_rdma_read(conn, &tx_desc->req);
+		rc = nvmf_post_rdma_read(conn, &rdma_req->req);
 		if (rc) {
 			SPDK_ERRLOG("Unable to post pending rdma read descriptor\n");
 			return -1;
@@ -1131,12 +987,11 @@ nvmf_process_pending_rdma(struct spdk_nvmf_conn *conn)
 static int
 nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 {
-	struct nvme_qp_rx_desc *rx_desc;
-	struct nvme_qp_tx_desc *tx_desc;
+	struct spdk_nvmf_rdma_request *rdma_req;
 	struct spdk_nvmf_request *req;
 	int ret;
 
-	rx_desc = (struct nvme_qp_rx_desc *)wc->wr_id;
+	rdma_req = (struct spdk_nvmf_rdma_request *)wc->wr_id;
 
 	if (wc->byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
 		SPDK_ERRLOG("recv length less than capsule header\n");
@@ -1144,23 +999,11 @@ nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv byte count 0x%x\n", wc->byte_len);
 
-	/* get a response buffer */
-	if (STAILQ_EMPTY(&conn->rdma.qp_tx_desc)) {
-		SPDK_ERRLOG("tx desc pool empty!\n");
-		return -1;
-	}
-	tx_desc = STAILQ_FIRST(&conn->rdma.qp_tx_desc);
-	nvmf_active_tx_desc(tx_desc);
-
-	req = &tx_desc->req;
-	req->conn = conn;
-	req->tx_desc = tx_desc;
-	req->rx_desc = rx_desc;
-	req->cmd = &rx_desc->cmd;
+	req = &rdma_req->req;
 
 	ret = spdk_nvmf_request_prep_data(req,
-					  rx_desc->bb, wc->byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
-					  rx_desc->bb, rx_desc->bb_sgl.length);
+					  rdma_req->bb, wc->byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
+					  rdma_req->bb, rdma_req->bb_sgl.length);
 	if (ret < 0) {
 		SPDK_ERRLOG("prep_data failed\n");
 		return spdk_nvmf_request_complete(req);
@@ -1188,7 +1031,7 @@ int
 nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 {
 	struct ibv_wc wc;
-	struct nvme_qp_tx_desc *tx_desc;
+	struct spdk_nvmf_rdma_request *rdma_req;
 	struct spdk_nvmf_request *req;
 	int rc;
 	int cq_count = 0;
@@ -1217,8 +1060,6 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		switch (wc.opcode) {
 		case IBV_WC_SEND:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ send completion\n");
-			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
-			nvmf_deactive_tx_desc(tx_desc);
 			break;
 
 		case IBV_WC_RDMA_WRITE:
@@ -1227,15 +1068,15 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			 * flag in rdma_write, to trace rdma write latency
 			 */
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma write completion\n");
-			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
-			req = &tx_desc->req;
+			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
+			req = &rdma_req->req;
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
 			break;
 
 		case IBV_WC_RDMA_READ:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "\nCQ rdma read completion\n");
-			tx_desc = (struct nvme_qp_tx_desc *)wc.wr_id;
-			req = &tx_desc->req;
+			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
+			req = &rdma_req->req;
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {

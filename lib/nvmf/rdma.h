@@ -54,34 +54,27 @@ struct spdk_nvmf_rdma_conn {
 	uint8_t						responder_resources;
 	uint8_t						initiator_depth;
 	uint8_t						pending_rdma_read_count;
-	STAILQ_HEAD(qp_pending_desc, nvme_qp_tx_desc)	qp_pending_desc;
-
-	STAILQ_HEAD(qp_rx_desc, nvme_qp_rx_desc)	qp_rx_desc;
-	STAILQ_HEAD(qp_tx_desc, nvme_qp_tx_desc)	qp_tx_desc;
-	STAILQ_HEAD(qp_tx_active_desc, nvme_qp_tx_desc)	qp_tx_active_desc;
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)		pending_rdma_reqs;
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)		rdma_reqs;
 };
 
-/* Define the Admin Queue Rx/Tx Descriptors */
+struct spdk_nvmf_rdma_request {
+	struct spdk_nvmf_request		req;
+	STAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 
-struct nvme_qp_rx_desc {
-	union nvmf_h2c_msg	cmd;
-	struct spdk_nvmf_conn	*conn;
-	struct ibv_mr		*cmd_mr;
-	struct ibv_sge		recv_sgl;
-	struct ibv_sge		bb_sgl; /* must follow recv_sgl */
-	struct ibv_mr		*bb_mr;
-	uint8_t			*bb;
-	uint32_t		bb_len;
-	STAILQ_ENTRY(nvme_qp_rx_desc) link;
-};
+	union nvmf_h2c_msg			cmd;
+	struct ibv_mr				*cmd_mr;
 
-struct nvme_qp_tx_desc {
-	union nvmf_c2h_msg		rsp;
-	struct spdk_nvmf_conn		*conn;
-	struct spdk_nvmf_request	req;
-	struct ibv_mr			*rsp_mr;
-	struct ibv_sge			send_sgl;
-	STAILQ_ENTRY(nvme_qp_tx_desc) link;
+	union nvmf_c2h_msg			rsp;
+	struct ibv_mr				*rsp_mr;
+
+	struct ibv_sge				send_sgl;
+	struct ibv_sge				recv_sgl;
+	struct ibv_sge				bb_sgl; /* must follow recv_sgl */
+
+	struct ibv_mr				*bb_mr;
+	uint8_t					*bb;
+	uint32_t				bb_len;
 };
 
 int nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
