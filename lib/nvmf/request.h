@@ -66,8 +66,6 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
-
-	TAILQ_ENTRY(spdk_nvmf_request) 	entries;
 };
 
 int
