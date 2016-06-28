@@ -23,7 +23,7 @@ if [ -e "/dev/nvme-fabrics" ]; then
 	chmod a+rw /dev/nvme-fabrics
 fi
 
-echo 'traddr='$NVMF_FIRST_TARGET_IP',transport=rdma,nr_io_queues=1,trsvcid='$NVMF_PORT',nqn=iqn.2013-06.com.intel.ch.spdk:cnode1' > /dev/nvme-fabrics
+echo 'traddr='$NVMF_FIRST_TARGET_IP',transport=rdma,nr_io_queues=1,trsvcid='$NVMF_PORT',nqn=nqn.2016-06.io.spdk:cnode1' > /dev/nvme-fabrics
 
 $testdir/nvmf_fio.py 4096 1 rw 1 verify
 $testdir/nvmf_fio.py 4096 1 randrw 1 verify

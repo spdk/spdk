@@ -34,7 +34,7 @@
 [Nvmf]
   # node name (not include optional part)
   # Users can optionally change this to fit their environment.
-  NodeBase "iqn.2013-06.com.intel.ch.spdk"
+  NodeBase "nqn.2016-06.io.spdk"
 
   # Set the optional in-capsule data byte length for I/O queue capsule size.
   # Accepted values must be divisible by 16 and less than or equal to

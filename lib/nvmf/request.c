@@ -410,8 +410,8 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		      connect_data->hostid[9],
 		      ntohs(*(uint16_t *)&connect_data->hostid[10]),
 		      ntohl(*(uint32_t *)&connect_data->hostid[12]));
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subsiqn: \"%s\"\n", (char *)&connect_data->subnqn[0]);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostiqn: \"%s\"\n", (char *)&connect_data->hostnqn[0]);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", (char *)&connect_data->subnqn[0]);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", (char *)&connect_data->hostnqn[0]);
 
 	response = &req->rsp->connect_rsp;
 

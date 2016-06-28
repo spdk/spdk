@@ -155,54 +155,34 @@ nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
-/* nvmf uses iSCSI IQN format to name target subsystems.  We expect that
-   the nvmf subsiqn name provided diring connect requests will be
+/* nvmf uses NQN format to name target subsystems.  We expect that
+   the nvmf subnqn name provided diring connect requests will be
    equivalent to a individual controller name
 */
 static int
 spdk_check_nvmf_name(const char *name)
 {
-	const unsigned char *up = (const unsigned char *) name;
-	size_t n;
+	size_t len;
 
-	/* valid iSCSI name? */
-	for (n = 0; up[n] != 0; n++) {
-		if (up[n] > 0x00U && up[n] <= 0x2cU)
-			goto err0;
-		if (up[n] == 0x2fU)
-			goto err0;
-		if (up[n] >= 0x3bU && up[n] <= 0x40U)
-			goto err0;
-		if (up[n] >= 0x5bU && up[n] <= 0x60U)
-			goto err0;
-		if (up[n] >= 0x7bU && up[n] <= 0x7fU)
-			goto err0;
-		if (isspace(up[n]))
-			goto err0;
+	len = strlen(name);
+	if (len > SPDK_NVMF_NQN_MAX_LEN) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", name, len, SPDK_NVMF_NQN_MAX_LEN);
+		return -1;
 	}
 
-	/* valid format? */
-	if (strncasecmp(name, "iqn.", 4) == 0) {
-		/* iqn.YYYY-MM.reversed.domain.name */
-		if (!isdigit(up[4]) || !isdigit(up[5]) || !isdigit(up[6])
-		    || !isdigit(up[7]) || up[8] != '-' || !isdigit(up[9])
-		    || !isdigit(up[10]) || up[11] != '.') {
-			SPDK_ERRLOG("invalid iqn format. "
-				    "expect \"iqn.YYYY-MM.reversed.domain.name\"\n");
-			return -1;
-		}
-	} else if (strncasecmp(name, "eui.", 4) == 0) {
-		/* EUI-64 -> 16bytes */
-		/* XXX */
-	} else if (strncasecmp(name, "naa.", 4) == 0) {
-		/* 64bit -> 16bytes, 128bit -> 32bytes */
-		/* XXX */
+	if (strncasecmp(name, "nqn.", 4) != 0) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", name);
+		return -1;
+	}
+
+	/* yyyy-mm. */
+	if (!(isdigit(name[4]) && isdigit(name[5]) && isdigit(name[6]) && isdigit(name[7]) &&
+	      name[8] == '-' && isdigit(name[9]) && isdigit(name[10]) && name[11] == '.')) {
+		SPDK_ERRLOG("Invalid date code in NQN \"%s\"\n", name);
+		return -1;
 	}
 
 	return 0;
-err0:
-	SPDK_ERRLOG("Invalid iSCSI character [val %x, index %d]\n", up[n], (int)n);
-	return -1;
 }
 
 static void
@@ -289,9 +269,7 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 		goto err0;
 	}
 
-	if (strncasecmp(name, "iqn.", 4) != 0
-	    && strncasecmp(name, "eui.", 4) != 0
-	    && strncasecmp(name, "naa.", 4) != 0) {
+	if (strncasecmp(name, "nqn.", 4) != 0) {
 		ss_group->name = spdk_sprintf_alloc("%s:%s", g_nvmf_tgt.nodebase, name);
 	} else {
 		ss_group->name = strdup(name);

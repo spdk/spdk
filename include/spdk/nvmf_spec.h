@@ -456,6 +456,7 @@ struct spdk_nvmf_extended_identify_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_extended_identify_ctrlr_data) == 256, "Incorrect size");
 
+#define SPDK_NVMF_NQN_MAX_LEN 223
 #define SPDK_NVMF_DISCOVERY_NQN "nqn.2014-08.org.nvmexpress.discovery"
 
 struct spdk_nvmf_discovery_identify_data {
