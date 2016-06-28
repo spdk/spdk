@@ -1,6 +1,25 @@
 Changelog
 =========
 
+Upcoming release
+----------------
+
+- NVMe
+  - The Weighted Round Robin arbitration method is now supported. This allows
+    the user to specify different priorities on a per-I/O-queue basis.  To
+    enable WRR, set the `arb_mechanism` field during `spdk_nvme_probe()`.
+  - A simplified "Hello World" example was added to show the proper way to use
+    the NVMe library API; see `examples/nvme/hello_world/hello_world.c`.
+- NVMe over Fabrics
+  - The configuration file format was changed, which will require updates to
+    any existing nvmf.conf files (see `etc/spdk/nvmf.conf.in`):
+    - `SubsystemGroup` was renamed to `Subsystem`.
+    - `AuthFile` was removed (it was unimplemented).
+    - `nvmf_tgt` was updated to correctly recognize NQN (NVMe Qualified Names)
+      when naming subsystems.  The default node name was changed to reflect this;
+      it is now "nqn.2016-06.io.spdk".
+  - Many bug fixes and cleanups were applied to the `nvmf_tgt` app and library.
+
 v16.06: NVMf userspace target
 -----------------------------
 
