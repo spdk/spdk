@@ -450,6 +450,11 @@ alloc_rdma_reqs(struct spdk_nvmf_conn *conn)
 			      rdma_req, &rdma_req->req,
 			      rdma_req->req.rsp);
 
+		if (nvmf_post_rdma_recv(conn, rdma_req)) {
+			SPDK_ERRLOG("Unable to post connection rx desc\n");
+			goto fail;
+		}
+
 		STAILQ_INSERT_TAIL(&conn->rdma.rdma_reqs, rdma_req, link);
 	}
 
@@ -476,7 +481,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
 	struct rdma_cm_id		*conn_id;
 	struct spdk_nvmf_conn		*conn;
-	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
 	struct sockaddr_in		*addr;
 	struct rdma_conn_param		*host_event_data = NULL;
@@ -581,15 +585,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		goto err1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA requests allocated\n");
-
-	/* Post all the RX descriptors */
-	STAILQ_FOREACH(rdma_req, &conn->rdma.rdma_reqs, link) {
-		if (nvmf_post_rdma_recv(conn, rdma_req)) {
-			SPDK_ERRLOG("Unable to post connection rx desc\n");
-			goto err1;
-		}
-	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RX buffers posted\n");
 
 	rc = spdk_nvmf_startup_conn(conn);
 	if (rc) {
