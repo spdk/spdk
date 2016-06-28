@@ -354,9 +354,10 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 
 static int
 nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
-		    struct spdk_nvmf_rdma_request *rdma_req)
+		    struct spdk_nvmf_request *req)
 {
 	struct ibv_recv_wr wr, *bad_wr = NULL;
+	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	int rc;
 
 	/* Update Connection SQ Tracking, increment
@@ -400,12 +401,6 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	/* restore the SGL length that may have been modified */
 	rdma_req->bb_sgl.length = rdma_req->bb_len;
 
-	/* Re-post recv */
-	if (nvmf_post_rdma_recv(conn, rdma_req)) {
-		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
-		return -1;
-	}
-
 	nvmf_ibv_send_wr_init(&wr, NULL, &rdma_req->send_sgl, (uint64_t)rdma_req,
 			      IBV_WR_SEND, IBV_SEND_SIGNALED);
 
@@ -418,7 +413,8 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 }
 
 int
-spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_request *req)
+spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn,
+				struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	int ret;
@@ -444,6 +440,19 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_re
 }
 
 int
+spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
+			       struct spdk_nvmf_request *req)
+{
+
+	if (nvmf_post_rdma_recv(req->conn, req)) {
+		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int
 spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
@@ -459,7 +468,7 @@ spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn)
 			      rdma_req, &rdma_req->req,
 			      rdma_req->req.rsp);
 
-		if (nvmf_post_rdma_recv(conn, rdma_req)) {
+		if (nvmf_post_rdma_recv(conn, &rdma_req->req)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
 			goto fail;
 		}
@@ -941,6 +950,11 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		switch (wc.opcode) {
 		case IBV_WC_SEND:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ send completion\n");
+			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
+			req = &rdma_req->req;
+			if (spdk_nvmf_request_release(req)) {
+				return -1;
+			}
 			break;
 
 		case IBV_WC_RDMA_WRITE:

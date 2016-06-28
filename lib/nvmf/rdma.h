@@ -76,6 +76,8 @@ int nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 			struct spdk_nvmf_request *req);
 int spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn,
 				    struct spdk_nvmf_request *req);
+int spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
+				   struct spdk_nvmf_request *req);
 int nvmf_rdma_init(void);
 int spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn);
 void spdk_nvmf_rdma_free_reqs(struct spdk_nvmf_conn *conn);

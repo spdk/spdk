@@ -70,6 +70,12 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
+int
+spdk_nvmf_request_release(struct spdk_nvmf_request *req)
+{
+	return spdk_nvmf_rdma_request_release(req->conn, req);
+}
+
 static bool
 nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 {
