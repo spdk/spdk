@@ -166,6 +166,73 @@ free_rdma_reqs(struct spdk_nvmf_conn *conn)
 	}
 }
 
+static struct spdk_nvmf_rdma_request *
+alloc_rdma_req(struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_request *rdma_req;
+
+	rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
+	if (!rdma_req) {
+		SPDK_ERRLOG("Unable to allocate rdma_req\n");
+		return NULL;
+	}
+
+	rdma_req->cmd_mr = rdma_reg_msgs(conn->rdma.cm_id, &rdma_req->cmd, sizeof(rdma_req->cmd));
+	if (rdma_req->cmd_mr == NULL) {
+		SPDK_ERRLOG("Unable to register cmd_mr\n");
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+
+	rdma_req->recv_sgl.addr = (uint64_t)&rdma_req->cmd;
+	rdma_req->recv_sgl.length = sizeof(rdma_req->cmd);
+	rdma_req->recv_sgl.lkey = rdma_req->cmd_mr->lkey;
+
+	if (conn->type == CONN_TYPE_AQ) {
+		/* Admin commands can only send 4k of data maximum */
+		rdma_req->bb_len = SMALL_BB_MAX_SIZE;
+	} else {
+		rdma_req->bb_len = LARGE_BB_MAX_SIZE;
+	}
+	rdma_req->bb = rte_zmalloc("nvmf_bb", rdma_req->bb_len, 0);
+	if (!rdma_req->bb) {
+		SPDK_ERRLOG("Unable to get %u byte bounce buffer\n", rdma_req->bb_len);
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+	rdma_req->bb_mr = rdma_reg_read(conn->rdma.cm_id,
+					(void *)rdma_req->bb,
+					rdma_req->bb_len);
+	if (rdma_req->bb_mr == NULL) {
+		SPDK_ERRLOG("Unable to register bb_mr\n");
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+
+	/* initialize bb_sgl */
+	rdma_req->bb_sgl.addr = (uint64_t)rdma_req->bb;
+	rdma_req->bb_sgl.length = rdma_req->bb_len;
+	rdma_req->bb_sgl.lkey = rdma_req->bb_mr->lkey;
+
+	rdma_req->rsp_mr = rdma_reg_msgs(conn->rdma.cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
+	if (rdma_req->rsp_mr == NULL) {
+		SPDK_ERRLOG("Unable to register rsp_mr\n");
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+
+	/* initialize send_sgl */
+	rdma_req->send_sgl.addr = (uint64_t)&rdma_req->rsp;
+	rdma_req->send_sgl.length = sizeof(rdma_req->rsp);
+	rdma_req->send_sgl.lkey = rdma_req->rsp_mr->lkey;
+
+	rdma_req->req.cmd = &rdma_req->cmd;
+	rdma_req->req.rsp = &rdma_req->rsp;
+	rdma_req->req.conn = conn;
+
+	return rdma_req;
+}
+
 static void
 nvmf_drain_cq(struct spdk_nvmf_conn *conn)
 {
@@ -383,68 +450,10 @@ alloc_rdma_reqs(struct spdk_nvmf_conn *conn)
 	int i;
 
 	for (i = 0; i < conn->rdma.queue_depth; i++) {
-		rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
-		if (!rdma_req) {
-			SPDK_ERRLOG("Unable to get rdma_req\n");
+		rdma_req = alloc_rdma_req(conn);
+		if (rdma_req == NULL) {
 			goto fail;
 		}
-
-		rdma_req->cmd_mr = rdma_reg_msgs(conn->rdma.cm_id, &rdma_req->cmd, sizeof(rdma_req->cmd));
-		if (rdma_req->cmd_mr == NULL) {
-			SPDK_ERRLOG("Unable to register cmd_mr\n");
-			goto fail;
-		}
-
-		/* initialize recv_sgl */
-		rdma_req->recv_sgl.addr = (uint64_t)&rdma_req->cmd;
-		rdma_req->recv_sgl.length = sizeof(rdma_req->cmd);
-		rdma_req->recv_sgl.lkey = rdma_req->cmd_mr->lkey;
-
-		/* pre-assign a data bb (bounce buffer) with each RX descriptor */
-		/*
-		  For admin queue, assign smaller BB size to support maximum data that
-		  would be exchanged related to admin commands.  For IO queue, assign
-		  the large BB size that is equal to the maximum I/O transfer supported
-		  by the NVMe device. This large BB is also used for in-capsule receive
-		  data.
-		*/
-		if (conn->type == CONN_TYPE_AQ) {
-			rdma_req->bb_len = SMALL_BB_MAX_SIZE;
-		} else { // for IO queues
-			rdma_req->bb_len = LARGE_BB_MAX_SIZE;
-		}
-		rdma_req->bb = rte_zmalloc("nvmf_bb", rdma_req->bb_len, 0);
-		if (!rdma_req->bb) {
-			SPDK_ERRLOG("Unable to get %u-byte bounce buffer\n", rdma_req->bb_len);
-			goto fail;
-		}
-		rdma_req->bb_mr = rdma_reg_read(conn->rdma.cm_id,
-						(void *)rdma_req->bb,
-						rdma_req->bb_len);
-		if (rdma_req->bb_mr == NULL) {
-			SPDK_ERRLOG("Unable to register bb_mr\n");
-			goto fail;
-		}
-
-		/* initialize bb_sgl */
-		rdma_req->bb_sgl.addr = (uint64_t)rdma_req->bb;
-		rdma_req->bb_sgl.length = rdma_req->bb_len;
-		rdma_req->bb_sgl.lkey = rdma_req->bb_mr->lkey;
-
-		rdma_req->rsp_mr = rdma_reg_msgs(conn->rdma.cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
-		if (rdma_req->rsp_mr == NULL) {
-			SPDK_ERRLOG("Unable to register rsp_mr\n");
-			goto fail;
-		}
-
-		/* initialize send_sgl */
-		rdma_req->send_sgl.addr = (uint64_t)&rdma_req->rsp;
-		rdma_req->send_sgl.length = sizeof(rdma_req->rsp);
-		rdma_req->send_sgl.lkey = rdma_req->rsp_mr->lkey;
-
-		rdma_req->req.cmd = &rdma_req->cmd;
-		rdma_req->req.rsp = &rdma_req->rsp;
-		rdma_req->req.conn = conn;
 
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_req %p: req %p, rsp %p\n",
 			      rdma_req, &rdma_req->req,
@@ -461,11 +470,6 @@ alloc_rdma_reqs(struct spdk_nvmf_conn *conn)
 	return 0;
 
 fail:
-	/* cleanup any partial rdma_req that failed during init loop */
-	if (rdma_req != NULL) {
-		free_rdma_req(rdma_req);
-	}
-
 	STAILQ_FOREACH(rdma_req, &conn->rdma.rdma_reqs, link) {
 		STAILQ_REMOVE(&conn->rdma.rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
 		free_rdma_req(rdma_req);
