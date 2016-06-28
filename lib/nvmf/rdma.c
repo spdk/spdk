@@ -47,7 +47,6 @@
 
 #include "conn.h"
 #include "rdma.h"
-#include "nvmf.h"
 #include "port.h"
 #include "host.h"
 #include "spdk/assert.h"

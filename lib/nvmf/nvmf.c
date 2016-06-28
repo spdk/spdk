@@ -38,7 +38,6 @@
 
 #include "spdk/log.h"
 #include "spdk/conf.h"
-#include "nvmf.h"
 #include "conf.h"
 #include "conn.h"
 #include "controller.h"
@@ -122,7 +121,7 @@ static int spdk_nvmf_check_pool(struct rte_mempool *pool, uint32_t count)
 	}
 }
 
-int
+static int
 spdk_nvmf_check_pools(void)
 {
 	struct spdk_nvmf_globals *spdk_nvmf = &g_nvmf_tgt;
@@ -273,6 +272,11 @@ nvmf_tgt_subsystem_fini(void)
 	free(g_nvmf_tgt.nodebase);
 
 	pthread_mutex_destroy(&g_nvmf_tgt.mutex);
+
+	if (spdk_nvmf_check_pools() != 0) {
+		return -1;
+	}
+
 	return 0;
 }
 

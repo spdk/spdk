@@ -48,7 +48,6 @@
 #include "nvmf/rdma.h"
 #include "nvmf/port.h"
 #include "nvmf/host.h"
-#include "nvmf/nvmf.h"
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"
@@ -231,10 +230,6 @@ main(int argc, char **argv)
 	rc = spdk_app_start(spdk_nvmf_startup, NULL, NULL);
 
 	spdk_app_fini();
-
-	if (spdk_nvmf_check_pools() != 0) {
-		rc = -1;
-	}
 
 	return rc;
 }

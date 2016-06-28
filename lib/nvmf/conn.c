@@ -45,7 +45,6 @@
 #include <rte_cycles.h>
 #include <rte_timer.h>
 
-#include "nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "conn.h"
 #include "rdma.h"

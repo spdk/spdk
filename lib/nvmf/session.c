@@ -34,7 +34,6 @@
 #include <string.h>
 
 #include "session.h"
-#include "nvmf.h"
 #include "nvmf_internal.h"
 #include "subsystem_grp.h"
 #include "spdk/log.h"

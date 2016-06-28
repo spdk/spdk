@@ -35,7 +35,6 @@
 #include <rte_debug.h>
 
 #include "conn.h"
-#include "nvmf.h"
 #include "rdma.h"
 #include "port.h"
 #include "spdk/log.h"

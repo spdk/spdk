@@ -34,8 +34,6 @@
 #ifndef __NVMF_INTERNAL_H__
 #define __NVMF_INTERNAL_H__
 
-#include "nvmf.h"
-
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>

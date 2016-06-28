@@ -37,7 +37,6 @@
 #include "port.h"
 #include "host.h"
 #include "nvmf_internal.h"
-#include "nvmf.h"
 #include "session.h"
 #include "subsystem_grp.h"
 #include "spdk/log.h"
