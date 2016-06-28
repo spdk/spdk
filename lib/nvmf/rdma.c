@@ -156,6 +156,15 @@ free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
 }
 
 void
+spdk_nvmf_rdma_free_req(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
+
+	STAILQ_REMOVE(&req->conn->rdma.rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
+	free_rdma_req(rdma_req);
+}
+
+void
 spdk_nvmf_rdma_free_reqs(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
@@ -270,8 +279,10 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 static void
 nvmf_trace_ibv_sge(struct ibv_sge *sg_list)
 {
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p length 0x%x lkey 0x%x\n",
-		      (void *)sg_list->addr, sg_list->length, sg_list->lkey);
+	if (sg_list) {
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p length 0x%x lkey 0x%x\n",
+			      (void *)sg_list->addr, sg_list->length, sg_list->lkey);
+	}
 }
 
 static void
@@ -494,6 +505,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
 	struct rdma_cm_id		*conn_id;
 	struct spdk_nvmf_conn		*conn;
+	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
 	struct sockaddr_in		*addr;
 	struct rdma_conn_param		*host_event_data = NULL;
@@ -591,13 +603,15 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 
 	STAILQ_INIT(&conn->rdma.rdma_reqs);
 
-	/* Allocate Buffers */
-	rc = spdk_nvmf_rdma_alloc_reqs(conn);
-	if (rc) {
-		SPDK_ERRLOG("Unable to allocate connection RDMA requests\n");
+	/* Allocate 1 buffer suitable for the CONNECT capsule.
+	 * Once that is received, the full queue depth will be allocated.
+	 */
+	rdma_req = alloc_rdma_req(conn);
+	if (nvmf_post_rdma_recv(conn, &rdma_req->req)) {
+		SPDK_ERRLOG("Unable to post connection rx desc\n");
 		goto err1;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA requests allocated\n");
+	STAILQ_INSERT_TAIL(&conn->rdma.rdma_reqs, rdma_req, link);
 
 	rc = spdk_nvmf_startup_conn(conn);
 	if (rc) {

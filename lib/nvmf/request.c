@@ -73,6 +73,21 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_request_release(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_capsule_cmd *capsule;
+
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
+		capsule = &req->cmd->nvmf_cmd;
+		if (capsule->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
+			/* Special case: connect is always the first capsule and new
+			 * work queue entries are allocated in response to this command.
+			 * Instead of re-posting this entry, just free it.
+			 */
+			spdk_nvmf_rdma_free_req(req);
+			return 0;
+		}
+	}
+
 	return spdk_nvmf_rdma_request_release(req->conn, req);
 }
 
@@ -431,6 +446,13 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 			/* When session first created, set some attributes */
 			nvmf_init_conn_properites(conn, session, response);
 		}
+	}
+
+	/* Allocate RDMA reqs according to the queue depth and conn type*/
+	if (spdk_nvmf_rdma_alloc_reqs(conn)) {
+		SPDK_ERRLOG("Unable to allocate sufficient RDMA work requests\n");
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return true;
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
