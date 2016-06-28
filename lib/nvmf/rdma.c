@@ -443,8 +443,8 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn, struct spdk_nvmf_re
 	return 0;
 }
 
-static int
-alloc_rdma_reqs(struct spdk_nvmf_conn *conn)
+int
+spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
 	int i;
@@ -583,7 +583,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	STAILQ_INIT(&conn->rdma.rdma_reqs);
 
 	/* Allocate Buffers */
-	rc = alloc_rdma_reqs(conn);
+	rc = spdk_nvmf_rdma_alloc_reqs(conn);
 	if (rc) {
 		SPDK_ERRLOG("Unable to allocate connection RDMA requests\n");
 		goto err1;
