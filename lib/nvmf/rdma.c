@@ -155,8 +155,8 @@ free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
 	rte_free(rdma_req);
 }
 
-static void
-free_rdma_reqs(struct spdk_nvmf_conn *conn)
+void
+spdk_nvmf_rdma_free_reqs(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
 
@@ -255,7 +255,7 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 
 	rdma_destroy_qp(conn->rdma.cm_id);
 
-	free_rdma_reqs(conn);
+	spdk_nvmf_rdma_free_reqs(conn);
 
 	nvmf_drain_cq(conn);
 	rc = ibv_destroy_cq(conn->rdma.cq);
