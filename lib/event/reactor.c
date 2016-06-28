@@ -56,6 +56,8 @@
 
 #include "spdk/log.h"
 
+#define SPDK_MAX_SOCKET		64
+
 enum spdk_reactor_state {
 	SPDK_REACTOR_STATE_INVALID = 0,
 	SPDK_REACTOR_STATE_INITIALIZED = 1,
@@ -87,7 +89,7 @@ static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
 static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore);
 
-struct rte_mempool *g_spdk_event_mempool;
+struct rte_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 
 /** \file
 
@@ -107,8 +109,10 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 {
 	struct spdk_event *event = NULL;
 	int rc;
+	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
+	RTE_VERIFY(socket_id < SPDK_MAX_SOCKET);
 
-	rc = rte_mempool_get(g_spdk_event_mempool, (void **)&event);
+	rc = rte_mempool_get(g_spdk_event_mempool[socket_id], (void **)&event);
 	RTE_VERIFY((rc == 0) && (event != NULL));
 
 	event->lcore = lcore;
@@ -121,9 +125,12 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 }
 
 static void
-spdk_event_free(struct spdk_event *event)
+spdk_event_free(uint32_t lcore, struct spdk_event *event)
 {
-	rte_mempool_put(g_spdk_event_mempool, (void *)event);
+	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
+	RTE_VERIFY(socket_id < SPDK_MAX_SOCKET);
+
+	rte_mempool_put(g_spdk_event_mempool[socket_id], (void *)event);
 }
 
 void
@@ -170,7 +177,7 @@ spdk_event_queue_run_single(uint32_t lcore)
 	}
 
 	event->fn(event);
-	spdk_event_free(event);
+	spdk_event_free(lcore, event);
 }
 
 static void
@@ -440,6 +447,9 @@ spdk_reactors_init(const char *mask)
 	uint32_t i;
 	int rc;
 	struct spdk_reactor *reactor;
+	uint64_t socket_mask = 0x0;
+	uint8_t socket_count = 0;
+	char mempool_name[32];
 
 	rc = spdk_reactor_parse_mask(mask);
 	if (rc < 0) {
@@ -447,7 +457,6 @@ spdk_reactors_init(const char *mask)
 	}
 
 	printf("Occupied cpu core mask is 0x%lx\n", spdk_app_get_core_mask());
-	printf("Occupied cpu socket mask is 0x%lx\n", spdk_reactor_get_socket_mask());
 
 	RTE_LCORE_FOREACH(i) {
 		if (((1ULL << i) & spdk_app_get_core_mask())) {
@@ -457,15 +466,47 @@ spdk_reactors_init(const char *mask)
 		}
 	}
 
-	/* TODO: separate event mempools per socket */
-	g_spdk_event_mempool = rte_mempool_create("spdk_event_mempool", 262144,
-			       sizeof(struct spdk_event), 128, 0,
-			       NULL, NULL, NULL, NULL,
-			       SOCKET_ID_ANY, 0);
+	socket_mask = spdk_reactor_get_socket_mask();
+	printf("Occupied cpu socket mask is 0x%lx\n", socket_mask);
 
-	if (g_spdk_event_mempool == NULL) {
-		SPDK_ERRLOG("spdk_event_mempool allocation failed\n");
-		return -1;
+	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
+		if ((1ULL << i) & socket_mask) {
+			socket_count++;
+		}
+	}
+
+	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
+		if ((1ULL << i) & socket_mask) {
+			snprintf(mempool_name, sizeof(mempool_name), "spdk_event_mempool_%d", i);
+			g_spdk_event_mempool[i] = rte_mempool_create(mempool_name,
+						  (262144 / socket_count),
+						  sizeof(struct spdk_event), 128, 0,
+						  NULL, NULL, NULL, NULL, i, 0);
+
+			if (g_spdk_event_mempool[i] == NULL) {
+				SPDK_ERRLOG("spdk_event_mempool creation failed on socket %d\n", i);
+
+				/*
+				 * Instead of failing the operation directly, try to create
+				 * the mempool on any available sockets in the case that
+				 * memory is not evenly installed on all sockets. If still
+				 * fails, free all allocated memory and exits.
+				 */
+				g_spdk_event_mempool[i] = rte_mempool_create(
+								  mempool_name,
+								  (262144 / socket_count),
+								  sizeof(struct spdk_event),
+								  128, 0,
+								  NULL, NULL, NULL, NULL,
+								  SOCKET_ID_ANY, 0);
+
+				/* TODO: in DPDK 16.04, free mempool API is avaialbe. */
+				if (g_spdk_event_mempool[i] == NULL) {
+					SPDK_ERRLOG("spdk_event_mempool creation failed\n");
+					return -1;
+				}
+			}
+		}
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
