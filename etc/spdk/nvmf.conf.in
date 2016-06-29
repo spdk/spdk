@@ -36,16 +36,6 @@
   # Users can optionally change this to fit their environment.
   NodeBase "nqn.2016-06.io.spdk"
 
-  # Set the optional in-capsule data byte length for I/O queue capsule size.
-  # Accepted values must be divisible by 16 and less than or equal to
-  # the default maximum transfer length NVMF_MAX_RECV_DATA_TRANSFER_SIZE.
-  # A minimum recommended value of 1024 bytes allows NVMf connect
-  # commands to use in-capsule data.  Specifying a value greater than 4096
-  # will allow NVMf write requests <= 4096 in length to use in-capsule
-  # immediate data and bypass the need to perfrom an rdma_read operation
-  # to pull the data from the host.
-  MaxInCapsuleData 1024
-
   # Set the maximum number of NVMf logical controller sessions allowed
   # for each subsystem provisioned below.  The default value (1) is used if
   # not set here.

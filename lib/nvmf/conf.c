@@ -48,7 +48,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 {
 	struct spdk_conf_section *sp;
 	char *nodebase;
-	int max_in_capsule_data;
 	int max_sessions_per_subsystem;
 	int max_queue_depth;
 	int max_conn_per_sess;
@@ -65,11 +64,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	nodebase = spdk_conf_section_get_val(sp, "NodeBase");
 	if (nodebase == NULL) {
 		nodebase = SPDK_NVMF_DEFAULT_NODEBASE;
-	}
-
-	max_in_capsule_data = spdk_conf_section_get_intval(sp, "MaxInCapsuleData");
-	if (max_in_capsule_data < 0) {
-		max_in_capsule_data = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
 	}
 
 	max_sessions_per_subsystem = spdk_conf_section_get_intval(sp, "MaxSessionsPerSubsystem");
@@ -90,7 +84,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	max_recv_seg_len = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE;
 	listen_port = SPDK_NVMF_DEFAULT_SIN_PORT;
 
-	rc = nvmf_tgt_init(nodebase, max_in_capsule_data, max_sessions_per_subsystem,
+	rc = nvmf_tgt_init(nodebase, max_sessions_per_subsystem,
 			   max_queue_depth, max_conn_per_sess, max_recv_seg_len, listen_port);
 
 	return rc;

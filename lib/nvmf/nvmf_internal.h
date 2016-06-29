@@ -57,7 +57,6 @@
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
 #define SPDK_NVMF_DEFAULT_NODEBASE "nqn.2016-06.io.spdk"
-#define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 1024
 #define SPDK_NVMF_DEFAULT_MAX_SESSIONS_PER_SUBSYSTEM 1
 #define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
 #define SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION 4
@@ -105,7 +104,6 @@ struct spdk_nvmf_globals {
 
 	pthread_mutex_t mutex;
 
-	int MaxInCapsuleData;
 	int MaxSessionsPerSubsystem;
 	int MaxQueueDepth;
 	int MaxConnectionsPerSession;
@@ -119,7 +117,7 @@ void
 nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);
 
 
-int nvmf_tgt_init(char *nodebase, int max_in_capsule_data, int max_sessions, int max_queue_depth,
+int nvmf_tgt_init(char *nodebase, int max_sessions, int max_queue_depth,
 		  int max_conn_per_sess, int max_recv_seg_len, int listen_port);
 
 int nvmf_initialize(void);

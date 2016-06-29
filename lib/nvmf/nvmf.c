@@ -137,7 +137,7 @@ spdk_nvmf_check_pools(void)
 }
 
 int
-nvmf_tgt_init(char *nodebase, int max_in_capsule_data,
+nvmf_tgt_init(char *nodebase,
 	      int max_sessions_per_subsystem,
 	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len, int listen_port)
 {
@@ -149,17 +149,6 @@ nvmf_tgt_init(char *nodebase, int max_in_capsule_data,
 		return -EINVAL;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NodeBase: %s\n", g_nvmf_tgt.nodebase);
-
-	if (max_in_capsule_data >= 16 &&
-	    max_in_capsule_data % 16 == 0 &&
-	    max_in_capsule_data <= SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE) {
-		g_nvmf_tgt.MaxInCapsuleData = max_in_capsule_data;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxInCapsuleData: to %d\n",
-			      g_nvmf_tgt.MaxInCapsuleData);
-	} else {
-		SPDK_ERRLOG("Invalid MaxInCapsuleData: %d\n", max_in_capsule_data);
-		return -EINVAL;
-	}
 
 	if (max_sessions_per_subsystem >= 1 &&
 	    max_sessions_per_subsystem <= SPDK_NVMF_DEFAULT_MAX_SESSIONS_PER_SUBSYSTEM) {
