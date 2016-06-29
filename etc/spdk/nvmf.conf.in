@@ -26,10 +26,6 @@
   # syslog facility
   LogFacility "local7"
 
-[Rpc]
-  # Defines whether nvmf will enable configuration via RPC
-  #RpcConfiguration Yes
-
 # This next section defines NVMf protocol specific global options
 [Nvmf]
   # node name (not include optional part)
