@@ -381,18 +381,9 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	wr.wr_id = (uintptr_t)rdma_req;
 	wr.next = NULL;
 	wr.sg_list = &rdma_req->recv_sgl;
-	wr.num_sge = 1;
+	wr.num_sge = 2;
 
 	nvmf_trace_ibv_sge(&rdma_req->recv_sgl);
-
-	/* for I/O queues we add bb sgl for in-capsule data use */
-	if (conn->type == CONN_TYPE_IOQ) {
-		wr.num_sge = 2;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sgl2 local addr %p, length 0x%x, lkey 0x%x\n",
-			      (void *)rdma_req->bb_sgl.addr,
-			      rdma_req->bb_sgl.length,
-			      rdma_req->bb_sgl.lkey);
-	}
 
 	rc = ibv_post_recv(conn->rdma.qp, &wr, &bad_wr);
 	if (rc) {
