@@ -139,7 +139,7 @@ spdk_nvmf_check_pools(void)
 int
 nvmf_tgt_init(char *nodebase,
 	      int max_sessions_per_subsystem,
-	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len)
+	      int max_queue_depth, int max_conn_per_sess)
 {
 	int rc;
 
@@ -179,11 +179,6 @@ nvmf_tgt_init(char *nodebase,
 		SPDK_ERRLOG("Invalid MaxConnectionsPerSession: %d\n", max_conn_per_sess);
 		return -EINVAL;
 	}
-
-
-	g_nvmf_tgt.MaxRecvDataSegmentLength = max_recv_seg_len;
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxRecvDataSegmentLength %d\n",
-		      g_nvmf_tgt.MaxRecvDataSegmentLength);
 
 	rc = pthread_mutex_init(&g_nvmf_tgt.mutex, NULL);
 	if (rc != 0) {

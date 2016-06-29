@@ -107,7 +107,6 @@ struct spdk_nvmf_globals {
 	int MaxSessionsPerSubsystem;
 	int MaxQueueDepth;
 	int MaxConnectionsPerSession;
-	int MaxRecvDataSegmentLength;
 
 	struct rte_mempool *nvme_request_pool;
 	uint16_t	   sin_port;
@@ -118,7 +117,7 @@ nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);
 
 
 int nvmf_tgt_init(char *nodebase, int max_sessions, int max_queue_depth,
-		  int max_conn_per_sess, int max_recv_seg_len);
+		  int max_conn_per_sess);
 
 int nvmf_initialize(void);
 void nvmf_shutdown(void);
