@@ -460,19 +460,18 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
 	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
 	struct spdk_nvme_cmd *cmd = &h2c_msg->nvme_cmd;
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
-	const char *cmd_type;
 	uint8_t opc;
-
-	cmd_type = conn_type == CONN_TYPE_AQ ? "Admin" : "I/O";
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		opc = cap_hdr->fctype;
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
-			      cmd_type, cap_hdr->fctype, cap_hdr->cid);
+			      conn_type == CONN_TYPE_AQ ? "Admin" : "I/O",
+			      cap_hdr->fctype, cap_hdr->cid);
 	} else {
 		opc = cmd->opc;
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
-			      cmd_type, cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
+			      conn_type == CONN_TYPE_AQ ? "Admin" : "I/O",
+			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
 		if (cmd->mptr) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
 		}
