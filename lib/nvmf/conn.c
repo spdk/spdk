@@ -367,7 +367,7 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 	}
 
 	/* increase the I/O recv capsule size for in_capsule data */
-	lcdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)&session->vcdata.reserved5[1088];
+	lcdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
 	lcdata->ioccsz += (SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 16);
 }
 
