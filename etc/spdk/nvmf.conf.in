@@ -69,10 +69,10 @@
 #  NVM subsystem controller session, providing a means to distribute NVMf
 #  traffic across all network ports.
 [Port1]
-  FabricIntf 15.15.15.2:7174
+  FabricIntf 15.15.15.2:4420
 
 [Port2]
-  FabricIntf 192.168.2.21:7174
+  FabricIntf 192.168.2.21:4420
 
 # Users must change the Host section(s) to match the IP
 #  addresses of the clients that will connect to this target.
