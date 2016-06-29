@@ -139,7 +139,7 @@ spdk_nvmf_check_pools(void)
 int
 nvmf_tgt_init(char *nodebase,
 	      int max_sessions_per_subsystem,
-	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len, int listen_port)
+	      int max_queue_depth, int max_conn_per_sess, int max_recv_seg_len)
 {
 	int rc;
 

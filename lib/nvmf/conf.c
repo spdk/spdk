@@ -52,7 +52,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	int max_queue_depth;
 	int max_conn_per_sess;
 	int max_recv_seg_len;
-	int listen_port;
 	int rc;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
@@ -82,10 +81,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	}
 
 	max_recv_seg_len = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE;
-	listen_port = SPDK_NVMF_DEFAULT_SIN_PORT;
 
 	rc = nvmf_tgt_init(nodebase, max_sessions_per_subsystem,
-			   max_queue_depth, max_conn_per_sess, max_recv_seg_len, listen_port);
+			   max_queue_depth, max_conn_per_sess, max_recv_seg_len);
 
 	return rc;
 }
