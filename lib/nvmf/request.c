@@ -434,14 +434,18 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 
 	response = &req->rsp->connect_rsp;
 
-	session = nvmf_connect((void *)conn, connect, connect_data, response);
+	conn->qid = connect->qid;
+	conn->cntlid = connect_data->cntlid;
+	if (conn->qid > 0) {
+		conn->type = CONN_TYPE_IOQ;
+	} else {
+		conn->type = CONN_TYPE_AQ;
+	}
+
+	session = nvmf_connect(conn, connect, connect_data, response);
 	if (session != NULL) {
 		conn->sess = session;
-		conn->qid = connect->qid;
-		if (connect->qid > 0) {
-			conn->type = CONN_TYPE_IOQ; /* I/O Connection */
-		} else {
-			/* When session first created, set some attributes */
+		if (conn->type == CONN_TYPE_AQ) {
 			nvmf_init_conn_properites(conn, session, response);
 		}
 	}

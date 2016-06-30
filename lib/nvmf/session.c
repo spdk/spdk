@@ -236,116 +236,67 @@ nvmf_find_session_by_id(const char *subnqn, uint16_t cntl_id)
 }
 
 struct nvmf_session *
-nvmf_connect(void *fabric_conn,
+nvmf_connect(struct spdk_nvmf_conn *conn,
 	     struct spdk_nvmf_fabric_connect_cmd *connect,
 	     struct spdk_nvmf_fabric_connect_data *connect_data,
 	     struct spdk_nvmf_fabric_connect_rsp *response)
 {
 	struct nvmf_session *session;
-	struct nvmf_connection_entry *connection = NULL;
 
-	connection = calloc(1, sizeof(struct nvmf_connection_entry));
-	if (connection == NULL)
-		goto connect_fail;
-
-	/* Figure out if this is the first connect and we
-	 * need to allocate an nvmf_session or if this is
-	 * a subsequent connect for an I/O queue and we need
-	 * to return an existing session
-	 */
-	if (connect->qid == 0) {
-		/* first connect for AQ connection */
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "AQ connect capsule\n");
-		if (connect_data->cntlid == 0xffff) {
-			/* no nvmf session/controller association, allocate one */
-			session = nvmf_create_session(connect_data->subnqn);
-			if (session == NULL) {
-				SPDK_ERRLOG("create session failed\n");
-				response->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-				goto connect_fail;
-			}
-		} else {
-			SPDK_ERRLOG("nvmf AQ connection attempt to cntlid %d\n", connect_data->cntlid);
+	if (conn->type == CONN_TYPE_AQ) {
+		/* For admin connections, establish a new session */
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT Admin Queue for controller id %d\n", conn->cntlid);
+		if (conn->cntlid != 0xFFFF) {
+			/* This NVMf target only supports dynamic mode. */
+			SPDK_ERRLOG("The NVMf target only supports dynamic mode.\n");
 			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-			goto connect_fail;
+			return NULL;
 		}
-		connection->is_aq_conn = 1;
+
+		session = nvmf_create_session(connect_data->subnqn);
+		if (session == NULL) {
+			response->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
+			return NULL;
+		}
 	} else {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "IOQ connect capsule\n");
-		/* locate the existing session */
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT I/O Queue for controller id %d\n", conn->cntlid);
 		session = nvmf_find_session_by_id(connect_data->subnqn, connect_data->cntlid);
 		if (session == NULL) {
-			SPDK_ERRLOG("invalid nvmf cntlid %d\n", connect_data->cntlid);
+			SPDK_ERRLOG("Unknown controller id %d\n", conn->cntlid);
 			response->status.sc = SPDK_NVMF_FABRIC_SC_RESTART_DISCOVERY;
-			goto connect_fail;
+			return NULL;
 		}
+
 		/* check if we would exceed session connection limit */
 		if (session->num_connections >= session->max_connections_allowed) {
 			SPDK_ERRLOG("connection limit %d\n", session->num_connections);
 			response->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-			goto connect_fail;
+			return NULL;
 		}
-
-		if (session->is_valid == 0) {
-			SPDK_ERRLOG("session invalid or at IO connection limit %d\n", session->num_connections);
-			response->status.sc = SPDK_NVMF_FABRIC_SC_RESTART_DISCOVERY;
-			goto connect_fail;
-		}
-		connection->is_aq_conn = 0;
 	}
 
-	connection->fabric_conn = fabric_conn;
-
 	session->num_connections++;
-	TAILQ_INSERT_HEAD(&session->connections, connection, entries);
+	TAILQ_INSERT_HEAD(&session->connections, conn, link);
 
 	response->status_code_specific.success.cntlid = session->cntlid;
 	response->status.sc = 0;
 
 	return session;
-
-connect_fail:
-	if (connection)
-		free(connection);
-	return NULL;
 }
 
 void
-nvmf_disconnect(void *fabric_conn,
-		struct nvmf_session *session)
+nvmf_disconnect(struct nvmf_session *session,
+		struct spdk_nvmf_conn *conn)
 {
-	struct nvmf_connection_entry *conn, *tconn, *rconn = NULL;
-
-	/* Indication from the fabric transport that a
-	 * specific connection has gone way.  If the
-	 * connection is the AQ connection then expect
-	 * that the complete session will go away
-	 */
-	if (session == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_disconnect: session not active!\n");
-		return;
-	}
-
-	TAILQ_FOREACH_SAFE(conn, &session->connections, entries, tconn) {
-		if (conn->fabric_conn == fabric_conn) {
-			rconn = conn;
-			break;
+	if (session) {
+		if (session->num_connections > 0) {
+			session->num_connections--;
+			TAILQ_REMOVE(&session->connections, conn, link);
 		}
-	}
-	if (rconn == NULL) {
-		SPDK_ERRLOG("Session connection did not exist!\n");
-		return;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Disconnect NVMf conn %p, sess %p\n", rconn, session);
 
-	session->num_connections--;
-	TAILQ_REMOVE(&session->connections, rconn, entries);
-	free(rconn);
-
-	if (session->num_connections == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Session connection count 0, deleting session %p!\n",
-			      session);
-		nvmf_delete_session(session);
+		if (session->num_connections == 0) {
+			nvmf_delete_session(session);
+		}
 	}
 }
 

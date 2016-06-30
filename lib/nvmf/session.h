@@ -37,21 +37,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "conn.h"
 #include "request.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
-
-/*
- * This structure maintains local NVMf library specific connection
- * state that includes an opaque pointer back to its parent fabric
- * transport connection context.
- */
-struct nvmf_connection_entry {
-	void *fabric_conn;
-	int is_aq_conn;
-
-	TAILQ_ENTRY(nvmf_connection_entry) entries;
-};
 
 /* define a virtual controller limit to the number of QPs supported */
 #define MAX_SESSION_IO_QUEUES 64
@@ -76,7 +65,7 @@ struct nvmf_session {
 	} vcprop; /* virtual controller properties */
 	struct spdk_nvme_ctrlr_data	vcdata; /* virtual controller data */
 
-	TAILQ_HEAD(connection_q, nvmf_connection_entry) connections;
+	TAILQ_HEAD(connection_q, spdk_nvmf_conn) connections;
 	int num_connections;
 	int max_connections_allowed;
 
@@ -86,13 +75,13 @@ struct nvmf_session {
 };
 
 struct nvmf_session *
-nvmf_connect(void *fabric_conn,
+nvmf_connect(struct spdk_nvmf_conn *conn,
 	     struct spdk_nvmf_fabric_connect_cmd *connect,
 	     struct spdk_nvmf_fabric_connect_data *connect_data,
 	     struct spdk_nvmf_fabric_connect_rsp *response);
 
 void
-nvmf_disconnect(void *fabric_conn, struct nvmf_session *session);
+nvmf_disconnect(struct nvmf_session *session, struct spdk_nvmf_conn *conn);
 
 void
 nvmf_init_session_properties(struct nvmf_session *session, int aq_depth);

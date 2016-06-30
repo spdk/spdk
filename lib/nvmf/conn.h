@@ -59,10 +59,6 @@ struct spdk_nvmf_conn {
 
 	struct nvmf_session		*sess;
 
-
-	/*
-	 * values saved from fabric connect and private data
-	 */
 	uint16_t			qid;
 	uint16_t			cntlid;
 

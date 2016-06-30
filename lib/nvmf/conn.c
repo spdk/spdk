@@ -250,7 +250,7 @@ _conn_destruct(spdk_event_t event)
 	 * going away.  If this is the AQ connection then
 	 * set state for other connections to abort.
 	 */
-	nvmf_disconnect((void *)conn, conn->sess);
+	nvmf_disconnect(conn->sess, conn);
 
 	if (conn->type == CONN_TYPE_AQ) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "AQ connection destruct, trigger session closure\n");
