@@ -40,15 +40,7 @@
 struct spdk_nvmf_conn;
 
 #define MAX_PER_SUBSYSTEM_ACCESS_MAP 2
-#define MAX_PER_SUBSYSTEM_NAMESPACES 32
 #define MAX_NQN_SIZE 255
-
-struct spdk_nvmf_namespace {
-	int nvme_ns_id;
-	struct spdk_nvme_ns *ns;
-	struct spdk_nvme_ctrlr *ctrlr;
-	struct spdk_nvme_qpair *qpair;
-};
 
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
@@ -61,8 +53,8 @@ struct spdk_nvmf_subsystem {
 	int num_sessions;
 	enum spdk_nvmf_subsystem_types subtype;
 	TAILQ_HEAD(session_q, nvmf_session) sessions;
-	struct spdk_nvmf_namespace ns_list_map[MAX_PER_SUBSYSTEM_NAMESPACES];
-	int ns_count;
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_qpair *io_qpair;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
@@ -86,10 +78,6 @@ nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_ty
 
 int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
-
-int
-nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem,
-		      struct spdk_nvme_ctrlr *ctrlr);
 
 struct spdk_nvmf_subsystem *
 nvmf_find_subsystem(const char *subnqn);

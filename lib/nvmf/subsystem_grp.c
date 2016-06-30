@@ -44,7 +44,6 @@
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
 
-#define MAX_TMPBUF 1024
 #define SPDK_CN_TAG_MAX 0x0000ffff
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem_grp) g_ssg_head = TAILQ_HEAD_INITIALIZER(g_ssg_head);
@@ -116,42 +115,17 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	return 0;
 }
 
-int
-nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem,
-		      struct spdk_nvme_ctrlr *ctrlr)
+static int
+nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+			 struct spdk_nvme_ctrlr *ctrlr)
 {
-	int i, count, total_ns;
-	struct spdk_nvme_qpair *qpair;
-	struct spdk_nvmf_namespace *nvmf_ns;
-
-	total_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+	subsystem->ctrlr = ctrlr;
 
 	/* Assume that all I/O will be handled on one thread for now */
-	qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
-	if (qpair == NULL) {
+	subsystem->io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+	if (subsystem->io_qpair == NULL) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -1;
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Adding %d namespaces from ctrlr %p to subsystem %s\n",
-		      total_ns, ctrlr, subsystem->subnqn);
-
-	count = 0;
-	for (i = 0; i < MAX_PER_SUBSYSTEM_NAMESPACES; i++) {
-		if (count == total_ns) {
-			break;
-		}
-		nvmf_ns = &subsystem->ns_list_map[i];
-		if (nvmf_ns->ctrlr == NULL) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Adding namespace %d to subsystem %s\n", count + 1,
-				      subsystem->subnqn);
-			nvmf_ns->ctrlr = ctrlr;
-			nvmf_ns->qpair = qpair;
-			nvmf_ns->nvme_ns_id = count + 1;
-			nvmf_ns->ns = spdk_nvme_ctrlr_get_ns(ctrlr, count + 1);
-			subsystem->ns_count++;
-			count++;
-		}
 	}
 
 	return 0;
@@ -246,7 +220,6 @@ spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
 static int
 spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 {
-	char buf[MAX_TMPBUF];
 	struct spdk_nvmf_subsystem_grp *ss_group;
 	const char *port_tag, *ig_tag;
 	const char *val, *name;
@@ -340,39 +313,27 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 		goto err0;
 	}
 
-	/* add controllers into the subsystem */
-	for (i = 0; i < MAX_PER_SUBSYSTEM_NAMESPACES; i++) {
-		snprintf(buf, sizeof(buf), "Controller%d", i);
-		val = spdk_conf_section_get_val(sp, buf);
-		if (val == NULL) {
-			break;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, buf, 0, 0);
-		if (val == NULL) {
-			SPDK_ERRLOG("No name specified for Controller%d\n", i);
-			goto err0;
-		}
-
-		/* claim this controller from the available controller list */
-		nvmf_ctrlr = spdk_nvmf_ctrlr_claim(val);
-		if (nvmf_ctrlr == NULL) {
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "nvme controller %s not found\n", val);
-			continue;
-		}
-
-		/* notify nvmf library to add this device namespace
-		   to this subsystem.
-		 */
-		ret = nvmf_subsystem_add_ns(ss_group->subsystem, nvmf_ctrlr->ctrlr);
-		if (ret < 0) {
-			SPDK_ERRLOG("nvmf library add namespace failed!\n");
-			goto err0;
-		}
-
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "    NVMf Subsystem: Nvme Controller: %s , %p\n",
-			      nvmf_ctrlr->name, nvmf_ctrlr->ctrlr);
+	val = spdk_conf_section_get_val(sp, "Controller");
+	if (val == NULL) {
+		SPDK_ERRLOG("Subsystem %d: missing Controller\n", ss_group->num);
+		goto err0;
 	}
+
+	/* claim this controller from the available controller list */
+	nvmf_ctrlr = spdk_nvmf_ctrlr_claim(val);
+	if (nvmf_ctrlr == NULL) {
+		SPDK_ERRLOG("Subsystem %d: NVMe controller %s not found\n", ss_group->num, val);
+		goto err0;
+	}
+
+	ret = nvmf_subsystem_add_ctrlr(ss_group->subsystem, nvmf_ctrlr->ctrlr);
+	if (ret < 0) {
+		SPDK_ERRLOG("Subsystem %d: adding controller %s failed\n", ss_group->num, val);
+		goto err0;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "    NVMf Subsystem: Nvme Controller: %s , %p\n",
+		      nvmf_ctrlr->name, nvmf_ctrlr->ctrlr);
 
 	TAILQ_INSERT_TAIL(&g_ssg_head, ss_group, tailq);
 

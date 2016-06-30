@@ -156,37 +156,12 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
-	struct spdk_nvme_ctrlr *ctrlr = NULL;
-	uint32_t nsid = 0;
 	int rc = 0;
 	uint8_t feature;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	response->cid = cmd->cid;
-
-	if (cmd->nsid == 0) {
-		/* may be valid for the requested command. but need
-		   to at least map to a known valid controller.
-		   Note:  Issue when in multi-controller subsystem
-		   mode, commands that do not provide ns_id can not
-		   be mapped to valid HW ctrlr!  This is where
-		   definition of a virtual controller is required */
-		ctrlr = subsystem->ns_list_map[0].ctrlr;
-		nsid = 0;
-	} else {
-		/* verify namespace id */
-		if (cmd->nsid > MAX_PER_SUBSYSTEM_NAMESPACES) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid NS_ID %u\n",
-				      cmd->nsid);
-			response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-			return true;
-		}
-
-		ctrlr = subsystem->ns_list_map[cmd->nsid - 1].ctrlr;
-		nsid = subsystem->ns_list_map[cmd->nsid - 1].nvme_ns_id;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "ctrlr %p nvme ns_id %u\n", ctrlr, nsid);
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
@@ -201,14 +176,9 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 			const struct spdk_nvme_ns_data *nsdata;
 
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace\n");
-			if (nsid == 0) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid NS_ID = 0\n");
-				response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-				return true;
-			}
-			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			ns = spdk_nvme_ctrlr_get_ns(subsystem->ctrlr, cmd->nsid);
 			if (ns == NULL) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Unsuccessful query for Namespace reference\n");
+				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Unsuccessful query for nsid %u\n", cmd->nsid);
 				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 				return true;
 			}
@@ -234,10 +204,6 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
 			response->cdw0 = ((session->max_io_queues - 1) << 16) | (session->max_io_queues - 1);
 			return true;
-		case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - LBA Range Type\n");
-			cmd->nsid = nsid;
-			goto passthrough;
 		default:
 			goto passthrough;
 		}
@@ -300,8 +266,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	default:
 passthrough:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "admin_cmd passthrough: opc 0x%02x\n", cmd->opc);
-		cmd->nsid = nsid;
-		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(subsystem->ctrlr,
 						   cmd,
 						   req->data, req->length,
 						   nvmf_complete_cmd,
@@ -322,11 +287,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
-	struct spdk_nvmf_namespace *nvmf_ns;
-	struct spdk_nvme_ctrlr *ctrlr = NULL;
-	struct spdk_nvme_ns *ns = NULL;
-	struct spdk_nvme_qpair *qpair;
-	uint32_t nsid = 0;
+	struct spdk_nvme_ns *ns;
 	struct nvme_read_cdw12 *cdw12;
 	uint64_t lba_address;
 	uint32_t lba_count;
@@ -338,13 +299,6 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	response->cid = cmd->cid;
 
-	/* verify subsystem */
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Subsystem Not Initialized!\n");
-		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		return true;
-	}
-
 	/* verify that the contoller is ready to process commands */
 	if (session->vcprop.csts.bits.rdy == 0) {
 		SPDK_ERRLOG("Subsystem Controller Not Ready!\n");
@@ -352,22 +306,16 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 		return true;
 	}
 
-	/* verify namespace id */
-	if (cmd->nsid == 0 || cmd->nsid > MAX_PER_SUBSYSTEM_NAMESPACES) {
-		SPDK_ERRLOG("Invalid NS_ID %u\n", cmd->nsid);
-		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		return true;
-	}
-
-	nvmf_ns = &subsystem->ns_list_map[cmd->nsid - 1];
-	ctrlr = nvmf_ns->ctrlr;
-	nsid = nvmf_ns->nvme_ns_id;
-	ns = nvmf_ns->ns;
-	qpair = nvmf_ns->qpair;
-
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE:
+		ns = spdk_nvme_ctrlr_get_ns(subsystem->ctrlr, cmd->nsid);
+		if (ns == NULL) {
+			SPDK_ERRLOG("Invalid NS ID %u\n", cmd->nsid);
+			response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+			return true;
+		}
+
 		cdw12 = (struct nvme_read_cdw12 *)&cmd->cdw12;
 		/* NVMe library read/write interface expects non-0based lba_count value */
 		lba_count = cdw12->nlb + 1;
@@ -379,7 +327,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Read LBA 0x%" PRIx64 ", 0x%x blocks\n",
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
-			rc = spdk_nvme_ns_cmd_read(ns, qpair,
+			rc = spdk_nvme_ns_cmd_read(ns, subsystem->io_qpair,
 						   req->data, lba_address, lba_count,
 						   nvmf_complete_cmd,
 						   req, io_flags);
@@ -387,7 +335,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Write LBA 0x%" PRIx64 ", 0x%x blocks\n",
 				      lba_address, lba_count);
 			spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
-			rc = spdk_nvme_ns_cmd_write(ns, qpair,
+			rc = spdk_nvme_ns_cmd_write(ns, subsystem->io_qpair,
 						    req->data, lba_address, lba_count,
 						    nvmf_complete_cmd,
 						    req, io_flags);
@@ -395,8 +343,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 		break;
 	default:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "io_cmd passthrough: opc 0x%02x\n", cmd->opc);
-		cmd->nsid = nsid;
-		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, qpair,
+		rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->ctrlr, subsystem->io_qpair,
 						cmd,
 						req->data, req->length,
 						nvmf_complete_cmd,

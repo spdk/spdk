@@ -122,8 +122,6 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 static void
 nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 {
-	/* for now base virtual controller properties on first namespace controller */
-	struct spdk_nvme_ctrlr *ctrlr = session->subsys->ns_list_map[0].ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvmf_extended_identify_ctrlr_data *nvmfdata;
 
@@ -134,13 +132,8 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 	*/
 
 	/* Init the virtual controller details using actual HW details */
-	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	cdata = spdk_nvme_ctrlr_get_data(session->subsys->ctrlr);
 	memcpy((char *)&session->vcdata, (char *)cdata, sizeof(struct spdk_nvme_ctrlr_data));
-
-	/* update virtual controller data to represent merge of
-	   controllers for all namespaces
-	*/
-	session->vcdata.nn = session->subsys->ns_count;
 
 	/* indicate support for only a single AER */
 	session->vcdata.aerl = 0;
@@ -547,35 +540,14 @@ nvmf_property_set(struct nvmf_session *session,
 void
 nvmf_check_admin_completions(struct nvmf_session *session)
 {
-	struct spdk_nvmf_subsystem *subsystem = session->subsys;
-	struct spdk_nvme_ctrlr *ctrlr, *prev_ctrlr = NULL;
-	int i;
-
-	for (i = 0; i < MAX_PER_SUBSYSTEM_NAMESPACES; i++) {
-		ctrlr = subsystem->ns_list_map[i].ctrlr;
-		if (ctrlr == NULL)
-			continue;
-		if (ctrlr != NULL && ctrlr != prev_ctrlr) {
-			spdk_nvme_ctrlr_process_admin_completions(ctrlr);
-			prev_ctrlr = ctrlr;
-		}
+	/* Discovery subsystem won't have a real NVMe controller, so check ctrlr first */
+	if (session->subsys->ctrlr) {
+		spdk_nvme_ctrlr_process_admin_completions(session->subsys->ctrlr);
 	}
 }
 
 void
 nvmf_check_io_completions(struct nvmf_session *session)
 {
-	struct spdk_nvmf_subsystem *subsystem = session->subsys;
-	struct spdk_nvme_qpair *qpair, *prev_qpair = NULL;
-	int i;
-
-	for (i = 0; i < MAX_PER_SUBSYSTEM_NAMESPACES; i++) {
-		qpair = subsystem->ns_list_map[i].qpair;
-		if (qpair == NULL)
-			continue;
-		if (qpair != NULL && qpair != prev_qpair) {
-			spdk_nvme_qpair_process_completions(qpair, 0);
-			prev_qpair = qpair;
-		}
-	}
+	spdk_nvme_qpair_process_completions(session->subsys->io_qpair, 0);
 }

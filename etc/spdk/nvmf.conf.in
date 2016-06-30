@@ -94,7 +94,7 @@
 #   session within the NVMf subsystem.  Any such session is allowed access
 #   to all NVMe namespaces within the subsystem.
 #
-# SubsystemName, Mapping, Controller0 are minimum required
+# SubsystemName, Mapping, Controller are minimum required
 # The SubsystemName is concatenated with NodeBase above to form the NVMf
 #   subsystem NQN that will be used by remote initiator to identify the
 #   target subsystem for connection.
@@ -106,12 +106,11 @@
 [Subsystem1]
   SubsystemName cnode1
   Mapping Port1 Host1
-  # Using NVME 0 namespace 1
-  Controller0 Nvme0
+  Controller Nvme0
 
 [Subsystem2]
   SubsystemName cnode2
   Mapping Port2 Host2
   # Using NVME 1 namespace 1
-  Controller0 Nvme1
+  Controller Nvme1
 
