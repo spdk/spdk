@@ -36,7 +36,7 @@ rdma_device_init
 timing_enter fs_test
 
 # Start up the NVMf target in another process
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf &
+$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf -t nvmf -t rdma &
 nvmfpid=$!
 
 trap "process_core; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
