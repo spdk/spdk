@@ -213,9 +213,9 @@ nvmf_tgt_subsystem_initialize(void)
 	}
 
 	/* initialize with the NVMf transport */
-	rc = nvmf_rdma_init();
+	rc = spdk_nvmf_rdma_init();
 	if (rc <= 0) {
-		SPDK_ERRLOG("nvmf_rdma_init() failed\n");
+		SPDK_ERRLOG("spdk_nvmf_rdma_init() failed\n");
 		return rc;
 	}
 	/* initialize NVMe/NVMf backend */
@@ -253,6 +253,7 @@ nvmf_tgt_subsystem_fini(void)
 	nvmf_shutdown();
 	spdk_nvmf_host_destroy_all();
 	spdk_nvmf_port_destroy_all();
+	spdk_nvmf_rdma_fini();
 	free(g_nvmf_tgt.nodebase);
 
 	pthread_mutex_destroy(&g_nvmf_tgt.mutex);

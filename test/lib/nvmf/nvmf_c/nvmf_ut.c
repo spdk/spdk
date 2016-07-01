@@ -88,7 +88,7 @@ int spdk_nvmf_parse_conf(void)
 	return 0;
 }
 
-int nvmf_rdma_init(void)
+int spdk_nvmf_rdma_init(void)
 {
 	return 0;
 }

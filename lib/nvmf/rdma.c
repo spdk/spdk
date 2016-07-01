@@ -810,7 +810,7 @@ Initialize with RDMA transport.  Query OFED for device list.
 
 */
 int
-nvmf_rdma_init(void)
+spdk_nvmf_rdma_init(void)
 {
 	struct ibv_device **dev_list;
 	struct ibv_context *ibdev_ctx = NULL;
@@ -878,6 +878,13 @@ nvmf_rdma_init(void)
 	ibv_free_device_list(dev_list);
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    %d Fabric Intf(s) active\n", num_devices_found);
 	return num_devices_found;
+}
+
+int
+spdk_nvmf_rdma_fini(void)
+{
+	/* Nothing to do */
+	return 0;
 }
 
 static int
