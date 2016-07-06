@@ -444,9 +444,14 @@ static void
 print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
+	union spdk_nvme_cap_register		cap;
+	union spdk_nvme_vs_register		vs;
 	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
+
+	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
+	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
 
 	get_features(ctrlr);
 	get_log_pages(ctrlr);
@@ -466,20 +471,20 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 
 	printf("Controller Capabilities/Features\n");
 	printf("================================\n");
-	printf("Vendor ID:                  %04x\n", cdata->vid);
-	printf("Subsystem Vendor ID:        %04x\n", cdata->ssvid);
+	printf("Vendor ID:                             %04x\n", cdata->vid);
+	printf("Subsystem Vendor ID:                   %04x\n", cdata->ssvid);
 	snprintf(str, sizeof(cdata->sn) + 1, "%s", cdata->sn);
-	printf("Serial Number:              %s\n", str);
+	printf("Serial Number:                         %s\n", str);
 	snprintf(str, sizeof(cdata->mn) + 1, "%s", cdata->mn);
-	printf("Model Number:               %s\n", str);
+	printf("Model Number:                          %s\n", str);
 	snprintf(str, sizeof(cdata->fr) + 1, "%s", cdata->fr);
-	printf("Firmware Version:           %s\n", str);
-	printf("Recommended Arb Burst:      %d\n", cdata->rab);
-	printf("IEEE OUI Identifier:        %02x %02x %02x\n",
+	printf("Firmware Version:                      %s\n", str);
+	printf("Recommended Arb Burst:                 %d\n", cdata->rab);
+	printf("IEEE OUI Identifier:                   %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
-	printf("Multi-path I/O:        %02x\n", *(int *)&cdata->cmic);
+	printf("Multi-path I/O:                        %02x\n", *(int *)&cdata->cmic);
 	/* TODO: Use CAP.MPSMIN to determine true memory page size. */
-	printf("Max Data Transfer Size:     ");
+	printf("Max Data Transfer Size:                ");
 	if (cdata->mdts == 0)
 		printf("Unlimited\n");
 	else
@@ -493,6 +498,30 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 			printf("%u milliseconds\n", tler * 100);
 		}
 	}
+	printf("NVMe Specification Version:            %u.%u", vs.bits.mjr, vs.bits.mnr);
+	if (vs.bits.ter) {
+		printf(".%u", vs.bits.ter);
+	}
+	printf("\n");
+	printf("Maximum Queue Entries:                 %u\n", cap.bits.mqes + 1);
+	printf("Contiguous Queues Required:            %s\n", cap.bits.cqr ? "Yes" : "No");
+	printf("Arbitration Mechanisms Supported\n");
+	printf("  Weighted Round Robin:                %s\n",
+	       cap.bits.ams & SPDK_NVME_CAP_AMS_WRR ? "Supported" : "Not Supported");
+	printf("  Vendor Specific:                     %s\n",
+	       cap.bits.ams & SPDK_NVME_CAP_AMS_VS ? "Supported" : "Not Supported");
+	printf("Reset Timeout:                         %" PRIu64 " ms\n", (uint64_t)500 * cap.bits.to);
+	printf("Doorbell Stride:                       %" PRIu64 " bytes\n",
+	       (uint64_t)1 << (2 + cap.bits.dstrd));
+	printf("NVM Subsystem Reset:                   %s\n",
+	       cap.bits.nssrs ? "Supported" : "Not Supported");
+	printf("Command Sets Supported\n");
+	printf("  NVM Command Set:                     %s\n",
+	       cap.bits.css_nvm ? "Supported" : "Not Supported");
+	printf("Memory Page Size Minimum:              %" PRIu64 " bytes\n",
+	       (uint64_t)1 << (12 + cap.bits.mpsmin));
+	printf("Memory Page Size Maximum:              %" PRIu64 " bytes\n",
+	       (uint64_t)1 << (12 + cap.bits.mpsmax));
 	printf("\n");
 
 	printf("Admin Command Set Attributes\n");

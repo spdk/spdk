@@ -186,7 +186,8 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_aqa_register) == 4, "Incorrect size");
 union spdk_nvme_vs_register {
 	uint32_t	raw;
 	struct {
-		uint32_t reserved1	: 8;
+		/** indicates the tertiary version */
+		uint32_t ter		: 8;
 		/** indicates the minor version */
 		uint32_t mnr		: 8;
 		/** indicates the major version */
