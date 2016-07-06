@@ -193,9 +193,9 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 		return NULL;
 	}
 
-	rdma_req->recv_sgl.addr = (uint64_t)&rdma_req->cmd;
-	rdma_req->recv_sgl.length = sizeof(rdma_req->cmd);
-	rdma_req->recv_sgl.lkey = rdma_req->cmd_mr->lkey;
+	rdma_req->recv_sgl[0].addr = (uint64_t)&rdma_req->cmd;
+	rdma_req->recv_sgl[0].length = sizeof(rdma_req->cmd);
+	rdma_req->recv_sgl[0].lkey = rdma_req->cmd_mr->lkey;
 
 	if (conn->type == CONN_TYPE_AQ) {
 		/* Admin commands can only send 4k of data maximum */
@@ -218,10 +218,10 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 		return NULL;
 	}
 
-	/* initialize bb_sgl */
-	rdma_req->bb_sgl.addr = (uint64_t)rdma_req->bb;
-	rdma_req->bb_sgl.length = rdma_req->bb_len;
-	rdma_req->bb_sgl.lkey = rdma_req->bb_mr->lkey;
+	/* initialize data buffer sgl */
+	rdma_req->recv_sgl[1].addr = (uint64_t)rdma_req->bb;
+	rdma_req->recv_sgl[1].length = rdma_req->bb_len;
+	rdma_req->recv_sgl[1].lkey = rdma_req->bb_mr->lkey;
 
 	rdma_req->rsp_mr = rdma_reg_msgs(conn->rdma.cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
 	if (rdma_req->rsp_mr == NULL) {
@@ -328,9 +328,9 @@ nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
 	int rc;
 
 	/* temporarily adjust SGE to only copy what the host is prepared to send. */
-	rdma_req->bb_sgl.length = req->length;
+	rdma_req->recv_sgl[1].length = req->length;
 
-	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->bb_sgl, (uint64_t)rdma_req,
+	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->recv_sgl[1], (uint64_t)rdma_req,
 			      IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
 
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uint64_t)req, 0);
@@ -350,9 +350,9 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 	int rc;
 
 	/* temporarily adjust SGE to only copy what the host is prepared to receive. */
-	rdma_req->bb_sgl.length = req->length;
+	rdma_req->recv_sgl[1].length = req->length;
 
-	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->bb_sgl, (uint64_t)rdma_req,
+	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->recv_sgl[1], (uint64_t)rdma_req,
 			      IBV_WR_RDMA_WRITE, 0);
 
 	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uint64_t)req, 0);
@@ -380,10 +380,10 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 
 	wr.wr_id = (uintptr_t)rdma_req;
 	wr.next = NULL;
-	wr.sg_list = &rdma_req->recv_sgl;
+	wr.sg_list = &rdma_req->recv_sgl[0];
 	wr.num_sge = 2;
 
-	nvmf_trace_ibv_sge(&rdma_req->recv_sgl);
+	nvmf_trace_ibv_sge(&rdma_req->recv_sgl[0]);
 
 	rc = ibv_post_recv(conn->rdma.qp, &wr, &bad_wr);
 	if (rc) {
@@ -401,7 +401,7 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	int rc;
 
 	/* restore the SGL length that may have been modified */
-	rdma_req->bb_sgl.length = rdma_req->bb_len;
+	rdma_req->recv_sgl[1].length = rdma_req->bb_len;
 
 	nvmf_ibv_send_wr_init(&wr, NULL, &rdma_req->send_sgl, (uint64_t)rdma_req,
 			      IBV_WR_SEND, IBV_SEND_SIGNALED);
@@ -898,7 +898,7 @@ nvmf_recv(struct spdk_nvmf_conn *conn, struct ibv_wc *wc)
 
 	ret = spdk_nvmf_request_prep_data(req,
 					  rdma_req->bb, wc->byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
-					  rdma_req->bb, rdma_req->bb_sgl.length);
+					  rdma_req->bb, rdma_req->recv_sgl[1].length);
 	if (ret < 0) {
 		SPDK_ERRLOG("prep_data failed\n");
 		return spdk_nvmf_request_complete(req);

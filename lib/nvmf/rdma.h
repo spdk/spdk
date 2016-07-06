@@ -64,8 +64,7 @@ struct spdk_nvmf_rdma_request {
 	struct ibv_mr				*rsp_mr;
 
 	struct ibv_sge				send_sgl;
-	struct ibv_sge				recv_sgl;
-	struct ibv_sge				bb_sgl; /* must follow recv_sgl */
+	struct ibv_sge				recv_sgl[2];
 
 	struct ibv_mr				*bb_mr;
 	uint8_t					*bb;
