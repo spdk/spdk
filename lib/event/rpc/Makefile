@@ -31,12 +31,9 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
-CFLAGS += $(DPDK_INC)
-LIBNAME = event
-C_SRCS = app.c dpdk_init.c reactor.c subsystem.c
-
-DIRS-y = rpc
+C_SRCS = app_rpc.c
+LIBNAME = app_rpc
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
