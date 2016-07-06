@@ -18,7 +18,6 @@ bs=%(blocksize)d
 iodepth=%(iodepth)d
 %(verify)s
 verify_dump=1
-verify_async=10
 
 """
 
