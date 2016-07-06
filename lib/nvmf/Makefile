@@ -36,7 +36,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 CFLAGS += $(DPDK_INC)
 LIBNAME = nvmf
 C_SRCS = rdma.c port.c conn.c controller.c \
-	 host.c subsystem_grp.c conf.c \
+	 host.c subsystem.c conf.c \
 	 nvmf.c request.c session.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

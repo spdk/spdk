@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _NVMF_SUBSYSTEM_GROUP_H_
-#define _NVMF_SUBSYSTEM_GROUP_H_
+#ifndef SPDK_NVMF_SUBSYSTEM_H
+#define SPDK_NVMF_SUBSYSTEM_H
 
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
@@ -91,4 +91,4 @@ spdk_shutdown_nvmf_subsystems(void);
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);
 
-#endif /* _NVMF_SUBSYSTEM_GROUP_H_ */
+#endif /* SPDK_NVMF_SUBSYSTEM_H */

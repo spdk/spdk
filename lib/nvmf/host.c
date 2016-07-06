@@ -36,7 +36,7 @@
 
 #include "host.h"
 #include "nvmf_internal.h"
-#include "subsystem_grp.h"
+#include "subsystem.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
 

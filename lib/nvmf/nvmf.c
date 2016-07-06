@@ -44,7 +44,7 @@
 #include "port.h"
 #include "host.h"
 #include "rdma.h"
-#include "subsystem_grp.h"
+#include "subsystem.h"
 #include "spdk/trace.h"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)

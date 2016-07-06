@@ -40,7 +40,7 @@
 #include "rdma.h"
 #include "request.h"
 #include "session.h"
-#include "subsystem_grp.h"
+#include "subsystem.h"
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"

@@ -38,7 +38,7 @@
 #include "host.h"
 #include "nvmf_internal.h"
 #include "session.h"
-#include "subsystem_grp.h"
+#include "subsystem.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
