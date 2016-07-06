@@ -10,6 +10,11 @@ if [ $EUID -ne 0 ]; then
 	exit 1
 fi
 
+if [ $(uname -s) = Linux ]; then
+	# set core_pattern to a known value to avoid ABRT, systemd-coredump, etc.
+	echo "core" > /proc/sys/kernel/core_pattern
+fi
+
 trap "process_core; $rootdir/scripts/setup.sh reset; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
