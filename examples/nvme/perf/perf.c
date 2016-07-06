@@ -394,6 +394,7 @@ static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned 
 		fprintf(stderr, "task->buf rte_malloc failed\n");
 		exit(1);
 	}
+	memset(task->buf, id % 8, g_io_size_bytes);
 }
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
