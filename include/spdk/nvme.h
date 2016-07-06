@@ -164,6 +164,16 @@ int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 const struct spdk_nvme_ctrlr_data *spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Get the NVMe controller CAP (Capabilities) register.
+ */
+union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * \brief Get the NVMe controller VS (Version) register.
+ */
+union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * \brief Get the number of namespaces for the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller is attached to

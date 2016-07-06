@@ -1175,6 +1175,22 @@ spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 	return &ctrlr->cdata;
 }
 
+union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cap_register cap;
+
+	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
+	return cap;
+}
+
+union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_vs_register vs;
+
+	vs.raw = nvme_mmio_read_4(ctrlr, vs.raw);
+	return vs;
+}
+
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
