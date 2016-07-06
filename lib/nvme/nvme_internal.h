@@ -54,7 +54,6 @@
 #include "spdk/mmio.h"
 #include "spdk/pci_ids.h"
 #include "spdk/nvme_intel.h"
-#include "spdk/pci_ids.h"
 
 /*
  * Some Intel devices support vendor-unique read latency log page even

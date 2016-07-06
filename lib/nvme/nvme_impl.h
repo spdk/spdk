@@ -61,9 +61,7 @@
 #include <rte_pci.h>
 #endif
 
-#include "spdk/pci.h"
 #include "spdk/pci_ids.h"
-#include "spdk/nvme_spec.h"
 
 /**
  * \page nvme_driver_integration NVMe Driver Integration
