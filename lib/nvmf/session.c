@@ -102,16 +102,14 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 	session->vcdata.sgls.sgl_offset = 1;
 
 	/* Properties */
-	session->vcprop.cap_lo.raw = 0;
-	session->vcprop.cap_lo.bits.cqr = 1;	/* NVMF specification required */
-	session->vcprop.cap_lo.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
-	session->vcprop.cap_lo.bits.ams = 0;	/* optional arb mechanisms */
-
-	session->vcprop.cap_hi.raw = 0;
-	session->vcprop.cap_hi.bits.dstrd = 0;	/* fixed to 0 for NVMf */
-	session->vcprop.cap_hi.bits.css_nvm = 1; /* NVM command set */
-	session->vcprop.cap_hi.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
-	session->vcprop.cap_hi.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
+	session->vcprop.cap.raw = 0;
+	session->vcprop.cap.bits.cqr = 1;	/* NVMF specification required */
+	session->vcprop.cap.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
+	session->vcprop.cap.bits.ams = 0;	/* optional arb mechanisms */
+	session->vcprop.cap.bits.dstrd = 0;	/* fixed to 0 for NVMf */
+	session->vcprop.cap.bits.css_nvm = 1; /* NVM command set */
+	session->vcprop.cap.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
+	session->vcprop.cap.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
 
 	session->vcprop.vs = 0x10000;	/* Version Supported: Major 1, Minor 0 */
 
@@ -180,17 +178,15 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 	/* feature: Number Of Queues. */
 	session->max_io_queues = MAX_SESSION_IO_QUEUES;
 
-	session->vcprop.cap_lo.raw = 0;
-	session->vcprop.cap_lo.bits.cqr = 0;	/* queues not contiguous */
-	session->vcprop.cap_lo.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
-	session->vcprop.cap_lo.bits.ams = 0;	/* optional arb mechanisms */
-	session->vcprop.cap_lo.bits.to = 1;	/* ready timeout - 500 msec units */
-
-	session->vcprop.cap_hi.raw = 0;
-	session->vcprop.cap_hi.bits.dstrd = 0;	/* fixed to 0 for NVMf */
-	session->vcprop.cap_hi.bits.css_nvm = 1; /* NVM command set */
-	session->vcprop.cap_hi.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
-	session->vcprop.cap_hi.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
+	session->vcprop.cap.raw = 0;
+	session->vcprop.cap.bits.cqr = 0;	/* queues not contiguous */
+	session->vcprop.cap.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
+	session->vcprop.cap.bits.ams = 0;	/* optional arb mechanisms */
+	session->vcprop.cap.bits.to = 1;	/* ready timeout - 500 msec units */
+	session->vcprop.cap.bits.dstrd = 0;	/* fixed to 0 for NVMf */
+	session->vcprop.cap.bits.css_nvm = 1; /* NVM command set */
+	session->vcprop.cap.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
+	session->vcprop.cap.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
 
 	session->vcprop.vs = 0x10000;	/* Version Supported: Major 1, Minor 0 */
 
@@ -213,10 +209,8 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: max io queues %x\n",
 		      session->max_io_queues);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cap_lo %x\n",
-		      session->vcprop.cap_lo.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cap_hi %x\n",
-		      session->vcprop.cap_hi.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cap %" PRIx64 "\n",
+		      session->vcprop.cap.raw);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: vs %x\n", session->vcprop.vs);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cc %x\n", session->vcprop.cc.raw);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: csts %x\n",
@@ -406,16 +400,16 @@ nvmf_property_get(struct nvmf_session *session,
 	}
 
 	switch (cmd->ofst) {
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, cap_lo)):
-		response->value.u32.low = session->vcprop.cap_lo.raw;
+	case (offsetof(struct spdk_nvmf_ctrlr_properties, cap)):
+		response->value.u32.low = session->vcprop.cap.raw;
 		if (cmd->attrib == 1)
-			response->value.u32.high = session->vcprop.cap_hi.raw;
+			response->value.u64 = session->vcprop.cap.raw;
 		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, cap_hi)):
+	case (offsetof(struct spdk_nvmf_ctrlr_properties, cap) + 4):
 		if (cmd->attrib == 1)
 			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		else
-			response->value.u32.low = session->vcprop.cap_hi.raw;
+			response->value.u32.low = session->vcprop.cap.raw >> 32;
 		break;
 	case (offsetof(struct spdk_nvmf_ctrlr_properties, vs)):
 		if (cmd->attrib == 1)

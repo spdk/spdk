@@ -346,7 +346,7 @@ static int
 nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair		*qpair;
-	union spdk_nvme_cap_lo_register	cap_lo;
+	union spdk_nvme_cap_register	cap;
 	uint32_t			i, num_entries, num_trackers;
 	int				rc;
 
@@ -365,8 +365,8 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	 *  devices may specify a smaller limit, so we need to check
 	 *  the MQES field in the capabilities register.
 	 */
-	cap_lo.raw = nvme_mmio_read_4(ctrlr, cap_lo.raw);
-	num_entries = nvme_min(NVME_IO_ENTRIES, cap_lo.bits.mqes + 1);
+	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
+	num_entries = nvme_min(NVME_IO_ENTRIES, cap.bits.mqes + 1);
 
 	/*
 	 * No need to have more trackers than entries in the submit queue.
@@ -450,7 +450,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register	cc;
 	union spdk_nvme_aqa_register	aqa;
-	union spdk_nvme_cap_lo_register	cap_lo;
+	union spdk_nvme_cap_register	cap;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 
@@ -477,18 +477,18 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	/* Page size is 2 ^ (12 + mps). */
 	cc.bits.mps = nvme_u32log2(PAGE_SIZE) - 12;
 
-	cap_lo.raw = nvme_mmio_read_4(ctrlr, cap_lo.raw);
+	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
 
 	switch (ctrlr->opts.arb_mechanism) {
 	case SPDK_NVME_CC_AMS_RR:
 		break;
 	case SPDK_NVME_CC_AMS_WRR:
-		if (SPDK_NVME_CAP_AMS_WRR & cap_lo.bits.ams) {
+		if (SPDK_NVME_CAP_AMS_WRR & cap.bits.ams) {
 			break;
 		}
 		return -EINVAL;
 	case SPDK_NVME_CC_AMS_VS:
-		if (SPDK_NVME_CAP_AMS_VS & cap_lo.bits.ams) {
+		if (SPDK_NVME_CAP_AMS_VS & cap.bits.ams) {
 			break;
 		}
 		return -EINVAL;
@@ -818,15 +818,15 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register cc;
 	union spdk_nvme_csts_register csts;
-	union spdk_nvme_cap_lo_register cap_lo;
+	union spdk_nvme_cap_register cap;
 	uint32_t ready_timeout_in_ms;
 	int rc;
 
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 	csts.raw = nvme_mmio_read_4(ctrlr, csts.raw);
-	cap_lo.raw = nvme_mmio_read_4(ctrlr, cap_lo.raw);
+	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
 
-	ready_timeout_in_ms = 500 * cap_lo.bits.to;
+	ready_timeout_in_ms = 500 * cap.bits.to;
 
 	/*
 	 * Check if the current initialization step is done or has timed out.
@@ -1080,7 +1080,7 @@ nvme_ctrlr_free_bars(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
-	union spdk_nvme_cap_hi_register	cap_hi;
+	union spdk_nvme_cap_register	cap;
 	uint32_t			cmd_reg;
 	int				status;
 	int				rc;
@@ -1099,13 +1099,13 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	cmd_reg |= 0x4;
 	nvme_pcicfg_write32(devhandle, cmd_reg, 4);
 
-	cap_hi.raw = nvme_mmio_read_4(ctrlr, cap_hi.raw);
+	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
 
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
-	ctrlr->doorbell_stride_u32 = 1 << cap_hi.bits.dstrd;
+	ctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
 
-	ctrlr->min_page_size = 1 << (12 + cap_hi.bits.mpsmin);
+	ctrlr->min_page_size = 1 << (12 + cap.bits.mpsmin);
 
 	rc = nvme_ctrlr_construct_admin_qpair(ctrlr);
 	if (rc)

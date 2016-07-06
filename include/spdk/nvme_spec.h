@@ -68,8 +68,8 @@ extern "C" {
  */
 #define SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES	256
 
-union spdk_nvme_cap_lo_register {
-	uint32_t	raw;
+union spdk_nvme_cap_register {
+	uint64_t	raw;
 	struct {
 		/** maximum queue entries supported */
 		uint32_t mqes		: 16;
@@ -84,17 +84,12 @@ union spdk_nvme_cap_lo_register {
 
 		/** timeout */
 		uint32_t to		: 8;
-	} bits;
-};
-SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_lo_register) == 4, "Incorrect size");
 
-union spdk_nvme_cap_hi_register {
-	uint32_t	raw;
-	struct {
 		/** doorbell stride */
 		uint32_t dstrd		: 4;
 
-		uint32_t reserved3	: 1;
+		/** NVM subsystem reset supported */
+		uint32_t nssrs		: 1;
 
 		/** command sets supported */
 		uint32_t css_nvm	: 1;
@@ -108,10 +103,10 @@ union spdk_nvme_cap_hi_register {
 		/** memory page size maximum */
 		uint32_t mpsmax		: 4;
 
-		uint32_t reserved1	: 8;
+		uint32_t reserved3	: 8;
 	} bits;
 };
-SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_hi_register) == 4, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cap_register) == 8, "Incorrect size");
 
 union spdk_nvme_cc_register {
 	uint32_t	raw;
@@ -236,8 +231,7 @@ SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_cmbsz_register) == 4, "Incorrect size"
 
 struct spdk_nvme_registers {
 	/** controller capabilities */
-	union spdk_nvme_cap_lo_register	cap_lo;
-	union spdk_nvme_cap_hi_register	cap_hi;
+	union spdk_nvme_cap_register	cap;
 
 	/** version of NVMe specification */
 	union spdk_nvme_vs_register vs;
@@ -269,7 +263,7 @@ struct spdk_nvme_registers {
 };
 
 /* NVMe controller register space offsets */
-SPDK_STATIC_ASSERT(0x00 == offsetof(struct spdk_nvme_registers, cap_lo),
+SPDK_STATIC_ASSERT(0x00 == offsetof(struct spdk_nvme_registers, cap),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x08 == offsetof(struct spdk_nvme_registers, vs), "Incorrect register offset");
 SPDK_STATIC_ASSERT(0x0C == offsetof(struct spdk_nvme_registers, intms),

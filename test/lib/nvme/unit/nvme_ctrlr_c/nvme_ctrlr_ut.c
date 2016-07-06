@@ -425,7 +425,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	/*
 	 * Default round robin enabled
 	 */
-	g_ut_nvme_regs.cap_lo.bits.ams = 0x0;
+	g_ut_nvme_regs.cap.bits.ams = 0x0;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
@@ -543,7 +543,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	/*
 	 * Weighted round robin enabled
 	 */
-	g_ut_nvme_regs.cap_lo.bits.ams = SPDK_NVME_CAP_AMS_WRR;
+	g_ut_nvme_regs.cap.bits.ams = SPDK_NVME_CAP_AMS_WRR;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
@@ -662,7 +662,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	/*
 	 * Default round robin enabled
 	 */
-	g_ut_nvme_regs.cap_lo.bits.ams = SPDK_NVME_CAP_AMS_VS;
+	g_ut_nvme_regs.cap.bits.ams = SPDK_NVME_CAP_AMS_VS;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;

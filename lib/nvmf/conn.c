@@ -353,7 +353,7 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 	 */
 	/* reset mdts in vcdata to equal the application default maximum */
 	mdts = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE /
-	       (1 << (12 + session->vcprop.cap_hi.bits.mpsmin));
+	       (1 << (12 + session->vcprop.cap.bits.mpsmin));
 	if (mdts == 0) {
 		SPDK_ERRLOG("Min page size exceeds max transfer size!\n");
 		SPDK_ERRLOG("Verify setting of SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE and mpsmin\n");

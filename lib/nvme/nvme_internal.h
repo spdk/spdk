@@ -473,6 +473,9 @@ extern struct nvme_driver g_nvme_driver;
 #define nvme_mmio_read_4(sc, reg) \
 	spdk_mmio_read_4(&(sc)->regs->reg)
 
+#define nvme_mmio_read_8(sc, reg) \
+	spdk_mmio_read_8(&(sc)->regs->reg)
+
 #define nvme_mmio_write_4(sc, reg, val) \
 	spdk_mmio_write_4(&(sc)->regs->reg, val)
 

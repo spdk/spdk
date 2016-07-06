@@ -330,8 +330,7 @@ union spdk_nvmf_capsule_attr_hi {
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvmf_capsule_attr_hi) == 4, "Incorrect size");
 
 struct spdk_nvmf_ctrlr_properties {
-	union spdk_nvme_cap_lo_register		cap_lo;
-	union spdk_nvme_cap_hi_register		cap_hi;
+	union spdk_nvme_cap_register		cap;
 
 	uint32_t				vs;
 	uint32_t				intms;
@@ -360,7 +359,7 @@ struct spdk_nvmf_ctrlr_properties {
 	uint8_t					reserved5[0x2F0];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_properties) == 4864, "Incorrect size");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_CAP_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, cap_lo),
+SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_CAP_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, cap),
 		   "Incorrect register offset");
 SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_VS_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, vs),
 		   "Incorrect register offset");
