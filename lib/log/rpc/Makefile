@@ -31,11 +31,9 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 
-C_SRCS = log.c
-LIBNAME = log
-
-DIRS-y = rpc
+C_SRCS = log_rpc.c
+LIBNAME = log_rpc
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

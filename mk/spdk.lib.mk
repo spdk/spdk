@@ -35,12 +35,16 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIB := libspdk_$(LIBNAME).a
 
-all: $(LIB)
+.PHONY: all clean $(DIRS-y)
 
-clean:
+all: $(LIB) $(DIRS-y)
+
+clean: $(DIRS-y)
 	$(CLEAN_C)
 
 $(LIB): $(OBJS)
 	$(LIB_C)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
