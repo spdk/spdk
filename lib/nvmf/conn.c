@@ -340,35 +340,8 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 			  struct nvmf_session *session,
 			  struct spdk_nvmf_fabric_connect_rsp *response)
 {
-
-	struct spdk_nvmf_extended_identify_ctrlr_data *lcdata;
-	uint32_t mdts;
-
 	conn->cntlid = response->status_code_specific.success.cntlid;
-	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
 	nvmf_init_session_properties(session, conn->rdma.queue_depth);
-
-	/* Update the session logical controller data with any
-	 * application fabric side limits
-	 */
-	/* reset mdts in vcdata to equal the application default maximum */
-	mdts = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE /
-	       (1 << (12 + session->vcprop.cap.bits.mpsmin));
-	if (mdts == 0) {
-		SPDK_ERRLOG("Min page size exceeds max transfer size!\n");
-		SPDK_ERRLOG("Verify setting of SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE and mpsmin\n");
-		session->vcdata.mdts = 1; /* Support single page for now */
-	} else {
-		/* set mdts as a power of 2 representing number of mpsmin units */
-		session->vcdata.mdts = 0;
-		while ((1ULL << session->vcdata.mdts) < mdts) {
-			session->vcdata.mdts++;
-		}
-	}
-
-	/* increase the I/O recv capsule size for in_capsule data */
-	lcdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
-	lcdata->ioccsz += (SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 16);
 }
 
 static void

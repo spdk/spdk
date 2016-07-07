@@ -68,6 +68,7 @@ nvmf_create_session(const char *subnqn)
 	session->num_connections = 0;
 	session->is_valid = 1;
 	session->subsys = subsystem;
+	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
 
 exit:
 	return session;
@@ -136,25 +137,22 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 
 	/* Init the virtual controller details using actual HW details */
 	cdata = spdk_nvme_ctrlr_get_data(session->subsys->ctrlr);
-	memcpy((char *)&session->vcdata, (char *)cdata, sizeof(struct spdk_nvme_ctrlr_data));
+	memcpy(&session->vcdata, cdata, sizeof(struct spdk_nvme_ctrlr_data));
 
-	/* indicate support for only a single AER */
 	session->vcdata.aerl = 0;
-
-	/* reset cntlid in vcdata to match the logical cntlid known to NVMf */
 	session->vcdata.cntlid = session->cntlid;
-
-	/* initialize the nvmf new and extension details in controller data */
 	session->vcdata.kas = 10;
 	session->vcdata.maxcmd = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+	session->vcdata.mdts = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 4096;
+	session->vcdata.sgls.keyed_sgl = 1;
+	session->vcdata.sgls.sgl_offset = 1;
+
 	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
 	nvmfdata->ioccsz = (NVMF_H2C_MAX_MSG / 16);
 	nvmfdata->iorcsz = (NVMF_C2H_MAX_MSG / 16);
 	nvmfdata->icdoff = 0; /* offset starts directly after SQE */
 	nvmfdata->ctrattr = 0; /* dynamic controller model */
 	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
-	session->vcdata.sgls.keyed_sgl = 1;
-	session->vcdata.sgls.sgl_offset = 1;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ctrlr data: maxcmd %x\n",
 		      session->vcdata.maxcmd);
