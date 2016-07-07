@@ -197,7 +197,6 @@ nvmf_create_session(const char *subnqn)
 		      session->cntlid);
 	TAILQ_INIT(&session->connections);
 	session->num_connections = 0;
-	session->is_valid = 1;
 	session->subsys = subsystem;
 	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
 

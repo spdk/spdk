@@ -56,7 +56,6 @@ struct nvmf_session {
 	uint16_t	cntlid;
 	uint32_t	max_io_queues; /* maximum supported by backend NVMe library */
 	int		active_queues;
-	int		is_valid;
 	struct {
 		union spdk_nvme_cap_register	cap;
 		union spdk_nvme_vs_register	vs;
