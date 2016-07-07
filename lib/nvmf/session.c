@@ -126,9 +126,6 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: sgls data: 0x%x\n",
 		      *(uint32_t *)&session->vcdata.sgls);
 
-	/* feature: Number Of Queues. */
-	session->max_io_queues = MAX_SESSION_IO_QUEUES;
-
 	session->vcprop.cap.raw = 0;
 	session->vcprop.cap.bits.cqr = 0;	/* queues not contiguous */
 	session->vcprop.cap.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
@@ -150,8 +147,6 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcprop.csts.raw = 0;
 	session->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: max io queues %x\n",
-		      session->max_io_queues);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cap %" PRIx64 "\n",
 		      session->vcprop.cap.raw);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: vs %x\n", session->vcprop.vs.raw);
