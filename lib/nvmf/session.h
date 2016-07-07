@@ -53,7 +53,6 @@
 struct nvmf_session {
 	struct spdk_nvmf_subsystem *subsys;
 
-	uint16_t	cntlid;
 	struct {
 		union spdk_nvme_cap_register	cap;
 		union spdk_nvme_vs_register	vs;

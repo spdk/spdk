@@ -48,8 +48,7 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 	session->vcdata.maxcmd = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
 	/* extended data for get log page supportted */
 	session->vcdata.lpa.edlp = 1;
-	/* reset cntlid in vcdata to match the logical cntlid known to NVMf */
-	session->vcdata.cntlid = session->cntlid;
+	session->vcdata.cntlid = 0; /* There is one controller per subsystem, so its id is 0 */
 	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
 	nvmfdata->ioccsz = (NVMF_H2C_MAX_MSG / 16);
 	nvmfdata->iorcsz = (NVMF_C2H_MAX_MSG / 16);
@@ -97,7 +96,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	memcpy(&session->vcdata, cdata, sizeof(struct spdk_nvme_ctrlr_data));
 
 	session->vcdata.aerl = 0;
-	session->vcdata.cntlid = session->cntlid;
+	session->vcdata.cntlid = 0;
 	session->vcdata.kas = 10;
 	session->vcdata.maxcmd = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
 	session->vcdata.mdts = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 4096;
@@ -185,11 +184,8 @@ nvmf_create_session(const char *subnqn)
 	}
 
 	subsystem->num_sessions++;
-	session->cntlid = 0; /* Subsystems only have one controller by design, so cntlid is 0 */
 	TAILQ_INSERT_HEAD(&subsystem->sessions, session, entries);
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_session: allocated session cntlid %d\n",
-		      session->cntlid);
 	TAILQ_INIT(&session->connections);
 	session->num_connections = 0;
 	session->subsys = subsystem;
@@ -213,20 +209,13 @@ static struct nvmf_session *
 nvmf_find_session_by_id(const char *subnqn, uint16_t cntl_id)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	struct nvmf_session *sess, *tsess;
 
 	subsystem = nvmf_find_subsystem(subnqn);
-	if (subsystem == NULL)
+	if (subsystem == NULL) {
 		return NULL;
-
-	TAILQ_FOREACH_SAFE(sess, &subsystem->sessions, entries, tsess) {
-		if (sess->cntlid == cntl_id) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Session Match cntlid %d, sess %p\n", cntl_id, sess);
-			return sess;
-		}
 	}
 
-	return NULL;
+	return TAILQ_FIRST(&subsystem->sessions);
 }
 
 struct nvmf_session *
@@ -272,7 +261,7 @@ nvmf_connect(struct spdk_nvmf_conn *conn,
 	session->num_connections++;
 	TAILQ_INSERT_HEAD(&session->connections, conn, link);
 
-	response->status_code_specific.success.cntlid = session->cntlid;
+	response->status_code_specific.success.cntlid = 0;
 	response->status.sc = 0;
 
 	return session;
