@@ -949,7 +949,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		if (wc.status) {
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ completion error status %d (%s), exiting handler\n",
 				      wc.status, ibv_wc_status_str(wc.status));
-			break;
+			return -1;
 		}
 
 		switch (wc.opcode) {
