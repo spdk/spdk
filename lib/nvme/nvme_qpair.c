@@ -454,13 +454,14 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return 0;
 	}
 
-	if (max_completions == 0) {
+	if (max_completions == 0 || (max_completions > (qpair->num_entries - 1U))) {
+
 		/*
-		 * max_completions == 0 means unlimited; set it to the max uint32_t value
-		 *  to avoid a special case in the loop.  The maximum possible queue size is
-		 *  only 64K, so num_completions will never reach this value.
+		 * max_completions == 0 means unlimited, but complete at most one
+		 * queue depth batch of I/O at a time so that the completion
+		 * queue doorbells don't wrap around.
 		 */
-		max_completions = UINT32_MAX;
+		max_completions = qpair->num_entries - 1;
 	}
 
 	while (1) {
