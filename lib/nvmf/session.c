@@ -58,8 +58,7 @@ nvmf_create_session(const char *subnqn)
 		goto exit;
 
 	subsystem->num_sessions++;
-	/* define cntlid that is unique across all subsystems */
-	session->cntlid = (subsystem->num << NVMF_CNTLID_SUBS_SHIFT) + subsystem->num_sessions;
+	session->cntlid = 0; /* Subsystems only have one controller by design, so cntlid is 0 */
 	TAILQ_INSERT_HEAD(&subsystem->sessions, session, entries);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_session: allocated session cntlid %d\n",
@@ -243,8 +242,8 @@ nvmf_connect(struct spdk_nvmf_conn *conn,
 
 	if (conn->type == CONN_TYPE_AQ) {
 		/* For admin connections, establish a new session */
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT Admin Queue for controller id %d\n", conn->cntlid);
-		if (conn->cntlid != 0xFFFF) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT Admin Queue for controller id %d\n", connect_data->cntlid);
+		if (connect_data->cntlid != 0xFFFF) {
 			/* This NVMf target only supports dynamic mode. */
 			SPDK_ERRLOG("The NVMf target only supports dynamic mode.\n");
 			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
@@ -257,10 +256,10 @@ nvmf_connect(struct spdk_nvmf_conn *conn,
 			return NULL;
 		}
 	} else {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT I/O Queue for controller id %d\n", conn->cntlid);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT I/O Queue for controller id %d\n", connect_data->cntlid);
 		session = nvmf_find_session_by_id(connect_data->subnqn, connect_data->cntlid);
 		if (session == NULL) {
-			SPDK_ERRLOG("Unknown controller id %d\n", conn->cntlid);
+			SPDK_ERRLOG("Unknown controller id %d\n", connect_data->cntlid);
 			response->status.sc = SPDK_NVMF_FABRIC_SC_RESTART_DISCOVERY;
 			return NULL;
 		}
