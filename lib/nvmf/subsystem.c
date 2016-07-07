@@ -85,7 +85,6 @@ nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_ty
 	subsystem->num = num;
 	subsystem->subtype = sub_type;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
-	TAILQ_INIT(&subsystem->sessions);
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 
@@ -95,18 +94,15 @@ nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_ty
 int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct nvmf_session *sess, *tsess;
-
 	if (subsystem == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF,
 			      "nvmf_delete_subsystem: there is no subsystem\n");
 		return 0;
 	}
 
-	TAILQ_FOREACH_SAFE(sess, &subsystem->sessions, entries, tsess) {
-		subsystem->num_sessions--;
-		TAILQ_REMOVE(&subsystem->sessions, sess, entries);
-		free(sess);
+	if (subsystem->session) {
+		/* TODO: Call a session function that closes all connections */
+		free(subsystem->session);
 	}
 
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);

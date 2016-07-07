@@ -50,9 +50,8 @@ struct spdk_nvmf_conn;
 struct spdk_nvmf_subsystem {
 	uint16_t num;
 	char subnqn[MAX_NQN_SIZE];
-	int num_sessions;
 	enum spdk_nvmf_subsystem_types subtype;
-	TAILQ_HEAD(session_q, nvmf_session) sessions;
+	struct nvmf_session *session;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_qpair *io_qpair;
 

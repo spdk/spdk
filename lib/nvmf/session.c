@@ -183,9 +183,6 @@ nvmf_create_session(const char *subnqn)
 		return NULL;
 	}
 
-	subsystem->num_sessions++;
-	TAILQ_INSERT_HEAD(&subsystem->sessions, session, entries);
-
 	TAILQ_INIT(&session->connections);
 	session->num_connections = 0;
 	session->subsys = subsystem;
@@ -193,20 +190,20 @@ nvmf_create_session(const char *subnqn)
 
 	nvmf_init_session_properties(session);
 
+	subsystem->session = session;
+
 	return session;
 }
 
 static void
 nvmf_delete_session(struct nvmf_session	*session)
 {
-	session->subsys->num_sessions--;
-	TAILQ_REMOVE(&session->subsys->sessions, session, entries);
-
+	session->subsys->session = NULL;
 	free(session);
 }
 
 static struct nvmf_session *
-nvmf_find_session_by_id(const char *subnqn, uint16_t cntl_id)
+nvmf_find_session(const char *subnqn)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 
@@ -215,7 +212,7 @@ nvmf_find_session_by_id(const char *subnqn, uint16_t cntl_id)
 		return NULL;
 	}
 
-	return TAILQ_FIRST(&subsystem->sessions);
+	return subsystem->session;
 }
 
 struct nvmf_session *
@@ -243,7 +240,7 @@ nvmf_connect(struct spdk_nvmf_conn *conn,
 		}
 	} else {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT I/O Queue for controller id %d\n", connect_data->cntlid);
-		session = nvmf_find_session_by_id(connect_data->subnqn, connect_data->cntlid);
+		session = nvmf_find_session(connect_data->subnqn);
 		if (session == NULL) {
 			SPDK_ERRLOG("Unknown controller id %d\n", connect_data->cntlid);
 			response->status.sc = SPDK_NVMF_FABRIC_SC_RESTART_DISCOVERY;
