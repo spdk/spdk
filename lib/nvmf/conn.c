@@ -307,7 +307,7 @@ nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
 			  struct nvmf_session *session,
 			  struct spdk_nvmf_fabric_connect_rsp *response)
 {
-	nvmf_init_session_properties(session, conn->rdma.queue_depth);
+	nvmf_init_session_properties(session);
 }
 
 static void

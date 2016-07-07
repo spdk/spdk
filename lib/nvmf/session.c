@@ -123,7 +123,7 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 }
 
 static void
-nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
+nvmf_init_nvme_session_properties(struct nvmf_session *session)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvmf_extended_identify_ctrlr_data *nvmfdata;
@@ -203,10 +203,10 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 }
 
 void
-nvmf_init_session_properties(struct nvmf_session *session, int aq_depth)
+nvmf_init_session_properties(struct nvmf_session *session)
 {
 	if (session->subsys->subtype == SPDK_NVMF_SUB_NVME) {
-		nvmf_init_nvme_session_properties(session, aq_depth);
+		nvmf_init_nvme_session_properties(session);
 	} else {
 		nvmf_init_discovery_session_properties(session);
 	}

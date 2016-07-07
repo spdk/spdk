@@ -84,7 +84,7 @@ void
 nvmf_disconnect(struct nvmf_session *session, struct spdk_nvmf_conn *conn);
 
 void
-nvmf_init_session_properties(struct nvmf_session *session, int aq_depth);
+nvmf_init_session_properties(struct nvmf_session *session);
 
 void
 nvmf_property_get(struct nvmf_session *session,
