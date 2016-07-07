@@ -403,7 +403,6 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_data *connect_data;
 	struct spdk_nvmf_fabric_connect_rsp *response;
 	struct spdk_nvmf_conn *conn = req->conn;
-	struct nvmf_session *session;
 
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
 		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
@@ -441,12 +440,11 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		conn->type = CONN_TYPE_AQ;
 	}
 
-	session = nvmf_connect(conn, connect, connect_data, response);
-	if (session != NULL) {
-		conn->sess = session;
-		if (conn->type == CONN_TYPE_AQ) {
-			nvmf_init_conn_properites(conn, session, response);
-		}
+	conn->sess = nvmf_connect(conn, connect, connect_data, response);
+	if (!conn->sess) {
+		SPDK_ERRLOG("Unable to allocate session\n");
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return true;
 	}
 
 	/* Allocate RDMA reqs according to the queue depth and conn type*/

@@ -40,48 +40,6 @@
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
 
-static struct nvmf_session *
-nvmf_create_session(const char *subnqn)
-{
-	struct nvmf_session	*session;
-	struct spdk_nvmf_subsystem	*subsystem;
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_session:\n");
-
-	/* locate the previously provisioned subsystem */
-	subsystem = nvmf_find_subsystem(subnqn);
-	if (subsystem == NULL)
-		return NULL;
-
-	session = calloc(1, sizeof(struct nvmf_session));
-	if (session == NULL)
-		goto exit;
-
-	subsystem->num_sessions++;
-	session->cntlid = 0; /* Subsystems only have one controller by design, so cntlid is 0 */
-	TAILQ_INSERT_HEAD(&subsystem->sessions, session, entries);
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_session: allocated session cntlid %d\n",
-		      session->cntlid);
-	TAILQ_INIT(&session->connections);
-	session->num_connections = 0;
-	session->is_valid = 1;
-	session->subsys = subsystem;
-	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
-
-exit:
-	return session;
-}
-
-static void
-nvmf_delete_session(struct nvmf_session	*session)
-{
-	session->subsys->num_sessions--;
-	TAILQ_REMOVE(&session->subsys->sessions, session, entries);
-
-	free(session);
-}
-
 static void
 nvmf_init_discovery_session_properties(struct nvmf_session *session)
 {
@@ -202,7 +160,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 		      session->vcprop.csts.raw);
 }
 
-void
+static void
 nvmf_init_session_properties(struct nvmf_session *session)
 {
 	if (session->subsys->subtype == SPDK_NVMF_SUB_NVME) {
@@ -210,6 +168,51 @@ nvmf_init_session_properties(struct nvmf_session *session)
 	} else {
 		nvmf_init_discovery_session_properties(session);
 	}
+}
+
+static struct nvmf_session *
+nvmf_create_session(const char *subnqn)
+{
+	struct nvmf_session	*session;
+	struct spdk_nvmf_subsystem	*subsystem;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_session:\n");
+
+	/* locate the previously provisioned subsystem */
+	subsystem = nvmf_find_subsystem(subnqn);
+	if (subsystem == NULL) {
+		return NULL;
+	}
+
+	session = calloc(1, sizeof(struct nvmf_session));
+	if (session == NULL) {
+		return NULL;
+	}
+
+	subsystem->num_sessions++;
+	session->cntlid = 0; /* Subsystems only have one controller by design, so cntlid is 0 */
+	TAILQ_INSERT_HEAD(&subsystem->sessions, session, entries);
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_session: allocated session cntlid %d\n",
+		      session->cntlid);
+	TAILQ_INIT(&session->connections);
+	session->num_connections = 0;
+	session->is_valid = 1;
+	session->subsys = subsystem;
+	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
+
+	nvmf_init_session_properties(session);
+
+	return session;
+}
+
+static void
+nvmf_delete_session(struct nvmf_session	*session)
+{
+	session->subsys->num_sessions--;
+	TAILQ_REMOVE(&session->subsys->sessions, session, entries);
+
+	free(session);
 }
 
 static struct nvmf_session *

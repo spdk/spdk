@@ -302,14 +302,6 @@ void spdk_shutdown_nvmf_conns(void)
 			rte_get_master_lcore(), spdk_nvmf_conn_check_shutdown, NULL);
 }
 
-void
-nvmf_init_conn_properites(struct spdk_nvmf_conn *conn,
-			  struct nvmf_session *session,
-			  struct spdk_nvmf_fabric_connect_rsp *response)
-{
-	nvmf_init_session_properties(session);
-}
-
 static void
 spdk_nvmf_conn_do_work(void *arg)
 {
