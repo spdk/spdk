@@ -111,7 +111,10 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 	session->vcprop.cap.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
 	session->vcprop.cap.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
 
-	session->vcprop.vs = 0x10000;	/* Version Supported: Major 1, Minor 0 */
+	/* Version Supported: 1.0 */
+	session->vcprop.vs.bits.mjr = 1;
+	session->vcprop.vs.bits.mnr = 0;
+	session->vcprop.vs.bits.ter = 0;
 
 	session->vcprop.cc.raw = 0;
 
@@ -181,7 +184,10 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 	session->vcprop.cap.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
 	session->vcprop.cap.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
 
-	session->vcprop.vs = 0x10000;	/* Version Supported: Major 1, Minor 0 */
+	/* Version Supported: 1.0 */
+	session->vcprop.vs.bits.mjr = 1;
+	session->vcprop.vs.bits.mnr = 0;
+	session->vcprop.vs.bits.ter = 0;
 
 	session->vcprop.cc.raw = 0;
 	session->vcprop.cc.bits.en = 0; /* Init controller disabled */
@@ -189,33 +195,14 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session, int aq_depth)
 	session->vcprop.csts.raw = 0;
 	session->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
 
-	/* nssr not defined for v1.0 */
-
-	/* Set AQA details to reflect the virtual connection SQ/CQ depth */
-	session->vcprop.aqa.bits.asqs = (aq_depth & 0xFFF);
-	session->vcprop.aqa.bits.acqs = (aq_depth & 0xFFF);
-
-	session->vcprop.propsz.bits.size = sizeof(struct spdk_nvmf_ctrlr_properties) / 64;
-	session->vcprop.capattr_hi.raw = 0;
-	session->vcprop.capattr_lo.bits.rspsz = sizeof(union nvmf_c2h_msg) / 16;
-	session->vcprop.capattr_lo.bits.cmdsz = sizeof(union nvmf_h2c_msg) / 16;
-
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: max io queues %x\n",
 		      session->max_io_queues);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cap %" PRIx64 "\n",
 		      session->vcprop.cap.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: vs %x\n", session->vcprop.vs);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: vs %x\n", session->vcprop.vs.raw);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cc %x\n", session->vcprop.cc.raw);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: csts %x\n",
 		      session->vcprop.csts.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: nssr %x\n", session->vcprop.nssr);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: aqa %x\n", session->vcprop.aqa.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: propsz %x\n",
-		      session->vcprop.propsz.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: capattr_lo %x\n",
-		      session->vcprop.capattr_lo.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: capattr_hi %x\n",
-		      session->vcprop.capattr_hi.raw);
 }
 
 void
@@ -376,92 +363,126 @@ nvmf_complete_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
 	spdk_nvmf_request_complete(req);
 }
 
+static uint64_t
+nvmf_prop_get_cap(struct nvmf_session *session)
+{
+	return session->vcprop.cap.raw;
+}
+
+static uint64_t
+nvmf_prop_get_vs(struct nvmf_session *session)
+{
+	return session->vcprop.vs.raw;
+}
+
+static uint64_t
+nvmf_prop_get_cc(struct nvmf_session *session)
+{
+	return session->vcprop.cc.raw;
+}
+
+static bool
+nvmf_prop_set_cc(struct nvmf_session *session, uint64_t value)
+{
+	union spdk_nvme_cc_register cc;
+
+	cc.raw = (uint32_t)value;
+
+	if (cc.bits.en && !session->vcprop.cc.bits.en) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Enable!\n");
+		session->vcprop.csts.bits.rdy = 1;
+	}
+
+	if (cc.bits.shn && !session->vcprop.cc.bits.shn) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Shutdown!\n");
+		session->vcprop.cc.bits.en = 0;
+	}
+
+	session->vcprop.cc.raw = cc.raw;
+	return true;
+}
+
+static uint64_t
+nvmf_prop_get_csts(struct nvmf_session *session)
+{
+	return session->vcprop.csts.raw;
+}
+
+struct nvmf_prop {
+	uint32_t ofst;
+	uint8_t size;
+	char name[11];
+	uint64_t (*get_cb)(struct nvmf_session *session);
+	bool (*set_cb)(struct nvmf_session *session, uint64_t value);
+};
+
+#define PROP(field, size, get_cb, set_cb) \
+	{ \
+		offsetof(struct spdk_nvme_registers, field), \
+		SPDK_NVMF_PROP_SIZE_##size, \
+		#field, \
+		get_cb, set_cb \
+	}
+
+static const struct nvmf_prop nvmf_props[] = {
+	PROP(cap,  8, nvmf_prop_get_cap,  NULL),
+	PROP(vs,   4, nvmf_prop_get_vs,   NULL),
+	PROP(cc,   4, nvmf_prop_get_cc,   nvmf_prop_set_cc),
+	PROP(csts, 4, nvmf_prop_get_csts, NULL),
+};
+
+static const struct nvmf_prop *
+find_prop(uint32_t ofst)
+{
+	size_t i;
+
+	for (i = 0; i < sizeof(nvmf_props) / sizeof(*nvmf_props); i++) {
+		const struct nvmf_prop *prop = &nvmf_props[i];
+
+		if (prop->ofst == ofst) {
+			return prop;
+		}
+	}
+
+	return NULL;
+}
+
 void
 nvmf_property_get(struct nvmf_session *session,
 		  struct spdk_nvmf_fabric_prop_get_cmd *cmd,
 		  struct spdk_nvmf_fabric_prop_get_rsp *response)
 {
+	const struct nvmf_prop *prop;
+
 	response->status.sc = 0;
 	response->value.u64 = 0;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_property_get: attrib %d, offset %x\n",
-		      cmd->attrib, cmd->ofst);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "size %d, offset 0x%x\n",
+		      cmd->attrib.size, cmd->ofst);
 
-	if (cmd->ofst > offsetof(struct spdk_nvmf_ctrlr_properties, capattr_hi)) {
+	if (cmd->attrib.size != SPDK_NVMF_PROP_SIZE_4 &&
+	    cmd->attrib.size != SPDK_NVMF_PROP_SIZE_8) {
+		SPDK_ERRLOG("Invalid size value %d\n", cmd->attrib.size);
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return;
 	}
 
-	switch (cmd->ofst) {
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, cap)):
-		response->value.u32.low = session->vcprop.cap.raw;
-		if (cmd->attrib == 1)
-			response->value.u64 = session->vcprop.cap.raw;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, cap) + 4):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.cap.raw >> 32;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, vs)):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.vs;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, intms)):
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, intmc)):
-		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, cc)):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.cc.raw;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, csts)):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.csts.raw;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, nssr)):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.nssr;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, aqa)):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.aqa.raw;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, asq)):
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, acq)):
-		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, propsz)):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.propsz.raw;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, capattr_lo)):
-		response->value.u32.low = session->vcprop.capattr_lo.raw;
-		if (cmd->attrib == 1)
-			response->value.u32.high = session->vcprop.capattr_hi.raw;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, capattr_hi)):
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			response->value.u32.low = session->vcprop.capattr_hi.raw;
-		break;
-	default:
-		break;
+	prop = find_prop(cmd->ofst);
+	if (prop == NULL || prop->get_cb == NULL) {
+		/* Reserved properties return 0 when read */
+		return;
 	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "name: %s\n", prop->name);
+	if (cmd->attrib.size != prop->size) {
+		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
+			    cmd->ofst, cmd->attrib.size, prop->size);
+		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+		return;
+	}
+
+	response->value.u64 = prop->get_cb(session);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "response value: 0x%" PRIx64 "\n", response->value.u64);
 }
 
 void
@@ -470,70 +491,36 @@ nvmf_property_set(struct nvmf_session *session,
 		  struct spdk_nvmf_fabric_prop_set_rsp *response,
 		  bool *shutdown)
 {
-	response->status.sc = 0;
+	const struct nvmf_prop *prop;
+	uint64_t value;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF,
-		      "nvmf_property_set: attrib %d, offset %x, value %lx, value low %x, value high %x\n",
-		      cmd->attrib, cmd->ofst, cmd->value.u64, cmd->value.u32.low, cmd->value.u32.high);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "size %d, offset 0x%x, value 0x%" PRIx64 "\n",
+		      cmd->attrib.size, cmd->ofst, cmd->value.u64);
 
-	if (cmd->ofst > offsetof(struct spdk_nvmf_ctrlr_properties, capattr_hi)) {
+	prop = find_prop(cmd->ofst);
+	if (prop == NULL || prop->set_cb == NULL) {
+		SPDK_ERRLOG("Invalid offset 0x%x\n", cmd->ofst);
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 		return;
 	}
 
-	/* TBD: determine which values we allow to be changed, deal with spec version
-		difference.  Fields within 32bit value, ex. for reset in csts */
-
-	switch (cmd->ofst) {
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, cc)): {
-		union spdk_nvme_cc_register cc;
-
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC\n");
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else {
-			cc.raw = cmd->value.u32.low;
-
-			if (cc.bits.en == 1 && session->vcprop.cc.bits.en == 0) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Enable!\n");
-				session->vcprop.csts.bits.rdy = 1;
-			}
-
-			if (cc.bits.shn && session->vcprop.cc.bits.shn == 0) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Shutdown!\n");
-				session->vcprop.cc.bits.en = 0;
-				*shutdown = true;
-			}
-
-			session->vcprop.cc.raw = cc.raw;
-		}
-	}
-	break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, csts)):
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CSTS\n");
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			session->vcprop.csts.raw = cmd->value.u32.low;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, nssr)):
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set NSSR\n");
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			session->vcprop.nssr = cmd->value.u32.low;
-		break;
-	case (offsetof(struct spdk_nvmf_ctrlr_properties, aqa)):
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set AQA\n");
-		if (cmd->attrib == 1)
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		else
-			session->vcprop.aqa.raw = cmd->value.u32.low;
-		break;
-	default:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set Invalid Offset %x\n", cmd->ofst);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "name: %s\n", prop->name);
+	if (cmd->attrib.size != prop->size) {
+		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
+			    cmd->ofst, cmd->attrib.size, prop->size);
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		break;
+		return;
+	}
+
+	value = cmd->value.u64;
+	if (prop->size == SPDK_NVMF_PROP_SIZE_4) {
+		value = (uint32_t)value;
+	}
+
+	if (!prop->set_cb(session, value)) {
+		SPDK_ERRLOG("prop set_cb failed\n");
+		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+		return;
 	}
 }
 

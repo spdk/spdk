@@ -68,7 +68,12 @@ struct nvmf_session {
 	uint32_t	max_io_queues; /* maximum supported by backend NVMe library */
 	int		active_queues;
 	int		is_valid;
-	struct spdk_nvmf_ctrlr_properties	vcprop;	/* virtual controller properties */
+	struct {
+		union spdk_nvme_cap_register	cap;
+		union spdk_nvme_vs_register	vs;
+		union spdk_nvme_cc_register	cc;
+		union spdk_nvme_csts_register	csts;
+	} vcprop; /* virtual controller properties */
 	struct spdk_nvme_ctrlr_data	vcdata; /* virtual controller data */
 
 	TAILQ_HEAD(connection_q, nvmf_connection_entry) connections;

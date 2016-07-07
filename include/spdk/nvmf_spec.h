@@ -253,137 +253,8 @@ struct spdk_nvmf_fabric_connect_rsp {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_connect_rsp) == 16, "Incorrect size");
 
-#define SPDK_NVMF_PROP_CAP_OFST		0x0
-#define SPDK_NVMF_PROP_VS_OFST		0x8
-#define SPDK_NVMF_PROP_INTMS_OFST	0xC
-#define SPDK_NVMF_PROP_INTMC_OFST	0x10
-#define SPDK_NVMF_PROP_CC_OFST		0x14
-#define SPDK_NVMF_PROP_CSTS_OFST	0x1C
-#define SPDK_NVMF_PROP_NSSR_OFST	0x20
-#define SPDK_NVMF_PROP_AQA_OFST		0x24
-#define SPDK_NVMF_PROP_ASQ_OFST		0x28
-#define SPDK_NVMF_PROP_ACQ_OFST		0x30
-#define SPDK_NVMF_PROP_CMBLOC_OFST	0x38
-#define SPDK_NVMF_PROP_CMBSZ_OFST	0x3C
-
-#define SPDK_NVMF_PROP_CAP_LEN		0x8
-#define SPDK_NVMF_PROP_VS_LEN		0x4
-#define SPDK_NVMF_PROP_INTMS_LEN	0x4
-#define SPDK_NVMF_PROP_INTMC_LEN	0x4
-#define SPDK_NVMF_PROP_CC_LEN		0x4
-#define SPDK_NVMF_PROP_CSTS_LEN		0x4
-#define SPDK_NVMF_PROP_NSSR_LEN		0x4
-#define SPDK_NVMF_PROP_AQA_LEN		0x4
-#define SPDK_NVMF_PROP_ASQ_LEN		0x8
-#define SPDK_NVMF_PROP_ACQ_LEN		0x8
-#define SPDK_NVMF_PROP_CMBLOC_LEN	0x4
-#define SPDK_NVMF_PROP_CMBSZ_LEN	0x4
-
-union spdk_nvmf_property_size {
-	uint32_t	raw;
-	struct {
-		uint32_t reserved	: 16;
-
-		/** property address space size */
-		uint32_t size		: 16;
-	} bits;
-};
-SPDK_STATIC_ASSERT(sizeof(union spdk_nvmf_property_size) == 4, "Incorrect size");
-
-union spdk_nvmf_capsule_attr_lo {
-	uint32_t	raw;
-	struct {
-		/** maximum response capsule size */
-		uint32_t rspsz		: 16;
-
-		/** maximum command capsule size */
-		uint32_t cmdsz		: 16;
-	} bits;
-};
-SPDK_STATIC_ASSERT(sizeof(union spdk_nvmf_capsule_attr_lo) == 4, "Incorrect size");
-
-union spdk_nvmf_capsule_attr_hi {
-	uint32_t	raw;
-	struct {
-		/** support capsule alignment in response capsules */
-		uint32_t reserved	: 26;
-
-		/** support capsule alignment in response capsules */
-		uint32_t cairsp		: 1;
-
-		/** support capsule alignment in command capsules */
-		uint32_t caicmd		: 1;
-
-		/** support capsule metadata in response capsules */
-		uint32_t cmirsp		: 1;
-
-		/** support capsule metadata in command capsules */
-		uint32_t cmicmd		: 1;
-
-		/** support capsule data in response capsules */
-		uint32_t cdirsp		: 1;
-
-		/** support capsule data in command capsules */
-		uint32_t cdicmd		: 1;
-	} bits;
-};
-SPDK_STATIC_ASSERT(sizeof(union spdk_nvmf_capsule_attr_hi) == 4, "Incorrect size");
-
-struct spdk_nvmf_ctrlr_properties {
-	union spdk_nvme_cap_register		cap;
-
-	uint32_t				vs;
-	uint32_t				intms;
-	uint32_t				intmc;
-
-	union spdk_nvme_cc_register		cc;
-
-	uint32_t				reserved1;
-	union spdk_nvme_csts_register		csts;
-	uint32_t				nssr;
-
-	union spdk_nvme_aqa_register		aqa;
-
-	uint64_t				asq;
-	uint64_t				acq;
-
-	uint32_t				cmbloc;
-	uint32_t				cmbsz;
-
-	uint8_t					reserved2[0xEC0];
-	uint8_t					reserved3[0x100];
-	union spdk_nvmf_property_size		propsz;
-	uint32_t				reserved4;
-	union spdk_nvmf_capsule_attr_lo		capattr_lo;
-	union spdk_nvmf_capsule_attr_hi		capattr_hi;
-	uint8_t					reserved5[0x2F0];
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_ctrlr_properties) == 4864, "Incorrect size");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_CAP_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, cap),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_VS_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, vs),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_INTMS_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, intms),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_INTMC_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, intmc),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_CC_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, cc),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_CSTS_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, csts),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_NSSR_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, nssr),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_AQA_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, aqa),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_ASQ_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, asq),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_ACQ_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, acq),
-		   "Incorrect register offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_CMBLOC_OFST == offsetof(struct spdk_nvmf_ctrlr_properties,
-		   cmbloc),
-		   "Incorrect property offset");
-SPDK_STATIC_ASSERT(SPDK_NVMF_PROP_CMBSZ_OFST == offsetof(struct spdk_nvmf_ctrlr_properties, cmbsz),
-		   "Incorrect property offset");
+#define SPDK_NVMF_PROP_SIZE_4	0
+#define SPDK_NVMF_PROP_SIZE_8	1
 
 struct spdk_nvmf_fabric_prop_get_cmd {
 	uint8_t		opcode;
@@ -391,7 +262,10 @@ struct spdk_nvmf_fabric_prop_get_cmd {
 	uint16_t	cid;
 	uint8_t		fctype;
 	uint8_t		reserved2[35];
-	uint8_t		attrib;
+	struct {
+		uint8_t size		: 2;
+		uint8_t reserved	: 6;
+	} attrib;
 	uint8_t		reserved3[3];
 	uint32_t	ofst;
 	uint8_t		reserved4[16];
@@ -420,7 +294,10 @@ struct spdk_nvmf_fabric_prop_set_cmd {
 	uint16_t	cid;
 	uint8_t		fctype;
 	uint8_t		reserved1[35];
-	uint8_t		attrib;
+	struct {
+		uint8_t size		: 2;
+		uint8_t reserved	: 6;
+	} attrib;
 	uint8_t		reserved2[3];
 	uint32_t	ofst;
 
