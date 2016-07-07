@@ -101,22 +101,6 @@ free_conn(struct spdk_nvmf_conn *conn)
 	conn->is_valid = 0;
 }
 
-static struct spdk_nvmf_conn *
-spdk_find_nvmf_conn_by_cntlid(int cntlid)
-{
-	int i;
-
-	for (i = 0; i < g_max_conns; i++) {
-		if ((g_conns_array[i].is_valid == 1) &&
-		    (g_conns_array[i].cntlid == cntlid) &&
-		    (g_conns_array[i].qid == 0)) {
-			return &g_conns_array[i];
-		}
-	}
-
-	return NULL;
-}
-
 int spdk_initialize_nvmf_conns(int max_connections)
 {
 	size_t conns_size;
@@ -200,24 +184,7 @@ int
 spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
 {
 	int lcore;
-	struct spdk_nvmf_conn *admin_conn;
 	uint64_t nvmf_session_core = spdk_app_get_core_mask();
-
-	/*
-	 * if starting IO connection then determine core
-	 * allocated to admin queue to request core mask.
-	 * Can not assume nvmf session yet created at time
-	 * of fabric connection setup.  Rely on fabric
-	 * function to locate matching controller session.
-	 */
-	if (conn->type == CONN_TYPE_IOQ && conn->cntlid != 0) {
-		admin_conn = spdk_find_nvmf_conn_by_cntlid(conn->cntlid);
-		if (admin_conn != NULL) {
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Located admin conn session core %d\n",
-				      admin_conn->poller.lcore);
-			nvmf_session_core = 1ULL << admin_conn->poller.lcore;
-		}
-	}
 
 	lcore = nvmf_allocate_reactor(nvmf_session_core);
 	if (lcore < 0) {
