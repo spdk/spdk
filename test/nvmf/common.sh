@@ -8,7 +8,7 @@ NVMF_FIRST_TARGET_IP=$NVMF_IP_PREFIX.$NVMF_IP_LEAST_ADDR
 function load_ib_rdma_modules()
 {
 	if [ `uname` != Linux ]; then
-		exit 0
+		return 0
 	fi
 
 	modprobe ib_cm
@@ -23,13 +23,17 @@ function load_ib_rdma_modules()
 
 function detect_mellanox_nics()
 {
+	if ! hash lspci; then
+		return 0
+	fi
+
 	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox | awk -F ' ' '{print "0000:"$1}'`
 	mlx_core_driver="mlx4_core"
 	mlx_ib_driver="mlx4_ib"
 	mlx_en_driver="mlx4_en"
 
 	if [ -z "$nvmf_nic_bdfs" ]; then
-		exit 0
+		return 0
 	fi
 
 	# for nvmf target loopback test, suppose we only have one type of card.
@@ -68,8 +72,6 @@ function detect_mellanox_nics()
 	# The mlx4 driver takes an extra few seconds to load after modprobe returns,
 	# otherwise ifconfig operations will do nothing.
 	sleep 5
-
-	trap - SIGINT SIGTERM EXIT
 }
 
 function detect_rdma_nics()
@@ -84,16 +86,12 @@ function allocate_nic_ips()
 	for nic_type in `ls /sys/class/infiniband`; do
 		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
 			ifconfig $nic_name $NVMF_IP_PREFIX.$count netmask 255.255.255.0 up
+
+			# dump configuration for debug log
+			ifconfig $nic_name
 			let count=$count+1
 		done
 	done
-
-	# check whether the IP is configured
-	result=`ifconfig | grep $NVMF_IP_PREFIX`
-	if [ -z "$result" ]; then
-		echo "no NIC for nvmf test"
-		exit 0
-	fi
 }
 
 function nvmfcleanup()
@@ -109,3 +107,7 @@ function rdma_device_init()
 	allocate_nic_ips
 }
 
+function rdma_nic_available()
+{
+	ifconfig | grep -q $NVMF_IP_PREFIX
+}

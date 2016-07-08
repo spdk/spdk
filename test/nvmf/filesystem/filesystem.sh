@@ -31,9 +31,12 @@ function filesystem_test()
 	done
 }
 
-rdma_device_init
-
 set -e
+
+if ! rdma_nic_available; then
+	echo "no NIC for nvmf test"
+	exit 0
+fi
 
 timing_enter fs_test
 

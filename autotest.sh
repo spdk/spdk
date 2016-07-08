@@ -2,6 +2,7 @@
 
 rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/scripts/autotest_common.sh"
+source "$rootdir/test/nvmf/common.sh"
 
 set -xe
 
@@ -42,6 +43,10 @@ fi
 timing_enter afterboot
 ./scripts/setup.sh
 timing_exit afterboot
+
+timing_enter nvmf_setup
+rdma_device_init
+timing_exit nvmf_setup
 
 #####################
 # Unit Tests

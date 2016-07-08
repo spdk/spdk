@@ -5,14 +5,17 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+set -e
+
 if ! hash nvme; then
 	echo "nvme command not found; skipping discovery test"
 	exit 0
 fi
 
-rdma_device_init
-
-set -e
+if ! rdma_nic_available; then
+	echo "no NIC for nvmf test"
+	exit 0
+fi
 
 timing_enter discovery
 
