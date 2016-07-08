@@ -97,7 +97,6 @@ function allocate_nic_ips()
 function nvmfcleanup()
 {
 	rmmod nvme-rdma
-	rmmod nvme || true
 }
 
 function rdma_device_init()
