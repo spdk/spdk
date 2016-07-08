@@ -48,21 +48,6 @@ function detect_mellanox_nics()
 		break;
 	done
 
-	# Uninstall/install driver to make a clean test environment
-	if lsmod | grep -q $mlx_ib_driver; then
-		rmmod $mlx_ib_driver
-	fi
-
-	if [ -n "$mlx_en_driver" ]; then
-		if lsmod | grep -q $mlx_en_driver; then
-			rmmod $mlx_en_driver
-		fi
-	fi
-
-	if lsmod | grep -q $mlx_core_driver; then
-		rmmod $mlx_core_driver
-	fi
-
 	modprobe $mlx_core_driver
 	modprobe $mlx_ib_driver
 	if [ -n "$mlx_en_driver" ]; then
