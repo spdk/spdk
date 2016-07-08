@@ -33,6 +33,8 @@ function filesystem_test()
 
 rdma_device_init
 
+set -e
+
 timing_enter fs_test
 
 # Start up the NVMf target in another process

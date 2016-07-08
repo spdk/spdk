@@ -7,6 +7,8 @@ source $rootdir/test/nvmf/common.sh
 
 rdma_device_init
 
+set -e
+
 timing_enter fio
 
 # Start up the NVMf target in another process

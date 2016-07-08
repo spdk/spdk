@@ -12,6 +12,8 @@ fi
 
 rdma_device_init
 
+set -e
+
 timing_enter discovery
 
 # Start up the NVMf target in another process
