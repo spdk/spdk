@@ -18,7 +18,7 @@ timing_enter fs_test
 $rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf &
 nvmfpid=$!
 
-trap "process_core; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 sleep 5
 

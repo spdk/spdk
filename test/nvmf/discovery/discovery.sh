@@ -23,7 +23,7 @@ timing_enter discovery
 $rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf -t nvmf -t rdma &
 nvmfpid=$!
 
-trap "process_core; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 sleep 10
 
