@@ -70,27 +70,6 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-int
-spdk_nvmf_request_release(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvmf_capsule_cmd *capsule;
-
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		capsule = &req->cmd->nvmf_cmd;
-		if (capsule->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
-			/* Special case: connect is always the first capsule and new
-			 * work queue entries are allocated in response to this command.
-			 * Instead of re-posting this entry, just free it.
-			 */
-			spdk_nvmf_rdma_free_req(req);
-			return 0;
-		}
-	}
-
-	return spdk_nvmf_rdma_request_release(req->conn, req);
-}
-
 static bool
 nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 {

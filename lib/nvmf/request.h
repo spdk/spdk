@@ -75,6 +75,5 @@ int
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
-int spdk_nvmf_request_release(struct spdk_nvmf_request *req);
 
 #endif

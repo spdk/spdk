@@ -211,7 +211,7 @@ free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
 	rte_free(rdma_req);
 }
 
-void
+static void
 spdk_nvmf_rdma_free_req(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(req->conn);
@@ -221,7 +221,7 @@ spdk_nvmf_rdma_free_req(struct spdk_nvmf_request *req)
 	free_rdma_req(rdma_req);
 }
 
-void
+static void
 spdk_nvmf_rdma_free_reqs(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
@@ -503,12 +503,26 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn,
 	return 0;
 }
 
-int
+static int
 spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
 			       struct spdk_nvmf_request *req)
 {
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	if (nvmf_post_rdma_recv(req->conn, req)) {
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
+		struct spdk_nvmf_capsule_cmd *capsule = &req->cmd->nvmf_cmd;
+
+		if (capsule->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
+			/* Special case: connect is always the first capsule and new
+			 * work queue entries are allocated in response to this command.
+			 * Instead of re-posting this entry, just free it.
+			 */
+			spdk_nvmf_rdma_free_req(req);
+			return 0;
+		}
+	}
+
+	if (nvmf_post_rdma_recv(conn, req)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
 	}
@@ -1032,7 +1046,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ send completion\n");
 			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
 			req = &rdma_req->req;
-			if (spdk_nvmf_request_release(req)) {
+			if (spdk_nvmf_rdma_request_release(conn, req)) {
 				return -1;
 			}
 			break;
