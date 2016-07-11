@@ -234,7 +234,7 @@ spdk_nvmf_parse_ports(void)
 }
 
 static int
-spdk_nvmf_parse_init_grp(struct spdk_conf_section *sp)
+spdk_nvmf_parse_host(struct spdk_conf_section *sp)
 {
 	int i;
 	const char *mask;
@@ -280,7 +280,7 @@ spdk_nvmf_parse_init_grp(struct spdk_conf_section *sp)
 }
 
 static int
-spdk_nvmf_parse_init_grps(void)
+spdk_nvmf_parse_hosts(void)
 {
 	int rc = 0;
 	struct spdk_conf_section *sp;
@@ -288,7 +288,7 @@ spdk_nvmf_parse_init_grps(void)
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "Host")) {
-			rc = spdk_nvmf_parse_init_grp(sp);
+			rc = spdk_nvmf_parse_host(sp);
 			if (rc < 0) {
 				return -1;
 			}
@@ -315,8 +315,8 @@ spdk_nvmf_parse_conf(void)
 		return rc;
 	}
 
-	/* Initiator Group sections */
-	rc = spdk_nvmf_parse_init_grps();
+	/* Host sections */
+	rc = spdk_nvmf_parse_hosts();
 	if (rc < 0) {
 		return rc;
 	}
