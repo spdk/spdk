@@ -79,7 +79,6 @@ nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_ty
 		return NULL;
 	}
 
-	memset(subsystem, 0, sizeof(struct spdk_nvmf_subsystem));
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_subsystem: allocated subsystem %p\n", subsystem);
 
 	subsystem->num = num;
@@ -94,10 +93,16 @@ nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_ty
 int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
+	int i;
+
 	if (subsystem == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF,
 			      "nvmf_delete_subsystem: there is no subsystem\n");
 		return 0;
+	}
+
+	for (i = 0; i < subsystem->map_count; i++) {
+		subsystem->map[i].host->ref--;
 	}
 
 	if (subsystem->session) {
@@ -159,14 +164,8 @@ spdk_check_nvmf_name(const char *name)
 static void
 spdk_nvmf_subsystem_destruct(struct spdk_nvmf_subsystem_grp *ss_group)
 {
-	int i;
-
 	if (ss_group == NULL) {
 		return;
-	}
-
-	for (i = 0; i < ss_group->map_count; i++) {
-		ss_group->map[i].host->ref--;
 	}
 
 	/* Call NVMf library to free the subsystem */
@@ -176,7 +175,7 @@ spdk_nvmf_subsystem_destruct(struct spdk_nvmf_subsystem_grp *ss_group)
 }
 
 static int
-spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
+spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem *subsystem,
 			    int port_tag, int host_tag)
 {
 	struct spdk_nvmf_access_map	*map;
@@ -185,27 +184,27 @@ spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
 
 	port = spdk_nvmf_port_find_by_tag(port_tag);
 	if (port == NULL) {
-		SPDK_ERRLOG("%s: Port%d not found\n", ss_group->subsystem->subnqn, port_tag);
+		SPDK_ERRLOG("%s: Port%d not found\n", subsystem->subnqn, port_tag);
 		return -1;
 	}
 	if (port->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: Port%d not active\n", ss_group->subsystem->subnqn, port_tag);
+		SPDK_ERRLOG("%s: Port%d not active\n", subsystem->subnqn, port_tag);
 		return -1;
 	}
 	host = spdk_nvmf_host_find_by_tag(host_tag);
 	if (host == NULL) {
-		SPDK_ERRLOG("%s: Host%d not found\n", ss_group->subsystem->subnqn, host_tag);
+		SPDK_ERRLOG("%s: Host%d not found\n", subsystem->subnqn, host_tag);
 		return -1;
 	}
 	if (host->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: Host%d not active\n", ss_group->subsystem->subnqn, host_tag);
+		SPDK_ERRLOG("%s: Host%d not active\n", subsystem->subnqn, host_tag);
 		return -1;
 	}
 	host->ref++;
-	map = &ss_group->map[ss_group->map_count];
+	map = &subsystem->map[subsystem->map_count];
 	map->port = port;
 	map->host = host;
-	ss_group->map_count++;
+	subsystem->map_count++;
 
 	return 0;
 }
@@ -246,6 +245,13 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 
 	printf("    NVMf Subsystem: Name: %s\n", nqn);
 
+	/* register this subsystem with the NVMf library */
+	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, nqn, SPDK_NVMF_SUB_NVME);
+	if (ss_group->subsystem == NULL) {
+		SPDK_ERRLOG("Failed creating new nvmf library subsystem\n");
+		goto err0;
+	}
+
 	/* Setup initiator and port access mapping */
 	val = spdk_conf_section_get_val(sp, "Mapping");
 	if (val == NULL) {
@@ -254,7 +260,6 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 		goto err0;
 	}
 
-	ss_group->map_count = 0;
 	for (i = 0; i < MAX_PER_SUBSYSTEM_ACCESS_MAP; i++) {
 		val = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
 		if (val == NULL)
@@ -282,18 +287,11 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 			goto err0;
 		}
 
-		ret = spdk_nvmf_subsystem_add_map(ss_group, port_tag_i, ig_tag_i);
+		ret = spdk_nvmf_subsystem_add_map(ss_group->subsystem, port_tag_i, ig_tag_i);
 		if (ret < 0) {
 			SPDK_ERRLOG("could not init access map within subsystem group\n");
 			goto err0;
 		}
-	}
-
-	/* register this subsystem with the NVMf library */
-	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, nqn, SPDK_NVMF_SUB_NVME);
-	if (ss_group->subsystem == NULL) {
-		SPDK_ERRLOG("Failed creating new nvmf library subsystem\n");
-		goto err0;
 	}
 
 	val = spdk_conf_section_get_val(sp, "Controller");
@@ -376,8 +374,8 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 		if (subsystem->subtype == SPDK_NVMF_SUB_DISCOVERY)
 			continue;
 
-		for (i = 0; i < ss_group->map_count; i++) {
-			map = &ss_group->map[i];
+		for (i = 0; i < subsystem->map_count; i++) {
+			map = &subsystem->map[i];
 			port = map->port;
 			if (port != NULL) {
 				TAILQ_FOREACH(fabric_intf, &port->head, tailq) {

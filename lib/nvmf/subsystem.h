@@ -42,6 +42,11 @@ struct spdk_nvmf_conn;
 #define MAX_PER_SUBSYSTEM_ACCESS_MAP 2
 #define MAX_NQN_SIZE 255
 
+struct spdk_nvmf_access_map {
+	struct spdk_nvmf_port	*port;
+	struct spdk_nvmf_host	*host;
+};
+
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of virtual controller sessions.  Any individual controller session has
@@ -55,19 +60,15 @@ struct spdk_nvmf_subsystem {
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_qpair *io_qpair;
 
-	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
-};
+	int map_count;
+	struct spdk_nvmf_access_map map[MAX_PER_SUBSYSTEM_ACCESS_MAP];
 
-struct spdk_nvmf_access_map {
-	struct spdk_nvmf_port	*port;
-	struct spdk_nvmf_host	*host;
+	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
 
 struct spdk_nvmf_subsystem_grp {
 	int num;
 	struct spdk_nvmf_subsystem *subsystem;
-	int map_count;
-	struct spdk_nvmf_access_map map[MAX_PER_SUBSYSTEM_ACCESS_MAP];
 	TAILQ_ENTRY(spdk_nvmf_subsystem_grp)	tailq;
 };
 
