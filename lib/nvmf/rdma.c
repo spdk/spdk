@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "rdma.h"
+
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <infiniband/verbs.h>
@@ -46,7 +48,7 @@
 #include <rte_malloc.h>
 
 #include "conn.h"
-#include "rdma.h"
+#include "request.h"
 #include "port.h"
 #include "host.h"
 #include "spdk/assert.h"
@@ -62,6 +64,38 @@
  */
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
+
+struct spdk_nvmf_rdma_conn {
+	struct spdk_nvmf_conn			conn;
+
+	struct rdma_cm_id			*cm_id;
+	struct ibv_context			*ctx;
+	struct ibv_comp_channel			*comp_channel;
+	struct ibv_cq				*cq;
+	struct ibv_qp				*qp;
+
+	uint16_t				queue_depth;
+
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)	rdma_reqs;
+};
+
+struct spdk_nvmf_rdma_request {
+	struct spdk_nvmf_request		req;
+	STAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
+
+	union nvmf_h2c_msg			cmd;
+	struct ibv_mr				*cmd_mr;
+
+	union nvmf_c2h_msg			rsp;
+	struct ibv_mr				*rsp_mr;
+
+	struct ibv_sge				send_sgl;
+	struct ibv_sge				recv_sgl[2];
+
+	struct ibv_mr				*bb_mr;
+	uint8_t					*bb;
+	uint32_t				bb_len;
+};
 
 struct spdk_nvmf_rdma {
 	struct rte_timer		acceptor_timer;

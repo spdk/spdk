@@ -34,45 +34,8 @@
 #ifndef _NVMF_RDMA_H_
 #define _NVMF_RDMA_H_
 
-#include <infiniband/verbs.h>
-
-#include "nvmf_internal.h"
-#include "conn.h"
-#include "request.h"
-#include "spdk/nvmf_spec.h"
-#include "spdk/queue.h"
-
-struct spdk_nvmf_rdma_conn {
-	struct spdk_nvmf_conn		conn;
-
-	struct rdma_cm_id		*cm_id;
-	struct ibv_context		*ctx;
-	struct ibv_comp_channel		*comp_channel;
-	struct ibv_cq			*cq;
-	struct ibv_qp			*qp;
-
-	uint16_t			queue_depth;
-
-	STAILQ_HEAD(, spdk_nvmf_rdma_request)		rdma_reqs;
-};
-
-struct spdk_nvmf_rdma_request {
-	struct spdk_nvmf_request		req;
-	STAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
-
-	union nvmf_h2c_msg			cmd;
-	struct ibv_mr				*cmd_mr;
-
-	union nvmf_c2h_msg			rsp;
-	struct ibv_mr				*rsp_mr;
-
-	struct ibv_sge				send_sgl;
-	struct ibv_sge				recv_sgl[2];
-
-	struct ibv_mr				*bb_mr;
-	uint8_t					*bb;
-	uint32_t				bb_len;
-};
+struct spdk_nvmf_conn;
+struct spdk_nvmf_request;
 
 int spdk_nvmf_rdma_init(void);
 int spdk_nvmf_rdma_fini(void);
