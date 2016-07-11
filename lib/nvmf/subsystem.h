@@ -66,12 +66,6 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
 
-struct spdk_nvmf_subsystem_grp {
-	int num;
-	struct spdk_nvmf_subsystem *subsystem;
-	TAILQ_ENTRY(spdk_nvmf_subsystem_grp)	tailq;
-};
-
 struct spdk_nvmf_subsystem *
 nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_type);
 

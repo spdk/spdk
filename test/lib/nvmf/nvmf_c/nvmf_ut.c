@@ -50,7 +50,7 @@
 #include "nvmf/nvmf_admin_cmd.c"
 #include "nvmf/nvmf_io_cmd.c"
 #include "nvmf/session.c"
-#include "nvmf/subsystem_grp.c"
+#include "nvmf/subsystem.c"
 
 
 #define NS_PER_CTRLR 8
