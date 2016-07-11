@@ -274,23 +274,23 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 		port_tag = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
 		ig_tag = spdk_conf_section_get_nmval(sp, "Mapping", i, 1);
 		if (port_tag == NULL || ig_tag == NULL) {
-			SPDK_ERRLOG("LU%d: mapping error\n", ss_group->num);
+			SPDK_ERRLOG("Subsystem%d: mapping error\n", ss_group->num);
 			goto err0;
 		}
 		if (strncasecmp(port_tag, "Port",
 				strlen("Port")) != 0
 		    || sscanf(port_tag, "%*[^0-9]%d", &port_tag_i) != 1) {
-			SPDK_ERRLOG("LU%d: mapping port error\n", ss_group->num);
+			SPDK_ERRLOG("Subsystem%d: mapping port error\n", ss_group->num);
 			goto err0;
 		}
 		if (strncasecmp(ig_tag, "Host",
 				strlen("Host")) != 0
 		    || sscanf(ig_tag, "%*[^0-9]%d", &ig_tag_i) != 1) {
-			SPDK_ERRLOG("LU%d: mapping host error\n", ss_group->num);
+			SPDK_ERRLOG("Subsystem%d: mapping host error\n", ss_group->num);
 			goto err0;
 		}
 		if (port_tag_i < 1 || ig_tag_i < 1) {
-			SPDK_ERRLOG("LU%d: invalid group tag\n", ss_group->num);
+			SPDK_ERRLOG("Subsystem%d: invalid group tag\n", ss_group->num);
 			goto err0;
 		}
 
