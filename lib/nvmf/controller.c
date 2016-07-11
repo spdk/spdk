@@ -41,19 +41,11 @@ static TAILQ_HEAD(, spdk_nvmf_ctrlr) g_ctrlrs = TAILQ_HEAD_INITIALIZER(g_ctrlrs)
 
 #define SPDK_NVMF_MAX_NVME_DEVICES 64
 
-struct nvme_bdf_whitelist {
-	uint16_t	domain;
-	uint8_t		bus;
-	uint8_t		dev;
-	uint8_t		func;
-	char		name[MAX_NVME_NAME_LENGTH];
-};
-
 struct spdk_nvmf_probe_ctx {
 	bool claim_all;
 	bool unbind_from_kernel;
 	int whitelist_count;
-	struct nvme_bdf_whitelist whitelist[SPDK_NVMF_MAX_NVME_DEVICES];
+	struct nvme_bdf_whitelist *whitelist;
 };
 
 static void
@@ -213,70 +205,15 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 }
 
 int
-spdk_nvmf_init_nvme(void)
+spdk_nvmf_init_nvme(struct nvme_bdf_whitelist *whitelist, size_t whitelist_count,
+		    bool claim_all, bool unbind_from_kernel)
 {
-	struct spdk_conf_section *sp;
 	struct spdk_nvmf_probe_ctx ctx = { 0 };
-	const char *val;
-	int i, rc;
 
-	SPDK_NOTICELOG("*** Initialize NVMe Devices ***\n");
-	sp = spdk_conf_find_section(NULL, "Nvme");
-	if (sp == NULL) {
-		SPDK_ERRLOG("NVMe device section in config file not found!\n");
-		return -1;
-	}
-
-	val = spdk_conf_section_get_val(sp, "ClaimAllDevices");
-	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			ctx.claim_all = true;
-		}
-	}
-
-	val = spdk_conf_section_get_val(sp, "UnbindFromKernel");
-	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			ctx.unbind_from_kernel = true;
-		}
-	}
-
-	if (!ctx.claim_all) {
-		for (i = 0; ; i++) {
-			unsigned int domain, bus, dev, func;
-
-			val = spdk_conf_section_get_nmval(sp, "BDF", i, 0);
-			if (val == NULL) {
-				break;
-			}
-
-			rc = sscanf(val, "%x:%x:%x.%x", &domain, &bus, &dev, &func);
-			if (rc != 4) {
-				SPDK_ERRLOG("Invalid format for BDF: %s\n", val);
-				return -1;
-			}
-
-			ctx.whitelist[ctx.whitelist_count].domain = domain;
-			ctx.whitelist[ctx.whitelist_count].bus = bus;
-			ctx.whitelist[ctx.whitelist_count].dev = dev;
-			ctx.whitelist[ctx.whitelist_count].func = func;
-
-			val = spdk_conf_section_get_nmval(sp, "BDF", i, 1);
-			if (val == NULL) {
-				SPDK_ERRLOG("BDF section with no device name\n");
-				return -1;
-			}
-
-			snprintf(ctx.whitelist[ctx.whitelist_count].name, MAX_NVME_NAME_LENGTH, "%s", val);
-
-			ctx.whitelist_count++;
-		}
-
-		if (ctx.whitelist_count == 0) {
-			SPDK_ERRLOG("No BDF section\n");
-			return -1;
-		}
-	}
+	ctx.whitelist = whitelist;
+	ctx.whitelist_count = whitelist_count;
+	ctx.claim_all = claim_all;
+	ctx.unbind_from_kernel = unbind_from_kernel;
 
 	/* Probe the physical NVMe devices */
 	if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {

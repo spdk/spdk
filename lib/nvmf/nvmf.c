@@ -170,12 +170,6 @@ nvmf_tgt_subsystem_initialize(void)
 		SPDK_ERRLOG("spdk_nvmf_rdma_init() failed\n");
 		return rc;
 	}
-	/* initialize NVMe/NVMf backend */
-	rc = spdk_nvmf_init_nvme();
-	if (rc < 0) {
-		fprintf(stderr, "NVMf could not initialize NVMe devices.\n");
-		return -1;
-	}
 
 	rc = spdk_initialize_nvmf_subsystems();
 	if (rc < 0) {

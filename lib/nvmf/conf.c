@@ -35,6 +35,7 @@
 #include <string.h>
 
 #include "conf.h"
+#include "controller.h"
 #include "host.h"
 #include "nvmf_internal.h"
 #include "port.h"
@@ -298,6 +299,84 @@ spdk_nvmf_parse_hosts(void)
 	return 0;
 }
 
+static int
+spdk_nvmf_parse_nvme(void)
+{
+	struct spdk_conf_section *sp;
+	struct nvme_bdf_whitelist *whitelist = NULL;
+	const char *val;
+	bool claim_all = false;
+	bool unbind_from_kernel = false;
+	int i = 0;
+	int rc;
+
+	sp = spdk_conf_find_section(NULL, "Nvme");
+	if (sp == NULL) {
+		SPDK_ERRLOG("NVMe device section in config file not found!\n");
+		return -1;
+	}
+
+	val = spdk_conf_section_get_val(sp, "ClaimAllDevices");
+	if (val != NULL) {
+		if (!strcmp(val, "Yes")) {
+			claim_all = true;
+		}
+	}
+
+	val = spdk_conf_section_get_val(sp, "UnbindFromKernel");
+	if (val != NULL) {
+		if (!strcmp(val, "Yes")) {
+			unbind_from_kernel = true;
+		}
+	}
+
+	if (!claim_all) {
+		for (i = 0; ; i++) {
+			unsigned int domain, bus, dev, func;
+
+			val = spdk_conf_section_get_nmval(sp, "BDF", i, 0);
+			if (val == NULL) {
+				break;
+			}
+
+			whitelist = realloc(whitelist, sizeof(*whitelist) * (i + 1));
+
+			rc = sscanf(val, "%x:%x:%x.%x", &domain, &bus, &dev, &func);
+			if (rc != 4) {
+				SPDK_ERRLOG("Invalid format for BDF: %s\n", val);
+				free(whitelist);
+				return -1;
+			}
+
+			whitelist[i].domain = domain;
+			whitelist[i].bus = bus;
+			whitelist[i].dev = dev;
+			whitelist[i].func = func;
+
+			val = spdk_conf_section_get_nmval(sp, "BDF", i, 1);
+			if (val == NULL) {
+				SPDK_ERRLOG("BDF section with no device name\n");
+				free(whitelist);
+				return -1;
+			}
+
+			snprintf(whitelist[i].name, MAX_NVME_NAME_LENGTH, "%s", val);
+		}
+
+		if (i == 0) {
+			SPDK_ERRLOG("No BDF section\n");
+			return -1;
+		}
+	}
+
+	rc = spdk_nvmf_init_nvme(whitelist, i,
+				 claim_all, unbind_from_kernel);
+
+	free(whitelist);
+
+	return rc;
+}
+
 int
 spdk_nvmf_parse_conf(void)
 {
@@ -317,6 +396,12 @@ spdk_nvmf_parse_conf(void)
 
 	/* Host sections */
 	rc = spdk_nvmf_parse_hosts();
+	if (rc < 0) {
+		return rc;
+	}
+
+	/* NVMe sections */
+	rc = spdk_nvmf_parse_nvme();
 	if (rc < 0) {
 		return rc;
 	}

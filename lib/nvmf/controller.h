@@ -40,6 +40,14 @@
 
 #define MAX_NVME_NAME_LENGTH 64
 
+struct nvme_bdf_whitelist {
+	uint16_t	domain;
+	uint8_t		bus;
+	uint8_t		dev;
+	uint8_t		func;
+	char		name[MAX_NVME_NAME_LENGTH];
+};
+
 struct spdk_nvmf_ctrlr {
 	struct spdk_nvme_ctrlr *ctrlr;
 	char 			name[MAX_NVME_NAME_LENGTH];
@@ -47,7 +55,8 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_ENTRY(spdk_nvmf_ctrlr) entry;
 };
 
-int spdk_nvmf_init_nvme(void);
+int spdk_nvmf_init_nvme(struct nvme_bdf_whitelist *whitelist, size_t whitelist_count,
+			bool claim_all, bool unbind_from_kernel);
 int spdk_nvmf_shutdown_nvme(void);
 
 struct spdk_nvmf_ctrlr *
