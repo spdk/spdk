@@ -87,18 +87,17 @@ spdk_nvmf_initialize_pools(struct spdk_nvmf_globals *spdk_nvmf)
 	SPDK_NOTICELOG("\n*** NVMf Pool Creation ***\n");
 
 	/* create NVMe backend request pool */
-	spdk_nvmf->nvme_request_pool = rte_mempool_create("NVMe_Pool",
-				       SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf),
-				       spdk_nvme_request_size(),
-				       128, 0,
-				       NULL, NULL, NULL, NULL,
-				       SOCKET_ID_ANY, 0);
-	if (!spdk_nvmf->nvme_request_pool) {
+	request_mempool = rte_mempool_create("NVMe_Pool",
+					     SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf),
+					     spdk_nvme_request_size(),
+					     128, 0,
+					     NULL, NULL, NULL, NULL,
+					     SOCKET_ID_ANY, 0);
+	if (!request_mempool) {
 		SPDK_ERRLOG("create NVMe request pool failed\n");
 		return -1;
 	}
-	/* set global pointer for this pool referenced by libraries */
-	request_mempool = spdk_nvmf->nvme_request_pool;
+
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMe request_mempool %p, size 0x%u bytes\n",
 		      request_mempool,
 		      (unsigned int)(SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf) * spdk_nvme_request_size()));
@@ -123,7 +122,7 @@ spdk_nvmf_check_pools(void)
 	struct spdk_nvmf_globals *spdk_nvmf = &g_nvmf_tgt;
 	int rc = 0;
 
-	rc += spdk_nvmf_check_pool(spdk_nvmf->nvme_request_pool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
+	rc += spdk_nvmf_check_pool(request_mempool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
 
 	if (rc == 0) {
 		return 0;

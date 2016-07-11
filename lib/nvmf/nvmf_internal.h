@@ -107,7 +107,6 @@ struct spdk_nvmf_globals {
 	int MaxQueueDepth;
 	int MaxConnectionsPerSession;
 
-	struct rte_mempool *nvme_request_pool;
 	uint16_t	   sin_port;
 };
 
