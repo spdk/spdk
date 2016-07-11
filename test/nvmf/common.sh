@@ -81,6 +81,9 @@ function allocate_nic_ips()
 
 function nvmfcleanup()
 {
+	sync
+	sleep 5
+	sync
 	rmmod nvme-rdma
 }
 
