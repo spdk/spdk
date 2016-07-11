@@ -66,8 +66,6 @@ struct nvmf_session {
 	int max_connections_allowed;
 
 	struct spdk_nvmf_request *aer_req;
-
-	TAILQ_ENTRY(nvmf_session) entries;
 };
 
 struct nvmf_session *
