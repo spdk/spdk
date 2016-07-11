@@ -165,8 +165,6 @@ spdk_nvmf_subsystem_destruct(struct spdk_nvmf_subsystem_grp *ss_group)
 		return;
 	}
 
-	free(ss_group->name);
-
 	for (i = 0; i < ss_group->map_count; i++) {
 		ss_group->map[i].host->ref--;
 	}
@@ -187,20 +185,20 @@ spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem_grp *ss_group,
 
 	port = spdk_nvmf_port_find_by_tag(port_tag);
 	if (port == NULL) {
-		SPDK_ERRLOG("%s: Port%d not found\n", ss_group->name, port_tag);
+		SPDK_ERRLOG("%s: Port%d not found\n", ss_group->subsystem->subnqn, port_tag);
 		return -1;
 	}
 	if (port->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: Port%d not active\n", ss_group->name, port_tag);
+		SPDK_ERRLOG("%s: Port%d not active\n", ss_group->subsystem->subnqn, port_tag);
 		return -1;
 	}
 	host = spdk_nvmf_host_find_by_tag(host_tag);
 	if (host == NULL) {
-		SPDK_ERRLOG("%s: Host%d not found\n", ss_group->name, host_tag);
+		SPDK_ERRLOG("%s: Host%d not found\n", ss_group->subsystem->subnqn, host_tag);
 		return -1;
 	}
 	if (host->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: Host%d not active\n", ss_group->name, host_tag);
+		SPDK_ERRLOG("%s: Host%d not active\n", ss_group->subsystem->subnqn, host_tag);
 		return -1;
 	}
 	host->ref++;
@@ -217,7 +215,8 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 {
 	struct spdk_nvmf_subsystem_grp *ss_group;
 	const char *port_tag, *ig_tag;
-	const char *val, *name;
+	const char *val;
+	char *name = NULL;
 	int port_tag_i, ig_tag_i;
 	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
 	int i, ret;
@@ -233,30 +232,30 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 	ss_group->num = sp->num;
 
 	/* read in and verify the NQN for the subsystem */
-	name = spdk_conf_section_get_val(sp, "SubsystemName");
-	if (name == NULL) {
+	val = spdk_conf_section_get_val(sp, "SubsystemName");
+	if (val == NULL) {
 		SPDK_ERRLOG("Subsystem Group %d: SubsystemName not found\n", ss_group->num);
 		goto err0;
 	}
 
-	if (strncasecmp(name, "nqn.", 4) != 0) {
-		ss_group->name = spdk_sprintf_alloc("%s:%s", g_nvmf_tgt.nodebase, name);
+	if (strncasecmp(val, "nqn.", 4) != 0) {
+		name = spdk_sprintf_alloc("%s:%s", g_nvmf_tgt.nodebase, val);
 	} else {
-		ss_group->name = strdup(name);
+		name = strdup(val);
 	}
 
-	if (!ss_group->name) {
+	if (!name) {
 		SPDK_ERRLOG("Could not allocate Controller Node name\n");
 		goto err0;
 	}
 
-	if (spdk_check_nvmf_name(ss_group->name) != 0) {
+	if (spdk_check_nvmf_name(name) != 0) {
 		SPDK_ERRLOG("Controller Node name (n=%s) (fn=%s) contains an invalid character or format.\n",
-			    name, ss_group->name);
+			    name, name);
 		goto err0;
 	}
 
-	printf("    NVMf Subsystem: Name: %s\n", ss_group->name);
+	printf("    NVMf Subsystem: Name: %s\n", name);
 
 	/* Setup initiator and port access mapping */
 	val = spdk_conf_section_get_val(sp, "Mapping");
@@ -302,7 +301,7 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 	}
 
 	/* register this subsystem with the NVMf library */
-	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, ss_group->name, SPDK_NVMF_SUB_NVME);
+	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, name, SPDK_NVMF_SUB_NVME);
 	if (ss_group->subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating new nvmf library subsystem\n");
 		goto err0;
@@ -332,8 +331,13 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 
 	TAILQ_INSERT_TAIL(&g_ssg_head, ss_group, tailq);
 
+	free(name);
+
 	return 0;
 err0:
+	if (name) {
+		free(name);
+	}
 	spdk_nvmf_subsystem_destruct(ss_group);
 	return -1;
 }
@@ -342,6 +346,7 @@ static int
 spdk_add_nvmf_discovery_subsystem(void)
 {
 	struct spdk_nvmf_subsystem_grp *ss_group;
+	char *name;
 
 	ss_group = calloc(1, sizeof(*ss_group));
 	if (!ss_group) {
@@ -350,20 +355,23 @@ spdk_add_nvmf_discovery_subsystem(void)
 	}
 
 	ss_group->num = 0xffff;
-	ss_group->name = strdup(SPDK_NVMF_DISCOVERY_NQN);
-	if (ss_group->name == NULL) {
+	name = strdup(SPDK_NVMF_DISCOVERY_NQN);
+	if (name == NULL) {
 		SPDK_ERRLOG("strdup ss_group->name error\n");
 		free(ss_group);
 		return -1;
 	}
 
-	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, ss_group->name, SPDK_NVMF_SUB_DISCOVERY);
+	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, name, SPDK_NVMF_SUB_DISCOVERY);
 	if (ss_group->subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		free(ss_group);
+		free(name);
 		return -1;
 	}
+
 	TAILQ_INSERT_TAIL(&g_ssg_head, ss_group, tailq);
+	free(name);
 
 	return 0;
 }

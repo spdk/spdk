@@ -65,7 +65,6 @@ struct spdk_nvmf_access_map {
 
 struct spdk_nvmf_subsystem_grp {
 	int num;
-	char *name;
 	struct spdk_nvmf_subsystem *subsystem;
 	int map_count;
 	struct spdk_nvmf_access_map map[MAX_PER_SUBSYSTEM_ACCESS_MAP];
