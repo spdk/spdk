@@ -755,7 +755,8 @@ err0:
 	return -1;
 }
 
-const char *CM_EVENT_STR[] = {
+#ifdef DEBUG
+static const char *CM_EVENT_STR[] = {
 	"RDMA_CM_EVENT_ADDR_RESOLVED",
 	"RDMA_CM_EVENT_ADDR_ERROR",
 	"RDMA_CM_EVENT_ROUTE_RESOLVED",
@@ -773,6 +774,7 @@ const char *CM_EVENT_STR[] = {
 	"RDMA_CM_EVENT_ADDR_CHANGE",
 	"RDMA_CM_EVENT_TIMEWAIT_EXIT"
 };
+#endif /* DEBUG */
 
 static void
 nvmf_rdma_accept(struct rte_timer *timer, void *arg)
