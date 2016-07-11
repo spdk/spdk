@@ -38,7 +38,6 @@
 
 #include "spdk/event.h"
 #include "nvmf_internal.h"
-#include "rdma.h"
 #include "spdk/queue.h"
 
 /* RDMA transport connection states */
@@ -63,8 +62,6 @@ struct spdk_nvmf_conn {
 	volatile enum conn_state	state;
 
 	uint16_t			sq_head;
-
-	struct spdk_nvmf_rdma_conn	rdma;
 
 	TAILQ_ENTRY(spdk_nvmf_conn) 	link;
 	struct spdk_poller		poller;

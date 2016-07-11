@@ -37,11 +37,14 @@
 #include <infiniband/verbs.h>
 
 #include "nvmf_internal.h"
+#include "conn.h"
 #include "request.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
 struct spdk_nvmf_rdma_conn {
+	struct spdk_nvmf_conn		conn;
+
 	struct rdma_cm_id		*cm_id;
 	struct ibv_context		*ctx;
 	struct ibv_comp_channel		*comp_channel;
