@@ -28,10 +28,6 @@
 
 # This next section defines NVMf protocol specific global options
 [Nvmf]
-  # node name (not include optional part)
-  # Users can optionally change this to fit their environment.
-  NodeBase "nqn.2016-06.io.spdk"
-
   # Set the maximum number of NVMf logical controller sessions allowed
   # for each subsystem provisioned below.  The default value (1) is used if
   # not set here.
@@ -94,22 +90,19 @@
 #   session within the NVMf subsystem.  Any such session is allowed access
 #   to all NVMe namespaces within the subsystem.
 #
-# SubsystemName, Mapping, Controller are minimum required
-# The SubsystemName is concatenated with NodeBase above to form the NVMf
-#   subsystem NQN that will be used by remote initiator to identify the
-#   target subsystem for connection.
+# NQN, Mapping, Controller are minimum required.
 # The Mapping defines the local fabric network port to be used by remote
 #   connecting initiator.  Multiple mappings can be used to permit shared
 #   access to the same subsystem.
 # Each Controller identifies a specific HW device from the Nvme whitelist
 #   section above.
 [Subsystem1]
-  SubsystemName cnode1
+  NQN nqn.2016-06.io.spdk:cnode1
   Mapping Port1 Host1
   Controller Nvme0
 
 [Subsystem2]
-  SubsystemName cnode2
+  NQN nqn.2016-06.io.spdk:cnode2
   Mapping Port2 Host2
   # Using NVME 1 namespace 1
   Controller Nvme1

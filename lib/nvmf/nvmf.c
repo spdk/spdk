@@ -108,17 +108,9 @@ spdk_nvmf_check_pools(void)
 }
 
 int
-nvmf_tgt_init(char *nodebase,
-	      int max_queue_depth, int max_conn_per_sess)
+nvmf_tgt_init(int max_queue_depth, int max_conn_per_sess)
 {
 	int rc;
-
-	g_nvmf_tgt.nodebase = strdup(nodebase);
-	if (!g_nvmf_tgt.nodebase) {
-		SPDK_ERRLOG("No NodeBase provided\n");
-		return -EINVAL;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NodeBase: %s\n", g_nvmf_tgt.nodebase);
 
 	if (max_queue_depth >= 1 &&
 	    max_queue_depth <= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH) {
@@ -202,7 +194,6 @@ nvmf_tgt_subsystem_fini(void)
 	spdk_nvmf_host_destroy_all();
 	spdk_nvmf_port_destroy_all();
 	spdk_nvmf_rdma_fini();
-	free(g_nvmf_tgt.nodebase);
 
 	pthread_mutex_destroy(&g_nvmf_tgt.mutex);
 

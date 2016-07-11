@@ -47,7 +47,6 @@ static int
 spdk_nvmf_parse_nvmf_tgt(void)
 {
 	struct spdk_conf_section *sp;
-	char *nodebase;
 	int max_queue_depth;
 	int max_conn_per_sess;
 	int rc;
@@ -56,11 +55,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	if (sp == NULL) {
 		SPDK_ERRLOG("No Nvmf section in configuration file.\n");
 		return -1;
-	}
-
-	nodebase = spdk_conf_section_get_val(sp, "NodeBase");
-	if (nodebase == NULL) {
-		nodebase = SPDK_NVMF_DEFAULT_NODEBASE;
 	}
 
 	max_queue_depth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
@@ -73,8 +67,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		max_conn_per_sess = SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION;
 	}
 
-	rc = nvmf_tgt_init(nodebase, max_queue_depth, max_conn_per_sess);
-
+	rc = nvmf_tgt_init(max_queue_depth, max_conn_per_sess);
 	return rc;
 }
 

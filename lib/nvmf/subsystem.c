@@ -216,7 +216,7 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 	struct spdk_nvmf_subsystem_grp *ss_group;
 	const char *port_tag, *ig_tag;
 	const char *val;
-	char *name = NULL;
+	char *nqn;
 	int port_tag_i, ig_tag_i;
 	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
 	int i, ret;
@@ -232,30 +232,19 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 	ss_group->num = sp->num;
 
 	/* read in and verify the NQN for the subsystem */
-	val = spdk_conf_section_get_val(sp, "SubsystemName");
-	if (val == NULL) {
-		SPDK_ERRLOG("Subsystem Group %d: SubsystemName not found\n", ss_group->num);
+	nqn = spdk_conf_section_get_val(sp, "NQN");
+	if (nqn == NULL) {
+		SPDK_ERRLOG("Subsystem Group %d: NQN not found\n", ss_group->num);
 		goto err0;
 	}
 
-	if (strncasecmp(val, "nqn.", 4) != 0) {
-		name = spdk_sprintf_alloc("%s:%s", g_nvmf_tgt.nodebase, val);
-	} else {
-		name = strdup(val);
-	}
-
-	if (!name) {
-		SPDK_ERRLOG("Could not allocate Controller Node name\n");
+	if (spdk_check_nvmf_name(nqn) != 0) {
+		SPDK_ERRLOG("Controller Node name (n=%s) contains an invalid character or format.\n",
+			    nqn);
 		goto err0;
 	}
 
-	if (spdk_check_nvmf_name(name) != 0) {
-		SPDK_ERRLOG("Controller Node name (n=%s) (fn=%s) contains an invalid character or format.\n",
-			    name, name);
-		goto err0;
-	}
-
-	printf("    NVMf Subsystem: Name: %s\n", name);
+	printf("    NVMf Subsystem: Name: %s\n", nqn);
 
 	/* Setup initiator and port access mapping */
 	val = spdk_conf_section_get_val(sp, "Mapping");
@@ -301,7 +290,7 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 	}
 
 	/* register this subsystem with the NVMf library */
-	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, name, SPDK_NVMF_SUB_NVME);
+	ss_group->subsystem = nvmf_create_subsystem(ss_group->num, nqn, SPDK_NVMF_SUB_NVME);
 	if (ss_group->subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating new nvmf library subsystem\n");
 		goto err0;
@@ -331,13 +320,8 @@ spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
 
 	TAILQ_INSERT_TAIL(&g_ssg_head, ss_group, tailq);
 
-	free(name);
-
 	return 0;
 err0:
-	if (name) {
-		free(name);
-	}
 	spdk_nvmf_subsystem_destruct(ss_group);
 	return -1;
 }

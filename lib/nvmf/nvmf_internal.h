@@ -55,7 +55,6 @@
 #define SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE  DEFAULT_BB_SIZE
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
-#define SPDK_NVMF_DEFAULT_NODEBASE "nqn.2016-06.io.spdk"
 #define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
 #define SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION 4
 #define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
@@ -98,8 +97,6 @@ struct __attribute__((packed)) nvme_read_cdw13 {
 };
 
 struct spdk_nvmf_globals {
-	char *nodebase;
-
 	pthread_mutex_t mutex;
 
 	int MaxQueueDepth;
@@ -108,7 +105,7 @@ struct spdk_nvmf_globals {
 	uint16_t	   sin_port;
 };
 
-int nvmf_tgt_init(char *nodebase, int max_queue_depth, int max_conn_per_sess);
+int nvmf_tgt_init(int max_queue_depth, int max_conn_per_sess);
 
 extern struct spdk_nvmf_globals g_nvmf_tgt;
 
