@@ -4,6 +4,7 @@
 *.d
 *.gcda
 *.gcno
+*.kdev4
 *.ko
 *.log
 *.map
