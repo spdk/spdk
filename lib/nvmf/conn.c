@@ -59,8 +59,6 @@
 
 */
 
-static rte_atomic32_t g_num_connections[RTE_MAX_LCORE];
-
 static int g_max_conns;
 static struct spdk_nvmf_conn *g_conns_array;
 
@@ -101,7 +99,7 @@ free_conn(struct spdk_nvmf_conn *conn)
 
 int spdk_initialize_nvmf_conns(int max_connections)
 {
-	int i, rc;
+	int rc;
 
 	rc = pthread_mutex_init(&g_conns_mutex, NULL);
 	if (rc != 0) {
@@ -111,10 +109,6 @@ int spdk_initialize_nvmf_conns(int max_connections)
 
 	g_max_conns = max_connections;
 	g_conns_array = calloc(g_max_conns, sizeof(struct spdk_nvmf_conn));
-
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
-		rte_atomic32_set(&g_num_connections[i], 0);
-	}
 
 	return 0;
 }
@@ -177,7 +171,6 @@ spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
 	conn->poller.fn = spdk_nvmf_conn_do_work;
 	conn->poller.arg = conn;
 
-	rte_atomic32_inc(&g_num_connections[lcore]);
 	spdk_poller_register(&conn->poller, lcore, NULL);
 
 	return 0;
@@ -220,7 +213,6 @@ static void spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn)
 
 	event = spdk_event_allocate(rte_lcore_id(), _conn_destruct, conn, NULL, NULL);
 	spdk_poller_unregister(&conn->poller, event);
-	rte_atomic32_dec(&g_num_connections[rte_lcore_id()]);
 }
 
 static int
