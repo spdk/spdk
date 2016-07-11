@@ -48,7 +48,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 {
 	struct spdk_conf_section *sp;
 	char *nodebase;
-	int max_sessions_per_subsystem;
 	int max_queue_depth;
 	int max_conn_per_sess;
 	int rc;
@@ -64,11 +63,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		nodebase = SPDK_NVMF_DEFAULT_NODEBASE;
 	}
 
-	max_sessions_per_subsystem = spdk_conf_section_get_intval(sp, "MaxSessionsPerSubsystem");
-	if (max_sessions_per_subsystem < 0) {
-		max_sessions_per_subsystem = SPDK_NVMF_DEFAULT_MAX_SESSIONS_PER_SUBSYSTEM;
-	}
-
 	max_queue_depth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
 	if (max_queue_depth < 0) {
 		max_queue_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
@@ -79,8 +73,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		max_conn_per_sess = SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION;
 	}
 
-	rc = nvmf_tgt_init(nodebase, max_sessions_per_subsystem,
-			   max_queue_depth, max_conn_per_sess);
+	rc = nvmf_tgt_init(nodebase, max_queue_depth, max_conn_per_sess);
 
 	return rc;
 }

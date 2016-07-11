@@ -66,11 +66,9 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
  * needed for all possible admin and I/O queue requests.
  */
 #define SPDK_NVMF_ADMINQ_POOL_SIZE(spdk)	(MAX_SUBSYSTEMS * \
-						 (spdk->MaxSessionsPerSubsystem) * \
 						 spdk->MaxQueueDepth)
 
 #define SPDK_NVMF_IOQ_POOL_SIZE(spdk)	(MAX_SUBSYSTEMS * \
-					 (spdk->MaxSessionsPerSubsystem) * \
 					 (spdk->MaxConnectionsPerSession - 1) * \
 					 spdk->MaxQueueDepth)
 
@@ -133,7 +131,6 @@ spdk_nvmf_check_pools(void)
 
 int
 nvmf_tgt_init(char *nodebase,
-	      int max_sessions_per_subsystem,
 	      int max_queue_depth, int max_conn_per_sess)
 {
 	int rc;
@@ -144,16 +141,6 @@ nvmf_tgt_init(char *nodebase,
 		return -EINVAL;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NodeBase: %s\n", g_nvmf_tgt.nodebase);
-
-	if (max_sessions_per_subsystem >= 1 &&
-	    max_sessions_per_subsystem <= SPDK_NVMF_DEFAULT_MAX_SESSIONS_PER_SUBSYSTEM) {
-		g_nvmf_tgt.MaxSessionsPerSubsystem = max_sessions_per_subsystem;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxSessionsPerSubsystem: %d\n",
-			      g_nvmf_tgt.MaxSessionsPerSubsystem);
-	} else {
-		SPDK_ERRLOG("Invalid MaxSessionsPerSubsystem: %d\n", max_sessions_per_subsystem);
-		return -EINVAL;
-	}
 
 	if (max_queue_depth >= 1 &&
 	    max_queue_depth <= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH) {
