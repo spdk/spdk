@@ -63,8 +63,6 @@ static rte_atomic32_t g_num_connections[RTE_MAX_LCORE];
 
 static int g_max_conns;
 static struct spdk_nvmf_conn *g_conns_array;
-static char g_shm_name[64];
-static int g_conns_array_fd;
 
 static pthread_mutex_t g_conns_mutex;
 
@@ -103,7 +101,6 @@ free_conn(struct spdk_nvmf_conn *conn)
 
 int spdk_initialize_nvmf_conns(int max_connections)
 {
-	size_t conns_size;
 	int i, rc;
 
 	rc = pthread_mutex_init(&g_conns_mutex, NULL);
@@ -112,26 +109,8 @@ int spdk_initialize_nvmf_conns(int max_connections)
 		return -1;
 	}
 
-	sprintf(g_shm_name, "nvmf_conns.%d", spdk_app_get_instance_id());
-	g_conns_array_fd = shm_open(g_shm_name, O_RDWR | O_CREAT, 0600);
-	if (g_conns_array_fd < 0) {
-		SPDK_ERRLOG("could not shm_open %s\n", g_shm_name);
-		return -1;
-	}
-
 	g_max_conns = max_connections;
-	conns_size = sizeof(struct spdk_nvmf_conn) * g_max_conns;
-
-	if (ftruncate(g_conns_array_fd, conns_size) != 0) {
-		SPDK_ERRLOG("could not ftruncate\n");
-		shm_unlink(g_shm_name);
-		close(g_conns_array_fd);
-		return -1;
-	}
-	g_conns_array = mmap(0, conns_size, PROT_READ | PROT_WRITE, MAP_SHARED,
-			     g_conns_array_fd, 0);
-
-	memset(g_conns_array, 0, conns_size);
+	g_conns_array = calloc(g_max_conns, sizeof(struct spdk_nvmf_conn));
 
 	for (i = 0; i < RTE_MAX_LCORE; i++) {
 		rte_atomic32_set(&g_num_connections[i], 0);
@@ -265,9 +244,7 @@ spdk_nvmf_get_active_conns(void)
 static void
 spdk_nvmf_cleanup_conns(void)
 {
-	munmap(g_conns_array, sizeof(struct spdk_nvmf_conn) * g_max_conns);
-	shm_unlink(g_shm_name);
-	close(g_conns_array_fd);
+	free(g_conns_array);
 }
 
 static void
