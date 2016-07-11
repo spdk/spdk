@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -39,6 +40,7 @@
 #include "host.h"
 #include "nvmf_internal.h"
 #include "port.h"
+#include "subsystem.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
 
@@ -377,6 +379,152 @@ spdk_nvmf_parse_nvme(void)
 	return rc;
 }
 
+static int
+spdk_nvmf_validate_nqn(const char *nqn)
+{
+	size_t len;
+
+	len = strlen(nqn);
+	if (len > SPDK_NVMF_NQN_MAX_LEN) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", nqn, len, SPDK_NVMF_NQN_MAX_LEN);
+		return -1;
+	}
+
+	if (strncasecmp(nqn, "nqn.", 4) != 0) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", nqn);
+		return -1;
+	}
+
+	/* yyyy-mm. */
+	if (!(isdigit(nqn[4]) && isdigit(nqn[5]) && isdigit(nqn[6]) && isdigit(nqn[7]) &&
+	      nqn[8] == '-' && isdigit(nqn[9]) && isdigit(nqn[10]) && nqn[11] == '.')) {
+		SPDK_ERRLOG("Invalid date code in NQN \"%s\"\n", nqn);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
+{
+	const char *val, *nqn;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	const char *port_name, *host_name;
+	int port_id, host_id;
+
+	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
+	int i, ret;
+
+	nqn = spdk_conf_section_get_val(sp, "NQN");
+	if (nqn == NULL) {
+		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", sp->num);
+		return -1;
+	}
+
+	if (spdk_nvmf_validate_nqn(nqn) != 0) {
+		return -1;
+	}
+
+	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUB_NVME);
+	if (subsystem == NULL) {
+		return -1;
+	}
+
+	val = spdk_conf_section_get_val(sp, "Mapping");
+	if (val == NULL) {
+		SPDK_ERRLOG("No Mapping entry in Subsystem %d\n", sp->num);
+		nvmf_delete_subsystem(subsystem);
+		return -1;
+	}
+
+	for (i = 0; i < MAX_PER_SUBSYSTEM_ACCESS_MAP; i++) {
+		val = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
+		if (val == NULL) {
+			break;
+		}
+
+		port_name = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
+		host_name = spdk_conf_section_get_nmval(sp, "Mapping", i, 1);
+		if (port_name == NULL || host_name == NULL) {
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+		if (strncasecmp(port_name, "Port",
+				strlen("Port")) != 0
+		    || sscanf(port_name, "%*[^0-9]%d", &port_id) != 1) {
+			SPDK_ERRLOG("Invalid mapping for Subsystem %d\n", sp->num);
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+		if (strncasecmp(host_name, "Host",
+				strlen("Host")) != 0
+		    || sscanf(host_name, "%*[^0-9]%d", &host_id) != 1) {
+			SPDK_ERRLOG("Invalid mapping for Subsystem %d\n", sp->num);
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+		if (port_id < 1 || host_id < 1) {
+			SPDK_ERRLOG("Invalid mapping for Subsystem %d\n", sp->num);
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+
+		ret = spdk_nvmf_subsystem_add_map(subsystem, port_id, host_id);
+		if (ret < 0) {
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+	}
+
+	val = spdk_conf_section_get_val(sp, "Controller");
+	if (val == NULL) {
+		SPDK_ERRLOG("Subsystem %d: missing Controller\n", sp->num);
+		nvmf_delete_subsystem(subsystem);
+		return -1;
+	}
+
+	/* claim this controller from the available controller list */
+	nvmf_ctrlr = spdk_nvmf_ctrlr_claim(val);
+	if (nvmf_ctrlr == NULL) {
+		SPDK_ERRLOG("Subsystem %d: NVMe controller %s not found\n", sp->num, val);
+		nvmf_delete_subsystem(subsystem);
+		return -1;
+	}
+
+	ret = nvmf_subsystem_add_ctrlr(subsystem, nvmf_ctrlr->ctrlr);
+	if (ret < 0) {
+		SPDK_ERRLOG("Subsystem %d: adding controller %s failed\n", sp->num, val);
+		nvmf_delete_subsystem(subsystem);
+		return -1;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "    NVMf Subsystem: Nvme Controller: %s , %p\n",
+		      nvmf_ctrlr->name, nvmf_ctrlr->ctrlr);
+
+	return 0;
+}
+
+static int
+spdk_nvmf_parse_subsystems(void)
+{
+	int rc = 0;
+	struct spdk_conf_section *sp;
+
+	sp = spdk_conf_first_section(NULL);
+	while (sp != NULL) {
+		if (spdk_conf_section_match_prefix(sp, "Subsystem")) {
+			rc = spdk_nvmf_parse_subsystem(sp);
+			if (rc < 0) {
+				return -1;
+			}
+		}
+		sp = spdk_conf_next_section(sp);
+	}
+	return 0;
+}
+
 int
 spdk_nvmf_parse_conf(void)
 {
@@ -402,6 +550,12 @@ spdk_nvmf_parse_conf(void)
 
 	/* NVMe sections */
 	rc = spdk_nvmf_parse_nvme();
+	if (rc < 0) {
+		return rc;
+	}
+
+	/* Subsystem sections */
+	rc = spdk_nvmf_parse_subsystems();
 	if (rc < 0) {
 		return rc;
 	}

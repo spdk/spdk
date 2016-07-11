@@ -171,9 +171,9 @@ nvmf_tgt_subsystem_initialize(void)
 		return rc;
 	}
 
-	rc = spdk_initialize_nvmf_subsystems();
+	rc = spdk_add_nvmf_discovery_subsystem();
 	if (rc < 0) {
-		SPDK_ERRLOG("spdk_initialize_nvmf_subsystems failed\n");
+		SPDK_ERRLOG("spdk_add_nvmf_discovery_subsystem failed\n");
 		return rc;
 	}
 

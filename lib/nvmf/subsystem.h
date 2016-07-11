@@ -67,7 +67,7 @@ struct spdk_nvmf_subsystem {
 };
 
 struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_type);
+nvmf_create_subsystem(int num, const char *name, enum spdk_nvmf_subsystem_types sub_type);
 
 int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
@@ -76,10 +76,18 @@ struct spdk_nvmf_subsystem *
 nvmf_find_subsystem(const char *subnqn);
 
 int
-spdk_initialize_nvmf_subsystems(void);
+nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+			 struct spdk_nvme_ctrlr *ctrlr);
+
+int
+spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem *subsystem,
+			    int port_tag, int host_tag);
 
 int
 spdk_shutdown_nvmf_subsystems(void);
+
+int
+spdk_add_nvmf_discovery_subsystem(void);
 
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);

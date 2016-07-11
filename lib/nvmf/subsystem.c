@@ -69,7 +69,7 @@ nvmf_find_subsystem(const char *subnqn)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, char *name, enum spdk_nvmf_subsystem_types sub_type)
+nvmf_create_subsystem(int num, const char *name, enum spdk_nvmf_subsystem_types sub_type)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 
@@ -114,7 +114,7 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	return 0;
 }
 
-static int
+int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			 struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -130,37 +130,7 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
-/* nvmf uses NQN format to name target subsystems.  We expect that
-   the nvmf subnqn name provided diring connect requests will be
-   equivalent to a individual controller name
-*/
-static int
-spdk_check_nvmf_name(const char *name)
-{
-	size_t len;
-
-	len = strlen(name);
-	if (len > SPDK_NVMF_NQN_MAX_LEN) {
-		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", name, len, SPDK_NVMF_NQN_MAX_LEN);
-		return -1;
-	}
-
-	if (strncasecmp(name, "nqn.", 4) != 0) {
-		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", name);
-		return -1;
-	}
-
-	/* yyyy-mm. */
-	if (!(isdigit(name[4]) && isdigit(name[5]) && isdigit(name[6]) && isdigit(name[7]) &&
-	      name[8] == '-' && isdigit(name[9]) && isdigit(name[10]) && name[11] == '.')) {
-		SPDK_ERRLOG("Invalid date code in NQN \"%s\"\n", name);
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
+int
 spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem *subsystem,
 			    int port_tag, int host_tag)
 {
@@ -195,114 +165,7 @@ spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
-static int
-spdk_cf_add_nvmf_subsystem(struct spdk_conf_section *sp)
-{
-	const char *port_tag, *ig_tag;
-	const char *val;
-	char *nqn;
-	int port_tag_i, ig_tag_i;
-	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
-	int i, ret;
-	struct spdk_nvmf_subsystem *subsystem = NULL;
-
-	printf("Provisioning NVMf Subsystem %d:\n", sp->num);
-
-	/* read in and verify the NQN for the subsystem */
-	nqn = spdk_conf_section_get_val(sp, "NQN");
-	if (nqn == NULL) {
-		SPDK_ERRLOG("Subsystem Group %d: NQN not found\n", sp->num);
-		goto err0;
-	}
-
-	if (spdk_check_nvmf_name(nqn) != 0) {
-		SPDK_ERRLOG("Controller Node name (n=%s) contains an invalid character or format.\n",
-			    nqn);
-		goto err0;
-	}
-
-	printf("    NVMf Subsystem: Name: %s\n", nqn);
-
-	/* register this subsystem with the NVMf library */
-	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUB_NVME);
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Failed creating new nvmf library subsystem\n");
-		goto err0;
-	}
-
-	/* Setup initiator and port access mapping */
-	val = spdk_conf_section_get_val(sp, "Mapping");
-	if (val == NULL) {
-		/* no access map */
-		SPDK_ERRLOG("Subsystem Group %d: no access Mapping\n", sp->num);
-		goto err0;
-	}
-
-	for (i = 0; i < MAX_PER_SUBSYSTEM_ACCESS_MAP; i++) {
-		val = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
-		if (val == NULL)
-			break;
-		port_tag = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
-		ig_tag = spdk_conf_section_get_nmval(sp, "Mapping", i, 1);
-		if (port_tag == NULL || ig_tag == NULL) {
-			SPDK_ERRLOG("Subsystem%d: mapping error\n", sp->num);
-			goto err0;
-		}
-		if (strncasecmp(port_tag, "Port",
-				strlen("Port")) != 0
-		    || sscanf(port_tag, "%*[^0-9]%d", &port_tag_i) != 1) {
-			SPDK_ERRLOG("Subsystem%d: mapping port error\n", sp->num);
-			goto err0;
-		}
-		if (strncasecmp(ig_tag, "Host",
-				strlen("Host")) != 0
-		    || sscanf(ig_tag, "%*[^0-9]%d", &ig_tag_i) != 1) {
-			SPDK_ERRLOG("Subsystem%d: mapping host error\n", sp->num);
-			goto err0;
-		}
-		if (port_tag_i < 1 || ig_tag_i < 1) {
-			SPDK_ERRLOG("Subsystem%d: invalid group tag\n", sp->num);
-			goto err0;
-		}
-
-		ret = spdk_nvmf_subsystem_add_map(subsystem, port_tag_i, ig_tag_i);
-		if (ret < 0) {
-			SPDK_ERRLOG("could not init access map within subsystem group\n");
-			goto err0;
-		}
-	}
-
-	val = spdk_conf_section_get_val(sp, "Controller");
-	if (val == NULL) {
-		SPDK_ERRLOG("Subsystem %d: missing Controller\n", sp->num);
-		goto err0;
-	}
-
-	/* claim this controller from the available controller list */
-	nvmf_ctrlr = spdk_nvmf_ctrlr_claim(val);
-	if (nvmf_ctrlr == NULL) {
-		SPDK_ERRLOG("Subsystem %d: NVMe controller %s not found\n", sp->num, val);
-		goto err0;
-	}
-
-	ret = nvmf_subsystem_add_ctrlr(subsystem, nvmf_ctrlr->ctrlr);
-	if (ret < 0) {
-		SPDK_ERRLOG("Subsystem %d: adding controller %s failed\n", sp->num, val);
-		goto err0;
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "    NVMf Subsystem: Nvme Controller: %s , %p\n",
-		      nvmf_ctrlr->name, nvmf_ctrlr->ctrlr);
-
-
-	return 0;
-
-err0:
-	nvmf_delete_subsystem(subsystem);
-	return -1;
-}
-
-static int
+int
 spdk_add_nvmf_discovery_subsystem(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
@@ -374,40 +237,6 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 	}
 
 	disc_log->numrec = numrec;
-}
-
-int
-spdk_initialize_nvmf_subsystems(void)
-{
-	struct spdk_conf_section *sp;
-	int rc;
-
-	SPDK_NOTICELOG("\n*** NVMf Controller Subsystems Init ***\n");
-
-	sp = spdk_conf_first_section(NULL);
-	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "Subsystem")) {
-			if (sp->num > SPDK_CN_TAG_MAX) {
-				SPDK_ERRLOG("tag %d is invalid\n", sp->num);
-				SPDK_TRACELOG(SPDK_TRACE_DEBUG, "tag %d is invalid\n", sp->num);
-				return -1;
-			}
-			rc = spdk_cf_add_nvmf_subsystem(sp);
-			if (rc < 0) {
-				SPDK_ERRLOG("spdk_cf_add_nvmf_subsystem() failed\n");
-				SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_cf_add_nvmf_subsystem() failed\n");
-				return -1;
-			}
-		}
-		sp = spdk_conf_next_section(sp);
-	}
-
-	/* Discovery subsystem */
-	rc = spdk_add_nvmf_discovery_subsystem();
-	if (rc == 0)
-		printf("    Discovery Service Enabled\n");
-
-	return rc;
 }
 
 int
