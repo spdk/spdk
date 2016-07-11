@@ -51,42 +51,21 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 #define MAX_SUBSYSTEMS 4
 
-/*
- * Define the global pool sizes for the maximum possible
- * requests across all target connection queues.
- *
- * SPDK_NVMF_ADMINQ_POOL_SIZE: There is a single admin queue
- * for each subsystem session.
- *
- * SPDK_NVMF_IOQ_POOL_SIZE: MaxConnectionsPerSession is config
- * option that defines the total connection queues per session,
- * so we -1 here to not account for the admin queue.
- *
- * SPDK_NVMF_DESC_POOL_SIZE: The total number of RDMA descriptors
- * needed for all possible admin and I/O queue requests.
- */
-#define SPDK_NVMF_ADMINQ_POOL_SIZE(spdk)	(MAX_SUBSYSTEMS * \
-						 spdk->MaxQueueDepth)
-
-#define SPDK_NVMF_IOQ_POOL_SIZE(spdk)	(MAX_SUBSYSTEMS * \
-					 (spdk->MaxConnectionsPerSession - 1) * \
-					 spdk->MaxQueueDepth)
-
-#define SPDK_NVMF_DESC_POOL_SIZE(spdk)	(SPDK_NVMF_ADMINQ_POOL_SIZE(spdk) + \
-					 SPDK_NVMF_IOQ_POOL_SIZE(spdk))
-
 struct spdk_nvmf_globals g_nvmf_tgt;
 
 extern struct rte_mempool *request_mempool;
+static unsigned g_num_requests;
 
 static int
-spdk_nvmf_initialize_pools(struct spdk_nvmf_globals *spdk_nvmf)
+spdk_nvmf_initialize_pools(void)
 {
 	SPDK_NOTICELOG("\n*** NVMf Pool Creation ***\n");
 
+	g_num_requests = MAX_SUBSYSTEMS * g_nvmf_tgt.MaxConnectionsPerSession * g_nvmf_tgt.MaxQueueDepth;
+
 	/* create NVMe backend request pool */
 	request_mempool = rte_mempool_create("NVMe_Pool",
-					     SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf),
+					     g_num_requests,
 					     spdk_nvme_request_size(),
 					     128, 0,
 					     NULL, NULL, NULL, NULL,
@@ -96,9 +75,9 @@ spdk_nvmf_initialize_pools(struct spdk_nvmf_globals *spdk_nvmf)
 		return -1;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMe request_mempool %p, size 0x%u bytes\n",
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMe request_mempool %p, size %" PRIu64 " bytes\n",
 		      request_mempool,
-		      (unsigned int)(SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf) * spdk_nvme_request_size()));
+		      (uint64_t)g_num_requests * spdk_nvme_request_size());
 
 	return 0;
 }
@@ -117,10 +96,9 @@ static int spdk_nvmf_check_pool(struct rte_mempool *pool, uint32_t count)
 static int
 spdk_nvmf_check_pools(void)
 {
-	struct spdk_nvmf_globals *spdk_nvmf = &g_nvmf_tgt;
 	int rc = 0;
 
-	rc += spdk_nvmf_check_pool(request_mempool, SPDK_NVMF_DESC_POOL_SIZE(spdk_nvmf));
+	rc += spdk_nvmf_check_pool(request_mempool, g_num_requests);
 
 	if (rc == 0) {
 		return 0;
@@ -173,7 +151,7 @@ nvmf_tgt_init(char *nodebase,
 		g_nvmf_tgt.sin_port = htons(SPDK_NVMF_DEFAULT_SIN_PORT);
 	}
 
-	rc = spdk_nvmf_initialize_pools(&g_nvmf_tgt);
+	rc = spdk_nvmf_initialize_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_nvmf_initialize_pools() failed\n");
 		return rc;
