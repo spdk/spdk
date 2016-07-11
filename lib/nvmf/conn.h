@@ -70,9 +70,6 @@ struct spdk_nvmf_conn {
 	struct spdk_poller		poller;
 };
 
-struct spdk_nvmf_conn *
-spdk_nvmf_allocate_conn(void);
-
 int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);
 void spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn);
 

@@ -62,20 +62,6 @@
 static int nvmf_allocate_reactor(uint64_t cpumask);
 static void spdk_nvmf_conn_do_work(void *arg);
 
-struct spdk_nvmf_conn *
-spdk_nvmf_allocate_conn(void)
-{
-	struct spdk_nvmf_conn *conn;
-
-	conn = calloc(1, sizeof(struct spdk_nvmf_conn));
-	if (conn == NULL) {
-		SPDK_ERRLOG("Could not allocate new connection.\n");
-		return NULL;
-	}
-
-	return conn;
-}
-
 /**
 
 \brief Create an NVMf fabric connection from the given parameters and schedule it
@@ -99,7 +85,7 @@ spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
 	lcore = nvmf_allocate_reactor(nvmf_session_core);
 	if (lcore < 0) {
 		SPDK_ERRLOG("Unable to find core to launch connection.\n");
-		goto err0;
+		return -1;
 	}
 
 	conn->state = CONN_STATE_RUNNING;
@@ -111,9 +97,6 @@ spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
 	spdk_poller_register(&conn->poller, lcore, NULL);
 
 	return 0;
-err0:
-	free(conn);
-	return -1;
 }
 
 void
@@ -123,7 +106,6 @@ spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn)
 
 	nvmf_disconnect(conn->sess, conn);
 	nvmf_rdma_conn_cleanup(conn);
-	free(conn);
 }
 
 static void

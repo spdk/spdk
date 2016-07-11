@@ -71,6 +71,29 @@ struct spdk_nvmf_rdma {
 
 static struct spdk_nvmf_rdma g_rdma = { };
 
+static struct spdk_nvmf_conn *
+allocate_conn(void)
+{
+	struct spdk_nvmf_conn *conn;
+
+	conn = calloc(1, sizeof(struct spdk_nvmf_conn));
+	if (conn == NULL) {
+		SPDK_ERRLOG("Could not allocate new connection.\n");
+		return NULL;
+	}
+
+	/* all new connections initially default as AQ until nvmf connect */
+	conn->type = CONN_TYPE_AQ;
+
+	/* no session association until nvmf connect */
+	conn->sess = NULL;
+
+	conn->state = CONN_STATE_INVALID;
+	conn->sq_head = 0;
+
+	return conn;
+}
+
 static inline struct spdk_nvmf_rdma_request *
 get_rdma_req(struct spdk_nvmf_request *req)
 {
@@ -269,6 +292,8 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 
 	ibv_destroy_comp_channel(conn->rdma.comp_channel);
 	rdma_destroy_id(conn->rdma.cm_id);
+
+	free(conn);
 }
 
 static void
@@ -490,7 +515,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	struct spdk_nvmf_host		*host;
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
 	struct rdma_cm_id		*conn_id;
-	struct spdk_nvmf_conn		*conn;
+	struct spdk_nvmf_conn		*conn = NULL;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
 	struct sockaddr_in		*addr;
@@ -541,7 +566,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Found approved remote host %p\n", host);
 
 	/* Init the NVMf rdma transport connection */
-	conn = spdk_nvmf_allocate_conn();
+	conn = allocate_conn();
 	if (conn == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
@@ -632,6 +657,7 @@ err1: {
 
 		rej_data.status.sc = sts;
 		rdma_reject(conn_id, &ctrlr_event_data, sizeof(rej_data));
+		free(conn);
 	}
 err0:
 	return -1;
