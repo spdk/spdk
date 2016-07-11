@@ -195,10 +195,18 @@ nvmf_create_session(const char *subnqn)
 	return session;
 }
 
-static void
-nvmf_delete_session(struct nvmf_session	*session)
+void
+spdk_nvmf_session_destruct(struct nvmf_session *session)
 {
 	session->subsys->session = NULL;
+
+	while (!TAILQ_EMPTY(&session->connections)) {
+		struct spdk_nvmf_conn *conn = TAILQ_FIRST(&session->connections);
+
+		TAILQ_REMOVE(&session->connections, conn, link);
+		spdk_nvmf_conn_destruct(conn);
+	}
+
 	free(session);
 }
 
@@ -268,15 +276,11 @@ void
 nvmf_disconnect(struct nvmf_session *session,
 		struct spdk_nvmf_conn *conn)
 {
-	if (session) {
-		if (session->num_connections > 0) {
-			session->num_connections--;
-			TAILQ_REMOVE(&session->connections, conn, link);
-		}
+	session->num_connections--;
+	TAILQ_REMOVE(&session->connections, conn, link);
 
-		if (session->num_connections == 0) {
-			nvmf_delete_session(session);
-		}
+	if (session->num_connections == 0 || conn->type == CONN_TYPE_AQ) {
+		spdk_nvmf_session_destruct(session);
 	}
 }
 

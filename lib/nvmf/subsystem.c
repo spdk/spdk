@@ -101,8 +101,7 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	if (subsystem->session) {
-		/* TODO: Call a session function that closes all connections */
-		free(subsystem->session);
+		spdk_nvmf_session_destruct(subsystem->session);
 	}
 
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);

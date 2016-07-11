@@ -77,10 +77,6 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 #define SPDK_NVMF_DESC_POOL_SIZE(spdk)	(SPDK_NVMF_ADMINQ_POOL_SIZE(spdk) + \
 					 SPDK_NVMF_IOQ_POOL_SIZE(spdk))
 
-#define SPDK_NVMF_MAX_CONNECTIONS(spdk)	(MAX_SUBSYSTEMS * \
-					 ((spdk)->MaxSessionsPerSubsystem) * \
-					 ((spdk)->MaxConnectionsPerSession))
-
 struct spdk_nvmf_globals g_nvmf_tgt;
 
 extern struct rte_mempool *request_mempool;
@@ -238,11 +234,7 @@ nvmf_tgt_subsystem_initialize(void)
 		SPDK_ERRLOG("spdk_initialize_nvmf_subsystems failed\n");
 		return rc;
 	}
-	rc = spdk_initialize_nvmf_conns(SPDK_NVMF_MAX_CONNECTIONS(&g_nvmf_tgt));
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_initialize_nvmf_conns() failed\n");
-		return rc;
-	}
+
 	return rc;
 }
 

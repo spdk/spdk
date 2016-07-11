@@ -94,4 +94,6 @@ nvmf_check_io_completions(struct nvmf_session *session);
 void
 nvmf_check_admin_completions(struct nvmf_session *session);
 
+void spdk_nvmf_session_destruct(struct nvmf_session *session);
+
 #endif

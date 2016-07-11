@@ -55,8 +55,6 @@ enum conn_type {
 };
 
 struct spdk_nvmf_conn {
-	uint32_t			is_valid;
-
 	struct nvmf_session		*sess;
 
 	uint16_t			qid;
@@ -72,13 +70,10 @@ struct spdk_nvmf_conn {
 	struct spdk_poller		poller;
 };
 
-int spdk_initialize_nvmf_conns(int max_connections);
-
-void spdk_shutdown_nvmf_conns(void);
-
 struct spdk_nvmf_conn *
 spdk_nvmf_allocate_conn(void);
 
 int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);
+void spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn);
 
 #endif /* NVMF_CONN_H */

@@ -59,84 +59,21 @@
 
 */
 
-static int g_max_conns;
-static struct spdk_nvmf_conn *g_conns_array;
-
-static pthread_mutex_t g_conns_mutex;
-
-static struct rte_timer g_shutdown_timer;
-
 static int nvmf_allocate_reactor(uint64_t cpumask);
 static void spdk_nvmf_conn_do_work(void *arg);
-
-static struct spdk_nvmf_conn *
-allocate_conn(void)
-{
-	struct spdk_nvmf_conn	*conn;
-	int				i;
-
-	pthread_mutex_lock(&g_conns_mutex);
-	for (i = 0; i < g_max_conns; i++) {
-		conn = &g_conns_array[i];
-		if (!conn->is_valid) {
-			memset(conn, 0, sizeof(*conn));
-			conn->is_valid = 1;
-			pthread_mutex_unlock(&g_conns_mutex);
-			return conn;
-		}
-	}
-	pthread_mutex_unlock(&g_conns_mutex);
-
-	return NULL;
-}
-
-static void
-free_conn(struct spdk_nvmf_conn *conn)
-{
-	conn->sess = NULL;
-	conn->is_valid = 0;
-}
-
-int spdk_initialize_nvmf_conns(int max_connections)
-{
-	int rc;
-
-	rc = pthread_mutex_init(&g_conns_mutex, NULL);
-	if (rc != 0) {
-		SPDK_ERRLOG("mutex_init() failed\n");
-		return -1;
-	}
-
-	g_max_conns = max_connections;
-	g_conns_array = calloc(g_max_conns, sizeof(struct spdk_nvmf_conn));
-
-	return 0;
-}
 
 struct spdk_nvmf_conn *
 spdk_nvmf_allocate_conn(void)
 {
 	struct spdk_nvmf_conn *conn;
 
-	conn = allocate_conn();
+	conn = calloc(1, sizeof(struct spdk_nvmf_conn));
 	if (conn == NULL) {
 		SPDK_ERRLOG("Could not allocate new connection.\n");
-		goto err0;
+		return NULL;
 	}
 
-	/* all new connections initially default as AQ until nvmf connect */
-	conn->type = CONN_TYPE_AQ;
-
-	/* no session association until nvmf connect */
-	conn->sess = NULL;
-
-	conn->state = CONN_STATE_INVALID;
-	conn->sq_head = 0;
-
 	return conn;
-
-err0:
-	return NULL;
 }
 
 /**
@@ -175,100 +112,18 @@ spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
 
 	return 0;
 err0:
-	free_conn(conn);
+	free(conn);
 	return -1;
 }
 
-static void
-_conn_destruct(spdk_event_t event)
+void
+spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn)
 {
-	struct spdk_nvmf_conn *conn = spdk_event_get_arg1(event);
+	spdk_poller_unregister(&conn->poller, NULL);
 
-	/*
-	 * Notify NVMf library of the fabric connection
-	 * going away.  If this is the AQ connection then
-	 * set state for other connections to abort.
-	 */
 	nvmf_disconnect(conn->sess, conn);
-
-	if (conn->type == CONN_TYPE_AQ) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "AQ connection destruct, trigger session closure\n");
-		/* Trigger all I/O connections to shutdown */
-		conn->state = CONN_STATE_FABRIC_DISCONNECT;
-	}
-
 	nvmf_rdma_conn_cleanup(conn);
-
-	pthread_mutex_lock(&g_conns_mutex);
-	free_conn(conn);
-	pthread_mutex_unlock(&g_conns_mutex);
-}
-
-static void spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_event *event;
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "conn %p\n", conn);
-	conn->state = CONN_STATE_INVALID;
-
-	event = spdk_event_allocate(rte_lcore_id(), _conn_destruct, conn, NULL, NULL);
-	spdk_poller_unregister(&conn->poller, event);
-}
-
-static int
-spdk_nvmf_get_active_conns(void)
-{
-	struct spdk_nvmf_conn *conn;
-	int num = 0;
-	int i;
-
-	pthread_mutex_lock(&g_conns_mutex);
-	for (i = 0; i < g_max_conns; i++) {
-		conn = &g_conns_array[i];
-		if (!conn->is_valid)
-			continue;
-		num++;
-	}
-	pthread_mutex_unlock(&g_conns_mutex);
-	return num;
-}
-
-static void
-spdk_nvmf_cleanup_conns(void)
-{
-	free(g_conns_array);
-}
-
-static void
-spdk_nvmf_conn_check_shutdown(struct rte_timer *timer, void *arg)
-{
-	if (spdk_nvmf_get_active_conns() == 0) {
-		RTE_VERIFY(timer == &g_shutdown_timer);
-		rte_timer_stop(timer);
-		spdk_nvmf_cleanup_conns();
-		spdk_app_stop(0);
-	}
-}
-
-void spdk_shutdown_nvmf_conns(void)
-{
-	struct spdk_nvmf_conn	*conn;
-	int				i;
-
-	pthread_mutex_lock(&g_conns_mutex);
-
-	for (i = 0; i < g_max_conns; i++) {
-		conn = &g_conns_array[i];
-		if (!conn->is_valid)
-			continue;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Set conn %d state to exiting\n", i);
-		conn->state = CONN_STATE_EXITING;
-	}
-
-	pthread_mutex_unlock(&g_conns_mutex);
-	rte_timer_init(&g_shutdown_timer);
-	rte_timer_reset(&g_shutdown_timer, rte_get_timer_hz() / 1000, PERIODICAL,
-			rte_get_master_lcore(), spdk_nvmf_conn_check_shutdown, NULL);
+	free(conn);
 }
 
 static void

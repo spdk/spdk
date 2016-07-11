@@ -44,7 +44,6 @@
 
 #include "spdk/event.h"
 
-#include "nvmf/conn.h"
 #include "nvmf/rdma.h"
 #include "nvmf/port.h"
 #include "nvmf/host.h"
@@ -61,7 +60,7 @@ static void
 spdk_nvmf_shutdown_cb(void)
 {
 	nvmf_acceptor_stop();
-	spdk_shutdown_nvmf_conns();
+	spdk_app_stop(0);
 
 	fprintf(stdout, "\n=========================\n");
 	fprintf(stdout, "   NVMF shutdown signal\n");
