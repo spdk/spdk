@@ -56,8 +56,6 @@
 #include "spdk/trace.h"
 
 #define ACCEPT_TIMEOUT (rte_get_timer_hz() >> 10) /* ~1ms */
-#define MAX_RDMA_DEVICES 4
-#define MAX_SESSIONS_PER_DEVICE	1 /* for now accept only single session per device */
 
 /*
  RDMA Connection Resouce Defaults
@@ -912,7 +910,7 @@ spdk_nvmf_rdma_init(void)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    %d RDMA verbs device(s) discovered\n", num_of_rdma_devices);
 
 	/* Look through the list of devices for one we support */
-	for (i = 0; dev_list[i] && num_devices_found < MAX_RDMA_DEVICES; i++, ibdev_ctx = NULL) {
+	for (i = 0; i < num_of_rdma_devices; i++) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, " RDMA Device %d:\n", i);
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "   Node type: %d\n", (int)dev_list[i]->node_type);
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "   Transport type: %d\n", (int)dev_list[i]->transport_type);
