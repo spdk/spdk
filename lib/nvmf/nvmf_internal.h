@@ -114,9 +114,6 @@ nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);
 
 int nvmf_tgt_init(char *nodebase, int max_queue_depth, int max_conn_per_sess);
 
-int nvmf_initialize(void);
-void nvmf_shutdown(void);
-
 extern struct spdk_nvmf_globals g_nvmf_tgt;
 
 #endif /* __NVMF_INTERNAL_H__ */

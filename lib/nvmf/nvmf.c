@@ -179,14 +179,6 @@ nvmf_tgt_subsystem_initialize(void)
 		return rc;
 	}
 	/* initialize NVMe/NVMf backend */
-
-	SPDK_NOTICELOG("\n*** NVMf Library Init ***\n");
-	rc = nvmf_initialize();
-	if (rc < 0) {
-		SPDK_ERRLOG("nvmf_initialize() failed\n");
-		return rc;
-	}
-
 	rc = spdk_nvmf_init_nvme();
 	if (rc < 0) {
 		fprintf(stderr, "NVMf could not initialize NVMe devices.\n");
@@ -206,7 +198,7 @@ static int
 nvmf_tgt_subsystem_fini(void)
 {
 	spdk_shutdown_nvmf_subsystems();
-	nvmf_shutdown();
+	spdk_nvmf_shutdown_nvme();
 	spdk_nvmf_host_destroy_all();
 	spdk_nvmf_port_destroy_all();
 	spdk_nvmf_rdma_fini();
@@ -219,25 +211,6 @@ nvmf_tgt_subsystem_fini(void)
 	}
 
 	return 0;
-}
-
-int
-nvmf_initialize(void)
-{
-	if (request_mempool == NULL) {
-		fprintf(stderr, "NVMf application has not created request mempool!\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-void
-nvmf_shutdown(void)
-{
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_shutdown\n");
-
-	spdk_nvmf_shutdown_nvme();
 }
 
 SPDK_SUBSYSTEM_REGISTER(nvmf, nvmf_tgt_subsystem_initialize, nvmf_tgt_subsystem_fini, NULL)
