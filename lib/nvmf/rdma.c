@@ -197,12 +197,7 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 	rdma_req->recv_sgl[0].length = sizeof(rdma_req->cmd);
 	rdma_req->recv_sgl[0].lkey = rdma_req->cmd_mr->lkey;
 
-	if (conn->type == CONN_TYPE_AQ) {
-		/* Admin commands can only send 4k of data maximum */
-		rdma_req->bb_len = SMALL_BB_MAX_SIZE;
-	} else {
-		rdma_req->bb_len = LARGE_BB_MAX_SIZE;
-	}
+	rdma_req->bb_len = DEFAULT_BB_SIZE;
 	rdma_req->bb = rte_zmalloc("nvmf_bb", rdma_req->bb_len, 0);
 	if (!rdma_req->bb) {
 		SPDK_ERRLOG("Unable to get %u byte bounce buffer\n", rdma_req->bb_len);

@@ -46,14 +46,13 @@
 
 #define nvmf_min(a,b) (((a)<(b))?(a):(b))
 
-#define SMALL_BB_MAX_SIZE 4096
-#define LARGE_BB_MAX_SIZE (128 * 1024)
+#define DEFAULT_BB_SIZE (128 * 1024)
 
 /*
  * NVMf target supports a maximum transfer size that is equal to
  * a single allocated bounce buffer per request.
  */
-#define SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE  LARGE_BB_MAX_SIZE
+#define SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE  DEFAULT_BB_SIZE
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
 #define SPDK_NVMF_DEFAULT_NODEBASE "nqn.2016-06.io.spdk"
