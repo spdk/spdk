@@ -284,20 +284,6 @@ nvmf_disconnect(struct nvmf_session *session,
 	}
 }
 
-void
-nvmf_complete_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
-{
-	struct spdk_nvmf_request *req  = ctx;
-	struct spdk_nvme_cpl *response;
-
-	spdk_trace_record(TRACE_NVMF_LIB_COMPLETE, 0, 0, (uint64_t)req, 0);
-
-	response = &req->rsp->nvme_cpl;
-	memcpy(response, cmp, sizeof(*cmp));
-
-	spdk_nvmf_request_complete(req);
-}
-
 static uint64_t
 nvmf_prop_get_cap(struct nvmf_session *session)
 {

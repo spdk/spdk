@@ -108,10 +108,6 @@ struct spdk_nvmf_globals {
 	uint16_t	   sin_port;
 };
 
-void
-nvmf_complete_cmd(void *rsp, const struct spdk_nvme_cpl *cmp);
-
-
 int nvmf_tgt_init(char *nodebase, int max_queue_depth, int max_conn_per_sess);
 
 extern struct spdk_nvmf_globals g_nvmf_tgt;
