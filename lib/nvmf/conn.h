@@ -56,8 +56,6 @@ enum conn_type {
 struct spdk_nvmf_conn {
 	struct nvmf_session		*sess;
 
-	uint16_t			qid;
-
 	enum conn_type			type;
 	volatile enum conn_state	state;
 

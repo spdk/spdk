@@ -650,18 +650,13 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		/* No private data, so use defaults. */
 		qp_depth = nvmf_min(ibdev_attr.max_qp_wr, SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH);
 		rw_depth = nvmf_min(ibdev_attr.max_qp_rd_atom, SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH);
-		conn->qid = 0;
 	} else {
 		const struct spdk_nvmf_rdma_request_private_data *private_data = host_event_data->private_data;
 		qp_depth = nvmf_min(ibdev_attr.max_qp_wr, nvmf_min(private_data->hrqsize,
 				    private_data->hsqsize));
 		rw_depth = nvmf_min(ibdev_attr.max_qp_rd_atom, host_event_data->initiator_depth);
-		conn->qid = private_data->qid;
 	}
 	rdma_conn->queue_depth = nvmf_min(qp_depth, rw_depth);
-	if (conn->qid > 0) {
-		conn->type = CONN_TYPE_IOQ;
-	}
 
 	rc = nvmf_rdma_queue_init(conn, conn_id->verbs);
 	if (rc) {

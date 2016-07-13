@@ -428,8 +428,7 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 
 	response = &req->rsp->connect_rsp;
 
-	conn->qid = connect->qid;
-	if (conn->qid > 0) {
+	if (connect->qid > 0) {
 		conn->type = CONN_TYPE_IOQ;
 	} else {
 		conn->type = CONN_TYPE_AQ;

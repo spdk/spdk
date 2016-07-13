@@ -89,8 +89,7 @@ spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
 	}
 
 	conn->state = CONN_STATE_RUNNING;
-	SPDK_NOTICELOG("Launching nvmf connection[qid=%d] on core: %d\n",
-		       conn->qid, lcore);
+	SPDK_NOTICELOG("Launching nvmf connection on core: %d\n", lcore);
 	conn->poller.fn = spdk_nvmf_conn_do_work;
 	conn->poller.arg = conn;
 
