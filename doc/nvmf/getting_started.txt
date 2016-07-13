@@ -50,10 +50,10 @@ apt-get install libibverbs-dev librdmacm-dev
 \endverbatim
 
 Then build SPDK with the NVMf target enabled, either by editing CONFIG
-to enable CONFIG_NVMF or enabling it on the `make` command line:
+to enable CONFIG_RDMA or enabling it on the `make` command line:
 
 \verbatim
-make CONFIG_NVMF=y <other config parameters>
+make CONFIG_RDMA=y <other config parameters>
 \endverbatim
 
 \section nvmf_config Configuring NVMf

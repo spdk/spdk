@@ -69,6 +69,6 @@ CONFIG_FIO_PLUGIN?=n
 # which is required for building the SPDK FIO plugin.
 FIO_SOURCE_DIR?=/usr/src/fio
 
-# Build NVMf (NVMe over Fabrics) target.
+# Enable RDMA support for the NVMf target.
 # Requires ibverbs development libraries.
-CONFIG_NVMF?=n
+CONFIG_RDMA?=n

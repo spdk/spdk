@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += trace
-DIRS-$(CONFIG_NVMF) += nvmf_tgt
+DIRS-$(CONFIG_RDMA) += nvmf_tgt
 
 .PHONY: all clean $(DIRS-y)
 

@@ -111,6 +111,9 @@ SYS_LIBS += -lrt
 
 MAKEFLAGS += --no-print-directory
 
+C_SRCS += $(C_SRCS-y)
+CXX_SRCS += $(CXX_SRCS-y)
+
 OBJS = $(C_SRCS:.c=.o) $(CXX_SRCS:.cpp=.o)
 
 DEPFLAGS = -MMD -MP -MF $*.d.tmp

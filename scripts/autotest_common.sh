@@ -24,7 +24,7 @@ case `uname` in
 esac
 
 if [ -f /usr/include/infiniband/verbs.h ]; then
-	MAKECONFIG="$MAKECONFIG CONFIG_NVMF=y"
+	MAKECONFIG="$MAKECONFIG CONFIG_RDMA=y"
 fi
 
 if [ -z "$output_dir" ]; then
