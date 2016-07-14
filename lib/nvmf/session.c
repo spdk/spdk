@@ -111,19 +111,19 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	nvmfdata->ctrattr = 0; /* dynamic controller model */
 	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ctrlr data: maxcmd %x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ctrlr data: maxcmd %x\n",
 		      session->vcdata.maxcmd);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: ioccsz %x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: ioccsz %x\n",
 		      nvmfdata->ioccsz);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: iorcsz %x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: iorcsz %x\n",
 		      nvmfdata->iorcsz);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: icdoff %x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: icdoff %x\n",
 		      nvmfdata->icdoff);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: ctrattr %x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: ctrattr %x\n",
 		      nvmfdata->ctrattr);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: ext ctrlr data: msdbd %x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: msdbd %x\n",
 		      nvmfdata->msdbd);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: sgls data: 0x%x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	sgls data: 0x%x\n",
 		      *(uint32_t *)&session->vcdata.sgls);
 
 	session->vcprop.cap.raw = 0;
@@ -147,11 +147,11 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcprop.csts.raw = 0;
 	session->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cap %" PRIx64 "\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	cap %" PRIx64 "\n",
 		      session->vcprop.cap.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: vs %x\n", session->vcprop.vs.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: cc %x\n", session->vcprop.cc.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	nvmf_init_session_properties: csts %x\n",
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	vs %x\n", session->vcprop.vs.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	cc %x\n", session->vcprop.cc.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	csts %x\n",
 		      session->vcprop.csts.raw);
 }
 
