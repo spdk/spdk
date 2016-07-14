@@ -34,6 +34,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include <rte_config.h>
 #include <rte_lcore.h>
@@ -184,7 +185,7 @@ spdk_nvmf_parse_port(struct spdk_conf_section *sp)
 {
 	struct spdk_nvmf_port		*port;
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
-	char *listen_addr, *host, *listen_port;
+	char *transport_name, *listen_addr, *host, *listen_port;
 	int i = 0, rc = 0;
 
 	/* Create the Subsystem Port */
@@ -194,10 +195,21 @@ spdk_nvmf_parse_port(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	/* Loop over the fabric interfaces and add them to the port */
+	/* Loop over the listen addresses and add them to the port */
 	for (i = 0; ; i++) {
-		listen_addr = spdk_conf_section_get_nmval(sp, "FabricIntf", i, 0);
+		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
+		if (transport_name == NULL) {
+			break;
+		}
+
+		if (strcasecmp(transport_name, "RDMA") != 0) {
+			SPDK_ERRLOG("Unknown transport type '%s'\n", transport_name);
+			return -1;
+		}
+
+		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
 		if (listen_addr == NULL) {
+			SPDK_ERRLOG("Missing address for Listen in Port%d\n", sp->num);
 			break;
 		}
 		rc = spdk_nvmf_parse_addr(listen_addr, &host, &listen_port);
