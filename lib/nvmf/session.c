@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <arpa/inet.h>
 #include <string.h>
 
 #include "session.h"
@@ -154,47 +155,6 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 		      session->vcprop.csts.raw);
 }
 
-static void
-nvmf_init_session_properties(struct nvmf_session *session)
-{
-	if (session->subsys->subtype == SPDK_NVMF_SUB_NVME) {
-		nvmf_init_nvme_session_properties(session);
-	} else {
-		nvmf_init_discovery_session_properties(session);
-	}
-}
-
-static struct nvmf_session *
-nvmf_create_session(const char *subnqn)
-{
-	struct nvmf_session	*session;
-	struct spdk_nvmf_subsystem	*subsystem;
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_session:\n");
-
-	/* locate the previously provisioned subsystem */
-	subsystem = nvmf_find_subsystem(subnqn);
-	if (subsystem == NULL) {
-		return NULL;
-	}
-
-	session = calloc(1, sizeof(struct nvmf_session));
-	if (session == NULL) {
-		return NULL;
-	}
-
-	TAILQ_INIT(&session->connections);
-	session->num_connections = 0;
-	session->subsys = subsystem;
-	session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
-
-	nvmf_init_session_properties(session);
-
-	subsystem->session = session;
-
-	return session;
-}
-
 void
 spdk_nvmf_session_destruct(struct nvmf_session *session)
 {
@@ -210,66 +170,122 @@ spdk_nvmf_session_destruct(struct nvmf_session *session)
 	free(session);
 }
 
-static struct nvmf_session *
-nvmf_find_session(const char *subnqn)
+static void
+invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp, uint8_t iattr, uint16_t ipo)
 {
-	struct spdk_nvmf_subsystem *subsystem;
-
-	subsystem = nvmf_find_subsystem(subnqn);
-	if (subsystem == NULL) {
-		return NULL;
-	}
-
-	return subsystem->session;
+	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+	rsp->status_code_specific.invalid.iattr = iattr;
+	rsp->status_code_specific.invalid.ipo = ipo;
 }
 
-struct nvmf_session *
-nvmf_connect(struct spdk_nvmf_conn *conn,
-	     struct spdk_nvmf_fabric_connect_cmd *connect,
-	     struct spdk_nvmf_fabric_connect_data *connect_data,
-	     struct spdk_nvmf_fabric_connect_rsp *response)
+void
+spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
+			  struct spdk_nvmf_fabric_connect_cmd *cmd,
+			  struct spdk_nvmf_fabric_connect_data *data,
+			  struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
 	struct nvmf_session *session;
+	struct spdk_nvmf_subsystem *subsystem;
 
-	if (conn->type == CONN_TYPE_AQ) {
-		/* For admin connections, establish a new session */
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT Admin Queue for controller id %d\n", connect_data->cntlid);
-		if (connect_data->cntlid != 0xFFFF) {
+#define INVALID_CONNECT_CMD(field) invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
+#define INVALID_CONNECT_DATA(field) invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "recfmt 0x%x qid %u sqsize %u\n",
+		      cmd->recfmt, cmd->qid, cmd->sqsize);
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect data:\n");
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  cntlid:  0x%04x\n", data->cntlid);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostid: %08x-%04x-%04x-%02x%02x-%04x%08x ***\n",
+		      ntohl(*(uint32_t *)&data->hostid[0]),
+		      ntohs(*(uint16_t *)&data->hostid[4]),
+		      ntohs(*(uint16_t *)&data->hostid[6]),
+		      data->hostid[8],
+		      data->hostid[9],
+		      ntohs(*(uint16_t *)&data->hostid[10]),
+		      ntohl(*(uint32_t *)&data->hostid[12]));
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
+
+	subsystem = nvmf_find_subsystem(data->subnqn);
+	if (subsystem == NULL) {
+		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
+		INVALID_CONNECT_DATA(subnqn);
+		return;
+	}
+
+	if (cmd->qid == 0) {
+		conn->type = CONN_TYPE_AQ;
+
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
+
+		if (data->cntlid != 0xFFFF) {
 			/* This NVMf target only supports dynamic mode. */
-			SPDK_ERRLOG("The NVMf target only supports dynamic mode.\n");
-			response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-			return NULL;
+			SPDK_ERRLOG("The NVMf target only supports dynamic mode (CNTLID = 0x%x).\n", data->cntlid);
+			INVALID_CONNECT_DATA(cntlid);
+			return;
 		}
 
-		session = nvmf_create_session(connect_data->subnqn);
+		if (subsystem->session) {
+			SPDK_ERRLOG("Cannot connect to already-connected controller\n");
+			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
+			return;
+		}
+
+		/* Establish a new session */
+		subsystem->session = session = calloc(1, sizeof(struct nvmf_session));
 		if (session == NULL) {
-			response->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-			return NULL;
+			SPDK_ERRLOG("Memory allocation failure\n");
+			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			return;
+		}
+
+		TAILQ_INIT(&session->connections);
+		session->num_connections = 0;
+		session->subsys = subsystem;
+		session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
+
+		if (subsystem->subtype == SPDK_NVMF_SUB_NVME) {
+			nvmf_init_nvme_session_properties(session);
+		} else {
+			nvmf_init_discovery_session_properties(session);
 		}
 	} else {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "CONNECT I/O Queue for controller id %d\n", connect_data->cntlid);
-		session = nvmf_find_session(connect_data->subnqn);
-		if (session == NULL) {
-			SPDK_ERRLOG("Unknown controller id %d\n", connect_data->cntlid);
-			response->status.sc = SPDK_NVMF_FABRIC_SC_RESTART_DISCOVERY;
-			return NULL;
+		conn->type = CONN_TYPE_IOQ;
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
+
+		/* We always return CNTLID 0, so verify that the I/O connect CNTLID matches */
+		if (data->cntlid != 0) {
+			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
+			INVALID_CONNECT_DATA(cntlid);
+			return;
+		}
+
+		session = subsystem->session;
+		if (session == NULL || !session->vcprop.cc.bits.en) {
+			SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
+			INVALID_CONNECT_CMD(qid);
+			return;
 		}
 
 		/* check if we would exceed session connection limit */
 		if (session->num_connections >= session->max_connections_allowed) {
 			SPDK_ERRLOG("connection limit %d\n", session->num_connections);
-			response->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-			return NULL;
+			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
+			return;
 		}
 	}
 
 	session->num_connections++;
 	TAILQ_INSERT_HEAD(&session->connections, conn, link);
+	conn->sess = session;
 
-	response->status_code_specific.success.cntlid = 0;
-	response->status.sc = 0;
-
-	return session;
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	rsp->status_code_specific.success.cntlid = 0;
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
+		      rsp->status_code_specific.success.cntlid);
 }
 
 void

@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <arpa/inet.h>
-
 #include <rte_config.h>
 #include <rte_debug.h>
 
@@ -406,40 +404,10 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	}
 
 	connect = &req->cmd->connect_cmd;
+	response = &req->rsp->connect_rsp;
 	connect_data = (struct spdk_nvmf_fabric_connect_data *)req->data;
 
-	RTE_VERIFY(connect_data != NULL);
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect cmd: cid 0x%x recfmt 0x%x qid %u sqsize %u\n",
-		      connect->cid, connect->recfmt, connect->qid, connect->sqsize);
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect data:\n");
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  cntlid:  0x%04x\n", connect_data->cntlid);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostid: %08x-%04x-%04x-%02x%02x-%04x%08x ***\n",
-		      ntohl(*(uint32_t *)&connect_data->hostid[0]),
-		      ntohs(*(uint16_t *)&connect_data->hostid[4]),
-		      ntohs(*(uint16_t *)&connect_data->hostid[6]),
-		      connect_data->hostid[8],
-		      connect_data->hostid[9],
-		      ntohs(*(uint16_t *)&connect_data->hostid[10]),
-		      ntohl(*(uint32_t *)&connect_data->hostid[12]));
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", (char *)&connect_data->subnqn[0]);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", (char *)&connect_data->hostnqn[0]);
-
-	response = &req->rsp->connect_rsp;
-
-	if (connect->qid > 0) {
-		conn->type = CONN_TYPE_IOQ;
-	} else {
-		conn->type = CONN_TYPE_AQ;
-	}
-
-	conn->sess = nvmf_connect(conn, connect, connect_data, response);
-	if (!conn->sess) {
-		SPDK_ERRLOG("Unable to allocate session\n");
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		return true;
-	}
+	spdk_nvmf_session_connect(conn, connect, connect_data, response);
 
 	/* Allocate RDMA reqs according to the queue depth and conn type*/
 	if (spdk_nvmf_rdma_alloc_reqs(conn)) {
@@ -448,8 +416,6 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		return true;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
-		      response->status_code_specific.success.cntlid);
 	return true;
 }
 

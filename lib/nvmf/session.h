@@ -68,11 +68,10 @@ struct nvmf_session {
 	struct spdk_nvmf_request *aer_req;
 };
 
-struct nvmf_session *
-nvmf_connect(struct spdk_nvmf_conn *conn,
-	     struct spdk_nvmf_fabric_connect_cmd *connect,
-	     struct spdk_nvmf_fabric_connect_data *connect_data,
-	     struct spdk_nvmf_fabric_connect_rsp *response);
+void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
+			       struct spdk_nvmf_fabric_connect_cmd *cmd,
+			       struct spdk_nvmf_fabric_connect_data *data,
+			       struct spdk_nvmf_fabric_connect_rsp *rsp);
 
 void
 nvmf_disconnect(struct nvmf_session *session, struct spdk_nvmf_conn *conn);
