@@ -44,9 +44,9 @@
 
 #include "spdk/event.h"
 
-#include "nvmf/rdma.h"
 #include "nvmf/port.h"
 #include "nvmf/host.h"
+#include "nvmf/transport.h"
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"
@@ -59,7 +59,7 @@ struct rte_mempool *request_mempool;
 static void
 spdk_nvmf_shutdown_cb(void)
 {
-	nvmf_acceptor_stop();
+	spdk_nvmf_acceptor_stop();
 	spdk_app_stop(0);
 
 	fprintf(stdout, "\n=========================\n");
@@ -99,9 +99,9 @@ spdk_nvmf_startup(spdk_event_t event)
 
 	/* start the rdma poller that will listen
 	   on all available ports */
-	rc = nvmf_acceptor_start();
+	rc = spdk_nvmf_acceptor_start();
 	if (rc < 0) {
-		SPDK_ERRLOG("nvmf_acceptor_start() failed\n");
+		SPDK_ERRLOG("spdk_nvmf_acceptor_start() failed\n");
 		goto initialize_error;
 	}
 

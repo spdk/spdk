@@ -50,6 +50,8 @@
 * ports for the group of aggregated links constitute a single NVM subsystem port.
 */
 
+struct spdk_nvmf_transport;
+
 enum group_state {
 	GROUP_INIT = 0x0,
 	GROUP_READY = 0x1,
@@ -60,6 +62,7 @@ struct spdk_nvmf_fabric_intf {
 	char					*host;
 	char					*sin_port;
 	struct spdk_nvmf_port			*port;
+	const struct spdk_nvmf_transport	*transport;
 	enum spdk_nvmf_transport_types		trtype;
 	enum spdk_nvmf_address_family_types	adrfam;
 	enum spdk_nvmf_transport_requirements	treq;
@@ -76,7 +79,8 @@ struct spdk_nvmf_port {
 };
 
 struct spdk_nvmf_fabric_intf *
-spdk_nvmf_fabric_intf_create(char *host, char *sin_port);
+spdk_nvmf_fabric_intf_create(const struct spdk_nvmf_transport *transport, char *host,
+			     char *sin_port);
 
 void
 spdk_nvmf_fabric_intf_destroy(struct spdk_nvmf_fabric_intf *fabric_intf);

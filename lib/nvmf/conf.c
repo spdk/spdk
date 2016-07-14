@@ -45,6 +45,7 @@
 #include "nvmf_internal.h"
 #include "port.h"
 #include "subsystem.h"
+#include "transport.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
 
@@ -197,12 +198,15 @@ spdk_nvmf_parse_port(struct spdk_conf_section *sp)
 
 	/* Loop over the listen addresses and add them to the port */
 	for (i = 0; ; i++) {
+		const struct spdk_nvmf_transport *transport;
+
 		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
 		if (transport_name == NULL) {
 			break;
 		}
 
-		if (strcasecmp(transport_name, "RDMA") != 0) {
+		transport = spdk_nvmf_transport_get(transport_name);
+		if (transport == NULL) {
 			SPDK_ERRLOG("Unknown transport type '%s'\n", transport_name);
 			return -1;
 		}
@@ -216,7 +220,7 @@ spdk_nvmf_parse_port(struct spdk_conf_section *sp)
 		if (rc < 0) {
 			continue;
 		}
-		fabric_intf = spdk_nvmf_fabric_intf_create(host, listen_port);
+		fabric_intf = spdk_nvmf_fabric_intf_create(transport, host, listen_port);
 		if (!fabric_intf) {
 			continue;
 		}

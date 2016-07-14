@@ -31,33 +31,90 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMF_CONN_H
-#define NVMF_CONN_H
+#include "transport.h"
 
-#include <stdint.h>
+#include <stdlib.h>
+#include <strings.h>
 
-#include "spdk/event.h"
-#include "nvmf_internal.h"
+#include "spdk/log.h"
 #include "spdk/queue.h"
 
-struct spdk_nvmf_transport;
-
-enum conn_type {
-	CONN_TYPE_AQ = 0,
-	CONN_TYPE_IOQ = 1,
+static const struct spdk_nvmf_transport *const g_transports[] = {
+#ifdef SPDK_CONFIG_RDMA
+	&spdk_nvmf_transport_rdma,
+#endif
 };
 
-struct spdk_nvmf_conn {
-	const struct spdk_nvmf_transport	*transport;
-	struct nvmf_session			*sess;
-	enum conn_type				type;
+#define NUM_TRANSPORTS (sizeof(g_transports) / sizeof(*g_transports))
 
-	uint16_t				sq_head;
+int
+spdk_nvmf_transport_init(void)
+{
+	size_t i;
+	int count = 0;
 
-	TAILQ_ENTRY(spdk_nvmf_conn) 		link;
-};
+	for (i = 0; i != NUM_TRANSPORTS; i++) {
+		if (g_transports[i]->transport_init() < 0) {
+			SPDK_NOTICELOG("%s transport init failed\n", g_transports[i]->name);
+		} else {
+			count++;
+		}
+	}
 
-int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);
-void spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn);
+	return count;
+}
 
-#endif /* NVMF_CONN_H */
+int
+spdk_nvmf_transport_fini(void)
+{
+	size_t i;
+	int count = 0;
+
+	for (i = 0; i != NUM_TRANSPORTS; i++) {
+		if (g_transports[i]->transport_fini() < 0) {
+			SPDK_NOTICELOG("%s transport fini failed\n", g_transports[i]->name);
+		} else {
+			count++;
+		}
+	}
+
+	return count;
+}
+
+int
+spdk_nvmf_acceptor_start(void)
+{
+	size_t i;
+
+	for (i = 0; i != NUM_TRANSPORTS; i++) {
+		if (g_transports[i]->transport_start() < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+void
+spdk_nvmf_acceptor_stop(void)
+{
+	size_t i;
+
+	for (i = 0; i != NUM_TRANSPORTS; i++) {
+		g_transports[i]->transport_stop();
+	}
+}
+
+const struct spdk_nvmf_transport *
+spdk_nvmf_transport_get(const char *name)
+{
+	size_t i;
+
+	for (i = 0; i != NUM_TRANSPORTS; i++) {
+		if (strcasecmp(name, g_transports[i]->name) == 0) {
+			return g_transports[i];
+		}
+	}
+
+	return NULL;
+}

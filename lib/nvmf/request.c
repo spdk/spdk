@@ -35,10 +35,10 @@
 #include <rte_debug.h>
 
 #include "conn.h"
-#include "rdma.h"
 #include "request.h"
 #include "session.h"
 #include "subsystem.h"
+#include "transport.h"
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"
@@ -60,7 +60,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      response->cid, response->cdw0, response->rsvd1, response->sqhd,
 		      *(uint16_t *)&response->status);
 
-	if (spdk_nvmf_rdma_request_complete(req->conn, req)) {
+	if (req->conn->transport->req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 		return -1;
 	}
@@ -401,9 +401,8 @@ nvmf_handle_connect(spdk_event_t event)
 
 	spdk_nvmf_session_connect(conn, connect, connect_data, response);
 
-	/* Allocate RDMA reqs according to the queue depth and conn type*/
-	if (spdk_nvmf_rdma_alloc_reqs(conn)) {
-		SPDK_ERRLOG("Unable to allocate sufficient RDMA work requests\n");
+	if (conn->transport->conn_init(conn)) {
+		SPDK_ERRLOG("Transport connection initialization failed\n");
 		nvmf_disconnect(conn->sess, conn);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		spdk_nvmf_request_complete(req);
@@ -533,7 +532,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	enum spdk_nvme_data_transfer xfer;
-	int ret;
 
 	nvmf_trace_command(req->cmd, conn->type);
 
@@ -614,13 +612,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
 				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Initiating Host to Controller data transfer\n");
-				ret = nvmf_post_rdma_read(conn, req);
-				if (ret) {
-					SPDK_ERRLOG("Unable to post rdma read tx descriptor\n");
-					rsp->status.sc = SPDK_NVME_SC_DATA_TRANSFER_ERROR;
-					return -1;
-				}
-
 				/* Wait for transfer to complete before executing command. */
 				return 1;
 			}

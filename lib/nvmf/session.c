@@ -36,8 +36,8 @@
 
 #include "session.h"
 #include "nvmf_internal.h"
-#include "rdma.h"
 #include "subsystem.h"
+#include "transport.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
@@ -464,7 +464,8 @@ spdk_nvmf_session_poll(struct nvmf_session *session)
 	struct spdk_nvmf_conn	*conn, *tmp;
 
 	TAILQ_FOREACH_SAFE(conn, &session->connections, link, tmp) {
-		if (nvmf_check_rdma_completions(conn) < 0) {
+		if (conn->transport->conn_poll(conn) < 0) {
+			SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
 			nvmf_disconnect(session, conn);
 		}
 	}

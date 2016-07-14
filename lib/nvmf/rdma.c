@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "rdma.h"
-
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <infiniband/verbs.h>
@@ -53,6 +51,7 @@
 #include "host.h"
 #include "session.h"
 #include "subsystem.h"
+#include "transport.h"
 #include "spdk/assert.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
@@ -315,7 +314,7 @@ nvmf_drain_cq(struct spdk_nvmf_conn *conn)
 
 }
 
-void
+static void
 nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
@@ -382,11 +381,11 @@ nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 	nvmf_trace_ibv_sge(wr->sg_list);
 }
 
-int
-nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
-		    struct spdk_nvmf_request *req)
+static int
+nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	int rc;
@@ -481,10 +480,10 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	return (rc);
 }
 
-int
-spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn,
-				struct spdk_nvmf_request *req)
+static int
+spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	int ret;
 
@@ -535,7 +534,7 @@ spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
 	return 0;
 }
 
-int
+static int
 spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
@@ -636,6 +635,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 
 	conn = &rdma_conn->conn;
+	conn->transport = &spdk_nvmf_transport_rdma;
 
 	/*
 	 * Save the rdma_cm context id in our fabric connection context.  This
@@ -826,6 +826,12 @@ nvmf_recv(struct spdk_nvmf_rdma_request *rdma_req, struct ibv_wc *wc)
 	 * Pending transfer from host to controller; command will continue
 	 * once transfer is complete.
 	 */
+	ret = nvmf_post_rdma_read(req);
+	if (ret) {
+		SPDK_ERRLOG("Unable to transfer data from host to controller\n");
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -940,7 +946,8 @@ nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 	}
 }
 
-int nvmf_acceptor_start(void)
+static int
+spdk_nvmf_rdma_acceptor_start(void)
 {
 	struct sockaddr_in	addr;
 	uint16_t		sin_port;
@@ -995,7 +1002,8 @@ create_id_error:
 	return -1;
 }
 
-void nvmf_acceptor_stop(void)
+static void
+spdk_nvmf_rdma_acceptor_stop(void)
 {
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "nvmf_acceptor_stop: shutdown\n");
 	rte_timer_stop_sync(&g_rdma.acceptor_timer);
@@ -1006,7 +1014,7 @@ void nvmf_acceptor_stop(void)
 Initialize with RDMA transport.  Query OFED for device list.
 
 */
-int
+static int
 spdk_nvmf_rdma_init(void)
 {
 	struct ibv_device **dev_list;
@@ -1077,14 +1085,14 @@ spdk_nvmf_rdma_init(void)
 	return num_devices_found;
 }
 
-int
+static int
 spdk_nvmf_rdma_fini(void)
 {
 	/* Nothing to do */
 	return 0;
 }
 
-int
+static int
 nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 {
 	struct ibv_wc wc;
@@ -1166,5 +1174,19 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 	}
 	return cq_count;
 }
+
+const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
+	.name = "rdma",
+	.transport_init = spdk_nvmf_rdma_init,
+	.transport_fini = spdk_nvmf_rdma_fini,
+	.transport_start = spdk_nvmf_rdma_acceptor_start,
+	.transport_stop = spdk_nvmf_rdma_acceptor_stop,
+
+	.req_complete = spdk_nvmf_rdma_request_complete,
+
+	.conn_init = spdk_nvmf_rdma_alloc_reqs,
+	.conn_fini = nvmf_rdma_conn_cleanup,
+	.conn_poll = nvmf_check_rdma_completions,
+};
 
 SPDK_LOG_REGISTER_TRACE_FLAG("rdma", SPDK_TRACE_RDMA)

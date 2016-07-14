@@ -47,10 +47,10 @@
 
 #include "spdk/nvmf_spec.h"
 #include "conn.h"
-#include "rdma.h"
 #include "request.h"
 #include "session.h"
 #include "subsystem.h"
+#include "transport.h"
 #include "spdk/queue.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
@@ -64,5 +64,5 @@ void
 spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn)
 {
 	nvmf_disconnect(conn->sess, conn);
-	nvmf_rdma_conn_cleanup(conn);
+	conn->transport->conn_fini(conn);
 }

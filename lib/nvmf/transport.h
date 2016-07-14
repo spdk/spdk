@@ -31,26 +31,66 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _NVMF_RDMA_H_
-#define _NVMF_RDMA_H_
+#ifndef SPDK_NVMF_TRANSPORT_H
+#define SPDK_NVMF_TRANSPORT_H
 
 struct spdk_nvmf_conn;
 struct spdk_nvmf_request;
 
-int spdk_nvmf_rdma_init(void);
-int spdk_nvmf_rdma_fini(void);
+struct spdk_nvmf_transport {
+	/**
+	 * Name of the transport.
+	 */
+	const char *name;
 
-int nvmf_post_rdma_read(struct spdk_nvmf_conn *conn,
-			struct spdk_nvmf_request *req);
-int spdk_nvmf_rdma_request_complete(struct spdk_nvmf_conn *conn,
-				    struct spdk_nvmf_request *req);
+	/**
+	 * Initialize the transport.
+	 */
+	int (*transport_init)(void);
 
-int spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn);
-void nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn);
+	/**
+	 * Shut down the transport.
+	 */
+	int (*transport_fini)(void);
 
-int nvmf_acceptor_start(void);
-void nvmf_acceptor_stop(void);
+	/**
+	 * Start accepting connections on the transport.
+	 */
+	int (*transport_start)(void);
 
-int nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn);
+	/**
+	 * Stop accepting connections on the transport.
+	 */
+	void (*transport_stop)(void);
 
-#endif /* _NVMF_RDMA_H_ */
+	/*
+	 * Signal request completion.
+	 */
+	int (*req_complete)(struct spdk_nvmf_request *req);
+
+	/*
+	 * Initialize resources for a new connection.
+	 */
+	int (*conn_init)(struct spdk_nvmf_conn *conn);
+
+	/*
+	 * Deinitialize a connection.
+	 */
+	void (*conn_fini)(struct spdk_nvmf_conn *conn);
+
+	/*
+	 * Poll a connection for events.
+	 */
+	int (*conn_poll)(struct spdk_nvmf_conn *conn);
+};
+
+int spdk_nvmf_transport_init(void);
+int spdk_nvmf_transport_fini(void);
+const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
+
+int spdk_nvmf_acceptor_start(void);
+void spdk_nvmf_acceptor_stop(void);
+
+extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
+
+#endif /* SPDK_NVMF_TRANSPORT_H */

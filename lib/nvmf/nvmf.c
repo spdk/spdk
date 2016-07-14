@@ -43,8 +43,8 @@
 #include "controller.h"
 #include "port.h"
 #include "host.h"
-#include "rdma.h"
 #include "subsystem.h"
+#include "transport.h"
 #include "spdk/trace.h"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
@@ -165,10 +165,10 @@ nvmf_tgt_subsystem_initialize(void)
 	}
 
 	/* initialize with the NVMf transport */
-	rc = spdk_nvmf_rdma_init();
+	rc = spdk_nvmf_transport_init();
 	if (rc <= 0) {
-		SPDK_ERRLOG("spdk_nvmf_rdma_init() failed\n");
-		return rc;
+		SPDK_ERRLOG("Transport initialization failed\n");
+		return -1;
 	}
 
 	rc = spdk_add_nvmf_discovery_subsystem();
@@ -187,7 +187,7 @@ nvmf_tgt_subsystem_fini(void)
 	spdk_nvmf_shutdown_nvme();
 	spdk_nvmf_host_destroy_all();
 	spdk_nvmf_port_destroy_all();
-	spdk_nvmf_rdma_fini();
+	spdk_nvmf_transport_fini();
 
 	pthread_mutex_destroy(&g_nvmf_tgt.mutex);
 

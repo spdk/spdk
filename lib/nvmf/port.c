@@ -35,8 +35,8 @@
 #include <rte_debug.h>
 
 #include "conn.h"
-#include "rdma.h"
 #include "port.h"
+#include "transport.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
@@ -45,7 +45,8 @@ static TAILQ_HEAD(, spdk_nvmf_port)	g_port_head = TAILQ_HEAD_INITIALIZER(g_port_
 
 /* Assumes caller allocated host and port strings on the heap */
 struct spdk_nvmf_fabric_intf *
-spdk_nvmf_fabric_intf_create(char *host, char *sin_port)
+spdk_nvmf_fabric_intf_create(const struct spdk_nvmf_transport *transport, char *host,
+			     char *sin_port)
 {
 	struct spdk_nvmf_fabric_intf *fabric_intf = NULL;
 
@@ -63,6 +64,7 @@ spdk_nvmf_fabric_intf_create(char *host, char *sin_port)
 
 	fabric_intf->host = host;
 	fabric_intf->sin_port = sin_port;
+	fabric_intf->transport = transport;
 	fabric_intf->trtype = SPDK_NVMF_TRANS_RDMA;
 	fabric_intf->adrfam = SPDK_NVMF_ADDR_FAMILY_IPV4;
 	fabric_intf->treq = SPDK_NVMF_TREQ_NOT_SPECIFIED;
