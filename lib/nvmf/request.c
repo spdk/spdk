@@ -389,13 +389,40 @@ nvmf_process_property_set(struct spdk_nvmf_request *req)
 	return true;
 }
 
+static void
+nvmf_handle_connect(spdk_event_t event)
+{
+	struct spdk_nvmf_request *req = spdk_event_get_arg1(event);
+	struct spdk_nvmf_fabric_connect_cmd *connect = &req->cmd->connect_cmd;
+	struct spdk_nvmf_fabric_connect_data *connect_data = (struct spdk_nvmf_fabric_connect_data *)
+			req->data;
+	struct spdk_nvmf_fabric_connect_rsp *response = &req->rsp->connect_rsp;
+	struct spdk_nvmf_conn *conn = req->conn;
+
+	spdk_nvmf_session_connect(conn, connect, connect_data, response);
+
+	/* Allocate RDMA reqs according to the queue depth and conn type*/
+	if (spdk_nvmf_rdma_alloc_reqs(conn)) {
+		SPDK_ERRLOG("Unable to allocate sufficient RDMA work requests\n");
+		/* TODO: Needs to shutdown poller */
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
+		      response->status_code_specific.success.cntlid);
+
+	spdk_nvmf_request_complete(req);
+	return;
+}
+
 static bool
 nvmf_process_connect(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_fabric_connect_cmd *connect;
-	struct spdk_nvmf_fabric_connect_data *connect_data;
-	struct spdk_nvmf_fabric_connect_rsp *response;
 	struct spdk_nvmf_conn *conn = req->conn;
+	int rc;
+	spdk_event_t event;
 
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
 		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
@@ -403,20 +430,19 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		return true;
 	}
 
-	connect = &req->cmd->connect_cmd;
-	response = &req->rsp->connect_rsp;
-	connect_data = (struct spdk_nvmf_fabric_connect_data *)req->data;
-
-	spdk_nvmf_session_connect(conn, connect, connect_data, response);
-
-	/* Allocate RDMA reqs according to the queue depth and conn type*/
-	if (spdk_nvmf_rdma_alloc_reqs(conn)) {
-		SPDK_ERRLOG("Unable to allocate sufficient RDMA work requests\n");
+	/* Start the connection poller */
+	rc = spdk_nvmf_startup_conn(conn);
+	if (rc) {
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		SPDK_ERRLOG("Unable to start connection poller\n");
 		return true;
 	}
 
-	return true;
+	/* Pass an event to the lcore that owns this connection */
+	event = spdk_event_allocate(conn->poller.lcore, nvmf_handle_connect, req, NULL, NULL);
+	spdk_event_call(event);
+
+	return false;
 }
 
 static bool
