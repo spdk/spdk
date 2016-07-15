@@ -1071,7 +1071,6 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 	struct spdk_nvmf_rdma_request *rdma_req;
 	struct spdk_nvmf_request *req;
 	int rc;
-	int cq_count = 0;
 	int i;
 
 	for (i = 0; i < rdma_conn->queue_depth; i++) {
@@ -1086,8 +1085,6 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		}
 
 		/* OK, process the single successful cq event */
-		cq_count += rc;
-
 		if (wc.status) {
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ completion error status %d (%s), exiting handler\n",
 				      wc.status, ibv_wc_status_str(wc.status));
@@ -1139,7 +1136,8 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			return -1;
 		}
 	}
-	return cq_count;
+
+	return 0;
 }
 
 static void
