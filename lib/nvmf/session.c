@@ -36,6 +36,7 @@
 
 #include "session.h"
 #include "nvmf_internal.h"
+#include "rdma.h"
 #include "subsystem.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
@@ -457,17 +458,16 @@ nvmf_property_set(struct nvmf_session *session,
 	}
 }
 
-void
-nvmf_check_admin_completions(struct nvmf_session *session)
+int
+spdk_nvmf_session_poll(struct nvmf_session *session)
 {
-	/* Discovery subsystem won't have a real NVMe controller, so check ctrlr first */
-	if (session->subsys->ctrlr) {
-		spdk_nvme_ctrlr_process_admin_completions(session->subsys->ctrlr);
-	}
-}
+	struct spdk_nvmf_conn	*conn, *tmp;
 
-void
-nvmf_check_io_completions(struct nvmf_session *session)
-{
-	spdk_nvme_qpair_process_completions(session->subsys->io_qpair, 0);
+	TAILQ_FOREACH_SAFE(conn, &session->connections, link, tmp) {
+		if (nvmf_check_rdma_completions(conn) < 0) {
+			nvmf_disconnect(session, conn);
+		}
+	}
+
+	return 0;
 }

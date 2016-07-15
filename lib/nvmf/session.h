@@ -87,11 +87,7 @@ nvmf_property_set(struct nvmf_session *session,
 		  struct spdk_nvmf_fabric_prop_set_rsp *response,
 		  bool *shutdown);
 
-void
-nvmf_check_io_completions(struct nvmf_session *session);
-
-void
-nvmf_check_admin_completions(struct nvmf_session *session);
+int spdk_nvmf_session_poll(struct nvmf_session *session);
 
 void spdk_nvmf_session_destruct(struct nvmf_session *session);
 

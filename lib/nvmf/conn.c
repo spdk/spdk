@@ -60,55 +60,9 @@
 
 */
 
-static void spdk_nvmf_conn_do_work(void *arg);
-
-int
-spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
-{
-	conn->state = CONN_STATE_RUNNING;
-	conn->poller.fn = spdk_nvmf_conn_do_work;
-	conn->poller.arg = conn;
-
-	spdk_poller_register(&conn->poller, conn->sess->subsys->lcore, NULL);
-
-	return 0;
-}
-
 void
 spdk_nvmf_conn_destruct(struct spdk_nvmf_conn *conn)
 {
-	spdk_poller_unregister(&conn->poller, NULL);
-
 	nvmf_disconnect(conn->sess, conn);
 	nvmf_rdma_conn_cleanup(conn);
-}
-
-static void
-spdk_nvmf_conn_do_work(void *arg)
-{
-	struct spdk_nvmf_conn *conn = arg;
-	struct nvmf_session *session = conn->sess;
-
-	/* process pending NVMe device completions */
-	if (session) {
-		if (conn->type == CONN_TYPE_AQ) {
-			nvmf_check_admin_completions(session);
-		} else {
-			nvmf_check_io_completions(session);
-		}
-	}
-
-	/* process pending RDMA completions */
-	if (nvmf_check_rdma_completions(conn) < 0) {
-		SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
-		conn->state = CONN_STATE_EXITING;
-	}
-
-	if (conn->state == CONN_STATE_EXITING ||
-	    conn->state == CONN_STATE_FABRIC_DISCONNECT) {
-		spdk_nvmf_conn_destruct(conn);
-		if (session && (session->num_connections == 0)) {
-			spdk_nvmf_session_destruct(session);
-		}
-	}
 }

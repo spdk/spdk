@@ -51,6 +51,8 @@
 #include "request.h"
 #include "port.h"
 #include "host.h"
+#include "session.h"
+#include "subsystem.h"
 #include "spdk/assert.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
@@ -719,36 +721,52 @@ err0:
 	return -1;
 }
 
-static int
-nvmf_rdma_disconnect(struct rdma_cm_event *event)
+static void
+spdk_nvmf_handle_disconnect(spdk_event_t event)
 {
-	struct rdma_cm_id		*conn_id;
-	struct spdk_nvmf_conn	*conn;
+	struct nvmf_session		*session = spdk_event_get_arg1(event);
+	struct spdk_nvmf_conn		*conn = spdk_event_get_arg2(event);
 
-	/* Check to make sure we know about this rdma device */
-	if (event->id == NULL) {
+	nvmf_disconnect(session, conn);
+}
+
+static int
+nvmf_rdma_disconnect(struct rdma_cm_event *evt)
+{
+	struct spdk_nvmf_conn		*conn;
+	struct nvmf_session		*session;
+	struct spdk_nvmf_rdma_conn 	*rdma_conn;
+	spdk_event_t			event;
+
+	if (evt->id == NULL) {
 		SPDK_ERRLOG("disconnect request: missing cm_id\n");
-		goto err0;
+		return -1;
 	}
-	conn_id = event->id;
 
-	conn = conn_id->context;
+	conn = evt->id->context;
 	if (conn == NULL) {
 		SPDK_ERRLOG("disconnect request: no active connection\n");
-		goto err0;
+		return -1;
 	}
 
-	/*
-	 * Modify connection state to trigger async termination
-	 * next time the connection poller executes
-	 */
-	conn->state = CONN_STATE_FABRIC_DISCONNECT;
+	rdma_conn = get_rdma_conn(conn);
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma connection %p state set to CONN_STATE_FABRIC_DISCONNECT\n",
-		      conn);
+	session = conn->sess;
+	if (session == NULL) {
+		/* No session has been established yet. That means the conn
+		 * must be in the pending connections list. Remove it. */
+		TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
+		nvmf_rdma_conn_cleanup(conn);
+		return 0;
+	}
+
+	/* Pass an event to the core that owns this connection */
+	event = spdk_event_allocate(session->subsys->poller.lcore,
+				    spdk_nvmf_handle_disconnect,
+				    session, conn, NULL);
+	spdk_event_call(event);
+
 	return 0;
-err0:
-	return -1;
 }
 
 #ifdef DEBUG

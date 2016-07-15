@@ -40,14 +40,6 @@
 #include "nvmf_internal.h"
 #include "spdk/queue.h"
 
-/* RDMA transport connection states */
-enum conn_state {
-	CONN_STATE_INVALID = 0,
-	CONN_STATE_RUNNING = 1,
-	CONN_STATE_FABRIC_DISCONNECT = 2,
-	CONN_STATE_EXITING = 4,
-};
-
 enum conn_type {
 	CONN_TYPE_AQ = 0,
 	CONN_TYPE_IOQ = 1,
@@ -57,12 +49,10 @@ struct spdk_nvmf_conn {
 	struct nvmf_session		*sess;
 
 	enum conn_type			type;
-	volatile enum conn_state	state;
 
 	uint16_t			sq_head;
 
 	TAILQ_ENTRY(spdk_nvmf_conn) 	link;
-	struct spdk_poller		poller;
 };
 
 int spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn);

@@ -66,6 +66,27 @@ nvmf_find_subsystem(const char *subnqn)
 	return NULL;
 }
 
+static void
+spdk_nvmf_subsystem_poller(void *arg)
+{
+	struct spdk_nvmf_subsystem *subsystem = arg;
+	struct nvmf_session *session = subsystem->session;
+
+	if (!session) {
+		/* No active connections, so just return */
+		return;
+	}
+
+	/* For NVMe subsystems, check the backing physical device for completions. */
+	if (subsystem->subtype == SPDK_NVMF_SUB_NVME) {
+		spdk_nvme_ctrlr_process_admin_completions(subsystem->ctrlr);
+		spdk_nvme_qpair_process_completions(subsystem->io_qpair, 0);
+	}
+
+	/* For each connection in the session, check for RDMA completions */
+	spdk_nvmf_session_poll(session);
+}
+
 struct spdk_nvmf_subsystem *
 nvmf_create_subsystem(int num, const char *name,
 		      enum spdk_nvmf_subsystem_types sub_type,
@@ -83,7 +104,10 @@ nvmf_create_subsystem(int num, const char *name,
 	subsystem->num = num;
 	subsystem->subtype = sub_type;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
-	subsystem->lcore = lcore;
+
+	subsystem->poller.fn = spdk_nvmf_subsystem_poller;
+	subsystem->poller.arg = subsystem;
+	spdk_poller_register(&subsystem->poller, lcore, NULL);
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 

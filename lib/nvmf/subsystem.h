@@ -34,6 +34,7 @@
 #ifndef SPDK_NVMF_SUBSYSTEM_H
 #define SPDK_NVMF_SUBSYSTEM_H
 
+#include "spdk/event.h"
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
 
@@ -59,7 +60,8 @@ struct spdk_nvmf_subsystem {
 	struct nvmf_session *session;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_qpair *io_qpair;
-	uint32_t		lcore;
+
+	struct spdk_poller	poller;
 
 	int map_count;
 	struct spdk_nvmf_access_map map[MAX_PER_SUBSYSTEM_ACCESS_MAP];
