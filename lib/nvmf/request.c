@@ -649,7 +649,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		RTE_VERIFY(session != NULL);
 		subsystem = session->subsys;
 		RTE_VERIFY(subsystem != NULL);
-		if (subsystem->subtype == SPDK_NVMF_SUB_DISCOVERY) {
+		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			done = nvmf_process_discovery_cmd(req);
 		} else {
 			done = nvmf_process_admin_cmd(req);

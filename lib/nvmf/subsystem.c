@@ -85,7 +85,7 @@ spdk_nvmf_subsystem_poller(void *arg)
 	}
 
 	/* For NVMe subsystems, check the backing physical device for completions. */
-	if (subsystem->subtype == SPDK_NVMF_SUB_NVME) {
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_nvme_ctrlr_process_admin_completions(subsystem->ctrlr);
 		spdk_nvme_qpair_process_completions(subsystem->io_qpair, 0);
 	}
@@ -96,7 +96,7 @@ spdk_nvmf_subsystem_poller(void *arg)
 
 struct spdk_nvmf_subsystem *
 nvmf_create_subsystem(int num, const char *name,
-		      enum spdk_nvmf_subsystem_types sub_type,
+		      enum spdk_nvmf_subtype subtype,
 		      uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
@@ -109,7 +109,7 @@ nvmf_create_subsystem(int num, const char *name,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_subsystem: allocated subsystem %p\n", subsystem);
 
 	subsystem->num = num;
-	subsystem->subtype = sub_type;
+	subsystem->subtype = subtype;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
 	TAILQ_INIT(&subsystem->listen_addrs);
 	TAILQ_INIT(&subsystem->hosts);
@@ -220,7 +220,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 		return -1;
 	}
 
-	subsystem = nvmf_create_subsystem(0, name, SPDK_NVMF_SUB_DISCOVERY, rte_get_master_lcore());
+	subsystem = nvmf_create_subsystem(0, name, SPDK_NVMF_SUBTYPE_DISCOVERY, rte_get_master_lcore());
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		free(name);
@@ -241,7 +241,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
-		if (subsystem->subtype == SPDK_NVMF_SUB_DISCOVERY) {
+		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			continue;
 		}
 

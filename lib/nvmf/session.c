@@ -248,7 +248,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		session->subsys = subsystem;
 		session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
 
-		if (subsystem->subtype == SPDK_NVMF_SUB_NVME) {
+		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 			nvmf_init_nvme_session_properties(session);
 		} else {
 			nvmf_init_discovery_session_properties(session);

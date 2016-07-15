@@ -336,7 +336,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	}
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 
-	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUB_NVME, lcore);
+	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUBTYPE_NVME, lcore);
 	if (subsystem == NULL) {
 		return -1;
 	}

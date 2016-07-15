@@ -62,7 +62,7 @@ struct spdk_nvmf_host {
 struct spdk_nvmf_subsystem {
 	uint16_t num;
 	char subnqn[MAX_NQN_SIZE];
-	enum spdk_nvmf_subsystem_types subtype;
+	enum spdk_nvmf_subtype subtype;
 	struct nvmf_session *session;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_qpair *io_qpair;
@@ -80,7 +80,7 @@ struct spdk_nvmf_subsystem {
 
 struct spdk_nvmf_subsystem *
 nvmf_create_subsystem(int num, const char *name,
-		      enum spdk_nvmf_subsystem_types sub_type,
+		      enum spdk_nvmf_subtype subtype,
 		      uint32_t lcore);
 
 int
