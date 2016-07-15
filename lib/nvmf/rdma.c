@@ -308,7 +308,6 @@ nvmf_drain_cq(struct spdk_nvmf_conn *conn)
 
 	/* drain the cq before destruction */
 	while (ibv_poll_cq(rdma_conn->cq, 1, &wc) > 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "drain cq event\n");
 		//ibv_ack_cq_events(conn->cq, 1);
 	}
 
@@ -320,7 +319,7 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	int rc;
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Enter\n");
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Enter\n");
 
 	rdma_destroy_qp(rdma_conn->cm_id);
 
@@ -441,7 +440,7 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	   RX recv slot.
 	*/
 	conn->sq_head < (rdma_conn->queue_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "sq_head %x, sq_depth %x\n", conn->sq_head, rdma_conn->queue_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "sq_head %x, sq_depth %x\n", conn->sq_head, rdma_conn->queue_depth);
 
 	wr.wr_id = (uintptr_t)rdma_req;
 	wr.next = NULL;
@@ -547,7 +546,7 @@ spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn)
 			goto fail;
 		}
 
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_req %p: req %p, rsp %p\n",
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rdma_req %p: req %p, rsp %p\n",
 			      rdma_req, &rdma_req->req,
 			      rdma_req->req.rsp);
 
@@ -596,7 +595,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_ERRLOG("connect request: missing cm_id ibv_context\n");
 		goto err0;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Connect Recv on fabric intf name %s, dev_name %s\n",
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      conn_id->verbs->device->name, conn_id->verbs->device->dev_name);
 
 	/* Init the NVMf rdma transport connection */
@@ -643,7 +642,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_ERRLOG("connect request: rdma conn init failure!\n");
 		goto err1;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMf fabric connection initialized\n");
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "NVMf fabric connection initialized\n");
 
 	STAILQ_INIT(&rdma_conn->rdma_reqs);
 
@@ -678,7 +677,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_ERRLOG("Error on rdma_accept\n");
 		goto err1;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Sent back the accept\n");
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Sent back the accept\n");
 
 	return 0;
 
@@ -977,7 +976,7 @@ create_id_error:
 static void
 spdk_nvmf_rdma_acceptor_stop(void)
 {
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "nvmf_acceptor_stop: shutdown\n");
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "nvmf_acceptor_stop: shutdown\n");
 	rte_timer_stop_sync(&g_rdma.acceptor_timer);
 }
 
@@ -1003,15 +1002,15 @@ spdk_nvmf_rdma_init(void)
 		SPDK_ERRLOG(" No RDMA verbs devices found\n");
 		return -1;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    %d RDMA verbs device(s) discovered\n", num_of_rdma_devices);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "%d RDMA verbs device(s) discovered\n", num_of_rdma_devices);
 
 	/* Look through the list of devices for one we support */
 	for (i = 0; i < num_of_rdma_devices; i++) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, " RDMA Device %d:\n", i);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "   Node type: %d\n", (int)dev_list[i]->node_type);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "   Transport type: %d\n", (int)dev_list[i]->transport_type);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "   Name: %s\n", dev_list[i]->name);
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "   Device Name: %s\n", dev_list[i]->dev_name);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, " RDMA Device %d:\n", i);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Node type: %d\n", (int)dev_list[i]->node_type);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Transport type: %d\n", (int)dev_list[i]->transport_type);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Name: %s\n", dev_list[i]->name);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Device Name: %s\n", dev_list[i]->dev_name);
 
 		ibdev_ctx = ibv_open_device(dev_list[i]);
 		if (!ibdev_ctx) {
