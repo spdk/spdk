@@ -59,6 +59,7 @@ struct spdk_nvmf_subsystem {
 	struct nvmf_session *session;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_qpair *io_qpair;
+	uint32_t		lcore;
 
 	int map_count;
 	struct spdk_nvmf_access_map map[MAX_PER_SUBSYSTEM_ACCESS_MAP];
@@ -67,7 +68,9 @@ struct spdk_nvmf_subsystem {
 };
 
 struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, const char *name, enum spdk_nvmf_subsystem_types sub_type);
+nvmf_create_subsystem(int num, const char *name,
+		      enum spdk_nvmf_subsystem_types sub_type,
+		      uint32_t lcore);
 
 int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);

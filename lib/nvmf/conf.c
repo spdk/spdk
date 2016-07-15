@@ -35,6 +35,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <rte_config.h>
+#include <rte_lcore.h>
+
 #include "conf.h"
 #include "controller.h"
 #include "host.h"
@@ -427,7 +430,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUB_NVME);
+	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUB_NVME, rte_get_master_lcore());
 	if (subsystem == NULL) {
 		return -1;
 	}

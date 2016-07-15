@@ -67,7 +67,9 @@ nvmf_find_subsystem(const char *subnqn)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, const char *name, enum spdk_nvmf_subsystem_types sub_type)
+nvmf_create_subsystem(int num, const char *name,
+		      enum spdk_nvmf_subsystem_types sub_type,
+		      uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 
@@ -81,6 +83,7 @@ nvmf_create_subsystem(int num, const char *name, enum spdk_nvmf_subsystem_types 
 	subsystem->num = num;
 	subsystem->subtype = sub_type;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
+	subsystem->lcore = lcore;
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 
@@ -175,7 +178,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 		return -1;
 	}
 
-	subsystem = nvmf_create_subsystem(0, name, SPDK_NVMF_SUB_DISCOVERY);
+	subsystem = nvmf_create_subsystem(0, name, SPDK_NVMF_SUB_DISCOVERY, rte_get_master_lcore());
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		free(name);

@@ -398,6 +398,7 @@ nvmf_handle_connect(spdk_event_t event)
 			req->data;
 	struct spdk_nvmf_fabric_connect_rsp *response = &req->rsp->connect_rsp;
 	struct spdk_nvmf_conn *conn = req->conn;
+	int rc;
 
 	spdk_nvmf_session_connect(conn, connect, connect_data, response);
 
@@ -405,6 +406,15 @@ nvmf_handle_connect(spdk_event_t event)
 	if (spdk_nvmf_rdma_alloc_reqs(conn)) {
 		SPDK_ERRLOG("Unable to allocate sufficient RDMA work requests\n");
 		/* TODO: Needs to shutdown poller */
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	/* Start the connection poller */
+	rc = spdk_nvmf_startup_conn(conn);
+	if (rc) {
+		SPDK_ERRLOG("Unable to start connection poller\n");
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		spdk_nvmf_request_complete(req);
 		return;
@@ -421,20 +431,11 @@ static bool
 nvmf_process_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_conn *conn = req->conn;
-	int rc;
 	spdk_event_t event;
 
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
 		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return true;
-	}
-
-	/* Start the connection poller */
-	rc = spdk_nvmf_startup_conn(conn);
-	if (rc) {
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		SPDK_ERRLOG("Unable to start connection poller\n");
 		return true;
 	}
 

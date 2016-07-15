@@ -50,6 +50,7 @@
 #include "rdma.h"
 #include "request.h"
 #include "session.h"
+#include "subsystem.h"
 #include "spdk/queue.h"
 #include "spdk/log.h"
 #include "spdk/trace.h"
@@ -59,41 +60,16 @@
 
 */
 
-static int nvmf_allocate_reactor(uint64_t cpumask);
 static void spdk_nvmf_conn_do_work(void *arg);
 
-/**
-
-\brief Create an NVMf fabric connection from the given parameters and schedule it
-       on a reactor thread.
-
-\code
-
-# identify reactor where the new connections work item will be scheduled
-reactor = nvmf_allocate_reactor()
-schedule fabric connection work item on reactor
-
-\endcode
-
-*/
 int
 spdk_nvmf_startup_conn(struct spdk_nvmf_conn *conn)
 {
-	int lcore;
-	uint64_t nvmf_session_core = spdk_app_get_core_mask();
-
-	lcore = nvmf_allocate_reactor(nvmf_session_core);
-	if (lcore < 0) {
-		SPDK_ERRLOG("Unable to find core to launch connection.\n");
-		return -1;
-	}
-
 	conn->state = CONN_STATE_RUNNING;
-	SPDK_NOTICELOG("Launching nvmf connection on core: %d\n", lcore);
 	conn->poller.fn = spdk_nvmf_conn_do_work;
 	conn->poller.arg = conn;
 
-	spdk_poller_register(&conn->poller, lcore, NULL);
+	spdk_poller_register(&conn->poller, conn->sess->subsys->lcore, NULL);
 
 	return 0;
 }
@@ -135,10 +111,4 @@ spdk_nvmf_conn_do_work(void *arg)
 			spdk_nvmf_session_destruct(session);
 		}
 	}
-}
-
-static int
-nvmf_allocate_reactor(uint64_t cpumask)
-{
-	return rte_get_master_lcore();
 }
