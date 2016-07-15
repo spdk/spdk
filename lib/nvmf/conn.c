@@ -111,13 +111,14 @@ static void
 spdk_nvmf_conn_do_work(void *arg)
 {
 	struct spdk_nvmf_conn *conn = arg;
+	struct nvmf_session *session = conn->sess;
 
 	/* process pending NVMe device completions */
-	if (conn->sess) {
+	if (session) {
 		if (conn->type == CONN_TYPE_AQ) {
-			nvmf_check_admin_completions(conn->sess);
+			nvmf_check_admin_completions(session);
 		} else {
-			nvmf_check_io_completions(conn->sess);
+			nvmf_check_io_completions(session);
 		}
 	}
 
@@ -130,6 +131,9 @@ spdk_nvmf_conn_do_work(void *arg)
 	if (conn->state == CONN_STATE_EXITING ||
 	    conn->state == CONN_STATE_FABRIC_DISCONNECT) {
 		spdk_nvmf_conn_destruct(conn);
+		if (session && (session->num_connections == 0)) {
+			spdk_nvmf_session_destruct(session);
+		}
 	}
 }
 
