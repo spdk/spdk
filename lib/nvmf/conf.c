@@ -425,16 +425,37 @@ spdk_nvmf_validate_nqn(const char *nqn)
 }
 
 static int
+spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
+{
+	uint32_t end;
+
+	if (lcore == 0) {
+		end = 0;
+	} else {
+		end = lcore - 1;
+	}
+
+	do {
+		if (((mask >> lcore) & 1U) == 1U) {
+			break;
+		}
+		lcore = (lcore + 1) % 64;
+	} while (lcore != end);
+
+	return lcore;
+}
+
+static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *val, *nqn;
 	struct spdk_nvmf_subsystem *subsystem;
-
 	const char *port_name, *host_name;
 	int port_id, host_id;
-
 	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
 	int i, ret;
+	uint64_t mask;
+	uint32_t lcore;
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	if (nqn == NULL) {
@@ -446,7 +467,18 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUB_NVME, rte_get_master_lcore());
+
+
+	/* Determine which core to assign to the subsystem using round robin */
+	mask = spdk_app_get_core_mask();
+	lcore = 0;
+	for (i = 0; i < sp->num; i++) {
+		lcore = spdk_nvmf_allocate_lcore(mask, lcore);
+		lcore++;
+	}
+	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
+
+	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUB_NVME, lcore);
 	if (subsystem == NULL) {
 		return -1;
 	}
