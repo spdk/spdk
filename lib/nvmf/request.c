@@ -370,14 +370,12 @@ nvmf_process_property_get(struct spdk_nvmf_request *req)
 static bool
 nvmf_process_property_set(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_fabric_prop_set_rsp *response;
 	struct spdk_nvmf_fabric_prop_set_cmd *cmd;
 	bool	shutdown = false;
 
 	cmd = &req->cmd->prop_set_cmd;
-	response = &req->rsp->prop_set_rsp;
 
-	nvmf_property_set(req->conn->sess, cmd, response, &shutdown);
+	nvmf_property_set(req->conn->sess, cmd, &req->rsp->nvme_cpl, &shutdown);
 
 	/* TODO: This is not right. It should shut down the whole session.
 	if (shutdown == true) {

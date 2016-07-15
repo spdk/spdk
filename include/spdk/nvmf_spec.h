@@ -192,15 +192,6 @@ struct spdk_nvmf_fabric_auth_recv_cmd {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_auth_recv_cmd) == 64, "Incorrect size");
 
-struct spdk_nvmf_fabric_auth_recv_rsp {
-	uint8_t		reserved0[8];
-	uint16_t	sqhd;
-	uint8_t		reserved1[2];
-	uint16_t	cid;
-	struct spdk_nvme_status status;
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_auth_recv_rsp) == 16, "Incorrect size");
-
 struct spdk_nvmf_fabric_auth_send_cmd {
 	uint8_t		opcode;
 	uint8_t		reserved1;
@@ -217,15 +208,6 @@ struct spdk_nvmf_fabric_auth_send_cmd {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_auth_send_cmd) == 64, "Incorrect size");
 
-struct spdk_nvmf_fabric_auth_send_rsp {
-	uint8_t		reserved0[8];
-	uint16_t	sqhd;
-	uint8_t		reserved1[2];
-	uint16_t	cid;
-	struct spdk_nvme_status status;
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_auth_send_rsp) == 16, "Incorrect size");
-
 struct spdk_nvmf_fabric_connect_data {
 	uint8_t		hostid[16];
 	uint16_t	cntlid;
@@ -235,12 +217,6 @@ struct spdk_nvmf_fabric_connect_data {
 	uint8_t		reserved6[256];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_connect_data) == 1024, "Incorrect size");
-
-#define SPDK_NVMF_CONNECT_ATTR_PRIORITY_URGENT	0x00
-#define SPDK_NVMF_CONNECT_ATTR_PRIORITY_HIGH	0x01
-#define SPDK_NVMF_CONNECT_ATTR_PRIORITY_MEDIUM	0x02
-#define SPDK_NVMF_CONNECT_ATTR_PRIORITY_LOW	0x03
-#define SPDK_NVMF_CONNECT_ATTR_RESERVED		0xFC
 
 struct spdk_nvmf_fabric_connect_cmd {
 	uint8_t		opcode;
@@ -343,15 +319,6 @@ struct spdk_nvmf_fabric_prop_set_cmd {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_prop_set_cmd) == 64, "Incorrect size");
 
-struct spdk_nvmf_fabric_prop_set_rsp {
-	uint8_t		reserved0[8];
-	uint16_t	sqhd;
-	uint16_t	reserved1;
-	uint16_t	cid;
-	struct spdk_nvme_status status;
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_prop_set_rsp) == 16, "Incorrect size");
-
 struct spdk_nvmf_extended_identify_ctrlr_data {
 	uint32_t	ioccsz;
 	uint32_t	iorcsz;
@@ -364,24 +331,6 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_extended_identify_ctrlr_data) == 256,
 
 #define SPDK_NVMF_NQN_MAX_LEN 223
 #define SPDK_NVMF_DISCOVERY_NQN "nqn.2014-08.org.nvmexpress.discovery"
-
-struct spdk_nvmf_discovery_identify_data {
-	uint8_t		reserved0[64];
-	uint64_t	fr;
-	uint8_t		reserved1[5];
-	uint8_t		mdts;
-	uint16_t	cntlid;
-	uint32_t	ver;
-	uint8_t		reserved2[177];
-	uint8_t		lpa;
-	uint8_t		elpe;
-	uint8_t		reserved3[505];
-	uint8_t		subnqn[256];
-	uint8_t		discovery[1024];
-	uint8_t		reserved4[1024];
-	uint8_t		vs[1024];
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_identify_data) == 4096, "Incorrect size");
 
 /** RDMA transport-specific address subtype */
 struct spdk_nvmf_rdma_transport_specific_address_subtype {
