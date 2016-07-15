@@ -224,9 +224,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 						snprintf(entry->trsvcid, 32, "%s", fabric_intf->sin_port);
 						snprintf(entry->traddr, 256, "%s", fabric_intf->host);
 						snprintf(entry->subnqn, 256, "%s", subsystem->subnqn);
-						entry->tsas.rdma.rdma_qptype = port->rdma.rdma_qptype;
-						entry->tsas.rdma.rdma_prtype = port->rdma.rdma_prtype;
-						entry->tsas.rdma.rdma_cms = port->rdma.rdma_cms;
+						entry->tsas = port->tsas;
 					}
 					numrec++;
 				}

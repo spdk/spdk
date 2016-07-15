@@ -364,6 +364,12 @@ struct spdk_nvmf_rdma_transport_specific_address {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_rdma_transport_specific_address) == 256,
 		   "Incorrect size");
 
+union spdk_nvmf_transport_specific_address {
+	uint8_t raw[256];
+	struct spdk_nvmf_rdma_transport_specific_address rdma;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvmf_transport_specific_address) == 256, "Incorrect size");
+
 struct spdk_nvmf_discovery_log_page_entry {
 	uint8_t		trtype; /* transport type */
 	uint8_t		adrfam; /* address family */
@@ -376,9 +382,7 @@ struct spdk_nvmf_discovery_log_page_entry {
 	uint8_t		reserved1[192];
 	uint8_t		subnqn[256];
 	uint8_t		traddr[256];
-	union	{
-		struct spdk_nvmf_rdma_transport_specific_address rdma;
-	} tsas;
+	union spdk_nvmf_transport_specific_address tsas;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_discovery_log_page_entry) == 1024, "Incorrect size");
 

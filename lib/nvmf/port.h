@@ -77,7 +77,7 @@ struct spdk_nvmf_port {
 	int tag;
 	enum group_state state;
 	enum fabric_type type;
-	struct spdk_nvmf_rdma_transport_specific_address rdma;
+	union spdk_nvmf_transport_specific_address	tsas;
 	TAILQ_HEAD(, spdk_nvmf_fabric_intf)	head;
 	TAILQ_ENTRY(spdk_nvmf_port)		tailq;
 };
