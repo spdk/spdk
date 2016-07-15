@@ -224,7 +224,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 						snprintf(entry->trsvcid, 32, "%s", fabric_intf->sin_port);
 						snprintf(entry->traddr, 256, "%s", fabric_intf->host);
 						snprintf(entry->subnqn, 256, "%s", subsystem->subnqn);
-						entry->tsas = port->tsas;
+						entry->tsas = fabric_intf->tsas;
 					}
 					numrec++;
 				}
