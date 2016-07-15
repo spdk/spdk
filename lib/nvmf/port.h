@@ -50,12 +50,6 @@
 * ports for the group of aggregated links constitute a single NVM subsystem port.
 */
 
-enum fabric_type {
-	FABRIC_RDMA = 0x1,
-	FABRIC_PCI = 0x2,
-	FABRIC_ETHERNET = 0x3,
-};
-
 enum group_state {
 	GROUP_INIT = 0x0,
 	GROUP_READY = 0x1,
@@ -76,7 +70,6 @@ struct spdk_nvmf_fabric_intf {
 struct spdk_nvmf_port {
 	int tag;
 	enum group_state state;
-	enum fabric_type type;
 	union spdk_nvmf_transport_specific_address	tsas;
 	TAILQ_HEAD(, spdk_nvmf_fabric_intf)	head;
 	TAILQ_ENTRY(spdk_nvmf_port)		tailq;

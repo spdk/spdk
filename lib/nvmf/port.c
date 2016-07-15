@@ -126,7 +126,6 @@ spdk_nvmf_port_create(int tag)
 
 	port->state = GROUP_INIT;
 	port->tag = tag;
-	port->type = FABRIC_RDMA;
 	port->tsas.rdma.rdma_qptype = SPDK_NVMF_QP_TYPE_RELIABLE_CONNECTED;
 	/* No provider specified */
 	port->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_NO_PROVIDER;
