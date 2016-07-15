@@ -40,12 +40,18 @@
 
 struct spdk_nvmf_conn;
 
-#define MAX_PER_SUBSYSTEM_ACCESS_MAP 2
 #define MAX_NQN_SIZE 255
 
-struct spdk_nvmf_access_map {
-	struct spdk_nvmf_port	*port;
-	struct spdk_nvmf_host	*host;
+struct spdk_nvmf_listen_addr {
+	char					*traddr;
+	char					*trsvc; /* TODO: Change to trsvcid */
+	const struct spdk_nvmf_transport	*transport;
+	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
+};
+
+struct spdk_nvmf_host {
+	char				*nqn;
+	TAILQ_ENTRY(spdk_nvmf_host)	link;
 };
 
 /*
@@ -63,8 +69,11 @@ struct spdk_nvmf_subsystem {
 
 	struct spdk_poller	poller;
 
-	int map_count;
-	struct spdk_nvmf_access_map map[MAX_PER_SUBSYSTEM_ACCESS_MAP];
+	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
+	uint32_t				num_listen_addrs;
+
+	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
+	uint32_t				num_hosts;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
@@ -78,15 +87,20 @@ int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn);
+nvmf_find_subsystem(const char *subnqn, const char *hostnqn);
+
+int
+spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
+				 const struct spdk_nvmf_transport *transport,
+				 char *traddr, char *trsvc);
+
+int
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
+			     char *host_nqn);
 
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			 struct spdk_nvme_ctrlr *ctrlr);
-
-int
-spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem *subsystem,
-			    int port_tag, int host_tag);
 
 int
 spdk_shutdown_nvmf_subsystems(void);

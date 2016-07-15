@@ -34,8 +34,6 @@
 #include <ctype.h>
 
 #include "controller.h"
-#include "port.h"
-#include "host.h"
 #include "nvmf_internal.h"
 #include "session.h"
 #include "subsystem.h"
@@ -48,22 +46,30 @@
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn)
+nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
 {
-	struct spdk_nvmf_subsystem	*subs;
+	struct spdk_nvmf_subsystem	*subsystem;
+	struct spdk_nvmf_host		*host;
 
-	if (subnqn == NULL)
+	if (!subnqn || !hostnqn) {
 		return NULL;
+	}
 
-	TAILQ_FOREACH(subs, &g_subsystems, entries) {
-		if (strcasecmp(subnqn, subs->subnqn) == 0) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "found subsystem group with name: %s\n",
-				      subnqn);
-			return subs;
+	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+		if (strcasecmp(subnqn, subsystem->subnqn) == 0) {
+			if (subsystem->num_hosts == 0) {
+				/* No hosts means any host can connect */
+				return subsystem;
+			}
+
+			TAILQ_FOREACH(host, &subsystem->hosts, link) {
+				if (strcasecmp(hostnqn, host->nqn) == 0) {
+					return subsystem;
+				}
+			}
 		}
 	}
 
-	fprintf(stderr, "can't find subsystem %s\n", subnqn);
 	return NULL;
 }
 
@@ -105,6 +111,8 @@ nvmf_create_subsystem(int num, const char *name,
 	subsystem->num = num;
 	subsystem->subtype = sub_type;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
+	TAILQ_INIT(&subsystem->listen_addrs);
+	TAILQ_INIT(&subsystem->hosts);
 
 	subsystem->poller.fn = spdk_nvmf_subsystem_poller;
 	subsystem->poller.arg = subsystem;
@@ -118,7 +126,8 @@ nvmf_create_subsystem(int num, const char *name,
 int
 nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
-	int i;
+	struct spdk_nvmf_listen_addr	*listen_addr, *listen_addr_tmp;
+	struct spdk_nvmf_host		*host, *host_tmp;
 
 	if (subsystem == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF,
@@ -126,8 +135,19 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		return 0;
 	}
 
-	for (i = 0; i < subsystem->map_count; i++) {
-		subsystem->map[i].host->ref--;
+	TAILQ_FOREACH_SAFE(listen_addr, &subsystem->listen_addrs, link, listen_addr_tmp) {
+		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
+		free(listen_addr->traddr);
+		free(listen_addr->trsvc);
+		free(listen_addr);
+		subsystem->num_listen_addrs--;
+	}
+
+	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
+		TAILQ_REMOVE(&subsystem->hosts, host, link);
+		free(host->nqn);
+		free(host);
+		subsystem->num_hosts--;
 	}
 
 	if (subsystem->session) {
@@ -137,6 +157,38 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
 
 	free(subsystem);
+	return 0;
+}
+
+int
+spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
+				 const struct spdk_nvmf_transport *transport,
+				 char *traddr, char *trsvc)
+{
+	struct spdk_nvmf_listen_addr *listen_addr;
+
+	listen_addr = calloc(1, sizeof(*listen_addr));
+	listen_addr->traddr = strdup(traddr);
+	listen_addr->trsvc = strdup(trsvc);
+	listen_addr->transport = transport;
+
+	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
+	subsystem->num_listen_addrs++;
+
+	return 0;
+}
+
+int
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_nqn)
+{
+	struct spdk_nvmf_host *host;
+
+	host = calloc(1, sizeof(*host));
+	host->nqn = strdup(host_nqn);
+
+	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
+	subsystem->num_hosts++;
+
 	return 0;
 }
 
@@ -152,41 +204,6 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -1;
 	}
-
-	return 0;
-}
-
-int
-spdk_nvmf_subsystem_add_map(struct spdk_nvmf_subsystem *subsystem,
-			    int port_tag, int host_tag)
-{
-	struct spdk_nvmf_access_map	*map;
-	struct spdk_nvmf_port		*port;
-	struct spdk_nvmf_host		*host;
-
-	port = spdk_nvmf_port_find_by_tag(port_tag);
-	if (port == NULL) {
-		SPDK_ERRLOG("%s: Port%d not found\n", subsystem->subnqn, port_tag);
-		return -1;
-	}
-	if (port->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: Port%d not active\n", subsystem->subnqn, port_tag);
-		return -1;
-	}
-	host = spdk_nvmf_host_find_by_tag(host_tag);
-	if (host == NULL) {
-		SPDK_ERRLOG("%s: Host%d not found\n", subsystem->subnqn, host_tag);
-		return -1;
-	}
-	if (host->state != GROUP_READY) {
-		SPDK_ERRLOG("%s: Host%d not active\n", subsystem->subnqn, host_tag);
-		return -1;
-	}
-	host->ref++;
-	map = &subsystem->map[subsystem->map_count];
-	map->port = port;
-	map->host = host;
-	subsystem->map_count++;
 
 	return 0;
 }
@@ -218,11 +235,9 @@ spdk_add_nvmf_discovery_subsystem(void)
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length)
 {
-	int i, numrec = 0;
+	int numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_access_map *map;
-	struct spdk_nvmf_port *port;
-	struct spdk_nvmf_fabric_intf *fabric_intf;
+	struct spdk_nvmf_listen_addr *listen_addr;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
@@ -230,29 +245,22 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 			continue;
 		}
 
-		for (i = 0; i < subsystem->map_count; i++) {
-			map = &subsystem->map[i];
-			port = map->port;
-			if (port != NULL) {
-				TAILQ_FOREACH(fabric_intf, &port->head, tailq) {
-					/* include the discovery log entry */
-					if (length > sizeof(struct spdk_nvmf_discovery_log_page)) {
-						if (sizeof(struct spdk_nvmf_discovery_log_page) + (numrec + 1) * sizeof(
-							    struct spdk_nvmf_discovery_log_page_entry) > length) {
-							break;
-						}
-						entry = &disc_log->entries[numrec];
-						entry->portid = port->tag;
-						/* Dynamic controllers */
-						entry->cntlid = 0xffff;
-						entry->subtype = subsystem->subtype;
-						snprintf(entry->subnqn, 256, "%s", subsystem->subnqn);
-
-						fabric_intf->transport->fabric_intf_discover(fabric_intf, entry);
-					}
-					numrec++;
+		TAILQ_FOREACH(listen_addr, &subsystem->listen_addrs, link) {
+			/* include the discovery log entry */
+			if (length > sizeof(struct spdk_nvmf_discovery_log_page)) {
+				if (sizeof(struct spdk_nvmf_discovery_log_page) + (numrec + 1) * sizeof(
+					    struct spdk_nvmf_discovery_log_page_entry) > length) {
+					break;
 				}
+				entry = &disc_log->entries[numrec];
+				entry->portid = subsystem->num;
+				entry->cntlid = 0xffff;
+				entry->subtype = subsystem->subtype;
+				snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
+
+				listen_addr->transport->listen_addr_discover(listen_addr, entry);
 			}
+			numrec++;
 		}
 	}
 

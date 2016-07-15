@@ -41,8 +41,6 @@
 #include "conf.h"
 #include "conn.h"
 #include "controller.h"
-#include "port.h"
-#include "host.h"
 #include "subsystem.h"
 #include "transport.h"
 #include "spdk/trace.h"
@@ -185,8 +183,6 @@ nvmf_tgt_subsystem_fini(void)
 {
 	spdk_shutdown_nvmf_subsystems();
 	spdk_nvmf_shutdown_nvme();
-	spdk_nvmf_host_destroy_all();
-	spdk_nvmf_port_destroy_all();
 	spdk_nvmf_transport_fini();
 
 	pthread_mutex_destroy(&g_nvmf_tgt.mutex);

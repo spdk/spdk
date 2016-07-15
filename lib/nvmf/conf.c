@@ -41,13 +41,14 @@
 
 #include "conf.h"
 #include "controller.h"
-#include "host.h"
 #include "nvmf_internal.h"
-#include "port.h"
 #include "subsystem.h"
 #include "transport.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
+
+#define MAX_LISTEN_ADDRESSES 255
+#define MAX_HOSTS 255
 
 #define PORTNUMSTRLEN 32
 
@@ -182,145 +183,6 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 }
 
 static int
-spdk_nvmf_parse_port(struct spdk_conf_section *sp)
-{
-	struct spdk_nvmf_port		*port;
-	struct spdk_nvmf_fabric_intf	*fabric_intf;
-	char *transport_name, *listen_addr, *host, *listen_port;
-	int i = 0, rc = 0;
-
-	/* Create the Subsystem Port */
-	port = spdk_nvmf_port_create(sp->num);
-	if (!port) {
-		SPDK_ERRLOG("Port create failed\n");
-		return -1;
-	}
-
-	/* Loop over the listen addresses and add them to the port */
-	for (i = 0; ; i++) {
-		const struct spdk_nvmf_transport *transport;
-
-		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
-		if (transport_name == NULL) {
-			break;
-		}
-
-		transport = spdk_nvmf_transport_get(transport_name);
-		if (transport == NULL) {
-			SPDK_ERRLOG("Unknown transport type '%s'\n", transport_name);
-			return -1;
-		}
-
-		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
-		if (listen_addr == NULL) {
-			SPDK_ERRLOG("Missing address for Listen in Port%d\n", sp->num);
-			break;
-		}
-		rc = spdk_nvmf_parse_addr(listen_addr, &host, &listen_port);
-		if (rc < 0) {
-			continue;
-		}
-		fabric_intf = spdk_nvmf_fabric_intf_create(transport, host, listen_port);
-		if (!fabric_intf) {
-			continue;
-		}
-
-		spdk_nvmf_port_add_fabric_intf(port, fabric_intf);
-	}
-
-	if (TAILQ_EMPTY(&port->head)) {
-		SPDK_ERRLOG("No fabric interface found\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
-spdk_nvmf_parse_ports(void)
-{
-	int rc = 0;
-	struct spdk_conf_section *sp;
-
-	sp = spdk_conf_first_section(NULL);
-	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "Port")) {
-			rc = spdk_nvmf_parse_port(sp);
-			if (rc < 0) {
-				return -1;
-			}
-		}
-		sp = spdk_conf_next_section(sp);
-	}
-	return 0;
-}
-
-static int
-spdk_nvmf_parse_host(struct spdk_conf_section *sp)
-{
-	int i;
-	const char *mask;
-	char **netmasks;
-	int num_netmasks;
-	struct spdk_nvmf_host *host;
-
-
-	for (num_netmasks = 0; ; num_netmasks++) {
-		mask = spdk_conf_section_get_nval(sp, "Netmask", num_netmasks);
-		if (mask == NULL) {
-			break;
-		}
-	}
-
-	if (num_netmasks == 0) {
-		return -1;
-	}
-
-
-	netmasks = calloc(num_netmasks, sizeof(char *));
-	if (!netmasks) {
-		return -1;
-	}
-
-	for (i = 0; i < num_netmasks; i++) {
-		mask = spdk_conf_section_get_nval(sp, "Netmask", i);
-		netmasks[i] = strdup(mask);
-		if (!netmasks[i]) {
-			free(netmasks);
-			return -1;
-		}
-	}
-
-	host = spdk_nvmf_host_create(sp->num, num_netmasks, netmasks);
-
-	if (!host) {
-		free(netmasks);
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
-spdk_nvmf_parse_hosts(void)
-{
-	int rc = 0;
-	struct spdk_conf_section *sp;
-
-	sp = spdk_conf_first_section(NULL);
-	while (sp != NULL) {
-		if (spdk_conf_section_match_prefix(sp, "Host")) {
-			rc = spdk_nvmf_parse_host(sp);
-			if (rc < 0) {
-				return -1;
-			}
-		}
-		sp = spdk_conf_next_section(sp);
-	}
-	return 0;
-}
-
-static int
 spdk_nvmf_parse_nvme(void)
 {
 	struct spdk_conf_section *sp;
@@ -450,8 +312,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *val, *nqn;
 	struct spdk_nvmf_subsystem *subsystem;
-	const char *port_name, *host_name;
-	int port_id, host_id;
 	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
 	int i, ret;
 	uint64_t mask;
@@ -467,8 +327,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-
-
 	/* Determine which core to assign to the subsystem using round robin */
 	mask = spdk_app_get_core_mask();
 	lcore = 0;
@@ -483,50 +341,44 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	val = spdk_conf_section_get_val(sp, "Mapping");
-	if (val == NULL) {
-		SPDK_ERRLOG("No Mapping entry in Subsystem %d\n", sp->num);
-		nvmf_delete_subsystem(subsystem);
-		return -1;
-	}
+	/* Parse Listen sections */
+	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
+		char *transport_name, *listen_addr;
+		char *traddr, *trsvc;
+		const struct spdk_nvmf_transport *transport;
 
-	for (i = 0; i < MAX_PER_SUBSYSTEM_ACCESS_MAP; i++) {
-		val = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
-		if (val == NULL) {
+		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
+		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
+
+		if (!transport_name || !listen_addr) {
 			break;
 		}
 
-		port_name = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
-		host_name = spdk_conf_section_get_nmval(sp, "Mapping", i, 1);
-		if (port_name == NULL || host_name == NULL) {
-			nvmf_delete_subsystem(subsystem);
-			return -1;
-		}
-		if (strncasecmp(port_name, "Port",
-				strlen("Port")) != 0
-		    || sscanf(port_name, "%*[^0-9]%d", &port_id) != 1) {
-			SPDK_ERRLOG("Invalid mapping for Subsystem %d\n", sp->num);
-			nvmf_delete_subsystem(subsystem);
-			return -1;
-		}
-		if (strncasecmp(host_name, "Host",
-				strlen("Host")) != 0
-		    || sscanf(host_name, "%*[^0-9]%d", &host_id) != 1) {
-			SPDK_ERRLOG("Invalid mapping for Subsystem %d\n", sp->num);
-			nvmf_delete_subsystem(subsystem);
-			return -1;
-		}
-		if (port_id < 1 || host_id < 1) {
-			SPDK_ERRLOG("Invalid mapping for Subsystem %d\n", sp->num);
-			nvmf_delete_subsystem(subsystem);
-			return -1;
+		transport = spdk_nvmf_transport_get(transport_name);
+		if (transport == NULL) {
+			SPDK_ERRLOG("Unknown transport type '%s'\n", transport_name);
+			continue;
 		}
 
-		ret = spdk_nvmf_subsystem_add_map(subsystem, port_id, host_id);
+		ret = spdk_nvmf_parse_addr(listen_addr, &traddr, &trsvc);
 		if (ret < 0) {
-			nvmf_delete_subsystem(subsystem);
-			return -1;
+			SPDK_ERRLOG("Unable to parse transport address '%s'\n", listen_addr);
+			continue;
 		}
+
+		spdk_nvmf_subsystem_add_listener(subsystem, transport, traddr, trsvc);
+	}
+
+	/* Parse Host sections */
+	for (i = 0; i < MAX_HOSTS; i++) {
+		char *host_nqn;
+
+		host_nqn = spdk_conf_section_get_nval(sp, "Host", i);
+		if (!host_nqn) {
+			break;
+		}
+
+		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
 	}
 
 	val = spdk_conf_section_get_val(sp, "Controller");
@@ -583,18 +435,6 @@ spdk_nvmf_parse_conf(void)
 
 	/* NVMf section */
 	rc = spdk_nvmf_parse_nvmf_tgt();
-	if (rc < 0) {
-		return rc;
-	}
-
-	/* Port sections */
-	rc = spdk_nvmf_parse_ports();
-	if (rc < 0) {
-		return rc;
-	}
-
-	/* Host sections */
-	rc = spdk_nvmf_parse_hosts();
 	if (rc < 0) {
 		return rc;
 	}

@@ -48,8 +48,6 @@
 
 #include "conn.h"
 #include "request.h"
-#include "port.h"
-#include "host.h"
 #include "session.h"
 #include "subsystem.h"
 #include "transport.h"
@@ -575,19 +573,15 @@ fail:
 static int
 nvmf_rdma_connect(struct rdma_cm_event *event)
 {
-	struct spdk_nvmf_host		*host;
-	struct spdk_nvmf_fabric_intf	*fabric_intf;
 	struct rdma_cm_id		*conn_id;
 	struct spdk_nvmf_rdma_conn	*rdma_conn = NULL;
 	struct spdk_nvmf_conn		*conn;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
-	struct sockaddr_in		*addr;
 	struct rdma_conn_param		*host_event_data = NULL;
 	struct rdma_conn_param		ctrlr_event_data;
 	struct spdk_nvmf_rdma_accept_private_data accept_data;
 	uint16_t			sts = 0;
-	char addr_str[INET_ADDRSTRLEN];
 	int 				rc, qp_depth, rw_depth;
 
 
@@ -604,30 +598,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      conn_id->verbs->device->name, conn_id->verbs->device->dev_name);
-	addr = (struct sockaddr_in *)rdma_get_local_addr(conn_id);
-	inet_ntop(AF_INET, &(addr->sin_addr), addr_str, INET_ADDRSTRLEN);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Route: local addr %s\n",
-		      addr_str);
-
-	fabric_intf = spdk_nvmf_port_find_fabric_intf_by_addr(addr_str);
-	if (fabric_intf == NULL) {
-		SPDK_ERRLOG("connect request: rdma device does not exist!\n");
-		goto err1;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Found existing RDMA Device %p\n", fabric_intf);
-
-	/* validate remote address is within a provisioned initiator group */
-	addr = (struct sockaddr_in *)rdma_get_peer_addr(conn_id);
-	inet_ntop(AF_INET, &(addr->sin_addr), addr_str, INET_ADDRSTRLEN);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Route: peer addr %s\n",
-		      addr_str);
-
-	host = spdk_nvmf_host_find_by_addr(addr_str);
-	if (host == NULL) {
-		SPDK_ERRLOG("connect request: remote host addr not provisioned!\n");
-		goto err1;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Found approved remote host %p\n", host);
 
 	/* Init the NVMf rdma transport connection */
 	rdma_conn = allocate_rdma_conn();
@@ -1178,15 +1148,15 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 }
 
 static void
-nvmf_rdma_discover(struct spdk_nvmf_fabric_intf *fabric_intf,
+nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 		   struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = SPDK_NVMF_TRANS_RDMA;
 	entry->adrfam = SPDK_NVMF_ADDR_FAMILY_IPV4;
 	entry->treq = SPDK_NVMF_TREQ_NOT_SPECIFIED;
 
-	snprintf(entry->trsvcid, sizeof(entry->trsvcid), "%s", fabric_intf->sin_port);
-	snprintf(entry->traddr, sizeof(entry->traddr), "%s", fabric_intf->host);
+	snprintf(entry->trsvcid, sizeof(entry->trsvcid), "%s", listen_addr->trsvc);
+	snprintf(entry->traddr, sizeof(entry->traddr), "%s", listen_addr->traddr);
 
 	entry->tsas.rdma.rdma_qptype = SPDK_NVMF_QP_TYPE_RELIABLE_CONNECTED;
 	entry->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_NO_PROVIDER;
@@ -1206,7 +1176,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.conn_fini = nvmf_rdma_conn_cleanup,
 	.conn_poll = nvmf_check_rdma_completions,
 
-	.fabric_intf_discover = nvmf_rdma_discover,
+	.listen_addr_discover = nvmf_rdma_discover,
 };
 
 SPDK_LOG_REGISTER_TRACE_FLAG("rdma", SPDK_TRACE_RDMA)

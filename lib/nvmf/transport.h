@@ -36,7 +36,7 @@
 
 struct spdk_nvmf_conn;
 struct spdk_nvmf_discovery_log_page_entry;
-struct spdk_nvmf_fabric_intf;
+struct spdk_nvmf_listen_addr;
 struct spdk_nvmf_request;
 
 struct spdk_nvmf_transport {
@@ -86,9 +86,9 @@ struct spdk_nvmf_transport {
 	int (*conn_poll)(struct spdk_nvmf_conn *conn);
 
 	/**
-	 * Fill out a discovery log entry for a specific fabric interface.
+	 * Fill out a discovery log entry for a specific listen address.
 	 */
-	void (*fabric_intf_discover)(struct spdk_nvmf_fabric_intf *fabric_intf,
+	void (*listen_addr_discover)(struct spdk_nvmf_listen_addr *listen_addr,
 				     struct spdk_nvmf_discovery_log_page_entry *entry);
 };
 

@@ -43,30 +43,6 @@
   # initiator having the opportunity to specify a smaller value.
   #MaxQueueDepth 128
 
-# Users must change the Port section(s) to match the IP addresses
-#  for their environment.
-# Port sections define which fabric network ports the NVMf server
-#  will use to listen and accept incoming connections.  A Port is
-#  also used to control which ports will be used for each individual
-#  NVM subsystem controller session, providing a means to distribute NVMf
-#  traffic across all network ports.
-[Port1]
-  Listen RDMA 15.15.15.2:4420
-
-[Port2]
-  Listen RDMA 192.168.2.21:4420
-
-# Users must change the Host section(s) to match the IP
-#  addresses of the clients that will connect to this target.
-# Netmask can be used to specify a single IP address or a range of IP addresses
-#  Netmask 192.168.1.20   <== single IP address
-#  Netmask 192.168.1.0/24 <== IP range 192.168.1.*
-[Host1]
-  Netmask 15.15.15.0/24
-
-[Host2]
-  Netmask 192.168.2.0/24
-
 # NVMe Device Whitelist
 # Users may specify which NVMe devices to claim by their PCI
 # domain, bus, device, and function. The format is dddd:bb:dd.f, which is
@@ -81,29 +57,15 @@
   BDF 0000:01:00.0 Nvme1
   # ClaimAllDevices Yes
 
-# Users should change the Subsystem section(s) below to define the
-#   set of local NVMe resources that will be accessible by specific groups
-#   of hosts.  These mappings will be inspected to approve
-#   remote fabric transport and NVMf protocol connection requests.
-#
-# Each approved NVMf connection represents a specific virtual controller
-#   session within the NVMf subsystem.  Any such session is allowed access
-#   to all NVMe namespaces within the subsystem.
-#
-# NQN, Mapping, Controller are minimum required.
-# The Mapping defines the local fabric network port to be used by remote
-#   connecting initiator.  Multiple mappings can be used to permit shared
-#   access to the same subsystem.
-# Each Controller identifies a specific HW device from the Nvme whitelist
-#   section above.
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
-  Mapping Port1 Host1
+  Listen RDMA 15.15.15.2:4420
+  Host nqn.2016-06.io.spdk:init
   Controller Nvme0
 
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
-  Mapping Port2 Host2
-  # Using NVME 1 namespace 1
+  Listen RDMA 192.168.2.21:4420
+  Host nqn.2016-06.io.spdk:init
   Controller Nvme1
 

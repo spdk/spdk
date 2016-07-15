@@ -44,8 +44,6 @@
 
 #include "spdk/event.h"
 
-#include "nvmf/port.h"
-#include "nvmf/host.h"
 #include "nvmf/transport.h"
 
 #include "spdk/log.h"

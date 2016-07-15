@@ -443,7 +443,7 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	}
 
 	/* Look up the requested subsystem */
-	subsystem = nvmf_find_subsystem(data->subnqn);
+	subsystem = nvmf_find_subsystem(data->subnqn, data->hostnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
 		INVALID_CONNECT_DATA(subnqn);
