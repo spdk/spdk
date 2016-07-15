@@ -93,12 +93,7 @@ struct spdk_nvmf_rdma_request {
 	union nvmf_c2h_msg			rsp;
 	struct ibv_mr				*rsp_mr;
 
-	struct ibv_sge				send_sgl;
-	struct ibv_sge				recv_sgl[2];
-
 	struct ibv_mr				*bb_mr;
-	uint8_t					*bb;
-	uint32_t				bb_len;
 };
 
 struct spdk_nvmf_rdma {
@@ -207,11 +202,13 @@ free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
 		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
 	}
 
-	if (rdma_req->bb_mr && rdma_dereg_mr(rdma_req->bb_mr)) {
-		SPDK_ERRLOG("Unable to de-register bb_mr\n");
+	if (rdma_req->bb_mr) {
+		rte_free(rdma_req->bb_mr->addr);
+		if (rdma_dereg_mr(rdma_req->bb_mr)) {
+			SPDK_ERRLOG("Unable to de-register bb_mr\n");
+		}
 	}
 
-	rte_free(rdma_req->bb);
 	rte_free(rdma_req);
 }
 
@@ -242,6 +239,8 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req;
+	void *bb;
+	size_t bb_len;
 
 	rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
 	if (!rdma_req) {
@@ -256,30 +255,20 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 		return NULL;
 	}
 
-	rdma_req->recv_sgl[0].addr = (uint64_t)&rdma_req->cmd;
-	rdma_req->recv_sgl[0].length = sizeof(rdma_req->cmd);
-	rdma_req->recv_sgl[0].lkey = rdma_req->cmd_mr->lkey;
-
-	rdma_req->bb_len = DEFAULT_BB_SIZE;
-	rdma_req->bb = rte_zmalloc("nvmf_bb", rdma_req->bb_len, 0);
-	if (!rdma_req->bb) {
-		SPDK_ERRLOG("Unable to get %u byte bounce buffer\n", rdma_req->bb_len);
+	bb_len = DEFAULT_BB_SIZE;
+	bb = rte_zmalloc("nvmf_bb", bb_len, 0);
+	if (!bb) {
+		SPDK_ERRLOG("Unable to get %zu byte bounce buffer\n", bb_len);
 		free_rdma_req(rdma_req);
 		return NULL;
 	}
-	rdma_req->bb_mr = rdma_reg_read(rdma_conn->cm_id,
-					(void *)rdma_req->bb,
-					rdma_req->bb_len);
+	rdma_req->bb_mr = rdma_reg_read(rdma_conn->cm_id, bb, bb_len);
 	if (rdma_req->bb_mr == NULL) {
 		SPDK_ERRLOG("Unable to register bb_mr\n");
+		rte_free(bb);
 		free_rdma_req(rdma_req);
 		return NULL;
 	}
-
-	/* initialize data buffer sgl */
-	rdma_req->recv_sgl[1].addr = (uint64_t)rdma_req->bb;
-	rdma_req->recv_sgl[1].length = rdma_req->bb_len;
-	rdma_req->recv_sgl[1].lkey = rdma_req->bb_mr->lkey;
 
 	rdma_req->rsp_mr = rdma_reg_msgs(rdma_conn->cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
 	if (rdma_req->rsp_mr == NULL) {
@@ -287,11 +276,6 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 		free_rdma_req(rdma_req);
 		return NULL;
 	}
-
-	/* initialize send_sgl */
-	rdma_req->send_sgl.addr = (uint64_t)&rdma_req->rsp;
-	rdma_req->send_sgl.length = sizeof(rdma_req->rsp);
-	rdma_req->send_sgl.lkey = rdma_req->rsp_mr->lkey;
 
 	rdma_req->req.cmd = &rdma_req->cmd;
 	rdma_req->req.rsp = &rdma_req->rsp;
@@ -350,34 +334,34 @@ static void
 nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 		      struct spdk_nvmf_request *req,
 		      struct ibv_sge *sg_list,
-		      uint64_t wr_id,
 		      enum ibv_wr_opcode opcode,
 		      int send_flags)
 {
+	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	RTE_VERIFY(wr != NULL);
 	RTE_VERIFY(sg_list != NULL);
 
 	memset(wr, 0, sizeof(*wr));
-	wr->wr_id = wr_id;
+	wr->wr_id = (uint64_t)rdma_req;
 	wr->next = NULL;
 	wr->opcode = opcode;
 	wr->send_flags = send_flags;
 	wr->sg_list = sg_list;
 	wr->num_sge = 1;
+}
 
-	if (req != NULL) {
-		struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
+static void
+nvmf_ibv_send_wr_set_rkey(struct ibv_send_wr *wr, struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
 
-		RTE_VERIFY(sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	RTE_VERIFY(sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
 
-		wr->wr.rdma.rkey = sgl->keyed.key;
-		wr->wr.rdma.remote_addr = sgl->address;
+	wr->wr.rdma.rkey = sgl->keyed.key;
+	wr->wr.rdma.remote_addr = sgl->address;
 
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rkey %x remote_addr %p\n",
-			      wr->wr.rdma.rkey, (void *)wr->wr.rdma.remote_addr);
-	}
-
-	nvmf_trace_ibv_sge(wr->sg_list);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "rkey %x remote_addr %p\n",
+		      wr->wr.rdma.rkey, (void *)wr->wr.rdma.remote_addr);
 }
 
 static int
@@ -387,13 +371,16 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
+	struct ibv_sge sge;
 	int rc;
 
-	/* temporarily adjust SGE to only copy what the host is prepared to send. */
-	rdma_req->recv_sgl[1].length = req->length;
+	sge.addr = (uint64_t)rdma_req->bb_mr->addr;
+	sge.lkey = rdma_req->bb_mr->lkey;
+	sge.length = req->length;
+	nvmf_trace_ibv_sge(&sge);
 
-	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->recv_sgl[1], (uint64_t)rdma_req,
-			      IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
+	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
+	nvmf_ibv_send_wr_set_rkey(&wr, req);
 
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uint64_t)req, 0);
 	rc = ibv_post_send(rdma_conn->qp, &wr, &bad_wr);
@@ -410,13 +397,16 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
+	struct ibv_sge sge;
 	int rc;
 
-	/* temporarily adjust SGE to only copy what the host is prepared to receive. */
-	rdma_req->recv_sgl[1].length = req->length;
+	sge.addr = (uint64_t)rdma_req->bb_mr->addr;
+	sge.lkey = rdma_req->bb_mr->lkey;
+	sge.length = req->length;
+	nvmf_trace_ibv_sge(&sge);
 
-	nvmf_ibv_send_wr_init(&wr, req, &rdma_req->recv_sgl[1], (uint64_t)rdma_req,
-			      IBV_WR_RDMA_WRITE, 0);
+	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_RDMA_WRITE, 0);
+	nvmf_ibv_send_wr_set_rkey(&wr, req);
 
 	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uint64_t)req, 0);
 	rc = ibv_post_send(rdma_conn->qp, &wr, &bad_wr);
@@ -433,6 +423,7 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	struct ibv_recv_wr wr, *bad_wr = NULL;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
+	struct ibv_sge sg_list[2];
 	int rc;
 
 	/* Update Connection SQ Tracking, increment
@@ -442,12 +433,21 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	conn->sq_head < (rdma_conn->queue_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "sq_head %x, sq_depth %x\n", conn->sq_head, rdma_conn->queue_depth);
 
+	sg_list[0].addr = (uint64_t)&rdma_req->cmd;
+	sg_list[0].length = sizeof(rdma_req->cmd);
+	sg_list[0].lkey = rdma_req->cmd_mr->lkey;
+	nvmf_trace_ibv_sge(&sg_list[0]);
+
+	sg_list[1].addr = (uint64_t)rdma_req->bb_mr->addr;
+	sg_list[1].length = rdma_req->bb_mr->length;
+	sg_list[1].lkey = rdma_req->bb_mr->lkey;
+	nvmf_trace_ibv_sge(&sg_list[1]);
+
+	memset(&wr, 0, sizeof(wr));
 	wr.wr_id = (uintptr_t)rdma_req;
 	wr.next = NULL;
-	wr.sg_list = &rdma_req->recv_sgl[0];
+	wr.sg_list = sg_list;
 	wr.num_sge = 2;
-
-	nvmf_trace_ibv_sge(&rdma_req->recv_sgl[0]);
 
 	rc = ibv_post_recv(rdma_conn->qp, &wr, &bad_wr);
 	if (rc) {
@@ -463,13 +463,15 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
+	struct ibv_sge sge;
 	int rc;
 
-	/* restore the SGL length that may have been modified */
-	rdma_req->recv_sgl[1].length = rdma_req->bb_len;
+	sge.addr = (uint64_t)&rdma_req->rsp;
+	sge.length = sizeof(rdma_req->rsp);
+	sge.lkey = rdma_req->rsp_mr->lkey;
+	nvmf_trace_ibv_sge(&sge);
 
-	nvmf_ibv_send_wr_init(&wr, NULL, &rdma_req->send_sgl, (uint64_t)rdma_req,
-			      IBV_WR_SEND, IBV_SEND_SIGNALED);
+	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_SEND, IBV_SEND_SIGNALED);
 
 	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uint64_t)req, 0);
 	rc = ibv_post_send(rdma_conn->qp, &wr, &bad_wr);
@@ -766,6 +768,7 @@ nvmf_recv(struct spdk_nvmf_rdma_request *rdma_req, struct ibv_wc *wc)
 {
 	int ret;
 	struct spdk_nvmf_request *req;
+	void *bb;
 
 	if (wc->byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
 		SPDK_ERRLOG("recv length %u less than capsule header\n", wc->byte_len);
@@ -774,9 +777,10 @@ nvmf_recv(struct spdk_nvmf_rdma_request *rdma_req, struct ibv_wc *wc)
 
 	req = &rdma_req->req;
 
+	bb = rdma_req->bb_mr->addr;
 	ret = spdk_nvmf_request_prep_data(req,
-					  rdma_req->bb, wc->byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
-					  rdma_req->bb, rdma_req->recv_sgl[1].length);
+					  bb, wc->byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
+					  bb, rdma_req->bb_mr->length);
 	if (ret < 0) {
 		SPDK_ERRLOG("prep_data failed\n");
 		return spdk_nvmf_request_complete(req);
@@ -1092,6 +1096,11 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		}
 
 		rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
+		if (rdma_req == NULL) {
+			SPDK_ERRLOG("Got CQ completion for NULL rdma_req\n");
+			return -1;
+		}
+
 		req = &rdma_req->req;
 
 		switch (wc.opcode) {
