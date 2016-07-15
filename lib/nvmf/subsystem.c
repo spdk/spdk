@@ -44,8 +44,6 @@
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
 
-#define SPDK_CN_TAG_MAX 0x0000ffff
-
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 
 struct spdk_nvmf_subsystem *
