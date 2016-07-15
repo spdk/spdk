@@ -41,9 +41,6 @@
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
 
-#define MAX_FABRIC_INTF_PER_PORT 4
-#define MAX_PORTS 4
-
 static TAILQ_HEAD(, spdk_nvmf_port)	g_port_head = TAILQ_HEAD_INITIALIZER(g_port_head);
 
 /* Assumes caller allocated host and port strings on the heap */
@@ -88,17 +85,11 @@ spdk_nvmf_port_find_fabric_intf_by_addr(char *addr)
 {
 	struct spdk_nvmf_port		*port;
 	struct spdk_nvmf_fabric_intf	*fabric_intf;
-	int i;
 
 	if (addr == NULL)
 		goto find_error;
 
-	for (i = 1; i < MAX_PORTS; i++) {
-		port = spdk_nvmf_port_find_by_tag(i);
-		if (port == NULL) {
-			continue;
-		}
-
+	TAILQ_FOREACH(port, &g_port_head, tailq) {
 		TAILQ_FOREACH(fabric_intf, &port->head, tailq) {
 			if (!strncasecmp(fabric_intf->host, addr, strlen(fabric_intf->host))) {
 				return fabric_intf;
