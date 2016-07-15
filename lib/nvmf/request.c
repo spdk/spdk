@@ -34,7 +34,7 @@
 #include <rte_config.h>
 #include <rte_debug.h>
 
-#include "conn.h"
+#include "nvmf_internal.h"
 #include "request.h"
 #include "session.h"
 #include "subsystem.h"

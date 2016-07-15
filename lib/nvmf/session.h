@@ -37,13 +37,29 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "conn.h"
 #include "request.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
 /* define a virtual controller limit to the number of QPs supported */
 #define MAX_SESSION_IO_QUEUES 64
+
+struct spdk_nvmf_transport;
+
+enum conn_type {
+	CONN_TYPE_AQ = 0,
+	CONN_TYPE_IOQ = 1,
+};
+
+struct spdk_nvmf_conn {
+	const struct spdk_nvmf_transport	*transport;
+	struct nvmf_session			*sess;
+	enum conn_type				type;
+
+	uint16_t				sq_head;
+
+	TAILQ_ENTRY(spdk_nvmf_conn) 		link;
+};
 
 /*
  * This structure maintains the NVMf virtual controller session

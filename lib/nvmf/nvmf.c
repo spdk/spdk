@@ -39,7 +39,6 @@
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "conf.h"
-#include "conn.h"
 #include "controller.h"
 #include "subsystem.h"
 #include "transport.h"

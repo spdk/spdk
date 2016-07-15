@@ -165,7 +165,8 @@ spdk_nvmf_session_destruct(struct nvmf_session *session)
 		struct spdk_nvmf_conn *conn = TAILQ_FIRST(&session->connections);
 
 		TAILQ_REMOVE(&session->connections, conn, link);
-		spdk_nvmf_conn_destruct(conn);
+		nvmf_disconnect(conn->sess, conn);
+		conn->transport->conn_fini(conn);
 	}
 
 	free(session);
