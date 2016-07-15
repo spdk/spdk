@@ -1094,11 +1094,12 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			return -1;
 		}
 
+		rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
+		req = &rdma_req->req;
+
 		switch (wc.opcode) {
 		case IBV_WC_SEND:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ send completion\n");
-			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
-			req = &rdma_req->req;
 			if (spdk_nvmf_rdma_request_release(conn, req)) {
 				return -1;
 			}
@@ -1110,15 +1111,11 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 			 * flag in rdma_write, to trace rdma write latency
 			 */
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ rdma write completion\n");
-			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
-			req = &rdma_req->req;
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
 			break;
 
 		case IBV_WC_RDMA_READ:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ rdma read completion\n");
-			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
-			req = &rdma_req->req;
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
@@ -1129,8 +1126,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 
 		case IBV_WC_RECV:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ recv completion\n");
-			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, wc.wr_id, 0);
-			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
+			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, (uint64_t)req, 0);
 			rc = nvmf_recv(rdma_req, &wc);
 			if (rc < 0) {
 				SPDK_ERRLOG("nvmf_recv processing failure\n");
