@@ -39,6 +39,7 @@
 #include "nvmf_internal.h"
 #include "session.h"
 #include "subsystem.h"
+#include "transport.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
@@ -241,17 +242,13 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 							break;
 						}
 						entry = &disc_log->entries[numrec];
-						entry->trtype = fabric_intf->trtype;
-						entry->adrfam = fabric_intf->adrfam;
-						entry->treq = fabric_intf->treq;
 						entry->portid = port->tag;
 						/* Dynamic controllers */
 						entry->cntlid = 0xffff;
 						entry->subtype = subsystem->subtype;
-						snprintf(entry->trsvcid, 32, "%s", fabric_intf->sin_port);
-						snprintf(entry->traddr, 256, "%s", fabric_intf->host);
 						snprintf(entry->subnqn, 256, "%s", subsystem->subnqn);
-						entry->tsas = fabric_intf->tsas;
+
+						fabric_intf->transport->fabric_intf_discover(fabric_intf, entry);
 					}
 					numrec++;
 				}

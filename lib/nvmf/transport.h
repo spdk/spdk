@@ -35,6 +35,8 @@
 #define SPDK_NVMF_TRANSPORT_H
 
 struct spdk_nvmf_conn;
+struct spdk_nvmf_discovery_log_page_entry;
+struct spdk_nvmf_fabric_intf;
 struct spdk_nvmf_request;
 
 struct spdk_nvmf_transport {
@@ -82,6 +84,12 @@ struct spdk_nvmf_transport {
 	 * Poll a connection for events.
 	 */
 	int (*conn_poll)(struct spdk_nvmf_conn *conn);
+
+	/**
+	 * Fill out a discovery log entry for a specific fabric interface.
+	 */
+	void (*fabric_intf_discover)(struct spdk_nvmf_fabric_intf *fabric_intf,
+				     struct spdk_nvmf_discovery_log_page_entry *entry);
 };
 
 int spdk_nvmf_transport_init(void);

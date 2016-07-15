@@ -63,10 +63,6 @@ struct spdk_nvmf_fabric_intf {
 	char					*sin_port;
 	struct spdk_nvmf_port			*port;
 	const struct spdk_nvmf_transport	*transport;
-	enum spdk_nvmf_transport_types		trtype;
-	enum spdk_nvmf_address_family_types	adrfam;
-	enum spdk_nvmf_transport_requirements	treq;
-	union spdk_nvmf_transport_specific_address_subtype	tsas;
 	uint32_t				num_sessions;
 	TAILQ_ENTRY(spdk_nvmf_fabric_intf)	tailq;
 };

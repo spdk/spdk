@@ -37,6 +37,7 @@
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <stdint.h>
 
 #include <rte_config.h>
@@ -54,6 +55,7 @@
 #include "transport.h"
 #include "spdk/assert.h"
 #include "spdk/log.h"
+#include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 
 #define ACCEPT_TIMEOUT (rte_get_timer_hz() >> 10) /* ~1ms */
@@ -1175,6 +1177,22 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 	return cq_count;
 }
 
+static void
+nvmf_rdma_discover(struct spdk_nvmf_fabric_intf *fabric_intf,
+		   struct spdk_nvmf_discovery_log_page_entry *entry)
+{
+	entry->trtype = SPDK_NVMF_TRANS_RDMA;
+	entry->adrfam = SPDK_NVMF_ADDR_FAMILY_IPV4;
+	entry->treq = SPDK_NVMF_TREQ_NOT_SPECIFIED;
+
+	snprintf(entry->trsvcid, sizeof(entry->trsvcid), "%s", fabric_intf->sin_port);
+	snprintf(entry->traddr, sizeof(entry->traddr), "%s", fabric_intf->host);
+
+	entry->tsas.rdma.rdma_qptype = SPDK_NVMF_QP_TYPE_RELIABLE_CONNECTED;
+	entry->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_NO_PROVIDER;
+	entry->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
+}
+
 const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.name = "rdma",
 	.transport_init = spdk_nvmf_rdma_init,
@@ -1187,6 +1205,8 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.conn_init = spdk_nvmf_rdma_alloc_reqs,
 	.conn_fini = nvmf_rdma_conn_cleanup,
 	.conn_poll = nvmf_check_rdma_completions,
+
+	.fabric_intf_discover = nvmf_rdma_discover,
 };
 
 SPDK_LOG_REGISTER_TRACE_FLAG("rdma", SPDK_TRACE_RDMA)

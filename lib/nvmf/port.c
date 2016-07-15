@@ -65,12 +65,6 @@ spdk_nvmf_fabric_intf_create(const struct spdk_nvmf_transport *transport, char *
 	fabric_intf->host = host;
 	fabric_intf->sin_port = sin_port;
 	fabric_intf->transport = transport;
-	fabric_intf->trtype = SPDK_NVMF_TRANS_RDMA;
-	fabric_intf->adrfam = SPDK_NVMF_ADDR_FAMILY_IPV4;
-	fabric_intf->treq = SPDK_NVMF_TREQ_NOT_SPECIFIED;
-	fabric_intf->tsas.rdma.rdma_qptype = SPDK_NVMF_QP_TYPE_RELIABLE_CONNECTED;
-	fabric_intf->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_NO_PROVIDER;
-	fabric_intf->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
 
 	return fabric_intf;
 }
