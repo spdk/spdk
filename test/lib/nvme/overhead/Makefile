@@ -31,14 +31,32 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = unit aer reset sgl e2edp overhead
+APP = overhead
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := overhead.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CFLAGS += -I. $(DPDK_INC)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
+	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
+
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) -lpthread $(DPDK_LIB) -lrt
+
+ifeq ($(OS),Linux)
+LIBS += -laio
+CFLAGS += -DHAVE_LIBAIO
+endif
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

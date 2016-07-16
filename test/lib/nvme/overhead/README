@@ -1,0 +1,24 @@
+This application measures the software overhead of I/O submission
+and completion for both the SPDK NVMe driver and an AIO file handle.
+It runs a random read, queue depth = 1 workload to a single device,
+and captures TSC as follows:
+
+* Submission: capture TSC before and after the I/O submission
+  call (SPDK or AIO).
+* Completion: capture TSC before and after the I/O completion
+  check.  Only record the TSC delta if the I/O completion check
+  resulted in a completed I/O.  Also use heuristics in the AIO
+  case to account for time spent in interrupt handling outside
+  of the actual I/O completion check.
+
+Usage:
+
+To test software overhead for a 4KB I/O over a 10 second period:
+
+SPDK:  overhead -s 4096 -t 10
+AIO:   overhead -s 4096 -t 10 /dev/nvme0n1
+
+Note that for the SPDK case, it will only use the first namespace
+on the first controller found by SPDK.  If a different namespace is
+desired, attach controllers individually to the kernel NVMe driver
+to ensure they will not be enumerated by SPDK.
