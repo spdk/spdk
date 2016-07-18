@@ -271,6 +271,20 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			return;
 		}
 
+		if (1u << session->vcprop.cc.bits.iosqes != sizeof(struct spdk_nvme_cmd)) {
+			SPDK_ERRLOG("Got I/O connect with invalid IOSQES %u\n",
+				    session->vcprop.cc.bits.iosqes);
+			INVALID_CONNECT_CMD(qid);
+			return;
+		}
+
+		if (1u << session->vcprop.cc.bits.iocqes != sizeof(struct spdk_nvme_cpl)) {
+			SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
+				    session->vcprop.cc.bits.iocqes);
+			INVALID_CONNECT_CMD(qid);
+			return;
+		}
+
 		/* check if we would exceed session connection limit */
 		if (session->num_connections >= session->max_connections_allowed) {
 			SPDK_ERRLOG("connection limit %d\n", session->num_connections);
