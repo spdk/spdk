@@ -647,17 +647,21 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 int
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
+	struct nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	bool done;
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		done = nvmf_process_fabrics_command(req);
+	} else if (session == NULL || !session->vcprop.cc.bits.en) {
+		/* Only Fabric commands are allowed when the controller is disabled */
+		SPDK_ERRLOG("Non-Fabric command sent to disabled controller\n");
+		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		done = true;
 	} else if (req->conn->type == CONN_TYPE_AQ) {
-		struct nvmf_session *session;
 		struct spdk_nvmf_subsystem *subsystem;
 
-		session = req->conn->sess;
-		RTE_VERIFY(session != NULL);
 		subsystem = session->subsys;
 		RTE_VERIFY(subsystem != NULL);
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
