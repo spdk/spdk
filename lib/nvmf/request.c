@@ -280,12 +280,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
-	struct spdk_nvme_ns *ns;
-	struct nvme_read_cdw12 *cdw12;
-	uint64_t lba_address;
-	uint32_t lba_count;
-	uint32_t io_flags;
-	int rc = 0;
+	int rc;
 
 	/* pre-set response details for this command */
 	response = &req->rsp->nvme_cpl;
@@ -299,50 +294,11 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 		return true;
 	}
 
-	switch (cmd->opc) {
-	case SPDK_NVME_OPC_READ:
-	case SPDK_NVME_OPC_WRITE:
-		ns = spdk_nvme_ctrlr_get_ns(subsystem->ctrlr, cmd->nsid);
-		if (ns == NULL) {
-			SPDK_ERRLOG("Invalid NS ID %u\n", cmd->nsid);
-			response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-			return true;
-		}
-
-		cdw12 = (struct nvme_read_cdw12 *)&cmd->cdw12;
-		/* NVMe library read/write interface expects non-0based lba_count value */
-		lba_count = cdw12->nlb + 1;
-		lba_address = cmd->cdw11;
-		lba_address = (lba_address << 32) + cmd->cdw10;
-		io_flags = cmd->cdw12 & 0xFFFF0000U;
-
-		if (cmd->opc == SPDK_NVME_OPC_READ) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Read LBA 0x%" PRIx64 ", 0x%x blocks\n",
-				      lba_address, lba_count);
-			spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
-			rc = spdk_nvme_ns_cmd_read(ns, subsystem->io_qpair,
-						   req->data, lba_address, lba_count,
-						   nvmf_complete_cmd,
-						   req, io_flags);
-		} else {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Write LBA 0x%" PRIx64 ", 0x%x blocks\n",
-				      lba_address, lba_count);
-			spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
-			rc = spdk_nvme_ns_cmd_write(ns, subsystem->io_qpair,
-						    req->data, lba_address, lba_count,
-						    nvmf_complete_cmd,
-						    req, io_flags);
-		}
-		break;
-	default:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "io_cmd passthrough: opc 0x%02x\n", cmd->opc);
-		rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->ctrlr, subsystem->io_qpair,
-						cmd,
-						req->data, req->length,
-						nvmf_complete_cmd,
-						req);
-		break;
-	}
+	rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->ctrlr, subsystem->io_qpair,
+					cmd,
+					req->data, req->length,
+					nvmf_complete_cmd,
+					req);
 
 	if (rc) {
 		SPDK_ERRLOG("Failed to submit Opcode 0x%02x\n", cmd->opc);
