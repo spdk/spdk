@@ -371,18 +371,10 @@ static bool
 nvmf_process_property_set(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_prop_set_cmd *cmd;
-	bool	shutdown = false;
 
 	cmd = &req->cmd->prop_set_cmd;
 
-	nvmf_property_set(req->conn->sess, cmd, &req->rsp->nvme_cpl, &shutdown);
-
-	/* TODO: This is not right. It should shut down the whole session.
-	if (shutdown == true) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Call to set properties has indicated shutdown\n");
-		conn->state = CONN_STATE_FABRIC_DISCONNECT;
-	}
-	*/
+	nvmf_property_set(req->conn->sess, cmd, &req->rsp->nvme_cpl);
 
 	return true;
 }
