@@ -319,30 +319,69 @@ nvmf_prop_get_cc(struct nvmf_session *session)
 static bool
 nvmf_prop_set_cc(struct nvmf_session *session, uint64_t value)
 {
-	union spdk_nvme_cc_register cc;
+	union spdk_nvme_cc_register cc, diff;
 
 	cc.raw = (uint32_t)value;
 
-	if (cc.bits.en ^ session->vcprop.cc.bits.en) {
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "cur CC: 0x%08x\n", session->vcprop.cc.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "new CC: 0x%08x\n", cc.raw);
+
+	/*
+	 * Calculate which bits changed between the current and new CC.
+	 * Mark each bit as 0 once it is handled to determine if any unhandled bits were changed.
+	 */
+	diff.raw = cc.raw ^ session->vcprop.cc.raw;
+
+	if (diff.bits.en) {
 		if (cc.bits.en) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Enable!\n");
+			session->vcprop.cc.bits.en = 1;
 			session->vcprop.csts.bits.rdy = 1;
 		} else {
 			SPDK_ERRLOG("CC.EN transition from 1 to 0 (reset) not implemented!\n");
 			/* TODO: reset */
 		}
+		diff.bits.en = 0;
 	}
 
-	if (cc.bits.shn == SPDK_NVME_SHN_NORMAL ||
-	    cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Shutdown %u%ub!\n",
-			      cc.bits.shn >> 1, cc.bits.shn & 1);
-		session->vcprop.cc.bits.en = 0;
-		session->vcprop.csts.bits.rdy = 0;
-		session->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+	if (diff.bits.shn) {
+		if (cc.bits.shn == SPDK_NVME_SHN_NORMAL ||
+		    cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Shutdown %u%ub!\n",
+				      cc.bits.shn >> 1, cc.bits.shn & 1);
+			session->vcprop.cc.bits.shn = cc.bits.shn;
+			session->vcprop.cc.bits.en = 0;
+			session->vcprop.csts.bits.rdy = 0;
+			session->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
+		} else if (cc.bits.shn == 0) {
+			session->vcprop.cc.bits.shn = 0;
+		} else {
+			SPDK_ERRLOG("Prop Set CC: Invalid SHN value %u%ub\n",
+				    cc.bits.shn >> 1, cc.bits.shn & 1);
+			return false;
+		}
+		diff.bits.shn = 0;
 	}
 
-	session->vcprop.cc.raw = cc.raw;
+	if (diff.bits.iosqes) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Prop Set IOSQES = %u (%u bytes)\n",
+			      cc.bits.iosqes, 1u << cc.bits.iosqes);
+		session->vcprop.cc.bits.iosqes = cc.bits.iosqes;
+		diff.bits.iosqes = 0;
+	}
+
+	if (diff.bits.iocqes) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Prop Set IOCQES = %u (%u bytes)\n",
+			      cc.bits.iocqes, 1u << cc.bits.iocqes);
+		session->vcprop.cc.bits.iocqes = cc.bits.iocqes;
+		diff.bits.iocqes = 0;
+	}
+
+	if (diff.raw != 0) {
+		SPDK_ERRLOG("Prop Set CC toggled reserved bits 0x%x!\n", diff.raw);
+		return false;
+	}
+
 	return true;
 }
 
