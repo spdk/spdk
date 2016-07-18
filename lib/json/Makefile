@@ -32,6 +32,7 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = json_parse.c json_util.c json_write.c
 LIBNAME = json

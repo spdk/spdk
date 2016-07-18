@@ -32,6 +32,7 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
 C_SRCS = file.c string.c pci.c
