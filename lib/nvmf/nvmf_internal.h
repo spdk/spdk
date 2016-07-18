@@ -45,6 +45,7 @@
 #include "spdk/queue.h"
 
 #define nvmf_min(a,b) (((a)<(b))?(a):(b))
+#define nvmf_max(a,b) (((a)>(b))?(a):(b))
 
 #define DEFAULT_BB_SIZE (128 * 1024)
 
@@ -56,7 +57,6 @@
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
 #define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
-#define SPDK_NVMF_DEFAULT_MAX_QUEUES_PER_SESSION 4
 #define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
 
 #define OBJECT_NVMF_IO				0x30

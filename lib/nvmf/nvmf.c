@@ -130,15 +130,7 @@ nvmf_tgt_init(int max_queue_depth, int max_queues_per_sess)
 		return -EINVAL;
 	}
 
-	if (max_queues_per_sess >= 1 &&
-	    max_queues_per_sess <= SPDK_NVMF_DEFAULT_MAX_QUEUES_PER_SESSION) {
-		g_nvmf_tgt.max_queues_per_session = max_queues_per_sess;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxQueuesPerSession: %d\n",
-			      g_nvmf_tgt.max_queues_per_session);
-	} else {
-		SPDK_ERRLOG("Invalid MaxQueuesPerSession: %d\n", max_queues_per_sess);
-		return -EINVAL;
-	}
+	g_nvmf_tgt.max_queues_per_session = max_queues_per_sess;
 
 	rc = pthread_mutex_init(&g_nvmf_tgt.mutex, NULL);
 	if (rc != 0) {
