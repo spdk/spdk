@@ -635,8 +635,8 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		qp_depth = nvmf_min(private_data->hrqsize, private_data->hsqsize);
 		rw_depth = host_event_data->initiator_depth;
 	}
-	qp_depth = nvmf_min(qp_depth, ibdev_attr.max_qp_wr);
-	rw_depth = nvmf_min(rw_depth, ibdev_attr.max_qp_rd_atom);
+	qp_depth = nvmf_min(g_nvmf_tgt.max_queue_depth, nvmf_min(qp_depth, ibdev_attr.max_qp_wr));
+	rw_depth = nvmf_min(g_nvmf_tgt.max_queue_depth, nvmf_min(rw_depth, ibdev_attr.max_qp_rd_atom));
 	rdma_conn->queue_depth = nvmf_min(qp_depth, rw_depth);
 
 	rc = nvmf_rdma_queue_init(conn, conn_id->verbs);
