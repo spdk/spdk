@@ -28,11 +28,6 @@
 
 # This next section defines NVMf protocol specific global options
 [Nvmf]
-  # Set the maximum number of NVMf logical controller sessions allowed
-  # for each subsystem provisioned below.  The default value (1) is used if
-  # not set here.
-  #MaxSessionsPerSubsystem 1
-
   # Set the maximum number of NVMf per-controller connections [admin_q + io_q(s)]
   MaxConnectionsPerSession 4
 
