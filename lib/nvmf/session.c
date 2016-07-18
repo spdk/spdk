@@ -323,9 +323,14 @@ nvmf_prop_set_cc(struct nvmf_session *session, uint64_t value)
 
 	cc.raw = (uint32_t)value;
 
-	if (cc.bits.en && !session->vcprop.cc.bits.en) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Enable!\n");
-		session->vcprop.csts.bits.rdy = 1;
+	if (cc.bits.en ^ session->vcprop.cc.bits.en) {
+		if (cc.bits.en) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Enable!\n");
+			session->vcprop.csts.bits.rdy = 1;
+		} else {
+			SPDK_ERRLOG("CC.EN transition from 1 to 0 (reset) not implemented!\n");
+			/* TODO: reset */
+		}
 	}
 
 	if (cc.bits.shn == SPDK_NVME_SHN_NORMAL ||
