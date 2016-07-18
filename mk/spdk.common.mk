@@ -161,7 +161,9 @@ DPDK_INC_DIR ?= $(DPDK_DIR_ABS)/include
 DPDK_LIB_DIR ?= $(DPDK_DIR_ABS)/lib
 
 DPDK_INC = -I$(DPDK_INC_DIR)
-DPDK_LIB = -L$(DPDK_LIB_DIR) -Wl,--start-group -lrte_eal -lrte_mempool -lrte_ring -lrte_timer -Wl,--end-group -Wl,-rpath=$(DPDK_LIB_DIR)
+DPDK_LIB = -L$(DPDK_LIB_DIR) -Wl,--start-group -Wl,--whole-archive \
+	   -lrte_eal -lrte_mempool -lrte_ring -lrte_timer \
+	   -Wl,--end-group -Wl,--no-whole-archive -Wl,-rpath=$(DPDK_LIB_DIR)
 # librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
 #  existence to maintain backward compatibility.
 ifneq ($(wildcard $(DPDK_DIR_ABS)/lib/librte_malloc.*),)
