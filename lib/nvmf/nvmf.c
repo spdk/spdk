@@ -59,7 +59,7 @@ spdk_nvmf_initialize_pools(void)
 {
 	SPDK_NOTICELOG("\n*** NVMf Pool Creation ***\n");
 
-	g_num_requests = MAX_SUBSYSTEMS * g_nvmf_tgt.MaxConnectionsPerSession * g_nvmf_tgt.MaxQueueDepth;
+	g_num_requests = MAX_SUBSYSTEMS * g_nvmf_tgt.max_queues_per_session * g_nvmf_tgt.MaxQueueDepth;
 
 	/* create NVMe backend request pool */
 	request_mempool = rte_mempool_create("NVMe_Pool",
@@ -117,7 +117,7 @@ spdk_nvmf_check_pools(void)
 }
 
 int
-nvmf_tgt_init(int max_queue_depth, int max_conn_per_sess)
+nvmf_tgt_init(int max_queue_depth, int max_queues_per_sess)
 {
 	int rc;
 
@@ -131,13 +131,13 @@ nvmf_tgt_init(int max_queue_depth, int max_conn_per_sess)
 		return -EINVAL;
 	}
 
-	if (max_conn_per_sess >= 1 &&
-	    max_conn_per_sess <= SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION) {
-		g_nvmf_tgt.MaxConnectionsPerSession = max_conn_per_sess;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxConnectionsPerSession: %d\n",
-			      g_nvmf_tgt.MaxConnectionsPerSession);
+	if (max_queues_per_sess >= 1 &&
+	    max_queues_per_sess <= SPDK_NVMF_DEFAULT_MAX_QUEUES_PER_SESSION) {
+		g_nvmf_tgt.max_queues_per_session = max_queues_per_sess;
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxQueuesPerSession: %d\n",
+			      g_nvmf_tgt.max_queues_per_session);
 	} else {
-		SPDK_ERRLOG("Invalid MaxConnectionsPerSession: %d\n", max_conn_per_sess);
+		SPDK_ERRLOG("Invalid MaxQueuesPerSession: %d\n", max_queues_per_sess);
 		return -EINVAL;
 	}
 

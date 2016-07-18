@@ -57,7 +57,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 {
 	struct spdk_conf_section *sp;
 	int max_queue_depth;
-	int max_conn_per_sess;
+	int max_queues_per_sess;
 	int rc;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
@@ -71,12 +71,12 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		max_queue_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
 	}
 
-	max_conn_per_sess = spdk_conf_section_get_intval(sp, "MaxConnectionsPerSession");
-	if (max_conn_per_sess < 0) {
-		max_conn_per_sess = SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION;
+	max_queues_per_sess = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
+	if (max_queues_per_sess < 0) {
+		max_queues_per_sess = SPDK_NVMF_DEFAULT_MAX_QUEUES_PER_SESSION;
 	}
 
-	rc = nvmf_tgt_init(max_queue_depth, max_conn_per_sess);
+	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess);
 	return rc;
 }
 

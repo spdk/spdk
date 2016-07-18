@@ -246,7 +246,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		TAILQ_INIT(&session->connections);
 		session->num_connections = 0;
 		session->subsys = subsystem;
-		session->max_connections_allowed = g_nvmf_tgt.MaxConnectionsPerSession;
+		session->max_connections_allowed = g_nvmf_tgt.max_queues_per_session;
 
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 			nvmf_init_nvme_session_properties(session);

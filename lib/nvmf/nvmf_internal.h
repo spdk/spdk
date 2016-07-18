@@ -56,7 +56,7 @@
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
 #define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
-#define SPDK_NVMF_DEFAULT_MAX_CONNECTIONS_PER_SESSION 4
+#define SPDK_NVMF_DEFAULT_MAX_QUEUES_PER_SESSION 4
 #define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
 
 #define OBJECT_NVMF_IO				0x30
@@ -100,7 +100,7 @@ struct spdk_nvmf_globals {
 	pthread_mutex_t mutex;
 
 	int MaxQueueDepth;
-	int MaxConnectionsPerSession;
+	int max_queues_per_session;
 
 	uint16_t	   sin_port;
 };
