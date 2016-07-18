@@ -450,20 +450,41 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 static bool
 nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
 
 	cap_hdr = &req->cmd->nvmf_cmd;
 
-	switch (cap_hdr->fctype) {
-	case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET:
-		return nvmf_process_property_set(req);
-	case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
-		return nvmf_process_property_get(req);
-	case SPDK_NVMF_FABRIC_COMMAND_CONNECT:
-		return nvmf_process_connect(req);
-	default:
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "recv capsule header type invalid [%x]!\n",
-			      cap_hdr->fctype);
+	if (conn->sess == NULL) {
+		/* No session established yet; the only valid command is Connect */
+		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
+			return nvmf_process_connect(req);
+		} else {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Got fctype 0x%x, expected Connect\n",
+				      cap_hdr->fctype);
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+			return true;
+		}
+	} else if (conn->type == CONN_TYPE_AQ) {
+		/*
+		 * Session is established, and this is an admin queue.
+		 * Disallow Connect and allow other fabrics commands.
+		 */
+		switch (cap_hdr->fctype) {
+		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET:
+			return nvmf_process_property_set(req);
+		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
+			return nvmf_process_property_get(req);
+		default:
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv capsule header type invalid [%x]!\n",
+				      cap_hdr->fctype);
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+			return true;
+		}
+	} else {
+		/* Session is established, and this is an I/O queue */
+		/* For now, no I/O-specific Fabrics commands are implemented (other than Connect) */
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return true;
 	}
