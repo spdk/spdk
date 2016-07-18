@@ -1,18 +1,15 @@
-# nvmf target configuration file
+# NVMf Target Configuration File
 #
 # Please write all parameters using ASCII.
 # The parameter must be quoted if it includes whitespace.
 #
 # Configuration syntax:
-# Spaces at head of line are deleted, other spaces are as separator
-# Lines starting with '#' are comments and not evaluated.
+# Leading whitespace is ignored.
+# Lines starting with '#' are comments.
 # Lines ending with '\' are concatenated with the next line.
-# Bracketed keys are section keys grouping the following value keys.
-# Number of section key is used as a tag number.
-#  Ex. [TargetNode1] = TargetNode section key with tag number 1
-[Global]
-  Comment "Global section"
+# Bracketed ([]) names define sections
 
+[Global]
   # Users can restrict work items to only run on certain cores by
   #  specifying a ReactorMask.  Default ReactorMask mask is defined as
   #  -c option in the 'ealargs' setting at beginning of file nvmf_tgt.c.
@@ -26,16 +23,14 @@
   # syslog facility
   LogFacility "local7"
 
-# This next section defines NVMf protocol specific global options
+# Define NVMf protocol global options
 [Nvmf]
-  # Set the maximum number of NVMf per-controller connections [admin_q + io_q(s)]
+  # Set the maximum number of submission and completion queues per session.
+  # Setting this to '8', for example, allows for 8 submission and 8 completion queues
+  # per session.
   MaxConnectionsPerSession 4
 
-  # Set the global default maximum queue depth to a value less than the
-  # default (128).  This value used for initial global pool allocation of
-  # QP Rx/Tx descriptors and staging buffers.  The actual queue depth
-  # used is negotiated during connection establishment, the remote
-  # initiator having the opportunity to specify a smaller value.
+  # Set the maximum number of outstanding I/O per queue.
   #MaxQueueDepth 128
 
 # NVMe Device Whitelist
@@ -52,12 +47,22 @@
   BDF 0000:01:00.0 Nvme1
   # ClaimAllDevices Yes
 
+# Define an NVMf Subsystem.
+# - NQN is required and must be unique.
+# - Between 1 and 255 Listen directives are allowed. This defines
+#   the addresses on which new connections may be accepted. The format
+#   is Listen <type> <address> where type currently can only be RDMA.
+# - Between 0 and 255 Host directives are allowed. This defines the
+#   NQNs of allowed hosts. If no Host directive is specified, all hosts
+#   are allowed to connect.
+# - Exactly 1 Controller directive.
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
   Listen RDMA 15.15.15.2:4420
   Host nqn.2016-06.io.spdk:init
   Controller Nvme0
 
+# Multiple subsystems are allowed.
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
   Listen RDMA 192.168.2.21:4420
