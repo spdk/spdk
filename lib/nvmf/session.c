@@ -328,9 +328,13 @@ nvmf_prop_set_cc(struct nvmf_session *session, uint64_t value)
 		session->vcprop.csts.bits.rdy = 1;
 	}
 
-	if (cc.bits.shn && !session->vcprop.cc.bits.shn) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Shutdown!\n");
+	if (cc.bits.shn == SPDK_NVME_SHN_NORMAL ||
+	    cc.bits.shn == SPDK_NVME_SHN_ABRUPT) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Property Set CC Shutdown %u%ub!\n",
+			      cc.bits.shn >> 1, cc.bits.shn & 1);
 		session->vcprop.cc.bits.en = 0;
+		session->vcprop.csts.bits.rdy = 0;
+		session->vcprop.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	}
 
 	session->vcprop.cc.raw = cc.raw;
