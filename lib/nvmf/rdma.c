@@ -701,6 +701,9 @@ spdk_nvmf_handle_disconnect(spdk_event_t event)
 	struct spdk_nvmf_conn		*conn = spdk_event_get_arg2(event);
 
 	nvmf_disconnect(session, conn);
+	if (session && session->num_connections == 0) {
+		spdk_nvmf_session_destruct(session);
+	}
 }
 
 static int
