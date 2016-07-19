@@ -407,6 +407,63 @@ get_lba_format(const struct spdk_nvme_ns_data *ns_data)
 }
 
 static void
+identify_allocated_ns_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct dev *dev = cb_arg;
+
+	dev->outstanding_admin_cmds--;
+}
+
+static uint32_t
+get_allocated_nsid(struct dev *dev)
+{
+	uint32_t nsid;
+	size_t i;
+	struct spdk_nvme_ns_list *ns_list;
+	struct spdk_nvme_cmd cmd = {0};
+
+	ns_list = rte_zmalloc("nvme_ns_list", sizeof(*ns_list), 4096);
+	if (ns_list == NULL) {
+		printf("Allocation error\n");
+		return 0;
+	}
+
+	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	cmd.cdw10 = SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST;
+	cmd.nsid = 0;
+
+	dev->outstanding_admin_cmds++;
+	if (spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, ns_list, sizeof(*ns_list),
+					  identify_allocated_ns_cb, dev)) {
+		printf("Identify command failed\n");
+		rte_free(ns_list);
+		return 0;
+	}
+
+	while (dev->outstanding_admin_cmds) {
+		spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+	}
+
+	printf("Allocated Namespace IDs:\n");
+	for (i = 0; i < sizeof(ns_list->ns_list) / sizeof(*ns_list->ns_list); i++) {
+		if (ns_list->ns_list[i] == 0) {
+			break;
+		}
+		printf("%u\n", ns_list->ns_list[i]);
+	}
+
+	rte_free(ns_list);
+
+	printf("Please Input Namespace ID: \n");
+	if (!scanf("%u", &nsid)) {
+		printf("Invalid Namespace ID\n");
+		nsid = 0;
+	}
+
+	return nsid;
+}
+
+static void
 ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
 {
 	int ret = 0;
@@ -499,7 +556,7 @@ nvme_manage_format(struct dev *device, int ns_id, int ses, int pi, int pil, int 
 static void
 attach_and_detach_ns(int attachment_op)
 {
-	int		ns_id;
+	uint32_t	nsid;
 	struct dev	*ctrlr;
 
 	ctrlr = get_controller();
@@ -513,14 +570,13 @@ attach_and_detach_ns(int attachment_op)
 		return;
 	}
 
-	printf("Please Input Namespace ID: \n");
-	if (!scanf("%d", &ns_id)) {
+	nsid = get_allocated_nsid(ctrlr);
+	if (nsid == 0) {
 		printf("Invalid Namespace ID\n");
-		while (getchar() != '\n');
 		return;
 	}
 
-	ns_attach(ctrlr, attachment_op, ctrlr->cdata->cntlid, ns_id);
+	ns_attach(ctrlr, attachment_op, ctrlr->cdata->cntlid, nsid);
 }
 
 static void
