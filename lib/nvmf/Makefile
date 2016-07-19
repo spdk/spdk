@@ -32,6 +32,7 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+include $(SPDK_ROOT_DIR)/CONFIG
 
 CFLAGS += $(DPDK_INC)
 LIBNAME = nvmf
