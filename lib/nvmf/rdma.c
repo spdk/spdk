@@ -724,6 +724,8 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		SPDK_ERRLOG("disconnect request: no active connection\n");
 		return -1;
 	}
+	/* ack the disconnect event before rdma_destroy_id */
+	rdma_ack_cm_event(evt);
 
 	rdma_conn = get_rdma_conn(conn);
 
@@ -908,7 +910,7 @@ nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 					SPDK_ERRLOG("Unable to process disconnect event. rc: %d\n", rc);
 					break;
 				}
-				break;
+				continue;
 			default:
 				SPDK_ERRLOG("Unexpected Acceptor Event [%d]\n", event->event);
 				break;
