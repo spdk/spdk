@@ -38,6 +38,10 @@ timing_enter reserve
 $rootdir/examples/nvme/reserve/reserve
 timing_exit reserve
 
+timing_enter hello_world
+$rootdir/examples/nvme/hello_world/hello_world
+timing_exit
+
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
 	for bdf in $(linux_iter_pci 0108); do
