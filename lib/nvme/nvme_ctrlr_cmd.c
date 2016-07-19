@@ -98,7 +98,7 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 	 * TODO: create an identify command data structure, which
 	 *  includes this CNS bit in cdw10.
 	 */
-	cmd->cdw10 = 1;
+	cmd->cdw10 = SPDK_NVME_IDENTIFY_CTRLR;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
@@ -123,6 +123,7 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 	/*
 	 * TODO: create an identify command data structure
 	 */
+	cmd->cdw10 = SPDK_NVME_IDENTIFY_NS;
 	cmd->nsid = nsid;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);

@@ -662,6 +662,30 @@ struct spdk_nvme_power_state {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_power_state) == 32, "Incorrect size");
 
+/** Identify command CNS value */
+enum spdk_nvme_identify_cns {
+	/** Identify namespace indicated in CDW1.NSID */
+	SPDK_NVME_IDENTIFY_NS				= 0x00,
+
+	/** Identify controller */
+	SPDK_NVME_IDENTIFY_CTRLR			= 0x01,
+
+	/** List active NSIDs greater than CDW1.NSID */
+	SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST		= 0x02,
+
+	/** List allocated NSIDs greater than CDW1.NSID */
+	SPDK_NVME_IDENTIFY_ALLOCATED_NS_LIST		= 0x10,
+
+	/** Identify namespace if CDW1.NSID is allocated */
+	SPDK_NVME_IDENTIFY_NS_ALLOCATED			= 0x11,
+
+	/** Get list of controllers starting at CDW10.CNTID that are attached to CDW1.NSID */
+	SPDK_NVME_IDENTIFY_NS_ATTACHED_CTRLR_LIST	= 0x12,
+
+	/** Get list of controllers starting at CDW10.CNTID */
+	SPDK_NVME_IDENTIFY_CTRLR_LIST			= 0x13,
+};
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
