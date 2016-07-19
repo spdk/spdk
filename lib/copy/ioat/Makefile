@@ -31,13 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
-LIBNAME = copy
-C_SRCS = copy_engine.c
-
-DIRS-y = ioat
+LIBNAME = copy_ioat
+C_SRCS = copy_engine_ioat.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
