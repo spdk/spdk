@@ -332,6 +332,7 @@ cleanup(void)
 static char *ealargs[] = {
 	"hello_world",
 	"-c 0x1",
+	"-n 4",
 };
 
 int main(int argc, char **argv)
