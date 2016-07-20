@@ -174,8 +174,8 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		switch (feature) {
 		case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
-			response->cdw0 = ((session->max_connections_allowed - 1) << 16) | (session->max_connections_allowed
-					 - 1);
+			response->cdw0 = ((session->max_connections_allowed - 1) << 16) |
+					 (session->max_connections_allowed - 1);
 			return true;
 		default:
 			goto passthrough;
@@ -192,8 +192,8 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Queue pairs already active!\n");
 				response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			} else {
-				response->cdw0 = ((session->max_connections_allowed - 1) << 16) | (session->max_connections_allowed
-						 - 1);
+				response->cdw0 = ((session->max_connections_allowed - 1) << 16) |
+						 (session->max_connections_allowed - 1);
 			}
 			return true;
 		default:
