@@ -89,8 +89,7 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
 		/* Only identify controller can be supported */
-		if (cmd->cdw10 == 1) {
-			/* identify controller */
+		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
 			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
 			return true;
@@ -156,38 +155,20 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
-		if (req->data == NULL) {
-			SPDK_ERRLOG("identify command with no buffer\n");
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			return true;
-		}
-		if (cmd->cdw10 == 0) {
-			/* identify namespace */
-			struct spdk_nvme_ns *ns;
-			const struct spdk_nvme_ns_data *nsdata;
-
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace\n");
-			ns = spdk_nvme_ctrlr_get_ns(subsystem->ctrlr, cmd->nsid);
-			if (ns == NULL) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Unsuccessful query for nsid %u\n", cmd->nsid);
+		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
+			if (req->data == NULL || req->length < sizeof(struct spdk_nvme_ctrlr_data)) {
+				SPDK_ERRLOG("identify command with no buffer\n");
 				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 				return true;
 			}
-			nsdata = spdk_nvme_ns_get_data(ns);
-			memcpy(req->data, (char *)nsdata, sizeof(struct spdk_nvme_ns_data));
-			return true;
-		} else if (cmd->cdw10 == 1) {
-			/* identify controller */
+
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
 			/* pull from virtual controller context */
-			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
-			return true;
-		} else {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Namespace List\n");
-			response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+			memcpy(req->data, &session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
 			return true;
 		}
-		break;
+		goto passthrough;
+
 	case SPDK_NVME_OPC_GET_FEATURES:
 		feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 		switch (feature) {
