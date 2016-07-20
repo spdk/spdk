@@ -49,6 +49,13 @@
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
+# - Mode may be either "Direct" or "Virtual". Direct means that physical
+#   devices attached to the target will be presented to hosts as if they
+#   were directly attached to the host. No software emulation or command
+#   validation is performed. Virtual means that an NVMe controller is
+#   emulated in software and the namespaces it contains map to block devices
+#   on the target system. These block devices do not need to be NVMe devices.
+#   Only Direct mode is currently supported.
 # - Between 1 and 255 Listen directives are allowed. This defines
 #   the addresses on which new connections may be accepted. The format
 #   is Listen <type> <address> where type currently can only be RDMA.
@@ -58,6 +65,7 @@
 # - Exactly 1 Controller directive.
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
+  Mode Direct
   Listen RDMA 15.15.15.2:4420
   Host nqn.2016-06.io.spdk:init
   Controller Nvme0
@@ -65,6 +73,7 @@
 # Multiple subsystems are allowed.
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
+  Mode Direct
   Listen RDMA 192.168.2.21:4420
   Host nqn.2016-06.io.spdk:init
   Controller Nvme1

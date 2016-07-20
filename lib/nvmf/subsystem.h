@@ -42,6 +42,11 @@ struct spdk_nvmf_conn;
 
 #define MAX_NQN_SIZE 255
 
+enum spdk_nvmf_subsystem_mode {
+	NVMF_SUBSYSTEM_MODE_DIRECT	= 0,
+	NVMF_SUBSYSTEM_MODE_VIRTUAL	= 1,
+};
+
 struct spdk_nvmf_listen_addr {
 	char					*traddr;
 	char					*trsvc; /* TODO: Change to trsvcid */
@@ -62,6 +67,7 @@ struct spdk_nvmf_host {
 struct spdk_nvmf_subsystem {
 	uint16_t num;
 	char subnqn[MAX_NQN_SIZE];
+	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
 	struct nvmf_session *session;
 	struct spdk_nvme_ctrlr *ctrlr;

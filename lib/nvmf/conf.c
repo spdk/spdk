@@ -310,7 +310,7 @@ spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
-	const char *val, *nqn;
+	const char *val, *nqn, *mode;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
 	int i, ret;
@@ -338,6 +338,25 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUBTYPE_NVME, lcore);
 	if (subsystem == NULL) {
+		return -1;
+	}
+
+	mode = spdk_conf_section_get_val(sp, "Mode");
+	if (mode == NULL) {
+		nvmf_delete_subsystem(subsystem);
+		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", sp->num);
+		return -1;
+	}
+
+	if (strcasecmp(mode, "Direct") == 0) {
+		subsystem->mode = NVMF_SUBSYSTEM_MODE_DIRECT;
+	} else if (strcasecmp(mode, "Virtual") == 0) {
+		nvmf_delete_subsystem(subsystem);
+		SPDK_ERRLOG("Virtual Subsystems are not yet supported.\n");
+		return -1;
+	} else {
+		nvmf_delete_subsystem(subsystem);
+		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode);
 		return -1;
 	}
 
