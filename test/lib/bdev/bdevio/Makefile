@@ -31,14 +31,39 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += bdev conf copy cunit event json jsonrpc log memory rpc trace util nvme nvmf ioat
+APP = bdevio
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := bdevio.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CFLAGS += -I. $(DPDK_INC)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
+	     $(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
+	     $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
+	     $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
+	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+	     $(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
+	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
+	     $(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
+	     $(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
+	     $(SPDK_ROOT_DIR)/lib/json/libspdk_json.a
+
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
+	$(COPY_MODULES_LINKER_ARGS)
+
+LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) $(DPDK_LIB) -lcunit
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS) $(BLOCKDEV_MODULES) $(LINKER_MODULES)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

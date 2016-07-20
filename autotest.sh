@@ -54,6 +54,7 @@ timing_exit nvmf_setup
 
 timing_enter lib
 
+time test/lib/bdev/blockdev.sh
 time test/lib/event/event.sh
 time test/lib/nvme/nvme.sh
 time test/lib/nvmf/nvmf.sh

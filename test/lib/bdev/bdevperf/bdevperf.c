@@ -1,0 +1,684 @@
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
+ *   Copyright (c) Intel Corporation.
+ *   All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of Intel Corporation nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include <rte_config.h>
+#include <rte_eal.h>
+#include <rte_debug.h>
+#include <rte_mempool.h>
+#include <rte_cycles.h>
+#include <rte_malloc.h>
+#include <rte_ring.h>
+#include <rte_lcore.h>
+#include <rte_timer.h>
+
+#include "spdk/bdev.h"
+#include "spdk/bdev_db.h"
+#include "spdk/copy_engine.h"
+#include "spdk/log.h"
+
+struct bdevperf_task {
+	struct iovec		iov;
+	struct io_target	*target;
+	void			*buf;
+};
+
+static int g_io_size = 0;
+/* initialize to invalid value so we can detect if user overrides it. */
+static int g_rw_percentage = -1;
+static int g_is_random;
+static bool g_verify = false;
+static bool g_reset = false;
+static bool g_unmap = false;
+static int g_queue_depth;
+static int g_time_in_sec;
+static int g_show_performance_real_time = 0;
+static bool g_run_failed = false;
+static bool g_zcopy = true;
+
+static struct rte_timer g_perf_timer;
+
+static void bdevperf_submit_single(struct io_target *target);
+
+#include "../common.c"
+
+struct io_target {
+	struct spdk_bdev	*bdev;
+	struct io_target	*next;
+	unsigned		lcore;
+	int			io_completed;
+	int			current_queue_depth;
+	uint64_t		size_in_ios;
+	uint64_t		offset_in_ios;
+	bool			is_draining;
+	struct rte_timer	run_timer;
+	struct rte_timer	reset_timer;
+};
+
+struct io_target *head[RTE_MAX_LCORE];
+static int g_target_count = 0;
+
+/*
+ * Used to determine how the I/O buffers should be aligned.
+ *  This alignment will be bumped up for blockdevs that
+ *  require alignment based on block length - for example,
+ *  AIO blockdevs.
+ */
+static uint32_t g_min_alignment = 8;
+
+static void
+blockdev_heads_init(void)
+{
+	int i;
+
+	for (i = 0; i < RTE_MAX_LCORE; i++) {
+		head[i] = NULL;
+	}
+}
+
+static void
+bdevperf_construct_targets(void)
+{
+	int index = 0;
+	struct blockdev_entry *bdev_entry = g_bdevs;
+	struct spdk_bdev *bdev;
+	struct io_target *target;
+
+	while (bdev_entry != NULL) {
+		bdev = bdev_entry->bdev;
+
+		if (bdev->claimed) {
+			bdev_entry = bdev_entry->next;
+			continue;
+		}
+
+		if (g_unmap && !bdev->thin_provisioning) {
+			printf("Skipping %s because it does not support unmap\n", bdev->name);
+			bdev_entry = bdev_entry->next;
+			continue;
+		}
+
+		target = malloc(sizeof(struct io_target));
+		if (!target) {
+			fprintf(stderr, "Unable to allocate memory for new target.\n");
+			/* Return immediately because all mallocs will presumably fail after this */
+			return;
+		}
+		target->bdev = bdev;
+		/* Mapping each target to lcore */
+		index = g_target_count % spdk_app_get_core_count();
+		target->next = head[index];
+		target->lcore = index;
+		target->io_completed = 0;
+		target->current_queue_depth = 0;
+		target->offset_in_ios = 0;
+		target->size_in_ios = (bdev->blockcnt * bdev->blocklen) /
+				      g_io_size;
+		if (bdev->need_aligned_buffer && g_min_alignment < bdev->blocklen) {
+			g_min_alignment = bdev->blocklen;
+		}
+
+		target->is_draining = false;
+		rte_timer_init(&target->run_timer);
+		rte_timer_init(&target->reset_timer);
+
+		head[index] = target;
+		g_target_count++;
+		bdev_entry = bdev_entry->next;
+	}
+}
+
+static void
+end_run(spdk_event_t event)
+{
+	if (--g_target_count == 0) {
+		if (g_show_performance_real_time) {
+			rte_timer_stop_sync(&g_perf_timer);
+		}
+		spdk_app_stop(0);
+	}
+}
+
+struct rte_mempool *task_pool;
+
+static void
+bdevperf_complete(spdk_event_t event)
+{
+	struct io_target	*target;
+	struct bdevperf_task	*task = spdk_event_get_arg1(event);
+	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+	spdk_event_t		complete;
+
+	if (bdev_io->status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		g_run_failed = true;
+	} else if (g_verify || g_reset || g_unmap) {
+		if (memcmp(task->buf, bdev_io->u.read.buf, g_io_size) != 0) {
+			printf("Buffer mismatch! Disk Offset: %lu\n", bdev_io->u.read.offset);
+			g_run_failed = true;
+		}
+	}
+
+	target = task->target;
+	target->current_queue_depth--;
+	target->io_completed++;
+
+	bdev_io->caller_ctx = NULL;
+	rte_mempool_put(task_pool, task);
+
+	spdk_bdev_free_io(bdev_io);
+
+	/*
+	 * is_draining indicates when time has expired for the test run
+	 * and we are just waiting for the previously submitted I/O
+	 * to complete.  In this case, do not submit a new I/O to replace
+	 * the one just completed.
+	 */
+	if (!target->is_draining) {
+		bdevperf_submit_single(target);
+	} else if (target->current_queue_depth == 0) {
+		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, NULL, NULL, NULL);
+		spdk_event_call(complete);
+	}
+}
+
+static void
+bdevperf_unmap_complete(spdk_event_t event)
+{
+	struct io_target	*target;
+	struct bdevperf_task	*task = spdk_event_get_arg1(event);
+	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+
+	target = task->target;
+
+	/* Set the expected buffer to 0. */
+	memset(task->buf, 0, g_io_size);
+
+	/* Read the data back in */
+	spdk_bdev_read(target->bdev, NULL,
+		       be32toh(bdev_io->u.unmap.unmap_bdesc->block_count) * target->bdev->blocklen,
+		       be64toh(bdev_io->u.unmap.unmap_bdesc->lba) * target->bdev->blocklen,
+		       bdevperf_complete, task);
+
+	free(bdev_io->u.unmap.unmap_bdesc);
+	spdk_bdev_free_io(bdev_io);
+
+}
+
+static void
+bdevperf_verify_write_complete(spdk_event_t event)
+{
+	struct io_target	*target;
+	struct bdevperf_task	*task = spdk_event_get_arg1(event);
+	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+
+	target = task->target;
+
+	if (g_unmap) {
+		/* Unmap the data */
+		struct spdk_scsi_unmap_bdesc *bdesc = calloc(1, sizeof(*bdesc));
+		if (bdesc == NULL) {
+			fprintf(stderr, "memory allocation failure\n");
+			exit(1);
+		}
+
+		bdesc->lba = htobe64(bdev_io->u.write.offset / target->bdev->blocklen);
+		bdesc->block_count = htobe32(bdev_io->u.write.len / target->bdev->blocklen);
+
+		spdk_bdev_unmap(target->bdev, bdesc, 1, bdevperf_unmap_complete,
+				task);
+	} else {
+		/* Read the data back in */
+		spdk_bdev_read(target->bdev, NULL,
+			       bdev_io->u.write.len,
+			       bdev_io->u.write.offset,
+			       bdevperf_complete, task);
+	}
+
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
+{
+	struct bdevperf_task *task = __task;
+
+	task->buf = rte_malloc(NULL, g_io_size, g_min_alignment);
+}
+
+static __thread unsigned int seed = 0;
+
+static void
+bdevperf_submit_single(struct io_target *target)
+{
+	struct spdk_bdev	*bdev;
+	struct bdevperf_task	*task = NULL;
+	uint64_t		offset_in_ios;
+	void			*rbuf;
+
+	bdev = target->bdev;
+
+	if (rte_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
+		printf("Task pool allocation failed\n");
+		abort();
+	}
+
+	task->target = target;
+
+	if (g_is_random) {
+		offset_in_ios = rand_r(&seed) % target->size_in_ios;
+	} else {
+		offset_in_ios = target->offset_in_ios++;
+		if (target->offset_in_ios == target->size_in_ios) {
+			target->offset_in_ios = 0;
+		}
+	}
+
+	if (g_verify || g_reset || g_unmap) {
+		memset(task->buf, rand_r(&seed) % 256, g_io_size);
+		task->iov.iov_base = task->buf;
+		task->iov.iov_len = g_io_size;
+		spdk_bdev_writev(bdev, &task->iov, 1, g_io_size,
+				 offset_in_ios * g_io_size,
+				 bdevperf_verify_write_complete, task);
+	} else if ((g_rw_percentage == 100) ||
+		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
+		rbuf = g_zcopy ? NULL : task->buf;
+		spdk_bdev_read(bdev, rbuf, g_io_size,
+			       offset_in_ios * g_io_size,
+			       bdevperf_complete, task);
+	} else {
+		task->iov.iov_base = task->buf;
+		task->iov.iov_len = g_io_size;
+		spdk_bdev_writev(bdev, &task->iov, 1, g_io_size,
+				 offset_in_ios * g_io_size,
+				 bdevperf_complete, task);
+	}
+
+	target->current_queue_depth++;
+}
+
+static void
+bdevperf_submit_io(struct io_target *target, int queue_depth)
+{
+	while (queue_depth-- > 0) {
+		bdevperf_submit_single(target);
+	}
+}
+
+static void
+end_target(struct rte_timer *timer, void *arg)
+{
+	struct io_target *target = arg;
+
+	if (g_reset) {
+		rte_timer_stop_sync(&target->reset_timer);
+	}
+
+	target->is_draining = true;
+}
+
+static void reset_target(struct rte_timer *timer, void *arg);
+
+static void
+reset_cb(spdk_event_t event)
+{
+	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+	int			status = bdev_io->status;
+	struct bdevperf_task	*task = bdev_io->caller_ctx;
+	struct io_target	*target = task->target;
+
+	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		printf("Reset blockdev=%s failed\n", target->bdev->name);
+		g_run_failed = true;
+	}
+
+	rte_mempool_put(task_pool, task);
+
+	rte_timer_reset(&target->reset_timer, rte_get_timer_hz() * 10, SINGLE,
+			target->lcore, reset_target, target);
+}
+
+static void
+reset_target(struct rte_timer *timer, void *arg)
+{
+	struct io_target *target = arg;
+	struct bdevperf_task	*task = NULL;
+
+	/* Do reset. */
+	rte_mempool_get(task_pool, (void **)&task);
+	task->target = target;
+	spdk_bdev_reset(target->bdev, SPDK_BDEV_RESET_SOFT,
+			reset_cb, task);
+}
+
+static void
+bdevperf_submit_on_core(spdk_event_t event)
+{
+	struct io_target *target = spdk_event_get_arg1(event);
+
+	/* Submit initial I/O for each block device. Each time one
+	 * completes, another will be submitted. */
+	while (target != NULL) {
+		/* Start a timer to stop this I/O chain when the run is over */
+		rte_timer_reset(&target->run_timer, rte_get_timer_hz() * g_time_in_sec, SINGLE,
+				target->lcore, end_target, target);
+		if (g_reset) {
+			rte_timer_reset(&target->reset_timer, rte_get_timer_hz() * 10, SINGLE,
+					target->lcore, reset_target, target);
+		}
+		bdevperf_submit_io(target, g_queue_depth);
+		target = target->next;
+	}
+}
+
+static void usage(char *program_name)
+{
+	printf("%s options\n", program_name);
+	printf("\t[-c configuration file]\n");
+	printf("\t[-m core mask for distributing I/O submission/completion work\n");
+	printf("\t\t(default: 0x1 - use core 0 only)]\n");
+	printf("\t[-q io depth]\n");
+	printf("\t[-s io size in bytes]\n");
+	printf("\t[-w io pattern type, must be one of\n");
+	printf("\t\t(read, write, randread, randwrite, rw, randrw, verify, reset)]\n");
+	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
+	printf("\t[-t time in seconds]\n");
+	printf("\t[-S Show performance result in real time]\n");
+}
+
+static void
+performance_dump(int io_time)
+{
+	int index;
+	unsigned lcore_id;
+	float io_per_second, mb_per_second;
+	float total_io_per_second, total_mb_per_second;
+	struct io_target *target;
+
+	total_io_per_second = 0;
+	total_mb_per_second = 0;
+	for (index = 0; index < spdk_app_get_core_count(); index++) {
+		target = head[index];
+		if (target != NULL) {
+			lcore_id = target->lcore;
+			printf("\r Logical core: %d\n", lcore_id);
+		}
+		while (target != NULL) {
+			io_per_second = (float)target->io_completed /
+					io_time;
+			mb_per_second = io_per_second * g_io_size /
+					(1024 * 1024);
+			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
+			       target->bdev->name, io_per_second,
+			       mb_per_second);
+			total_io_per_second += io_per_second;
+			total_mb_per_second += mb_per_second;
+			target = target->next;
+		}
+	}
+
+	printf("\r =====================================================\n");
+	printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
+	       "Total", total_io_per_second, total_mb_per_second);
+	fflush(stdout);
+
+}
+
+static void
+performance_statistics_thread(struct rte_timer *timer, void *arg)
+{
+	performance_dump(1);
+}
+
+static void
+bdevperf_run(spdk_event_t evt)
+{
+	int i;
+	struct io_target *target;
+	spdk_event_t event;
+
+	printf("Running I/O for %d seconds...\n", g_time_in_sec);
+	fflush(stdout);
+
+	/* Start a timer to dump performance numbers */
+	if (g_show_performance_real_time) {
+		rte_timer_init(&g_perf_timer);
+		rte_timer_reset(&g_perf_timer, rte_get_timer_hz(), PERIODICAL,
+				rte_get_master_lcore(), performance_statistics_thread, NULL);
+	}
+
+	/* Send events to start all I/O */
+	RTE_LCORE_FOREACH(i) {
+		if (spdk_app_get_core_mask() & (1ULL << i)) {
+			target = head[i];
+			if (target != NULL) {
+				event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
+							    target, NULL, NULL);
+				spdk_event_call(event);
+			}
+		}
+	}
+}
+
+int
+main(int argc, char **argv)
+{
+	const char *config_file;
+	const char *core_mask;
+	const char *workload_type;
+	int op;
+	bool mix_specified;
+
+	/* default value*/
+	config_file = NULL;
+	g_queue_depth = 0;
+	g_io_size = 0;
+	workload_type = NULL;
+	g_time_in_sec = 0;
+	mix_specified = false;
+	core_mask = NULL;
+
+	while ((op = getopt(argc, argv, "c:m:q:s:t:w:M:S")) != -1) {
+		switch (op) {
+		case 'c':
+			config_file = optarg;
+			break;
+		case 'm':
+			core_mask = optarg;
+			break;
+		case 'q':
+			g_queue_depth = atoi(optarg);
+			break;
+		case 's':
+			g_io_size = atoi(optarg);
+			break;
+		case 't':
+			g_time_in_sec = atoi(optarg);
+			break;
+		case 'w':
+			workload_type = optarg;
+			break;
+		case 'M':
+			g_rw_percentage = atoi(optarg);
+			mix_specified = true;
+			break;
+		case 'S':
+			g_show_performance_real_time = 1;
+			break;
+		default:
+			usage(argv[0]);
+			exit(1);
+		}
+	}
+
+	if (!config_file) {
+		usage(argv[0]);
+		exit(1);
+	}
+	if (!g_queue_depth) {
+		usage(argv[0]);
+		exit(1);
+	}
+	if (!g_io_size) {
+		usage(argv[0]);
+		exit(1);
+	}
+	if (!workload_type) {
+		usage(argv[0]);
+		exit(1);
+	}
+	if (!g_time_in_sec) {
+		usage(argv[0]);
+		exit(1);
+	}
+
+	if (strcmp(workload_type, "read") &&
+	    strcmp(workload_type, "write") &&
+	    strcmp(workload_type, "randread") &&
+	    strcmp(workload_type, "randwrite") &&
+	    strcmp(workload_type, "rw") &&
+	    strcmp(workload_type, "randrw") &&
+	    strcmp(workload_type, "verify") &&
+	    strcmp(workload_type, "reset") &&
+	    strcmp(workload_type, "unmap")) {
+		fprintf(stderr,
+			"io pattern type must be one of\n"
+			"(read, write, randread, randwrite, rw, randrw, verify, reset, unmap)\n");
+		exit(1);
+	}
+
+	if (!strcmp(workload_type, "read") ||
+	    !strcmp(workload_type, "randread")) {
+		g_rw_percentage = 100;
+	}
+
+	if (!strcmp(workload_type, "write") ||
+	    !strcmp(workload_type, "randwrite")) {
+		g_rw_percentage = 0;
+	}
+
+	if (!strcmp(workload_type, "verify") ||
+	    !strcmp(workload_type, "reset") ||
+	    !strcmp(workload_type, "unmap")) {
+		g_rw_percentage = 50;
+		if (g_io_size > SPDK_BDEV_LARGE_RBUF_MAX_SIZE) {
+			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
+				SPDK_BDEV_LARGE_RBUF_MAX_SIZE, g_io_size);
+			exit(1);
+		}
+		if (core_mask) {
+			fprintf(stderr, "Ignoring -m option. Verify can only run with a single core.\n");
+			core_mask = NULL;
+		}
+		g_verify = true;
+		if (!strcmp(workload_type, "reset")) {
+			g_reset = true;
+		}
+		if (!strcmp(workload_type, "unmap")) {
+			g_unmap = true;
+		}
+	}
+
+	if (!strcmp(workload_type, "read") ||
+	    !strcmp(workload_type, "randread") ||
+	    !strcmp(workload_type, "write") ||
+	    !strcmp(workload_type, "randwrite") ||
+	    !strcmp(workload_type, "verify") ||
+	    !strcmp(workload_type, "reset") ||
+	    !strcmp(workload_type, "unmap")) {
+		if (mix_specified) {
+			fprintf(stderr, "Ignoring -M option... Please use -M option"
+				" only when using rw or randrw.\n");
+		}
+	}
+
+	if (!strcmp(workload_type, "rw") ||
+	    !strcmp(workload_type, "randrw")) {
+		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
+			fprintf(stderr,
+				"-M must be specified to value from 0 to 100 "
+				"for rw or randrw.\n");
+			exit(1);
+		}
+	}
+
+	if (!strcmp(workload_type, "read") ||
+	    !strcmp(workload_type, "write") ||
+	    !strcmp(workload_type, "rw") ||
+	    !strcmp(workload_type, "verify") ||
+	    !strcmp(workload_type, "reset") ||
+	    !strcmp(workload_type, "unmap")) {
+		g_is_random = 0;
+	} else {
+		g_is_random = 1;
+	}
+
+	if (g_io_size > SPDK_BDEV_LARGE_RBUF_MAX_SIZE) {
+		fprintf(stdout, "I/O size of %d is greather than zero copy threshold (%d).\n",
+			g_io_size, SPDK_BDEV_LARGE_RBUF_MAX_SIZE);
+		fprintf(stdout, "Zero copy mechanism will not be used.\n");
+		g_zcopy = false;
+	}
+
+	optind = 1;  /*reset the optind */
+
+	rte_set_log_level(RTE_LOG_ERR);
+
+	blockdev_heads_init();
+
+	bdevtest_init(config_file, core_mask);
+
+	bdevperf_construct_targets();
+
+	if (g_bdevs == NULL) {
+		printf("No blockdevs available.\n");
+		return 1;
+	}
+
+	task_pool = rte_mempool_create("task_pool", 4096 * spdk_app_get_core_count(),
+				       sizeof(struct bdevperf_task),
+				       64, 0, NULL, NULL, task_ctor, NULL,
+				       SOCKET_ID_ANY, 0);
+
+	spdk_app_start(bdevperf_run, NULL, NULL);
+
+	performance_dump(g_time_in_sec);
+	spdk_app_fini();
+	printf("done.\n");
+	return 0;
+}
