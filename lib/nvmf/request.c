@@ -78,7 +78,6 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
-	response->cid = cmd->cid;
 
 	if (req->data == NULL) {
 		SPDK_ERRLOG("discovery command with no buffer\n");
@@ -151,7 +150,6 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
-	response->cid = cmd->cid;
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
@@ -266,7 +264,6 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	/* pre-set response details for this command */
 	response = &req->rsp->nvme_cpl;
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
-	response->cid = cmd->cid;
 
 	/* verify that the contoller is ready to process commands */
 	if (session->vcprop.csts.bits.rdy == 0) {
