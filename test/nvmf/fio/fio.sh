@@ -30,10 +30,10 @@ fi
 
 echo 'traddr='$NVMF_FIRST_TARGET_IP',transport=rdma,nr_io_queues=1,trsvcid='$NVMF_PORT',nqn=nqn.2016-06.io.spdk:cnode1' > /dev/nvme-fabrics
 
-$testdir/nvmf_fio.py 4096 1 rw 1 verify
-$testdir/nvmf_fio.py 4096 1 randrw 1 verify
-$testdir/nvmf_fio.py 4096 128 rw 1 verify
-$testdir/nvmf_fio.py 4096 128 randrw 1 verify
+$testdir/nvmf_fio.py 4096 1 write 1 verify
+$testdir/nvmf_fio.py 4096 1 randwrite 1 verify
+$testdir/nvmf_fio.py 4096 128 write 1 verify
+$testdir/nvmf_fio.py 4096 128 randwrite 1 verify
 
 sync
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
