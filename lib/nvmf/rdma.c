@@ -624,20 +624,31 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		goto err1;
 	}
 
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Calculating Queue Depth\n");
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", g_nvmf_tgt.max_queue_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA,
+		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
+		      ibdev_attr.max_qp_wr, ibdev_attr.max_qp_rd_atom);
 	host_event_data = &event->param.conn;
 	if (host_event_data->private_data == NULL ||
 	    host_event_data->private_data_len < sizeof(struct spdk_nvmf_rdma_request_private_data)) {
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "No private data supplied\n");
 		/* No private data, so use defaults. */
 		qp_depth = g_nvmf_tgt.max_queue_depth;
 		rw_depth = g_nvmf_tgt.max_queue_depth;
 	} else {
 		const struct spdk_nvmf_rdma_request_private_data *private_data = host_event_data->private_data;
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Receive Queue Size: %d\n", private_data->hrqsize);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Send Queue Size: %d\n", private_data->hsqsize);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host NIC Receive Queue Size: %d\n",
+			      host_event_data->initiator_depth);
 		qp_depth = nvmf_min(private_data->hrqsize, private_data->hsqsize);
 		rw_depth = host_event_data->initiator_depth;
 	}
 	qp_depth = nvmf_min(g_nvmf_tgt.max_queue_depth, nvmf_min(qp_depth, ibdev_attr.max_qp_wr));
 	rw_depth = nvmf_min(g_nvmf_tgt.max_queue_depth, nvmf_min(rw_depth, ibdev_attr.max_qp_rd_atom));
 	rdma_conn->queue_depth = nvmf_min(qp_depth, rw_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d\n", rdma_conn->queue_depth);
 
 	rc = nvmf_rdma_queue_init(conn, conn_id->verbs);
 	if (rc) {
