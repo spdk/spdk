@@ -254,32 +254,18 @@ passthrough:
 static bool
 nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 {
-	struct nvmf_session *session = req->conn->sess;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *response;
-	struct spdk_nvmf_subsystem *subsystem = session->subsys;
+	struct spdk_nvmf_subsystem *subsystem = req->conn->sess->subsys;
 	int rc;
 
-	/* pre-set response details for this command */
-	response = &req->rsp->nvme_cpl;
-	response->status.sc = SPDK_NVME_SC_SUCCESS;
-
-	/* verify that the contoller is ready to process commands */
-	if (session->vcprop.csts.bits.rdy == 0) {
-		SPDK_ERRLOG("Subsystem Controller Not Ready!\n");
-		response->status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
-		return true;
-	}
-
 	rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->ctrlr, subsystem->io_qpair,
-					cmd,
+					&req->cmd->nvme_cmd,
 					req->data, req->length,
 					nvmf_complete_cmd,
 					req);
 
 	if (rc) {
-		SPDK_ERRLOG("Failed to submit Opcode 0x%02x\n", cmd->opc);
-		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		SPDK_ERRLOG("Failed to submit request %p\n", req);
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return true;
 	}
 
