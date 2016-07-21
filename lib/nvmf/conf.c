@@ -40,7 +40,6 @@
 #include <rte_lcore.h>
 
 #include "conf.h"
-#include "controller.h"
 #include "nvmf_internal.h"
 #include "subsystem.h"
 #include "transport.h"
@@ -51,6 +50,15 @@
 #define MAX_HOSTS 255
 
 #define PORTNUMSTRLEN 32
+
+struct spdk_nvmf_probe_ctx {
+	struct spdk_nvmf_subsystem	*subsystem;
+	bool				any;
+	int				domain;
+	int				bus;
+	int				device;
+	int				function;
+};
 
 static int
 spdk_nvmf_parse_nvmf_tgt(void)
@@ -182,82 +190,46 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 	return 0;
 }
 
-static int
-spdk_nvmf_parse_nvme(void)
+static bool
+probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct spdk_conf_section *sp;
-	struct nvme_bdf_whitelist *whitelist = NULL;
-	const char *val;
-	bool claim_all = false;
-	bool unbind_from_kernel = false;
-	int i = 0;
+	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
+	uint16_t found_domain = spdk_pci_device_get_domain(dev);
+	uint8_t found_bus    = spdk_pci_device_get_bus(dev);
+	uint8_t found_dev    = spdk_pci_device_get_dev(dev);
+	uint8_t found_func   = spdk_pci_device_get_func(dev);
+
+	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
+		       found_domain, found_bus, found_dev, found_func);
+
+	if (ctx->any) {
+		return true;
+	}
+
+	if (found_domain == ctx->domain &&
+	    found_bus == ctx->bus &&
+	    found_dev == ctx->device &&
+	    found_func == ctx->function) {
+		if (!spdk_pci_device_has_non_uio_driver(dev)) {
+			return true;
+		}
+		SPDK_ERRLOG("Requested device is still bound to the kernel. Unbind your NVMe devices first.\n");
+	}
+
+	return false;
+}
+
+static void
+attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr,
+	  const struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
 	int rc;
 
-	sp = spdk_conf_find_section(NULL, "Nvme");
-	if (sp == NULL) {
-		SPDK_ERRLOG("NVMe device section in config file not found!\n");
-		return -1;
+	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}
-
-	val = spdk_conf_section_get_val(sp, "ClaimAllDevices");
-	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			claim_all = true;
-		}
-	}
-
-	val = spdk_conf_section_get_val(sp, "UnbindFromKernel");
-	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			unbind_from_kernel = true;
-		}
-	}
-
-	if (!claim_all) {
-		for (i = 0; ; i++) {
-			unsigned int domain, bus, dev, func;
-
-			val = spdk_conf_section_get_nmval(sp, "BDF", i, 0);
-			if (val == NULL) {
-				break;
-			}
-
-			whitelist = realloc(whitelist, sizeof(*whitelist) * (i + 1));
-
-			rc = sscanf(val, "%x:%x:%x.%x", &domain, &bus, &dev, &func);
-			if (rc != 4) {
-				SPDK_ERRLOG("Invalid format for BDF: %s\n", val);
-				free(whitelist);
-				return -1;
-			}
-
-			whitelist[i].domain = domain;
-			whitelist[i].bus = bus;
-			whitelist[i].dev = dev;
-			whitelist[i].func = func;
-
-			val = spdk_conf_section_get_nmval(sp, "BDF", i, 1);
-			if (val == NULL) {
-				SPDK_ERRLOG("BDF section with no device name\n");
-				free(whitelist);
-				return -1;
-			}
-
-			snprintf(whitelist[i].name, MAX_NVME_NAME_LENGTH, "%s", val);
-		}
-
-		if (i == 0) {
-			SPDK_ERRLOG("No BDF section\n");
-			return -1;
-		}
-	}
-
-	rc = spdk_nvmf_init_nvme(whitelist, i,
-				 claim_all, unbind_from_kernel);
-
-	free(whitelist);
-
-	return rc;
 }
 
 static int
@@ -310,9 +282,9 @@ spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
-	const char *val, *nqn, *mode;
+	const char *nqn, *mode, *bdf;
 	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_ctrlr *nvmf_ctrlr;
+	struct spdk_nvmf_probe_ctx ctx = { 0 };
 	int i, ret;
 	uint64_t mask;
 	uint32_t lcore;
@@ -400,30 +372,29 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
 	}
 
-	val = spdk_conf_section_get_val(sp, "Controller");
-	if (val == NULL) {
-		SPDK_ERRLOG("Subsystem %d: missing Controller\n", sp->num);
+	/* Parse NVMe section */
+	bdf = spdk_conf_section_get_val(sp, "NVMe");
+	if (bdf == NULL) {
+		SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", sp->num);
 		nvmf_delete_subsystem(subsystem);
 		return -1;
 	}
 
-	/* claim this controller from the available controller list */
-	nvmf_ctrlr = spdk_nvmf_ctrlr_claim(val);
-	if (nvmf_ctrlr == NULL) {
-		SPDK_ERRLOG("Subsystem %d: NVMe controller %s not found\n", sp->num, val);
-		nvmf_delete_subsystem(subsystem);
-		return -1;
+	ctx.subsystem = subsystem;
+	if (strcmp(bdf, "*") == 0) {
+		ctx.any = true;
+	} else {
+		ret = sscanf(bdf, "%x:%x:%x.%x", &ctx.domain, &ctx.bus, &ctx.device, &ctx.function);
+		if (ret != 4) {
+			SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
+			return -1;
+		}
+		ctx.any = false;
 	}
 
-	ret = nvmf_subsystem_add_ctrlr(subsystem, nvmf_ctrlr->ctrlr);
-	if (ret < 0) {
-		SPDK_ERRLOG("Subsystem %d: adding controller %s failed\n", sp->num, val);
-		nvmf_delete_subsystem(subsystem);
-		return -1;
+	if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
+		SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 	}
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "    NVMf Subsystem: Nvme Controller: %s , %p\n",
-		      nvmf_ctrlr->name, nvmf_ctrlr->ctrlr);
 
 	return 0;
 }
@@ -454,12 +425,6 @@ spdk_nvmf_parse_conf(void)
 
 	/* NVMf section */
 	rc = spdk_nvmf_parse_nvmf_tgt();
-	if (rc < 0) {
-		return rc;
-	}
-
-	/* NVMe sections */
-	rc = spdk_nvmf_parse_nvme();
 	if (rc < 0) {
 		return rc;
 	}

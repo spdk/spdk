@@ -34,6 +34,8 @@
 #ifndef SPDK_NVMF_SUBSYSTEM_H
 #define SPDK_NVMF_SUBSYSTEM_H
 
+#include "nvmf_internal.h"
+
 #include "spdk/event.h"
 #include "spdk/nvme.h"
 #include "spdk/queue.h"

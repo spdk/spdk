@@ -33,7 +33,6 @@
 
 #include <ctype.h>
 
-#include "controller.h"
 #include "nvmf_internal.h"
 #include "session.h"
 #include "subsystem.h"
@@ -152,6 +151,10 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	if (subsystem->session) {
 		spdk_nvmf_session_destruct(subsystem->session);
+	}
+
+	if (subsystem->ctrlr) {
+		spdk_nvme_detach(subsystem->ctrlr);
 	}
 
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);

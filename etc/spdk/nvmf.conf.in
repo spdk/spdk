@@ -33,20 +33,6 @@
   # Set the maximum number of outstanding I/O per queue.
   #MaxQueueDepth 128
 
-# NVMe Device Whitelist
-# Users may specify which NVMe devices to claim by their PCI
-# domain, bus, device, and function. The format is dddd:bb:dd.f, which is
-# the same format displayed by lspci or in /sys/bus/pci/devices. The second
-# argument is a "name" for the device that can be anything. The name
-# is referenced later in the Subsystem section.
-#
-# Alternatively, the user can specify ClaimAllDevices. All
-# NVMe devices will be claimed and named Nvme0, Nvme1, etc.
-[Nvme]
-  BDF 0000:00:00.0 Nvme0
-  BDF 0000:01:00.0 Nvme1
-  # ClaimAllDevices Yes
-
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Mode may be either "Direct" or "Virtual". Direct means that physical
@@ -62,13 +48,15 @@
 # - Between 0 and 255 Host directives are allowed. This defines the
 #   NQNs of allowed hosts. If no Host directive is specified, all hosts
 #   are allowed to connect.
-# - Exactly 1 Controller directive.
+# - Exactly 1 NVMe directive specifying an NVMe device by PCI BDF. The
+#   PCI domain:bus:device.function can be replaced by "*" to indicate
+#   any PCI device.
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
   Mode Direct
   Listen RDMA 15.15.15.2:4420
   Host nqn.2016-06.io.spdk:init
-  Controller Nvme0
+  NVMe 0000:00:00.0
 
 # Multiple subsystems are allowed.
 [Subsystem2]
@@ -76,5 +64,5 @@
   Mode Direct
   Listen RDMA 192.168.2.21:4420
   Host nqn.2016-06.io.spdk:init
-  Controller Nvme1
+  NVMe 0000:01:00.0
 
