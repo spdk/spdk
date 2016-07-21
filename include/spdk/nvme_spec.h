@@ -737,7 +737,13 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/** optional asynchronous events supported */
 	uint32_t		oaes;
 
-	uint8_t			reserved1[160];
+	/** controller attributes */
+	struct {
+		uint32_t	host_id_exhid_supported: 1;
+		uint32_t	reserved: 31;
+	} ctratt;
+
+	uint8_t			reserved1[156];
 
 	/* bytes 256-511: admin command set attributes */
 
