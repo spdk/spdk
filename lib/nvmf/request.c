@@ -513,11 +513,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 				      offset, sgl->unkeyed.length);
 
-			if (conn->type == CONN_TYPE_AQ) {
-				SPDK_ERRLOG("In-capsule data not allowed for admin queue\n");
-				return -1;
-			}
-
 			if (offset > max_len) {
 				SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
 					    offset, max_len);

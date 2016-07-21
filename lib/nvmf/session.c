@@ -112,6 +112,9 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	nvmfdata->ctrattr = 0; /* dynamic controller model */
 	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
 
+	/* TODO: this should be set by the transport */
+	nvmfdata->ioccsz += SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 16;
+
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ctrlr data: maxcmd %x\n",
 		      session->vcdata.maxcmd);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: ioccsz %x\n",
