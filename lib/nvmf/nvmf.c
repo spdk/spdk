@@ -58,7 +58,7 @@ spdk_nvmf_initialize_pools(void)
 {
 	SPDK_NOTICELOG("\n*** NVMf Pool Creation ***\n");
 
-	g_num_requests = MAX_SUBSYSTEMS * g_nvmf_tgt.max_queues_per_session * g_nvmf_tgt.MaxQueueDepth;
+	g_num_requests = MAX_SUBSYSTEMS * g_nvmf_tgt.max_queues_per_session * g_nvmf_tgt.max_queue_depth;
 
 	/* create NVMe backend request pool */
 	request_mempool = rte_mempool_create("NVMe_Pool",
@@ -120,17 +120,8 @@ nvmf_tgt_init(int max_queue_depth, int max_queues_per_sess)
 {
 	int rc;
 
-	if (max_queue_depth >= 1 &&
-	    max_queue_depth <= SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH) {
-		g_nvmf_tgt.MaxQueueDepth = max_queue_depth;
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxQueueDepth: %d\n",
-			      g_nvmf_tgt.MaxQueueDepth);
-	} else {
-		SPDK_ERRLOG("Invalid MaxQueueDepth: %d\n", max_queue_depth);
-		return -EINVAL;
-	}
-
 	g_nvmf_tgt.max_queues_per_session = max_queues_per_sess;
+	g_nvmf_tgt.max_queue_depth = max_queue_depth;
 
 	rc = pthread_mutex_init(&g_nvmf_tgt.mutex, NULL);
 	if (rc != 0) {

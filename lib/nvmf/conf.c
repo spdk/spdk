@@ -64,6 +64,10 @@ struct spdk_nvmf_probe_ctx {
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN 2
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX 1024
 
+#define SPDK_NVMF_CONFIG_QUEUE_DEPTH_DEFAULT 128
+#define SPDK_NVMF_CONFIG_QUEUE_DEPTH_MIN 16
+#define SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX 1024
+
 static int
 spdk_nvmf_parse_nvmf_tgt(void)
 {
@@ -80,10 +84,15 @@ spdk_nvmf_parse_nvmf_tgt(void)
 
 	max_queue_depth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
 	if (max_queue_depth < 0) {
-		max_queue_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+		max_queue_depth = SPDK_NVMF_CONFIG_QUEUE_DEPTH_DEFAULT;
 	}
+	max_queue_depth = nvmf_max(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MIN);
+	max_queue_depth = nvmf_min(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX);
 
 	max_queues_per_sess = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
+	if (max_queues_per_sess < 0) {
+		max_queues_per_sess = SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_DEFAULT;
+	}
 	max_queues_per_sess = nvmf_max(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN);
 	max_queues_per_sess = nvmf_min(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX);
 

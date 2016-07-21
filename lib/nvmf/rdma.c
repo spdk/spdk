@@ -628,8 +628,8 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	if (host_event_data->private_data == NULL ||
 	    host_event_data->private_data_len < sizeof(struct spdk_nvmf_rdma_request_private_data)) {
 		/* No private data, so use defaults. */
-		qp_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
-		rw_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+		qp_depth = g_nvmf_tgt.max_queue_depth;
+		rw_depth = g_nvmf_tgt.max_queue_depth;
 	} else {
 		const struct spdk_nvmf_rdma_request_private_data *private_data = host_event_data->private_data;
 		qp_depth = nvmf_min(private_data->hrqsize, private_data->hsqsize);

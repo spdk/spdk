@@ -47,7 +47,7 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 {
 	struct spdk_nvmf_extended_identify_ctrlr_data *nvmfdata;
 
-	session->vcdata.maxcmd = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
 	/* extended data for get log page supportted */
 	session->vcdata.lpa.edlp = 1;
 	session->vcdata.cntlid = 0; /* There is one controller per subsystem, so its id is 0 */
@@ -100,7 +100,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcdata.aerl = 0;
 	session->vcdata.cntlid = 0;
 	session->vcdata.kas = 10;
-	session->vcdata.maxcmd = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
 	session->vcdata.mdts = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 4096;
 	session->vcdata.sgls.keyed_sgl = 1;
 	session->vcdata.sgls.sgl_offset = 1;
