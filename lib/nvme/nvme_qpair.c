@@ -251,7 +251,6 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 	switch ((int)cpl->status.sct) {
 	case SPDK_NVME_SCT_GENERIC:
 		switch ((int)cpl->status.sc) {
-		case SPDK_NVME_SC_ABORTED_BY_REQUEST:
 		case SPDK_NVME_SC_NAMESPACE_NOT_READY:
 			if (cpl->status.dnr) {
 				return false;
@@ -264,6 +263,7 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 		case SPDK_NVME_SC_DATA_TRANSFER_ERROR:
 		case SPDK_NVME_SC_ABORTED_POWER_LOSS:
 		case SPDK_NVME_SC_INTERNAL_DEVICE_ERROR:
+		case SPDK_NVME_SC_ABORTED_BY_REQUEST:
 		case SPDK_NVME_SC_ABORTED_SQ_DELETION:
 		case SPDK_NVME_SC_ABORTED_FAILED_FUSED:
 		case SPDK_NVME_SC_ABORTED_MISSING_FUSED:
