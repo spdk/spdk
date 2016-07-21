@@ -451,60 +451,7 @@ spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
 	return (strncmp(driver_begin, "uio_", 4) != 0 &&
 		strcmp(driver_begin, "vfio-pci") != 0);
 }
-#endif
 
-#ifdef __FreeBSD__
-int
-spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
-{
-	struct pci_conf_io	configsel;
-	struct pci_match_conf	pattern;
-	struct pci_conf		conf;
-	int			fd;
-
-	memset(&pattern, 0, sizeof(pattern));
-	pattern.pc_sel.pc_domain = spdk_pci_device_get_domain(dev);
-	pattern.pc_sel.pc_bus = spdk_pci_device_get_bus(dev);
-	pattern.pc_sel.pc_dev = spdk_pci_device_get_dev(dev);
-	pattern.pc_sel.pc_func = spdk_pci_device_get_func(dev);
-	pattern.flags = PCI_GETCONF_MATCH_DOMAIN |
-			PCI_GETCONF_MATCH_BUS |
-			PCI_GETCONF_MATCH_DEV |
-			PCI_GETCONF_MATCH_FUNC;
-
-	memset(&configsel, 0, sizeof(configsel));
-	configsel.match_buf_len = sizeof(conf);
-	configsel.matches = &conf;
-	configsel.num_patterns = 1;
-	configsel.pat_buf_len = sizeof(pattern);
-	configsel.patterns = &pattern;
-
-	fd = open("/dev/pci", O_RDONLY, 0);
-	if (fd < 0) {
-		fprintf(stderr, "could not open /dev/pci\n");
-		return -1;
-	}
-
-	if (ioctl(fd, PCIOCGETCONF, &configsel) == -1) {
-		fprintf(stderr, "ioctl(PCIOCGETCONF) failed\n");
-		close(fd);
-		return -1;
-	}
-
-	close(fd);
-
-	if (configsel.num_matches != 1) {
-		fprintf(stderr, "could not find specified device\n");
-		return -1;
-	}
-
-	if (conf.pd_name[0] == '\0' || !strcmp(conf.pd_name, "nic_uio")) {
-		return 0;
-	} else {
-		return 1;
-	}
-}
-#endif
 
 int
 spdk_pci_device_unbind_kernel_driver(struct spdk_pci_device *dev)
@@ -677,3 +624,85 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 	/* Keep dev_fd open to maintain the lock. */
 	return 0;
 }
+#endif /* __linux__ */
+
+#ifdef __FreeBSD__
+int
+spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
+{
+	struct pci_conf_io	configsel;
+	struct pci_match_conf	pattern;
+	struct pci_conf		conf;
+	int			fd;
+
+	memset(&pattern, 0, sizeof(pattern));
+	pattern.pc_sel.pc_domain = spdk_pci_device_get_domain(dev);
+	pattern.pc_sel.pc_bus = spdk_pci_device_get_bus(dev);
+	pattern.pc_sel.pc_dev = spdk_pci_device_get_dev(dev);
+	pattern.pc_sel.pc_func = spdk_pci_device_get_func(dev);
+	pattern.flags = PCI_GETCONF_MATCH_DOMAIN |
+			PCI_GETCONF_MATCH_BUS |
+			PCI_GETCONF_MATCH_DEV |
+			PCI_GETCONF_MATCH_FUNC;
+
+	memset(&configsel, 0, sizeof(configsel));
+	configsel.match_buf_len = sizeof(conf);
+	configsel.matches = &conf;
+	configsel.num_patterns = 1;
+	configsel.pat_buf_len = sizeof(pattern);
+	configsel.patterns = &pattern;
+
+	fd = open("/dev/pci", O_RDONLY, 0);
+	if (fd < 0) {
+		fprintf(stderr, "could not open /dev/pci\n");
+		return -1;
+	}
+
+	if (ioctl(fd, PCIOCGETCONF, &configsel) == -1) {
+		fprintf(stderr, "ioctl(PCIOCGETCONF) failed\n");
+		close(fd);
+		return -1;
+	}
+
+	close(fd);
+
+	if (configsel.num_matches != 1) {
+		fprintf(stderr, "could not find specified device\n");
+		return -1;
+	}
+
+	if (conf.pd_name[0] == '\0' || !strcmp(conf.pd_name, "nic_uio")) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+int
+spdk_pci_device_unbind_kernel_driver(struct spdk_pci_device *dev)
+{
+	/* TODO */
+	return 0;
+}
+
+int
+spdk_pci_device_bind_uio_driver(struct spdk_pci_device *dev)
+{
+	/* TODO */
+	return 0;
+}
+
+int
+spdk_pci_device_switch_to_uio_driver(struct spdk_pci_device *dev)
+{
+	/* TODO */
+	return 0;
+}
+
+int
+spdk_pci_device_claim(struct spdk_pci_device *dev)
+{
+	/* TODO */
+	return 0;
+}
+#endif /* __FreeBSD__ */
