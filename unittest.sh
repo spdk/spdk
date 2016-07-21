@@ -31,3 +31,9 @@ test/lib/jsonrpc/server/jsonrpc_server_ut
 make -C test/lib/log CONFIG_WERROR=y
 
 test/lib/log/log_ut
+
+make -C test/lib/nvmf CONFIG_WERROR=y
+
+test/lib/nvmf/request/request_ut
+test/lib/nvmf/session/session_ut
+test/lib/nvmf/subsystem/subsystem_ut

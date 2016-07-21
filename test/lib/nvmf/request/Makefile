@@ -31,14 +31,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = request session subsystem
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/nvmf
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-.PHONY: all clean $(DIRS-y)
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+LIBS += $(SPDK_LIBS)
+LIBS += -lcunit
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+APP = request_ut
+C_SRCS = request_ut.c
+
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
