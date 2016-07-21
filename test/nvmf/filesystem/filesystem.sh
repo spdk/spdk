@@ -18,7 +18,7 @@ timing_enter fs_test
 $rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf &
 nvmfpid=$!
 
-trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $nvmfpid; nvme_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 sleep 5
 
@@ -58,6 +58,8 @@ for dev in $devs; do
 		umount /mnt/device
 		timing_exit $fstype
 	done
+
+	parted -s /dev/$dev rm 1
 done
 
 sync
