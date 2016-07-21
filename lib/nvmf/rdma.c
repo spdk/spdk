@@ -781,6 +781,7 @@ nvmf_recv(struct spdk_nvmf_rdma_request *rdma_req, struct ibv_wc *wc)
 	}
 
 	req = &rdma_req->req;
+	memset(req->rsp, 0, sizeof(*req->rsp));
 
 	bb = rdma_req->bb_mr->addr;
 	ret = spdk_nvmf_request_prep_data(req,
