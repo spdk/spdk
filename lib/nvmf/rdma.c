@@ -454,13 +454,6 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Request: %p Connection: %p\n", req, conn);
 
-	/* Update Connection SQ Tracking, increment
-	   the SQ head counter opening up another
-	   RX recv slot.
-	*/
-	conn->sq_head < (rdma_conn->queue_depth - 1) ? (conn->sq_head++) : (conn->sq_head = 0);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "sq_head %x, sq_depth %x\n", conn->sq_head, rdma_conn->queue_depth);
-
 	sg_list[0].addr = (uint64_t)&rdma_req->cmd;
 	sg_list[0].length = sizeof(rdma_req->cmd);
 	sg_list[0].lkey = rdma_req->cmd_mr->lkey;
@@ -542,9 +535,16 @@ static int
 spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
 			       struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
+
 	if (nvmf_post_rdma_recv(conn, req)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
+	}
+
+	conn->sq_head++;
+	if (conn->sq_head == rdma_conn->queue_depth) {
+		conn->sq_head = 0;
 	}
 
 	return 0;
