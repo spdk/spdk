@@ -826,54 +826,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 	return 0;
 }
 
-static int
-nvmf_recv(struct spdk_nvmf_rdma_request *rdma_req, struct ibv_wc *wc)
-{
-	int ret;
-	struct spdk_nvmf_request *req;
-	void *bb;
-
-	if (wc->byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
-		SPDK_ERRLOG("recv length %u less than capsule header\n", wc->byte_len);
-		return -1;
-	}
-
-	req = &rdma_req->req;
-	memset(req->rsp, 0, sizeof(*req->rsp));
-
-	bb = rdma_req->bb_mr->addr;
-	ret = spdk_nvmf_request_prep_data(req,
-					  bb, wc->byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
-					  bb, rdma_req->bb_mr->length);
-	if (ret < 0) {
-		SPDK_ERRLOG("prep_data failed\n");
-		return spdk_nvmf_request_complete(req);
-	}
-
-	if (ret == 0) {
-		/* Data is available now; execute command immediately. */
-		ret = spdk_nvmf_request_exec(req);
-		if (ret < 0) {
-			SPDK_ERRLOG("Command execution failed\n");
-			return -1;
-		}
-
-		return 1;
-	}
-
-	/*
-	 * Pending transfer from host to controller; command will continue
-	 * once transfer is complete.
-	 */
-	ret = nvmf_post_rdma_read(req);
-	if (ret) {
-		SPDK_ERRLOG("Unable to transfer data from host to controller\n");
-		return -1;
-	}
-
-	return 0;
-}
-
 static void
 nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 {
@@ -915,14 +867,42 @@ nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Received new capsule on pending connection.\n");
 			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, wc.wr_id, 0);
 			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
-			rc = nvmf_recv(rdma_req, &wc);
+			if (wc.byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
+				SPDK_ERRLOG("recv length %u less than capsule header\n", wc.byte_len);
+				nvmf_rdma_conn_cleanup(&rdma_conn->conn);
+				continue;
+			}
+
+			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
+			rc = spdk_nvmf_request_prep_data(&rdma_req->req,
+							 rdma_req->bb_mr->addr,
+							 wc.byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
+							 rdma_req->bb_mr->addr,
+							 rdma_req->bb_mr->length);
 			if (rc < 0) {
-				SPDK_ERRLOG("nvmf_recv processing failure\n");
+				SPDK_ERRLOG("prep_data failed\n");
 				TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
 				nvmf_rdma_conn_cleanup(&rdma_conn->conn);
 				continue;
-			} else if (rc > 0) {
+			} else if (rc == 0) {
+				/* Data is immediately available */
+				rc = spdk_nvmf_request_exec(&rdma_req->req);
+				if (rc < 0) {
+					SPDK_ERRLOG("Command execution failed\n");
+					TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
+					nvmf_rdma_conn_cleanup(&rdma_conn->conn);
+					continue;
+				}
 				TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
+			} else {
+				/* Start transfer of data from host to target */
+				rc = nvmf_post_rdma_read(&rdma_req->req);
+				if (rc) {
+					SPDK_ERRLOG("Unable to transfer data from host to target\n");
+					TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
+					nvmf_rdma_conn_cleanup(&rdma_conn->conn);
+					continue;
+				}
 			}
 		} else if (wc.opcode == IBV_WC_RDMA_READ) {
 			/* A previously received capsule finished grabbing
@@ -1197,10 +1177,35 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		case IBV_WC_RECV:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ recv completion\n");
 			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, (uint64_t)req, 0);
-			rc = nvmf_recv(rdma_req, &wc);
-			if (rc < 0) {
-				SPDK_ERRLOG("nvmf_recv processing failure\n");
+
+			if (wc.byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
+				SPDK_ERRLOG("recv length %u less than capsule header\n", wc.byte_len);
 				return -1;
+			}
+
+			memset(req->rsp, 0, sizeof(*req->rsp));
+			rc = spdk_nvmf_request_prep_data(req,
+							 rdma_req->bb_mr->addr,
+							 wc.byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
+							 rdma_req->bb_mr->addr,
+							 rdma_req->bb_mr->length);
+			if (rc < 0) {
+				SPDK_ERRLOG("prep_data failed\n");
+				return spdk_nvmf_request_complete(req);
+			} else if (rc == 0) {
+				/* Data is immediately available */
+				rc = spdk_nvmf_request_exec(req);
+				if (rc < 0) {
+					SPDK_ERRLOG("Command execution failed\n");
+					return -1;
+				}
+			} else {
+				/* Start transfer of data from host to target */
+				rc = nvmf_post_rdma_read(req);
+				if (rc) {
+					SPDK_ERRLOG("Unable to transfer data from host to target\n");
+					return -1;
+				}
 			}
 			break;
 
