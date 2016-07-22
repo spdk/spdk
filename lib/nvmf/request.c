@@ -31,8 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rte_config.h>
-#include <rte_debug.h>
+#include <assert.h>
 
 #include "nvmf_internal.h"
 #include "request.h"
@@ -560,11 +559,11 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 
 	if (xfer == SPDK_NVME_DATA_NONE) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "No data to transfer\n");
-		RTE_VERIFY(req->data == NULL);
-		RTE_VERIFY(req->length == 0);
+		assert(req->data == NULL);
+		assert(req->length == 0);
 	} else {
-		RTE_VERIFY(req->data != NULL);
-		RTE_VERIFY(req->length != 0);
+		assert(req->data != NULL);
+		assert(req->length != 0);
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s data ready\n",
 			      xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ? "Host to Controller" :
 			      "Controller to Host");
@@ -592,7 +591,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		struct spdk_nvmf_subsystem *subsystem;
 
 		subsystem = session->subsys;
-		RTE_VERIFY(subsystem != NULL);
+		assert(subsystem != NULL);
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			done = nvmf_process_discovery_cmd(req);
 		} else {
