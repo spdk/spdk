@@ -77,6 +77,7 @@ struct spdk_nvmf_rdma_conn {
 	uint16_t				queue_depth;
 
 	STAILQ_HEAD(, spdk_nvmf_rdma_request)	rdma_reqs;
+	int					outstanding_reqs;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_conn)	link;
 };
@@ -1090,8 +1091,11 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 		switch (wc.opcode) {
 		case IBV_WC_SEND:
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND Complete. Request: %p Connection: %p\n",
-				      req, conn);
+			assert(rdma_conn->outstanding_reqs > 0);
+			rdma_conn->outstanding_reqs--;
+			SPDK_TRACELOG(SPDK_TRACE_RDMA,
+				      "RDMA SEND Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
+				      req, conn, rdma_conn->outstanding_reqs);
 			if (spdk_nvmf_rdma_request_release(conn, req)) {
 				return -1;
 			}
@@ -1120,10 +1124,6 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			break;
 
 		case IBV_WC_RECV:
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV Complete. Request: %p Connection: %p\n",
-				      req, conn);
-			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, (uint64_t)req, 0);
-
 			if (wc.byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
 				SPDK_ERRLOG("recv length %u less than capsule header\n", wc.byte_len);
 				return -1;
@@ -1141,6 +1141,12 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				}
 
 			}
+
+			rdma_conn->outstanding_reqs++;
+			SPDK_TRACELOG(SPDK_TRACE_RDMA,
+				      "RDMA RECV Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
+				      req, conn, rdma_conn->outstanding_reqs);
+			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, (uint64_t)req, 0);
 
 			memset(req->rsp, 0, sizeof(*req->rsp));
 			rc = spdk_nvmf_request_prep_data(req,
