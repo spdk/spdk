@@ -42,9 +42,6 @@
 #include <inttypes.h>
 #include <limits.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -116,10 +113,12 @@ struct spdk_trace_history {
 
 };
 
+#define SPDK_TRACE_MAX_LCORE		128
+
 struct spdk_trace_histories {
 	uint64_t			tsc_rate;
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
-	struct spdk_trace_history	per_lcore_history[RTE_MAX_LCORE];
+	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];
 	struct spdk_trace_owner		owner[UCHAR_MAX + 1];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];

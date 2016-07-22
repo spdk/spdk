@@ -44,6 +44,7 @@
 #include <rte_debug.h>
 #include <rte_cycles.h>
 #include <rte_timer.h>
+#include <rte_lcore.h>
 #include <rte_malloc.h>
 
 #include "nvmf_internal.h"

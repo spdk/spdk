@@ -45,7 +45,9 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#include <rte_config.h>
 #include <rte_debug.h>
+#include <rte_lcore.h>
 
 #include "spdk/log.h"
 #include "spdk/conf.h"

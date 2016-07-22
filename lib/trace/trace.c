@@ -61,6 +61,7 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 	struct spdk_trace_history *lcore_history;
 	struct spdk_trace_entry *next_entry;
 	uint64_t tsc;
+	unsigned lcore;
 
 	/*
 	 * Tracepoint group ID is encoded in the tpoint_id.  Lower 6 bits determine the tracepoint
@@ -72,7 +73,12 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		return;
 	}
 
-	lcore_history = &g_trace_histories->per_lcore_history[rte_lcore_id()];
+	lcore = rte_lcore_id();
+	if (lcore >= SPDK_TRACE_MAX_LCORE) {
+		return;
+	}
+
+	lcore_history = &g_trace_histories->per_lcore_history[lcore];
 	tsc = rte_get_timer_cycles();
 
 	lcore_history->tpoint_count[tpoint_id]++;
@@ -182,7 +188,7 @@ spdk_trace_init(const char *shm_name)
 
 	g_trace_histories->tsc_rate = rte_get_timer_hz();
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		g_trace_histories->per_lcore_history[i].lcore = i;
 	}
 

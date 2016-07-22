@@ -314,7 +314,7 @@ int main(int argc, char **argv)
 	void			*history_ptr;
 	struct spdk_trace_history *history_entries, *history;
 	int			fd, i;
-	int			lcore = RTE_MAX_LCORE;
+	int			lcore = SPDK_TRACE_MAX_LCORE;
 	uint64_t		tsc_offset;
 	const char		*app_name = "ids";
 	int			op;
@@ -325,10 +325,10 @@ int main(int argc, char **argv)
 		switch (op) {
 		case 'c':
 			lcore = atoi(optarg);
-			if (lcore > RTE_MAX_LCORE) {
+			if (lcore > SPDK_TRACE_MAX_LCORE) {
 				fprintf(stderr, "Selected lcore: %d "
 					"exceeds maximum %d\n", lcore,
-					RTE_MAX_LCORE);
+					SPDK_TRACE_MAX_LCORE);
 				exit(1);
 			}
 			break;
@@ -373,8 +373,8 @@ int main(int argc, char **argv)
 	memcpy(history_entries, g_histories->per_lcore_history,
 	       sizeof(g_histories->per_lcore_history));
 
-	if (lcore == RTE_MAX_LCORE) {
-		for (i = 0; i < RTE_MAX_LCORE; i++) {
+	if (lcore == SPDK_TRACE_MAX_LCORE) {
+		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = &history_entries[i];
 			if (history->entries[0].tsc == 0) {
 				continue;
