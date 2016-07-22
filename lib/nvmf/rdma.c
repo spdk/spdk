@@ -107,7 +107,7 @@ struct spdk_nvmf_rdma {
 static struct spdk_nvmf_rdma g_rdma = { };
 
 static struct spdk_nvmf_rdma_request *alloc_rdma_req(struct spdk_nvmf_conn *conn);
-static int nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn, struct spdk_nvmf_request *req);
+static int nvmf_post_rdma_recv(struct spdk_nvmf_request *req);
 static void free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req);
 
 static struct spdk_nvmf_rdma_conn *
@@ -184,7 +184,7 @@ allocate_rdma_conn(struct rdma_cm_id *id, uint16_t queue_depth)
 			      rdma_req, &rdma_req->req,
 			      rdma_req->req.rsp);
 
-		if (nvmf_post_rdma_recv(conn, &rdma_req->req)) {
+		if (nvmf_post_rdma_recv(&rdma_req->req)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
 			goto alloc_error;
 		}
@@ -402,10 +402,10 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
-		     struct spdk_nvmf_request *req)
+nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	struct ibv_sge sge;
@@ -430,10 +430,10 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 }
 
 static int
-nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
-		    struct spdk_nvmf_request *req)
+nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 {
 	struct ibv_recv_wr wr, *bad_wr = NULL;
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	struct ibv_sge sg_list[2];
@@ -465,10 +465,10 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 }
 
 static int
-nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
-		    struct spdk_nvmf_request *req)
+nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr wr, *bad_wr = NULL;
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	struct ibv_sge sge;
@@ -494,7 +494,6 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 static int
 spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	int ret;
 
@@ -502,14 +501,14 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		/* Need to transfer data via RDMA Write */
-		ret = nvmf_post_rdma_write(conn, req);
+		ret = nvmf_post_rdma_write(req);
 		if (ret) {
 			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
 			return -1;
 		}
 	}
 
-	ret = nvmf_post_rdma_send(conn, req);
+	ret = nvmf_post_rdma_send(req);
 	if (ret) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
 		return -1;
@@ -519,12 +518,12 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 }
 
 static int
-spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
-			       struct spdk_nvmf_request *req)
+spdk_nvmf_rdma_request_release(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 
-	if (nvmf_post_rdma_recv(conn, req)) {
+	if (nvmf_post_rdma_recv(req)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
 	}
@@ -1079,7 +1078,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA,
 				      "RDMA SEND Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
 				      req, conn, rdma_conn->outstanding_reqs);
-			if (spdk_nvmf_rdma_request_release(conn, req)) {
+			if (spdk_nvmf_rdma_request_release(req)) {
 				return -1;
 			}
 			break;
@@ -1119,7 +1118,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 				if (conn->type == CONN_TYPE_AQ &&
 				    cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
-					spdk_nvmf_rdma_request_release(conn, req);
+					spdk_nvmf_rdma_request_release(req);
 					break;
 				}
 
