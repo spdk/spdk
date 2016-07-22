@@ -69,6 +69,30 @@ struct spdk_nvmf_probe_ctx {
 #define SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX 1024
 
 static int
+spdk_add_nvmf_discovery_subsystem(void)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+	char *name;
+
+	name = strdup(SPDK_NVMF_DISCOVERY_NQN);
+	if (name == NULL) {
+		SPDK_ERRLOG("strdup ss_group->name error\n");
+		return -1;
+	}
+
+	subsystem = nvmf_create_subsystem(0, name, SPDK_NVMF_SUBTYPE_DISCOVERY, rte_get_master_lcore());
+	if (subsystem == NULL) {
+		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
+		free(name);
+		return -1;
+	}
+
+	free(name);
+
+	return 0;
+}
+
+static int
 spdk_nvmf_parse_nvmf_tgt(void)
 {
 	struct spdk_conf_section *sp;
@@ -97,7 +121,18 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	max_queues_per_sess = nvmf_min(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX);
 
 	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess);
-	return rc;
+	if (rc != 0) {
+		SPDK_ERRLOG("nvmf_tgt_init() failed\n");
+		return rc;
+	}
+
+	rc = spdk_add_nvmf_discovery_subsystem();
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_add_nvmf_discovery_subsystem failed\n");
+		return rc;
+	}
+
+	return 0;
 }
 
 static int

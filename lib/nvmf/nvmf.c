@@ -162,13 +162,7 @@ nvmf_tgt_subsystem_initialize(void)
 		return -1;
 	}
 
-	rc = spdk_add_nvmf_discovery_subsystem();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_add_nvmf_discovery_subsystem failed\n");
-		return rc;
-	}
-
-	return rc;
+	return 0;
 }
 
 static int

@@ -211,30 +211,6 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
-int
-spdk_add_nvmf_discovery_subsystem(void)
-{
-	struct spdk_nvmf_subsystem *subsystem;
-	char *name;
-
-	name = strdup(SPDK_NVMF_DISCOVERY_NQN);
-	if (name == NULL) {
-		SPDK_ERRLOG("strdup ss_group->name error\n");
-		return -1;
-	}
-
-	subsystem = nvmf_create_subsystem(0, name, SPDK_NVMF_SUBTYPE_DISCOVERY, rte_get_master_lcore());
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
-		free(name);
-		return -1;
-	}
-
-	free(name);
-
-	return 0;
-}
-
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length)
 {

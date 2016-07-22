@@ -113,9 +113,6 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 int
 spdk_shutdown_nvmf_subsystems(void);
 
-int
-spdk_add_nvmf_discovery_subsystem(void);
-
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);
 
