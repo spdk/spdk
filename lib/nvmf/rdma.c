@@ -725,6 +725,108 @@ static const char *CM_EVENT_STR[] = {
 #endif /* DEBUG */
 
 static int
+spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
+			    void *in_cap_data, uint32_t in_cap_len,
+			    void *bb, uint32_t bb_len)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	enum spdk_nvme_data_transfer xfer;
+
+	req->length = 0;
+	req->xfer = SPDK_NVME_DATA_NONE;
+	req->data = NULL;
+
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
+		xfer = spdk_nvme_opc_get_data_transfer(req->cmd->nvmf_cmd.fctype);
+	} else {
+		xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
+	}
+
+	if (xfer != SPDK_NVME_DATA_NONE) {
+		struct spdk_nvme_sgl_descriptor *sgl = (struct spdk_nvme_sgl_descriptor *)&cmd->dptr.sgl1;
+
+		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
+		    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
+		     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
+			if (sgl->keyed.length > bb_len) {
+				SPDK_ERRLOG("SGL length 0x%x exceeds BB length 0x%x\n",
+					    sgl->keyed.length, bb_len);
+				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+				return -1;
+			}
+
+			req->data = bb;
+			req->length = sgl->keyed.length;
+		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
+			   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
+			uint64_t offset = sgl->address;
+			uint32_t max_len = in_cap_len;
+
+			SPDK_TRACELOG(SPDK_TRACE_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
+				      offset, sgl->unkeyed.length);
+
+			if (offset > max_len) {
+				SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
+					    offset, max_len);
+				rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
+				return -1;
+			}
+			max_len -= (uint32_t)offset;
+
+			if (sgl->unkeyed.length > max_len) {
+				SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
+					    sgl->unkeyed.length, max_len);
+				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+				return -1;
+			}
+
+			req->data = in_cap_data + offset;
+			req->length = sgl->unkeyed.length;
+		} else {
+			SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
+				    sgl->generic.type, sgl->generic.subtype);
+			rsp->status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
+			return -1;
+		}
+
+		if (req->length == 0) {
+			xfer = SPDK_NVME_DATA_NONE;
+			req->data = NULL;
+		}
+
+		req->xfer = xfer;
+
+		/*
+		 * For any I/O that requires data to be
+		 * pulled into target BB before processing by
+		 * the backend NVMe device
+		 */
+		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Initiating Host to Controller data transfer\n");
+				/* Wait for transfer to complete before executing command. */
+				return 1;
+			}
+		}
+	}
+
+	if (xfer == SPDK_NVME_DATA_NONE) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "No data to transfer\n");
+		assert(req->data == NULL);
+		assert(req->length == 0);
+	} else {
+		assert(req->data != NULL);
+		assert(req->length != 0);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s data ready\n",
+			      xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ? "Host to Controller" :
+			      "Controller to Host");
+	}
+
+	return 0;
+}
+
+static int
 nvmf_recv(struct spdk_nvmf_rdma_request *rdma_req, struct ibv_wc *wc)
 {
 	int ret;
