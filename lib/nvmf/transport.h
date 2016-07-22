@@ -71,11 +71,6 @@ struct spdk_nvmf_transport {
 	int (*req_complete)(struct spdk_nvmf_request *req);
 
 	/*
-	 * Initialize resources for a new connection.
-	 */
-	int (*conn_init)(struct spdk_nvmf_conn *conn);
-
-	/*
 	 * Deinitialize a connection.
 	 */
 	void (*conn_fini)(struct spdk_nvmf_conn *conn);

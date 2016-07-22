@@ -105,13 +105,18 @@ struct spdk_nvmf_rdma {
 
 static struct spdk_nvmf_rdma g_rdma = { };
 
+static struct spdk_nvmf_rdma_request *alloc_rdma_req(struct spdk_nvmf_conn *conn);
+static int nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn, struct spdk_nvmf_request *req);
+static void free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req);
+
 static struct spdk_nvmf_rdma_conn *
 allocate_rdma_conn(struct rdma_cm_id *id, uint16_t queue_depth)
 {
 	struct spdk_nvmf_rdma_conn	*rdma_conn;
 	struct spdk_nvmf_conn		*conn;
-	int				rc;
+	int				rc, i;
 	struct ibv_qp_init_attr		attr;
+	struct spdk_nvmf_rdma_request	*rdma_req;
 
 	rdma_conn = calloc(1, sizeof(struct spdk_nvmf_rdma_conn));
 	if (rdma_conn == NULL) {
@@ -166,9 +171,32 @@ allocate_rdma_conn(struct rdma_cm_id *id, uint16_t queue_depth)
 	conn->transport = &spdk_nvmf_transport_rdma;
 	id->context = conn;
 
+	for (i = 0; i < rdma_conn->queue_depth; i++) {
+		rdma_req = alloc_rdma_req(conn);
+		if (rdma_req == NULL) {
+			goto alloc_error;
+		}
+
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rdma_req %p: req %p, rsp %p\n",
+			      rdma_req, &rdma_req->req,
+			      rdma_req->req.rsp);
+
+		if (nvmf_post_rdma_recv(conn, &rdma_req->req)) {
+			SPDK_ERRLOG("Unable to post connection rx desc\n");
+			goto alloc_error;
+		}
+
+		STAILQ_INSERT_TAIL(&rdma_conn->rdma_reqs, rdma_req, link);
+	}
+
 	return rdma_conn;
 
 alloc_error:
+	STAILQ_FOREACH(rdma_req, &rdma_conn->rdma_reqs, link) {
+		STAILQ_REMOVE(&rdma_conn->rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
+		free_rdma_req(rdma_req);
+	}
+
 	if (rdma_conn->cq) {
 		ibv_destroy_cq(rdma_conn->cq);
 	}
@@ -212,16 +240,6 @@ free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
 	}
 
 	rte_free(rdma_req);
-}
-
-static void
-spdk_nvmf_rdma_free_req(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(req->conn);
-	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
-
-	STAILQ_REMOVE(&rdma_conn->rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
-	free_rdma_req(rdma_req);
 }
 
 static void
@@ -514,21 +532,6 @@ static int
 spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
 			       struct spdk_nvmf_request *req)
 {
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		struct spdk_nvmf_capsule_cmd *capsule = &req->cmd->nvmf_cmd;
-
-		if (capsule->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
-			/* Special case: connect is always the first capsule and new
-			 * work queue entries are allocated in response to this command.
-			 * Instead of re-posting this entry, just free it.
-			 */
-			spdk_nvmf_rdma_free_req(req);
-			return 0;
-		}
-	}
-
 	if (nvmf_post_rdma_recv(conn, req)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
@@ -538,47 +541,9 @@ spdk_nvmf_rdma_request_release(struct spdk_nvmf_conn *conn,
 }
 
 static int
-spdk_nvmf_rdma_alloc_reqs(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req;
-	int i;
-
-	for (i = 0; i < rdma_conn->queue_depth; i++) {
-		rdma_req = alloc_rdma_req(conn);
-		if (rdma_req == NULL) {
-			goto fail;
-		}
-
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rdma_req %p: req %p, rsp %p\n",
-			      rdma_req, &rdma_req->req,
-			      rdma_req->req.rsp);
-
-		if (nvmf_post_rdma_recv(conn, &rdma_req->req)) {
-			SPDK_ERRLOG("Unable to post connection rx desc\n");
-			goto fail;
-		}
-
-		STAILQ_INSERT_TAIL(&rdma_conn->rdma_reqs, rdma_req, link);
-	}
-
-	return 0;
-
-fail:
-	STAILQ_FOREACH(rdma_req, &rdma_conn->rdma_reqs, link) {
-		STAILQ_REMOVE(&rdma_conn->rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
-		free_rdma_req(rdma_req);
-	}
-
-	return -ENOMEM;
-}
-
-static int
 nvmf_rdma_connect(struct rdma_cm_event *event)
 {
 	struct spdk_nvmf_rdma_conn	*rdma_conn = NULL;
-	struct spdk_nvmf_conn		*conn;
-	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
 	struct rdma_conn_param		*rdma_param = NULL;
 	struct rdma_conn_param		ctrlr_event_data;
@@ -650,18 +615,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
 	}
-
-	conn = &rdma_conn->conn;
-
-	/* Allocate 1 buffer suitable for the CONNECT capsule.
-	 * Once that is received, the full queue depth will be allocated.
-	 */
-	rdma_req = alloc_rdma_req(conn);
-	if (nvmf_post_rdma_recv(conn, &rdma_req->req)) {
-		SPDK_ERRLOG("Unable to post connection rx desc\n");
-		goto err1;
-	}
-	STAILQ_INSERT_TAIL(&rdma_conn->rdma_reqs, rdma_req, link);
 
 	/* Add this RDMA connection to the global list until a CONNECT capsule
 	 * is received. */
@@ -1183,7 +1136,6 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 
 	.req_complete = spdk_nvmf_rdma_request_complete,
 
-	.conn_init = spdk_nvmf_rdma_alloc_reqs,
 	.conn_fini = nvmf_rdma_conn_cleanup,
 	.conn_poll = nvmf_check_rdma_completions,
 

@@ -310,14 +310,6 @@ nvmf_handle_connect(spdk_event_t event)
 
 	spdk_nvmf_session_connect(conn, connect, connect_data, response);
 
-	if (conn->transport->conn_init(conn)) {
-		SPDK_ERRLOG("Transport connection initialization failed\n");
-		nvmf_disconnect(conn->sess, conn);
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		spdk_nvmf_request_complete(req);
-		return;
-	}
-
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      response->status_code_specific.success.cntlid);
 
