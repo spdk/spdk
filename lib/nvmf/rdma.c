@@ -308,19 +308,6 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 }
 
 static void
-nvmf_drain_cq(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct ibv_wc wc;
-
-	/* drain the cq before destruction */
-	while (ibv_poll_cq(rdma_conn->cq, 1, &wc) > 0) {
-		//ibv_ack_cq_events(conn->cq, 1);
-	}
-
-}
-
-static void
 nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
@@ -332,7 +319,6 @@ nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
 
 	spdk_nvmf_rdma_free_reqs(conn);
 
-	nvmf_drain_cq(conn);
 	rc = ibv_destroy_cq(rdma_conn->cq);
 	if (rc) {
 		SPDK_ERRLOG("ibv_destroy_cq error\n");
