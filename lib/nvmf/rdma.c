@@ -171,6 +171,8 @@ allocate_rdma_conn(struct rdma_cm_id *id, uint16_t queue_depth)
 	conn->transport = &spdk_nvmf_transport_rdma;
 	id->context = conn;
 
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", conn);
+
 	for (i = 0; i < rdma_conn->queue_depth; i++) {
 		rdma_req = alloc_rdma_req(conn);
 		if (rdma_req == NULL) {
@@ -394,6 +396,8 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 	struct ibv_sge sge;
 	int rc;
 
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
+
 	sge.addr = (uint64_t)rdma_req->bb_mr->addr;
 	sge.lkey = rdma_req->bb_mr->lkey;
 	sge.length = req->length;
@@ -420,6 +424,8 @@ nvmf_post_rdma_write(struct spdk_nvmf_conn *conn,
 	struct ibv_sge sge;
 	int rc;
 
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
+
 	sge.addr = (uint64_t)rdma_req->bb_mr->addr;
 	sge.lkey = rdma_req->bb_mr->lkey;
 	sge.length = req->length;
@@ -445,6 +451,8 @@ nvmf_post_rdma_recv(struct spdk_nvmf_conn *conn,
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	struct ibv_sge sg_list[2];
 	int rc;
+
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Request: %p Connection: %p\n", req, conn);
 
 	/* Update Connection SQ Tracking, increment
 	   the SQ head counter opening up another
@@ -485,6 +493,8 @@ nvmf_post_rdma_send(struct spdk_nvmf_conn *conn,
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	struct ibv_sge sge;
 	int rc;
+
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, conn);
 
 	sge.addr = (uint64_t)&rdma_req->rsp;
 	sge.length = sizeof(rdma_req->rsp);
@@ -1080,7 +1090,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 		switch (wc.opcode) {
 		case IBV_WC_SEND:
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ send completion\n");
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND Complete. Request: %p Connection: %p\n",
+				      req, conn);
 			if (spdk_nvmf_rdma_request_release(conn, req)) {
 				return -1;
 			}
@@ -1091,12 +1102,14 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			 * Will get this event only if we set IBV_SEND_SIGNALED
 			 * flag in rdma_write, to trace rdma write latency
 			 */
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ rdma write completion\n");
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE Complete. Request: %p Connection: %p\n",
+				      req, conn);
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
 			break;
 
 		case IBV_WC_RDMA_READ:
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ rdma read completion\n");
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ Complete. Request: %p Connection: %p\n",
+				      req, conn);
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
@@ -1107,7 +1120,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			break;
 
 		case IBV_WC_RECV:
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "CQ recv completion\n");
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV Complete. Request: %p Connection: %p\n",
+				      req, conn);
 			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, (uint64_t)req, 0);
 
 			if (wc.byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
