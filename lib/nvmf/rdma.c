@@ -579,11 +579,13 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	struct spdk_nvmf_conn		*conn;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct ibv_device_attr		ibdev_attr;
-	struct rdma_conn_param		*host_event_data = NULL;
+	struct rdma_conn_param		*rdma_param = NULL;
 	struct rdma_conn_param		ctrlr_event_data;
+	const struct spdk_nvmf_rdma_request_private_data *private_data = NULL;
 	struct spdk_nvmf_rdma_accept_private_data accept_data;
 	uint16_t			sts = 0;
-	int 				rc, qp_depth, rw_depth;
+	uint16_t			queue_depth;
+	int 				rc;
 
 
 	/* Check to make sure we know about this rdma device */
@@ -617,37 +619,48 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	rdma_conn->cm_id = event->id;
 	event->id->context = conn;
 
-	rc = ibv_query_device(event->id->verbs, &ibdev_attr);
-	if (rc) {
-		SPDK_ERRLOG(" Failed on query for device attributes\n");
-		goto err1;
-	}
+	/* Figure out the supported queue depth. This is a multi-step process
+	 * that takes into account hardware maximums, host provided values,
+	 * and our target's internal memory limits */
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Calculating Queue Depth\n");
+
+	/* Start with the maximum queue depth allowed by the target */
+	queue_depth = g_nvmf_tgt.max_queue_depth;
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", g_nvmf_tgt.max_queue_depth);
+
+	/* Next check the local NIC's hardware limitations */
+	rc = ibv_query_device(event->id->verbs, &ibdev_attr);
+	if (rc) {
+		SPDK_ERRLOG("Failed to query RDMA device attributes\n");
+		sts = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		goto err1;
+	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
 		      ibdev_attr.max_qp_wr, ibdev_attr.max_qp_rd_atom);
-	host_event_data = &event->param.conn;
-	if (host_event_data->private_data == NULL ||
-	    host_event_data->private_data_len < sizeof(struct spdk_nvmf_rdma_request_private_data)) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "No private data supplied\n");
-		/* No private data, so use defaults. */
-		qp_depth = g_nvmf_tgt.max_queue_depth;
-		rw_depth = g_nvmf_tgt.max_queue_depth;
-	} else {
-		const struct spdk_nvmf_rdma_request_private_data *private_data = host_event_data->private_data;
+	queue_depth = nvmf_min(queue_depth, ibdev_attr.max_qp_rd_atom);
+	queue_depth = nvmf_min(queue_depth, ibdev_attr.max_qp_rd_atom);
+
+	/* Next check the remote NIC's hardware limitations */
+	rdma_param = &event->param.conn;
+	queue_depth = nvmf_min(queue_depth, rdma_param->initiator_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host NIC Max Read/Write Queue Depth: %d\n",
+		      rdma_param->initiator_depth);
+
+	/* Finally check for the host software requested values, which are
+	 * optional. */
+	if (rdma_param->private_data != NULL &&
+	    rdma_param->private_data_len >= sizeof(struct spdk_nvmf_rdma_request_private_data)) {
+		private_data = rdma_param->private_data;
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Receive Queue Size: %d\n", private_data->hrqsize);
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Send Queue Size: %d\n", private_data->hsqsize);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host NIC Receive Queue Size: %d\n",
-			      host_event_data->initiator_depth);
-		qp_depth = nvmf_min(private_data->hrqsize, private_data->hsqsize);
-		rw_depth = host_event_data->initiator_depth;
+		queue_depth = nvmf_min(queue_depth, private_data->hrqsize);
+		queue_depth = nvmf_min(queue_depth, private_data->hsqsize);
 	}
-	qp_depth = nvmf_min(g_nvmf_tgt.max_queue_depth, nvmf_min(qp_depth, ibdev_attr.max_qp_wr));
-	rw_depth = nvmf_min(g_nvmf_tgt.max_queue_depth, nvmf_min(rw_depth, ibdev_attr.max_qp_rd_atom));
-	rdma_conn->queue_depth = nvmf_min(qp_depth, rw_depth);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d\n", rdma_conn->queue_depth);
+
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d\n", queue_depth);
+	rdma_conn->queue_depth = queue_depth;
 
 	rc = nvmf_rdma_queue_init(conn, event->id->verbs);
 	if (rc) {
@@ -674,9 +687,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 
 	accept_data.recfmt = 0;
 	accept_data.crqsize = rdma_conn->queue_depth;
-	if (host_event_data != NULL) {
-		memcpy(&ctrlr_event_data, host_event_data, sizeof(ctrlr_event_data));
-	}
+	ctrlr_event_data = *rdma_param;
 	ctrlr_event_data.private_data = &accept_data;
 	ctrlr_event_data.private_data_len = sizeof(accept_data);
 	if (event->id->ps == RDMA_PS_TCP) {
