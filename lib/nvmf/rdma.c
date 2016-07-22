@@ -65,6 +65,19 @@
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
+struct spdk_nvmf_rdma_request {
+	struct spdk_nvmf_request		req;
+	STAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
+
+	union nvmf_h2c_msg			cmd;
+	struct ibv_mr				*cmd_mr;
+
+	union nvmf_c2h_msg			rsp;
+	struct ibv_mr				*rsp_mr;
+
+	struct ibv_mr				*bb_mr;
+};
+
 struct spdk_nvmf_rdma_conn {
 	struct spdk_nvmf_conn			conn;
 
@@ -85,19 +98,6 @@ struct spdk_nvmf_rdma_conn {
 /* List of RDMA connections that have not yet received a CONNECT capsule */
 static TAILQ_HEAD(, spdk_nvmf_rdma_conn) g_pending_conns = TAILQ_HEAD_INITIALIZER(g_pending_conns);
 
-struct spdk_nvmf_rdma_request {
-	struct spdk_nvmf_request		req;
-	STAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
-
-	union nvmf_h2c_msg			cmd;
-	struct ibv_mr				*cmd_mr;
-
-	union nvmf_c2h_msg			rsp;
-	struct ibv_mr				*rsp_mr;
-
-	struct ibv_mr				*bb_mr;
-};
-
 struct spdk_nvmf_rdma {
 	struct rte_timer		acceptor_timer;
 	struct rdma_event_channel	*acceptor_event_channel;
@@ -106,9 +106,121 @@ struct spdk_nvmf_rdma {
 
 static struct spdk_nvmf_rdma g_rdma = { };
 
-static struct spdk_nvmf_rdma_request *alloc_rdma_req(struct spdk_nvmf_conn *conn);
+static inline struct spdk_nvmf_rdma_conn *
+get_rdma_conn(struct spdk_nvmf_conn *conn)
+{
+	return (struct spdk_nvmf_rdma_conn *)((uintptr_t)conn + offsetof(struct spdk_nvmf_rdma_conn, conn));
+}
+
+static inline struct spdk_nvmf_rdma_request *
+get_rdma_req(struct spdk_nvmf_request *req)
+{
+	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req + offsetof(struct spdk_nvmf_rdma_request,
+			req));
+}
+
 static int nvmf_post_rdma_recv(struct spdk_nvmf_request *req);
-static void free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req);
+
+static void
+free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
+{
+	if (rdma_req->cmd_mr && rdma_dereg_mr(rdma_req->cmd_mr)) {
+		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
+	}
+
+	if (rdma_req->rsp_mr && rdma_dereg_mr(rdma_req->rsp_mr)) {
+		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
+	}
+
+	if (rdma_req->bb_mr) {
+		rte_free(rdma_req->bb_mr->addr);
+		if (rdma_dereg_mr(rdma_req->bb_mr)) {
+			SPDK_ERRLOG("Unable to de-register bb_mr\n");
+		}
+	}
+
+	rte_free(rdma_req);
+}
+
+static struct spdk_nvmf_rdma_request *
+alloc_rdma_req(struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
+	struct spdk_nvmf_rdma_request *rdma_req;
+	void *bb;
+	size_t bb_len;
+
+	rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
+	if (!rdma_req) {
+		SPDK_ERRLOG("Unable to allocate rdma_req\n");
+		return NULL;
+	}
+
+	rdma_req->cmd_mr = rdma_reg_msgs(rdma_conn->cm_id, &rdma_req->cmd, sizeof(rdma_req->cmd));
+	if (rdma_req->cmd_mr == NULL) {
+		SPDK_ERRLOG("Unable to register cmd_mr\n");
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+
+	bb_len = DEFAULT_BB_SIZE;
+	bb = rte_zmalloc("nvmf_bb", bb_len, 0);
+	if (!bb) {
+		SPDK_ERRLOG("Unable to get %zu byte bounce buffer\n", bb_len);
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+	rdma_req->bb_mr = rdma_reg_read(rdma_conn->cm_id, bb, bb_len);
+	if (rdma_req->bb_mr == NULL) {
+		SPDK_ERRLOG("Unable to register bb_mr\n");
+		rte_free(bb);
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+
+	rdma_req->rsp_mr = rdma_reg_msgs(rdma_conn->cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
+	if (rdma_req->rsp_mr == NULL) {
+		SPDK_ERRLOG("Unable to register rsp_mr\n");
+		free_rdma_req(rdma_req);
+		return NULL;
+	}
+
+	rdma_req->req.cmd = &rdma_req->cmd;
+	rdma_req->req.rsp = &rdma_req->rsp;
+	rdma_req->req.conn = conn;
+
+	return rdma_req;
+}
+
+static void
+spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
+	struct spdk_nvmf_rdma_request *rdma_req;
+
+	STAILQ_FOREACH(rdma_req, &rdma_conn->rdma_reqs, link) {
+		STAILQ_REMOVE(&rdma_conn->rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
+		free_rdma_req(rdma_req);
+	}
+
+	if (rdma_conn->cm_id) {
+		rdma_destroy_qp(rdma_conn->cm_id);
+	}
+
+	if (rdma_conn->cq) {
+		ibv_destroy_cq(rdma_conn->cq);
+	}
+
+	if (rdma_conn->comp_channel) {
+		ibv_destroy_comp_channel(rdma_conn->comp_channel);
+	}
+
+	if (rdma_conn->cm_id) {
+		rdma_destroy_id(rdma_conn->cm_id);
+	}
+
+	free(rdma_conn);
+}
 
 static struct spdk_nvmf_rdma_conn *
 allocate_rdma_conn(struct rdma_cm_id *id, uint16_t queue_depth)
@@ -209,125 +321,6 @@ alloc_error:
 	}
 
 	return NULL;
-}
-
-static inline struct spdk_nvmf_rdma_conn *
-get_rdma_conn(struct spdk_nvmf_conn *conn)
-{
-	return (struct spdk_nvmf_rdma_conn *)((uintptr_t)conn + offsetof(struct spdk_nvmf_rdma_conn, conn));
-}
-
-static inline struct spdk_nvmf_rdma_request *
-get_rdma_req(struct spdk_nvmf_request *req)
-{
-	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req + offsetof(struct spdk_nvmf_rdma_request,
-			req));
-}
-
-static void
-free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
-{
-	if (rdma_req->cmd_mr && rdma_dereg_mr(rdma_req->cmd_mr)) {
-		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
-	}
-
-	if (rdma_req->rsp_mr && rdma_dereg_mr(rdma_req->rsp_mr)) {
-		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
-	}
-
-	if (rdma_req->bb_mr) {
-		rte_free(rdma_req->bb_mr->addr);
-		if (rdma_dereg_mr(rdma_req->bb_mr)) {
-			SPDK_ERRLOG("Unable to de-register bb_mr\n");
-		}
-	}
-
-	rte_free(rdma_req);
-}
-
-static void
-spdk_nvmf_rdma_free_reqs(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req;
-
-	STAILQ_FOREACH(rdma_req, &rdma_conn->rdma_reqs, link) {
-		STAILQ_REMOVE(&rdma_conn->rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
-		free_rdma_req(rdma_req);
-	}
-}
-
-static struct spdk_nvmf_rdma_request *
-alloc_rdma_req(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req;
-	void *bb;
-	size_t bb_len;
-
-	rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
-	if (!rdma_req) {
-		SPDK_ERRLOG("Unable to allocate rdma_req\n");
-		return NULL;
-	}
-
-	rdma_req->cmd_mr = rdma_reg_msgs(rdma_conn->cm_id, &rdma_req->cmd, sizeof(rdma_req->cmd));
-	if (rdma_req->cmd_mr == NULL) {
-		SPDK_ERRLOG("Unable to register cmd_mr\n");
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-
-	bb_len = DEFAULT_BB_SIZE;
-	bb = rte_zmalloc("nvmf_bb", bb_len, 0);
-	if (!bb) {
-		SPDK_ERRLOG("Unable to get %zu byte bounce buffer\n", bb_len);
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-	rdma_req->bb_mr = rdma_reg_read(rdma_conn->cm_id, bb, bb_len);
-	if (rdma_req->bb_mr == NULL) {
-		SPDK_ERRLOG("Unable to register bb_mr\n");
-		rte_free(bb);
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-
-	rdma_req->rsp_mr = rdma_reg_msgs(rdma_conn->cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
-	if (rdma_req->rsp_mr == NULL) {
-		SPDK_ERRLOG("Unable to register rsp_mr\n");
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-
-	rdma_req->req.cmd = &rdma_req->cmd;
-	rdma_req->req.rsp = &rdma_req->rsp;
-	rdma_req->req.conn = conn;
-
-	return rdma_req;
-}
-
-static void
-nvmf_rdma_conn_cleanup(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	int rc;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Enter\n");
-
-	rdma_destroy_qp(rdma_conn->cm_id);
-
-	spdk_nvmf_rdma_free_reqs(conn);
-
-	rc = ibv_destroy_cq(rdma_conn->cq);
-	if (rc) {
-		SPDK_ERRLOG("ibv_destroy_cq error\n");
-	}
-
-	ibv_destroy_comp_channel(rdma_conn->comp_channel);
-	rdma_destroy_id(rdma_conn->cm_id);
-
-	free(rdma_conn);
 }
 
 static void
@@ -683,7 +676,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		/* No session has been established yet. That means the conn
 		 * must be in the pending connections list. Remove it. */
 		TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-		nvmf_rdma_conn_cleanup(conn);
+		spdk_nvmf_rdma_conn_destroy(conn);
 		return 0;
 	}
 
@@ -838,7 +831,7 @@ nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 		rc = spdk_nvmf_rdma_poll(&rdma_conn->conn);
 		if (rc < 0) {
 			TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-			nvmf_rdma_conn_cleanup(&rdma_conn->conn);
+			spdk_nvmf_rdma_conn_destroy(&rdma_conn->conn);
 		} else if (rc > 0) {
 			/* At least one request was processed which is assumed to be
 			 * a CONNECT. Remove this connection from our list. */
@@ -1191,7 +1184,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 
 	.req_complete = spdk_nvmf_rdma_request_complete,
 
-	.conn_fini = nvmf_rdma_conn_cleanup,
+	.conn_fini = spdk_nvmf_rdma_conn_destroy,
 	.conn_poll = spdk_nvmf_rdma_poll,
 
 	.listen_addr_discover = nvmf_rdma_discover,
