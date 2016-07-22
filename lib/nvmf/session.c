@@ -90,7 +90,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	*/
 
 	/* Init the virtual controller details using actual HW details */
-	cdata = spdk_nvme_ctrlr_get_data(session->subsys->ctrlr);
+	cdata = spdk_nvme_ctrlr_get_data(session->subsys->ctrlr.direct.ctrlr);
 	memcpy(&session->vcdata, cdata, sizeof(struct spdk_nvme_ctrlr_data));
 
 	session->vcdata.aerl = 0;

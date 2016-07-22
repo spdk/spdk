@@ -53,6 +53,7 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
 	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	$(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
+	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
 
 LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB)
 

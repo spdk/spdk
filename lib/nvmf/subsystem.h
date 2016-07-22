@@ -39,10 +39,13 @@
 #include "spdk/event.h"
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
+#include "spdk/bdev.h"
 
 struct spdk_nvmf_conn;
+struct spdk_nvmf_subsystem;
 
 #define MAX_NQN_SIZE 255
+#define MAX_VIRTUAL_NAMESPACE 16
 
 enum spdk_nvmf_subsystem_mode {
 	NVMF_SUBSYSTEM_MODE_DIRECT	= 0,
@@ -61,6 +64,27 @@ struct spdk_nvmf_host {
 	TAILQ_ENTRY(spdk_nvmf_host)	link;
 };
 
+struct spdk_nvmf_ns {
+	uint32_t nsid;
+	struct spdk_bdev *bdev;
+};
+
+
+union spdk_nvmf_controller {
+	struct {
+		struct nvmf_session *session;
+		struct spdk_nvme_ctrlr *ctrlr;
+		struct spdk_nvme_qpair *io_qpair;
+	} direct;
+
+	struct {
+		struct nvmf_session *session;
+		struct spdk_nvmf_ns *ns_list[MAX_VIRTUAL_NAMESPACE];
+		uint16_t ns_count;
+	} virtual;
+};
+
+
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of virtual controller sessions.  Any individual controller session has
@@ -72,8 +96,7 @@ struct spdk_nvmf_subsystem {
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
 	struct nvmf_session *session;
-	struct spdk_nvme_ctrlr *ctrlr;
-	struct spdk_nvme_qpair *io_qpair;
+	union spdk_nvmf_controller 	ctrlr;
 
 	struct spdk_poller	poller;
 

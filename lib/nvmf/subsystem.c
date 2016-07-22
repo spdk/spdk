@@ -85,8 +85,8 @@ spdk_nvmf_subsystem_poller(void *arg)
 
 	/* For NVMe subsystems, check the backing physical device for completions. */
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		spdk_nvme_ctrlr_process_admin_completions(subsystem->ctrlr);
-		spdk_nvme_qpair_process_completions(subsystem->io_qpair, 0);
+		spdk_nvme_ctrlr_process_admin_completions(subsystem->ctrlr.direct.ctrlr);
+		spdk_nvme_qpair_process_completions(subsystem->ctrlr.direct.io_qpair, 0);
 	}
 
 	/* For each connection in the session, check for RDMA completions */
@@ -153,8 +153,8 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		spdk_nvmf_session_destruct(subsystem->session);
 	}
 
-	if (subsystem->ctrlr) {
-		spdk_nvme_detach(subsystem->ctrlr);
+	if (subsystem->ctrlr.direct.ctrlr) {
+		spdk_nvme_detach(subsystem->ctrlr.direct.ctrlr);
 	}
 
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
@@ -199,11 +199,10 @@ int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			 struct spdk_nvme_ctrlr *ctrlr)
 {
-	subsystem->ctrlr = ctrlr;
-
+	subsystem->ctrlr.direct.ctrlr = ctrlr;
 	/* Assume that all I/O will be handled on one thread for now */
-	subsystem->io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
-	if (subsystem->io_qpair == NULL) {
+	subsystem->ctrlr.direct.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+	if (subsystem->ctrlr.direct.io_qpair == NULL) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -1;
 	}

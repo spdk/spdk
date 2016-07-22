@@ -237,7 +237,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	default:
 passthrough:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "admin_cmd passthrough: opc 0x%02x\n", cmd->opc);
-		rc = spdk_nvme_ctrlr_cmd_admin_raw(subsystem->ctrlr,
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(subsystem->ctrlr.direct.ctrlr,
 						   cmd,
 						   req->data, req->length,
 						   nvmf_complete_cmd,
@@ -249,6 +249,7 @@ passthrough:
 		}
 		return false;
 	}
+
 }
 
 static bool
@@ -257,7 +258,7 @@ nvmf_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem *subsystem = req->conn->sess->subsys;
 	int rc;
 
-	rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->ctrlr, subsystem->io_qpair,
+	rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->ctrlr.direct.ctrlr, subsystem->ctrlr.direct.io_qpair,
 					&req->cmd->nvme_cmd,
 					req->data, req->length,
 					nvmf_complete_cmd,
