@@ -826,13 +826,14 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req,
 	return 0;
 }
 
+static int spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn);
+
 static void
 nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 {
 	struct rdma_cm_event		*event;
 	int				rc;
 	struct spdk_nvmf_rdma_conn	*rdma_conn, *tmp;
-	struct spdk_nvmf_rdma_request	*rdma_req;
 
 	if (g_rdma.acceptor_event_channel == NULL) {
 		return;
@@ -841,87 +842,14 @@ nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 	/* Process pending connections for incoming capsules. The only capsule
 	 * this should ever find is a CONNECT request. */
 	TAILQ_FOREACH_SAFE(rdma_conn, &g_pending_conns, link, tmp) {
-		struct ibv_wc wc;
-
-		rc = ibv_poll_cq(rdma_conn->cq, 1, &wc);
-		if (rc == 0) {
-			continue;
-		} else if (rc < 0) {
-			SPDK_ERRLOG("Error polling RDMA completion queue: %d (%s)\n",
-				    errno, strerror(errno));
+		rc = spdk_nvmf_rdma_poll(&rdma_conn->conn);
+		if (rc < 0) {
 			TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
 			nvmf_rdma_conn_cleanup(&rdma_conn->conn);
-			continue;
-		}
-
-		if (wc.status) {
-			SPDK_ERRLOG("Error polling RDMA completion queue: %d (%s)\n",
-				    wc.status, ibv_wc_status_str(wc.status));
+		} else if (rc > 0) {
+			/* At least one request was processed which is assumed to be
+			 * a CONNECT. Remove this connection from our list. */
 			TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-			nvmf_rdma_conn_cleanup(&rdma_conn->conn);
-			continue;
-		}
-
-		if (wc.opcode == IBV_WC_RECV) {
-			/* New incoming capsule. */
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Received new capsule on pending connection.\n");
-			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, wc.wr_id, 0);
-			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
-			if (wc.byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
-				SPDK_ERRLOG("recv length %u less than capsule header\n", wc.byte_len);
-				nvmf_rdma_conn_cleanup(&rdma_conn->conn);
-				continue;
-			}
-
-			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
-			rc = spdk_nvmf_request_prep_data(&rdma_req->req,
-							 rdma_req->bb_mr->addr,
-							 wc.byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
-							 rdma_req->bb_mr->addr,
-							 rdma_req->bb_mr->length);
-			if (rc < 0) {
-				SPDK_ERRLOG("prep_data failed\n");
-				TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-				nvmf_rdma_conn_cleanup(&rdma_conn->conn);
-				continue;
-			} else if (rc == 0) {
-				/* Data is immediately available */
-				rc = spdk_nvmf_request_exec(&rdma_req->req);
-				if (rc < 0) {
-					SPDK_ERRLOG("Command execution failed\n");
-					TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-					nvmf_rdma_conn_cleanup(&rdma_conn->conn);
-					continue;
-				}
-				TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-			} else {
-				/* Start transfer of data from host to target */
-				rc = nvmf_post_rdma_read(&rdma_req->req);
-				if (rc) {
-					SPDK_ERRLOG("Unable to transfer data from host to target\n");
-					TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-					nvmf_rdma_conn_cleanup(&rdma_conn->conn);
-					continue;
-				}
-			}
-		} else if (wc.opcode == IBV_WC_RDMA_READ) {
-			/* A previously received capsule finished grabbing
-			 * its associated data */
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA read for a request on the pending connection completed\n");
-			rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
-			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)&rdma_req->req, 0);
-			rc = spdk_nvmf_request_exec(&rdma_req->req);
-			if (rc) {
-				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
-				TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-				nvmf_rdma_conn_cleanup(&rdma_conn->conn);
-				continue;
-			}
-			TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-		} else {
-			/* No other completion types are expected here */
-			SPDK_ERRLOG("Unexpected RDMA completion.\n");
-			continue;
 		}
 	}
 
