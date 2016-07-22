@@ -105,11 +105,13 @@ struct spdk_nvmf_rdma {
 
 static struct spdk_nvmf_rdma g_rdma = { };
 
-
 static struct spdk_nvmf_rdma_conn *
-allocate_rdma_conn(void)
+allocate_rdma_conn(struct rdma_cm_id *id, uint16_t queue_depth)
 {
-	struct spdk_nvmf_rdma_conn *rdma_conn;
+	struct spdk_nvmf_rdma_conn	*rdma_conn;
+	struct spdk_nvmf_conn		*conn;
+	int				rc;
+	struct ibv_qp_init_attr		attr;
 
 	rdma_conn = calloc(1, sizeof(struct spdk_nvmf_rdma_conn));
 	if (rdma_conn == NULL) {
@@ -117,55 +119,31 @@ allocate_rdma_conn(void)
 		return NULL;
 	}
 
-	return rdma_conn;
-}
+	rdma_conn->queue_depth = queue_depth;
+	rdma_conn->ctx = id->verbs;
+	rdma_conn->cm_id = id;
+	STAILQ_INIT(&rdma_conn->rdma_reqs);
 
-static inline struct spdk_nvmf_rdma_conn *
-get_rdma_conn(struct spdk_nvmf_conn *conn)
-{
-	return (struct spdk_nvmf_rdma_conn *)((uintptr_t)conn + offsetof(struct spdk_nvmf_rdma_conn, conn));
-}
-
-static inline struct spdk_nvmf_rdma_request *
-get_rdma_req(struct spdk_nvmf_request *req)
-{
-	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req + offsetof(struct spdk_nvmf_rdma_request,
-			req));
-}
-
-static int
-nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
-		     struct ibv_context *verbs)
-{
-	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
-	int				rc;
-	struct ibv_qp_init_attr		attr;
-
-	if (rdma_conn->ctx) {
-		SPDK_ERRLOG("context already set!\n");
-		goto return_error;
-	}
-	rdma_conn->ctx = verbs;
-
-	rdma_conn->comp_channel = ibv_create_comp_channel(verbs);
+	rdma_conn->comp_channel = ibv_create_comp_channel(id->verbs);
 	if (!rdma_conn->comp_channel) {
 		SPDK_ERRLOG("create completion channel error!\n");
-		goto return_error;
+		goto alloc_error;
 	}
+
 	rc = fcntl(rdma_conn->comp_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
 		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
-		goto cq_error;
+		goto alloc_error;
 	}
 
 	/*
 	 * Size the CQ to handle completions for RECV, SEND, and either READ or WRITE.
 	 */
-	rdma_conn->cq = ibv_create_cq(verbs, (rdma_conn->queue_depth * 3), conn, rdma_conn->comp_channel,
+	rdma_conn->cq = ibv_create_cq(id->verbs, (queue_depth * 3), rdma_conn, rdma_conn->comp_channel,
 				      0);
 	if (!rdma_conn->cq) {
 		SPDK_ERRLOG("create cq error!\n");
-		goto cq_error;
+		goto alloc_error;
 	}
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
@@ -180,16 +158,39 @@ nvmf_rdma_queue_init(struct spdk_nvmf_conn *conn,
 	rc = rdma_create_qp(rdma_conn->cm_id, NULL, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
-		goto cq_error;
+		goto alloc_error;
 	}
 	rdma_conn->qp = rdma_conn->cm_id->qp;
 
-	return 0;
+	conn = &rdma_conn->conn;
+	conn->transport = &spdk_nvmf_transport_rdma;
+	id->context = conn;
 
-cq_error:
-	ibv_destroy_comp_channel(rdma_conn->comp_channel);
-return_error:
-	return -1;
+	return rdma_conn;
+
+alloc_error:
+	if (rdma_conn->cq) {
+		ibv_destroy_cq(rdma_conn->cq);
+	}
+
+	if (rdma_conn->comp_channel) {
+		ibv_destroy_comp_channel(rdma_conn->comp_channel);
+	}
+
+	return NULL;
+}
+
+static inline struct spdk_nvmf_rdma_conn *
+get_rdma_conn(struct spdk_nvmf_conn *conn)
+{
+	return (struct spdk_nvmf_rdma_conn *)((uintptr_t)conn + offsetof(struct spdk_nvmf_rdma_conn, conn));
+}
+
+static inline struct spdk_nvmf_rdma_request *
+get_rdma_req(struct spdk_nvmf_request *req)
+{
+	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req + offsetof(struct spdk_nvmf_rdma_request,
+			req));
 }
 
 static void
@@ -601,24 +602,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      event->id->verbs->device->name, event->id->verbs->device->dev_name);
 
-	/* Init the NVMf rdma transport connection */
-	rdma_conn = allocate_rdma_conn();
-	if (rdma_conn == NULL) {
-		SPDK_ERRLOG("Error on nvmf connection creation\n");
-		goto err1;
-	}
-
-	conn = &rdma_conn->conn;
-	conn->transport = &spdk_nvmf_transport_rdma;
-
-	/*
-	 * Save the rdma_cm context id in our fabric connection context.  This
-	 * ptr can be used to get indirect access to ibv_context (cm_id->verbs)
-	 * and also to ibv_device (cm_id->verbs->device)
-	 */
-	rdma_conn->cm_id = event->id;
-	event->id->context = conn;
-
 	/* Figure out the supported queue depth. This is a multi-step process
 	 * that takes into account hardware maximums, host provided values,
 	 * and our target's internal memory limits */
@@ -660,16 +643,15 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d\n", queue_depth);
-	rdma_conn->queue_depth = queue_depth;
 
-	rc = nvmf_rdma_queue_init(conn, event->id->verbs);
-	if (rc) {
-		SPDK_ERRLOG("connect request: rdma conn init failure!\n");
+	/* Init the NVMf rdma transport connection */
+	rdma_conn = allocate_rdma_conn(event->id, queue_depth);
+	if (rdma_conn == NULL) {
+		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "NVMf fabric connection initialized\n");
 
-	STAILQ_INIT(&rdma_conn->rdma_reqs);
+	conn = &rdma_conn->conn;
 
 	/* Allocate 1 buffer suitable for the CONNECT capsule.
 	 * Once that is received, the full queue depth will be allocated.
