@@ -168,7 +168,7 @@ spdk_nvmf_session_destruct(struct nvmf_session *session)
 		struct spdk_nvmf_conn *conn = TAILQ_FIRST(&session->connections);
 
 		TAILQ_REMOVE(&session->connections, conn, link);
-		nvmf_disconnect(conn->sess, conn);
+		session->num_connections--;
 		conn->transport->conn_fini(conn);
 	}
 
@@ -313,6 +313,11 @@ nvmf_disconnect(struct nvmf_session *session,
 {
 	session->num_connections--;
 	TAILQ_REMOVE(&session->connections, conn, link);
+	conn->transport->conn_fini(conn);
+
+	if (session->num_connections == 0) {
+		spdk_nvmf_session_destruct(session);
+	}
 }
 
 static uint64_t
