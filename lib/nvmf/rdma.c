@@ -1111,17 +1111,20 @@ spdk_nvmf_rdma_fini(void)
 	return 0;
 }
 
+/* Returns the number of times that spdk_nvmf_request_exec was called,
+ * or -1 on error.
+ */
 static int
-nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
+spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 {
 	struct ibv_wc wc;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req;
 	struct spdk_nvmf_request *req;
-	int rc;
-	int i;
+	int rc, count;
 
-	for (i = 0; i < rdma_conn->queue_depth; i++) {
+	count = 0;
+	while (true) {
 		rc = ibv_poll_cq(rdma_conn->cq, 1, &wc);
 		if (rc == 0) // No completions at this time
 			break;
@@ -1172,6 +1175,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
 				return -1;
 			}
+			count++;
 			break;
 
 		case IBV_WC_RECV:
@@ -1199,6 +1203,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 					SPDK_ERRLOG("Command execution failed\n");
 					return -1;
 				}
+				count++;
 			} else {
 				/* Start transfer of data from host to target */
 				rc = nvmf_post_rdma_read(req);
@@ -1215,7 +1220,7 @@ nvmf_check_rdma_completions(struct spdk_nvmf_conn *conn)
 		}
 	}
 
-	return 0;
+	return count;
 }
 
 static void
@@ -1244,7 +1249,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.req_complete = spdk_nvmf_rdma_request_complete,
 
 	.conn_fini = nvmf_rdma_conn_cleanup,
-	.conn_poll = nvmf_check_rdma_completions,
+	.conn_poll = spdk_nvmf_rdma_poll,
 
 	.listen_addr_discover = nvmf_rdma_discover,
 };
