@@ -1187,6 +1187,19 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				return -1;
 			}
 
+			{
+				/* TEMPORARY SPECIAL CASE: For asynchronous event requests, just immediately
+				* re-post the capsule. */
+				struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+				if (conn->type == CONN_TYPE_AQ &&
+				    cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+					spdk_nvmf_rdma_request_release(conn, req);
+					break;
+				}
+
+			}
+
 			memset(req->rsp, 0, sizeof(*req->rsp));
 			rc = spdk_nvmf_request_prep_data(req,
 							 rdma_req->bb_mr->addr,
