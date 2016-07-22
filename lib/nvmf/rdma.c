@@ -575,7 +575,6 @@ fail:
 static int
 nvmf_rdma_connect(struct rdma_cm_event *event)
 {
-	struct rdma_cm_id		*conn_id;
 	struct spdk_nvmf_rdma_conn	*rdma_conn = NULL;
 	struct spdk_nvmf_conn		*conn;
 	struct spdk_nvmf_rdma_request	*rdma_req;
@@ -592,14 +591,13 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_ERRLOG("connect request: missing cm_id\n");
 		goto err0;
 	}
-	conn_id = event->id;
 
-	if (conn_id->verbs == NULL) {
+	if (event->id->verbs == NULL) {
 		SPDK_ERRLOG("connect request: missing cm_id ibv_context\n");
 		goto err0;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
-		      conn_id->verbs->device->name, conn_id->verbs->device->dev_name);
+		      event->id->verbs->device->name, event->id->verbs->device->dev_name);
 
 	/* Init the NVMf rdma transport connection */
 	rdma_conn = allocate_rdma_conn();
@@ -616,10 +614,10 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	 * ptr can be used to get indirect access to ibv_context (cm_id->verbs)
 	 * and also to ibv_device (cm_id->verbs->device)
 	 */
-	rdma_conn->cm_id = conn_id;
-	conn_id->context = conn;
+	rdma_conn->cm_id = event->id;
+	event->id->context = conn;
 
-	rc = ibv_query_device(conn_id->verbs, &ibdev_attr);
+	rc = ibv_query_device(event->id->verbs, &ibdev_attr);
 	if (rc) {
 		SPDK_ERRLOG(" Failed on query for device attributes\n");
 		goto err1;
@@ -651,7 +649,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	rdma_conn->queue_depth = nvmf_min(qp_depth, rw_depth);
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d\n", rdma_conn->queue_depth);
 
-	rc = nvmf_rdma_queue_init(conn, conn_id->verbs);
+	rc = nvmf_rdma_queue_init(conn, event->id->verbs);
 	if (rc) {
 		SPDK_ERRLOG("connect request: rdma conn init failure!\n");
 		goto err1;
@@ -681,7 +679,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 	ctrlr_event_data.private_data = &accept_data;
 	ctrlr_event_data.private_data_len = sizeof(accept_data);
-	if (conn_id->ps == RDMA_PS_TCP) {
+	if (event->id->ps == RDMA_PS_TCP) {
 		ctrlr_event_data.responder_resources = 0; /* We accept 0 reads from the host */
 		ctrlr_event_data.initiator_depth = rdma_conn->queue_depth;
 	}
@@ -699,7 +697,7 @@ err1: {
 		struct spdk_nvmf_rdma_reject_private_data rej_data;
 
 		rej_data.status.sc = sts;
-		rdma_reject(conn_id, &ctrlr_event_data, sizeof(rej_data));
+		rdma_reject(event->id, &ctrlr_event_data, sizeof(rej_data));
 		free(rdma_conn);
 	}
 err0:
