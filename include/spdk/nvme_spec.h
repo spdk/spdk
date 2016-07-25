@@ -196,6 +196,16 @@ union spdk_nvme_vs_register {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_vs_register) == 4, "Incorrect size");
 
+/** Generate raw version in the same format as \ref spdk_nvme_vs_register for comparison. */
+#define SPDK_NVME_VERSION(mjr, mnr, ter) \
+	(((uint32_t)(mjr) << 16) | \
+	((uint32_t)(mnr) << 8) | \
+	(uint32_t)(ter))
+
+/* Test that the shifts are correct */
+SPDK_STATIC_ASSERT(SPDK_NVME_VERSION(1, 0, 0) == 0x00010000, "version macro error");
+SPDK_STATIC_ASSERT(SPDK_NVME_VERSION(1, 2, 1) == 0x00010201, "version macro error");
+
 union spdk_nvme_cmbloc_register {
 	uint32_t	raw;
 	struct {
@@ -735,7 +745,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	uint16_t		cntlid;
 
 	/** version */
-	uint32_t		ver;
+	union spdk_nvme_vs_register	ver;
 
 	/** RTD3 resume latency */
 	uint32_t		rtd3r;

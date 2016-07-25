@@ -67,10 +67,11 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 	session->vcprop.cap.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
 	session->vcprop.cap.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
 
-	/* Version Supported: 1.0 */
+	/* Version Supported: 1.2.1 */
 	session->vcprop.vs.bits.mjr = 1;
-	session->vcprop.vs.bits.mnr = 0;
-	session->vcprop.vs.bits.ter = 0;
+	session->vcprop.vs.bits.mnr = 2;
+	session->vcprop.vs.bits.ter = 1;
+	session->vcdata.ver = session->vcprop.vs;
 
 	session->vcprop.cc.raw = 0;
 
@@ -135,10 +136,13 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcprop.cap.bits.mpsmin = 0; /* 2 ^ 12 + mpsmin == 4k */
 	session->vcprop.cap.bits.mpsmax = 0; /* 2 ^ 12 + mpsmax == 4k */
 
-	/* Version Supported: 1.0 */
-	session->vcprop.vs.bits.mjr = 1;
-	session->vcprop.vs.bits.mnr = 0;
-	session->vcprop.vs.bits.ter = 0;
+	/* Report at least version 1.2.1 */
+	if (session->vcprop.vs.raw < SPDK_NVME_VERSION(1, 2, 1)) {
+		session->vcprop.vs.bits.mjr = 1;
+		session->vcprop.vs.bits.mnr = 2;
+		session->vcprop.vs.bits.ter = 1;
+		session->vcdata.ver = session->vcprop.vs;
+	}
 
 	session->vcprop.cc.raw = 0;
 	session->vcprop.cc.bits.en = 0; /* Init controller disabled */
