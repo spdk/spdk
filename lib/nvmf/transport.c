@@ -48,13 +48,15 @@ static const struct spdk_nvmf_transport *const g_transports[] = {
 #define NUM_TRANSPORTS (sizeof(g_transports) / sizeof(*g_transports))
 
 int
-spdk_nvmf_transport_init(void)
+spdk_nvmf_transport_init(uint16_t max_queue_depth, uint32_t max_io_size,
+			 uint32_t in_capsule_data_size)
 {
 	size_t i;
 	int count = 0;
 
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (g_transports[i]->transport_init() < 0) {
+		if (g_transports[i]->transport_init(max_queue_depth, max_io_size,
+						    in_capsule_data_size) < 0) {
 			SPDK_NOTICELOG("%s transport init failed\n", g_transports[i]->name);
 		} else {
 			count++;

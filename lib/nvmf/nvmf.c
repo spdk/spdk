@@ -158,7 +158,9 @@ nvmf_tgt_subsystem_initialize(void)
 	}
 
 	/* initialize with the NVMf transport */
-	rc = spdk_nvmf_transport_init();
+	rc = spdk_nvmf_transport_init(g_nvmf_tgt.max_queue_depth,
+				      g_nvmf_tgt.in_capsule_data_size,
+				      g_nvmf_tgt.max_io_size);
 	if (rc <= 0) {
 		SPDK_ERRLOG("Transport initialization failed\n");
 		return -1;

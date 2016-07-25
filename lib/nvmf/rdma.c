@@ -117,6 +117,10 @@ struct spdk_nvmf_rdma {
 	struct rte_timer		acceptor_timer;
 	struct rdma_event_channel	*acceptor_event_channel;
 	struct rdma_cm_id		*acceptor_listen_id;
+
+	uint16_t max_queue_depth;
+	uint32_t max_io_size;
+	uint32_t in_capsule_data_size;
 };
 
 static struct spdk_nvmf_rdma g_rdma = { };
@@ -248,7 +252,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 	rdma_conn->cpls = rte_calloc("nvmf_rdma_cpl", rdma_conn->queue_depth,
 				     sizeof(*rdma_conn->cpls), 0);
 	rdma_conn->bufs = rte_calloc("nvmf_rdma_buf", rdma_conn->queue_depth,
-				     g_nvmf_tgt.in_capsule_data_size, 0);
+				     g_rdma.in_capsule_data_size, 0);
 	if (!rdma_conn->reqs || !rdma_conn->cmds || !rdma_conn->cpls || !rdma_conn->bufs) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
@@ -260,7 +264,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 	rdma_conn->cpls_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->cpls,
 					   queue_depth * sizeof(*rdma_conn->cpls));
 	rdma_conn->bufs_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->bufs,
-					   rdma_conn->queue_depth * g_nvmf_tgt.in_capsule_data_size);
+					   rdma_conn->queue_depth * g_rdma.in_capsule_data_size);
 	if (!rdma_conn->cmds_mr || !rdma_conn->cpls_mr || !rdma_conn->bufs_mr) {
 		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
@@ -269,8 +273,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 
 	for (i = 0; i < queue_depth; i++) {
 		rdma_req = &rdma_conn->reqs[i];
-
-		rdma_req->buf = (void *)((uintptr_t)rdma_conn->bufs + (i * g_nvmf_tgt.in_capsule_data_size));
+		rdma_req->buf = (void *)((uintptr_t)rdma_conn->bufs + (i * g_rdma.in_capsule_data_size));
 		rdma_req->req.cmd = &rdma_conn->cmds[i];
 		rdma_req->req.rsp = &rdma_conn->cpls[i];
 		rdma_req->req.conn = &rdma_conn->conn;
@@ -404,7 +407,7 @@ nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 	nvmf_trace_ibv_sge(&sg_list[0]);
 
 	sg_list[1].addr = (uintptr_t)rdma_req->buf;
-	sg_list[1].length = g_nvmf_tgt.in_capsule_data_size;
+	sg_list[1].length = g_rdma.in_capsule_data_size;
 	sg_list[1].lkey = rdma_conn->bufs_mr->lkey;
 	nvmf_trace_ibv_sge(&sg_list[1]);
 
@@ -528,8 +531,8 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Calculating Queue Depth\n");
 
 	/* Start with the maximum queue depth allowed by the target */
-	queue_depth = g_nvmf_tgt.max_queue_depth;
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", g_nvmf_tgt.max_queue_depth);
+	queue_depth = g_rdma.max_queue_depth;
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", g_rdma.max_queue_depth);
 
 	/* Next check the local NIC's hardware limitations */
 	rc = ibv_query_device(event->id->verbs, &ibdev_attr);
@@ -913,7 +916,8 @@ Initialize with RDMA transport.  Query OFED for device list.
 
 */
 static int
-spdk_nvmf_rdma_init(void)
+spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
+		    uint32_t in_capsule_data_size)
 {
 	struct ibv_device **dev_list;
 	struct ibv_context *ibdev_ctx = NULL;
@@ -980,6 +984,11 @@ spdk_nvmf_rdma_init(void)
 
 	ibv_free_device_list(dev_list);
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    %d Fabric Intf(s) active\n", num_devices_found);
+
+	g_rdma.max_queue_depth = max_queue_depth;
+	g_rdma.max_io_size = max_io_size;
+	g_rdma.in_capsule_data_size = in_capsule_data_size;
+
 	return num_devices_found;
 }
 
@@ -1088,7 +1097,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 							 rdma_req->buf,
 							 wc.byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
 							 rdma_req->buf,
-							 g_nvmf_tgt.max_io_size);
+							 g_rdma.max_io_size);
 			if (rc < 0) {
 				SPDK_ERRLOG("prep_data failed\n");
 				return spdk_nvmf_request_complete(req);
