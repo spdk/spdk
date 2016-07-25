@@ -82,8 +82,14 @@ struct spdk_nvmf_rdma_conn {
 	struct ibv_cq				*cq;
 	struct ibv_qp				*qp;
 
+	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				queue_depth;
-	int					outstanding_reqs;
+
+	/* The maximum number of active RDMA READ and WRITE operations at one time */
+	uint16_t				rw_depth;
+
+	/* The current number of I/O outstanding on this connection */
+	int					num_outstanding_reqs;
 
 	/* Array of size "queue_depth" containing RDMA requests. */
 	struct spdk_nvmf_rdma_request		*reqs;
@@ -180,7 +186,7 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 }
 
 static struct spdk_nvmf_rdma_conn *
-spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
+spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth, uint16_t rw_depth)
 {
 	struct spdk_nvmf_rdma_conn	*rdma_conn;
 	struct spdk_nvmf_conn		*conn;
@@ -195,6 +201,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 	}
 
 	rdma_conn->queue_depth = queue_depth;
+	rdma_conn->rw_depth = rw_depth;
 	rdma_conn->ctx = id->verbs;
 	rdma_conn->cm_id = id;
 
@@ -508,6 +515,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	struct spdk_nvmf_rdma_accept_private_data accept_data;
 	uint16_t			sts = 0;
 	uint16_t			queue_depth;
+	uint16_t			rw_depth;
 	int 				rc;
 
 
@@ -532,6 +540,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 
 	/* Start with the maximum queue depth allowed by the target */
 	queue_depth = g_rdma.max_queue_depth;
+	rw_depth = g_rdma.max_queue_depth;
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", g_rdma.max_queue_depth);
 
 	/* Next check the local NIC's hardware limitations */
@@ -544,14 +553,15 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
 		      ibdev_attr.max_qp_wr, ibdev_attr.max_qp_rd_atom);
-	queue_depth = nvmf_min(queue_depth, ibdev_attr.max_qp_rd_atom);
-	queue_depth = nvmf_min(queue_depth, ibdev_attr.max_qp_rd_atom);
+	queue_depth = nvmf_min(queue_depth, ibdev_attr.max_qp_wr);
+	rw_depth = nvmf_min(rw_depth, ibdev_attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
 	rdma_param = &event->param.conn;
-	queue_depth = nvmf_min(queue_depth, rdma_param->initiator_depth);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host NIC Max Read/Write Queue Depth: %d\n",
-		      rdma_param->initiator_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA,
+		      "Host NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
+		      rdma_param->initiator_depth, rdma_param->responder_resources);
+	rw_depth = nvmf_min(rw_depth, rdma_param->initiator_depth);
 
 	/* Finally check for the host software requested values, which are
 	 * optional. */
@@ -564,10 +574,14 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		queue_depth = nvmf_min(queue_depth, private_data->hsqsize);
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d\n", queue_depth);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
+		      queue_depth, rw_depth);
+
+	/* TEMPORARY: Limit the queue_depth to the rw_depth due to lack of queueing */
+	queue_depth = rw_depth;
 
 	/* Init the NVMf rdma transport connection */
-	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, queue_depth);
+	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, queue_depth, rw_depth);
 	if (rdma_conn == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
@@ -1048,11 +1062,11 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 		switch (wc.opcode) {
 		case IBV_WC_SEND:
-			assert(rdma_conn->outstanding_reqs > 0);
-			rdma_conn->outstanding_reqs--;
+			assert(rdma_conn->num_outstanding_reqs > 0);
+			rdma_conn->num_outstanding_reqs--;
 			SPDK_TRACELOG(SPDK_TRACE_RDMA,
 				      "RDMA SEND Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
-				      req, conn, rdma_conn->outstanding_reqs);
+				      req, conn, rdma_conn->num_outstanding_reqs);
 			if (spdk_nvmf_rdma_request_release(req)) {
 				return -1;
 			}
@@ -1086,10 +1100,10 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				return -1;
 			}
 
-			rdma_conn->outstanding_reqs++;
+			rdma_conn->num_outstanding_reqs++;
 			SPDK_TRACELOG(SPDK_TRACE_RDMA,
 				      "RDMA RECV Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
-				      req, conn, rdma_conn->outstanding_reqs);
+				      req, conn, rdma_conn->num_outstanding_reqs);
 			spdk_trace_record(TRACE_NVMF_IO_START, 0, 0, (uint64_t)req, 0);
 
 			memset(req->rsp, 0, sizeof(*req->rsp));
