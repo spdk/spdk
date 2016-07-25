@@ -70,28 +70,6 @@
 #define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
-/*
- * Some NVMe command definitions not provided in the nvme_spec.h file
- */
-
-/* read command dword 12 */
-struct __attribute__((packed)) nvme_read_cdw12 {
-	uint16_t	nlb;		/* number of logical blocks */
-	uint16_t	rsvd	: 10;
-	uint8_t		prinfo	: 4;	/* protection information field */
-	uint8_t		fua	: 1;	/* force unit access */
-	uint8_t		lr	: 1;	/* limited retry */
-};
-
-/* read command dword 13 */
-struct __attribute__((packed)) nvme_read_cdw13 {
-	uint8_t		dsm_af	: 4;	/* access frequency */
-	uint8_t		dsm_lat	: 2;	/* access latency */
-	uint8_t		dsm_seq	: 1;	/* sequential request */
-	uint8_t		dsm_inc	: 1;	/* incompressible */
-	uint8_t		rsvd[3];
-};
-
 struct spdk_nvmf_globals {
 	int max_queue_depth;
 	int max_queues_per_session;
