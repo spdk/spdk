@@ -319,16 +319,6 @@ struct spdk_nvmf_fabric_prop_set_cmd {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_prop_set_cmd) == 64, "Incorrect size");
 
-struct spdk_nvmf_extended_identify_ctrlr_data {
-	uint32_t	ioccsz;
-	uint32_t	iorcsz;
-	uint16_t	icdoff;
-	uint8_t		ctrattr;
-	uint8_t		msdbd;
-	uint8_t		reserved[244];
-};
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_extended_identify_ctrlr_data) == 256, "Incorrect size");
-
 #define SPDK_NVMF_NQN_MAX_LEN 223
 #define SPDK_NVMF_DISCOVERY_NQN "nqn.2014-08.org.nvmexpress.discovery"
 

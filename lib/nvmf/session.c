@@ -45,18 +45,15 @@
 static void
 nvmf_init_discovery_session_properties(struct nvmf_session *session)
 {
-	struct spdk_nvmf_extended_identify_ctrlr_data *nvmfdata;
-
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
 	/* extended data for get log page supportted */
 	session->vcdata.lpa.edlp = 1;
 	session->vcdata.cntlid = 0; /* There is one controller per subsystem, so its id is 0 */
-	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
-	nvmfdata->ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-	nvmfdata->iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
-	nvmfdata->icdoff = 0; /* offset starts directly after SQE */
-	nvmfdata->ctrattr = 0; /* dynamic controller model */
-	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
+	session->vcdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	session->vcdata.nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
+	session->vcdata.nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
+	session->vcdata.nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
+	session->vcdata.nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
 	session->vcdata.sgls.keyed_sgl = 1;
 	session->vcdata.sgls.sgl_offset = 1;
 
@@ -85,7 +82,6 @@ static void
 nvmf_init_nvme_session_properties(struct nvmf_session *session)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
-	struct spdk_nvmf_extended_identify_ctrlr_data *nvmfdata;
 
 	/*
 	  Here we are going to initialize the features, properties, and
@@ -105,28 +101,27 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcdata.sgls.keyed_sgl = 1;
 	session->vcdata.sgls.sgl_offset = 1;
 
-	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
-	nvmfdata->ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-	nvmfdata->iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
-	nvmfdata->icdoff = 0; /* offset starts directly after SQE */
-	nvmfdata->ctrattr = 0; /* dynamic controller model */
-	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
+	session->vcdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	session->vcdata.nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
+	session->vcdata.nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
+	session->vcdata.nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
+	session->vcdata.nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
 
 	/* TODO: this should be set by the transport */
-	nvmfdata->ioccsz += SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 16;
+	session->vcdata.nvmf_specific.ioccsz += SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 16;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ctrlr data: maxcmd %x\n",
 		      session->vcdata.maxcmd);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: ioccsz %x\n",
-		      nvmfdata->ioccsz);
+		      session->vcdata.nvmf_specific.ioccsz);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: iorcsz %x\n",
-		      nvmfdata->iorcsz);
+		      session->vcdata.nvmf_specific.iorcsz);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: icdoff %x\n",
-		      nvmfdata->icdoff);
+		      session->vcdata.nvmf_specific.icdoff);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: ctrattr %x\n",
-		      nvmfdata->ctrattr);
+		      *(uint8_t *)&session->vcdata.nvmf_specific.ctrattr);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: msdbd %x\n",
-		      nvmfdata->msdbd);
+		      session->vcdata.nvmf_specific.msdbd);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	sgls data: 0x%x\n",
 		      *(uint32_t *)&session->vcdata.sgls);
 

@@ -687,6 +687,15 @@ enum spdk_nvme_identify_cns {
 	SPDK_NVME_IDENTIFY_CTRLR_LIST			= 0x13,
 };
 
+/** NVMe over Fabrics controller model */
+enum spdk_nvmf_ctrlr_model {
+	/** NVM subsystem uses dynamic controller model */
+	SPDK_NVMF_CTRLR_MODEL_DYNAMIC			= 0,
+
+	/** NVM subsystem uses static controller model */
+	SPDK_NVMF_CTRLR_MODEL_STATIC			= 1,
+};
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -939,7 +948,29 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 
 	uint8_t			reserved5[768];
 
-	uint8_t			nvmf_specific[256];
+	/** NVMe over Fabrics-specific fields */
+	struct {
+		/** I/O queue command capsule supported size (16-byte units) */
+		uint32_t	ioccsz;
+
+		/** I/O queue response capsule supported size (16-byte units) */
+		uint32_t	iorcsz;
+
+		/** In-capsule data offset (16-byte units) */
+		uint16_t	icdoff;
+
+		/** Controller attributes */
+		struct {
+			/** Controller model: \ref spdk_nvmf_ctrlr_model */
+			uint8_t	ctrlr_model : 1;
+			uint8_t reserved : 7;
+		} ctrattr;
+
+		/** Maximum SGL block descriptors (0 = no limit) */
+		uint8_t		msdbd;
+
+		uint8_t		reserved[244];
+	} nvmf_specific;
 
 	/* bytes 2048-3071: power state descriptors */
 	struct spdk_nvme_power_state	psd[32];
