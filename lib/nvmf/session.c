@@ -126,7 +126,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 		      *(uint32_t *)&session->vcdata.sgls);
 
 	session->vcprop.cap.raw = 0;
-	session->vcprop.cap.bits.cqr = 0;	/* queues not contiguous */
+	session->vcprop.cap.bits.cqr = 1;
 	session->vcprop.cap.bits.mqes = (session->vcdata.maxcmd - 1);	/* max queue depth */
 	session->vcprop.cap.bits.ams = 0;	/* optional arb mechanisms */
 	session->vcprop.cap.bits.to = 1;	/* ready timeout - 500 msec units */
