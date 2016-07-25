@@ -68,6 +68,14 @@ struct spdk_nvmf_probe_ctx {
 #define SPDK_NVMF_CONFIG_QUEUE_DEPTH_MIN 16
 #define SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX 1024
 
+#define SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_DEFAULT 131072
+#define SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MIN 4096
+#define SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MAX 131072
+
+#define SPDK_NVMF_CONFIG_MAX_IO_SIZE_DEFAULT 131072
+#define SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN 4096
+#define SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX 131072
+
 static int
 spdk_add_nvmf_discovery_subsystem(void)
 {
@@ -89,6 +97,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	struct spdk_conf_section *sp;
 	int max_queue_depth;
 	int max_queues_per_sess;
+	int in_capsule_data_size;
+	int max_io_size;
 	int rc;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
@@ -111,7 +121,27 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	max_queues_per_sess = nvmf_max(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN);
 	max_queues_per_sess = nvmf_min(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX);
 
-	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess);
+	in_capsule_data_size = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
+	if (in_capsule_data_size < 0) {
+		in_capsule_data_size = SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_DEFAULT;
+	} else if ((in_capsule_data_size % 16) != 0) {
+		SPDK_ERRLOG("InCapsuleDataSize must be a multiple of 16\n");
+		return -1;
+	}
+	in_capsule_data_size = nvmf_max(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MIN);
+	in_capsule_data_size = nvmf_min(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MAX);
+
+	max_io_size = spdk_conf_section_get_intval(sp, "MaxIOSize");
+	if (max_io_size < 0) {
+		max_io_size = SPDK_NVMF_CONFIG_MAX_IO_SIZE_DEFAULT;
+	} else if ((max_io_size % 4096) != 0) {
+		SPDK_ERRLOG("MaxIOSize must be a multiple of 4096\n");
+		return -1;
+	}
+	max_io_size = nvmf_max(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN);
+	max_io_size = nvmf_min(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX);
+
+	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvmf_tgt_init() failed\n");
 		return rc;

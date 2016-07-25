@@ -116,12 +116,20 @@ spdk_nvmf_check_pools(void)
 }
 
 int
-nvmf_tgt_init(int max_queue_depth, int max_queues_per_sess)
+nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
+	      uint32_t in_capsule_data_size, uint32_t max_io_size)
 {
 	int rc;
 
 	g_nvmf_tgt.max_queues_per_session = max_queues_per_sess;
 	g_nvmf_tgt.max_queue_depth = max_queue_depth;
+	g_nvmf_tgt.in_capsule_data_size = in_capsule_data_size;
+	g_nvmf_tgt.max_io_size = max_io_size;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queues Per Session: %d\n", max_queues_per_sess);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n", in_capsule_data_size);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", max_io_size);
 
 	/* init nvmf specific config options */
 	if (!g_nvmf_tgt.sin_port) {

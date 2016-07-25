@@ -46,14 +46,6 @@
 #define nvmf_min(a,b) (((a)<(b))?(a):(b))
 #define nvmf_max(a,b) (((a)>(b))?(a):(b))
 
-#define DEFAULT_BB_SIZE (128 * 1024)
-
-/*
- * NVMf target supports a maximum transfer size that is equal to
- * a single allocated bounce buffer per request.
- */
-#define SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE  DEFAULT_BB_SIZE
-
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
 #define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
 
@@ -71,13 +63,27 @@
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
 struct spdk_nvmf_globals {
-	int max_queue_depth;
-	int max_queues_per_session;
+	uint16_t max_queue_depth;
+	uint16_t max_queues_per_session;
+
+	uint32_t in_capsule_data_size;
+	uint32_t max_io_size;
 
 	uint16_t	   sin_port;
 };
 
-int nvmf_tgt_init(int max_queue_depth, int max_conn_per_sess);
+int nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
+		  uint32_t in_capsule_data_size, uint32_t max_io_size);
+
+static inline uint32_t
+nvmf_u32log2(uint32_t x)
+{
+	if (x == 0) {
+		/* __builtin_clz(0) is undefined, so just bail */
+		return 0;
+	}
+	return 31u - __builtin_clz(x);
+}
 
 extern struct spdk_nvmf_globals g_nvmf_tgt;
 

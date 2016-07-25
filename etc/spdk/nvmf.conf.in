@@ -33,6 +33,12 @@
   # Set the maximum number of outstanding I/O per queue.
   #MaxQueueDepth 128
 
+  # Set the maximum in-capsule data size. Must be a multiple of 16.
+  #InCapsuleDataSize 4096
+
+  # Set the maximum I/O size. Must be a multiple of 4096.
+  #MaxIOSize 131072
+
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Mode may be either "Direct" or "Virtual". Direct means that physical

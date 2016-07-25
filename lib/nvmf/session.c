@@ -85,6 +85,8 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 
+	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
+
 	/*
 	  Here we are going to initialize the features, properties, and
 	  identify controller details for the virtual controller associated
@@ -99,7 +101,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcdata.cntlid = 0;
 	session->vcdata.kas = 10;
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
-	session->vcdata.mdts = SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 4096;
+	session->vcdata.mdts = nvmf_u32log2(g_nvmf_tgt.max_io_size / 4096);
 	session->vcdata.sgls.keyed_sgl = 1;
 	session->vcdata.sgls.sgl_offset = 1;
 
@@ -110,7 +112,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcdata.nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
 
 	/* TODO: this should be set by the transport */
-	session->vcdata.nvmf_specific.ioccsz += SPDK_NVMF_MAX_RECV_DATA_TRANSFER_SIZE / 16;
+	session->vcdata.nvmf_specific.ioccsz += g_nvmf_tgt.max_io_size / 16;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ctrlr data: maxcmd %x\n",
 		      session->vcdata.maxcmd);
