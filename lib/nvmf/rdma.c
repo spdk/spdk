@@ -244,13 +244,15 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 	rdma_conn->comp_channel = ibv_create_comp_channel(id->verbs);
 	if (!rdma_conn->comp_channel) {
 		SPDK_ERRLOG("create completion channel error!\n");
-		goto alloc_error;
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
+		return NULL;
 	}
 
 	rc = fcntl(rdma_conn->comp_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
 		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
-		goto alloc_error;
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
+		return NULL;
 	}
 
 	/*
@@ -260,7 +262,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 				      0);
 	if (!rdma_conn->cq) {
 		SPDK_ERRLOG("create cq error!\n");
-		goto alloc_error;
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
+		return NULL;
 	}
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
@@ -275,7 +278,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 	rc = rdma_create_qp(rdma_conn->cm_id, NULL, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
-		goto alloc_error;
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
+		return NULL;
 	}
 	rdma_conn->qp = rdma_conn->cm_id->qp;
 
@@ -288,7 +292,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 	for (i = 0; i < rdma_conn->queue_depth; i++) {
 		rdma_req = alloc_rdma_req(conn);
 		if (rdma_req == NULL) {
-			goto alloc_error;
+			spdk_nvmf_rdma_conn_destroy(rdma_conn);
+			return NULL;
 		}
 
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rdma_req %p: req %p, rsp %p\n",
@@ -297,29 +302,14 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 
 		if (nvmf_post_rdma_recv(&rdma_req->req)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
-			goto alloc_error;
+			spdk_nvmf_rdma_conn_destroy(rdma_conn);
+			return NULL;
 		}
 
 		STAILQ_INSERT_TAIL(&rdma_conn->rdma_reqs, rdma_req, link);
 	}
 
 	return rdma_conn;
-
-alloc_error:
-	STAILQ_FOREACH(rdma_req, &rdma_conn->rdma_reqs, link) {
-		STAILQ_REMOVE(&rdma_conn->rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
-		free_rdma_req(rdma_req);
-	}
-
-	if (rdma_conn->cq) {
-		ibv_destroy_cq(rdma_conn->cq);
-	}
-
-	if (rdma_conn->comp_channel) {
-		ibv_destroy_comp_channel(rdma_conn->comp_channel);
-	}
-
-	return NULL;
 }
 
 static void
