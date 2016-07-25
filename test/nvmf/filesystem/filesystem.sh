@@ -60,6 +60,9 @@ for dev in $devs; do
 	done
 done
 
+sync
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
