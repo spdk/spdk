@@ -193,9 +193,8 @@ alloc_rdma_req(struct spdk_nvmf_conn *conn)
 }
 
 static void
-spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_conn *conn)
+spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 {
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req;
 
 	STAILQ_FOREACH(rdma_req, &rdma_conn->rdma_reqs, link) {
@@ -223,7 +222,7 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_conn *conn)
 }
 
 static struct spdk_nvmf_rdma_conn *
-allocate_rdma_conn(struct rdma_cm_id *id, uint16_t queue_depth)
+spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 {
 	struct spdk_nvmf_rdma_conn	*rdma_conn;
 	struct spdk_nvmf_conn		*conn;
@@ -599,7 +598,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d\n", queue_depth);
 
 	/* Init the NVMf rdma transport connection */
-	rdma_conn = allocate_rdma_conn(event->id, queue_depth);
+	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, queue_depth);
 	if (rdma_conn == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
@@ -676,7 +675,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		/* No session has been established yet. That means the conn
 		 * must be in the pending connections list. Remove it. */
 		TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-		spdk_nvmf_rdma_conn_destroy(conn);
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		return 0;
 	}
 
@@ -831,7 +830,7 @@ nvmf_rdma_accept(struct rte_timer *timer, void *arg)
 		rc = spdk_nvmf_rdma_poll(&rdma_conn->conn);
 		if (rc < 0) {
 			TAILQ_REMOVE(&g_pending_conns, rdma_conn, link);
-			spdk_nvmf_rdma_conn_destroy(&rdma_conn->conn);
+			spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		} else if (rc > 0) {
 			/* At least one request was processed which is assumed to be
 			 * a CONNECT. Remove this connection from our list. */
@@ -1025,6 +1024,14 @@ spdk_nvmf_rdma_fini(void)
 	return 0;
 }
 
+static void
+spdk_nvmf_rdma_close_conn(struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
+
+	return spdk_nvmf_rdma_conn_destroy(rdma_conn);
+}
+
 /* Returns the number of times that spdk_nvmf_request_exec was called,
  * or -1 on error.
  */
@@ -1172,7 +1179,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.req_complete = spdk_nvmf_rdma_request_complete,
 	.req_release = spdk_nvmf_rdma_request_release,
 
-	.conn_fini = spdk_nvmf_rdma_conn_destroy,
+	.conn_fini = spdk_nvmf_rdma_close_conn,
 	.conn_poll = spdk_nvmf_rdma_poll,
 
 	.listen_addr_discover = nvmf_rdma_discover,
