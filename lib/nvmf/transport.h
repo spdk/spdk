@@ -66,9 +66,18 @@ struct spdk_nvmf_transport {
 	void (*transport_stop)(void);
 
 	/*
-	 * Signal request completion.
+	 * Signal request completion, which sends a response
+	 * to the originator. A request can either
+	 * be completed or released, but not both.
 	 */
 	int (*req_complete)(struct spdk_nvmf_request *req);
+
+	/*
+	 * Signal that the request can be released without sending
+	 * a response. A request can either be completed or release,
+	 * but not both.
+	 */
+	int (*req_release)(struct spdk_nvmf_request *req);
 
 	/*
 	 * Deinitialize a connection.

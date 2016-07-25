@@ -37,7 +37,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "request.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
@@ -80,8 +79,6 @@ struct nvmf_session {
 	TAILQ_HEAD(connection_q, spdk_nvmf_conn) connections;
 	int num_connections;
 	int max_connections_allowed;
-
-	struct spdk_nvmf_request *aer_req;
 };
 
 void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,

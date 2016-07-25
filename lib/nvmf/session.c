@@ -36,6 +36,7 @@
 
 #include "session.h"
 #include "nvmf_internal.h"
+#include "request.h"
 #include "subsystem.h"
 #include "transport.h"
 #include "spdk/log.h"

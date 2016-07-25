@@ -1104,19 +1104,6 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				return -1;
 			}
 
-			{
-				/* TEMPORARY SPECIAL CASE: For asynchronous event requests, just immediately
-				* re-post the capsule. */
-				struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-
-				if (conn->type == CONN_TYPE_AQ &&
-				    cmd->opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
-					spdk_nvmf_rdma_request_release(req);
-					break;
-				}
-
-			}
-
 			rdma_conn->outstanding_reqs++;
 			SPDK_TRACELOG(SPDK_TRACE_RDMA,
 				      "RDMA RECV Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
@@ -1183,6 +1170,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.transport_stop = spdk_nvmf_rdma_acceptor_stop,
 
 	.req_complete = spdk_nvmf_rdma_request_complete,
+	.req_release = spdk_nvmf_rdma_request_release,
 
 	.conn_fini = spdk_nvmf_rdma_conn_destroy,
 	.conn_poll = spdk_nvmf_rdma_poll,
