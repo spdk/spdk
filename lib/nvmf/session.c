@@ -52,8 +52,8 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 	session->vcdata.lpa.edlp = 1;
 	session->vcdata.cntlid = 0; /* There is one controller per subsystem, so its id is 0 */
 	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
-	nvmfdata->ioccsz = (NVMF_H2C_MAX_MSG / 16);
-	nvmfdata->iorcsz = (NVMF_C2H_MAX_MSG / 16);
+	nvmfdata->ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	nvmfdata->iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
 	nvmfdata->icdoff = 0; /* offset starts directly after SQE */
 	nvmfdata->ctrattr = 0; /* dynamic controller model */
 	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */
@@ -106,8 +106,8 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	session->vcdata.sgls.sgl_offset = 1;
 
 	nvmfdata = (struct spdk_nvmf_extended_identify_ctrlr_data *)session->vcdata.nvmf_specific;
-	nvmfdata->ioccsz = (NVMF_H2C_MAX_MSG / 16);
-	nvmfdata->iorcsz = (NVMF_C2H_MAX_MSG / 16);
+	nvmfdata->ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+	nvmfdata->iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
 	nvmfdata->icdoff = 0; /* offset starts directly after SQE */
 	nvmfdata->ctrattr = 0; /* dynamic controller model */
 	nvmfdata->msdbd = 1; /* target supports single SGL in capsule */

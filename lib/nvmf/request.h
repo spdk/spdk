@@ -53,9 +53,6 @@ union nvmf_c2h_msg {
 };
 SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
 
-#define NVMF_H2C_MAX_MSG (sizeof(union nvmf_h2c_msg))
-#define NVMF_C2H_MAX_MSG (sizeof(union nvmf_c2h_msg))
-
 struct spdk_nvmf_request {
 	struct spdk_nvmf_conn		*conn;
 	uint32_t			length;
