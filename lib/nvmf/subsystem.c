@@ -231,7 +231,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 					break;
 				}
 				entry = &disc_log->entries[numrec];
-				entry->portid = subsystem->num;
+				entry->portid = numrec;
 				entry->cntlid = 0xffff;
 				entry->subtype = subsystem->subtype;
 				snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
