@@ -71,8 +71,6 @@
 #define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
 
-#define NVMF_CNTLID_SUBS_SHIFT 8
-
 /*
  * Some NVMe command definitions not provided in the nvme_spec.h file
  */
