@@ -66,16 +66,11 @@
 #define NVMF_DEFAULT_RX_SGE		2
 
 struct spdk_nvmf_rdma_request {
-	struct spdk_nvmf_request		req;
-	STAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
+	struct spdk_nvmf_request	req;
 
-	union nvmf_h2c_msg			cmd;
-	struct ibv_mr				*cmd_mr;
+	/* Inline data buffer of size DEFAULT_BB_SIZE */
+	void				*buf;
 
-	union nvmf_c2h_msg			rsp;
-	struct ibv_mr				*rsp_mr;
-
-	struct ibv_mr				*bb_mr;
 };
 
 struct spdk_nvmf_rdma_conn {
@@ -88,9 +83,29 @@ struct spdk_nvmf_rdma_conn {
 	struct ibv_qp				*qp;
 
 	uint16_t				queue_depth;
-
-	STAILQ_HEAD(, spdk_nvmf_rdma_request)	rdma_reqs;
 	int					outstanding_reqs;
+
+	/* Array of size "queue_depth" containing RDMA requests. */
+	struct spdk_nvmf_rdma_request		*reqs;
+
+	/* Array of size "queue_depth" containing 64 byte capsules
+	 * used for receive.
+	 */
+	union nvmf_h2c_msg			*cmds;
+	struct ibv_mr				*cmds_mr;
+
+	/* Array of size "queue_depth" containing 16 byte completions
+	 * to be sent back to the user.
+	 */
+	union nvmf_c2h_msg			*cpls;
+	struct ibv_mr				*cpls_mr;
+
+	/* Array of size "queue_depth * DEFAULT_BB_SIZE" containing
+	 * buffers to be used for inline data. TODO: Currently, all data
+	 * is inline.
+	 */
+	void					*bufs;
+	struct ibv_mr				*bufs_mr;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_conn)	link;
 };
@@ -122,84 +137,18 @@ get_rdma_req(struct spdk_nvmf_request *req)
 static int nvmf_post_rdma_recv(struct spdk_nvmf_request *req);
 
 static void
-free_rdma_req(struct spdk_nvmf_rdma_request *rdma_req)
-{
-	if (rdma_req->cmd_mr && rdma_dereg_mr(rdma_req->cmd_mr)) {
-		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
-	}
-
-	if (rdma_req->rsp_mr && rdma_dereg_mr(rdma_req->rsp_mr)) {
-		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
-	}
-
-	if (rdma_req->bb_mr) {
-		rte_free(rdma_req->bb_mr->addr);
-		if (rdma_dereg_mr(rdma_req->bb_mr)) {
-			SPDK_ERRLOG("Unable to de-register bb_mr\n");
-		}
-	}
-
-	rte_free(rdma_req);
-}
-
-static struct spdk_nvmf_rdma_request *
-alloc_rdma_req(struct spdk_nvmf_conn *conn)
-{
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req;
-	void *bb;
-	size_t bb_len;
-
-	rdma_req = rte_zmalloc("nvmf_rdma_req", sizeof(*rdma_req), 0);
-	if (!rdma_req) {
-		SPDK_ERRLOG("Unable to allocate rdma_req\n");
-		return NULL;
-	}
-
-	rdma_req->cmd_mr = rdma_reg_msgs(rdma_conn->cm_id, &rdma_req->cmd, sizeof(rdma_req->cmd));
-	if (rdma_req->cmd_mr == NULL) {
-		SPDK_ERRLOG("Unable to register cmd_mr\n");
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-
-	bb_len = DEFAULT_BB_SIZE;
-	bb = rte_zmalloc("nvmf_bb", bb_len, 0);
-	if (!bb) {
-		SPDK_ERRLOG("Unable to get %zu byte bounce buffer\n", bb_len);
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-	rdma_req->bb_mr = rdma_reg_read(rdma_conn->cm_id, bb, bb_len);
-	if (rdma_req->bb_mr == NULL) {
-		SPDK_ERRLOG("Unable to register bb_mr\n");
-		rte_free(bb);
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-
-	rdma_req->rsp_mr = rdma_reg_msgs(rdma_conn->cm_id, &rdma_req->rsp, sizeof(rdma_req->rsp));
-	if (rdma_req->rsp_mr == NULL) {
-		SPDK_ERRLOG("Unable to register rsp_mr\n");
-		free_rdma_req(rdma_req);
-		return NULL;
-	}
-
-	rdma_req->req.cmd = &rdma_req->cmd;
-	rdma_req->req.rsp = &rdma_req->rsp;
-	rdma_req->req.conn = conn;
-
-	return rdma_req;
-}
-
-static void
 spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 {
-	struct spdk_nvmf_rdma_request *rdma_req;
+	if (rdma_conn->cmds_mr) {
+		rdma_dereg_mr(rdma_conn->cmds_mr);
+	}
 
-	STAILQ_FOREACH(rdma_req, &rdma_conn->rdma_reqs, link) {
-		STAILQ_REMOVE(&rdma_conn->rdma_reqs, rdma_req, spdk_nvmf_rdma_request, link);
-		free_rdma_req(rdma_req);
+	if (rdma_conn->cpls_mr) {
+		rdma_dereg_mr(rdma_conn->cpls_mr);
+	}
+
+	if (rdma_conn->bufs_mr) {
+		rdma_dereg_mr(rdma_conn->bufs_mr);
 	}
 
 	if (rdma_conn->cm_id) {
@@ -218,6 +167,11 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 		rdma_destroy_id(rdma_conn->cm_id);
 	}
 
+	/* Free all memory */
+	rte_free(rdma_conn->cmds);
+	rte_free(rdma_conn->cpls);
+	rte_free(rdma_conn->bufs);
+	free(rdma_conn->reqs);
 	free(rdma_conn);
 }
 
@@ -239,7 +193,6 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 	rdma_conn->queue_depth = queue_depth;
 	rdma_conn->ctx = id->verbs;
 	rdma_conn->cm_id = id;
-	STAILQ_INIT(&rdma_conn->rdma_reqs);
 
 	rdma_conn->comp_channel = ibv_create_comp_channel(id->verbs);
 	if (!rdma_conn->comp_channel) {
@@ -289,24 +242,44 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t queue_depth)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", conn);
 
-	for (i = 0; i < rdma_conn->queue_depth; i++) {
-		rdma_req = alloc_rdma_req(conn);
-		if (rdma_req == NULL) {
-			spdk_nvmf_rdma_conn_destroy(rdma_conn);
-			return NULL;
-		}
+	rdma_conn->reqs = calloc(rdma_conn->queue_depth, sizeof(*rdma_conn->reqs));
+	rdma_conn->cmds = rte_calloc("nvmf_rdma_cmd", rdma_conn->queue_depth,
+				     sizeof(*rdma_conn->cmds), 0);
+	rdma_conn->cpls = rte_calloc("nvmf_rdma_cpl", rdma_conn->queue_depth,
+				     sizeof(*rdma_conn->cpls), 0);
+	rdma_conn->bufs = rte_calloc("nvmf_rdma_buf", rdma_conn->queue_depth,
+				     DEFAULT_BB_SIZE, 0);
+	if (!rdma_conn->reqs || !rdma_conn->cmds || !rdma_conn->cpls || !rdma_conn->bufs) {
+		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
+		return NULL;
+	}
 
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "rdma_req %p: req %p, rsp %p\n",
-			      rdma_req, &rdma_req->req,
-			      rdma_req->req.rsp);
+	rdma_conn->cmds_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->cmds,
+					   queue_depth * sizeof(*rdma_conn->cmds));
+	rdma_conn->cpls_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->cpls,
+					   queue_depth * sizeof(*rdma_conn->cpls));
+	rdma_conn->bufs_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->bufs,
+					   rdma_conn->queue_depth * DEFAULT_BB_SIZE);
+	if (!rdma_conn->cmds_mr || !rdma_conn->cpls_mr || !rdma_conn->bufs_mr) {
+		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
+		return NULL;
+	}
+
+	for (i = 0; i < queue_depth; i++) {
+		rdma_req = &rdma_conn->reqs[i];
+
+		rdma_req->buf = (void *)((uintptr_t)rdma_conn->bufs + (i * DEFAULT_BB_SIZE));
+		rdma_req->req.cmd = &rdma_conn->cmds[i];
+		rdma_req->req.rsp = &rdma_conn->cpls[i];
+		rdma_req->req.conn = &rdma_conn->conn;
 
 		if (nvmf_post_rdma_recv(&rdma_req->req)) {
-			SPDK_ERRLOG("Unable to post connection rx desc\n");
+			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
 			spdk_nvmf_rdma_conn_destroy(rdma_conn);
 			return NULL;
 		}
-
-		STAILQ_INSERT_TAIL(&rdma_conn->rdma_reqs, rdma_req, link);
 	}
 
 	return rdma_conn;
@@ -367,20 +340,21 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
 
-	sge.addr = (uint64_t)rdma_req->bb_mr->addr;
-	sge.lkey = rdma_req->bb_mr->lkey;
+	sge.addr = (uintptr_t)rdma_req->buf;
+	sge.lkey = rdma_conn->bufs_mr->lkey;
 	sge.length = req->length;
 	nvmf_trace_ibv_sge(&sge);
 
 	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_RDMA_READ, IBV_SEND_SIGNALED);
 	nvmf_ibv_send_wr_set_rkey(&wr, req);
 
-	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uint64_t)req, 0);
+	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
 	rc = ibv_post_send(rdma_conn->qp, &wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma read send, rc = 0x%x\n", rc);
 	}
-	return (rc);
+
+	return rc;
 }
 
 static int
@@ -395,20 +369,21 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
 
-	sge.addr = (uint64_t)rdma_req->bb_mr->addr;
-	sge.lkey = rdma_req->bb_mr->lkey;
+	sge.addr = (uintptr_t)rdma_req->buf;
+	sge.lkey = rdma_conn->bufs_mr->lkey;
 	sge.length = req->length;
 	nvmf_trace_ibv_sge(&sge);
 
 	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_RDMA_WRITE, 0);
 	nvmf_ibv_send_wr_set_rkey(&wr, req);
 
-	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uint64_t)req, 0);
+	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
 	rc = ibv_post_send(rdma_conn->qp, &wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma write send, rc = 0x%x\n", rc);
 	}
-	return (rc);
+
+	return rc;
 }
 
 static int
@@ -423,14 +398,14 @@ nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Request: %p Connection: %p\n", req, conn);
 
-	sg_list[0].addr = (uint64_t)&rdma_req->cmd;
-	sg_list[0].length = sizeof(rdma_req->cmd);
-	sg_list[0].lkey = rdma_req->cmd_mr->lkey;
+	sg_list[0].addr = (uintptr_t)req->cmd;
+	sg_list[0].length = sizeof(*req->cmd);
+	sg_list[0].lkey = rdma_conn->cmds_mr->lkey;
 	nvmf_trace_ibv_sge(&sg_list[0]);
 
-	sg_list[1].addr = (uint64_t)rdma_req->bb_mr->addr;
-	sg_list[1].length = rdma_req->bb_mr->length;
-	sg_list[1].lkey = rdma_req->bb_mr->lkey;
+	sg_list[1].addr = (uintptr_t)rdma_req->buf;
+	sg_list[1].length = DEFAULT_BB_SIZE;
+	sg_list[1].lkey = rdma_conn->bufs_mr->lkey;
 	nvmf_trace_ibv_sge(&sg_list[1]);
 
 	memset(&wr, 0, sizeof(wr));
@@ -443,7 +418,8 @@ nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma recv, rc = 0x%x\n", rc);
 	}
-	return (rc);
+
+	return rc;
 }
 
 static int
@@ -452,25 +428,25 @@ nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
 	struct ibv_sge sge;
 	int rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, conn);
 
-	sge.addr = (uint64_t)&rdma_req->rsp;
-	sge.length = sizeof(rdma_req->rsp);
-	sge.lkey = rdma_req->rsp_mr->lkey;
+	sge.addr = (uintptr_t)req->rsp;
+	sge.length = sizeof(*req->rsp);
+	sge.lkey = rdma_conn->cpls_mr->lkey;
 	nvmf_trace_ibv_sge(&sge);
 
 	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_SEND, IBV_SEND_SIGNALED);
 
-	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uint64_t)req, 0);
+	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
 	rc = ibv_post_send(rdma_conn->qp, &wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma send for NVMf completion, rc = 0x%x\n", rc);
 	}
-	return (rc);
+
+	return rc;
 }
 
 static int
@@ -1109,10 +1085,10 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 			memset(req->rsp, 0, sizeof(*req->rsp));
 			rc = spdk_nvmf_request_prep_data(req,
-							 rdma_req->bb_mr->addr,
+							 rdma_req->buf,
 							 wc.byte_len - sizeof(struct spdk_nvmf_capsule_cmd),
-							 rdma_req->bb_mr->addr,
-							 rdma_req->bb_mr->length);
+							 rdma_req->buf,
+							 DEFAULT_BB_SIZE);
 			if (rc < 0) {
 				SPDK_ERRLOG("prep_data failed\n");
 				return spdk_nvmf_request_complete(req);
