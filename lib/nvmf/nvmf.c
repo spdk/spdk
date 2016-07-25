@@ -123,12 +123,6 @@ nvmf_tgt_init(int max_queue_depth, int max_queues_per_sess)
 	g_nvmf_tgt.max_queues_per_session = max_queues_per_sess;
 	g_nvmf_tgt.max_queue_depth = max_queue_depth;
 
-	rc = pthread_mutex_init(&g_nvmf_tgt.mutex, NULL);
-	if (rc != 0) {
-		SPDK_ERRLOG("mutex_init() failed\n");
-		return -1;
-	}
-
 	/* init nvmf specific config options */
 	if (!g_nvmf_tgt.sin_port) {
 		g_nvmf_tgt.sin_port = htons(SPDK_NVMF_DEFAULT_SIN_PORT);
@@ -170,8 +164,6 @@ nvmf_tgt_subsystem_fini(void)
 {
 	spdk_shutdown_nvmf_subsystems();
 	spdk_nvmf_transport_fini();
-
-	pthread_mutex_destroy(&g_nvmf_tgt.mutex);
 
 	if (spdk_nvmf_check_pools() != 0) {
 		return -1;

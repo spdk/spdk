@@ -38,7 +38,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <pthread.h>
 
 #include "spdk/nvmf_spec.h"
 #include "spdk/assert.h"
@@ -94,8 +93,6 @@ struct __attribute__((packed)) nvme_read_cdw13 {
 };
 
 struct spdk_nvmf_globals {
-	pthread_mutex_t mutex;
-
 	int max_queue_depth;
 	int max_queues_per_session;
 
