@@ -79,6 +79,12 @@ struct nvmf_session {
 	TAILQ_HEAD(connection_q, spdk_nvmf_conn) connections;
 	int num_connections;
 	int max_connections_allowed;
+
+	const struct spdk_nvmf_transport	*transport;
+
+	/* This is filled in by calling the transport's
+	 * session_init function. */
+	void					*trctx;
 };
 
 void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,

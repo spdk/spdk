@@ -174,6 +174,8 @@ spdk_nvmf_session_destruct(struct nvmf_session *session)
 		conn->transport->conn_fini(conn);
 	}
 
+	session->transport->session_fini(session);
+
 	free(session);
 }
 
@@ -252,6 +254,10 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		session->num_connections = 0;
 		session->subsys = subsystem;
 		session->max_connections_allowed = g_nvmf_tgt.max_queues_per_session;
+		if (conn->transport->session_init(session, conn)) {
+			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			return;
+		}
 
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 			nvmf_init_nvme_session_properties(session);

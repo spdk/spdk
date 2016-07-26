@@ -119,6 +119,10 @@ struct spdk_nvmf_rdma_conn {
 /* List of RDMA connections that have not yet received a CONNECT capsule */
 static TAILQ_HEAD(, spdk_nvmf_rdma_conn) g_pending_conns = TAILQ_HEAD_INITIALIZER(g_pending_conns);
 
+struct spdk_nvmf_rdma_session {
+	int reserved;
+};
+
 struct spdk_nvmf_rdma {
 	struct rte_timer		acceptor_timer;
 	struct rdma_event_channel	*acceptor_event_channel;
@@ -932,6 +936,35 @@ spdk_nvmf_rdma_acceptor_stop(void)
 	rte_timer_stop_sync(&g_rdma.acceptor_timer);
 }
 
+static int
+spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_session	*rdma_sess;
+
+	rdma_sess = calloc(1, sizeof(*rdma_sess));
+	if (!rdma_sess) {
+		return -1;
+	}
+
+	session->transport = conn->transport;
+	session->trctx = rdma_sess;
+
+	return 0;
+}
+
+static void
+spdk_nvmf_rdma_session_fini(struct nvmf_session *session)
+{
+	struct spdk_nvmf_rdma_session *rdma_sess = session->trctx;
+
+	if (!rdma_sess) {
+		return;
+	}
+
+	free(rdma_sess);
+	session->trctx = NULL;
+}
+
 /*
 
 Initialize with RDMA transport.  Query OFED for device list.
@@ -1081,10 +1114,6 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			break;
 
 		case IBV_WC_RDMA_WRITE:
-			/*
-			 * Will get this event only if we set IBV_SEND_SIGNALED
-			 * flag in rdma_write, to trace rdma write latency
-			 */
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE Complete. Request: %p Connection: %p\n",
 				      req, conn);
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
@@ -1168,6 +1197,9 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.transport_fini = spdk_nvmf_rdma_fini,
 	.transport_start = spdk_nvmf_rdma_acceptor_start,
 	.transport_stop = spdk_nvmf_rdma_acceptor_stop,
+
+	.session_init = spdk_nvmf_rdma_session_init,
+	.session_fini = spdk_nvmf_rdma_session_fini,
 
 	.req_complete = spdk_nvmf_rdma_request_complete,
 	.req_release = spdk_nvmf_rdma_request_release,
