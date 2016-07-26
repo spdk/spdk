@@ -448,7 +448,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		if (lcore == 0) {
 			lcore = rte_lcore_id();
 		}
-		spdk_poller_register(&bdev->poller, lcore, NULL);
+		spdk_poller_register(&bdev->poller, lcore, NULL, 0);
 	}
 
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {

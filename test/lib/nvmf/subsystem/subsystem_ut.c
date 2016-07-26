@@ -43,7 +43,8 @@
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 void
-spdk_poller_register(struct spdk_poller *poller, uint32_t lcore, struct spdk_event *complete)
+spdk_poller_register(struct spdk_poller *poller, uint32_t lcore, struct spdk_event *complete,
+		     uint64_t period_microseconds)
 {
 }
 

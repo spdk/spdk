@@ -47,6 +47,7 @@
 #endif
 
 #include <rte_config.h>
+#include <rte_cycles.h>
 #include <rte_debug.h>
 #include <rte_mempool.h>
 #include <rte_ring.h>
@@ -68,7 +69,7 @@ enum spdk_reactor_state {
 
 struct spdk_reactor {
 	/* Logical core number for this reactor. */
-	uint32_t			lcore;
+	uint32_t					lcore;
 
 	/*
 	 * Contains pollers actively running on this reactor.  Pollers
@@ -76,9 +77,14 @@ struct spdk_reactor {
 	 *  of the ring, executes it, then puts it back at the tail of
 	 *  the ring.
 	 */
-	TAILQ_HEAD(, spdk_poller)	active_pollers;
+	TAILQ_HEAD(, spdk_poller)			active_pollers;
 
-	struct rte_ring			*events;
+	/**
+	 * Contains pollers running on this reactor with a periodic timer.
+	 */
+	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
+
+	struct rte_ring					*events;
 };
 
 static struct spdk_reactor g_reactors[RTE_MAX_LCORE];
@@ -220,6 +226,30 @@ static void set_reactor_thread_name(void)
 #endif
 }
 
+static void
+spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poller, uint64_t now)
+{
+	struct spdk_poller *iter;
+	uint64_t next_run_tick;
+
+	next_run_tick = now + poller->period_ticks;
+	poller->next_run_tick = next_run_tick;
+
+	/*
+	 * Insert poller in the reactor's timer_pollers list in sorted order by next scheduled
+	 * run time.
+	 */
+	TAILQ_FOREACH_REVERSE(iter, &reactor->timer_pollers, timer_pollers_head, tailq) {
+		if (iter->next_run_tick <= next_run_tick) {
+			TAILQ_INSERT_AFTER(&reactor->timer_pollers, iter, poller, tailq);
+			return;
+		}
+	}
+
+	/* No earlier pollers were found, so this poller must be the new head */
+	TAILQ_INSERT_HEAD(&reactor->timer_pollers, poller, tailq);
+}
+
 /**
 
 \brief This is the main function of the reactor thread.
@@ -270,6 +300,17 @@ _spdk_reactor_run(void *arg)
 			TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 		}
 
+		poller = TAILQ_FIRST(&reactor->timer_pollers);
+		if (poller) {
+			uint64_t now = rte_get_timer_cycles();
+
+			if (now >= poller->next_run_tick) {
+				TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
+				poller->fn(poller->arg);
+				spdk_poller_insert_timer(reactor, poller, now);
+			}
+		}
+
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
 			break;
 		}
@@ -286,6 +327,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 	reactor->lcore = lcore;
 
 	TAILQ_INIT(&reactor->active_pollers);
+	TAILQ_INIT(&reactor->timer_pollers);
 
 	snprintf(ring_name, sizeof(ring_name) - 1, "spdk_event_queue_%u", lcore);
 	reactor->events =
@@ -523,16 +565,20 @@ _spdk_event_add_poller(spdk_event_t event)
 
 	poller->lcore = reactor->lcore;
 
-	TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
+	if (poller->period_ticks) {
+		spdk_poller_insert_timer(reactor, poller, rte_get_timer_cycles());
+	} else {
+		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
+	}
 
 	if (next) {
 		spdk_event_call(next);
 	}
 }
 
-void
-spdk_poller_register(struct spdk_poller *poller,
-		     uint32_t lcore, spdk_event_t complete)
+static void
+_spdk_poller_register(struct spdk_poller *poller, uint32_t lcore,
+		      struct spdk_event *complete)
 {
 	struct spdk_reactor *reactor;
 	struct spdk_event *event;
@@ -542,6 +588,19 @@ spdk_poller_register(struct spdk_poller *poller,
 	spdk_event_call(event);
 }
 
+void
+spdk_poller_register(struct spdk_poller *poller,
+		     uint32_t lcore, struct spdk_event *complete, uint64_t period_microseconds)
+{
+	if (period_microseconds) {
+		poller->period_ticks = (rte_get_timer_hz() * period_microseconds) / 1000000ULL;
+	} else {
+		poller->period_ticks = 0;
+	}
+
+	_spdk_poller_register(poller, lcore, complete);
+}
+
 static void
 _spdk_event_remove_poller(spdk_event_t event)
 {
@@ -549,7 +608,11 @@ _spdk_event_remove_poller(spdk_event_t event)
 	struct spdk_poller *poller = spdk_event_get_arg2(event);
 	struct spdk_event *next = spdk_event_get_next(event);
 
-	TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
+	if (poller->period_ticks) {
+		TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
+	} else {
+		TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
+	}
 
 	if (next) {
 		spdk_event_call(next);
@@ -579,7 +642,7 @@ _spdk_poller_migrate(spdk_event_t event)
 	 * because we already set this event up so that it is called
 	 * on the new_lcore.
 	 */
-	spdk_poller_register(poller, rte_lcore_id(), next);
+	_spdk_poller_register(poller, rte_lcore_id(), next);
 }
 
 void

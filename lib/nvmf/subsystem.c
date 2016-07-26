@@ -115,7 +115,7 @@ nvmf_create_subsystem(int num, const char *name,
 
 	subsystem->poller.fn = spdk_nvmf_subsystem_poller;
 	subsystem->poller.arg = subsystem;
-	spdk_poller_register(&subsystem->poller, lcore, NULL);
+	spdk_poller_register(&subsystem->poller, lcore, NULL, 0);
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 

@@ -105,6 +105,8 @@ typedef void (*spdk_poller_fn)(void *arg);
 struct spdk_poller {
 	TAILQ_ENTRY(spdk_poller)	tailq;
 	uint32_t			lcore;
+	uint64_t			period_ticks;
+	uint64_t			next_run_tick;
 	spdk_poller_fn			fn;
 	void				*arg;
 };
@@ -220,7 +222,8 @@ void spdk_event_queue_run_all(uint32_t lcore);
  */
 void spdk_poller_register(struct spdk_poller *poller,
 			  uint32_t lcore,
-			  struct spdk_event *complete);
+			  struct spdk_event *complete,
+			  uint64_t period_microseconds);
 
 /**
  * \brief Unregister a poller on the given lcore.
