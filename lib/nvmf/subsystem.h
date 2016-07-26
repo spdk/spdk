@@ -88,9 +88,14 @@ struct spdk_nvmf_ctrlr_ops {
 	int (*process_io_cmd)(struct spdk_nvmf_request *req);
 
 	/**
-	 * Poll for completions.
+	 * Poll for I/O completions.
 	 */
-	void (*poll_for_completions)(struct nvmf_session *session);
+	void (*poll_for_io_completions)(struct nvmf_session *session);
+
+	/**
+	 * Poll for admin completions.
+	 */
+	void (*poll_for_admin_completions)(struct nvmf_session *session);
 };
 
 struct spdk_nvmf_controller {
@@ -127,6 +132,7 @@ struct spdk_nvmf_subsystem {
 	struct spdk_nvmf_controller 	ctrlr;
 
 	struct spdk_poller			*poller;
+	struct spdk_poller			*admin_poller;
 
 	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
 	uint32_t				num_listen_addrs;

@@ -49,10 +49,15 @@ nvmf_direct_ctrlr_get_data(struct nvmf_session *session)
 }
 
 static void
-nvmf_direct_ctrlr_poll_for_completions(struct nvmf_session *session)
+nvmf_direct_ctrlr_poll_for_io_completions(struct nvmf_session *session)
+{
+	spdk_nvme_qpair_process_completions(session->subsys->ctrlr.dev.direct.io_qpair, 0);
+}
+
+static void
+nvmf_direct_ctrlr_poll_for_admin_completions(struct nvmf_session *session)
 {
 	spdk_nvme_ctrlr_process_admin_completions(session->subsys->ctrlr.dev.direct.ctrlr);
-	spdk_nvme_qpair_process_completions(session->subsys->ctrlr.dev.direct.io_qpair, 0);
 }
 
 static void
@@ -251,5 +256,6 @@ const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops = {
 	.ctrlr_get_data			= nvmf_direct_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_direct_ctrlr_process_admin_cmd,
 	.process_io_cmd			= nvmf_direct_ctrlr_process_io_cmd,
-	.poll_for_completions		= nvmf_direct_ctrlr_poll_for_completions,
+	.poll_for_io_completions	= nvmf_direct_ctrlr_poll_for_io_completions,
+	.poll_for_admin_completions	= nvmf_direct_ctrlr_poll_for_admin_completions,
 };
