@@ -384,7 +384,7 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 	sge.length = req->length;
 	nvmf_trace_ibv_sge(&sge);
 
-	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_RDMA_WRITE, 0);
+	nvmf_ibv_send_wr_init(&wr, req, &sge, IBV_WR_RDMA_WRITE, IBV_SEND_SIGNALED);
 	nvmf_ibv_send_wr_set_rkey(&wr, req);
 
 	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
