@@ -440,49 +440,108 @@ nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 	return rc;
 }
 
-static int
-spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	int ret;
+/**
+ * REQUEST COMPLETION HANDLING
+ *
+ * Request completion consists of three steps:
+ *
+ * 1) Transfer any data to the host using an RDMA Write. If no data,
+ *    skip this step. (spdk_nvmf_rdma_request_transfer_data)
+ * 2) Upon transfer completion, update sq_head, re-post the recv capsule,
+ *    and send the completion. (spdk_nvmf_rdma_request_send_completion)
+ * 3) Upon getting acknowledgement of the completion, decrement the internal
+ *    count of number of outstanding requests. (spdk_nvmf_rdma_request_ack_completion)
+ *
+ * There are two public interfaces to initiate the process of completing a request,
+ * exposed as callbacks in the transport layer.
+ *
+ * 1) spdk_nvmf_rdma_request_complete, which attempts to do all three steps.
+ * 2) spdk_nvmf_rdma_request_release, which skips straight to step 3.
+**/
 
-	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
-	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		/* Need to transfer data via RDMA Write */
-		ret = nvmf_post_rdma_write(req);
-		if (ret) {
-			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
-			return -1;
-		}
-	} else {
-		/* Send the completion */
-		ret = nvmf_post_rdma_send(req);
-		if (ret) {
-			SPDK_ERRLOG("Unable to send response capsule\n");
-			return -1;
-		}
+static int
+spdk_nvmf_rdma_request_transfer_data(struct spdk_nvmf_request *req)
+{
+	if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		return nvmf_post_rdma_write(req);
+	} else if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		return nvmf_post_rdma_read(req);
 	}
 
-	return 0;
+	/* This should not have been called if there is no data to xfer */
+	assert(false);
+
+	return -1;
 }
 
 static int
-spdk_nvmf_rdma_request_release(struct spdk_nvmf_request *req)
+spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
+{
+	int rc;
+	struct spdk_nvmf_conn *conn = req->conn;
+	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	/* Advance our sq_head pointer */
+	conn->sq_head++;
+	if (conn->sq_head == rdma_conn->queue_depth) {
+		conn->sq_head = 0;
+	}
+	rsp->sqhd = conn->sq_head;
+
+	/* Post the capsule to the recv buffer */
+	rc = nvmf_post_rdma_recv(req);
+	if (rc) {
+		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+		return rc;
+	}
+
+	/* Send the completion */
+	rc = nvmf_post_rdma_send(req);
+	if (rc) {
+		SPDK_ERRLOG("Unable to send response capsule\n");
+	}
+
+	return rc;
+}
+
+static int
+spdk_nvmf_rdma_request_ack_completion(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 
-	if (nvmf_post_rdma_recv(req)) {
-		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
-		return -1;
-	}
-
+	/* Advance our sq_head pointer */
 	conn->sq_head++;
 	if (conn->sq_head == rdma_conn->queue_depth) {
 		conn->sq_head = 0;
 	}
 
+	rdma_conn->num_outstanding_reqs--;
+
 	return 0;
+}
+
+static int
+spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	int rc;
+
+	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
+	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		rc = spdk_nvmf_rdma_request_transfer_data(req);
+	} else {
+		rc = spdk_nvmf_rdma_request_send_completion(req);
+	}
+
+	return rc;
+}
+
+static int
+spdk_nvmf_rdma_request_release(struct spdk_nvmf_request *req)
+{
+	return spdk_nvmf_rdma_request_ack_completion(req);
 }
 
 static int
@@ -555,11 +614,11 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		queue_depth = nvmf_min(queue_depth, private_data->hsqsize);
 	}
 
+	/* Queue Depth cannot exceed R/W depth */
+	queue_depth = nvmf_min(queue_depth, rw_depth);
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
 		      queue_depth, rw_depth);
 
-	/* TEMPORARY: Limit the queue_depth to the rw_depth due to lack of queueing */
-	queue_depth = rw_depth;
 
 	/* Init the NVMf rdma transport connection */
 	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, queue_depth, rw_depth);
@@ -1065,8 +1124,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 		}
 
 		if (wc.status) {
-			SPDK_ERRLOG("Send CQ error (%d): %s\n",
-				    wc.status, ibv_wc_status_str(wc.status));
+			SPDK_ERRLOG("Send CQ error on Connection %p, Request 0x%lu (%d): %s\n",
+				    conn, wc.wr_id, wc.status, ibv_wc_status_str(wc.status));
 			return -1;
 		}
 
@@ -1081,11 +1140,11 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 		switch (wc.opcode) {
 		case IBV_WC_SEND:
 			assert(rdma_conn->num_outstanding_reqs > 0);
-			rdma_conn->num_outstanding_reqs--;
 			SPDK_TRACELOG(SPDK_TRACE_RDMA,
 				      "RDMA SEND Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
-				      req, conn, rdma_conn->num_outstanding_reqs);
-			if (spdk_nvmf_rdma_request_release(req)) {
+				      req, conn, rdma_conn->num_outstanding_reqs - 1);
+			rc = spdk_nvmf_rdma_request_ack_completion(req);
+			if (rc) {
 				return -1;
 			}
 			break;
@@ -1094,9 +1153,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE Complete. Request: %p Connection: %p\n",
 				      req, conn);
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
-			/* Send the completion */
-			if (nvmf_post_rdma_send(req)) {
-				SPDK_ERRLOG("Unable to send response capsule\n");
+			rc = spdk_nvmf_rdma_request_send_completion(req);
+			if (rc) {
 				return -1;
 			}
 			break;
@@ -1107,7 +1165,6 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
-				SPDK_ERRLOG("request_exec error %d after RDMA Read completion\n", rc);
 				return -1;
 			}
 			count++;
@@ -1165,21 +1222,17 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			memset(req->rsp, 0, sizeof(*req->rsp));
 			rc = spdk_nvmf_request_prep_data(req);
 			if (rc < 0) {
-				SPDK_ERRLOG("prep_data failed\n");
-				return spdk_nvmf_request_complete(req);
+				return spdk_nvmf_rdma_request_complete(req);
 			} else if (rc == 0) {
 				/* Data is immediately available */
 				rc = spdk_nvmf_request_exec(req);
 				if (rc < 0) {
-					SPDK_ERRLOG("Command execution failed\n");
 					return -1;
 				}
 				count++;
 			} else {
-				/* Start transfer of data from host to target */
-				rc = nvmf_post_rdma_read(req);
+				rc = spdk_nvmf_rdma_request_transfer_data(req);
 				if (rc) {
-					SPDK_ERRLOG("Unable to transfer data from host to target\n");
 					return -1;
 				}
 			}
