@@ -31,14 +31,24 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev conf copy cunit event json jsonrpc log memory rpc trace util nvme nvmf scsi ioat
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi
+LIBS += $(SPDK_LIBS)
+LIBS += -lcunit
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+APP = dev_ut
+C_SRCS = dev_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
