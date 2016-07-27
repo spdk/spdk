@@ -469,7 +469,6 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	int ret;
 
-	/* Was the command successful? */
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		/* Need to transfer data via RDMA Write */
@@ -478,12 +477,13 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 			SPDK_ERRLOG("Unable to post rdma write tx descriptor\n");
 			return -1;
 		}
-	}
-
-	ret = nvmf_post_rdma_send(req);
-	if (ret) {
-		SPDK_ERRLOG("Unable to send response capsule\n");
-		return -1;
+	} else {
+		/* Send the completion */
+		ret = nvmf_post_rdma_send(req);
+		if (ret) {
+			SPDK_ERRLOG("Unable to send response capsule\n");
+			return -1;
+		}
 	}
 
 	return 0;
@@ -1117,6 +1117,11 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE Complete. Request: %p Connection: %p\n",
 				      req, conn);
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
+			/* Send the completion */
+			if (nvmf_post_rdma_send(req)) {
+				SPDK_ERRLOG("Unable to send response capsule\n");
+				return -1;
+			}
 			break;
 
 		case IBV_WC_RDMA_READ:
