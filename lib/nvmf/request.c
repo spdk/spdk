@@ -150,11 +150,14 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
+	uint32_t nr_io_queues = 0;
 	int rc = 0;
 	uint8_t feature;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	/* Extra 1 connection for Admin queue */
+	nr_io_queues = session->max_connections_allowed - 1;
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
@@ -177,8 +180,9 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 		switch (feature) {
 		case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
-			response->cdw0 = ((session->max_connections_allowed - 1) << 16) |
-					 (session->max_connections_allowed - 1);
+			/* Number of IO queues has a zero based value */
+			response->cdw0 = ((nr_io_queues - 1) << 16) |
+					 (nr_io_queues - 1);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto passthrough;
@@ -195,8 +199,9 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Queue pairs already active!\n");
 				response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			} else {
-				response->cdw0 = ((session->max_connections_allowed - 1) << 16) |
-						 (session->max_connections_allowed - 1);
+				/* Number of IO queues has a zero based value */
+				response->cdw0 = ((nr_io_queues - 1) << 16) |
+						 (nr_io_queues - 1);
 			}
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
