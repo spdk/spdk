@@ -76,7 +76,7 @@ struct spdk_reactor {
 	 *  of the ring, executes it, then puts it back at the tail of
 	 *  the ring.
 	 */
-	struct rte_ring			*active_pollers;
+	TAILQ_HEAD(, spdk_poller)	active_pollers;
 
 	struct rte_ring			*events;
 };
@@ -253,8 +253,7 @@ static int
 _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
-	struct spdk_poller	*poller = NULL;
-	int			rc;
+	struct spdk_poller	*poller;
 
 	set_reactor_thread_name();
 	SPDK_NOTICELOG("waiting for work item to arrive...\n");
@@ -264,14 +263,11 @@ _spdk_reactor_run(void *arg)
 
 		rte_timer_manage();
 
-		if (rte_ring_dequeue(reactor->active_pollers, (void **)&poller) == 0) {
+		poller = TAILQ_FIRST(&reactor->active_pollers);
+		if (poller) {
+			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 			poller->fn(poller->arg);
-			rc = rte_ring_enqueue(reactor->active_pollers,
-					      (void *)poller);
-			if (rc != 0) {
-				SPDK_ERRLOG("poller could not be enqueued\n");
-				exit(EXIT_FAILURE);
-			}
+			TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
@@ -289,10 +285,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 
 	reactor->lcore = lcore;
 
-	snprintf(ring_name, sizeof(ring_name), "spdk_active_pollers_%d", lcore);
-	reactor->active_pollers =
-		rte_ring_create(ring_name, SPDK_POLLER_RING_SIZE, rte_lcore_to_socket_id(lcore),
-				RING_F_SP_ENQ | RING_F_SC_DEQ);
+	TAILQ_INIT(&reactor->active_pollers);
 
 	snprintf(ring_name, sizeof(ring_name) - 1, "spdk_event_queue_%u", lcore);
 	reactor->events =
@@ -530,7 +523,7 @@ _spdk_event_add_poller(spdk_event_t event)
 
 	poller->lcore = reactor->lcore;
 
-	rte_ring_enqueue(reactor->active_pollers, (void *)poller);
+	TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 
 	if (next) {
 		spdk_event_call(next);
@@ -555,22 +548,8 @@ _spdk_event_remove_poller(spdk_event_t event)
 	struct spdk_reactor *reactor = spdk_event_get_arg1(event);
 	struct spdk_poller *poller = spdk_event_get_arg2(event);
 	struct spdk_event *next = spdk_event_get_next(event);
-	struct spdk_poller *tmp = NULL;
-	uint32_t i;
-	int rc;
 
-	/* Loop over all pollers, without breaking early, so that
-	 * the list of pollers stays in the same order. */
-	for (i = 0; i < rte_ring_count(reactor->active_pollers); i++) {
-		rte_ring_dequeue(reactor->active_pollers, (void **)&tmp);
-		if (tmp != poller) {
-			rc = rte_ring_enqueue(reactor->active_pollers, (void *)tmp);
-			if (rc != 0) {
-				SPDK_ERRLOG("poller could not be enqueued\n");
-				exit(EXIT_FAILURE);
-			}
-		}
-	}
+	TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 
 	if (next) {
 		spdk_event_call(next);

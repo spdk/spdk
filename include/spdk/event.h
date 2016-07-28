@@ -103,18 +103,11 @@ typedef void (*spdk_poller_fn)(void *arg);
  * \brief A poller is a function that is repeatedly called on an lcore.
  */
 struct spdk_poller {
-	uint32_t		lcore;
-	spdk_poller_fn		fn;
-	void			*arg;
+	TAILQ_ENTRY(spdk_poller)	tailq;
+	uint32_t			lcore;
+	spdk_poller_fn			fn;
+	void				*arg;
 };
-
-#define SPDK_POLLER_RING_SIZE		4096
-
-/*
- * -1 accounts for the empty slot needed to differentiate between ring empty
- *  and ring full.
- */
-#define SPDK_MAX_POLLERS_PER_CORE	(SPDK_POLLER_RING_SIZE - 1)
 
 typedef void (*spdk_app_shutdown_cb)(void);
 typedef void (*spdk_sighandler_t)(int);
