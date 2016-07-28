@@ -54,6 +54,7 @@
 struct spdk_nvmf_probe_ctx {
 	struct spdk_nvmf_subsystem	*subsystem;
 	bool				any;
+	bool				found;
 	int				domain;
 	int				bus;
 	int				device;
@@ -270,7 +271,8 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
 		       found_domain, found_bus, found_dev, found_func);
 
-	if (ctx->any) {
+	if (ctx->any && !ctx->found) {
+		ctx->found = true;
 		return true;
 	}
 
@@ -449,6 +451,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	}
 
 	ctx.subsystem = subsystem;
+	ctx.found = false;
 	if (strcmp(bdf, "*") == 0) {
 		ctx.any = true;
 	} else {
