@@ -142,6 +142,39 @@ nvmf_complete_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
 	spdk_nvmf_request_complete(req);
 }
 
+static int
+nvmf_admin_identify_nslist(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint32_t req_ns_id = cmd->nsid;
+	uint32_t i, num_ns, count = 0;
+	struct spdk_nvme_ns_list *ns_list;
+
+	if (req_ns_id >= 0xfffffffeUL) {
+		return -1;
+	}
+	memset(req->data, 0, req->length);
+
+	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+	ns_list = (struct spdk_nvme_ns_list *)req->data;
+	for (i = 1; i <= num_ns; i++) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, i);
+		if (!spdk_nvme_ns_is_active(ns)) {
+			continue;
+		}
+		if (i <= req_ns_id) {
+			continue;
+		}
+
+		ns_list->ns_list[count++] = i;
+		if (count == sizeof(*ns_list) / sizeof(uint32_t)) {
+			break;
+		}
+	}
+	return 0;
+}
+
 static spdk_nvmf_request_exec_status
 nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 {
@@ -150,6 +183,7 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
 	uint32_t nr_io_queues = 0;
+	union spdk_nvme_vs_register vs;
 	int rc = 0;
 	uint8_t feature;
 
@@ -160,18 +194,30 @@ nvmf_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
-		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
-			if (req->data == NULL || req->length < sizeof(struct spdk_nvme_ctrlr_data)) {
-				SPDK_ERRLOG("identify command with no buffer\n");
-				response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-			}
+		if (req->data == NULL || req->length < 4096) {
+			SPDK_ERRLOG("identify command with invalid buffer\n");
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
 
+		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
 			/* pull from virtual controller context */
 			memcpy(req->data, &session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		} else if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST) {
+			vs = spdk_nvme_ctrlr_get_regs_vs(subsystem->ctrlr.direct.ctrlr);
+			if (vs.raw < SPDK_NVME_VERSION(1, 1, 0)) {
+				/* fill in identify ns list with virtual controller information */
+				rc = nvmf_admin_identify_nslist(subsystem->ctrlr.direct.ctrlr, req);
+				if (rc < 0) {
+					SPDK_ERRLOG("Invalid Namespace or Format\n");
+					response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+				}
+				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			}
 		}
+
 		goto passthrough;
 
 	case SPDK_NVME_OPC_GET_FEATURES:

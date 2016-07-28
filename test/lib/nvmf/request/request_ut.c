@@ -85,6 +85,31 @@ spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 	return -1;
 }
 
+uint32_t
+spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_vs_register vs;
+
+	vs.raw = 0;
+	return vs;
+}
+
+bool
+spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
+{
+	return false;
+}
+
+struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id)
+{
+	return NULL;
+}
+
 void
 nvmf_disconnect(struct nvmf_session *session, struct spdk_nvmf_conn *conn)
 {
