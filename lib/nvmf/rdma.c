@@ -43,7 +43,6 @@
 #include <rte_config.h>
 #include <rte_debug.h>
 #include <rte_cycles.h>
-#include <rte_timer.h>
 #include <rte_lcore.h>
 #include <rte_malloc.h>
 
@@ -53,11 +52,12 @@
 #include "subsystem.h"
 #include "transport.h"
 #include "spdk/assert.h"
+#include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 
-#define ACCEPT_TIMEOUT (rte_get_timer_hz() >> 10) /* ~1ms */
+#define ACCEPT_TIMEOUT_US		1000 /* 1ms */
 
 /*
  RDMA Connection Resouce Defaults
@@ -140,7 +140,7 @@ struct spdk_nvmf_rdma_session {
 };
 
 struct spdk_nvmf_rdma {
-	struct rte_timer		acceptor_timer;
+	struct spdk_poller		acceptor_poller;
 	struct rdma_event_channel	*acceptor_event_channel;
 	struct rdma_cm_id		*acceptor_listen_id;
 
@@ -909,7 +909,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 static int spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn);
 
 static void
-nvmf_rdma_accept(struct rte_timer *timer, void *arg)
+nvmf_rdma_accept(void *arg)
 {
 	struct rdma_cm_event		*event;
 	int				rc;
@@ -1017,10 +1017,10 @@ spdk_nvmf_rdma_acceptor_start(void)
 	sin_port = ntohs(rdma_get_src_port(g_rdma.acceptor_listen_id));
 	SPDK_NOTICELOG("*** NVMf Target Listening on port %d ***\n", sin_port);
 
-	rte_timer_init(&g_rdma.acceptor_timer);
-	rte_timer_reset(&g_rdma.acceptor_timer, ACCEPT_TIMEOUT, PERIODICAL,
-			rte_lcore_id(), nvmf_rdma_accept, NULL);
-	return (rc);
+	g_rdma.acceptor_poller.fn = nvmf_rdma_accept;
+	g_rdma.acceptor_poller.arg = NULL;
+	spdk_poller_register(&g_rdma.acceptor_poller, rte_lcore_id(), NULL, ACCEPT_TIMEOUT_US);
+	return rc;
 
 listen_error:
 	rdma_destroy_id(g_rdma.acceptor_listen_id);
@@ -1033,7 +1033,7 @@ static void
 spdk_nvmf_rdma_acceptor_stop(void)
 {
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "nvmf_acceptor_stop: shutdown\n");
-	rte_timer_stop_sync(&g_rdma.acceptor_timer);
+	spdk_poller_unregister(&g_rdma.acceptor_poller, NULL);
 }
 
 static int
