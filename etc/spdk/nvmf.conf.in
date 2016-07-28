@@ -28,7 +28,7 @@
   # Set the maximum number of submission and completion queues per session.
   # Setting this to '8', for example, allows for 8 submission and 8 completion queues
   # per session.
-  MaxConnectionsPerSession 4
+  MaxQueuesPerSession 4
 
   # Set the maximum number of outstanding I/O per queue.
   #MaxQueueDepth 128

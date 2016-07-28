@@ -65,11 +65,15 @@
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
+struct spdk_nvmf_rdma_buf {
+	SLIST_ENTRY(spdk_nvmf_rdma_buf) link;
+};
+
 struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_request		req;
 
 	/* In Capsule data buffer */
-	void					*buf;
+	uint8_t					*buf;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 
@@ -95,6 +99,9 @@ struct spdk_nvmf_rdma_conn {
 	/* The number of RDMA READ and WRITE requests that are outstanding */
 	uint16_t				cur_rdma_rw_depth;
 
+	/* Requests that are waiting to obtain a data buffer */
+	TAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_data_buf_queue;
+
 	/* Requests that are waiting to perform an RDMA READ or WRITE */
 	TAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_rdma_rw_queue;
 
@@ -114,8 +121,7 @@ struct spdk_nvmf_rdma_conn {
 	struct ibv_mr				*cpls_mr;
 
 	/* Array of size "max_queue_depth * InCapsuleDataSize" containing
-	 * buffers to be used for in capsule data. TODO: Currently, all data
-	 * is in capsule.
+	 * buffers to be used for in capsule data.
 	 */
 	void					*bufs;
 	struct ibv_mr				*bufs_mr;
@@ -127,7 +133,10 @@ struct spdk_nvmf_rdma_conn {
 static TAILQ_HEAD(, spdk_nvmf_rdma_conn) g_pending_conns = TAILQ_HEAD_INITIALIZER(g_pending_conns);
 
 struct spdk_nvmf_rdma_session {
-	int reserved;
+	SLIST_HEAD(, spdk_nvmf_rdma_buf)	data_buf_pool;
+
+	uint8_t					*buf;
+	struct ibv_mr				*buf_mr;
 };
 
 struct spdk_nvmf_rdma {
@@ -206,6 +215,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 	rdma_conn->max_queue_depth = max_queue_depth;
 	rdma_conn->max_rw_depth = max_rw_depth;
 	rdma_conn->cm_id = id;
+	TAILQ_INIT(&rdma_conn->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_conn->pending_rdma_rw_queue);
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
@@ -248,11 +258,11 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 
 	rdma_conn->reqs = calloc(max_queue_depth, sizeof(*rdma_conn->reqs));
 	rdma_conn->cmds = rte_calloc("nvmf_rdma_cmd", max_queue_depth,
-				     sizeof(*rdma_conn->cmds), 0);
+				     sizeof(*rdma_conn->cmds), 0x1000);
 	rdma_conn->cpls = rte_calloc("nvmf_rdma_cpl", max_queue_depth,
-				     sizeof(*rdma_conn->cpls), 0);
+				     sizeof(*rdma_conn->cpls), 0x1000);
 	rdma_conn->bufs = rte_calloc("nvmf_rdma_buf", max_queue_depth,
-				     g_rdma.in_capsule_data_size, 0);
+				     g_rdma.in_capsule_data_size, 0x1000);
 	if (!rdma_conn->reqs || !rdma_conn->cmds || !rdma_conn->cpls || !rdma_conn->bufs) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
@@ -270,6 +280,12 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		return NULL;
 	}
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Command Array: %p Length: %lx LKey: %x\n",
+		      rdma_conn->cmds, max_queue_depth * sizeof(*rdma_conn->cmds), rdma_conn->cmds_mr->lkey);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Completion Array: %p Length: %lx LKey: %x\n",
+		      rdma_conn->cpls, max_queue_depth * sizeof(*rdma_conn->cpls), rdma_conn->cpls_mr->lkey);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "In Capsule Data Array: %p Length: %x LKey: %x\n",
+		      rdma_conn->bufs, max_queue_depth * g_rdma.in_capsule_data_size, rdma_conn->bufs_mr->lkey);
 
 	for (i = 0; i < max_queue_depth; i++) {
 		rdma_req = &rdma_conn->reqs[i];
@@ -337,14 +353,19 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
+	struct spdk_nvmf_rdma_session *rdma_sess;
 	struct ibv_sge sge;
 	int rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
 
-	sge.addr = (uintptr_t)rdma_req->buf;
-	sge.lkey = rdma_conn->bufs_mr->lkey;
+	sge.addr = (uintptr_t)req->data;
+	if (req->length > g_rdma.in_capsule_data_size) {
+		rdma_sess = conn->sess->trctx;
+		sge.lkey = rdma_sess->buf_mr->lkey;
+	} else {
+		sge.lkey = rdma_conn->bufs_mr->lkey;
+	}
 	sge.length = req->length;
 	nvmf_trace_ibv_sge(&sge);
 
@@ -366,14 +387,19 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 	struct ibv_send_wr wr, *bad_wr = NULL;
 	struct spdk_nvmf_conn *conn = req->conn;
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
+	struct spdk_nvmf_rdma_session *rdma_sess;
 	struct ibv_sge sge;
 	int rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
 
-	sge.addr = (uintptr_t)rdma_req->buf;
-	sge.lkey = rdma_conn->bufs_mr->lkey;
+	sge.addr = (uintptr_t)req->data;
+	if (req->length > g_rdma.in_capsule_data_size) {
+		rdma_sess = conn->sess->trctx;
+		sge.lkey = rdma_sess->buf_mr->lkey;
+	} else {
+		sge.lkey = rdma_conn->bufs_mr->lkey;
+	}
 	sge.length = req->length;
 	nvmf_trace_ibv_sge(&sge);
 
@@ -457,8 +483,8 @@ nvmf_post_rdma_send(struct spdk_nvmf_request *req)
  *
  * Request completion consists of three steps:
  *
- * 1) Transfer any data to the host using an RDMA Write. If no data,
- *    skip this step. (spdk_nvmf_rdma_request_transfer_data)
+ * 1) Transfer any data to the host using an RDMA Write. If no data or an NVMe write,
+ *    this step is unnecessary. (spdk_nvmf_rdma_request_transfer_data)
  * 2) Upon transfer completion, update sq_head, re-post the recv capsule,
  *    and send the completion. (spdk_nvmf_rdma_request_send_completion)
  * 3) Upon getting acknowledgement of the completion, decrement the internal
@@ -507,9 +533,21 @@ static int
 spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
 {
 	int rc;
-	struct spdk_nvmf_conn *conn = req->conn;
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_conn		*conn = req->conn;
+	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
+	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_rdma_session	*rdma_sess;
+	struct spdk_nvmf_rdma_buf	*buf;
+
+	if (req->length > g_rdma.in_capsule_data_size) {
+		/* Put the buffer back in the pool */
+		rdma_sess = conn->sess->trctx;
+		buf = req->data;
+
+		SLIST_INSERT_HEAD(&rdma_sess->data_buf_pool, buf, link);
+		req->data = NULL;
+		req->length = 0;
+	}
 
 	/* Advance our sq_head pointer */
 	conn->sq_head++;
@@ -759,114 +797,113 @@ static const char *CM_EVENT_STR[] = {
 };
 #endif /* DEBUG */
 
-static int
+typedef enum _spdk_nvmf_request_prep_type {
+	SPDK_NVMF_REQUEST_PREP_ERROR = -1,
+	SPDK_NVMF_REQUEST_PREP_READY = 0,
+	SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER = 1,
+	SPDK_NVMF_REQUEST_PREP_PENDING_DATA = 2,
+} spdk_nvmf_request_prep_type;
+
+static spdk_nvmf_request_prep_type
 spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd		*cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_rdma_request	*rdma_req = get_rdma_req(req);
-	enum spdk_nvme_data_transfer	xfer;
+	struct spdk_nvmf_rdma_session	*rdma_sess;
+	struct spdk_nvme_sgl_descriptor *sgl;
 
 	req->length = 0;
-	req->xfer = SPDK_NVME_DATA_NONE;
 	req->data = NULL;
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		xfer = spdk_nvme_opc_get_data_transfer(req->cmd->nvmf_cmd.fctype);
+		req->xfer = spdk_nvme_opc_get_data_transfer(req->cmd->nvmf_cmd.fctype);
 	} else {
-		xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
+		req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
 	}
 
-	if (xfer != SPDK_NVME_DATA_NONE) {
-		struct spdk_nvme_sgl_descriptor *sgl = (struct spdk_nvme_sgl_descriptor *)&cmd->dptr.sgl1;
+	if (req->xfer == SPDK_NVME_DATA_NONE) {
+		return SPDK_NVMF_REQUEST_PREP_READY;
+	}
 
-		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
-		    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
-		     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
-			if (sgl->keyed.length > g_rdma.max_io_size) {
-				SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
-					    sgl->keyed.length, g_rdma.max_io_size);
-				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-				return -1;
+	sgl = &cmd->dptr.sgl1;
+
+	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
+	    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
+	     sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY)) {
+		if (sgl->keyed.length > g_rdma.max_io_size) {
+			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
+				    sgl->keyed.length, g_rdma.max_io_size);
+			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+			return SPDK_NVMF_REQUEST_PREP_ERROR;
+		}
+
+		if (sgl->keyed.length == 0) {
+			req->xfer = SPDK_NVME_DATA_NONE;
+			return SPDK_NVMF_REQUEST_PREP_READY;
+		}
+
+		req->length = sgl->keyed.length;
+
+		/* TODO: In Capsule Data Size should be tracked per queue (admin, for instance, should always have 4k and no more). */
+		if (sgl->keyed.length > g_rdma.in_capsule_data_size) {
+			rdma_sess = req->conn->sess->trctx;
+			req->data = SLIST_FIRST(&rdma_sess->data_buf_pool);
+			if (!req->data) {
+				/* No available buffers. Queue this request up. */
+				SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
+				return SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER;
 			}
 
-			if (sgl->keyed.length > g_rdma.in_capsule_data_size) {
-				/* TODO: Get a large buffer from the central pool. */
-				SPDK_ERRLOG("SGL length 0x%x exceeds in capsule data buffer size 0x%x\n",
-					    sgl->keyed.length, g_rdma.in_capsule_data_size);
-				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-				return -1;
-			} else {
-				/* Use the in capsule data buffer, even though this isn't in capsule data */
-				req->data = rdma_req->buf;
-				req->length = sgl->keyed.length;
-			}
-		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
-			   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
-			uint64_t offset = sgl->address;
-			uint32_t max_len = g_rdma.in_capsule_data_size;
-
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
-				      offset, sgl->unkeyed.length);
-
-			if (offset > max_len) {
-				SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
-					    offset, max_len);
-				rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
-				return -1;
-			}
-			max_len -= (uint32_t)offset;
-
-			if (sgl->unkeyed.length > max_len) {
-				SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
-					    sgl->unkeyed.length, max_len);
-				rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-				return -1;
-			}
-
-			req->data = rdma_req->buf + offset;
-			req->length = sgl->unkeyed.length;
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", req);
+			SLIST_REMOVE_HEAD(&rdma_sess->data_buf_pool, link);
 		} else {
-			SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
-				    sgl->generic.type, sgl->generic.subtype);
-			rsp->status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
-			return -1;
+			/* Use the in capsule data buffer, even though this isn't in capsule data */
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request using in capsule buffer for non-capsule data\n");
+			req->data = rdma_req->buf;
+		}
+		if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			return SPDK_NVMF_REQUEST_PREP_PENDING_DATA;
+		} else {
+			return SPDK_NVMF_REQUEST_PREP_READY;
+		}
+	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
+		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
+		uint64_t offset = sgl->address;
+		uint32_t max_len = g_rdma.in_capsule_data_size;
+
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
+			      offset, sgl->unkeyed.length);
+
+		if (offset > max_len) {
+			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
+				    offset, max_len);
+			rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
+			return SPDK_NVMF_REQUEST_PREP_ERROR;
+		}
+		max_len -= (uint32_t)offset;
+
+		if (sgl->unkeyed.length > max_len) {
+			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
+				    sgl->unkeyed.length, max_len);
+			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+			return SPDK_NVMF_REQUEST_PREP_ERROR;
 		}
 
-		if (req->length == 0) {
-			xfer = SPDK_NVME_DATA_NONE;
-			req->data = NULL;
+		if (sgl->unkeyed.length == 0) {
+			req->xfer = SPDK_NVME_DATA_NONE;
+			return SPDK_NVMF_REQUEST_PREP_READY;
 		}
 
-		req->xfer = xfer;
-
-		/*
-		 * For any I/O that requires data to be
-		 * pulled into the local buffer before processing by
-		 * the backend NVMe device
-		 */
-		if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
-				SPDK_TRACELOG(SPDK_TRACE_NVMF, "Initiating Host to Controller data transfer\n");
-				/* Wait for transfer to complete before executing command. */
-				return 1;
-			}
-		}
+		req->data = rdma_req->buf + offset;
+		req->length = sgl->unkeyed.length;
+		return SPDK_NVMF_REQUEST_PREP_READY;
 	}
 
-	if (xfer == SPDK_NVME_DATA_NONE) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "No data to transfer\n");
-		assert(req->data == NULL);
-		assert(req->length == 0);
-	} else {
-		assert(req->data != NULL);
-		assert(req->length != 0);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s data ready\n",
-			      xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ? "Host to Controller" :
-			      "Controller to Host");
-	}
-
-	return 0;
+	SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
+		    sgl->generic.type, sgl->generic.subtype);
+	rsp->status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
+	return SPDK_NVMF_REQUEST_PREP_ERROR;
 }
 
 static int spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn);
@@ -1003,10 +1040,40 @@ static int
 spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_session	*rdma_sess;
+	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
+	int				i;
+	struct spdk_nvmf_rdma_buf	*buf;
 
 	rdma_sess = calloc(1, sizeof(*rdma_sess));
 	if (!rdma_sess) {
 		return -1;
+	}
+
+	/* TODO: Make the number of elements in this pool configurable. For now, one full queue
+	 *       worth seems reasonable.
+	 */
+	rdma_sess->buf = rte_calloc("large_buf_pool", rdma_conn->max_queue_depth, g_rdma.max_io_size,
+				    0x20000);
+	if (!rdma_sess->buf) {
+		free(rdma_sess);
+		return -1;
+	}
+
+	rdma_sess->buf_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_sess->buf,
+					  g_rdma.max_queue_depth * g_rdma.max_io_size);
+	if (!rdma_sess->buf_mr) {
+		rte_free(rdma_sess->buf);
+		free(rdma_sess);
+		return -1;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Session Shared Data Pool: %p Length: %x LKey: %x\n",
+		      rdma_sess->buf,  rdma_conn->max_queue_depth * g_rdma.max_io_size, rdma_sess->buf_mr->lkey);
+
+	SLIST_INIT(&rdma_sess->data_buf_pool);
+	for (i = 0; i < rdma_conn->max_queue_depth; i++) {
+		buf = (struct spdk_nvmf_rdma_buf *)(rdma_sess->buf + (i * g_rdma.max_io_size));
+		SLIST_INSERT_HEAD(&rdma_sess->data_buf_pool, buf, link);
 	}
 
 	session->transport = conn->transport;
@@ -1024,6 +1091,8 @@ spdk_nvmf_rdma_session_fini(struct nvmf_session *session)
 		return;
 	}
 
+	rdma_dereg_mr(rdma_sess->buf_mr);
+	rte_free(rdma_sess->buf);
 	free(rdma_sess);
 	session->trctx = NULL;
 }
@@ -1128,10 +1197,36 @@ spdk_nvmf_rdma_close_conn(struct spdk_nvmf_conn *conn)
 static int
 spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_conn *conn)
 {
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_request *rdma_req;
+	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
+	struct spdk_nvmf_rdma_session	*rdma_sess;
+	struct spdk_nvmf_rdma_request	*rdma_req, *tmp;
 	int rc;
+	int count = 0;
 
+	/* First, try to assign free data buffers to requests that need one */
+	if (conn->sess) {
+		rdma_sess = conn->sess->trctx;
+		TAILQ_FOREACH_SAFE(rdma_req, &rdma_conn->pending_data_buf_queue, link, tmp) {
+			assert(rdma_req->req.data == NULL);
+			rdma_req->req.data = SLIST_FIRST(&rdma_sess->data_buf_pool);
+			if (!rdma_req->req.data) {
+				break;
+			}
+			SLIST_REMOVE_HEAD(&rdma_sess->data_buf_pool, link);
+			TAILQ_REMOVE(&rdma_conn->pending_data_buf_queue, rdma_req, link);
+			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+				TAILQ_INSERT_TAIL(&rdma_conn->pending_rdma_rw_queue, rdma_req, link);
+			} else {
+				rc = spdk_nvmf_request_exec(&rdma_req->req);
+				if (rc < 0) {
+					return -1;
+				}
+				count++;
+			}
+		}
+	}
+
+	/* Try to initiate RDMA Reads or Writes on requests that have data buffers */
 	while (rdma_conn->cur_rdma_rw_depth < rdma_conn->max_rw_depth) {
 		if (TAILQ_EMPTY(&rdma_conn->pending_rdma_rw_queue)) {
 			break;
@@ -1148,7 +1243,7 @@ spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_conn *conn)
 		}
 	}
 
-	return 0;
+	return count;
 }
 
 /* Returns the number of times that spdk_nvmf_request_exec was called,
@@ -1214,9 +1309,10 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			/* Since an RDMA R/W operation completed, try to submit from the pending list. */
 			rdma_conn->cur_rdma_rw_depth--;
 			rc = spdk_nvmf_rdma_handle_pending_rdma_rw(conn);
-			if (rc) {
+			if (rc < 0) {
 				return -1;
 			}
+			count += rc;
 			break;
 
 		case IBV_WC_RDMA_READ:
@@ -1232,9 +1328,10 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			/* Since an RDMA R/W operation completed, try to submit from the pending list. */
 			rdma_conn->cur_rdma_rw_depth--;
 			rc = spdk_nvmf_rdma_handle_pending_rdma_rw(conn);
-			if (rc) {
+			if (rc < 0) {
 				return -1;
 			}
+			count += rc;
 			break;
 
 		case IBV_WC_RECV:
@@ -1288,20 +1385,29 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 			memset(req->rsp, 0, sizeof(*req->rsp));
 			rc = spdk_nvmf_request_prep_data(req);
-			if (rc < 0) {
-				return spdk_nvmf_rdma_request_complete(req);
-			} else if (rc == 0) {
+			switch (rc) {
+			case SPDK_NVMF_REQUEST_PREP_READY:
+				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p is ready for execution\n", req);
 				/* Data is immediately available */
 				rc = spdk_nvmf_request_exec(req);
 				if (rc < 0) {
 					return -1;
 				}
 				count++;
-			} else {
+				break;
+			case SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER:
+				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p needs data buffer\n", req);
+				TAILQ_INSERT_TAIL(&rdma_conn->pending_data_buf_queue, rdma_req, link);
+				break;
+			case SPDK_NVMF_REQUEST_PREP_PENDING_DATA:
+				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p needs data transfer\n", req);
 				rc = spdk_nvmf_rdma_request_transfer_data(req);
-				if (rc) {
+				if (rc < 0) {
 					return -1;
 				}
+				break;
+			case SPDK_NVMF_REQUEST_PREP_ERROR:
+				return spdk_nvmf_rdma_request_complete(req);
 			}
 			break;
 
