@@ -268,9 +268,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 	uint8_t found_dev    = spdk_pci_device_get_dev(dev);
 	uint8_t found_func   = spdk_pci_device_get_func(dev);
 
-	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
-		       found_domain, found_bus, found_dev, found_func);
-
 	if (ctx->any && !ctx->found) {
 		ctx->found = true;
 		return true;
@@ -294,7 +291,14 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 	  const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
+	uint16_t found_domain = spdk_pci_device_get_domain(dev);
+	uint8_t found_bus    = spdk_pci_device_get_bus(dev);
+	uint8_t found_dev    = spdk_pci_device_get_dev(dev);
+	uint8_t found_func   = spdk_pci_device_get_func(dev);
 	int rc;
+
+	SPDK_NOTICELOG("Attaching NVMe device %x:%x:%x.%x to subsystem %s\n",
+		       found_domain, found_bus, found_dev, found_func, ctx->subsystem->subnqn);
 
 	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr);
 	if (rc < 0) {
