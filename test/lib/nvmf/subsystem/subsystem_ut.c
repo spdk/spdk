@@ -37,6 +37,9 @@
 #include <stdio.h>
 
 #include "spdk_cunit.h"
+#include "subsystem.h"
+
+const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
 
 #include "subsystem.c"
 

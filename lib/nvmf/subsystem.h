@@ -43,6 +43,8 @@
 
 struct spdk_nvmf_conn;
 struct spdk_nvmf_subsystem;
+struct spdk_nvmf_request;
+struct nvmf_session;
 
 #define MAX_NQN_SIZE 255
 #define MAX_VIRTUAL_NAMESPACE 16
@@ -69,19 +71,44 @@ struct spdk_nvmf_ns {
 	struct spdk_bdev *bdev;
 };
 
+struct spdk_nvmf_ctrlr_ops {
+	/**
+	 * Get NVMe identify controller data.
+	 */
+	void (*ctrlr_get_data)(struct nvmf_session *session);
 
-union spdk_nvmf_controller {
-	struct {
-		struct nvmf_session *session;
-		struct spdk_nvme_ctrlr *ctrlr;
-		struct spdk_nvme_qpair *io_qpair;
-	} direct;
+	/**
+	 * Process admin command.
+	 */
+	int (*process_admin_cmd)(struct spdk_nvmf_request *req);
 
-	struct {
-		struct nvmf_session *session;
-		struct spdk_nvmf_ns *ns_list[MAX_VIRTUAL_NAMESPACE];
-		uint16_t ns_count;
-	} virtual;
+	/**
+	 * Process IO command.
+	 */
+	int (*process_io_cmd)(struct spdk_nvmf_request *req);
+
+	/**
+	 * Poll for completions.
+	 */
+	void (*poll_for_completions)(struct nvmf_session *session);
+};
+
+struct spdk_nvmf_controller {
+	union {
+		struct {
+			struct nvmf_session *session;
+			struct spdk_nvme_ctrlr *ctrlr;
+			struct spdk_nvme_qpair *io_qpair;
+		} direct;
+
+		struct {
+			struct nvmf_session *session;
+			struct spdk_nvmf_ns *ns_list[MAX_VIRTUAL_NAMESPACE];
+			uint16_t ns_count;
+		} virtual;
+	} dev;
+
+	const struct spdk_nvmf_ctrlr_ops *ops;
 };
 
 
@@ -96,7 +123,7 @@ struct spdk_nvmf_subsystem {
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
 	struct nvmf_session *session;
-	union spdk_nvmf_controller 	ctrlr;
+	struct spdk_nvmf_controller 	ctrlr;
 
 	struct spdk_poller	poller;
 
@@ -139,4 +166,5 @@ spdk_shutdown_nvmf_subsystems(void);
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);
 
+extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
 #endif /* SPDK_NVMF_SUBSYSTEM_H */

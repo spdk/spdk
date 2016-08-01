@@ -37,6 +37,12 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
+typedef enum _spdk_nvmf_request_exec_status {
+	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
+	SPDK_NVMF_REQUEST_EXEC_STATUS_RELEASE,
+	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
+} spdk_nvmf_request_exec_status;
+
 union nvmf_h2c_msg {
 	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
 	struct spdk_nvme_cmd				nvme_cmd;

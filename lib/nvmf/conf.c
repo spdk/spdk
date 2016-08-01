@@ -356,9 +356,8 @@ spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
-	const char *nqn, *mode, *bdf;
+	const char *nqn, *mode;
 	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_probe_ctx ctx = { 0 };
 	int i, ret;
 	uint64_t mask;
 	uint32_t lcore;
@@ -449,31 +448,35 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
 	}
 
-	/* Parse NVMe section */
-	bdf = spdk_conf_section_get_val(sp, "NVMe");
-	if (bdf == NULL) {
-		SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", sp->num);
-		nvmf_delete_subsystem(subsystem);
-		return -1;
-	}
+	if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+		const char *bdf;
+		struct spdk_nvmf_probe_ctx ctx = { 0 };
 
-	ctx.subsystem = subsystem;
-	ctx.found = false;
-	if (strcmp(bdf, "*") == 0) {
-		ctx.any = true;
-	} else {
-		ret = sscanf(bdf, "%x:%x:%x.%x", &ctx.domain, &ctx.bus, &ctx.device, &ctx.function);
-		if (ret != 4) {
-			SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
+		/* Parse NVMe section */
+		bdf = spdk_conf_section_get_val(sp, "NVMe");
+		if (bdf == NULL) {
+			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", sp->num);
+			nvmf_delete_subsystem(subsystem);
 			return -1;
 		}
-		ctx.any = false;
-	}
 
-	if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
-		SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
-	}
+		ctx.subsystem = subsystem;
+		ctx.found = false;
+		if (strcmp(bdf, "*") == 0) {
+			ctx.any = true;
+		} else {
+			ret = sscanf(bdf, "%x:%x:%x.%x", &ctx.domain, &ctx.bus, &ctx.device, &ctx.function);
+			if (ret != 4) {
+				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
+				return -1;
+			}
+			ctx.any = false;
+		}
 
+		if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
+			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
+		}
+	}
 	return 0;
 }
 

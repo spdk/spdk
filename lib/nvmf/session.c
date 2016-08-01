@@ -83,19 +83,10 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 static void
 nvmf_init_nvme_session_properties(struct nvmf_session *session)
 {
-	const struct spdk_nvme_ctrlr_data	*cdata;
-
 	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
 
-	/*
-	  Here we are going to initialize the features, properties, and
-	  identify controller details for the virtual controller associated
-	  with a specific subsystem session.
-	*/
-
-	/* Init the virtual controller details using actual HW details */
-	cdata = spdk_nvme_ctrlr_get_data(session->subsys->ctrlr.direct.ctrlr);
-	memcpy(&session->vcdata, cdata, sizeof(struct spdk_nvme_ctrlr_data));
+	/* Init the controller details */
+	session->subsys->ctrlr.ops->ctrlr_get_data(session);
 
 	session->vcdata.aerl = 0;
 	session->vcdata.cntlid = 0;
