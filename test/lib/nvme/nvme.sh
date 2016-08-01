@@ -42,6 +42,10 @@ timing_enter hello_world
 $rootdir/examples/nvme/hello_world/hello_world
 timing_exit
 
+timing_enter overhead
+$rootdir/test/lib/nvme/overhead/overhead -s 4096 -t 1
+timing_exit overhead
+
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
 	for bdf in $(linux_iter_pci 0108); do
