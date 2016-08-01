@@ -50,7 +50,6 @@
 #include <sys/uio.h>
 
 #include "spdk/bdev.h"
-#include "spdk/bdev_db.h"
 #include "spdk/log.h"
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"

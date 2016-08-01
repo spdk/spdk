@@ -36,52 +36,6 @@
 
 #include "spdk/event.h"
 
-struct blockdev_entry {
-	struct spdk_bdev	*bdev;
-	struct blockdev_entry	*next;
-};
-
-struct blockdev_entry *g_bdevs = NULL;
-
-int
-spdk_bdev_db_add(struct spdk_bdev *bdev)
-{
-	struct blockdev_entry *bdev_entry = calloc(1, sizeof(struct blockdev_entry));
-
-	if (bdev_entry == NULL) {
-		return -ENOMEM;
-	}
-
-	bdev_entry->bdev = bdev;
-
-	bdev_entry->next = g_bdevs;
-	g_bdevs = bdev_entry;
-
-	return 0;
-}
-
-int
-spdk_bdev_db_delete(struct spdk_bdev *bdev)
-{
-	/* Deleting is not important */
-	return 0;
-}
-
-struct spdk_bdev *
-spdk_bdev_db_get_by_name(const char *bdev_name)
-{
-	struct blockdev_entry *bdev_entry = g_bdevs;
-
-	while (bdev_entry != NULL) {
-		if (strcmp(bdev_name, bdev_entry->bdev->name) == 0) {
-			return bdev_entry->bdev;
-		}
-		bdev_entry = bdev_entry->next;
-	}
-
-	return NULL;
-}
-
 static void
 bdevtest_init(const char *config_file, const char *cpumask)
 {

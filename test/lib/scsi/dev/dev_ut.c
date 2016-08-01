@@ -83,7 +83,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 }
 
 struct spdk_bdev *
-spdk_bdev_db_get_by_name(const char *bdev_name)
+spdk_bdev_get_by_name(const char *bdev_name)
 {
 	snprintf(g_bdev.name, sizeof(g_bdev.name), "%s", bdev_name);
 	return &g_bdev;

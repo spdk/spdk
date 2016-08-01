@@ -45,7 +45,6 @@
 #include <rte_mempool.h>
 #include <rte_version.h>
 
-#include "spdk/bdev_db.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/queue.h"
@@ -66,6 +65,36 @@ static TAILQ_HEAD(, spdk_bdev_module_if) spdk_bdev_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_bdev_module_list);
 static TAILQ_HEAD(, spdk_bdev_module_if) spdk_vbdev_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_vbdev_module_list);
+
+static TAILQ_HEAD(, spdk_bdev) spdk_bdev_list =
+	TAILQ_HEAD_INITIALIZER(spdk_bdev_list);
+
+struct spdk_bdev *spdk_bdev_first(void)
+{
+	return TAILQ_FIRST(&spdk_bdev_list);
+}
+
+struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev)
+{
+	return TAILQ_NEXT(prev, link);
+}
+
+struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name)
+{
+	struct spdk_bdev *bdev = spdk_bdev_first();
+
+	while (bdev != NULL) {
+		if (strncmp(bdev_name, bdev->name, sizeof(bdev->name)) == 0) {
+			if (!bdev->claimed) {
+				bdev->claimed = true;
+				return bdev;
+			}
+		}
+		bdev = spdk_bdev_next(bdev);
+	}
+
+	return NULL;
+}
 
 static void
 spdk_bdev_io_set_rbuf(struct spdk_bdev_io *bdev_io, void *buf)
@@ -760,7 +789,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	bdev->poller.fn = spdk_bdev_do_work;
 	bdev->poller.arg = bdev;
 
-	spdk_bdev_db_add(bdev);
+	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);
 }
 
 void
@@ -768,7 +797,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
 	int			rc;
 
-	spdk_bdev_db_delete(bdev);
+	TAILQ_REMOVE(&spdk_bdev_list, bdev, link);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {

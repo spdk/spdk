@@ -48,7 +48,6 @@
 #include <rte_timer.h>
 
 #include "spdk/bdev.h"
-#include "spdk/bdev_db.h"
 #include "spdk/copy_engine.h"
 #include "spdk/log.h"
 
@@ -115,21 +114,20 @@ static void
 bdevperf_construct_targets(void)
 {
 	int index = 0;
-	struct blockdev_entry *bdev_entry = g_bdevs;
 	struct spdk_bdev *bdev;
 	struct io_target *target;
 
-	while (bdev_entry != NULL) {
-		bdev = bdev_entry->bdev;
+	bdev = spdk_bdev_first();
+	while (bdev != NULL) {
 
 		if (bdev->claimed) {
-			bdev_entry = bdev_entry->next;
+			bdev = spdk_bdev_next(bdev);
 			continue;
 		}
 
 		if (g_unmap && !bdev->thin_provisioning) {
 			printf("Skipping %s because it does not support unmap\n", bdev->name);
-			bdev_entry = bdev_entry->next;
+			bdev = spdk_bdev_next(bdev);
 			continue;
 		}
 
@@ -159,7 +157,8 @@ bdevperf_construct_targets(void)
 
 		head[index] = target;
 		g_target_count++;
-		bdev_entry = bdev_entry->next;
+
+		bdev = spdk_bdev_next(bdev);
 	}
 }
 
@@ -664,11 +663,6 @@ main(int argc, char **argv)
 	bdevtest_init(config_file, core_mask);
 
 	bdevperf_construct_targets();
-
-	if (g_bdevs == NULL) {
-		printf("No blockdevs available.\n");
-		return 1;
-	}
 
 	task_pool = rte_mempool_create("task_pool", 4096 * spdk_app_get_core_count(),
 				       sizeof(struct bdevperf_task),

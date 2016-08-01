@@ -165,7 +165,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	dev->maxlun = 0;
 
 	for (i = 0; i < num_luns; i++) {
-		bdev = spdk_bdev_db_get_by_name(lun_name_list[i]);
+		bdev = spdk_bdev_get_by_name(lun_name_list[i]);
 		if (bdev == NULL) {
 			free_dev(dev);
 			return NULL;

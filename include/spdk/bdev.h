@@ -147,6 +147,8 @@ struct spdk_bdev {
 
 	/** True if another blockdev or a LUN is using this device */
 	bool claimed;
+
+	TAILQ_ENTRY(spdk_bdev) link;
 };
 
 /**
@@ -358,6 +360,12 @@ struct spdk_bdev_module_if {
 /* The following functions are intended to be called from the upper layer
  * that is using the blockdev layer.
  */
+
+struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
+
+struct spdk_bdev *spdk_bdev_first(void);
+struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
+
 struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev,
 				    void *buf, uint64_t nbytes, uint64_t offset,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);

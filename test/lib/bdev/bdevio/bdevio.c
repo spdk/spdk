@@ -43,7 +43,6 @@
 #include <rte_ring.h>
 
 #include "spdk/bdev.h"
-#include "spdk/bdev_db.h"
 #include "spdk/copy_engine.h"
 #include "spdk/log.h"
 
@@ -64,15 +63,14 @@ struct io_target *g_io_targets = NULL;
 static int
 bdevio_construct_targets(void)
 {
-	struct blockdev_entry *bdev_entry = g_bdevs;
 	struct spdk_bdev *bdev;
 	struct io_target *target;
 
-	while (bdev_entry != NULL) {
-		bdev = bdev_entry->bdev;
+	bdev = spdk_bdev_first();
+	while (bdev != NULL) {
 
 		if (bdev->claimed) {
-			bdev_entry = bdev_entry->next;
+			bdev = spdk_bdev_next(bdev);
 			continue;
 		}
 
@@ -83,7 +81,8 @@ bdevio_construct_targets(void)
 		target->bdev = bdev;
 		target->next = g_io_targets;
 		g_io_targets = target;
-		bdev_entry = bdev_entry->next;
+
+		bdev = spdk_bdev_next(bdev);
 	}
 
 	return 0;
@@ -114,14 +113,14 @@ static int
 check_io_completion(void)
 {
 	int rc;
-	struct blockdev_entry *bdev_entry;
+	struct spdk_bdev *bdev;
 
 	rc = 0;
 	while (!complete) {
-		bdev_entry = g_bdevs;
-		while (bdev_entry != NULL) {
-			spdk_bdev_do_work(bdev_entry->bdev);
-			bdev_entry = bdev_entry->next;
+		bdev = spdk_bdev_first();
+		while (bdev != NULL) {
+			spdk_bdev_do_work(bdev);
+			bdev = spdk_bdev_next(bdev);
 		}
 		spdk_event_queue_run_all(rte_lcore_id());
 	}
