@@ -345,7 +345,7 @@ check_io(void)
 		 *  will ensure this extra time is accounted for next time through
 		 *  when we see current_queue_depth drop to 0.
 		 */
-		if ((end - g_complete_tsc_start) < 500) {
+		if (g_ns->type == ENTRY_TYPE_NVME_NS || (end - g_complete_tsc_start) < 500) {
 			g_complete_tsc_start = end;
 		}
 	} else {
