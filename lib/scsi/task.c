@@ -33,6 +33,7 @@
  */
 
 #include "scsi_internal.h"
+#include "spdk/endian.h"
 
 #include <rte_config.h>
 #include <rte_debug.h>

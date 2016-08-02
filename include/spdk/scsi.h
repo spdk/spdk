@@ -73,6 +73,20 @@ enum spdk_scsi_task_type {
 	SPDK_SCSI_TASK_TYPE_MANAGE,
 };
 
+/*
+ * SAM does not define the value for these service responses.  Each transport
+ *  (i.e. SAS, FC, iSCSI) will map these value to transport-specific codes,
+ *  and may add their own.
+ */
+enum spdk_scsi_task_mgmt_resp {
+	SPDK_SCSI_TASK_MGMT_RESP_COMPLETE,
+	SPDK_SCSI_TASK_MGMT_RESP_SUCCESS,
+	SPDK_SCSI_TASK_MGMT_RESP_REJECT,
+	SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN,
+	SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE,
+	SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED
+};
+
 struct spdk_scsi_task {
 	uint8_t				type;
 	uint8_t				status;
@@ -149,6 +163,34 @@ struct spdk_scsi_dev {
 
 	int			num_ports;
 	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
+};
+
+/**
+
+\brief Represents a SCSI LUN.
+
+LUN modules will implement the function pointers specifically for the LUN
+type.  For example, NVMe LUNs will implement scsi_execute to translate
+the SCSI task to an NVMe command and post it to the NVMe controller.
+malloc LUNs will implement scsi_execute to translate the SCSI task and
+copy the task's data into or out of the allocated memory buffer.
+
+*/
+struct spdk_scsi_lun {
+	/** LUN id for this logical unit. */
+	int id;
+
+	/** Pointer to the SCSI device containing this LUN. */
+	struct spdk_scsi_dev *dev;
+
+	/** The blockdev associated with this LUN. */
+	struct spdk_bdev *bdev;
+
+	/** Name for this LUN. */
+	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
+
+	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
+	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
 };
 
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);

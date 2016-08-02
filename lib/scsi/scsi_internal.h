@@ -61,20 +61,6 @@ enum {
 	SPDK_SCSI_TASK_PENDING,
 };
 
-/*
- * SAM does not define the value for these service responses.  Each transport
- *  (i.e. SAS, FC, iSCSI) will map these value to transport-specific codes,
- *  and may add their own.
- */
-enum spdk_scsi_task_mgmt_resp {
-	SPDK_SCSI_TASK_MGMT_RESP_COMPLETE,
-	SPDK_SCSI_TASK_MGMT_RESP_SUCCESS,
-	SPDK_SCSI_TASK_MGMT_RESP_REJECT,
-	SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN,
-	SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE,
-	SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED
-};
-
 #define OWNER_SCSI_DEV		0x10
 
 #define OBJECT_SCSI_TASK	0x10
@@ -82,34 +68,6 @@ enum spdk_scsi_task_mgmt_resp {
 #define TRACE_GROUP_SCSI	0x2
 #define TRACE_SCSI_TASK_DONE	SPDK_TPOINT_ID(TRACE_GROUP_SCSI, 0x0)
 #define TRACE_SCSI_TASK_START	SPDK_TPOINT_ID(TRACE_GROUP_SCSI, 0x1)
-
-/**
-
-\brief Represents a SCSI LUN.
-
-LUN modules will implement the function pointers specifically for the LUN
-type.  For example, NVMe LUNs will implement scsi_execute to translate
-the SCSI task to an NVMe command and post it to the NVMe controller.
-malloc LUNs will implement scsi_execute to translate the SCSI task and
-copy the task's data into or out of the allocated memory buffer.
-
-*/
-struct spdk_scsi_lun {
-	/** LUN id for this logical unit. */
-	int id;
-
-	/** Pointer to the SCSI device containing this LUN. */
-	struct spdk_scsi_dev *dev;
-
-	/** The blockdev associated with this LUN. */
-	struct spdk_bdev *bdev;
-
-	/** Name for this LUN. */
-	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
-
-	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
-	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
-};
 
 struct spdk_lun_db_entry {
 	struct spdk_scsi_lun *lun;
@@ -146,69 +104,6 @@ struct spdk_scsi_dev *spdk_scsi_dev_get_list(void);
 
 int spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
 int spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
-
-static inline uint16_t
-from_be16(void *ptr)
-{
-	uint8_t *tmp = (uint8_t *)ptr;
-	return (((uint16_t)tmp[0] << 8) | tmp[1]);
-}
-
-static inline void
-to_be16(void *out, uint16_t in)
-{
-	uint8_t *tmp = (uint8_t *)out;
-	tmp[0] = (in >> 8) & 0xFF;
-	tmp[1] = in & 0xFF;
-}
-
-static inline uint32_t
-from_be32(void *ptr)
-{
-	uint8_t *tmp = (uint8_t *)ptr;
-	return (((uint32_t)tmp[0] << 24) |
-		((uint32_t)tmp[1] << 16) |
-		((uint32_t)tmp[2] << 8) |
-		((uint32_t)tmp[3]));
-}
-
-static inline void
-to_be32(void *out, uint32_t in)
-{
-	uint8_t *tmp = (uint8_t *)out;
-	tmp[0] = (in >> 24) & 0xFF;
-	tmp[1] = (in >> 16) & 0xFF;
-	tmp[2] = (in >> 8) & 0xFF;
-	tmp[3] = in & 0xFF;
-}
-
-static inline uint64_t
-from_be64(void *ptr)
-{
-	uint8_t *tmp = (uint8_t *)ptr;
-	return (((uint64_t)tmp[0] << 56) |
-		((uint64_t)tmp[1] << 48) |
-		((uint64_t)tmp[2] << 40) |
-		((uint64_t)tmp[3] << 32) |
-		((uint64_t)tmp[4] << 24) |
-		((uint64_t)tmp[5] << 16) |
-		((uint64_t)tmp[6] << 8) |
-		((uint64_t)tmp[7]));
-}
-
-static inline void
-to_be64(void *out, uint64_t in)
-{
-	uint8_t *tmp = (uint8_t *)out;
-	tmp[0] = (in >> 56) & 0xFF;
-	tmp[1] = (in >> 48) & 0xFF;
-	tmp[2] = (in >> 40) & 0xFF;
-	tmp[3] = (in >> 32) & 0xFF;
-	tmp[4] = (in >> 24) & 0xFF;
-	tmp[5] = (in >> 16) & 0xFF;
-	tmp[6] = (in >> 8) & 0xFF;
-	tmp[7] = in & 0xFF;
-};
 
 struct spdk_scsi_parameters {
 	uint32_t max_unmap_lba_count;

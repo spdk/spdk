@@ -33,6 +33,7 @@
  */
 
 #include "scsi_internal.h"
+#include "spdk/endian.h"
 
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)

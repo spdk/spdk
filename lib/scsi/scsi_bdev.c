@@ -33,6 +33,7 @@
  */
 
 #include "scsi_internal.h"
+#include "spdk/endian.h"
 
 #define SPDK_WORK_BLOCK_SIZE		(1ULL * 1024ULL * 1024ULL)
 #define SPDK_WORK_ATS_BLOCK_SIZE	(1ULL * 1024ULL * 1024ULL)
