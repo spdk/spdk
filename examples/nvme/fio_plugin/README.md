@@ -38,3 +38,9 @@ To select NVMe devices, you simply pass an identifier as the filename in the for
 
 Remember that NVMe namespaces start at 1, not 0! Also, the notation uses '.' throughout,
 not ':'. For example - 0000.04.00.0/1.
+
+Currently the fio_plugin is limited to a single thread, so only one job is supported.
+
+When testing random workloads, it is recommended to set norandommap=1.  fio's random map
+processing consumes extra CPU cycles which will degrade performance over time with
+the fio_plugin since all I/O are submitted and completed on a single CPU core.
