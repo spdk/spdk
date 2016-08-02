@@ -32,7 +32,6 @@
 #
 
 obj-m := dmaperf.o
-dmaperf-y := dma_perf.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
