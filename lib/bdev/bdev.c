@@ -71,12 +71,26 @@ static TAILQ_HEAD(, spdk_bdev) spdk_bdev_list =
 
 struct spdk_bdev *spdk_bdev_first(void)
 {
-	return TAILQ_FIRST(&spdk_bdev_list);
+	struct spdk_bdev *bdev;
+
+	bdev = TAILQ_FIRST(&spdk_bdev_list);
+	if (bdev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Starting bdev iteration at %s\n", bdev->name);
+	}
+
+	return bdev;
 }
 
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev)
 {
-	return TAILQ_NEXT(prev, link);
+	struct spdk_bdev *bdev;
+
+	bdev = TAILQ_NEXT(prev, link);
+	if (bdev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Continuing bdev iteration at %s\n", bdev->name);
+	}
+
+	return bdev;
 }
 
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name)
@@ -85,10 +99,7 @@ struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name)
 
 	while (bdev != NULL) {
 		if (strncmp(bdev_name, bdev->name, sizeof(bdev->name)) == 0) {
-			if (!bdev->claimed) {
-				bdev->claimed = true;
-				return bdev;
-			}
+			return bdev;
 		}
 		bdev = spdk_bdev_next(bdev);
 	}
@@ -789,6 +800,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	bdev->poller.fn = spdk_bdev_do_work;
 	bdev->poller.arg = bdev;
 
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);
 }
 
@@ -797,6 +809,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
 	int			rc;
 
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Removing bdev %s from list\n", bdev->name);
 	TAILQ_REMOVE(&spdk_bdev_list, bdev, link);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
