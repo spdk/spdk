@@ -38,7 +38,7 @@
 
 #include "nvme/nvme_qpair.c"
 
-struct nvme_driver g_nvme_driver = {
+struct nvme_driver _g_nvme_driver = {
 	.lock = NVME_MUTEX_INITIALIZER,
 };
 
