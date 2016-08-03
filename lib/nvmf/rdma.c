@@ -1052,7 +1052,7 @@ spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn 
 	/* TODO: Make the number of elements in this pool configurable. For now, one full queue
 	 *       worth seems reasonable.
 	 */
-	rdma_sess->buf = rte_calloc("large_buf_pool", rdma_conn->max_queue_depth, g_rdma.max_io_size,
+	rdma_sess->buf = rte_calloc("large_buf_pool", g_rdma.max_queue_depth, g_rdma.max_io_size,
 				    0x20000);
 	if (!rdma_sess->buf) {
 		free(rdma_sess);
@@ -1068,10 +1068,10 @@ spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn 
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Session Shared Data Pool: %p Length: %x LKey: %x\n",
-		      rdma_sess->buf,  rdma_conn->max_queue_depth * g_rdma.max_io_size, rdma_sess->buf_mr->lkey);
+		      rdma_sess->buf,  g_rdma.max_queue_depth * g_rdma.max_io_size, rdma_sess->buf_mr->lkey);
 
 	SLIST_INIT(&rdma_sess->data_buf_pool);
-	for (i = 0; i < rdma_conn->max_queue_depth; i++) {
+	for (i = 0; i < g_rdma.max_queue_depth; i++) {
 		buf = (struct spdk_nvmf_rdma_buf *)(rdma_sess->buf + (i * g_rdma.max_io_size));
 		SLIST_INSERT_HEAD(&rdma_sess->data_buf_pool, buf, link);
 	}
