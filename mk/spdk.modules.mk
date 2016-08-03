@@ -3,6 +3,11 @@ BLOCKDEV_MODULES += $(SPDK_ROOT_DIR)/lib/bdev/malloc/libspdk_bdev_malloc.a
 BLOCKDEV_MODULES += $(SPDK_ROOT_DIR)/lib/bdev/nvme/libspdk_bdev_nvme.a \
 		    $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a
 
+ifeq ($(OS),Linux)
+BLOCKDEV_MODULES += $(SPDK_ROOT_DIR)/lib/bdev/aio/libspdk_bdev_aio.a
+BLOCKDEV_MODULES_DEPS += -laio
+endif
+
 COPY_MODULES += $(SPDK_ROOT_DIR)/lib/copy/ioat/libspdk_copy_ioat.a \
 		$(SPDK_ROOT_DIR)/lib/ioat/libspdk_ioat.a
 
