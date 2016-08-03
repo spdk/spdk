@@ -1055,6 +1055,8 @@ spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn 
 	rdma_sess->buf = rte_calloc("large_buf_pool", g_rdma.max_queue_depth, g_rdma.max_io_size,
 				    0x20000);
 	if (!rdma_sess->buf) {
+		SPDK_ERRLOG("Large buffer pool allocation failed (%d x %d)\n",
+			    g_rdma.max_queue_depth, g_rdma.max_io_size);
 		free(rdma_sess);
 		return -1;
 	}
@@ -1062,6 +1064,8 @@ spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn 
 	rdma_sess->buf_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_sess->buf,
 					  g_rdma.max_queue_depth * g_rdma.max_io_size);
 	if (!rdma_sess->buf_mr) {
+		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
+			    g_rdma.max_queue_depth, g_rdma.max_io_size);
 		rte_free(rdma_sess->buf);
 		free(rdma_sess);
 		return -1;
