@@ -67,6 +67,21 @@ time test/lib/scsi/scsi.sh
 
 timing_exit lib
 
+
+if [ $(uname -s) = Linux ]; then
+	export TARGET_IP=127.0.0.1
+	export INITIATOR_IP=127.0.0.1
+
+	timing_enter iscsi_tgt
+
+	time ./test/iscsi_tgt/filesystem/filesystem.sh
+	time ./test/iscsi_tgt/fio/fio.sh
+	time ./test/iscsi_tgt/reset/reset.sh
+	time ./test/iscsi_tgt/rpc_config/rpc_config.sh
+
+	timing_exit iscsi_tgt
+fi
+
 timing_enter nvmf
 
 time test/nvmf/fio/fio.sh

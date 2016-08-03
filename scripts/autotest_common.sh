@@ -102,6 +102,30 @@ function process_core() {
 	return $ret
 }
 
+function waitforlisten() {
+	# $1 = process pid
+	# $2 = TCP port number
+	if [ -z "$1" ] || [ -z "$2" ]; then
+		exit 1
+	fi
+
+	echo "Waiting for process to start up and listen on TCP port $2..."
+	# turn off trace for this loop
+	set +x
+	ret=1
+	while [ $ret -ne 0 ]; do
+		# if the process is no longer running, then exit the script
+		#  since it means the application crashed
+		if ! kill -s 0 $1; then
+			exit
+		fi
+		if netstat -an --tcp | grep -iw listen | grep -q $2; then
+			ret=0
+		fi
+	done
+	set -x
+}
+
 function killprocess() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
@@ -126,4 +150,26 @@ function nvme_cleanup()
 	for dev in $devs; do
 		parted -s /dev/$dev mklabel msdos
 	done
+}
+
+function iscsicleanup() {
+	echo "Cleaning up iSCSI connection"
+	iscsiadm -m node --logout || true
+	iscsiadm -m node -o delete || true
+}
+
+function stop_iscsi_service() {
+	if cat /etc/*-release | grep Ubuntu; then
+		service open-iscsi stop
+	else
+		service iscsid stop
+	fi
+}
+
+function start_iscsi_service() {
+	if cat /etc/*-release | grep Ubuntu; then
+		service open-iscsi start
+	else
+		service iscsid start
+	fi
 }

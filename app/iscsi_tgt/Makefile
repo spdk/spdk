@@ -31,18 +31,49 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += trace
-DIRS-$(CONFIG_RDMA) += nvmf_tgt
-ifeq ($(OS),Linux)
-DIRS-y += iscsi_tgt
-endif
+APP = iscsi_tgt
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += $(DPDK_INC)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+# Add iSCSI library directory to include path
+# TODO: remove this once iSCSI has a public API header
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+C_SRCS := iscsi_tgt.c
+
+SPDK_LIBS = \
+	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
+	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
+	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
+	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
+	$(SPDK_ROOT_DIR)/lib/iscsi/libspdk_iscsi.a \
+	$(SPDK_ROOT_DIR)/lib/scsi/libspdk_scsi.a \
+	$(SPDK_ROOT_DIR)/lib/net/libspdk_net.a \
+	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
+	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
+	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
+	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	$(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
+	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
+	$(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
+	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
+
+LIBS += -Wl,--whole-archive $(SPDK_LIBS) -Wl,--no-whole-archive
+LIBS += -lcrypto $(PCIACCESS_LIB) $(DPDK_LIB)
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
+	$(COPY_MODULES_LINKER_ARGS)
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

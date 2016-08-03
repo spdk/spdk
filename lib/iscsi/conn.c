@@ -1372,9 +1372,9 @@ SPDK_TRACE_REGISTER_FN(iscsi_conn_trace)
 	spdk_trace_register_description("READ PDU", "", TRACE_READ_PDU,
 					OWNER_ISCSI_CONN, OBJECT_ISCSI_PDU, 1, 0, 0, "opc:   ");
 	spdk_trace_register_description("ISCSI TASK DONE", "", TRACE_ISCSI_TASK_DONE,
-					OWNER_ISCSI_CONN, OBJECT_ISCSI_TASK, 0, 0, 0, "");
+					OWNER_ISCSI_CONN, OBJECT_SCSI_TASK, 0, 0, 0, "");
 	spdk_trace_register_description("ISCSI TASK QUEUE", "", TRACE_ISCSI_TASK_QUEUE,
-					OWNER_ISCSI_CONN, OBJECT_ISCSI_TASK, 1, 1, 0, "pdu:   ");
+					OWNER_ISCSI_CONN, OBJECT_SCSI_TASK, 1, 1, 0, "pdu:   ");
 	spdk_trace_register_description("ISCSI CONN ACTIVE", "", TRACE_ISCSI_CONN_ACTIVE,
 					OWNER_ISCSI_CONN, OBJECT_NONE, 0, 0, 0, "");
 	spdk_trace_register_description("ISCSI CONN IDLE", "", TRACE_ISCSI_CONN_IDLE,
