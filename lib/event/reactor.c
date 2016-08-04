@@ -361,6 +361,12 @@ spdk_app_get_core_count(void)
 	return g_reactor_count;
 }
 
+uint32_t
+spdk_app_get_current_core(void)
+{
+	return rte_lcore_id();
+}
+
 int
 spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
 {

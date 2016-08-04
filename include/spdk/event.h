@@ -199,6 +199,11 @@ uint64_t spdk_app_get_core_mask(void);
 int spdk_app_get_core_count(void);
 
 /**
+ * \brief Return the lcore of the current thread.
+ */
+uint32_t spdk_app_get_current_core(void);
+
+/**
  * \brief Allocate an event to be passed to \ref spdk_event_call
  */
 spdk_event_t spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
