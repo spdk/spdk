@@ -168,7 +168,7 @@ hello_world(void)
 		 */
 		ns_entry->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_entry->ctrlr, 0);
 		if (ns_entry->qpair == NULL) {
-			printf("ERROR: init_ns_worker_ctx() failed\n");
+			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 			return;
 		}
 
