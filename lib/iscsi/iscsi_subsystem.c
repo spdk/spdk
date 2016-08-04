@@ -52,6 +52,7 @@
 #include <rte_string_fns.h>
 #include <rte_cycles.h>
 #include <rte_malloc.h>
+#include <rte_version.h>
 
 #include <inttypes.h>
 #include <unistd.h>
@@ -458,12 +459,23 @@ spdk_iscsi_initialize_all_pools(void)
 	return 0;
 }
 
+/*
+ * Wrapper to provide rte_mempool_avail_count() on older DPDK versions.
+ * Drop this if the minimum DPDK version is raised to at least 16.07.
+ */
+#if RTE_VERSION < RTE_VERSION_NUM(16, 7, 0, 1)
+static unsigned rte_mempool_avail_count(const struct rte_mempool *pool)
+{
+	return rte_mempool_count(pool);
+}
+#endif
+
 static int
 spdk_iscsi_check_pool(struct rte_mempool *pool, uint32_t count)
 {
-	if (rte_mempool_count(pool) != count) {
-		SPDK_ERRLOG("rte_mempool_count(%s) == %d, should be %d\n",
-			    pool->name, rte_mempool_count(pool), count);
+	if (rte_mempool_avail_count(pool) != count) {
+		SPDK_ERRLOG("rte_mempool_avail_count(%s) == %d, should be %d\n",
+			    pool->name, rte_mempool_avail_count(pool), count);
 		return -1;
 	} else {
 		return 0;
