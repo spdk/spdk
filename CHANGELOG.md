@@ -1,16 +1,13 @@
 Changelog
 =========
 
-Upcoming release
-----------------
+v16.08: iSCSI target, NVMf maturity
+-----------------------------------
+This release adds a userspace iSCSI target. The iSCSI target is capable of exporting
+NVMe devices over a network using the iSCSI protocol. The application is located
+in app/iscsi_tgt and a documented configuration file can be found at etc/spdk/spdk.conf.in.
 
-- NVMe
-  - The Weighted Round Robin arbitration method is now supported. This allows
-    the user to specify different priorities on a per-I/O-queue basis.  To
-    enable WRR, set the `arb_mechanism` field during `spdk_nvme_probe()`.
-  - A simplified "Hello World" example was added to show the proper way to use
-    the NVMe library API; see `examples/nvme/hello_world/hello_world.c`.
-- NVMe over Fabrics
+This release also significantly improves the existing NVMe over Fabrics target.
   - The configuration file format was changed, which will require updates to
     any existing nvmf.conf files (see `etc/spdk/nvmf.conf.in`):
     - `SubsystemGroup` was renamed to `Subsystem`.
@@ -18,7 +15,25 @@ Upcoming release
     - `nvmf_tgt` was updated to correctly recognize NQN (NVMe Qualified Names)
       when naming subsystems.  The default node name was changed to reflect this;
       it is now "nqn.2016-06.io.spdk".
+    - `Port` and `Host` sections were merged into the `Subsystem` section
+    - Global options to control max queue depth, number of queues, max I/O
+      size, and max in-capsule data size were added.
+    - The Nvme section was removed. Now a list of devices is specified by
+      bus/device/function directly in the Subsystem section.
+    - Subsystems now have a Mode, which can be Direct or Virtual. This is an attempt
+      to future-proof the interface, so the only mode supported by this release
+      is "Direct".
   - Many bug fixes and cleanups were applied to the `nvmf_tgt` app and library.
+  - The target now supports discovery.
+
+This release also adds one new feature and provides some better examples and tools
+for the NVMe driver.
+  - The Weighted Round Robin arbitration method is now supported. This allows
+    the user to specify different priorities on a per-I/O-queue basis.  To
+    enable WRR, set the `arb_mechanism` field during `spdk_nvme_probe()`.
+  - A simplified "Hello World" example was added to show the proper way to use
+    the NVMe library API; see `examples/nvme/hello_world/hello_world.c`.
+  - A test for measuring software overhead was added. See `test/lib/nvme/overhead`.
 
 v16.06: NVMf userspace target
 -----------------------------
