@@ -34,9 +34,6 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <signal.h>
-
-#include <sys/types.h>
 
 #include <rte_config.h>
 #include <rte_memzone.h>
@@ -46,12 +43,8 @@
 #include <rte_memory.h>
 
 #include "spdk/event.h"
-#include "spdk/net.h"
 #include "iscsi/iscsi.h"
-#include "spdk/scsi.h"
 #include "spdk/log.h"
-#include "spdk/bdev.h"
-#include "spdk/copy_engine.h"
 
 uint64_t g_flush_timeout;
 
