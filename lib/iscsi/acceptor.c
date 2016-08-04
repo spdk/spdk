@@ -38,20 +38,16 @@
 
 #include <sys/types.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-#include <rte_cycles.h>
-#include <rte_timer.h>
-
+#include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/net.h"
 #include "iscsi/acceptor.h"
 #include "iscsi/conn.h"
 #include "iscsi/portal_grp.h"
 
-#define ACCEPT_TIMEOUT (rte_get_timer_hz() >> 10) /* ~1ms */
+#define ACCEPT_TIMEOUT_US 1000 /* 1ms */
 
-static struct rte_timer g_acceptor_timer;
+static struct spdk_poller g_acceptor_poller;
 
 /*! \file
 
@@ -86,7 +82,7 @@ spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
 }
 
 static void
-spdk_acceptor(struct rte_timer *timer, void *arg)
+spdk_acceptor(void *arg)
 {
 	struct spdk_iscsi_globals		*iscsi = arg;
 	struct spdk_iscsi_portal_grp	*portal_group;
@@ -102,13 +98,13 @@ spdk_acceptor(struct rte_timer *timer, void *arg)
 void
 spdk_iscsi_acceptor_start(void)
 {
-	rte_timer_init(&g_acceptor_timer);
-	rte_timer_reset(&g_acceptor_timer, ACCEPT_TIMEOUT, PERIODICAL,
-			rte_lcore_id(), spdk_acceptor, &g_spdk_iscsi);
+	g_acceptor_poller.fn = spdk_acceptor;
+	g_acceptor_poller.arg = &g_spdk_iscsi;
+	spdk_poller_register(&g_acceptor_poller, spdk_app_get_current_core(), NULL, ACCEPT_TIMEOUT_US);
 }
 
 void
 spdk_iscsi_acceptor_stop(void)
 {
-	rte_timer_stop_sync(&g_acceptor_timer);
+	spdk_poller_unregister(&g_acceptor_poller, NULL);
 }
