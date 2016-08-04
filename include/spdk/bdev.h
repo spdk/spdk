@@ -107,7 +107,7 @@ struct spdk_bdev {
 	char product_name[SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH];
 
 	/** Size in bytes of a logical block for the backend */
-	uint64_t blocklen;
+	uint32_t blocklen;
 
 	/** Number of blocks */
 	uint64_t blockcnt;

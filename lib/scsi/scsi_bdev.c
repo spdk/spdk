@@ -515,8 +515,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* support zero length in WRITE SAME */
 
 			/* MAXIMUM COMPARE AND WRITE LENGTH */
-			blocks = SPDK_WORK_ATS_BLOCK_SIZE /
-				 (uint32_t)bdev->blocklen;
+			blocks = SPDK_WORK_ATS_BLOCK_SIZE / bdev->blocklen;
 
 			if (blocks > 0xff)
 				blocks = 0xff;
@@ -525,15 +524,14 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 			/* force align to 4KB */
 			if (bdev->blocklen < 4096) {
-				blocks = 4096 / (uint32_t)bdev->blocklen;
+				blocks = 4096 / bdev->blocklen;
 				/* OPTIMAL TRANSFER LENGTH GRANULARITY */
 				to_be16(&data[6], blocks);
 
 				/* MAXIMUM TRANSFER LENGTH */
 
 				/* OPTIMAL TRANSFER LENGTH */
-				blocks = SPDK_WORK_BLOCK_SIZE /
-					 (uint32_t)bdev->blocklen;
+				blocks = SPDK_WORK_BLOCK_SIZE / bdev->blocklen;
 
 				to_be32(&data[12], blocks);
 
@@ -547,8 +545,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				/* MAXIMUM TRANSFER LENGTH */
 
 				/* OPTIMAL TRANSFER LENGTH */
-				blocks = SPDK_WORK_BLOCK_SIZE /
-					 (uint32_t)bdev->blocklen;
+				blocks = SPDK_WORK_BLOCK_SIZE / bdev->blocklen;
 				to_be32(&data[12], blocks);
 
 				/* MAXIMUM PREFETCH XDREAD XDWRITE TRANSFER LENGTH */
@@ -1559,7 +1556,7 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		case SPDK_SBC_SAI_READ_CAPACITY_16:
 			spdk_scsi_task_alloc_data(task, 32, &data);
 			to_be64(&data[0], bdev->blockcnt - 1);
-			to_be32(&data[8], (uint32_t)bdev->blocklen);
+			to_be32(&data[8], bdev->blocklen);
 			/*
 			 * Set the TPE bit to 1 to indicate thin provisioning.
 			 * The position of TPE bit is the 7th bit in 14th byte
