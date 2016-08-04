@@ -104,35 +104,6 @@ usage(char *executable_name)
 	printf(" -d         disable coredump file enabling\n");
 }
 
-/*! \file
-
-This is the main file.
-
-*/
-
-/*!
-
-\brief This is the main function for the iSCSI server application.
-
-\msc
-
-	c_runtime [label="C Runtime"],libuns,dpdk [label="DPDK"], iSCSI [label="iSCSI Server"];
-	c_runtime=>libuns [label="__msa_init()"];
-	libuns=>dpdk [label="rte_eal_init()"];
-	libuns<<dpdk;
-	c_runtime<<libuns;
-	c_runtime=>iSCSI [label="main()"];
-	iSCSI=>iSCSI [label="spdk_dpdk_framework_init()"];
-	iSCSI=>iSCSI [label="spdk_app_init()"];
-	iSCSI=>iSCSI [label="spdk_event_allocate()"];
-	iSCSI=>iSCSI [label="spdk_app_start()"];
-	iSCSI=>iSCSI [label="spdk_app_fini()"];
-	c_runtime<<iSCSI;
-
-\endmsc
-
-*/
-
 static void
 spdk_startup(spdk_event_t event)
 {
