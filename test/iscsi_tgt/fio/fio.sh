@@ -75,20 +75,15 @@ iscsiadm -m node --login -p $TARGET_IP:$PORT
 trap "iscsicleanup; process_core; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 sleep 1
-$fio_py 4096 1 randrw 5 verify
-$fio_py 131072 32 randrw 5 verify
+$fio_py 4096 1 randrw 1 verify
+$fio_py 131072 32 randrw 1 verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	VERIFY_TIME=300
-else
-	VERIFY_TIME=10
-fi
-$fio_py 4096 1 write $VERIFY_TIME verify
+	$fio_py 4096 1 write 300 verify
 
-# Run the running_config test which will generate a config file from the
-#  running iSCSI target, then kill and restart the iSCSI target using the
-#  generated config file
-if [ $RUN_NIGHTLY -eq 1 ]; then
+	# Run the running_config test which will generate a config file from the
+	#  running iSCSI target, then kill and restart the iSCSI target using the
+	#  generated config file
 	running_config
 fi
 
