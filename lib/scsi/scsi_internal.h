@@ -61,14 +61,6 @@ enum {
 	SPDK_SCSI_TASK_PENDING,
 };
 
-#define OWNER_SCSI_DEV		0x10
-
-#define OBJECT_SCSI_TASK	0x10
-
-#define TRACE_GROUP_SCSI	0x2
-#define TRACE_SCSI_TASK_DONE	SPDK_TPOINT_ID(TRACE_GROUP_SCSI, 0x0)
-#define TRACE_SCSI_TASK_START	SPDK_TPOINT_ID(TRACE_GROUP_SCSI, 0x1)
-
 struct spdk_lun_db_entry {
 	struct spdk_scsi_lun *lun;
 	int claimed;
