@@ -51,11 +51,14 @@
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <rte_config.h>
 #include <rte_cycles.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_version.h>
+#include <rte_memzone.h>
+#include <rte_eal.h>
 
 #ifdef SPDK_CONFIG_PCIACCESS
 #include <pciaccess.h>
@@ -99,6 +102,65 @@ nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
  * Free a memory buffer previously allocated with nvme_malloc.
  */
 #define nvme_free(buf)			rte_free(buf)
+
+/**
+ * Reserve a named, process shared memory zone with the given size,
+ *   socket_id and flags.
+ * Return a pointer to the allocated memory address. If the allocation
+ *   cannot be done, return NULL.
+ */
+static inline void *
+nvme_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
+{
+	const struct rte_memzone *mz = rte_memzone_reserve(name, len, socket_id, flags);
+
+	if (mz != NULL) {
+		return mz->addr;
+	} else {
+		return NULL;
+	}
+}
+
+/**
+ * Lookup the memory zone identified by the given name.
+ * Return a pointer to the reserved memory address. If the reservation
+ *   cannot be found, return NULL.
+ */
+static inline void *
+nvme_memzone_lookup(const char *name)
+{
+	const struct rte_memzone *mz = rte_memzone_lookup(name);
+
+	if (mz != NULL) {
+		return mz->addr;
+	} else {
+		return NULL;
+	}
+}
+
+/**
+ * Free the memory zone identified by the given name.
+ */
+static inline int
+nvme_memzone_free(const char *name)
+{
+	const struct rte_memzone *mz = rte_memzone_lookup(name);
+
+	if (mz != NULL) {
+		return rte_memzone_free(mz);
+	}
+
+	return -1;
+}
+
+/**
+ * Return true if the calling process is primary process
+ */
+static inline bool
+nvme_process_is_primary(void)
+{
+	return (rte_eal_process_type() == RTE_PROC_PRIMARY);
+}
 
 /**
  * Log or print a message from the NVMe driver.

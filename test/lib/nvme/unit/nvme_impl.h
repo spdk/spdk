@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <pthread.h>
 
 #include "spdk/nvme_spec.h"
@@ -117,6 +118,32 @@ nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint
 {
 	*addr = 0;
 	*size = 0;
+}
+
+static inline void *
+nvme_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
+{
+	return malloc(len);
+}
+
+static inline void *
+nvme_memzone_lookup(const char *name)
+{
+	assert(0);
+	return NULL;
+}
+
+static inline int
+nvme_memzone_free(const char *name)
+{
+	assert(0);
+	return 0;
+}
+
+static inline bool
+nvme_process_is_primary(void)
+{
+	return true;
 }
 
 #endif /* __NVME_IMPL_H__ */
