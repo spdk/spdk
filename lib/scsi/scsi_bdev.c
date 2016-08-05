@@ -1512,9 +1512,9 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 	switch (cdb[0]) {
 	case SPDK_SBC_READ_6:
 	case SPDK_SBC_WRITE_6:
-		lba = (uint32_t)cdb[1] << 16;
-		lba |= (uint32_t)cdb[2] << 8;
-		lba |= (uint32_t)cdb[3];
+		lba = (uint64_t)cdb[1] << 16;
+		lba |= (uint64_t)cdb[2] << 8;
+		lba |= (uint64_t)cdb[3];
 		xfer_len = cdb[4];
 		if (xfer_len == 0) {
 			xfer_len = 256;
