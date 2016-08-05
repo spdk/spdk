@@ -55,10 +55,10 @@ struct spdk_nvmf_probe_ctx {
 	struct spdk_nvmf_subsystem	*subsystem;
 	bool				any;
 	bool				found;
-	int				domain;
-	int				bus;
-	int				device;
-	int				function;
+	uint32_t			domain;
+	uint32_t			bus;
+	uint32_t			device;
+	uint32_t			function;
 };
 
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_DEFAULT 4
