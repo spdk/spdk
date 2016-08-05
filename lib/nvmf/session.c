@@ -223,6 +223,8 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		return;
 	}
 
+	conn->sq_head_max = cmd->sqsize;
+
 	if (cmd->qid == 0) {
 		conn->type = CONN_TYPE_AQ;
 

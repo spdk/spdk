@@ -534,7 +534,6 @@ spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
 {
 	int rc;
 	struct spdk_nvmf_conn		*conn = req->conn;
-	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_rdma_session	*rdma_sess;
 	struct spdk_nvmf_rdma_buf	*buf;
@@ -550,9 +549,10 @@ spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
 	}
 
 	/* Advance our sq_head pointer */
-	conn->sq_head++;
-	if (conn->sq_head == rdma_conn->max_queue_depth) {
+	if (conn->sq_head == conn->sq_head_max) {
 		conn->sq_head = 0;
+	} else {
+		conn->sq_head++;
 	}
 	rsp->sqhd = conn->sq_head;
 
@@ -579,9 +579,10 @@ spdk_nvmf_rdma_request_ack_completion(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 
 	/* Advance our sq_head pointer */
-	conn->sq_head++;
-	if (conn->sq_head == rdma_conn->max_queue_depth) {
+	if (conn->sq_head == conn->sq_head_max) {
 		conn->sq_head = 0;
+	} else {
+		conn->sq_head++;
 	}
 
 	rdma_conn->cur_queue_depth--;

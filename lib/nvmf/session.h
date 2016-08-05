@@ -56,6 +56,7 @@ struct spdk_nvmf_conn {
 	enum conn_type				type;
 
 	uint16_t				sq_head;
+	uint16_t				sq_head_max;
 
 	TAILQ_ENTRY(spdk_nvmf_conn) 		link;
 };
