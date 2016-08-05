@@ -432,6 +432,9 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		}
 
 		spdk_nvmf_subsystem_add_listener(subsystem, transport, traddr, trsvc);
+
+		free(traddr);
+		free(trsvc);
 	}
 
 	/* Parse Host sections */

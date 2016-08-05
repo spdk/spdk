@@ -174,8 +174,20 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	if (!listen_addr) {
 		return -1;
 	}
+
 	listen_addr->traddr = strdup(traddr);
+	if (!listen_addr->traddr) {
+		free(listen_addr);
+		return -1;
+	}
+
 	listen_addr->trsvc = strdup(trsvc);
+	if (!listen_addr->trsvc) {
+		free(listen_addr->traddr);
+		free(listen_addr);
+		return -1;
+	}
+
 	listen_addr->transport = transport;
 
 	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
@@ -194,6 +206,10 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_n
 		return -1;
 	}
 	host->nqn = strdup(host_nqn);
+	if (!host->nqn) {
+		free(host);
+		return -1;
+	}
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 	subsystem->num_hosts++;
