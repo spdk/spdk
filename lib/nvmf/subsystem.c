@@ -255,6 +255,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 				entry = &disc_log->entries[numrec];
 				entry->portid = numrec;
 				entry->cntlid = 0xffff;
+				entry->asqsz = g_nvmf_tgt.max_queue_depth;
 				entry->subtype = subsystem->subtype;
 				snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
