@@ -220,8 +220,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
-	attr.cap.max_send_wr	= rdma_conn->max_queue_depth * 2; /* SEND, READ, and WRITE operations */
-	attr.cap.max_recv_wr	= rdma_conn->max_queue_depth; /* RECV operations */
+	attr.cap.max_send_wr	= max_queue_depth * 2; /* SEND, READ, and WRITE operations */
+	attr.cap.max_recv_wr	= max_queue_depth; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
