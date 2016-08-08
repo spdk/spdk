@@ -522,7 +522,7 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 	}
 }
 
-struct spdk_iscsi_pdu *spdk_get_pdu()
+struct spdk_iscsi_pdu *spdk_get_pdu(void)
 {
 	struct spdk_iscsi_pdu *pdu;
 	int rc;
