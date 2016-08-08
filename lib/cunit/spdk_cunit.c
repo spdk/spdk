@@ -33,6 +33,8 @@
 
 #include "spdk_cunit.h"
 
+#include <stdio.h>
+
 static int
 spdk_cunit_get_test_result(CU_pTest test)
 {
