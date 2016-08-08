@@ -610,18 +610,19 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 				 * Only print this message before we report the
 				 *  first dropped connection.
 				 */
-				printf("drop old connections %s by %s\n",
-				       conn->target->name, conn_match);
+				SPDK_ERRLOG("drop old connections %s by %s\n",
+					    conn->target->name, conn_match);
 			}
 
-			printf("exiting conn by %s(%s), ",
-			       xconn_match, xconn->initiator_addr);
-			if (xconn->sess != NULL)
-				printf("TSIH=%u, ", xconn->sess->tsih);
-			else
-				printf("TSIH=xx, ");
+			SPDK_ERRLOG("exiting conn by %s (%s)",
+				    xconn_match, xconn->initiator_addr);
+			if (xconn->sess != NULL) {
+				SPDK_TRACELOG(SPDK_TRACE_ISCSI, "TSIH=%u\n", xconn->sess->tsih);
+			} else {
+				SPDK_TRACELOG(SPDK_TRACE_ISCSI, "TSIH=xx\n");
+			}
 
-			printf("CID=%u\n", xconn->cid);
+			SPDK_TRACELOG(SPDK_TRACE_ISCSI, "CID=%u\n", xconn->cid);
 			xconn->state = ISCSI_CONN_STATE_EXITING;
 			num++;
 		}
@@ -629,8 +630,9 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 
 	pthread_mutex_unlock(&g_conns_mutex);
 
-	if (num != 0)
-		printf("exiting %d conns\n", num);
+	if (num != 0) {
+		SPDK_ERRLOG("exiting %d conns\n", num);
+	}
 
 	return 0;
 }

@@ -110,8 +110,8 @@ spdk_iscsi_tgt_node_allow_ipv6(const char *netmask, const char *addr)
 	}
 
 #if 0
-	printf("input %s\n", addr);
-	printf("mask  %s / %d\n", mask, bits);
+	SPDK_TRACELOG(SPDK_TRACE_ISCSI, "input %s\n", addr);
+	SPDK_TRACELOG(SPDK_TRACE_ISCSI, "mask  %s / %d\n", mask, bits);
 #endif
 
 	/* presentation to network order binary */

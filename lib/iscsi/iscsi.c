@@ -957,7 +957,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			     tgtmd5, SPDK_MD5DIGEST_LEN);
 
 #if 0
-		printf("tgtmd5=%s, resmd5=%s\n", in_val, response);
+		SPDK_TRACELOG(SPDK_TRACE_ISCSI, "tgtmd5=%s, resmd5=%s\n", in_val, response);
 		spdk_dump("tgtmd5", tgtmd5, SPDK_MD5DIGEST_LEN);
 		spdk_dump("resmd5", resmd5, SPDK_MD5DIGEST_LEN);
 #endif
@@ -4659,7 +4659,7 @@ spdk_append_iscsi_sess(struct spdk_iscsi_conn *conn,
 		return -1;
 	}
 
-	printf("Connections(tsih %d): %d\n", sess->tsih, sess->connections);
+	SPDK_TRACELOG(SPDK_TRACE_ISCSI, "Connections (tsih %d): %d\n", sess->tsih, sess->connections);
 	conn->sess = sess;
 
 	/*
