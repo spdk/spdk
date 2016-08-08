@@ -105,18 +105,18 @@ static struct rte_timer g_start_up_timer;
 static void
 spdk_iscsi_config_dump_section(FILE *fp)
 {
-	char authmethod[32] = "None";
+	const char *authmethod = "None";
 	char authgroup[32] = "None";
 
 	if (NULL == fp)
 		return;
 
 	if (g_spdk_iscsi.req_discovery_auth)
-		strcpy(authmethod, "CHAP");
+		authmethod = "CHAP";
 	else if (g_spdk_iscsi.req_discovery_auth_mutual)
-		strcpy(authmethod, "CHAP Mutual");
+		authmethod = "CHAP Mutual";
 	else if (!g_spdk_iscsi.no_discovery_auth)
-		strcpy(authmethod, "Auto");
+		authmethod = "Auto";
 
 	if (g_spdk_iscsi.discovery_auth_group)
 		sprintf(authgroup, "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
@@ -278,26 +278,26 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 		}
 
 		if (dev) {
-			char authmethod[32] = "None";
+			const char *authmethod = "None";
 			char authgroup[32] = "None";
-			char usedigest[32] = "Auto";
+			const char *usedigest = "Auto";
 
 			if (target->auth_chap_disabled)
-				strcpy(authmethod, "None");
+				authmethod = "None";
 			else if (!target->auth_chap_required)
-				strcpy(authmethod, "Auto");
+				authmethod = "Auto";
 			else if (target->auth_chap_mutual)
-				strcpy(authmethod, "CHAP Mutual");
+				authmethod = "CHAP Mutual";
 			else
-				strcpy(authmethod, "CHAP");
+				authmethod = "CHAP";
 
 			if (target->auth_group > 0)
 				sprintf(authgroup, "AuthGroup%d", target->auth_group);
 
 			if (target->header_digest)
-				strcpy(usedigest, "Header");
+				usedigest = "Header";
 			else if (target->data_digest)
-				strcpy(usedigest, "Data");
+				usedigest = "Data";
 
 			fprintf(fp, TARGET_NODE_AUTH_TMPL,
 				authmethod, authgroup, usedigest);
