@@ -196,7 +196,7 @@ retry:
 				case EADDRNOTAVAIL:
 					SPDK_ERRLOG("IP address %s not available. "
 						    "Verify IP address in config file "
-						    "and make sure unbind script is "
+						    "and make sure setup script is "
 						    "run before starting spdk app.\n", ip);
 				/* fallthrough */
 				default:

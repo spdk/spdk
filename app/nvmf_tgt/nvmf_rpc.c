@@ -33,7 +33,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <pciaccess.h>
+
 #include "nvmf_tgt.h"
 #include "nvmf/subsystem.h"
 #include "nvmf/transport.h"

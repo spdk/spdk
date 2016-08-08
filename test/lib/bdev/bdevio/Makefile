@@ -56,7 +56,7 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS)
 
-LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) $(DPDK_LIB) -lcunit
+LIBS += $(SPDK_LIBS) $(DPDK_LIB) -lcunit
 
 all : $(APP)
 

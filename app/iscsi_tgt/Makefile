@@ -64,7 +64,7 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
 
 LIBS += -Wl,--whole-archive $(SPDK_LIBS) -Wl,--no-whole-archive
-LIBS += -lcrypto $(PCIACCESS_LIB) $(DPDK_LIB)
+LIBS += -lcrypto $(DPDK_LIB)
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS)
 

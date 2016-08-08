@@ -60,7 +60,6 @@ struct ioat_device {
 };
 
 static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
-static int g_unbindfromkernel = 0;
 static pthread_mutex_t g_ioat_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct ioat_whitelist {
@@ -262,26 +261,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 		return false;
 	}
 
-	if (spdk_pci_device_has_non_uio_driver(pci_dev)) {
-		if (g_unbindfromkernel && ctx->num_whitelist_devices > 0) {
-			if (spdk_pci_device_switch_to_uio_driver(pci_dev)) {
-				return false;
-			}
-		} else {
-			SPDK_WARNLOG("Device has kernel ioat driver attached, skipping...\n");
-			return false;
-		}
-	} else {
-		if (spdk_pci_device_bind_uio_driver(pci_dev)) {
-			SPDK_WARNLOG("Device %s %d:%d:%d bind to uio driver failed\n",
-				     spdk_pci_device_get_device_name(pci_dev),
-				     spdk_pci_device_get_bus(pci_dev),
-				     spdk_pci_device_get_dev(pci_dev),
-				     spdk_pci_device_get_func(pci_dev));
-			return false;
-		}
-	}
-
 	/* Claim the device in case conflict with other process */
 	if (spdk_pci_device_claim(pci_dev) != 0) {
 		return false;
@@ -331,13 +310,6 @@ copy_engine_ioat_init(void)
 			       &probe_ctx.whitelist[probe_ctx.num_whitelist_devices].dev,
 			       &probe_ctx.whitelist[probe_ctx.num_whitelist_devices].func);
 			probe_ctx.num_whitelist_devices++;
-		}
-
-		val = spdk_conf_section_get_val(sp, "UnbindFromKernel");
-		if (val != NULL) {
-			if (!strcmp(val, "Yes")) {
-				g_unbindfromkernel = 1;
-			}
 		}
 	}
 

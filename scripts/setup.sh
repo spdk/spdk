@@ -56,7 +56,7 @@ function configure_linux {
 	# IOAT
 	TMP=`mktemp`
 	#collect all the device_id info of ioat devices.
-	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/lib/ioat/ioat_pci.h \
+	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
 	for dev_id in `cat $TMP`; do
@@ -110,7 +110,7 @@ function reset_linux {
 	# IOAT
 	TMP=`mktemp`
 	#collect all the device_id info of ioat devices.
-	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/lib/ioat/ioat_pci.h \
+	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
 	modprobe ioatdma || true
@@ -127,10 +127,22 @@ function reset_linux {
 
 function configure_freebsd {
 	TMP=`mktemp`
+
+	# NVMe
+	GREP_STR="class=0x010802"
+
+	# IOAT
+	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}' > $TMP
+	for dev_id in `cat $TMP`; do
+		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
+	done
+
 	AWK_PROG="{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}"
 	echo $AWK_PROG > $TMP
-	PCICONF=`pciconf -l | grep 'class=0x010802\|^ioat'`
-	BDFS=`echo $PCICONF | awk -F: -f $TMP`
+
+	BDFS=`pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP`
+
 	kldunload nic_uio.ko || true
 	kenv hw.nic_uio.bdfs=$BDFS
 	kldload nic_uio.ko

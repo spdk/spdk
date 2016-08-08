@@ -96,9 +96,6 @@
   BDF 0000:00:00.0 Nvme0
   BDF 0000:01:00.0 Nvme1
 
-  # If 'Yes', iscsi will automatically unbind the kernel NVMe driver from
-  # discovered devices and rebind it to the uio driver.
-  UnbindFromKernel Yes
   # The following two arguments allow the user to partition NVMe namespaces
   # into multiple LUNs
   NvmeLunsPerNs 1
@@ -126,13 +123,10 @@
 # Users may not want to use offload even it is available.
 # Users may use the whitelist to initialize specified devices, IDS
 #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.
-# Users can set the option "UnbindFromKernel Yes", iscsi will automatically
-#  unbind from the Ioat driver and bind the device to uio driver.
 [Ioat]
   Disable Yes
   Whitelist 00:04.0
   Whitelist 00:04.1
-  UnbindFromKernel Yes
 
 # Users must change this section to match the /dev/sdX devices to be
 #  exported as iSCSI LUNs. The devices are accessed using Linux AIO.

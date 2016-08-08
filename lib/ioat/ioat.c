@@ -32,7 +32,7 @@
  */
 
 #include "ioat_internal.h"
-#include "ioat_pci.h"
+#include "spdk/pci.h"
 
 #include "spdk/log.h"
 
@@ -92,9 +92,10 @@ ioat_map_pci_bar(struct spdk_ioat_chan *ioat)
 {
 	int regs_bar, rc;
 	void *addr;
+	uint64_t phys_addr, size;
 
 	regs_bar = 0;
-	rc = ioat_pcicfg_map_bar(ioat->device, regs_bar, 0, &addr);
+	rc = spdk_pci_device_map_bar(ioat->device, regs_bar, &addr, &phys_addr, &size);
 	if (rc != 0 || addr == NULL) {
 		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n",
 			    rc);
@@ -113,7 +114,7 @@ ioat_unmap_pci_bar(struct spdk_ioat_chan *ioat)
 	void *addr = (void *)ioat->regs;
 
 	if (addr) {
-		rc = ioat_pcicfg_unmap_bar(ioat->device, 0, addr);
+		rc = spdk_pci_device_unmap_bar(ioat->device, 0, addr);
 	}
 	return rc;
 }
@@ -368,7 +369,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	uint8_t xfercap, version;
 	uint64_t status;
 	int i, num_descriptors;
-	uint64_t comp_update_bus_addr;
+	uint64_t comp_update_bus_addr = 0;
 
 	if (ioat_map_pci_bar(ioat) != 0) {
 		SPDK_ERRLOG("ioat_map_pci_bar() failed\n");
@@ -471,9 +472,9 @@ ioat_attach(void *device)
 	}
 
 	/* Enable PCI busmaster. */
-	ioat_pcicfg_read32(device, &cmd_reg, 4);
+	spdk_pci_device_cfg_read32(device, &cmd_reg, 4);
 	cmd_reg |= 0x4;
-	ioat_pcicfg_write32(device, cmd_reg, 4);
+	spdk_pci_device_cfg_write32(device, cmd_reg, 4);
 
 	ioat->device = device;
 
@@ -542,7 +543,7 @@ spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_cb a
 	enum_ctx.attach_cb = attach_cb;
 	enum_ctx.cb_ctx = cb_ctx;
 
-	rc = ioat_pci_enumerate(ioat_enum_cb, &enum_ctx);
+	rc = spdk_pci_enumerate(SPDK_PCI_DEVICE_IOAT, ioat_enum_cb, &enum_ctx);
 
 	pthread_mutex_unlock(&g_ioat_driver.lock);
 

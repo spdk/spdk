@@ -43,199 +43,170 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#ifdef SPDK_CONFIG_PCIACCESS
-#include <pciaccess.h>
-/* When using libpciaccess, struct spdk_pci_device * is actually struct pci_device * internally. */
-#define spdk_pci_device pci_device
-#else
+#include <rte_config.h>
 #include <rte_pci.h>
-/* When using DPDK PCI, struct spdk_pci_device * is actually struct rte_pci_device * internally. */
+#include <rte_version.h>
+
 #define spdk_pci_device rte_pci_device
-#endif
 
 #ifdef __FreeBSD__
 #include <sys/pciio.h>
 #endif
 
 #include "spdk/pci.h"
+#include "spdk/pci_ids.h"
 
 #define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
-#ifndef PCI_PRI_FMT /* This is defined by rte_pci.h when SPDK_CONFIG_PCIACCESS is not set */
-#define PCI_PRI_FMT		"%04x:%02x:%02x.%1u"
-#endif
-
 #define SPDK_PCI_PATH_MAX	256
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
-#define PCI_UIO_DRIVER		"uio_pci_generic"
 
-#ifdef SPDK_CONFIG_PCIACCESS
+struct spdk_pci_enum_ctx {
+	struct rte_pci_driver	driver;
+	spdk_pci_enum_cb	enum_cb;
+	void 			*enum_ctx;
+};
 
-/*
- * libpciaccess wrapper functions
- */
+static struct rte_pci_id nvme_pci_driver_id[] = {
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
+	{
+		.class_id = SPDK_PCI_CLASS_NVME,
+		.vendor_id = PCI_ANY_ID,
+		.device_id = PCI_ANY_ID,
+		.subsystem_vendor_id = PCI_ANY_ID,
+		.subsystem_device_id = PCI_ANY_ID,
+	},
+#else
+	{RTE_PCI_DEVICE(0x8086, 0x0953)},
+#endif
+	{ .vendor_id = 0, /* sentinel */ },
+};
 
-static pthread_mutex_t g_pci_init_mutex = PTHREAD_MUTEX_INITIALIZER;
-static bool g_pci_initialized = false;
+#define SPDK_IOAT_PCI_DEVICE(DEVICE_ID) RTE_PCI_DEVICE(SPDK_PCI_VID_INTEL, DEVICE_ID)
+static struct rte_pci_id ioat_driver_id[] = {
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB0)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB1)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB2)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB3)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB4)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB5)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB6)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB7)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB8)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB0)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB1)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB2)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB3)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB4)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB5)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB6)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB7)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB8)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB9)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW0)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW2)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW3)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW4)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW5)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW6)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW7)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW8)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW9)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD0)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD1)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD2)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD3)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE0)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE1)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE2)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE3)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX0)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX1)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX2)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX3)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX4)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX5)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX6)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX7)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX8)},
+	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX9)},
+	{ .vendor_id = 0, /* sentinel */ },
+};
 
 static int
-spdk_pci_init(void)
+spdk_pci_device_init(struct rte_pci_driver *driver,
+		     struct rte_pci_device *device)
 {
+	struct spdk_pci_enum_ctx *ctx = (struct spdk_pci_enum_ctx *)driver;
+
+	if (device->kdrv == RTE_KDRV_VFIO) {
+		/*
+		 * TODO: This is a workaround for an issue where the device is not ready after VFIO reset.
+		 * Figure out what is actually going wrong and remove this sleep.
+		 */
+		usleep(500 * 1000);
+	}
+
+	return ctx->enum_cb(ctx->enum_ctx, (struct spdk_pci_device *)device);
+}
+
+static int
+spdk_pci_device_fini(struct rte_pci_device *device)
+{
+	return 0;
+}
+
+int
+spdk_pci_enumerate(enum spdk_pci_device_type type,
+		   spdk_pci_enum_cb enum_cb,
+		   void *enum_ctx)
+{
+	struct spdk_pci_enum_ctx ctx = {};
 	int rc;
 
-	pthread_mutex_lock(&g_pci_init_mutex);
+	ctx.enum_cb = enum_cb;
+	ctx.enum_ctx = enum_ctx;
+	ctx.driver.devinit = spdk_pci_device_init;
+	ctx.driver.devuninit = spdk_pci_device_fini;
+	ctx.driver.drv_flags = RTE_PCI_DRV_NEED_MAPPING;
 
-	if (!g_pci_initialized) {
-		rc = pci_system_init();
-		if (rc == 0) {
-			g_pci_initialized = true;
-		}
+	if (type == SPDK_PCI_DEVICE_NVME) {
+		ctx.driver.name = "SPDK NVMe";
+		ctx.driver.id_table = nvme_pci_driver_id;
+	} else if (type == SPDK_PCI_DEVICE_IOAT) {
+		ctx.driver.id_table = ioat_driver_id;
+		ctx.driver.name = "SPDK IOAT";
 	} else {
-		rc = 0;
+		return -1;
 	}
 
-	pthread_mutex_unlock(&g_pci_init_mutex);
+	rte_eal_pci_register(&ctx.driver);
+	rc = rte_eal_pci_probe();
+	rte_eal_pci_unregister(&ctx.driver);
 
 	return rc;
 }
 
-uint16_t
-spdk_pci_device_get_domain(struct spdk_pci_device *dev)
+int
+spdk_pci_device_map_bar(struct spdk_pci_device *device, uint32_t bar,
+			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
 {
-	return dev->domain;
-}
+	struct rte_pci_device *dev = device;
 
-uint8_t
-spdk_pci_device_get_bus(struct spdk_pci_device *dev)
-{
-	return dev->bus;
-}
+	*mapped_addr = dev->mem_resource[bar].addr;
+	*phys_addr = (uint64_t)dev->mem_resource[bar].phys_addr;
+	*size = (uint64_t)dev->mem_resource[bar].len;
 
-
-uint8_t
-spdk_pci_device_get_dev(struct spdk_pci_device *dev)
-{
-	return dev->dev;
-}
-
-uint8_t
-spdk_pci_device_get_func(struct spdk_pci_device *dev)
-{
-	return dev->func;
-}
-
-uint16_t
-spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
-{
-	return dev->vendor_id;
-}
-
-uint16_t
-spdk_pci_device_get_device_id(struct spdk_pci_device *dev)
-{
-	return dev->device_id;
-}
-
-uint16_t
-spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev)
-{
-	return dev->subvendor_id;
-}
-
-uint16_t
-spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
-{
-	return dev->subdevice_id;
-}
-
-uint32_t
-spdk_pci_device_get_class(struct spdk_pci_device *dev)
-{
-	return dev->device_class;
-}
-
-const char *
-spdk_pci_device_get_device_name(struct spdk_pci_device *dev)
-{
-	return pci_device_get_device_name(dev);
+	return 0;
 }
 
 int
-spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
+spdk_pci_device_unmap_bar(struct spdk_pci_device *device, uint32_t bar, void *addr)
 {
-	return pci_device_cfg_read_u8(dev, value, offset);
+	return 0;
 }
-
-int
-spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset)
-{
-	return pci_device_cfg_write_u8(dev, value, offset);
-}
-
-int
-spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset)
-{
-	return pci_device_cfg_read_u16(dev, value, offset);
-}
-
-int
-spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset)
-{
-	return pci_device_cfg_write_u16(dev, value, offset);
-}
-
-int
-spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset)
-{
-	return pci_device_cfg_read_u32(dev, value, offset);
-}
-
-int
-spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset)
-{
-	return pci_device_cfg_write_u32(dev, value, offset);
-}
-
-int
-spdk_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
-{
-	struct pci_device_iterator *pci_dev_iter;
-	struct pci_device *pci_dev;
-	struct pci_slot_match match;
-	int rc;
-
-	rc = spdk_pci_init();
-	if (rc != 0) {
-		return rc;
-	}
-
-	match.domain = PCI_MATCH_ANY;
-	match.bus = PCI_MATCH_ANY;
-	match.dev = PCI_MATCH_ANY;
-	match.func = PCI_MATCH_ANY;
-
-	pci_dev_iter = pci_slot_match_iterator_create(&match);
-
-	rc = 0;
-	while ((pci_dev = pci_device_next(pci_dev_iter))) {
-		pci_device_probe(pci_dev);
-		if (enum_cb(enum_ctx, pci_dev)) {
-			rc = -1;
-		}
-	}
-
-	pci_iterator_destroy(pci_dev_iter);
-
-	return rc;
-}
-
-#else /* !SPDK_CONFIG_PCIACCESS */
-
-/*
- * DPDK PCI wrapper functions
- */
 
 static int
 pci_device_get_u32(struct spdk_pci_device *dev, const char *file, uint32_t *val)
@@ -374,9 +345,6 @@ spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_
 	return rte_eal_pci_write_config(dev, &value, 4, offset) == 4 ? 0 : -1;
 }
 
-#endif /* !SPDK_CONFIG_PCIACCESS */
-
-
 int
 spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len)
 {
@@ -418,160 +386,6 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 }
 
 #ifdef __linux__
-int
-spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
-{
-	char linkname[SPDK_PCI_PATH_MAX];
-	char driver[SPDK_PCI_PATH_MAX];
-	ssize_t driver_len;
-	char *driver_begin;
-
-	snprintf(linkname, sizeof(linkname),
-		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/driver",
-		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
-		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev));
-
-	driver_len = readlink(linkname, driver, sizeof(driver));
-
-	if (driver_len < 0 || driver_len >= SPDK_PCI_PATH_MAX) {
-		return 0;
-	}
-
-	driver[driver_len] = '\0'; /* readlink() doesn't null terminate, so we have to */
-
-	driver_begin = strrchr(driver, '/');
-	if (driver_begin) {
-		/* Advance to the character after the slash */
-		driver_begin++;
-	} else {
-		/* This shouldn't normally happen - driver should be a relative path with slashes */
-		driver_begin = driver;
-	}
-
-	return (strncmp(driver_begin, "uio_", 4) != 0 &&
-		strcmp(driver_begin, "vfio-pci") != 0);
-}
-
-
-int
-spdk_pci_device_unbind_kernel_driver(struct spdk_pci_device *dev)
-{
-	int n;
-	FILE *fd;
-	char filename[SPDK_PCI_PATH_MAX];
-	char buf[256];
-
-	snprintf(filename, sizeof(filename),
-		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/driver/unbind",
-		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
-		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev));
-
-	fd = fopen(filename, "w");
-	if (!fd)
-		return 0;
-
-	n = snprintf(buf, sizeof(buf), PCI_PRI_FMT,
-		     spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
-		     spdk_pci_device_get_dev(dev), spdk_pci_device_get_dev(dev));
-
-	if (fwrite(buf, n, 1, fd) == 0)
-		goto error;
-
-	fclose(fd);
-	return 0;
-
-error:
-	fclose(fd);
-	return -1;
-}
-
-static int
-check_modules(const char *driver_name)
-{
-	FILE *fd;
-	const char *proc_modules = "/proc/modules";
-	char buffer[256];
-
-	fd = fopen(proc_modules, "r");
-	if (!fd)
-		return -1;
-
-	while (fgets(buffer, sizeof(buffer), fd)) {
-		if (strstr(buffer, driver_name) == NULL)
-			continue;
-		else {
-			fclose(fd);
-			return 0;
-		}
-	}
-	fclose(fd);
-
-	return -1;
-}
-
-int
-spdk_pci_device_bind_uio_driver(struct spdk_pci_device *dev)
-{
-	int err, n;
-	FILE *fd;
-	char filename[SPDK_PCI_PATH_MAX];
-	char buf[256];
-	const char *driver_name = PCI_UIO_DRIVER;
-
-	err = check_modules(driver_name);
-	if (err < 0) {
-		fprintf(stderr, "No %s module loaded\n", driver_name);
-		return err;
-	}
-
-	snprintf(filename, sizeof(filename),
-		 SYSFS_PCI_DRIVERS "/" "%s" "/new_id", driver_name);
-
-	fd = fopen(filename, "w");
-	if (!fd) {
-		return -1;
-	}
-
-	n = snprintf(buf, sizeof(buf), "%04x %04x",
-		     spdk_pci_device_get_vendor_id(dev),
-		     spdk_pci_device_get_device_id(dev));
-
-	if (fwrite(buf, n, 1, fd) == 0)
-		goto error;
-
-	fclose(fd);
-	return 0;
-
-error:
-	fclose(fd);
-	return -1;
-}
-
-int
-spdk_pci_device_switch_to_uio_driver(struct spdk_pci_device *dev)
-{
-	if (spdk_pci_device_unbind_kernel_driver(dev)) {
-		fprintf(stderr, "Device %d:%d:%d unbind from "
-			"kernel driver failed\n",
-			spdk_pci_device_get_bus(dev),
-			spdk_pci_device_get_dev(dev),
-			spdk_pci_device_get_func(dev));
-		return -1;
-	}
-	if (spdk_pci_device_bind_uio_driver(dev)) {
-		fprintf(stderr, "Device %d:%d:%d bind to "
-			"uio driver failed\n",
-			spdk_pci_device_get_bus(dev),
-			spdk_pci_device_get_dev(dev),
-			spdk_pci_device_get_func(dev));
-		return -1;
-	}
-	printf("Device %d:%d:%d bind to uio driver success\n",
-	       spdk_pci_device_get_bus(dev), spdk_pci_device_get_dev(dev),
-	       spdk_pci_device_get_func(dev));
-	return 0;
-}
-
 int
 spdk_pci_device_claim(struct spdk_pci_device *dev)
 {
@@ -627,78 +441,6 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 #endif /* __linux__ */
 
 #ifdef __FreeBSD__
-int
-spdk_pci_device_has_non_uio_driver(struct spdk_pci_device *dev)
-{
-	struct pci_conf_io	configsel;
-	struct pci_match_conf	pattern;
-	struct pci_conf		conf;
-	int			fd;
-
-	memset(&pattern, 0, sizeof(pattern));
-	pattern.pc_sel.pc_domain = spdk_pci_device_get_domain(dev);
-	pattern.pc_sel.pc_bus = spdk_pci_device_get_bus(dev);
-	pattern.pc_sel.pc_dev = spdk_pci_device_get_dev(dev);
-	pattern.pc_sel.pc_func = spdk_pci_device_get_func(dev);
-	pattern.flags = PCI_GETCONF_MATCH_DOMAIN |
-			PCI_GETCONF_MATCH_BUS |
-			PCI_GETCONF_MATCH_DEV |
-			PCI_GETCONF_MATCH_FUNC;
-
-	memset(&configsel, 0, sizeof(configsel));
-	configsel.match_buf_len = sizeof(conf);
-	configsel.matches = &conf;
-	configsel.num_patterns = 1;
-	configsel.pat_buf_len = sizeof(pattern);
-	configsel.patterns = &pattern;
-
-	fd = open("/dev/pci", O_RDONLY, 0);
-	if (fd < 0) {
-		fprintf(stderr, "could not open /dev/pci\n");
-		return -1;
-	}
-
-	if (ioctl(fd, PCIOCGETCONF, &configsel) == -1) {
-		fprintf(stderr, "ioctl(PCIOCGETCONF) failed\n");
-		close(fd);
-		return -1;
-	}
-
-	close(fd);
-
-	if (configsel.num_matches != 1) {
-		fprintf(stderr, "could not find specified device\n");
-		return -1;
-	}
-
-	if (conf.pd_name[0] == '\0' || !strcmp(conf.pd_name, "nic_uio")) {
-		return 0;
-	} else {
-		return 1;
-	}
-}
-
-int
-spdk_pci_device_unbind_kernel_driver(struct spdk_pci_device *dev)
-{
-	/* TODO */
-	return 0;
-}
-
-int
-spdk_pci_device_bind_uio_driver(struct spdk_pci_device *dev)
-{
-	/* TODO */
-	return 0;
-}
-
-int
-spdk_pci_device_switch_to_uio_driver(struct spdk_pci_device *dev)
-{
-	/* TODO */
-	return 0;
-}
-
 int
 spdk_pci_device_claim(struct spdk_pci_device *dev)
 {

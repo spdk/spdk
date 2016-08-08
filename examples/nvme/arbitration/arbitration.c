@@ -869,17 +869,6 @@ register_workers(void)
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (spdk_pci_device_has_non_uio_driver(dev)) {
-		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
-		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
-			spdk_pci_device_get_domain(dev),
-			spdk_pci_device_get_bus(dev),
-			spdk_pci_device_get_dev(dev),
-			spdk_pci_device_get_func(dev));
-		fprintf(stderr, " skipping...\n");
-		return false;
-	}
-
 	/* Update with user specified arbitration configuration */
 	opts->arb_mechanism = g_arbitration.arbitration_mechanism;
 

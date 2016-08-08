@@ -149,12 +149,6 @@ the kernel to avoid interrupts and context switching.
   BDF 0000:00:00.0 Nvme0
   BDF 0000:01:00.0 Nvme1
 
-  # Users can set the option "UnbindFromKernel Yes", SPDK will unbind all NVMe
-  #  devices from kernel driver and bind them to the uio_pci_generic driver.
-  #  The purpose is to prevent the case where NVMe driver is loaded while iscsi
-  #  is running.
-  UnbindFromKernel Yes
-
   # SPDK supports partitioning each nvme card into multiple LUNs
   #  through the NvmeLunsPerNs parameter. If NvmeLunsPerNs is specified,
   #  then the size of the nvme card is split up equally only if LunSizeinMB

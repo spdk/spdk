@@ -341,11 +341,8 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 	    found_bus == ctx->bus &&
 	    found_dev == ctx->device &&
 	    found_func == ctx->function) {
-		if (!spdk_pci_device_has_non_uio_driver(dev)) {
-			ctx->found = true;
-			return true;
-		}
-		SPDK_ERRLOG("Requested device is still bound to the kernel. Unbind your NVMe devices first.\n");
+		ctx->found = true;
+		return true;
 	}
 
 	return false;

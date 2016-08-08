@@ -45,7 +45,7 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/ioat/libspdk_ioat.a \
 	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
 	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 
-LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB) $(DPDK_LIB)
+LIBS += $(SPDK_LIBS) $(DPDK_LIB)
 
 all: $(APP)
 

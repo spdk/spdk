@@ -93,10 +93,6 @@ LDFLAGS += --coverage
 endif
 endif
 
-ifeq ($(CONFIG_PCIACCESS), y)
-PCIACCESS_LIB=-lpciaccess
-endif
-
 CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
 CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
 

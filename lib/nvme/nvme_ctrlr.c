@@ -982,17 +982,19 @@ nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	/* controller memory buffer offset from BAR in Bytes */
 	offset = unit_size * cmbloc.bits.ofst;
 
-	nvme_pcicfg_get_bar_addr_len(ctrlr->devhandle, bir, &bar_phys_addr, &bar_size);
-
-	if (offset > bar_size)
+	rc = spdk_pci_device_map_bar(ctrlr->devhandle, bir, &addr,
+				     &bar_phys_addr, &bar_size);
+	if ((rc != 0) || addr == NULL) {
 		goto exit;
+	}
 
-	if (size > bar_size - offset)
+	if (offset > bar_size) {
 		goto exit;
+	}
 
-	rc = nvme_pcicfg_map_bar_write_combine(ctrlr->devhandle, bir, &addr);
-	if ((rc != 0) || addr == NULL)
+	if (size > bar_size - offset) {
 		goto exit;
+	}
 
 	ctrlr->cmb_bar_virt_addr = addr;
 	ctrlr->cmb_bar_phys_addr = bar_phys_addr;
@@ -1019,7 +1021,7 @@ nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (addr) {
 		cmbloc.raw = nvme_mmio_read_4(ctrlr, cmbloc.raw);
-		rc = nvme_pcicfg_unmap_bar(ctrlr->devhandle, cmbloc.bits.bir, addr);
+		rc = spdk_pci_device_unmap_bar(ctrlr->devhandle, cmbloc.bits.bir, addr);
 	}
 	return rc;
 }
@@ -1047,8 +1049,10 @@ nvme_ctrlr_allocate_bars(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
 	void *addr;
+	uint64_t phys_addr, size;
 
-	rc = nvme_pcicfg_map_bar(ctrlr->devhandle, 0, 0 /* writable */, &addr);
+	rc = spdk_pci_device_map_bar(ctrlr->devhandle, 0, &addr,
+				     &phys_addr, &size);
 	ctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
 	if ((ctrlr->regs == NULL) || (rc != 0)) {
 		SPDK_ERRLOG("nvme_pcicfg_map_bar failed with rc %d or bar %p\n",
@@ -1074,7 +1078,7 @@ nvme_ctrlr_free_bars(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (addr) {
-		rc = nvme_pcicfg_unmap_bar(ctrlr->devhandle, 0, addr);
+		rc = spdk_pci_device_unmap_bar(ctrlr->devhandle, 0, addr);
 	}
 	return rc;
 }
@@ -1114,9 +1118,9 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	}
 
 	/* Enable PCI busmaster and disable INTx */
-	nvme_pcicfg_read32(devhandle, &cmd_reg, 4);
-	cmd_reg |= 0x0404;
-	nvme_pcicfg_write32(devhandle, cmd_reg, 4);
+	spdk_pci_device_cfg_read32(devhandle, &cmd_reg, 4);
+	cmd_reg |= 0x404;
+	spdk_pci_device_cfg_write32(devhandle, cmd_reg, 4);
 
 	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
 

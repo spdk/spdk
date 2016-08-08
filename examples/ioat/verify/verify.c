@@ -210,11 +210,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	       spdk_pci_device_get_vendor_id(pci_dev), spdk_pci_device_get_device_id(pci_dev),
 	       spdk_pci_device_get_device_name(pci_dev));
 
-	if (spdk_pci_device_has_non_uio_driver(pci_dev)) {
-		printf("Device has non-uio kernel driver, skipping...\n");
-		return false;
-	}
-
 	return true;
 }
 
@@ -395,7 +390,7 @@ init(void)
 		return 1;
 	}
 
-	char *ealargs[] = {"verify", core_mask_conf, "-n 4", "--no-pci"};
+	char *ealargs[] = {"verify", core_mask_conf, "-n 4"};
 	if (rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs) < 0) {
 		free(core_mask_conf);
 		fprintf(stderr, "Could not init eal\n");

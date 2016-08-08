@@ -8,10 +8,9 @@ operations (config cycles and mapping BARs), virtual to physical
 address translation and allocating per I/O data structures.
 
 SPDK includes a default implementation of the nvme_impl API based
-on the Data Plane Development Kit ([DPDK](dpdk.org)) and
-libpciaccess.  This DPDK implementation can be found in
-lib/nvme/nvme_impl.h.  DPDK is currently supported on Linux and
-FreeBSD only.
+on the Data Plane Development Kit ([DPDK](dpdk.org)).  This DPDK
+implementation can be found in lib/nvme/nvme_impl.h.  DPDK is
+currently supported on Linux and FreeBSD only.
 
 Users who want to use SPDK on other operating system, or in
 userspace driver frameworks other than DPDK, will need to implement

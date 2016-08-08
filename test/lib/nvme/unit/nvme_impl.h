@@ -67,45 +67,6 @@ extern uint64_t g_ut_tsc;
 #define nvme_get_tsc()			(g_ut_tsc)
 #define nvme_get_tsc_hz()		(1000000)
 
-static inline int
-nvme_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
-{
-	/* TODO: enumeration is not needed in any unit tests yet, so it's not implemented */
-	return -1;
-}
-
-#define nvme_pcicfg_read32(handle, var, offset)		do { *(var) = 0xFFFFFFFFu; } while (0)
-#define nvme_pcicfg_write32(handle, var, offset)	do { (void)(var); } while (0)
-
-extern struct spdk_nvme_registers g_ut_nvme_regs;
-
-static inline
-int nvme_pcicfg_map_bar(void *pci_handle, int bar, int read_only, void **addr)
-{
-	*addr = &g_ut_nvme_regs;
-	return 0;
-}
-
-static inline int
-nvme_pcicfg_map_bar_write_combine(void *devhandle, uint32_t bar, void **addr)
-{
-	*addr = &g_ut_nvme_regs;
-	return 0;
-}
-
-static inline int
-nvme_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
-{
-	return 0;
-}
-
-static inline void
-nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint64_t *size)
-{
-	*addr = 0;
-	*size = 0;
-}
-
 static inline void *
 nvme_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
 {

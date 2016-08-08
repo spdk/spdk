@@ -191,7 +191,7 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 	ns->id = id;
 	ns->stripe_size = 0;
 
-	nvme_pcicfg_read32(ctrlr->devhandle, &pci_devid, 0);
+	spdk_pci_device_cfg_read32(ctrlr->devhandle, &pci_devid, 0);
 	if (pci_devid == INTEL_DC_P3X00_DEVID && ctrlr->cdata.vs[3] != 0) {
 		ns->stripe_size = (1 << ctrlr->cdata.vs[3]) * ctrlr->min_page_size;
 	}

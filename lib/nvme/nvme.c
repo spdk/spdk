@@ -291,7 +291,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
 
-	rc = nvme_pci_enumerate(nvme_enum_cb, &enum_ctx);
+	rc = spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, nvme_enum_cb, &enum_ctx);
 	/*
 	 * Keep going even if one or more nvme_attach() calls failed,
 	 *  but maintain the value of rc to signal errors when we return.

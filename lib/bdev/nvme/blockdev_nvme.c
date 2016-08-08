@@ -115,7 +115,6 @@ static int nvme_luns_per_ns = 1;
 static int nvme_controller_index = 0;
 static int LunSizeInMB = 0;
 static int num_controllers = -1;
-static int unbindfromkernel = 0;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
@@ -388,27 +387,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 		return false;
 	}
 
-	if (spdk_pci_device_has_non_uio_driver(pci_dev)) {
-		/* NVMe kernel driver case */
-		if (unbindfromkernel || ctx->num_whitelist_controllers > 0) {
-			if (spdk_pci_device_switch_to_uio_driver(pci_dev)) {
-				return false;
-			}
-		} else {
-			SPDK_WARNLOG("Device has kernel nvme driver attached, skipping...\n");
-			return false;
-		}
-	} else {
-		if (spdk_pci_device_bind_uio_driver(pci_dev)) {
-			SPDK_WARNLOG("Device %s %d:%d:%d bind to uio driver failed\n",
-				     spdk_pci_device_get_device_name(pci_dev),
-				     spdk_pci_device_get_bus(pci_dev),
-				     spdk_pci_device_get_dev(pci_dev),
-				     spdk_pci_device_get_func(pci_dev));
-			return false;
-		}
-	}
-
 	/* Claim the device in case conflict with other process */
 	if (spdk_pci_device_claim(pci_dev) != 0) {
 		return false;
@@ -486,13 +464,6 @@ nvme_library_init(void)
 	 *  controllers.
 	 */
 	num_controllers = spdk_conf_section_get_intval(sp, "NumControllers");
-
-	val = spdk_conf_section_get_val(sp, "UnbindFromKernel");
-	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			unbindfromkernel = 1;
-		}
-	}
 
 	/* Init the whitelist */
 	probe_ctx.num_whitelist_controllers = 0;
@@ -710,9 +681,7 @@ blockdev_nvme_get_spdk_running_config(FILE *fp)
 		"\n"
 		"# Users may change this to partition an NVMe namespace into multiple LUNs.\n"
 		"[Nvme]\n"
-		"  UnbindFromKernel %s\n"
 		"  NvmeLunsPerNs %d\n",
-		unbindfromkernel ? "Yes" : "No",
 		nvme_luns_per_ns);
 	if (num_controllers != -1) {
 		fprintf(fp, "  NumControllers %d\n", num_controllers);

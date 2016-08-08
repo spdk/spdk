@@ -36,7 +36,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
-#include <pciaccess.h>
 
 #include "rte_config.h"
 #include "rte_mempool.h"
@@ -109,13 +108,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 			continue;
 		}
 		if (bus == found_bus && slot == found_slot && func == found_func) {
-			/* We do want to claim this device */
-			if (spdk_pci_device_has_non_uio_driver(dev)) {
-				fprintf(stderr,
-					"Requested to attach to %02x:%02x.%02x but that device is not unbound from the kernel\n",
-					bus, slot, func);
-				return false;
-			}
 			return true;
 		}
 	}

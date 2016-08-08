@@ -35,6 +35,45 @@
 
 #include "ioat/ioat.c"
 
+int
+spdk_pci_enumerate(enum spdk_pci_device_type type,
+		   spdk_pci_enum_cb enum_cb,
+		   void *enum_ctx)
+{
+	return -1;
+}
+
+int
+spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
+			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+{
+	*mapped_addr = NULL;
+	*phys_addr = 0;
+	*size = 0;
+	return 0;
+}
+
+int
+spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr)
+{
+	return 0;
+}
+
+int
+spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value,
+			   uint32_t offset)
+{
+	*value = 0xFFFFFFFFu;
+	return 0;
+}
+
+int
+spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
+			    uint32_t offset)
+{
+	return 0;
+}
+
 static void ioat_state_check(void)
 {
 	/*

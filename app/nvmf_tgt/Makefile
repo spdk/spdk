@@ -65,7 +65,7 @@ SPDK_LIBS = \
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
         $(COPY_MODULES_LINKER_ARGS)
 
-LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB)
+LIBS += $(SPDK_LIBS)
 
 ifeq ($(CONFIG_RDMA),y)
 LIBS += -libverbs -lrdmacm

@@ -25,27 +25,4 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 #define ioat_vtophys(buf)				(uint64_t)(buf)
 #define ioat_delay_us(us)				ioat_noop()
 
-static inline int
-ioat_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)
-{
-	return -1;
-}
-
-#define ioat_pcicfg_read32(handle, var, offset)		do { *(var) = 0xFFFFFFFFu; } while (0)
-#define ioat_pcicfg_write32(handle, var, offset)	do { (void)(var); } while (0)
-
-static inline int
-ioat_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **mapped_addr)
-{
-	/* TODO */
-	*mapped_addr = NULL;
-	return -1;
-}
-
-static inline int
-ioat_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
-{
-	return 0;
-}
-
 #endif /* __IOAT_IMPL_H__ */

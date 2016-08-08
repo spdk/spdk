@@ -533,17 +533,6 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 {
 	static uint32_t ctrlr_found = 0;
 
-	if (spdk_pci_device_has_non_uio_driver(dev)) {
-		fprintf(stderr, "non-uio kernel driver attached to NVMe\n");
-		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
-			spdk_pci_device_get_domain(dev),
-			spdk_pci_device_get_bus(dev),
-			spdk_pci_device_get_dev(dev),
-			spdk_pci_device_get_func(dev));
-		fprintf(stderr, " skipping...\n");
-		return false;
-	}
-
 	if (ctrlr_found == 1) {
 		fprintf(stderr, "only attching to one controller, so skipping\n");
 		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",

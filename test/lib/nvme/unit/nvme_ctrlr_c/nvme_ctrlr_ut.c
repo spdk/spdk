@@ -55,6 +55,37 @@ struct spdk_nvme_registers g_ut_nvme_regs = {};
 
 __thread int    nvme_thread_ioq_index = -1;
 
+int
+spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
+			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+{
+	*mapped_addr = &g_ut_nvme_regs;
+	*phys_addr = (uintptr_t)&g_ut_nvme_regs;
+	*size = sizeof(g_ut_nvme_regs);
+	return 0;
+}
+
+int
+spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr)
+{
+	return 0;
+}
+
+int
+spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value,
+			   uint32_t offset)
+{
+	*value = 0xFFFFFFFFu;
+	return 0;
+}
+
+int
+spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
+			    uint32_t offset)
+{
+	return 0;
+}
+
 uint16_t
 spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
 {
