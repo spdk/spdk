@@ -32,7 +32,7 @@
  */
 
 /**
- * \page nvmf_getting_started NVMf Getting Started Guide
+ * \page nvmf_getting_started NVMe over Fabrics Target Getting Started Guide
 
 The NVMe over Fabrics target is a user space application that presents block devices over the
 network using RDMA. It requires an RDMA-capable NIC with its corresponding OFED software package
@@ -55,8 +55,8 @@ NIC vendor's OFED distribution.
 \section nvmf_prereqs Prerequisites
 
 This guide starts by assuming that you can already build the standard SPDK distribution on your
-platform. By default, the NVMf target is not built. To build NVMf there are some additional
-dependencies.
+platform. By default, the NVMe over Fabrics target is not built. To build nvmf_tgt there are some
+additional dependencies.
 
 Fedora:
 \verbatim
@@ -68,7 +68,7 @@ Ubuntu:
 apt-get install libibverbs-dev librdmacm-dev
 \endverbatim
 
-Then build SPDK with the NVMf target enabled, either by editing CONFIG to enable CONFIG_RDMA or
+Then build SPDK with RDMA enabled, either by editing CONFIG to enable CONFIG_RDMA or
 enabling it on the `make` command line:
 
 \verbatim
@@ -77,9 +77,9 @@ make CONFIG_RDMA=y <other config parameters>
 
 Once built, the binary will be in `app/nvmf_tgt`.
 
-\section nvmf_config Configuring NVMf
+\section nvmf_config Configuring NVMe over Fabrics Target
 
-An NVMf specific configuration file is used to configure, or 'provision', the NVMf target. This 
+A `nvmf_tgt`-specific configuration file is used to configure the NVMe over Fabrics target. This
 file's primary purpose is to define subsystems. A fully documented example configuration file is
 located at `etc/spdk/nvmf.conf.in`.
 

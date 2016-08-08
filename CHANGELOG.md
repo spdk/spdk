@@ -1,8 +1,9 @@
 Changelog
 =========
 
-v16.08: iSCSI target, NVMf maturity
------------------------------------
+v16.08: iSCSI target, NVMe over Fabrics maturity
+------------------------------------------------
+
 This release adds a userspace iSCSI target. The iSCSI target is capable of exporting
 NVMe devices over a network using the iSCSI protocol. The application is located
 in app/iscsi_tgt and a documented configuration file can be found at etc/spdk/spdk.conf.in.
