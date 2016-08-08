@@ -128,29 +128,4 @@ nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint
 	*size = 0;
 }
 
-typedef pthread_mutex_t nvme_mutex_t;
-
-#define nvme_mutex_init(x) pthread_mutex_init((x), NULL)
-#define nvme_mutex_destroy(x) pthread_mutex_destroy((x))
-#define nvme_mutex_lock pthread_mutex_lock
-#define nvme_mutex_unlock pthread_mutex_unlock
-#define NVME_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-
-static inline int
-nvme_mutex_init_recursive(nvme_mutex_t *mtx)
-{
-	pthread_mutexattr_t attr;
-	int rc = 0;
-
-	if (pthread_mutexattr_init(&attr)) {
-		return -1;
-	}
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) ||
-	    pthread_mutex_init(mtx, &attr)) {
-		rc = -1;
-	}
-	pthread_mutexattr_destroy(&attr);
-	return rc;
-}
-
 #endif /* __NVME_IMPL_H__ */

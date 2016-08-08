@@ -36,7 +36,7 @@
 #include "nvme/nvme_ctrlr.c"
 
 struct nvme_driver _g_nvme_driver = {
-	.lock = NVME_MUTEX_INITIALIZER,
+	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
 static uint16_t g_pci_vendor_id;

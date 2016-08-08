@@ -118,7 +118,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	nvme_mutex_lock(&ctrlr->ctrlr_lock);
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
 	/*
 	 * Get the first available qpair structure.
@@ -126,7 +126,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	qpair = TAILQ_FIRST(&ctrlr->free_io_qpairs);
 	if (qpair == NULL) {
 		/* No free queue IDs */
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
@@ -142,13 +142,13 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		 * spdk_nvme_ctrlr_create_qpair() failed, so the qpair structure is still unused.
 		 * Exit here so we don't insert it into the active_io_qpairs list.
 		 */
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 	TAILQ_REMOVE(&ctrlr->free_io_qpairs, qpair, tailq);
 	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
 
-	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return qpair;
 }
@@ -166,42 +166,42 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	ctrlr = qpair->ctrlr;
 
-	nvme_mutex_lock(&ctrlr->ctrlr_lock);
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
 	/* Delete the I/O submission queue and then the completion queue */
 
 	status.done = false;
 	rc = nvme_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return rc;
 	}
 	while (status.done == false) {
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -1;
 	}
 
 	status.done = false;
 	rc = nvme_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return rc;
 	}
 	while (status.done == false) {
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -1;
 	}
 
 	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
 	TAILQ_INSERT_HEAD(&ctrlr->free_io_qpairs, qpair, tailq);
 
-	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	return 0;
 }
 
@@ -522,7 +522,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t i;
 	struct spdk_nvme_qpair *qpair;
 
-	nvme_mutex_lock(&ctrlr->ctrlr_lock);
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
 	if (ctrlr->is_resetting || ctrlr->is_failed) {
 		/*
@@ -530,7 +530,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		 *  immediately since there is no need to kick off another
 		 *  reset in these cases.
 		 */
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return 0;
 	}
 
@@ -568,7 +568,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->is_resetting = false;
 
-	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return rc;
 }
@@ -1077,6 +1077,23 @@ nvme_ctrlr_free_bars(struct spdk_nvme_ctrlr *ctrlr)
 	return rc;
 }
 
+static inline int
+pthread_mutex_init_recursive(pthread_mutex_t *mtx)
+{
+	pthread_mutexattr_t attr;
+	int rc = 0;
+
+	if (pthread_mutexattr_init(&attr)) {
+		return -1;
+	}
+	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) ||
+	    pthread_mutex_init(mtx, &attr)) {
+		rc = -1;
+	}
+	pthread_mutexattr_destroy(&attr);
+	return rc;
+}
+
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
@@ -1117,7 +1134,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	TAILQ_INIT(&ctrlr->free_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 
-	nvme_mutex_init_recursive(&ctrlr->ctrlr_lock);
+	pthread_mutex_init_recursive(&ctrlr->ctrlr_lock);
 
 	return 0;
 }
@@ -1147,7 +1164,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_qpair_destroy(&ctrlr->adminq);
 
 	nvme_ctrlr_free_bars(ctrlr);
-	nvme_mutex_destroy(&ctrlr->ctrlr_lock);
+	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
 }
 
 int
@@ -1162,9 +1179,9 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int32_t num_completions;
 
-	nvme_mutex_lock(&ctrlr->ctrlr_lock);
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 	num_completions = spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-	nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return num_completions;
 }
@@ -1245,9 +1262,9 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	if (res)
 		return res;
 	while (status.done == false) {
-		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_attach_ns failed!\n");
@@ -1270,9 +1287,9 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	if (res)
 		return res;
 	while (status.done == false) {
-		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_detach_ns failed!\n");
@@ -1293,9 +1310,9 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 	if (res)
 		return 0;
 	while (status.done == false) {
-		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_create_ns failed!\n");
@@ -1322,9 +1339,9 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	if (res)
 		return res;
 	while (status.done == false) {
-		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_delete_ns failed!\n");
@@ -1347,9 +1364,9 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	if (res)
 		return res;
 	while (status.done == false) {
-		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "spdk_nvme_ctrlr_format failed!\n");
@@ -1392,9 +1409,9 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 			return res;
 
 		while (status.done == false) {
-			nvme_mutex_lock(&ctrlr->ctrlr_lock);
+			pthread_mutex_lock(&ctrlr->ctrlr_lock);
 			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-			nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+			pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		}
 		if (spdk_nvme_cpl_is_error(&status.cpl)) {
 			nvme_printf(ctrlr, "spdk_nvme_ctrlr_fw_image_download failed!\n");
@@ -1418,9 +1435,9 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		return res;
 
 	while (status.done == false) {
-		nvme_mutex_lock(&ctrlr->ctrlr_lock);
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-		nvme_mutex_unlock(&ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_ctrlr_cmd_fw_commit failed!\n");

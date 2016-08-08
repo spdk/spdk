@@ -37,6 +37,7 @@
 #include "spdk/nvme.h"
 
 #include <errno.h>
+#include <pthread.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -419,7 +420,7 @@ struct spdk_nvme_ctrlr {
 	void				*aer_cb_arg;
 
 	/** guards access to the controller itself, including admin queues */
-	nvme_mutex_t			ctrlr_lock;
+	pthread_mutex_t			ctrlr_lock;
 
 
 	struct spdk_nvme_qpair		adminq;
@@ -452,7 +453,7 @@ struct spdk_nvme_ctrlr {
 };
 
 struct nvme_driver {
-	nvme_mutex_t	lock;
+	pthread_mutex_t	lock;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
 };

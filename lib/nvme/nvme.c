@@ -34,7 +34,7 @@
 #include "nvme_internal.h"
 
 struct nvme_driver _g_nvme_driver = {
-	.lock = NVME_MUTEX_INITIALIZER,
+	.lock = PTHREAD_MUTEX_INITIALIZER,
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.attached_ctrlrs),
 };
@@ -69,13 +69,13 @@ nvme_attach(void *devhandle)
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_mutex_lock(&g_nvme_driver->lock);
+	pthread_mutex_lock(&g_nvme_driver->lock);
 
 	nvme_ctrlr_destruct(ctrlr);
 	TAILQ_REMOVE(&g_nvme_driver->attached_ctrlrs, ctrlr, tailq);
 	nvme_free(ctrlr);
 
-	nvme_mutex_unlock(&g_nvme_driver->lock);
+	pthread_mutex_unlock(&g_nvme_driver->lock);
 	return 0;
 }
 
@@ -204,7 +204,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 	struct nvme_enum_ctx enum_ctx;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
-	nvme_mutex_lock(&g_nvme_driver->lock);
+	pthread_mutex_lock(&g_nvme_driver->lock);
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
@@ -226,9 +226,9 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 			 *  the functions it calls (in particular nvme_ctrlr_set_num_qpairs())
 			 *  can assume it is held.
 			 */
-			nvme_mutex_unlock(&g_nvme_driver->lock);
+			pthread_mutex_unlock(&g_nvme_driver->lock);
 			start_rc = nvme_ctrlr_process_init(ctrlr);
-			nvme_mutex_lock(&g_nvme_driver->lock);
+			pthread_mutex_lock(&g_nvme_driver->lock);
 
 			if (start_rc) {
 				/* Controller failed to initialize. */
@@ -251,15 +251,15 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 				 * Unlock while calling attach_cb() so the user can call other functions
 				 *  that may take the driver lock, like nvme_detach().
 				 */
-				nvme_mutex_unlock(&g_nvme_driver->lock);
+				pthread_mutex_unlock(&g_nvme_driver->lock);
 				attach_cb(cb_ctx, ctrlr->devhandle, ctrlr, &ctrlr->opts);
-				nvme_mutex_lock(&g_nvme_driver->lock);
+				pthread_mutex_lock(&g_nvme_driver->lock);
 
 				break;
 			}
 		}
 	}
 
-	nvme_mutex_unlock(&g_nvme_driver->lock);
+	pthread_mutex_unlock(&g_nvme_driver->lock);
 	return rc;
 }

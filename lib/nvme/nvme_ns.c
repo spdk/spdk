@@ -55,9 +55,9 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 	}
 
 	while (status.done == false) {
-		nvme_mutex_lock(&ns->ctrlr->ctrlr_lock);
+		pthread_mutex_lock(&ns->ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(&ns->ctrlr->adminq, 0);
-		nvme_mutex_unlock(&ns->ctrlr->ctrlr_lock);
+		pthread_mutex_unlock(&ns->ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");

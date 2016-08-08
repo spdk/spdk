@@ -39,7 +39,7 @@
 #include "nvme/nvme_qpair.c"
 
 struct nvme_driver _g_nvme_driver = {
-	.lock = NVME_MUTEX_INITIALIZER,
+	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
 int32_t spdk_nvme_retry_count = 1;
