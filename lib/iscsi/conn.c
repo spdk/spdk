@@ -310,8 +310,8 @@ error_return:
 	 *  housekeeping for TCP socket to lcore associations gets cleared.
 	 */
 	spdk_net_framework_clear_socket_association(conn->sock);
-	rte_atomic32_inc(&g_num_connections[rte_lcore_id()]);
-	spdk_poller_register(&conn->poller, rte_lcore_id(), NULL, 0);
+	rte_atomic32_inc(&g_num_connections[spdk_app_get_current_core()]);
+	spdk_poller_register(&conn->poller, spdk_app_get_current_core(), NULL, 0);
 
 	return 0;
 }
@@ -449,7 +449,7 @@ _spdk_iscsi_conn_free(spdk_event_t event)
 	spdk_iscsi_remove_conn(conn);
 	pthread_mutex_unlock(&g_conns_mutex);
 
-	rte_atomic32_dec(&g_num_connections[rte_lcore_id()]);
+	rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 }
 
 static void
@@ -466,7 +466,7 @@ _spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 
 	rte_timer_stop(timer);
 
-	event = spdk_event_allocate(rte_lcore_id(), _spdk_iscsi_conn_free,
+	event = spdk_event_allocate(spdk_app_get_current_core(), _spdk_iscsi_conn_free,
 				    conn, NULL, NULL);
 	spdk_poller_unregister(&conn->poller, event);
 }
@@ -496,7 +496,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		rte_timer_reset(&conn->shutdown_timer, rte_get_timer_hz() / 1000, PERIODICAL,
 				rte_lcore_id(), _spdk_iscsi_conn_check_shutdown, conn);
 	} else {
-		event = spdk_event_allocate(rte_lcore_id(), _spdk_iscsi_conn_free,
+		event = spdk_event_allocate(spdk_app_get_current_core(), _spdk_iscsi_conn_free,
 					    conn, NULL, NULL);
 		spdk_poller_unregister(&conn->poller, event);
 	}
@@ -1039,7 +1039,7 @@ static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
 	    conn->pending_task_cnt == 0) {
 
 		spdk_trace_record(TRACE_ISCSI_CONN_IDLE, conn->id, 0, 0, 0);
-		rte_atomic32_dec(&g_num_connections[rte_lcore_id()]);
+		rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 		spdk_net_framework_clear_socket_association(conn->sock);
 		event = spdk_event_allocate(rte_get_master_lcore(), __add_idle_conn,
 					    conn, NULL, NULL);
@@ -1112,7 +1112,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
 		lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
 		conn->poller.fn = spdk_iscsi_conn_full_feature_do_work;
-		rte_atomic32_dec(&g_num_connections[rte_lcore_id()]);
+		rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 		rte_atomic32_inc(&g_num_connections[lcore]);
 		spdk_net_framework_clear_socket_association(conn->sock);
 		spdk_poller_migrate(&conn->poller, lcore, NULL);
