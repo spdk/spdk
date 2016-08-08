@@ -119,7 +119,7 @@ spdk_iscsi_config_dump_section(FILE *fp)
 		authmethod = "Auto";
 
 	if (g_spdk_iscsi.discovery_auth_group)
-		sprintf(authgroup, "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
+		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
 
 	/* FIXME - lookup log facility and put it in place of "local7" below */
 	fprintf(fp, ISCSI_CONFIG_TMPL,
@@ -292,7 +292,7 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 				authmethod = "CHAP";
 
 			if (target->auth_group > 0)
-				sprintf(authgroup, "AuthGroup%d", target->auth_group);
+				snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->auth_group);
 
 			if (target->header_digest)
 				usedigest = "Header";

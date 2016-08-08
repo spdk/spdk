@@ -146,7 +146,7 @@ int spdk_initialize_iscsi_conns(void)
 		return -1;
 	}
 
-	sprintf(g_shm_name, "spdk_iscsi_conns.%d", spdk_app_get_instance_id());
+	snprintf(g_shm_name, sizeof(g_shm_name), "spdk_iscsi_conns.%d", spdk_app_get_instance_id());
 	conns_array_fd = shm_open(g_shm_name, O_RDWR | O_CREAT, 0600);
 	if (conns_array_fd < 0) {
 		SPDK_ERRLOG("could not shm_open %s\n", g_shm_name);
