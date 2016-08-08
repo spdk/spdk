@@ -32,6 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
@@ -46,8 +47,6 @@
 #include <signal.h>
 
 #include <sys/types.h>
-
-#include <rte_debug.h>
 
 #include "spdk/log.h"
 #include "spdk/conf.h"
@@ -68,8 +67,8 @@ spdk_iscsi_portal_create(char *host, char *port, uint64_t cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
 
-	RTE_VERIFY(host != NULL);
-	RTE_VERIFY(port != NULL);
+	assert(host != NULL);
+	assert(port != NULL);
 
 	p = malloc(sizeof(*p));
 	if (!p) {
@@ -88,7 +87,7 @@ spdk_iscsi_portal_create(char *host, char *port, uint64_t cpumask)
 void
 spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 {
-	RTE_VERIFY(p != NULL);
+	assert(p != NULL);
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_iscsi_portal_destroy\n");
 	free(p->host);
@@ -280,7 +279,7 @@ spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal	*p;
 
-	RTE_VERIFY(pg != NULL);
+	assert(pg != NULL);
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_iscsi_portal_grp_destroy\n");
 	while (!TAILQ_EMPTY(&pg->head)) {
@@ -294,8 +293,8 @@ spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 static void
 spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 {
-	RTE_VERIFY(pg != NULL);
-	RTE_VERIFY(!TAILQ_EMPTY(&pg->head));
+	assert(pg != NULL);
+	assert(!TAILQ_EMPTY(&pg->head));
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	pg->state = GROUP_READY;
@@ -442,8 +441,8 @@ void
 spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 				 struct spdk_iscsi_portal *p)
 {
-	RTE_VERIFY(pg != NULL);
-	RTE_VERIFY(p != NULL);
+	assert(pg != NULL);
+	assert(p != NULL);
 
 	p->group = pg;
 	TAILQ_INSERT_TAIL(&pg->head, p, tailq);
@@ -588,8 +587,8 @@ spdk_iscsi_portal_grp_unregister(struct spdk_iscsi_portal_grp *pg)
 	struct spdk_iscsi_portal_grp *portal_group;
 	struct spdk_iscsi_portal_grp *portal_group_tmp;
 
-	RTE_VERIFY(pg != NULL);
-	RTE_VERIFY(!TAILQ_EMPTY(&pg->head));
+	assert(pg != NULL);
+	assert(!TAILQ_EMPTY(&pg->head));
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(portal_group, &g_spdk_iscsi.pg_head, tailq, portal_group_tmp) {

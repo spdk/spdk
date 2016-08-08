@@ -32,6 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
@@ -45,8 +46,6 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
-
-#include <rte_debug.h>
 
 #include "spdk/log.h"
 #include "spdk/conf.h"
@@ -290,7 +289,7 @@ spdk_iscsi_init_grp_destroy_by_tag(int tag)
 void
 spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 {
-	RTE_VERIFY(ig != NULL);
+	assert(ig != NULL);
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	ig->state = GROUP_READY;
@@ -343,7 +342,7 @@ spdk_initiator_group_unregister(struct spdk_iscsi_init_grp *ig)
 	struct spdk_iscsi_init_grp *initiator_group;
 	struct spdk_iscsi_init_grp *initiator_group_tmp;
 
-	RTE_VERIFY(ig != NULL);
+	assert(ig != NULL);
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(initiator_group, &g_spdk_iscsi.ig_head, tailq, initiator_group_tmp) {
