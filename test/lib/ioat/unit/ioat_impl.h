@@ -24,7 +24,6 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 #define ioat_free(buf)					free(buf)
 #define ioat_vtophys(buf)				(uint64_t)(buf)
 #define ioat_delay_us(us)				ioat_noop()
-#define ioat_assert(check)				assert(check)
 #define ioat_printf(chan, fmt, args...)			printf(fmt, ##args)
 
 static inline int

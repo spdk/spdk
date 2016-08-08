@@ -105,12 +105,6 @@ nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 #define nvme_printf(ctrlr, fmt, args...) printf(fmt, ##args)
 
 /**
- * Assert a condition and panic/abort as desired.  Failures of these
- *  assertions indicate catastrophic failures within the driver.
- */
-#define nvme_assert(check, str) assert(check)
-
-/**
  * Return the physical address for the specified virtual address.
  */
 #define nvme_vtophys(buf)		spdk_vtophys(buf)

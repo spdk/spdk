@@ -201,7 +201,7 @@ ioat_prep_copy(struct spdk_ioat_chan *ioat, uint64_t dst,
 	struct ioat_descriptor *desc;
 	union spdk_ioat_hw_desc *hw_desc;
 
-	ioat_assert(len <= ioat->max_xfer_size);
+	assert(len <= ioat->max_xfer_size);
 
 	if (ioat_get_ring_space(ioat) < 1) {
 		return NULL;
@@ -232,7 +232,7 @@ ioat_prep_fill(struct spdk_ioat_chan *ioat, uint64_t dst,
 	struct ioat_descriptor *desc;
 	union spdk_ioat_hw_desc *hw_desc;
 
-	ioat_assert(len <= ioat->max_xfer_size);
+	assert(len <= ioat->max_xfer_size);
 
 	if (ioat_get_ring_space(ioat) < 1) {
 		return NULL;

@@ -61,15 +61,6 @@ extern char outbuf[OUTBUF_SIZE];
 #define nvme_printf(ctrlr, fmt, args...) snprintf(outbuf, OUTBUF_SIZE, fmt, ##args)
 #define nvme_get_num_ioq()		8
 #define nvme_get_ioq_idx()		0
-#define nvme_assert(check, str)			\
-do							\
-	{						\
-		if (!(check)) {				\
-			printf str;			\
-			assert(check);			\
-		}					\
-	}						\
-	while (0)
 
 uint64_t nvme_vtophys(void *buf);
 #define NVME_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)

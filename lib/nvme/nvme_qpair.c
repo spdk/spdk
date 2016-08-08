@@ -115,8 +115,8 @@ static void
 nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_cmd *cmd)
 {
-	nvme_assert(qpair != NULL, ("print_command: qpair == NULL\n"));
-	nvme_assert(cmd != NULL, ("print_command: cmd == NULL\n"));
+	assert(qpair != NULL);
+	assert(cmd != NULL);
 	switch ((int)cmd->opc) {
 	case SPDK_NVME_OPC_WRITE:
 	case SPDK_NVME_OPC_READ:
@@ -146,8 +146,8 @@ nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
 static void
 nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd)
 {
-	nvme_assert(qpair != NULL, ("qpair can not be NULL"));
-	nvme_assert(cmd != NULL, ("cmd can not be NULL"));
+	assert(qpair != NULL);
+	assert(cmd != NULL);
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_admin_qpair_print_command(qpair, cmd);
@@ -369,7 +369,7 @@ nvme_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *
 
 	req = tr->req;
 
-	nvme_assert(req != NULL, ("tr has NULL req\n"));
+	assert(req != NULL);
 
 	error = spdk_nvme_cpl_is_error(cpl);
 	retry = error && nvme_completion_is_retry(cpl) &&
@@ -382,7 +382,7 @@ nvme_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *
 
 	qpair->tr[cpl->cid].active = false;
 
-	nvme_assert(cpl->cid == req->cmd.cid, ("cpl cid does not match cmd cid\n"));
+	assert(cpl->cid == req->cmd.cid);
 
 	if (retry) {
 		req->retries++;
@@ -506,7 +506,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			nvme_printf(qpair->ctrlr,
 				    "cpl does not map to outstanding cmd\n");
 			nvme_qpair_print_completion(qpair, cpl);
-			nvme_assert(0, ("received completion for unknown cmd\n"));
+			assert(0);
 		}
 
 		if (++qpair->cq_head == qpair->num_entries) {
@@ -537,8 +537,8 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	uint64_t		phys_addr = 0;
 	uint64_t		offset;
 
-	nvme_assert(num_entries != 0, ("invalid num_entries\n"));
-	nvme_assert(num_trackers != 0, ("invalid num_trackers\n"));
+	assert(num_entries != 0);
+	assert(num_trackers != 0);
 
 	qpair->id = id;
 	qpair->num_entries = num_entries;
@@ -617,7 +617,7 @@ nvme_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 
 	tr = LIST_FIRST(&qpair->outstanding_tr);
 	while (tr != NULL) {
-		nvme_assert(tr->req != NULL, ("tr->req == NULL in abort_aers\n"));
+		assert(tr->req != NULL);
 		if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 			nvme_qpair_manual_complete_tracker(qpair, tr,
 							   SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_SQ_DELETION, 0,
@@ -741,10 +741,10 @@ _nvme_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	/*
 	 * Build scattered payloads.
 	 */
-	nvme_assert(req->payload_size != 0, ("cannot build SGL for zero-length transfer\n"));
-	nvme_assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL, ("sgl payload type required\n"));
-	nvme_assert(req->payload.u.sgl.reset_sgl_fn != NULL, ("sgl reset callback required\n"));
-	nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
+	assert(req->payload_size != 0);
+	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
+	assert(req->payload.u.sgl.next_sge_fn != NULL);
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
 	sgl = tr->u.sgl;
@@ -814,8 +814,8 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 	/*
 	 * Build scattered payloads.
 	 */
-	nvme_assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL, ("sgl payload type required\n"));
-	nvme_assert(req->payload.u.sgl.reset_sgl_fn != NULL, ("sgl reset callback required\n"));
+	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
 	remaining_transfer_len = req->payload_size;
@@ -823,7 +823,7 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 	last_nseg = 0;
 
 	while (remaining_transfer_len > 0) {
-		nvme_assert(req->payload.u.sgl.next_sge_fn != NULL, ("sgl callback required\n"));
+		assert(req->payload.u.sgl.next_sge_fn != NULL);
 		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
 		if (rc) {
 			_nvme_fail_request_bad_vtophys(qpair, tr);
@@ -958,7 +958,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 			return rc;
 		}
 	} else {
-		nvme_assert(0, ("invalid NVMe payload type %d\n", req->payload.type));
+		assert(0);
 		_nvme_fail_request_bad_vtophys(qpair, tr);
 		return -EINVAL;
 	}

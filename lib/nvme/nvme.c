@@ -150,8 +150,8 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 void
 nvme_free_request(struct nvme_request *req)
 {
-	nvme_assert(req != NULL, ("nvme_free_request(NULL)\n"));
-	nvme_assert(req->num_children == 0, ("num_children != 0\n"));
+	assert(req != NULL);
+	assert(req->num_children == 0);
 
 	nvme_dealloc_request(req);
 }

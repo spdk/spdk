@@ -1,7 +1,6 @@
 #ifndef __IOAT_IMPL_H__
 #define __IOAT_IMPL_H__
 
-#include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -11,6 +10,7 @@
 #include <rte_atomic.h>
 #include <rte_cycles.h>
 
+#include "spdk/assert.h"
 #include "spdk/pci.h"
 #include "spdk/vtophys.h"
 #include "spdk/pci.h"
@@ -63,12 +63,6 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
  * Delay us.
  */
 #define ioat_delay_us(us)        rte_delay_us(us)
-
-/**
- * Assert a condition and panic/abort as desired.  Failures of these
- *  assertions indicate catastrophic failures within the driver.
- */
-#define ioat_assert(check)		assert(check)
 
 /**
  * Log or print a message from the driver.

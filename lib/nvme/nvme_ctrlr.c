@@ -902,7 +902,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	default:
-		nvme_assert(0, ("unhandled ctrlr state %d\n", ctrlr->state));
+		assert(0);
 		nvme_ctrlr_fail(ctrlr);
 		return -1;
 	}

@@ -176,7 +176,7 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 {
 	uint32_t				pci_devid;
 
-	nvme_assert(id > 0, ("invalid namespace id %d", id));
+	assert(id > 0);
 
 	ns->ctrlr = ctrlr;
 	ns->id = id;
