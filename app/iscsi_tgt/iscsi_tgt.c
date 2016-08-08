@@ -45,6 +45,7 @@
 #include "spdk/event.h"
 #include "iscsi/iscsi.h"
 #include "spdk/log.h"
+#include "spdk/net.h"
 
 uint64_t g_flush_timeout;
 
@@ -199,6 +200,7 @@ main(int argc, char **argv)
 	spdk_app_init(&opts);
 
 	printf("Total cores available: %d\n", rte_lcore_count());
+	printf("Using net framework %s\n", spdk_net_framework_get_name());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(spdk_startup, NULL, NULL);
 
