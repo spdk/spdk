@@ -1077,7 +1077,7 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 
 	/* If flush timer has expired, flush all PDUs */
 	tsc = rte_get_timer_cycles();
-	if (tsc - conn->last_flush > g_flush_timeout) {
+	if (tsc - conn->last_flush > g_spdk_iscsi.flush_timeout) {
 		conn->last_flush = tsc;
 		if (spdk_iscsi_conn_flush_pdus(conn) != 0) {
 			conn->state = ISCSI_CONN_STATE_EXITING;

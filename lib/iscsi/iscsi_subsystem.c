@@ -819,14 +819,11 @@ spdk_iscsi_app_read_parameters(void)
 
 	val = spdk_conf_section_get_val(sp, "FlushTimeout");
 	if (val == NULL) {
-		g_flush_timeout = DEFAULT_FLUSH_TIMEOUT *
-				  (rte_get_timer_hz() >> 20);
+		g_spdk_iscsi.flush_timeout = DEFAULT_FLUSH_TIMEOUT * (rte_get_timer_hz() >> 20);
 	} else {
-		g_flush_timeout = strtoul(val, NULL, 10) *
-				  (rte_get_timer_hz() >> 20);
+		g_spdk_iscsi.flush_timeout = strtoul(val, NULL, 10) * (rte_get_timer_hz() >> 20);
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "FlushTimeout %"PRIu64"\n",
-		      g_flush_timeout);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "FlushTimeout %"PRIu64"\n", g_spdk_iscsi.flush_timeout);
 
 	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
 	if (nopininterval < 0) {

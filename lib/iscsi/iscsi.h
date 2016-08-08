@@ -54,8 +54,6 @@
 #define SPDK_ISCSI_DEFAULT_AUTHFILE SPDK_ISCSI_BUILD_ETC "/auth.conf"
 #define SPDK_ISCSI_DEFAULT_NODEBASE "iqn.2016-06.io.spdk"
 
-extern uint64_t g_flush_timeout;
-
 #define DEFAULT_MAXR2T 4
 #define MAX_INITIATOR_NAME 256
 #define MAX_TARGET_NAME 256
@@ -273,6 +271,7 @@ struct spdk_iscsi_globals {
 	int req_discovery_auth;
 	int req_discovery_auth_mutual;
 	int discovery_auth_group;
+	uint64_t flush_timeout;
 
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;

@@ -47,8 +47,6 @@
 #include "spdk/log.h"
 #include "spdk/net.h"
 
-uint64_t g_flush_timeout;
-
 static void
 spdk_iscsi_dump_memory_info(void)
 {
