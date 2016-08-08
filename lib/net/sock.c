@@ -49,8 +49,6 @@
 #include "spdk/net.h"
 
 #define MAX_TMPBUF 1024
-#define TIMEOUT_RW 60
-#define POLLWAIT 1000
 #define PORTNUMLEN 32
 
 static int get_addr_str(struct sockaddr_in *paddr, char *host, int hlen)

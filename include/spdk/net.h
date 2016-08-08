@@ -55,7 +55,6 @@ int spdk_net_framework_idle_time(void);
 
 #define SPDK_IFNAMSIZE		32
 #define SPDK_MAX_IP_PER_IFC	32
-#define SPDK_MAX_NIC_NUM		32
 
 struct spdk_interface {
 	char name[SPDK_IFNAMSIZE];
