@@ -34,13 +34,15 @@
 #include "ioat_internal.h"
 #include "ioat_pci.h"
 
+#include <pthread.h>
+
 struct ioat_driver {
-	ioat_mutex_t	lock;
+	pthread_mutex_t			lock;
 	TAILQ_HEAD(, spdk_ioat_chan)	attached_chans;
 };
 
 static struct ioat_driver g_ioat_driver = {
-	.lock = IOAT_MUTEX_INITIALIZER,
+	.lock = PTHREAD_MUTEX_INITIALIZER,
 	.attached_chans = TAILQ_HEAD_INITIALIZER(g_ioat_driver.attached_chans),
 };
 
@@ -532,7 +534,7 @@ spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_cb a
 	int rc;
 	struct ioat_enum_ctx enum_ctx;
 
-	ioat_mutex_lock(&g_ioat_driver.lock);
+	pthread_mutex_lock(&g_ioat_driver.lock);
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.attach_cb = attach_cb;
@@ -540,7 +542,7 @@ spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_cb a
 
 	rc = ioat_pci_enumerate(ioat_enum_cb, &enum_ctx);
 
-	ioat_mutex_unlock(&g_ioat_driver.lock);
+	pthread_mutex_unlock(&g_ioat_driver.lock);
 
 	return rc;
 }
@@ -553,9 +555,9 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 	/* ioat should be in the free list (not registered to a thread)
 	 * when calling ioat_detach().
 	 */
-	ioat_mutex_lock(&driver->lock);
+	pthread_mutex_lock(&driver->lock);
 	TAILQ_REMOVE(&driver->attached_chans, ioat, tailq);
-	ioat_mutex_unlock(&driver->lock);
+	pthread_mutex_unlock(&driver->lock);
 
 	ioat_channel_destruct(ioat);
 	free(ioat);

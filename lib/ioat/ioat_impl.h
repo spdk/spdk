@@ -301,10 +301,4 @@ ioat_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_de
 
 #endif /* !SPDK_CONFIG_PCIACCESS */
 
-typedef pthread_mutex_t ioat_mutex_t;
-
-#define ioat_mutex_lock pthread_mutex_lock
-#define ioat_mutex_unlock pthread_mutex_unlock
-#define IOAT_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-
 #endif /* __IOAT_IMPL_H__ */

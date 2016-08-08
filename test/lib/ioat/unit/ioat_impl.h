@@ -50,10 +50,4 @@ ioat_pcicfg_unmap_bar(void *devhandle, uint32_t bar, void *addr)
 	return 0;
 }
 
-typedef pthread_mutex_t ioat_mutex_t;
-
-#define ioat_mutex_lock pthread_mutex_lock
-#define ioat_mutex_unlock pthread_mutex_unlock
-#define IOAT_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-
 #endif /* __IOAT_IMPL_H__ */
