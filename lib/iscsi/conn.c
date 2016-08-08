@@ -131,6 +131,101 @@ spdk_find_iscsi_connection_by_id(int cid)
 	}
 }
 
+static int
+init_idle_conns(void)
+{
+	RTE_VERIFY(g_epoll_fd == 0);
+	g_epoll_fd = epoll_create1(0);
+	if (g_epoll_fd < 0) {
+		SPDK_ERRLOG("epoll_create1 failed master lcore\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+add_idle_conn(struct spdk_iscsi_conn *conn)
+{
+	struct epoll_event event;
+	int rc;
+
+	event.events = EPOLLIN;
+	event.data.u64 = 0LL;
+	event.data.ptr = conn;
+
+	rc = epoll_ctl(g_epoll_fd, EPOLL_CTL_ADD, conn->sock, &event);
+	if (rc == 0) {
+		return 0;
+	} else {
+		SPDK_ERRLOG("conn epoll_ctl failed\n");
+		return -1;
+	}
+}
+
+static int
+del_idle_conn(struct spdk_iscsi_conn *conn)
+{
+	struct epoll_event event;
+	int rc;
+
+	/*
+	 * The event parameter is ignored but needs to be non-NULL to work around a bug in old
+	 * kernel versions.
+	 */
+	rc = epoll_ctl(g_epoll_fd, EPOLL_CTL_DEL, conn->sock, &event);
+	if (rc == 0) {
+		return 0;
+	} else {
+		SPDK_ERRLOG("epoll_ctl(EPOLL_CTL_DEL) failed\n");
+		return -1;
+	}
+}
+
+static void
+check_idle_conns(void)
+{
+	struct epoll_event events[SPDK_MAX_POLLERS_PER_CORE];
+	int i;
+	int nfds;
+	struct spdk_iscsi_conn *conn;
+
+	/* if nothing idle, can exit now */
+	if (STAILQ_EMPTY(&g_idle_conn_list_head)) {
+		/* this epoll_wait is needed to finish socket closing process */
+		epoll_wait(g_epoll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
+	}
+
+	/* Perform a non-blocking epoll */
+	nfds = epoll_wait(g_epoll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
+	if (nfds < 0) {
+		SPDK_ERRLOG("epoll_wait failed! (ret: %d)\n", nfds);
+		return;
+	}
+
+	if (nfds > SPDK_MAX_POLLERS_PER_CORE) {
+		SPDK_ERRLOG("epoll_wait events exceeded limit! %d > %d\n", nfds,
+			    SPDK_MAX_POLLERS_PER_CORE);
+		RTE_VERIFY(0);
+	}
+
+	/*
+	 * In the case of any event cause (EPOLLIN or EPOLLERR)
+	 * just make the connection active for normal process loop.
+	 */
+	for (i = 0; i < nfds; i++) {
+
+		conn = (struct spdk_iscsi_conn *)events[i].data.ptr;
+
+		/*
+		 * Flag the connection that an event was noticed
+		 * such that during the list scan process it will
+		 * be re-inserted into the active ring
+		 */
+		conn->pending_activate_event = true;
+	}
+}
+
 int spdk_initialize_iscsi_conns(void)
 {
 	size_t conns_size;
@@ -177,10 +272,7 @@ int spdk_initialize_iscsi_conns(void)
 		spdk_iscsi_set_min_conn_idle_interval(spdk_net_framework_idle_time());
 
 	STAILQ_INIT(&g_idle_conn_list_head);
-	RTE_VERIFY(g_epoll_fd == 0);
-	g_epoll_fd = epoll_create1(0);
-	if (g_epoll_fd < 0) {
-		SPDK_ERRLOG("epoll_create1 failed master lcore\n");
+	if (init_idle_conns() < 0) {
 		return -1;
 	}
 
@@ -540,7 +632,6 @@ spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 void spdk_shutdown_iscsi_conns(void)
 {
 	struct spdk_iscsi_conn	*conn, *tmp;
-	struct epoll_event		event;
 	int				i;
 
 	/* cleanup - move conns from list back into ring
@@ -550,7 +641,7 @@ void spdk_shutdown_iscsi_conns(void)
 		STAILQ_REMOVE(&g_idle_conn_list_head, conn, spdk_iscsi_conn, link);
 		spdk_poller_register(&conn->poller, rte_get_master_lcore(), NULL, 0);
 		conn->is_idle = 0;
-		epoll_ctl(g_epoll_fd, EPOLL_CTL_DEL, conn->sock, &event);
+		del_idle_conn(conn);
 	}
 
 	pthread_mutex_lock(&g_conns_mutex);
@@ -1155,46 +1246,10 @@ even though the connection is considered 'idle'.
 */
 void spdk_iscsi_conn_idle_do_work(void *arg)
 {
-	struct epoll_event event;
-	struct epoll_event events[SPDK_MAX_POLLERS_PER_CORE];
 	uint64_t	tsc;
-	int		  i;
-	int             nfds;
-	struct spdk_iscsi_conn *conn, *tconn;
+	struct spdk_iscsi_conn *tconn;
 
-	/* if nothing idle, can exit now */
-	if (STAILQ_EMPTY(&g_idle_conn_list_head)) {
-		/* this epoll_wait is needed to finish socket closing process */
-		epoll_wait(g_epoll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
-	}
-
-	/* Perform a non-blocking epoll */
-	nfds = epoll_wait(g_epoll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
-	if (nfds < 0) {
-		SPDK_ERRLOG("epoll_wait failed! (ret: %d)\n", nfds);
-		return;
-	}
-
-	if (nfds > SPDK_MAX_POLLERS_PER_CORE) {
-		SPDK_ERRLOG("epoll_wait events exceeded limit! %d > %d\n", nfds,
-			    SPDK_MAX_POLLERS_PER_CORE);
-		RTE_VERIFY(0);
-	}
-
-	/* In the case of any event cause (EPOLLIN or EPOLLERR)
-	   just make the connection active for normal process loop.
-	*/
-	for (i = 0; i < nfds; i++) {
-
-		conn = (struct spdk_iscsi_conn *)events[i].data.ptr;
-
-		/* Flag the connection that an event was noticed
-		   such that during the list scan process it will
-		   be re-inserted into the active ring
-		*/
-		conn->pending_activate_event = true;
-	}
-
+	check_idle_conns();
 
 	/* Now walk the idle list to process timer based actions */
 	STAILQ_FOREACH(tconn, &g_idle_conn_list_head, link) {
@@ -1218,7 +1273,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			tconn->last_activity_tsc = rte_get_timer_cycles();
 			tconn->pending_activate_event = false;
 			tconn->is_idle = 0;
-			epoll_ctl(g_epoll_fd, EPOLL_CTL_DEL, tconn->sock, &event);
+			del_idle_conn(tconn);
 			/* migrate work item to new core */
 			lcore = spdk_iscsi_conn_allocate_reactor(tconn->portal->cpumask);
 			rte_atomic32_inc(&g_num_connections[lcore]);
@@ -1234,7 +1289,6 @@ static void
 __add_idle_conn(spdk_event_t e)
 {
 	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(e);
-	struct epoll_event event;
 	int rc;
 
 	/*
@@ -1248,18 +1302,14 @@ __add_idle_conn(spdk_event_t e)
 		return;
 	}
 
-	event.events = EPOLLIN;
-	event.data.u64 = 0LL;
-	event.data.ptr = conn;
-
-	rc = epoll_ctl(g_epoll_fd, EPOLL_CTL_ADD, conn->sock, &event);
+	rc = add_idle_conn(conn);
 	if (rc == 0) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d idle\n",
 			      conn->id, conn->cid, &conn->poller, conn->poller.lcore);
 		conn->is_idle = 1;
 		STAILQ_INSERT_TAIL(&g_idle_conn_list_head, conn, link);
 	} else {
-		SPDK_ERRLOG("conn epoll_ctl failed\n");
+		SPDK_ERRLOG("add_idle_conn() failed\n");
 	}
 }
 
