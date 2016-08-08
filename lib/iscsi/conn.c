@@ -67,7 +67,7 @@
 		offsetof(struct spdk_iscsi_conn, portal));
 
 #define MICROSECOND_TO_TSC(x) ((x) * rte_get_timer_hz()/1000000)
-int64_t g_conn_idle_interval_in_tsc = -1;
+static int64_t g_conn_idle_interval_in_tsc = -1;
 
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
 #define SPDK_MAX_POLLERS_PER_CORE	4096
@@ -75,11 +75,11 @@ static int g_connections_per_lcore = DEFAULT_CONNECTIONS_PER_LCORE;
 static rte_atomic32_t g_num_connections[RTE_MAX_LCORE];
 
 struct spdk_iscsi_conn *g_conns_array;
-char g_shm_name[64];
+static char g_shm_name[64];
 
-pthread_mutex_t g_conns_mutex;
+static pthread_mutex_t g_conns_mutex;
 
-struct rte_timer g_shutdown_timer;
+static struct rte_timer g_shutdown_timer;
 
 static uint32_t spdk_iscsi_conn_allocate_reactor(uint64_t cpumask);
 static void __add_idle_conn(spdk_event_t event);

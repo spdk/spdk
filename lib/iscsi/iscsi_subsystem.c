@@ -136,13 +136,13 @@ spdk_iscsi_config_dump_section(FILE *fp)
 
 
 /* Portal groups */
-const char *portal_group_section = \
-				   "\n"
-				   "# Users must change the PortalGroup section(s) to match the IP addresses\n"
-				   "#  for their environment.\n"
-				   "# PortalGroup sections define which TCP ports the iSCSI server will use\n"
-				   "#  to listen for incoming connections.  These are also used to determine\n"
-				   "#  which targets are accessible over each portal group.\n";
+static const char *portal_group_section = \
+		"\n"
+		"# Users must change the PortalGroup section(s) to match the IP addresses\n"
+		"#  for their environment.\n"
+		"# PortalGroup sections define which TCP ports the iSCSI server will use\n"
+		"#  to listen for incoming connections.  These are also used to determine\n"
+		"#  which targets are accessible over each portal group.\n";
 
 #define PORTAL_GROUP_TMPL \
 "[PortalGroup%d]\n" \
@@ -173,13 +173,13 @@ spdk_iscsi_config_dump_portal_groups(FILE *fp)
 }
 
 /* Initiator Groups */
-const char *initiator_group_section = \
-				      "\n"
-				      "# Users must change the InitiatorGroup section(s) to match the IP\n"
-				      "#  addresses and initiator configuration in their environment.\n"
-				      "# Netmask can be used to specify a single IP address or a range of IP addresses\n"
-				      "#  Netmask 192.168.1.20   <== single IP address\n"
-				      "#  Netmask 192.168.1.0/24 <== IP range 192.168.1.*\n";
+static const char *initiator_group_section = \
+		"\n"
+		"# Users must change the InitiatorGroup section(s) to match the IP\n"
+		"#  addresses and initiator configuration in their environment.\n"
+		"# Netmask can be used to specify a single IP address or a range of IP addresses\n"
+		"#  Netmask 192.168.1.20   <== single IP address\n"
+		"#  Netmask 192.168.1.0/24 <== IP range 192.168.1.*\n";
 
 #define INITIATOR_GROUP_TMPL \
 "[InitiatorGroup%d]\n" \
@@ -220,11 +220,11 @@ spdk_iscsi_config_dump_initiator_groups(FILE *fp)
 }
 
 /* Target nodes */
-const char *target_nodes_section = \
-				   "\n"
-				   "# Users should change the TargetNode section(s) below to match the\n"
-				   "#  desired iSCSI target node configuration.\n"
-				   "# TargetName, Mapping, LUN0 are minimum required\n";
+static const char *target_nodes_section = \
+		"\n"
+		"# Users should change the TargetNode section(s) below to match the\n"
+		"#  desired iSCSI target node configuration.\n"
+		"# TargetName, Mapping, LUN0 are minimum required\n";
 
 #define TARGET_NODE_TMPL \
 "[TargetNode%d]\n" \
