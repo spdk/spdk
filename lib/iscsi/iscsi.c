@@ -100,9 +100,6 @@
 
 #define MAX_TMPBUF 1024
 
-/** \file
-
-*/
 struct spdk_iscsi_globals g_spdk_iscsi;
 
 /* random value generation */

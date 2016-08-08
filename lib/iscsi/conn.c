@@ -58,10 +58,6 @@
 #include "iscsi/portal_grp.h"
 #include "spdk/scsi.h"
 
-/** \file
-
-*/
-
 #define SPDK_ISCSI_CONNECTION_MEMSET(conn)		\
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));

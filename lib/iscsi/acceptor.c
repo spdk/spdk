@@ -49,10 +49,6 @@
 
 static struct spdk_poller g_acceptor_poller;
 
-/*! \file
-
-*/
-
 static void
 spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
 {
