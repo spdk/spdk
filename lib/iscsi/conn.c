@@ -82,7 +82,6 @@ static void __add_idle_conn(spdk_event_t event);
 
 /** Global variables used for managing idle connections. */
 static int g_epoll_fd = 0;
-static uint32_t g_epoll_idle_cnt = 0;
 static struct spdk_poller g_idle_conn_poller;
 static STAILQ_HEAD(idle_list, spdk_iscsi_conn) g_idle_conn_list_head;
 
@@ -177,7 +176,6 @@ int spdk_initialize_iscsi_conns(void)
 	if (g_conn_idle_interval_in_tsc == -1)
 		spdk_iscsi_set_min_conn_idle_interval(spdk_net_framework_idle_time());
 
-	g_epoll_idle_cnt = 0;
 	STAILQ_INIT(&g_idle_conn_list_head);
 	RTE_VERIFY(g_epoll_fd == 0);
 	g_epoll_fd = epoll_create1(0);
@@ -554,7 +552,6 @@ void spdk_shutdown_iscsi_conns(void)
 		conn->is_idle = 0;
 		epoll_ctl(g_epoll_fd, EPOLL_CTL_DEL, conn->sock, &event);
 	}
-	g_epoll_idle_cnt = 0;
 
 	pthread_mutex_lock(&g_conns_mutex);
 
@@ -1220,7 +1217,6 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			STAILQ_REMOVE(&g_idle_conn_list_head, tconn, spdk_iscsi_conn, link);
 			tconn->last_activity_tsc = rte_get_timer_cycles();
 			tconn->pending_activate_event = false;
-			g_epoll_idle_cnt -= 1;
 			tconn->is_idle = 0;
 			epoll_ctl(g_epoll_fd, EPOLL_CTL_DEL, tconn->sock, &event);
 			/* migrate work item to new core */
@@ -1260,7 +1256,6 @@ __add_idle_conn(spdk_event_t e)
 	if (rc == 0) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d idle\n",
 			      conn->id, conn->cid, &conn->poller, conn->poller.lcore);
-		g_epoll_idle_cnt += 1;
 		conn->is_idle = 1;
 		STAILQ_INSERT_TAIL(&g_idle_conn_list_head, conn, link);
 	} else {
