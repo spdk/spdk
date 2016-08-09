@@ -49,77 +49,10 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
 
-extern struct rte_mempool *request_mempool;
-static unsigned g_num_requests;
-
-static int
-spdk_nvmf_initialize_pools(void)
-{
-	SPDK_NOTICELOG("\n*** NVMf Pool Creation ***\n");
-
-	g_num_requests = MAX_SUBSYSTEMS * g_nvmf_tgt.max_queues_per_session * g_nvmf_tgt.max_queue_depth;
-
-	/* create NVMe backend request pool */
-	request_mempool = rte_mempool_create("NVMe_Pool",
-					     g_num_requests,
-					     spdk_nvme_request_size(),
-					     128, 0,
-					     NULL, NULL, NULL, NULL,
-					     SOCKET_ID_ANY, 0);
-	if (!request_mempool) {
-		SPDK_ERRLOG("create NVMe request pool failed\n");
-		return -1;
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMe request_mempool %p, size %" PRIu64 " bytes\n",
-		      request_mempool,
-		      (uint64_t)g_num_requests * spdk_nvme_request_size());
-
-	return 0;
-}
-
-/*
- * Wrapper to provide rte_mempool_avail_count() on older DPDK versions.
- * Drop this if the minimum DPDK version is raised to at least 16.07.
- */
-#if RTE_VERSION < RTE_VERSION_NUM(16, 7, 0, 1)
-static unsigned rte_mempool_avail_count(const struct rte_mempool *pool)
-{
-	return rte_mempool_count(pool);
-}
-#endif
-
-static int spdk_nvmf_check_pool(struct rte_mempool *pool, uint32_t count)
-{
-	if (rte_mempool_avail_count(pool) != count) {
-		SPDK_ERRLOG("rte_mempool_avail_count(%s) == %d, should be %d\n",
-			    pool->name, rte_mempool_avail_count(pool), count);
-		return -1;
-	} else {
-		return 0;
-	}
-}
-
-int
-spdk_nvmf_check_pools(void)
-{
-	int rc = 0;
-
-	rc += spdk_nvmf_check_pool(request_mempool, g_num_requests);
-
-	if (rc == 0) {
-		return 0;
-	} else {
-		return -1;
-	}
-}
-
 int
 nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	      uint32_t in_capsule_data_size, uint32_t max_io_size)
 {
-	int rc;
-
 	g_nvmf_tgt.max_queues_per_session = max_queues_per_sess;
 	g_nvmf_tgt.max_queue_depth = max_queue_depth;
 	g_nvmf_tgt.in_capsule_data_size = in_capsule_data_size;
@@ -129,12 +62,6 @@ nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n", in_capsule_data_size);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", max_io_size);
-
-	rc = spdk_nvmf_initialize_pools();
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_nvmf_initialize_pools() failed\n");
-		return rc;
-	}
 
 	return 0;
 }

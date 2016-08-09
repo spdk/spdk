@@ -81,8 +81,6 @@ struct spdk_nvme_ctrlr {
 
 static int controller_checked[20];
 
-struct rte_mempool *request_mempool;
-
 int spdk_nvmf_parse_conf(void)
 {
 	return 0;
@@ -218,12 +216,6 @@ spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return nsdata;
 }
 
-size_t
-spdk_nvme_request_size(void)
-{
-	return 0;
-}
-
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -316,14 +308,8 @@ nvmf_test_init(void)
 	struct spdk_nvme_ctrlr *ctrlr;
 	uint32_t i;
 
-	request_mempool = NULL;
-	/* test that NVMf library will trap if mempool not created */
-	rc = nvmf_initialize();
-	CU_ASSERT(rc < 0);
-	request_mempool = malloc(sizeof(struct rte_mempool));
 	rc = nvmf_initialize();
 	CU_ASSERT(rc == 0);
-	free(request_mempool);
 	/* create faked controller */
 	ctrlr = malloc(sizeof(struct spdk_nvme_ctrlr));
 	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);

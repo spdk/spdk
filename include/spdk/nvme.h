@@ -958,16 +958,6 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					void *payload, uint32_t len,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
-/**
- * \brief Get the size, in bytes, of an nvme_request.
- *
- * This is the size of the request objects that need to be allocated by the
- * nvme_alloc_request macro in nvme_impl.h
- *
- * This function is thread safe and can be called at any time.
- */
-size_t spdk_nvme_request_size(void);
-
 #ifdef __cplusplus
 }
 #endif

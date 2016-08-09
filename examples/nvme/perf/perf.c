@@ -132,7 +132,6 @@ static int g_outstanding_commands;
 
 static bool g_latency_tracking_enable = false;
 
-struct rte_mempool *request_mempool;
 static struct rte_mempool *task_pool;
 
 static struct ctrlr_entry *g_controllers = NULL;
@@ -1121,17 +1120,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     spdk_nvme_request_size(), 128, 0,
-					     NULL, NULL, NULL, NULL,
-					     SOCKET_ID_ANY, 0);
-
-	if (request_mempool == NULL) {
-		fprintf(stderr, "could not initialize request mempool\n");
-		return 1;
-	}
-
-	task_pool = rte_mempool_create("task_pool", 8192,
+	task_pool = rte_mempool_create("perf_task_pool", 8192,
 				       sizeof(struct perf_task),
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);

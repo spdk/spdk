@@ -89,9 +89,6 @@ struct spdk_fio_thread {
 
 };
 
-// Global request_mempool is used by libspdk_nvme.a and must be defined
-struct rte_mempool         *request_mempool;
-
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -206,15 +203,6 @@ static int spdk_fio_setup(struct thread_data *td)
 	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
 	if (rc < 0) {
 		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
-
-	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     spdk_nvme_request_size(), 128, 0,
-					     NULL, NULL, NULL, NULL,
-					     SOCKET_ID_ANY, 0);
-	if (!request_mempool) {
-		fprintf(stderr, "rte_mempool_create failed\n");
 		return 1;
 	}
 

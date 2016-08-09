@@ -66,17 +66,6 @@ extern char outbuf[OUTBUF_SIZE];
 uint64_t nvme_vtophys(void *buf);
 #define NVME_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
-#define nvme_alloc_request(bufp)	\
-do					\
-	{				\
-		if (posix_memalign((void **)(bufp), 64, sizeof(struct nvme_request))) {	\
-			*(bufp) = NULL;	\
-		}			\
-	}				\
-	while (0)
-
-#define nvme_dealloc_request(buf)	free(buf)
-
 extern uint64_t g_ut_tsc;
 #define nvme_get_tsc()			(g_ut_tsc)
 #define nvme_get_tsc_hz()		(1000000)
@@ -144,6 +133,31 @@ static inline bool
 nvme_process_is_primary(void)
 {
 	return true;
+}
+
+#define NVME_SOCKET_ID_ANY -1
+
+typedef unsigned nvme_mempool_t;
+
+static inline nvme_mempool_t *
+nvme_mempool_create(const char *name, unsigned n, unsigned elt_size,
+		    unsigned cache_size)
+{
+	static int mp;
+
+	return &mp;
+}
+
+static inline void
+nvme_mempool_get(nvme_mempool_t *mp, void **buf)
+{
+	posix_memalign(buf, 64, 0x1000);
+}
+
+static inline void
+nvme_mempool_put(nvme_mempool_t *mp, void *buf)
+{
+	free(buf);
 }
 
 #endif /* __NVME_IMPL_H__ */

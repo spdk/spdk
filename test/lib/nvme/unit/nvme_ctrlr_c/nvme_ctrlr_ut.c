@@ -37,6 +37,7 @@
 
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
+	.request_mempool = NULL,
 };
 
 static uint16_t g_pci_vendor_id;
@@ -119,7 +120,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	 * Free the request here so it does not leak.
 	 * For the purposes of this unit test, we don't need to bother emulating request submission.
 	 */
-	nvme_dealloc_request(req);
+	nvme_mempool_put(_g_nvme_driver.request_mempool, req);
 
 	return 0;
 }
@@ -286,7 +287,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 		      void *cb_arg)
 {
 	struct nvme_request *req = NULL;
-	nvme_alloc_request(&req);
+	nvme_mempool_get(_g_nvme_driver.request_mempool, (void **)&req);
 
 	if (req != NULL) {
 		memset(req, 0, offsetof(struct nvme_request, children));

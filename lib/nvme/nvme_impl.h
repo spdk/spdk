@@ -83,9 +83,7 @@
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment.
- * Note: these calls are only made during driver initialization.  Per
- *   I/O allocations during driver operation use the nvme_alloc_request
- *   callback.
+ * Note: these calls are only made during driver initialization.
  */
 static inline void *
 nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
@@ -173,18 +171,41 @@ nvme_process_is_primary(void)
 #define nvme_vtophys(buf)		spdk_vtophys(buf)
 #define NVME_VTOPHYS_ERROR		SPDK_VTOPHYS_ERROR
 
-extern struct rte_mempool *request_mempool;
+typedef struct rte_mempool nvme_mempool_t;
 
 /**
- * Return a buffer for an nvme_request object.  These objects are allocated
- *  for each I/O.  They do not need to be pinned nor physically contiguous.
+ * Create a mempool with the given configuration.
+ * Return a pointer to the allocated memory address. If the allocation
+ *   cannot be done, return NULL.
  */
-#define nvme_alloc_request(bufp)	rte_mempool_get(request_mempool, (void **)(bufp));
+static inline nvme_mempool_t *
+nvme_mempool_create(const char *name, unsigned n, unsigned elt_size,
+		    unsigned cache_size)
+{
+	struct rte_mempool *mp;
 
-/**
- * Free a buffer previously allocated with nvme_alloc_request().
- */
-#define nvme_dealloc_request(buf)	rte_mempool_put(request_mempool, buf)
+	mp = rte_mempool_create(name, n, elt_size, cache_size,
+				0, NULL, NULL, NULL, NULL,
+				SOCKET_ID_ANY, 0);
+
+	if (mp == NULL) {
+		return NULL;
+	}
+
+	return (nvme_mempool_t *)mp;
+}
+
+static inline void
+nvme_mempool_get(nvme_mempool_t *mp, void **buf)
+{
+	rte_mempool_get(mp, buf);
+}
+
+static inline void
+nvme_mempool_put(nvme_mempool_t *mp, void *buf)
+{
+	rte_mempool_put(mp, buf);
+}
 
 /**
  * Get a monotonic timestamp counter (used for measuring timeouts during initialization).

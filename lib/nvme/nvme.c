@@ -37,6 +37,7 @@ struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.attached_ctrlrs),
+	.request_mempool = NULL,
 };
 
 struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
@@ -93,20 +94,13 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	status->done = true;
 }
 
-size_t
-spdk_nvme_request_size(void)
-{
-	return sizeof(struct nvme_request);
-}
-
 struct nvme_request *
 nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req = NULL;
 
-	nvme_alloc_request(&req);
-
+	nvme_mempool_get(g_spdk_nvme_driver->request_mempool, (void **)&req);
 	if (req == NULL) {
 		return req;
 	}
@@ -214,7 +208,7 @@ nvme_free_request(struct nvme_request *req)
 	assert(req != NULL);
 	assert(req->num_children == 0);
 
-	nvme_dealloc_request(req);
+	nvme_mempool_put(g_spdk_nvme_driver->request_mempool, req);
 }
 
 int
@@ -283,6 +277,16 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+
+	if (g_spdk_nvme_driver->request_mempool == NULL) {
+		g_spdk_nvme_driver->request_mempool = nvme_mempool_create("nvme_request", 8192,
+						      sizeof(struct nvme_request), 128);
+		if (g_spdk_nvme_driver->request_mempool == NULL) {
+			nvme_printf(NULL, "Unable to allocate pool of requests\n");
+			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return -1;
+		}
+	}
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;

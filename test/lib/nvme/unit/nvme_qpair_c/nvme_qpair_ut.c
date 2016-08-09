@@ -40,6 +40,7 @@
 
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
+	.request_mempool = NULL,
 };
 
 int32_t spdk_nvme_retry_count = 1;
@@ -129,7 +130,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 {
 	struct nvme_request *req = NULL;
 
-	nvme_alloc_request(&req);
+	nvme_mempool_get(_g_nvme_driver.request_mempool, (void **)&req);
 
 	if (req == NULL) {
 		return req;
@@ -173,7 +174,7 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 void
 nvme_free_request(struct nvme_request *req)
 {
-	nvme_dealloc_request(req);
+	nvme_mempool_put(_g_nvme_driver.request_mempool, req);
 }
 
 void
@@ -263,7 +264,7 @@ ut_insert_cq_entry(struct spdk_nvme_qpair *qpair, uint32_t slot)
 	struct nvme_tracker 	*tr;
 	struct spdk_nvme_cpl	*cpl;
 
-	nvme_alloc_request(&req);
+	nvme_mempool_get(_g_nvme_driver.request_mempool, (void **)&req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	memset(req, 0, sizeof(*req));
 

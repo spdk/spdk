@@ -43,8 +43,6 @@
 #include "spdk/nvme_intel.h"
 #include "spdk/pci_ids.h"
 
-struct rte_mempool *request_mempool;
-
 static int outstanding_commands;
 
 struct feature {
@@ -917,16 +915,6 @@ int main(int argc, char **argv)
 
 	if (rc < 0) {
 		fprintf(stderr, "could not initialize dpdk\n");
-		exit(1);
-	}
-
-	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     spdk_nvme_request_size(), 128, 0,
-					     NULL, NULL, NULL, NULL,
-					     SOCKET_ID_ANY, 0);
-
-	if (request_mempool == NULL) {
-		fprintf(stderr, "could not initialize request mempool\n");
 		exit(1);
 	}
 

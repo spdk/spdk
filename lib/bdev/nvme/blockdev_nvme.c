@@ -58,7 +58,6 @@
 
 #define MAX_NVME_NAME_LENGTH 64
 
-void init_request_mempool(void);
 static void blockdev_nvme_get_spdk_running_config(FILE *fp);
 
 struct nvme_device {
@@ -462,8 +461,6 @@ nvme_library_init(void)
 		return 0;
 	}
 
-	init_request_mempool();
-
 	nvme_luns_per_ns = spdk_conf_section_get_intval(sp, "NvmeLunsPerNs");
 	if (nvme_luns_per_ns < 1)
 		nvme_luns_per_ns = 1;
@@ -697,16 +694,6 @@ blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 		return -1;
 
 	return 0;
-}
-
-struct rte_mempool *request_mempool;
-
-void init_request_mempool()
-{
-	request_mempool = rte_mempool_create("nvme request", 8192,
-					     spdk_nvme_request_size(),
-					     128, 0, NULL, NULL, NULL, NULL,
-					     SOCKET_ID_ANY, 0);
 }
 
 static void

@@ -55,8 +55,6 @@ struct ns_entry {
 	struct spdk_nvme_qpair	*qpair;
 };
 
-struct rte_mempool *request_mempool;
-
 static struct ctrlr_entry *g_controllers = NULL;
 static struct ns_entry *g_namespaces = NULL;
 
@@ -353,22 +351,6 @@ int main(int argc, char **argv)
 	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
 	if (rc < 0) {
 		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
-
-	/*
-	 * Create the NVMe request buffer pool.  This will be used internally
-	 *  by the SPDK NVMe driver to allocate an spdk_nvme_request data
-	 *  structure for each I/O request.  This is implicitly passed to
-	 *  the SPDK NVMe driver via an extern declaration in nvme_impl.h.
-	 */
-	request_mempool = rte_mempool_create("nvme_request", 8192,
-					     spdk_nvme_request_size(), 128, 0,
-					     NULL, NULL, NULL, NULL,
-					     SOCKET_ID_ANY, 0);
-
-	if (request_mempool == NULL) {
-		fprintf(stderr, "could not initialize request mempool\n");
 		return 1;
 	}
 

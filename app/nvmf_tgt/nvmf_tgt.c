@@ -55,8 +55,6 @@
 #include "spdk/nvme.h"
 #include "spdk/io_channel.h"
 
-struct rte_mempool *request_mempool;
-
 #define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
 
@@ -70,11 +68,7 @@ static bool g_subsystems_shutdown;
 static void
 shutdown_complete(void)
 {
-	int rc;
-
-	rc = spdk_nvmf_check_pools();
-
-	spdk_app_stop(rc);
+	spdk_app_stop(0);
 }
 
 static void
@@ -380,7 +374,6 @@ This is the main file.
 	nvmf=>nvmf [label="spdk_event_allocate()"];
 	nvmf=>nvmf [label="spdk_app_start()"];
 	nvmf=>nvmf [label="spdk_app_fini()"];
-	nvmf=>nvmf [label="spdk_nvmf_check_pools()"];
 	c_runtime<<nvmf;
 
 \endmsc
