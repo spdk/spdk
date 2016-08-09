@@ -383,7 +383,7 @@ struct iscsi_param_table {
 	int type;
 };
 
-static struct iscsi_param_table conn_param_table[] = {
+static const struct iscsi_param_table conn_param_table[] = {
 	{ "HeaderDigest", "None", "CRC32C,None", ISPT_LIST },
 	{ "DataDigest", "None", "CRC32C,None", ISPT_LIST },
 	{ "MaxRecvDataSegmentLength", "8192", "512,16777215", ISPT_NUMERICAL_DECLARATIVE },
@@ -401,7 +401,7 @@ static struct iscsi_param_table conn_param_table[] = {
 };
 
 
-static struct iscsi_param_table sess_param_table[] = {
+static const struct iscsi_param_table sess_param_table[] = {
 	{ "MaxConnections", "1", "1,65535", ISPT_NUMERICAL_MIN },
 #if 0
 	/* need special handling */
@@ -429,7 +429,7 @@ static struct iscsi_param_table sess_param_table[] = {
 
 static int
 spdk_iscsi_params_init_internal(struct iscsi_param **params,
-				struct iscsi_param_table *table)
+				const struct iscsi_param_table *table)
 {
 	int rc;
 	int i;
