@@ -93,8 +93,7 @@ LDFLAGS += --coverage
 endif
 endif
 
-CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
-CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
+include $(CONFIG_ENV)/env.mk
 
 ifeq ($(CONFIG_ADDRESS_SANITIZER),y)
 COMMON_CFLAGS += -fsanitize=address
@@ -103,6 +102,9 @@ endif
 
 COMMON_CFLAGS += -pthread
 LDFLAGS += -pthread
+
+CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-definition -std=gnu99
+CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
 
 SYS_LIBS += -lrt
 
@@ -151,26 +153,3 @@ CLEAN_C=\
 	$(COMPILE_CXX)
 
 %.d: ;
-
-DPDK_DIR ?= $(CONFIG_DPDK_DIR)
-export DPDK_DIR_ABS = $(abspath $(DPDK_DIR))
-DPDK_INC_DIR ?= $(DPDK_DIR_ABS)/include
-DPDK_LIB_DIR ?= $(DPDK_DIR_ABS)/lib
-
-DPDK_INC = -I$(DPDK_INC_DIR)
-DPDK_LIB = -L$(DPDK_LIB_DIR) -Wl,--start-group -Wl,--whole-archive \
-	   -lrte_eal -lrte_mempool -lrte_ring -lrte_timer \
-	   -Wl,--end-group -Wl,--no-whole-archive -Wl,-rpath=$(DPDK_LIB_DIR)
-# librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
-#  existence to maintain backward compatibility.
-ifneq ($(wildcard $(DPDK_DIR_ABS)/lib/librte_malloc.*),)
-DPDK_LIB += -lrte_malloc
-endif
-
-# DPDK requires dl library for dlopen/dlclose on Linux.
-ifeq ($(OS),Linux)
-DPDK_LIB += -ldl
-endif
-ifeq ($(OS),FreeBSD)
-DPDK_LIB += -lexecinfo
-endif

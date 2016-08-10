@@ -33,14 +33,14 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 
-CFLAGS += $(DPDK_INC)
+CFLAGS += $(ENV_CFLAGS)
 SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
              $(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
              $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
              $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
              $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
 
-LIBS += $(SPDK_LIBS) $(DPDK_LIB)
+LIBS += $(SPDK_LIBS)
 
 TEST_FILE = nvmf_ut.c
 

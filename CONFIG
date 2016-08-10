@@ -43,9 +43,14 @@ CONFIG_COVERAGE?=n
 # Build with Address Sanitizer enabled
 CONFIG_ADDRESS_SANITIZER?=n
 
+# Directory that contains the desired SPDK environment library.
+# By default, this is implemented using DPDK.
+CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env
+
 # This directory should contain 'include' and 'lib' directories for your DPDK
 # installation. Alternatively you can specify this on the command line
-# with 'make DPDK_DIR=/path/to/dpdk'.
+# with 'make DPDK_DIR=/path/to/dpdk'. This is only a valid entry
+# when using the default SPDK environment library.
 CONFIG_DPDK_DIR?=/path/to/dpdk
 
 # Header file to use for NVMe implementation specific functions.

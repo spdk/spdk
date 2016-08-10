@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = nvmf_tgt
 
-CFLAGS += $(DPDK_INC)
+CFLAGS += $(ENV_CFLAGS)
 
 # Add NVMf library directory to include path
 # TODO: remove this once NVMf has a public API header
@@ -53,7 +53,6 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
 	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
 	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
 	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
 	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
@@ -71,11 +70,11 @@ ifeq ($(CONFIG_RDMA),y)
 LIBS += -libverbs -lrdmacm
 endif
 
-LIBS += $(DPDK_LIB)
+LIBS += $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS) $(BLOCKDEV_MODULES) $(LINKER_MODULES)
+$(APP) : $(OBJS) $(SPDK_LIBS) $(BLOCKDEV_MODULES) $(LINKER_MODULES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

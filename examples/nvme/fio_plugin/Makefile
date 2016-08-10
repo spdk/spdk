@@ -40,20 +40,19 @@ APP := fio_plugin
 
 C_SRCS := fio_plugin.c
 
-CFLAGS += -I. $(DPDK_INC) -I$(FIO_SOURCE_DIR)
+CFLAGS += -I. $(ENV_CFLAGS) -I$(FIO_SOURCE_DIR)
 
 LDFLAGS += -shared -rdynamic
 
 SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 
-LIBS += $(SPDK_LIBS) $(DPDK_LIB)
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

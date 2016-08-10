@@ -31,48 +31,43 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
+# This makefile snippet must define the following flags:
+# ENV_CFLAGS
+# ENV_CXXFLAGS
+# ENV_LIBS
+# ENV_LINKER_ARGS
 
-APP = iscsi_tgt
+DPDK_DIR ?= $(CONFIG_DPDK_DIR)
 
-CFLAGS += $(ENV_CFLAGS)
+ifeq ($(DPDK_DIR), )
+ifeq ($(OS),FreeBSD)
+export DPDK_ABS_DIR = /usr/local/share/dpdk/x86_64-native-freebsdapp-clang
+else
+export DPDK_ABS_DIR = /usr/local/share/dpdk/x86_64-native-linuxapp-gcc
+endif
+else
+export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))
+endif
 
-# Add iSCSI library directory to include path
-# TODO: remove this once iSCSI has a public API header
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+DPDK_INC = -I$(DPDK_ABS_DIR)/include
+DPDK_LIB = $(DPDK_ABS_DIR)/lib/librte_eal.a $(DPDK_ABS_DIR)/lib/librte_mempool.a \
+	   $(DPDK_ABS_DIR)/lib/librte_ring.a $(DPDK_ABS_DIR)/lib/librte_timer.a
 
-C_SRCS := iscsi_tgt.c
+# librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
+#  existence to maintain backward compatibility.
+ifneq ($(wildcard $(DPDK_ABS_DIR)/lib/librte_malloc.*),)
+DPDK_LIB += $(DPDK_ABS_DIR)/lib/librte_malloc.a
+endif
 
-SPDK_LIBS = \
-	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
-	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
-	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
-	$(SPDK_ROOT_DIR)/lib/iscsi/libspdk_iscsi.a \
-	$(SPDK_ROOT_DIR)/lib/scsi/libspdk_scsi.a \
-	$(SPDK_ROOT_DIR)/lib/net/libspdk_net.a \
-	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
-	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
-	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
-	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
-	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
+ifeq ($(OS),Linux)
+DPDK_LIB += -ldl
+endif
+ifeq ($(OS),FreeBSD)
+DPDK_LIB += -lexecinfo
+endif
 
-LIBS += -Wl,--whole-archive $(SPDK_LIBS) -Wl,--no-whole-archive
-LIBS += -lcrypto $(ENV_LINKER_ARGS)
-LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
-	$(COPY_MODULES_LINKER_ARGS)
+ENV_CFLAGS = $(DPDK_INC)
+ENV_CXXFLAGS = $(ENV_CFLAGS)
+ENV_LIBS = $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a $(DPDK_LIB)
+ENV_LINKER_ARGS = -Wl,--start-group -Wl,--whole-archive $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
 
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

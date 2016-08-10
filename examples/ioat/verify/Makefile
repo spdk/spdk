@@ -38,18 +38,17 @@ APP = verify
 
 C_SRCS := verify.c
 
-CFLAGS += -I. $(DPDK_INC)
+CFLAGS += -I. $(ENV_CFLAGS)
 
 SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/ioat/libspdk_ioat.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 
-LIBS += $(SPDK_LIBS) $(DPDK_LIB)
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 
 all: $(APP)
 
-$(APP): $(OBJS) $(SPDK_LIBS)
+$(APP): $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:

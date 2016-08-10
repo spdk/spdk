@@ -38,14 +38,13 @@ APP = overhead
 
 C_SRCS := overhead.c
 
-CFLAGS += -I. $(DPDK_INC)
+CFLAGS += -I. $(ENV_CFLAGS)
 
 SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 
-LIBS += $(SPDK_LIBS) $(DPDK_LIB)
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 
 ifeq ($(OS),Linux)
 LIBS += -laio
@@ -54,7 +53,7 @@ endif
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

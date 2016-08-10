@@ -38,15 +38,13 @@ APP = vtophys
 
 C_SRCS = vtophys.c
 
-CFLAGS += $(DPDK_INC)
+CFLAGS += $(ENV_CFLAGS)
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
-
-LIBS += $(SPDK_LIBS) $(DPDK_LIB)
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 
 all: $(APP)
 
-$(APP): $(OBJS) $(SPDK_LIBS)
+$(APP): $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:

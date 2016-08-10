@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(DPDK_INC)
+CFLAGS += $(ENV_CFLAGS)
 APP = event
 C_SRCS := event.c
 
@@ -44,11 +44,11 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 
-LIBS += $(SPDK_LIBS) $(DPDK_LIB)
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :
