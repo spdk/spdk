@@ -40,7 +40,7 @@ C_SRCS = vtophys.c
 
 CFLAGS += $(DPDK_INC)
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 
 LIBS += $(SPDK_LIBS) $(DPDK_LIB)
 

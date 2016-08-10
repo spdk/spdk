@@ -53,7 +53,7 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
 	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
 	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
+	$(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
 	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
 	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \

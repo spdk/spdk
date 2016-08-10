@@ -41,7 +41,7 @@
 #include <rte_lcore.h>
 
 #include "spdk/copy_engine.h"
-#include "spdk/vtophys.h"
+#include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
 #include "spdk/event.h"

@@ -75,7 +75,7 @@ time test/lib/bdev/blockdev.sh
 time test/lib/event/event.sh
 time test/lib/nvme/nvme.sh
 time test/lib/nvmf/nvmf.sh
-time test/lib/memory/memory.sh
+time test/lib/env/vtophys.sh
 time test/lib/ioat/ioat.sh
 time test/lib/json/json.sh
 time test/lib/jsonrpc/jsonrpc.sh

@@ -57,7 +57,7 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
 	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
 	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
+	$(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
 	$(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \

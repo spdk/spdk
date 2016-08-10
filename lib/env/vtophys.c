@@ -37,10 +37,11 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "rte_config.h"
-#include "rte_eal.h"
-#include "rte_eal_memconfig.h"
-#include "spdk/vtophys.h"
+#include <rte_config.h>
+#include <rte_eal.h>
+#include <rte_eal_memconfig.h>
+
+#include "spdk/env.h"
 
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
  * which is enough to cover 128 TB.

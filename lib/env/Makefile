@@ -36,6 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
 C_SRCS = vtophys.c
-LIBNAME = memory
+LIBNAME = env
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

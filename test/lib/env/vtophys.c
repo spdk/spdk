@@ -40,7 +40,7 @@
 #include <rte_mempool.h>
 #include <rte_malloc.h>
 
-#include "spdk/vtophys.h"
+#include "spdk/env.h"
 
 static const char *ealargs[] = {
 	"vtophys",

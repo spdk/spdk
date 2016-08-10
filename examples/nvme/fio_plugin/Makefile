@@ -46,8 +46,8 @@ LDFLAGS += -shared -rdynamic
 
 SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
 	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+	     $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a \
 
 LIBS += $(SPDK_LIBS) $(DPDK_LIB)
 

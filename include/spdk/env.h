@@ -32,11 +32,11 @@
  */
 
 /** \file
- * Virtual to physical address translation
+ * Encapsulated third-party dependencies
  */
 
-#ifndef SPDK_VTOPHYS_H
-#define SPDK_VTOPHYS_H
+#ifndef SPDK_ENV_H
+#define SPDK_ENV_H
 
 #ifdef __cplusplus
 extern "C" {

@@ -45,7 +45,7 @@
 #ifndef __NVME_IMPL_H__
 #define __NVME_IMPL_H__
 
-#include "spdk/vtophys.h"
+#include "spdk/env.h"
 #include "spdk/pci.h"
 #include "spdk/nvme_spec.h"
 #include <assert.h>
