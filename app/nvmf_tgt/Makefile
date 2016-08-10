@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = nvmf_tgt
 
@@ -54,6 +55,13 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
 	$(SPDK_ROOT_DIR)/lib/memory/libspdk_memory.a \
 	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
+	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
+	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
+	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
+	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
+
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
+        $(COPY_MODULES_LINKER_ARGS)
 
 LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB)
 
@@ -62,7 +70,7 @@ LIBS += $(DPDK_LIB)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIBS) $(BLOCKDEV_MODULES) $(LINKER_MODULES)
 	$(LINK_C)
 
 clean :

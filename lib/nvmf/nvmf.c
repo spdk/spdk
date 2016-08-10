@@ -183,6 +183,7 @@ nvmf_tgt_subsystem_fini(void)
 }
 
 SPDK_SUBSYSTEM_REGISTER(nvmf, nvmf_tgt_subsystem_initialize, nvmf_tgt_subsystem_fini, NULL)
+SPDK_SUBSYSTEM_DEPEND(nvmf, bdev)
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
