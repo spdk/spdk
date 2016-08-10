@@ -45,6 +45,8 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+struct spdk_pci_device;
+
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment. The buffer will be zeroed.
@@ -62,6 +64,41 @@ spdk_free(void *buf);
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
 uint64_t spdk_vtophys(void *buf);
+
+enum spdk_pci_device_type {
+	SPDK_PCI_DEVICE_NVME,
+	SPDK_PCI_DEVICE_IOAT,
+};
+
+typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
+
+int spdk_pci_enumerate(enum spdk_pci_device_type type,
+		       spdk_pci_enum_cb enum_cb,
+		       void *enum_ctx);
+
+int spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
+			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
+int spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr);
+
+uint16_t spdk_pci_device_get_domain(struct spdk_pci_device *dev);
+uint8_t spdk_pci_device_get_bus(struct spdk_pci_device *dev);
+uint8_t spdk_pci_device_get_dev(struct spdk_pci_device *dev);
+uint8_t spdk_pci_device_get_func(struct spdk_pci_device *dev);
+uint16_t spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev);
+uint16_t spdk_pci_device_get_device_id(struct spdk_pci_device *dev);
+uint16_t spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev);
+uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
+uint32_t spdk_pci_device_get_class(struct spdk_pci_device *dev);
+const char *spdk_pci_device_get_device_name(struct spdk_pci_device *dev);
+int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
+int spdk_pci_device_claim(struct spdk_pci_device *dev);
+
+int spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset);
+int spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset);
+int spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset);
+int spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset);
+int spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset);
+int spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset);
 
 #ifdef __cplusplus
 }

@@ -44,7 +44,7 @@
 #include <rte_mempool.h>
 
 #include "spdk/ioat.h"
-#include "spdk/pci.h"
+#include "spdk/env.h"
 #include "spdk/string.h"
 
 struct user_config {

@@ -53,7 +53,7 @@
 #include <sys/pciio.h>
 #endif
 
-#include "spdk/pci.h"
+#include "spdk/env.h"
 #include "spdk/pci_ids.h"
 
 #define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"

@@ -45,7 +45,7 @@
 #include <rte_lcore.h>
 
 #include "spdk/nvme.h"
-#include "spdk/pci.h"
+#include "spdk/env.h"
 
 static uint32_t swap32(uint32_t value)
 {

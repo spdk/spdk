@@ -33,7 +33,7 @@
 
 #include "spdk_cunit.h"
 
-#include "spdk/pci.h"
+#include "spdk/env.h"
 
 #include "nvme/nvme.c"
 

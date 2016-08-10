@@ -32,9 +32,9 @@
  */
 
 #include "ioat_internal.h"
-#include "spdk/pci.h"
 
 #include "spdk/log.h"
+#include "spdk/env.h"
 
 #include <pthread.h>
 

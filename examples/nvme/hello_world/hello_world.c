@@ -40,7 +40,7 @@
 #include <rte_malloc.h>
 
 #include "spdk/nvme.h"
-#include "spdk/pci.h"
+#include "spdk/env.h"
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr	*ctrlr;

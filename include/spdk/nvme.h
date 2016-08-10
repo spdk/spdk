@@ -45,7 +45,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "spdk/pci.h"
+
+#include "spdk/env.h"
 #include "nvme_spec.h"
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)

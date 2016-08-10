@@ -39,7 +39,7 @@
 #include "nvmf/transport.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
-#include "spdk/pci.h"
+#include "spdk/env.h"
 #include "spdk/nvme.h"
 
 static void

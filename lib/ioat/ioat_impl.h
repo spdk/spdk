@@ -11,7 +11,6 @@
 #include <rte_cycles.h>
 
 #include "spdk/assert.h"
-#include "spdk/pci.h"
 #include "spdk/env.h"
 
 #include <rte_pci.h>

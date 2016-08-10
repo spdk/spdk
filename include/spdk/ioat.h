@@ -45,7 +45,7 @@ extern "C" {
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "spdk/pci.h"
+#include "spdk/env.h"
 
 /**
  * Opaque handle for a single I/OAT channel returned by \ref spdk_ioat_probe().

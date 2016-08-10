@@ -46,8 +46,9 @@
 #define __NVME_IMPL_H__
 
 #include "spdk/env.h"
-#include "spdk/pci.h"
+#include "spdk/env.h"
 #include "spdk/nvme_spec.h"
+
 #include <assert.h>
 #include <string.h>
 #include <unistd.h>

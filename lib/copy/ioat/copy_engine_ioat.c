@@ -45,9 +45,7 @@
 #include "spdk/conf.h"
 #include "spdk/log.h"
 #include "spdk/event.h"
-#include "spdk/pci.h"
 #include "spdk/io_channel.h"
-
 #include "spdk/ioat.h"
 
 #define IOAT_MAX_CHANNELS		64

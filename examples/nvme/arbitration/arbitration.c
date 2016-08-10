@@ -43,7 +43,7 @@
 #include <rte_lcore.h>
 
 #include "spdk/nvme.h"
-#include "spdk/pci.h"
+#include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
 

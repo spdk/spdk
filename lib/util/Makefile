@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
-C_SRCS = bit_array.c fd.c io_channel.c string.c pci.c
+C_SRCS = bit_array.c fd.c io_channel.c string.c
 LIBNAME = util
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

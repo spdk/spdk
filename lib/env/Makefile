@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
-C_SRCS = env.c vtophys.c
+C_SRCS = env.c pci.c vtophys.c
 LIBNAME = env
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
