@@ -4,16 +4,9 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <string.h>
-#include <rte_config.h>
-#include <rte_malloc.h>
-#include <rte_atomic.h>
-#include <rte_cycles.h>
 
 #include "spdk/assert.h"
 #include "spdk/env.h"
-
-#include <rte_pci.h>
 
 /**
  * \file
@@ -44,6 +37,6 @@
 /**
  * Delay us.
  */
-#define ioat_delay_us(us)        rte_delay_us(us)
+#define ioat_delay_us                   spdk_delay_us
 
 #endif /* __IOAT_IMPL_H__ */

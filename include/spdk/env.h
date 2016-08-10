@@ -61,6 +61,21 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
 void
 spdk_free(void *buf);
 
+/**
+ * Get a monotonic timestamp counter.
+ */
+uint64_t spdk_get_ticks(void);
+
+/**
+ * Get the tick rate of spdk_get_ticks() per second.
+ */
+uint64_t spdk_get_ticks_hz(void);
+
+/**
+ * Delay the given number of microseconds
+ */
+void spdk_delay_us(unsigned int us);
+
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
 uint64_t spdk_vtophys(void *buf);

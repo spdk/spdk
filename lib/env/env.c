@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include <rte_config.h>
+#include <rte_cycles.h>
 #include <rte_malloc.h>
 
 void *
@@ -53,4 +54,19 @@ void
 spdk_free(void *buf)
 {
 	return rte_free(buf);
+}
+
+uint64_t spdk_get_ticks(void)
+{
+	return rte_get_timer_cycles();
+}
+
+uint64_t spdk_get_ticks_hz(void)
+{
+	return rte_get_timer_hz();
+}
+
+void spdk_delay_us(unsigned int us)
+{
+	return rte_delay_us(us);
 }

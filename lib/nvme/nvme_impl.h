@@ -54,14 +54,10 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <rte_config.h>
-#include <rte_cycles.h>
-#include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_version.h>
 #include <rte_memzone.h>
 #include <rte_eal.h>
-
-#include <rte_pci.h>
 
 #include "spdk/pci_ids.h"
 
@@ -193,11 +189,11 @@ nvme_mempool_put(nvme_mempool_t *mp, void *buf)
 /**
  * Get a monotonic timestamp counter (used for measuring timeouts during initialization).
  */
-#define nvme_get_tsc()			rte_get_timer_cycles()
+#define nvme_get_tsc()			spdk_get_ticks()
 
 /**
  * Get the tick rate of nvme_get_tsc() per second.
  */
-#define nvme_get_tsc_hz()		rte_get_timer_hz()
+#define nvme_get_tsc_hz()		spdk_get_ticks_hz()
 
 #endif /* __NVME_IMPL_H__ */
