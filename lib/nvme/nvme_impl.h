@@ -49,6 +49,7 @@
 #include "spdk/pci.h"
 #include "spdk/nvme_spec.h"
 #include <assert.h>
+#include <string.h>
 #include <unistd.h>
 #include <rte_config.h>
 #include <rte_cycles.h>
@@ -85,8 +86,11 @@
 static inline void *
 nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 {
-	void *buf = rte_zmalloc(tag, size, align);
-	*phys_addr = rte_malloc_virt2phy(buf);
+	void *buf = rte_malloc(tag, size, align);
+	if (buf) {
+		memset(buf, 0, size);
+		*phys_addr = rte_malloc_virt2phy(buf);
+	}
 	return buf;
 }
 
