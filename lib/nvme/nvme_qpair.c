@@ -556,8 +556,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 		}
 	}
 	if (qpair->sq_in_cmb == false) {
-		qpair->cmd = nvme_malloc("qpair_cmd",
-					 qpair->num_entries * sizeof(struct spdk_nvme_cmd),
+		qpair->cmd = nvme_malloc(qpair->num_entries * sizeof(struct spdk_nvme_cmd),
 					 0x1000,
 					 &qpair->cmd_bus_addr);
 		if (qpair->cmd == NULL) {
@@ -566,8 +565,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 		}
 	}
 
-	qpair->cpl = nvme_malloc("qpair_cpl",
-				 qpair->num_entries * sizeof(struct spdk_nvme_cpl),
+	qpair->cpl = nvme_malloc(qpair->num_entries * sizeof(struct spdk_nvme_cpl),
 				 0x1000,
 				 &qpair->cpl_bus_addr);
 	if (qpair->cpl == NULL) {
@@ -589,7 +587,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
-	qpair->tr = nvme_malloc("nvme_tr", num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
+	qpair->tr = nvme_malloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
 	if (qpair->tr == NULL) {
 		SPDK_ERRLOG("nvme_tr failed\n");
 		goto fail;

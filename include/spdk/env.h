@@ -42,7 +42,22 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdint.h>
+
+/**
+ * Allocate a pinned, physically contiguous memory buffer with the
+ *   given size and alignment. The buffer will be zeroed.
+ */
+void *
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
+
+/**
+ * Free a memory buffer previously allocated with spdk_malloc.
+ *   This call is never made from the performance path.
+ */
+void
+spdk_free(void *buf);
 
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 

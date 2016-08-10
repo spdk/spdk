@@ -30,22 +30,12 @@
  * Allocate a pinned, physically contiguous memory buffer with the
  * given size and alignment.
  */
-static inline void *
-ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
-{
-	void *buf = rte_malloc(tag, size, align);
-
-	if (buf) {
-		memset(buf, 0, size);
-		*phys_addr = rte_malloc_virt2phy(buf);
-	}
-	return buf;
-}
+#define ioat_zmalloc			spdk_zmalloc
 
 /**
  * Free a memory buffer previously allocated with ioat_zmalloc.
  */
-#define ioat_free(buf)			rte_free(buf)
+#define ioat_free			spdk_free
 
 /**
  * Return the physical address for the specified virtual address.

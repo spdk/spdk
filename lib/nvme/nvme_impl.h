@@ -81,21 +81,12 @@
  *   given size and alignment.
  * Note: these calls are only made during driver initialization.
  */
-static inline void *
-nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
-{
-	void *buf = rte_malloc(tag, size, align);
-	if (buf) {
-		memset(buf, 0, size);
-		*phys_addr = rte_malloc_virt2phy(buf);
-	}
-	return buf;
-}
+#define nvme_malloc 			spdk_zmalloc
 
 /**
  * Free a memory buffer previously allocated with nvme_malloc.
  */
-#define nvme_free(buf)			rte_free(buf)
+#define nvme_free			spdk_free
 
 /**
  * Reserve a named, process shared memory zone with the given size,

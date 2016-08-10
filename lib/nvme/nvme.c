@@ -51,7 +51,7 @@ nvme_attach(void *devhandle)
 	int			status;
 	uint64_t		phys_addr = 0;
 
-	ctrlr = nvme_malloc("nvme_ctrlr", sizeof(struct spdk_nvme_ctrlr),
+	ctrlr = nvme_malloc(sizeof(struct spdk_nvme_ctrlr),
 			    64, &phys_addr);
 	if (ctrlr == NULL) {
 		SPDK_ERRLOG("could not allocate ctrlr\n");
@@ -178,7 +178,7 @@ nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_c
 	uint64_t phys_addr;
 
 	if (buffer && payload_size) {
-		contig_buffer = nvme_malloc("nvme_user_copy", payload_size, 4096, &phys_addr);
+		contig_buffer = nvme_malloc(payload_size, 4096, &phys_addr);
 		if (!contig_buffer) {
 			return NULL;
 		}

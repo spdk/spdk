@@ -247,8 +247,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
-	log_page_directory = nvme_malloc("nvme_log_page_directory",
-					 sizeof(struct spdk_nvme_intel_log_page_directory),
+	log_page_directory = nvme_malloc(sizeof(struct spdk_nvme_intel_log_page_directory),
 					 64, &phys_addr);
 	if (log_page_directory == NULL) {
 		SPDK_ERRLOG("could not allocate log_page_directory\n");
@@ -375,8 +374,7 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	num_trackers = nvme_min(NVME_IO_TRACKERS, (num_entries - 1));
 
-	ctrlr->ioq = nvme_malloc("nvme_ioq",
-				 ctrlr->opts.num_io_queues * sizeof(struct spdk_nvme_qpair),
+	ctrlr->ioq = nvme_malloc(ctrlr->opts.num_io_queues * sizeof(struct spdk_nvme_qpair),
 				 64, &phys_addr);
 
 	if (ctrlr->ioq == NULL)
@@ -695,8 +693,7 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			goto fail;
 		}
 
-		ctrlr->nsdata = nvme_malloc("nvme_namespaces",
-					    nn * sizeof(struct spdk_nvme_ns_data), 64,
+		ctrlr->nsdata = nvme_malloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
 					    &phys_addr);
 		if (ctrlr->nsdata == NULL) {
 			goto fail;

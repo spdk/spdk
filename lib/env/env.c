@@ -31,93 +31,26 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __NVME_IMPL_H__
-#define __NVME_IMPL_H__
+#include "spdk/env.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <pthread.h>
+#include <string.h>
 
-#include "spdk/nvme_spec.h"
+#include <rte_config.h>
+#include <rte_malloc.h>
 
-struct spdk_pci_device;
-
-static inline void *
-nvme_malloc(size_t size, unsigned align, uint64_t *phys_addr)
+void *
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	void *buf = NULL;
-	if (posix_memalign(&buf, align, size)) {
-		return NULL;
+	void *buf = rte_malloc(NULL, size, align);
+	if (buf) {
+		memset(buf, 0, size);
+		*phys_addr = rte_malloc_virt2phy(buf);
 	}
-	*phys_addr = (uint64_t)buf;
 	return buf;
 }
 
-#define nvme_free(buf)			free(buf)
-#define nvme_get_num_ioq()		8
-#define nvme_get_ioq_idx()		0
-
-uint64_t nvme_vtophys(void *buf);
-#define NVME_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
-
-extern uint64_t g_ut_tsc;
-#define nvme_get_tsc()			(g_ut_tsc)
-#define nvme_get_tsc_hz()		(1000000)
-
-static inline void *
-nvme_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
+void
+spdk_free(void *buf)
 {
-	return malloc(len);
+	return rte_free(buf);
 }
-
-static inline void *
-nvme_memzone_lookup(const char *name)
-{
-	assert(0);
-	return NULL;
-}
-
-static inline int
-nvme_memzone_free(const char *name)
-{
-	assert(0);
-	return 0;
-}
-
-static inline bool
-nvme_process_is_primary(void)
-{
-	return true;
-}
-
-#define NVME_SOCKET_ID_ANY -1
-
-typedef unsigned nvme_mempool_t;
-
-static inline nvme_mempool_t *
-nvme_mempool_create(const char *name, unsigned n, unsigned elt_size,
-		    unsigned cache_size)
-{
-	static int mp;
-
-	return &mp;
-}
-
-static inline void
-nvme_mempool_get(nvme_mempool_t *mp, void **buf)
-{
-	if (posix_memalign(buf, 64, 0x1000)) {
-		*buf = NULL;
-	}
-}
-
-static inline void
-nvme_mempool_put(nvme_mempool_t *mp, void *buf)
-{
-	free(buf);
-}
-
-#endif /* __NVME_IMPL_H__ */

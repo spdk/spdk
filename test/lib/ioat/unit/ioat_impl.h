@@ -12,7 +12,7 @@
 struct spdk_pci_device;
 
 static inline void *
-ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
+ioat_zmalloc(size_t size, unsigned align, uint64_t *phys_addr)
 {
 	return calloc(1, size);
 }
