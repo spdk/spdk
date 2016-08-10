@@ -160,7 +160,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	struct spdk_scsi_lun	*lun;
 	struct spdk_scsi_dev	*dev;
 	struct spdk_scsi_port	*port;
-	uint32_t blocks;
+	uint32_t blocks, optimal_blocks;
 	int hlen = 0, plen, plen2;
 	uint16_t len = 0;
 	int pc;
@@ -524,32 +524,22 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 			/* force align to 4KB */
 			if (bdev->blocklen < 4096) {
-				blocks = 4096 / bdev->blocklen;
-				/* OPTIMAL TRANSFER LENGTH GRANULARITY */
-				to_be16(&data[6], blocks);
-
-				/* MAXIMUM TRANSFER LENGTH */
-
-				/* OPTIMAL TRANSFER LENGTH */
-				blocks = SPDK_WORK_BLOCK_SIZE / bdev->blocklen;
-
-				to_be32(&data[12], blocks);
-
-				/* MAXIMUM PREFETCH XDREAD XDWRITE TRANSFER LENGTH */
+				optimal_blocks = 4096 / bdev->blocklen;
 			} else {
-				blocks = 1;
-
-				/* OPTIMAL TRANSFER LENGTH GRANULARITY */
-				to_be16(&data[6], blocks);
-
-				/* MAXIMUM TRANSFER LENGTH */
-
-				/* OPTIMAL TRANSFER LENGTH */
-				blocks = SPDK_WORK_BLOCK_SIZE / bdev->blocklen;
-				to_be32(&data[12], blocks);
-
-				/* MAXIMUM PREFETCH XDREAD XDWRITE TRANSFER LENGTH */
+				optimal_blocks = 1;
 			}
+
+			/* OPTIMAL TRANSFER LENGTH GRANULARITY */
+			to_be16(&data[6], optimal_blocks);
+
+			blocks = SPDK_WORK_BLOCK_SIZE / bdev->blocklen;
+
+			/* MAXIMUM TRANSFER LENGTH */
+			to_be32(&data[8], blocks);
+			/* OPTIMAL TRANSFER LENGTH */
+			to_be32(&data[12], blocks);
+
+			/* MAXIMUM PREFETCH XDREAD XDWRITE TRANSFER LENGTH */
 
 			len = 20 - hlen;
 
