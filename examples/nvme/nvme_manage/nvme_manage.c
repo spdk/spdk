@@ -175,6 +175,7 @@ static const char *ealargs[] = {
 	"nvme_manage",
 	"-c 0x1",
 	"-n 4",
+	"--proc-type=auto",
 };
 
 static void usage(void)

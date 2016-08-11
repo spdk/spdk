@@ -183,6 +183,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 static char *ealargs[] = {
 	"fio",
 	"-n 4",
+	"--proc-type=auto",
 };
 
 /* Called once at initialization. This is responsible for gathering the size of

@@ -58,6 +58,7 @@ enum dpdk_eal_args {
 	EAL_MEMSIZE_ARG,
 	EAL_MASTER_CORE_ARG,
 	EAL_FILE_PREFIX_ARG,
+	EAL_PROC_TYPE_ARG,
 	EAL_ARG_COUNT
 };
 
@@ -155,6 +156,19 @@ spdk_build_eal_cmdline(struct spdk_app_opts *opts)
 	g_arg_strings[EAL_FILE_PREFIX_ARG] = strdup("");
 #endif
 	if (g_arg_strings[EAL_FILE_PREFIX_ARG] == NULL) {
+		spdk_free_ealargs();
+		rte_exit(EXIT_FAILURE, "ealargs spdk_sprintf_alloc");
+	}
+
+#ifdef __linux__
+	/* set the process type */
+	g_arg_strings[EAL_PROC_TYPE_ARG] = spdk_sprintf_alloc("--proc-type=auto");
+#else
+	/* --proc-type is not required on FreeBSD */
+	/* TODO: to enable the support on FreeBSD once it supports process shared mutex */
+	g_arg_strings[EAL_PROC_TYPE_ARG] = strdup("");
+#endif
+	if (g_arg_strings[EAL_PROC_TYPE_ARG] == NULL) {
 		spdk_free_ealargs();
 		rte_exit(EXIT_FAILURE, "ealargs spdk_sprintf_alloc");
 	}

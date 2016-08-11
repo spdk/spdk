@@ -1120,6 +1120,7 @@ static char *ealargs[] = {
 	"arb",
 	"-c 0xf", /* This must be the second parameter. It is overwritten by index in main(). */
 	"-n 4",
+	"--proc-type=auto",
 };
 
 int

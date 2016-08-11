@@ -1093,6 +1093,7 @@ static char *ealargs[] = {
 	"perf",
 	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
 	"-n 4",
+	"--proc-type=auto",
 };
 
 int main(int argc, char **argv)

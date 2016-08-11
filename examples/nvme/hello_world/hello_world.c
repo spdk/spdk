@@ -333,6 +333,7 @@ static char *ealargs[] = {
 	"hello_world",
 	"-c 0x1",
 	"-n 4",
+	"--proc-type=auto",
 };
 
 int main(int argc, char **argv)
