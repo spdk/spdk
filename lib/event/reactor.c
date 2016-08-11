@@ -59,6 +59,15 @@
 
 #define SPDK_MAX_SOCKET		64
 
+struct spdk_poller {
+	TAILQ_ENTRY(spdk_poller)	tailq;
+	uint32_t			lcore;
+	uint64_t			period_ticks;
+	uint64_t			next_run_tick;
+	spdk_poller_fn			fn;
+	void				*arg;
+};
+
 enum spdk_reactor_state {
 	SPDK_REACTOR_STATE_INVALID = 0,
 	SPDK_REACTOR_STATE_INITIALIZED = 1,
@@ -569,8 +578,6 @@ _spdk_event_add_poller(spdk_event_t event)
 	struct spdk_poller *poller = spdk_event_get_arg2(event);
 	struct spdk_event *next = spdk_event_get_next(event);
 
-	poller->lcore = reactor->lcore;
-
 	if (poller->period_ticks) {
 		spdk_poller_insert_timer(reactor, poller, rte_get_timer_cycles());
 	} else {
@@ -582,36 +589,47 @@ _spdk_event_add_poller(spdk_event_t event)
 	}
 }
 
-static void
-_spdk_poller_register(struct spdk_poller *poller, uint32_t lcore,
-		      struct spdk_event *complete)
+void
+spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
+		     uint32_t lcore, struct spdk_event *complete, uint64_t period_microseconds)
 {
+	struct spdk_poller *poller;
 	struct spdk_reactor *reactor;
 	struct spdk_event *event;
 
-	reactor = spdk_reactor_get(lcore);
-	event = spdk_event_allocate(lcore, _spdk_event_add_poller, reactor, poller, complete);
-	spdk_event_call(event);
-}
+	poller = calloc(1, sizeof(*poller));
+	if (poller == NULL) {
+		SPDK_ERRLOG("Poller memory allocation failed\n");
+		abort();
+	}
 
-void
-spdk_poller_register(struct spdk_poller *poller,
-		     uint32_t lcore, struct spdk_event *complete, uint64_t period_microseconds)
-{
+	poller->lcore = lcore;
+	poller->fn = fn;
+	poller->arg = arg;
+
 	if (period_microseconds) {
 		poller->period_ticks = (rte_get_timer_hz() * period_microseconds) / 1000000ULL;
 	} else {
 		poller->period_ticks = 0;
 	}
 
-	_spdk_poller_register(poller, lcore, complete);
+	if (*ppoller != NULL) {
+		SPDK_ERRLOG("Attempted reuse of poller pointer\n");
+		abort();
+	}
+
+	*ppoller = poller;
+
+	reactor = spdk_reactor_get(lcore);
+	event = spdk_event_allocate(lcore, _spdk_event_add_poller, reactor, poller, complete);
+	spdk_event_call(event);
 }
 
 static void
 _spdk_event_remove_poller(spdk_event_t event)
 {
-	struct spdk_reactor *reactor = spdk_event_get_arg1(event);
-	struct spdk_poller *poller = spdk_event_get_arg2(event);
+	struct spdk_poller *poller = spdk_event_get_arg1(event);
+	struct spdk_reactor *reactor = spdk_reactor_get(poller->lcore);
 	struct spdk_event *next = spdk_event_get_next(event);
 
 	if (poller->period_ticks) {
@@ -620,47 +638,30 @@ _spdk_event_remove_poller(spdk_event_t event)
 		TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 	}
 
+	free(poller);
+
 	if (next) {
 		spdk_event_call(next);
 	}
 }
 
 void
-spdk_poller_unregister(struct spdk_poller *poller,
+spdk_poller_unregister(struct spdk_poller **ppoller,
 		       struct spdk_event *complete)
 {
-	struct spdk_reactor *reactor;
-	struct spdk_event *event;
+	struct spdk_poller *poller;
 
-	reactor = spdk_reactor_get(poller->lcore);
-	event = spdk_event_allocate(poller->lcore, _spdk_event_remove_poller, reactor, poller, complete);
+	poller = *ppoller;
 
-	spdk_event_call(event);
-}
+	*ppoller = NULL;
 
-static void
-_spdk_poller_migrate(spdk_event_t event)
-{
-	struct spdk_poller *poller = spdk_event_get_arg1(event);
-	struct spdk_event *next = spdk_event_get_next(event);
+	if (poller == NULL) {
+		if (complete) {
+			spdk_event_call(complete);
+		}
+		return;
+	}
 
-	/* Register the poller on the current lcore. This works
-	 * because we already set this event up so that it is called
-	 * on the new_lcore.
-	 */
-	_spdk_poller_register(poller, rte_lcore_id(), next);
-}
-
-void
-spdk_poller_migrate(struct spdk_poller *poller, int new_lcore,
-		    struct spdk_event *complete)
-{
-	struct spdk_event *event;
-
-	RTE_VERIFY(spdk_app_get_core_mask() & (1ULL << new_lcore));
-	RTE_VERIFY(poller != NULL);
-
-	event = spdk_event_allocate(new_lcore, _spdk_poller_migrate, poller, NULL, complete);
-
-	spdk_poller_unregister(poller, event);
+	spdk_event_call(spdk_event_allocate(poller->lcore, _spdk_event_remove_poller, poller, NULL,
+					    complete));
 }

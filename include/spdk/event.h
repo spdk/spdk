@@ -102,14 +102,7 @@ typedef void (*spdk_poller_fn)(void *arg);
 /**
  * \brief A poller is a function that is repeatedly called on an lcore.
  */
-struct spdk_poller {
-	TAILQ_ENTRY(spdk_poller)	tailq;
-	uint32_t			lcore;
-	uint64_t			period_ticks;
-	uint64_t			next_run_tick;
-	spdk_poller_fn			fn;
-	void				*arg;
-};
+struct spdk_poller;
 
 typedef void (*spdk_app_shutdown_cb)(void);
 typedef void (*spdk_sighandler_t)(int);
@@ -225,7 +218,9 @@ void spdk_event_queue_run_all(uint32_t lcore);
 /**
  * \brief Register a poller on the given lcore.
  */
-void spdk_poller_register(struct spdk_poller *poller,
+void spdk_poller_register(struct spdk_poller **ppoller,
+			  spdk_poller_fn fn,
+			  void *arg,
 			  uint32_t lcore,
 			  struct spdk_event *complete,
 			  uint64_t period_microseconds);
@@ -233,14 +228,8 @@ void spdk_poller_register(struct spdk_poller *poller,
 /**
  * \brief Unregister a poller on the given lcore.
  */
-void spdk_poller_unregister(struct spdk_poller *poller,
+void spdk_poller_unregister(struct spdk_poller **ppoller,
 			    struct spdk_event *complete);
-
-/**
- * \brief Move a poller from its current lcore to a new lcore.
- */
-void spdk_poller_migrate(struct spdk_poller *poller, int new_lcore,
-			 struct spdk_event *complete);
 
 struct spdk_subsystem {
 	const char *name;

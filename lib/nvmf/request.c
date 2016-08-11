@@ -202,7 +202,7 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	}
 
 	/* Pass an event to the lcore that owns this subsystem */
-	event = spdk_event_allocate(subsystem->poller.lcore, nvmf_handle_connect, req, NULL, NULL);
+	event = spdk_event_allocate(subsystem->lcore, nvmf_handle_connect, req, NULL, NULL);
 	spdk_event_call(event);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;

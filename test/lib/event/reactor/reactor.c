@@ -39,10 +39,10 @@
 #include "spdk/event.h"
 
 static int g_time_in_sec;
-static struct spdk_poller test_end_poller;
-static struct spdk_poller poller_100ms;
-static struct spdk_poller poller_250ms;
-static struct spdk_poller poller_500ms;
+static struct spdk_poller *test_end_poller;
+static struct spdk_poller *poller_100ms;
+static struct spdk_poller *poller_250ms;
+static struct spdk_poller *poller_500ms;
 
 static void
 test_end(void *arg)
@@ -65,20 +65,11 @@ test_start(spdk_event_t evt)
 	printf("test_start\n");
 
 	/* Register a poller that will stop the test after the time has elapsed. */
-	test_end_poller.fn = test_end;
-	spdk_poller_register(&test_end_poller, 0, NULL, g_time_in_sec * 1000000ULL);
+	spdk_poller_register(&test_end_poller, test_end, NULL, 0, NULL, g_time_in_sec * 1000000ULL);
 
-	poller_100ms.fn = tick;
-	poller_100ms.arg = (void *)100;
-	spdk_poller_register(&poller_100ms, 0, NULL, 100000);
-
-	poller_250ms.fn = tick;
-	poller_250ms.arg = (void *)250;
-	spdk_poller_register(&poller_250ms, 0, NULL, 250000);
-
-	poller_500ms.fn = tick;
-	poller_500ms.arg = (void *)500;
-	spdk_poller_register(&poller_500ms, 0, NULL, 500000);
+	spdk_poller_register(&poller_100ms, tick, (void *)100, 0, NULL, 100000);
+	spdk_poller_register(&poller_250ms, tick, (void *)250, 0, NULL, 250000);
+	spdk_poller_register(&poller_500ms, tick, (void *)500, 0, NULL, 500000);
 }
 
 static void

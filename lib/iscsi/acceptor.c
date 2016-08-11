@@ -47,7 +47,7 @@
 
 #define ACCEPT_TIMEOUT_US 1000 /* 1ms */
 
-static struct spdk_poller g_acceptor_poller;
+static struct spdk_poller *g_acceptor_poller;
 
 static void
 spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
@@ -94,9 +94,8 @@ spdk_acceptor(void *arg)
 void
 spdk_iscsi_acceptor_start(void)
 {
-	g_acceptor_poller.fn = spdk_acceptor;
-	g_acceptor_poller.arg = &g_spdk_iscsi;
-	spdk_poller_register(&g_acceptor_poller, spdk_app_get_current_core(), NULL, ACCEPT_TIMEOUT_US);
+	spdk_poller_register(&g_acceptor_poller, spdk_acceptor, &g_spdk_iscsi, spdk_app_get_current_core(),
+			     NULL, ACCEPT_TIMEOUT_US);
 }
 
 void

@@ -908,9 +908,6 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_server_conn *conn,
 		spdk_json_write_name(w, "is_idle");
 		spdk_json_write_int32(w, c->is_idle);
 
-		spdk_json_write_name(w, "lcore_id");
-		spdk_json_write_int32(w, c->poller.lcore);
-
 		spdk_json_write_name(w, "initiator_addr");
 		spdk_json_write_string(w, c->initiator_addr);
 

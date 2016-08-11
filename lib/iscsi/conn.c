@@ -82,7 +82,7 @@ static void __add_idle_conn(spdk_event_t event);
 
 /** Global variables used for managing idle connections. */
 static int g_epoll_fd = 0;
-static struct spdk_poller g_idle_conn_poller;
+static struct spdk_poller *g_idle_conn_poller;
 static STAILQ_HEAD(idle_list, spdk_iscsi_conn) g_idle_conn_list_head;
 
 void spdk_iscsi_conn_login_do_work(void *arg);
@@ -276,9 +276,8 @@ int spdk_initialize_iscsi_conns(void)
 		return -1;
 	}
 
-	g_idle_conn_poller.fn = spdk_iscsi_conn_idle_do_work;
-	g_idle_conn_poller.arg = NULL;
-	spdk_poller_register(&g_idle_conn_poller, rte_get_master_lcore(), NULL, 0);
+	spdk_poller_register(&g_idle_conn_poller, spdk_iscsi_conn_idle_do_work, NULL,
+			     rte_get_master_lcore(), NULL, 0);
 
 	return 0;
 }
@@ -388,8 +387,6 @@ error_return:
 	rte_timer_init(&conn->logout_timer);
 	rte_timer_init(&conn->shutdown_timer);
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
-	conn->poller.fn = spdk_iscsi_conn_login_do_work;
-	conn->poller.arg = conn;
 	conn->last_activity_tsc = rte_get_timer_cycles();
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
@@ -401,7 +398,8 @@ error_return:
 	 */
 	spdk_net_framework_clear_socket_association(conn->sock);
 	rte_atomic32_inc(&g_num_connections[spdk_app_get_current_core()]);
-	spdk_poller_register(&conn->poller, spdk_app_get_current_core(), NULL, 0);
+	spdk_poller_register(&conn->poller, spdk_iscsi_conn_login_do_work, conn,
+			     spdk_app_get_current_core(), NULL, 0);
 
 	return 0;
 }
@@ -639,7 +637,8 @@ void spdk_shutdown_iscsi_conns(void)
 	 */
 	STAILQ_FOREACH_SAFE(conn, &g_idle_conn_list_head, link, tmp) {
 		STAILQ_REMOVE(&g_idle_conn_list_head, conn, spdk_iscsi_conn, link);
-		spdk_poller_register(&conn->poller, rte_get_master_lcore(), NULL, 0);
+		spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
+				     rte_get_master_lcore(), NULL, 0);
 		conn->is_idle = 0;
 		del_idle_conn(conn);
 	}
@@ -1182,12 +1181,23 @@ conn_exit:
 	return 0;
 }
 
+static void
+spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event)
+{
+	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
+
+	/* The poller has been unregistered, so now we can re-register it on the new core. */
+	spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
+			     spdk_app_get_current_core(), NULL, 0);
+}
+
 void
 spdk_iscsi_conn_login_do_work(void *arg)
 {
 	struct spdk_iscsi_conn	*conn = arg;
 	int				lcore;
 	int				rc;
+	struct spdk_event		*event;
 
 	/* General connection processing */
 	rc = spdk_iscsi_conn_execute(conn);
@@ -1199,11 +1209,11 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	 */
 	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
 		lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
-		conn->poller.fn = spdk_iscsi_conn_full_feature_do_work;
+		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL, NULL);
 		rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 		rte_atomic32_inc(&g_num_connections[lcore]);
 		spdk_net_framework_clear_socket_association(conn->sock);
-		spdk_poller_migrate(&conn->poller, lcore, NULL);
+		spdk_poller_unregister(&conn->poller, event);
 	}
 }
 
@@ -1278,7 +1288,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			lcore = spdk_iscsi_conn_allocate_reactor(tconn->portal->cpumask);
 			rte_atomic32_inc(&g_num_connections[lcore]);
 			spdk_net_framework_clear_socket_association(tconn->sock);
-			spdk_poller_register(&tconn->poller, lcore, NULL, 0);
+			spdk_poller_register(&tconn->poller, spdk_iscsi_conn_full_feature_do_work, tconn, lcore, NULL, 0);
 			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
 				      tconn->id, tconn->cid, &tconn->poller, lcore);
 		}
@@ -1298,14 +1308,15 @@ __add_idle_conn(spdk_event_t e)
 	 *  process.
 	 */
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		spdk_poller_register(&conn->poller, rte_get_master_lcore(), NULL, 0);
+		spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
+				     rte_get_master_lcore(), NULL, 0);
 		return;
 	}
 
 	rc = add_idle_conn(conn);
 	if (rc == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d idle\n",
-			      conn->id, conn->cid, &conn->poller, conn->poller.lcore);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to idle\n",
+			      conn->id, conn->cid, conn->poller);
 		conn->is_idle = 1;
 		STAILQ_INSERT_TAIL(&g_idle_conn_list_head, conn, link);
 	} else {

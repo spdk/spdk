@@ -119,13 +119,14 @@ struct spdk_nvmf_controller {
  */
 struct spdk_nvmf_subsystem {
 	uint16_t num;
+	uint32_t lcore;
 	char subnqn[MAX_NQN_SIZE];
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
 	struct nvmf_session *session;
 	struct spdk_nvmf_controller 	ctrlr;
 
-	struct spdk_poller	poller;
+	struct spdk_poller			*poller;
 
 	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
 	uint32_t				num_listen_addrs;

@@ -140,7 +140,7 @@ struct spdk_nvmf_rdma_session {
 };
 
 struct spdk_nvmf_rdma {
-	struct spdk_poller		acceptor_poller;
+	struct spdk_poller		*acceptor_poller;
 	struct rdma_event_channel	*acceptor_event_channel;
 	struct rdma_cm_id		*acceptor_listen_id;
 
@@ -769,7 +769,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	}
 
 	/* Pass an event to the core that owns this connection */
-	event = spdk_event_allocate(session->subsys->poller.lcore,
+	event = spdk_event_allocate(session->subsys->lcore,
 				    spdk_nvmf_handle_disconnect,
 				    session, conn, NULL);
 	spdk_event_call(event);
@@ -1018,9 +1018,8 @@ spdk_nvmf_rdma_acceptor_start(void)
 	sin_port = ntohs(rdma_get_src_port(g_rdma.acceptor_listen_id));
 	SPDK_NOTICELOG("*** NVMf Target Listening on port %d ***\n", sin_port);
 
-	g_rdma.acceptor_poller.fn = nvmf_rdma_accept;
-	g_rdma.acceptor_poller.arg = NULL;
-	spdk_poller_register(&g_rdma.acceptor_poller, rte_lcore_id(), NULL, ACCEPT_TIMEOUT_US);
+	spdk_poller_register(&g_rdma.acceptor_poller, nvmf_rdma_accept, NULL, rte_lcore_id(), NULL,
+			     ACCEPT_TIMEOUT_US);
 	return rc;
 
 listen_error:

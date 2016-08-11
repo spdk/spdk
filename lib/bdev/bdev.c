@@ -440,7 +440,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_event *event, *cb_event = NULL;
-	uint32_t lcore = bdev->poller.lcore;
+	uint32_t lcore = bdev->lcore;
 
 	/* start the poller when first IO comes */
 	if (!bdev->is_running) {
@@ -448,7 +448,8 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		if (lcore == 0) {
 			lcore = rte_lcore_id();
 		}
-		spdk_poller_register(&bdev->poller, lcore, NULL, 0);
+		bdev->lcore = lcore;
+		spdk_poller_register(&bdev->poller, spdk_bdev_do_work, bdev, lcore, NULL, 0);
 	}
 
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
@@ -797,8 +798,6 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
 	bdev->is_running = false;
-	bdev->poller.fn = spdk_bdev_do_work;
-	bdev->poller.arg = bdev;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);

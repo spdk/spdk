@@ -142,8 +142,11 @@ struct spdk_bdev {
 	/** Whether the poller is registered with the reactor */
 	bool is_running;
 
+	/** Which lcore the poller is running on */
+	uint32_t lcore;
+
 	/** Poller to submit IO and check completion */
-	struct spdk_poller poller;
+	struct spdk_poller *poller;
 
 	/** True if another blockdev or a LUN is using this device */
 	bool claimed;
