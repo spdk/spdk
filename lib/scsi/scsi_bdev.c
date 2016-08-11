@@ -618,6 +618,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		case SPDK_SPC_VPD_BLOCK_DEV_CHARS: {
 			/* PAGE LENGTH */
 			hlen = 4;
+			len = 64 - hlen;
 
 			to_be16(&data[4], DEFAULT_DISK_ROTATION_RATE);
 
@@ -628,7 +629,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* Reserved */
 			memset(&data[8], 0, 64 - 8);
 
-			to_be16(vpage->alloc_len, 64 - hlen);
+			to_be16(vpage->alloc_len, len);
 			break;
 		}
 
@@ -639,9 +640,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			}
 
 			hlen = 4;
-
-			/* PAGE CODE */
-			data[1] = SPDK_SPC_VPD_BLOCK_THIN_PROVISION;
+			len = 7;
 
 			/*
 			 *  PAGE LENGTH : if the DP bit is set to one, then the
@@ -667,7 +666,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			 */
 			data[6] = SPDK_SCSI_UNMAP_THIN_PROVISIONING;
 
-			to_be16(vpage->alloc_len, 7);
+			to_be16(vpage->alloc_len, len);
 			break;
 		}
 
