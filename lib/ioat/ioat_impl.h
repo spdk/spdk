@@ -65,11 +65,6 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 #define ioat_delay_us(us)        rte_delay_us(us)
 
 /**
- * Log or print a message from the driver.
- */
-#define ioat_printf(chan, fmt, args...) printf(fmt, ##args)
-
-/**
  *
  */
 #define ioat_pcicfg_read32(handle, var, offset)  spdk_pci_device_cfg_read32(handle, var, offset)

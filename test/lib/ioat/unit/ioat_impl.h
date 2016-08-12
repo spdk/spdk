@@ -24,7 +24,6 @@ ioat_zmalloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 #define ioat_free(buf)					free(buf)
 #define ioat_vtophys(buf)				(uint64_t)(buf)
 #define ioat_delay_us(us)				ioat_noop()
-#define ioat_printf(chan, fmt, args...)			printf(fmt, ##args)
 
 static inline int
 ioat_pci_enumerate(int (*enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev), void *enum_ctx)

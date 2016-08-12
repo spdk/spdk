@@ -39,7 +39,7 @@ C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib -include $(SPDK_ROOT_DIR)/test/lib/ioat/unit/ioat_impl.h
 
-LIBS += -lcunit
+LIBS += -lcunit $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a
 
 APP = $(TEST_FILE:.c=)
 

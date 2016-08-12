@@ -34,6 +34,8 @@
 #include "ioat_internal.h"
 #include "ioat_pci.h"
 
+#include "spdk/log.h"
+
 #include <pthread.h>
 
 struct ioat_driver {
@@ -94,8 +96,8 @@ ioat_map_pci_bar(struct spdk_ioat_chan *ioat)
 	regs_bar = 0;
 	rc = ioat_pcicfg_map_bar(ioat->device, regs_bar, 0, &addr);
 	if (rc != 0 || addr == NULL) {
-		ioat_printf(ioat, "%s: pci_device_map_range failed with error code %d\n",
-			    __func__, rc);
+		SPDK_ERRLOG("pci_device_map_range failed with error code %d\n",
+			    rc);
 		return -1;
 	}
 
@@ -272,7 +274,7 @@ static int ioat_reset_hw(struct spdk_ioat_chan *ioat)
 		ioat_delay_us(1000);
 		timeout--;
 		if (timeout == 0) {
-			ioat_printf(ioat, "%s: timed out waiting for suspend\n", __func__);
+			SPDK_ERRLOG("timed out waiting for suspend\n");
 			return -1;
 		}
 		status = ioat_get_chansts(ioat);
@@ -292,7 +294,7 @@ static int ioat_reset_hw(struct spdk_ioat_chan *ioat)
 		ioat_delay_us(1000);
 		timeout--;
 		if (timeout == 0) {
-			ioat_printf(ioat, "%s: timed out waiting for reset\n", __func__);
+			SPDK_ERRLOG("timed out waiting for reset\n");
 			return -1;
 		}
 	}
@@ -315,7 +317,7 @@ ioat_process_channel_events(struct spdk_ioat_chan *ioat)
 	completed_descriptor = status & SPDK_IOAT_CHANSTS_COMPLETED_DESCRIPTOR_MASK;
 
 	if (is_ioat_halted(status)) {
-		ioat_printf(ioat, "%s: Channel halted (%x)\n", __func__, ioat->regs->chanerr);
+		SPDK_ERRLOG("Channel halted (%x)\n", ioat->regs->chanerr);
 		return -1;
 	}
 
@@ -369,14 +371,14 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	uint64_t comp_update_bus_addr;
 
 	if (ioat_map_pci_bar(ioat) != 0) {
-		ioat_printf(ioat, "%s: ioat_map_pci_bar() failed\n", __func__);
+		SPDK_ERRLOG("ioat_map_pci_bar() failed\n");
 		return -1;
 	}
 
 	version = ioat->regs->cbver;
 	if (version < SPDK_IOAT_VER_3_0) {
-		ioat_printf(ioat, "%s: unsupported IOAT version %u.%u\n",
-			    __func__, version >> 4, version & 0xF);
+		SPDK_ERRLOG(" unsupported IOAT version %u.%u\n",
+			    version >> 4, version & 0xF);
 		return -1;
 	}
 
@@ -393,7 +395,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		ioat->max_xfer_size = 1ULL << 32;
 	} else if (xfercap < 12) {
 		/* XFCERCAP must be at least 12 (4 KB) according to the spec. */
-		ioat_printf(ioat, "%s: invalid XFERCAP value %u\n", __func__, xfercap);
+		SPDK_ERRLOG("invalid XFERCAP value %u\n", xfercap);
 		return -1;
 	} else {
 		ioat->max_xfer_size = 1U << xfercap;
@@ -448,8 +450,8 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	if (is_ioat_idle(status)) {
 		ioat_process_channel_events(ioat);
 	} else {
-		ioat_printf(ioat, "%s: could not start channel: status = %p\n error = %#x\n",
-			    __func__, (void *)status, ioat->regs->chanerr);
+		SPDK_ERRLOG("could not start channel: status = %p\n error = %#x\n",
+			    (void *)status, ioat->regs->chanerr);
 		return -1;
 	}
 
@@ -516,7 +518,7 @@ ioat_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 */
 		ioat = ioat_attach(pci_dev);
 		if (ioat == NULL) {
-			ioat_printf(NULL, "ioat_attach() failed\n");
+			SPDK_ERRLOG("ioat_attach() failed\n");
 			return -1;
 		}
 
@@ -660,7 +662,7 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 	}
 
 	if (!(ioat->dma_capabilities & SPDK_IOAT_ENGINE_FILL_SUPPORTED)) {
-		ioat_printf(ioat, "Channel does not support memory fill\n");
+		SPDK_ERRLOG("Channel does not support memory fill\n");
 		return -1;
 	}
 
@@ -716,3 +718,5 @@ spdk_ioat_process_events(struct spdk_ioat_chan *ioat)
 {
 	return ioat_process_channel_events(ioat);
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("ioat", SPDK_TRACE_IOAT)
