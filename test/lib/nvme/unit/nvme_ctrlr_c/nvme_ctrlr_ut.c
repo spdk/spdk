@@ -33,6 +33,11 @@
 
 #include "spdk_cunit.h"
 
+#include <stdbool.h>
+
+bool trace_flag = false;
+#define SPDK_TRACE_NVME trace_flag
+
 #include "nvme/nvme_ctrlr.c"
 
 struct nvme_driver _g_nvme_driver = {
@@ -44,8 +49,6 @@ static uint16_t g_pci_vendor_id;
 static uint16_t g_pci_device_id;
 static uint16_t g_pci_subvendor_id;
 static uint16_t g_pci_subdevice_id;
-
-char outbuf[OUTBUF_SIZE];
 
 uint64_t g_ut_tsc = 0;
 struct spdk_nvme_registers g_ut_nvme_regs = {};

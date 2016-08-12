@@ -35,8 +35,6 @@
 
 #include "nvme/nvme_ns_cmd.c"
 
-char outbuf[OUTBUF_SIZE];
-
 struct nvme_request *g_request = NULL;
 
 

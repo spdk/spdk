@@ -38,8 +38,6 @@
 
 #define CTRLR_CDATA_ELPE   5
 
-char outbuf[OUTBUF_SIZE];
-
 struct nvme_request g_req;
 
 uint32_t error_num_entries;

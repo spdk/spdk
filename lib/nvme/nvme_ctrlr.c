@@ -62,7 +62,7 @@ spdk_nvme_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_create_io_cq failed!\n");
+		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
 		return -1;
 	}
 
@@ -76,7 +76,7 @@ spdk_nvme_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpa
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_create_io_sq failed!\n");
+		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
 		/* Attempt to delete the completion queue */
 		status.done = false;
 		rc = nvme_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
@@ -113,8 +113,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 * default round robin arbitration method.
 	 */
 	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (qprio != SPDK_NVME_QPRIO_URGENT)) {
-		nvme_printf(ctrlr,
-			    "invalid queue priority for default round robin arbitration method\n");
+		SPDK_ERRLOG("invalid queue priority for default round robin arbitration method\n");
 		return NULL;
 	}
 
@@ -252,7 +251,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 					 sizeof(struct spdk_nvme_intel_log_page_directory),
 					 64, &phys_addr);
 	if (log_page_directory == NULL) {
-		nvme_printf(NULL, "could not allocate log_page_directory\n");
+		SPDK_ERRLOG("could not allocate log_page_directory\n");
 		return -ENXIO;
 	}
 
@@ -266,7 +265,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		nvme_free(log_page_directory);
-		nvme_printf(ctrlr, "nvme_ctrlr_cmd_get_log_page failed!\n");
+		SPDK_ERRLOG("nvme_ctrlr_cmd_get_log_page failed!\n");
 		return -ENXIO;
 	}
 
@@ -443,7 +442,7 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 			break;
 	}
 	if (csts.bits.shst != SPDK_NVME_SHST_COMPLETE)
-		nvme_printf(ctrlr, "did not shutdown within 5 seconds\n");
+		SPDK_ERRLOG("did not shutdown within 5 seconds\n");
 }
 
 static int
@@ -456,7 +455,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
 
 	if (cc.bits.en != 0) {
-		nvme_printf(ctrlr, "%s called with CC.EN = 1\n", __func__);
+		SPDK_ERRLOG("%s called with CC.EN = 1\n", __func__);
 		return -EINVAL;
 	}
 
@@ -537,7 +536,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->is_resetting = true;
 
-	nvme_printf(ctrlr, "resetting controller\n");
+	SPDK_NOTICELOG("resetting controller\n");
 
 	/* Disable all queues before disabling the controller hardware. */
 	nvme_qpair_disable(&ctrlr->adminq);
@@ -550,7 +549,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
-			nvme_printf(ctrlr, "%s: controller reinitialization failed\n", __func__);
+			SPDK_ERRLOG("%s: controller reinitialization failed\n", __func__);
 			nvme_ctrlr_fail(ctrlr);
 			rc = -1;
 			break;
@@ -591,7 +590,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_identify_controller failed!\n");
+		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		return -ENXIO;
 	}
 
@@ -618,11 +617,11 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	status.done = false;
 
 	if (ctrlr->opts.num_io_queues > SPDK_NVME_MAX_IO_QUEUES) {
-		nvme_printf(ctrlr, "Limiting requested num_io_queues %u to max %d\n",
-			    ctrlr->opts.num_io_queues, SPDK_NVME_MAX_IO_QUEUES);
+		SPDK_NOTICELOG("Limiting requested num_io_queues %u to max %d\n",
+			       ctrlr->opts.num_io_queues, SPDK_NVME_MAX_IO_QUEUES);
 		ctrlr->opts.num_io_queues = SPDK_NVME_MAX_IO_QUEUES;
 	} else if (ctrlr->opts.num_io_queues < 1) {
-		nvme_printf(ctrlr, "Requested num_io_queues 0, increasing to 1\n");
+		SPDK_NOTICELOG("Requested num_io_queues 0, increasing to 1\n");
 		ctrlr->opts.num_io_queues = 1;
 	}
 
@@ -636,7 +635,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_set_num_queues failed!\n");
+		SPDK_ERRLOG("nvme_set_num_queues failed!\n");
 		return -ENXIO;
 	}
 
@@ -681,7 +680,7 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	uint64_t phys_addr = 0;
 
 	if (nn == 0) {
-		nvme_printf(ctrlr, "controller has 0 namespaces\n");
+		SPDK_ERRLOG("controller has 0 namespaces\n");
 		return -1;
 	}
 
@@ -751,7 +750,7 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		 * We can't do anything to recover from a failure here,
 		 * so just print a warning message and leave the AER unsubmitted.
 		 */
-		nvme_printf(ctrlr, "resubmitting AER failed!\n");
+		SPDK_ERRLOG("resubmitting AER failed!\n");
 	}
 }
 
@@ -794,7 +793,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_ctrlr_cmd_set_async_event_config failed!\n");
+		SPDK_ERRLOG("nvme_ctrlr_cmd_set_async_event_config failed!\n");
 		return -ENXIO;
 	}
 
@@ -804,7 +803,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	for (i = 0; i < ctrlr->num_aers; i++) {
 		aer = &ctrlr->aer[i];
 		if (nvme_ctrlr_construct_and_submit_aer(ctrlr, aer)) {
-			nvme_printf(ctrlr, "nvme_ctrlr_construct_and_submit_aer failed!\n");
+			SPDK_ERRLOG("nvme_ctrlr_construct_and_submit_aer failed!\n");
 			return -1;
 		}
 	}
@@ -911,7 +910,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
 	    nvme_get_tsc() > ctrlr->state_timeout_tsc) {
-		nvme_printf(ctrlr, "Initialization timed out in state %d\n", ctrlr->state);
+		SPDK_ERRLOG("Initialization timed out in state %d\n", ctrlr->state);
 		nvme_ctrlr_fail(ctrlr);
 		return -1;
 	}
@@ -1052,7 +1051,7 @@ nvme_ctrlr_allocate_bars(struct spdk_nvme_ctrlr *ctrlr)
 	rc = nvme_pcicfg_map_bar(ctrlr->devhandle, 0, 0 /* writable */, &addr);
 	ctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
 	if ((ctrlr->regs == NULL) || (rc != 0)) {
-		nvme_printf(ctrlr, "nvme_pcicfg_map_bar failed with rc %d or bar %p\n",
+		SPDK_ERRLOG("nvme_pcicfg_map_bar failed with rc %d or bar %p\n",
 			    rc, ctrlr->regs);
 		return -1;
 	}
@@ -1070,7 +1069,7 @@ nvme_ctrlr_free_bars(struct spdk_nvme_ctrlr *ctrlr)
 
 	rc = nvme_ctrlr_unmap_cmb(ctrlr);
 	if (rc != 0) {
-		nvme_printf(ctrlr, "nvme_ctrlr_unmap_cmb failed with error code %d\n", rc);
+		SPDK_ERRLOG("nvme_ctrlr_unmap_cmb failed with error code %d\n", rc);
 		return -1;
 	}
 
@@ -1270,7 +1269,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "spdk_nvme_ctrlr_attach_ns failed!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_attach_ns failed!\n");
 		return -ENXIO;
 	}
 
@@ -1295,7 +1294,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "spdk_nvme_ctrlr_detach_ns failed!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_detach_ns failed!\n");
 		return -ENXIO;
 	}
 
@@ -1318,7 +1317,7 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "spdk_nvme_ctrlr_create_ns failed!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_create_ns failed!\n");
 		return 0;
 	}
 
@@ -1347,7 +1346,7 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "spdk_nvme_ctrlr_delete_ns failed!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_delete_ns failed!\n");
 		return -ENXIO;
 	}
 
@@ -1372,7 +1371,7 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "spdk_nvme_ctrlr_format failed!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_format failed!\n");
 		return -ENXIO;
 	}
 
@@ -1392,7 +1391,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	void					*p;
 
 	if (size % 4) {
-		nvme_printf(ctrlr, "spdk_nvme_ctrlr_update_firmware invalid size!\n");
+		SPDK_ERRLOG("spdk_nvme_ctrlr_update_firmware invalid size!\n");
 		return -1;
 	}
 
@@ -1417,7 +1416,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 			pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		}
 		if (spdk_nvme_cpl_is_error(&status.cpl)) {
-			nvme_printf(ctrlr, "spdk_nvme_ctrlr_fw_image_download failed!\n");
+			SPDK_ERRLOG("spdk_nvme_ctrlr_fw_image_download failed!\n");
 			return -ENXIO;
 		}
 		p += transfer;
@@ -1443,7 +1442,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_ctrlr_cmd_fw_commit failed!\n");
+		SPDK_ERRLOG("nvme_ctrlr_cmd_fw_commit failed!\n");
 		return -ENXIO;
 	}
 

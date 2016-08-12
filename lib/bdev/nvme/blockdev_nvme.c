@@ -144,7 +144,7 @@ blockdev_nvme_read(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int64_t rc;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVME, "read %lu bytes with offset %#lx to %p\n",
+	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "read %lu bytes with offset %#lx to %p\n",
 		      nbytes, offset, buf);
 
 	rc = nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_READ, buf, nbytes, offset);
@@ -165,7 +165,7 @@ blockdev_nvme_writev(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 	if ((iovcnt != 1) || (iov->iov_len != len))
 		return -1;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVME, "write %lu bytes with offset %#lx from %p\n",
+	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "write %lu bytes with offset %#lx from %p\n",
 		      iov->iov_len, offset, iov->iov_base);
 
 	rc = nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_WRITE, (void *)iov->iov_base,
@@ -715,4 +715,4 @@ blockdev_nvme_get_spdk_running_config(FILE *fp)
 	}
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)
+SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)

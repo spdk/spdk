@@ -52,6 +52,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/barrier.h"
+#include "spdk/log.h"
 #include "spdk/mmio.h"
 #include "spdk/pci_ids.h"
 #include "spdk/nvme_intel.h"

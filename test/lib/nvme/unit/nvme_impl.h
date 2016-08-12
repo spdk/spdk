@@ -57,9 +57,6 @@ nvme_malloc(const char *tag, size_t size, unsigned align, uint64_t *phys_addr)
 }
 
 #define nvme_free(buf)			free(buf)
-#define OUTBUF_SIZE 1024
-extern char outbuf[OUTBUF_SIZE];
-#define nvme_printf(ctrlr, fmt, args...) snprintf(outbuf, OUTBUF_SIZE, fmt, ##args)
 #define nvme_get_num_ioq()		8
 #define nvme_get_ioq_idx()		0
 

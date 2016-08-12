@@ -35,8 +35,6 @@
 
 #include "nvme/nvme.c"
 
-char outbuf[OUTBUF_SIZE];
-
 uint64_t nvme_vtophys(void *buf)
 {
 	return (uintptr_t)buf;

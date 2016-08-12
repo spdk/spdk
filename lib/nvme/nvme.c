@@ -54,7 +54,7 @@ nvme_attach(void *devhandle)
 	ctrlr = nvme_malloc("nvme_ctrlr", sizeof(struct spdk_nvme_ctrlr),
 			    64, &phys_addr);
 	if (ctrlr == NULL) {
-		nvme_printf(NULL, "could not allocate ctrlr\n");
+		SPDK_ERRLOG("could not allocate ctrlr\n");
 		return NULL;
 	}
 
@@ -256,7 +256,7 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev, &opts)) {
 		ctrlr = nvme_attach(pci_dev);
 		if (ctrlr == NULL) {
-			nvme_printf(NULL, "nvme_attach() failed\n");
+			SPDK_ERRLOG("nvme_attach() failed\n");
 			return -1;
 		}
 
@@ -282,7 +282,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 		g_spdk_nvme_driver->request_mempool = nvme_mempool_create("nvme_request", 8192,
 						      sizeof(struct nvme_request), 128);
 		if (g_spdk_nvme_driver->request_mempool == NULL) {
-			nvme_printf(NULL, "Unable to allocate pool of requests\n");
+			SPDK_ERRLOG("Unable to allocate pool of requests\n");
 			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 			return -1;
 		}
@@ -345,3 +345,5 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return rc;
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)

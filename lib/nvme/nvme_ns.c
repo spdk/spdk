@@ -60,7 +60,7 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		pthread_mutex_unlock(&ns->ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_printf(ctrlr, "nvme_identify_namespace failed\n");
+		SPDK_ERRLOG("nvme_identify_namespace failed\n");
 		return -ENXIO;
 	}
 

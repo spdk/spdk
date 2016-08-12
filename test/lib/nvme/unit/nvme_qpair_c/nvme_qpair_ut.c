@@ -33,8 +33,12 @@
 
 
 #include <sys/uio.h>
+#include <stdbool.h>
 
 #include "spdk_cunit.h"
+
+bool trace_flag = false;
+#define SPDK_TRACE_NVME trace_flag
 
 #include "nvme/nvme_qpair.c"
 
@@ -44,8 +48,6 @@ struct nvme_driver _g_nvme_driver = {
 };
 
 int32_t spdk_nvme_retry_count = 1;
-
-char outbuf[OUTBUF_SIZE];
 
 struct nvme_request *g_request = NULL;
 
@@ -193,48 +195,6 @@ nvme_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t al
 }
 
 static void
-test1(void)
-{
-	struct spdk_nvme_qpair qpair = {};
-	struct spdk_nvme_cmd cmd = {};
-
-	outbuf[0] = '\0';
-
-	/*
-	 * qpair.id == 0 means it is an admin queue.  Ensure
-	 *  that the opc is decoded as an admin opc and not an
-	 *  I/o opc.
-	 */
-	qpair.id = 0;
-	cmd.opc = SPDK_NVME_OPC_IDENTIFY;
-
-	nvme_qpair_print_command(&qpair, &cmd);
-
-	CU_ASSERT(strstr(outbuf, "IDENTIFY") != NULL);
-}
-
-static void
-test2(void)
-{
-	struct spdk_nvme_qpair qpair = {};
-	struct spdk_nvme_cmd cmd = {};
-
-	outbuf[0] = '\0';
-
-	/*
-	 * qpair.id != 0 means it is an I/O queue.  Ensure
-	 *  that the opc is decoded as an I/O opc and not an
-	 *  admin opc.
-	 */
-	qpair.id = 1;
-	cmd.opc = SPDK_NVME_OPC_DATASET_MANAGEMENT;
-
-	nvme_qpair_print_command(&qpair, &cmd);
-
-	CU_ASSERT(strstr(outbuf, "DATASET MANAGEMENT") != NULL);
-}
-
-static void
 prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_ctrlr *ctrlr,
 			    struct spdk_nvme_registers *regs)
@@ -351,15 +311,12 @@ test4(void)
 	 *  a bad payload buffer.
 	 */
 	fail_vtophys = true;
-	outbuf[0] = '\0';
 
 	CU_ASSERT(qpair.sq_tail == 0);
 
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
 
 	CU_ASSERT(qpair.sq_tail == 0);
-	/* Assert that command/completion data was printed to log. */
-	CU_ASSERT(strlen(outbuf) > 0);
 
 	cleanup_submit_request_test(&qpair);
 }
@@ -535,8 +492,6 @@ test_ctrlr_failed(void)
 	qpair.is_enabled = false;
 	ctrlr.is_failed = true;
 	ctrlr.is_resetting = true;
-
-	outbuf[0] = '\0';
 
 	CU_ASSERT(qpair.sq_tail == 0);
 
@@ -761,6 +716,7 @@ static void test_nvme_completion_is_retry(void)
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 }
 
+#ifdef DEBUG
 static void
 test_get_status_string(void)
 {
@@ -782,6 +738,7 @@ test_get_status_string(void)
 	status_string = get_status_string(100, 0);
 	CU_ASSERT(strcmp(status_string, "RESERVED") == 0);
 }
+#endif
 
 int main(int argc, char **argv)
 {
@@ -798,24 +755,23 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (
-		CU_add_test(suite, "test1", test1) == NULL
-		|| CU_add_test(suite, "test2", test2) == NULL
-		|| CU_add_test(suite, "test3", test3) == NULL
-		|| CU_add_test(suite, "test4", test4) == NULL
-		|| CU_add_test(suite, "ctrlr_failed", test_ctrlr_failed) == NULL
-		|| CU_add_test(suite, "struct_packing", struct_packing) == NULL
-		|| CU_add_test(suite, "nvme_qpair_fail", test_nvme_qpair_fail) == NULL
-		|| CU_add_test(suite, "spdk_nvme_qpair_process_completions",
-			       test_nvme_qpair_process_completions) == NULL
-		|| CU_add_test(suite, "spdk_nvme_qpair_process_completions_limit",
-			       test_nvme_qpair_process_completions_limit) == NULL
-		|| CU_add_test(suite, "nvme_qpair_destroy", test_nvme_qpair_destroy) == NULL
-		|| CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
-		|| CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
-		|| CU_add_test(suite, "sgl_request", test_sgl_req) == NULL
-		|| CU_add_test(suite, "hw_sgl_request", test_hw_sgl_req) == NULL
-	) {
+	if (CU_add_test(suite, "test3", test3) == NULL
+	    || CU_add_test(suite, "test4", test4) == NULL
+	    || CU_add_test(suite, "ctrlr_failed", test_ctrlr_failed) == NULL
+	    || CU_add_test(suite, "struct_packing", struct_packing) == NULL
+	    || CU_add_test(suite, "nvme_qpair_fail", test_nvme_qpair_fail) == NULL
+	    || CU_add_test(suite, "spdk_nvme_qpair_process_completions",
+			   test_nvme_qpair_process_completions) == NULL
+	    || CU_add_test(suite, "spdk_nvme_qpair_process_completions_limit",
+			   test_nvme_qpair_process_completions_limit) == NULL
+	    || CU_add_test(suite, "nvme_qpair_destroy", test_nvme_qpair_destroy) == NULL
+	    || CU_add_test(suite, "nvme_completion_is_retry", test_nvme_completion_is_retry) == NULL
+#ifdef DEBUG
+	    || CU_add_test(suite, "get_status_string", test_get_status_string) == NULL
+#endif
+	    || CU_add_test(suite, "sgl_request", test_sgl_req) == NULL
+	    || CU_add_test(suite, "hw_sgl_request", test_hw_sgl_req) == NULL
+	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

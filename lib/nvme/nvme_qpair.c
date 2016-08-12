@@ -105,10 +105,10 @@ nvme_admin_qpair_print_command(struct spdk_nvme_qpair *qpair,
 			       struct spdk_nvme_cmd *cmd)
 {
 
-	nvme_printf(qpair->ctrlr, "%s (%02x) sqid:%d cid:%d nsid:%x "
-		    "cdw10:%08x cdw11:%08x\n",
-		    nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qpair->id, cmd->cid,
-		    cmd->nsid, cmd->cdw10, cmd->cdw11);
+	SPDK_NOTICELOG("%s (%02x) sqid:%d cid:%d nsid:%x "
+		       "cdw10:%08x cdw11:%08x\n",
+		       nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qpair->id, cmd->cid,
+		       cmd->nsid, cmd->cdw10, cmd->cdw11);
 }
 
 static void
@@ -122,23 +122,23 @@ nvme_io_qpair_print_command(struct spdk_nvme_qpair *qpair,
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE_UNCORRECTABLE:
 	case SPDK_NVME_OPC_COMPARE:
-		nvme_printf(qpair->ctrlr, "%s sqid:%d cid:%d nsid:%d "
-			    "lba:%llu len:%d\n",
-			    nvme_get_string(io_opcode, cmd->opc), qpair->id, cmd->cid,
-			    cmd->nsid,
-			    ((unsigned long long)cmd->cdw11 << 32) + cmd->cdw10,
-			    (cmd->cdw12 & 0xFFFF) + 1);
+		SPDK_NOTICELOG("%s sqid:%d cid:%d nsid:%d "
+			       "lba:%llu len:%d\n",
+			       nvme_get_string(io_opcode, cmd->opc), qpair->id, cmd->cid,
+			       cmd->nsid,
+			       ((unsigned long long)cmd->cdw11 << 32) + cmd->cdw10,
+			       (cmd->cdw12 & 0xFFFF) + 1);
 		break;
 	case SPDK_NVME_OPC_FLUSH:
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
-		nvme_printf(qpair->ctrlr, "%s sqid:%d cid:%d nsid:%d\n",
-			    nvme_get_string(io_opcode, cmd->opc), qpair->id, cmd->cid,
-			    cmd->nsid);
+		SPDK_NOTICELOG("%s sqid:%d cid:%d nsid:%d\n",
+			       nvme_get_string(io_opcode, cmd->opc), qpair->id, cmd->cid,
+			       cmd->nsid);
 		break;
 	default:
-		nvme_printf(qpair->ctrlr, "%s (%02x) sqid:%d cid:%d nsid:%d\n",
-			    nvme_get_string(io_opcode, cmd->opc), cmd->opc, qpair->id,
-			    cmd->cid, cmd->nsid);
+		SPDK_NOTICELOG("%s (%02x) sqid:%d cid:%d nsid:%d\n",
+			       nvme_get_string(io_opcode, cmd->opc), cmd->opc, qpair->id,
+			       cmd->cid, cmd->nsid);
 		break;
 	}
 }
@@ -260,10 +260,10 @@ static void
 nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_cpl *cpl)
 {
-	nvme_printf(qpair->ctrlr, "%s (%02x/%02x) sqid:%d cid:%d cdw0:%x sqhd:%04x p:%x m:%x dnr:%x\n",
-		    get_status_string(cpl->status.sct, cpl->status.sc),
-		    cpl->status.sct, cpl->status.sc, cpl->sqid, cpl->cid, cpl->cdw0,
-		    cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
+	SPDK_NOTICELOG("%s (%02x/%02x) sqid:%d cid:%d cdw0:%x sqhd:%04x p:%x m:%x dnr:%x\n",
+		       get_status_string(cpl->status.sct, cpl->status.sc),
+		       cpl->status.sct, cpl->status.sc, cpl->sqid, cpl->cid, cpl->cdw0,
+		       cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
 }
 
 static bool
@@ -503,8 +503,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		if (tr->active) {
 			nvme_qpair_complete_tracker(qpair, tr, cpl, true);
 		} else {
-			nvme_printf(qpair->ctrlr,
-				    "cpl does not map to outstanding cmd\n");
+			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
 			nvme_qpair_print_completion(qpair, cpl);
 			assert(0);
 		}
@@ -562,7 +561,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 					 0x1000,
 					 &qpair->cmd_bus_addr);
 		if (qpair->cmd == NULL) {
-			nvme_printf(ctrlr, "alloc qpair_cmd failed\n");
+			SPDK_ERRLOG("alloc qpair_cmd failed\n");
 			goto fail;
 		}
 	}
@@ -572,7 +571,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 				 0x1000,
 				 &qpair->cpl_bus_addr);
 	if (qpair->cpl == NULL) {
-		nvme_printf(ctrlr, "alloc qpair_cpl failed\n");
+		SPDK_ERRLOG("alloc qpair_cpl failed\n");
 		goto fail;
 	}
 
@@ -592,7 +591,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	 */
 	qpair->tr = nvme_malloc("nvme_tr", num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
 	if (qpair->tr == NULL) {
-		nvme_printf(ctrlr, "nvme_tr failed\n");
+		SPDK_ERRLOG("nvme_tr failed\n");
 		goto fail;
 	}
 
@@ -1000,8 +999,7 @@ _nvme_admin_qpair_enable(struct spdk_nvme_qpair *qpair)
 	 *  command was issued no longer applies.
 	 */
 	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, tr_temp) {
-		nvme_printf(qpair->ctrlr,
-			    "aborting outstanding admin command\n");
+		SPDK_ERRLOG("aborting outstanding admin command\n");
 		nvme_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 1 /* do not retry */, true);
 	}
@@ -1022,14 +1020,14 @@ _nvme_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 	while (!STAILQ_EMPTY(&qpair->queued_req)) {
 		req = STAILQ_FIRST(&qpair->queued_req);
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		nvme_printf(qpair->ctrlr, "aborting queued i/o\n");
+		SPDK_ERRLOG("aborting queued i/o\n");
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, true);
 	}
 
 	/* Manually abort each outstanding I/O. */
 	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, temp) {
-		nvme_printf(qpair->ctrlr, "aborting outstanding i/o\n");
+		SPDK_ERRLOG("aborting outstanding i/o\n");
 		nvme_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 0, true);
 	}
@@ -1077,7 +1075,7 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 	while (!STAILQ_EMPTY(&qpair->queued_req)) {
 		req = STAILQ_FIRST(&qpair->queued_req);
 		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		nvme_printf(qpair->ctrlr, "failing queued i/o\n");
+		SPDK_ERRLOG("failing queued i/o\n");
 		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, true);
 	}
@@ -1089,7 +1087,7 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 		 * Do not remove the tracker.  The abort_tracker path will
 		 *  do that for us.
 		 */
-		nvme_printf(qpair->ctrlr, "failing outstanding i/o\n");
+		SPDK_ERRLOG("failing outstanding i/o\n");
 		nvme_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 1 /* do not retry */, true);
 	}

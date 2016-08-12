@@ -161,11 +161,6 @@ nvme_process_is_primary(void)
 }
 
 /**
- * Log or print a message from the NVMe driver.
- */
-#define nvme_printf(ctrlr, fmt, args...) printf(fmt, ##args)
-
-/**
  * Return the physical address for the specified virtual address.
  */
 #define nvme_vtophys(buf)		spdk_vtophys(buf)
@@ -304,7 +299,6 @@ nvme_pcicfg_map_bar(void *devhandle, uint32_t bar, uint32_t read_only, void **ma
 static inline int
 nvme_pcicfg_map_bar_write_combine(void *devhandle, uint32_t bar, void **mapped_addr)
 {
-	nvme_printf(NULL, "DPDK cannot support write combine now\n");
 	return -1;
 }
 
