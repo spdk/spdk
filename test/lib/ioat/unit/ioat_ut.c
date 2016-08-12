@@ -33,7 +33,32 @@
 
 #include "CUnit/Basic.h"
 
+#include <stdint.h>
+#include <stddef.h>
+#include <stdlib.h>
+
 #include "ioat/ioat.c"
+
+void *
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	return calloc(1, size);
+}
+
+void spdk_free(void *buf)
+{
+	free(buf);
+}
+
+uint64_t spdk_vtophys(void *buf)
+{
+	return (uint64_t)buf;
+}
+
+void spdk_delay_us(unsigned int us)
+{
+
+}
 
 int
 spdk_pci_enumerate(enum spdk_pci_device_type type,

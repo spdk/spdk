@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS) -include $(CONFIG_IOAT_IMPL)
+CFLAGS += $(ENV_CFLAGS)
 C_SRCS = ioat.c
 LIBNAME = ioat
 
