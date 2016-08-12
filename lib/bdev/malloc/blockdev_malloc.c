@@ -235,11 +235,13 @@ struct malloc_disk *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	mdisk = rte_zmalloc(NULL, sizeof(*mdisk), 0);
+	mdisk = rte_malloc(NULL, sizeof(*mdisk), 0);
 	if (!mdisk) {
 		perror("mdisk");
 		return NULL;
 	}
+
+	memset(mdisk, 0, sizeof(*mdisk));
 
 	/*
 	 * Allocate the large backend memory buffer using rte_malloc(),
