@@ -758,8 +758,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../lib/nvme/nvme_impl.h \
-                         ../include/spdk \
+INPUT                  = ../include/spdk \
                          mainpage.txt \
                          ioat/index.txt \
                          nvme/index.txt \

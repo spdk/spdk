@@ -247,8 +247,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
-	log_page_directory = nvme_malloc(sizeof(struct spdk_nvme_intel_log_page_directory),
-					 64, &phys_addr);
+	log_page_directory = spdk_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
+					  64, &phys_addr);
 	if (log_page_directory == NULL) {
 		SPDK_ERRLOG("could not allocate log_page_directory\n");
 		return -ENXIO;
@@ -263,13 +263,13 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		nvme_free(log_page_directory);
+		spdk_free(log_page_directory);
 		SPDK_ERRLOG("nvme_ctrlr_cmd_get_log_page failed!\n");
 		return -ENXIO;
 	}
 
 	nvme_ctrlr_construct_intel_support_log_page_list(ctrlr, log_page_directory);
-	nvme_free(log_page_directory);
+	spdk_free(log_page_directory);
 	return 0;
 }
 
@@ -374,8 +374,8 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	num_trackers = nvme_min(NVME_IO_TRACKERS, (num_entries - 1));
 
-	ctrlr->ioq = nvme_malloc(ctrlr->opts.num_io_queues * sizeof(struct spdk_nvme_qpair),
-				 64, &phys_addr);
+	ctrlr->ioq = spdk_zmalloc(ctrlr->opts.num_io_queues * sizeof(struct spdk_nvme_qpair),
+				  64, &phys_addr);
 
 	if (ctrlr->ioq == NULL)
 		return -1;
@@ -509,7 +509,7 @@ nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
 		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
 	} else {
-		ctrlr->state_timeout_tsc = nvme_get_tsc() + (timeout_in_ms * nvme_get_tsc_hz()) / 1000;
+		ctrlr->state_timeout_tsc = spdk_get_ticks() + (timeout_in_ms * spdk_get_ticks_hz()) / 1000;
 	}
 }
 
@@ -660,13 +660,13 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			nvme_ns_destruct(&ctrlr->ns[i]);
 		}
 
-		nvme_free(ctrlr->ns);
+		spdk_free(ctrlr->ns);
 		ctrlr->ns = NULL;
 		ctrlr->num_ns = 0;
 	}
 
 	if (ctrlr->nsdata) {
-		nvme_free(ctrlr->nsdata);
+		spdk_free(ctrlr->nsdata);
 		ctrlr->nsdata = NULL;
 	}
 }
@@ -688,14 +688,14 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	if (nn != ctrlr->num_ns) {
 		nvme_ctrlr_destruct_namespaces(ctrlr);
 
-		ctrlr->ns = nvme_malloc(nn * sizeof(struct spdk_nvme_ns), 64,
-					&phys_addr);
+		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
+					 &phys_addr);
 		if (ctrlr->ns == NULL) {
 			goto fail;
 		}
 
-		ctrlr->nsdata = nvme_malloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
-					    &phys_addr);
+		ctrlr->nsdata = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
+					     &phys_addr);
 		if (ctrlr->nsdata == NULL) {
 			goto fail;
 		}
@@ -907,7 +907,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
-	    nvme_get_tsc() > ctrlr->state_timeout_tsc) {
+	    spdk_get_ticks() > ctrlr->state_timeout_tsc) {
 		SPDK_ERRLOG("Initialization timed out in state %d\n", ctrlr->state);
 		nvme_ctrlr_fail(ctrlr);
 		return -1;
@@ -1163,7 +1163,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	nvme_free(ctrlr->ioq);
+	spdk_free(ctrlr->ioq);
 
 	nvme_qpair_destroy(&ctrlr->adminq);
 

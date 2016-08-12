@@ -35,6 +35,8 @@
 
 #include "nvme/nvme_ns_cmd.c"
 
+#include "lib/nvme/unit/test_env.c"
+
 struct nvme_request *g_request = NULL;
 
 
@@ -53,11 +55,6 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
 {
 	return 0;
-}
-
-uint64_t nvme_vtophys(void *buf)
-{
-	return (uintptr_t)buf;
 }
 
 int
@@ -484,7 +481,7 @@ test_nvme_ns_cmd_dataset_management(void)
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	CU_ASSERT(g_request->cmd.cdw10 == 0);
 	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
-	nvme_free(g_request->payload.u.contig);
+	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 
 	/* TRIM 256 LBAs */
@@ -496,7 +493,7 @@ test_nvme_ns_cmd_dataset_management(void)
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 	CU_ASSERT(g_request->cmd.cdw10 == 255u);
 	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
-	nvme_free(g_request->payload.u.contig);
+	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 
 	rc = spdk_nvme_ns_cmd_dataset_management(&ns, &qpair, SPDK_NVME_DSM_ATTR_DEALLOCATE,
@@ -635,7 +632,7 @@ test_nvme_ns_cmd_reservation_register(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
 
-	nvme_free(g_request->payload.u.contig);
+	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }
@@ -672,7 +669,7 @@ test_nvme_ns_cmd_reservation_release(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
 
-	nvme_free(g_request->payload.u.contig);
+	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }
@@ -709,7 +706,7 @@ test_nvme_ns_cmd_reservation_acquire(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
 
-	nvme_free(g_request->payload.u.contig);
+	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }
@@ -738,7 +735,7 @@ test_nvme_ns_cmd_reservation_report(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == (0x1000 / 4));
 
-	nvme_free(g_request->payload.u.contig);
+	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }

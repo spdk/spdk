@@ -51,8 +51,8 @@ nvme_attach(void *devhandle)
 	int			status;
 	uint64_t		phys_addr = 0;
 
-	ctrlr = nvme_malloc(sizeof(struct spdk_nvme_ctrlr),
-			    64, &phys_addr);
+	ctrlr = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr),
+			     64, &phys_addr);
 	if (ctrlr == NULL) {
 		SPDK_ERRLOG("could not allocate ctrlr\n");
 		return NULL;
@@ -60,7 +60,7 @@ nvme_attach(void *devhandle)
 
 	status = nvme_ctrlr_construct(ctrlr, devhandle);
 	if (status != 0) {
-		nvme_free(ctrlr);
+		spdk_free(ctrlr);
 		return NULL;
 	}
 
@@ -74,7 +74,7 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_destruct(ctrlr);
 	TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
-	nvme_free(ctrlr);
+	spdk_free(ctrlr);
 
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return 0;
@@ -100,7 +100,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 {
 	struct nvme_request *req = NULL;
 
-	req = nvme_mempool_get(g_spdk_nvme_driver->request_mempool);
+	req = spdk_mempool_get(g_spdk_nvme_driver->request_mempool);
 	if (req == NULL) {
 		return req;
 	}
@@ -156,7 +156,7 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 			memcpy(req->user_buffer, req->payload.u.contig, req->payload_size);
 		}
 
-		nvme_free(req->payload.u.contig);
+		spdk_free(req->payload.u.contig);
 	}
 
 	/* Call the user's original callback now that the buffer has been copied */
@@ -178,7 +178,7 @@ nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_c
 	uint64_t phys_addr;
 
 	if (buffer && payload_size) {
-		contig_buffer = nvme_malloc(payload_size, 4096, &phys_addr);
+		contig_buffer = spdk_zmalloc(payload_size, 4096, &phys_addr);
 		if (!contig_buffer) {
 			return NULL;
 		}
@@ -190,7 +190,7 @@ nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_c
 
 	req = nvme_allocate_request_contig(contig_buffer, payload_size, nvme_user_copy_cmd_complete, NULL);
 	if (!req) {
-		nvme_free(buffer);
+		spdk_free(buffer);
 		return NULL;
 	}
 
@@ -208,7 +208,7 @@ nvme_free_request(struct nvme_request *req)
 	assert(req != NULL);
 	assert(req->num_children == 0);
 
-	nvme_mempool_put(g_spdk_nvme_driver->request_mempool, req);
+	spdk_mempool_put(g_spdk_nvme_driver->request_mempool, req);
 }
 
 int
@@ -279,7 +279,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	if (g_spdk_nvme_driver->request_mempool == NULL) {
-		g_spdk_nvme_driver->request_mempool = nvme_mempool_create("nvme_request", 8192,
+		g_spdk_nvme_driver->request_mempool = spdk_mempool_create("nvme_request", 8192,
 						      sizeof(struct nvme_request), -1);
 		if (g_spdk_nvme_driver->request_mempool == NULL) {
 			SPDK_ERRLOG("Unable to allocate pool of requests\n");
@@ -316,7 +316,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 				/* Controller failed to initialize. */
 				TAILQ_REMOVE(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
 				nvme_ctrlr_destruct(ctrlr);
-				nvme_free(ctrlr);
+				spdk_free(ctrlr);
 				rc = -1;
 				break;
 			}

@@ -53,10 +53,6 @@ CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env
 # when using the default SPDK environment library.
 CONFIG_DPDK_DIR?=/path/to/dpdk
 
-# Header file to use for NVMe implementation specific functions.
-# Defaults to depending on DPDK.
-CONFIG_NVME_IMPL?=nvme_impl.h
-
 # Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
 # fio source code directory.
 CONFIG_FIO_PLUGIN?=n

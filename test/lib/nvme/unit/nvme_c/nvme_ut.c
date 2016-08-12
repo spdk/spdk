@@ -37,17 +37,14 @@
 
 #include "nvme/nvme.c"
 
+#include "lib/nvme/unit/test_env.c"
+
 int
 spdk_pci_enumerate(enum spdk_pci_device_type type,
 		   spdk_pci_enum_cb enum_cb,
 		   void *enum_ctx)
 {
 	return -1;
-}
-
-uint64_t nvme_vtophys(void *buf)
-{
-	return (uintptr_t)buf;
 }
 
 int

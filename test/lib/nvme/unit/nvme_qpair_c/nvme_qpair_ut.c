@@ -37,6 +37,8 @@
 
 #include "spdk_cunit.h"
 
+#include "lib/nvme/unit/test_env.c"
+
 bool trace_flag = false;
 #define SPDK_TRACE_NVME trace_flag
 
@@ -51,18 +53,9 @@ int32_t spdk_nvme_retry_count = 1;
 
 struct nvme_request *g_request = NULL;
 
-bool fail_vtophys = false;
+extern bool ut_fail_vtophys;
 
 bool fail_next_sge = false;
-
-uint64_t nvme_vtophys(void *buf)
-{
-	if (fail_vtophys) {
-		return (uint64_t) - 1;
-	} else {
-		return (uintptr_t)buf;
-	}
-}
 
 struct io_request {
 	uint64_t address_offset;
@@ -132,7 +125,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 {
 	struct nvme_request *req = NULL;
 
-	req = nvme_mempool_get(_g_nvme_driver.request_mempool);
+	req = spdk_mempool_get(_g_nvme_driver.request_mempool);
 
 	if (req == NULL) {
 		return req;
@@ -176,7 +169,7 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 void
 nvme_free_request(struct nvme_request *req)
 {
-	nvme_mempool_put(_g_nvme_driver.request_mempool, req);
+	spdk_mempool_put(_g_nvme_driver.request_mempool, req);
 }
 
 void
@@ -208,7 +201,7 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	CU_ASSERT(qpair->sq_tail == 0);
 	CU_ASSERT(qpair->cq_head == 0);
 
-	fail_vtophys = false;
+	ut_fail_vtophys = false;
 }
 
 static void
@@ -224,7 +217,7 @@ ut_insert_cq_entry(struct spdk_nvme_qpair *qpair, uint32_t slot)
 	struct nvme_tracker 	*tr;
 	struct spdk_nvme_cpl	*cpl;
 
-	req = nvme_mempool_get(_g_nvme_driver.request_mempool);
+	req = spdk_mempool_get(_g_nvme_driver.request_mempool);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	memset(req, 0, sizeof(*req));
 
@@ -310,7 +303,7 @@ test4(void)
 	 *  the request with error status to signify
 	 *  a bad payload buffer.
 	 */
-	fail_vtophys = true;
+	ut_fail_vtophys = true;
 
 	CU_ASSERT(qpair.sq_tail == 0);
 

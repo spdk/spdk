@@ -465,7 +465,7 @@ struct nvme_driver {
 	pthread_mutex_t	lock;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
-	nvme_mempool_t	*request_mempool;
+	struct spdk_mempool	*request_mempool;
 };
 
 struct pci_id {

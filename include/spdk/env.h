@@ -56,7 +56,7 @@ void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
- * Free a memory buffer previously allocated with spdk_malloc.
+ * Free a memory buffer previously allocated with spdk_zmalloc.
  *   This call is never made from the performance path.
  */
 void

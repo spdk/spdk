@@ -556,18 +556,18 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 		}
 	}
 	if (qpair->sq_in_cmb == false) {
-		qpair->cmd = nvme_malloc(qpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					 0x1000,
-					 &qpair->cmd_bus_addr);
+		qpair->cmd = spdk_zmalloc(qpair->num_entries * sizeof(struct spdk_nvme_cmd),
+					  0x1000,
+					  &qpair->cmd_bus_addr);
 		if (qpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
 			goto fail;
 		}
 	}
 
-	qpair->cpl = nvme_malloc(qpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				 0x1000,
-				 &qpair->cpl_bus_addr);
+	qpair->cpl = spdk_zmalloc(qpair->num_entries * sizeof(struct spdk_nvme_cpl),
+				  0x1000,
+				  &qpair->cpl_bus_addr);
 	if (qpair->cpl == NULL) {
 		SPDK_ERRLOG("alloc qpair_cpl failed\n");
 		goto fail;
@@ -587,7 +587,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
-	qpair->tr = nvme_malloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
+	qpair->tr = spdk_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
 	if (qpair->tr == NULL) {
 		SPDK_ERRLOG("nvme_tr failed\n");
 		goto fail;
@@ -640,15 +640,15 @@ nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		_nvme_admin_qpair_destroy(qpair);
 	}
 	if (qpair->cmd && !qpair->sq_in_cmb) {
-		nvme_free(qpair->cmd);
+		spdk_free(qpair->cmd);
 		qpair->cmd = NULL;
 	}
 	if (qpair->cpl) {
-		nvme_free(qpair->cpl);
+		spdk_free(qpair->cpl);
 		qpair->cpl = NULL;
 	}
 	if (qpair->tr) {
-		nvme_free(qpair->tr);
+		spdk_free(qpair->tr);
 		qpair->tr = NULL;
 	}
 }
@@ -678,8 +678,8 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	void *md_payload;
 	void *payload = req->payload.u.contig + req->payload_offset;
 
-	phys_addr = nvme_vtophys(payload);
-	if (phys_addr == NVME_VTOPHYS_ERROR) {
+	phys_addr = spdk_vtophys(payload);
+	if (phys_addr == SPDK_VTOPHYS_ERROR) {
 		_nvme_fail_request_bad_vtophys(qpair, tr);
 		return -1;
 	}
@@ -692,8 +692,8 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 
 	if (req->payload.md) {
 		md_payload = req->payload.md + req->md_offset;
-		tr->req->cmd.mptr = nvme_vtophys(md_payload);
-		if (tr->req->cmd.mptr == NVME_VTOPHYS_ERROR) {
+		tr->req->cmd.mptr = spdk_vtophys(md_payload);
+		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
 			_nvme_fail_request_bad_vtophys(qpair, tr);
 			return -1;
 		}
@@ -703,14 +703,14 @@ _nvme_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_requ
 	tr->req->cmd.dptr.prp.prp1 = phys_addr;
 	if (nseg == 2) {
 		seg_addr = payload + PAGE_SIZE - unaligned;
-		tr->req->cmd.dptr.prp.prp2 = nvme_vtophys(seg_addr);
+		tr->req->cmd.dptr.prp.prp2 = spdk_vtophys(seg_addr);
 	} else if (nseg > 2) {
 		cur_nseg = 1;
 		tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
 		while (cur_nseg < nseg) {
 			seg_addr = payload + cur_nseg * PAGE_SIZE - unaligned;
-			phys_addr = nvme_vtophys(seg_addr);
-			if (phys_addr == NVME_VTOPHYS_ERROR) {
+			phys_addr = spdk_vtophys(seg_addr);
+			if (phys_addr == SPDK_VTOPHYS_ERROR) {
 				_nvme_fail_request_bad_vtophys(qpair, tr);
 				return -1;
 			}
