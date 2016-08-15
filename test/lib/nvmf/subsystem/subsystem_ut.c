@@ -47,9 +47,27 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
 
+uint32_t
+spdk_app_get_current_core(void)
+{
+	return 0;
+}
+
+struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
+				       void *arg1, void *arg2,
+				       spdk_event_t next)
+{
+	return NULL;
+}
+
 void
 spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg, uint32_t lcore,
 		     struct spdk_event *complete, uint64_t period_microseconds)
+{
+}
+
+void spdk_poller_unregister(struct spdk_poller **ppoller,
+			    struct spdk_event *complete)
 {
 }
 

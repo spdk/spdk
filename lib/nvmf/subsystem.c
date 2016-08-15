@@ -128,17 +128,16 @@ nvmf_create_subsystem(int num, const char *name,
 	return subsystem;
 }
 
-int
-nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
+static void
+nvmf_delete_subsystem_poller_unreg(struct spdk_event *event)
 {
+	struct spdk_nvmf_subsystem	*subsystem = spdk_event_get_arg1(event);
 	struct spdk_nvmf_listen_addr	*listen_addr, *listen_addr_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 
-	if (subsystem == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF,
-			      "nvmf_delete_subsystem: there is no subsystem\n");
-		return 0;
-	}
+	/*
+	 * The poller has been unregistered, so now the memory can be freed.
+	 */
 
 	TAILQ_FOREACH_SAFE(listen_addr, &subsystem->listen_addrs, link, listen_addr_tmp) {
 		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
@@ -166,6 +165,27 @@ nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
 
 	free(subsystem);
+}
+
+int
+nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_event		*event;
+
+	if (subsystem == NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF,
+			      "nvmf_delete_subsystem: there is no subsystem\n");
+		return 0;
+	}
+
+	/*
+	 * Unregister the poller - this starts a chain of events that will eventually free
+	 * the subsystem's memory.
+	 */
+	event = spdk_event_allocate(spdk_app_get_current_core(), nvmf_delete_subsystem_poller_unreg,
+				    subsystem, NULL, NULL);
+	spdk_poller_unregister(&subsystem->poller, event);
+
 	return 0;
 }
 
