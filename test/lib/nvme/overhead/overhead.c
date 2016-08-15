@@ -112,7 +112,11 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 struct perf_task *g_task;
 uint64_t g_tsc_submit = 0;
+uint64_t g_tsc_submit_min = UINT64_MAX;
+uint64_t g_tsc_submit_max = 0;
 uint64_t g_tsc_complete = 0;
+uint64_t g_tsc_complete_min = UINT64_MAX;
+uint64_t g_tsc_complete_max = 0;
 uint64_t g_io_completed = 0;
 
 static void
@@ -286,6 +290,7 @@ submit_single_io(void)
 	uint64_t		start;
 	int			rc;
 	struct ns_entry		*entry = g_ns;
+	uint64_t		tsc_submit;
 
 	offset_in_ios = rand_r(&seed) % entry->size_in_ios;
 
@@ -304,7 +309,14 @@ submit_single_io(void)
 	}
 
 	rte_mb();
-	g_tsc_submit += rte_get_tsc_cycles() - start;
+	tsc_submit = rte_get_tsc_cycles() - start;
+	g_tsc_submit += tsc_submit;
+	if (tsc_submit < g_tsc_submit_min) {
+		g_tsc_submit_min = tsc_submit;
+	}
+	if (tsc_submit > g_tsc_submit_max) {
+		g_tsc_submit_max = tsc_submit;
+	}
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
@@ -324,7 +336,7 @@ uint64_t g_complete_tsc_start;
 static void
 check_io(void)
 {
-	uint64_t end;
+	uint64_t end, tsc_complete;
 	rte_mb();
 #if HAVE_LIBAIO
 	if (g_ns->type == ENTRY_TYPE_AIO_FILE) {
@@ -349,7 +361,14 @@ check_io(void)
 			g_complete_tsc_start = end;
 		}
 	} else {
-		g_tsc_complete += end - g_complete_tsc_start;
+		tsc_complete = end - g_complete_tsc_start;
+		g_tsc_complete += tsc_complete;
+		if (tsc_complete < g_tsc_complete_min) {
+			g_tsc_complete_min = tsc_complete;
+		}
+		if (tsc_complete > g_tsc_complete_max) {
+			g_tsc_complete_max = tsc_complete;
+		}
 		g_io_completed++;
 		if (!g_ns->is_draining) {
 			submit_single_io();
@@ -468,8 +487,10 @@ print_stats(void)
 	printf("g_tsc_complete = %ju\n", g_tsc_complete);
 	printf("g_io_completed = %ju\n", g_io_completed);
 
-	printf("avg submit = %8.1f\n", (float)g_tsc_submit / g_io_completed);
-	printf("avg complete = %8.1f\n", (float)g_tsc_complete / g_io_completed);
+	printf("submit   avg, min, max = %8.1f, %ju, %ju\n",
+	       (float)g_tsc_submit / g_io_completed, g_tsc_submit_min, g_tsc_submit_max);
+	printf("complete avg, min, max = %8.1f, %ju, %ju\n",
+	       (float)g_tsc_complete / g_io_completed, g_tsc_complete_min, g_tsc_complete_max);
 }
 
 static int
