@@ -193,9 +193,6 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 
 	if (rdma_conn->cm_id) {
 		rdma_destroy_qp(rdma_conn->cm_id);
-	}
-
-	if (rdma_conn->cm_id) {
 		rdma_destroy_id(rdma_conn->cm_id);
 	}
 
