@@ -88,7 +88,7 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 		session->subsys->ctrlr.ops->poll_for_completions(session);
 	}
 
-	/* For each connection in the session, check for RDMA completions */
+	/* For each connection in the session, check for completions */
 	spdk_nvmf_session_poll(session);
 }
 
