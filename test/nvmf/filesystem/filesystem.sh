@@ -29,6 +29,7 @@ if [ -e "/dev/nvme-fabrics" ]; then
 fi
 
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode2" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 mkdir -p /mnt/device
 
@@ -64,6 +65,7 @@ done
 
 sync
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode2"
 
 trap - SIGINT SIGTERM EXIT
 

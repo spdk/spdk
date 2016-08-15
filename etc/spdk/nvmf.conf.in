@@ -23,6 +23,16 @@
   # syslog facility
   LogFacility "local7"
 
+# Users may change this section to create a different number or size of
+#  malloc LUNs.
+# This will generate 8 LUNs with a malloc-allocated backend.
+# Each LUN will be size 64MB and these will be named
+# Malloc0 through Malloc7.  Not all LUNs defined here are necessarily
+#  used below.
+[Malloc]
+  NumberOfLuns 8
+  LunSizeInMB 64
+
 # Define NVMf protocol global options
 [Nvmf]
   # Set the maximum number of submission and completion queues per session.
@@ -63,6 +73,8 @@
 # - Exactly 1 NVMe directive specifying an NVMe device by PCI BDF. The
 #   PCI domain:bus:device.function can be replaced by "*" to indicate
 #   any PCI device.
+
+# Direct controller
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
   Core 0
@@ -72,11 +84,13 @@
   NVMe 0000:00:00.0
 
 # Multiple subsystems are allowed.
+# Virtual controller
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
   Core 0
-  Mode Direct
+  Mode Virtual
   Listen RDMA 192.168.2.21:4420
   Host nqn.2016-06.io.spdk:init
-  NVMe 0000:01:00.0
-
+  SN SPDK00000000000001
+  Namespace Malloc0
+  Namespace Malloc1

@@ -247,9 +247,18 @@ nvmf_direct_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
+static void
+nvmf_direct_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
+{
+	if (subsystem->ctrlr.dev.direct.ctrlr) {
+		spdk_nvme_detach(subsystem->ctrlr.dev.direct.ctrlr);
+	}
+}
+
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops = {
 	.ctrlr_get_data			= nvmf_direct_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_direct_ctrlr_process_admin_cmd,
 	.process_io_cmd			= nvmf_direct_ctrlr_process_io_cmd,
 	.poll_for_completions		= nvmf_direct_ctrlr_poll_for_completions,
+	.detach				= nvmf_direct_ctrlr_detach,
 };

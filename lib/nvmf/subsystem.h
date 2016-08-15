@@ -46,6 +46,7 @@ struct spdk_nvmf_request;
 struct nvmf_session;
 
 #define MAX_VIRTUAL_NAMESPACE 16
+#define MAX_SN_LEN 20
 
 enum spdk_nvmf_subsystem_mode {
 	NVMF_SUBSYSTEM_MODE_DIRECT	= 0,
@@ -62,11 +63,6 @@ struct spdk_nvmf_listen_addr {
 struct spdk_nvmf_host {
 	char				*nqn;
 	TAILQ_ENTRY(spdk_nvmf_host)	link;
-};
-
-struct spdk_nvmf_ns {
-	uint32_t nsid;
-	struct spdk_bdev *bdev;
 };
 
 struct spdk_nvmf_ctrlr_ops {
@@ -89,6 +85,11 @@ struct spdk_nvmf_ctrlr_ops {
 	 * Poll for completions.
 	 */
 	void (*poll_for_completions)(struct nvmf_session *session);
+
+	/**
+	 * Detach the controller.
+	 */
+	void (*detach)(struct spdk_nvmf_subsystem *subsystem);
 };
 
 struct spdk_nvmf_controller {
@@ -101,7 +102,8 @@ struct spdk_nvmf_controller {
 
 		struct {
 			struct nvmf_session *session;
-			struct spdk_nvmf_ns *ns_list[MAX_VIRTUAL_NAMESPACE];
+			char	sn[MAX_SN_LEN + 1];
+			struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
 			uint16_t ns_count;
 		} virtual;
 	} dev;
@@ -167,5 +169,8 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
+int
+spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev);
 extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
+extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
 #endif /* SPDK_NVMF_SUBSYSTEM_H */

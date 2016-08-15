@@ -32,6 +32,7 @@
  */
 
 #include <ctype.h>
+#include <assert.h>
 
 #include "nvmf_internal.h"
 #include "session.h"
@@ -187,9 +188,8 @@ nvmf_delete_subsystem_poller_unreg(struct spdk_event *event)
 	if (subsystem->session) {
 		spdk_nvmf_session_destruct(subsystem->session);
 	}
-
-	if (subsystem->ctrlr.dev.direct.ctrlr) {
-		spdk_nvme_detach(subsystem->ctrlr.dev.direct.ctrlr);
+	if (subsystem->ctrlr.ops) {
+		subsystem->ctrlr.ops->detach(subsystem);
 	}
 
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
@@ -340,5 +340,23 @@ spdk_shutdown_nvmf_subsystems(void)
 		nvmf_delete_subsystem(subsystem);
 	}
 
+	return 0;
+}
+
+int
+spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev)
+{
+	int i = 0;
+
+	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
+	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->ctrlr.dev.virtual.ns_list[i]) {
+		i++;
+	}
+	if (i == MAX_VIRTUAL_NAMESPACE) {
+		SPDK_ERRLOG("spdk_nvmf_subsystem_add_ns() failed\n");
+		return -1;
+	}
+	subsystem->ctrlr.dev.virtual.ns_list[i] = bdev;
+	subsystem->ctrlr.dev.virtual.ns_count++;
 	return 0;
 }

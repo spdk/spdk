@@ -44,6 +44,7 @@
 #include "nvmf/transport.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
+#include "spdk/bdev.h"
 
 #define MAX_LISTEN_ADDRESSES 255
 #define MAX_HOSTS 255
@@ -315,6 +316,20 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 }
 
 static int
+spdk_nvmf_validate_sn(const char *sn)
+{
+	size_t len;
+
+	len = strlen(sn);
+	if (len > MAX_SN_LEN) {
+		SPDK_ERRLOG("Invalid sn \"%s\": length %zu > max %d\n", sn, len, MAX_SN_LEN);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
 spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 {
 	uint32_t end;
@@ -377,9 +392,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	if (strcasecmp(mode, "Direct") == 0) {
 		subsystem->mode = NVMF_SUBSYSTEM_MODE_DIRECT;
 	} else if (strcasecmp(mode, "Virtual") == 0) {
-		nvmf_delete_subsystem(subsystem);
-		SPDK_ERRLOG("Virtual Subsystems are not yet supported.\n");
-		return -1;
+		subsystem->mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
 	} else {
 		nvmf_delete_subsystem(subsystem);
 		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode);
@@ -456,6 +469,49 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
+		}
+	} else {
+		struct spdk_bdev *bdev;
+		const char *namespace, *sn, *val;
+
+		sn = spdk_conf_section_get_val(sp, "SN");
+		if (sn == NULL) {
+			SPDK_ERRLOG("Subsystem %d: missing serial number\n", sp->num);
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+		if (spdk_nvmf_validate_sn(sn) != 0) {
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+
+		namespace = spdk_conf_section_get_val(sp, "Namespace");
+		if (namespace == NULL) {
+			SPDK_ERRLOG("Subsystem %d: missing Namespace directive\n", sp->num);
+			nvmf_delete_subsystem(subsystem);
+			return -1;
+		}
+
+		subsystem->ctrlr.dev.virtual.ns_count = 0;
+		snprintf(subsystem->ctrlr.dev.virtual.sn, MAX_SN_LEN, "%s", sn);
+		subsystem->ctrlr.ops = &spdk_nvmf_virtual_ctrlr_ops;
+
+		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
+			val = spdk_conf_section_get_nval(sp, "Namespace", i);
+			if (val == NULL) {
+				break;
+			}
+			namespace = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
+			if (!namespace) {
+				SPDK_ERRLOG("Namespace %d: missing block device\n", i);
+				nvmf_delete_subsystem(subsystem);
+				return -1;
+			}
+			bdev = spdk_bdev_get_by_name(namespace);
+			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
+				nvmf_delete_subsystem(subsystem);
+				return -1;
+			}
 		}
 	}
 	return 0;

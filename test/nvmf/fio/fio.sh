@@ -29,6 +29,7 @@ if [ -e "/dev/nvme-fabrics" ]; then
 fi
 
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode2" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 $testdir/nvmf_fio.py 4096 1 write 1 verify
 $testdir/nvmf_fio.py 4096 1 randwrite 1 verify
@@ -37,8 +38,11 @@ $testdir/nvmf_fio.py 4096 128 randwrite 1 verify
 
 sync
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode2"
 
 rm -f ./local-job0-0-verify.state
+rm -f ./local-job1-1-verify.state
+rm -f ./local-job2-2-verify.state
 
 trap - SIGINT SIGTERM EXIT
 
