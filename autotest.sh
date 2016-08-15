@@ -39,6 +39,23 @@ if hash lcov; then
 	$LCOV -q -c -i -t "Baseline" -d $src -o cov_base.info
 fi
 
+# Make sure the disks are clean (no leftover partition tables)
+timing_enter cleanup
+if [ $(uname -s) = Linux ]; then
+	# Load the kernel driver
+	./scripts/setup.sh reset
+
+	# Let the kernel discover any filesystems or partitions
+	sleep 10
+
+	# Delete all partitions on NVMe devices
+	devs=`lsblk -l -o NAME | grep nvme`
+	for dev in $devs; do
+		parted -s /dev/$dev mklabel msdos
+	done
+fi
+timing_exit cleanup
+
 # set up huge pages
 timing_enter afterboot
 ./scripts/setup.sh

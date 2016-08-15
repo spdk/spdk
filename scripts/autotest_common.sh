@@ -137,21 +137,6 @@ function killprocess() {
 	wait $1 || true
 }
 
-function nvme_cleanup()
-{
-	# Load the kernel driver
-	./scripts/setup.sh reset
-
-	# Let the kernel discover any filesystems or partitions
-	sleep 10
-
-	# Delete all partitions on NVMe devices
-	devs=`lsblk -l -o NAME | grep nvme`
-	for dev in $devs; do
-		parted -s /dev/$dev mklabel msdos
-	done
-}
-
 function iscsicleanup() {
 	echo "Cleaning up iSCSI connection"
 	iscsiadm -m node --logout || true
