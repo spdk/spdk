@@ -251,7 +251,6 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 	switch ((int)cpl->status.sct) {
 	case SPDK_NVME_SCT_GENERIC:
 		switch ((int)cpl->status.sc) {
-		case SPDK_NVME_SC_ABORTED_BY_REQUEST:
 		case SPDK_NVME_SC_NAMESPACE_NOT_READY:
 			if (cpl->status.dnr) {
 				return false;
@@ -264,6 +263,7 @@ nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl)
 		case SPDK_NVME_SC_DATA_TRANSFER_ERROR:
 		case SPDK_NVME_SC_ABORTED_POWER_LOSS:
 		case SPDK_NVME_SC_INTERNAL_DEVICE_ERROR:
+		case SPDK_NVME_SC_ABORTED_BY_REQUEST:
 		case SPDK_NVME_SC_ABORTED_SQ_DELETION:
 		case SPDK_NVME_SC_ABORTED_FAILED_FUSED:
 		case SPDK_NVME_SC_ABORTED_MISSING_FUSED:
@@ -640,13 +640,6 @@ _nvme_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 					   1 /* do not retry */, true);
 }
 
-static void
-_nvme_fail_request_ctrlr_failed(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
-{
-	nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
-					   SPDK_NVME_SC_ABORTED_BY_REQUEST, true);
-}
-
 /**
  * Build PRP list describing physically contiguous payload buffer.
  */
@@ -991,36 +984,26 @@ _nvme_admin_qpair_enable(struct spdk_nvme_qpair *qpair)
 static void
 _nvme_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
-	STAILQ_HEAD(, nvme_request)	temp;
 	struct nvme_tracker		*tr;
-	struct nvme_tracker		*tr_temp;
+	struct nvme_tracker		*temp;
 	struct nvme_request		*req;
 
 	qpair->is_enabled = true;
-	/*
-	 * Manually abort each outstanding I/O.  This normally results in a
-	 *  retry, unless the retry count on the associated request has
-	 *  reached its limit.
-	 */
-	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, tr_temp) {
+
+	/* Manually abort each queued I/O. */
+	while (!STAILQ_EMPTY(&qpair->queued_req)) {
+		req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		nvme_printf(qpair->ctrlr, "aborting queued i/o\n");
+		nvme_qpair_manual_complete_request(qpair, req, SPDK_NVME_SCT_GENERIC,
+						   SPDK_NVME_SC_ABORTED_BY_REQUEST, true);
+	}
+
+	/* Manually abort each outstanding I/O. */
+	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, temp) {
 		nvme_printf(qpair->ctrlr, "aborting outstanding i/o\n");
 		nvme_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 0, true);
-	}
-
-
-	STAILQ_INIT(&temp);
-	STAILQ_SWAP(&qpair->queued_req, &temp, nvme_request);
-
-	while (!STAILQ_EMPTY(&temp)) {
-		req = STAILQ_FIRST(&temp);
-		STAILQ_REMOVE_HEAD(&temp, stailq);
-
-		nvme_printf(qpair->ctrlr, "resubmitting queued i/o\n");
-		nvme_qpair_print_command(qpair, &req->cmd);
-		if (nvme_qpair_submit_request(qpair, req) != 0) {
-			_nvme_fail_request_ctrlr_failed(qpair, req);
-		}
 	}
 }
 

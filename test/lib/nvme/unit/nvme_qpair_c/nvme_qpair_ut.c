@@ -668,7 +668,7 @@ static void test_nvme_completion_is_retry(void)
 	struct spdk_nvme_cpl	cpl = {};
 
 	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-	cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+	cpl.status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
 	cpl.status.dnr = 0;
 	CU_ASSERT_TRUE(nvme_completion_is_retry(&cpl));
 
@@ -688,6 +688,9 @@ static void test_nvme_completion_is_retry(void)
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
 	cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
 	cpl.status.sc = SPDK_NVME_SC_ABORTED_FAILED_FUSED;
