@@ -147,6 +147,7 @@ struct spdk_nvmf_rdma {
 	uint16_t max_queue_depth;
 	uint32_t max_io_size;
 	uint32_t in_capsule_data_size;
+	uint32_t num_devices_found;
 };
 
 static struct spdk_nvmf_rdma g_rdma = { };
@@ -981,6 +982,10 @@ spdk_nvmf_rdma_acceptor_start(void)
 	uint16_t		sin_port;
 	int			rc;
 
+	if (g_rdma.num_devices_found == 0) {
+		return 0;
+	}
+
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = g_nvmf_tgt.sin_port;
@@ -1121,8 +1126,8 @@ spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 
 	dev_list = ibv_get_device_list(&num_of_rdma_devices);
 	if (!dev_list) {
-		SPDK_ERRLOG(" No RDMA verbs devices found\n");
-		return -1;
+		SPDK_NOTICELOG("No RDMA verbs devices found\n");
+		return 0;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "%d RDMA verbs device(s) discovered\n", num_of_rdma_devices);
 
@@ -1179,6 +1184,7 @@ spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 	g_rdma.max_queue_depth = max_queue_depth;
 	g_rdma.max_io_size = max_io_size;
 	g_rdma.in_capsule_data_size = in_capsule_data_size;
+	g_rdma.num_devices_found = num_devices_found;
 
 	return num_devices_found;
 }
