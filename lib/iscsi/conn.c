@@ -396,10 +396,11 @@ error_return:
 	 *  core, suspend the connection here.  This ensures any necessary libuns
 	 *  housekeeping for TCP socket to lcore associations gets cleared.
 	 */
+	conn->lcore = spdk_app_get_current_core();
 	spdk_net_framework_clear_socket_association(conn->sock);
-	rte_atomic32_inc(&g_num_connections[spdk_app_get_current_core()]);
+	rte_atomic32_inc(&g_num_connections[conn->lcore]);
 	spdk_poller_register(&conn->poller, spdk_iscsi_conn_login_do_work, conn,
-			     spdk_app_get_current_core(), NULL, 0);
+			     conn->lcore, NULL, 0);
 
 	return 0;
 }
@@ -637,8 +638,9 @@ void spdk_shutdown_iscsi_conns(void)
 	 */
 	STAILQ_FOREACH_SAFE(conn, &g_idle_conn_list_head, link, tmp) {
 		STAILQ_REMOVE(&g_idle_conn_list_head, conn, spdk_iscsi_conn, link);
+		conn->lcore = rte_get_master_lcore();
 		spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
-				     rte_get_master_lcore(), NULL, 0);
+				     conn->lcore, NULL, 0);
 		conn->is_idle = 0;
 		del_idle_conn(conn);
 	}
@@ -1187,8 +1189,9 @@ spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event)
 	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
+	conn->lcore = spdk_app_get_current_core();
 	spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
-			     spdk_app_get_current_core(), NULL, 0);
+			     conn->lcore, NULL, 0);
 }
 
 void
@@ -1288,6 +1291,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			lcore = spdk_iscsi_conn_allocate_reactor(tconn->portal->cpumask);
 			rte_atomic32_inc(&g_num_connections[lcore]);
 			spdk_net_framework_clear_socket_association(tconn->sock);
+			tconn->lcore = lcore;
 			spdk_poller_register(&tconn->poller, spdk_iscsi_conn_full_feature_do_work, tconn, lcore, NULL, 0);
 			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
 				      tconn->id, tconn->cid, &tconn->poller, lcore);
@@ -1308,8 +1312,9 @@ __add_idle_conn(spdk_event_t e)
 	 *  process.
 	 */
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
+		conn->lcore = rte_get_master_lcore();
 		spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
-				     rte_get_master_lcore(), NULL, 0);
+				     conn->lcore, NULL, 0);
 		return;
 	}
 

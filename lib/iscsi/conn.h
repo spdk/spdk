@@ -80,6 +80,7 @@ struct spdk_iscsi_conn {
 	 *  are initialized when allocated.
 	 */
 	struct spdk_iscsi_portal		*portal;
+	uint32_t			lcore;
 	int				sock;
 	struct spdk_iscsi_sess	*sess;
 
