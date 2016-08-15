@@ -42,8 +42,6 @@
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
 
-#define ADMIN_POLL_MICROSECONDS 10000 /* 10 milliseconds */
-
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 
 struct spdk_nvmf_subsystem *
@@ -87,27 +85,11 @@ spdk_nvmf_subsystem_poller(void *arg)
 
 	/* For NVMe subsystems, check the backing physical device for completions. */
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		session->subsys->ctrlr.ops->poll_for_io_completions(session);
+		session->subsys->ctrlr.ops->poll_for_completions(session);
 	}
 
 	/* For each connection in the session, check for RDMA completions */
 	spdk_nvmf_session_poll(session);
-}
-
-static void
-spdk_nvmf_subsystem_admin_poll(void *arg)
-{
-	struct spdk_nvmf_subsystem *subsystem = arg;
-	struct nvmf_session *session = subsystem->session;
-
-	if (!session) {
-		/* No active connections, so just return */
-		return;
-	}
-
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		session->subsys->ctrlr.ops->poll_for_admin_completions(session);
-	}
 }
 
 struct spdk_nvmf_subsystem *
@@ -132,8 +114,6 @@ nvmf_create_subsystem(int num, const char *name,
 
 	subsystem->lcore = lcore;
 	spdk_poller_register(&subsystem->poller, spdk_nvmf_subsystem_poller, subsystem, lcore, NULL, 0);
-	spdk_poller_register(&subsystem->admin_poller, spdk_nvmf_subsystem_admin_poll, subsystem,
-			     lcore, NULL, ADMIN_POLL_MICROSECONDS);
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 
