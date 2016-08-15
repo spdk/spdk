@@ -41,7 +41,7 @@
 
 /**
  * \file
- *
+ * NVMe over Fabrics specification definitions
  */
 
 #pragma pack(push, 1)
