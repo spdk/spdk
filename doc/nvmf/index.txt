@@ -33,7 +33,7 @@
 
 /*!
 
-\page nvmf NVMf (NVMe over Fabrics)
+\page nvmf NVMe over Fabrics
 
 - \ref nvmf_getting_started
 
