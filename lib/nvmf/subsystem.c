@@ -269,11 +269,9 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 int
 spdk_shutdown_nvmf_subsystems(void)
 {
-	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem *subsystem, *subsys_tmp;
 
-	while (!TAILQ_EMPTY(&g_subsystems)) {
-		subsystem = TAILQ_FIRST(&g_subsystems);
-		TAILQ_REMOVE(&g_subsystems, subsystem, entries);
+	TAILQ_FOREACH_SAFE(subsystem, &g_subsystems, entries, subsys_tmp) {
 		nvmf_delete_subsystem(subsystem);
 	}
 
