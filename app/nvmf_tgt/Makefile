@@ -43,7 +43,7 @@ CFLAGS += $(DPDK_INC)
 # TODO: remove this once NVMf has a public API header
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-C_SRCS := nvmf_tgt.c
+C_SRCS := conf.c nvmf_tgt.c
 
 SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/nvmf/libspdk_nvmf.a \

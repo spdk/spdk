@@ -39,7 +39,6 @@
 
 #include "spdk/log.h"
 #include "spdk/conf.h"
-#include "conf.h"
 #include "subsystem.h"
 #include "transport.h"
 #include "spdk/trace.h"
@@ -151,24 +150,6 @@ nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 static int
 nvmf_tgt_subsystem_initialize(void)
 {
-	int rc;
-
-	/* initialize from configuration file */
-	rc = spdk_nvmf_parse_conf();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
-		return rc;
-	}
-
-	/* initialize with the NVMf transport */
-	rc = spdk_nvmf_transport_init(g_nvmf_tgt.max_queue_depth,
-				      g_nvmf_tgt.max_io_size,
-				      g_nvmf_tgt.in_capsule_data_size);
-	if (rc <= 0) {
-		SPDK_ERRLOG("Transport initialization failed\n");
-		return -1;
-	}
-
 	return 0;
 }
 

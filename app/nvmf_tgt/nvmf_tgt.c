@@ -42,6 +42,8 @@
 #include <rte_memzone.h>
 #include <rte_mempool.h>
 
+#include "conf.h"
+
 #include "spdk/event.h"
 
 #include "nvmf/transport.h"
@@ -94,6 +96,18 @@ static void
 spdk_nvmf_startup(spdk_event_t event)
 {
 	int rc;
+
+	rc = spdk_nvmf_parse_conf();
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
+		goto initialize_error;
+	}
+
+	rc = spdk_nvmf_transport_init();
+	if (rc <= 0) {
+		SPDK_ERRLOG("Transport initialization failed\n");
+		goto initialize_error;
+	}
 
 	/* start the rdma poller that will listen
 	   on all available ports */

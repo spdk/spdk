@@ -111,8 +111,7 @@ struct spdk_nvmf_transport {
 				     struct spdk_nvmf_discovery_log_page_entry *entry);
 };
 
-int spdk_nvmf_transport_init(uint16_t max_queue_depth, uint32_t max_io_size,
-			     uint32_t in_capsule_data_size);
+int spdk_nvmf_transport_init(void);
 int spdk_nvmf_transport_fini(void);
 const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
 

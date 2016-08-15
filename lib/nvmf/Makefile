@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
 LIBNAME = nvmf
-C_SRCS = subsystem.c conf.c nvmf.c \
+C_SRCS = subsystem.c nvmf.c \
 	 request.c session.c transport.c \
 	 direct.c
 

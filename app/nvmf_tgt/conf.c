@@ -40,9 +40,8 @@
 #include <rte_lcore.h>
 
 #include "conf.h"
-#include "nvmf_internal.h"
-#include "subsystem.h"
-#include "transport.h"
+#include "nvmf/subsystem.h"
+#include "nvmf/transport.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
 
