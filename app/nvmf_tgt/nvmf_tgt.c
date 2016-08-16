@@ -57,7 +57,7 @@ struct rte_mempool *request_mempool;
 #define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
 
-#define ACCEPT_TIMEOUT_US		1000 /* 1ms */
+#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
@@ -197,6 +197,7 @@ main(int argc, char **argv)
 
 	opts.name = "nvmf";
 	opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
+	opts.max_delay_us = 1000; /* 1 ms */
 
 	while ((ch = getopt(argc, argv, "c:de:i:l:m:n:p:qs:t:DH")) != -1) {
 		switch (ch) {

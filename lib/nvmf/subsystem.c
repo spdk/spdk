@@ -111,7 +111,8 @@ nvmf_create_subsystem(int num, const char *name,
 		return NULL;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_subsystem: allocated subsystem %p\n", subsystem);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_subsystem: allocated subsystem %p on lcore 0x%x\n",
+		      subsystem, lcore);
 
 	subsystem->num = num;
 	subsystem->subtype = subtype;
