@@ -184,6 +184,7 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_data *data = (struct spdk_nvmf_fabric_connect_data *)
 			req->data;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	void *end;
 
 #define INVALID_CONNECT_DATA(field) invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
@@ -193,6 +194,20 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	/* Ensure that subnqn and hostnqn are null terminated */
+	end = memchr(data->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
+	if (!end) {
+		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
+		INVALID_CONNECT_DATA(subnqn);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	end = memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
+	if (!end) {
+		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
+		INVALID_CONNECT_DATA(hostnqn);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 	/* Look up the requested subsystem */
 	subsystem = nvmf_find_subsystem(data->subnqn, data->hostnqn);
 	if (subsystem == NULL) {
