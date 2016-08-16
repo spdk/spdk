@@ -31,19 +31,21 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += trace
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-ifeq ($(OS),Linux)
-DIRS-y += iscsi_tgt
-endif
+CXXFLAGS += $(DPDK_INC)
+CXXFLAGS += -I$(SPDK_ROOT_DIR)/lib
+CXX_SRCS = iscsi_top.cpp
 
-.PHONY: all clean $(DIRS-y)
+APP = iscsi_top
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+all: $(APP)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+$(APP) : $(OBJS)
+	$(LINK_CXX)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
