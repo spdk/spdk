@@ -167,5 +167,7 @@ spdk_shutdown_nvmf_subsystems(void);
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);
 
+void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
+
 extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
 #endif /* SPDK_NVMF_SUBSYSTEM_H */

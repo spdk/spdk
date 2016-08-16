@@ -72,10 +72,9 @@ nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
 	return NULL;
 }
 
-static void
-spdk_nvmf_subsystem_poller(void *arg)
+void
+spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_subsystem *subsystem = arg;
 	struct nvmf_session *session = subsystem->session;
 
 	if (!session) {
@@ -90,6 +89,14 @@ spdk_nvmf_subsystem_poller(void *arg)
 
 	/* For each connection in the session, check for RDMA completions */
 	spdk_nvmf_session_poll(session);
+}
+
+static void
+spdk_nvmf_subsystem_poller(void *arg)
+{
+	struct spdk_nvmf_subsystem *subsystem = arg;
+
+	spdk_nvmf_subsystem_poll(subsystem);
 }
 
 struct spdk_nvmf_subsystem *
