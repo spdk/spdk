@@ -37,13 +37,13 @@ To build SPDK, some dependencies must be installed.
 
 Fedora/CentOS:
 
-    sudo dnf install -y gcc libpciaccess-devel CUnit-devel libaio-devel openssl-devel
+    sudo dnf install -y gcc gcc-c++ libpciaccess-devel CUnit-devel libaio-devel openssl-devel
     # Additional dependencies for NVMe over Fabrics:
     sudo dnf install -y libibverbs-devel librdmacm-devel
 
 Ubuntu/Debian:
 
-    sudo apt-get install -y gcc libpciaccess-dev make libcunit1-dev libaio-dev libssl-dev
+    sudo apt-get install -y gcc g++ libpciaccess-dev make libcunit1-dev libaio-dev libssl-dev
     # Additional dependencies for NVMe over Fabrics:
     sudo apt-get install -y libibverbs-dev librdmacm-dev
 
