@@ -34,6 +34,12 @@
 #ifndef NVMF_CONF_H
 #define NVMF_CONF_H
 
+struct spdk_nvmf_tgt_conf {
+	uint32_t acceptor_lcore;
+};
+
+extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
+
 int
 spdk_nvmf_parse_conf(void);
 

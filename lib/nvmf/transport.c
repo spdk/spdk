@@ -85,12 +85,12 @@ spdk_nvmf_transport_fini(void)
 }
 
 int
-spdk_nvmf_acceptor_start(void)
+spdk_nvmf_acceptor_init(void)
 {
 	size_t i;
 
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (g_transports[i]->transport_start() < 0) {
+		if (g_transports[i]->acceptor_init() < 0) {
 			return -1;
 		}
 	}
@@ -99,12 +99,22 @@ spdk_nvmf_acceptor_start(void)
 }
 
 void
-spdk_nvmf_acceptor_stop(void)
+spdk_nvmf_acceptor_poll(void)
 {
 	size_t i;
 
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		g_transports[i]->transport_stop();
+		g_transports[i]->acceptor_poll();
+	}
+}
+
+void
+spdk_nvmf_acceptor_fini(void)
+{
+	size_t i;
+
+	for (i = 0; i != NUM_TRANSPORTS; i++) {
+		g_transports[i]->acceptor_fini();
 	}
 }
 

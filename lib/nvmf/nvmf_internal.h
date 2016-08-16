@@ -69,14 +69,11 @@ struct spdk_nvmf_globals {
 	uint32_t in_capsule_data_size;
 	uint32_t max_io_size;
 
-	uint32_t acceptor_lcore;
-
 	uint16_t	   sin_port;
 };
 
 int nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
-		  uint32_t in_capsule_data_size, uint32_t max_io_size,
-		  uint32_t acceptor_lcore);
+		  uint32_t in_capsule_data_size, uint32_t max_io_size);
 
 static inline uint32_t
 nvmf_u32log2(uint32_t x)

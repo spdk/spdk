@@ -52,12 +52,9 @@
 #include "subsystem.h"
 #include "transport.h"
 #include "spdk/assert.h"
-#include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
-
-#define ACCEPT_TIMEOUT_US		1000 /* 1ms */
 
 /*
  RDMA Connection Resouce Defaults
@@ -140,7 +137,6 @@ struct spdk_nvmf_rdma_session {
 };
 
 struct spdk_nvmf_rdma {
-	struct spdk_poller		*acceptor_poller;
 	struct rdma_event_channel	*acceptor_event_channel;
 	struct rdma_cm_id		*acceptor_listen_id;
 
@@ -911,7 +907,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 static int spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn);
 
 static void
-nvmf_rdma_accept(void *arg)
+spdk_nvmf_rdma_acceptor_poll(void)
 {
 	struct rdma_cm_event		*event;
 	int				rc;
@@ -976,7 +972,7 @@ nvmf_rdma_accept(void *arg)
 }
 
 static int
-spdk_nvmf_rdma_acceptor_start(void)
+spdk_nvmf_rdma_acceptor_init(void)
 {
 	struct sockaddr_in	addr;
 	uint16_t		sin_port;
@@ -1023,8 +1019,6 @@ spdk_nvmf_rdma_acceptor_start(void)
 	sin_port = ntohs(rdma_get_src_port(g_rdma.acceptor_listen_id));
 	SPDK_NOTICELOG("*** NVMf Target Listening on port %d ***\n", sin_port);
 
-	spdk_poller_register(&g_rdma.acceptor_poller, nvmf_rdma_accept, NULL, g_nvmf_tgt.acceptor_lcore,
-			     NULL, ACCEPT_TIMEOUT_US);
 	return rc;
 
 listen_error:
@@ -1035,10 +1029,8 @@ create_id_error:
 }
 
 static void
-spdk_nvmf_rdma_acceptor_stop(void)
+spdk_nvmf_rdma_acceptor_fini(void)
 {
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "nvmf_acceptor_stop: shutdown\n");
-	spdk_poller_unregister(&g_rdma.acceptor_poller, NULL);
 }
 
 static int
@@ -1457,8 +1449,10 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.name = "rdma",
 	.transport_init = spdk_nvmf_rdma_init,
 	.transport_fini = spdk_nvmf_rdma_fini,
-	.transport_start = spdk_nvmf_rdma_acceptor_start,
-	.transport_stop = spdk_nvmf_rdma_acceptor_stop,
+
+	.acceptor_init = spdk_nvmf_rdma_acceptor_init,
+	.acceptor_poll = spdk_nvmf_rdma_acceptor_poll,
+	.acceptor_fini = spdk_nvmf_rdma_acceptor_fini,
 
 	.session_init = spdk_nvmf_rdma_session_init,
 	.session_fini = spdk_nvmf_rdma_session_fini,

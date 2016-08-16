@@ -56,15 +56,30 @@ struct rte_mempool *request_mempool;
 #define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
 
+#define ACCEPT_TIMEOUT_US		1000 /* 1ms */
+
+static struct spdk_poller *g_acceptor_poller = NULL;
+
+static void
+acceptor_poller_unregistered_event(struct spdk_event *event)
+{
+	spdk_nvmf_acceptor_fini();
+
+	spdk_app_stop(0);
+}
+
 static void
 spdk_nvmf_shutdown_cb(void)
 {
-	spdk_nvmf_acceptor_stop();
-	spdk_app_stop(0);
+	struct spdk_event *event;
 
 	fprintf(stdout, "\n=========================\n");
 	fprintf(stdout, "   NVMF shutdown signal\n");
 	fprintf(stdout, "=========================\n");
+
+	event = spdk_event_allocate(spdk_app_get_current_core(), acceptor_poller_unregistered_event,
+				    NULL, NULL, NULL);
+	spdk_poller_unregister(&g_acceptor_poller, event);
 }
 
 static void
@@ -93,6 +108,12 @@ usage(void)
 }
 
 static void
+acceptor_poll(void *arg)
+{
+	spdk_nvmf_acceptor_poll();
+}
+
+static void
 spdk_nvmf_startup(spdk_event_t event)
 {
 	int rc;
@@ -109,13 +130,16 @@ spdk_nvmf_startup(spdk_event_t event)
 		goto initialize_error;
 	}
 
-	/* start the rdma poller that will listen
-	   on all available ports */
-	rc = spdk_nvmf_acceptor_start();
+	rc = spdk_nvmf_acceptor_init();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_nvmf_acceptor_start() failed\n");
 		goto initialize_error;
 	}
+
+	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
+			     g_spdk_nvmf_tgt_conf.acceptor_lcore, NULL, ACCEPT_TIMEOUT_US);
+
+	SPDK_NOTICELOG("Acceptor running on core %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore);
 
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		rte_memzone_dump(stdout);

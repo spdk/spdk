@@ -63,12 +63,17 @@ struct spdk_nvmf_transport {
 	/**
 	 * Start accepting connections on the transport.
 	 */
-	int (*transport_start)(void);
+	int (*acceptor_init)(void);
+
+	/**
+	 * Check for new connections on the transport.
+	 */
+	void (*acceptor_poll)(void);
 
 	/**
 	 * Stop accepting connections on the transport.
 	 */
-	void (*transport_stop)(void);
+	void (*acceptor_fini)(void);
 
 	/**
 	 * Initialize the transport for the given session
@@ -115,8 +120,9 @@ int spdk_nvmf_transport_init(void);
 int spdk_nvmf_transport_fini(void);
 const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
 
-int spdk_nvmf_acceptor_start(void);
-void spdk_nvmf_acceptor_stop(void);
+int spdk_nvmf_acceptor_init(void);
+void spdk_nvmf_acceptor_poll(void);
+void spdk_nvmf_acceptor_fini(void);
 
 extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
 

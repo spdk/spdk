@@ -76,6 +76,8 @@ struct spdk_nvmf_probe_ctx {
 #define SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN 4096
 #define SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX 131072
 
+struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
+
 static int
 spdk_add_nvmf_discovery_subsystem(void)
 {
@@ -146,9 +148,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	if (acceptor_lcore < 0) {
 		acceptor_lcore = rte_lcore_id();
 	}
+	g_spdk_nvmf_tgt_conf.acceptor_lcore = acceptor_lcore;
 
-	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size,
-			   acceptor_lcore);
+	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvmf_tgt_init() failed\n");
 		return rc;
