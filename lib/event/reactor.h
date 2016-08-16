@@ -34,7 +34,7 @@
 #ifndef SPDK_REACTOR_H_
 #define SPDK_REACTOR_H_
 
-int spdk_reactors_init(const char *mask);
+int spdk_reactors_init(const char *mask, unsigned int max_delay_us);
 int spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);

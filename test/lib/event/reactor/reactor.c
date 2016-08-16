@@ -98,6 +98,7 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "reactor";
+	opts.max_delay_us = 1000;
 
 	g_time_in_sec = 0;
 
@@ -121,7 +122,6 @@ main(int argc, char **argv)
 
 	opts.shutdown_cb = test_cleanup;
 
-	spdk_app_opts_init(&opts);
 	spdk_app_init(&opts);
 
 	spdk_app_start(test_start, NULL, NULL);

@@ -223,6 +223,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->dpdk_master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->dpdk_mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;
+	opts->max_delay_us = 0;
 }
 
 void
@@ -322,7 +323,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	 *  reactor_mask will be NULL which will enable all cores to run
 	 *  reactors.
 	 */
-	if (spdk_reactors_init(opts->reactor_mask)) {
+	if (spdk_reactors_init(opts->reactor_mask, opts->max_delay_us)) {
 		fprintf(stderr, "Invalid reactor mask.\n");
 		exit(EXIT_FAILURE);
 	}

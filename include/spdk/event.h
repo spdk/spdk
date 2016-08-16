@@ -131,6 +131,13 @@ struct spdk_app_opts {
 	uint32_t		dpdk_mem_channel;
 	uint32_t 		dpdk_master_core;
 	int			dpdk_mem_size;
+
+	/* The maximum latency allowed when passing an event
+	 * from one core to another. A value of 0
+	 * means all cores continually poll. This is
+	 * specified in microseconds.
+	 */
+	uint64_t		max_delay_us;
 };
 
 /**
@@ -213,7 +220,7 @@ void spdk_event_call(spdk_event_t event);
 #define spdk_event_get_arg2(event)	(event)->arg2
 
 /* TODO: This is only used by tests and should be made private */
-void spdk_event_queue_run_all(uint32_t lcore);
+uint32_t spdk_event_queue_run_all(uint32_t lcore);
 
 /**
  * \brief Register a poller on the given lcore.
