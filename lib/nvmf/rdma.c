@@ -1018,8 +1018,8 @@ spdk_nvmf_rdma_acceptor_start(void)
 	sin_port = ntohs(rdma_get_src_port(g_rdma.acceptor_listen_id));
 	SPDK_NOTICELOG("*** NVMf Target Listening on port %d ***\n", sin_port);
 
-	spdk_poller_register(&g_rdma.acceptor_poller, nvmf_rdma_accept, NULL, rte_lcore_id(), NULL,
-			     ACCEPT_TIMEOUT_US);
+	spdk_poller_register(&g_rdma.acceptor_poller, nvmf_rdma_accept, NULL, g_nvmf_tgt.acceptor_lcore,
+			     NULL, ACCEPT_TIMEOUT_US);
 	return rc;
 
 listen_error:

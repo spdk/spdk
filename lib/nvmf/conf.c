@@ -100,6 +100,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	int max_queues_per_sess;
 	int in_capsule_data_size;
 	int max_io_size;
+	int acceptor_lcore;
 	int rc;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
@@ -142,7 +143,13 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	max_io_size = nvmf_max(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN);
 	max_io_size = nvmf_min(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX);
 
-	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size);
+	acceptor_lcore = spdk_conf_section_get_intval(sp, "AcceptorCore");
+	if (acceptor_lcore < 0) {
+		acceptor_lcore = rte_lcore_id();
+	}
+
+	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size,
+			   acceptor_lcore);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvmf_tgt_init() failed\n");
 		return rc;
@@ -360,7 +367,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	struct spdk_nvmf_subsystem *subsystem;
 	int i, ret;
 	uint64_t mask;
-	uint32_t lcore;
+	int lcore = 0;
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	if (nqn == NULL) {
@@ -372,12 +379,15 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	/* Determine which core to assign to the subsystem using round robin */
+	/* Determine which core to assign to the subsystem */
 	mask = spdk_app_get_core_mask();
-	lcore = 0;
-	for (i = 0; i < sp->num; i++) {
-		lcore = spdk_nvmf_allocate_lcore(mask, lcore);
-		lcore++;
+	lcore = spdk_conf_section_get_intval(sp, "Core");
+	if (lcore < 0) {
+		lcore = 0;
+		for (i = 0; i < sp->num; i++) {
+			lcore = spdk_nvmf_allocate_lcore(mask, lcore);
+			lcore++;
+		}
 	}
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 

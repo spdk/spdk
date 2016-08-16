@@ -39,8 +39,14 @@
   # Set the maximum I/O size. Must be a multiple of 4096.
   #MaxIOSize 131072
 
+  # Set the global acceptor lcore ID, lcores are numbered starting at 0.
+  #AcceptorCore 0
+
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
+# - Core may be set or not. If set, the specified subsystem will run on
+#   it, otherwise each subsystem will use a round-robin method to allocate
+#   core from available cores,  lcores are numbered starting at 0.
 # - Mode may be either "Direct" or "Virtual". Direct means that physical
 #   devices attached to the target will be presented to hosts as if they
 #   were directly attached to the host. No software emulation or command
@@ -59,6 +65,7 @@
 #   any PCI device.
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
+  Core 0
   Mode Direct
   Listen RDMA 15.15.15.2:4420
   Host nqn.2016-06.io.spdk:init
@@ -67,6 +74,7 @@
 # Multiple subsystems are allowed.
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
+  Core 0
   Mode Direct
   Listen RDMA 192.168.2.21:4420
   Host nqn.2016-06.io.spdk:init
