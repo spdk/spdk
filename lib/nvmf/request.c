@@ -183,10 +183,18 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	spdk_event_t			event;
 	struct spdk_nvmf_fabric_connect_data *data = (struct spdk_nvmf_fabric_connect_data *)
 			req->data;
+	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	void *end;
 
 #define INVALID_CONNECT_DATA(field) invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
+
+	if (cmd->recfmt != 0) {
+		SPDK_ERRLOG("Connect command unsupported RECFMT %u\n", cmd->recfmt);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INCOMPATIBLE_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
 		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
