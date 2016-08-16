@@ -36,7 +36,6 @@
 #define SPDK_ISCSI_TGT_NODE_H_
 
 #include <pthread.h>
-#include <libaio.h>
 #include <time.h>
 
 #include "spdk/scsi.h"
