@@ -12,4 +12,8 @@ timing_enter param
 $testdir/param/param_ut
 timing_exit param
 
+timing_enter target_node
+$testdir/target_node/target_node_ut $testdir/target_node/target_node.conf
+timing_exit target_node
+
 timing_exit iscsi
