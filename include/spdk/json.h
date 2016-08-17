@@ -107,6 +107,13 @@ struct spdk_json_val {
  */
 #define SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE	0x000000001
 
+/**
+ * Allow parsing of comments.
+ *
+ * Comments are not allowed by the JSON RFC, so this is not enabled by default.
+ */
+#define SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS	0x000000002
+
 /*
  * Parse JSON data.
  *

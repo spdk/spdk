@@ -373,6 +373,50 @@ done:
 	}
 }
 
+static int
+json_valid_comment(const uint8_t *start, const uint8_t *buf_end)
+{
+	const uint8_t *p = start;
+	bool multiline;
+
+	assert(buf_end > p);
+	if (buf_end - p < 2) {
+		return SPDK_JSON_PARSE_INCOMPLETE;
+	}
+
+	if (p[0] != '/') {
+		return SPDK_JSON_PARSE_INVALID;
+	}
+	if (p[1] == '*') {
+		multiline = true;
+	} else if (p[1] == '/') {
+		multiline = false;
+	} else {
+		return SPDK_JSON_PARSE_INVALID;
+	}
+	p += 2;
+
+	if (multiline) {
+		while (p != buf_end - 1) {
+			if (p[0] == '*' && p[1] == '/') {
+				/* Include the terminating star and slash in the comment */
+				return p - start + 2;
+			}
+			p++;
+		}
+	} else {
+		while (p != buf_end) {
+			if (*p == '\r' || *p == '\n') {
+				/* Do not include the line terminator in the comment */
+				return p - start;
+			}
+			p++;
+		}
+	}
+
+	return SPDK_JSON_PARSE_INCOMPLETE;
+}
+
 struct json_literal {
 	enum spdk_json_val_type type;
 	uint32_t len;
@@ -572,6 +616,16 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			if (state != STATE_NAME_SEPARATOR) return SPDK_JSON_PARSE_INVALID;
 			data++;
 			state = STATE_VALUE;
+			break;
+
+		case '/':
+			if (!(flags & SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS)) {
+				return SPDK_JSON_PARSE_INVALID;
+			}
+			rc = json_valid_comment(data, json_end);
+			if (rc < 0) return rc;
+			/* Skip over comment */
+			data += rc;
 			break;
 
 		default:

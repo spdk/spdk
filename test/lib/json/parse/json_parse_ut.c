@@ -55,18 +55,24 @@ static int g_cur_val;
  * Do two checks - first pass NULL for values to ensure the count is correct,
  *  then pass g_vals to get the actual values.
  */
-#define PARSE_PASS(in, num_vals, trailing) \
+#define PARSE_PASS_FLAGS(in, num_vals, trailing, flags) \
 	BUF_SETUP(in); \
-	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, 0) == num_vals); \
+	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, flags) == num_vals); \
 	memset(g_vals, 0, sizeof(g_vals)); \
-	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, g_vals, sizeof(g_vals), &g_end, SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == num_vals); \
+	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, g_vals, sizeof(g_vals), &g_end, flags | SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == num_vals); \
 	CU_ASSERT(g_end == g_buf + sizeof(in) - sizeof(trailing)); \
 	CU_ASSERT(memcmp(g_end, trailing, sizeof(trailing) - 1) == 0); \
 	g_cur_val = 0
 
-#define PARSE_FAIL(in, retval) \
+#define PARSE_PASS(in, num_vals, trailing) \
+	PARSE_PASS_FLAGS(in, num_vals, trailing, 0)
+
+#define PARSE_FAIL_FLAGS(in, retval, flags) \
 	BUF_SETUP(in); \
-	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, 0) == retval)
+	CU_ASSERT(spdk_json_parse(g_buf, sizeof(in) - 1, NULL, 0, &g_end, flags) == retval)
+
+#define PARSE_FAIL(in, retval) \
+	PARSE_FAIL_FLAGS(in, retval, 0)
 
 #define VAL_STRING_MATCH(str, var_type) \
 	CU_ASSERT(g_vals[g_cur_val].type == var_type); \
@@ -797,6 +803,61 @@ test_parse_nesting(void)
 	PARSE_FAIL("{\"a\": [0, 1, 2]", SPDK_JSON_PARSE_INCOMPLETE);
 }
 
+
+static void
+test_parse_comment(void)
+{
+	/* Comments are not allowed by the JSON RFC */
+	PARSE_PASS("[0]", 3, "");
+	PARSE_FAIL("/* test */[0]", SPDK_JSON_PARSE_INVALID);
+	PARSE_FAIL("[/* test */0]", SPDK_JSON_PARSE_INVALID);
+	PARSE_FAIL("[0/* test */]", SPDK_JSON_PARSE_INVALID);
+
+	/*
+	 * This is allowed since the parser stops once it reads a complete JSON object.
+	 * The next parse call would fail (see tests above) when parsing the comment.
+	 */
+	PARSE_PASS("[0]/* test */", 3, "/* test */");
+
+	/*
+	 * Test with non-standard comments enabled.
+	 */
+	PARSE_PASS_FLAGS("/* test */[0]", 3, "", SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	VAL_ARRAY_BEGIN(1);
+	VAL_NUMBER("0");
+	VAL_ARRAY_END();
+
+	PARSE_PASS_FLAGS("[/* test */0]", 3, "", SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	VAL_ARRAY_BEGIN(1);
+	VAL_NUMBER("0");
+	VAL_ARRAY_END();
+
+	PARSE_PASS_FLAGS("[0/* test */]", 3, "", SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	VAL_ARRAY_BEGIN(1);
+	VAL_NUMBER("0");
+	VAL_ARRAY_END();
+
+	PARSE_FAIL_FLAGS("/* test */", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	PARSE_FAIL_FLAGS("[/* test */", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	PARSE_FAIL_FLAGS("[0/* test */", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+
+	/*
+	 * Single-line comments
+	 */
+	PARSE_PASS_FLAGS("// test\n0", 1, "", SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	VAL_NUMBER("0");
+
+	PARSE_PASS_FLAGS("// test\r\n0", 1, "", SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	VAL_NUMBER("0");
+
+	PARSE_PASS_FLAGS("// [0] test\n0", 1, "", SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	VAL_NUMBER("0");
+
+	PARSE_FAIL_FLAGS("//", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	PARSE_FAIL_FLAGS("// test", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+	PARSE_FAIL_FLAGS("//\n", SPDK_JSON_PARSE_INCOMPLETE, SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -822,7 +883,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "parse_number", test_parse_number) == NULL ||
 		CU_add_test(suite, "parse_array", test_parse_array) == NULL ||
 		CU_add_test(suite, "parse_object", test_parse_object) == NULL ||
-		CU_add_test(suite, "parse_nesting", test_parse_nesting) == NULL) {
+		CU_add_test(suite, "parse_nesting", test_parse_nesting) == NULL ||
+		CU_add_test(suite, "parse_comment", test_parse_comment) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
