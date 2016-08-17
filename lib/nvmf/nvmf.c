@@ -144,21 +144,6 @@ nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	return 0;
 }
 
-static int
-nvmf_tgt_subsystem_initialize(void)
-{
-	return 0;
-}
-
-static int
-nvmf_tgt_subsystem_fini(void)
-{
-	return 0;
-}
-
-SPDK_SUBSYSTEM_REGISTER(nvmf, nvmf_tgt_subsystem_initialize, nvmf_tgt_subsystem_fini, NULL)
-SPDK_SUBSYSTEM_DEPEND(nvmf, bdev)
-
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');

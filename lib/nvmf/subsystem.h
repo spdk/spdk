@@ -36,7 +36,6 @@
 
 #include "nvmf_internal.h"
 
-#include "spdk/event.h"
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
 #include "spdk/bdev.h"
