@@ -19,7 +19,7 @@ nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
-sleep 5
+waitforlisten $nvmfpid ${RPC_PORT}
 
 modprobe -v nvme-rdma
 
