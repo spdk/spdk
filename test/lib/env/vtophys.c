@@ -38,7 +38,6 @@
 #include <rte_config.h>
 #include <rte_eal.h>
 #include <rte_mempool.h>
-#include <rte_malloc.h>
 
 #include "spdk/env.h"
 
@@ -96,18 +95,18 @@ vtophys_positive_test(void)
 	int rc = 0;
 
 	for (i = 0; i < 31; i++) {
-		p = rte_malloc("vtophys_test", size, 512);
+		p = spdk_zmalloc(size, 512, NULL);
 		if (p == NULL)
 			continue;
 
 		if (spdk_vtophys(p) == SPDK_VTOPHYS_ERROR) {
 			rc = -1;
 			printf("Err: VA=%p is not mapped to a huge_page,\n", p);
-			rte_free(p);
+			spdk_free(p);
 			break;
 		}
 
-		rte_free(p);
+		spdk_free(p);
 		size = size << 1;
 	}
 

@@ -39,29 +39,11 @@
 #include <rte_memzone.h>
 #include <rte_eal.h>
 #include <rte_lcore.h>
-#include <rte_malloc.h>
-#include <rte_memory.h>
 
 #include "spdk/event.h"
 #include "iscsi/iscsi.h"
 #include "spdk/log.h"
 #include "spdk/net.h"
-
-static void
-spdk_iscsi_dump_memory_info(void)
-{
-	struct rte_malloc_socket_stats stats;
-	int i;
-
-	for (i = 0; i < RTE_MAX_NUMA_NODES; i++) {
-		rte_malloc_get_socket_stats(i, &stats);
-		if (stats.heap_totalsz_bytes > 0)
-			fprintf(stderr, "Socket %d: Total memory %"PRIu64" MB,"
-				" Free memory %"PRIu64" MB\n",
-				i, stats.heap_totalsz_bytes >> 20,
-				stats.heap_freesz_bytes >> 20);
-	}
-}
 
 static void
 spdk_sigusr1(int signo __attribute__((__unused__)))
@@ -106,9 +88,6 @@ spdk_startup(spdk_event_t event)
 		rte_memzone_dump(stdout);
 		fflush(stdout);
 	}
-
-	/* Dump socket memory information */
-	spdk_iscsi_dump_memory_info();
 }
 
 int

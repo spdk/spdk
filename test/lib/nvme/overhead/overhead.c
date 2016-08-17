@@ -39,7 +39,6 @@
 #include <rte_config.h>
 #include <rte_cycles.h>
 #include <rte_mempool.h>
-#include <rte_malloc.h>
 #include <rte_lcore.h>
 
 #include "spdk/fd.h"
@@ -601,15 +600,15 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	g_task = rte_zmalloc("task", sizeof(struct perf_task), 0);
+	g_task = spdk_zmalloc(sizeof(struct perf_task), 0, NULL);
 	if (g_task == NULL) {
 		fprintf(stderr, "g_task alloc failed\n");
 		exit(1);
 	}
 
-	g_task->buf = rte_malloc(NULL, g_io_size_bytes, 0x1000);
+	g_task->buf = spdk_zmalloc(g_io_size_bytes, 0x1000, NULL);
 	if (g_task->buf == NULL) {
-		fprintf(stderr, "g_task->buf rte_malloc failed\n");
+		fprintf(stderr, "g_task->buf spdk_zmalloc failed\n");
 		exit(1);
 	}
 

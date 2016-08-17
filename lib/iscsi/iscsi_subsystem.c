@@ -35,7 +35,6 @@
 #include <rte_config.h>
 #include <rte_common.h>
 #include <rte_log.h>
-#include <rte_memory.h>
 #include <rte_memcpy.h>
 #include <rte_memzone.h>
 #include <rte_tailq.h>
@@ -50,7 +49,6 @@
 #include <rte_mempool.h>
 #include <rte_string_fns.h>
 #include <rte_cycles.h>
-#include <rte_malloc.h>
 #include <rte_version.h>
 
 #include <inttypes.h>
@@ -63,7 +61,9 @@
 #include "iscsi/acceptor.h"
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
+
 #include "spdk/event.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 
 #define ISCSI_CONFIG_TMPL \
@@ -613,7 +613,7 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.MaxSessions = MaxSessions;
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
 
-	g_spdk_iscsi.session = rte_malloc(NULL, sizeof(void *) * g_spdk_iscsi.MaxSessions, 0);
+	g_spdk_iscsi.session = spdk_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
 		perror("Unable to allocate session pointer array\n");
 		return -1;

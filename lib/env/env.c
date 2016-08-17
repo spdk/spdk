@@ -48,7 +48,9 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 	void *buf = rte_malloc(NULL, size, align);
 	if (buf) {
 		memset(buf, 0, size);
-		*phys_addr = rte_malloc_virt2phy(buf);
+		if (phys_addr) {
+			*phys_addr = rte_malloc_virt2phy(buf);
+		}
 	}
 	return buf;
 }

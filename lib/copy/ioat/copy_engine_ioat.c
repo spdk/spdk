@@ -36,7 +36,6 @@
 #include <errno.h>
 
 #include <rte_config.h>
-#include <rte_malloc.h>
 #include <rte_memcpy.h>
 #include <rte_lcore.h>
 
@@ -140,7 +139,7 @@ copy_engine_ioat_exit(void)
 		TAILQ_REMOVE(&g_devices, dev, tailq);
 		spdk_ioat_detach(dev->ioat);
 		ioat_free_device(dev);
-		rte_free(dev);
+		spdk_free(dev);
 	}
 	return;
 }
@@ -272,7 +271,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 {
 	struct ioat_device *dev;
 
-	dev = rte_malloc(NULL, sizeof(*dev), 0);
+	dev = spdk_zmalloc(sizeof(*dev), 0, NULL);
 	if (dev == NULL) {
 		SPDK_ERRLOG("Failed to allocate device struct\n");
 		return;

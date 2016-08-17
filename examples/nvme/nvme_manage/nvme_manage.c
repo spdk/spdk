@@ -41,7 +41,6 @@
 #include <fcntl.h>
 
 #include <rte_config.h>
-#include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -111,7 +110,7 @@ identify_common_ns_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 
 	if (cpl->status.sc != SPDK_NVME_SC_SUCCESS) {
 		/* Identify Namespace for NSID = FFFFFFFFh is optional, so failure is not fatal. */
-		rte_free(dev->common_ns_data);
+		spdk_free(dev->common_ns_data);
 		dev->common_ns_data = NULL;
 	}
 
@@ -133,7 +132,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	/* Retrieve controller data */
 	dev->cdata = spdk_nvme_ctrlr_get_data(dev->ctrlr);
 
-	dev->common_ns_data = rte_zmalloc("common_ns_data", sizeof(struct spdk_nvme_ns_data), 4096);
+	dev->common_ns_data = spdk_zmalloc(sizeof(struct spdk_nvme_ns_data), 4096, NULL);
 	if (dev->common_ns_data == NULL) {
 		fprintf(stderr, "common_ns_data allocation failure\n");
 		return;
@@ -149,7 +148,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	if (spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, dev->common_ns_data,
 					  sizeof(struct spdk_nvme_ns_data), identify_common_ns_cb, dev) != 0) {
 		dev->outstanding_admin_cmds--;
-		rte_free(dev->common_ns_data);
+		spdk_free(dev->common_ns_data);
 		dev->common_ns_data = NULL;
 	}
 
@@ -410,7 +409,7 @@ get_allocated_nsid(struct dev *dev)
 	struct spdk_nvme_ns_list *ns_list;
 	struct spdk_nvme_cmd cmd = {0};
 
-	ns_list = rte_zmalloc("nvme_ns_list", sizeof(*ns_list), 4096);
+	ns_list = spdk_zmalloc(sizeof(*ns_list), 4096, NULL);
 	if (ns_list == NULL) {
 		printf("Allocation error\n");
 		return 0;
@@ -424,7 +423,7 @@ get_allocated_nsid(struct dev *dev)
 	if (spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, ns_list, sizeof(*ns_list),
 					  identify_allocated_ns_cb, dev)) {
 		printf("Identify command failed\n");
-		rte_free(ns_list);
+		spdk_free(ns_list);
 		return 0;
 	}
 
@@ -440,7 +439,7 @@ get_allocated_nsid(struct dev *dev)
 		printf("%u\n", ns_list->ns_list[i]);
 	}
 
-	rte_free(ns_list);
+	spdk_free(ns_list);
 
 	printf("Please Input Namespace ID: \n");
 	if (!scanf("%u", &nsid)) {
@@ -457,8 +456,8 @@ ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
 	int ret = 0;
 	struct spdk_nvme_ctrlr_list *ctrlr_list;
 
-	ctrlr_list = rte_zmalloc("nvme controller list", sizeof(struct spdk_nvme_ctrlr_list),
-				 4096);
+	ctrlr_list = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr_list),
+				  4096, NULL);
 	if (ctrlr_list == NULL) {
 		printf("Allocation error (controller list)\n");
 		exit(1);
@@ -477,7 +476,7 @@ ns_attach(struct dev *device, int attachment_op, int ctrlr_id, int ns_id)
 		fprintf(stdout, "ns attach: Failed\n");
 	}
 
-	rte_free(ctrlr_list);
+	spdk_free(ctrlr_list);
 }
 
 static void
@@ -487,7 +486,7 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 	uint32_t nsid;
 	struct spdk_nvme_ns_data *ndata;
 
-	ndata = rte_zmalloc("nvme namespace data", sizeof(struct spdk_nvme_ns_data), 4096);
+	ndata = spdk_zmalloc(sizeof(struct spdk_nvme_ns_data), 4096, NULL);
 	if (ndata == NULL) {
 		printf("Allocation error (namespace data)\n");
 		exit(1);
@@ -508,7 +507,7 @@ ns_manage_add(struct dev *device, uint64_t ns_size, uint64_t ns_capacity, int ns
 		printf("Created namespace ID %u\n", nsid);
 	}
 
-	rte_free(ndata);
+	spdk_free(ndata);
 }
 
 static void
@@ -849,7 +848,7 @@ update_firmware_image(void)
 
 	size = fw_stat.st_size;
 
-	fw_image = rte_zmalloc("firmware image", size, 4096);
+	fw_image = spdk_zmalloc(size, 4096, NULL);
 	if (fw_image == NULL) {
 		printf("Allocation error\n");
 		close(fd);
@@ -859,7 +858,7 @@ update_firmware_image(void)
 	if (read(fd, fw_image, size) != ((ssize_t)(size))) {
 		printf("Read firmware image failed\n");
 		close(fd);
-		rte_free(fw_image);
+		spdk_free(fw_image);
 		return;
 	}
 	close(fd);
@@ -867,7 +866,7 @@ update_firmware_image(void)
 	printf("Please Input Slot(0 - 7): \n");
 	if (!scanf("%d", &slot)) {
 		printf("Invalid Slot\n");
-		rte_free(fw_image);
+		spdk_free(fw_image);
 		while (getchar() != '\n');
 		return;
 	}
@@ -878,7 +877,7 @@ update_firmware_image(void)
 	} else {
 		printf("spdk_nvme_ctrlr_update_firmware success\n");
 	}
-	rte_free(fw_image);
+	spdk_free(fw_image);
 }
 
 int main(int argc, char **argv)

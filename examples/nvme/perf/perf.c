@@ -39,7 +39,6 @@
 #include <rte_config.h>
 #include <rte_cycles.h>
 #include <rte_mempool.h>
-#include <rte_malloc.h>
 #include <rte_lcore.h>
 
 #include "spdk/fd.h"
@@ -259,8 +258,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 		exit(1);
 	}
 
-	entry->latency_page = rte_zmalloc("nvme latency", sizeof(struct spdk_nvme_intel_rw_latency_page),
-					  4096);
+	entry->latency_page = spdk_zmalloc(sizeof(struct spdk_nvme_intel_rw_latency_page),
+					   4096, NULL);
 	if (entry->latency_page == NULL) {
 		printf("Allocation error (latency page)\n");
 		exit(1);
@@ -388,9 +387,9 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
-	task->buf = rte_malloc(NULL, g_io_size_bytes, 0x200);
+	task->buf = spdk_zmalloc(g_io_size_bytes, 0x200, NULL);
 	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf rte_malloc failed\n");
+		fprintf(stderr, "task->buf spdk_zmalloc failed\n");
 		exit(1);
 	}
 	memset(task->buf, id % 8, g_io_size_bytes);
@@ -1008,7 +1007,7 @@ unregister_controllers(void)
 
 	while (entry) {
 		struct ctrlr_entry *next = entry->next;
-		rte_free(entry->latency_page);
+		spdk_free(entry->latency_page);
 		if (g_latency_tracking_enable &&
 		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 			set_latency_tracking_feature(entry->ctrlr, false);

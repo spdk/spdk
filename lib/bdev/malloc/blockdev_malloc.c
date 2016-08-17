@@ -35,13 +35,13 @@
 #include <stdio.h>
 #include <errno.h>
 #include <rte_config.h>
-#include <rte_malloc.h>
 #include <rte_memcpy.h>
 
 #include "blockdev_malloc.h"
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
@@ -120,8 +120,8 @@ blockdev_malloc_destruct(struct spdk_bdev *bdev)
 {
 	struct malloc_disk *malloc_disk = (struct malloc_disk *)bdev;
 	blockdev_malloc_delete_from_list(malloc_disk);
-	rte_free(malloc_disk->malloc_buf);
-	rte_free(malloc_disk);
+	spdk_free(malloc_disk->malloc_buf);
+	spdk_free(malloc_disk);
 	return 0;
 }
 
@@ -369,25 +369,22 @@ struct malloc_disk *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	mdisk = rte_malloc(NULL, sizeof(*mdisk), 0);
+	mdisk = spdk_zmalloc(sizeof(*mdisk), 0, NULL);
 	if (!mdisk) {
 		perror("mdisk");
 		return NULL;
 	}
 
-	memset(mdisk, 0, sizeof(*mdisk));
-
 	/*
-	 * Allocate the large backend memory buffer using rte_malloc(),
-	 *  so that we guarantee it is allocated from hugepage memory.
+	 * Allocate the large backend memory buffer from pinned memory.
 	 *
 	 * TODO: need to pass a hint so we know which socket to allocate
 	 *  from on multi-socket systems.
 	 */
-	mdisk->malloc_buf = rte_zmalloc(NULL, num_blocks * block_size, 2 * 1024 * 1024);
+	mdisk->malloc_buf = spdk_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL);
 	if (!mdisk->malloc_buf) {
-		SPDK_ERRLOG("rte_zmalloc failed\n");
-		rte_free(mdisk);
+		SPDK_ERRLOG("spdk_zmalloc failed\n");
+		spdk_free(mdisk);
 		return NULL;
 	}
 
@@ -414,8 +411,8 @@ struct malloc_disk *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 
 static void free_malloc_disk(struct malloc_disk *mdisk)
 {
-	rte_free(mdisk->malloc_buf);
-	rte_free(mdisk);
+	spdk_free(mdisk->malloc_buf);
+	spdk_free(mdisk);
 }
 
 static int blockdev_malloc_initialize(void)

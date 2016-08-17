@@ -53,7 +53,6 @@
 #include <rte_config.h>
 #include <rte_common.h>
 #include <rte_log.h>
-#include <rte_memory.h>
 #include <rte_memcpy.h>
 #include <rte_memzone.h>
 #include <rte_tailq.h>
@@ -68,7 +67,6 @@
 #include <rte_mempool.h>
 #include <rte_string_fns.h>
 #include <rte_cycles.h>
-#include <rte_malloc.h>
 
 #include "spdk/endian.h"
 #include "spdk/trace.h"

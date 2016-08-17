@@ -36,7 +36,6 @@
 #include <string.h>
 
 #include <rte_config.h>
-#include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -136,7 +135,7 @@ static void build_io_request_0(struct io_request *req)
 {
 	req->nseg = 1;
 
-	req->iovs[0].base = rte_zmalloc(NULL, 0x800, 4);
+	req->iovs[0].base = spdk_zmalloc(0x800, 4, NULL);
 	req->iovs[0].len = 0x800;
 }
 
@@ -145,7 +144,7 @@ static void build_io_request_1(struct io_request *req)
 	req->nseg = 1;
 
 	/* 512B for 1st sge */
-	req->iovs[0].base = rte_zmalloc(NULL, 0x200, 0x200);
+	req->iovs[0].base = spdk_zmalloc(0x200, 0x200, NULL);
 	req->iovs[0].len = 0x200;
 }
 
@@ -154,7 +153,7 @@ static void build_io_request_2(struct io_request *req)
 	req->nseg = 1;
 
 	/* 256KB for 1st sge */
-	req->iovs[0].base = rte_zmalloc(NULL, 0x40000, 0x1000);
+	req->iovs[0].base = spdk_zmalloc(0x40000, 0x1000, NULL);
 	req->iovs[0].len = 0x40000;
 }
 
@@ -164,16 +163,16 @@ static void build_io_request_3(struct io_request *req)
 
 	/* 2KB for 1st sge, make sure the iov address start at 0x800 boundary,
 	 *  and end with 0x1000 boundary */
-	req->iovs[0].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL);
 	req->iovs[0].offset = 0x800;
 	req->iovs[0].len = 0x800;
 
 	/* 4KB for 2th sge */
-	req->iovs[1].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[1].base = spdk_zmalloc(0x1000, 0x1000, NULL);
 	req->iovs[1].len = 0x1000;
 
 	/* 12KB for 3th sge */
-	req->iovs[2].base = rte_zmalloc(NULL, 0x3000, 0x1000);
+	req->iovs[2].base = spdk_zmalloc(0x3000, 0x1000, NULL);
 	req->iovs[2].len = 0x3000;
 }
 
@@ -184,12 +183,12 @@ static void build_io_request_4(struct io_request *req)
 	req->nseg = 32;
 
 	/* 4KB for 1st sge */
-	req->iovs[0].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL);
 	req->iovs[0].len = 0x1000;
 
 	/* 8KB for the rest 31 sge */
 	for (i = 1; i < req->nseg; i++) {
-		req->iovs[i].base = rte_zmalloc(NULL, 0x2000, 0x1000);
+		req->iovs[i].base = spdk_zmalloc(0x2000, 0x1000, NULL);
 		req->iovs[i].len = 0x2000;
 	}
 }
@@ -199,7 +198,7 @@ static void build_io_request_5(struct io_request *req)
 	req->nseg = 1;
 
 	/* 8KB for 1st sge */
-	req->iovs[0].base = rte_zmalloc(NULL, 0x2000, 0x1000);
+	req->iovs[0].base = spdk_zmalloc(0x2000, 0x1000, NULL);
 	req->iovs[0].len = 0x2000;
 }
 
@@ -208,11 +207,11 @@ static void build_io_request_6(struct io_request *req)
 	req->nseg = 2;
 
 	/* 4KB for 1st sge */
-	req->iovs[0].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL);
 	req->iovs[0].len = 0x1000;
 
 	/* 4KB for 2st sge */
-	req->iovs[1].base = rte_zmalloc(NULL, 0x1000, 0x1000);
+	req->iovs[1].base = spdk_zmalloc(0x1000, 0x1000, NULL);
 	req->iovs[1].len = 0x1000;
 }
 
@@ -228,10 +227,10 @@ free_req(struct io_request *req)
 	}
 
 	for (i = 0; i < req->nseg; i++) {
-		rte_free(req->iovs[i].base);
+		spdk_free(req->iovs[i].base);
 	}
 
-	rte_free(req);
+	spdk_free(req);
 }
 
 static int
@@ -258,7 +257,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 		return 0;
 	}
 
-	req = rte_zmalloc(NULL, sizeof(*req), 0);
+	req = spdk_zmalloc(sizeof(*req), 0, NULL);
 	if (!req) {
 		fprintf(stderr, "Allocate request failed\n");
 		return 0;
@@ -271,7 +270,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	for (i = 0; i < req->nseg; i++) {
 		struct sgl_element *sge = &req->iovs[i];
 
-		sge->phys_addr = rte_malloc_virt2phy(sge->base) + sge->offset;
+		sge->phys_addr = spdk_vtophys(sge->base) + sge->offset;
 		len += sge->len;
 	}
 

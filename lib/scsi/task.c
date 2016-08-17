@@ -34,9 +34,7 @@
 
 #include "scsi_internal.h"
 #include "spdk/endian.h"
-
-#include <rte_config.h>
-#include <rte_malloc.h>
+#include "spdk/env.h"
 
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
@@ -62,7 +60,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 			}
 			spdk_bdev_free_io(bdev_io);
 		} else {
-			rte_free(task->rbuf);
+			spdk_free(task->rbuf);
 		}
 
 		task->rbuf = NULL;
@@ -127,7 +125,7 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 
 	task->alloc_len = alloc_len;
 	if (task->rbuf == NULL) {
-		task->rbuf = rte_malloc(NULL, alloc_len, 0);
+		task->rbuf = spdk_zmalloc(alloc_len, 0, NULL);
 	}
 	*data = task->rbuf;
 	memset(task->rbuf, 0, task->alloc_len);

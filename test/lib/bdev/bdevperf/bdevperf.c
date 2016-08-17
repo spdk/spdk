@@ -42,13 +42,13 @@
 #include <rte_eal.h>
 #include <rte_mempool.h>
 #include <rte_cycles.h>
-#include <rte_malloc.h>
 #include <rte_ring.h>
 #include <rte_lcore.h>
 
 #include "spdk/bdev.h"
 #include "spdk/copy_engine.h"
 #include "spdk/endian.h"
+#include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
@@ -288,7 +288,7 @@ task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct bdevperf_task *task = __task;
 
-	task->buf = rte_malloc(NULL, g_io_size, g_min_alignment);
+	task->buf = spdk_zmalloc(g_io_size, g_min_alignment, NULL);
 }
 
 static __thread unsigned int seed = 0;

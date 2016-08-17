@@ -44,7 +44,6 @@
 #include <rte_ring.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
-#include <rte_malloc.h>
 
 #include "spdk/conf.h"
 #include "spdk/endian.h"

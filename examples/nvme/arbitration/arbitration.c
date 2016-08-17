@@ -39,7 +39,6 @@
 #include <rte_config.h>
 #include <rte_cycles.h>
 #include <rte_mempool.h>
-#include <rte_malloc.h>
 #include <rte_lcore.h>
 
 #include "spdk/nvme.h"
@@ -294,9 +293,9 @@ static void
 task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct arb_task *task = __task;
-	task->buf = rte_malloc(NULL, g_arbitration.io_size_bytes, 0x200);
+	task->buf = spdk_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
 	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf rte_malloc failed\n");
+		fprintf(stderr, "task->buf spdk_zmalloc failed\n");
 		exit(1);
 	}
 }
@@ -438,7 +437,7 @@ cleanup(void)
 	} while (worker);
 
 	if (rte_mempool_get(task_pool, (void **)&task) == 0) {
-		rte_free(task->buf);
+		spdk_free(task->buf);
 	}
 
 }

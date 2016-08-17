@@ -37,7 +37,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <rte_config.h>
-#include <rte_malloc.h>
 #include <rte_eal.h>
 #include <rte_lcore.h>
 #include <rte_cycles.h>
@@ -117,7 +116,7 @@ ioat_exit(void)
 		if (dev->ioat) {
 			spdk_ioat_detach(dev->ioat);
 		}
-		rte_free(dev);
+		spdk_free(dev);
 	}
 }
 
@@ -162,7 +161,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 {
 	struct ioat_device *dev;
 
-	dev = rte_malloc(NULL, sizeof(*dev), 0);
+	dev = spdk_zmalloc(sizeof(*dev), 0, NULL);
 	if (dev == NULL) {
 		printf("Failed to allocate device struct\n");
 		return;

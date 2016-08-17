@@ -43,7 +43,6 @@
 #include <rte_config.h>
 #include <rte_cycles.h>
 #include <rte_lcore.h>
-#include <rte_malloc.h>
 
 #include "nvmf_internal.h"
 #include "request.h"
@@ -202,9 +201,9 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 	}
 
 	/* Free all memory */
-	rte_free(rdma_conn->cmds);
-	rte_free(rdma_conn->cpls);
-	rte_free(rdma_conn->bufs);
+	spdk_free(rdma_conn->cmds);
+	spdk_free(rdma_conn->cpls);
+	spdk_free(rdma_conn->bufs);
 	free(rdma_conn->reqs);
 	free(rdma_conn);
 }
@@ -264,12 +263,12 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", conn);
 
 	rdma_conn->reqs = calloc(max_queue_depth, sizeof(*rdma_conn->reqs));
-	rdma_conn->cmds = rte_calloc("nvmf_rdma_cmd", max_queue_depth,
-				     sizeof(*rdma_conn->cmds), 0x1000);
-	rdma_conn->cpls = rte_calloc("nvmf_rdma_cpl", max_queue_depth,
-				     sizeof(*rdma_conn->cpls), 0x1000);
-	rdma_conn->bufs = rte_calloc("nvmf_rdma_buf", max_queue_depth,
-				     g_rdma.in_capsule_data_size, 0x1000);
+	rdma_conn->cmds = spdk_zmalloc(max_queue_depth * sizeof(*rdma_conn->cmds),
+				       0x1000, NULL);
+	rdma_conn->cpls = spdk_zmalloc(max_queue_depth * sizeof(*rdma_conn->cpls),
+				       0x1000, NULL);
+	rdma_conn->bufs = spdk_zmalloc(max_queue_depth * g_rdma.in_capsule_data_size,
+				       0x1000, NULL);
 	if (!rdma_conn->reqs || !rdma_conn->cmds || !rdma_conn->cpls || !rdma_conn->bufs) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
@@ -984,8 +983,8 @@ spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session, struct spdk_nvmf_
 	/* TODO: Make the number of elements in this pool configurable. For now, one full queue
 	 *       worth seems reasonable.
 	 */
-	rdma_sess->buf = rte_calloc("large_buf_pool", g_rdma.max_queue_depth, g_rdma.max_io_size,
-				    0x20000);
+	rdma_sess->buf = spdk_zmalloc(g_rdma.max_queue_depth * g_rdma.max_io_size,
+				      0x20000, NULL);
 	if (!rdma_sess->buf) {
 		SPDK_ERRLOG("Large buffer pool allocation failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);
@@ -998,7 +997,7 @@ spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session, struct spdk_nvmf_
 	if (!rdma_sess->buf_mr) {
 		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);
-		rte_free(rdma_sess->buf);
+		spdk_free(rdma_sess->buf);
 		free(rdma_sess);
 		return -1;
 	}
@@ -1028,7 +1027,7 @@ spdk_nvmf_rdma_session_fini(struct spdk_nvmf_session *session)
 	}
 
 	rdma_dereg_mr(rdma_sess->buf_mr);
-	rte_free(rdma_sess->buf);
+	spdk_free(rdma_sess->buf);
 	free(rdma_sess);
 	session->trctx = NULL;
 }

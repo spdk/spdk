@@ -38,7 +38,6 @@
 #include <string.h>
 #include <rte_config.h>
 #include <rte_lcore.h>
-#include <rte_malloc.h>
 #include <rte_eal.h>
 #include <rte_cycles.h>
 #include <rte_mempool.h>
@@ -367,7 +366,7 @@ init_src_buffer(void)
 {
 	int i;
 
-	g_src = rte_malloc(NULL, SRC_BUFFER_SIZE, 512);
+	g_src = spdk_zmalloc(SRC_BUFFER_SIZE, 512, NULL);
 	if (g_src == NULL) {
 		fprintf(stderr, "Allocate src buffer failed\n");
 		return -1;
@@ -487,7 +486,7 @@ main(int argc, char **argv)
 	rc = dump_result(threads, RTE_MAX_LCORE);
 
 cleanup:
-	rte_free(g_src);
+	spdk_free(g_src);
 	ioat_exit();
 
 	return rc;

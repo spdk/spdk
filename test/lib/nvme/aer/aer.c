@@ -34,7 +34,6 @@
 #include <stdbool.h>
 
 #include <rte_config.h>
-#include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -158,7 +157,7 @@ cleanup(void)
 
 	foreach_dev(dev) {
 		if (dev->health_page) {
-			rte_free(dev->health_page);
+			spdk_free(dev->health_page);
 		}
 	}
 }
@@ -215,7 +214,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 
 	printf("Attached to %s\n", dev->name);
 
-	dev->health_page = rte_zmalloc("nvme health", sizeof(*dev->health_page), 4096);
+	dev->health_page = spdk_zmalloc(sizeof(*dev->health_page), 4096, NULL);
 	if (dev->health_page == NULL) {
 		printf("Allocation error (health page)\n");
 		failed = 1;

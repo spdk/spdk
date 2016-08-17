@@ -38,11 +38,11 @@
 
 #include <rte_config.h>
 #include <rte_eal.h>
-#include <rte_malloc.h>
 #include <rte_ring.h>
 
 #include "spdk/bdev.h"
 #include "spdk/copy_engine.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 
 #include "CUnit/Basic.h"
@@ -93,7 +93,7 @@ static enum spdk_bdev_io_status completion_status_per_io;
 static void
 initialize_buffer(char **buf, int pattern, int size)
 {
-	*buf = rte_malloc(NULL, size, 0x1000);
+	*buf = spdk_zmalloc(size, 0x1000, NULL);
 	memset(*buf, pattern, size);
 }
 
@@ -174,8 +174,8 @@ blockdev_write_read_data_match(char *rx_buf, char *tx_buf, int data_length)
 	int rc;
 	rc = memcmp(rx_buf, tx_buf, data_length);
 
-	rte_free(rx_buf);
-	rte_free(tx_buf);
+	spdk_free(rx_buf);
+	spdk_free(tx_buf);
 
 	return rc;
 }
