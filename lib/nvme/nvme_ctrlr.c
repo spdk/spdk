@@ -1094,9 +1094,9 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 		return status;
 	}
 
-	/* Enable PCI busmaster. */
+	/* Enable PCI busmaster and disable INTx */
 	nvme_pcicfg_read32(devhandle, &cmd_reg, 4);
-	cmd_reg |= 0x4;
+	cmd_reg |= 0x0404;
 	nvme_pcicfg_write32(devhandle, cmd_reg, 4);
 
 	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
