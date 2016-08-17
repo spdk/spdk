@@ -28,7 +28,7 @@ if [ -e "/dev/nvme-fabrics" ]; then
 	chmod a+rw /dev/nvme-fabrics
 fi
 
-echo 'traddr='$NVMF_FIRST_TARGET_IP',transport=rdma,nr_io_queues=1,trsvcid='$NVMF_PORT',nqn=nqn.2016-06.io.spdk:cnode1' > /dev/nvme-fabrics
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
 mkdir -p /mnt/device
 
