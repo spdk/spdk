@@ -75,6 +75,8 @@ struct spdk_nvmf_globals {
 int nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
 		  uint32_t in_capsule_data_size, uint32_t max_io_size);
 
+int spdk_nvmf_check_pools(void);
+
 static inline uint32_t
 nvmf_u32log2(uint32_t x)
 {

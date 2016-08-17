@@ -100,7 +100,7 @@ static int spdk_nvmf_check_pool(struct rte_mempool *pool, uint32_t count)
 	}
 }
 
-static int
+int
 spdk_nvmf_check_pools(void)
 {
 	int rc = 0;
@@ -153,13 +153,6 @@ nvmf_tgt_subsystem_initialize(void)
 static int
 nvmf_tgt_subsystem_fini(void)
 {
-	spdk_shutdown_nvmf_subsystems();
-	spdk_nvmf_transport_fini();
-
-	if (spdk_nvmf_check_pools() != 0) {
-		return -1;
-	}
-
 	return 0;
 }
 

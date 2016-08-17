@@ -47,6 +47,7 @@
 #include "spdk/event.h"
 
 #include "nvmf/transport.h"
+#include "nvmf/subsystem.h"
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"
@@ -63,9 +64,15 @@ static struct spdk_poller *g_acceptor_poller = NULL;
 static void
 acceptor_poller_unregistered_event(struct spdk_event *event)
 {
-	spdk_nvmf_acceptor_fini();
+	int rc;
 
-	spdk_app_stop(0);
+	spdk_nvmf_acceptor_fini();
+	spdk_nvmf_transport_fini();
+	spdk_shutdown_nvmf_subsystems();
+
+	rc = spdk_nvmf_check_pools();
+
+	spdk_app_stop(rc);
 }
 
 static void
