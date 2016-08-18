@@ -136,17 +136,29 @@ struct spdk_nvmf_rdma_session {
 	struct ibv_mr				*buf_mr;
 };
 
+struct spdk_nvmf_rdma_listen_addr {
+	char					*traddr;
+	char					*trsvc;
+	struct rdma_cm_id			*id;
+	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
+};
+
 struct spdk_nvmf_rdma {
-	struct rdma_event_channel	*acceptor_event_channel;
-	struct rdma_cm_id		*acceptor_listen_id;
+	struct rdma_event_channel			*acceptor_event_channel;
 
 	uint16_t max_queue_depth;
 	uint32_t max_io_size;
 	uint32_t in_capsule_data_size;
 	uint32_t num_devices_found;
+
+	pthread_mutex_t lock;
+	TAILQ_HEAD(, spdk_nvmf_rdma_listen_addr)	listen_addrs;
 };
 
-static struct spdk_nvmf_rdma g_rdma = { };
+static struct spdk_nvmf_rdma g_rdma = {
+	.lock = PTHREAD_MUTEX_INITIALIZER,
+	.listen_addrs = TAILQ_HEAD_INITIALIZER(g_rdma.listen_addrs),
+};
 
 static inline struct spdk_nvmf_rdma_conn *
 get_rdma_conn(struct spdk_nvmf_conn *conn)
@@ -975,16 +987,12 @@ static int
 spdk_nvmf_rdma_acceptor_init(void)
 {
 	struct sockaddr_in	addr;
-	uint16_t		sin_port;
 	int			rc;
+	struct spdk_nvmf_rdma_listen_addr *listen_addr, *tmp;
 
 	if (g_rdma.num_devices_found == 0) {
 		return 0;
 	}
-
-	memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = g_nvmf_tgt.sin_port;
 
 	/* create an event channel with rdmacm to receive
 	   connection oriented requests and notifications */
@@ -999,30 +1007,46 @@ spdk_nvmf_rdma_acceptor_init(void)
 		goto create_id_error;
 	}
 
-	rc = rdma_create_id(g_rdma.acceptor_event_channel, &g_rdma.acceptor_listen_id, NULL, RDMA_PS_TCP);
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_create_id() failed\n");
-		goto create_id_error;
+	pthread_mutex_lock(&g_rdma.lock);
+	TAILQ_FOREACH_SAFE(listen_addr, &g_rdma.listen_addrs, link, tmp) {
+		memset(&addr, 0, sizeof(addr));
+		addr.sin_family = AF_INET;
+		addr.sin_addr.s_addr = inet_addr(listen_addr->traddr);
+		addr.sin_port = htons((uint16_t)strtoul(listen_addr->trsvc, NULL, 10));
+
+		rc = rdma_create_id(g_rdma.acceptor_event_channel, &listen_addr->id, NULL,
+				    RDMA_PS_TCP);
+		if (rc < 0) {
+			SPDK_ERRLOG("rdma_create_id() failed\n");
+			goto listen_error;
+		}
+
+		rc = rdma_bind_addr(listen_addr->id, (struct sockaddr *)&addr);
+		if (rc < 0) {
+			SPDK_ERRLOG("rdma_bind_addr() failed\n");
+			goto listen_error;
+		}
+
+		rc = rdma_listen(listen_addr->id, 10); /* 10 = backlog */
+		if (rc < 0) {
+			SPDK_ERRLOG("rdma_listen() failed\n");
+			goto listen_error;
+		}
+		SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
+			       listen_addr->traddr, ntohs(rdma_get_src_port(listen_addr->id)));
 	}
 
-	rc = rdma_bind_addr(g_rdma.acceptor_listen_id, (struct sockaddr *)&addr);
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_bind_addr() failed\n");
-		goto listen_error;
-	}
-
-	rc = rdma_listen(g_rdma.acceptor_listen_id, 10); /* 10 = backlog */
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_listen() failed\n");
-		goto listen_error;
-	}
-	sin_port = ntohs(rdma_get_src_port(g_rdma.acceptor_listen_id));
-	SPDK_NOTICELOG("*** NVMf Target Listening on port %d ***\n", sin_port);
-
-	return rc;
+	pthread_mutex_unlock(&g_rdma.lock);
+	return 0;
 
 listen_error:
-	rdma_destroy_id(g_rdma.acceptor_listen_id);
+	TAILQ_FOREACH_SAFE(listen_addr, &g_rdma.listen_addrs, link, tmp) {
+		if (listen_addr->id) {
+			rdma_destroy_id(listen_addr->id);
+		}
+	}
+	pthread_mutex_unlock(&g_rdma.lock);
+
 create_id_error:
 	rdma_destroy_event_channel(g_rdma.acceptor_event_channel);
 	return -1;
@@ -1031,6 +1055,14 @@ create_id_error:
 static void
 spdk_nvmf_rdma_acceptor_fini(void)
 {
+	struct spdk_nvmf_rdma_listen_addr *listen_addr, *tmp;
+
+	pthread_mutex_lock(&g_rdma.lock);
+	TAILQ_FOREACH_SAFE(listen_addr, &g_rdma.listen_addrs, link, tmp) {
+		TAILQ_REMOVE(&g_rdma.listen_addrs, listen_addr, link);
+		free(listen_addr);
+	}
+	pthread_mutex_unlock(&g_rdma.lock);
 }
 
 static int
@@ -1430,8 +1462,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 }
 
 static void
-nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
-		   struct spdk_nvmf_discovery_log_page_entry *entry)
+spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
+			struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = SPDK_NVMF_TRTYPE_RDMA;
 	entry->adrfam = SPDK_NVMF_ADRFAM_IPV4;
@@ -1445,6 +1477,35 @@ nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 	entry->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
 }
 
+static int
+spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
+{
+	struct spdk_nvmf_rdma_listen_addr *addr, *tmp;
+
+	pthread_mutex_lock(&g_rdma.lock);
+	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, tmp) {
+		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
+		    (!strcasecmp(addr->trsvc, listen_addr->trsvc))) {
+			pthread_mutex_unlock(&g_rdma.lock);
+			return 0;
+		}
+	}
+
+	addr = calloc(1, sizeof(*addr));
+	if (!addr) {
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
+	addr->traddr = listen_addr->traddr;
+	addr->trsvc = listen_addr->trsvc;
+
+	TAILQ_INSERT_TAIL(&g_rdma.listen_addrs, addr, link);
+	pthread_mutex_unlock(&g_rdma.lock);
+
+	return 0;
+}
+
 const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.name = "rdma",
 	.transport_init = spdk_nvmf_rdma_init,
@@ -1453,6 +1514,9 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.acceptor_init = spdk_nvmf_rdma_acceptor_init,
 	.acceptor_poll = spdk_nvmf_rdma_acceptor_poll,
 	.acceptor_fini = spdk_nvmf_rdma_acceptor_fini,
+
+	.listen_addr_add = spdk_nvmf_rdma_listen,
+	.listen_addr_discover = spdk_nvmf_rdma_discover,
 
 	.session_init = spdk_nvmf_rdma_session_init,
 	.session_fini = spdk_nvmf_rdma_session_fini,
@@ -1463,7 +1527,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.conn_fini = spdk_nvmf_rdma_close_conn,
 	.conn_poll = spdk_nvmf_rdma_poll,
 
-	.listen_addr_discover = nvmf_rdma_discover,
+
 };
 
 SPDK_LOG_REGISTER_TRACE_FLAG("rdma", SPDK_TRACE_RDMA)

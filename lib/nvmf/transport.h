@@ -76,6 +76,18 @@ struct spdk_nvmf_transport {
 	void (*acceptor_fini)(void);
 
 	/**
+	  * Instruct the acceptor to listen on the address provided. This
+	  * may be called multiple times.
+	  */
+	int (*listen_addr_add)(struct spdk_nvmf_listen_addr *listen_addr);
+
+	/**
+	 * Fill out a discovery log entry for a specific listen address.
+	 */
+	void (*listen_addr_discover)(struct spdk_nvmf_listen_addr *listen_addr,
+				     struct spdk_nvmf_discovery_log_page_entry *entry);
+
+	/**
 	 * Initialize the transport for the given session
 	 */
 	int (*session_init)(struct nvmf_session *session, struct spdk_nvmf_conn *conn);
@@ -108,12 +120,6 @@ struct spdk_nvmf_transport {
 	 * Poll a connection for events.
 	 */
 	int (*conn_poll)(struct spdk_nvmf_conn *conn);
-
-	/**
-	 * Fill out a discovery log entry for a specific listen address.
-	 */
-	void (*listen_addr_discover)(struct spdk_nvmf_listen_addr *listen_addr,
-				     struct spdk_nvmf_discovery_log_page_entry *entry);
 };
 
 int spdk_nvmf_transport_init(void);

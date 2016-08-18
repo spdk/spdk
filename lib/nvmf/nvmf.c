@@ -130,11 +130,6 @@ nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n", in_capsule_data_size);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", max_io_size);
 
-	/* init nvmf specific config options */
-	if (!g_nvmf_tgt.sin_port) {
-		g_nvmf_tgt.sin_port = htons(SPDK_NVMF_DEFAULT_SIN_PORT);
-	}
-
 	rc = spdk_nvmf_initialize_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_nvmf_initialize_pools() failed\n");

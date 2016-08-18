@@ -175,6 +175,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				 char *traddr, char *trsvc)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
+	int rc;
 
 	listen_addr = calloc(1, sizeof(*listen_addr));
 	if (!listen_addr) {
@@ -198,6 +199,12 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
 	subsystem->num_listen_addrs++;
+
+	rc = transport->listen_addr_add(listen_addr);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to listen on address '%s'\n", traddr);
+		return -1;
+	}
 
 	return 0;
 }
