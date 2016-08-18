@@ -67,7 +67,10 @@ LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 
 LIBS += $(SPDK_LIBS) $(PCIACCESS_LIB)
 
+ifeq ($(CONFIG_RDMA),y)
 LIBS += -libverbs -lrdmacm
+endif
+
 LIBS += $(DPDK_LIB)
 
 all : $(APP)

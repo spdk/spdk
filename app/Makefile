@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += trace
-DIRS-$(CONFIG_RDMA) += nvmf_tgt
+DIRS-y += nvmf_tgt
 ifeq ($(OS),Linux)
 DIRS-y += iscsi_tgt
 endif
