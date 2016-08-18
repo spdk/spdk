@@ -37,7 +37,6 @@
 #include <unistd.h>
 
 #include <rte_config.h>
-#include <rte_cycles.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -423,7 +422,7 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		}
 	}
 
-	task->submit_tsc = rte_get_timer_cycles();
+	task->submit_tsc = spdk_get_ticks();
 
 	if ((g_rw_percentage == 100) ||
 	    (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
@@ -468,7 +467,7 @@ task_complete(struct perf_task *task)
 	ns_ctx = task->ns_ctx;
 	ns_ctx->current_queue_depth--;
 	ns_ctx->io_completed++;
-	tsc_diff = rte_get_timer_cycles() - task->submit_tsc;
+	tsc_diff = spdk_get_ticks() - task->submit_tsc;
 	ns_ctx->total_tsc += tsc_diff;
 	if (ns_ctx->min_tsc > tsc_diff) {
 		ns_ctx->min_tsc = tsc_diff;
@@ -589,7 +588,7 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	tsc_end = rte_get_timer_cycles() + g_time_in_sec * g_tsc_rate;
+	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -610,7 +609,7 @@ work_fn(void *arg)
 			ns_ctx = ns_ctx->next;
 		}
 
-		if (rte_get_timer_cycles() > tsc_end) {
+		if (spdk_get_ticks() > tsc_end) {
 			break;
 		}
 	}
@@ -1113,7 +1112,7 @@ int main(int argc, char **argv)
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
 
-	g_tsc_rate = rte_get_timer_hz();
+	g_tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
 		rc = -1;

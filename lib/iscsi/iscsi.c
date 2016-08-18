@@ -66,9 +66,9 @@
 #include <rte_log.h>
 #include <rte_mempool.h>
 #include <rte_string_fns.h>
-#include <rte_cycles.h>
 
 #include "spdk/endian.h"
+#include "spdk/env.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
@@ -3446,7 +3446,7 @@ spdk_iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
 
 	spdk_iscsi_write_pdu(conn, rsp_pdu);
-	conn->last_nopin = rte_get_timer_cycles();
+	conn->last_nopin = spdk_get_ticks();
 
 	return SPDK_SUCCESS;
 }

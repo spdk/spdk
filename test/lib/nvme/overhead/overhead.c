@@ -37,7 +37,6 @@
 #include <unistd.h>
 
 #include <rte_config.h>
-#include <rte_cycles.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -291,7 +290,7 @@ submit_single_io(void)
 
 	offset_in_ios = rand_r(&seed) % entry->size_in_ios;
 
-	start = rte_get_tsc_cycles();
+	start = spdk_get_ticks();
 	rte_mb();
 #if HAVE_LIBAIO
 	if (entry->type == ENTRY_TYPE_AIO_FILE) {
@@ -306,7 +305,7 @@ submit_single_io(void)
 	}
 
 	rte_mb();
-	tsc_submit = rte_get_tsc_cycles() - start;
+	tsc_submit = spdk_get_ticks() - start;
 	g_tsc_submit += tsc_submit;
 	if (tsc_submit < g_tsc_submit_min) {
 		g_tsc_submit_min = tsc_submit;
@@ -344,7 +343,7 @@ check_io(void)
 		spdk_nvme_qpair_process_completions(g_ns->u.nvme.qpair, 0);
 	}
 	rte_mb();
-	end = rte_get_tsc_cycles();
+	end = spdk_get_ticks();
 	if (g_ns->current_queue_depth == 1) {
 		/*
 		 * Account for race condition in AIO case where interrupt occurs
@@ -370,7 +369,7 @@ check_io(void)
 		if (!g_ns->is_draining) {
 			submit_single_io();
 		}
-		g_complete_tsc_start = rte_get_tsc_cycles();
+		g_complete_tsc_start = spdk_get_ticks();
 	}
 }
 
@@ -440,11 +439,11 @@ work_fn(void)
 		return 1;
 	}
 
-	tsc_end = rte_get_tsc_cycles() + g_time_in_sec * g_tsc_rate;
+	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
 	submit_single_io();
-	g_complete_tsc_start = rte_get_tsc_cycles();
+	g_complete_tsc_start = spdk_get_ticks();
 
 	while (1) {
 		/*
@@ -454,7 +453,7 @@ work_fn(void)
 		 */
 		check_io();
 
-		if (rte_get_tsc_cycles() > tsc_end) {
+		if (spdk_get_ticks() > tsc_end) {
 			break;
 		}
 	}
@@ -612,7 +611,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	g_tsc_rate = rte_get_tsc_hz();
+	g_tsc_rate = spdk_get_ticks_hz();
 
 #if HAVE_LIBAIO
 	if (g_aio_optind < argc) {

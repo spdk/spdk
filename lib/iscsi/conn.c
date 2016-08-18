@@ -46,9 +46,9 @@
 
 #include <rte_config.h>
 #include <rte_mempool.h>
-#include <rte_cycles.h>
 
 #include "spdk/endian.h"
+#include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
@@ -63,7 +63,7 @@
 	memset(&(conn)->portal, 0, sizeof(*(conn)) -	\
 		offsetof(struct spdk_iscsi_conn, portal));
 
-#define MICROSECOND_TO_TSC(x) ((x) * rte_get_timer_hz()/1000000)
+#define MICROSECOND_TO_TSC(x) ((x) * spdk_get_ticks_hz()/1000000)
 static int64_t g_conn_idle_interval_in_tsc = -1;
 
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
@@ -321,7 +321,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	conn->timeout = g_spdk_iscsi.timeout;
 	conn->nopininterval = g_spdk_iscsi.nopininterval;
-	conn->nopininterval *= rte_get_timer_hz(); /* seconds to TSC */
+	conn->nopininterval *= spdk_get_ticks_hz(); /* seconds to TSC */
 	conn->nop_outstanding = false;
 	conn->data_out_cnt = 0;
 	conn->data_in_cnt = 0;
@@ -393,7 +393,7 @@ error_return:
 	conn->logout_timer = NULL;
 	conn->shutdown_timer = NULL;
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
-	conn->last_activity_tsc = rte_get_timer_cycles();
+	conn->last_activity_tsc = spdk_get_ticks();
 	conn->pending_task_cnt = 0;
 	conn->pending_activate_event = false;
 
@@ -837,7 +837,7 @@ process_task_mgmt_completion(spdk_event_t event)
 	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
 	struct spdk_iscsi_task *task = spdk_event_get_arg2(event);
 
-	conn->last_activity_tsc = rte_get_timer_cycles();
+	conn->last_activity_tsc = spdk_get_ticks();
 	spdk_iscsi_task_mgmt_response(conn, task);
 	spdk_iscsi_task_put(task);
 }
@@ -902,7 +902,7 @@ void process_task_completion(spdk_event_t event)
 
 	assert(task != NULL);
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
-	conn->last_activity_tsc = rte_get_timer_cycles();
+	conn->last_activity_tsc = spdk_get_ticks();
 
 	primary = spdk_iscsi_task_get_primary(task);
 
@@ -965,9 +965,9 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 	uint64_t	tsc;
 
 	/* Check for nop interval expiration */
-	tsc = rte_get_timer_cycles();
+	tsc = spdk_get_ticks();
 	if (conn->nop_outstanding) {
-		if ((tsc - conn->last_nopin) > (conn->timeout  * rte_get_timer_hz())) {
+		if ((tsc - conn->last_nopin) > (conn->timeout  * spdk_get_ticks_hz())) {
 			SPDK_ERRLOG("Timed out waiting for NOP-Out response from initiator\n");
 			SPDK_ERRLOG("  tsc=0x%lx, last_nopin=0x%lx\n", tsc, conn->last_nopin);
 			return -1;
@@ -1204,7 +1204,7 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 
 static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
 {
-	uint64_t current_tsc = rte_get_timer_cycles();
+	uint64_t current_tsc = spdk_get_ticks();
 
 	if (g_conn_idle_interval_in_tsc > 0 &&
 	    ((int64_t)(current_tsc - conn->last_activity_tsc)) >= g_conn_idle_interval_in_tsc &&
@@ -1240,7 +1240,7 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 	}
 
 	/* If flush timer has expired, flush all PDUs */
-	tsc = rte_get_timer_cycles();
+	tsc = spdk_get_ticks();
 	if (tsc - conn->last_flush > g_spdk_iscsi.flush_timeout) {
 		conn->last_flush = tsc;
 		if (spdk_iscsi_conn_flush_pdus(conn) != 0) {
@@ -1313,7 +1313,7 @@ spdk_iscsi_conn_full_feature_do_work(void *arg)
 	if (rc < 0) {
 		return;
 	} else if (rc > 0) {
-		conn->last_activity_tsc = rte_get_timer_cycles();
+		conn->last_activity_tsc = spdk_get_ticks();
 	}
 
 	/* Check if the session was idle during this access pass. If it was,
@@ -1353,7 +1353,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 		assert(tconn->is_idle == 1);
 
 		if (tconn->pending_activate_event == false) {
-			tsc = rte_get_timer_cycles();
+			tsc = spdk_get_ticks();
 			if (tsc - tconn->last_nopin > tconn->nopininterval) {
 				tconn->pending_activate_event = true;
 			}
@@ -1366,7 +1366,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 
 			/* remove connection from idle list */
 			STAILQ_REMOVE(&g_idle_conn_list_head, tconn, spdk_iscsi_conn, link);
-			tconn->last_activity_tsc = rte_get_timer_cycles();
+			tconn->last_activity_tsc = spdk_get_ticks();
 			tconn->pending_activate_event = false;
 			tconn->is_idle = 0;
 			del_idle_conn(tconn);

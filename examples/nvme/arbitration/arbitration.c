@@ -37,7 +37,6 @@
 #include <unistd.h>
 
 #include <rte_config.h>
-#include <rte_cycles.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -461,7 +460,7 @@ work_fn(void *arg)
 		ns_ctx = ns_ctx->next;
 	}
 
-	tsc_end = rte_get_timer_cycles() + g_arbitration.time_in_sec * g_arbitration.tsc_rate;
+	tsc_end = spdk_get_ticks() + g_arbitration.time_in_sec * g_arbitration.tsc_rate;
 
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
@@ -483,7 +482,7 @@ work_fn(void *arg)
 			ns_ctx = ns_ctx->next;
 		}
 
-		if (rte_get_timer_cycles() > tsc_end) {
+		if (spdk_get_ticks() > tsc_end) {
 			break;
 		}
 	}
@@ -1133,7 +1132,7 @@ main(int argc, char **argv)
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
 
-	g_arbitration.tsc_rate = rte_get_timer_hz();
+	g_arbitration.tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
 		return 1;

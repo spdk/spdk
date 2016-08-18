@@ -48,7 +48,6 @@
 #endif
 
 #include <rte_config.h>
-#include <rte_cycles.h>
 #include <rte_mempool.h>
 #include <rte_ring.h>
 
@@ -56,6 +55,7 @@
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
+#include "spdk/env.h"
 
 #define SPDK_MAX_SOCKET		64
 
@@ -341,14 +341,14 @@ _spdk_reactor_run(void *arg)
 	set_reactor_thread_name();
 	SPDK_NOTICELOG("Reactor started on core 0x%x\n", rte_lcore_id());
 
-	spin_cycles = SPDK_REACTOR_SPIN_TIME_US * rte_get_timer_hz() / 1000000ULL;
-	sleep_cycles = reactor->max_delay_us * rte_get_timer_hz() / 1000000ULL;
-	last_action = rte_get_timer_cycles();
+	spin_cycles = SPDK_REACTOR_SPIN_TIME_US * spdk_get_ticks_hz() / 1000000ULL;
+	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
+	last_action = spdk_get_ticks();
 
 	while (1) {
 		event_count = spdk_event_queue_run_all(rte_lcore_id());
 		if (event_count > 0) {
-			last_action = rte_get_timer_cycles();
+			last_action = spdk_get_ticks();
 		}
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
@@ -362,12 +362,12 @@ _spdk_reactor_run(void *arg)
 				poller->state = SPDK_POLLER_STATE_WAITING;
 				TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 			}
-			last_action = rte_get_timer_cycles();
+			last_action = spdk_get_ticks();
 		}
 
 		poller = TAILQ_FIRST(&reactor->timer_pollers);
 		if (poller) {
-			now = rte_get_timer_cycles();
+			now = spdk_get_ticks();
 
 			if (now >= poller->next_run_tick) {
 				TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
@@ -384,7 +384,7 @@ _spdk_reactor_run(void *arg)
 
 		/* Determine if the thread can sleep */
 		if (sleep_cycles > 0) {
-			now = rte_get_timer_cycles();
+			now = spdk_get_ticks();
 			if (now >= (last_action + spin_cycles)) {
 				sleep_us = reactor->max_delay_us;
 
@@ -396,7 +396,7 @@ _spdk_reactor_run(void *arg)
 						if (poller->next_run_tick <= now) {
 							sleep_us = 0;
 						} else {
-							sleep_us = ((poller->next_run_tick - now) * 1000000ULL) / rte_get_timer_hz();
+							sleep_us = ((poller->next_run_tick - now) * 1000000ULL) / spdk_get_ticks_hz();
 						}
 					}
 				}
@@ -668,7 +668,7 @@ _spdk_event_add_poller(spdk_event_t event)
 	struct spdk_event *next = spdk_event_get_next(event);
 
 	if (poller->period_ticks) {
-		spdk_poller_insert_timer(reactor, poller, rte_get_timer_cycles());
+		spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
 	} else {
 		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 	}
@@ -698,7 +698,7 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 	poller->arg = arg;
 
 	if (period_microseconds) {
-		poller->period_ticks = (rte_get_timer_hz() * period_microseconds) / 1000000ULL;
+		poller->period_ticks = (spdk_get_ticks_hz() * period_microseconds) / 1000000ULL;
 	} else {
 		poller->period_ticks = 0;
 	}

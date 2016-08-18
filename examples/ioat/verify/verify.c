@@ -39,7 +39,6 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 #include <rte_eal.h>
-#include <rte_cycles.h>
 #include <rte_mempool.h>
 
 #include "spdk/ioat.h"
@@ -348,10 +347,10 @@ work_fn(void *arg)
 		return 1;
 	}
 
-	tsc_end = rte_get_timer_cycles() + g_user_config.time_in_sec * rte_get_timer_hz();
+	tsc_end = spdk_get_ticks() + g_user_config.time_in_sec * spdk_get_ticks_hz();
 
 	submit_xfers(t, g_user_config.queue_depth);
-	while (rte_get_timer_cycles() < tsc_end) {
+	while (spdk_get_ticks() < tsc_end) {
 		spdk_ioat_process_events(t->chan);
 	}
 

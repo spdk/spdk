@@ -48,7 +48,6 @@
 #include <rte_log.h>
 #include <rte_mempool.h>
 #include <rte_string_fns.h>
-#include <rte_cycles.h>
 #include <rte_version.h>
 
 #include <inttypes.h>
@@ -816,9 +815,9 @@ spdk_iscsi_app_read_parameters(void)
 
 	val = spdk_conf_section_get_val(sp, "FlushTimeout");
 	if (val == NULL) {
-		g_spdk_iscsi.flush_timeout = DEFAULT_FLUSH_TIMEOUT * (rte_get_timer_hz() >> 20);
+		g_spdk_iscsi.flush_timeout = DEFAULT_FLUSH_TIMEOUT * (spdk_get_ticks_hz() >> 20);
 	} else {
-		g_spdk_iscsi.flush_timeout = strtoul(val, NULL, 10) * (rte_get_timer_hz() >> 20);
+		g_spdk_iscsi.flush_timeout = strtoul(val, NULL, 10) * (spdk_get_ticks_hz() >> 20);
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "FlushTimeout %"PRIu64"\n", g_spdk_iscsi.flush_timeout);
 

@@ -37,7 +37,6 @@
 #include <unistd.h>
 
 #include <rte_config.h>
-#include <rte_cycles.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -268,7 +267,7 @@ drain_io(struct ns_worker_ctx *ns_ctx)
 static int
 work_fn(void *arg)
 {
-	uint64_t tsc_end = rte_get_timer_cycles() + g_time_in_sec * g_tsc_rate;
+	uint64_t tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
 	bool did_reset = false;
@@ -299,7 +298,7 @@ work_fn(void *arg)
 			ns_ctx = ns_ctx->next;
 		}
 
-		if (!did_reset && ((tsc_end - rte_get_timer_cycles()) / g_tsc_rate) > (uint64_t)g_time_in_sec / 2) {
+		if (!did_reset && ((tsc_end - spdk_get_ticks()) / g_tsc_rate) > (uint64_t)g_time_in_sec / 2) {
 			ns_ctx = worker->ns_ctx;
 			while (ns_ctx != NULL) {
 				if (spdk_nvme_ctrlr_reset(ns_ctx->entry->ctrlr) < 0) {
@@ -311,7 +310,7 @@ work_fn(void *arg)
 			did_reset = true;
 		}
 
-		if (rte_get_timer_cycles() > tsc_end) {
+		if (spdk_get_ticks() > tsc_end) {
 			break;
 		}
 	}
@@ -640,7 +639,7 @@ int main(int argc, char **argv)
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
 
-	g_tsc_rate = rte_get_timer_hz();
+	g_tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
 		return 1;

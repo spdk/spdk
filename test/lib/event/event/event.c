@@ -40,10 +40,10 @@
 #include <rte_config.h>
 #include <rte_eal.h>
 #include <rte_mempool.h>
-#include <rte_cycles.h>
 #include <rte_ring.h>
 #include <rte_lcore.h>
 
+#include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
 
@@ -74,7 +74,7 @@ event_work_fn(void *arg)
 {
 	uint64_t tsc_end;
 
-	tsc_end = rte_get_timer_cycles() + g_time_in_sec * g_tsc_rate;
+	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
 	submit_new_event(NULL);
 	submit_new_event(NULL);
@@ -85,7 +85,7 @@ event_work_fn(void *arg)
 
 		spdk_event_queue_run_all(rte_lcore_id());
 
-		if (rte_get_timer_cycles() > tsc_end) {
+		if (spdk_get_ticks() > tsc_end) {
 			break;
 		}
 	}
@@ -152,7 +152,7 @@ main(int argc, char **argv)
 
 	spdk_app_init(&opts);
 
-	g_tsc_rate = rte_get_timer_hz();
+	g_tsc_rate = spdk_get_ticks_hz();
 	g_tsc_us_rate = g_tsc_rate / (1000 * 1000);
 
 	printf("Running I/O for %d seconds...", g_time_in_sec);

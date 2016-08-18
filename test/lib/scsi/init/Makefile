@@ -39,9 +39,8 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 	     $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi
-LIBS += $(SPDK_LIBS)
-LIBS += $(DPDK_LIB)
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi $(ENV_CFLAGS)
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 LIBS += -lcunit
 
 APP = init_ut
@@ -49,7 +48,7 @@ C_SRCS = init_ut.c
 
 all: $(APP)
 
-$(APP): $(OBJS) $(SPDK_LIBS)
+$(APP): $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:

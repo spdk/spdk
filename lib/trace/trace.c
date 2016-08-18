@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/env.h"
 #include "spdk/trace.h"
 
 #include <assert.h>
@@ -46,7 +47,6 @@
 #include <errno.h>
 
 #include <rte_config.h>
-#include <rte_cycles.h>
 #include <rte_lcore.h>
 
 static char g_shm_name[64];
@@ -79,7 +79,7 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 	}
 
 	lcore_history = &g_trace_histories->per_lcore_history[lcore];
-	tsc = rte_get_timer_cycles();
+	tsc = spdk_get_ticks();
 
 	lcore_history->tpoint_count[tpoint_id]++;
 
@@ -186,7 +186,7 @@ spdk_trace_init(const char *shm_name)
 
 	memset(g_trace_histories, 0, sizeof(*g_trace_histories));
 
-	g_trace_histories->tsc_rate = rte_get_timer_hz();
+	g_trace_histories->tsc_rate = spdk_get_ticks_hz();
 
 	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 		g_trace_histories->per_lcore_history[i].lcore = i;

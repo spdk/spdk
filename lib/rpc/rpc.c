@@ -47,6 +47,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/rpc.h"
+#include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
