@@ -41,7 +41,6 @@
 #include <stdint.h>
 
 #include <rte_config.h>
-#include <rte_debug.h>
 #include <rte_cycles.h>
 #include <rte_lcore.h>
 #include <rte_malloc.h>
@@ -326,8 +325,8 @@ nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 		      int send_flags)
 {
 	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
-	RTE_VERIFY(wr != NULL);
-	RTE_VERIFY(sg_list != NULL);
+	assert(wr != NULL);
+	assert(sg_list != NULL);
 
 	wr->wr_id = (uint64_t)rdma_req;
 	wr->opcode = opcode;
@@ -341,7 +340,7 @@ nvmf_ibv_send_wr_set_rkey(struct ibv_send_wr *wr, struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
 
-	RTE_VERIFY(sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
+	assert(sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
 
 	wr->wr.rdma.rkey = sgl->keyed.key;
 	wr->wr.rdma.remote_addr = sgl->address;

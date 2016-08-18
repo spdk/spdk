@@ -112,8 +112,8 @@ struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name)
 static void
 spdk_bdev_io_set_rbuf(struct spdk_bdev_io *bdev_io, void *buf)
 {
-	RTE_VERIFY(bdev_io->get_rbuf_cb != NULL);
-	RTE_VERIFY(buf != NULL);
+	assert(bdev_io->get_rbuf_cb != NULL);
+	assert(buf != NULL);
 	bdev_io->u.read.buf_unaligned = buf;
 	bdev_io->u.read.buf = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
 	bdev_io->u.read.put_rbuf = true;
@@ -447,7 +447,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
 		cb_event = spdk_event_allocate(rte_lcore_id(), bdev_io->cb,
 					       bdev_io->caller_ctx, bdev_io, NULL);
-		RTE_VERIFY(cb_event != NULL);
+		assert(cb_event != NULL);
 	}
 
 	__submit_request(bdev, bdev_io, cb_event);
@@ -791,7 +791,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 	bdev_io->status = status;
 
-	RTE_VERIFY(bdev_io->cb_event != NULL);
+	assert(bdev_io->cb_event != NULL);
 	spdk_event_call(bdev_io->cb_event);
 }
 
@@ -822,7 +822,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 void
 spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb)
 {
-	RTE_VERIFY(cb != NULL);
+	assert(cb != NULL);
 
 	if (bdev_io->u.read.buf == NULL) {
 		bdev_io->get_rbuf_cb = cb;

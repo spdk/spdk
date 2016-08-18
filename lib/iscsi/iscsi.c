@@ -52,7 +52,6 @@
 
 #include <rte_config.h>
 #include <rte_common.h>
-#include <rte_debug.h>
 #include <rte_log.h>
 #include <rte_memory.h>
 #include <rte_memcpy.h>
@@ -64,7 +63,6 @@
 #include <rte_atomic.h>
 #include <rte_lcore.h>
 #include <rte_branch_prediction.h>
-#include <rte_debug.h>
 #include <rte_ring.h>
 #include <rte_log.h>
 #include <rte_mempool.h>
@@ -359,7 +357,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 	/* AHS */
 	ahs_len = pdu->bhs.total_ahs_len * 4;
-	RTE_VERIFY(ahs_len <= ISCSI_AHS_LEN);
+	assert(ahs_len <= ISCSI_AHS_LEN);
 	if (pdu->ahs_valid_bytes < ahs_len) {
 		rc = spdk_iscsi_conn_read_data(conn,
 					       ahs_len - pdu->ahs_valid_bytes,
@@ -2859,7 +2857,7 @@ int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
 
 			remaining_size = task->scsi.transfer_len - task->current_datain_offset;
 			subtask = spdk_iscsi_task_get(&conn->pending_task_cnt, task);
-			RTE_VERIFY(subtask != NULL);
+			assert(subtask != NULL);
 			subtask->scsi.offset = task->current_datain_offset;
 			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_RBUF_MAX_SIZE, remaining_size);
 			subtask->scsi.rbuf = NULL;
@@ -4592,7 +4590,7 @@ spdk_get_iscsi_sess_by_tsih(uint16_t tsih)
 	}
 
 	session = g_spdk_iscsi.session[tsih - 1];
-	RTE_VERIFY(tsih == session->tsih);
+	assert(tsih == session->tsih);
 
 	return session;
 }

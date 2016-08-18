@@ -42,7 +42,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <rte_debug.h>
 #include <rte_config.h>
 #include <rte_per_lcore.h>
 #include <rte_eal.h>

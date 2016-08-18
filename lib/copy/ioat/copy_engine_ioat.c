@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -38,7 +39,6 @@
 #include <rte_malloc.h>
 #include <rte_memcpy.h>
 #include <rte_lcore.h>
-#include <rte_debug.h>
 
 #include "spdk/copy_engine.h"
 #include "spdk/vtophys.h"
@@ -168,7 +168,7 @@ ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 
-	RTE_VERIFY(ioat_ch->ioat_ch != NULL);
+	assert(ioat_ch->ioat_ch != NULL);
 
 	ioat_task->cb = cb;
 
@@ -183,7 +183,7 @@ ioat_copy_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 	uint64_t fill64 = 0x0101010101010101ULL * fill;
 
-	RTE_VERIFY(ioat_ch->ioat_ch != NULL);
+	assert(ioat_ch->ioat_ch != NULL);
 
 	ioat_task->cb = cb;
 

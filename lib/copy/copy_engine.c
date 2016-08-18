@@ -33,11 +33,10 @@
 
 #include "spdk/copy_engine.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <errno.h>
-#include <assert.h>
 #include <rte_config.h>
-#include <rte_debug.h>
 #include <rte_memcpy.h>
 
 #include "spdk/log.h"
@@ -59,14 +58,14 @@ struct copy_io_channel {
 void
 spdk_copy_engine_register(struct spdk_copy_engine *copy_engine)
 {
-	RTE_VERIFY(hw_copy_engine == NULL);
+	assert(hw_copy_engine == NULL);
 	hw_copy_engine = copy_engine;
 }
 
 static void
 spdk_memcpy_register(struct spdk_copy_engine *copy_engine)
 {
-	RTE_VERIFY(mem_copy_engine == NULL);
+	assert(mem_copy_engine == NULL);
 	mem_copy_engine = copy_engine;
 }
 

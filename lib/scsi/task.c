@@ -36,7 +36,6 @@
 #include "spdk/endian.h"
 
 #include <rte_config.h>
-#include <rte_debug.h>
 #include <rte_malloc.h>
 
 void
@@ -68,7 +67,7 @@ spdk_put_task(struct spdk_scsi_task *task)
 
 		task->rbuf = NULL;
 
-		RTE_VERIFY(task->owner_task_ctr != NULL);
+		assert(task->owner_task_ctr != NULL);
 		if (*(task->owner_task_ctr) > 0) {
 			*(task->owner_task_ctr) -= 1;
 		} else {
@@ -85,7 +84,7 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 {
 	task->ref++;
 
-	RTE_VERIFY(owner_task_ctr != NULL);
+	assert(owner_task_ctr != NULL);
 	task->owner_task_ctr = owner_task_ctr;
 	*owner_task_ctr += 1;
 

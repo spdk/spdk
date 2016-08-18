@@ -37,7 +37,6 @@
 
 #include <rte_config.h>
 #include <rte_eal.h>
-#include <rte_debug.h>
 #include <rte_mempool.h>
 #include <rte_malloc.h>
 

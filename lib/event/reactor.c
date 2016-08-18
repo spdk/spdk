@@ -33,6 +33,7 @@
 
 #include "spdk/event.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -48,7 +49,6 @@
 
 #include <rte_config.h>
 #include <rte_cycles.h>
-#include <rte_debug.h>
 #include <rte_mempool.h>
 #include <rte_ring.h>
 #include <rte_timer.h>
@@ -131,10 +131,13 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 	struct spdk_event *event = NULL;
 	int rc;
 	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
-	RTE_VERIFY(socket_id < SPDK_MAX_SOCKET);
+	assert(socket_id < SPDK_MAX_SOCKET);
 
 	rc = rte_mempool_get(g_spdk_event_mempool[socket_id], (void **)&event);
-	RTE_VERIFY((rc == 0) && (event != NULL));
+	if (rc != 0 || event == NULL) {
+		assert(false);
+		return NULL;
+	}
 
 	event->lcore = lcore;
 	event->fn = fn;
@@ -149,7 +152,7 @@ static void
 spdk_event_free(uint32_t lcore, struct spdk_event *event)
 {
 	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
-	RTE_VERIFY(socket_id < SPDK_MAX_SOCKET);
+	assert(socket_id < SPDK_MAX_SOCKET);
 
 	rte_mempool_put(g_spdk_event_mempool[socket_id], (void *)event);
 }
@@ -162,9 +165,11 @@ spdk_event_call(spdk_event_t event)
 
 	reactor = spdk_reactor_get(event->lcore);
 
-	RTE_VERIFY(reactor->events != NULL);
+	assert(reactor->events != NULL);
 	rc = rte_ring_enqueue(reactor->events, event);
-	RTE_VERIFY(rc == 0);
+	if (rc != 0) {
+		assert(false);
+	}
 }
 
 static uint32_t
@@ -190,7 +195,7 @@ spdk_event_queue_run_single(uint32_t lcore)
 
 	reactor = spdk_reactor_get(lcore);
 
-	RTE_VERIFY(reactor->events != NULL);
+	assert(reactor->events != NULL);
 	rc = rte_ring_dequeue(reactor->events, (void **)&event);
 
 	if ((rc != 0) || event == NULL) {
@@ -389,7 +394,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	snprintf(ring_name, sizeof(ring_name) - 1, "spdk_event_queue_%u", lcore);
 	reactor->events =
 		rte_ring_create(ring_name, 65536, rte_lcore_to_socket_id(lcore), RING_F_SC_DEQ);
-	RTE_VERIFY(reactor->events != NULL);
+	assert(reactor->events != NULL);
 }
 
 static void
@@ -514,7 +519,7 @@ spdk_reactors_start(void)
 	struct spdk_reactor *reactor;
 	uint32_t i;
 
-	RTE_VERIFY(rte_get_master_lcore() == rte_lcore_id());
+	assert(rte_get_master_lcore() == rte_lcore_id());
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 

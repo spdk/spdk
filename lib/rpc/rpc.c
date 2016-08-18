@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
@@ -104,10 +105,10 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 	struct spdk_rpc_method *m;
 
 	m = calloc(1, sizeof(struct spdk_rpc_method));
-	RTE_VERIFY(m != NULL);
+	assert(m != NULL);
 
 	m->name = strdup(method);
-	RTE_VERIFY(m->name != NULL);
+	assert(m->name != NULL);
 
 	m->func = func;
 
@@ -124,7 +125,7 @@ spdk_jsonrpc_handler(
 {
 	struct spdk_rpc_method *m;
 
-	RTE_VERIFY(method != NULL);
+	assert(method != NULL);
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (spdk_json_strequal(method, m->name)) {

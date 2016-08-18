@@ -141,7 +141,7 @@ spdk_find_iscsi_connection_by_id(int cid)
 static int
 init_idle_conns(void)
 {
-	RTE_VERIFY(g_epoll_fd == 0);
+	assert(g_epoll_fd == 0);
 	g_epoll_fd = epoll_create1(0);
 	if (g_epoll_fd < 0) {
 		SPDK_ERRLOG("epoll_create1 failed master lcore\n");
@@ -213,7 +213,7 @@ check_idle_conns(void)
 	if (nfds > SPDK_MAX_POLLERS_PER_CORE) {
 		SPDK_ERRLOG("epoll_wait events exceeded limit! %d > %d\n", nfds,
 			    SPDK_MAX_POLLERS_PER_CORE);
-		RTE_VERIFY(0);
+		assert(0);
 	}
 
 	/*
@@ -624,7 +624,7 @@ static void
 spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 {
 	if (spdk_iscsi_get_active_conns() == 0) {
-		RTE_VERIFY(timer == &g_shutdown_timer);
+		assert(timer == &g_shutdown_timer);
 		rte_timer_stop(timer);
 		spdk_iscsi_conns_cleanup();
 		spdk_app_stop(0);
@@ -686,7 +686,7 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 		target->num_active_conns--;
 		pthread_mutex_unlock(&target->mutex);
 
-		RTE_VERIFY(conn->dev != NULL);
+		assert(conn->dev != NULL);
 		spdk_scsi_dev_free_io_channels(conn->dev);
 	}
 	rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
@@ -906,7 +906,7 @@ void process_task_completion(spdk_event_t event)
 	struct spdk_iscsi_task *task = spdk_event_get_arg2(event);
 	struct spdk_iscsi_task *primary;
 
-	RTE_VERIFY(task != NULL);
+	assert(task != NULL);
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);
 	conn->last_activity_tsc = rte_get_timer_cycles();
 
@@ -1274,7 +1274,7 @@ spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event)
 	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
-		RTE_VERIFY(conn->dev != NULL);
+		assert(conn->dev != NULL);
 		spdk_scsi_dev_allocate_io_channels(conn->dev);
 	}
 
@@ -1356,7 +1356,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 	/* Now walk the idle list to process timer based actions */
 	STAILQ_FOREACH(tconn, &g_idle_conn_list_head, link) {
 
-		RTE_VERIFY(tconn->is_idle == 1);
+		assert(tconn->is_idle == 1);
 
 		if (tconn->pending_activate_event == false) {
 			tsc = rte_get_timer_cycles();

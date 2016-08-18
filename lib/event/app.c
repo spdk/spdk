@@ -33,6 +33,7 @@
 
 #include "spdk/event.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -46,7 +47,6 @@
 #include <signal.h>
 
 #include <rte_config.h>
-#include <rte_debug.h>
 #include <rte_lcore.h>
 
 #include "spdk/log.h"
@@ -246,7 +246,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 
 	config = spdk_conf_allocate();
-	RTE_VERIFY(config != NULL);
+	assert(config != NULL);
 	if (opts->config_file) {
 		rc = spdk_conf_read(config, opts->config_file);
 		if (rc != 0) {

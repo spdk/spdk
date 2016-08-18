@@ -33,9 +33,9 @@
 
 #include "spdk/trace.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -211,13 +211,13 @@ spdk_trace_register_owner(uint8_t type, char id_prefix)
 {
 	struct spdk_trace_owner *owner;
 
-	RTE_VERIFY(type != OWNER_NONE);
+	assert(type != OWNER_NONE);
 
 	/* 'owner' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	*/
 	owner = &g_trace_histories->owner[type];
-	RTE_VERIFY(owner->type == 0);
+	assert(owner->type == 0);
 
 	owner->type = type;
 	owner->id_prefix = id_prefix;
@@ -228,13 +228,13 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 {
 	struct spdk_trace_object *object;
 
-	RTE_VERIFY(type != OBJECT_NONE);
+	assert(type != OBJECT_NONE);
 
 	/* 'object' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
 	*/
 	object = &g_trace_histories->object[type];
-	RTE_VERIFY(object->type == 0);
+	assert(object->type == 0);
 
 	object->type = type;
 	object->id_prefix = id_prefix;
@@ -249,11 +249,11 @@ spdk_trace_register_description(const char *name, const char *short_name,
 {
 	struct spdk_trace_tpoint *tpoint;
 
-	RTE_VERIFY(tpoint_id != 0);
-	RTE_VERIFY(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
+	assert(tpoint_id != 0);
+	assert(tpoint_id < SPDK_TRACE_MAX_TPOINT_ID);
 
 	tpoint = &g_trace_histories->tpoint[tpoint_id];
-	RTE_VERIFY(tpoint->tpoint_id == 0);
+	assert(tpoint->tpoint_id == 0);
 
 	strncpy(tpoint->name, name, sizeof(tpoint->name));
 	strncpy(tpoint->short_name, short_name, sizeof(tpoint->short_name));
