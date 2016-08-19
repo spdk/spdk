@@ -54,6 +54,7 @@
 #include "spdk/assert.h"
 #include "spdk/log.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/string.h"
 #include "spdk/trace.h"
 
 /*
@@ -1469,8 +1470,8 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 	entry->adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED;
 
-	snprintf(entry->trsvcid, sizeof(entry->trsvcid), "%s", listen_addr->trsvc);
-	snprintf(entry->traddr, sizeof(entry->traddr), "%s", listen_addr->traddr);
+	spdk_strcpy_pad(entry->trsvcid, listen_addr->trsvc, sizeof(entry->trsvcid), ' ');
+	spdk_strcpy_pad(entry->traddr, listen_addr->traddr, sizeof(entry->traddr), ' ');
 
 	entry->tsas.rdma.rdma_qptype = SPDK_NVMF_RDMA_QPTYPE_RELIABLE_CONNECTED;
 	entry->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_PRTYPE_NONE;
