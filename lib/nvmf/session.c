@@ -58,6 +58,8 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 	session->vcdata.sgls.keyed_sgl = 1;
 	session->vcdata.sgls.sgl_offset = 1;
 
+	strncpy((char *)session->vcdata.subnqn, SPDK_NVMF_DISCOVERY_NQN, sizeof(session->vcdata.subnqn));
+
 	/* Properties */
 	session->vcprop.cap.raw = 0;
 	session->vcprop.cap.bits.cqr = 1;	/* NVMF specification required */
@@ -104,6 +106,8 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 
 	/* TODO: this should be set by the transport */
 	session->vcdata.nvmf_specific.ioccsz += g_nvmf_tgt.in_capsule_data_size / 16;
+
+	strncpy((char *)session->vcdata.subnqn, session->subsys->subnqn, sizeof(session->vcdata.subnqn));
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ctrlr data: maxcmd %x\n",
 		      session->vcdata.maxcmd);
