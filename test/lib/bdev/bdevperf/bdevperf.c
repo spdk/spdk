@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <rte_config.h>
 #include <rte_eal.h>

@@ -40,7 +40,6 @@
 #define SPDK_BDEV_H_
 
 #include <inttypes.h>
-#include <unistd.h>
 #include <stddef.h>  /* for offsetof */
 #include <sys/uio.h> /* for struct iovec */
 #include <stdbool.h>
