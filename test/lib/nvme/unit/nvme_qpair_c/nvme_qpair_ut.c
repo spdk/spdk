@@ -672,6 +672,12 @@ static void test_nvme_completion_is_retry(void)
 	cpl.status.dnr = 0;
 	CU_ASSERT_TRUE(nvme_completion_is_retry(&cpl));
 
+	cpl.status.sc = SPDK_NVME_SC_FORMAT_IN_PROGRESS;
+	cpl.status.dnr = 1;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+	cpl.status.dnr = 0;
+	CU_ASSERT_TRUE(nvme_completion_is_retry(&cpl));
+
 	cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
@@ -705,10 +711,37 @@ static void test_nvme_completion_is_retry(void)
 	cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
+	cpl.status.sc = SPDK_NVME_SC_INVALID_SGL_SEG_DESCRIPTOR;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_INVALID_NUM_SGL_DESCIRPTORS;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_METADATA_SGL_LENGTH_INVALID;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_INVALID_CONTROLLER_MEM_BUF;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_INVALID_PRP_OFFSET;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_ATOMIC_WRITE_UNIT_EXCEEDED;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
 	cpl.status.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
 	cpl.status.sc = SPDK_NVME_SC_CAPACITY_EXCEEDED;
+	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
+
+	cpl.status.sc = SPDK_NVME_SC_RESERVATION_CONFLICT;
 	CU_ASSERT_FALSE(nvme_completion_is_retry(&cpl));
 
 	cpl.status.sc = 0x70;
