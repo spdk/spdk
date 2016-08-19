@@ -158,7 +158,7 @@ spdk_bdev_unmap(struct spdk_bdev *bdev,
 }
 
 int
-spdk_bdev_reset(struct spdk_bdev *bdev, int reset_type,
+spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return 0;

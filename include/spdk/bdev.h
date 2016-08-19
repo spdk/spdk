@@ -282,7 +282,7 @@ struct spdk_bdev_io {
 			uint64_t length;
 		} flush;
 		struct {
-			int32_t type;
+			enum spdk_bdev_reset_type type;
 		} reset;
 	} u;
 
@@ -393,7 +393,7 @@ struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 int spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io);
 void spdk_bdev_do_work(void *ctx);
-int spdk_bdev_reset(struct spdk_bdev *bdev, int reset_type,
+int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /* The remaining functions are intended to be called from within
