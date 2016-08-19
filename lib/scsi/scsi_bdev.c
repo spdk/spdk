@@ -33,6 +33,8 @@
  */
 
 #include "scsi_internal.h"
+
+#include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
 
