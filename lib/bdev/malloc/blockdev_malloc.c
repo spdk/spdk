@@ -44,6 +44,8 @@
 #include "spdk/log.h"
 #include "spdk/copy_engine.h"
 
+#include "bdev_module.h"
+
 struct malloc_disk {
 	struct spdk_bdev	disk;	/* this must be the first element */
 	void 			*malloc_buf;

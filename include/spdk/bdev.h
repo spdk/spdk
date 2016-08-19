@@ -56,40 +56,6 @@
 
 struct spdk_bdev_io;
 
-/** \page block_backend_modules Block Device Backend Modules
-
-To implement a backend block device driver, a number of functions
-dictated by struct spdk_bdev_fn_table must be provided.
-
-The module should register itself using SPDK_BDEV_MODULE_REGISTER or
-SPDK_VBDEV_MODULE_REGISTER to define the parameters for the module.
-
-Use SPDK_BDEV_MODULE_REGISTER for all block backends that are real disks.
-Any virtual backends such as RAID, partitioning, etc. should use
-SPDK_VBDEV_MODULE_REGISTER.
-
-<hr>
-
-In the module initialization code, the config file sections can be parsed to
-acquire custom configuration parameters. For example, if the config file has
-a section such as below:
-<blockquote><pre>
-[MyBE]
-  MyParam 1234
-</pre></blockquote>
-
-The value can be extracted as the example below:
-<blockquote><pre>
-struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "MyBe");
-int my_param = spdk_conf_section_get_intval(sp, "MyParam");
-</pre></blockquote>
-
-The backend initialization routine also need to create "disks". A virtual
-representation of each LUN must be constructed. Mainly a struct spdk_bdev
-must be passed to the bdev database via spdk_bdev_register().
-
-*/
-
 /**
  * \brief SPDK block device.
  *
@@ -320,53 +286,8 @@ struct spdk_bdev_io {
 	/* No members may be added after driver_ctx! */
 };
 
-/** Block device module */
-struct spdk_bdev_module_if {
-	/**
-	 * Initialization function for the module.  Called by the spdk
-	 * application during startup.
-	 *
-	 * Modules are required to define this function.
-	 */
-	int (*module_init)(void);
-
-	/**
-	 * Finish function for the module.  Called by the spdk application
-	 * before the spdk application exits to perform any necessary cleanup.
-	 *
-	 * Modules are not required to define this function.
-	 */
-	void (*module_fini)(void);
-
-	/**
-	 * Function called to return a text string representing the
-	 * module's configuration options for inclusion in a configuration file.
-	 */
-	void (*config_text)(FILE *fp);
-
-	/** Name for the modules being defined. */
-	const char *module_name;
-
-	/**
-	 * Returns the allocation size required for the backend for uses such as local
-	 * command structs, local SGL, iovecs, or other user context.
-	 */
-	int (*get_ctx_size)(void);
-
-	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
-};
-
-/* The blockdev API has two distinct parts. The first portion of the API
- * is to be used by the layer above the blockdev in order to communicate
- * with it. The second portion of the API is to be used by the blockdev
- * modules themselves to perform operations like completing I/O.
- */
-
-/* The following functions are intended to be called from the upper layer
- * that is using the blockdev layer.
- */
-
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
+void spdk_bdev_unregister(struct spdk_bdev *bdev);
 
 struct spdk_bdev *spdk_bdev_first(void);
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
@@ -392,55 +313,8 @@ struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 int spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io);
 void spdk_bdev_do_work(void *ctx);
-int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
-		    spdk_bdev_io_completion_cb cb, void *cb_arg);
-
-/* The remaining functions are intended to be called from within
- * blockdev modules.
- */
-void spdk_bdev_register(struct spdk_bdev *bdev);
-void spdk_bdev_unregister(struct spdk_bdev *bdev);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
-void spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb);
-struct spdk_bdev_io *spdk_bdev_get_io(void);
-struct spdk_bdev_io *spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
-		struct spdk_bdev *bdev,
-		spdk_bdev_io_completion_cb cb,
-		void *cb_arg);
-void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
-			   enum spdk_bdev_io_status status);
-void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
-void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module);
-
-static inline struct spdk_bdev_io *
-spdk_bdev_io_from_ctx(void *ctx)
-{
-	return (struct spdk_bdev_io *)
-	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
-}
-
-#define SPDK_BDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)			\
-	static struct spdk_bdev_module_if init_fn ## _if = {					\
-	.module_init 	= init_fn,								\
-	.module_fini	= fini_fn,								\
-	.config_text	= config_fn,								\
-	.get_ctx_size	= ctx_size_fn,                                				\
-	};  											\
-	__attribute__((constructor)) static void init_fn ## _init(void)  			\
-	{                                                           				\
-	    spdk_bdev_module_list_add(&init_fn ## _if);                  			\
-	}
-
-#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)			\
-	static struct spdk_bdev_module_if init_fn ## _if = {					\
-	.module_init 	= init_fn,								\
-	.module_fini	= fini_fn,								\
-	.config_text	= config_fn,								\
-	.get_ctx_size	= ctx_size_fn,                                				\
-	};  											\
-	__attribute__((constructor)) static void init_fn ## _init(void)  			\
-	{                                                           				\
-	    spdk_vbdev_module_list_add(&init_fn ## _if);                  			\
-	}
+int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 #endif /* SPDK_BDEV_H_ */

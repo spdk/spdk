@@ -53,6 +53,8 @@
 #include "spdk/bdev.h"
 #include "spdk/nvme.h"
 
+#include "bdev_module.h"
+
 #define MAX_NVME_NAME_LENGTH 64
 
 void init_request_mempool(void);

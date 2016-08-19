@@ -40,6 +40,8 @@
 #include "spdk/queue.h"
 #include "spdk/bdev.h"
 
+#include "bdev_module.h"
+
 struct blockdev_aio_task {
 	struct iocb			iocb;
 	uint64_t			len;
