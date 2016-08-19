@@ -13,11 +13,11 @@ $valgrind $testdir/unit/ioat_ut
 timing_exit unit
 
 timing_enter perf
-$rootdir/examples/ioat/perf/perf
+$rootdir/examples/ioat/perf/perf -t 1
 timing_exit perf
 
 timing_enter verify
-$rootdir/examples/ioat/verify/verify
+$rootdir/examples/ioat/verify/verify -t 1
 timing_exit verify
 
 timing_exit ioat
