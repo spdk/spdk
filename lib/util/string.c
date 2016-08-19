@@ -200,3 +200,17 @@ spdk_str_trim(char *s)
 
 	return s;
 }
+
+void
+spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad)
+{
+	size_t len;
+
+	len = strlen(src);
+	if (len < size) {
+		memcpy(dst, src, len);
+		memset((char *)dst + len, pad, size - len);
+	} else {
+		memcpy(dst, src, size);
+	}
+}

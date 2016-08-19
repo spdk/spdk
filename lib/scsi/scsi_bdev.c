@@ -34,6 +34,7 @@
 
 #include "scsi_internal.h"
 #include "spdk/endian.h"
+#include "spdk/string.h"
 
 #define SPDK_WORK_BLOCK_SIZE		(1ULL * 1024ULL * 1024ULL)
 #define SPDK_WORK_ATS_BLOCK_SIZE	(1ULL * 1024ULL * 1024ULL)
@@ -43,20 +44,6 @@
 #define DEFAULT_DISK_REVISION		"0001"
 #define DEFAULT_DISK_ROTATION_RATE	7200	/* 7200 rpm */
 #define DEFAULT_DISK_FORM_FACTOR	0x02	/* 3.5 inch */
-
-static void
-spdk_strcpy_pad(uint8_t *dst, size_t size, const char *src, int pad)
-{
-	size_t len;
-
-	len = strlen(src);
-	if (len < size) {
-		memcpy(dst, src, len);
-		memset(dst + len, pad, (size - len));
-	} else {
-		memcpy(dst, src, size);
-	}
-}
 
 static int
 spdk_hex2bin(char ch)
@@ -232,7 +219,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				len = MAX_SERIAL_STRING;
 			}
 
-			spdk_strcpy_pad(vpage->params, len, bdev->name, ' ');
+			spdk_strcpy_pad(vpage->params, bdev->name, len, ' ');
 
 			/* PAGE LENGTH */
 			to_be16(vpage->alloc_len, len);
@@ -286,10 +273,9 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->piv = 1;
 			desig->reserved1 = 0;
 			desig->len = 8 + 16 + MAX_SERIAL_STRING;
-			spdk_strcpy_pad(desig->desig, 8, DEFAULT_DISK_VENDOR, ' ');
-			spdk_strcpy_pad(&desig->desig[8], 16, bdev->product_name, ' ');
-			spdk_strcpy_pad(&desig->desig[24], MAX_SERIAL_STRING,
-					bdev->name, ' ');
+			spdk_strcpy_pad(desig->desig, DEFAULT_DISK_VENDOR, 8, ' ');
+			spdk_strcpy_pad(&desig->desig[8], bdev->product_name, 16, ' ');
+			spdk_strcpy_pad(&desig->desig[24], bdev->name, MAX_SERIAL_STRING, ' ');
 			len += sizeof(struct spdk_scsi_desig_desc) + 8 + 16 + MAX_SERIAL_STRING;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;
@@ -701,14 +687,13 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		inqdata->flags3 = 0x2;
 
 		/* T10 VENDOR IDENTIFICATION */
-		spdk_strcpy_pad(inqdata->t10_vendor_id, 8, DEFAULT_DISK_VENDOR, ' ');
+		spdk_strcpy_pad(inqdata->t10_vendor_id, DEFAULT_DISK_VENDOR, 8, ' ');
 
 		/* PRODUCT IDENTIFICATION */
-		spdk_strcpy_pad(inqdata->product_id, 16,
-				bdev->product_name, ' ');
+		spdk_strcpy_pad(inqdata->product_id, bdev->product_name, 16, ' ');
 
 		/* PRODUCT REVISION LEVEL */
-		spdk_strcpy_pad(inqdata->product_rev, 4, DEFAULT_DISK_REVISION, ' ');
+		spdk_strcpy_pad(inqdata->product_rev, DEFAULT_DISK_REVISION, 4, ' ');
 
 		/* Vendor specific */
 		memset(inqdata->vendor, 0x20, 20);

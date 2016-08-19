@@ -42,6 +42,8 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
+
 /**
  * sprintf with automatic buffer allocation.
  *
@@ -77,6 +79,18 @@ char *spdk_strsepq(char **stringp, const char *delim);
  * \param s String to trim.
  */
 char *spdk_str_trim(char *s);
+
+/**
+ * Copy a string into a fixed-size buffer, padding extra bytes with a specific character.
+ *
+ * \param dst Pointer to destination fixed-size buffer to fill.
+ * \param src Pointer to source null-terminated string to copy into dst.
+ * \param size Number of bytes to fill in dst.
+ * \param pad Character to pad extra space in dst beyond the size of src.
+ *
+ * If src is longer than size, only size bytes will be copied.
+ */
+void spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad);
 
 #ifdef __cplusplus
 }
