@@ -40,11 +40,6 @@
 #define SPDK_SCSI_SPEC_H
 
 #include <stdint.h>
-#ifdef __linux__
-#include <endian.h>
-#elif defined(__FreeBSD__)
-#include <sys/endian.h>
-#endif
 
 #include "spdk/assert.h"
 

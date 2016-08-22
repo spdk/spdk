@@ -49,6 +49,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/copy_engine.h"
+#include "spdk/endian.h"
 #include "spdk/log.h"
 
 struct bdevperf_task {
@@ -229,8 +230,8 @@ bdevperf_unmap_complete(spdk_event_t event)
 
 	/* Read the data back in */
 	spdk_bdev_read(target->bdev, NULL,
-		       be32toh(bdev_io->u.unmap.unmap_bdesc->block_count) * target->bdev->blocklen,
-		       be64toh(bdev_io->u.unmap.unmap_bdesc->lba) * target->bdev->blocklen,
+		       from_be32(&bdev_io->u.unmap.unmap_bdesc->block_count) * target->bdev->blocklen,
+		       from_be64(&bdev_io->u.unmap.unmap_bdesc->lba) * target->bdev->blocklen,
 		       bdevperf_complete, task);
 
 	free(bdev_io->u.unmap.unmap_bdesc);
@@ -255,8 +256,8 @@ bdevperf_verify_write_complete(spdk_event_t event)
 			exit(1);
 		}
 
-		bdesc->lba = htobe64(bdev_io->u.write.offset / target->bdev->blocklen);
-		bdesc->block_count = htobe32(bdev_io->u.write.len / target->bdev->blocklen);
+		to_be64(&bdesc->lba, bdev_io->u.write.offset / target->bdev->blocklen);
+		to_be32(&bdesc->block_count, bdev_io->u.write.len / target->bdev->blocklen);
 
 		spdk_bdev_unmap(target->bdev, bdesc, 1, bdevperf_unmap_complete,
 				task);

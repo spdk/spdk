@@ -47,6 +47,7 @@
 #include <rte_malloc.h>
 
 #include "spdk/conf.h"
+#include "spdk/endian.h"
 #include "spdk/pci.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
@@ -620,8 +621,8 @@ blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
 
 	for (i = 0; i < bdesc_count; i++) {
 		bio->dsm_range[i].starting_lba =
-			nbdev->lba_start + be64toh(unmap_d->lba);
-		bio->dsm_range[i].length = be32toh(unmap_d->block_count);
+			nbdev->lba_start + from_be64(&unmap_d->lba);
+		bio->dsm_range[i].length = from_be32(&unmap_d->block_count);
 		unmap_d++;
 	}
 

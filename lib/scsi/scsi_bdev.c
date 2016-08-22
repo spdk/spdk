@@ -439,7 +439,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				sdesc->reserved = 0;
 
 				/* RELATIVE PORT IDENTIFIER */
-				sdesc->rel_port_id = htobe16(dev->port[i].index);
+				to_be16(&sdesc->rel_port_id, dev->port[i].index);
 
 				/* Reserved */
 				sdesc->reserved2 = 0;
@@ -481,7 +481,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				plen2 += 4 + plen;
 
 				/* TARGET PORT DESCRIPTORS LENGTH */
-				sdesc->tgt_desc_len = htobe16(plen2);
+				to_be16(&sdesc->tgt_desc_len, plen2);
 
 				len += plen2;
 			}

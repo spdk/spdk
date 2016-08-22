@@ -49,6 +49,7 @@
 #include <rte_cycles.h>
 #include <rte_timer.h>
 
+#include "spdk/endian.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
 #include "spdk/net.h"
@@ -1010,7 +1011,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 			    (conn->sess->ErrorRecoveryLevel >= 1) &&
 			    spdk_iscsi_is_deferred_free_pdu(pdu)) {
 				SPDK_TRACELOG(SPDK_TRACE_DEBUG, "stat_sn=%d\n",
-					      be32toh(pdu->bhs.stat_sn));
+					      from_be32(&pdu->bhs.stat_sn));
 				TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
 						  tailq);
 			} else {
