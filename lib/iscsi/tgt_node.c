@@ -43,9 +43,6 @@
 #include <string.h>
 #include <limits.h>
 #include <pthread.h>
-#ifdef HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
 #include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -56,9 +53,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#ifdef HAVE_SYS_DISKLABEL_H
-#include <sys/disklabel.h>
-#endif
 
 #include "spdk/event.h"
 #include "spdk/log.h"

@@ -43,20 +43,12 @@
 #include <string.h>
 #include <poll.h>
 #include <pthread.h>
-#ifdef HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <fcntl.h>
 #include <time.h>
-
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE
-#endif
-#include <endian.h>
 
 #include <rte_config.h>
 #include <rte_common.h>
@@ -80,6 +72,7 @@
 #include <rte_cycles.h>
 #include <rte_malloc.h>
 
+#include "spdk/endian.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
