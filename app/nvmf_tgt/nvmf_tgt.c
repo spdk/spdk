@@ -104,11 +104,8 @@ usage(void)
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
 
-#ifdef DEBUG
-	printf(" -t flag    - trace flag options (all, rdma, nvmf, debug)\n");
-#else
-	printf(" -t flag    - trace flag options (not supported - must rebuild with CONFIG_DEBUG=y)\n");
-#endif
+	spdk_tracelog_usage(stdout, "-t");
+
 	printf(" -v         - verbose (enable warnings)\n");
 	printf(" -H         - show this usage\n");
 	printf(" -d         - disable coredump file enabling\n");

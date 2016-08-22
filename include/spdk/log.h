@@ -111,4 +111,6 @@ const char *spdk_log_get_trace_flag_name(size_t idx);
 void spdk_open_log(void);
 void spdk_close_log(void);
 
+void spdk_tracelog_usage(FILE *f, const char *trace_arg);
+
 #endif /* SPDK_LOG_H */

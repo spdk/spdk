@@ -92,11 +92,7 @@ usage(char *executable_name)
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
-#ifdef DEBUG
-	printf(" -t flag    trace flag (all, net, iscsi, scsi, target, debug)\n");
-#else
-	printf(" -t flag    trace flag (not supported - must rebuild with CONFIG_DEBUG=y)\n");
-#endif
+	spdk_tracelog_usage(stdout, "-t");
 	printf(" -v         verbose (enable warnings)\n");
 	printf(" -H         show this usage\n");
 	printf(" -V         show version\n");

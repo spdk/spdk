@@ -375,3 +375,22 @@ spdk_close_log(void)
 {
 	closelog();
 }
+
+void
+spdk_tracelog_usage(FILE *f, const char *trace_arg)
+{
+#ifdef DEBUG
+	size_t i;
+
+	fprintf(f, " %s flag    enable trace flag (all", trace_arg);
+
+	for (i = 0; i < g_num_trace_flags; i++) {
+		fprintf(f, ", %s", g_trace_flags[i].name);
+	}
+
+	fprintf(f, ")\n");
+#else
+	fprintf(f, " %s flag    enable trace flag (not supported - must rebuild with CONFIG_DEBUG=y)\n",
+		trace_arg);
+#endif
+}
