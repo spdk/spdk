@@ -419,7 +419,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	/* Parse Listen sections */
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		char *transport_name, *listen_addr;
-		char *traddr, *trsvc;
+		char *traddr, *trsvcid;
 		const struct spdk_nvmf_transport *transport;
 
 		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
@@ -435,16 +435,16 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			continue;
 		}
 
-		ret = spdk_nvmf_parse_addr(listen_addr, &traddr, &trsvc);
+		ret = spdk_nvmf_parse_addr(listen_addr, &traddr, &trsvcid);
 		if (ret < 0) {
 			SPDK_ERRLOG("Unable to parse transport address '%s'\n", listen_addr);
 			continue;
 		}
 
-		spdk_nvmf_subsystem_add_listener(subsystem, transport, traddr, trsvc);
+		spdk_nvmf_subsystem_add_listener(subsystem, transport, traddr, trsvcid);
 
 		free(traddr);
-		free(trsvc);
+		free(trsvcid);
 	}
 
 	/* Parse Host sections */

@@ -55,7 +55,7 @@ enum spdk_nvmf_subsystem_mode {
 
 struct spdk_nvmf_listen_addr {
 	char					*traddr;
-	char					*trsvc; /* TODO: Change to trsvcid */
+	char					*trsvcid;
 	const struct spdk_nvmf_transport	*transport;
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
 };
@@ -150,7 +150,7 @@ nvmf_find_subsystem(const char *subnqn, const char *hostnqn);
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				 const struct spdk_nvmf_transport *transport,
-				 char *traddr, char *trsvc);
+				 char *traddr, char *trsvcid);
 
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,

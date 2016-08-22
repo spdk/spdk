@@ -139,7 +139,7 @@ struct spdk_nvmf_rdma_session {
 
 struct spdk_nvmf_rdma_listen_addr {
 	char					*traddr;
-	char					*trsvc;
+	char					*trsvcid;
 	struct rdma_cm_id			*id;
 	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
 };
@@ -1013,7 +1013,7 @@ spdk_nvmf_rdma_acceptor_init(void)
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
 		addr.sin_addr.s_addr = inet_addr(listen_addr->traddr);
-		addr.sin_port = htons((uint16_t)strtoul(listen_addr->trsvc, NULL, 10));
+		addr.sin_port = htons((uint16_t)strtoul(listen_addr->trsvcid, NULL, 10));
 
 		rc = rdma_create_id(g_rdma.acceptor_event_channel, &listen_addr->id, NULL,
 				    RDMA_PS_TCP);
@@ -1470,7 +1470,7 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 	entry->adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED;
 
-	spdk_strcpy_pad(entry->trsvcid, listen_addr->trsvc, sizeof(entry->trsvcid), ' ');
+	spdk_strcpy_pad(entry->trsvcid, listen_addr->trsvcid, sizeof(entry->trsvcid), ' ');
 	spdk_strcpy_pad(entry->traddr, listen_addr->traddr, sizeof(entry->traddr), ' ');
 
 	entry->tsas.rdma.rdma_qptype = SPDK_NVMF_RDMA_QPTYPE_RELIABLE_CONNECTED;
@@ -1486,7 +1486,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	pthread_mutex_lock(&g_rdma.lock);
 	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, tmp) {
 		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
-		    (!strcasecmp(addr->trsvc, listen_addr->trsvc))) {
+		    (!strcasecmp(addr->trsvcid, listen_addr->trsvcid))) {
 			pthread_mutex_unlock(&g_rdma.lock);
 			return 0;
 		}
@@ -1499,7 +1499,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	}
 
 	addr->traddr = listen_addr->traddr;
-	addr->trsvc = listen_addr->trsvc;
+	addr->trsvcid = listen_addr->trsvcid;
 
 	TAILQ_INSERT_TAIL(&g_rdma.listen_addrs, addr, link);
 	pthread_mutex_unlock(&g_rdma.lock);
