@@ -315,32 +315,6 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 }
 
 static int
-spdk_nvmf_validate_nqn(const char *nqn)
-{
-	size_t len;
-
-	len = strlen(nqn);
-	if (len > SPDK_NVMF_NQN_MAX_LEN) {
-		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", nqn, len, SPDK_NVMF_NQN_MAX_LEN);
-		return -1;
-	}
-
-	if (strncasecmp(nqn, "nqn.", 4) != 0) {
-		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", nqn);
-		return -1;
-	}
-
-	/* yyyy-mm. */
-	if (!(isdigit(nqn[4]) && isdigit(nqn[5]) && isdigit(nqn[6]) && isdigit(nqn[7]) &&
-	      nqn[8] == '-' && isdigit(nqn[9]) && isdigit(nqn[10]) && nqn[11] == '.')) {
-		SPDK_ERRLOG("Invalid date code in NQN \"%s\"\n", nqn);
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 {
 	uint32_t end;
@@ -373,10 +347,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	if (nqn == NULL) {
 		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", sp->num);
-		return -1;
-	}
-
-	if (spdk_nvmf_validate_nqn(nqn) != 0) {
 		return -1;
 	}
 

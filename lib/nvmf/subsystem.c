@@ -99,12 +99,42 @@ spdk_nvmf_subsystem_poller(void *arg)
 	spdk_nvmf_subsystem_poll(subsystem);
 }
 
+static bool
+spdk_nvmf_valid_nqn(const char *nqn)
+{
+	size_t len;
+
+	len = strlen(nqn);
+	if (len >= SPDK_NVMF_NQN_MAX_LEN) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", nqn, len, SPDK_NVMF_NQN_MAX_LEN - 1);
+		return false;
+	}
+
+	if (strncasecmp(nqn, "nqn.", 4) != 0) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", nqn);
+		return false;
+	}
+
+	/* yyyy-mm. */
+	if (!(isdigit(nqn[4]) && isdigit(nqn[5]) && isdigit(nqn[6]) && isdigit(nqn[7]) &&
+	      nqn[8] == '-' && isdigit(nqn[9]) && isdigit(nqn[10]) && nqn[11] == '.')) {
+		SPDK_ERRLOG("Invalid date code in NQN \"%s\"\n", nqn);
+		return false;
+	}
+
+	return true;
+}
+
 struct spdk_nvmf_subsystem *
 nvmf_create_subsystem(int num, const char *name,
 		      enum spdk_nvmf_subtype subtype,
 		      uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
+
+	if (!spdk_nvmf_valid_nqn(name)) {
+		return NULL;
+	}
 
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {

@@ -45,7 +45,6 @@ struct spdk_nvmf_subsystem;
 struct spdk_nvmf_request;
 struct nvmf_session;
 
-#define MAX_NQN_SIZE 255
 #define MAX_VIRTUAL_NAMESPACE 16
 
 enum spdk_nvmf_subsystem_mode {
@@ -119,7 +118,7 @@ struct spdk_nvmf_controller {
 struct spdk_nvmf_subsystem {
 	uint16_t num;
 	uint32_t lcore;
-	char subnqn[MAX_NQN_SIZE];
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN];
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
 	struct nvmf_session *session;

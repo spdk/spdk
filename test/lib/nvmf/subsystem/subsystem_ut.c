@@ -109,33 +109,34 @@ spdk_nvmf_session_poll(struct nvmf_session *session)
 static void
 nvmf_test_create_subsystem(void)
 {
-
-	char correct_name[] = "subsystem1";
-	char *nqn_name;
+	char nqn[256];
 	struct spdk_nvmf_subsystem *subsystem;
-	subsystem = nvmf_create_subsystem(1, correct_name, SPDK_NVMF_SUBTYPE_NVME, 1);
+
+	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
+	subsystem = nvmf_create_subsystem(1, nqn, SPDK_NVMF_SUBTYPE_NVME, 1);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_EQUAL(subsystem->num, 1);
 	CU_ASSERT_EQUAL(subsystem->lcore, 1);
-	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, correct_name);
+	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
+	nvmf_delete_subsystem(subsystem);
 
-	/* test long name */
-	nqn_name = malloc(256);
-	memset(nqn_name, '\0', 256);
-	memset(nqn_name, 'a', 255);
-	subsystem = nvmf_create_subsystem(2, nqn_name, SPDK_NVMF_SUBTYPE_NVME, 2);
+	/* Longest valid name */
+	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
+	memset(nqn + strlen(nqn), 'a', 222 - strlen(nqn));
+	nqn[222] = '\0';
+	CU_ASSERT(strlen(nqn) == 222);
+	subsystem = nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, 2);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
-	CU_ASSERT_STRING_NOT_EQUAL(subsystem->subnqn, nqn_name);
-	CU_ASSERT_EQUAL(strlen(subsystem->subnqn) + 1, MAX_NQN_SIZE);
-	free(nqn_name);
+	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
+	nvmf_delete_subsystem(subsystem);
 
-	nqn_name = malloc(255);
-	memset(nqn_name, '\0', 255);
-	memset(nqn_name, 'a', 254);
-	subsystem = nvmf_create_subsystem(2, nqn_name, SPDK_NVMF_SUBTYPE_NVME, 2);
-	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
-	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn_name);
-	free(nqn_name);
+	/* Name that is one byte longer than allowed */
+	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
+	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
+	nqn[223] = '\0';
+	CU_ASSERT(strlen(nqn) == 223);
+	subsystem = nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, 2);
+	CU_ASSERT(subsystem == NULL);
 }
 
 static void
