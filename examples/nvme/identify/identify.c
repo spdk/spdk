@@ -524,6 +524,11 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	       (uint64_t)1 << (12 + cap.bits.mpsmin));
 	printf("Memory Page Size Maximum:              %" PRIu64 " bytes\n",
 	       (uint64_t)1 << (12 + cap.bits.mpsmax));
+	printf("Optional Asynchronous Events Supported\n");
+	printf("  Namespace Attribute Notices:         %s\n",
+	       cdata->oaes.ns_attribute_notices ? "Supported" : "Not Supported");
+	printf("  Firmware Activation Notices:         %s\n",
+	       cdata->oaes.fw_activation_notices ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Admin Command Set Attributes\n");
