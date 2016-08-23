@@ -42,7 +42,7 @@
 #include <rte_memzone.h>
 #include <rte_mempool.h>
 
-#include "conf.h"
+#include "nvmf_tgt.h"
 
 #include "spdk/event.h"
 

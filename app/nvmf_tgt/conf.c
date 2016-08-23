@@ -39,7 +39,7 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 
-#include "conf.h"
+#include "nvmf_tgt.h"
 #include "nvmf/subsystem.h"
 #include "nvmf/transport.h"
 #include "spdk/conf.h"

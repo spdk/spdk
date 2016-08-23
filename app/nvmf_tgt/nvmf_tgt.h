@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMF_CONF_H
-#define NVMF_CONF_H
+#ifndef NVMF_TGT_H
+#define NVMF_TGT_H
 
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_lcore;
@@ -40,7 +40,6 @@ struct spdk_nvmf_tgt_conf {
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
-int
-spdk_nvmf_parse_conf(void);
+int spdk_nvmf_parse_conf(void);
 
 #endif
