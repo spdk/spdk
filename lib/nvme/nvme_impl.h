@@ -55,6 +55,7 @@
 #include <rte_cycles.h>
 #include <rte_malloc.h>
 #include <rte_mempool.h>
+#include <rte_version.h>
 
 #ifdef SPDK_CONFIG_PCIACCESS
 #include <pciaccess.h>
@@ -239,11 +240,18 @@ nvme_pcicfg_get_bar_addr_len(void *devhandle, uint32_t bar, uint64_t *addr, uint
 	*size = (uint64_t)dev->mem_resource[bar].len;
 }
 
-/*
- * TODO: once DPDK supports matching class code instead of device ID, switch to SPDK_PCI_CLASS_NVME
- */
 static struct rte_pci_id nvme_pci_driver_id[] = {
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
+	{
+		.class_id = SPDK_PCI_CLASS_NVME,
+		.vendor_id = PCI_ANY_ID,
+		.device_id = PCI_ANY_ID,
+		.subsystem_vendor_id = PCI_ANY_ID,
+		.subsystem_device_id = PCI_ANY_ID,
+	},
+#else
 	{RTE_PCI_DEVICE(0x8086, 0x0953)},
+#endif
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
