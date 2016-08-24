@@ -274,11 +274,34 @@ static void blockdev_nvme_free_request(struct spdk_bdev_io *bdev_io)
 {
 }
 
+static bool
+blockdev_nvme_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	struct nvme_blockdev *nbdev = (struct nvme_blockdev *)bdev;
+	const struct spdk_nvme_ctrlr_data *cdata;
+
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		return true;
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		cdata = spdk_nvme_ctrlr_get_data(nbdev->ctrlr);
+		return cdata->oncs.dsm;
+
+	default:
+		return false;
+	}
+}
+
 static struct spdk_bdev_fn_table nvmelib_fn_table = {
-	.destruct	= blockdev_nvme_destruct,
-	.check_io	= blockdev_nvme_check_io,
-	.submit_request	= blockdev_nvme_submit_request,
-	.free_request	= blockdev_nvme_free_request,
+	.destruct		= blockdev_nvme_destruct,
+	.check_io		= blockdev_nvme_check_io,
+	.submit_request		= blockdev_nvme_submit_request,
+	.free_request		= blockdev_nvme_free_request,
+	.io_type_supported	= blockdev_nvme_io_type_supported,
 };
 
 struct nvme_probe_ctx {

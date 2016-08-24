@@ -154,6 +154,16 @@ struct spdk_bdev {
 	TAILQ_ENTRY(spdk_bdev) link;
 };
 
+/** Blockdev I/O type */
+enum spdk_bdev_io_type {
+	SPDK_BDEV_IO_TYPE_INVALID,
+	SPDK_BDEV_IO_TYPE_READ,
+	SPDK_BDEV_IO_TYPE_WRITE,
+	SPDK_BDEV_IO_TYPE_UNMAP,
+	SPDK_BDEV_IO_TYPE_FLUSH,
+	SPDK_BDEV_IO_TYPE_RESET,
+};
+
 /**
  * Function table for a block device backend.
  *
@@ -173,16 +183,9 @@ struct spdk_bdev_fn_table {
 
 	/** Release buf for read command. */
 	void (*free_request)(struct spdk_bdev_io *);
-};
 
-/** Blockdev I/O type */
-enum spdk_bdev_io_type {
-	SPDK_BDEV_IO_TYPE_INVALID,
-	SPDK_BDEV_IO_TYPE_READ,
-	SPDK_BDEV_IO_TYPE_WRITE,
-	SPDK_BDEV_IO_TYPE_UNMAP,
-	SPDK_BDEV_IO_TYPE_FLUSH,
-	SPDK_BDEV_IO_TYPE_RESET,
+	/** Check if the block device supports a specific I/O type. */
+	bool (*io_type_supported)(struct spdk_bdev *bdev, enum spdk_bdev_io_type);
 };
 
 /** Blockdev I/O completion status */
@@ -368,6 +371,8 @@ struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 
 struct spdk_bdev *spdk_bdev_first(void);
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
+
+bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
 struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev,
 				    void *buf, uint64_t nbytes, uint64_t offset,

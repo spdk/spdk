@@ -277,11 +277,27 @@ static void blockdev_aio_free_request(struct spdk_bdev_io *bdev_io)
 {
 }
 
+static bool
+blockdev_aio_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_RESET:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 static struct spdk_bdev_fn_table aio_fn_table = {
-	.destruct	= blockdev_aio_destruct,
-	.check_io	= blockdev_aio_check_io,
-	.submit_request	= blockdev_aio_submit_request,
-	.free_request	= blockdev_aio_free_request,
+	.destruct		= blockdev_aio_destruct,
+	.check_io		= blockdev_aio_check_io,
+	.submit_request		= blockdev_aio_submit_request,
+	.free_request		= blockdev_aio_free_request,
+	.io_type_supported	= blockdev_aio_io_type_supported,
 };
 
 static void aio_free_disk(struct file_disk *fdisk)

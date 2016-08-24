@@ -214,11 +214,27 @@ static void blockdev_malloc_free_request(struct spdk_bdev_io *bdev_io)
 {
 }
 
+static bool
+blockdev_malloc_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_RESET:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 static struct spdk_bdev_fn_table malloc_fn_table = {
-	.destruct	= blockdev_malloc_destruct,
-	.check_io	= blockdev_malloc_check_io,
-	.submit_request	= blockdev_malloc_submit_request,
-	.free_request	= blockdev_malloc_free_request,
+	.destruct		= blockdev_malloc_destruct,
+	.check_io		= blockdev_malloc_check_io,
+	.submit_request		= blockdev_malloc_submit_request,
+	.free_request		= blockdev_malloc_free_request,
+	.io_type_supported	= blockdev_malloc_io_type_supported,
 };
 
 struct malloc_disk *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)

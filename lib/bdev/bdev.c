@@ -515,6 +515,12 @@ spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
 	return child;
 }
 
+bool
+spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	return bdev->fn_table->io_type_supported(bdev, io_type);
+}
+
 struct spdk_bdev_io *
 spdk_bdev_read(struct spdk_bdev *bdev,
 	       void *buf, uint64_t nbytes, uint64_t offset,
