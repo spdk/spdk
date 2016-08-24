@@ -482,7 +482,10 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	printf("Recommended Arb Burst:                 %d\n", cdata->rab);
 	printf("IEEE OUI Identifier:                   %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
-	printf("Multi-path I/O:                        %02x\n", *(int *)&cdata->cmic);
+	printf("Multi-path I/O\n");
+	printf("  May have multiple subsystem ports:   %s\n", cdata->cmic.multi_port ? "Yes" : "No");
+	printf("  May be connected to multiple hosts:  %s\n", cdata->cmic.multi_host ? "Yes" : "No");
+	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.sr_iov ? "Yes" : "No");
 	printf("Max Data Transfer Size:                ");
 	if (cdata->mdts == 0)
 		printf("Unlimited\n");
