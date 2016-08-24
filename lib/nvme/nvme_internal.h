@@ -465,7 +465,7 @@ struct pci_id {
 	uint16_t	sub_dev_id;
 };
 
-extern struct nvme_driver *g_nvme_driver;
+extern struct nvme_driver *g_spdk_nvme_driver;
 
 #define nvme_min(a,b) (((a)<(b))?(a):(b))
 
