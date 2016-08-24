@@ -500,11 +500,19 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 			printf("%u milliseconds\n", tler * 100);
 		}
 	}
-	printf("NVMe Specification Version:            %u.%u", vs.bits.mjr, vs.bits.mnr);
+	printf("NVMe Specification Version (VS):       %u.%u", vs.bits.mjr, vs.bits.mnr);
 	if (vs.bits.ter) {
 		printf(".%u", vs.bits.ter);
 	}
 	printf("\n");
+	if (cdata->ver.raw != 0) {
+		printf("NVMe Specification Version (Identify): %u.%u", cdata->ver.bits.mjr, cdata->ver.bits.mnr);
+		if (cdata->ver.bits.ter) {
+			printf(".%u", cdata->ver.bits.ter);
+		}
+		printf("\n");
+	}
+
 	printf("Maximum Queue Entries:                 %u\n", cap.bits.mqes + 1);
 	printf("Contiguous Queues Required:            %s\n", cap.bits.cqr ? "Yes" : "No");
 	printf("Arbitration Mechanisms Supported\n");
