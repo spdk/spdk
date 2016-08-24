@@ -35,6 +35,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
 
 #include <rte_config.h>
 #include <rte_lcore.h>
@@ -61,6 +65,8 @@ struct spdk_nvmf_probe_ctx {
 	uint32_t			function;
 };
 
+#define MAX_STRING_LEN 255
+
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_DEFAULT 4
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN 2
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX 1024
@@ -78,6 +84,55 @@ struct spdk_nvmf_probe_ctx {
 #define SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX 131072
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
+
+static int
+spdk_get_numa_node_value(char *path)
+{
+	FILE *fd;
+	int numa_node = -1;
+	char buf[MAX_STRING_LEN];
+
+	fd = fopen(path, "r");
+	if (!fd) {
+		return -1;
+	}
+
+	if (fgets(buf, sizeof(buf), fd) != NULL) {
+		numa_node = strtoul(buf, NULL, 10);
+	}
+	fclose(fd);
+
+	return numa_node;
+}
+
+static int
+spdk_get_ifaddr_numa_node(char *if_addr)
+{
+	int ret;
+	struct ifaddrs *ifaddrs, *ifa;
+	struct sockaddr_in addr, addr_in;
+	char path[MAX_STRING_LEN];
+	int numa_node = -1;
+
+	addr_in.sin_addr.s_addr = inet_addr(if_addr);
+
+	ret = getifaddrs(&ifaddrs);
+	if (ret < 0)
+		return -1;
+
+	for (ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
+		addr = *(struct sockaddr_in *)ifa->ifa_addr;
+		if ((uint32_t)addr_in.sin_addr.s_addr != (uint32_t)addr.sin_addr.s_addr) {
+			continue;
+		}
+		snprintf(path, MAX_STRING_LEN, "/sys/class/net/%s/device/numa_node", ifa->ifa_name);
+		numa_node = spdk_get_numa_node_value(path);
+		break;
+	}
+	freeifaddrs(ifaddrs);
+
+	return numa_node;
+}
 
 static int
 spdk_add_nvmf_discovery_subsystem(void)
@@ -306,9 +361,25 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 	uint8_t found_dev    = spdk_pci_device_get_dev(dev);
 	uint8_t found_func   = spdk_pci_device_get_func(dev);
 	int rc;
+	char path[MAX_STRING_LEN];
+	int numa_node = -1;
 
 	SPDK_NOTICELOG("Attaching NVMe device %x:%x:%x.%x to subsystem %s\n",
 		       found_domain, found_bus, found_dev, found_func, ctx->subsystem->subnqn);
+
+	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%04x:%02x:%02x.%1u/numa_node",
+		 found_domain, found_bus, found_dev, found_func);
+
+	numa_node = spdk_get_numa_node_value(path);
+	if (numa_node >= 0) {
+		/* Running subsystem and NVMe device is on the same socket or not */
+		if (rte_lcore_to_socket_id(ctx->subsystem->lcore) != (unsigned)numa_node) {
+			SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core belonging "
+				     "to a different NUMA node than the associated NVMe device. "
+				     "This may result in reduced performance.\n",
+				     ctx->subsystem->subnqn);
+		}
+	}
 
 	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, dev);
 	if (rc < 0) {
@@ -406,6 +477,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		char *transport_name, *listen_addr;
 		char *traddr, *trsvcid;
 		const struct spdk_nvmf_transport *transport;
+		int numa_node = -1;
 
 		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
 		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
@@ -426,6 +498,15 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			continue;
 		}
 
+		numa_node = spdk_get_ifaddr_numa_node(traddr);
+		if (numa_node >= 0) {
+			if (rte_lcore_to_socket_id(subsystem->lcore) != (unsigned)numa_node) {
+				SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core belonging "
+					     "to a different NUMA node than the associated NIC. "
+					     "This may result in reduced performance.\n",
+					     subsystem->subnqn);
+			}
+		}
 		spdk_nvmf_subsystem_add_listener(subsystem, transport, traddr, trsvcid);
 
 		free(traddr);
