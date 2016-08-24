@@ -491,7 +491,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 		printf("%d\n", 4096 * (1 << cdata->mdts));
 	if (features[SPDK_NVME_FEAT_ERROR_RECOVERY].valid) {
 		unsigned tler = features[SPDK_NVME_FEAT_ERROR_RECOVERY].result & 0xFFFF;
-		printf("Error Recovery Timeout:     ");
+		printf("Error Recovery Timeout:                ");
 		if (tler == 0) {
 			printf("Unlimited\n");
 		} else {
