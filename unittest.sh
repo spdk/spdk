@@ -39,8 +39,11 @@ test/lib/nvmf/request/request_ut
 test/lib/nvmf/session/session_ut
 test/lib/nvmf/subsystem/subsystem_ut
 
-make -C test/lib/scsi CONFIG_WERROR=y
+# TODO: allow lib/util to build without DPDK/libpciaccess
+#make -C test/lib/scsi CONFIG_WERROR=y
+make -C test/lib/scsi/dev CONFIG_WERROR=y
+make -C test/lib/scsi/lun CONFIG_WERROR=y
 
 test/lib/scsi/dev/dev_ut
 test/lib/scsi/lun/lun_ut
-test/lib/scsi/scsi_bdev/scsi_bdev_ut
+#test/lib/scsi/scsi_bdev/scsi_bdev_ut
