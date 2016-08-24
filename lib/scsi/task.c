@@ -179,8 +179,10 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 }
 
 void
-spdk_scsi_task_set_check_condition(struct spdk_scsi_task *task, int sk, int asc, int ascq)
+spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
+			  int asc, int ascq)
 {
 	spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
-	task->status = SPDK_SCSI_STATUS_CHECK_CONDITION;
+	task->status = sc;
 }
+

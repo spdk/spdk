@@ -154,6 +154,6 @@ spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
 }
 
 void
-spdk_scsi_task_set_check_condition(struct spdk_scsi_task *task, int sk, int asc, int ascq)
+spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc, int ascq)
 {
 }

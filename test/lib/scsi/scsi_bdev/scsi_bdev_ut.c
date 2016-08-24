@@ -54,10 +54,11 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 }
 
 void
-spdk_scsi_task_set_check_condition(struct spdk_scsi_task *task, int sk, int asc, int ascq)
+spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
+			  int asc, int ascq)
 {
 	spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
-	task->status = SPDK_SCSI_STATUS_CHECK_CONDITION;
+	task->status = sc;
 }
 
 void
@@ -117,6 +118,12 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 	/* SenseLength */
 	to_be16(data, 18);
 	task->sense_data_len = 20;
+}
+
+void
+spdk_scsi_nvme_translate(struct spdk_bdev_io *bdev_io, int *sc, int *sk,
+                            int *asc, int *ascq)
+{
 }
 
 struct spdk_bdev_io *
@@ -451,6 +458,37 @@ inquiry_overflow_test(void)
 	}
 }
 
+/*
+ * This test is to verify specific error translation from bdev to scsi.
+ */
+static void
+task_complete_test(void)
+{
+	struct spdk_event event;
+	struct spdk_scsi_task task = {};
+	struct spdk_bdev_io bdev_io = {};
+	struct spdk_scsi_lun lun;
+
+	TAILQ_INIT(&lun.tasks);
+	TAILQ_INSERT_TAIL(&lun.tasks, &task, scsi_link);
+	task.lun = &lun;
+
+	event.arg1 = &task;
+	event.arg2 = &bdev_io;
+
+	task.type = SPDK_SCSI_TASK_TYPE_CMD;
+	bdev_io.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	spdk_bdev_scsi_task_complete(&event);
+	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_GOOD);
+
+	bdev_io.status = SPDK_BDEV_IO_STATUS_FAILED;
+	spdk_bdev_scsi_task_complete(&event);
+	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT_EQUAL(task.sense_data[4], (SPDK_SCSI_SENSE_ABORTED_COMMAND & 0xf));
+	CU_ASSERT_EQUAL(task.sense_data[14], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
+	CU_ASSERT_EQUAL(task.sense_data[15], SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -475,6 +513,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "inquiry evpd test", inquiry_evpd_test) == NULL
 		|| CU_add_test(suite, "inquiry standard test", inquiry_standard_test) == NULL
 		|| CU_add_test(suite, "inquiry overflow test", inquiry_overflow_test) == NULL
+		|| CU_add_test(suite, "task complete test", task_complete_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

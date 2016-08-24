@@ -84,10 +84,11 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 	free(task);
 }
 
-void spdk_scsi_task_set_check_condition(struct spdk_scsi_task *task, int sk,
-					int asc, int ascq)
+void
+spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
+			  int asc, int ascq)
 {
-	task->status = SPDK_SCSI_STATUS_CHECK_CONDITION;
+	task->status = sc;
 }
 
 void
