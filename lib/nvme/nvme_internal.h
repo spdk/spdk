@@ -580,4 +580,6 @@ bool	nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk);
 
 void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);
 
+int	nvme_mutex_init_shared(pthread_mutex_t *mtx);
+
 #endif /* __NVME_INTERNAL_H__ */

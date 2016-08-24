@@ -156,6 +156,23 @@ nvme_free_request(struct nvme_request *req)
 	nvme_dealloc_request(req);
 }
 
+int
+nvme_mutex_init_shared(pthread_mutex_t *mtx)
+{
+	pthread_mutexattr_t attr;
+	int rc = 0;
+
+	if (pthread_mutexattr_init(&attr)) {
+		return -1;
+	}
+	if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) ||
+	    pthread_mutex_init(mtx, &attr)) {
+		rc = -1;
+	}
+	pthread_mutexattr_destroy(&attr);
+	return rc;
+}
+
 struct nvme_enum_ctx {
 	spdk_nvme_probe_cb probe_cb;
 	void *cb_ctx;
