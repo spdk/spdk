@@ -483,12 +483,11 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	printf("IEEE OUI Identifier:                   %02x %02x %02x\n",
 	       cdata->ieee[0], cdata->ieee[1], cdata->ieee[2]);
 	printf("Multi-path I/O:                        %02x\n", *(int *)&cdata->cmic);
-	/* TODO: Use CAP.MPSMIN to determine true memory page size. */
 	printf("Max Data Transfer Size:                ");
 	if (cdata->mdts == 0)
 		printf("Unlimited\n");
 	else
-		printf("%d\n", 4096 * (1 << cdata->mdts));
+		printf("%" PRIu64 "\n", (uint64_t)1 << (12 + cap.bits.mpsmin + cdata->mdts));
 	if (features[SPDK_NVME_FEAT_ERROR_RECOVERY].valid) {
 		unsigned tler = features[SPDK_NVME_FEAT_ERROR_RECOVERY].result & 0xFFFF;
 		printf("Error Recovery Timeout:                ");
