@@ -190,6 +190,7 @@ enum spdk_bdev_io_status {
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
 	SPDK_BDEV_IO_STATUS_PENDING = 0,
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
+	SPDK_BDEV_IO_STATUS_NVME_ERROR = 2,
 };
 
 /** Blockdev reset operation type */
@@ -282,6 +283,16 @@ struct spdk_bdev_io {
 			int32_t type;
 		} reset;
 	} u;
+
+	/** Error information from a device */
+	union {
+		struct {
+			/** NVMe status code type */
+			int sct;
+			/** NVMe status code */
+			int sc;
+		} nvme;
+	} error;
 
 	/** User function that will be called when this completes */
 	spdk_bdev_io_completion_cb cb;

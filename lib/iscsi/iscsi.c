@@ -2905,7 +2905,10 @@ static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 	extra_data_in_count = spdk_iscsi_get_extra_data_in_count(task);
 	if (extra_data_in_count > MAX_EXTRA_DATAIN_PER_CONNECTION) {
 		SPDK_ERRLOG("Unsupported read size\n");
-		spdk_scsi_task_set_check_condition(&task->scsi, SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x25, 0x00);
+		spdk_scsi_task_set_status(&task->scsi, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_LOGICAL_UNIT_NOT_SUPPORTED,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		task->scsi.bytes_completed = task->scsi.transfer_len;
 		spdk_iscsi_task_response(conn, task);
 		spdk_iscsi_task_put(task);

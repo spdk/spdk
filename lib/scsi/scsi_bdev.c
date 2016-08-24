@@ -182,9 +182,10 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	evpd = inq->evpd & 0x1;
 
 	if (!evpd && pc) {
-		spdk_scsi_task_set_check_condition(task,
-						   SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-						   0x24, 0x0);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return -1;
 	}
 
@@ -253,9 +254,10 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			len += sizeof(struct spdk_scsi_desig_desc) + 4;
 			len += sizeof(struct spdk_scsi_desig_desc) + 4;
 			if (sizeof(struct spdk_scsi_vpd_page) + len > task->alloc_len) {
-				spdk_scsi_task_set_check_condition(task,
-								   SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-								   0x24, 0x0);
+				spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+							  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+							  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+							  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 				return -1;
 			}
 
@@ -369,9 +371,10 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 			/* should not exceed the data_in buffer length */
 			if (sizeof(struct spdk_scsi_vpd_page) + len > alloc_len) {
-				spdk_scsi_task_set_check_condition(task,
-								   SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-								   0x24, 0x0);
+				spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+							  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+							  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+							  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 				return -1;
 			}
 			to_be16(vpage->alloc_len, len);
@@ -737,9 +740,10 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	return hlen + len;
 
 inq_error:
-	spdk_scsi_task_set_check_condition(task,
-					   SPDK_SCSI_SENSE_NO_SENSE,
-					   0x0, 0x0);
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  SPDK_SCSI_SENSE_NO_SENSE,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 	return -1;
 }
 
@@ -1246,16 +1250,23 @@ spdk_bdev_scsi_task_complete(spdk_event_t event)
 	enum spdk_bdev_io_status	status = bdev_io->status;
 
 	if (task->type == SPDK_SCSI_TASK_TYPE_CMD) {
-		if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_ABORTED_COMMAND, 0, 0);
-		}
+		int sc, sk, asc, ascq;
 
-		/* If status was not set to CHECK_CONDITION yet, then we can set
-		 * status to GOOD.
-		 */
-		if (task->status != SPDK_SCSI_STATUS_CHECK_CONDITION) {
+		switch (bdev_io->status) {
+		case SPDK_BDEV_IO_STATUS_SUCCESS:
 			task->status = SPDK_SCSI_STATUS_GOOD;
+			break;
+		case SPDK_BDEV_IO_STATUS_NVME_ERROR:
+			spdk_scsi_nvme_translate(bdev_io, &sc, &sk, &asc, &ascq);
+			spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
+			break;
+		default:
+			sc   = SPDK_SCSI_STATUS_CHECK_CONDITION;
+			sk   = SPDK_SCSI_SENSE_ABORTED_COMMAND;
+			asc  = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+			ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
+			spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
+			break;
 		}
 
 		/* command completed. remove from outstanding task list */
@@ -1396,7 +1407,10 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 	if (lba >= maxlba || llen > maxlba || lba > (maxlba - llen)) {
 		SPDK_ERRLOG("end of media\n");
-		spdk_scsi_task_set_check_condition(task, SPDK_SCSI_SENSE_NO_SENSE, 0x0, 0x0);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
@@ -1405,7 +1419,10 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("spdk_bdev_flush() failed\n");
-		spdk_scsi_task_set_check_condition(task, SPDK_SCSI_SENSE_NO_SENSE, 0x0, 0x0);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 	task->data_transferred = 0;
@@ -1426,13 +1443,19 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 		rc = spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
 	} else {
 		SPDK_ERRLOG("Incorrect data direction\n");
-		spdk_scsi_task_set_check_condition(task, SPDK_SCSI_SENSE_NO_SENSE, 0x0, 0x0);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
 	if (rc < 0) {
 		SPDK_ERRLOG("disk op (rw) failed\n");
-		spdk_scsi_task_set_check_condition(task, SPDK_SCSI_SENSE_NO_SENSE, 0x0, 0x0);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 
 		return SPDK_SCSI_TASK_COMPLETE;
 	} else {
@@ -1466,9 +1489,10 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 	if (bdesc_count > bdev->max_unmap_bdesc_count) {
 		SPDK_ERRLOG("Error - supported unmap block descriptor count limit"
 			    " is %u\n", bdev->max_unmap_bdesc_count);
-		spdk_scsi_task_set_check_condition(task,
-						   SPDK_SCSI_SENSE_NO_SENSE,
-						   0x0, 0x0);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
@@ -1478,9 +1502,10 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("SCSI Unmapping failed\n");
-		spdk_scsi_task_set_check_condition(task,
-						   SPDK_SCSI_SENSE_NO_SENSE,
-						   0x0, 0x0);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
@@ -1628,15 +1653,20 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		alloc_len = from_be32(&cdb[6]);
 		if (alloc_len < 16) {
 			/* INVALID FIELD IN CDB */
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x24, 0x00);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		}
 
 		spdk_scsi_task_alloc_data(task, alloc_len, &data);
 		data_len = spdk_bdev_scsi_report_luns(task->lun, sel, data, task->alloc_len);
 		if (data_len < 0) {
-			spdk_scsi_task_set_check_condition(task, SPDK_SCSI_SENSE_NO_SENSE, 0x0, 0x0);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_NO_SENSE,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		}
 
@@ -1665,14 +1695,18 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		} else if (cdb[0] == SPDK_SPC_MODE_SELECT_6 && pllen < 4) {
 			/* MODE_SELECT(6) must have at least a 4 byte header. */
 			/* INVALID FIELD IN CDB */
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x24, 0x00);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		} else if (cdb[0] == SPDK_SPC_MODE_SELECT_10 && pllen < 8) {
 			/* MODE_SELECT(10) must have at least an 8 byte header. */
 			/* INVALID FIELD IN CDB */
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x24, 0x00);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		}
 
@@ -1692,9 +1726,10 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 				   &data[md + bdlen],
 				   pllen - (md + bdlen));
 		if (data_len != 0) {
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_NO_SENSE,
-							   0x0, 0x0);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_NO_SENSE,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		}
 
@@ -1740,8 +1775,10 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 
 		if (data_len < 0) {
 			/* INVALID FIELD IN CDB */
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x24, 0x00);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		}
 
@@ -1756,8 +1793,10 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		desc = cdb[1] & 0x1;
 		if (desc != 0) {
 			/* INVALID FIELD IN CDB */
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x24, 0x00);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
 		}
 
@@ -1788,8 +1827,10 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		}
 
 		/* INVALID COMMAND OPERATION CODE */
-		spdk_scsi_task_set_check_condition(task,
-						   SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x20, 0x00);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_COMMAND_OPERATION_CODE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		break;
 
 	case SPDK_SPC_TEST_UNIT_READY:
@@ -1820,9 +1861,10 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 		if ((rc = spdk_bdev_scsi_process_primary(bdev, task)) == SPDK_SCSI_TASK_UNKNOWN) {
 			SPDK_TRACELOG(SPDK_TRACE_SCSI, "unsupported SCSI OP=0x%x\n", task->cdb[0]);
 			/* INVALID COMMAND OPERATION CODE */
-			spdk_scsi_task_set_check_condition(task,
-							   SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-							   0x20, 0x00);
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_INVALID_COMMAND_OPERATION_CODE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			return SPDK_SCSI_TASK_COMPLETE;
 		}
 	}

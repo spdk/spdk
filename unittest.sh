@@ -44,3 +44,5 @@ make -C test/lib/scsi CONFIG_WERROR=y
 test/lib/scsi/dev/dev_ut
 test/lib/scsi/lun/lun_ut
 test/lib/scsi/scsi_bdev/scsi_bdev_ut
+test/lib/scsi/scsi_nvme/scsi_nvme_ut
+

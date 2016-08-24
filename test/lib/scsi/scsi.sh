@@ -11,5 +11,6 @@ timing_enter scsi
 $testdir/dev/dev_ut
 $testdir/lun/lun_ut
 $testdir/scsi_bdev/scsi_bdev_ut
+$testdir/scsi_nvme/scsi_nvme_ut
 
 timing_exit scsi
