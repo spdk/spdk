@@ -37,6 +37,7 @@
 #include "subsystem.h"
 #include "session.h"
 #include "request.h"
+#include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
@@ -446,8 +447,8 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req
 		}
 
 		for (i = 0; i < nr; i++) {
-			unmap[i].lba = htobe64(dsm_range[i].starting_lba);
-			unmap[i].block_count = htobe32(dsm_range[i].length);
+			to_be64(&unmap[i].lba, dsm_range[i].starting_lba);
+			to_be32(&unmap[i].block_count, dsm_range[i].length);
 		}
 		if (spdk_bdev_unmap(bdev, unmap, nr, nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
 			free(unmap);
