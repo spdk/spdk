@@ -46,6 +46,10 @@ It achieves high performance by moving all of the necessary drivers
 into userspace and operating in a polled mode instead of relying on interrupts,
 which avoids kernel context switches and eliminates interrupt handling overhead.
 
+\section general General Information
+
+ - \ref directory_structure
+
 \section modules Modules
 
 - \ref nvme
