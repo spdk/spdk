@@ -48,6 +48,8 @@
 
 #include "nvmf/transport.h"
 #include "nvmf/subsystem.h"
+#include "nvmf/request.h"
+#include "nvmf/session.h"
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"
@@ -61,12 +63,67 @@ struct rte_mempool *request_mempool;
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
+static TAILQ_HEAD(, nvmf_tgt_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
+static bool g_subsystems_shutdown;
+
+static void
+shutdown_complete(void)
+{
+	int rc;
+
+	rc = spdk_nvmf_check_pools();
+
+	spdk_app_stop(rc);
+}
+
+static void
+subsystem_delete_event(struct spdk_event *event)
+{
+	struct nvmf_tgt_subsystem *app_subsys = spdk_event_get_arg1(event);
+	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
+
+	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
+	free(app_subsys);
+
+	spdk_nvmf_delete_subsystem(subsystem);
+
+	if (g_subsystems_shutdown && TAILQ_EMPTY(&g_subsystems)) {
+		/* Finished shutting down all subsystems - continue the shutdown process. */
+		shutdown_complete();
+	}
+}
+
+void
+nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
+{
+	struct spdk_event *event;
+
+	/*
+	 * Unregister the poller - this starts a chain of events that will eventually free
+	 * the subsystem's memory.
+	 */
+	event = spdk_event_allocate(spdk_app_get_current_core(), subsystem_delete_event,
+				    app_subsys, NULL, NULL);
+	spdk_poller_unregister(&app_subsys->poller, event);
+}
+
+static void
+shutdown_subsystems(void)
+{
+	struct nvmf_tgt_subsystem *app_subsys, *tmp;
+
+	g_subsystems_shutdown = true;
+	TAILQ_FOREACH_SAFE(app_subsys, &g_subsystems, tailq, tmp) {
+		nvmf_tgt_delete_subsystem(app_subsys);
+	}
+}
+
 static void
 acceptor_poller_unregistered_event(struct spdk_event *event)
 {
 	spdk_nvmf_acceptor_fini();
 	spdk_nvmf_transport_fini();
-	spdk_shutdown_nvmf_subsystems();
+	shutdown_subsystems();
 }
 
 static void
@@ -81,6 +138,82 @@ spdk_nvmf_shutdown_cb(void)
 	event = spdk_event_allocate(spdk_app_get_current_core(), acceptor_poller_unregistered_event,
 				    NULL, NULL, NULL);
 	spdk_poller_unregister(&g_acceptor_poller, event);
+}
+
+static void
+subsystem_poll(void *arg)
+{
+	struct nvmf_tgt_subsystem *app_subsys = arg;
+
+	spdk_nvmf_subsystem_poll(app_subsys->subsystem);
+}
+
+static void
+connect_event(struct spdk_event *event)
+{
+	struct spdk_nvmf_request *req = spdk_event_get_arg1(event);
+
+	spdk_nvmf_handle_connect(req);
+}
+
+static void
+connect_cb(void *cb_ctx, struct spdk_nvmf_request *req)
+{
+	struct nvmf_tgt_subsystem *app_subsys = cb_ctx;
+	struct spdk_event *event;
+
+	/* Pass an event to the lcore that owns this subsystem */
+	event = spdk_event_allocate(app_subsys->lcore, connect_event, req, NULL, NULL);
+	spdk_event_call(event);
+}
+
+static void
+disconnect_event(struct spdk_event *event)
+{
+	struct spdk_nvmf_conn *conn = spdk_event_get_arg1(event);
+
+	spdk_nvmf_handle_disconnect(conn);
+}
+
+static void
+disconnect_cb(void *cb_ctx, struct spdk_nvmf_conn *conn)
+{
+	struct nvmf_tgt_subsystem *app_subsys = cb_ctx;
+	struct spdk_event *event;
+
+	/* Pass an event to the core that owns this connection */
+	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, conn, NULL, NULL);
+	spdk_event_call(event);
+}
+
+struct nvmf_tgt_subsystem *
+nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subtype, uint32_t lcore)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+	struct nvmf_tgt_subsystem *app_subsys;
+
+	app_subsys = calloc(1, sizeof(*app_subsys));
+	if (app_subsys == NULL) {
+		SPDK_ERRLOG("Subsystem allocation failed\n");
+		return NULL;
+	}
+
+	subsystem = spdk_nvmf_create_subsystem(num, name, subtype, app_subsys, connect_cb, disconnect_cb);
+	if (subsystem == NULL) {
+		SPDK_ERRLOG("Subsystem creation failed\n");
+		free(app_subsys);
+		return NULL;
+	}
+
+	app_subsys->subsystem = subsystem;
+	app_subsys->lcore = lcore;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "allocated subsystem %p on lcore %u\n", subsystem, lcore);
+
+	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
+	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, NULL, 0);
+
+	return app_subsys;
 }
 
 static void

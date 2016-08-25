@@ -92,6 +92,9 @@ struct spdk_nvmf_ctrlr_ops {
 	void (*detach)(struct spdk_nvmf_subsystem *subsystem);
 };
 
+typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
+typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_conn *conn);
+
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of virtual controller sessions.  Any individual controller session has
@@ -120,7 +123,9 @@ struct spdk_nvmf_subsystem {
 
 	const struct spdk_nvmf_ctrlr_ops *ops;
 
-	struct spdk_poller			*poller;
+	void					*cb_ctx;
+	spdk_nvmf_subsystem_connect_fn		connect_cb;
+	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
 
 	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
 	uint32_t				num_listen_addrs;
@@ -131,13 +136,14 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
 
-struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, const char *name,
-		      enum spdk_nvmf_subtype subtype,
-		      uint32_t lcore);
+struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(int num,
+		const char *name,
+		enum spdk_nvmf_subtype subtype,
+		void *cb_ctx,
+		spdk_nvmf_subsystem_connect_fn connect_cb,
+		spdk_nvmf_subsystem_disconnect_fn disconnect_cb);
 
-int
-nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
+void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 struct spdk_nvmf_subsystem *
 nvmf_find_subsystem(const char *subnqn, const char *hostnqn);
@@ -154,9 +160,6 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			 struct spdk_nvme_ctrlr *ctrlr);
-
-int
-spdk_shutdown_nvmf_subsystems(void);
 
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);

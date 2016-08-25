@@ -82,11 +82,11 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 static int
 spdk_add_nvmf_discovery_subsystem(void)
 {
-	struct spdk_nvmf_subsystem *subsystem;
+	struct nvmf_tgt_subsystem *app_subsys;
 
-	subsystem = nvmf_create_subsystem(0, SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
-					  rte_get_master_lcore());
-	if (subsystem == NULL) {
+	app_subsys = nvmf_tgt_create_subsystem(0, SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
+					       rte_get_master_lcore());
+	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		return -1;
 	}
@@ -354,6 +354,7 @@ static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode;
+	struct nvmf_tgt_subsystem *app_subsys;
 	struct spdk_nvmf_subsystem *subsystem;
 	int i, ret;
 	uint64_t mask;
@@ -377,14 +378,16 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	}
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 
-	subsystem = nvmf_create_subsystem(sp->num, nqn, SPDK_NVMF_SUBTYPE_NVME, lcore);
-	if (subsystem == NULL) {
+	app_subsys = nvmf_tgt_create_subsystem(sp->num, nqn, SPDK_NVMF_SUBTYPE_NVME, lcore);
+	if (app_subsys == NULL) {
+		SPDK_ERRLOG("Subsystem createion failed\n");
 		return -1;
 	}
+	subsystem = app_subsys->subsystem;
 
 	mode = spdk_conf_section_get_val(sp, "Mode");
 	if (mode == NULL) {
-		nvmf_delete_subsystem(subsystem);
+		nvmf_tgt_delete_subsystem(app_subsys);
 		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", sp->num);
 		return -1;
 	}
@@ -394,7 +397,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	} else if (strcasecmp(mode, "Virtual") == 0) {
 		subsystem->mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
 	} else {
-		nvmf_delete_subsystem(subsystem);
+		nvmf_tgt_delete_subsystem(app_subsys);
 		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode);
 		return -1;
 	}
@@ -450,7 +453,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		bdf = spdk_conf_section_get_val(sp, "NVMe");
 		if (bdf == NULL) {
 			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", sp->num);
-			nvmf_delete_subsystem(subsystem);
+			nvmf_tgt_delete_subsystem(app_subsys);
 			return -1;
 		}
 
@@ -477,18 +480,18 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		sn = spdk_conf_section_get_val(sp, "SN");
 		if (sn == NULL) {
 			SPDK_ERRLOG("Subsystem %d: missing serial number\n", sp->num);
-			nvmf_delete_subsystem(subsystem);
+			nvmf_tgt_delete_subsystem(app_subsys);
 			return -1;
 		}
 		if (spdk_nvmf_validate_sn(sn) != 0) {
-			nvmf_delete_subsystem(subsystem);
+			nvmf_tgt_delete_subsystem(app_subsys);
 			return -1;
 		}
 
 		namespace = spdk_conf_section_get_val(sp, "Namespace");
 		if (namespace == NULL) {
 			SPDK_ERRLOG("Subsystem %d: missing Namespace directive\n", sp->num);
-			nvmf_delete_subsystem(subsystem);
+			nvmf_tgt_delete_subsystem(app_subsys);
 			return -1;
 		}
 
@@ -504,19 +507,19 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			namespace = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
 			if (!namespace) {
 				SPDK_ERRLOG("Namespace %d: missing block device\n", i);
-				nvmf_delete_subsystem(subsystem);
+				nvmf_tgt_delete_subsystem(app_subsys);
 				return -1;
 			}
 
 			bdev = spdk_bdev_get_by_name(namespace);
 			if (!bdev) {
 				SPDK_ERRLOG("bdev is NULL\n");
-				nvmf_delete_subsystem(subsystem);
+				nvmf_tgt_delete_subsystem(app_subsys);
 				return -1;
 			}
 
 			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
-				nvmf_delete_subsystem(subsystem);
+				nvmf_tgt_delete_subsystem(app_subsys);
 				return -1;
 			}
 

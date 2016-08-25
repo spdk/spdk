@@ -34,12 +34,33 @@
 #ifndef NVMF_TGT_H
 #define NVMF_TGT_H
 
+#include <stdint.h>
+
+#include "spdk/nvmf_spec.h"
+#include "spdk/queue.h"
+
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_lcore;
+};
+
+struct nvmf_tgt_subsystem {
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_poller *poller;
+
+	TAILQ_ENTRY(nvmf_tgt_subsystem) tailq;
+
+	uint32_t lcore;
 };
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
 int spdk_nvmf_parse_conf(void);
+
+struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(int num,
+		const char *name,
+		enum spdk_nvmf_subtype subtype,
+		uint32_t lcore);
+
+void nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys);
 
 #endif

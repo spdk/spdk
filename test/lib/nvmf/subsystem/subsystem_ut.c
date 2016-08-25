@@ -47,17 +47,6 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
 
-void
-spdk_app_stop(int rc)
-{
-}
-
-int
-spdk_nvmf_check_pools(void)
-{
-	return 0;
-}
-
 uint32_t
 spdk_app_get_current_core(void)
 {
@@ -124,29 +113,28 @@ nvmf_test_create_subsystem(void)
 	struct spdk_nvmf_subsystem *subsystem;
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
-	subsystem = nvmf_create_subsystem(1, nqn, SPDK_NVMF_SUBTYPE_NVME, 1);
+	subsystem = spdk_nvmf_create_subsystem(1, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_EQUAL(subsystem->num, 1);
-	CU_ASSERT_EQUAL(subsystem->lcore, 1);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	nvmf_delete_subsystem(subsystem);
+	spdk_nvmf_delete_subsystem(subsystem);
 
 	/* Longest valid name */
 	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
 	memset(nqn + strlen(nqn), 'a', 222 - strlen(nqn));
 	nqn[222] = '\0';
 	CU_ASSERT(strlen(nqn) == 222);
-	subsystem = nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, 2);
+	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	nvmf_delete_subsystem(subsystem);
+	spdk_nvmf_delete_subsystem(subsystem);
 
 	/* Name that is one byte longer than allowed */
 	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
 	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
 	nqn[223] = '\0';
 	CU_ASSERT(strlen(nqn) == 223);
-	subsystem = nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, 2);
+	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL, NULL, NULL);
 	CU_ASSERT(subsystem == NULL);
 }
 

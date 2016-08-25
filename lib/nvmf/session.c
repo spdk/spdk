@@ -324,9 +324,10 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 }
 
 void
-nvmf_disconnect(struct nvmf_session *session,
-		struct spdk_nvmf_conn *conn)
+spdk_nvmf_handle_disconnect(struct spdk_nvmf_conn *conn)
 {
+	struct nvmf_session *session = conn->sess;
+
 	session->num_connections--;
 	TAILQ_REMOVE(&session->connections, conn, link);
 	conn->transport->conn_fini(conn);
@@ -552,7 +553,7 @@ spdk_nvmf_session_poll(struct nvmf_session *session)
 	TAILQ_FOREACH_SAFE(conn, &session->connections, link, tmp) {
 		if (conn->transport->conn_poll(conn) < 0) {
 			SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
-			nvmf_disconnect(session, conn);
+			spdk_nvmf_handle_disconnect(conn);
 		}
 	}
 

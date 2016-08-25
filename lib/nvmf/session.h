@@ -93,8 +93,7 @@ void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			       struct spdk_nvmf_fabric_connect_data *data,
 			       struct spdk_nvmf_fabric_connect_rsp *rsp);
 
-void
-nvmf_disconnect(struct nvmf_session *session, struct spdk_nvmf_conn *conn);
+void spdk_nvmf_handle_disconnect(struct spdk_nvmf_conn *conn);
 
 void
 nvmf_property_get(struct nvmf_session *session,

@@ -734,22 +734,13 @@ err0:
 	return -1;
 }
 
-static void
-spdk_nvmf_handle_disconnect(spdk_event_t event)
-{
-	struct nvmf_session		*session = spdk_event_get_arg1(event);
-	struct spdk_nvmf_conn		*conn = spdk_event_get_arg2(event);
-
-	nvmf_disconnect(session, conn);
-}
-
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
 	struct spdk_nvmf_conn		*conn;
 	struct nvmf_session		*session;
+	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_rdma_conn 	*rdma_conn;
-	spdk_event_t			event;
 
 	if (evt->id == NULL) {
 		SPDK_ERRLOG("disconnect request: missing cm_id\n");
@@ -775,11 +766,9 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		return 0;
 	}
 
-	/* Pass an event to the core that owns this connection */
-	event = spdk_event_allocate(session->subsys->lcore,
-				    spdk_nvmf_handle_disconnect,
-				    session, conn, NULL);
-	spdk_event_call(event);
+	subsystem = session->subsys;
+
+	subsystem->disconnect_cb(subsystem->cb_ctx, conn);
 
 	return 0;
 }

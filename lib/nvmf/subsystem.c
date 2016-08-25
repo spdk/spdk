@@ -44,7 +44,6 @@
 #include "spdk/nvmf_spec.h"
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
-bool g_subsystems_shutdown;
 
 struct spdk_nvmf_subsystem *
 nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
@@ -93,14 +92,6 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 	spdk_nvmf_session_poll(session);
 }
 
-static void
-spdk_nvmf_subsystem_poller(void *arg)
-{
-	struct spdk_nvmf_subsystem *subsystem = arg;
-
-	spdk_nvmf_subsystem_poll(subsystem);
-}
-
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
@@ -128,9 +119,10 @@ spdk_nvmf_valid_nqn(const char *nqn)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_create_subsystem(int num, const char *name,
-		      enum spdk_nvmf_subtype subtype,
-		      uint32_t lcore)
+spdk_nvmf_create_subsystem(int num, const char *name,
+			   enum spdk_nvmf_subtype subtype, void *cb_ctx,
+			   spdk_nvmf_subsystem_connect_fn connect_cb,
+			   spdk_nvmf_subsystem_disconnect_fn disconnect_cb)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 
@@ -143,27 +135,23 @@ nvmf_create_subsystem(int num, const char *name,
 		return NULL;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "nvmf_create_subsystem: allocated subsystem %p on lcore 0x%x\n",
-		      subsystem, lcore);
-
 	subsystem->num = num;
 	subsystem->subtype = subtype;
+	subsystem->cb_ctx = cb_ctx;
+	subsystem->connect_cb = connect_cb;
+	subsystem->disconnect_cb = disconnect_cb;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
 	TAILQ_INIT(&subsystem->listen_addrs);
 	TAILQ_INIT(&subsystem->hosts);
-
-	subsystem->lcore = lcore;
-	spdk_poller_register(&subsystem->poller, spdk_nvmf_subsystem_poller, subsystem, lcore, NULL, 0);
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 
 	return subsystem;
 }
 
-static void
-nvmf_delete_subsystem_poller_unreg(struct spdk_event *event)
+void
+spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_subsystem	*subsystem = spdk_event_get_arg1(event);
 	struct spdk_nvmf_listen_addr	*listen_addr, *listen_addr_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 
@@ -196,32 +184,6 @@ nvmf_delete_subsystem_poller_unreg(struct spdk_event *event)
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
 
 	free(subsystem);
-
-	if (g_subsystems_shutdown && TAILQ_EMPTY(&g_subsystems)) {
-		spdk_app_stop(spdk_nvmf_check_pools());
-	}
-}
-
-int
-nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
-{
-	struct spdk_event		*event;
-
-	if (subsystem == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF,
-			      "nvmf_delete_subsystem: there is no subsystem\n");
-		return 0;
-	}
-
-	/*
-	 * Unregister the poller - this starts a chain of events that will eventually free
-	 * the subsystem's memory.
-	 */
-	event = spdk_event_allocate(spdk_app_get_current_core(), nvmf_delete_subsystem_poller_unreg,
-				    subsystem, NULL, NULL);
-	spdk_poller_unregister(&subsystem->poller, event);
-
-	return 0;
 }
 
 int
@@ -334,19 +296,6 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 	}
 
 	disc_log->numrec = numrec;
-}
-
-int
-spdk_shutdown_nvmf_subsystems(void)
-{
-	struct spdk_nvmf_subsystem *subsystem, *subsys_tmp;
-
-	g_subsystems_shutdown = true;
-	TAILQ_FOREACH_SAFE(subsystem, &g_subsystems, entries, subsys_tmp) {
-		nvmf_delete_subsystem(subsystem);
-	}
-
-	return 0;
 }
 
 int
