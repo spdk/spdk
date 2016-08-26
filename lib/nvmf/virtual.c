@@ -446,10 +446,11 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req
 	struct spdk_scsi_unmap_bdesc *unmap;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	bool async = false;
 
 	nr = ((cmd->cdw10 & 0x000000ff) + 1);
 	attribute = cmd->cdw11 & 0x00000007;
-	if (attribute == SPDK_NVME_DSM_ATTR_DEALLOCATE) {
+	if (attribute & SPDK_NVME_DSM_ATTR_DEALLOCATE) {
 		struct spdk_nvme_dsm_range *dsm_range = (struct spdk_nvme_dsm_range *)req->data;
 		unmap = calloc(nr, sizeof(*unmap));
 		if (unmap == NULL) {
@@ -467,11 +468,13 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-	} else {
-		SPDK_ERRLOG("dsm attribute:%x does not supported yet\n", attribute);
-		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		async = true;
 	}
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+
+	if (async) {
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	}
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 static int
