@@ -63,16 +63,19 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_subsystem *subsys)
 	int i;
 
 	for (i = 0; i < subsys->ctrlr.dev.virtual.ns_count; i++) {
-		if (!strncasecmp(subsys->ctrlr.dev.virtual.ns_list[i]->name, "Nvme", 4)) {
-			continue;
-		} else {
-			break;
+		struct spdk_bdev *bdev = subsys->ctrlr.dev.virtual.ns_list[i];
+
+		if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+			SPDK_TRACELOG(SPDK_TRACE_NVMF,
+				      "Subsystem%d Namespace %s does not support unmap - not enabling DSM\n",
+				      i, bdev->name);
+			return;
 		}
 	}
 
-	if (i == subsys->ctrlr.dev.virtual.ns_count) {
-		subsys->session->vcdata.oncs.dsm = 1;
-	}
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem%d support unmap - enabling DSM\n",
+		      subsys->num);
+	subsys->session->vcdata.oncs.dsm = 1;
 }
 
 static void
