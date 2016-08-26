@@ -375,8 +375,6 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	num_trackers = nvme_min(NVME_IO_TRACKERS, (num_entries - 1));
 
-	ctrlr->max_xfer_size = NVME_MAX_XFER_SIZE;
-
 	ctrlr->ioq = calloc(ctrlr->opts.num_io_queues, sizeof(struct spdk_nvme_qpair));
 
 	if (ctrlr->ioq == NULL)
@@ -598,6 +596,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	 * Use MDTS to ensure our default max_xfer_size doesn't exceed what the
 	 *  controller supports.
 	 */
+	ctrlr->max_xfer_size = NVME_MAX_XFER_SIZE;
 	if (ctrlr->cdata.mdts > 0) {
 		ctrlr->max_xfer_size = nvme_min(ctrlr->max_xfer_size,
 						ctrlr->min_page_size * (1 << (ctrlr->cdata.mdts)));
