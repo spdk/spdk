@@ -113,6 +113,23 @@ spdk_copy_submit(struct copy_task *copy_req, void *dst, void *src,
 				     copy_engine_done);
 }
 
+int64_t
+spdk_copy_submit_fill(struct copy_task *copy_req, void *dst, uint8_t fill,
+		      uint64_t nbytes, copy_completion_cb cb)
+{
+	struct copy_task *req = copy_req;
+
+	req->cb = cb;
+
+	if (hw_copy_engine && hw_copy_engine->fill) {
+		return hw_copy_engine->fill(req->offload_ctx, dst, fill, nbytes,
+					    copy_engine_done);
+	}
+
+	return mem_copy_engine->fill(req->offload_ctx, dst, fill, nbytes,
+				     copy_engine_done);
+}
+
 /* memcpy default copy engine */
 static void
 mem_copy_check_io(void)
@@ -150,8 +167,25 @@ mem_copy_submit(void *cb_arg, void *dst, void *src, uint64_t nbytes,
 	return nbytes;
 }
 
+static int64_t
+mem_copy_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
+	      copy_completion_cb cb)
+{
+	struct mem_request **req_head = &copy_engine_req_head[rte_lcore_id()];
+	struct mem_request *req = (struct mem_request *)cb_arg;
+
+	req->next = *req_head;
+	*req_head = req;
+	req->cb = cb;
+
+	memset(dst, fill, nbytes);
+
+	return nbytes;
+}
+
 static struct spdk_copy_engine memcpy_copy_engine = {
 	.copy		= mem_copy_submit,
+	.fill		= mem_copy_fill,
 	.check_io	= mem_copy_check_io,
 };
 

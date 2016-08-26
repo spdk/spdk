@@ -142,6 +142,22 @@ ioat_copy_submit(void *cb_arg, void *dst, void *src, uint64_t nbytes,
 	return spdk_ioat_submit_copy(chan, ioat_task, ioat_done, dst, src, nbytes);
 }
 
+static int64_t
+ioat_copy_submit_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
+		      copy_completion_cb cb)
+{
+	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
+	struct spdk_ioat_chan *chan = g_ioat_chan[rte_lcore_id()];
+	uint64_t fill64 = 0x0101010101010101ULL * fill;
+
+	RTE_VERIFY(chan != NULL);
+
+	ioat_task->cb = cb;
+
+	return spdk_ioat_submit_fill(chan, ioat_task, ioat_done, dst, fill64, nbytes);
+}
+
+
 static void
 ioat_check_io(void)
 {
@@ -153,6 +169,7 @@ ioat_check_io(void)
 
 static struct spdk_copy_engine ioat_copy_engine = {
 	.copy		= ioat_copy_submit,
+	.fill		= ioat_copy_submit_fill,
 	.check_io	= ioat_check_io,
 };
 

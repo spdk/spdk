@@ -53,6 +53,8 @@ struct copy_task {
 struct spdk_copy_engine {
 	int64_t	(*copy)(void *cb_arg, void *dst, void *src,
 			uint64_t nbytes, copy_completion_cb cb);
+	int64_t	(*fill)(void *cb_arg, void *dst, uint8_t fill,
+			uint64_t nbytes, copy_completion_cb cb);
 	void	(*check_io)(void);
 };
 
@@ -84,6 +86,8 @@ struct spdk_copy_module_if {
 void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
 int64_t spdk_copy_submit(struct copy_task *copy_req, void *dst, void *src,
 			 uint64_t nbytes, copy_completion_cb cb);
+int64_t spdk_copy_submit_fill(struct copy_task *copy_req, void *dst, uint8_t fill,
+			      uint64_t nbytes, copy_completion_cb cb);
 int spdk_copy_check_io(void);
 int spdk_copy_module_get_max_ctx_size(void);
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
