@@ -41,10 +41,13 @@
 #include "blockdev_malloc.h"
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
+#include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/copy_engine.h"
 
 #include "bdev_module.h"
+
+#define MALLOC_MAX_UNMAP_BDESC	1
 
 struct malloc_disk {
 	struct spdk_bdev	disk;	/* this must be the first element */
@@ -142,6 +145,35 @@ blockdev_malloc_writev(struct malloc_disk *mdisk, struct copy_task *copy_req,
 }
 
 static int
+blockdev_malloc_unmap(struct malloc_disk *mdisk,
+		      struct copy_task *copy_req,
+		      struct spdk_scsi_unmap_bdesc *unmap_d,
+		      uint16_t bdesc_count)
+{
+	uint64_t lba, offset, byte_count;
+	uint32_t block_count;
+
+	assert(bdesc_count <= MALLOC_MAX_UNMAP_BDESC);
+
+	/*
+	 * For now, only support a single unmap descriptor per command. The copy engine API does not
+	 * support batch submission of operations.
+	 */
+	assert(bdesc_count == 1);
+
+	lba = from_be64(&unmap_d[0].lba);
+	offset = lba * mdisk->disk.blocklen;
+	block_count = from_be32(&unmap_d[0].block_count);
+	byte_count = (uint64_t)block_count * mdisk->disk.blocklen;
+
+	if (lba >= mdisk->disk.blockcnt || block_count > mdisk->disk.blockcnt - lba) {
+		return -1;
+	}
+
+	return spdk_copy_submit_fill(copy_req, mdisk->malloc_buf + offset, 0, byte_count, malloc_done);
+}
+
+static int
 blockdev_malloc_check_io(struct spdk_bdev *bdev)
 {
 	return spdk_copy_check_io();
@@ -199,6 +231,12 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 					     (struct copy_task *)bdev_io->driver_ctx,
 					     bdev_io->u.flush.offset,
 					     bdev_io->u.flush.length);
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return blockdev_malloc_unmap((struct malloc_disk *)bdev_io->ctx,
+					     (struct copy_task *)bdev_io->driver_ctx,
+					     bdev_io->u.unmap.unmap_bdesc,
+					     bdev_io->u.unmap.bdesc_count);
 	default:
 		return -1;
 	}
@@ -224,6 +262,7 @@ blockdev_malloc_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
 
 	default:
@@ -282,6 +321,8 @@ struct malloc_disk *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
 	mdisk->disk.blockcnt = num_blocks;
+	mdisk->disk.thin_provisioning = 1;
+	mdisk->disk.max_unmap_bdesc_count = MALLOC_MAX_UNMAP_BDESC;
 
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
