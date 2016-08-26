@@ -385,6 +385,7 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
 {
 	uint64_t lba_address;
 	uint64_t blockcnt;
+	uint64_t io_bytes;
 	off_t offset;
 	uint64_t llen;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -400,6 +401,13 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
 	if (lba_address >= blockcnt || llen > blockcnt || lba_address > (blockcnt - llen)) {
 		SPDK_ERRLOG("end of media\n");
 		response->status.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	io_bytes = llen * bdev->blocklen;
+	if (io_bytes > req->length) {
+		SPDK_ERRLOG("Read/Write NLB > SGL length\n");
+		response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -449,6 +457,12 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req
 	bool async = false;
 
 	nr = ((cmd->cdw10 & 0x000000ff) + 1);
+	if (nr * sizeof(struct spdk_nvme_dsm_range) > req->length) {
+		SPDK_ERRLOG("Dataset Management number of ranges > SGL length\n");
+		response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	attribute = cmd->cdw11 & 0x00000007;
 	if (attribute & SPDK_NVME_DSM_ATTR_DEALLOCATE) {
 		struct spdk_nvme_dsm_range *dsm_range = (struct spdk_nvme_dsm_range *)req->data;
