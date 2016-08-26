@@ -512,6 +512,10 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 				nvmf_delete_subsystem(subsystem);
 				return -1;
 			}
+
+			SPDK_NOTICELOG("Attaching block device %s to subsystem %s\n",
+				       bdev->name, subsystem->subnqn);
+
 		}
 	}
 	return 0;
