@@ -142,6 +142,7 @@ nvmf_virtual_ctrlr_complete_cmd(spdk_event_t event)
 static int
 nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
+	uint8_t lid;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -151,12 +152,14 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	switch (cmd->cdw10) {
+	lid = cmd->cdw10 & 0xFF;
+	switch (lid) {
 	case SPDK_NVME_LOG_ERROR:
 	case SPDK_NVME_LOG_HEALTH_INFORMATION:
 	case SPDK_NVME_LOG_FIRMWARE_SLOT:
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
+		SPDK_ERRLOG("Unsupported Get Log Page 0x%02X\n", lid);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
