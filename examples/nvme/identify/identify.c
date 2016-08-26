@@ -590,7 +590,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	printf("Scatter-Gather List\n");
 	printf("  SGL Command Set:           %s\n",
 	       cdata->sgls.supported ? "Supported" : "Not Supported");
-	printf("  SGL Keyed: %s\n",
+	printf("  SGL Keyed:                 %s\n",
 	       cdata->sgls.keyed_sgl ? "Supported" : "Not Supported");
 	printf("  SGL Bit Bucket Descriptor: %s\n",
 	       cdata->sgls.bit_bucket_descriptor ? "Supported" : "Not Supported");
@@ -598,9 +598,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 	       cdata->sgls.metadata_pointer ? "Supported" : "Not Supported");
 	printf("  Oversized SGL:             %s\n",
 	       cdata->sgls.oversized_sgl ? "Supported" : "Not Supported");
-	printf("  SGL Metadata Address: %s\n",
+	printf("  SGL Metadata Address:      %s\n",
 	       cdata->sgls.metadata_address ? "Supported" : "Not Supported");
-	printf("  SGL Offset: %s\n",
+	printf("  SGL Offset:                %s\n",
 	       cdata->sgls.sgl_offset ? "Supported" : "Not Supported");
 	printf("\n");
 
