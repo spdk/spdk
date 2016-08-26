@@ -140,34 +140,6 @@ nvmf_virtual_ctrlr_complete_cmd(spdk_event_t event)
 }
 
 static int
-nvmf_virtual_ctrlr_admin_identify_nslist(struct spdk_nvmf_controller *ctrlr,
-		struct spdk_nvmf_request *req)
-{
-	struct spdk_nvme_ns_list *ns_list;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	uint32_t req_ns_id = cmd->nsid;
-	uint32_t i, num_ns, count = 0;
-
-	if (req_ns_id >= 0xfffffffeUL) {
-		return -1;
-	}
-	memset(req->data, 0, req->length);
-	num_ns = ctrlr->dev.virtual.ns_count;
-
-	ns_list = (struct spdk_nvme_ns_list *)req->data;
-	for (i = 1; i <= num_ns; i++) {
-		if (i <= req_ns_id) {
-			continue;
-		}
-		ns_list->ns_list[count++] = i;
-		if (count == sizeof(*ns_list) / sizeof(uint32_t)) {
-			break;
-		}
-	}
-	return 0;
-}
-
-static int
 nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -191,61 +163,95 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 }
 
 static int
+identify_ns(struct spdk_nvmf_controller *ctrlr,
+	    struct spdk_nvme_cmd *cmd,
+	    struct spdk_nvme_cpl *rsp,
+	    struct spdk_nvme_ns_data *nsdata)
+{
+	struct spdk_bdev *bdev;
+
+	if (cmd->nsid > ctrlr->dev.virtual.ns_count || cmd->nsid == 0) {
+		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	bdev = ctrlr->dev.virtual.ns_list[cmd->nsid - 1];
+
+	nsdata->nsze = bdev->blockcnt;
+	nsdata->ncap = bdev->blockcnt;
+	nsdata->nuse = bdev->blockcnt;
+	nsdata->nlbaf = 0;
+	nsdata->flbas.format = 0;
+	nsdata->lbaf[0].lbads = nvmf_u32log2(bdev->blocklen);
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+identify_ctrlr(struct nvmf_session *session, struct spdk_nvme_ctrlr_data *cdata)
+{
+	*cdata = session->vcdata;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+identify_active_ns_list(struct spdk_nvmf_controller *ctrlr,
+			struct spdk_nvme_cmd *cmd,
+			struct spdk_nvme_cpl *rsp,
+			struct spdk_nvme_ns_list *ns_list)
+{
+	uint32_t i, num_ns, count = 0;
+
+	if (cmd->nsid >= 0xfffffffeUL) {
+		SPDK_ERRLOG("Identify Active Namespace List with invalid NSID %u\n", cmd->nsid);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	num_ns = ctrlr->dev.virtual.ns_count;
+
+	for (i = 1; i <= num_ns; i++) {
+		if (i <= cmd->nsid) {
+			continue;
+		}
+		ns_list->ns_list[count++] = i;
+		if (count == sizeof(*ns_list) / sizeof(uint32_t)) {
+			break;
+		}
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 nvmf_virtual_ctrlr_identify(struct spdk_nvmf_request *req)
 {
-	uint32_t nsid;
-	uint32_t blen;
-	uint32_t shift = 0;
-	int rc = 0;
-	struct spdk_nvme_ns_data *nsdata;
-
+	uint8_t cns;
 	struct nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
 
 	if (req->data == NULL || req->length < 4096) {
 		SPDK_ERRLOG("identify command with invalid buffer\n");
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_NS) {
-		nsid = cmd->nsid;
-		if (nsid > subsystem->ctrlr.dev.virtual.ns_count || nsid == 0) {
-			SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
-			response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
+	memset(req->data, 0, req->length);
 
-		nsdata = (struct spdk_nvme_ns_data *)req->data;
-		memset(nsdata, 0, sizeof(*nsdata));
-		nsdata->nsze = subsystem->ctrlr.dev.virtual.ns_list[nsid - 1]->blockcnt;
-		nsdata->ncap = subsystem->ctrlr.dev.virtual.ns_list[nsid - 1]->blockcnt;
-		nsdata->nuse = subsystem->ctrlr.dev.virtual.ns_list[nsid - 1]->blockcnt;
-		nsdata->nlbaf = 0;
-		nsdata->flbas.format = 0;
-		nsdata->flbas.extended = 0;
-		nsdata->nmic.can_share = 1;
-		blen = subsystem->ctrlr.dev.virtual.ns_list[nsid - 1]->blocklen;
-		shift = nvmf_u32log2(blen);
-		nsdata->lbaf[0].lbads = shift;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	} else if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
-		/* pull from virtual controller context */
-		memcpy(req->data, &session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	} else if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST) {
-		rc = nvmf_virtual_ctrlr_admin_identify_nslist(&subsystem->ctrlr, req);
-		if (rc < 0) {
-			SPDK_ERRLOG("Invalid Namespace or Format\n");
-			response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		}
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	} else {
-		SPDK_ERRLOG("identify command with invalid code\n");
-		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+	cns = cmd->cdw10 & 0xFF;
+	switch (cns) {
+	case SPDK_NVME_IDENTIFY_NS:
+		return identify_ns(&subsystem->ctrlr, cmd, rsp, req->data);
+	case SPDK_NVME_IDENTIFY_CTRLR:
+		return identify_ctrlr(session, req->data);
+	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
+		return identify_active_ns_list(&subsystem->ctrlr, cmd, rsp, req->data);
+	default:
+		SPDK_ERRLOG("Identify command with unsupported CNS 0x%02x\n", cns);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 }
