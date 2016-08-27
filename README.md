@@ -18,6 +18,7 @@ The development kit currently includes:
 * NVMe driver
 * I/OAT (DMA engine) driver
 * NVMe over Fabrics target
+* iSCSI target
 
 Documentation
 =============
