@@ -95,12 +95,6 @@ struct spdk_bdev {
 	/** Represents maximum unmap block descriptor count */
 	uint32_t max_unmap_bdesc_count;
 
-	/** array of child block dev that is underneath of the current dev */
-	struct spdk_bdev **child_bdevs;
-
-	/** number of child blockdevs allocated */
-	int num_child_bdevs;
-
 	/** generation value used by block device reset */
 	uint32_t gencnt;
 
