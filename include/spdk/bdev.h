@@ -257,7 +257,7 @@ struct spdk_bdev_io {
 	enum spdk_bdev_io_status status;
 
 	/** Used in virtual device (e.g., RAID), indicates its parent spdk_bdev_io **/
-	void *parent;
+	struct spdk_bdev_io *parent;
 
 	/** Used in virtual device (e.g., RAID) for storing multiple child device I/Os **/
 	TAILQ_HEAD(child_io, spdk_bdev_io) child_io;
