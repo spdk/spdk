@@ -76,6 +76,18 @@
   # Units in microseconds.
   AdminPollRate 100000
 
+# The Split virtual block device slices block devices into multiple smaller bdevs.
+[Split]
+  # Syntax:
+  #   Split <bdev> <count> [<size_in_megabytes>]
+
+  # Split Malloc2 into two equally-sized portions, Malloc2p0 and Malloc2p1
+  Split Malloc2 2
+
+  # Split Malloc3 into eight 1-megabyte portions, Malloc3p0 ... Malloc3p7,
+  # leaving the rest of the device inaccessible
+  Split Malloc3 8 1
+
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Core may be set or not. If set, the specified subsystem will run on

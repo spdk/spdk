@@ -120,7 +120,7 @@
 # Of course, users can disable offload even it is available.
 [Malloc]
   # Number of Malloc targets
-  NumberOfLuns 1
+  NumberOfLuns 3
   # Malloc targets are 128M
   LunSizeInMB 128
   # Block size. Default is 512 bytes.
@@ -139,6 +139,18 @@
 [AIO]
   AIO /dev/sdb
   AIO /dev/sdc
+
+# The Split virtual block device slices block devices into multiple smaller bdevs.
+[Split]
+  # Syntax:
+  #   Split <bdev> <count> [<size_in_megabytes>]
+
+  # Split Malloc1 into two equally-sized portions, Malloc1p0 and Malloc1p1
+  Split Malloc1 2
+
+  # Split Malloc2 into eight 1-megabyte portions, Malloc2p0 ... Malloc2p7,
+  # leaving the rest of the device inaccessible
+  Split Malloc2 8 1
 
 # Users should change the TargetNode section(s) below to match the
 #  desired iSCSI target node configuration.
