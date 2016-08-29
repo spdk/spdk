@@ -418,6 +418,24 @@ __submit_request(spdk_event_t event)
 		}
 		bdev->fn_table->submit_request(bdev_io);
 	} else {
+		struct spdk_bdev_io *child_io, *tmp;
+
+		TAILQ_FOREACH_SAFE(child_io, &bdev_io->child_io, link, tmp) {
+			/*
+			 * Make sure no references to the parent I/O remain, since it is being
+			 * returned to the free pool.
+			 */
+			child_io->parent = NULL;
+			TAILQ_REMOVE(&bdev_io->child_io, child_io, link);
+
+			/*
+			 * Child I/O may have an rbuf that needs to be returned to a pool
+			 *  on a different core, so free it through the request submission
+			 *  process rather than calling put_io directly here.
+			 */
+			spdk_bdev_free_io(child_io);
+		}
+
 		spdk_bdev_put_io(bdev_io);
 	}
 }
