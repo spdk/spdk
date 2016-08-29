@@ -265,9 +265,6 @@ struct spdk_bdev_io {
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
-	/** Number of children for this I/O */
-	int children;
-
 	/** Entry to the list need_buf of struct spdk_bdev. */
 	TAILQ_ENTRY(spdk_bdev_io) rbuf_link;
 

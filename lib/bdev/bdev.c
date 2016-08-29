@@ -472,7 +472,6 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->cb = cb;
 	bdev_io->gencnt = bdev->gencnt;
 	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
-	bdev_io->children = 0;
 	TAILQ_INIT(&bdev_io->child_io);
 }
 
@@ -505,7 +504,6 @@ spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
 	child->parent = parent;
 
 	TAILQ_INSERT_TAIL(&parent->child_io, child, link);
-	parent->children++;
 
 	return child;
 }
