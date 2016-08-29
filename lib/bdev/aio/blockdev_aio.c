@@ -332,7 +332,7 @@ create_aio_disk(char *fname)
 	TAILQ_INIT(&fdisk->sync_completion_list);
 	snprintf(fdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "AIO%d",
 		 g_blockdev_count);
-	snprintf(fdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "iSCSI AIO disk");
+	snprintf(fdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "AIO disk");
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;

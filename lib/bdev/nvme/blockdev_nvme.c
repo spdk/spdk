@@ -558,7 +558,7 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 			snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
 				 "Nvme%dn%dp%d", ctrlr_id, spdk_nvme_ns_get_id(ns), bdev_idx);
 			snprintf(bdev->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH,
-				 "iSCSI NVMe disk");
+				 "NVMe disk");
 
 			bdev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
 			if (!bdev->qpair) {
