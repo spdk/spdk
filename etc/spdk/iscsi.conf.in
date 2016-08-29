@@ -99,10 +99,6 @@
   BDF 0000:00:00.0 Nvme0
   BDF 0000:01:00.0 Nvme1
 
-  # The following two arguments allow the user to partition NVMe namespaces
-  # into multiple LUNs
-  NvmeLunsPerNs 1
-  LunSizeInMB 1024
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
   NvmeRetryCount 4
