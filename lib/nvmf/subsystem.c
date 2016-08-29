@@ -85,7 +85,7 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 
 	/* For NVMe subsystems, check the backing physical device for completions. */
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		session->subsys->ctrlr.ops->poll_for_completions(session);
+		session->subsys->ops->poll_for_completions(session);
 	}
 
 	/* For each connection in the session, check for completions */
@@ -188,8 +188,8 @@ nvmf_delete_subsystem_poller_unreg(struct spdk_event *event)
 	if (subsystem->session) {
 		spdk_nvmf_session_destruct(subsystem->session);
 	}
-	if (subsystem->ctrlr.ops) {
-		subsystem->ctrlr.ops->detach(subsystem);
+	if (subsystem->ops) {
+		subsystem->ops->detach(subsystem);
 	}
 
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
@@ -284,14 +284,14 @@ int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 			 struct spdk_nvme_ctrlr *ctrlr)
 {
-	subsystem->ctrlr.dev.direct.ctrlr = ctrlr;
+	subsystem->dev.direct.ctrlr = ctrlr;
 	/* Assume that all I/O will be handled on one thread for now */
-	subsystem->ctrlr.dev.direct.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
-	if (subsystem->ctrlr.dev.direct.io_qpair == NULL) {
+	subsystem->dev.direct.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+	if (subsystem->dev.direct.io_qpair == NULL) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -1;
 	}
-	subsystem->ctrlr.ops = &spdk_nvmf_direct_ctrlr_ops;
+	subsystem->ops = &spdk_nvmf_direct_ctrlr_ops;
 	return 0;
 }
 
@@ -349,14 +349,14 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	int i = 0;
 
 	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
-	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->ctrlr.dev.virtual.ns_list[i]) {
+	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->dev.virtual.ns_list[i]) {
 		i++;
 	}
 	if (i == MAX_VIRTUAL_NAMESPACE) {
 		SPDK_ERRLOG("spdk_nvmf_subsystem_add_ns() failed\n");
 		return -1;
 	}
-	subsystem->ctrlr.dev.virtual.ns_list[i] = bdev;
-	subsystem->ctrlr.dev.virtual.ns_count++;
+	subsystem->dev.virtual.ns_list[i] = bdev;
+	subsystem->dev.virtual.ns_count++;
 	return 0;
 }

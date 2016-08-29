@@ -343,10 +343,10 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			status = nvmf_process_discovery_cmd(req);
 		} else {
-			status = session->subsys->ctrlr.ops->process_admin_cmd(req);
+			status = session->subsys->ops->process_admin_cmd(req);
 		}
 	} else {
-		status = session->subsys->ctrlr.ops->process_io_cmd(req);
+		status = session->subsys->ops->process_io_cmd(req);
 	}
 
 	switch (status) {

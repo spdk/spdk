@@ -92,26 +92,6 @@ struct spdk_nvmf_ctrlr_ops {
 	void (*detach)(struct spdk_nvmf_subsystem *subsystem);
 };
 
-struct spdk_nvmf_controller {
-	union {
-		struct {
-			struct nvmf_session *session;
-			struct spdk_nvme_ctrlr *ctrlr;
-			struct spdk_nvme_qpair *io_qpair;
-		} direct;
-
-		struct {
-			struct nvmf_session *session;
-			char	sn[MAX_SN_LEN + 1];
-			struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
-			uint16_t ns_count;
-		} virtual;
-	} dev;
-
-	const struct spdk_nvmf_ctrlr_ops *ops;
-};
-
-
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of virtual controller sessions.  Any individual controller session has
@@ -124,7 +104,21 @@ struct spdk_nvmf_subsystem {
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
 	struct nvmf_session *session;
-	struct spdk_nvmf_controller 	ctrlr;
+
+	union {
+		struct {
+			struct spdk_nvme_ctrlr *ctrlr;
+			struct spdk_nvme_qpair *io_qpair;
+		} direct;
+
+		struct {
+			char	sn[MAX_SN_LEN + 1];
+			struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
+			uint16_t ns_count;
+		} virtual;
+	} dev;
+
+	const struct spdk_nvmf_ctrlr_ops *ops;
 
 	struct spdk_poller			*poller;
 

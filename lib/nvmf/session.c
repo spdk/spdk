@@ -88,7 +88,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
 
 	/* Init the controller details */
-	session->subsys->ctrlr.ops->ctrlr_get_data(session);
+	session->subsys->ops->ctrlr_get_data(session);
 
 	session->vcdata.aerl = 0;
 	session->vcdata.cntlid = 0;

@@ -62,8 +62,8 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_subsystem *subsys)
 {
 	int i;
 
-	for (i = 0; i < subsys->ctrlr.dev.virtual.ns_count; i++) {
-		struct spdk_bdev *bdev = subsys->ctrlr.dev.virtual.ns_list[i];
+	for (i = 0; i < subsys->dev.virtual.ns_count; i++) {
+		struct spdk_bdev *bdev = subsys->dev.virtual.ns_list[i];
 
 		if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF,
@@ -88,7 +88,7 @@ nvmf_virtual_ctrlr_get_data(struct nvmf_session *session)
 	spdk_strcpy_pad(session->vcdata.mn, MODEL_NUMBER, sizeof(session->vcdata.mn), ' ');
 	session->vcdata.vid = 0x8086;
 	session->vcdata.ssvid = 0x8086;
-	spdk_strcpy_pad(session->vcdata.sn, subsys->ctrlr.dev.virtual.sn, sizeof(session->vcdata.sn), ' ');
+	spdk_strcpy_pad(session->vcdata.sn, subsys->dev.virtual.sn, sizeof(session->vcdata.sn), ' ');
 	session->vcdata.rab = 6;
 	session->vcdata.ver.bits.mjr = 1;
 	session->vcdata.ver.bits.mnr = 2;
@@ -104,7 +104,7 @@ nvmf_virtual_ctrlr_get_data(struct nvmf_session *session)
 	session->vcdata.cqes.min = 0x04;
 	session->vcdata.cqes.max = 0x04;
 	session->vcdata.maxcmd = 1024;
-	session->vcdata.nn = subsys->ctrlr.dev.virtual.ns_count;
+	session->vcdata.nn = subsys->dev.virtual.ns_count;
 	session->vcdata.vwc.present = 1;
 	session->vcdata.sgls.supported = 1;
 	strncpy(session->vcdata.subnqn, session->subsys->subnqn, sizeof(session->vcdata.subnqn));
@@ -166,20 +166,20 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 }
 
 static int
-identify_ns(struct spdk_nvmf_controller *ctrlr,
+identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	    struct spdk_nvme_cmd *cmd,
 	    struct spdk_nvme_cpl *rsp,
 	    struct spdk_nvme_ns_data *nsdata)
 {
 	struct spdk_bdev *bdev;
 
-	if (cmd->nsid > ctrlr->dev.virtual.ns_count || cmd->nsid == 0) {
+	if (cmd->nsid > subsystem->dev.virtual.ns_count || cmd->nsid == 0) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	bdev = ctrlr->dev.virtual.ns_list[cmd->nsid - 1];
+	bdev = subsystem->dev.virtual.ns_list[cmd->nsid - 1];
 
 	nsdata->nsze = bdev->blockcnt;
 	nsdata->ncap = bdev->blockcnt;
@@ -199,7 +199,7 @@ identify_ctrlr(struct nvmf_session *session, struct spdk_nvme_ctrlr_data *cdata)
 }
 
 static int
-identify_active_ns_list(struct spdk_nvmf_controller *ctrlr,
+identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 			struct spdk_nvme_cmd *cmd,
 			struct spdk_nvme_cpl *rsp,
 			struct spdk_nvme_ns_list *ns_list)
@@ -212,7 +212,7 @@ identify_active_ns_list(struct spdk_nvmf_controller *ctrlr,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	num_ns = ctrlr->dev.virtual.ns_count;
+	num_ns = subsystem->dev.virtual.ns_count;
 
 	for (i = 1; i <= num_ns; i++) {
 		if (i <= cmd->nsid) {
@@ -247,11 +247,11 @@ nvmf_virtual_ctrlr_identify(struct spdk_nvmf_request *req)
 	cns = cmd->cdw10 & 0xFF;
 	switch (cns) {
 	case SPDK_NVME_IDENTIFY_NS:
-		return identify_ns(&subsystem->ctrlr, cmd, rsp, req->data);
+		return identify_ns(subsystem, cmd, rsp, req->data);
 	case SPDK_NVME_IDENTIFY_CTRLR:
 		return identify_ctrlr(session, req->data);
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
-		return identify_active_ns_list(&subsystem->ctrlr, cmd, rsp, req->data);
+		return identify_active_ns_list(subsystem, cmd, rsp, req->data);
 	default:
 		SPDK_ERRLOG("Identify command with unsupported CNS 0x%02x\n", cns);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -504,13 +504,13 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
 
-	if (nsid > subsystem->ctrlr.dev.virtual.ns_count || nsid == 0) {
+	if (nsid > subsystem->dev.virtual.ns_count || nsid == 0) {
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	bdev = subsystem->ctrlr.dev.virtual.ns_list[nsid - 1];
+	bdev = subsystem->dev.virtual.ns_list[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE:

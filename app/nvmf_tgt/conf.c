@@ -492,9 +492,9 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			return -1;
 		}
 
-		subsystem->ctrlr.dev.virtual.ns_count = 0;
-		snprintf(subsystem->ctrlr.dev.virtual.sn, MAX_SN_LEN, "%s", sn);
-		subsystem->ctrlr.ops = &spdk_nvmf_virtual_ctrlr_ops;
+		subsystem->dev.virtual.ns_count = 0;
+		snprintf(subsystem->dev.virtual.sn, MAX_SN_LEN, "%s", sn);
+		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 
 		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
 			val = spdk_conf_section_get_nval(sp, "Namespace", i);

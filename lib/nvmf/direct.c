@@ -44,15 +44,15 @@ nvmf_direct_ctrlr_get_data(struct nvmf_session *session)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 
-	cdata = spdk_nvme_ctrlr_get_data(session->subsys->ctrlr.dev.direct.ctrlr);
+	cdata = spdk_nvme_ctrlr_get_data(session->subsys->dev.direct.ctrlr);
 	memcpy(&session->vcdata, cdata, sizeof(struct spdk_nvme_ctrlr_data));
 }
 
 static void
 nvmf_direct_ctrlr_poll_for_completions(struct nvmf_session *session)
 {
-	spdk_nvme_ctrlr_process_admin_completions(session->subsys->ctrlr.dev.direct.ctrlr);
-	spdk_nvme_qpair_process_completions(session->subsys->ctrlr.dev.direct.io_qpair, 0);
+	spdk_nvme_ctrlr_process_admin_completions(session->subsys->dev.direct.ctrlr);
+	spdk_nvme_qpair_process_completions(session->subsys->dev.direct.io_qpair, 0);
 }
 
 static void
@@ -134,10 +134,10 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			memcpy(req->data, &session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		} else if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST) {
-			vs = spdk_nvme_ctrlr_get_regs_vs(subsystem->ctrlr.dev.direct.ctrlr);
+			vs = spdk_nvme_ctrlr_get_regs_vs(subsystem->dev.direct.ctrlr);
 			if (vs.raw < SPDK_NVME_VERSION(1, 1, 0)) {
 				/* fill in identify ns list with virtual controller information */
-				rc = nvmf_direct_ctrlr_admin_identify_nslist(subsystem->ctrlr.dev.direct.ctrlr, req);
+				rc = nvmf_direct_ctrlr_admin_identify_nslist(subsystem->dev.direct.ctrlr, req);
 				if (rc < 0) {
 					SPDK_ERRLOG("Invalid Namespace or Format\n");
 					response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
@@ -210,7 +210,7 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	default:
 passthrough:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "admin_cmd passthrough: opc 0x%02x\n", cmd->opc);
-		rc = spdk_nvme_ctrlr_cmd_admin_raw(subsystem->ctrlr.dev.direct.ctrlr,
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(subsystem->dev.direct.ctrlr,
 						   cmd,
 						   req->data, req->length,
 						   nvmf_direct_ctrlr_complete_cmd,
@@ -231,8 +231,8 @@ nvmf_direct_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem *subsystem = req->conn->sess->subsys;
 	int rc;
 
-	rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->ctrlr.dev.direct.ctrlr,
-					subsystem->ctrlr.dev.direct.io_qpair,
+	rc = spdk_nvme_ctrlr_cmd_io_raw(subsystem->dev.direct.ctrlr,
+					subsystem->dev.direct.io_qpair,
 					&req->cmd->nvme_cmd,
 					req->data, req->length,
 					nvmf_direct_ctrlr_complete_cmd,
@@ -250,8 +250,8 @@ nvmf_direct_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 static void
 nvmf_direct_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 {
-	if (subsystem->ctrlr.dev.direct.ctrlr) {
-		spdk_nvme_detach(subsystem->ctrlr.dev.direct.ctrlr);
+	if (subsystem->dev.direct.ctrlr) {
+		spdk_nvme_detach(subsystem->dev.direct.ctrlr);
 	}
 }
 
