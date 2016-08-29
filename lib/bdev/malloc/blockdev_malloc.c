@@ -250,10 +250,6 @@ static void blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static void blockdev_malloc_free_request(struct spdk_bdev_io *bdev_io)
-{
-}
-
 static bool
 blockdev_malloc_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
 {
@@ -274,7 +270,6 @@ static struct spdk_bdev_fn_table malloc_fn_table = {
 	.destruct		= blockdev_malloc_destruct,
 	.check_io		= blockdev_malloc_check_io,
 	.submit_request		= blockdev_malloc_submit_request,
-	.free_request		= blockdev_malloc_free_request,
 	.io_type_supported	= blockdev_malloc_io_type_supported,
 };
 

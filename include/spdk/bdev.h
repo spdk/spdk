@@ -140,9 +140,6 @@ struct spdk_bdev_fn_table {
 	/** Process the IO. */
 	void (*submit_request)(struct spdk_bdev_io *);
 
-	/** Release buf for read command. */
-	void (*free_request)(struct spdk_bdev_io *);
-
 	/** Check if the block device supports a specific I/O type. */
 	bool (*io_type_supported)(struct spdk_bdev *bdev, enum spdk_bdev_io_type);
 };

@@ -272,10 +272,6 @@ static void blockdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static void blockdev_nvme_free_request(struct spdk_bdev_io *bdev_io)
-{
-}
-
 static bool
 blockdev_nvme_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
 {
@@ -302,7 +298,6 @@ static struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= blockdev_nvme_destruct,
 	.check_io		= blockdev_nvme_check_io,
 	.submit_request		= blockdev_nvme_submit_request,
-	.free_request		= blockdev_nvme_free_request,
 	.io_type_supported	= blockdev_nvme_io_type_supported,
 };
 

@@ -405,13 +405,6 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 }
 
 static void
-spdk_bdev_io_free_request(struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->bdev->fn_table->free_request(bdev_io);
-	spdk_bdev_put_io(bdev_io);
-}
-
-static void
 __submit_request(spdk_event_t event)
 {
 	struct spdk_bdev *bdev = spdk_event_get_arg1(event);
@@ -425,7 +418,7 @@ __submit_request(spdk_event_t event)
 		}
 		bdev->fn_table->submit_request(bdev_io);
 	} else {
-		spdk_bdev_io_free_request(bdev_io);
+		spdk_bdev_put_io(bdev_io);
 	}
 }
 

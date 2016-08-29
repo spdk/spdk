@@ -273,10 +273,6 @@ static void blockdev_aio_submit_request(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static void blockdev_aio_free_request(struct spdk_bdev_io *bdev_io)
-{
-}
-
 static bool
 blockdev_aio_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
 {
@@ -296,7 +292,6 @@ static struct spdk_bdev_fn_table aio_fn_table = {
 	.destruct		= blockdev_aio_destruct,
 	.check_io		= blockdev_aio_check_io,
 	.submit_request		= blockdev_aio_submit_request,
-	.free_request		= blockdev_aio_free_request,
 	.io_type_supported	= blockdev_aio_io_type_supported,
 };
 
