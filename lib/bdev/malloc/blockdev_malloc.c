@@ -266,7 +266,7 @@ blockdev_malloc_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type
 	}
 }
 
-static struct spdk_bdev_fn_table malloc_fn_table = {
+static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.destruct		= blockdev_malloc_destruct,
 	.check_io		= blockdev_malloc_check_io,
 	.submit_request		= blockdev_malloc_submit_request,

@@ -90,7 +90,7 @@ struct spdk_bdev {
 	int thin_provisioning;
 
 	/** function table for all LUN ops */
-	struct spdk_bdev_fn_table *fn_table;
+	const struct spdk_bdev_fn_table *fn_table;
 
 	/** Represents maximum unmap block descriptor count */
 	uint32_t max_unmap_bdesc_count;

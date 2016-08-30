@@ -294,7 +294,7 @@ blockdev_nvme_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type i
 	}
 }
 
-static struct spdk_bdev_fn_table nvmelib_fn_table = {
+static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= blockdev_nvme_destruct,
 	.check_io		= blockdev_nvme_check_io,
 	.submit_request		= blockdev_nvme_submit_request,

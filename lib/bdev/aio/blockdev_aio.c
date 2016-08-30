@@ -288,7 +288,7 @@ blockdev_aio_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io
 	}
 }
 
-static struct spdk_bdev_fn_table aio_fn_table = {
+static const struct spdk_bdev_fn_table aio_fn_table = {
 	.destruct		= blockdev_aio_destruct,
 	.check_io		= blockdev_aio_check_io,
 	.submit_request		= blockdev_aio_submit_request,
