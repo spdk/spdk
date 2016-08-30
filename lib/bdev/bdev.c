@@ -462,7 +462,9 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 			lcore = rte_lcore_id();
 		}
 		bdev->lcore = lcore;
-		spdk_poller_register(&bdev->poller, spdk_bdev_do_work, bdev, lcore, NULL, 0);
+		if (bdev->fn_table->check_io) {
+			spdk_poller_register(&bdev->poller, spdk_bdev_do_work, bdev, lcore, NULL, 0);
+		}
 	}
 
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
@@ -815,6 +817,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
 	bdev->is_running = false;
+	bdev->poller = NULL;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);
@@ -834,7 +837,9 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	}
 
 	if (bdev->is_running) {
-		spdk_poller_unregister(&bdev->poller, NULL);
+		if (bdev->poller) {
+			spdk_poller_unregister(&bdev->poller, NULL);
+		}
 		bdev->is_running = false;
 	}
 }

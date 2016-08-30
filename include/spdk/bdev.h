@@ -134,7 +134,11 @@ struct spdk_bdev_fn_table {
 	/** Destroy the backend block device object */
 	int (*destruct)(struct spdk_bdev *bdev);
 
-	/** Poll the backend for I/O waiting to be completed. */
+	/**
+	 * Poll the backend for I/O waiting to be completed.
+	 *
+	 * Optional; if the bdev does not have any periodic work to do, this pointer can be NULL.
+	 */
 	int (*check_io)(struct spdk_bdev *bdev);
 
 	/** Process the IO. */
