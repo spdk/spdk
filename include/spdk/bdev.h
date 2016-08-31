@@ -187,10 +187,10 @@ enum spdk_bdev_io_type {
 
 /** Blockdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
 	SPDK_BDEV_IO_STATUS_PENDING = 0,
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
-	SPDK_BDEV_IO_STATUS_NVME_ERROR = 2,
 };
 
 /** Blockdev reset operation type */
