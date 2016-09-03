@@ -2846,19 +2846,6 @@ static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
 	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi);
 }
 
-static int spdk_iscsi_get_extra_data_in_count(struct spdk_iscsi_task *task)
-{
-	uint32_t transfer_len;
-	size_t segment_len;
-	int data_in_req = 0;
-
-	transfer_len = task->scsi.transfer_len;
-	segment_len = g_spdk_iscsi.MaxRecvDataSegmentLength;
-	if (transfer_len)
-		data_in_req = (transfer_len - 1) / segment_len;
-	return data_in_req;
-}
-
 int spdk_iscsi_conn_handle_queued_datain(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_task *task;
@@ -2892,18 +2879,7 @@ int spdk_iscsi_conn_handle_queued_datain(struct spdk_iscsi_conn *conn)
 static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task)
 {
-	int extra_data_in_count;
 	int32_t remaining_size = 0;
-
-	extra_data_in_count = spdk_iscsi_get_extra_data_in_count(task);
-	if (extra_data_in_count > MAX_EXTRA_DATAIN_PER_CONNECTION) {
-		SPDK_ERRLOG("Unsupported read size\n");
-		spdk_scsi_task_set_check_condition(&task->scsi, SPDK_SCSI_SENSE_ILLEGAL_REQUEST, 0x25, 0x00);
-		task->scsi.bytes_completed = task->scsi.transfer_len;
-		spdk_iscsi_task_response(conn, task);
-		spdk_iscsi_task_put(task);
-		return 0;
-	}
 
 	TAILQ_INIT(&task->scsi.subtask_list);
 	task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
@@ -3134,7 +3110,6 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	/* transfer data from logical unit */
 	/* (direction is view of initiator side) */
 	if (spdk_iscsi_task_is_read(primary)) {
-		primary->scsi.bytes_completed += task->scsi.length;
 		if ((task->scsi.status == SPDK_SCSI_STATUS_GOOD) ||
 		    (task->scsi.sense_data_len != 0)) {
 			rc = spdk_iscsi_transfer_in(conn, task);

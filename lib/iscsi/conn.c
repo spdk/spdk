@@ -782,15 +782,42 @@ process_task_mgmt_completion(spdk_event_t event)
 }
 
 static void
+process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
+				    struct spdk_iscsi_task *primary)
+{
+	struct spdk_scsi_task *tmp;
+
+	while (!TAILQ_EMPTY(&primary->scsi.subtask_list)) {
+		tmp = TAILQ_FIRST(&primary->scsi.subtask_list);
+		if (tmp->offset == primary->scsi.bytes_completed) {
+			TAILQ_REMOVE(&primary->scsi.subtask_list, tmp, scsi_link);
+			primary->scsi.bytes_completed += tmp->length;
+			spdk_iscsi_task_response(conn, (struct spdk_iscsi_task *)tmp);
+			spdk_iscsi_task_put((struct spdk_iscsi_task *)tmp);
+		} else {
+			break;
+		}
+	}
+
+}
+
+static void
 process_read_task_completion(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_task *task)
 {
 	struct spdk_iscsi_task *primary;
-	struct spdk_scsi_task *tmp, *tmp1;
+	struct spdk_scsi_task *tmp;
 	bool flag = false;
 
 	primary = spdk_iscsi_task_get_primary(task);
 	if (task != primary) {
+		if (task->scsi.offset == primary->scsi.bytes_completed) {
+			primary->scsi.bytes_completed += task->scsi.length;
+			spdk_iscsi_task_response(conn, task);
+			spdk_iscsi_task_put(task);
+			process_completed_read_subtask_list(conn, primary);
+			return;
+		}
 		TAILQ_FOREACH(tmp, &primary->scsi.subtask_list, scsi_link) {
 			if (task->scsi.offset < tmp->offset) {
 				TAILQ_INSERT_BEFORE(tmp, &task->scsi, scsi_link);
@@ -798,22 +825,13 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 				break;
 			}
 		}
-		if (!flag)
+		if (!flag) {
 			TAILQ_INSERT_TAIL(&primary->scsi.subtask_list, &task->scsi, scsi_link);
-	}
-
-	if (primary->scsi.bytes_completed != primary->scsi.transfer_len)
-		return;
-
-	/* reset this value to 0 */
-	primary->scsi.bytes_completed = 0;
-	spdk_iscsi_task_response(conn, primary);
-	spdk_iscsi_task_put(primary);
-
-	TAILQ_FOREACH_SAFE(tmp, &primary->scsi.subtask_list, scsi_link, tmp1) {
-		TAILQ_REMOVE(&primary->scsi.subtask_list, tmp, scsi_link);
-		spdk_iscsi_task_response(conn, (struct spdk_iscsi_task *)tmp);
-		spdk_iscsi_task_put((struct spdk_iscsi_task *)tmp);
+		}
+	} else {
+		primary->scsi.bytes_completed += primary->scsi.length;
+		spdk_iscsi_task_response(conn, primary);
+		process_completed_read_subtask_list(conn, primary);
 	}
 }
 
@@ -828,13 +846,12 @@ void process_task_completion(spdk_event_t event)
 	conn->last_activity_tsc = rte_get_timer_cycles();
 
 	primary = spdk_iscsi_task_get_primary(task);
-	primary->scsi.bytes_completed += task->scsi.length;
 
 	if (spdk_iscsi_task_is_read(primary)) {
 		process_read_task_completion(conn, task);
 		return;
 	} else {
-
+		primary->scsi.bytes_completed += task->scsi.length;
 		if (task->scsi.parent != NULL && task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 			memcpy(primary->scsi.sense_data, task->scsi.sense_data,
 			       task->scsi.sense_data_len);
@@ -1016,8 +1033,16 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 						  tailq);
 			} else {
 				if (pdu->task) {
-					if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN && pdu->task->scsi.offset > 0) {
-						conn->data_in_cnt--;
+					if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
+						struct spdk_iscsi_task *primary;
+
+						primary = spdk_iscsi_task_get_primary(pdu->task);
+						if (pdu->task->scsi.offset > 0) {
+							conn->data_in_cnt--;
+						}
+						if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
+							spdk_iscsi_task_put(primary);
+						}
 						spdk_iscsi_conn_handle_queued_datain(conn);
 					}
 					spdk_iscsi_task_put(pdu->task);
