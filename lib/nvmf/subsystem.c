@@ -44,6 +44,7 @@
 #include "spdk/nvmf_spec.h"
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
+bool g_subsystems_shutdown;
 
 struct spdk_nvmf_subsystem *
 nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
@@ -195,6 +196,10 @@ nvmf_delete_subsystem_poller_unreg(struct spdk_event *event)
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
 
 	free(subsystem);
+
+	if (g_subsystems_shutdown && TAILQ_EMPTY(&g_subsystems)) {
+		spdk_app_stop(spdk_nvmf_check_pools());
+	}
 }
 
 int
@@ -336,6 +341,7 @@ spdk_shutdown_nvmf_subsystems(void)
 {
 	struct spdk_nvmf_subsystem *subsystem, *subsys_tmp;
 
+	g_subsystems_shutdown = true;
 	TAILQ_FOREACH_SAFE(subsystem, &g_subsystems, entries, subsys_tmp) {
 		nvmf_delete_subsystem(subsystem);
 	}

@@ -47,6 +47,17 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
 
+void
+spdk_app_stop(int rc)
+{
+}
+
+int
+spdk_nvmf_check_pools(void)
+{
+	return 0;
+}
+
 uint32_t
 spdk_app_get_current_core(void)
 {
