@@ -164,13 +164,13 @@ static struct spdk_nvmf_rdma g_rdma = {
 static inline struct spdk_nvmf_rdma_conn *
 get_rdma_conn(struct spdk_nvmf_conn *conn)
 {
-	return (struct spdk_nvmf_rdma_conn *)((uintptr_t)conn + offsetof(struct spdk_nvmf_rdma_conn, conn));
+	return (struct spdk_nvmf_rdma_conn *)((uintptr_t)conn - offsetof(struct spdk_nvmf_rdma_conn, conn));
 }
 
 static inline struct spdk_nvmf_rdma_request *
 get_rdma_req(struct spdk_nvmf_request *req)
 {
-	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req + offsetof(struct spdk_nvmf_rdma_request,
+	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req - offsetof(struct spdk_nvmf_rdma_request,
 			req));
 }
 
