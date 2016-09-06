@@ -9,6 +9,7 @@ source $rootdir/scripts/autotest_common.sh
 timing_enter scsi
 
 $testdir/dev/dev_ut
+$testdir/init/init_ut
 $testdir/lun/lun_ut
 $testdir/scsi_bdev/scsi_bdev_ut
 
