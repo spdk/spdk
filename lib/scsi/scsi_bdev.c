@@ -47,6 +47,9 @@
 #define DEFAULT_DISK_ROTATION_RATE	7200	/* 7200 rpm */
 #define DEFAULT_DISK_FORM_FACTOR	0x02	/* 3.5 inch */
 
+#define INQUIRY_OFFSET(field)		offsetof(struct spdk_scsi_cdb_inquiry_data, field) + \
+					sizeof(((struct spdk_scsi_cdb_inquiry_data *)0x0)->field)
+
 static int
 spdk_hex2bin(char ch)
 {
@@ -697,25 +700,50 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		/* PRODUCT REVISION LEVEL */
 		spdk_strcpy_pad(inqdata->product_rev, DEFAULT_DISK_REVISION, 4, ' ');
 
-		/* Vendor specific */
-		memset(inqdata->vendor, 0x20, 20);
+		/*
+		 * Standard inquiry data ends here.  Only populate remaining fields if alloc_len
+		 *  indicates enough space to hold it.
+		 */
+		len = INQUIRY_OFFSET(product_rev) - 5;
 
-		/* CLOCKING(3-2) QAS(1) IUS(0) */
-		inqdata->ius = 0;
+		if (alloc_len >= INQUIRY_OFFSET(vendor)) {
+			/* Vendor specific */
+			memset(inqdata->vendor, 0x20, 20);
+			len += sizeof(inqdata->vendor);
+		}
 
-		/* Reserved */
-		inqdata->reserved = 0;
+		if (alloc_len >= INQUIRY_OFFSET(ius)) {
+			/* CLOCKING(3-2) QAS(1) IUS(0) */
+			inqdata->ius = 0;
+			len += sizeof(inqdata->ius);
+		}
+
+		if (alloc_len >= INQUIRY_OFFSET(reserved)) {
+			/* Reserved */
+			inqdata->reserved = 0;
+			len += sizeof(inqdata->reserved);
+		}
 
 		/* VERSION DESCRIPTOR 1-8 */
-		to_be16(inqdata->desc, 0x0960);
-		to_be16(&inqdata->desc[2], 0x0300); /* SPC-3 (no version claimed) */
-		to_be16(&inqdata->desc[4], 0x320); /* SBC-2 (no version claimed) */
-		to_be16(&inqdata->desc[6], 0x0040); /* SAM-2 (no version claimed) */
-		/* 96 - 74 + 8 */
-		/* Reserved[74-95] */
-		memset(&inqdata->desc[8], 0, 30);
+		if (alloc_len >= INQUIRY_OFFSET(reserved) + 2) {
+			to_be16(&inqdata->desc[0], 0x0960);
+			len += 2;
+		}
 
-		len = alloc_len - hlen;
+		if (alloc_len >= INQUIRY_OFFSET(reserved) + 4) {
+			to_be16(&inqdata->desc[2], 0x0300); /* SPC-3 (no version claimed) */
+			len += 2;
+		}
+
+		if (alloc_len >= INQUIRY_OFFSET(reserved) + 6) {
+			to_be16(&inqdata->desc[4], 0x320); /* SBC-2 (no version claimed) */
+			len += 2;
+		}
+
+		if (alloc_len >= INQUIRY_OFFSET(reserved) + 8) {
+			to_be16(&inqdata->desc[6], 0x0040); /* SAM-2 (no version claimed) */
+			len += 2;
+		}
 
 		/* ADDITIONAL LENGTH */
 		inqdata->add_len = len;
@@ -724,6 +752,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	return hlen + len;
 
 inq_error:
+	task->data_transferred = 0;
 	spdk_scsi_task_set_check_condition(task,
 					   SPDK_SCSI_SENSE_NO_SENSE,
 					   0x0, 0x0);

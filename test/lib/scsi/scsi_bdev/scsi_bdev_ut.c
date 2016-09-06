@@ -416,6 +416,53 @@ inquiry_standard_test(void)
 	CU_ASSERT_EQUAL(rc, 0);
 }
 
+static void
+_inquiry_overflow_test(uint8_t alloc_len)
+{
+	struct spdk_bdev bdev;
+	struct spdk_scsi_task task;
+	struct spdk_scsi_lun lun;
+	struct spdk_scsi_dev dev;
+	struct spdk_bdev_fn_table fn_table;
+	uint8_t cdb[6];
+	/* expects a 4K internal data buffer */
+	char data[256], data_compare[256];
+	int rc;
+
+	bdev.fn_table = &fn_table;
+
+	cdb[0] = 0x12;
+	cdb[1] = 0x00; // EVPD = 0
+	cdb[2] = 0x00; // PageCode zero - requesting standard inquiry
+	cdb[3] = 0x00;
+	cdb[4] = alloc_len; // Indicate data size used by conformance test
+	cdb[5] = 0x00;
+	task.cdb = cdb;
+
+	snprintf(&dev.name[0], sizeof(dev.name), "spdk_iscsi_translation_test");
+	lun.dev = &dev;
+	task.lun = &lun;
+
+	memset(data, 0, sizeof(data));
+	memset(data_compare, 0, sizeof(data_compare));
+	task.rbuf = data;
+
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT_EQUAL(rc, 0);
+	CU_ASSERT_EQUAL(memcmp(data + alloc_len, data_compare + alloc_len, sizeof(data) - alloc_len), 0);
+	CU_ASSERT(task.data_transferred <= alloc_len);
+}
+
+static void
+inquiry_overflow_test(void)
+{
+	int i;
+
+	for (i = 0; i < 256; i++) {
+		_inquiry_overflow_test(i);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -439,6 +486,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "mode sense 10 test", mode_sense_10_test) == NULL
 		|| CU_add_test(suite, "inquiry evpd test", inquiry_evpd_test) == NULL
 		|| CU_add_test(suite, "inquiry standard test", inquiry_standard_test) == NULL
+		|| CU_add_test(suite, "inquiry overflow test", inquiry_overflow_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
