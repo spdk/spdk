@@ -5,9 +5,9 @@ First, clone the fio source repository from http://github.com/axboe/fio
 
     git clone http://github.com/axboe/fio
 
-Then check out the fio 2.8 tag
+Then check out the fio 2.17 tag
 
-    cd fio && git checkout fio-2.8
+    cd fio && git checkout fio-2.17
 
 Finally, compile the code with
 
