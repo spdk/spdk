@@ -140,7 +140,8 @@ struct spdk_nvmf_rdma_listen_addr {
 	char					*traddr;
 	char					*trsvcid;
 	struct rdma_cm_id			*id;
-	struct ibv_device_attr			attr;
+	struct ibv_device_attr 			attr;
+	struct ibv_comp_channel			*comp_channel;
 	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
 };
 
@@ -209,7 +210,8 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 }
 
 static struct spdk_nvmf_rdma_conn *
-spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint16_t max_rw_depth)
+spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *channel,
+			   uint16_t max_queue_depth, uint16_t max_rw_depth)
 {
 	struct spdk_nvmf_rdma_conn	*rdma_conn;
 	struct spdk_nvmf_conn		*conn;
@@ -229,10 +231,10 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 	TAILQ_INIT(&rdma_conn->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_conn->pending_rdma_rw_queue);
 
-	rdma_conn->cq = ibv_create_cq(id->verbs, max_queue_depth * 2, NULL, NULL, 0);
+	rdma_conn->cq = ibv_create_cq(id->verbs, max_queue_depth * 2, NULL, channel, 0);
 	if (!rdma_conn->cq) {
 		SPDK_ERRLOG("Unable to create completion queue\n");
-		SPDK_ERRLOG("Id: %p Verbs: %p\n", id, id->verbs);
+		SPDK_ERRLOG("Completion Channel: %p Id: %p Verbs: %p\n", channel, id, id->verbs);
 		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
 		free(rdma_conn);
 		return NULL;
@@ -250,6 +252,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 	rc = rdma_create_qp(rdma_conn->cm_id, NULL, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
+		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		return NULL;
 	}
@@ -688,7 +691,8 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 
 
 	/* Init the NVMf rdma transport connection */
-	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, max_queue_depth, max_rw_depth);
+	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, addr->comp_channel, max_queue_depth,
+					       max_rw_depth);
 	if (rdma_conn == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
@@ -1040,9 +1044,11 @@ spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 {
 	SPDK_NOTICELOG("*** RDMA Transport Init ***\n");
 
+	pthread_mutex_lock(&g_rdma.lock);
 	g_rdma.max_queue_depth = max_queue_depth;
 	g_rdma.max_io_size = max_io_size;
 	g_rdma.in_capsule_data_size = in_capsule_data_size;
+	pthread_mutex_unlock(&g_rdma.lock);
 
 	return 0;
 }
@@ -1050,7 +1056,17 @@ spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 static int
 spdk_nvmf_rdma_fini(void)
 {
+	struct spdk_nvmf_rdma_listen_addr *addr, *tmp;
+
+	pthread_mutex_lock(&g_rdma.lock);
+	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, tmp) {
+		TAILQ_REMOVE(&g_rdma.listen_addrs, addr, link);
+		ibv_destroy_comp_channel(addr->comp_channel);
+		rdma_destroy_id(addr->id);
+	}
+
 	rdma_destroy_event_channel(g_rdma.event_channel);
+	pthread_mutex_unlock(&g_rdma.lock);
 
 	return 0;
 }
@@ -1342,6 +1358,27 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
 		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
+	addr->comp_channel = ibv_create_comp_channel(addr->id->verbs);
+	if (!addr->comp_channel) {
+		SPDK_ERRLOG("Failed to create completion channel\n");
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "For listen id %p with context %p, created completion channel %p\n",
+		      addr->id, addr->id->verbs, addr->comp_channel);
+
+	rc = fcntl(addr->comp_channel->fd, F_SETFL, O_NONBLOCK);
+	if (rc < 0) {
+		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
+		rdma_destroy_id(addr->id);
+		ibv_destroy_comp_channel(addr->comp_channel);
 		free(addr);
 		pthread_mutex_unlock(&g_rdma.lock);
 		return -1;
