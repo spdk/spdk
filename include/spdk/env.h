@@ -42,6 +42,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -60,6 +61,35 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
  */
 void
 spdk_free(void *buf);
+
+/**
+ * Reserve a named, process shared memory zone with the given size,
+ *   socket_id and flags.
+ * Return a pointer to the allocated memory address. If the allocation
+ *   cannot be done, return NULL.
+ */
+void *
+spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
+
+/**
+ * Lookup the memory zone identified by the given name.
+ * Return a pointer to the reserved memory address. If the reservation
+ *   cannot be found, return NULL.
+ */
+void *
+spdk_memzone_lookup(const char *name);
+
+/**
+ * Free the memory zone identified by the given name.
+ */
+int
+spdk_memzone_free(const char *name);
+
+/**
+ * Return true if the calling process is primary process
+ */
+bool
+spdk_process_is_primary(void);
 
 /**
  * Get a monotonic timestamp counter.

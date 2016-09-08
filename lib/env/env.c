@@ -38,6 +38,8 @@
 #include <rte_config.h>
 #include <rte_cycles.h>
 #include <rte_malloc.h>
+#include <rte_mempool.h>
+#include <rte_memzone.h>
 
 void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
@@ -54,6 +56,48 @@ void
 spdk_free(void *buf)
 {
 	return rte_free(buf);
+}
+
+void *
+spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
+{
+	const struct rte_memzone *mz = rte_memzone_reserve(name, len, socket_id, flags);
+
+	if (mz != NULL) {
+		return mz->addr;
+	} else {
+		return NULL;
+	}
+}
+
+void *
+spdk_memzone_lookup(const char *name)
+{
+	const struct rte_memzone *mz = rte_memzone_lookup(name);
+
+	if (mz != NULL) {
+		return mz->addr;
+	} else {
+		return NULL;
+	}
+}
+
+int
+spdk_memzone_free(const char *name)
+{
+	const struct rte_memzone *mz = rte_memzone_lookup(name);
+
+	if (mz != NULL) {
+		return rte_memzone_free(mz);
+	}
+
+	return -1;
+}
+
+bool
+spdk_process_is_primary(void)
+{
+	return (rte_eal_process_type() == RTE_PROC_PRIMARY);
 }
 
 uint64_t spdk_get_ticks(void)

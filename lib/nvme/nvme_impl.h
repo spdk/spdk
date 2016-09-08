@@ -56,7 +56,6 @@
 #include <rte_config.h>
 #include <rte_mempool.h>
 #include <rte_version.h>
-#include <rte_memzone.h>
 #include <rte_eal.h>
 
 #include "spdk/pci_ids.h"
@@ -91,58 +90,24 @@
  * Return a pointer to the allocated memory address. If the allocation
  *   cannot be done, return NULL.
  */
-static inline void *
-nvme_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
-{
-	const struct rte_memzone *mz = rte_memzone_reserve(name, len, socket_id, flags);
-
-	if (mz != NULL) {
-		return mz->addr;
-	} else {
-		return NULL;
-	}
-}
+#define nvme_memzone_reserve		spdk_memzone_reserve
 
 /**
  * Lookup the memory zone identified by the given name.
  * Return a pointer to the reserved memory address. If the reservation
  *   cannot be found, return NULL.
  */
-static inline void *
-nvme_memzone_lookup(const char *name)
-{
-	const struct rte_memzone *mz = rte_memzone_lookup(name);
-
-	if (mz != NULL) {
-		return mz->addr;
-	} else {
-		return NULL;
-	}
-}
+#define nvme_memzone_lookup		spdk_memzone_lookup
 
 /**
  * Free the memory zone identified by the given name.
  */
-static inline int
-nvme_memzone_free(const char *name)
-{
-	const struct rte_memzone *mz = rte_memzone_lookup(name);
-
-	if (mz != NULL) {
-		return rte_memzone_free(mz);
-	}
-
-	return -1;
-}
+#define nvme_memzone_free		spdk_memzone_free
 
 /**
  * Return true if the calling process is primary process
  */
-static inline bool
-nvme_process_is_primary(void)
-{
-	return (rte_eal_process_type() == RTE_PROC_PRIMARY);
-}
+#define nvme_process_is_primary		spdk_process_is_primary
 
 /**
  * Return the physical address for the specified virtual address.
