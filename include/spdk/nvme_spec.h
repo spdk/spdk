@@ -631,7 +631,7 @@ enum spdk_nvme_data_transfer {
  */
 static inline enum spdk_nvme_data_transfer spdk_nvme_opc_get_data_transfer(uint8_t opc)
 {
-	return opc & 3;
+	return (enum spdk_nvme_data_transfer)(opc & 3);
 }
 
 enum spdk_nvme_feat {
