@@ -507,7 +507,14 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 				nvmf_delete_subsystem(subsystem);
 				return -1;
 			}
+
 			bdev = spdk_bdev_get_by_name(namespace);
+			if (!bdev) {
+				SPDK_ERRLOG("bdev is NULL\n");
+				nvmf_delete_subsystem(subsystem);
+				return -1;
+			}
+
 			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
 				nvmf_delete_subsystem(subsystem);
 				return -1;
