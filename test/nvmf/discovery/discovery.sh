@@ -20,7 +20,7 @@ fi
 timing_enter discovery
 
 # Start up the NVMf target in another process
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf -t nvmf -t rdma &
+$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
