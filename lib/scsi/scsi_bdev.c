@@ -745,6 +745,22 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			len += 2;
 		}
 
+		/*
+		 * We only fill out 4 descriptors, but if the allocation length goes past
+		 *  that, zero the remaining bytes.  This fixes some SCSI compliance tests
+		 *  which expect a full 96 bytes to be returned, including the unpopulated
+		 *  version descriptors 5-8 (4 * 2 = 8 bytes) plus the 22 bytes of reserved
+		 *  space (bytes 74-95) - for a total of 30 bytes.
+		 */
+		if (alloc_len > INQUIRY_OFFSET(reserved) + 8) {
+			i = alloc_len - (INQUIRY_OFFSET(reserved) + 8);
+			if (i > 30) {
+				i = 30;
+			}
+			memset(&inqdata->desc[8], 0, i);
+			len += i;
+		}
+
 		/* ADDITIONAL LENGTH */
 		inqdata->add_len = len;
 	}
