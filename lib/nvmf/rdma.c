@@ -311,7 +311,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 	return rdma_conn;
 }
 
-static void
+static inline void
 nvmf_trace_ibv_sge(struct ibv_sge *sg_list)
 {
 	if (sg_list) {
@@ -320,7 +320,7 @@ nvmf_trace_ibv_sge(struct ibv_sge *sg_list)
 	}
 }
 
-static void
+static inline void
 nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 		      struct spdk_nvmf_request *req,
 		      struct ibv_sge *sg_list,
@@ -331,16 +331,14 @@ nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
 	RTE_VERIFY(wr != NULL);
 	RTE_VERIFY(sg_list != NULL);
 
-	memset(wr, 0, sizeof(*wr));
 	wr->wr_id = (uint64_t)rdma_req;
-	wr->next = NULL;
 	wr->opcode = opcode;
 	wr->send_flags = send_flags;
 	wr->sg_list = sg_list;
 	wr->num_sge = 1;
 }
 
-static void
+static inline void
 nvmf_ibv_send_wr_set_rkey(struct ibv_send_wr *wr, struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
@@ -357,12 +355,13 @@ nvmf_ibv_send_wr_set_rkey(struct ibv_send_wr *wr, struct spdk_nvmf_request *req)
 static int
 nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 {
-	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct spdk_nvmf_conn *conn = req->conn;
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_session *rdma_sess;
-	struct ibv_sge sge;
-	int rc;
+	struct ibv_send_wr	wr = {};
+	struct ibv_send_wr	*bad_wr = NULL;
+	struct spdk_nvmf_conn 	*conn = req->conn;
+	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
+	struct spdk_nvmf_rdma_session 	*rdma_sess;
+	struct ibv_sge 		sge;
+	int 			rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
 
@@ -391,12 +390,13 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 static int
 nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 {
-	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct spdk_nvmf_conn *conn = req->conn;
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_session *rdma_sess;
-	struct ibv_sge sge;
-	int rc;
+	struct ibv_send_wr	wr = {};
+	struct ibv_send_wr	*bad_wr = NULL;
+	struct spdk_nvmf_conn 	*conn = req->conn;
+	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
+	struct spdk_nvmf_rdma_session 	*rdma_sess;
+	struct ibv_sge 		sge;
+	int 			rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
 
@@ -461,11 +461,12 @@ nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 static int
 nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 {
-	struct ibv_send_wr wr, *bad_wr = NULL;
-	struct spdk_nvmf_conn *conn = req->conn;
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-	struct ibv_sge sge;
-	int rc;
+	struct ibv_send_wr	wr = {};
+	struct ibv_send_wr	*bad_wr = NULL;
+	struct spdk_nvmf_conn 	*conn = req->conn;
+	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
+	struct ibv_sge 		sge;
+	int 			rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, conn);
 
