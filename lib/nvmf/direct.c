@@ -59,12 +59,10 @@ static void
 nvmf_direct_ctrlr_complete_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
 {
 	struct spdk_nvmf_request *req = ctx;
-	struct spdk_nvme_cpl *response;
 
 	spdk_trace_record(TRACE_NVMF_LIB_COMPLETE, 0, 0, (uint64_t)req, 0);
 
-	response = &req->rsp->nvme_cpl;
-	memcpy(response, cmp, sizeof(*cmp));
+	req->rsp->nvme_cpl = *cmp;
 
 	spdk_nvmf_request_complete(req);
 }
