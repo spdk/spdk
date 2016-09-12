@@ -264,6 +264,9 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		session->max_connections_allowed = g_nvmf_tgt.max_queues_per_session;
 		if (conn->transport->session_init(session, conn)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			conn->transport->session_fini(session);
+			free(session);
+			subsystem->session = NULL;
 			return;
 		}
 
