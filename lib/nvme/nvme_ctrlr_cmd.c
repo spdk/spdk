@@ -84,9 +84,8 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 
-	req = nvme_allocate_request_contig(payload,
-					   sizeof(struct spdk_nvme_ctrlr_data),
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_ctrlr_data),
+					      cb_fn, cb_arg, false);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -110,9 +109,8 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 
-	req = nvme_allocate_request_contig(payload,
-					   sizeof(struct spdk_nvme_ns_data),
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_ns_data),
+					      cb_fn, cb_arg, false);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -234,8 +232,8 @@ nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	int					rc;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_ctrlr_list),
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_ctrlr_list),
+					      cb_fn, cb_arg, true);
 	if (req == NULL) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
@@ -261,8 +259,8 @@ nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	int					rc;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_ctrlr_list),
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_ctrlr_list),
+					      cb_fn, cb_arg, true);
 	if (req == NULL) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
@@ -288,8 +286,8 @@ nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data
 	int					rc;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_ns_data),
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_ns_data),
+					      cb_fn, cb_arg, true);
 	if (req == NULL) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
@@ -445,7 +443,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	int rc;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_contig(payload, payload_size, cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, payload_size, cb_fn, cb_arg, false);
 	if (req == NULL) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
@@ -519,8 +517,7 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 	int rc;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_contig(payload, size,
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, size, cb_fn, cb_arg, true);
 	if (req == NULL) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;

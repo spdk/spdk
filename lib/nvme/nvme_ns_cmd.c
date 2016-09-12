@@ -455,9 +455,8 @@ spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 
-	req = nvme_allocate_request_contig(payload,
-					   sizeof(struct spdk_nvme_reservation_register_data),
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_reservation_register_data),
+					      cb_fn, cb_arg, true);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -488,8 +487,8 @@ spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 
-	req = nvme_allocate_request_contig(payload, sizeof(struct spdk_nvme_reservation_key_data), cb_fn,
-					   cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_reservation_key_data), cb_fn,
+					      cb_arg, true);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -520,9 +519,8 @@ spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 
-	req = nvme_allocate_request_contig(payload,
-					   sizeof(struct spdk_nvme_reservation_acquire_data),
-					   cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, sizeof(struct spdk_nvme_reservation_acquire_data),
+					      cb_fn, cb_arg, true);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -555,7 +553,7 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 		return -EINVAL;
 	num_dwords = len / 4;
 
-	req = nvme_allocate_request_contig(payload, len, cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(payload, len, cb_fn, cb_arg, false);
 	if (req == NULL) {
 		return -ENOMEM;
 	}

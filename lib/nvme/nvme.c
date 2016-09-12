@@ -147,6 +147,67 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
 
+static void
+nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_request *req = arg;
+	enum spdk_nvme_data_transfer xfer;
+
+	if (req->user_buffer && req->payload_size) {
+		/* Copy back to the user buffer and free the contig buffer */
+		assert(req->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
+		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
+		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
+			memcpy(req->user_buffer, req->payload.u.contig, req->payload_size);
+		}
+
+		nvme_free(req->payload.u.contig);
+	}
+
+	/* Call the user's original callback now that the buffer has been copied */
+	req->user_cb_fn(req->user_cb_arg, cpl);
+}
+
+/**
+ * Allocate a request as well as a physically contiguous buffer to copy to/from the user's buffer.
+ *
+ * This is intended for use in non-fast-path functions (admin commands, reservations, etc.)
+ * where the overhead of a copy is not a problem.
+ */
+struct nvme_request *
+nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+				void *cb_arg, bool host_to_controller)
+{
+	struct nvme_request *req;
+	void *contig_buffer = NULL;
+	uint64_t phys_addr;
+
+	if (buffer && payload_size) {
+		contig_buffer = nvme_malloc("nvme_user_copy", payload_size, 4096, &phys_addr);
+		if (!contig_buffer) {
+			return NULL;
+		}
+
+		if (host_to_controller) {
+			memcpy(contig_buffer, buffer, payload_size);
+		}
+	}
+
+	req = nvme_allocate_request_contig(contig_buffer, payload_size, nvme_user_copy_cmd_complete, NULL);
+	if (!req) {
+		nvme_free(buffer);
+		return NULL;
+	}
+
+	req->user_cb_fn = cb_fn;
+	req->user_cb_arg = cb_arg;
+	req->user_buffer = buffer;
+	req->cb_arg = req;
+
+	return req;
+}
+
 void
 nvme_free_request(struct nvme_request *req)
 {

@@ -607,6 +607,7 @@ test_nvme_ns_cmd_reservation_register(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
 
+	nvme_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }
@@ -642,6 +643,7 @@ test_nvme_ns_cmd_reservation_release(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
 
+	nvme_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }
@@ -677,6 +679,7 @@ test_nvme_ns_cmd_reservation_acquire(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == tmp_cdw10);
 
+	nvme_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }
@@ -704,6 +707,7 @@ test_nvme_ns_cmd_reservation_report(void)
 
 	CU_ASSERT(g_request->cmd.cdw10 == (0x1000 / 4));
 
+	nvme_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
 }

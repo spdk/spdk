@@ -230,6 +230,14 @@ struct nvme_request {
 	 *  status once all child requests are completed.
 	 */
 	struct spdk_nvme_cpl		parent_status;
+
+	/**
+	 * The user_cb_fn and user_cb_arg fields are used for holding the original
+	 * callback data when using nvme_allocate_request_user_copy.
+	 */
+	spdk_nvme_cmd_cb		user_cb_fn;
+	void				*user_cb_arg;
+	void				*user_buffer;
 };
 
 struct nvme_completion_poll_status {
@@ -574,6 +582,8 @@ struct nvme_request *nvme_allocate_request(const struct nvme_payload *payload,
 struct nvme_request *nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 struct nvme_request *nvme_allocate_request_contig(void *buffer, uint32_t payload_size,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+struct nvme_request *nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 void	nvme_free_request(struct nvme_request *req);
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
 bool	nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk);

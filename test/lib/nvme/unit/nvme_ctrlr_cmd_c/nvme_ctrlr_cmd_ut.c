@@ -277,6 +277,14 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
 
+struct nvme_request *
+nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+				void *cb_arg, bool host_to_controller)
+{
+	/* For the unit test, we don't actually need to copy the buffer */
+	return nvme_allocate_request_contig(buffer, payload_size, cb_fn, cb_arg);
+}
+
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
