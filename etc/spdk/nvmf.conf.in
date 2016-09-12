@@ -52,6 +52,11 @@
   # Set the global acceptor lcore ID, lcores are numbered starting at 0.
   #AcceptorCore 0
 
+  # Set how often the acceptor polls for incoming connections. The acceptor is also
+  # responsible for polling existing connections that have gone idle. 0 means continuously
+  # poll. Units in microseconds.
+  AcceptorPollRate  1000
+
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Core may be set or not. If set, the specified subsystem will run on

@@ -55,6 +55,8 @@
 
 #define PORTNUMSTRLEN 32
 
+#define ACCEPT_TIMEOUT_US		1000 /* 1ms */
+
 struct spdk_nvmf_probe_ctx {
 	struct spdk_nvmf_subsystem	*subsystem;
 	bool				any;
@@ -158,6 +160,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	int in_capsule_data_size;
 	int max_io_size;
 	int acceptor_lcore;
+	int acceptor_poll_rate;
 	int rc;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
@@ -205,6 +208,12 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		acceptor_lcore = rte_lcore_id();
 	}
 	g_spdk_nvmf_tgt_conf.acceptor_lcore = acceptor_lcore;
+
+	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
+	if (acceptor_poll_rate < 0) {
+		acceptor_poll_rate = ACCEPT_TIMEOUT_US;
+	}
+	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
 
 	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size);
 	if (rc != 0) {

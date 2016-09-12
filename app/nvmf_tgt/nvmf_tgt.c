@@ -58,8 +58,6 @@
 #define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
 
-#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
-
 static struct spdk_poller *g_acceptor_poller = NULL;
 
 static TAILQ_HEAD(, nvmf_tgt_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
@@ -333,7 +331,8 @@ spdk_nvmf_startup(spdk_event_t event)
 	}
 
 	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
-			     g_spdk_nvmf_tgt_conf.acceptor_lcore, NULL, ACCEPT_TIMEOUT_US);
+			     g_spdk_nvmf_tgt_conf.acceptor_lcore, NULL,
+			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 
 	SPDK_NOTICELOG("Acceptor running on core %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore);
 

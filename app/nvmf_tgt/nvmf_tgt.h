@@ -47,6 +47,7 @@ struct rpc_listen_address {
 
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_lcore;
+	uint32_t acceptor_poll_rate;
 };
 
 struct nvmf_tgt_subsystem {
