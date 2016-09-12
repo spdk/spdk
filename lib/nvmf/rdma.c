@@ -1373,13 +1373,13 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 		if (rc == 0) {
 			break;
 		} else if (rc < 0) {
-			SPDK_ERRLOG("Error polling Send CQ! (%d): %s\n",
+			SPDK_ERRLOG("Error polling Recv CQ! (%d): %s\n",
 				    errno, strerror(errno));
 			return -1;
 		}
 
 		if (wc.status) {
-			SPDK_ERRLOG("Send CQ error (%d): %s\n",
+			SPDK_ERRLOG("Recv CQ error (%d): %s\n",
 				    wc.status, ibv_wc_status_str(wc.status));
 			return -1;
 		}
