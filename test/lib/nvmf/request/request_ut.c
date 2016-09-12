@@ -111,7 +111,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 }
 
 void
-spdk_nvmf_handle_disconnect(struct spdk_nvmf_conn *conn)
+spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn)
 {
 }
 

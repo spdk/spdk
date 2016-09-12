@@ -156,11 +156,16 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 		      session->vcprop.csts.raw);
 }
 
+static void session_destruct(struct nvmf_session *session)
+{
+	session->subsys->session = NULL;
+	session->transport->session_fini(session);
+	free(session);
+}
+
 void
 spdk_nvmf_session_destruct(struct nvmf_session *session)
 {
-	session->subsys->session = NULL;
-
 	while (!TAILQ_EMPTY(&session->connections)) {
 		struct spdk_nvmf_conn *conn = TAILQ_FIRST(&session->connections);
 
@@ -169,9 +174,7 @@ spdk_nvmf_session_destruct(struct nvmf_session *session)
 		conn->transport->conn_fini(conn);
 	}
 
-	session->transport->session_fini(session);
-
-	free(session);
+	session_destruct(session);
 }
 
 static void
@@ -327,16 +330,17 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 }
 
 void
-spdk_nvmf_handle_disconnect(struct spdk_nvmf_conn *conn)
+spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn)
 {
 	struct nvmf_session *session = conn->sess;
 
+	assert(session != NULL);
 	session->num_connections--;
 	TAILQ_REMOVE(&session->connections, conn, link);
 	conn->transport->conn_fini(conn);
 
 	if (session->num_connections == 0) {
-		spdk_nvmf_session_destruct(session);
+		session_destruct(session);
 	}
 }
 
@@ -556,7 +560,7 @@ spdk_nvmf_session_poll(struct nvmf_session *session)
 	TAILQ_FOREACH_SAFE(conn, &session->connections, link, tmp) {
 		if (conn->transport->conn_poll(conn) < 0) {
 			SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
-			spdk_nvmf_handle_disconnect(conn);
+			spdk_nvmf_session_disconnect(conn);
 		}
 	}
 

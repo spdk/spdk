@@ -964,15 +964,11 @@ nvmf_test_disconnect(void)
 	struct spdk_nvmf_subsystem *subsystem;
 
 	sess = nvmf_find_session_by_id("subsystem1", SS_SC_CNTLID);
-	/* delete non-exist connection */
-	nvmf_disconnect((void *)6, sess);
-	/* we have two connections admin and io */
-	CU_ASSERT_EQUAL(sess->num_connections, 2);
 	/* delete IO connection */
-	nvmf_disconnect((void *)fabric_conn_IO, sess);
+	spdk_nvmf_session_disconnect((void *)fabric_conn_IO);
 	CU_ASSERT_EQUAL(sess->num_connections, 1);
 	/* delete admin connection */
-	nvmf_disconnect((void *)fabric_conn_admin, sess);
+	spdk_nvmf_session_disconnect((void *)fabric_conn_admin);
 	subsystem = nvmf_find_subsystem("subsystem1");
 	CU_ASSERT_EQUAL(subsystem->num_sessions, 0);
 }

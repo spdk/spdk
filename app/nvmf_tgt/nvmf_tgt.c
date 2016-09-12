@@ -172,7 +172,7 @@ disconnect_event(struct spdk_event *event)
 {
 	struct spdk_nvmf_conn *conn = spdk_event_get_arg1(event);
 
-	spdk_nvmf_handle_disconnect(conn);
+	spdk_nvmf_session_disconnect(conn);
 }
 
 static void
