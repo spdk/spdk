@@ -35,7 +35,6 @@
 #include <unistd.h>
 
 #include <rte_config.h>
-#include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_lcore.h>
 
@@ -55,15 +54,15 @@ struct feature {
 
 static struct feature features[256];
 
-static struct spdk_nvme_error_information_entry *error_page = NULL;
+static struct spdk_nvme_error_information_entry error_page[256];
 
-static struct spdk_nvme_health_information_page *health_page = NULL;
+static struct spdk_nvme_health_information_page health_page;
 
-static struct spdk_nvme_intel_smart_information_page *intel_smart_page = NULL;
+static struct spdk_nvme_intel_smart_information_page intel_smart_page;
 
-static struct spdk_nvme_intel_temperature_page *intel_temperature_page = NULL;
+static struct spdk_nvme_intel_temperature_page intel_temperature_page;
 
-static struct spdk_nvme_intel_marketing_description_page *intel_md_page = NULL;
+static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
 
@@ -182,16 +181,10 @@ get_error_log_page(struct spdk_nvme_ctrlr *ctrlr)
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
-	if (error_page == NULL) {
-		error_page = rte_calloc("nvme error", cdata->elpe + 1, sizeof(*error_page), 4096);
-	}
-	if (error_page == NULL) {
-		printf("Allocation error (error page)\n");
-		exit(1);
-	}
-
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_ERROR,
-					     SPDK_NVME_GLOBAL_NS_TAG, error_page, sizeof(*error_page), get_log_page_completion, NULL)) {
+					     SPDK_NVME_GLOBAL_NS_TAG, error_page,
+					     sizeof(*error_page) * (cdata->elpe + 1),
+					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
@@ -202,16 +195,8 @@ get_error_log_page(struct spdk_nvme_ctrlr *ctrlr)
 static int
 get_health_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (health_page == NULL) {
-		health_page = rte_zmalloc("nvme health", sizeof(*health_page), 4096);
-	}
-	if (health_page == NULL) {
-		printf("Allocation error (health page)\n");
-		exit(1);
-	}
-
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-					     SPDK_NVME_GLOBAL_NS_TAG, health_page, sizeof(*health_page), get_log_page_completion, NULL)) {
+					     SPDK_NVME_GLOBAL_NS_TAG, &health_page, sizeof(health_page), get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
@@ -222,16 +207,8 @@ get_health_log_page(struct spdk_nvme_ctrlr *ctrlr)
 static int
 get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (intel_smart_page == NULL) {
-		intel_smart_page = rte_zmalloc("nvme intel smart", sizeof(*intel_smart_page), 4096);
-	}
-	if (intel_smart_page == NULL) {
-		printf("Allocation error (intel smart page)\n");
-		exit(1);
-	}
-
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
-					     intel_smart_page, sizeof(*intel_smart_page), get_log_page_completion, NULL)) {
+					     &intel_smart_page, sizeof(intel_smart_page), get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
@@ -242,17 +219,8 @@ get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 static int
 get_intel_temperature_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (intel_temperature_page == NULL) {
-		intel_temperature_page = rte_zmalloc("nvme intel temperature", sizeof(*intel_temperature_page),
-						     4096);
-	}
-	if (intel_temperature_page == NULL) {
-		printf("Allocation error (nvme intel temperature page)\n");
-		exit(1);
-	}
-
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE,
-					     SPDK_NVME_GLOBAL_NS_TAG, intel_temperature_page, sizeof(*intel_temperature_page),
+					     SPDK_NVME_GLOBAL_NS_TAG, &intel_temperature_page, sizeof(intel_temperature_page),
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
@@ -263,17 +231,8 @@ get_intel_temperature_log_page(struct spdk_nvme_ctrlr *ctrlr)
 static int
 get_intel_md_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (intel_md_page == NULL) {
-		intel_md_page = rte_zmalloc("nvme intel marketing description", 4096,
-					    4096);
-	}
-	if (intel_md_page == NULL) {
-		printf("Allocation error (nvme intel marketing description page)\n");
-		exit(1);
-	}
-
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION,
-					     SPDK_NVME_GLOBAL_NS_TAG, intel_md_page, sizeof(*intel_md_page),
+					     SPDK_NVME_GLOBAL_NS_TAG, &intel_md_page, sizeof(intel_md_page),
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
@@ -327,31 +286,6 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	while (outstanding_commands) {
 		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
-	}
-}
-
-static void
-cleanup(void)
-{
-	if (error_page) {
-		rte_free(error_page);
-		error_page = NULL;
-	}
-	if (health_page) {
-		rte_free(health_page);
-		health_page = NULL;
-	}
-	if (intel_smart_page) {
-		rte_free(intel_smart_page);
-		intel_smart_page = NULL;
-	}
-	if (intel_temperature_page) {
-		rte_free(intel_temperature_page);
-		intel_temperature_page = NULL;
-	}
-	if (intel_md_page) {
-		rte_free(intel_md_page);
-		intel_md_page = NULL;
 	}
 }
 
@@ -679,216 +613,216 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 		printf("\n");
 	}
 
-	if (features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].valid && health_page) {
+	if (features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].valid) {
 		printf("Health Information\n");
 		printf("==================\n");
 
 		if (g_hex_dump) {
-			hex_dump(health_page, sizeof(*health_page));
+			hex_dump(&health_page, sizeof(health_page));
 			printf("\n");
 		}
 
 		printf("Critical Warnings:\n");
 		printf("  Available Spare Space:     %s\n",
-		       health_page->critical_warning.bits.available_spare ? "WARNING" : "OK");
+		       health_page.critical_warning.bits.available_spare ? "WARNING" : "OK");
 		printf("  Temperature:               %s\n",
-		       health_page->critical_warning.bits.temperature ? "WARNING" : "OK");
+		       health_page.critical_warning.bits.temperature ? "WARNING" : "OK");
 		printf("  Device Reliability:        %s\n",
-		       health_page->critical_warning.bits.device_reliability ? "WARNING" : "OK");
+		       health_page.critical_warning.bits.device_reliability ? "WARNING" : "OK");
 		printf("  Read Only:                 %s\n",
-		       health_page->critical_warning.bits.read_only ? "Yes" : "No");
+		       health_page.critical_warning.bits.read_only ? "Yes" : "No");
 		printf("  Volatile Memory Backup:    %s\n",
-		       health_page->critical_warning.bits.volatile_memory_backup ? "WARNING" : "OK");
+		       health_page.critical_warning.bits.volatile_memory_backup ? "WARNING" : "OK");
 		printf("Current Temperature:         %u Kelvin (%u Celsius)\n",
-		       health_page->temperature,
-		       health_page->temperature - 273);
+		       health_page.temperature,
+		       health_page.temperature - 273);
 		printf("Temperature Threshold:       %u Kelvin (%u Celsius)\n",
 		       features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].result,
 		       features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].result - 273);
-		printf("Available Spare:             %u%%\n", health_page->available_spare);
-		printf("Life Percentage Used:        %u%%\n", health_page->percentage_used);
+		printf("Available Spare:             %u%%\n", health_page.available_spare);
+		printf("Life Percentage Used:        %u%%\n", health_page.percentage_used);
 		printf("Data Units Read:             ");
-		print_uint128_dec(health_page->data_units_read);
+		print_uint128_dec(health_page.data_units_read);
 		printf("\n");
 		printf("Data Units Written:          ");
-		print_uint128_dec(health_page->data_units_written);
+		print_uint128_dec(health_page.data_units_written);
 		printf("\n");
 		printf("Host Read Commands:          ");
-		print_uint128_dec(health_page->host_read_commands);
+		print_uint128_dec(health_page.host_read_commands);
 		printf("\n");
 		printf("Host Write Commands:         ");
-		print_uint128_dec(health_page->host_write_commands);
+		print_uint128_dec(health_page.host_write_commands);
 		printf("\n");
 		printf("Controller Busy Time:        ");
-		print_uint128_dec(health_page->controller_busy_time);
+		print_uint128_dec(health_page.controller_busy_time);
 		printf(" minutes\n");
 		printf("Power Cycles:                ");
-		print_uint128_dec(health_page->power_cycles);
+		print_uint128_dec(health_page.power_cycles);
 		printf("\n");
 		printf("Power On Hours:              ");
-		print_uint128_dec(health_page->power_on_hours);
+		print_uint128_dec(health_page.power_on_hours);
 		printf(" hours\n");
 		printf("Unsafe Shutdowns:            ");
-		print_uint128_dec(health_page->unsafe_shutdowns);
+		print_uint128_dec(health_page.unsafe_shutdowns);
 		printf("\n");
 		printf("Unrecoverable Media Errors:  ");
-		print_uint128_dec(health_page->media_errors);
+		print_uint128_dec(health_page.media_errors);
 		printf("\n");
 		printf("Lifetime Error Log Entries:  ");
-		print_uint128_dec(health_page->num_error_info_log_entries);
+		print_uint128_dec(health_page.num_error_info_log_entries);
 		printf("\n");
 		printf("\n");
 	}
 
-	if (intel_smart_page) {
+	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_SMART)) {
 		size_t i = 0;
 
 		printf("Intel Health Information\n");
 		printf("==================\n");
 		for (i = 0;
-		     i < sizeof(intel_smart_page->attributes) / sizeof(intel_smart_page->attributes[0]); i++) {
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_PROGRAM_FAIL_COUNT) {
+		     i < sizeof(intel_smart_page.attributes) / sizeof(intel_smart_page.attributes[0]); i++) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_PROGRAM_FAIL_COUNT) {
 				printf("Program Fail Count:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_ERASE_FAIL_COUNT) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_ERASE_FAIL_COUNT) {
 				printf("Erase Fail Count:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_WEAR_LEVELING_COUNT) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_WEAR_LEVELING_COUNT) {
 				printf("Wear Leveling Count:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: \n");
 				printf("  Min: ");
-				print_uint_var_dec(&intel_smart_page->attributes[i].raw_value[0], 2);
+				print_uint_var_dec(&intel_smart_page.attributes[i].raw_value[0], 2);
 				printf("\n");
 				printf("  Max: ");
-				print_uint_var_dec(&intel_smart_page->attributes[i].raw_value[2], 2);
+				print_uint_var_dec(&intel_smart_page.attributes[i].raw_value[2], 2);
 				printf("\n");
 				printf("  Avg: ");
-				print_uint_var_dec(&intel_smart_page->attributes[i].raw_value[4], 2);
+				print_uint_var_dec(&intel_smart_page.attributes[i].raw_value[4], 2);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_E2E_ERROR_COUNT) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_E2E_ERROR_COUNT) {
 				printf("End to End Error Detection Count:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_CRC_ERROR_COUNT) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_CRC_ERROR_COUNT) {
 				printf("CRC Error Count:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_MEDIA_WEAR) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_MEDIA_WEAR) {
 				printf("Timed Workload, Media Wear:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_HOST_READ_PERCENTAGE) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_HOST_READ_PERCENTAGE) {
 				printf("Timed Workload, Host Read/Write Ratio:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("%%");
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_TIMER) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_TIMER) {
 				printf("Timed Workload, Timer:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_THERMAL_THROTTLE_STATUS) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_THERMAL_THROTTLE_STATUS) {
 				printf("Thermal Throttle Status:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: \n");
-				printf("  Percentage: %d%%\n", intel_smart_page->attributes[i].raw_value[0]);
+				printf("  Percentage: %d%%\n", intel_smart_page.attributes[i].raw_value[0]);
 				printf("  Throttling Event Count: ");
-				print_uint_var_dec(&intel_smart_page->attributes[i].raw_value[1], 4);
+				print_uint_var_dec(&intel_smart_page.attributes[i].raw_value[1], 4);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_RETRY_BUFFER_OVERFLOW_COUNTER) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_RETRY_BUFFER_OVERFLOW_COUNTER) {
 				printf("Retry Buffer Overflow Counter:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_PLL_LOCK_LOSS_COUNT) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_PLL_LOCK_LOSS_COUNT) {
 				printf("PLL Lock Loss Count:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_NAND_BYTES_WRITTEN) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_NAND_BYTES_WRITTEN) {
 				printf("NAND Bytes Written:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
-			if (intel_smart_page->attributes[i].code == SPDK_NVME_INTEL_SMART_HOST_BYTES_WRITTEN) {
+			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_HOST_BYTES_WRITTEN) {
 				printf("Host Bytes Written:\n");
 				printf("  Normalized Value : %d\n",
-				       intel_smart_page->attributes[i].normalized_value);
+				       intel_smart_page.attributes[i].normalized_value);
 				printf("  Current Raw Value: ");
-				print_uint_var_dec(intel_smart_page->attributes[i].raw_value, 6);
+				print_uint_var_dec(intel_smart_page.attributes[i].raw_value, 6);
 				printf("\n");
 			}
 		}
 		printf("\n");
 	}
 
-	if (intel_temperature_page) {
+	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE)) {
 		printf("Intel Temperature Information\n");
 		printf("==================\n");
-		printf("Current Temperature: %lu\n", intel_temperature_page->current_temperature);
+		printf("Current Temperature: %lu\n", intel_temperature_page.current_temperature);
 		printf("Overtemp shutdown Flag for last critical component temperature: %lu\n",
-		       intel_temperature_page->shutdown_flag_last);
+		       intel_temperature_page.shutdown_flag_last);
 		printf("Overtemp shutdown Flag for life critical component temperature: %lu\n",
-		       intel_temperature_page->shutdown_flag_life);
-		printf("Highest temperature: %lu\n", intel_temperature_page->highest_temperature);
-		printf("Lowest temperature: %lu\n", intel_temperature_page->lowest_temperature);
+		       intel_temperature_page.shutdown_flag_life);
+		printf("Highest temperature: %lu\n", intel_temperature_page.highest_temperature);
+		printf("Lowest temperature: %lu\n", intel_temperature_page.lowest_temperature);
 		printf("Specified Maximum Operating Temperature: %lu\n",
-		       intel_temperature_page->specified_max_op_temperature);
+		       intel_temperature_page.specified_max_op_temperature);
 		printf("Specified Minimum Operating Temperature: %lu\n",
-		       intel_temperature_page->specified_min_op_temperature);
-		printf("Estimated offset: %ld\n", intel_temperature_page->estimated_offset);
+		       intel_temperature_page.specified_min_op_temperature);
+		printf("Estimated offset: %ld\n", intel_temperature_page.estimated_offset);
 		printf("\n");
 		printf("\n");
 
 	}
 
-	if (intel_md_page) {
+	if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION)) {
 		printf("Intel Marketing Information\n");
 		printf("==================\n");
-		snprintf(str, sizeof(intel_md_page->marketing_product), "%s", intel_md_page->marketing_product);
+		snprintf(str, sizeof(intel_md_page.marketing_product), "%s", intel_md_page.marketing_product);
 		printf("Marketing Product Information:		%s\n", str);
 		printf("\n");
 		printf("\n");
@@ -993,8 +927,6 @@ int main(int argc, char **argv)
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;
 	}
-
-	cleanup();
 
 	return rc;
 }
