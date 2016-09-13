@@ -810,14 +810,9 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	bool flag = false;
 
 	primary = spdk_iscsi_task_get_primary(task);
-	if (task != primary) {
-		if (task->scsi.offset == primary->scsi.bytes_completed) {
-			primary->scsi.bytes_completed += task->scsi.length;
-			spdk_iscsi_task_response(conn, task);
-			spdk_iscsi_task_put(task);
-			process_completed_read_subtask_list(conn, primary);
-			return;
-		}
+
+	if ((task != primary) &&
+	    (task->scsi.offset != primary->scsi.bytes_completed)) {
 		TAILQ_FOREACH(tmp, &primary->scsi.subtask_list, scsi_link) {
 			if (task->scsi.offset < tmp->offset) {
 				TAILQ_INSERT_BEFORE(tmp, &task->scsi, scsi_link);
@@ -828,11 +823,13 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 		if (!flag) {
 			TAILQ_INSERT_TAIL(&primary->scsi.subtask_list, &task->scsi, scsi_link);
 		}
-	} else {
-		primary->scsi.bytes_completed += primary->scsi.length;
-		spdk_iscsi_task_response(conn, primary);
-		process_completed_read_subtask_list(conn, primary);
+		return;
 	}
+
+	primary->scsi.bytes_completed += task->scsi.length;
+	spdk_iscsi_task_response(conn, task);
+	spdk_iscsi_task_put(task);
+	process_completed_read_subtask_list(conn, primary);
 }
 
 void process_task_completion(spdk_event_t event)
@@ -1033,19 +1030,14 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 						  tailq);
 			} else {
 				if (pdu->task) {
-					if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
-						struct spdk_iscsi_task *primary;
+					uint64_t offset = pdu->task->scsi.offset;
+					spdk_iscsi_task_put(pdu->task);
 
-						primary = spdk_iscsi_task_get_primary(pdu->task);
-						if (pdu->task->scsi.offset > 0) {
-							conn->data_in_cnt--;
-						}
-						if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
-							spdk_iscsi_task_put(primary);
-						}
+					if ((pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) &&
+					    (offset > 0)) {
+						conn->data_in_cnt--;
 						spdk_iscsi_conn_handle_queued_datain(conn);
 					}
-					spdk_iscsi_task_put(pdu->task);
 				}
 				spdk_put_pdu(pdu);
 			}
