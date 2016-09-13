@@ -112,6 +112,7 @@ struct spdk_nvmf_subsystem {
 		struct {
 			struct spdk_nvme_ctrlr *ctrlr;
 			struct spdk_nvme_qpair *io_qpair;
+			struct spdk_pci_device *pci_dev;
 		} direct;
 
 		struct {
@@ -160,7 +161,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-			 struct spdk_nvme_ctrlr *ctrlr);
+			 struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *dev);
 
 void
 spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);

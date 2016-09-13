@@ -302,6 +302,65 @@ def get_interfaces(args):
 p = subparsers.add_parser('get_interfaces', help='Display current interface list')
 p.set_defaults(func=get_interfaces)
 
+def get_nvmf_subsystems(args):
+    print_dict(jsonrpc_call('get_nvmf_subsystems'))
+
+p = subparsers.add_parser('get_nvmf_subsystems', help='Display nvmf subsystems')
+p.set_defaults(func=get_nvmf_subsystems)
+
+def construct_nvmf_subsystem(args):
+    namespaces = []
+    hosts = []
+
+    listen_addresses = [dict(u.split(":") for u in a.split(" ")) for a in args.listen.split(",")]
+
+    for u in args.hosts.split(" "):
+        hosts.append(u)
+
+    for u in args.namespaces.split(" "):
+        namespaces.append(u)
+
+    params = {
+        'core': args.core,
+        'mode': args.mode,
+        'nqn': args.nqn,
+        'listen_addresses': listen_addresses,
+        'hosts': hosts,
+        'pci_address': args.pci_address,
+        'serial_number': args.serial_number,
+        'namespaces': namespaces,
+    }
+    jsonrpc_call('construct_nvmf_subsystem', params)
+
+p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
+p.add_argument("-c", "--core", help='The core Nvmf target run on', type=int, default=0)
+p.add_argument('mode', help='Target mode: Virtual or Direct')
+p.add_argument('nqn', help='Target nqn(ASCII)')
+p.add_argument('listen', help="""comma-separated list of Listen <transport:transport_name traddr:address trsvcid:port_id> pairs enclosed
+in quotes.  Format:  'transport:transport0 traddr:traddr0 trsvcid:trsvcid0,transport:transport1 traddr:traddr1 trsvcid:trsvcid1' etc
+Example: 'transport:RDMA traddr:192.168.100.8 trsvcid:4420,transport:RDMA traddr:192.168.100.9 trsvcid:4420'""")
+p.add_argument('hosts', help="""Whitespace-separated list of host nqn list.
+Format:  'nqn1 nqn2' etc
+Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
+p.add_argument("-p", "--pci_address", help="""Valid if mode == Direct.
+Format:  'domain:device:function' etc
+Example: '0000:00:01.0'""", default='0000:00:01.0')
+p.add_argument("-s", "--serial_number", help="""Valid if mode == Virtual.
+Format:  'sn' etc
+Example: 'SPDK00000000000001'""",  default='0000:00:01.0')
+p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces.
+Format:  'dev1 dev2 dev3' etc
+Example: 'Malloc0 Malloc1 Malloc2'
+*** The devices must pre-exist ***""",  default='Malloc0')
+p.set_defaults(func=construct_nvmf_subsystem)
+
+def delete_nvmf_subsystem(args):
+    params = {'nqn': args.subsystem_nqn}
+    jsonrpc_call('delete_nvmf_subsystem', params)
+
+p = subparsers.add_parser('delete_nvmf_subsystem', help='Delete a nvmf subsystem')
+p.add_argument('subsystem_nqn', help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
+p.set_defaults(func=delete_nvmf_subsystem)
 
 def kill_instance(args):
     params = {'sig_name': args.sig_name}

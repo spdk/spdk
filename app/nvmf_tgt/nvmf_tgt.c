@@ -266,6 +266,33 @@ nvmf_tgt_delete_subsystems(void)
 	}
 }
 
+struct nvmf_tgt_subsystem *
+nvmf_tgt_subsystem_first(void)
+{
+	return TAILQ_FIRST(&g_subsystems);
+}
+
+struct nvmf_tgt_subsystem *
+nvmf_tgt_subsystem_next(struct nvmf_tgt_subsystem *subsystem)
+{
+	return TAILQ_NEXT(subsystem, tailq);
+}
+
+int
+nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
+{
+	struct nvmf_tgt_subsystem *tgt_subsystem, *subsys_tmp;
+
+	TAILQ_FOREACH_SAFE(tgt_subsystem, &g_subsystems, tailq, subsys_tmp) {
+		if (strcmp(tgt_subsystem->subsystem->subnqn, nqn) == 0) {
+			TAILQ_REMOVE(&g_subsystems, tgt_subsystem, tailq);
+			nvmf_tgt_delete_subsystem(tgt_subsystem);
+			return 0;
+		}
+	}
+	return -1;
+}
+
 static void
 usage(void)
 {

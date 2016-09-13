@@ -39,6 +39,12 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
+struct rpc_listen_address {
+	char *transport;
+	char *traddr;
+	char *trsvcid;
+};
+
 struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_lcore;
 };
@@ -54,10 +60,26 @@ struct nvmf_tgt_subsystem {
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
+struct nvmf_tgt_subsystem *
+nvmf_tgt_subsystem_first(void);
+
+struct nvmf_tgt_subsystem *
+nvmf_tgt_subsystem_next(struct nvmf_tgt_subsystem *subsystem);
+
 int spdk_nvmf_parse_conf(void);
 
 struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(int num,
 		const char *name,
 		enum spdk_nvmf_subtype subtype,
 		uint32_t lcore);
+
+int
+spdk_nvmf_parse_subsystem_for_rpc(const char *name,
+				  const char *mode, uint32_t lcore,
+				  int num_listen_addresses, struct rpc_listen_address *addresses,
+				  int num_hosts, char *hosts[], const char *bdf,
+				  const char *sn, int num_devs, char *dev_list[]);
+
+int
+nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn);
 #endif

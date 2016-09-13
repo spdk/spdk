@@ -310,7 +310,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 	SPDK_NOTICELOG("Attaching NVMe device %x:%x:%x.%x to subsystem %s\n",
 		       found_domain, found_bus, found_dev, found_func, ctx->subsystem->subnqn);
 
-	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr);
+	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, dev);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}
@@ -564,5 +564,158 @@ spdk_nvmf_parse_conf(void)
 		return rc;
 	}
 
+	return 0;
+}
+
+int
+spdk_nvmf_parse_subsystem_for_rpc(const char *name,
+				  const char *mode, uint32_t lcore,
+				  int num_listen_addresses, struct rpc_listen_address *addresses,
+				  int num_hosts, char *hosts[], const char *bdf,
+				  const char *sn, int num_devs, char *dev_list[])
+{
+	struct spdk_nvmf_subsystem *subsystem;
+	struct nvmf_tgt_subsystem *app_subsys;
+	int i, ret;
+	uint64_t mask;
+	int num = 0;
+
+	if (name == NULL) {
+		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", num);
+		return -1;
+	}
+
+	if (num_listen_addresses > MAX_LISTEN_ADDRESSES) {
+		SPDK_ERRLOG("invalid listen adresses number\n");
+		return -1;
+	}
+
+	if (num_hosts > MAX_HOSTS) {
+		SPDK_ERRLOG("invalid hosts number\n");
+		return -1;
+	}
+
+	app_subsys = nvmf_tgt_subsystem_first();
+	while (app_subsys) {
+		if (num < app_subsys->subsystem->num) {
+			num = app_subsys->subsystem->num + 1;
+		}
+		app_subsys = nvmf_tgt_subsystem_next(app_subsys);
+	}
+
+	/* Determine which core to assign to the subsystem */
+	mask = spdk_app_get_core_mask();
+	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
+
+	app_subsys = nvmf_tgt_create_subsystem(num, name, SPDK_NVMF_SUBTYPE_NVME, lcore);
+	if (app_subsys == NULL) {
+		SPDK_ERRLOG("Subsystem creation failed\n");
+		return -1;
+	}
+	subsystem = app_subsys->subsystem;
+
+	if (mode == NULL) {
+		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", num);
+		return -1;
+	}
+
+	if (strcasecmp(mode, "Direct") == 0) {
+		subsystem->mode = NVMF_SUBSYSTEM_MODE_DIRECT;
+	} else if (strcasecmp(mode, "Virtual") == 0) {
+		subsystem->mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
+	} else {
+		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode);
+		return -1;
+	}
+
+	/* Parse Listen sections */
+	for (i = 0; i < num_listen_addresses; i++) {
+		const struct spdk_nvmf_transport *transport;
+
+		transport = spdk_nvmf_transport_get(addresses[i].transport);
+		if (transport == NULL) {
+			SPDK_ERRLOG("Unknown transport type '%s'\n", addresses[i].transport);
+			return -1;
+		}
+
+		spdk_nvmf_subsystem_add_listener(subsystem, transport, addresses[i].traddr, addresses[i].trsvcid);
+	}
+
+	/* Parse Host sections */
+	for (i = 0; i < num_hosts; i++) {
+		char *host_nqn;
+
+		host_nqn = hosts[i];
+		if (strcmp(host_nqn, "All") == 0)
+			break;
+		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
+	}
+
+	if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+		struct spdk_nvmf_probe_ctx ctx = { 0 };
+
+		if (bdf == NULL) {
+			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", num);
+			return -1;
+		}
+
+		ctx.subsystem = subsystem;
+		ctx.found = false;
+		if (strcmp(bdf, "*") == 0) {
+			ctx.any = true;
+		} else {
+			ret = sscanf(bdf, "%x:%x:%x.%x", &ctx.domain, &ctx.bus, &ctx.device, &ctx.function);
+			if (ret != 4) {
+				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
+				return -1;
+			}
+			ctx.any = false;
+		}
+
+		if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
+			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
+		}
+	} else {
+		struct spdk_bdev *bdev;
+		const char *namespace;
+
+		if (sn == NULL) {
+			SPDK_ERRLOG("Subsystem %d: missing serial number\n", num);
+			return -1;
+		}
+		if (spdk_nvmf_validate_sn(sn) != 0) {
+			return -1;
+		}
+
+		if (num_devs > MAX_VIRTUAL_NAMESPACE) {
+			return -1;
+		}
+
+		subsystem->dev.virtual.ns_count = 0;
+		snprintf(subsystem->dev.virtual.sn, MAX_SN_LEN, "%s", sn);
+		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
+
+		for (i = 0; i < num_devs; i++) {
+			namespace = dev_list[i];
+			if (!namespace) {
+				SPDK_ERRLOG("Namespace %d: missing block device\n", i);
+				return -1;
+			}
+			bdev = spdk_bdev_get_by_name(namespace);
+			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
+				return -1;
+			}
+
+			SPDK_NOTICELOG("Attaching block device %s to subsystem %s\n",
+				       bdev->name, subsystem->subnqn);
+
+		}
+	}
+
+	ret = spdk_nvmf_acceptor_init();
+	if (ret < 0) {
+		SPDK_ERRLOG("spdk_nvmf_acceptor_start() failed\n");
+		return -1;
+	}
 	return 0;
 }
