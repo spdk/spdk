@@ -981,22 +981,26 @@ spdk_nvmf_rdma_acceptor_init(void)
 	if (g_rdma.num_devices_found == 0) {
 		return 0;
 	}
-
-	/* create an event channel with rdmacm to receive
-	   connection oriented requests and notifications */
-	g_rdma.acceptor_event_channel = rdma_create_event_channel();
 	if (g_rdma.acceptor_event_channel == NULL) {
-		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
-		return -1;
-	}
-	rc = fcntl(g_rdma.acceptor_event_channel->fd, F_SETFL, O_NONBLOCK);
-	if (rc < 0) {
-		SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
-		goto create_id_error;
+		/* create an event channel with rdmacm to receive
+		   connection oriented requests and notifications */
+		g_rdma.acceptor_event_channel = rdma_create_event_channel();
+		if (g_rdma.acceptor_event_channel == NULL) {
+			SPDK_ERRLOG("rdma_create_event_channel() failed\n");
+			return -1;
+		}
+		rc = fcntl(g_rdma.acceptor_event_channel->fd, F_SETFL, O_NONBLOCK);
+		if (rc < 0) {
+			SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
+			goto create_id_error;
+		}
 	}
 
 	pthread_mutex_lock(&g_rdma.lock);
 	TAILQ_FOREACH_SAFE(listen_addr, &g_rdma.listen_addrs, link, tmp) {
+		if (listen_addr->id) {
+			continue;
+		}
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
 		addr.sin_addr.s_addr = inet_addr(listen_addr->traddr);
