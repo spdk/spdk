@@ -134,7 +134,7 @@ function killprocess() {
 
 	echo "killing process with pid $1"
 	kill $1
-	wait $1 || true
+	wait $1
 }
 
 function iscsicleanup() {
