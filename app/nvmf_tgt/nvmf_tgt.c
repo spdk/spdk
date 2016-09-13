@@ -93,7 +93,7 @@ subsystem_delete_event(struct spdk_event *event)
 	}
 }
 
-void
+static void
 nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
 	struct spdk_event *event;
@@ -216,6 +216,20 @@ nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subt
 	return app_subsys;
 }
 
+/* This function can only be used before the pollers are started. */
+static void
+nvmf_tgt_delete_subsystems(void)
+{
+	struct nvmf_tgt_subsystem *app_subsys, *tmp;
+	struct spdk_nvmf_subsystem *subsystem;
+
+	TAILQ_FOREACH_SAFE(app_subsys, &g_subsystems, tailq, tmp) {
+		subsystem = app_subsys->subsystem;
+		spdk_nvmf_delete_subsystem(subsystem);
+		free(app_subsys);
+	}
+}
+
 static void
 usage(void)
 {
@@ -251,6 +265,7 @@ spdk_nvmf_startup(spdk_event_t event)
 
 	rc = spdk_nvmf_parse_conf();
 	if (rc < 0) {
+		nvmf_tgt_delete_subsystems();
 		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
 		goto initialize_error;
 	}

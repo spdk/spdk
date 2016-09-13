@@ -155,9 +155,11 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	struct spdk_nvmf_listen_addr	*listen_addr, *listen_addr_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 
-	/*
-	 * The poller has been unregistered, so now the memory can be freed.
-	 */
+	if (!subsystem) {
+		return;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "subsystem is %p\n", subsystem);
 
 	TAILQ_FOREACH_SAFE(listen_addr, &subsystem->listen_addrs, link, listen_addr_tmp) {
 		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);

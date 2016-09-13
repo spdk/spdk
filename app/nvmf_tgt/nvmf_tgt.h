@@ -60,7 +60,4 @@ struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(int num,
 		const char *name,
 		enum spdk_nvmf_subtype subtype,
 		uint32_t lcore);
-
-void nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys);
-
 #endif
