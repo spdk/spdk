@@ -56,14 +56,14 @@ nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
 	}
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
-		if (strcasecmp(subnqn, subsystem->subnqn) == 0) {
+		if (strcmp(subnqn, subsystem->subnqn) == 0) {
 			if (subsystem->num_hosts == 0) {
 				/* No hosts means any host can connect */
 				return subsystem;
 			}
 
 			TAILQ_FOREACH(host, &subsystem->hosts, link) {
-				if (strcasecmp(hostnqn, host->nqn) == 0) {
+				if (strcmp(hostnqn, host->nqn) == 0) {
 					return subsystem;
 				}
 			}
@@ -103,7 +103,7 @@ spdk_nvmf_valid_nqn(const char *nqn)
 		return false;
 	}
 
-	if (strncasecmp(nqn, "nqn.", 4) != 0) {
+	if (strncmp(nqn, "nqn.", 4) != 0) {
 		SPDK_ERRLOG("Invalid NQN \"%s\": NQN must begin with \"nqn.\".\n", nqn);
 		return false;
 	}
