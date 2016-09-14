@@ -115,7 +115,7 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 		break;
 	default:
 		SPDK_ERRLOG("Unsupported Opcode 0x%x for Discovery service\n", cmd->opc);
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
