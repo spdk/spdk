@@ -413,14 +413,14 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
 
 	if (cmd->opc == SPDK_NVME_OPC_READ) {
 		spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_read(bdev, req->data, req->length, offset, nvmf_virtual_ctrlr_complete_cmd,
+		if (spdk_bdev_read(bdev, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
 				   req) == NULL) {
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	} else {
 		spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_write(bdev, req->data, req->length, offset, nvmf_virtual_ctrlr_complete_cmd,
+		if (spdk_bdev_write(bdev, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
 				    req) == NULL) {
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

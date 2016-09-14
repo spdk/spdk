@@ -536,7 +536,7 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 
 struct spdk_bdev_io *
 spdk_bdev_read(struct spdk_bdev *bdev,
-	       void *buf, uint64_t nbytes, uint64_t offset,
+	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
@@ -581,7 +581,7 @@ spdk_bdev_read(struct spdk_bdev *bdev,
 
 struct spdk_bdev_io *
 spdk_bdev_write(struct spdk_bdev *bdev,
-		void *buf, uint64_t nbytes, uint64_t offset,
+		void *buf, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
@@ -605,7 +605,7 @@ spdk_bdev_write(struct spdk_bdev *bdev,
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
-		SPDK_ERRLOG("blockdev_io memory allocation failed duing writev\n");
+		SPDK_ERRLOG("blockdev_io memory allocation failed duing write\n");
 		return NULL;
 	}
 
@@ -630,7 +630,7 @@ spdk_bdev_write(struct spdk_bdev *bdev,
 struct spdk_bdev_io *
 spdk_bdev_writev(struct spdk_bdev *bdev,
 		 struct iovec *iov, int iovcnt,
-		 uint64_t len, uint64_t offset,
+		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;

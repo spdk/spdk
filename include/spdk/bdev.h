@@ -287,14 +287,14 @@ struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
 struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev,
-				    void *buf, uint64_t nbytes, uint64_t offset,
+				    void *buf, uint64_t offset, uint64_t nbytes,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_bdev_io *spdk_bdev_write(struct spdk_bdev *bdev,
-				     void *buf, uint64_t nbytes, uint64_t offset,
+				     void *buf, uint64_t offset, uint64_t nbytes,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_bdev_io *spdk_bdev_writev(struct spdk_bdev *bdev,
 				      struct iovec *iov, int iovcnt,
-				      uint64_t len, uint64_t offset,
+				      uint64_t offset, uint64_t len,
 				      spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev,
 				     struct spdk_scsi_unmap_bdesc *unmap_d,

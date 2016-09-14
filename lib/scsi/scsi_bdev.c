@@ -1334,9 +1334,8 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		return -1;
 	}
 
-	task->blockdev_io = spdk_bdev_read(bdev, task->rbuf, nbytes,
-					   offset, spdk_bdev_scsi_task_complete,
-					   task);
+	task->blockdev_io = spdk_bdev_read(bdev, task->rbuf, offset, nbytes,
+					   spdk_bdev_scsi_task_complete, task);
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("spdk_bdev_read() failed\n");
 		return -1;
@@ -1386,7 +1385,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 
 	offset += task->offset;
 	task->blockdev_io = spdk_bdev_writev(bdev, &task->iov,
-					     1, task->length, offset,
+					     1, offset, task->length,
 					     spdk_bdev_scsi_task_complete,
 					     task);
 

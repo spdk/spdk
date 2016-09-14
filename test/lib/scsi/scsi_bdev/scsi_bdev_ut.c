@@ -133,7 +133,7 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 
 struct spdk_bdev_io *
 spdk_bdev_read(struct spdk_bdev *bdev,
-	       void *buf, uint64_t nbytes, uint64_t offset,
+	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return NULL;
@@ -142,7 +142,7 @@ spdk_bdev_read(struct spdk_bdev *bdev,
 struct spdk_bdev_io *
 spdk_bdev_writev(struct spdk_bdev *bdev,
 		 struct iovec *iov, int iovcnt,
-		 uint64_t len, uint64_t offset,
+		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return NULL;
