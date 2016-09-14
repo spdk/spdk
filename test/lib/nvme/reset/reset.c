@@ -42,7 +42,6 @@
 #include <rte_malloc.h>
 #include <rte_lcore.h>
 
-#include "spdk/file.h"
 #include "spdk/nvme.h"
 #include "spdk/pci.h"
 #include "spdk/string.h"

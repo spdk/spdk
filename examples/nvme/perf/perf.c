@@ -42,7 +42,7 @@
 #include <rte_malloc.h>
 #include <rte_lcore.h>
 
-#include "spdk/file.h"
+#include "spdk/fd.h"
 #include "spdk/nvme.h"
 #include "spdk/pci.h"
 #include "spdk/string.h"
@@ -310,14 +310,14 @@ register_aio_file(const char *path)
 		return -1;
 	}
 
-	size = spdk_file_get_size(fd);
+	size = spdk_fd_get_size(fd);
 	if (size == 0) {
 		fprintf(stderr, "Could not determine size of AIO device %s\n", path);
 		close(fd);
 		return -1;
 	}
 
-	blklen = spdk_dev_get_blocklen(fd);
+	blklen = spdk_fd_get_blocklen(fd);
 	if (blklen == 0) {
 		fprintf(stderr, "Could not determine block size of AIO device %s\n", path);
 		close(fd);

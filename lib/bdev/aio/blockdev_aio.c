@@ -43,7 +43,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
-#include "spdk/file.h"
+#include "spdk/fd.h"
 #include "spdk/log.h"
 
 static int g_blockdev_count = 0;
@@ -321,7 +321,7 @@ create_aio_disk(char *fname)
 		goto error_return;
 	}
 
-	fdisk->size = spdk_file_get_size(fdisk->fd);
+	fdisk->size = spdk_fd_get_size(fdisk->fd);
 	fdisk->queue_depth = 128; // TODO: where do we get the queue depth from.
 
 	TAILQ_INIT(&fdisk->sync_completion_list);
@@ -331,7 +331,7 @@ create_aio_disk(char *fname)
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;
-	fdisk->disk.blocklen = spdk_dev_get_blocklen(fdisk->fd);
+	fdisk->disk.blocklen = spdk_fd_get_blocklen(fdisk->fd);
 	fdisk->disk.blockcnt = fdisk->size / fdisk->disk.blocklen;
 	fdisk->disk.ctxt = fdisk;
 
