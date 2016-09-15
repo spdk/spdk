@@ -47,3 +47,7 @@ make -C test/lib/scsi/lun CONFIG_WERROR=y
 test/lib/scsi/dev/dev_ut
 test/lib/scsi/lun/lun_ut
 #test/lib/scsi/scsi_bdev/scsi_bdev_ut
+
+make -C test/lib/util/bit_array CONFIG_WERROR=y
+
+test/lib/util/bit_array/bit_array_ut

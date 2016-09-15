@@ -82,6 +82,7 @@ time test/lib/jsonrpc/jsonrpc.sh
 time test/lib/log/log.sh
 time test/lib/scsi/scsi.sh
 time test/lib/iscsi/iscsi.sh
+time test/lib/util/util.sh
 
 timing_exit lib
 
