@@ -1276,31 +1276,30 @@ spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_conn *conn)
 static int
 spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 {
-	struct ibv_wc wc;
+	struct ibv_wc wc[32];
 	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvmf_rdma_request *rdma_req;
 	struct spdk_nvmf_request *req;
-	int rc;
+	int reaped, i, rc;
 	int count = 0;
 
 	/* Poll for completing operations. */
-	while (count < 128) {
-		rc = ibv_poll_cq(rdma_conn->cq, 1, &wc);
-		if (rc == 0) {
-			break;
-		} else if (rc < 0) {
-			SPDK_ERRLOG("Error polling Send CQ! (%d): %s\n",
-				    errno, strerror(errno));
-			return -1;
-		}
+	rc = ibv_poll_cq(rdma_conn->cq, 32, wc);
+	if (rc < 0) {
+		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
+			    errno, strerror(errno));
+		return -1;
+	}
 
-		if (wc.status) {
+	reaped = rc;
+	for (i = 0; i < reaped; i++) {
+		if (wc[i].status) {
 			SPDK_ERRLOG("CQ error on Connection %p, Request 0x%lu (%d): %s\n",
-				    conn, wc.wr_id, wc.status, ibv_wc_status_str(wc.status));
+				    conn, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			return -1;
 		}
 
-		rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
+		rdma_req = (struct spdk_nvmf_rdma_request *)wc[i].wr_id;
 		if (rdma_req == NULL) {
 			SPDK_ERRLOG("NULL wr_id in RDMA work completion\n");
 			return -1;
@@ -1308,7 +1307,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 		req = &rdma_req->req;
 
-		switch (wc.opcode) {
+		switch (wc[i].opcode) {
 		case IBV_WC_SEND:
 			assert(rdma_conn->cur_queue_depth > 0);
 			SPDK_TRACELOG(SPDK_TRACE_RDMA,
@@ -1358,8 +1357,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			break;
 
 		case IBV_WC_RECV:
-			if (wc.byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
-				SPDK_ERRLOG("recv length %u less than capsule header\n", wc.byte_len);
+			if (wc[i].byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
+				SPDK_ERRLOG("recv length %u less than capsule header\n", wc[i].byte_len);
 				return -1;
 			}
 
@@ -1393,12 +1392,13 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				}
 				break;
 			case SPDK_NVMF_REQUEST_PREP_ERROR:
-				return spdk_nvmf_rdma_request_complete(req);
+				spdk_nvmf_rdma_request_complete(req);
+				break;
 			}
 			break;
 
 		default:
-			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc.opcode);
+			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
 			return -1;
 		}
 	}
