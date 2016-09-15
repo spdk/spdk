@@ -81,6 +81,7 @@ struct spdk_nvmf_rdma_conn {
 	struct spdk_nvmf_conn			conn;
 
 	struct rdma_cm_id			*cm_id;
+	struct ibv_cq				*cq;
 
 	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				max_queue_depth;
@@ -196,6 +197,10 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 		rdma_destroy_id(rdma_conn->cm_id);
 	}
 
+	if (rdma_conn->cq) {
+		ibv_destroy_cq(rdma_conn->cq);
+	}
+
 	/* Free all memory */
 	rte_free(rdma_conn->cmds);
 	rte_free(rdma_conn->cpls);
@@ -225,9 +230,20 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 	TAILQ_INIT(&rdma_conn->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_conn->pending_rdma_rw_queue);
 
+	rdma_conn->cq = ibv_create_cq(id->verbs, max_queue_depth * 2, NULL, NULL, 0);
+	if (!rdma_conn->cq) {
+		SPDK_ERRLOG("Unable to create completion queue\n");
+		SPDK_ERRLOG("Id: %p Verbs: %p\n", id, id->verbs);
+		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
+		free(rdma_conn);
+		return NULL;
+	}
+
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
-	attr.cap.max_send_wr	= max_queue_depth * 2; /* SEND, READ, and WRITE operations */
+	attr.send_cq		= rdma_conn->cq;
+	attr.recv_cq		= rdma_conn->cq;
+	attr.cap.max_send_wr	= max_queue_depth; /* SEND, READ, and WRITE operations */
 	attr.cap.max_recv_wr	= max_queue_depth; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
@@ -235,24 +251,6 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, uint16_t max_queue_depth, uint
 	rc = rdma_create_qp(rdma_conn->cm_id, NULL, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
-		spdk_nvmf_rdma_conn_destroy(rdma_conn);
-		return NULL;
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA,
-		      "New RDMA QP created. Send CQ: %p Recv CQ: %p Send Queue Depth: %d Recv Queue Depth: %d\n",
-		      rdma_conn->cm_id->send_cq, rdma_conn->cm_id->recv_cq, attr.cap.max_send_wr, attr.cap.max_recv_wr);
-
-	rc = fcntl(rdma_conn->cm_id->send_cq_channel->fd, F_SETFL, O_NONBLOCK);
-	if (rc < 0) {
-		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
-		spdk_nvmf_rdma_conn_destroy(rdma_conn);
-		return NULL;
-	}
-
-	rc = fcntl(rdma_conn->cm_id->recv_cq_channel->fd, F_SETFL, O_NONBLOCK);
-	if (rc < 0) {
-		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		return NULL;
 	}
@@ -1285,10 +1283,9 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 	int rc;
 	int count = 0;
 
-	/* Poll the send completion queue to check for completing
-	 * operations that the target initiated. */
-	while (true) {
-		rc = ibv_poll_cq(rdma_conn->cm_id->send_cq, 1, &wc);
+	/* Poll for completing operations. */
+	while (count < 128) {
+		rc = ibv_poll_cq(rdma_conn->cq, 1, &wc);
 		if (rc == 0) {
 			break;
 		} else if (rc < 0) {
@@ -1298,7 +1295,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 		}
 
 		if (wc.status) {
-			SPDK_ERRLOG("Send CQ error on Connection %p, Request 0x%lu (%d): %s\n",
+			SPDK_ERRLOG("CQ error on Connection %p, Request 0x%lu (%d): %s\n",
 				    conn, wc.wr_id, wc.status, ibv_wc_status_str(wc.status));
 			return -1;
 		}
@@ -1361,43 +1358,6 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			break;
 
 		case IBV_WC_RECV:
-			SPDK_ERRLOG("Unexpectedly received a RECV completion on the Send CQ\n");
-			return -1;
-
-		default:
-			SPDK_ERRLOG("Received an unknown opcode on the Send CQ: %d\n", wc.opcode);
-			return -1;
-		}
-
-	}
-
-	/* Poll the recv completion queue for incoming requests */
-	while (rdma_conn->cur_queue_depth < rdma_conn->max_queue_depth) {
-		rc = ibv_poll_cq(rdma_conn->cm_id->recv_cq, 1, &wc);
-		if (rc == 0) {
-			break;
-		} else if (rc < 0) {
-			SPDK_ERRLOG("Error polling Recv CQ! (%d): %s\n",
-				    errno, strerror(errno));
-			return -1;
-		}
-
-		if (wc.status) {
-			SPDK_ERRLOG("Recv CQ error (%d): %s\n",
-				    wc.status, ibv_wc_status_str(wc.status));
-			return -1;
-		}
-
-		rdma_req = (struct spdk_nvmf_rdma_request *)wc.wr_id;
-		if (rdma_req == NULL) {
-			SPDK_ERRLOG("NULL wr_id in RDMA work completion\n");
-			return -1;
-		}
-
-		req = &rdma_req->req;
-
-		switch (wc.opcode) {
-		case IBV_WC_RECV:
 			if (wc.byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
 				SPDK_ERRLOG("recv length %u less than capsule header\n", wc.byte_len);
 				return -1;
@@ -1437,15 +1397,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			}
 			break;
 
-		case IBV_WC_SEND:
-		case IBV_WC_RDMA_WRITE:
-		case IBV_WC_RDMA_READ:
-			SPDK_ERRLOG("Unexpectedly received a Send/Write/Read completion on the Recv CQ\n");
-			return -1;
-			break;
-
 		default:
-			SPDK_ERRLOG("Received an unknown opcode on the Recv CQ: %d\n", wc.opcode);
+			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc.opcode);
 			return -1;
 		}
 	}
