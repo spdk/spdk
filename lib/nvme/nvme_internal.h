@@ -371,7 +371,7 @@ enum nvme_ctrlr_state {
 	NVME_CTRLR_STATE_READY
 };
 
-#define NVME_TIMEOUT_INFINITE	UINT64_MAX
+#define NVME_TIMEOUT_MAX	UINT64_MAX
 
 /*
  * One of these per allocated PCI device.
