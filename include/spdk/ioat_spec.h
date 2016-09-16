@@ -313,7 +313,7 @@ union spdk_ioat_hw_desc {
 	struct spdk_ioat_generic_hw_desc generic;
 	struct spdk_ioat_dma_hw_desc dma;
 	struct spdk_ioat_fill_hw_desc fill;
-	struct spdk_ioat_xor_hw_desc xor;
+	struct spdk_ioat_xor_hw_desc xor_desc;
 	struct spdk_ioat_xor_ext_hw_desc xor_ext;
 	struct spdk_ioat_pq_hw_desc pq;
 	struct spdk_ioat_pq_ext_hw_desc pq_ext;
