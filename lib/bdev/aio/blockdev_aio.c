@@ -45,6 +45,7 @@
 #include "spdk/conf.h"
 #include "spdk/fd.h"
 #include "spdk/log.h"
+#include "spdk/io_channel.h"
 
 static int g_blockdev_count = 0;
 
@@ -314,11 +315,42 @@ blockdev_aio_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io
 	}
 }
 
+static int
+blockdev_aio_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+{
+	struct blockdev_aio_io_channel *ch = ctx_buf;
+
+	if (blockdev_aio_initialize_io_channel(ch) != 0) {
+		return -1;
+	}
+
+	spdk_poller_register(&ch->poller, blockdev_aio_poll, ch,
+			     spdk_app_get_current_core(), NULL, 0);
+	return 0;
+}
+
+static void
+blockdev_aio_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct blockdev_aio_io_channel *io_channel = ctx_buf;
+
+	io_destroy(io_channel->io_ctx);
+	free(io_channel->events);
+	spdk_poller_unregister(&io_channel->poller, NULL);
+}
+
+static struct spdk_io_channel *
+blockdev_aio_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+{
+	return spdk_get_io_channel(bdev, priority);
+}
+
 static const struct spdk_bdev_fn_table aio_fn_table = {
 	.destruct		= blockdev_aio_destruct,
 	.check_io		= blockdev_aio_check_io,
 	.submit_request		= blockdev_aio_submit_request,
 	.io_type_supported	= blockdev_aio_io_type_supported,
+	.get_io_channel		= blockdev_aio_get_io_channel,
 };
 
 static void aio_free_disk(struct file_disk *fdisk)
@@ -367,6 +399,8 @@ create_aio_disk(char *fname)
 
 	g_blockdev_count++;
 
+	spdk_io_device_register(&fdisk->disk, blockdev_aio_create_cb, blockdev_aio_destroy_cb,
+				sizeof(struct blockdev_aio_io_channel));
 	spdk_bdev_register(&fdisk->disk);
 	return fdisk;
 

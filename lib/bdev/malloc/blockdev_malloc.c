@@ -44,6 +44,7 @@
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/copy_engine.h"
+#include "spdk/io_channel.h"
 
 #include "bdev_module.h"
 
@@ -266,11 +267,18 @@ blockdev_malloc_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type
 	}
 }
 
+static struct spdk_io_channel *
+blockdev_malloc_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+{
+	return spdk_copy_engine_get_io_channel(priority);
+}
+
 static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.destruct		= blockdev_malloc_destruct,
 	.check_io		= blockdev_malloc_check_io,
 	.submit_request		= blockdev_malloc_submit_request,
 	.io_type_supported	= blockdev_malloc_io_type_supported,
+	.get_io_channel		= blockdev_malloc_get_io_channel,
 };
 
 struct malloc_disk *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)

@@ -52,6 +52,7 @@
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/nvme.h"
+#include "spdk/io_channel.h"
 
 #include "bdev_module.h"
 
@@ -82,6 +83,11 @@ struct nvme_blockdev {
 	uint64_t		lba_start;
 	uint64_t		lba_end;
 	uint64_t		blocklen;
+};
+
+struct nvme_io_channel {
+	struct spdk_nvme_qpair	*qpair;
+	struct spdk_poller	*poller;
 };
 
 #define NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT	1
@@ -168,12 +174,20 @@ blockdev_nvme_writev(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
 	return iov->iov_len;
 }
 
+static void
+blockdev_nvme_poll(void *arg)
+{
+	struct spdk_nvme_qpair *qpair = arg;
+
+	spdk_nvme_qpair_process_completions(qpair, 0);
+}
+
 static int
 blockdev_nvme_check_io(struct spdk_bdev *bdev)
 {
 	struct nvme_blockdev *nbdev = (struct nvme_blockdev *)bdev;
 
-	spdk_nvme_qpair_process_completions(nbdev->qpair, 0);
+	blockdev_nvme_poll(nbdev->qpair);
 
 	return 0;
 }
@@ -295,11 +309,46 @@ blockdev_nvme_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type i
 	}
 }
 
+static int
+blockdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+{
+	struct spdk_nvme_ctrlr *ctrlr = io_device;
+	struct nvme_io_channel *ch = ctx_buf;
+
+	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+
+	if (ch->qpair == NULL) {
+		return -1;
+	}
+
+	spdk_poller_register(&ch->poller, blockdev_nvme_poll, ch->qpair,
+			     spdk_app_get_current_core(), NULL, 0);
+	return 0;
+}
+
+static void
+blockdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct nvme_io_channel *ch = ctx_buf;
+
+	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
+	spdk_poller_unregister(&ch->poller, NULL);
+}
+
+static struct spdk_io_channel *
+blockdev_nvme_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+{
+	struct nvme_blockdev *nvme_bdev = (struct nvme_blockdev *)bdev;
+
+	return spdk_get_io_channel(nvme_bdev->ctrlr, priority);
+}
+
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= blockdev_nvme_destruct,
 	.check_io		= blockdev_nvme_check_io,
 	.submit_request		= blockdev_nvme_submit_request,
 	.io_type_supported	= blockdev_nvme_io_type_supported,
+	.get_io_channel		= blockdev_nvme_get_io_channel,
 };
 
 struct nvme_probe_ctx {
@@ -390,6 +439,8 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	dev->id = nvme_controller_index++;
 
 	nvme_ctrlr_initialize_blockdevs(dev->ctrlr, nvme_luns_per_ns, dev->id);
+	spdk_io_device_register(ctrlr, blockdev_nvme_create_cb, blockdev_nvme_destroy_cb,
+				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_devices, dev, tailq);
 
 	if (ctx->controllers_remaining > 0) {

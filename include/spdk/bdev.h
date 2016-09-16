@@ -146,6 +146,9 @@ struct spdk_bdev_fn_table {
 
 	/** Check if the block device supports a specific I/O type. */
 	bool (*io_type_supported)(struct spdk_bdev *bdev, enum spdk_bdev_io_type);
+
+	/** Get an I/O channel for the specific bdev for the calling thread. */
+	struct spdk_io_channel *(*get_io_channel)(struct spdk_bdev *bdev, uint32_t priority);
 };
 
 /** Blockdev I/O completion status */
@@ -308,5 +311,5 @@ void spdk_bdev_do_work(void *ctx);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
-
+struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority);
 #endif /* SPDK_BDEV_H_ */

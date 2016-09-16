@@ -535,6 +535,12 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 	return bdev->fn_table->io_type_supported(bdev, io_type);
 }
 
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+{
+	return bdev->fn_table->get_io_channel(bdev, priority);
+}
+
 struct spdk_bdev_io *
 spdk_bdev_read(struct spdk_bdev *bdev,
 	       void *buf, uint64_t offset, uint64_t nbytes,
