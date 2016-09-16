@@ -31,17 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-# These directories contain tests.
-TESTDIRS = cpp_headers lib
+CXX_SRCS := cpp_headers.cpp
 
-DIRS-y = $(TESTDIRS)
+all : cpp_headers.o
 
-.PHONY: all clean $(DIRS-y)
+clean :
+	$(CLEAN_C)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
