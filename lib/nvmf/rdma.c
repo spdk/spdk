@@ -73,7 +73,6 @@ struct spdk_nvmf_rdma_request {
 	uint8_t					*buf;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
-
 };
 
 struct spdk_nvmf_rdma_conn {
@@ -141,18 +140,19 @@ struct spdk_nvmf_rdma_listen_addr {
 	char					*traddr;
 	char					*trsvcid;
 	struct rdma_cm_id			*id;
+	struct ibv_device_attr			attr;
 	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
 };
 
 struct spdk_nvmf_rdma {
-	struct rdma_event_channel			*acceptor_event_channel;
+	struct rdma_event_channel	*event_channel;
 
-	uint16_t max_queue_depth;
-	uint32_t max_io_size;
-	uint32_t in_capsule_data_size;
-	uint32_t num_devices_found;
+	pthread_mutex_t 		lock;
 
-	pthread_mutex_t lock;
+	uint16_t 			max_queue_depth;
+	uint32_t 			max_io_size;
+	uint32_t 			in_capsule_data_size;
+
 	TAILQ_HEAD(, spdk_nvmf_rdma_listen_addr)	listen_addrs;
 };
 
@@ -621,7 +621,7 @@ static int
 nvmf_rdma_connect(struct rdma_cm_event *event)
 {
 	struct spdk_nvmf_rdma_conn	*rdma_conn = NULL;
-	struct ibv_device_attr		ibdev_attr;
+	struct spdk_nvmf_rdma_listen_addr *addr;
 	struct rdma_conn_param		*rdma_param = NULL;
 	struct rdma_conn_param		ctrlr_event_data;
 	const struct spdk_nvmf_rdma_request_private_data *private_data = NULL;
@@ -631,8 +631,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	uint16_t			max_rw_depth;
 	int 				rc;
 
-
-	/* Check to make sure we know about this rdma device */
 	if (event->id == NULL) {
 		SPDK_ERRLOG("connect request: missing cm_id\n");
 		goto err0;
@@ -644,6 +642,10 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      event->id->verbs->device->name, event->id->verbs->device->dev_name);
+
+	addr = event->listen_id->context;
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Listen Id was %p with verbs %p. ListenAddr: %p\n",
+		      event->listen_id, event->listen_id->verbs, addr);
 
 	/* Figure out the supported queue depth. This is a multi-step process
 	 * that takes into account hardware maximums, host provided values,
@@ -657,17 +659,11 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", g_rdma.max_queue_depth);
 
 	/* Next check the local NIC's hardware limitations */
-	rc = ibv_query_device(event->id->verbs, &ibdev_attr);
-	if (rc) {
-		SPDK_ERRLOG("Failed to query RDMA device attributes\n");
-		sts = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-		goto err1;
-	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
-		      ibdev_attr.max_qp_wr, ibdev_attr.max_qp_rd_atom);
-	max_queue_depth = nvmf_min(max_queue_depth, ibdev_attr.max_qp_wr);
-	max_rw_depth = nvmf_min(max_rw_depth, ibdev_attr.max_qp_rd_atom);
+		      addr->attr.max_qp_wr, addr->attr.max_qp_rd_atom);
+	max_queue_depth = nvmf_min(max_queue_depth, addr->attr.max_qp_wr);
+	max_rw_depth = nvmf_min(max_rw_depth, addr->attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
 	rdma_param = &event->param.conn;
@@ -910,7 +906,7 @@ spdk_nvmf_rdma_acceptor_poll(void)
 	int				rc;
 	struct spdk_nvmf_rdma_conn	*rdma_conn, *tmp;
 
-	if (g_rdma.acceptor_event_channel == NULL) {
+	if (g_rdma.event_channel == NULL) {
 		return;
 	}
 
@@ -929,7 +925,7 @@ spdk_nvmf_rdma_acceptor_poll(void)
 	}
 
 	while (1) {
-		rc = rdma_get_cm_event(g_rdma.acceptor_event_channel, &event);
+		rc = rdma_get_cm_event(g_rdma.event_channel, &event);
 		if (rc == 0) {
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
 
@@ -966,92 +962,6 @@ spdk_nvmf_rdma_acceptor_poll(void)
 			break;
 		}
 	}
-}
-
-static int
-spdk_nvmf_rdma_acceptor_init(void)
-{
-	struct sockaddr_in	addr;
-	int			rc;
-	struct spdk_nvmf_rdma_listen_addr *listen_addr, *tmp;
-
-	if (g_rdma.num_devices_found == 0) {
-		return 0;
-	}
-	if (g_rdma.acceptor_event_channel == NULL) {
-		/* create an event channel with rdmacm to receive
-		   connection oriented requests and notifications */
-		g_rdma.acceptor_event_channel = rdma_create_event_channel();
-		if (g_rdma.acceptor_event_channel == NULL) {
-			SPDK_ERRLOG("rdma_create_event_channel() failed\n");
-			return -1;
-		}
-		rc = fcntl(g_rdma.acceptor_event_channel->fd, F_SETFL, O_NONBLOCK);
-		if (rc < 0) {
-			SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
-			goto create_id_error;
-		}
-	}
-
-	pthread_mutex_lock(&g_rdma.lock);
-	TAILQ_FOREACH_SAFE(listen_addr, &g_rdma.listen_addrs, link, tmp) {
-		if (listen_addr->id) {
-			continue;
-		}
-		memset(&addr, 0, sizeof(addr));
-		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = inet_addr(listen_addr->traddr);
-		addr.sin_port = htons((uint16_t)strtoul(listen_addr->trsvcid, NULL, 10));
-
-		rc = rdma_create_id(g_rdma.acceptor_event_channel, &listen_addr->id, NULL,
-				    RDMA_PS_TCP);
-		if (rc < 0) {
-			SPDK_ERRLOG("rdma_create_id() failed\n");
-			goto listen_error;
-		}
-
-		rc = rdma_bind_addr(listen_addr->id, (struct sockaddr *)&addr);
-		if (rc < 0) {
-			SPDK_ERRLOG("rdma_bind_addr() failed\n");
-			goto listen_error;
-		}
-
-		rc = rdma_listen(listen_addr->id, 10); /* 10 = backlog */
-		if (rc < 0) {
-			SPDK_ERRLOG("rdma_listen() failed\n");
-			goto listen_error;
-		}
-		SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
-			       listen_addr->traddr, ntohs(rdma_get_src_port(listen_addr->id)));
-	}
-
-	pthread_mutex_unlock(&g_rdma.lock);
-	return 0;
-
-listen_error:
-	TAILQ_FOREACH_SAFE(listen_addr, &g_rdma.listen_addrs, link, tmp) {
-		if (listen_addr->id) {
-			rdma_destroy_id(listen_addr->id);
-		}
-	}
-	pthread_mutex_unlock(&g_rdma.lock);
-
-create_id_error:
-	rdma_destroy_event_channel(g_rdma.acceptor_event_channel);
-	return -1;
-}
-
-static void
-spdk_nvmf_rdma_acceptor_fini(void)
-{
-	struct spdk_nvmf_rdma_listen_addr *listen_addr, *tmp;
-
-	pthread_mutex_lock(&g_rdma.lock);
-	TAILQ_FOREACH_SAFE(listen_addr, &g_rdma.listen_addrs, link, tmp) {
-		TAILQ_REMOVE(&g_rdma.listen_addrs, listen_addr, link);
-		free(listen_addr);
-	}
-	pthread_mutex_unlock(&g_rdma.lock);
 }
 
 static int
@@ -1128,84 +1038,20 @@ static int
 spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 		    uint32_t in_capsule_data_size)
 {
-	struct ibv_device **dev_list;
-	struct ibv_context *ibdev_ctx = NULL;
-	struct ibv_device_attr ibdev_attr;
-	int num_of_rdma_devices;
-	int num_devices_found = 0;
-	int i, ret;
-
 	SPDK_NOTICELOG("*** RDMA Transport Init ***\n");
-
-	dev_list = ibv_get_device_list(&num_of_rdma_devices);
-	if (!dev_list) {
-		SPDK_NOTICELOG("No RDMA verbs devices found\n");
-		return 0;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "%d RDMA verbs device(s) discovered\n", num_of_rdma_devices);
-
-	/* Look through the list of devices for one we support */
-	for (i = 0; i < num_of_rdma_devices; i++) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, " RDMA Device %d:\n", i);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Node type: %d\n", (int)dev_list[i]->node_type);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Transport type: %d\n", (int)dev_list[i]->transport_type);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Name: %s\n", dev_list[i]->name);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Device Name: %s\n", dev_list[i]->dev_name);
-
-		ibdev_ctx = ibv_open_device(dev_list[i]);
-		if (!ibdev_ctx) {
-			SPDK_ERRLOG(" No rdma context returned for device %d\n", i);
-			continue;
-		}
-
-		ret = ibv_query_device(ibdev_ctx, &ibdev_attr);
-		if (ret) {
-			SPDK_ERRLOG(" Failed on query for device %d\n", i);
-			ibv_close_device(ibdev_ctx);
-			continue;
-		}
-
-		/* display device specific attributes */
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, " RDMA Device Attributes:\n");
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max MR Size: 0x%llx\n", (long long int)ibdev_attr.max_mr_size);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Page Size Cap: 0x%llx\n",
-			      (long long int)ibdev_attr.page_size_cap);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max QPs: 0x%x\n", (int)ibdev_attr.max_qp);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max QP WRs: 0x%x\n", (int)ibdev_attr.max_qp_wr);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max SGE: 0x%x\n", (int)ibdev_attr.max_sge);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max CQs: 0x%x\n", (int)ibdev_attr.max_cq);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max CQE per CQ: 0x%x\n", (int)ibdev_attr.max_cqe);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max MR: 0x%x\n", (int)ibdev_attr.max_mr);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max PD: 0x%x\n", (int)ibdev_attr.max_pd);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max QP RD Atom: 0x%x\n", (int)ibdev_attr.max_qp_rd_atom);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max QP Init RD Atom: 0x%x\n",
-			      (int)ibdev_attr.max_qp_init_rd_atom);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max Res RD Atom: 0x%x\n", (int)ibdev_attr.max_res_rd_atom);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max EE: 0x%x\n", (int)ibdev_attr.max_ee);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max SRQ: 0x%x\n", (int)ibdev_attr.max_srq);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max SRQ WR: 0x%x\n", (int)ibdev_attr.max_srq_wr);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max SRQ SGE: 0x%x\n", (int)ibdev_attr.max_srq_sge);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Max PKeys: 0x%x\n", (int)ibdev_attr.max_pkeys);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "   Phys Port Cnt: %d\n", (int)ibdev_attr.phys_port_cnt);
-
-		num_devices_found++;
-	}
-
-	ibv_free_device_list(dev_list);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "    %d Fabric Intf(s) active\n", num_devices_found);
 
 	g_rdma.max_queue_depth = max_queue_depth;
 	g_rdma.max_io_size = max_io_size;
 	g_rdma.in_capsule_data_size = in_capsule_data_size;
-	g_rdma.num_devices_found = num_devices_found;
 
-	return num_devices_found;
+	return 0;
 }
 
 static int
 spdk_nvmf_rdma_fini(void)
 {
-	/* Nothing to do */
+	rdma_destroy_event_channel(g_rdma.event_channel);
+
 	return 0;
 }
 
@@ -1424,14 +1270,32 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 static int
 spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 {
-	struct spdk_nvmf_rdma_listen_addr *addr, *tmp;
+	struct spdk_nvmf_rdma_listen_addr *addr;
+	struct sockaddr_in saddr;
+	int rc;
 
 	pthread_mutex_lock(&g_rdma.lock);
-	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, tmp) {
+	TAILQ_FOREACH(addr, &g_rdma.listen_addrs, link) {
 		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
 		    (!strcasecmp(addr->trsvcid, listen_addr->trsvcid))) {
+			/* Already listening at this address */
 			pthread_mutex_unlock(&g_rdma.lock);
 			return 0;
+		}
+	}
+	if (g_rdma.event_channel == NULL) {
+		g_rdma.event_channel = rdma_create_event_channel();
+		if (g_rdma.event_channel == NULL) {
+			SPDK_ERRLOG("rdma_create_event_channel() failed\n");
+			pthread_mutex_unlock(&g_rdma.lock);
+			return -1;
+		}
+
+		rc = fcntl(g_rdma.event_channel->fd, F_SETFL, O_NONBLOCK);
+		if (rc < 0) {
+			SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
+			pthread_mutex_unlock(&g_rdma.lock);
+			return -1;
 		}
 	}
 
@@ -1444,8 +1308,50 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	addr->traddr = listen_addr->traddr;
 	addr->trsvcid = listen_addr->trsvcid;
 
+	rc = rdma_create_id(g_rdma.event_channel, &addr->id, addr, RDMA_PS_TCP);
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_create_id() failed\n");
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sin_family = AF_INET;
+	saddr.sin_addr.s_addr = inet_addr(addr->traddr);
+	saddr.sin_port = htons((uint16_t)strtoul(addr->trsvcid, NULL, 10));
+	rc = rdma_bind_addr(addr->id, (struct sockaddr *)&saddr);
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_bind_addr() failed\n");
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
+	rc = rdma_listen(addr->id, 10); /* 10 = backlog */
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_listen() failed\n");
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
+	rc = ibv_query_device(addr->id->verbs, &addr->attr);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
 	TAILQ_INSERT_TAIL(&g_rdma.listen_addrs, addr, link);
 	pthread_mutex_unlock(&g_rdma.lock);
+
+	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
+		       addr->traddr, ntohs(rdma_get_src_port(addr->id)));
 
 	return 0;
 }
@@ -1455,9 +1361,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.transport_init = spdk_nvmf_rdma_init,
 	.transport_fini = spdk_nvmf_rdma_fini,
 
-	.acceptor_init = spdk_nvmf_rdma_acceptor_init,
 	.acceptor_poll = spdk_nvmf_rdma_acceptor_poll,
-	.acceptor_fini = spdk_nvmf_rdma_acceptor_fini,
 
 	.listen_addr_add = spdk_nvmf_rdma_listen,
 	.listen_addr_discover = spdk_nvmf_rdma_discover,

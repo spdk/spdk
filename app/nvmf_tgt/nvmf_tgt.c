@@ -126,7 +126,6 @@ shutdown_subsystems(void)
 static void
 acceptor_poller_unregistered_event(struct spdk_event *event)
 {
-	spdk_nvmf_acceptor_fini();
 	spdk_nvmf_transport_fini();
 	shutdown_subsystems();
 }
@@ -330,12 +329,6 @@ spdk_nvmf_startup(spdk_event_t event)
 	rc = spdk_nvmf_transport_init();
 	if (rc <= 0) {
 		SPDK_ERRLOG("Transport initialization failed\n");
-		goto initialize_error;
-	}
-
-	rc = spdk_nvmf_acceptor_init();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_nvmf_acceptor_start() failed\n");
 		goto initialize_error;
 	}
 

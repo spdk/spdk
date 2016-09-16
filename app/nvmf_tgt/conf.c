@@ -790,10 +790,5 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		}
 	}
 
-	ret = spdk_nvmf_acceptor_init();
-	if (ret < 0) {
-		SPDK_ERRLOG("spdk_nvmf_acceptor_start() failed\n");
-		return -1;
-	}
 	return 0;
 }
