@@ -287,6 +287,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 	    found_dev == ctx->device &&
 	    found_func == ctx->function) {
 		if (!spdk_pci_device_has_non_uio_driver(dev)) {
+			ctx->found = true;
 			return true;
 		}
 		SPDK_ERRLOG("Requested device is still bound to the kernel. Unbind your NVMe devices first.\n");
@@ -472,6 +473,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
+		}
+
+		if (!ctx.found) {
+			SPDK_ERRLOG("Could not find NVMe controller for Subsystem%d\n", sp->num);
+			return -1;
 		}
 	} else {
 		struct spdk_bdev *bdev;
