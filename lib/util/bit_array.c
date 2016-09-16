@@ -41,6 +41,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "spdk/likely.h"
+
 typedef uint64_t spdk_bit_array_word;
 #define SPDK_BIT_ARRAY_WORD_TZCNT(x)	(__builtin_ctzll(x))
 #define SPDK_BIT_ARRAY_WORD_C(x)	((spdk_bit_array_word)(x))
@@ -161,7 +163,7 @@ static inline int
 _spdk_bit_array_get_word(const struct spdk_bit_array *ba, uint32_t bit_index,
 			 uint32_t *word_index, uint32_t *word_bit_index)
 {
-	if (bit_index >= ba->bit_count) {
+	if (spdk_unlikely(bit_index >= ba->bit_count)) {
 		return -EINVAL;
 	}
 
@@ -220,7 +222,7 @@ _spdk_bit_array_find_first(const struct spdk_bit_array *ba, uint32_t start_bit_i
 	spdk_bit_array_word word, first_word_mask;
 	const spdk_bit_array_word *words, *cur_word;
 
-	if (start_bit_index >= ba->bit_count) {
+	if (spdk_unlikely(start_bit_index >= ba->bit_count)) {
 		return ba->bit_count;
 	}
 
