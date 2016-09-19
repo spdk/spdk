@@ -106,7 +106,6 @@ struct spdk_nvmf_subsystem {
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN];
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
-	struct spdk_nvmf_session *session;
 
 	union {
 		struct {
@@ -128,6 +127,9 @@ struct spdk_nvmf_subsystem {
 	void					*cb_ctx;
 	spdk_nvmf_subsystem_connect_fn		connect_cb;
 	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
+
+	TAILQ_HEAD(, spdk_nvmf_session)		sessions;
+	uint32_t				session_id;
 
 	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
 	uint32_t				num_listen_addrs;

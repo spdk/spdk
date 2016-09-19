@@ -91,7 +91,7 @@ nvmf_init_nvme_session_properties(struct spdk_nvmf_session *session)
 	session->subsys->ops->ctrlr_get_data(session);
 
 	session->vcdata.aerl = 0;
-	session->vcdata.cntlid = 0;
+	session->vcdata.cntlid = session->id;
 	session->vcdata.kas = 10;
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
 	session->vcdata.mdts = nvmf_u32log2(g_nvmf_tgt.max_io_size / 4096);
@@ -158,7 +158,7 @@ nvmf_init_nvme_session_properties(struct spdk_nvmf_session *session)
 
 static void session_destruct(struct spdk_nvmf_session *session)
 {
-	session->subsys->session = NULL;
+	TAILQ_REMOVE(&session->subsys->sessions, session, link);
 	session->transport->session_fini(session);
 	free(session);
 }
@@ -245,15 +245,8 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			return;
 		}
 
-		if (subsystem->session) {
-			SPDK_ERRLOG("Cannot connect to already-connected controller\n");
-			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-			return;
-		}
-
 		/* Establish a new session */
-		subsystem->session = session = calloc(1, sizeof(struct spdk_nvmf_session));
+		session = calloc(1, sizeof(struct spdk_nvmf_session));
 		if (session == NULL) {
 			SPDK_ERRLOG("Memory allocation failure\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -261,6 +254,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		}
 
 		TAILQ_INIT(&session->connections);
+		session->id = subsystem->session_id++;
 		session->kato = cmd->kato;
 		session->num_connections = 0;
 		session->subsys = subsystem;
@@ -269,7 +263,6 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			conn->transport->session_fini(session);
 			free(session);
-			subsystem->session = NULL;
 			return;
 		}
 
@@ -278,19 +271,28 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		} else {
 			nvmf_init_discovery_session_properties(session);
 		}
+
+		TAILQ_INSERT_TAIL(&subsystem->sessions, session, link);
 	} else {
+		struct spdk_nvmf_session *tmp;
+
 		conn->type = CONN_TYPE_IOQ;
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
-		/* We always return CNTLID 0, so verify that the I/O connect CNTLID matches */
-		if (data->cntlid != 0) {
+		session = NULL;
+		TAILQ_FOREACH(tmp, &subsystem->sessions, link) {
+			if (tmp->id == data->cntlid) {
+				session = tmp;
+				break;
+			}
+		}
+		if (session == NULL) {
 			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
 			INVALID_CONNECT_DATA(cntlid);
 			return;
 		}
 
-		session = subsystem->session;
-		if (session == NULL || !session->vcprop.cc.bits.en) {
+		if (!session->vcprop.cc.bits.en) {
 			SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
 			INVALID_CONNECT_CMD(qid);
 			return;

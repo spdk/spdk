@@ -67,7 +67,8 @@ struct spdk_nvmf_conn {
  * At least one admin connection and additional IOQ connections.
  */
 struct spdk_nvmf_session {
-	struct spdk_nvmf_subsystem *subsys;
+	uint32_t			id;
+	struct spdk_nvmf_subsystem 	*subsys;
 
 	struct {
 		union spdk_nvme_cap_register	cap;
@@ -86,6 +87,8 @@ struct spdk_nvmf_session {
 	/* This is filled in by calling the transport's
 	 * session_init function. */
 	void					*trctx;
+
+	TAILQ_ENTRY(spdk_nvmf_session) 		link;
 };
 
 void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,

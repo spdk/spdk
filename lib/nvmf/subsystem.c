@@ -76,20 +76,17 @@ nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
 void
 spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_session *session = subsystem->session;
+	struct spdk_nvmf_session *session;
 
-	if (!session) {
-		/* No active connections, so just return */
-		return;
+	TAILQ_FOREACH(session, &subsystem->sessions, link) {
+		/* For NVMe subsystems, check the backing physical device for completions. */
+		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+			session->subsys->ops->poll_for_completions(session);
+		}
+
+		/* For each connection in the session, check for completions */
+		spdk_nvmf_session_poll(session);
 	}
-
-	/* For NVMe subsystems, check the backing physical device for completions. */
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		session->subsys->ops->poll_for_completions(session);
-	}
-
-	/* For each connection in the session, check for completions */
-	spdk_nvmf_session_poll(session);
 }
 
 static bool
@@ -143,6 +140,7 @@ spdk_nvmf_create_subsystem(int num, const char *name,
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
 	TAILQ_INIT(&subsystem->listen_addrs);
 	TAILQ_INIT(&subsystem->hosts);
+	TAILQ_INIT(&subsystem->sessions);
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 
@@ -154,6 +152,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_listen_addr	*listen_addr, *listen_addr_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
+	struct spdk_nvmf_session	*session, *session_tmp;
 
 	if (!subsystem) {
 		return;
@@ -176,9 +175,10 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		subsystem->num_hosts--;
 	}
 
-	if (subsystem->session) {
-		spdk_nvmf_session_destruct(subsystem->session);
+	TAILQ_FOREACH_SAFE(session, &subsystem->sessions, link, session_tmp) {
+		spdk_nvmf_session_destruct(session);
 	}
+
 	if (subsystem->ops) {
 		subsystem->ops->detach(subsystem);
 	}
