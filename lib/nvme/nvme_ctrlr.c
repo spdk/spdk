@@ -1049,7 +1049,8 @@ nvme_ctrlr_allocate_bars(struct spdk_nvme_ctrlr *ctrlr)
 	rc = nvme_pcicfg_map_bar(ctrlr->devhandle, 0, 0 /* writable */, &addr);
 	ctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
 	if ((ctrlr->regs == NULL) || (rc != 0)) {
-		nvme_printf(ctrlr, "pci_device_map_range failed with error code %d\n", rc);
+		nvme_printf(ctrlr, "nvme_pcicfg_map_bar failed with rc %d or bar %p\n",
+			    rc, ctrlr->regs);
 		return -1;
 	}
 
