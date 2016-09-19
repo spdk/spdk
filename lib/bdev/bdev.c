@@ -124,6 +124,7 @@ static void
 spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 {
 	struct rte_mempool *pool;
+	struct spdk_bdev_io *tmp;
 	void *buf;
 	need_rbuf_tailq_t *tailq;
 	uint64_t length;
@@ -142,9 +143,9 @@ spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 	if (TAILQ_EMPTY(tailq)) {
 		rte_mempool_put(pool, buf);
 	} else {
-		bdev_io = TAILQ_FIRST(tailq);
-		TAILQ_REMOVE(tailq, bdev_io, rbuf_link);
-		spdk_bdev_io_set_rbuf(bdev_io, buf);
+		tmp = TAILQ_FIRST(tailq);
+		TAILQ_REMOVE(tailq, tmp, rbuf_link);
+		spdk_bdev_io_set_rbuf(tmp, buf);
 	}
 }
 
