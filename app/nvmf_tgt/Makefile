@@ -39,10 +39,6 @@ APP = nvmf_tgt
 
 CFLAGS += $(ENV_CFLAGS)
 
-# Add NVMf library directory to include path
-# TODO: remove this once NVMf has a public API header
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-
 C_SRCS := conf.c nvmf_tgt.c nvmf_rpc.c
 
 SPDK_LIBS = \

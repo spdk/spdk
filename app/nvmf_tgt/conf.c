@@ -44,16 +44,17 @@
 #include <rte_lcore.h>
 
 #include "nvmf_tgt.h"
-#include "nvmf/subsystem.h"
-#include "nvmf/transport.h"
+
 #include "spdk/conf.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
+#include "spdk/nvme.h"
+#include "spdk/nvmf.h"
 
 #define MAX_LISTEN_ADDRESSES 255
 #define MAX_HOSTS 255
-
 #define PORTNUMSTRLEN 32
+#define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
 
 #define ACCEPT_TIMEOUT_US		1000 /* 1ms */
 
@@ -142,6 +143,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 	struct nvmf_tgt_subsystem *app_subsys;
 
 	app_subsys = nvmf_tgt_create_subsystem(0, SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
+					       NVMF_SUBSYSTEM_MODE_DIRECT,
 					       rte_get_master_lcore());
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
@@ -372,8 +374,8 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 	char path[MAX_STRING_LEN];
 	int numa_node = -1;
 
-	SPDK_NOTICELOG("Attaching NVMe device %x:%x:%x.%x to subsystem %s\n",
-		       found_domain, found_bus, found_dev, found_func, ctx->subsystem->subnqn);
+	SPDK_NOTICELOG("Attaching NVMe device %p at %x:%x:%x.%x to subsystem %p\n",
+		       ctrlr, found_domain, found_bus, found_dev, found_func, ctx->subsystem);
 
 	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%04x:%02x:%02x.%1u/numa_node",
 		 found_domain, found_bus, found_dev, found_func);
@@ -433,9 +435,10 @@ spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
-	const char *nqn, *mode;
+	const char *nqn, *mode_str;
 	struct nvmf_tgt_subsystem *app_subsys;
 	struct spdk_nvmf_subsystem *subsystem;
+	enum spdk_nvmf_subsystem_mode mode;
 	int i, ret;
 	uint64_t mask;
 	int lcore = 0;
@@ -458,27 +461,27 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	}
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 
-	app_subsys = nvmf_tgt_create_subsystem(sp->num, nqn, SPDK_NVMF_SUBTYPE_NVME, lcore);
+	mode_str = spdk_conf_section_get_val(sp, "Mode");
+	if (mode_str == NULL) {
+		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", sp->num);
+		return -1;
+	}
+
+	if (strcasecmp(mode_str, "Direct") == 0) {
+		mode = NVMF_SUBSYSTEM_MODE_DIRECT;
+	} else if (strcasecmp(mode_str, "Virtual") == 0) {
+		mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
+	} else {
+		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode_str);
+		return -1;
+	}
+
+	app_subsys = nvmf_tgt_create_subsystem(sp->num, nqn, SPDK_NVMF_SUBTYPE_NVME, mode, lcore);
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem createion failed\n");
 		return -1;
 	}
 	subsystem = app_subsys->subsystem;
-
-	mode = spdk_conf_section_get_val(sp, "Mode");
-	if (mode == NULL) {
-		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", sp->num);
-		return -1;
-	}
-
-	if (strcasecmp(mode, "Direct") == 0) {
-		subsystem->mode = NVMF_SUBSYSTEM_MODE_DIRECT;
-	} else if (strcasecmp(mode, "Virtual") == 0) {
-		subsystem->mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
-	} else {
-		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode);
-		return -1;
-	}
 
 	/* Parse Listen sections */
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
@@ -533,7 +536,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
 	}
 
-	if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 		const char *bdf;
 		struct spdk_nvmf_probe_ctx ctx = { 0 };
 
@@ -584,9 +587,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			return -1;
 		}
 
-		subsystem->dev.virt.ns_count = 0;
-		snprintf(subsystem->dev.virt.sn, MAX_SN_LEN, "%s", sn);
-		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
+		spdk_nvmf_subsystem_set_sn(subsystem, sn);
 
 		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
 			val = spdk_conf_section_get_nval(sp, "Namespace", i);
@@ -609,8 +610,8 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 				return -1;
 			}
 
-			SPDK_NOTICELOG("Attaching block device %s to subsystem %s\n",
-				       bdev->name, subsystem->subnqn);
+			SPDK_NOTICELOG("Attaching block device %s to subsystem %p\n",
+				       bdev->name, subsystem);
 
 		}
 	}
@@ -661,13 +662,14 @@ spdk_nvmf_parse_conf(void)
 
 int
 spdk_nvmf_parse_subsystem_for_rpc(const char *name,
-				  const char *mode, uint32_t lcore,
+				  const char *mode_str, uint32_t lcore,
 				  int num_listen_addresses, struct rpc_listen_address *addresses,
 				  int num_hosts, char *hosts[], const char *bdf,
 				  const char *sn, int num_devs, char *dev_list[])
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
+	enum spdk_nvmf_subsystem_mode mode;
 	int i, ret;
 	uint64_t mask;
 	int num = 0;
@@ -699,26 +701,28 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 	mask = spdk_app_get_core_mask();
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 
-	app_subsys = nvmf_tgt_create_subsystem(num, name, SPDK_NVMF_SUBTYPE_NVME, lcore);
+	/* Determine the mode the subsysem will operate in */
+	if (mode_str == NULL) {
+		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", num);
+		return -1;
+	}
+
+	if (strcasecmp(mode_str, "Direct") == 0) {
+		mode = NVMF_SUBSYSTEM_MODE_DIRECT;
+	} else if (strcasecmp(mode_str, "Virtual") == 0) {
+		mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
+	} else {
+		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode_str);
+		return -1;
+	}
+
+	app_subsys = nvmf_tgt_create_subsystem(num, name, SPDK_NVMF_SUBTYPE_NVME,
+					       mode, lcore);
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return -1;
 	}
 	subsystem = app_subsys->subsystem;
-
-	if (mode == NULL) {
-		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", num);
-		return -1;
-	}
-
-	if (strcasecmp(mode, "Direct") == 0) {
-		subsystem->mode = NVMF_SUBSYSTEM_MODE_DIRECT;
-	} else if (strcasecmp(mode, "Virtual") == 0) {
-		subsystem->mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
-	} else {
-		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode);
-		return -1;
-	}
 
 	/* Parse Listen sections */
 	for (i = 0; i < num_listen_addresses; i++) {
@@ -738,7 +742,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		spdk_nvmf_subsystem_add_host(subsystem, hosts[i]);
 	}
 
-	if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 		struct spdk_nvmf_probe_ctx ctx = { 0 };
 
 		if (bdf == NULL) {
@@ -791,7 +795,6 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 		subsystem->dev.virt.ns_count = 0;
 		snprintf(subsystem->dev.virt.sn, MAX_SN_LEN, "%s", sn);
-		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 
 		for (i = 0; i < num_devs; i++) {
 			namespace = dev_list[i];

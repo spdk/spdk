@@ -36,7 +36,7 @@
 
 #include <stdint.h>
 
-#include "spdk/nvmf_spec.h"
+#include "spdk/nvmf.h"
 #include "spdk/queue.h"
 
 struct rpc_listen_address {
@@ -74,6 +74,7 @@ void nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *subsystem);
 struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(int num,
 		const char *name,
 		enum spdk_nvmf_subtype subtype,
+		enum spdk_nvmf_subsystem_mode mode,
 		uint32_t lcore);
 
 int

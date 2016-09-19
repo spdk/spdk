@@ -43,11 +43,7 @@
 #include "spdk/assert.h"
 #include "spdk/queue.h"
 
-#define nvmf_min(a,b) (((a)<(b))?(a):(b))
-#define nvmf_max(a,b) (((a)>(b))?(a):(b))
-
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
-#define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
 
 #define OBJECT_NVMF_IO				0x30
 
@@ -69,9 +65,6 @@ struct spdk_nvmf_globals {
 	uint32_t in_capsule_data_size;
 	uint32_t max_io_size;
 };
-
-int nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
-		  uint32_t in_capsule_data_size, uint32_t max_io_size);
 
 static inline uint32_t
 nvmf_u32log2(uint32_t x)

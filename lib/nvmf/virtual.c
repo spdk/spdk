@@ -37,6 +37,8 @@
 #include "subsystem.h"
 #include "session.h"
 #include "request.h"
+
+#include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"

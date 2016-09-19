@@ -37,6 +37,7 @@
 #include <strings.h>
 
 #include "spdk/log.h"
+#include "spdk/nvmf.h"
 #include "spdk/queue.h"
 
 #include "nvmf_internal.h"

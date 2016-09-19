@@ -40,36 +40,13 @@
 #include "subsystem.h"
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
+const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
 
 #include "subsystem.c"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
-
-uint32_t
-spdk_app_get_current_core(void)
-{
-	return 0;
-}
-
-struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
-				       void *arg1, void *arg2,
-				       spdk_event_t next)
-{
-	return NULL;
-}
-
-void
-spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg, uint32_t lcore,
-		     struct spdk_event *complete, uint64_t period_microseconds)
-{
-}
-
-void spdk_poller_unregister(struct spdk_poller **ppoller,
-			    struct spdk_event *complete)
-{
-}
 
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
@@ -113,7 +90,8 @@ nvmf_test_create_subsystem(void)
 	struct spdk_nvmf_subsystem *subsystem;
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
-	subsystem = spdk_nvmf_create_subsystem(1, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL, NULL, NULL);
+	subsystem = spdk_nvmf_create_subsystem(1, nqn, SPDK_NVMF_SUBTYPE_NVME,
+					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_EQUAL(subsystem->num, 1);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
@@ -124,7 +102,8 @@ nvmf_test_create_subsystem(void)
 	memset(nqn + strlen(nqn), 'a', 222 - strlen(nqn));
 	nqn[222] = '\0';
 	CU_ASSERT(strlen(nqn) == 222);
-	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL, NULL, NULL);
+	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME,
+					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_delete_subsystem(subsystem);
@@ -134,7 +113,8 @@ nvmf_test_create_subsystem(void)
 	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
 	nqn[223] = '\0';
 	CU_ASSERT(strlen(nqn) == 223);
-	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL, NULL, NULL);
+	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME,
+					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	CU_ASSERT(subsystem == NULL);
 }
 

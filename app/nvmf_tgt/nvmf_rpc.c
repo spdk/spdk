@@ -34,24 +34,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "nvmf_tgt.h"
-#include "nvmf/subsystem.h"
-#include "nvmf/transport.h"
+#include "spdk/bdev.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
 #include "spdk/env.h"
 #include "spdk/nvme.h"
+#include "spdk/nvmf.h"
+
+#include "nvmf_tgt.h"
 
 static void
-dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *subsystem)
+dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tgt_subsystem)
 {
-	struct spdk_nvmf_listen_addr *listen_addr;
+	struct spdk_nvmf_listen_addr 	*listen_addr;
 	struct spdk_nvmf_host		*host;
+	struct spdk_nvmf_subsystem	*subsystem = tgt_subsystem->subsystem;
 
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "core");
-	spdk_json_write_int32(w, subsystem->lcore);
+	spdk_json_write_int32(w, tgt_subsystem->lcore);
 
 	spdk_json_write_name(w, "nqn");
 	spdk_json_write_string(w, subsystem->subnqn);
@@ -152,7 +154,7 @@ spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_server_conn *conn,
 	spdk_json_write_array_begin(w);
 	tgt_subsystem = nvmf_tgt_subsystem_first();
 	while (tgt_subsystem) {
-		dump_nvmf_subsystem(w, tgt_subsystem->subsystem);
+		dump_nvmf_subsystem(w, tgt_subsystem);
 		tgt_subsystem = nvmf_tgt_subsystem_next(tgt_subsystem);
 	}
 	spdk_json_write_array_end(w);

@@ -35,9 +35,11 @@
 
 #include "spdk/log.h"
 #include "spdk/conf.h"
+#include "spdk/nvmf.h"
+#include "spdk/trace.h"
+
 #include "subsystem.h"
 #include "transport.h"
-#include "spdk/trace.h"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 

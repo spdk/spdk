@@ -47,17 +47,6 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 {
 }
 
-spdk_event_t
-spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2, spdk_event_t next)
-{
-	return NULL;
-}
-
-void
-spdk_event_call(spdk_event_t event)
-{
-}
-
 void
 spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			  struct spdk_nvmf_fabric_connect_cmd *cmd,

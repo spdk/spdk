@@ -38,6 +38,7 @@
 #include "session.h"
 #include "subsystem.h"
 #include "transport.h"
+
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
@@ -117,7 +118,9 @@ spdk_nvmf_valid_nqn(const char *nqn)
 
 struct spdk_nvmf_subsystem *
 spdk_nvmf_create_subsystem(int num, const char *name,
-			   enum spdk_nvmf_subtype subtype, void *cb_ctx,
+			   enum spdk_nvmf_subtype subtype,
+			   enum spdk_nvmf_subsystem_mode mode,
+			   void *cb_ctx,
 			   spdk_nvmf_subsystem_connect_fn connect_cb,
 			   spdk_nvmf_subsystem_disconnect_fn disconnect_cb)
 {
@@ -134,6 +137,7 @@ spdk_nvmf_create_subsystem(int num, const char *name,
 
 	subsystem->num = num;
 	subsystem->subtype = subtype;
+	subsystem->mode = mode;
 	subsystem->cb_ctx = cb_ctx;
 	subsystem->connect_cb = connect_cb;
 	subsystem->disconnect_cb = disconnect_cb;
@@ -141,6 +145,12 @@ spdk_nvmf_create_subsystem(int num, const char *name,
 	TAILQ_INIT(&subsystem->listen_addrs);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->sessions);
+
+	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+		subsystem->ops = &spdk_nvmf_direct_ctrlr_ops;
+	} else {
+		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
+	}
 
 	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
 
@@ -179,7 +189,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		spdk_nvmf_session_destruct(session);
 	}
 
-	if (subsystem->ops) {
+	if (subsystem->ops->detach) {
 		subsystem->ops->detach(subsystem);
 	}
 
@@ -261,7 +271,6 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -1;
 	}
-	subsystem->ops = &spdk_nvmf_direct_ctrlr_ops;
 	return 0;
 }
 
@@ -316,5 +325,17 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	}
 	subsystem->dev.virt.ns_list[i] = bdev;
 	subsystem->dev.virt.ns_count++;
+	return 0;
+}
+
+int
+spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
+{
+	if (subsystem->mode != NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+		return -1;
+	}
+
+	snprintf(subsystem->dev.virt.sn, sizeof(subsystem->dev.virt.sn), "%s", sn);
+
 	return 0;
 }

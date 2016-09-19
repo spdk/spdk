@@ -97,9 +97,6 @@ void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			       struct spdk_nvmf_fabric_connect_rsp *rsp);
 
 void
-spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn);
-
-void
 spdk_nvmf_property_get(struct spdk_nvmf_session *session,
 		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
 		       struct spdk_nvmf_fabric_prop_get_rsp *response);
