@@ -256,3 +256,34 @@ spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
 	}
 }
 
+void
+spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev)
+{
+	int i;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		if (dev->lun[i] == NULL) {
+			continue;
+		}
+		spdk_scsi_lun_free_io_channel(dev->lun[i]);
+	}
+}
+
+int
+spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev)
+{
+	int i, rc;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		if (dev->lun[i] == NULL) {
+			continue;
+		}
+		rc = spdk_scsi_lun_allocate_io_channel(dev->lun[i]);
+		if (rc < 0) {
+			spdk_scsi_dev_free_io_channels(dev);
+			return -1;
+		}
+	}
+
+	return 0;
+}

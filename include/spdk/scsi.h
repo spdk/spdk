@@ -41,6 +41,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <pthread.h>
 #include <sys/uio.h>
 
 #include "spdk/queue.h"
@@ -193,6 +194,14 @@ struct spdk_scsi_lun {
 	/** The blockdev associated with this LUN. */
 	struct spdk_bdev *bdev;
 
+	/** I/O channel for the blockdev associated with this LUN. */
+	struct spdk_io_channel *io_channel;
+
+	/** Thread ID for the thread that allocated the I/O channel for this
+	 *   LUN.  All I/O to this LUN must be performed from this thread.
+	 */
+	pthread_t thread_id;
+
 	/** Name for this LUN. */
 	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
 
@@ -206,6 +215,8 @@ void spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *
 int spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name);
 struct spdk_scsi_port *spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id);
 void spdk_scsi_dev_print(struct spdk_scsi_dev *dev);
+int spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev);
+void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
 
 /**
 

@@ -140,7 +140,17 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 
 void spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
-	return;
+}
+
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+{
+	return NULL;
+}
+
+void
+spdk_put_io_channel(struct spdk_io_channel *ch)
+{
 }
 
 void spdk_event_call(spdk_event_t event)

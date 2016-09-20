@@ -117,6 +117,17 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 {
 }
 
+int
+spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
+{
+	return 0;
+}
+
+void
+spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
+{
+}
+
 
 static void
 dev_destruct_null_dev(void)

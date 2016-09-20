@@ -34,6 +34,7 @@
 
 #include "scsi_internal.h"
 #include "spdk/endian.h"
+#include "spdk/io_channel.h"
 
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
@@ -390,4 +391,30 @@ spdk_scsi_lun_delete(const char *lun_name)
 	/* Destroy this lun */
 	spdk_scsi_lun_destruct(lun);
 	pthread_mutex_unlock(&g_spdk_scsi.mutex);
+}
+
+int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
+{
+	if (lun->io_channel != NULL) {
+		if (pthread_self() == lun->thread_id) {
+			return 0;
+		}
+		SPDK_ERRLOG("io_channel already allocated for lun %s\n", lun->name);
+		return -1;
+	}
+
+	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev, SPDK_IO_PRIORITY_DEFAULT);
+	if (lun->io_channel == NULL) {
+		return -1;
+	}
+	lun->thread_id = pthread_self();
+	return 0;
+}
+
+void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
+{
+	if (lun->io_channel != NULL) {
+		spdk_put_io_channel(lun->io_channel);
+		lun->io_channel = NULL;
+	}
 }
