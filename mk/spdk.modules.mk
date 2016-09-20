@@ -8,6 +8,11 @@ BLOCKDEV_MODULES += $(SPDK_ROOT_DIR)/lib/bdev/aio/libspdk_bdev_aio.a
 BLOCKDEV_MODULES_DEPS += -laio
 endif
 
+ifeq ($(CONFIG_RBD),y)
+BLOCKDEV_MODULES += $(SPDK_ROOT_DIR)/lib/bdev/rbd/libspdk_bdev_rbd.a
+BLOCKDEV_MODULES_DEPS += -lrados -lrbd
+endif
+
 COPY_MODULES += $(SPDK_ROOT_DIR)/lib/copy/ioat/libspdk_copy_ioat.a \
 		$(SPDK_ROOT_DIR)/lib/ioat/libspdk_ioat.a
 

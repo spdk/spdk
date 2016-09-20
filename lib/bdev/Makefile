@@ -44,4 +44,6 @@ ifeq ($(OS),Linux)
 DIRS-y += aio
 endif
 
+DIRS-$(CONFIG_RBD) += rbd
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

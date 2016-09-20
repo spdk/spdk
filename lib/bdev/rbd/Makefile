@@ -31,48 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=n
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-# Treat warnings as errors (fail the build on any warning).
-CONFIG_WERROR?=n
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
+C_SRCS = blockdev_rbd.c
+LIBNAME = bdev_rbd
 
-# Build with code coverage instrumentation.
-CONFIG_COVERAGE?=n
-
-# Build with Address Sanitizer enabled
-CONFIG_ADDRESS_SANITIZER?=n
-
-# This directory should contain 'include' and 'lib' directories for your DPDK
-# installation. Alternatively you can specify this on the command line
-# with 'make DPDK_DIR=/path/to/dpdk'.
-CONFIG_DPDK_DIR?=/path/to/dpdk
-
-# Header file to use for NVMe implementation specific functions.
-# Defaults to depending on DPDK.
-CONFIG_NVME_IMPL?=nvme_impl.h
-
-# Header file to use for IOAT implementation specific functions.
-# Defaults to depending on DPDK.
-CONFIG_IOAT_IMPL?=ioat_impl.h
-
-# This item indicates using libpciaccess library or not. If enabled with y,
-# libpciaccess library is used to map pci devices; else DPDK library is used to
-# map pci devices.
-CONFIG_PCIACCESS?=y
-
-# Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
-# fio source code directory.
-CONFIG_FIO_PLUGIN?=n
-
-# This directory should contain the source code directory for fio
-# which is required for building the SPDK FIO plugin.
-FIO_SOURCE_DIR?=/usr/src/fio
-
-# Enable RDMA support for the NVMf target.
-# Requires ibverbs development libraries.
-CONFIG_RDMA?=n
-
-# Build Ceph RBD support in bdev modules
-# Requires librbd development libraries
-CONFIG_RBD?=n
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

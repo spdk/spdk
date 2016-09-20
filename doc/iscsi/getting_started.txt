@@ -104,6 +104,29 @@ Other TargetNode parameters go here (TargetName, Mapping, etc.):
   LUN0 AIO0
 \endverbatim
 
+Ceph RBD
+========
+
+Ceph RBD devices are accessed via librbd and librados libraries to access the RADOS block device
+exported by Ceph.
+
+Configuration file syntax:
+
+\verbatim
+[Ceph]
+  # The format of provided rbd info should be: Ceph rbd_pool_name rbd_name size.
+  # In the following example, rbd is the name of rbd_pool; foo is the name of
+  # rbd device exported by Ceph; value 512 represents the configured block size
+  # for this rbd, the block size should be a multiple of 512.
+  Ceph rbd foo 512
+\endverbatim
+
+Other TargetNode parameters go here (TargetName, Mapping, etc.):
+\verbatim
+[TargetNodeX]
+  LUN0 Ceph0
+\endverbatim
+
 NVMe
 ====
 
