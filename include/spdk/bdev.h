@@ -98,15 +98,6 @@ struct spdk_bdev {
 	/** generation value used by block device reset */
 	uint32_t gencnt;
 
-	/** Whether the poller is registered with the reactor */
-	bool is_running;
-
-	/** Which lcore the poller is running on */
-	uint32_t lcore;
-
-	/** Poller to submit IO and check completion */
-	struct spdk_poller *poller;
-
 	/** True if another blockdev or a LUN is using this device */
 	bool claimed;
 
@@ -133,13 +124,6 @@ enum spdk_bdev_io_type {
 struct spdk_bdev_fn_table {
 	/** Destroy the backend block device object */
 	int (*destruct)(struct spdk_bdev *bdev);
-
-	/**
-	 * Poll the backend for I/O waiting to be completed.
-	 *
-	 * Optional; if the bdev does not have any periodic work to do, this pointer can be NULL.
-	 */
-	int (*check_io)(struct spdk_bdev *bdev);
 
 	/** Process the IO. */
 	void (*submit_request)(struct spdk_bdev_io *);
@@ -192,6 +176,9 @@ struct spdk_bdev_io {
 
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
+
+	/** The I/O channel to submit this I/O on. */
+	struct spdk_io_channel *ch;
 
 	/** Enumerated value representing the I/O type. */
 	enum spdk_bdev_io_type type;
@@ -289,25 +276,24 @@ struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
 
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
-struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev,
+struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				    void *buf, uint64_t offset, uint64_t nbytes,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);
-struct spdk_bdev_io *spdk_bdev_write(struct spdk_bdev *bdev,
+struct spdk_bdev_io *spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     void *buf, uint64_t offset, uint64_t nbytes,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
-struct spdk_bdev_io *spdk_bdev_writev(struct spdk_bdev *bdev,
+struct spdk_bdev_io *spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				      struct iovec *iov, int iovcnt,
 				      uint64_t offset, uint64_t len,
 				      spdk_bdev_io_completion_cb cb, void *cb_arg);
-struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev,
+struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     struct spdk_scsi_unmap_bdesc *unmap_d,
 				     uint16_t bdesc_count,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
-struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev,
+struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     uint64_t offset, uint64_t length,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 int spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io);
-void spdk_bdev_do_work(void *ctx);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);

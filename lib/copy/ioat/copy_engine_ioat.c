@@ -61,8 +61,6 @@ struct ioat_device {
 
 static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static int g_unbindfromkernel = 0;
-static int g_ioat_channel_count = 0;
-static struct spdk_ioat_chan *g_ioat_chan[RTE_MAX_LCORE];
 static pthread_mutex_t g_ioat_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct ioat_whitelist {
@@ -164,32 +162,32 @@ ioat_done(void *cb_arg)
 }
 
 static int64_t
-ioat_copy_submit(void *cb_arg, void *dst, void *src, uint64_t nbytes,
+ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
 		 copy_completion_cb cb)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
-	struct spdk_ioat_chan *chan = g_ioat_chan[rte_lcore_id()];
+	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 
-	RTE_VERIFY(chan != NULL);
+	RTE_VERIFY(ioat_ch->ioat_ch != NULL);
 
 	ioat_task->cb = cb;
 
-	return spdk_ioat_submit_copy(chan, ioat_task, ioat_done, dst, src, nbytes);
+	return spdk_ioat_submit_copy(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, src, nbytes);
 }
 
 static int64_t
-ioat_copy_submit_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
-		      copy_completion_cb cb)
+ioat_copy_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
+		      uint64_t nbytes, copy_completion_cb cb)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
-	struct spdk_ioat_chan *chan = g_ioat_chan[rte_lcore_id()];
+	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
 	uint64_t fill64 = 0x0101010101010101ULL * fill;
 
-	RTE_VERIFY(chan != NULL);
+	RTE_VERIFY(ioat_ch->ioat_ch != NULL);
 
 	ioat_task->cb = cb;
 
-	return spdk_ioat_submit_fill(chan, ioat_task, ioat_done, dst, fill64, nbytes);
+	return spdk_ioat_submit_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill64, nbytes);
 }
 
 static void
@@ -200,21 +198,11 @@ ioat_poll(void *arg)
 	spdk_ioat_process_events(chan);
 }
 
-static void
-ioat_check_io(void)
-{
-	struct spdk_ioat_chan *chan = g_ioat_chan[rte_lcore_id()];
-
-	RTE_VERIFY(chan != NULL);
-	ioat_poll(chan);
-}
-
 static struct spdk_io_channel *ioat_get_io_channel(uint32_t priority);
 
 static struct spdk_copy_engine ioat_copy_engine = {
 	.copy		= ioat_copy_submit,
 	.fill		= ioat_copy_submit_fill,
-	.check_io	= ioat_check_io,
 	.get_io_channel	= ioat_get_io_channel,
 };
 
@@ -315,7 +303,6 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 
 	dev->ioat = ioat;
 	TAILQ_INSERT_TAIL(&g_devices, dev, tailq);
-	g_ioat_channel_count++;
 }
 
 static int
@@ -325,7 +312,6 @@ copy_engine_ioat_init(void)
 	const char *val, *pci_bdf;
 	int i;
 	struct ioat_probe_ctx probe_ctx = {};
-	int lcore;
 
 	if (sp != NULL) {
 		val = spdk_conf_section_get_val(sp, "Disable");
@@ -358,21 +344,6 @@ copy_engine_ioat_init(void)
 	if (spdk_ioat_probe(&probe_ctx, probe_cb, attach_cb) != 0) {
 		SPDK_ERRLOG("spdk_ioat_probe() failed\n");
 		return -1;
-	}
-
-	/* We only handle the case where we have enough channels */
-	if (g_ioat_channel_count < spdk_app_get_core_count()) {
-		SPDK_ERRLOG("Not enough IOAT channels for all cores\n");
-		copy_engine_ioat_exit();
-		return 0;
-	}
-
-	/* Assign channels to lcores in the active core mask */
-	/* we use u64 as CPU core mask */
-	for (lcore = 0; lcore < RTE_MAX_LCORE && lcore < 64; lcore++) {
-		if ((spdk_app_get_core_mask() & (1ULL << lcore))) {
-			g_ioat_chan[lcore] = ioat_allocate_device()->ioat;
-		}
 	}
 
 	SPDK_NOTICELOG("Ioat Copy Engine Offload Enabled\n");

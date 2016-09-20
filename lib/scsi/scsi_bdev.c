@@ -1334,7 +1334,7 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		return -1;
 	}
 
-	task->blockdev_io = spdk_bdev_read(bdev, task->rbuf, offset, nbytes,
+	task->blockdev_io = spdk_bdev_read(bdev, task->ch, task->rbuf, offset, nbytes,
 					   spdk_bdev_scsi_task_complete, task);
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("spdk_bdev_read() failed\n");
@@ -1384,7 +1384,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	}
 
 	offset += task->offset;
-	task->blockdev_io = spdk_bdev_writev(bdev, &task->iov,
+	task->blockdev_io = spdk_bdev_writev(bdev, task->ch, &task->iov,
 					     1, offset, task->length,
 					     spdk_bdev_scsi_task_complete,
 					     task);
@@ -1431,7 +1431,7 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	task->blockdev_io = spdk_bdev_flush(bdev, offset, nbytes,
+	task->blockdev_io = spdk_bdev_flush(bdev, task->ch, offset, nbytes,
 					    spdk_bdev_scsi_task_complete, task);
 
 	if (!task->blockdev_io) {
@@ -1503,7 +1503,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	task->blockdev_io = spdk_bdev_unmap(bdev, (struct spdk_scsi_unmap_bdesc *)&data[8],
+	task->blockdev_io = spdk_bdev_unmap(bdev, task->ch, (struct spdk_scsi_unmap_bdesc *)&data[8],
 					    bdesc_count, spdk_bdev_scsi_task_complete,
 					    task);
 

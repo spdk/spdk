@@ -79,7 +79,6 @@ struct nvme_blockdev {
 	struct spdk_bdev	disk;
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct spdk_nvme_ns	*ns;
-	struct spdk_nvme_qpair	*qpair;
 	uint64_t		lba_start;
 	uint64_t		lba_end;
 	uint64_t		blocklen;
@@ -139,15 +138,17 @@ SPDK_BDEV_MODULE_REGISTER(nvme_library_init, NULL, blockdev_nvme_get_spdk_runnin
 			  nvme_get_ctx_size)
 
 static int64_t
-blockdev_nvme_read(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
+blockdev_nvme_read(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
+		   struct nvme_blockio *bio,
 		   void *buf, uint64_t nbytes, off_t offset)
 {
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int64_t rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "read %lu bytes with offset %#lx to %p\n",
 		      nbytes, offset, buf);
 
-	rc = nvme_queue_cmd(nbdev, nbdev->qpair, bio, BDEV_DISK_READ, buf, nbytes, offset);
+	rc = nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_READ, buf, nbytes, offset);
 	if (rc < 0)
 		return -1;
 
@@ -155,9 +156,11 @@ blockdev_nvme_read(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
 }
 
 static int64_t
-blockdev_nvme_writev(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
+blockdev_nvme_writev(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
+		     struct nvme_blockio *bio,
 		     struct iovec *iov, int iovcnt, size_t len, off_t offset)
 {
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int64_t rc;
 
 	if ((iovcnt != 1) || (iov->iov_len != len))
@@ -166,7 +169,7 @@ blockdev_nvme_writev(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "write %lu bytes with offset %#lx from %p\n",
 		      iov->iov_len, offset, iov->iov_base);
 
-	rc = nvme_queue_cmd(nbdev, nbdev->qpair, bio, BDEV_DISK_WRITE, (void *)iov->iov_base,
+	rc = nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_WRITE, (void *)iov->iov_base,
 			    iov->iov_len, offset);
 	if (rc < 0)
 		return -1;
@@ -180,16 +183,6 @@ blockdev_nvme_poll(void *arg)
 	struct spdk_nvme_qpair *qpair = arg;
 
 	spdk_nvme_qpair_process_completions(qpair, 0);
-}
-
-static int
-blockdev_nvme_check_io(struct spdk_bdev *bdev)
-{
-	struct nvme_blockdev *nbdev = (struct nvme_blockdev *)bdev;
-
-	blockdev_nvme_poll(nbdev->qpair);
-
-	return 0;
 }
 
 static int
@@ -224,7 +217,8 @@ blockdev_nvme_reset(struct nvme_blockdev *nbdev, struct nvme_blockio *bio)
 }
 
 static int
-blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
+blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
+		    struct nvme_blockio *bio,
 		    struct spdk_scsi_unmap_bdesc *umap_d,
 		    uint16_t bdesc_count);
 
@@ -233,6 +227,7 @@ static void blockdev_nvme_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 	int ret;
 
 	ret = blockdev_nvme_read((struct nvme_blockdev *)bdev_io->ctx,
+				 bdev_io->ch,
 				 (struct nvme_blockio *)bdev_io->driver_ctx,
 				 bdev_io->u.read.buf,
 				 bdev_io->u.read.nbytes,
@@ -252,6 +247,7 @@ static int _blockdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return blockdev_nvme_writev((struct nvme_blockdev *)bdev_io->ctx,
+					    bdev_io->ch,
 					    (struct nvme_blockio *)bdev_io->driver_ctx,
 					    bdev_io->u.write.iovs,
 					    bdev_io->u.write.iovcnt,
@@ -260,6 +256,7 @@ static int _blockdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return blockdev_nvme_unmap((struct nvme_blockdev *)bdev_io->ctx,
+					   bdev_io->ch,
 					   (struct nvme_blockio *)bdev_io->driver_ctx,
 					   bdev_io->u.unmap.unmap_bdesc,
 					   bdev_io->u.unmap.bdesc_count);
@@ -345,7 +342,6 @@ blockdev_nvme_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= blockdev_nvme_destruct,
-	.check_io		= blockdev_nvme_check_io,
 	.submit_request		= blockdev_nvme_submit_request,
 	.io_type_supported	= blockdev_nvme_io_type_supported,
 	.get_io_channel		= blockdev_nvme_get_io_channel,
@@ -607,13 +603,6 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 			snprintf(bdev->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH,
 				 "NVMe disk");
 
-			bdev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
-			if (!bdev->qpair) {
-				SPDK_ERRLOG("Could not allocate I/O queue pair for %s\n",
-					    bdev->disk.name);
-				continue;
-			}
-
 			if (cdata->oncs.dsm) {
 				/*
 				 * Enable the thin provisioning
@@ -686,10 +675,12 @@ nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
 }
 
 static int
-blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
+blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
+		    struct nvme_blockio *bio,
 		    struct spdk_scsi_unmap_bdesc *unmap_d,
 		    uint16_t bdesc_count)
 {
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int rc = 0, i;
 
 	for (i = 0; i < bdesc_count; i++) {
@@ -699,7 +690,7 @@ blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
 		unmap_d++;
 	}
 
-	rc = spdk_nvme_ns_cmd_deallocate(nbdev->ns, nbdev->qpair, bio->dsm_range, bdesc_count,
+	rc = spdk_nvme_ns_cmd_deallocate(nbdev->ns, nvme_ch->qpair, bio->dsm_range, bdesc_count,
 					 queued_done, bio);
 
 	if (rc != 0)

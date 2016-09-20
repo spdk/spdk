@@ -62,8 +62,6 @@ struct file_disk {
 	char			disk_name[SPDK_BDEV_MAX_NAME_LENGTH];
 	uint64_t		size;
 
-	struct blockdev_aio_io_channel	ch;
-
 	/**
 	 * For storing I/O that were completed synchronously, and will be
 	 *   completed during next check_io call.

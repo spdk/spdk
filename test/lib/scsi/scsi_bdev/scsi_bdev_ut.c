@@ -132,7 +132,7 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 }
 
 struct spdk_bdev_io *
-spdk_bdev_read(struct spdk_bdev *bdev,
+spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
@@ -140,7 +140,7 @@ spdk_bdev_read(struct spdk_bdev *bdev,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_writev(struct spdk_bdev *bdev,
+spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		 struct iovec *iov, int iovcnt,
 		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -149,7 +149,7 @@ spdk_bdev_writev(struct spdk_bdev *bdev,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_unmap(struct spdk_bdev *bdev,
+spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct spdk_scsi_unmap_bdesc *unmap_d,
 		uint16_t bdesc_count,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -165,7 +165,7 @@ spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_flush(struct spdk_bdev *bdev,
+spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		uint64_t offset, uint64_t length,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {

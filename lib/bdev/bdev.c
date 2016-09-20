@@ -406,12 +406,9 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 }
 
 static void
-__submit_request(spdk_event_t event)
+__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, spdk_event_t cb_event)
 {
-	struct spdk_bdev *bdev = spdk_event_get_arg1(event);
-	struct spdk_bdev_io *bdev_io = spdk_event_get_arg2(event);
-
-	bdev_io->cb_event = spdk_event_get_next(event);
+	bdev_io->cb_event = cb_event;
 
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
@@ -441,32 +438,11 @@ __submit_request(spdk_event_t event)
 	}
 }
 
-void
-spdk_bdev_do_work(void *ctx)
-{
-	struct spdk_bdev *bdev = ctx;
-
-	bdev->fn_table->check_io(bdev->ctxt);
-}
-
 int
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	struct spdk_event *event, *cb_event = NULL;
-	uint32_t lcore = bdev->lcore;
-
-	/* start the poller when first IO comes */
-	if (!bdev->is_running) {
-		bdev->is_running = true;
-		if (lcore == 0) {
-			lcore = rte_lcore_id();
-		}
-		bdev->lcore = lcore;
-		if (bdev->fn_table->check_io) {
-			spdk_poller_register(&bdev->poller, spdk_bdev_do_work, bdev, lcore, NULL, 0);
-		}
-	}
+	struct spdk_event *cb_event = NULL;
 
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
 		cb_event = spdk_event_allocate(rte_lcore_id(), bdev_io->cb,
@@ -474,11 +450,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		RTE_VERIFY(cb_event != NULL);
 	}
 
-	event = spdk_event_allocate(lcore, __submit_request, bdev, bdev_io, cb_event);
-
-	RTE_VERIFY(event != NULL);
-	spdk_event_call(event);
-
+	__submit_request(bdev, bdev_io, cb_event);
 	return 0;
 }
 
@@ -542,7 +514,7 @@ spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 }
 
 struct spdk_bdev_io *
-spdk_bdev_read(struct spdk_bdev *bdev,
+spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
@@ -571,6 +543,7 @@ spdk_bdev_read(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
+	bdev_io->ch = ch;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.buf = buf;
 	bdev_io->u.read.nbytes = nbytes;
@@ -587,7 +560,7 @@ spdk_bdev_read(struct spdk_bdev *bdev,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_write(struct spdk_bdev *bdev,
+spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		void *buf, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
@@ -616,6 +589,7 @@ spdk_bdev_write(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
+	bdev_io->ch = ch;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iov.iov_base = buf;
 	bdev_io->u.write.iov.iov_len = nbytes;
@@ -635,7 +609,7 @@ spdk_bdev_write(struct spdk_bdev *bdev,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_writev(struct spdk_bdev *bdev,
+spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		 struct iovec *iov, int iovcnt,
 		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -665,6 +639,7 @@ spdk_bdev_writev(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
+	bdev_io->ch = ch;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iovs = iov;
 	bdev_io->u.write.iovcnt = iovcnt;
@@ -682,7 +657,7 @@ spdk_bdev_writev(struct spdk_bdev *bdev,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_unmap(struct spdk_bdev *bdev,
+spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct spdk_scsi_unmap_bdesc *unmap_d,
 		uint16_t bdesc_count,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -696,6 +671,7 @@ spdk_bdev_unmap(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
+	bdev_io->ch = ch;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
 	bdev_io->u.unmap.unmap_bdesc = unmap_d;
 	bdev_io->u.unmap.bdesc_count = bdesc_count;
@@ -711,7 +687,7 @@ spdk_bdev_unmap(struct spdk_bdev *bdev,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_flush(struct spdk_bdev *bdev,
+spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		uint64_t offset, uint64_t length,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
@@ -724,6 +700,7 @@ spdk_bdev_flush(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
+	bdev_io->ch = ch;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
 	bdev_io->u.flush.offset = offset;
 	bdev_io->u.flush.length = length;
@@ -823,8 +800,6 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
-	bdev->is_running = false;
-	bdev->poller = NULL;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);
@@ -841,13 +816,6 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
-	}
-
-	if (bdev->is_running) {
-		if (bdev->poller) {
-			spdk_poller_unregister(&bdev->poller, NULL);
-		}
-		bdev->is_running = false;
 	}
 }
 

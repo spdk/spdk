@@ -52,6 +52,7 @@
 #include "spdk/copy_engine.h"
 #include "spdk/endian.h"
 #include "spdk/log.h"
+#include "spdk/io_channel.h"
 
 struct bdevperf_task {
 	struct iovec		iov;
@@ -80,6 +81,7 @@ static void bdevperf_submit_single(struct io_target *target);
 
 struct io_target {
 	struct spdk_bdev	*bdev;
+	struct spdk_io_channel	*ch;
 	struct io_target	*next;
 	unsigned		lcore;
 	int			io_completed;
@@ -212,6 +214,7 @@ bdevperf_complete(spdk_event_t event)
 	if (!target->is_draining) {
 		bdevperf_submit_single(target);
 	} else if (target->current_queue_depth == 0) {
+		spdk_put_io_channel(target->ch);
 		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, NULL, NULL, NULL);
 		spdk_event_call(complete);
 	}
@@ -230,7 +233,7 @@ bdevperf_unmap_complete(spdk_event_t event)
 	memset(task->buf, 0, g_io_size);
 
 	/* Read the data back in */
-	spdk_bdev_read(target->bdev, NULL,
+	spdk_bdev_read(target->bdev, target->ch, NULL,
 		       from_be64(&bdev_io->u.unmap.unmap_bdesc->lba) * target->bdev->blocklen,
 		       from_be32(&bdev_io->u.unmap.unmap_bdesc->block_count) * target->bdev->blocklen,
 		       bdevperf_complete, task);
@@ -260,11 +263,11 @@ bdevperf_verify_write_complete(spdk_event_t event)
 		to_be64(&bdesc->lba, bdev_io->u.write.offset / target->bdev->blocklen);
 		to_be32(&bdesc->block_count, bdev_io->u.write.len / target->bdev->blocklen);
 
-		spdk_bdev_unmap(target->bdev, bdesc, 1, bdevperf_unmap_complete,
+		spdk_bdev_unmap(target->bdev, target->ch, bdesc, 1, bdevperf_unmap_complete,
 				task);
 	} else {
 		/* Read the data back in */
-		spdk_bdev_read(target->bdev, NULL,
+		spdk_bdev_read(target->bdev, target->ch, NULL,
 			       bdev_io->u.write.offset,
 			       bdev_io->u.write.len,
 			       bdevperf_complete, task);
@@ -287,11 +290,13 @@ static void
 bdevperf_submit_single(struct io_target *target)
 {
 	struct spdk_bdev	*bdev;
+	struct spdk_io_channel	*ch;
 	struct bdevperf_task	*task = NULL;
 	uint64_t		offset_in_ios;
 	void			*rbuf;
 
 	bdev = target->bdev;
+	ch = target->ch;
 
 	if (rte_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
 		printf("Task pool allocation failed\n");
@@ -313,17 +318,17 @@ bdevperf_submit_single(struct io_target *target)
 		memset(task->buf, rand_r(&seed) % 256, g_io_size);
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		spdk_bdev_writev(bdev, &task->iov, 1, offset_in_ios * g_io_size, g_io_size,
+		spdk_bdev_writev(bdev, ch, &task->iov, 1, offset_in_ios * g_io_size, g_io_size,
 				 bdevperf_verify_write_complete, task);
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 		rbuf = g_zcopy ? NULL : task->buf;
-		spdk_bdev_read(bdev, rbuf, offset_in_ios * g_io_size, g_io_size,
+		spdk_bdev_read(bdev, ch, rbuf, offset_in_ios * g_io_size, g_io_size,
 			       bdevperf_complete, task);
 	} else {
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		spdk_bdev_writev(bdev, &task->iov, 1, offset_in_ios * g_io_size, g_io_size,
+		spdk_bdev_writev(bdev, ch, &task->iov, 1, offset_in_ios * g_io_size, g_io_size,
 				 bdevperf_complete, task);
 	}
 
@@ -392,6 +397,8 @@ bdevperf_submit_on_core(spdk_event_t event)
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
 	while (target != NULL) {
+		target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
+
 		/* Start a timer to stop this I/O chain when the run is over */
 		rte_timer_reset(&target->run_timer, rte_get_timer_hz() * g_time_in_sec, SINGLE,
 				target->lcore, end_target, target);

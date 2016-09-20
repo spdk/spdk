@@ -381,7 +381,8 @@ nvmf_virtual_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
+nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			  struct spdk_nvmf_request *req)
 {
 	uint64_t lba_address;
 	uint64_t blockcnt;
@@ -413,14 +414,14 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
 
 	if (cmd->opc == SPDK_NVME_OPC_READ) {
 		spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_read(bdev, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
+		if (spdk_bdev_read(bdev, ch, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
 				   req) == NULL) {
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	} else {
 		spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_write(bdev, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
+		if (spdk_bdev_write(bdev, ch, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
 				    req) == NULL) {
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -431,14 +432,15 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_virtual_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
+nvmf_virtual_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			     struct spdk_nvmf_request *req)
 {
 
 	uint64_t nbytes;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
 	nbytes = bdev->blockcnt * bdev->blocklen;
-	if (spdk_bdev_flush(bdev, 0, nbytes, nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
+	if (spdk_bdev_flush(bdev, ch, 0, nbytes, nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -446,7 +448,8 @@ nvmf_virtual_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *r
 }
 
 static int
-nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req)
+nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			   struct spdk_nvmf_request *req)
 {
 	int i;
 	uint32_t attribute;
@@ -477,7 +480,7 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_nvmf_request *req
 			to_be64(&unmap[i].lba, dsm_range[i].starting_lba);
 			to_be32(&unmap[i].block_count, dsm_range[i].length);
 		}
-		if (spdk_bdev_unmap(bdev, unmap, nr, nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
+		if (spdk_bdev_unmap(bdev, ch, unmap, nr, nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
 			free(unmap);
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -496,6 +499,7 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	uint32_t nsid;
 	struct spdk_bdev *bdev;
+	struct spdk_io_channel *ch;
 	struct spdk_nvmf_subsystem *subsystem = req->conn->sess->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -511,14 +515,15 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 
 	bdev = subsystem->dev.virtual.ns_list[nsid - 1];
+	ch = subsystem->dev.virtual.ch[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE:
-		return nvmf_virtual_ctrlr_rw_cmd(bdev, req);
+		return nvmf_virtual_ctrlr_rw_cmd(bdev, ch, req);
 	case SPDK_NVME_OPC_FLUSH:
-		return nvmf_virtual_ctrlr_flush_cmd(bdev, req);
+		return nvmf_virtual_ctrlr_flush_cmd(bdev, ch, req);
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
-		return nvmf_virtual_ctrlr_dsm_cmd(bdev, req);
+		return nvmf_virtual_ctrlr_dsm_cmd(bdev, ch, req);
 	default:
 		SPDK_ERRLOG("Unsupported IO command opc: %x\n", cmd->opc);
 		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;

@@ -70,21 +70,6 @@ spdk_memcpy_register(struct spdk_copy_engine *copy_engine)
 	mem_copy_engine = copy_engine;
 }
 
-static int
-spdk_has_copy_engine(void)
-{
-	return (hw_copy_engine == NULL) ? 0 : 1;
-}
-
-int
-spdk_copy_check_io(void)
-{
-	if (spdk_has_copy_engine())
-		hw_copy_engine->check_io();
-
-	return 0;
-}
-
 static void
 copy_engine_done(void *ref, int status)
 {
@@ -94,41 +79,32 @@ copy_engine_done(void *ref, int status)
 }
 
 int64_t
-spdk_copy_submit(struct copy_task *copy_req, void *dst, void *src,
-		 uint64_t nbytes, copy_completion_cb cb)
+spdk_copy_submit(struct copy_task *copy_req, struct spdk_io_channel *ch,
+		 void *dst, void *src, uint64_t nbytes, copy_completion_cb cb)
 {
 	struct copy_task *req = copy_req;
+	struct copy_io_channel *copy_ch = spdk_io_channel_get_ctx(ch);
 
 	req->cb = cb;
-
-	if (spdk_has_copy_engine())
-		return hw_copy_engine->copy(req->offload_ctx, dst, src, nbytes,
-					    copy_engine_done);
-
-	return mem_copy_engine->copy(req->offload_ctx, dst, src, nbytes,
+	return copy_ch->engine->copy(req->offload_ctx, copy_ch->ch, dst, src, nbytes,
 				     copy_engine_done);
 }
 
 int64_t
-spdk_copy_submit_fill(struct copy_task *copy_req, void *dst, uint8_t fill,
-		      uint64_t nbytes, copy_completion_cb cb)
+spdk_copy_submit_fill(struct copy_task *copy_req, struct spdk_io_channel *ch,
+		      void *dst, uint8_t fill, uint64_t nbytes, copy_completion_cb cb)
 {
 	struct copy_task *req = copy_req;
+	struct copy_io_channel *copy_ch = spdk_io_channel_get_ctx(ch);
 
 	req->cb = cb;
-
-	if (hw_copy_engine && hw_copy_engine->fill) {
-		return hw_copy_engine->fill(req->offload_ctx, dst, fill, nbytes,
-					    copy_engine_done);
-	}
-
-	return mem_copy_engine->fill(req->offload_ctx, dst, fill, nbytes,
+	return copy_ch->engine->fill(req->offload_ctx, copy_ch->ch, dst, fill, nbytes,
 				     copy_engine_done);
 }
 
 /* memcpy default copy engine */
 static int64_t
-mem_copy_submit(void *cb_arg, void *dst, void *src, uint64_t nbytes,
+mem_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
 		copy_completion_cb cb)
 {
 	struct copy_task *copy_req;
@@ -141,7 +117,7 @@ mem_copy_submit(void *cb_arg, void *dst, void *src, uint64_t nbytes,
 }
 
 static int64_t
-mem_copy_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
+mem_copy_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
 	      copy_completion_cb cb)
 {
 	struct copy_task *copy_req;

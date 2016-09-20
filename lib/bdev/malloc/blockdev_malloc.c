@@ -121,18 +121,20 @@ blockdev_malloc_destruct(struct spdk_bdev *bdev)
 }
 
 static int64_t
-blockdev_malloc_read(struct malloc_disk *mdisk, struct copy_task *copy_req,
+blockdev_malloc_read(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		     struct copy_task *copy_req,
 		     void *buf, uint64_t nbytes, off_t offset)
 {
 	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "read %lu bytes from offset %#lx to %p\n",
 		      nbytes, offset, buf);
 
-	return spdk_copy_submit(copy_req, buf, mdisk->malloc_buf + offset,
+	return spdk_copy_submit(copy_req, ch, buf, mdisk->malloc_buf + offset,
 				nbytes, malloc_done);
 }
 
 static int64_t
-blockdev_malloc_writev(struct malloc_disk *mdisk, struct copy_task *copy_req,
+blockdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		       struct copy_task *copy_req,
 		       struct iovec *iov, int iovcnt, size_t len, off_t offset)
 {
 	if ((iovcnt != 1) || (iov->iov_len != len))
@@ -141,12 +143,13 @@ blockdev_malloc_writev(struct malloc_disk *mdisk, struct copy_task *copy_req,
 	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "wrote %lu bytes to offset %#lx from %p\n",
 		      iov->iov_len, offset, iov->iov_base);
 
-	return spdk_copy_submit(copy_req, mdisk->malloc_buf + offset,
+	return spdk_copy_submit(copy_req, ch, mdisk->malloc_buf + offset,
 				iov->iov_base, len, malloc_done);
 }
 
 static int
 blockdev_malloc_unmap(struct malloc_disk *mdisk,
+		      struct spdk_io_channel *ch,
 		      struct copy_task *copy_req,
 		      struct spdk_scsi_unmap_bdesc *unmap_d,
 		      uint16_t bdesc_count)
@@ -171,13 +174,7 @@ blockdev_malloc_unmap(struct malloc_disk *mdisk,
 		return -1;
 	}
 
-	return spdk_copy_submit_fill(copy_req, mdisk->malloc_buf + offset, 0, byte_count, malloc_done);
-}
-
-static int
-blockdev_malloc_check_io(struct spdk_bdev *bdev)
-{
-	return spdk_copy_check_io();
+	return spdk_copy_submit_fill(copy_req, ch, mdisk->malloc_buf + offset, 0, byte_count, malloc_done);
 }
 
 static int64_t
@@ -210,6 +207,7 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 		}
 
 		return blockdev_malloc_read((struct malloc_disk *)bdev_io->ctx,
+					    bdev_io->ch,
 					    (struct copy_task *)bdev_io->driver_ctx,
 					    bdev_io->u.read.buf,
 					    bdev_io->u.read.nbytes,
@@ -217,6 +215,7 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return blockdev_malloc_writev((struct malloc_disk *)bdev_io->ctx,
+					      bdev_io->ch,
 					      (struct copy_task *)bdev_io->driver_ctx,
 					      bdev_io->u.write.iovs,
 					      bdev_io->u.write.iovcnt,
@@ -235,6 +234,7 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return blockdev_malloc_unmap((struct malloc_disk *)bdev_io->ctx,
+					     bdev_io->ch,
 					     (struct copy_task *)bdev_io->driver_ctx,
 					     bdev_io->u.unmap.unmap_bdesc,
 					     bdev_io->u.unmap.bdesc_count);
@@ -275,7 +275,6 @@ blockdev_malloc_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 
 static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.destruct		= blockdev_malloc_destruct,
-	.check_io		= blockdev_malloc_check_io,
 	.submit_request		= blockdev_malloc_submit_request,
 	.io_type_supported	= blockdev_malloc_io_type_supported,
 	.get_io_channel		= blockdev_malloc_get_io_channel,

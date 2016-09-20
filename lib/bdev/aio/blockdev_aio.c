@@ -82,8 +82,6 @@ blockdev_aio_close(struct file_disk *disk)
 {
 	int rc;
 
-	io_destroy(disk->ch.io_ctx);
-
 	if (disk->fd == -1) {
 		return 0;
 	}
@@ -100,10 +98,11 @@ blockdev_aio_close(struct file_disk *disk)
 }
 
 static int64_t
-blockdev_aio_read(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
-		  void *buf, uint64_t nbytes, off_t offset)
+blockdev_aio_read(struct file_disk *fdisk, struct spdk_io_channel *ch,
+		  struct blockdev_aio_task *aio_task, void *buf, uint64_t nbytes, off_t offset)
 {
 	struct iocb *iocb = &aio_task->iocb;
+	struct blockdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	iocb->aio_fildes = fdisk->fd;
@@ -118,7 +117,7 @@ blockdev_aio_read(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
 	SPDK_TRACELOG(SPDK_TRACE_AIO, "read from %p of size %lu to off: %#lx\n",
 		      buf, nbytes, offset);
 
-	rc = io_submit(fdisk->ch.io_ctx, 1, &iocb);
+	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
@@ -128,10 +127,12 @@ blockdev_aio_read(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
 }
 
 static int64_t
-blockdev_aio_writev(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
+blockdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
+		    struct blockdev_aio_task *aio_task,
 		    struct iovec *iov, int iovcnt, size_t len, off_t offset)
 {
 	struct iocb *iocb = &aio_task->iocb;
+	struct blockdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	iocb->aio_fildes = fdisk->fd;
@@ -146,7 +147,7 @@ blockdev_aio_writev(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
 	SPDK_TRACELOG(SPDK_TRACE_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
 
-	rc = io_submit(fdisk->ch.io_ctx, 1, &iocb);
+	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
@@ -233,15 +234,6 @@ blockdev_aio_poll(void *arg)
 }
 
 static int
-blockdev_aio_check_io(struct spdk_bdev *bdev)
-{
-	struct file_disk *fdisk = (struct file_disk *)bdev;
-
-	blockdev_aio_poll(&fdisk->ch);
-	return 0;
-}
-
-static int
 blockdev_aio_reset(struct file_disk *fdisk, struct blockdev_aio_task *aio_task)
 {
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -254,6 +246,7 @@ static void blockdev_aio_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 	int ret = 0;
 
 	ret = blockdev_aio_read((struct file_disk *)bdev_io->ctx,
+				bdev_io->ch,
 				(struct blockdev_aio_task *)bdev_io->driver_ctx,
 				bdev_io->u.read.buf,
 				bdev_io->u.read.nbytes,
@@ -273,6 +266,7 @@ static int _blockdev_aio_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return blockdev_aio_writev((struct file_disk *)bdev_io->ctx,
+					   bdev_io->ch,
 					   (struct blockdev_aio_task *)bdev_io->driver_ctx,
 					   bdev_io->u.write.iovs,
 					   bdev_io->u.write.iovcnt,
@@ -347,7 +341,6 @@ blockdev_aio_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 
 static const struct spdk_bdev_fn_table aio_fn_table = {
 	.destruct		= blockdev_aio_destruct,
-	.check_io		= blockdev_aio_check_io,
 	.submit_request		= blockdev_aio_submit_request,
 	.io_type_supported	= blockdev_aio_io_type_supported,
 	.get_io_channel		= blockdev_aio_get_io_channel,
@@ -357,8 +350,6 @@ static void aio_free_disk(struct file_disk *fdisk)
 {
 	if (fdisk == NULL)
 		return;
-	if (fdisk->ch.events != NULL)
-		free(fdisk->ch.events);
 	free(fdisk);
 }
 
@@ -393,10 +384,6 @@ create_aio_disk(char *fname)
 	fdisk->disk.ctxt = fdisk;
 
 	fdisk->disk.fn_table = &aio_fn_table;
-	if (blockdev_aio_initialize_io_channel(&fdisk->ch) != 0) {
-		goto error_return;
-	}
-
 	g_blockdev_count++;
 
 	spdk_io_device_register(&fdisk->disk, blockdev_aio_create_cb, blockdev_aio_destroy_cb,
