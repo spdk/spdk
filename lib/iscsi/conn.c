@@ -683,6 +683,9 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 		pthread_mutex_lock(&target->mutex);
 		target->num_active_conns--;
 		pthread_mutex_unlock(&target->mutex);
+
+		RTE_VERIFY(conn->dev != NULL);
+		spdk_scsi_dev_free_io_channels(conn->dev);
 	}
 	rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 	spdk_net_framework_clear_socket_association(conn->sock);
@@ -1267,6 +1270,11 @@ static void
 spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event)
 {
 	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
+
+	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
+		RTE_VERIFY(conn->dev != NULL);
+		spdk_scsi_dev_allocate_io_channels(conn->dev);
+	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
 	conn->lcore = spdk_app_get_current_core();
