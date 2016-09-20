@@ -53,6 +53,7 @@
 
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/io_channel.h"
 
 struct rte_mempool *request_mempool;
 
@@ -96,7 +97,17 @@ subsystem_delete_event(struct spdk_event *event)
 static void
 nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
+	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 	struct spdk_event *event;
+	int i;
+
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
+	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+		for (i = 0; i < subsystem->dev.virtual.ns_count; i++) {
+			spdk_put_io_channel(subsystem->dev.virtual.ch[i]);
+			subsystem->dev.virtual.ch[i] = NULL;
+		}
+	}
 
 	/*
 	 * Unregister the poller - this starts a chain of events that will eventually free
@@ -186,11 +197,35 @@ disconnect_cb(void *cb_ctx, struct spdk_nvmf_conn *conn)
 	spdk_event_call(event);
 }
 
+static void
+nvmf_tgt_start_subsystem(struct spdk_event *event)
+{
+	struct nvmf_tgt_subsystem *app_subsys = spdk_event_get_arg1(event);
+	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
+	struct spdk_bdev *bdev;
+	struct spdk_io_channel *ch;
+	int lcore = spdk_app_get_current_core();
+	int i;
+
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
+	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+		for (i = 0; i < subsystem->dev.virtual.ns_count; i++) {
+			bdev = subsystem->dev.virtual.ns_list[i];
+			ch = spdk_bdev_get_io_channel(bdev, SPDK_IO_PRIORITY_DEFAULT);
+			assert(ch != NULL);
+			subsystem->dev.virtual.ch[i] = ch;
+		}
+	}
+
+	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, NULL, 0);
+}
+
 struct nvmf_tgt_subsystem *
 nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subtype, uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
+	struct spdk_event *event;
 
 	app_subsys = calloc(1, sizeof(*app_subsys));
 	if (app_subsys == NULL) {
@@ -211,7 +246,8 @@ nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subt
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "allocated subsystem %p on lcore %u\n", subsystem, lcore);
 
 	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
-	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, NULL, 0);
+	event = spdk_event_allocate(lcore, nvmf_tgt_start_subsystem, app_subsys, NULL, NULL);
+	spdk_event_call(event);
 
 	return app_subsys;
 }
