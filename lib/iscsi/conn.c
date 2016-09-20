@@ -90,6 +90,12 @@ void spdk_iscsi_conn_login_do_work(void *arg);
 void spdk_iscsi_conn_full_feature_do_work(void *arg);
 void spdk_iscsi_conn_idle_do_work(void *arg);
 
+static void spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event);
+static struct spdk_event *spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn,
+		int lcore);
+static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop,
+					int lcore);
+
 void spdk_iscsi_set_min_conn_idle_interval(int interval_in_us)
 {
 	g_conn_idle_interval_in_tsc = MICROSECOND_TO_TSC(interval_in_us);
@@ -546,7 +552,6 @@ static void
 _spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
-	spdk_event_t		event;
 	int rc;
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
@@ -556,15 +561,12 @@ _spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 
 	rte_timer_stop(timer);
 
-	event = spdk_event_allocate(spdk_app_get_current_core(), _spdk_iscsi_conn_free,
-				    conn, NULL, NULL);
-	spdk_poller_unregister(&conn->poller, event);
+	spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_app_get_current_core());
 }
 
 void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_tgt_node	*target;
-	spdk_event_t			event;
 	int				rc;
 
 	conn->state = ISCSI_CONN_STATE_EXITING;
@@ -586,9 +588,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		rte_timer_reset(&conn->shutdown_timer, rte_get_timer_hz() / 1000, PERIODICAL,
 				rte_lcore_id(), _spdk_iscsi_conn_check_shutdown, conn);
 	} else {
-		event = spdk_event_allocate(spdk_app_get_current_core(), _spdk_iscsi_conn_free,
-					    conn, NULL, NULL);
-		spdk_poller_unregister(&conn->poller, event);
+		spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_app_get_current_core());
 	}
 }
 
@@ -629,6 +629,31 @@ spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 	}
 }
 
+static struct spdk_event *
+spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn, int lcore)
+{
+	struct spdk_event *event;
+
+	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL, NULL);
+
+	return event;
+}
+
+/**
+ *  This function will stop the poller for the specified connection, and then call function
+ *  fn_after_stop() on the specified lcore.
+ */
+static void
+spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop, int lcore)
+{
+	struct spdk_event *event;
+
+	rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
+	spdk_net_framework_clear_socket_association(conn->sock);
+	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL, NULL);
+	spdk_poller_unregister(&conn->poller, event);
+}
+
 void spdk_shutdown_iscsi_conns(void)
 {
 	struct spdk_iscsi_conn	*conn, *tmp;
@@ -639,9 +664,7 @@ void spdk_shutdown_iscsi_conns(void)
 	 */
 	STAILQ_FOREACH_SAFE(conn, &g_idle_conn_list_head, link, tmp) {
 		STAILQ_REMOVE(&g_idle_conn_list_head, conn, spdk_iscsi_conn, link);
-		conn->lcore = rte_get_master_lcore();
-		spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
-				     conn->lcore, NULL, 0);
+		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, rte_get_master_lcore()));
 		conn->is_idle = 0;
 		del_idle_conn(conn);
 	}
@@ -1147,18 +1170,13 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
 {
 	uint64_t current_tsc = rte_get_timer_cycles();
-	spdk_event_t event;
 
 	if (g_conn_idle_interval_in_tsc > 0 &&
 	    ((int64_t)(current_tsc - conn->last_activity_tsc)) >= g_conn_idle_interval_in_tsc &&
 	    conn->pending_task_cnt == 0) {
 
 		spdk_trace_record(TRACE_ISCSI_CONN_IDLE, conn->id, 0, 0, 0);
-		rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
-		spdk_net_framework_clear_socket_association(conn->sock);
-		event = spdk_event_allocate(rte_get_master_lcore(), __add_idle_conn,
-					    conn, NULL, NULL);
-		spdk_poller_unregister(&conn->poller, event);
+		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, rte_get_master_lcore());
 	}
 }
 
@@ -1238,7 +1256,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	 */
 	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
 		lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
-		event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL, NULL);
+		event = spdk_iscsi_conn_get_migrate_event(conn, lcore);
 		rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 		rte_atomic32_inc(&g_num_connections[lcore]);
 		spdk_net_framework_clear_socket_association(conn->sock);
@@ -1317,8 +1335,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			lcore = spdk_iscsi_conn_allocate_reactor(tconn->portal->cpumask);
 			rte_atomic32_inc(&g_num_connections[lcore]);
 			spdk_net_framework_clear_socket_association(tconn->sock);
-			tconn->lcore = lcore;
-			spdk_poller_register(&tconn->poller, spdk_iscsi_conn_full_feature_do_work, tconn, lcore, NULL, 0);
+			spdk_event_call(spdk_iscsi_conn_get_migrate_event(tconn, lcore));
 			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
 				      tconn->id, tconn->cid, &tconn->poller, lcore);
 		}
@@ -1338,9 +1355,7 @@ __add_idle_conn(spdk_event_t e)
 	 *  process.
 	 */
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		conn->lcore = rte_get_master_lcore();
-		spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
-				     conn->lcore, NULL, 0);
+		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, rte_get_master_lcore()));
 		return;
 	}
 
