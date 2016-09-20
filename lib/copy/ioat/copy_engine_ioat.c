@@ -53,6 +53,7 @@
 
 struct ioat_device {
 	struct spdk_ioat_chan *ioat;
+	bool is_allocated;
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(ioat_device) tailq;
 };
@@ -61,6 +62,7 @@ static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static int g_unbindfromkernel = 0;
 static int g_ioat_channel_count = 0;
 static struct spdk_ioat_chan *g_ioat_chan[RTE_MAX_LCORE];
+static pthread_mutex_t g_ioat_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct ioat_whitelist {
 	uint32_t bus;
@@ -84,6 +86,31 @@ ioat_find_dev_by_whitelist_bdf(struct spdk_pci_device *dev,
 	return 0;
 }
 
+static struct ioat_device *
+ioat_allocate_device(void)
+{
+	struct ioat_device *dev;
+
+	pthread_mutex_lock(&g_ioat_mutex);
+	TAILQ_FOREACH(dev, &g_devices, tailq) {
+		if (!dev->is_allocated) {
+			dev->is_allocated = true;
+			pthread_mutex_unlock(&g_ioat_mutex);
+			return dev;
+		}
+	}
+	pthread_mutex_unlock(&g_ioat_mutex);
+
+	return NULL;
+}
+
+static void
+ioat_free_device(struct ioat_device *dev)
+{
+	pthread_mutex_lock(&g_ioat_mutex);
+	dev->is_allocated = false;
+	pthread_mutex_unlock(&g_ioat_mutex);
+}
 
 struct ioat_task {
 	copy_completion_cb	cb;
@@ -110,6 +137,7 @@ copy_engine_ioat_exit(void)
 		dev = TAILQ_FIRST(&g_devices);
 		TAILQ_REMOVE(&g_devices, dev, tailq);
 		spdk_ioat_detach(dev->ioat);
+		ioat_free_device(dev);
 		rte_free(dev);
 	}
 	return;
@@ -157,6 +185,13 @@ ioat_copy_submit_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
 	return spdk_ioat_submit_fill(chan, ioat_task, ioat_done, dst, fill64, nbytes);
 }
 
+static void
+ioat_poll(void *arg)
+{
+	struct spdk_ioat_chan *chan = arg;
+
+	spdk_ioat_process_events(chan);
+}
 
 static void
 ioat_check_io(void)
@@ -164,7 +199,7 @@ ioat_check_io(void)
 	struct spdk_ioat_chan *chan = g_ioat_chan[rte_lcore_id()];
 
 	RTE_VERIFY(chan != NULL);
-	spdk_ioat_process_events(chan);
+	ioat_poll(chan);
 }
 
 static struct spdk_copy_engine ioat_copy_engine = {
@@ -248,7 +283,6 @@ copy_engine_ioat_init(void)
 	int i;
 	struct ioat_probe_ctx probe_ctx = {};
 	int lcore;
-	struct ioat_device *dev;
 
 	if (sp != NULL) {
 		val = spdk_conf_section_get_val(sp, "Disable");
@@ -291,12 +325,10 @@ copy_engine_ioat_init(void)
 	}
 
 	/* Assign channels to lcores in the active core mask */
-	dev = TAILQ_FIRST(&g_devices);
 	/* we use u64 as CPU core mask */
 	for (lcore = 0; lcore < RTE_MAX_LCORE && lcore < 64; lcore++) {
 		if ((spdk_app_get_core_mask() & (1ULL << lcore))) {
-			g_ioat_chan[lcore] = dev->ioat;
-			dev = TAILQ_NEXT(dev, tailq);
+			g_ioat_chan[lcore] = ioat_allocate_device()->ioat;
 		}
 	}
 
