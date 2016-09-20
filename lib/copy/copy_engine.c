@@ -44,13 +44,6 @@
 #include "spdk/log.h"
 #include "spdk/event.h"
 
-struct mem_request {
-	struct mem_request	*next;
-	copy_completion_cb	cb;
-};
-
-struct mem_request *copy_engine_req_head[RTE_MAX_LCORE];
-
 static struct spdk_copy_engine *hw_copy_engine = NULL;
 /* Memcpy engine always exist */
 static struct spdk_copy_engine *mem_copy_engine = NULL;
@@ -83,8 +76,6 @@ spdk_copy_check_io(void)
 {
 	if (spdk_has_copy_engine())
 		hw_copy_engine->check_io();
-	else
-		mem_copy_engine->check_io();
 
 	return 0;
 }
@@ -131,39 +122,16 @@ spdk_copy_submit_fill(struct copy_task *copy_req, void *dst, uint8_t fill,
 }
 
 /* memcpy default copy engine */
-static void
-mem_copy_check_io(void)
-{
-	struct mem_request **req_head = &copy_engine_req_head[rte_lcore_id()];
-	struct mem_request *req = *req_head;
-	struct mem_request *req_next;
-	struct copy_task *copy_req;
-
-	*req_head = NULL;
-
-	while (req != NULL) {
-		req_next = req->next;
-		copy_req = (struct copy_task *)((uintptr_t)req -
-						offsetof(struct copy_task, offload_ctx));
-		req->cb((void *)copy_req, 0);
-		req = req_next;
-	}
-
-}
-
 static int64_t
 mem_copy_submit(void *cb_arg, void *dst, void *src, uint64_t nbytes,
 		copy_completion_cb cb)
 {
-	struct mem_request **req_head = &copy_engine_req_head[rte_lcore_id()];
-	struct mem_request *req = (struct mem_request *)cb_arg;
-
-	req->next = *req_head;
-	*req_head = req;
-	req->cb = cb;
+	struct copy_task *copy_req;
 
 	rte_memcpy(dst, src, (size_t)nbytes);
-
+	copy_req = (struct copy_task *)((uintptr_t)cb_arg -
+					offsetof(struct copy_task, offload_ctx));
+	cb(copy_req, 0);
 	return nbytes;
 }
 
@@ -171,14 +139,12 @@ static int64_t
 mem_copy_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
 	      copy_completion_cb cb)
 {
-	struct mem_request **req_head = &copy_engine_req_head[rte_lcore_id()];
-	struct mem_request *req = (struct mem_request *)cb_arg;
-
-	req->next = *req_head;
-	*req_head = req;
-	req->cb = cb;
+	struct copy_task *copy_req;
 
 	memset(dst, fill, nbytes);
+	copy_req = (struct copy_task *)((uintptr_t)cb_arg -
+					offsetof(struct copy_task, offload_ctx));
+	cb(copy_req, 0);
 
 	return nbytes;
 }
@@ -186,13 +152,12 @@ mem_copy_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
 static struct spdk_copy_engine memcpy_copy_engine = {
 	.copy		= mem_copy_submit,
 	.fill		= mem_copy_fill,
-	.check_io	= mem_copy_check_io,
 };
 
 static int
 copy_engine_mem_get_ctx_size(void)
 {
-	return sizeof(struct mem_request) + sizeof(struct copy_task);
+	return sizeof(struct copy_task);
 }
 
 int spdk_copy_module_get_max_ctx_size(void)
@@ -216,13 +181,6 @@ void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module)
 static int
 copy_engine_mem_init(void)
 {
-	int i;
-
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
-		copy_engine_req_head[i] = NULL;
-	}
-
-	/* Anyway, We will register memcpy engine */
 	spdk_memcpy_register(&memcpy_copy_engine);
 
 	return 0;
