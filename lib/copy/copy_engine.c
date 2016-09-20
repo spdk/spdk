@@ -35,14 +35,14 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <assert.h>
 #include <rte_config.h>
 #include <rte_debug.h>
-#include <rte_malloc.h>
 #include <rte_memcpy.h>
-#include <rte_lcore.h>
 
 #include "spdk/log.h"
 #include "spdk/event.h"
+#include "spdk/io_channel.h"
 
 static struct spdk_copy_engine *hw_copy_engine = NULL;
 /* Memcpy engine always exist */
@@ -50,6 +50,11 @@ static struct spdk_copy_engine *mem_copy_engine = NULL;
 
 TAILQ_HEAD(, spdk_copy_module_if) spdk_copy_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_copy_module_list);
+
+struct copy_io_channel {
+	struct spdk_copy_engine	*engine;
+	struct spdk_io_channel	*ch;
+};
 
 void
 spdk_copy_engine_register(struct spdk_copy_engine *copy_engine)
@@ -149,10 +154,29 @@ mem_copy_fill(void *cb_arg, void *dst, uint8_t fill, uint64_t nbytes,
 	return nbytes;
 }
 
+static struct spdk_io_channel *mem_get_io_channel(uint32_t priority);
+
 static struct spdk_copy_engine memcpy_copy_engine = {
 	.copy		= mem_copy_submit,
 	.fill		= mem_copy_fill,
+	.get_io_channel	= mem_get_io_channel,
 };
+
+static int
+memcpy_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+memcpy_destroy_cb(void *io_device, void *ctx_buf)
+{
+}
+
+static struct spdk_io_channel *mem_get_io_channel(uint32_t priority)
+{
+	return spdk_get_io_channel(&memcpy_copy_engine, priority);
+}
 
 static int
 copy_engine_mem_get_ctx_size(void)
@@ -179,9 +203,43 @@ void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module)
 }
 
 static int
+copy_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+{
+	struct copy_io_channel	*copy_ch = ctx_buf;
+
+	if (hw_copy_engine != NULL) {
+		copy_ch->ch = hw_copy_engine->get_io_channel(priority);
+		if (copy_ch->ch != NULL) {
+			copy_ch->engine = hw_copy_engine;
+			return 0;
+		}
+	}
+
+	copy_ch->ch = mem_copy_engine->get_io_channel(priority);
+	assert(copy_ch->ch != NULL);
+	copy_ch->engine = mem_copy_engine;
+	return 0;
+}
+
+static void
+copy_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct copy_io_channel	*copy_ch = ctx_buf;
+
+	spdk_put_io_channel(copy_ch->ch);
+}
+
+struct spdk_io_channel *
+spdk_copy_engine_get_io_channel(uint32_t priority)
+{
+	return spdk_get_io_channel(&spdk_copy_module_list, priority);
+}
+
+static int
 copy_engine_mem_init(void)
 {
 	spdk_memcpy_register(&memcpy_copy_engine);
+	spdk_io_device_register(&memcpy_copy_engine, memcpy_create_cb, memcpy_destroy_cb, 0);
 
 	return 0;
 }
@@ -211,6 +269,12 @@ static int
 spdk_copy_engine_initialize(void)
 {
 	spdk_copy_engine_module_initialize();
+	/*
+	 * We need a unique identifier for the copy engine framework, so use the
+	 *  spdk_copy_module_list address for this purpose.
+	 */
+	spdk_io_device_register(&spdk_copy_module_list, copy_create_cb, copy_destroy_cb,
+				sizeof(struct copy_io_channel));
 	return 0;
 }
 

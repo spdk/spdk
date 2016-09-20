@@ -46,6 +46,7 @@
 #include "spdk/log.h"
 #include "spdk/event.h"
 #include "spdk/pci.h"
+#include "spdk/io_channel.h"
 
 #include "spdk/ioat.h"
 
@@ -68,6 +69,12 @@ struct ioat_whitelist {
 	uint32_t bus;
 	uint32_t dev;
 	uint32_t func;
+};
+
+struct ioat_io_channel {
+	struct spdk_ioat_chan	*ioat_ch;
+	struct ioat_device	*ioat_dev;
+	struct spdk_poller	*poller;
 };
 
 static int
@@ -202,11 +209,47 @@ ioat_check_io(void)
 	ioat_poll(chan);
 }
 
+static struct spdk_io_channel *ioat_get_io_channel(uint32_t priority);
+
 static struct spdk_copy_engine ioat_copy_engine = {
 	.copy		= ioat_copy_submit,
 	.fill		= ioat_copy_submit_fill,
 	.check_io	= ioat_check_io,
+	.get_io_channel	= ioat_get_io_channel,
 };
+
+static int
+ioat_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+{
+	struct ioat_io_channel *ch = ctx_buf;
+	struct ioat_device *ioat_dev;
+
+	ioat_dev = ioat_allocate_device();
+	if (ioat_dev == NULL) {
+		return -1;
+	}
+
+	ch->ioat_dev = ioat_dev;
+	ch->ioat_ch = ioat_dev->ioat;
+	spdk_poller_register(&ch->poller, ioat_poll, ch->ioat_ch,
+			     spdk_app_get_current_core(), NULL, 0);
+	return 0;
+}
+
+static void
+ioat_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct ioat_io_channel *ch = ctx_buf;
+
+	ioat_free_device(ch->ioat_dev);
+	spdk_poller_unregister(&ch->poller, NULL);
+}
+
+static struct spdk_io_channel *
+ioat_get_io_channel(uint32_t priority)
+{
+	return spdk_get_io_channel(&ioat_copy_engine, priority);
+}
 
 struct ioat_probe_ctx {
 	int num_whitelist_devices;
@@ -334,6 +377,8 @@ copy_engine_ioat_init(void)
 
 	SPDK_NOTICELOG("Ioat Copy Engine Offload Enabled\n");
 	spdk_copy_engine_register(&ioat_copy_engine);
+	spdk_io_device_register(&ioat_copy_engine, ioat_create_cb, ioat_destroy_cb,
+				sizeof(struct ioat_io_channel));
 
 	return 0;
 }
