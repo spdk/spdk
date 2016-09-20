@@ -2846,15 +2846,21 @@ static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
 	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi);
 }
 
-int spdk_iscsi_conn_handle_queued_datain(struct spdk_iscsi_conn *conn)
+int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_task *task;
 
 	while (!TAILQ_EMPTY(&conn->queued_datain_tasks) &&
-	       conn->data_in_cnt < MAX_EXTRA_DATAIN_PER_CONNECTION) {
+	       conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
 		task = TAILQ_FIRST(&conn->queued_datain_tasks);
 		assert(task->current_datain_offset <= task->scsi.transfer_len);
 
+		if (task->current_datain_offset == 0) {
+			task->current_datain_offset = task->scsi.length;
+			conn->data_in_cnt++;
+			spdk_iscsi_queue_task(conn, task);
+			continue;
+		}
 		if (task->current_datain_offset < task->scsi.transfer_len) {
 			struct spdk_iscsi_task *subtask;
 			uint32_t remaining_size = 0;
@@ -2879,24 +2885,22 @@ int spdk_iscsi_conn_handle_queued_datain(struct spdk_iscsi_conn *conn)
 static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task)
 {
-	int32_t remaining_size = 0;
-
 	TAILQ_INIT(&task->scsi.subtask_list);
 	task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
 	task->scsi.parent = NULL;
 	task->scsi.offset = 0;
 	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_RBUF_MAX_SIZE, task->scsi.transfer_len);
 	task->scsi.rbuf = NULL;
-	spdk_iscsi_queue_task(conn, task);
+	task->current_datain_offset = 0;
 
-	remaining_size = task->scsi.transfer_len - task->scsi.length;
-	task->current_datain_offset = task->scsi.length;
-
-	if (remaining_size > 0) {
-		TAILQ_INSERT_TAIL(&conn->queued_datain_tasks, task, link);
-		return spdk_iscsi_conn_handle_queued_datain(conn);
+	if (task->scsi.transfer_len <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
+		spdk_iscsi_queue_task(conn, task);
+		return 0;
 	}
-	return 0;
+
+	TAILQ_INSERT_TAIL(&conn->queued_datain_tasks, task, link);
+
+	return spdk_iscsi_conn_handle_queued_tasks(conn);
 }
 
 static int
