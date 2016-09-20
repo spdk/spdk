@@ -56,6 +56,7 @@
 #include "reactor.h"
 
 #include "spdk/log.h"
+#include "spdk/io_channel.h"
 
 #define SPDK_MAX_SOCKET		64
 
@@ -305,6 +306,7 @@ _spdk_reactor_run(void *arg)
 	uint64_t		spin_cycles, sleep_cycles;
 	uint32_t		sleep_us;
 
+	spdk_allocate_thread();
 	set_reactor_thread_name();
 	SPDK_NOTICELOG("Reactor started on core 0x%x\n", rte_lcore_id());
 
@@ -369,6 +371,7 @@ _spdk_reactor_run(void *arg)
 		}
 	}
 
+	spdk_free_thread();
 	return 0;
 }
 
