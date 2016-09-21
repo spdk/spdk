@@ -10,10 +10,12 @@ testdir=$(readlink -f $(dirname $0))
 
 timing_enter blockdev
 
-timing_enter bounds
-$testdir/bdevio/bdevio $testdir/bdev.conf
-process_core
-timing_exit bounds
+# bdevio is disconnected from the build currently - it needs to be rewritten
+#  as an event-based test program.
+#timing_enter bounds
+#$testdir/bdevio/bdevio $testdir/bdev.conf
+#process_core
+#timing_exit bounds
 
 timing_enter verify
 $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 5
