@@ -92,7 +92,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg);
 
 static void spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event);
 static struct spdk_event *spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn,
-		int lcore);
+		int *lcore);
 static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop,
 					int lcore);
 
@@ -630,9 +630,38 @@ spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 }
 
 static struct spdk_event *
-spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn, int lcore)
+spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn, int *_lcore)
 {
 	struct spdk_event *event;
+	struct spdk_iscsi_tgt_node *target;
+	int lcore;
+
+	lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
+	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
+		target = conn->sess->target;
+		pthread_mutex_lock(&target->mutex);
+		target->num_active_conns++;
+		if (target->num_active_conns == 1) {
+			/**
+			 * This is the only active connection for this target node.
+			 *  Save the lcore in the target node so it can be used for
+			 *  any other connections to this target node.
+			 */
+			target->lcore = lcore;
+		} else {
+			/**
+			 * There are other active connections for this target node.
+			 *  Ignore the lcore specified by the allocator and use the
+			 *  the target node's lcore to ensure this connection runs on
+			 *  the same lcore as other connections for this target node.
+			 */
+			lcore = target->lcore;
+		}
+		pthread_mutex_unlock(&target->mutex);
+	}
+	if (_lcore != NULL) {
+		*_lcore = lcore;
+	}
 
 	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL, NULL);
 
@@ -647,7 +676,14 @@ static void
 spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop, int lcore)
 {
 	struct spdk_event *event;
+	struct spdk_iscsi_tgt_node *target;
 
+	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
+		target = conn->sess->target;
+		pthread_mutex_lock(&target->mutex);
+		target->num_active_conns--;
+		pthread_mutex_unlock(&target->mutex);
+	}
 	rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 	spdk_net_framework_clear_socket_association(conn->sock);
 	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL, NULL);
@@ -664,7 +700,7 @@ void spdk_shutdown_iscsi_conns(void)
 	 */
 	STAILQ_FOREACH_SAFE(conn, &g_idle_conn_list_head, link, tmp) {
 		STAILQ_REMOVE(&g_idle_conn_list_head, conn, spdk_iscsi_conn, link);
-		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, rte_get_master_lcore()));
+		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, NULL));
 		conn->is_idle = 0;
 		del_idle_conn(conn);
 	}
@@ -1255,8 +1291,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	 * did, migrate it to a dedicated reactor for the target node.
 	 */
 	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
-		lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
-		event = spdk_iscsi_conn_get_migrate_event(conn, lcore);
+		event = spdk_iscsi_conn_get_migrate_event(conn, &lcore);
 		rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
 		rte_atomic32_inc(&g_num_connections[lcore]);
 		spdk_net_framework_clear_socket_association(conn->sock);
@@ -1321,7 +1356,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 		}
 
 		if (tconn->pending_activate_event) {
-			uint32_t lcore;
+			int lcore;
 
 			spdk_trace_record(TRACE_ISCSI_CONN_ACTIVE, tconn->id, 0, 0, 0);
 
@@ -1332,10 +1367,9 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			tconn->is_idle = 0;
 			del_idle_conn(tconn);
 			/* migrate work item to new core */
-			lcore = spdk_iscsi_conn_allocate_reactor(tconn->portal->cpumask);
-			rte_atomic32_inc(&g_num_connections[lcore]);
 			spdk_net_framework_clear_socket_association(tconn->sock);
-			spdk_event_call(spdk_iscsi_conn_get_migrate_event(tconn, lcore));
+			spdk_event_call(spdk_iscsi_conn_get_migrate_event(tconn, &lcore));
+			rte_atomic32_inc(&g_num_connections[lcore]);
 			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
 				      tconn->id, tconn->cid, &tconn->poller, lcore);
 		}
@@ -1355,7 +1389,7 @@ __add_idle_conn(spdk_event_t e)
 	 *  process.
 	 */
 	if (conn->state == ISCSI_CONN_STATE_EXITING) {
-		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, rte_get_master_lcore()));
+		spdk_event_call(spdk_iscsi_conn_get_migrate_event(conn, NULL));
 		return;
 	}
 

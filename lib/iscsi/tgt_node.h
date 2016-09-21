@@ -67,6 +67,12 @@ struct spdk_iscsi_tgt_node {
 	int queue_depth;
 
 	struct spdk_scsi_dev *dev;
+	/**
+	 * Counts number of active iSCSI connections associated with this
+	 *  target node.
+	 */
+	uint32_t num_active_conns;
+	int lcore;
 
 	int maxmap;
 	struct spdk_iscsi_tgt_node_map map[MAX_TARGET_MAP];
