@@ -119,7 +119,8 @@ static void nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr,
 		int bdev_per_ns, int ctrlr_id);
 static int nvme_library_init(void);
 static void nvme_library_fini(void);
-int nvme_queue_cmd(struct nvme_blockdev *bdev, struct nvme_blockio *bio,
+int nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
+		   struct nvme_blockio *bio,
 		   int direction, void *buf, uint64_t nbytes, uint64_t offset);
 
 static int
@@ -140,7 +141,7 @@ blockdev_nvme_read(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "read %lu bytes with offset %#lx to %p\n",
 		      nbytes, offset, buf);
 
-	rc = nvme_queue_cmd(nbdev, bio, BDEV_DISK_READ, buf, nbytes, offset);
+	rc = nvme_queue_cmd(nbdev, nbdev->qpair, bio, BDEV_DISK_READ, buf, nbytes, offset);
 	if (rc < 0)
 		return -1;
 
@@ -159,7 +160,7 @@ blockdev_nvme_writev(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "write %lu bytes with offset %#lx from %p\n",
 		      iov->iov_len, offset, iov->iov_base);
 
-	rc = nvme_queue_cmd(nbdev, bio, BDEV_DISK_WRITE, (void *)iov->iov_base,
+	rc = nvme_queue_cmd(nbdev, nbdev->qpair, bio, BDEV_DISK_WRITE, (void *)iov->iov_base,
 			    iov->iov_len, offset);
 	if (rc < 0)
 		return -1;
@@ -601,7 +602,8 @@ queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 int
-nvme_queue_cmd(struct nvme_blockdev *bdev, struct nvme_blockio *bio,
+nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
+	       struct nvme_blockio *bio,
 	       int direction, void *buf, uint64_t nbytes, uint64_t offset)
 {
 	uint32_t ss = spdk_nvme_ns_get_sector_size(bdev->ns);
@@ -619,10 +621,10 @@ nvme_queue_cmd(struct nvme_blockdev *bdev, struct nvme_blockio *bio,
 	lba_count = nbytes / ss;
 
 	if (direction == BDEV_DISK_READ) {
-		rc = spdk_nvme_ns_cmd_read(bdev->ns, bdev->qpair, buf, next_lba,
+		rc = spdk_nvme_ns_cmd_read(bdev->ns, qpair, buf, next_lba,
 					   lba_count, queued_done, bio, 0);
 	} else {
-		rc = spdk_nvme_ns_cmd_write(bdev->ns, bdev->qpair, buf, next_lba,
+		rc = spdk_nvme_ns_cmd_write(bdev->ns, qpair, buf, next_lba,
 					    lba_count, queued_done, bio, 0);
 	}
 
