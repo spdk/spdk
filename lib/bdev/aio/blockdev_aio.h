@@ -48,23 +48,26 @@ struct blockdev_aio_task {
 	TAILQ_ENTRY(blockdev_aio_task)	link;
 };
 
+struct blockdev_aio_io_channel {
+	io_context_t		io_ctx;
+	long			queue_depth;
+	struct io_event		*events;
+};
+
 struct file_disk {
 	struct spdk_bdev	disk;	/* this must be first element */
 	char			*file;
 	int			fd;
 	char			disk_name[SPDK_BDEV_MAX_NAME_LENGTH];
-	long			queue_depth;
 	uint64_t		size;
+
+	struct blockdev_aio_io_channel	ch;
 
 	/**
 	 * For storing I/O that were completed synchronously, and will be
 	 *   completed during next check_io call.
 	 */
 	TAILQ_HEAD(, blockdev_aio_task) sync_completion_list;
-
-	/* for libaio */
-	io_context_t io_ctx;
-	struct io_event *events;
 };
 
 struct file_disk *create_aio_disk(char *fname);

@@ -81,7 +81,7 @@ blockdev_aio_close(struct file_disk *disk)
 {
 	int rc;
 
-	io_destroy(disk->io_ctx);
+	io_destroy(disk->ch.io_ctx);
 
 	if (disk->fd == -1) {
 		return 0;
@@ -117,7 +117,7 @@ blockdev_aio_read(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
 	SPDK_TRACELOG(SPDK_TRACE_AIO, "read from %p of size %lu to off: %#lx\n",
 		      buf, nbytes, offset);
 
-	rc = io_submit(fdisk->io_ctx, 1, &iocb);
+	rc = io_submit(fdisk->ch.io_ctx, 1, &iocb);
 	if (rc < 0) {
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
@@ -145,7 +145,7 @@ blockdev_aio_writev(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
 	SPDK_TRACELOG(SPDK_TRACE_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
 
-	rc = io_submit(fdisk->io_ctx, 1, &iocb);
+	rc = io_submit(fdisk->ch.io_ctx, 1, &iocb);
 	if (rc < 0) {
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
@@ -181,28 +181,47 @@ blockdev_aio_destruct(struct spdk_bdev *bdev)
 }
 
 static int
-blockdev_aio_check_io(struct spdk_bdev *bdev)
+blockdev_aio_initialize_io_channel(struct blockdev_aio_io_channel *ch)
 {
+	ch->queue_depth = 128;
+
+	if (io_setup(ch->queue_depth, &ch->io_ctx) < 0) {
+		SPDK_ERRLOG("async I/O context setup failure\n");
+		return -1;
+	}
+
+	ch->events = calloc(sizeof(struct io_event), ch->queue_depth);
+	if (!ch->events) {
+		io_destroy(ch->io_ctx);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+blockdev_aio_poll(void *arg)
+{
+	struct blockdev_aio_io_channel *ch = arg;
 	int nr, i;
 	enum spdk_bdev_io_status status;
 	struct blockdev_aio_task *aio_task;
-	struct file_disk *fdisk = (struct file_disk *)bdev;
 	struct timespec timeout;
 
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
 
-	nr = io_getevents(fdisk->io_ctx, 1, fdisk->queue_depth,
-			  fdisk->events, &timeout);
+	nr = io_getevents(ch->io_ctx, 1, ch->queue_depth,
+			  ch->events, &timeout);
 
 	if (nr < 0) {
 		SPDK_ERRLOG("%s: io_getevents returned %d\n", __func__, nr);
-		return -1;
+		return;
 	}
 
 	for (i = 0; i < nr; i++) {
-		aio_task = fdisk->events[i].data;
-		if (fdisk->events[i].res != aio_task->len) {
+		aio_task = ch->events[i].data;
+		if (ch->events[i].res != aio_task->len) {
 			status = SPDK_BDEV_IO_STATUS_FAILED;
 		} else {
 			status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -210,7 +229,14 @@ blockdev_aio_check_io(struct spdk_bdev *bdev)
 
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
 	}
+}
 
+static int
+blockdev_aio_check_io(struct spdk_bdev *bdev)
+{
+	struct file_disk *fdisk = (struct file_disk *)bdev;
+
+	blockdev_aio_poll(&fdisk->ch);
 	return 0;
 }
 
@@ -299,8 +325,8 @@ static void aio_free_disk(struct file_disk *fdisk)
 {
 	if (fdisk == NULL)
 		return;
-	if (fdisk->events != NULL)
-		free(fdisk->events);
+	if (fdisk->ch.events != NULL)
+		free(fdisk->ch.events);
 	free(fdisk);
 }
 
@@ -322,7 +348,6 @@ create_aio_disk(char *fname)
 	}
 
 	fdisk->size = spdk_fd_get_size(fdisk->fd);
-	fdisk->queue_depth = 128; // TODO: where do we get the queue depth from.
 
 	TAILQ_INIT(&fdisk->sync_completion_list);
 	snprintf(fdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "AIO%d",
@@ -336,14 +361,7 @@ create_aio_disk(char *fname)
 	fdisk->disk.ctxt = fdisk;
 
 	fdisk->disk.fn_table = &aio_fn_table;
-	if (io_setup(fdisk->queue_depth, &fdisk->io_ctx) < 0) {
-		SPDK_ERRLOG("async I/O context setup failure\n");
-		goto error_return;
-	}
-
-	fdisk->events = calloc(sizeof(struct io_event), fdisk->queue_depth);
-	if (!fdisk->events) {
-		SPDK_ERRLOG("unable to allocate async events\n");
+	if (blockdev_aio_initialize_io_channel(&fdisk->ch) != 0) {
 		goto error_return;
 	}
 
