@@ -82,7 +82,7 @@ struct arb_task {
 };
 
 struct worker_thread {
-	struct ns_worker_ctx 			*ns_ctx;
+	struct ns_worker_ctx			*ns_ctx;
 	struct worker_thread			*next;
 	unsigned				lcore;
 	enum spdk_nvme_qprio			qprio;
@@ -104,7 +104,7 @@ struct arb_context {
 	uint32_t				max_completions;
 	uint64_t				tsc_rate;
 	const char				*core_mask;
-	const char 				*workload_type;
+	const char				*workload_type;
 };
 
 struct feature {
@@ -115,25 +115,25 @@ struct feature {
 struct rte_mempool *request_mempool		= NULL;
 static struct rte_mempool *task_pool		= NULL;
 
-static struct ctrlr_entry *g_controllers 	= NULL;
-static struct ns_entry *g_namespaces 		= NULL;
-static struct worker_thread *g_workers 		= NULL;
+static struct ctrlr_entry *g_controllers	= NULL;
+static struct ns_entry *g_namespaces		= NULL;
+static struct worker_thread *g_workers		= NULL;
 
 static struct feature features[256];
 
 static struct arb_context g_arbitration = {
 	.outstanding_commands			= 0,
 	.num_workers				= 0,
-	.num_namespaces 			= 0,
-	.rw_percentage 				= 50,
-	.queue_depth 				= 64,
-	.time_in_sec 				= 60,
+	.num_namespaces				= 0,
+	.rw_percentage				= 50,
+	.queue_depth				= 64,
+	.time_in_sec				= 60,
 	.io_count				= 100000,
 	.latency_tracking_enable		= 0,
 	.arbitration_mechanism			= SPDK_NVME_CC_AMS_RR,
 	.arbitration_config			= 0,
 	.io_size_bytes				= 131072,
-	.max_completions 			= 0,
+	.max_completions			= 0,
 	.core_mask				= "0xf",
 	.workload_type				= "randrw",
 };
@@ -150,7 +150,7 @@ static struct arb_context g_arbitration = {
 /*
  * Description of dword for priority weight and arbitration burst
  * ------------------------------------------------------------------------------
- * 	31 : 24	    |	23 : 16		 |	15 : 08	   | 07 : 03  |	02 : 00
+ *     31 : 24      |       23 : 16      |    15 : 08      | 07 : 03  | 02 : 00
  * ------------------------------------------------------------------------------
  * High Prio Weight | Medium Prio Weight | Low Prio Weight | Reserved | Arb Burst
  * ------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ static struct arb_context g_arbitration = {
 #define SPDK_NVME_PRIO_WEIGHT_MASK		0xFF
 #define SPDK_NVME_ARB_BURST_MASK		0x7
 
-#define SPDK_NVME_QPRIO_MAX 			(SPDK_NVME_QPRIO_LOW + 1)
+#define SPDK_NVME_QPRIO_MAX			(SPDK_NVME_QPRIO_LOW + 1)
 
 static void task_complete(struct arb_task *task);
 
@@ -314,7 +314,7 @@ static __thread unsigned int seed = 0;
 static void
 submit_single_io(struct ns_worker_ctx *ns_ctx)
 {
-	struct arb_task	*task = NULL;
+	struct arb_task		*task = NULL;
 	uint64_t		offset_in_ios;
 	int			rc;
 	struct ns_entry		*entry = ns_ctx->entry;
@@ -426,10 +426,10 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static void
 cleanup(void)
 {
-	struct ns_entry *entry 			= g_namespaces;
-	struct ns_entry *next_entry 		= NULL;
-	struct worker_thread *worker 		= g_workers;
-	struct worker_thread *next_worker 	= NULL;
+	struct ns_entry *entry			= g_namespaces;
+	struct ns_entry *next_entry		= NULL;
+	struct worker_thread *worker		= g_workers;
+	struct worker_thread *next_worker	= NULL;
 	struct arb_task *task			= NULL;
 
 	do {
@@ -700,8 +700,8 @@ static int
 parse_args(int argc, char **argv)
 {
 	const char *workload_type	= NULL;
-	int op 				= 0;
-	bool mix_specified 		= false;
+	int op				= 0;
+	bool mix_specified		= false;
 
 	while ((op = getopt(argc, argv, "c:l:m:q:s:t:w:M:a:b:i:h")) != -1) {
 		switch (op) {
@@ -1042,16 +1042,16 @@ get_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 
 		printf("Current Arbitration Configuration\n");
 		printf("===========\n");
-		printf("Arbitration Burst:	     ");
+		printf("Arbitration Burst:           ");
 		if (ab == SPDK_NVME_ARB_BURST_MASK) {
 			printf("no limit\n");
 		} else {
 			printf("%u\n", 1u << ab);
 		}
 
-		printf("Low Priority Weight:	     %u\n", lpw);
+		printf("Low Priority Weight:         %u\n", lpw);
 		printf("Medium Priority Weight:      %u\n", mpw);
-		printf("High Priority Weight:	     %u\n", hpw);
+		printf("High Priority Weight:        %u\n", hpw);
 		printf("\n");
 	}
 }
