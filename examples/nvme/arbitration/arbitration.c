@@ -49,7 +49,7 @@
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
-	struct spdk_nvme_intel_rw_latency_page	*latency_page;
+	struct spdk_nvme_intel_rw_latency_page	latency_page;
 	struct ctrlr_entry			*next;
 	char					name[1024];
 };
@@ -258,18 +258,11 @@ static void
 register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int nsid, num_ns;
-	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
+	struct ctrlr_entry *entry = calloc(1, sizeof(struct ctrlr_entry));
 	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	if (entry == NULL) {
 		perror("ctrlr_entry malloc");
-		exit(1);
-	}
-
-	entry->latency_page = rte_zmalloc("nvme latency", sizeof(struct spdk_nvme_intel_rw_latency_page),
-					  4096);
-	if (entry->latency_page == NULL) {
-		printf("Allocation error (latency page)\n");
 		exit(1);
 	}
 
@@ -619,19 +612,19 @@ print_latency_page(struct ctrlr_entry *entry)
 	printf("--------------------------------------------------------\n");
 
 	for (i = 0; i < 32; i++) {
-		if (entry->latency_page->buckets_32us[i])
+		if (entry->latency_page.buckets_32us[i])
 			printf("Bucket %dus - %dus: %d\n", i * 32, (i + 1) * 32,
-			       entry->latency_page->buckets_32us[i]);
+			       entry->latency_page.buckets_32us[i]);
 	}
 	for (i = 0; i < 31; i++) {
-		if (entry->latency_page->buckets_1ms[i])
+		if (entry->latency_page.buckets_1ms[i])
 			printf("Bucket %dms - %dms: %d\n", i + 1, i + 2,
-			       entry->latency_page->buckets_1ms[i]);
+			       entry->latency_page.buckets_1ms[i]);
 	}
 	for (i = 0; i < 31; i++) {
-		if (entry->latency_page->buckets_32ms[i])
+		if (entry->latency_page.buckets_32ms[i])
 			printf("Bucket %dms - %dms: %d\n", (i + 1) * 32, (i + 2) * 32,
-			       entry->latency_page->buckets_32ms[i]);
+			       entry->latency_page.buckets_32ms[i]);
 	}
 }
 
@@ -648,7 +641,7 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 			if (spdk_nvme_ctrlr_cmd_get_log_page(
 				    ctrlr->ctrlr, log_page,
 				    SPDK_NVME_GLOBAL_NS_TAG,
-				    ctrlr->latency_page,
+				    &ctrlr->latency_page,
 				    sizeof(struct spdk_nvme_intel_rw_latency_page),
 				    enable_latency_tracking_complete,
 				    NULL)) {
@@ -941,7 +934,6 @@ unregister_controllers(void)
 
 	while (entry) {
 		struct ctrlr_entry *next = entry->next;
-		rte_free(entry->latency_page);
 		if (g_arbitration.latency_tracking_enable &&
 		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 			set_latency_tracking_feature(entry->ctrlr, false);
