@@ -349,6 +349,7 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cap_register	cap;
 	uint32_t			i, num_entries, num_trackers;
 	int				rc;
+	uint64_t			phys_addr = 0;
 
 	if (ctrlr->ioq != NULL) {
 		/*
@@ -375,7 +376,9 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	num_trackers = nvme_min(NVME_IO_TRACKERS, (num_entries - 1));
 
-	ctrlr->ioq = calloc(ctrlr->opts.num_io_queues, sizeof(struct spdk_nvme_qpair));
+	ctrlr->ioq = nvme_malloc("nvme_ioq",
+				 ctrlr->opts.num_io_queues * sizeof(struct spdk_nvme_qpair),
+				 64, &phys_addr);
 
 	if (ctrlr->ioq == NULL)
 		return -1;
@@ -1159,7 +1162,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
-	free(ctrlr->ioq);
+	nvme_free(ctrlr->ioq);
 
 	nvme_qpair_destroy(&ctrlr->adminq);
 
