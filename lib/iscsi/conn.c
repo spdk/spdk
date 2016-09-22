@@ -678,7 +678,7 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 	struct spdk_event *event;
 	struct spdk_iscsi_tgt_node *target;
 
-	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
+	if (conn->sess != NULL && conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		target = conn->sess->target;
 		pthread_mutex_lock(&target->mutex);
 		target->num_active_conns--;
