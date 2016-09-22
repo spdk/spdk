@@ -354,6 +354,14 @@ print_namespace(struct spdk_nvme_ns *ns)
 	       (flags & SPDK_NVME_NS_FLUSH_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Reservation:                 %s\n",
 	       (flags & SPDK_NVME_NS_RESERVATION_SUPPORTED) ? "Supported" : "Not Supported");
+	if (flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
+		printf("End-to-End Data Protection:  Supported\n");
+		printf("Protection Type:             Type%d\n", nsdata->dps.pit);
+		printf("Metadata Transfered as:      %s\n",
+		       nsdata->flbas.extended ? "Extended Data LBA" : "Separate Metadata Buffer");
+		printf("Metadata Location:           %s\n",
+		       nsdata->dps.md_start ? "First 8 Bytes" : "Last 8 Bytes");
+	}
 	printf("Size (in LBAs):              %lld (%lldM)\n",
 	       (long long)nsdata->nsze,
 	       (long long)nsdata->nsze / 1024 / 1024);
