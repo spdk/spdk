@@ -36,7 +36,7 @@ if hash lcov; then
 	export LCOV="lcov $LCOV_OPTS --no-external"
 	export GENHTML="genhtml $LCOV_OPTS"
 	# zero out coverage data
-	$LCOV -q -c -i -t "Baseline" -d $src -o cov_base.info
+	$LCOV -q -c -i -t "Baseline" -d $src -o $out/cov_base.info
 fi
 
 # Make sure the disks are clean (no leftover partition tables)
@@ -125,12 +125,10 @@ process_core
 
 if hash lcov; then
 	# generate coverage data and combine with baseline
-	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info
-	$LCOV -q -a cov_base.info -a cov_test.info -o cov_total.info
-	$LCOV -q -r cov_total.info 'test/*' -o cov_total.info
-	$GENHTML cov_total.info -t "$(hostname)" -o $out/coverage
+	$LCOV -q -c -d $src -t "$(hostname)" -o $out/cov_test.info
+	$LCOV -q -a $out/cov_base.info -a $out/cov_test.info -o $out/cov_total.info
+	$LCOV -q -r $out/cov_total.info 'test/*' -o $out/cov_total.info
+	$GENHTML $out/cov_total.info -t "$(hostname)" -o $out/coverage
 	chmod -R a+rX $out/coverage
-	rm cov_base.info cov_test.info
-	mv cov_total.info $out/cov_total.info
 	find . -name "*.gcda" -delete
 fi
