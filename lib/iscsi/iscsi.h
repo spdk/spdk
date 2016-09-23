@@ -107,12 +107,13 @@
 
 /*
  * Defines maximum number of data in buffers each connection can have in
- *  use at any given time. So this limit does not affect I/O smaller than
- *  SPDK_BDEV_SMALL_RBUF_MAX_SIZE.
+ *  use at any given time.  An "extra data in buffer" means any buffer after
+ *  the first for the iSCSI I/O command.  So this limit does not affect I/O
+ *  smaller than SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH.
  */
-#define MAX_LARGE_DATAIN_PER_CONNECTION 64
+#define MAX_EXTRA_DATAIN_PER_CONNECTION 64
 
-#define NUM_PDU_PER_CONNECTION	(2 * (SPDK_ISCSI_MAX_QUEUE_DEPTH + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
+#define NUM_PDU_PER_CONNECTION	(2 * (SPDK_ISCSI_MAX_QUEUE_DEPTH + MAX_EXTRA_DATAIN_PER_CONNECTION + 8))
 
 #define SPDK_ISCSI_MAX_BURST_LENGTH	\
 		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * MAX_DATA_OUT_PER_CONNECTION)
@@ -357,7 +358,7 @@ void process_task_mgmt_completion(spdk_event_t event);
 /* Memory management */
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);
 struct spdk_iscsi_pdu *spdk_get_pdu(void);
-int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn);
+int spdk_iscsi_conn_handle_queued_datain(struct spdk_iscsi_conn *conn);
 
 static inline int
 spdk_get_immediate_data_buffer_size(void)
