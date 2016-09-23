@@ -277,42 +277,40 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 				target->map[m].ig->tag);
 		}
 
-		if (dev) {
-			const char *authmethod = "None";
-			char authgroup[32] = "None";
-			const char *usedigest = "Auto";
+		const char *authmethod = "None";
+		char authgroup[32] = "None";
+		const char *usedigest = "Auto";
 
-			if (target->auth_chap_disabled)
-				authmethod = "None";
-			else if (!target->auth_chap_required)
-				authmethod = "Auto";
-			else if (target->auth_chap_mutual)
-				authmethod = "CHAP Mutual";
-			else
-				authmethod = "CHAP";
+		if (target->auth_chap_disabled)
+			authmethod = "None";
+		else if (!target->auth_chap_required)
+			authmethod = "Auto";
+		else if (target->auth_chap_mutual)
+			authmethod = "CHAP Mutual";
+		else
+			authmethod = "CHAP";
 
-			if (target->auth_group > 0)
-				snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->auth_group);
+		if (target->auth_group > 0)
+			snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->auth_group);
 
-			if (target->header_digest)
-				usedigest = "Header";
-			else if (target->data_digest)
-				usedigest = "Data";
+		if (target->header_digest)
+			usedigest = "Header";
+		else if (target->data_digest)
+			usedigest = "Data";
 
-			fprintf(fp, TARGET_NODE_AUTH_TMPL,
-				authmethod, authgroup, usedigest);
+		fprintf(fp, TARGET_NODE_AUTH_TMPL,
+			authmethod, authgroup, usedigest);
 
-			for (l = 0; l < dev->maxlun; l++) {
-				if (NULL == dev->lun[l]) continue;
+		for (l = 0; l < dev->maxlun; l++) {
+			if (NULL == dev->lun[l]) continue;
 
-				fprintf(fp, TARGET_NODE_LUN_TMPL,
-					dev->lun[l]->id,
-					dev->lun[l]->name);
-			}
-
-			fprintf(fp, TARGET_NODE_QD_TMPL,
-				target->queue_depth);
+			fprintf(fp, TARGET_NODE_LUN_TMPL,
+				dev->lun[l]->id,
+				dev->lun[l]->name);
 		}
+
+		fprintf(fp, TARGET_NODE_QD_TMPL,
+			target->queue_depth);
 	}
 }
 
