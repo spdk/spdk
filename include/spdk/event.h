@@ -159,7 +159,7 @@ void spdk_app_init(struct spdk_app_opts *opts);
 /**
  * \brief Perform final shutdown operations on an application using the event framework.
 */
-void spdk_app_fini(void);
+int spdk_app_fini(void);
 
 /**
  * \brief Start the framework. Once started, the framework will call start_fn on the master

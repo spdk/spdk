@@ -405,14 +405,18 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 }
 
-void
+int
 spdk_app_fini(void)
 {
-	spdk_subsystem_fini();
+	int rc;
+
+	rc = spdk_subsystem_fini();
 	spdk_trace_cleanup();
 	spdk_app_remove_pidfile();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_close_log();
+
+	return rc;
 }
 
 int
