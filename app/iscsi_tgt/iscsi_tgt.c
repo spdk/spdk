@@ -115,7 +115,7 @@ int
 main(int argc, char **argv)
 {
 	int ch;
-	int rc;
+	int rc, app_rc;
 	struct spdk_app_opts opts = {};
 
 	/* default value in opts structure */
@@ -196,9 +196,9 @@ main(int argc, char **argv)
 	printf("Total cores available: %d\n", rte_lcore_count());
 	printf("Using net framework %s\n", spdk_net_framework_get_name());
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(spdk_startup, NULL, NULL);
+	app_rc = spdk_app_start(spdk_startup, NULL, NULL);
 
-	spdk_app_fini();
+	rc = spdk_app_fini();
 
-	return rc;
+	return app_rc ? app_rc : rc;
 }
