@@ -131,7 +131,7 @@ nvmf_process_property_get(struct spdk_nvmf_request *req)
 	cmd = &req->cmd->prop_get_cmd;
 	response = &req->rsp->prop_get_rsp;
 
-	nvmf_property_get(req->conn->sess, cmd, response);
+	spdk_nvmf_property_get(req->conn->sess, cmd, response);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -143,7 +143,7 @@ nvmf_process_property_set(struct spdk_nvmf_request *req)
 
 	cmd = &req->cmd->prop_set_cmd;
 
-	nvmf_property_set(req->conn->sess, cmd, &req->rsp->nvme_cpl);
+	spdk_nvmf_property_set(req->conn->sess, cmd, &req->rsp->nvme_cpl);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

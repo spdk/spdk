@@ -477,9 +477,9 @@ find_prop(uint32_t ofst)
 }
 
 void
-nvmf_property_get(struct nvmf_session *session,
-		  struct spdk_nvmf_fabric_prop_get_cmd *cmd,
-		  struct spdk_nvmf_fabric_prop_get_rsp *response)
+spdk_nvmf_property_get(struct nvmf_session *session,
+		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
+		       struct spdk_nvmf_fabric_prop_get_rsp *response)
 {
 	const struct nvmf_prop *prop;
 
@@ -515,9 +515,9 @@ nvmf_property_get(struct nvmf_session *session,
 }
 
 void
-nvmf_property_set(struct nvmf_session *session,
-		  struct spdk_nvmf_fabric_prop_set_cmd *cmd,
-		  struct spdk_nvme_cpl *response)
+spdk_nvmf_property_set(struct nvmf_session *session,
+		       struct spdk_nvmf_fabric_prop_set_cmd *cmd,
+		       struct spdk_nvme_cpl *response)
 {
 	const struct nvmf_prop *prop;
 	uint64_t value;

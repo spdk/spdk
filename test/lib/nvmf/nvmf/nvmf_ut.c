@@ -704,7 +704,7 @@ nvmf_test_process_admin_cmd(void)
 
 #define RUN_AND_CHECK_PROPERTY_RESULT(fsts, cmd_cid) \
 	do { \
-		nvmf_property_get(sess, &cmd, &response); \
+		spdk_nvmf_property_get(sess, &cmd, &response); \
 		CU_ASSERT_EQUAL(response.status.sc, fsts); \
 	} while (0)
 
@@ -792,7 +792,7 @@ nvmf_test_property_get(void)
 	cmd.ofst = 0xffff;
 	cmd.attrib = 0;
 	cmd.cid = 29;
-	nvmf_property_get(sess, &cmd, &response);
+	spdk_nvmf_property_get(sess, &cmd, &response);
 	CU_ASSERT_EQUAL(response.status.sc, SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
 }
 
@@ -815,7 +815,7 @@ nvmf_test_property_set(void)
 		BUILD_PROPERTY_CMD(property_name, attr, c_id); \
 		property_name = (union union_name *)&cmd.value.u32.low; \
 		property_name->bits.bits_attr = val; \
-		nvmf_property_set(sess, &cmd, &response, &shutdown); \
+		spdk_nvmf_property_set(sess, &cmd, &response, &shutdown); \
 		CU_ASSERT_EQUAL(response.status.sc, 0); \
 		CU_ASSERT_EQUAL(sess->vcprop.property_name.bits.bits_attr, val); \
 	} while (0)
@@ -827,7 +827,7 @@ nvmf_test_property_set(void)
 	cmd.attrib = 0;
 	cmd.cid = 34;
 	cmd.value.u32.low = nssr;
-	nvmf_property_set(sess, &cmd, &response, &shutdown);
+	spdk_nvmf_property_set(sess, &cmd, &response, &shutdown);
 	CU_ASSERT_EQUAL(response.status.sc, 0);
 	CU_ASSERT_EQUAL(sess->vcprop.nssr, nssr);
 
@@ -837,7 +837,7 @@ nvmf_test_property_set(void)
 		BUILD_PROPERTY_CMD(property_name, attr, c_id); \
 		property_name = (union union_name *)&cmd.value.u32.low; \
 		property_name->bits.bits_attr = val; \
-		nvmf_property_set(sess, &cmd, &response, &shutdown); \
+		spdk_nvmf_property_set(sess, &cmd, &response, &shutdown); \
 		CU_ASSERT_EQUAL(response.status.sc, SPDK_NVMF_FABRIC_SC_INVALID_PARAM); \
 		CU_ASSERT_NOT_EQUAL(sess->vcprop.property_name.bits.bits_attr, val); \
 	} while (0)
@@ -850,14 +850,14 @@ nvmf_test_property_set(void)
 	cmd.attrib = 1;
 	cmd.cid = 37;
 	cmd.value.u32.low = nssr;
-	nvmf_property_set(sess, &cmd, &response, &shutdown);
+	spdk_nvmf_property_set(sess, &cmd, &response, &shutdown);
 	CU_ASSERT_EQUAL(response.status.sc, SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
 
 	cmd.ofst = 0xffff;
 	cmd.attrib = 0;
 	cmd.value.u32.low = 20;
 	cmd.cid = 35;
-	nvmf_property_set(sess, &cmd, &response, &shutdown);
+	spdk_nvmf_property_set(sess, &cmd, &response, &shutdown);
 	CU_ASSERT_EQUAL(response.status.sc, SPDK_NVMF_FABRIC_SC_INVALID_PARAM);
 }
 
