@@ -92,7 +92,7 @@ if [ $(uname -s) = Linux ]; then
 	export INITIATOR_IP=127.0.0.1
 
 	timing_enter iscsi_tgt
-
+	time ./test/iscsi_tgt/calsoft/calsoft.sh
 	time ./test/iscsi_tgt/filesystem/filesystem.sh
 	time ./test/iscsi_tgt/fio/fio.sh
 	time ./test/iscsi_tgt/reset/reset.sh
