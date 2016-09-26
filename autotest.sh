@@ -97,7 +97,7 @@ if [ $(uname -s) = Linux ]; then
 	time ./test/iscsi_tgt/fio/fio.sh
 	time ./test/iscsi_tgt/reset/reset.sh
 	time ./test/iscsi_tgt/rpc_config/rpc_config.sh
-
+	time ./test/iscsi_tgt/idle_migration/idle_migration.sh
 	timing_exit iscsi_tgt
 fi
 
