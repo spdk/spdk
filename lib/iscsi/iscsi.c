@@ -633,9 +633,6 @@ spdk_iscsi_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	TAILQ_INSERT_TAIL(&conn->write_pdu_list, pdu, tailq);
 }
 
-
-
-
 static int
 spdk_iscsi_append_text(struct spdk_iscsi_conn *conn __attribute__((
 			       __unused__)), const char *key, const char *val, uint8_t *data, int alloc_len,
@@ -1094,15 +1091,13 @@ spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 	DSET24(rsph->data_segment_len, data_len);
 
 	rsph->ffffffff = 0xffffffffU;
+	to_be32(&rsph->stat_sn, conn->StatSN);
+	conn->StatSN++;
 
 	if (conn->sess != NULL) {
-		to_be32(&rsph->stat_sn, conn->StatSN);
-		conn->StatSN++;
 		to_be32(&rsph->exp_cmd_sn, conn->sess->ExpCmdSN);
 		to_be32(&rsph->max_cmd_sn, conn->sess->MaxCmdSN);
 	} else {
-		to_be32(&rsph->stat_sn, conn->StatSN);
-		conn->StatSN++;
 		to_be32(&rsph->exp_cmd_sn, 1);
 		to_be32(&rsph->max_cmd_sn, 1);
 	}
