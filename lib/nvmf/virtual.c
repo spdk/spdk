@@ -79,7 +79,7 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_subsystem *subsys)
 }
 
 static void
-nvmf_virtual_ctrlr_get_data(struct nvmf_session *session)
+nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 {
 	struct spdk_nvmf_subsystem *subsys = session->subsys;
 
@@ -112,7 +112,7 @@ nvmf_virtual_ctrlr_get_data(struct nvmf_session *session)
 }
 
 static void
-nvmf_virtual_ctrlr_poll_for_completions(struct nvmf_session *session)
+nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_session *session)
 {
 	return;
 }
@@ -192,7 +192,7 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static int
-identify_ctrlr(struct nvmf_session *session, struct spdk_nvme_ctrlr_data *cdata)
+identify_ctrlr(struct spdk_nvmf_session *session, struct spdk_nvme_ctrlr_data *cdata)
 {
 	*cdata = session->vcdata;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -231,7 +231,7 @@ static int
 nvmf_virtual_ctrlr_identify(struct spdk_nvmf_request *req)
 {
 	uint8_t cns;
-	struct nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = session->subsys;
@@ -264,7 +264,7 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
 	uint32_t nr_io_queues;
-	struct nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -295,7 +295,7 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
 	uint32_t nr_io_queues = 0;
-	struct nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 

@@ -737,7 +737,7 @@ static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
 	struct spdk_nvmf_conn		*conn;
-	struct nvmf_session		*session;
+	struct spdk_nvmf_session	*session;
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_rdma_conn 	*rdma_conn;
 
@@ -1056,7 +1056,7 @@ spdk_nvmf_rdma_acceptor_fini(void)
 }
 
 static int
-spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn *conn)
+spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn)
 {
 	struct spdk_nvmf_rdma_session	*rdma_sess;
 	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
@@ -1106,7 +1106,7 @@ spdk_nvmf_rdma_session_init(struct nvmf_session *session, struct spdk_nvmf_conn 
 }
 
 static void
-spdk_nvmf_rdma_session_fini(struct nvmf_session *session)
+spdk_nvmf_rdma_session_fini(struct spdk_nvmf_session *session)
 {
 	struct spdk_nvmf_rdma_session *rdma_sess = session->trctx;
 

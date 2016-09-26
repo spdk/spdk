@@ -44,7 +44,7 @@
 #include "spdk/nvme_spec.h"
 
 static void
-nvmf_init_discovery_session_properties(struct nvmf_session *session)
+nvmf_init_discovery_session_properties(struct spdk_nvmf_session *session)
 {
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
 	/* extended data for get log page supportted */
@@ -83,7 +83,7 @@ nvmf_init_discovery_session_properties(struct nvmf_session *session)
 }
 
 static void
-nvmf_init_nvme_session_properties(struct nvmf_session *session)
+nvmf_init_nvme_session_properties(struct spdk_nvmf_session *session)
 {
 	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
 
@@ -156,7 +156,7 @@ nvmf_init_nvme_session_properties(struct nvmf_session *session)
 		      session->vcprop.csts.raw);
 }
 
-static void session_destruct(struct nvmf_session *session)
+static void session_destruct(struct spdk_nvmf_session *session)
 {
 	session->subsys->session = NULL;
 	session->transport->session_fini(session);
@@ -164,7 +164,7 @@ static void session_destruct(struct nvmf_session *session)
 }
 
 void
-spdk_nvmf_session_destruct(struct nvmf_session *session)
+spdk_nvmf_session_destruct(struct spdk_nvmf_session *session)
 {
 	while (!TAILQ_EMPTY(&session->connections)) {
 		struct spdk_nvmf_conn *conn = TAILQ_FIRST(&session->connections);
@@ -192,7 +192,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			  struct spdk_nvmf_fabric_connect_data *data,
 			  struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
-	struct nvmf_session *session;
+	struct spdk_nvmf_session *session;
 	struct spdk_nvmf_subsystem *subsystem;
 
 #define INVALID_CONNECT_CMD(field) invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
@@ -253,7 +253,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		}
 
 		/* Establish a new session */
-		subsystem->session = session = calloc(1, sizeof(struct nvmf_session));
+		subsystem->session = session = calloc(1, sizeof(struct spdk_nvmf_session));
 		if (session == NULL) {
 			SPDK_ERRLOG("Memory allocation failure\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -332,7 +332,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 void
 spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn)
 {
-	struct nvmf_session *session = conn->sess;
+	struct spdk_nvmf_session *session = conn->sess;
 
 	assert(session != NULL);
 	session->num_connections--;
@@ -345,25 +345,25 @@ spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn)
 }
 
 static uint64_t
-nvmf_prop_get_cap(struct nvmf_session *session)
+nvmf_prop_get_cap(struct spdk_nvmf_session *session)
 {
 	return session->vcprop.cap.raw;
 }
 
 static uint64_t
-nvmf_prop_get_vs(struct nvmf_session *session)
+nvmf_prop_get_vs(struct spdk_nvmf_session *session)
 {
 	return session->vcprop.vs.raw;
 }
 
 static uint64_t
-nvmf_prop_get_cc(struct nvmf_session *session)
+nvmf_prop_get_cc(struct spdk_nvmf_session *session)
 {
 	return session->vcprop.cc.raw;
 }
 
 static bool
-nvmf_prop_set_cc(struct nvmf_session *session, uint64_t value)
+nvmf_prop_set_cc(struct spdk_nvmf_session *session, uint64_t value)
 {
 	union spdk_nvme_cc_register cc, diff;
 
@@ -432,7 +432,7 @@ nvmf_prop_set_cc(struct nvmf_session *session, uint64_t value)
 }
 
 static uint64_t
-nvmf_prop_get_csts(struct nvmf_session *session)
+nvmf_prop_get_csts(struct spdk_nvmf_session *session)
 {
 	return session->vcprop.csts.raw;
 }
@@ -441,8 +441,8 @@ struct nvmf_prop {
 	uint32_t ofst;
 	uint8_t size;
 	char name[11];
-	uint64_t (*get_cb)(struct nvmf_session *session);
-	bool (*set_cb)(struct nvmf_session *session, uint64_t value);
+	uint64_t (*get_cb)(struct spdk_nvmf_session *session);
+	bool (*set_cb)(struct spdk_nvmf_session *session, uint64_t value);
 };
 
 #define PROP(field, size, get_cb, set_cb) \
@@ -477,7 +477,7 @@ find_prop(uint32_t ofst)
 }
 
 void
-spdk_nvmf_property_get(struct nvmf_session *session,
+spdk_nvmf_property_get(struct spdk_nvmf_session *session,
 		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
 		       struct spdk_nvmf_fabric_prop_get_rsp *response)
 {
@@ -515,7 +515,7 @@ spdk_nvmf_property_get(struct nvmf_session *session,
 }
 
 void
-spdk_nvmf_property_set(struct nvmf_session *session,
+spdk_nvmf_property_set(struct spdk_nvmf_session *session,
 		       struct spdk_nvmf_fabric_prop_set_cmd *cmd,
 		       struct spdk_nvme_cpl *response)
 {
@@ -553,7 +553,7 @@ spdk_nvmf_property_set(struct nvmf_session *session,
 }
 
 int
-spdk_nvmf_session_poll(struct nvmf_session *session)
+spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 {
 	struct spdk_nvmf_conn	*conn, *tmp;
 

@@ -76,7 +76,7 @@ nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
 void
 spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct nvmf_session *session = subsystem->session;
+	struct spdk_nvmf_session *session = subsystem->session;
 
 	if (!session) {
 		/* No active connections, so just return */

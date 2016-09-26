@@ -52,7 +52,7 @@ enum conn_type {
 
 struct spdk_nvmf_conn {
 	const struct spdk_nvmf_transport	*transport;
-	struct nvmf_session			*sess;
+	struct spdk_nvmf_session		*sess;
 	enum conn_type				type;
 
 	uint16_t				sq_head;
@@ -66,7 +66,7 @@ struct spdk_nvmf_conn {
  * state. Each NVMf session permits some number of connections.
  * At least one admin connection and additional IOQ connections.
  */
-struct nvmf_session {
+struct spdk_nvmf_session {
 	struct spdk_nvmf_subsystem *subsys;
 
 	struct {
@@ -97,17 +97,17 @@ void
 spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn);
 
 void
-spdk_nvmf_property_get(struct nvmf_session *session,
+spdk_nvmf_property_get(struct spdk_nvmf_session *session,
 		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
 		       struct spdk_nvmf_fabric_prop_get_rsp *response);
 
 void
-spdk_nvmf_property_set(struct nvmf_session *session,
+spdk_nvmf_property_set(struct spdk_nvmf_session *session,
 		       struct spdk_nvmf_fabric_prop_set_cmd *cmd,
 		       struct spdk_nvme_cpl *rsp);
 
-int spdk_nvmf_session_poll(struct nvmf_session *session);
+int spdk_nvmf_session_poll(struct spdk_nvmf_session *session);
 
-void spdk_nvmf_session_destruct(struct nvmf_session *session);
+void spdk_nvmf_session_destruct(struct spdk_nvmf_session *session);
 
 #endif

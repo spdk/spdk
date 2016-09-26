@@ -43,7 +43,7 @@
 struct spdk_nvmf_conn;
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_request;
-struct nvmf_session;
+struct spdk_nvmf_session;
 
 #define MAX_VIRTUAL_NAMESPACE 16
 #define MAX_SN_LEN 20
@@ -69,7 +69,7 @@ struct spdk_nvmf_ctrlr_ops {
 	/**
 	 * Get NVMe identify controller data.
 	 */
-	void (*ctrlr_get_data)(struct nvmf_session *session);
+	void (*ctrlr_get_data)(struct spdk_nvmf_session *session);
 
 	/**
 	 * Process admin command.
@@ -84,7 +84,7 @@ struct spdk_nvmf_ctrlr_ops {
 	/**
 	 * Poll for completions.
 	 */
-	void (*poll_for_completions)(struct nvmf_session *session);
+	void (*poll_for_completions)(struct spdk_nvmf_session *session);
 
 	/**
 	 * Detach the controller.
@@ -106,7 +106,7 @@ struct spdk_nvmf_subsystem {
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN];
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
-	struct nvmf_session *session;
+	struct spdk_nvmf_session *session;
 
 	union {
 		struct {

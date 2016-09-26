@@ -69,7 +69,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 static spdk_nvmf_request_exec_status
 nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 {
-	struct nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_discovery_log_page *log;
@@ -317,7 +317,7 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
 int
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
-	struct nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	spdk_nvmf_request_exec_status status;

@@ -387,7 +387,7 @@ nvmf_test_create_session(void)
 {
 	int fake_session_count = 5;
 	int i;
-	struct nvmf_session *session;
+	struct spdk_nvmf_session *session;
 	struct spdk_nvmf_subsystem *subsystem;
 
 	/* create session in non-exist subsystem */
@@ -414,7 +414,7 @@ nvmf_test_create_session(void)
 static void
 nvmf_test_find_session_by_id(void)
 {
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	sess = nvmf_find_session_by_id("subsystem1", SS_SC_CNTLID);
 	CU_ASSERT_EQUAL(sess->cntlid, SS_SC_CNTLID);
 	/* test non-exist conditions */
@@ -427,7 +427,7 @@ nvmf_test_delete_session(void)
 {
 	int i;
 	int fake_session_count = 5;
-	struct nvmf_session *session;
+	struct spdk_nvmf_session *session;
 	struct spdk_nvmf_subsystem *subsystem;
 
 	subsystem = nvmf_find_subsystem("subsystem1");
@@ -447,7 +447,7 @@ nvmf_test_connect(void)
 	uint64_t fabric_conn = 0;
 	uint64_t fabric_conn_admin = 1;
 	uint64_t fabric_conn_IO = 2;
-	struct nvmf_session *sess, *io_sess;
+	struct spdk_nvmf_session *sess, *io_sess;
 	struct spdk_nvmf_fabric_connect_cmd connect = {};
 	struct spdk_nvmf_fabric_connect_data connect_data = {};
 	struct spdk_nvmf_fabric_connect_rsp response = {};
@@ -517,7 +517,7 @@ static void
 nvmf_test_process_io_cmd(void)
 {
 	struct spdk_nvme_cmd nvmf_cmd = {};
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	struct spdk_nvmf_request nvmf_req = {};
 	struct nvme_read_cdw12 *cdw12;
 	struct spdk_nvmf_subsystem *tmp;
@@ -571,7 +571,7 @@ static void
 nvmf_test_process_admin_cmd(void)
 {
 	struct spdk_nvme_cmd nvmf_cmd = {};
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	struct spdk_nvmf_request nvmf_req = {};
 	struct spdk_nvmf_subsystem *subsystem;
 	int buf_len = sizeof(struct spdk_nvme_ns_data);
@@ -711,7 +711,7 @@ nvmf_test_process_admin_cmd(void)
 static void
 nvmf_test_property_get(void)
 {
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	struct spdk_nvmf_fabric_prop_get_cmd cmd;
 	struct spdk_nvmf_fabric_prop_get_rsp response;
 	union spdk_nvme_cap_lo_register *cap_lo;
@@ -799,7 +799,7 @@ nvmf_test_property_get(void)
 static void
 nvmf_test_property_set(void)
 {
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	struct spdk_nvmf_fabric_prop_set_cmd cmd;
 	struct spdk_nvmf_fabric_prop_set_rsp response;
 	union spdk_nvme_cc_register *cc;
@@ -864,7 +864,7 @@ nvmf_test_property_set(void)
 static void
 nvmf_test_check_admin_completions(void)
 {
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvme_ctrlr ctrlr1, ctrlr2;
 	int i;
@@ -910,7 +910,7 @@ nvmf_test_check_admin_completions(void)
 static void
 nvmf_test_check_io_completions(void)
 {
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvme_ctrlr ctrlr1, ctrlr2;
 	int i;
@@ -960,7 +960,7 @@ nvmf_test_disconnect(void)
 {
 	uint64_t fabric_conn_admin = 1;
 	uint64_t fabric_conn_IO = 2;
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 	struct spdk_nvmf_subsystem *subsystem;
 
 	sess = nvmf_find_session_by_id("subsystem1", SS_SC_CNTLID);
@@ -977,7 +977,7 @@ static void
 nvmf_test_delete_subsystem(void)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	struct nvmf_session *sess;
+	struct spdk_nvmf_session *sess;
 
 	sess = nvmf_create_session("subsystem1");
 	SPDK_CU_ASSERT_FATAL(sess != NULL);

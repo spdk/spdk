@@ -36,7 +36,7 @@
 
 #include <stdint.h>
 
-struct nvmf_session;
+struct spdk_nvmf_session;
 struct spdk_nvmf_conn;
 struct spdk_nvmf_request;
 struct spdk_nvmf_discovery_log_page_entry;
@@ -90,12 +90,12 @@ struct spdk_nvmf_transport {
 	/**
 	 * Initialize the transport for the given session
 	 */
-	int (*session_init)(struct nvmf_session *session, struct spdk_nvmf_conn *conn);
+	int (*session_init)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
 
 	/**
 	 * Deinitiallize the transport for the given session
 	 */
-	void (*session_fini)(struct nvmf_session *session);
+	void (*session_fini)(struct spdk_nvmf_session *session);
 
 	/*
 	 * Signal request completion, which sends a response
