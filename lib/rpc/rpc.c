@@ -45,20 +45,15 @@
 #include <errno.h>
 #include <string.h>
 
-#include <rte_config.h>
-#include <rte_cycles.h>
-#include <rte_timer.h>
-#include <rte_lcore.h>
-
 #include "spdk/queue.h"
 #include "spdk/rpc.h"
 #include "spdk/event.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
 
-#define RPC_SELECT_INTERVAL	(rte_get_timer_hz() >> 8) /* ~4ms */
+#define RPC_SELECT_INTERVAL	4000 /* 4ms */
 
-static struct rte_timer g_rpc_timer;
+static struct spdk_poller *g_rpc_poller = NULL;
 
 static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 
@@ -71,7 +66,7 @@ struct spdk_rpc_method {
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
 
 static void
-spdk_rpc_server_do_work(struct rte_timer *timer, void *arg)
+spdk_rpc_server_do_work(void *arg)
 {
 	spdk_jsonrpc_server_poll(g_jsonrpc_server);
 }
@@ -138,7 +133,7 @@ spdk_jsonrpc_handler(
 }
 
 static void
-spdk_rpc_setup(struct rte_timer *timer, void *arg)
+spdk_rpc_setup(void *arg)
 {
 	struct sockaddr_in	serv_addr;
 	uint16_t		port;
@@ -161,32 +156,42 @@ spdk_rpc_setup(struct rte_timer *timer, void *arg)
 		return;
 	}
 
-	rte_timer_reset(&g_rpc_timer, RPC_SELECT_INTERVAL, PERIODICAL,
-			rte_lcore_id(), spdk_rpc_server_do_work, NULL);
+	/* Unregister the one-shot setup and register the periodic rpc_server_do_work */
+	spdk_poller_unregister(&g_rpc_poller, NULL);
+	spdk_poller_register(&g_rpc_poller, spdk_rpc_server_do_work, NULL, spdk_app_get_current_core(),
+			     NULL, RPC_SELECT_INTERVAL);
 }
 
 static int
 spdk_rpc_initialize(void)
 {
-	rte_timer_init(&g_rpc_timer);
-
 	/*
-	 * Defer setup of the RPC service until the timer subsystem has started.  This
+	 * Defer setup of the RPC service until the reactor has started.  This
 	 *  allows us to detect the RPC listen socket as a suitable proxy for determining
 	 *  when the SPDK application has finished initialization and ready for logins
 	 *  or RPC commands.
 	 */
-	rte_timer_reset(&g_rpc_timer, 0, SINGLE, rte_lcore_id(), spdk_rpc_setup, NULL);
+	spdk_poller_register(&g_rpc_poller, spdk_rpc_setup, NULL, spdk_app_get_current_core(),
+			     NULL, 0);
 	return 0;
+}
+
+static void
+spdk_rpc_finish_cleanup(struct spdk_event *event)
+{
+	if (g_jsonrpc_server) {
+		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
+	}
 }
 
 static int
 spdk_rpc_finish(void)
 {
-	rte_timer_stop(&g_rpc_timer);
-	if (g_jsonrpc_server) {
-		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
-	}
+	struct spdk_event *complete;
+
+	complete = spdk_event_allocate(spdk_app_get_current_core(), spdk_rpc_finish_cleanup,
+				       NULL, NULL, NULL);
+	spdk_poller_unregister(&g_rpc_poller, complete);
 	return 0;
 }
 
