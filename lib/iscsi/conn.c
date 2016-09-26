@@ -1100,13 +1100,13 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 						if (pdu->task->scsi.offset > 0) {
 							conn->data_in_cnt--;
 							if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
+								/* Free the primary task after the last subtask done */
+								conn->data_in_cnt--;
 								spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
 							}
+							spdk_iscsi_conn_handle_queued_tasks(conn);
 						}
-
-						spdk_iscsi_conn_handle_queued_datain(conn);
 					}
-
 					spdk_iscsi_task_put(pdu->task);
 				}
 				spdk_put_pdu(pdu);
