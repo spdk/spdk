@@ -5,6 +5,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+rpc_py="python $rootdir/scripts/rpc.py"
+
 set -e
 
 if ! rdma_nic_available; then
@@ -27,6 +29,9 @@ if [ -e "/dev/nvme-fabrics" ]; then
 	chmod a+rw /dev/nvme-fabrics
 fi
 
+$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' All -p "*"
+$rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode2 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' All -s SPDK00000000000001 -n 'Malloc0 Malloc1'
+
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode2" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 
@@ -43,6 +48,9 @@ done
 
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode2"
+
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
 
 trap - SIGINT SIGTERM EXIT
 
