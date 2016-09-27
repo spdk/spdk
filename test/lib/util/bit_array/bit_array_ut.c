@@ -44,6 +44,7 @@ test_1bit(void)
 
 	ba = spdk_bit_array_create(1);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 1);
 
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == false);
 	CU_ASSERT(spdk_bit_array_find_first_set(ba, 0) == UINT32_MAX);
@@ -69,6 +70,7 @@ test_64bit(void)
 
 	ba = spdk_bit_array_create(64);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 64);
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == false);
 	CU_ASSERT(spdk_bit_array_get(ba, 63) == false);
 	CU_ASSERT(spdk_bit_array_get(ba, 64) == false);
@@ -109,6 +111,7 @@ test_find(void)
 
 	ba = spdk_bit_array_create(256);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 256);
 
 	/* Set all bits */
 	for (i = 0; i < 256; i++) {
@@ -164,6 +167,7 @@ test_resize(void)
 	/* Start with a 0 bit array */
 	ba = spdk_bit_array_create(0);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 0);
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == false);
 	CU_ASSERT(spdk_bit_array_set(ba, 0) == -EINVAL);
 	spdk_bit_array_clear(ba, 0);
@@ -171,6 +175,7 @@ test_resize(void)
 	/* Increase size to 1 bit */
 	SPDK_CU_ASSERT_FATAL(spdk_bit_array_resize(&ba, 1) == 0);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 1);
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == false);
 	CU_ASSERT(spdk_bit_array_set(ba, 0) == 0);
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == true);
@@ -178,6 +183,7 @@ test_resize(void)
 	/* Increase size to 2 bits */
 	SPDK_CU_ASSERT_FATAL(spdk_bit_array_resize(&ba, 2) == 0);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 2);
 	CU_ASSERT(spdk_bit_array_get(ba, 1) == false);
 	CU_ASSERT(spdk_bit_array_set(ba, 1) == 0);
 	CU_ASSERT(spdk_bit_array_get(ba, 1) == true);
@@ -185,12 +191,14 @@ test_resize(void)
 	/* Shrink size back to 1 bit */
 	SPDK_CU_ASSERT_FATAL(spdk_bit_array_resize(&ba, 1) == 0);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 1);
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == true);
 	CU_ASSERT(spdk_bit_array_get(ba, 1) == false);
 
 	/* Increase size to 65 bits */
 	SPDK_CU_ASSERT_FATAL(spdk_bit_array_resize(&ba, 65) == 0);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 65);
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == true);
 	CU_ASSERT(spdk_bit_array_get(ba, 1) == false);
 	CU_ASSERT(spdk_bit_array_set(ba, 64) == 0);
@@ -199,10 +207,21 @@ test_resize(void)
 	/* Shrink size back to 0 bits */
 	SPDK_CU_ASSERT_FATAL(spdk_bit_array_resize(&ba, 0) == 0);
 	SPDK_CU_ASSERT_FATAL(ba != NULL);
+	CU_ASSERT(spdk_bit_array_capacity(ba) == 0);
 	CU_ASSERT(spdk_bit_array_get(ba, 0) == false);
 	CU_ASSERT(spdk_bit_array_get(ba, 1) == false);
 
 	spdk_bit_array_free(&ba);
+}
+
+static void
+test_errors(void)
+{
+	/* Passing NULL to resize should fail. */
+	CU_ASSERT(spdk_bit_array_resize(NULL, 0) == -EINVAL);
+
+	/* Passing NULL to free is a no-op. */
+	spdk_bit_array_free(NULL);
 }
 
 int
@@ -225,7 +244,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "test_1bit", test_1bit) == NULL ||
 		CU_add_test(suite, "test_64bit", test_64bit) == NULL ||
 		CU_add_test(suite, "test_find", test_find) == NULL ||
-		CU_add_test(suite, "test_resize", test_resize) == NULL) {
+		CU_add_test(suite, "test_resize", test_resize) == NULL ||
+		CU_add_test(suite, "test_errors", test_errors) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
