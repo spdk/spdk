@@ -101,7 +101,7 @@ create_cb_null(void *io_device, uint32_t priority, void *ctx_buf)
 static void
 channel(void)
 {
-	struct spdk_io_channel *ch1, *ch2;
+	struct spdk_io_channel *ch1, *ch2, *ch3;
 	void *ctx;
 
 	spdk_allocate_thread();
@@ -110,12 +110,12 @@ channel(void)
 	spdk_io_device_register(&device3, create_cb_null, NULL, 0);
 
 	g_create_cb_calls = 0;
-	ch1 = spdk_get_io_channel(&device1, SPDK_IO_PRIORITY_DEFAULT);
+	ch1 = spdk_get_io_channel(&device1, SPDK_IO_PRIORITY_DEFAULT, false);
 	CU_ASSERT(g_create_cb_calls == 1);
 	SPDK_CU_ASSERT_FATAL(ch1 != NULL);
 
 	g_create_cb_calls = 0;
-	ch2 = spdk_get_io_channel(&device1, SPDK_IO_PRIORITY_DEFAULT);
+	ch2 = spdk_get_io_channel(&device1, SPDK_IO_PRIORITY_DEFAULT, false);
 	CU_ASSERT(g_create_cb_calls == 0);
 	CU_ASSERT(ch1 == ch2);
 	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
@@ -125,13 +125,23 @@ channel(void)
 	CU_ASSERT(g_destroy_cb_calls == 0);
 
 	g_create_cb_calls = 0;
-	ch2 = spdk_get_io_channel(&device2, SPDK_IO_PRIORITY_DEFAULT);
+	ch2 = spdk_get_io_channel(&device2, SPDK_IO_PRIORITY_DEFAULT, false);
 	CU_ASSERT(g_create_cb_calls == 1);
 	CU_ASSERT(ch1 != ch2);
 	SPDK_CU_ASSERT_FATAL(ch2 != NULL);
 
 	ctx = spdk_io_channel_get_ctx(ch2);
 	CU_ASSERT(*(uint64_t *)ctx == ctx2);
+
+	/*
+	 * Confirm that specifying unique==true will generate a new I/O channel,
+	 *  and reuse ch2.
+	 */
+	g_create_cb_calls = 0;
+	ch3 = spdk_get_io_channel(&device2, SPDK_IO_PRIORITY_DEFAULT, true);
+	CU_ASSERT(g_create_cb_calls == 1);
+	CU_ASSERT(ch2 != ch3);
+	CU_ASSERT(ch3 != NULL);
 
 	g_destroy_cb_calls = 0;
 	spdk_put_io_channel(ch1);
@@ -141,11 +151,15 @@ channel(void)
 	spdk_put_io_channel(ch2);
 	CU_ASSERT(g_destroy_cb_calls == 1);
 
-	ch1 = spdk_get_io_channel(&device3, SPDK_IO_PRIORITY_DEFAULT);
+	g_destroy_cb_calls = 0;
+	spdk_put_io_channel(ch3);
+	CU_ASSERT(g_destroy_cb_calls == 1);
+
+	ch1 = spdk_get_io_channel(&device3, SPDK_IO_PRIORITY_DEFAULT, false);
 	CU_ASSERT(ch1 == NULL);
 
 	/* Confirm failure if user specifies an invalid I/O priority. */
-	ch1 = spdk_get_io_channel(&device1, SPDK_IO_PRIORITY_DEFAULT + 1);
+	ch1 = spdk_get_io_channel(&device1, SPDK_IO_PRIORITY_DEFAULT + 1, false);
 	CU_ASSERT(ch1 == NULL);
 
 	spdk_io_device_unregister(&device1);

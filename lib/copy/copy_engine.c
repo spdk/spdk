@@ -151,7 +151,7 @@ memcpy_destroy_cb(void *io_device, void *ctx_buf)
 
 static struct spdk_io_channel *mem_get_io_channel(uint32_t priority)
 {
-	return spdk_get_io_channel(&memcpy_copy_engine, priority);
+	return spdk_get_io_channel(&memcpy_copy_engine, priority, false);
 }
 
 static int
@@ -208,7 +208,7 @@ copy_destroy_cb(void *io_device, void *ctx_buf)
 struct spdk_io_channel *
 spdk_copy_engine_get_io_channel(uint32_t priority)
 {
-	return spdk_get_io_channel(&spdk_copy_module_list, priority);
+	return spdk_get_io_channel(&spdk_copy_module_list, priority, false);
 }
 
 static int

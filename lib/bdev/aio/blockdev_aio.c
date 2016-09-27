@@ -336,7 +336,7 @@ blockdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 blockdev_aio_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {
-	return spdk_get_io_channel(bdev, priority);
+	return spdk_get_io_channel(bdev, priority, false);
 }
 
 static const struct spdk_bdev_fn_table aio_fn_table = {

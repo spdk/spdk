@@ -336,7 +336,7 @@ blockdev_nvme_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {
 	struct nvme_blockdev *nvme_bdev = (struct nvme_blockdev *)bdev;
 
-	return spdk_get_io_channel(nvme_bdev->ctrlr, priority);
+	return spdk_get_io_channel(nvme_bdev->ctrlr, priority, false);
 }
 
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {

@@ -130,7 +130,7 @@ spdk_io_device_unregister(void *io_device)
 }
 
 struct spdk_io_channel *
-spdk_get_io_channel(void *io_device, uint32_t priority)
+spdk_get_io_channel(void *io_device, uint32_t priority, bool unique)
 {
 	struct spdk_io_channel *ch;
 	struct io_device *dev;
@@ -154,14 +154,16 @@ spdk_get_io_channel(void *io_device, uint32_t priority)
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	TAILQ_FOREACH(ch, &g_io_channels, tailq) {
-		if (ch->io_device == io_device && ch->priority == priority) {
-			ch->ref++;
-			/*
-			 * An I/O channel already exists for this device on this
-			 *  thread, so return it.
-			 */
-			return ch;
+	if (unique == false) {
+		TAILQ_FOREACH(ch, &g_io_channels, tailq) {
+			if (ch->io_device == io_device && ch->priority == priority) {
+				ch->ref++;
+				/*
+				 * An I/O channel already exists for this device on this
+				 *  thread, so return it.
+				 */
+				return ch;
+			}
 		}
 	}
 

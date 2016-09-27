@@ -236,7 +236,7 @@ ioat_destroy_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 ioat_get_io_channel(uint32_t priority)
 {
-	return spdk_get_io_channel(&ioat_copy_engine, priority);
+	return spdk_get_io_channel(&ioat_copy_engine, priority, false);
 }
 
 struct ioat_probe_ctx {
