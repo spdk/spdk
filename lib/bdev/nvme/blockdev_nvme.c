@@ -306,7 +306,7 @@ blockdev_nvme_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type i
 }
 
 static int
-blockdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+blockdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void *unique_ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
@@ -336,7 +336,7 @@ blockdev_nvme_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {
 	struct nvme_blockdev *nvme_bdev = (struct nvme_blockdev *)bdev;
 
-	return spdk_get_io_channel(nvme_bdev->ctrlr, priority, false);
+	return spdk_get_io_channel(nvme_bdev->ctrlr, priority, false, NULL);
 }
 
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
