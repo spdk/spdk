@@ -15,10 +15,10 @@ interrupts, which avoids kernel context switches and eliminates interrupt
 handling overhead.
 
 The development kit currently includes:
-* NVMe driver
-* I/OAT (DMA engine) driver
-* NVMe over Fabrics target
-* iSCSI target
+* [NVMe driver](http://www.spdk.io/spdk/doc/nvme.html)
+* [I/OAT (DMA engine) driver](http://www.spdk.io/spdk/doc/ioat.html)
+* [NVMe over Fabrics target](http://www.spdk.io/spdk/doc/nvmf.html)
+* [iSCSI target](http://www.spdk.io/spdk/doc/iscsi.html)
 
 Documentation
 =============
