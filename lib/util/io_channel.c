@@ -121,6 +121,7 @@ spdk_io_device_unregister(void *io_device)
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device_ctx == io_device) {
 			TAILQ_REMOVE(&g_io_devices, dev, tailq);
+			free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
