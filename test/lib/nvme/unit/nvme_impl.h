@@ -151,7 +151,9 @@ nvme_mempool_create(const char *name, unsigned n, unsigned elt_size,
 static inline void
 nvme_mempool_get(nvme_mempool_t *mp, void **buf)
 {
-	posix_memalign(buf, 64, 0x1000);
+	if (posix_memalign(buf, 64, 0x1000)) {
+		*buf = NULL;
+	}
 }
 
 static inline void
