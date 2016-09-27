@@ -420,16 +420,18 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	while (!TAILQ_EMPTY(&conn->write_pdu_list)) {
 		pdu = TAILQ_FIRST(&conn->write_pdu_list);
 		TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
-		if (pdu->task)
+		if (pdu->task) {
 			spdk_iscsi_task_put(pdu->task);
+		}
 		spdk_put_pdu(pdu);
 	}
 
 	while (!TAILQ_EMPTY(&conn->snack_pdu_list)) {
 		pdu = TAILQ_FIRST(&conn->snack_pdu_list);
 		TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
-		if (pdu->task)
+		if (pdu->task) {
 			spdk_iscsi_task_put(pdu->task);
+		}
 		spdk_put_pdu(pdu);
 	}
 
@@ -442,7 +444,7 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	}
 
 	if (conn->pending_task_cnt)
-		return 1;
+		return -1;
 
 	return 0;
 
