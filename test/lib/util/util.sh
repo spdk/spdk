@@ -9,5 +9,6 @@ source $rootdir/scripts/autotest_common.sh
 timing_enter util
 
 $testdir/bit_array/bit_array_ut
+$testdir/io_channel/io_channel_ut
 
 timing_exit util
