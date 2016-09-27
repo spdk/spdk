@@ -343,7 +343,7 @@ static void free_malloc_disk(struct malloc_disk *mdisk)
 	rte_free(mdisk);
 }
 
-static int blockdev_malloc_initialize()
+static int blockdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
 	int NumberOfLuns, LunSizeInMB, BlockSize, i;
@@ -374,7 +374,7 @@ static int blockdev_malloc_initialize()
 	return 0;
 }
 
-static void blockdev_malloc_finish()
+static void blockdev_malloc_finish(void)
 {
 	struct malloc_disk *mdisk;
 
