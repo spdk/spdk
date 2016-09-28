@@ -39,7 +39,7 @@
 #include <rte_malloc.h>
 
 void
-spdk_put_task(struct spdk_scsi_task *task)
+spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
 	if (!task) {
 		return;
@@ -51,7 +51,7 @@ spdk_put_task(struct spdk_scsi_task *task)
 		struct spdk_bdev_io *bdev_io = task->blockdev_io;
 
 		if (task->parent) {
-			spdk_put_task(task->parent);
+			spdk_scsi_task_put(task->parent);
 			task->parent = NULL;
 		}
 

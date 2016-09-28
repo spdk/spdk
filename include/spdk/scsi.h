@@ -249,7 +249,7 @@ int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,
 
 void spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 			      struct spdk_scsi_task *parent);
-void spdk_put_task(struct spdk_scsi_task *task);
+void spdk_scsi_task_put(struct spdk_scsi_task *task);
 void spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 			       uint8_t **data);
 int spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc,

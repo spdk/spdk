@@ -19,7 +19,7 @@ spdk_iscsi_task_get(uint32_t *owner_task_ctr, struct spdk_iscsi_task *parent)
 }
 
 void
-spdk_put_task(struct spdk_scsi_task *task)
+spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
 	free(task);
 }

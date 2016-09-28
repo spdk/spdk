@@ -80,7 +80,7 @@ struct spdk_iscsi_task {
 static inline void
 spdk_iscsi_task_put(struct spdk_iscsi_task *task)
 {
-	spdk_put_task(&task->scsi);
+	spdk_scsi_task_put(&task->scsi);
 }
 
 static inline struct spdk_iscsi_pdu *

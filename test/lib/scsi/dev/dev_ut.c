@@ -67,7 +67,7 @@ spdk_get_task(uint32_t *owner_task_ctr)
 }
 
 void
-spdk_put_task(struct spdk_scsi_task *task)
+spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
 	g_task_count--;
 
@@ -250,7 +250,7 @@ dev_queue_mgmt_task_success(void)
 
 	spdk_scsi_dev_queue_mgmt_task(dev, task);
 
-	spdk_put_task(task);
+	spdk_scsi_task_put(task);
 
 	spdk_scsi_dev_destruct(dev);
 }
@@ -272,7 +272,7 @@ dev_queue_task_success(void)
 
 	spdk_scsi_dev_queue_task(dev, task);
 
-	spdk_put_task(task);
+	spdk_scsi_task_put(task);
 
 	spdk_scsi_dev_destruct(dev);
 }
@@ -293,8 +293,8 @@ dev_stop_success(void)
 	/* Enqueue the tasks into dev->task_mgmt_submit_queue*/
 	spdk_scsi_dev_queue_mgmt_task(&dev, task_mgmt);
 
-	spdk_put_task(task);
-	spdk_put_task(task_mgmt);
+	spdk_scsi_task_put(task);
+	spdk_scsi_task_put(task_mgmt);
 }
 
 static void
