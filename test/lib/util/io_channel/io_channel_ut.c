@@ -146,7 +146,7 @@ channel(void)
 	ch3 = spdk_get_io_channel(&device2, SPDK_IO_PRIORITY_DEFAULT, true, &tmp);
 	CU_ASSERT(g_create_cb_calls == 1);
 	CU_ASSERT(ch2 != ch3);
-	CU_ASSERT(ch3 != NULL);
+	SPDK_CU_ASSERT_FATAL(ch3 != NULL);
 	CU_ASSERT(tmp == ~0x5a5a);
 
 	g_destroy_cb_calls = 0;
