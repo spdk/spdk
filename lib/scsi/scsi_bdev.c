@@ -66,7 +66,8 @@ spdk_bdev_scsi_set_local_naa(char *name, uint8_t *buf)
 {
 	int i, value, count = 0;
 	uint64_t naa, local_value;
-	for (i = 0; (name[i] != '\0') && (i < 16); i++) {
+
+	for (i = 0; (i < 16) && (name[i] != '\0'); i++) {
 		value = spdk_hex2bin(name[i]);
 		if (i % 2) {
 			buf[count++] |= value << 4;

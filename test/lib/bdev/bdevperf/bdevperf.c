@@ -440,7 +440,7 @@ performance_dump(int io_time)
 		target = head[index];
 		if (target != NULL) {
 			lcore_id = target->lcore;
-			printf("\r Logical core: %d\n", lcore_id);
+			printf("\r Logical core: %u\n", lcore_id);
 		}
 		while (target != NULL) {
 			io_per_second = (float)target->io_completed /
