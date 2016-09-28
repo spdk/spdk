@@ -104,7 +104,7 @@ nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr, void *payload,
 
 int
 nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
-				  void *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+				  void *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t ns_allocated)
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
@@ -121,7 +121,11 @@ nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid,
 	/*
 	 * TODO: create an identify command data structure
 	 */
-	cmd->cdw10 = SPDK_NVME_IDENTIFY_NS;
+    if (ns_allocated)
+        cmd->cdw10 = SPDK_NVME_IDENTIFY_NS_ALLOCATED;
+    else
+        cmd->cdw10 = SPDK_NVME_IDENTIFY_NS;
+
 	cmd->nsid = nsid;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);

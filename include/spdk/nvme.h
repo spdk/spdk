@@ -529,7 +529,7 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
  * This function is thread safe and can be called at any point while the controller is attached to
  *  the SPDK NVMe driver.
  */
-const struct spdk_nvme_ns_data *spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns);
+const struct spdk_nvme_ns_data *spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns, uint32_t ns_allocated);
 
 /**
  * \brief Get the namespace id (index number) from the given namespace handle.
