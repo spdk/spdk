@@ -40,6 +40,7 @@
 #include <rte_malloc.h>
 #include <rte_mempool.h>
 #include <rte_memzone.h>
+#include <rte_version.h>
 
 void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
@@ -92,6 +93,54 @@ spdk_memzone_free(const char *name)
 	}
 
 	return -1;
+}
+
+struct spdk_mempool *
+spdk_mempool_create(const char *name, size_t count,
+		    size_t ele_size, size_t cache_size)
+{
+	struct rte_mempool *mp;
+	size_t tmp;
+
+	/* No more than half of all elements can be in cache */
+	tmp = (count / 2) / rte_lcore_count();
+	if (cache_size > tmp) {
+		cache_size = tmp;
+	}
+
+	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE) {
+		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
+	}
+
+	mp = rte_mempool_create(name, count, ele_size, cache_size,
+				0, NULL, NULL, NULL, NULL,
+				SOCKET_ID_ANY, 0);
+
+	return (struct spdk_mempool *)mp;
+}
+
+void
+spdk_mempool_free(struct spdk_mempool *mp)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
+	rte_mempool_free((struct rte_mempool *)mp);
+#endif
+}
+
+void *
+spdk_mempool_get(struct spdk_mempool *mp)
+{
+	void *ele = NULL;
+
+	rte_mempool_get((struct rte_mempool *)mp, &ele);
+
+	return ele;
+}
+
+void
+spdk_mempool_put(struct spdk_mempool *mp, void *ele)
+{
+	rte_mempool_put((struct rte_mempool *)mp, ele);
 }
 
 bool

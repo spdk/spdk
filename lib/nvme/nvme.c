@@ -100,7 +100,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 {
 	struct nvme_request *req = NULL;
 
-	nvme_mempool_get(g_spdk_nvme_driver->request_mempool, (void **)&req);
+	req = nvme_mempool_get(g_spdk_nvme_driver->request_mempool);
 	if (req == NULL) {
 		return req;
 	}
@@ -280,7 +280,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 
 	if (g_spdk_nvme_driver->request_mempool == NULL) {
 		g_spdk_nvme_driver->request_mempool = nvme_mempool_create("nvme_request", 8192,
-						      sizeof(struct nvme_request), 128);
+						      sizeof(struct nvme_request), -1);
 		if (g_spdk_nvme_driver->request_mempool == NULL) {
 			SPDK_ERRLOG("Unable to allocate pool of requests\n");
 			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);

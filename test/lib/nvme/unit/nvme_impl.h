@@ -98,20 +98,24 @@ nvme_process_is_primary(void)
 typedef unsigned nvme_mempool_t;
 
 static inline nvme_mempool_t *
-nvme_mempool_create(const char *name, unsigned n, unsigned elt_size,
-		    unsigned cache_size)
+nvme_mempool_create(const char *name, size_t n,
+		    size_t elt_size, size_t cache_size)
 {
 	static int mp;
 
 	return &mp;
 }
 
-static inline void
-nvme_mempool_get(nvme_mempool_t *mp, void **buf)
+static inline void *
+nvme_mempool_get(nvme_mempool_t *mp)
 {
-	if (posix_memalign(buf, 64, 0x1000)) {
-		*buf = NULL;
+	void *buf;
+
+	if (posix_memalign(&buf, 64, 0x1000)) {
+		buf = NULL;
 	}
+
+	return buf;
 }
 
 static inline void

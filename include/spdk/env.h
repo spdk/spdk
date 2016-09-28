@@ -85,6 +85,36 @@ spdk_memzone_lookup(const char *name);
 int
 spdk_memzone_free(const char *name);
 
+struct spdk_mempool;
+
+/**
+ * Create a thread-safe memory pool. Cache size is the number of
+ * elements in a thread-local cache. Can be 0 for no caching, or -1
+ * for unspecified.
+ */
+struct spdk_mempool *
+spdk_mempool_create(const char *name, size_t count,
+		    size_t ele_size, size_t cache_size);
+
+/**
+ * Free a memory pool.
+ */
+void
+spdk_mempool_free(struct spdk_mempool *mp);
+
+/**
+ * Get an element from a memory pool. If no elements remain, return NULL.
+ */
+void *
+spdk_mempool_get(struct spdk_mempool *mp);
+
+/**
+ * Put an element back into the memory pool.
+ */
+void
+spdk_mempool_put(struct spdk_mempool *mp, void *ele);
+
+
 /**
  * Return true if the calling process is primary process
  */

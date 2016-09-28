@@ -115,41 +115,17 @@
 #define nvme_vtophys(buf)		spdk_vtophys(buf)
 #define NVME_VTOPHYS_ERROR		SPDK_VTOPHYS_ERROR
 
-typedef struct rte_mempool nvme_mempool_t;
+typedef struct spdk_mempool nvme_mempool_t;
 
 /**
  * Create a mempool with the given configuration.
  * Return a pointer to the allocated memory address. If the allocation
  *   cannot be done, return NULL.
  */
-static inline nvme_mempool_t *
-nvme_mempool_create(const char *name, unsigned n, unsigned elt_size,
-		    unsigned cache_size)
-{
-	struct rte_mempool *mp;
-
-	mp = rte_mempool_create(name, n, elt_size, cache_size,
-				0, NULL, NULL, NULL, NULL,
-				SOCKET_ID_ANY, 0);
-
-	if (mp == NULL) {
-		return NULL;
-	}
-
-	return (nvme_mempool_t *)mp;
-}
-
-static inline void
-nvme_mempool_get(nvme_mempool_t *mp, void **buf)
-{
-	rte_mempool_get(mp, buf);
-}
-
-static inline void
-nvme_mempool_put(nvme_mempool_t *mp, void *buf)
-{
-	rte_mempool_put(mp, buf);
-}
+#define nvme_mempool_create		spdk_mempool_create
+#define nvme_mempool_free		spdk_mempool_free
+#define nvme_mempool_get		spdk_mempool_get
+#define nvme_mempool_put		spdk_mempool_put
 
 /**
  * Get a monotonic timestamp counter (used for measuring timeouts during initialization).

@@ -321,7 +321,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 		      void *cb_arg)
 {
 	struct nvme_request *req = NULL;
-	nvme_mempool_get(_g_nvme_driver.request_mempool, (void **)&req);
+	req = nvme_mempool_get(_g_nvme_driver.request_mempool);
 
 	if (req != NULL) {
 		memset(req, 0, offsetof(struct nvme_request, children));
