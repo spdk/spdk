@@ -62,8 +62,12 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
-	nvme_ctrlr_destruct(ctrlr);
+	nvme_ctrlr_proc_put_ref(ctrlr);
+
+	if (nvme_ctrlr_get_ref_count(ctrlr) == 0) {
+		TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
+		nvme_ctrlr_destruct(ctrlr);
+	}
 
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return 0;
@@ -325,6 +329,12 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 				 */
 				TAILQ_REMOVE(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
 				TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
+
+				/*
+				 * Increase the ref count before calling attach_cb() as the user may
+				 * call nvme_detach() immediately.
+				 */
+				nvme_ctrlr_proc_get_ref(ctrlr);
 
 				/*
 				 * Unlock while calling attach_cb() so the user can call other functions

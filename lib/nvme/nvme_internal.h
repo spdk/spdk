@@ -310,6 +310,9 @@ struct spdk_nvme_controller_process {
 
 	/** Per process PCI device handle */
 	struct spdk_pci_device				*devhandle;
+
+	/** Reference to track the number of attachment to this controller. */
+	int						ref;
 };
 
 /*
@@ -547,5 +550,15 @@ DECLARE_TRANSPORT(transport) /* generic transport dispatch functions */
 DECLARE_TRANSPORT(pcie)
 
 #undef DECLARE_TRANSPORT
+
+/*
+ * Below ref related functions must be called with the global
+ *  driver lock held for the multi-process condition.
+ *  Within these functions, the per ctrlr ctrlr_lock is also
+ *  acquired for the multi-thread condition.
+ */
+void	nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr);
+int	nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr);
 
 #endif /* __NVME_INTERNAL_H__ */

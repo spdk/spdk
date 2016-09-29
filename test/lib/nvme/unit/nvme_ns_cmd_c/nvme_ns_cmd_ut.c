@@ -136,6 +136,24 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	return 0;
 }
 
+void
+nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+void
+nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+int
+nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
 static void
 prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 		 struct spdk_nvme_qpair *qpair,

@@ -388,6 +388,12 @@ nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
 }
 
+void
+nvme_free_request(struct nvme_request *req)
+{
+	spdk_mempool_put(_g_nvme_driver.request_mempool, req);
+}
+
 static void
 test_nvme_ctrlr_init_en_1_rdy_0(void)
 {

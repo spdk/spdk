@@ -33,6 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/env.h"
+#include <signal.h>
 
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
@@ -822,10 +823,32 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	ctrlr_proc->pid = getpid();
 	STAILQ_INIT(&ctrlr_proc->active_reqs);
 	ctrlr_proc->devhandle = devhandle;
+	ctrlr_proc->ref = 0;
 
 	TAILQ_INSERT_TAIL(&ctrlr->active_procs, ctrlr_proc, tailq);
 
 	return 0;
+}
+
+/**
+ * This function will be called when the process exited unexpectedly
+ *  in order to free any incomplete nvme request and allocated memory.
+ * Note: the ctrl_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_cleanup_process(struct spdk_nvme_controller_process *proc)
+{
+	struct nvme_request	*req, *tmp_req;
+
+	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {
+		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);
+
+		assert(req->pid == proc->pid);
+
+		nvme_free_request(req);
+	}
+
+	spdk_free(proc);
 }
 
 /**
@@ -846,6 +869,88 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 
 		spdk_free(active_proc);
 	}
+}
+
+/**
+ * This function will be called when any other process attaches or
+ *  detaches the controller in order to cleanup those unexpectedly
+ *  terminated processes.
+ * Note: the ctrl_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_remove_inactive_proc(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_controller_process	*active_proc, *tmp;
+
+	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
+		if ((kill(active_proc->pid, 0) == -1) && (errno == ESRCH)) {
+			SPDK_ERRLOG("process %d terminated unexpected\n", active_proc->pid);
+
+			TAILQ_REMOVE(&ctrlr->active_procs, active_proc, tailq);
+
+			nvme_ctrlr_cleanup_process(active_proc);
+		}
+	}
+}
+
+void
+nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_controller_process	*active_proc;
+	pid_t					pid = getpid();
+
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_remove_inactive_proc(ctrlr);
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			active_proc->ref++;
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
+void
+nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_controller_process	*active_proc;
+	pid_t					pid = getpid();
+
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_remove_inactive_proc(ctrlr);
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			active_proc->ref--;
+			assert(active_proc->ref >= 0);
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
+int
+nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_controller_process	*active_proc;
+	int					ref = 0;
+
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_remove_inactive_proc(ctrlr);
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		ref += active_proc->ref;
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return ref;
 }
 
 /**
