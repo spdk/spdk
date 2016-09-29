@@ -1316,7 +1316,7 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 	uint64_t maxlba;
 	uint64_t llen;
 	uint64_t blen;
-	off_t offset;
+	uint64_t offset;
 	uint64_t nbytes;
 
 	maxlba = bdev->blockcnt;
@@ -1354,7 +1354,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	uint64_t maxlba;
 	uint64_t llen;
 	uint64_t blen;
-	off_t offset;
+	uint64_t offset;
 	uint64_t nbytes;
 	struct spdk_scsi_task *primary = task->parent;
 
