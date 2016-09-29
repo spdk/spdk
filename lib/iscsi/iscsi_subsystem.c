@@ -54,6 +54,7 @@
 #include <rte_version.h>
 
 #include <inttypes.h>
+#include <stddef.h>
 #include <unistd.h>
 
 #include "iscsi/iscsi.h"
@@ -319,7 +320,7 @@ spdk_mobj_ctor(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 {
 	struct spdk_mobj *m = _m;
 	uint64_t *phys_addr;
-	off_t off;
+	ptrdiff_t off;
 
 	m->mp = mp;
 	m->buf = (uint8_t *)m + sizeof(struct spdk_mobj);
