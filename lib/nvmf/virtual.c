@@ -387,7 +387,7 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	uint64_t lba_address;
 	uint64_t blockcnt;
 	uint64_t io_bytes;
-	off_t offset;
+	uint64_t offset;
 	uint64_t llen;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
