@@ -99,7 +99,7 @@ blockdev_aio_close(struct file_disk *disk)
 
 static int64_t
 blockdev_aio_read(struct file_disk *fdisk, struct spdk_io_channel *ch,
-		  struct blockdev_aio_task *aio_task, void *buf, uint64_t nbytes, off_t offset)
+		  struct blockdev_aio_task *aio_task, void *buf, uint64_t nbytes, uint64_t offset)
 {
 	struct iocb *iocb = &aio_task->iocb;
 	struct blockdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
@@ -129,7 +129,7 @@ blockdev_aio_read(struct file_disk *fdisk, struct spdk_io_channel *ch,
 static int64_t
 blockdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		    struct blockdev_aio_task *aio_task,
-		    struct iovec *iov, int iovcnt, size_t len, off_t offset)
+		    struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
 	struct iocb *iocb = &aio_task->iocb;
 	struct blockdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);

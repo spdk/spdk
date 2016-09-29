@@ -123,7 +123,7 @@ blockdev_malloc_destruct(struct spdk_bdev *bdev)
 static int64_t
 blockdev_malloc_read(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		     struct copy_task *copy_req,
-		     void *buf, uint64_t nbytes, off_t offset)
+		     void *buf, uint64_t nbytes, uint64_t offset)
 {
 	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "read %lu bytes from offset %#lx to %p\n",
 		      nbytes, offset, buf);
@@ -135,7 +135,7 @@ blockdev_malloc_read(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 static int64_t
 blockdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		       struct copy_task *copy_req,
-		       struct iovec *iov, int iovcnt, size_t len, off_t offset)
+		       struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
 	if ((iovcnt != 1) || (iov->iov_len != len))
 		return -1;

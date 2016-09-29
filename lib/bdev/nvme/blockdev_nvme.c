@@ -139,7 +139,7 @@ SPDK_BDEV_MODULE_REGISTER(nvme_library_init, NULL, blockdev_nvme_get_spdk_runnin
 static int64_t
 blockdev_nvme_read(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 		   struct nvme_blockio *bio,
-		   void *buf, uint64_t nbytes, off_t offset)
+		   void *buf, uint64_t nbytes, uint64_t offset)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int64_t rc;
@@ -157,7 +157,7 @@ blockdev_nvme_read(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 static int64_t
 blockdev_nvme_writev(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 		     struct nvme_blockio *bio,
-		     struct iovec *iov, int iovcnt, size_t len, off_t offset)
+		     struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int64_t rc;
