@@ -34,11 +34,16 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CXX_SRCS := cpp_headers.cpp
+HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
+CXX_SRCS := $(patsubst %.h,%.cpp,$(notdir $(HEADERS)))
 
-all : cpp_headers.o
+%.cpp: $(SPDK_ROOT_DIR)/include/spdk/%.h
+	$(Q)echo "  TEST_HEADER include/spdk/$(notdir $<)"; \
+	echo '#include "spdk/$(notdir $<)"' > $@
+
+all : $(CXX_SRCS) $(OBJS)
 
 clean :
-	$(CLEAN_C)
+	$(CLEAN_C) $(CXX_SRCS)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
