@@ -31,13 +31,16 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
+#include <errno.h>
+#include <inttypes.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <rte_config.h>
-#include <rte_mempool.h>
+#include <rte_atomic.h>
 #include <rte_lcore.h>
 
 #include "spdk/fd.h"

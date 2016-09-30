@@ -32,9 +32,10 @@
  */
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <rte_config.h>
-#include <rte_mempool.h>
 #include <rte_lcore.h>
 
 #include "spdk/nvme.h"

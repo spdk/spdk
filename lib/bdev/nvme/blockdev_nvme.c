@@ -42,7 +42,6 @@
 
 #include <rte_config.h>
 #include <rte_ring.h>
-#include <rte_mempool.h>
 #include <rte_lcore.h>
 
 #include "spdk/conf.h"

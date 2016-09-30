@@ -32,12 +32,12 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <rte_config.h>
 #include <rte_eal.h>
-#include <rte_mempool.h>
 
 #include "spdk/env.h"
 

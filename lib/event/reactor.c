@@ -48,7 +48,6 @@
 #endif
 
 #include <rte_config.h>
-#include <rte_mempool.h>
 #include <rte_ring.h>
 
 #include "reactor.h"
@@ -126,7 +125,7 @@ static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
 				   uint64_t max_delay_us);
 
-struct rte_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
+struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 
 /** \file
 
@@ -145,12 +144,11 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 		    spdk_event_t next)
 {
 	struct spdk_event *event = NULL;
-	int rc;
 	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
 	assert(socket_id < SPDK_MAX_SOCKET);
 
-	rc = rte_mempool_get(g_spdk_event_mempool[socket_id], (void **)&event);
-	if (rc != 0 || event == NULL) {
+	event = spdk_mempool_get(g_spdk_event_mempool[socket_id]);
+	if (event == NULL) {
 		assert(false);
 		return NULL;
 	}
@@ -170,7 +168,7 @@ spdk_event_free(uint32_t lcore, struct spdk_event *event)
 	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
 	assert(socket_id < SPDK_MAX_SOCKET);
 
-	rte_mempool_put(g_spdk_event_mempool[socket_id], (void *)event);
+	spdk_mempool_put(g_spdk_event_mempool[socket_id], (void *)event);
 }
 
 void
@@ -617,10 +615,9 @@ spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
 		if ((1ULL << i) & socket_mask) {
 			snprintf(mempool_name, sizeof(mempool_name), "spdk_event_mempool_%d", i);
-			g_spdk_event_mempool[i] = rte_mempool_create(mempool_name,
+			g_spdk_event_mempool[i] = spdk_mempool_create(mempool_name,
 						  (262144 / socket_count),
-						  sizeof(struct spdk_event), 128, 0,
-						  NULL, NULL, NULL, NULL, i, 0);
+						  sizeof(struct spdk_event), -1);
 
 			if (g_spdk_event_mempool[i] == NULL) {
 				SPDK_ERRLOG("spdk_event_mempool creation failed on socket %d\n", i);
@@ -631,13 +628,10 @@ spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 				 * memory is not evenly installed on all sockets. If still
 				 * fails, free all allocated memory and exits.
 				 */
-				g_spdk_event_mempool[i] = rte_mempool_create(
+				g_spdk_event_mempool[i] = spdk_mempool_create(
 								  mempool_name,
 								  (262144 / socket_count),
-								  sizeof(struct spdk_event),
-								  128, 0,
-								  NULL, NULL, NULL, NULL,
-								  SOCKET_ID_ANY, 0);
+								  sizeof(struct spdk_event), -1);
 
 				/* TODO: in DPDK 16.04, free mempool API is avaialbe. */
 				if (g_spdk_event_mempool[i] == NULL) {

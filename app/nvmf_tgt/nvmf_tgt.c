@@ -40,7 +40,7 @@
 
 #include <rte_config.h>
 #include <rte_memzone.h>
-#include <rte_mempool.h>
+#include <rte_lcore.h>
 
 #include "nvmf_tgt.h"
 

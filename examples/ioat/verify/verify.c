@@ -39,10 +39,10 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 #include <rte_eal.h>
-#include <rte_mempool.h>
 
 #include "spdk/ioat.h"
 #include "spdk/env.h"
+#include "spdk/queue.h"
 #include "spdk/string.h"
 
 #define SRC_BUFFER_SIZE (512*1024)
@@ -77,8 +77,8 @@ struct thread_entry {
 	uint64_t current_queue_depth;
 	unsigned lcore_id;
 	bool is_draining;
-	struct rte_mempool *data_pool;
-	struct rte_mempool *task_pool;
+	struct spdk_mempool *data_pool;
+	struct spdk_mempool *task_pool;
 };
 
 struct ioat_task {
@@ -190,8 +190,8 @@ ioat_done(void *cb_arg)
 
 	thread_entry->current_queue_depth--;
 	if (thread_entry->is_draining) {
-		rte_mempool_put(thread_entry->data_pool, ioat_task->buffer);
-		rte_mempool_put(thread_entry->task_pool, ioat_task);
+		spdk_mempool_put(thread_entry->data_pool, ioat_task->buffer);
+		spdk_mempool_put(thread_entry->task_pool, ioat_task);
 	} else {
 		prepare_ioat_task(thread_entry, ioat_task);
 		submit_single_xfer(ioat_task);
@@ -308,8 +308,8 @@ submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
 {
 	while (queue_depth-- > 0) {
 		struct ioat_task *ioat_task = NULL;
-		rte_mempool_get(thread_entry->task_pool, (void **)&ioat_task);
-		rte_mempool_get(thread_entry->data_pool, &(ioat_task->buffer));
+		ioat_task = spdk_mempool_get(thread_entry->task_pool);
+		ioat_task->buffer = spdk_mempool_get(thread_entry->data_pool);
 
 		ioat_task->type = IOAT_COPY_TYPE;
 		if (spdk_ioat_get_dma_capabilities(thread_entry->chan) & SPDK_IOAT_ENGINE_FILL_SUPPORTED) {
@@ -336,12 +336,9 @@ work_fn(void *arg)
 
 	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
 	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
-	t->data_pool = rte_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, 0, 0,
-					  NULL, NULL,
-					  NULL, NULL, SOCKET_ID_ANY, 0);
-	t->task_pool = rte_mempool_create(task_pool_name, g_user_config.queue_depth,
-					  sizeof(struct ioat_task), 0, 0, NULL, NULL,
-					  NULL, NULL, SOCKET_ID_ANY, 0);
+	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, -1);
+	t->task_pool = spdk_mempool_create(task_pool_name, g_user_config.queue_depth,
+					   sizeof(struct ioat_task), -1);
 	if (!t->data_pool || !t->task_pool) {
 		fprintf(stderr, "Could not allocate buffer pool.\n");
 		return 1;
