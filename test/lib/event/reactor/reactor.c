@@ -43,6 +43,7 @@ static struct spdk_poller *test_end_poller;
 static struct spdk_poller *poller_100ms;
 static struct spdk_poller *poller_250ms;
 static struct spdk_poller *poller_500ms;
+static struct spdk_poller *poller_oneshot;
 
 static void
 test_end(void *arg)
@@ -60,6 +61,13 @@ tick(void *arg)
 }
 
 static void
+oneshot(void *arg)
+{
+	printf("oneshot\n");
+	spdk_poller_unregister(&poller_oneshot, NULL);
+}
+
+static void
 test_start(spdk_event_t evt)
 {
 	printf("test_start\n");
@@ -70,6 +78,7 @@ test_start(spdk_event_t evt)
 	spdk_poller_register(&poller_100ms, tick, (void *)100, 0, NULL, 100000);
 	spdk_poller_register(&poller_250ms, tick, (void *)250, 0, NULL, 250000);
 	spdk_poller_register(&poller_500ms, tick, (void *)500, 0, NULL, 500000);
+	spdk_poller_register(&poller_oneshot, oneshot, NULL, 0, NULL, 0);
 }
 
 static void
@@ -81,6 +90,7 @@ test_cleanup(void)
 	spdk_poller_unregister(&poller_100ms, NULL);
 	spdk_poller_unregister(&poller_250ms, NULL);
 	spdk_poller_unregister(&poller_500ms, NULL);
+	/* poller_oneshot unregisters itself */
 }
 
 static void
