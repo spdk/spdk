@@ -36,10 +36,10 @@
 #include <stdlib.h>
 
 #include <rte_config.h>
-#include <rte_memzone.h>
 #include <rte_eal.h>
 #include <rte_lcore.h>
 
+#include "spdk/env.h"
 #include "spdk/event.h"
 #include "iscsi/iscsi.h"
 #include "spdk/log.h"
@@ -85,7 +85,7 @@ static void
 spdk_startup(spdk_event_t event)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
-		rte_memzone_dump(stdout);
+		spdk_memzone_dump(stdout);
 		fflush(stdout);
 	}
 }

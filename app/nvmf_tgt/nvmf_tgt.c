@@ -39,7 +39,6 @@
 #include <signal.h>
 
 #include <rte_config.h>
-#include <rte_memzone.h>
 #include <rte_lcore.h>
 
 #include "nvmf_tgt.h"
@@ -337,7 +336,7 @@ spdk_nvmf_startup(spdk_event_t event)
 	SPDK_NOTICELOG("Acceptor running on core %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore);
 
 	if (getenv("MEMZONE_DUMP") != NULL) {
-		rte_memzone_dump(stdout);
+		spdk_memzone_dump(stdout);
 		fflush(stdout);
 	}
 

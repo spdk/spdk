@@ -76,6 +76,12 @@ spdk_memzone_lookup(const char *name)
 	return NULL;
 }
 
+void
+spdk_memzone_dump(FILE *f)
+{
+	return;
+}
+
 int
 spdk_memzone_free(const char *name)
 {

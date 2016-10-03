@@ -97,6 +97,12 @@ spdk_memzone_free(const char *name)
 	return -1;
 }
 
+void
+spdk_memzone_dump(FILE *f)
+{
+	rte_memzone_dump(f);
+}
+
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
 		    size_t ele_size, size_t cache_size)

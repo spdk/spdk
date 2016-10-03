@@ -45,6 +45,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 struct spdk_pci_device;
 
@@ -84,6 +85,12 @@ spdk_memzone_lookup(const char *name);
  */
 int
 spdk_memzone_free(const char *name);
+
+/**
+ * Dump debug information about all memzones.
+ */
+void
+spdk_memzone_dump(FILE *f);
 
 struct spdk_mempool;
 
