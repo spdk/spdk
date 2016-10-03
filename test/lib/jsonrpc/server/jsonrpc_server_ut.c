@@ -36,6 +36,7 @@
 #include "jsonrpc_server.c"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define MAX_PARAMS	100
@@ -61,13 +62,13 @@ static size_t g_num_reqs;
 	memcpy(g_buf, in, sizeof(in) - 1); \
 	g_num_reqs = 0; \
 	g_cur_req = NULL; \
-	CU_ASSERT(spdk_jsonrpc_parse_request(&conn, g_buf, sizeof(in) - 1) == sizeof(in) - sizeof(trailing))
+	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, sizeof(in) - 1) == sizeof(in) - sizeof(trailing))
 
 #define PARSE_FAIL(in) \
 	memcpy(g_buf, in, sizeof(in) - 1); \
 	g_num_reqs = 0; \
 	g_cur_req = 0; \
-	CU_ASSERT(spdk_jsonrpc_parse_request(&conn, g_buf, sizeof(in) - 1) < 0)
+	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, sizeof(in) - 1) < 0)
 
 
 #define REQ_BEGIN(expected_error) \
@@ -203,10 +204,16 @@ spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 static void
 test_parse_request(void)
 {
-	struct spdk_jsonrpc_server server = {};
-	struct spdk_jsonrpc_server_conn conn = {};
+	struct spdk_jsonrpc_server *server;
+	struct spdk_jsonrpc_server_conn *conn;
 
-	conn.server = &server;
+	server = calloc(1, sizeof(*server));
+	SPDK_CU_ASSERT_FATAL(server != NULL);
+
+	conn = calloc(1, sizeof(*conn));
+	SPDK_CU_ASSERT_FATAL(conn != NULL);
+
+	conn->server = server;
 
 	/* rpc call with positional parameters */
 	PARSE_PASS("{\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":[42,23],\"id\":1}", "");
@@ -360,16 +367,25 @@ test_parse_request(void)
 	REQ_METHOD("get_data");
 	REQ_ID_STRING("9");
 	REQ_PARAMS_MISSING();
+
+	free(conn);
+	free(server);
 }
 
 static void
 test_parse_request_streaming(void)
 {
-	struct spdk_jsonrpc_server server = {};
-	struct spdk_jsonrpc_server_conn conn = {};
+	struct spdk_jsonrpc_server *server;
+	struct spdk_jsonrpc_server_conn *conn;
 	size_t len, i;
 
-	conn.server = &server;
+	server = calloc(1, sizeof(*server));
+	SPDK_CU_ASSERT_FATAL(server != NULL);
+
+	conn = calloc(1, sizeof(*conn));
+	SPDK_CU_ASSERT_FATAL(conn != NULL);
+
+	conn->server = server;
 
 	/*
 	 * Two valid requests end to end in the same buffer.
@@ -393,13 +409,16 @@ test_parse_request_streaming(void)
 
 	/* Try every partial length up to the full request length */
 	for (i = 0; i < len; i++) {
-		int rc = spdk_jsonrpc_parse_request(&conn, g_buf, i);
+		int rc = spdk_jsonrpc_parse_request(conn, g_buf, i);
 		/* Partial request - no data consumed */
 		CU_ASSERT(rc == 0);
 	}
 
 	/* Verify that full request can be parsed successfully */
-	CU_ASSERT(spdk_jsonrpc_parse_request(&conn, g_buf, len) == (ssize_t)len);
+	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, len) == (ssize_t)len);
+
+	free(conn);
+	free(server);
 }
 
 int main(int argc, char **argv)
