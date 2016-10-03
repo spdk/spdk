@@ -34,10 +34,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <errno.h>
-
-#include <rte_config.h>
-#include <rte_memcpy.h>
-#include <rte_lcore.h>
+#include <pthread.h>
 
 #include "spdk/copy_engine.h"
 #include "spdk/env.h"

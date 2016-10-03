@@ -33,8 +33,6 @@
 
 #include <arpa/inet.h>
 
-#include <rte_config.h>
-
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "subsystem.h"

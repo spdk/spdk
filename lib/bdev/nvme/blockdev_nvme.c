@@ -35,14 +35,11 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <sys/param.h>
 
 #include <pthread.h>
-
-#include <rte_config.h>
-#include <rte_ring.h>
-#include <rte_lcore.h>
 
 #include "spdk/conf.h"
 #include "spdk/endian.h"

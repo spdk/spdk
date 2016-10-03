@@ -36,9 +36,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk_cunit.h"
 
 #include "spdk/string.h"

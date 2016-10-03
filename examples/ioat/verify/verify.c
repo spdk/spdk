@@ -36,9 +36,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
 #include <rte_config.h>
 #include <rte_lcore.h>
-#include <rte_eal.h>
 
 #include "spdk/ioat.h"
 #include "spdk/env.h"

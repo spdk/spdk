@@ -34,8 +34,6 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <rte_config.h>
-#include <rte_memcpy.h>
 
 #include "blockdev_malloc.h"
 #include "spdk/bdev.h"

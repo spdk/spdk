@@ -32,26 +32,13 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rte_config.h>
-#include <rte_common.h>
-#include <rte_log.h>
-#include <rte_memcpy.h>
-#include <rte_tailq.h>
-#include <rte_eal.h>
-#include <rte_per_lcore.h>
-#include <rte_launch.h>
-#include <rte_atomic.h>
-#include <rte_lcore.h>
-#include <rte_branch_prediction.h>
-#include <rte_ring.h>
-#include <rte_log.h>
-#include <rte_mempool.h>
-#include <rte_string_fns.h>
-#include <rte_version.h>
-
 #include <inttypes.h>
 #include <stddef.h>
 #include <unistd.h>
+
+#include <rte_config.h>
+#include <rte_mempool.h>
+#include <rte_version.h>
 
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"
