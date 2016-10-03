@@ -448,45 +448,51 @@ test_nvme_ns_cmd_write_zeroes(void)
 }
 
 static void
-test_nvme_ns_cmd_deallocate(void)
+test_nvme_ns_cmd_dataset_management(void)
 {
 	struct spdk_nvme_ns	ns;
 	struct spdk_nvme_ctrlr	ctrlr;
 	struct spdk_nvme_qpair	qpair;
 	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
-	uint16_t		num_ranges = 1;
-	void			*payload = NULL;
+	struct spdk_nvme_dsm_range	ranges[256];
+	uint16_t			i;
 	int			rc = 0;
 
 	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128 * 1024, 0);
-	payload = malloc(num_ranges * sizeof(struct spdk_nvme_dsm_range));
 
-	rc = spdk_nvme_ns_cmd_deallocate(&ns, &qpair, payload, num_ranges, cb_fn, cb_arg);
+	for (i = 0; i < 256; i++) {
+		ranges[i].starting_lba = i;
+		ranges[i].length = 1;
+		ranges[i].attributes.raw = 0;
+	}
+
+	/* TRIM one LBA */
+	rc = spdk_nvme_ns_cmd_dataset_management(&ns, &qpair, SPDK_NVME_DSM_ATTR_DEALLOCATE,
+			ranges, 1, cb_fn, cb_arg);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == num_ranges - 1u);
+	CU_ASSERT(g_request->cmd.cdw10 == 0);
 	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
-	free(payload);
+	nvme_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 
-	num_ranges = 256;
-	payload = malloc(num_ranges * sizeof(struct spdk_nvme_dsm_range));
-	rc = spdk_nvme_ns_cmd_deallocate(&ns, &qpair, payload, num_ranges, cb_fn, cb_arg);
+	/* TRIM 256 LBAs */
+	rc = spdk_nvme_ns_cmd_dataset_management(&ns, &qpair, SPDK_NVME_DSM_ATTR_DEALLOCATE,
+			ranges, 256, cb_fn, cb_arg);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_DATASET_MANAGEMENT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
-	CU_ASSERT(g_request->cmd.cdw10 == num_ranges - 1u);
+	CU_ASSERT(g_request->cmd.cdw10 == 255u);
 	CU_ASSERT(g_request->cmd.cdw11 == SPDK_NVME_DSM_ATTR_DEALLOCATE);
-	free(payload);
+	nvme_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 
-	payload = NULL;
-	num_ranges = 0;
-	rc = spdk_nvme_ns_cmd_deallocate(&ns, &qpair, payload, num_ranges, cb_fn, cb_arg);
+	rc = spdk_nvme_ns_cmd_dataset_management(&ns, &qpair, SPDK_NVME_DSM_ATTR_DEALLOCATE,
+			NULL, 0, cb_fn, cb_arg);
 	CU_ASSERT(rc != 0);
 }
 
@@ -782,7 +788,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "split_test3", split_test3) == NULL
 		|| CU_add_test(suite, "split_test4", split_test4) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_flush", test_nvme_ns_cmd_flush) == NULL
-		|| CU_add_test(suite, "nvme_ns_cmd_deallocate", test_nvme_ns_cmd_deallocate) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_dataset_management",
+			       test_nvme_ns_cmd_dataset_management) == NULL
 		|| CU_add_test(suite, "io_flags", test_io_flags) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_write_zeroes", test_nvme_ns_cmd_write_zeroes) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_reservation_register",

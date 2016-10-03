@@ -821,26 +821,36 @@ int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 				  uint16_t apptag_mask, uint16_t apptag);
 
 /**
- * \brief Submits a deallocation request to the specified NVMe namespace.
+ * \brief Submits a data set management request to the specified NVMe namespace. Data set
+ *        management operations are designed to optimize interaction with the block
+ *        translation layer inside the device. The most common type of operation is
+ *        deallocate, which is often referred to as TRIM or UNMAP.
  *
- * \param ns NVMe namespace to submit the deallocation request
+ * \param ns NVMe namespace to submit the DSM request
+ * \param type A bit field constructed from \ref enum spdk_nvme_dsm_attribute.
  * \param qpair I/O queue pair to submit the request
- * \param payload virtual address pointer to the list of LBA ranges to
- *                deallocate
- * \param num_ranges number of ranges in the list pointed to by payload; must be
- *                between 1 and \ref SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES, inclusive.
+ * \param ranges An array of \ref spdk_nvme_dsm_range elements describing
+ 		 the LBAs to operate on.
+ * \param num_ranges The number of elements in the ranges array.
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function
  *
- * \return 0 if successfully submitted, ENOMEM if an nvme_request
- *	     structure cannot be allocated for the I/O request
+ * \return 0 if successfully submitted, negated POSIX errno values otherwise.
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ *
+ * This is a convenience wrapper that will automatically allocate and construct the correct
+ * data buffers. Therefore, ranges does not need to be allocated from pinned memory and
+ * can be placed on the stack. If a higher performance, zero-copy version of DSM is
+ * required, simply build and submit a raw command using spdk_nvme_ctrlr_cmd_io_raw().
  */
-int spdk_nvme_ns_cmd_deallocate(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-				void *payload, uint16_t num_ranges,
-				spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+					uint32_t type,
+					const struct spdk_nvme_dsm_range *ranges,
+					uint16_t num_ranges,
+					spdk_nvme_cmd_cb cb_fn,
+					void *cb_arg);
 
 /**
  * \brief Submits a flush request to the specified NVMe namespace.

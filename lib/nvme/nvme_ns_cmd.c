@@ -396,8 +396,10 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 }
 
 int
-spdk_nvme_ns_cmd_deallocate(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
-			    uint16_t num_ranges, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				    uint32_t type,
+				    const struct spdk_nvme_dsm_range *ranges, uint16_t num_ranges,
+				    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
@@ -406,9 +408,13 @@ spdk_nvme_ns_cmd_deallocate(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
 		return -EINVAL;
 	}
 
-	req = nvme_allocate_request_contig(payload,
-					   num_ranges * sizeof(struct spdk_nvme_dsm_range),
-					   cb_fn, cb_arg);
+	if (ranges == NULL) {
+		return -EINVAL;
+	}
+
+	req = nvme_allocate_request_user_copy((void *)ranges,
+					      num_ranges * sizeof(struct spdk_nvme_dsm_range),
+					      cb_fn, cb_arg, true);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -417,9 +423,8 @@ spdk_nvme_ns_cmd_deallocate(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpa
 	cmd->opc = SPDK_NVME_OPC_DATASET_MANAGEMENT;
 	cmd->nsid = ns->id;
 
-	/* TODO: create a delete command data structure */
 	cmd->cdw10 = num_ranges - 1;
-	cmd->cdw11 = SPDK_NVME_DSM_ATTR_DEALLOCATE;
+	cmd->cdw11 = type;
 
 	return nvme_qpair_submit_request(qpair, req);
 }

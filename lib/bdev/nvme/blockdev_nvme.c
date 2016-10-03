@@ -90,7 +90,7 @@ struct nvme_io_channel {
 
 #define NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT	1
 struct nvme_blockio {
-	struct spdk_nvme_dsm_range dsm_range[NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT];
+	int	reserved;
 };
 
 enum data_direction {
@@ -679,16 +679,23 @@ blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int rc = 0, i;
+	struct spdk_nvme_dsm_range dsm_range[NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT];
+
+	if (bdesc_count > NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT) {
+		return -1;
+	}
 
 	for (i = 0; i < bdesc_count; i++) {
-		bio->dsm_range[i].starting_lba =
-			nbdev->lba_start + from_be64(&unmap_d->lba);
-		bio->dsm_range[i].length = from_be32(&unmap_d->block_count);
+		dsm_range[i].starting_lba = nbdev->lba_start + from_be64(&unmap_d->lba);
+		dsm_range[i].length = from_be32(&unmap_d->block_count);
+		dsm_range[i].attributes.raw = 0;
 		unmap_d++;
 	}
 
-	rc = spdk_nvme_ns_cmd_deallocate(nbdev->ns, nvme_ch->qpair, bio->dsm_range, bdesc_count,
-					 queued_done, bio);
+	rc = spdk_nvme_ns_cmd_dataset_management(nbdev->ns, nvme_ch->qpair,
+			SPDK_NVME_DSM_ATTR_DEALLOCATE,
+			dsm_range, bdesc_count,
+			queued_done, bio);
 
 	if (rc != 0)
 		return -1;

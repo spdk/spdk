@@ -446,7 +446,23 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cpl) == 16, "Incorrect size");
  * Dataset Management range
  */
 struct spdk_nvme_dsm_range {
-	uint32_t attributes;
+	union {
+		struct {
+			uint32_t af		: 4; /**< access frequencey */
+			uint32_t al		: 2; /**< access latency */
+			uint32_t reserved0	: 2;
+
+			uint32_t sr		: 1; /**< sequential read range */
+			uint32_t sw		: 1; /**< sequential write range */
+			uint32_t wp		: 1; /**< write prepare */
+			uint32_t reserved1	: 13;
+
+			uint32_t access_size	: 8; /**< command access size */
+		} bits;
+
+		uint32_t raw;
+	} attributes;
+
 	uint32_t length;
 	uint64_t starting_lba;
 };
