@@ -69,7 +69,7 @@ static int64_t g_conn_idle_interval_in_tsc = -1;
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
 #define SPDK_MAX_POLLERS_PER_CORE	4096
 static int g_connections_per_lcore = DEFAULT_CONNECTIONS_PER_LCORE;
-static rte_atomic32_t g_num_connections[RTE_MAX_LCORE];
+static uint32_t g_num_connections[RTE_MAX_LCORE];
 
 struct spdk_iscsi_conn *g_conns_array;
 static char g_shm_name[64];
@@ -272,7 +272,7 @@ int spdk_initialize_iscsi_conns(void)
 	}
 
 	for (i = 0; i < RTE_MAX_LCORE; i++) {
-		rte_atomic32_set(&g_num_connections[i], 0);
+		g_num_connections[i] = 0;
 	}
 
 	if (g_conn_idle_interval_in_tsc == -1)
@@ -404,7 +404,7 @@ error_return:
 	 */
 	conn->lcore = spdk_app_get_current_core();
 	spdk_net_framework_clear_socket_association(conn->sock);
-	rte_atomic32_inc(&g_num_connections[conn->lcore]);
+	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 	spdk_poller_register(&conn->poller, spdk_iscsi_conn_login_do_work, conn,
 			     conn->lcore, NULL, 0);
 
@@ -546,7 +546,7 @@ _spdk_iscsi_conn_free(spdk_event_t event)
 	spdk_iscsi_remove_conn(conn);
 	pthread_mutex_unlock(&g_conns_mutex);
 
-	rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
+	__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
 }
 
 static void
@@ -687,7 +687,7 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 		assert(conn->dev != NULL);
 		spdk_scsi_dev_free_io_channels(conn->dev);
 	}
-	rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
+	__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
 	spdk_net_framework_clear_socket_association(conn->sock);
 	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL, NULL);
 	spdk_poller_unregister(&conn->poller, event);
@@ -1296,8 +1296,8 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	 */
 	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
 		event = spdk_iscsi_conn_get_migrate_event(conn, &lcore);
-		rte_atomic32_dec(&g_num_connections[spdk_app_get_current_core()]);
-		rte_atomic32_inc(&g_num_connections[lcore]);
+		__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
+		__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 		spdk_net_framework_clear_socket_association(conn->sock);
 		spdk_poller_unregister(&conn->poller, event);
 	}
@@ -1373,7 +1373,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			/* migrate work item to new core */
 			spdk_net_framework_clear_socket_association(tconn->sock);
 			spdk_event_call(spdk_iscsi_conn_get_migrate_event(tconn, &lcore));
-			rte_atomic32_inc(&g_num_connections[lcore]);
+			__sync_fetch_and_add(&g_num_connections[lcore], 1);
 			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
 				      tconn->id, tconn->cid, &tconn->poller, lcore);
 		}
@@ -1460,7 +1460,7 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 			break;
 		case RUNNING:
 			/* This lcore is running. Check how many pollers it already has. */
-			num_pollers = rte_atomic32_read(&g_num_connections[i]);
+			num_pollers = g_num_connections[i];
 
 			if ((num_pollers > 0) && (num_pollers < g_connections_per_lcore)) {
 				/* Fewer than the maximum connections per lcore,

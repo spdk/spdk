@@ -40,9 +40,9 @@
 #include <unistd.h>
 
 #include <rte_config.h>
-#include <rte_atomic.h>
 #include <rte_lcore.h>
 
+#include "spdk/barrier.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
@@ -294,7 +294,7 @@ submit_single_io(void)
 	offset_in_ios = rand_r(&seed) % entry->size_in_ios;
 
 	start = spdk_get_ticks();
-	rte_mb();
+	spdk_mb();
 #if HAVE_LIBAIO
 	if (entry->type == ENTRY_TYPE_AIO_FILE) {
 		rc = aio_submit(g_ns->u.aio.ctx, &g_task->iocb, entry->u.aio.fd, IO_CMD_PREAD, g_task->buf,
@@ -307,7 +307,7 @@ submit_single_io(void)
 					   entry->io_size_blocks, io_complete, g_task, 0);
 	}
 
-	rte_mb();
+	spdk_mb();
 	tsc_submit = spdk_get_ticks() - start;
 	g_tsc_submit += tsc_submit;
 	if (tsc_submit < g_tsc_submit_min) {
@@ -336,7 +336,7 @@ static void
 check_io(void)
 {
 	uint64_t end, tsc_complete;
-	rte_mb();
+	spdk_mb();
 #if HAVE_LIBAIO
 	if (g_ns->type == ENTRY_TYPE_AIO_FILE) {
 		aio_check_io();
@@ -345,7 +345,7 @@ check_io(void)
 	{
 		spdk_nvme_qpair_process_completions(g_ns->u.nvme.qpair, 0);
 	}
-	rte_mb();
+	spdk_mb();
 	end = spdk_get_ticks();
 	if (g_ns->current_queue_depth == 1) {
 		/*
