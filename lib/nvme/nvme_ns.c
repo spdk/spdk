@@ -60,8 +60,17 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		pthread_mutex_unlock(&ns->ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_identify_namespace failed\n");
-		return -ENXIO;
+		/* This can occur if the namespace is not active. Simply zero the
+		 * namespace data and continue. */
+		memset(nsdata, 0, sizeof(*nsdata));
+		ns->stripe_size = 0;
+		ns->sector_size = 0;
+		ns->md_size = 0;
+		ns->pi_type = 0;
+		ns->sectors_per_max_io = 0;
+		ns->sectors_per_stripe = 0;
+		ns->flags = 0;
+		return 0;
 	}
 
 	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
