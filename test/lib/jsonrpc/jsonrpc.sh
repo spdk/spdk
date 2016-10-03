@@ -8,6 +8,6 @@ source $rootdir/scripts/autotest_common.sh
 
 timing_enter jsonrpc
 
-$testdir/server/jsonrpc_server_ut
+$valgrind $testdir/server/jsonrpc_server_ut
 
 timing_exit jsonrpc

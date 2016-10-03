@@ -8,6 +8,6 @@ source $rootdir/scripts/autotest_common.sh
 
 timing_enter log
 
-$testdir/log_ut
+$valgrind $testdir/log_ut
 
 timing_exit log
