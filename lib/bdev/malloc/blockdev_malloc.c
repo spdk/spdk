@@ -135,24 +135,53 @@ blockdev_malloc_destruct(struct spdk_bdev *bdev)
 	return 0;
 }
 
-static void
-blockdev_malloc_read(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
-		     struct malloc_task *task,
-		     void *buf, uint64_t nbytes, uint64_t offset)
+static int
+blockdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
 {
-	int64_t rc;
+	int i;
 
-	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "read %lu bytes from offset %#lx to %p\n",
-		      nbytes, offset, buf);
+	for (i = 0; i < iovcnt; i++) {
+		if (nbytes < iovs[i].iov_len)
+			return 0;
+
+		nbytes -= iovs[i].iov_len;
+	}
+
+	return nbytes != 0;
+}
+
+static void
+blockdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		      struct malloc_task *task,
+		      struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+{
+	int64_t res = 0;
+	void *src = mdisk->malloc_buf + offset;
+	int i;
+
+	if (blockdev_malloc_check_iov_len(iov, iovcnt, len)) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
+				      SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "read %lu bytes from offset %#lx\n",
+		      len, offset);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	task->num_outstanding = 1;
+	task->num_outstanding = iovcnt;
 
-	rc = spdk_copy_submit(__copy_task_from_malloc_task(task), ch, buf,
-			      mdisk->malloc_buf + offset, nbytes, malloc_done);
+	for (i = 0; i < iovcnt; i++) {
+		res = spdk_copy_submit(__copy_task_from_malloc_task(task),
+				       ch, iov[i].iov_base,
+				       src, iov[i].iov_len, malloc_done);
 
-	if (rc != (int64_t)nbytes) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), SPDK_BDEV_IO_STATUS_FAILED);
+		if (res != (int64_t)iov[i].iov_len) {
+			malloc_done(__copy_task_from_malloc_task(task), -1);
+		}
+
+		src += iov[i].iov_len;
+		len -= iov[i].iov_len;
 	}
 }
 
@@ -161,24 +190,33 @@ blockdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		       struct malloc_task *task,
 		       struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
-	int64_t rc;
+	int64_t res = 0;
+	void *dst = mdisk->malloc_buf + offset;
+	int i;
 
-	if ((iovcnt != 1) || (iov->iov_len != len)) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), SPDK_BDEV_IO_STATUS_FAILED);
+	if (blockdev_malloc_check_iov_len(iov, iovcnt, len)) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
+				      SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "wrote %lu bytes to offset %#lx from %p\n",
-		      iov->iov_len, offset, iov->iov_base);
+	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "wrote %lu bytes to offset %#lx\n",
+		      len, offset);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	task->num_outstanding = 1;
+	task->num_outstanding = iovcnt;
 
-	rc = spdk_copy_submit(__copy_task_from_malloc_task(task), ch, mdisk->malloc_buf + offset,
-			      iov->iov_base, len, malloc_done);
+	for (i = 0; i < iovcnt; i++) {
+		res = spdk_copy_submit(__copy_task_from_malloc_task(task),
+				       ch, dst, iov[i].iov_base,
+				       iov[i].iov_len, malloc_done);
 
-	if (rc != (int64_t)len) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), SPDK_BDEV_IO_STATUS_FAILED);
+		if (res != (int64_t)iov[i].iov_len) {
+			malloc_done(__copy_task_from_malloc_task(task), -1);
+		}
+
+		dst += iov[i].iov_len;
+		len -= iov[i].iov_len;
 	}
 }
 
@@ -237,20 +275,25 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		if (bdev_io->u.read.buf == NULL) {
-			bdev_io->u.read.buf = ((struct malloc_disk *)bdev_io->ctx)->malloc_buf +
-					      bdev_io->u.read.offset;
+		if (bdev_io->u.read.iovs[0].iov_base == NULL) {
+			assert(bdev_io->u.read.iovcnt == 1);
+			bdev_io->u.read.iovs[0].iov_base =
+				((struct malloc_disk *)bdev_io->ctx)->malloc_buf +
+				bdev_io->u.read.offset;
+			bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
+			bdev_io->u.read.put_rbuf = false;
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bdev_io->driver_ctx),
 					      SPDK_BDEV_IO_STATUS_SUCCESS);
 			return 0;
 		}
 
-		blockdev_malloc_read((struct malloc_disk *)bdev_io->ctx,
-				     bdev_io->ch,
-				     (struct malloc_task *)bdev_io->driver_ctx,
-				     bdev_io->u.read.buf,
-				     bdev_io->u.read.nbytes,
-				     bdev_io->u.read.offset);
+		blockdev_malloc_readv((struct malloc_disk *)bdev_io->ctx,
+				      bdev_io->ch,
+				      (struct malloc_task *)bdev_io->driver_ctx,
+				      bdev_io->u.read.iovs,
+				      bdev_io->u.read.iovcnt,
+				      bdev_io->u.read.len,
+				      bdev_io->u.read.offset);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:

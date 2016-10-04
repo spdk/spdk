@@ -226,17 +226,20 @@ SPDK_BDEV_MODULE_REGISTER(blockdev_rbd_library_init, blockdev_rbd_library_fini, 
 			  blockdev_rbd_get_ctx_size)
 
 static int64_t
-blockdev_rbd_read(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
-		  struct blockdev_rbd_io *cmd, void *buf, size_t nbytes,
-		  uint64_t offset)
+blockdev_rbd_readv(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
+		   struct blockdev_rbd_io *cmd, struct iovec *iov,
+		   int iovcnt, size_t len, uint64_t offset)
 {
 	struct blockdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
 
+	if (iovcnt != 1 || iov->iov_len != len)
+		return -1;
+
 	cmd->ch = rbdio_ch;
 	cmd->direction = BLOCKDEV_RBD_READ;
-	cmd->len = nbytes;
+	cmd->len = len;
 
-	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, buf, offset, nbytes);
+	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, iov->iov_base, offset, len);
 }
 
 static int64_t
@@ -277,12 +280,13 @@ static void blockdev_rbd_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 {
 	int ret;
 
-	ret = blockdev_rbd_read(bdev_io->ctx,
-				bdev_io->ch,
-				(struct blockdev_rbd_io *)bdev_io->driver_ctx,
-				bdev_io->u.read.buf,
-				bdev_io->u.read.nbytes,
-				bdev_io->u.read.offset);
+	ret = blockdev_rbd_readv(bdev_io->ctx,
+				 bdev_io->ch,
+				 (struct blockdev_rbd_io *)bdev_io->driver_ctx,
+				 bdev_io->u.read.iovs,
+				 bdev_io->u.read.iovcnt,
+				 bdev_io->u.read.len,
+				 bdev_io->u.read.offset);
 
 	if (ret != 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);

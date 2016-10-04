@@ -193,7 +193,8 @@ bdevperf_complete(spdk_event_t event)
 		target->is_draining = true;
 		g_run_failed = true;
 	} else if (g_verify || g_reset || g_unmap) {
-		if (memcmp(task->buf, bdev_io->u.read.buf, g_io_size) != 0) {
+		assert(bdev_io->u.read.iovcnt == 1);
+		if (memcmp(task->buf, bdev_io->u.read.iov.iov_base, g_io_size) != 0) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", bdev_io->u.read.offset);
 			target->is_draining = true;
 			g_run_failed = true;
