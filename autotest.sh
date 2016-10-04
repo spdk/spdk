@@ -49,7 +49,7 @@ if [ $(uname -s) = Linux ]; then
 	sleep 10
 
 	# Delete all partitions on NVMe devices
-	devs=`lsblk -l -o NAME | grep nvme`
+	devs=`lsblk -l -o NAME | grep nvme | grep -v p`
 	for dev in $devs; do
 		parted -s /dev/$dev mklabel msdos
 	done
