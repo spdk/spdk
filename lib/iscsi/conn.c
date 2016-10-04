@@ -50,6 +50,7 @@
 #include <rte_timer.h>
 
 #include "spdk/endian.h"
+#include "spdk/event.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
 #include "spdk/net.h"
@@ -76,7 +77,7 @@ static char g_shm_name[64];
 
 static pthread_mutex_t g_conns_mutex;
 
-static struct rte_timer g_shutdown_timer;
+static struct spdk_poller *g_shutdown_timer = NULL;
 
 static uint32_t spdk_iscsi_conn_allocate_reactor(uint64_t cpumask);
 static void __add_idle_conn(spdk_event_t event);
@@ -620,11 +621,10 @@ spdk_iscsi_conns_cleanup(void)
 }
 
 static void
-spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
+spdk_iscsi_conn_check_shutdown(void *arg)
 {
 	if (spdk_iscsi_get_active_conns() == 0) {
-		assert(timer == &g_shutdown_timer);
-		rte_timer_stop(timer);
+		spdk_poller_unregister(&g_shutdown_timer, NULL);
 		spdk_iscsi_conns_cleanup();
 		spdk_app_stop(0);
 	}
@@ -719,9 +719,8 @@ void spdk_shutdown_iscsi_conns(void)
 	}
 
 	pthread_mutex_unlock(&g_conns_mutex);
-	rte_timer_init(&g_shutdown_timer);
-	rte_timer_reset(&g_shutdown_timer, rte_get_timer_hz() / 1000, PERIODICAL,
-			rte_get_master_lcore(), spdk_iscsi_conn_check_shutdown, NULL);
+	spdk_poller_register(&g_shutdown_timer, spdk_iscsi_conn_check_shutdown, NULL,
+			     rte_get_master_lcore(), NULL, 1000);
 }
 
 int
