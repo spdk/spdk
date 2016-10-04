@@ -114,8 +114,11 @@ spdk_bdev_io_set_rbuf(struct spdk_bdev_io *bdev_io, void *buf)
 {
 	assert(bdev_io->get_rbuf_cb != NULL);
 	assert(buf != NULL);
+	assert(bdev_io->u.read.iovs != NULL);
+
 	bdev_io->u.read.buf_unaligned = buf;
-	bdev_io->u.read.buf = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
+	bdev_io->u.read.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
+	bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
 	bdev_io->u.read.put_rbuf = true;
 	bdev_io->get_rbuf_cb(bdev_io);
 }
@@ -129,7 +132,9 @@ spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 	need_rbuf_tailq_t *tailq;
 	uint64_t length;
 
-	length = bdev_io->u.read.nbytes;
+	assert(bdev_io->u.read.iovcnt == 1);
+
+	length = bdev_io->u.read.len;
 	buf = bdev_io->u.read.buf_unaligned;
 
 	if (length <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
@@ -362,7 +367,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 static void
 _spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io)
 {
-	uint64_t len = bdev_io->u.read.nbytes;
+	uint64_t len = bdev_io->u.read.len;
 	struct rte_mempool *pool;
 	need_rbuf_tailq_t *tailq;
 	int rc;
@@ -545,9 +550,62 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	bdev_io->ch = ch;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
-	bdev_io->u.read.buf = buf;
-	bdev_io->u.read.nbytes = nbytes;
+	bdev_io->u.read.iov.iov_base = buf;
+	bdev_io->u.read.iov.iov_len = nbytes;
+	bdev_io->u.read.iovs = &bdev_io->u.read.iov;
+	bdev_io->u.read.iovcnt = 1;
+	bdev_io->u.read.len = nbytes;
 	bdev_io->u.read.offset = offset;
+	bdev_io->u.read.put_rbuf = false;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		return NULL;
+	}
+
+	return bdev_io;
+}
+
+struct spdk_bdev_io *
+spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt,
+		uint64_t offset, uint64_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io *bdev_io;
+	int rc;
+
+	/* Return failure if nbytes is not a multiple of bdev->blocklen */
+	if (nbytes % bdev->blocklen) {
+		return NULL;
+	}
+
+	/* Return failure if offset + nbytes is less than offset; indicates there
+	 * has been an overflow and hence the offset has been wrapped around */
+	if ((offset + nbytes) < offset) {
+		return NULL;
+	}
+
+	/* Return failure if offset + nbytes exceeds the size of the blockdev */
+	if ((offset + nbytes) > (bdev->blockcnt * bdev->blocklen)) {
+		return NULL;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
+		return NULL;
+	}
+
+	bdev_io->ch = ch;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
+	bdev_io->u.read.iovs = iov;
+	bdev_io->u.read.iovcnt = iovcnt;
+	bdev_io->u.read.len = nbytes;
+	bdev_io->u.read.offset = offset;
+	bdev_io->u.read.put_rbuf = false;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -834,8 +892,9 @@ void
 spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb)
 {
 	assert(cb != NULL);
+	assert(bdev_io->u.read.iovs != NULL);
 
-	if (bdev_io->u.read.buf == NULL) {
+	if (bdev_io->u.read.iovs[0].iov_base == NULL) {
 		bdev_io->get_rbuf_cb = cb;
 		_spdk_bdev_io_get_rbuf(bdev_io);
 	} else {

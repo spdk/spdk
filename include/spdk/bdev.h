@@ -189,11 +189,17 @@ struct spdk_bdev_io {
 			/** The unaligned rbuf originally allocated. */
 			void *buf_unaligned;
 
-			/** For single buffer cases, pointer to the aligned data buffer.  */
-			void *buf;
+			/** For basic read case, use our own iovec element. */
+			struct iovec iov;
 
-			/** For single buffer cases, size of the data buffer. */
-			uint64_t nbytes;
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
+			/** For SG buffer cases, total size of data to be transferred. */
+			size_t len;
 
 			/** Starting offset (in bytes) of the blockdev for this I/O. */
 			uint64_t offset;
@@ -279,6 +285,11 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
 struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				    void *buf, uint64_t offset, uint64_t nbytes,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);
+struct spdk_bdev_io *
+spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt,
+		uint64_t offset, uint64_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_bdev_io *spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     void *buf, uint64_t offset, uint64_t nbytes,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);

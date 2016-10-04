@@ -98,8 +98,9 @@ blockdev_aio_close(struct file_disk *disk)
 }
 
 static int64_t
-blockdev_aio_read(struct file_disk *fdisk, struct spdk_io_channel *ch,
-		  struct blockdev_aio_task *aio_task, void *buf, uint64_t nbytes, uint64_t offset)
+blockdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
+		   struct blockdev_aio_task *aio_task,
+		   struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
 {
 	struct iocb *iocb = &aio_task->iocb;
 	struct blockdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
@@ -107,15 +108,15 @@ blockdev_aio_read(struct file_disk *fdisk, struct spdk_io_channel *ch,
 
 	iocb->aio_fildes = fdisk->fd;
 	iocb->aio_reqprio = 0;
-	iocb->aio_lio_opcode = IO_CMD_PREAD;
-	iocb->u.c.buf = buf;
-	iocb->u.c.nbytes = nbytes;
-	iocb->u.c.offset = offset;
+	iocb->aio_lio_opcode = IO_CMD_PREADV;
+	iocb->u.v.vec = iov;
+	iocb->u.v.nr = iovcnt;
+	iocb->u.v.offset = offset;
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
 
-	SPDK_TRACELOG(SPDK_TRACE_AIO, "read from %p of size %lu to off: %#lx\n",
-		      buf, nbytes, offset);
+	SPDK_TRACELOG(SPDK_TRACE_AIO, "read %d iovs size %lu to off: %#lx\n",
+		      iovcnt, nbytes, offset);
 
 	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
@@ -245,12 +246,13 @@ static void blockdev_aio_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 {
 	int ret = 0;
 
-	ret = blockdev_aio_read((struct file_disk *)bdev_io->ctx,
-				bdev_io->ch,
-				(struct blockdev_aio_task *)bdev_io->driver_ctx,
-				bdev_io->u.read.buf,
-				bdev_io->u.read.nbytes,
-				bdev_io->u.read.offset);
+	ret = blockdev_aio_readv((struct file_disk *)bdev_io->ctx,
+				 bdev_io->ch,
+				 (struct blockdev_aio_task *)bdev_io->driver_ctx,
+				 bdev_io->u.read.iovs,
+				 bdev_io->u.read.iovcnt,
+				 bdev_io->u.read.offset,
+				 bdev_io->u.read.len);
 
 	if (ret < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);

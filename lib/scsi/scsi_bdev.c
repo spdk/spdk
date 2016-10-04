@@ -1302,7 +1302,7 @@ spdk_bdev_scsi_task_complete(spdk_event_t event)
 	}
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		task->rbuf = bdev_io->u.read.buf;
+		task->rbuf = bdev_io->u.read.iovs[0].iov_base;
 	}
 
 	spdk_scsi_lun_complete_task(task->lun, task);
