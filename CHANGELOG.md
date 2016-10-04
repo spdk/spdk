@@ -10,6 +10,12 @@ updated by simply removing the initialization of `request_mempool`.  Since the N
 library user no longer needs to know the size of the internal NVMe request
 structure to create the pool, the `spdk_nvme_request_size()` function was also removed.
 
+The `spdk_nvme_ns_cmd_deallocate()` function was renamed and extended to become
+`spdk_nvme_ns_cmd_dataset_management()`, which allows access to all of the NVMe
+Dataset Management command's parameters.  Existing callers can be updated to use
+`spdk_nvme_ns_cmd_dataset_management()` with `SPDK_NVME_DSM_ATTR_DEALLOCATE` as the
+`type` parameter.
+
 Libpciaccess has been removed as a dependency and DPDK PCI enumeration is
 used instead. Prior to DPDK 16.07 enumeration by class code was not supported,
 so for earlier DPDK versions only Intel SSDs will be discovered. Starting with
