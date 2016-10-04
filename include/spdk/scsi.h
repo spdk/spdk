@@ -124,13 +124,16 @@ struct spdk_scsi_task {
 	uint32_t alloc_len;
 
 	uint64_t offset;
-	struct iovec iov;
 	struct spdk_scsi_task *parent;
 
 	void (*free_fn)(struct spdk_scsi_task *);
 
 	uint8_t *cdb;
 	uint8_t *iobuf;
+
+	struct iovec iov;
+	struct iovec *iovs;
+	uint16_t iovcnt;
 
 	uint8_t sense_data[32];
 	size_t sense_data_len;

@@ -88,6 +88,12 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 	task->owner_task_ctr = owner_task_ctr;
 	*owner_task_ctr += 1;
 
+	/*
+	 * Pre-fill the iov_buffers to point to the embedded iov
+	 */
+	task->iovs = &task->iov;
+	task->iovcnt = 1;
+
 	if (parent != NULL) {
 		parent->ref++;
 		task->parent = parent;
