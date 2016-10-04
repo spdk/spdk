@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Upcoming Release
+----------------
+
+The NVMe library has been changed to create its own request memory pool rather than
+requiring the user to initialize the global `request_mempool` variable.  Apps can be
+updated by simply removing the initialization of `request_mempool`.  Since the NVMe
+library user no longer needs to know the size of the internal NVMe request
+structure to create the pool, the `spdk_nvme_request_size()` function was also removed.
+
 v16.08: iSCSI target, NVMe over Fabrics maturity
 ------------------------------------------------
 
