@@ -212,30 +212,38 @@ static void
 fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 {
 	char tmpbuf[MAX_TMPBUF];
-	char buf8[8 + 1];
+	char buf16[16 + 1];
 	size_t total;
-	size_t idx;
+	unsigned int idx;
 
 	fprintf(fp, "%s\n", label);
 
-	memset(buf8, 0, sizeof buf8);
+	memset(buf16, 0, sizeof buf16);
 	total = 0;
 	for (idx = 0; idx < len; idx++) {
-		if (idx != 0 && idx % 8 == 0) {
+		if (idx != 0 && idx % 16 == 0) {
 			snprintf(tmpbuf + total, sizeof tmpbuf - total,
-				 "%s", buf8);
+				 " %s", buf16);
 			fprintf(fp, "%s\n", tmpbuf);
 			total = 0;
 		}
+		if (idx % 16 == 0) {
+			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
+					  "%08x ", idx);
+		}
+		if (idx % 8 == 0) {
+			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
+					  "%s", " ");
+		}
 		total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
 				  "%2.2x ", buf[idx] & 0xff);
-		buf8[idx % 8] = isprint(buf[idx]) ? buf[idx] : '.';
+		buf16[idx % 16] = isprint(buf[idx]) ? buf[idx] : '.';
 	}
-	for (; idx % 8 != 0; idx++) {
+	for (; idx % 16 != 0; idx++) {
 		total += snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
-		buf8[idx % 8] = ' ';
+		buf16[idx % 16] = ' ';
 	}
-	snprintf(tmpbuf + total, sizeof tmpbuf - total, "%s", buf8);
+	snprintf(tmpbuf + total, sizeof tmpbuf - total, "  %s", buf16);
 	fprintf(fp, "%s\n", tmpbuf);
 	fflush(fp);
 }

@@ -77,7 +77,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 #define SPDK_TRACEDUMP(FLAG, LABEL, BUF, LEN)						\
 	do {										\
 		extern bool FLAG;							\
-		if (FLAG) {								\
+		if ((FLAG) && (LEN)) {								\
 			spdk_trace_dump((LABEL), (BUF), (LEN));				\
 		}									\
 	} while (0)
