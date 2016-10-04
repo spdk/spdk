@@ -63,9 +63,8 @@
 #include "iscsi/acceptor.h"
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
+#include "spdk/event.h"
 #include "spdk/log.h"
-
-static struct rte_timer g_start_up_timer;
 
 #define ISCSI_CONFIG_TMPL \
 "[iSCSI]\n" \
@@ -944,7 +943,7 @@ spdk_iscsi_app_read_parameters(void)
 }
 
 static void
-spdk_iscsi_setup(struct rte_timer *timer, void *arg)
+spdk_iscsi_setup(struct spdk_event *event)
 {
 	int rc;
 
@@ -987,12 +986,11 @@ spdk_iscsi_subsystem_init(void)
 		return -1;
 	}
 
-	rte_timer_init(&g_start_up_timer);
-
 	/*
-	 * Defer creation of listening sockets until the timer subsystem has started.
+	 * Defer creation of listening sockets until the reactor has started.
 	 */
-	rte_timer_reset(&g_start_up_timer, 0, SINGLE, rte_lcore_id(), spdk_iscsi_setup, NULL);
+	spdk_event_call(spdk_event_allocate(spdk_app_get_current_core(), spdk_iscsi_setup, NULL, NULL,
+					    NULL));
 
 	return 0;
 }
