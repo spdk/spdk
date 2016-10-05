@@ -163,11 +163,9 @@ initialize_buffer(char **buf, int pattern, int size)
 }
 
 static void
-quick_test_complete(void *arg1, void *arg2)
+quick_test_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *arg)
 {
-	struct spdk_bdev_io *bdev_io = arg2;
-
-	g_completion_status = bdev_io->status;
+	g_completion_status = status;
 	spdk_bdev_free_io(bdev_io);
 	wake_ut_thread();
 }

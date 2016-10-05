@@ -183,16 +183,15 @@ end_run(void *arg1, void *arg2)
 struct rte_mempool *task_pool;
 
 static void
-bdevperf_complete(void *arg1, void *arg2)
+bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *cb_arg)
 {
 	struct io_target	*target;
-	struct bdevperf_task	*task = arg1;
-	struct spdk_bdev_io	*bdev_io = arg2;
+	struct bdevperf_task	*task = cb_arg;
 	struct spdk_event 	*complete;
 
 	target = task->target;
 
-	if (bdev_io->status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
 		if (!g_reset) {
 			target->is_draining = true;
 			g_run_failed = true;
@@ -229,11 +228,10 @@ bdevperf_complete(void *arg1, void *arg2)
 }
 
 static void
-bdevperf_unmap_complete(void *arg1, void *arg2)
+bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *cb_arg)
 {
 	struct io_target	*target;
-	struct bdevperf_task	*task = arg1;
-	struct spdk_bdev_io	*bdev_io = arg2;
+	struct bdevperf_task	*task = cb_arg;
 
 	target = task->target;
 
@@ -252,11 +250,11 @@ bdevperf_unmap_complete(void *arg1, void *arg2)
 }
 
 static void
-bdevperf_verify_write_complete(void *arg1, void *arg2)
+bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+			       void *cb_arg)
 {
 	struct io_target	*target;
-	struct bdevperf_task	*task = arg1;
-	struct spdk_bdev_io	*bdev_io = arg2;
+	struct bdevperf_task	*task = cb_arg;
 
 	target = task->target;
 
@@ -367,11 +365,9 @@ end_target(void *arg)
 static void reset_target(void *arg);
 
 static void
-reset_cb(void *arg1, void *arg2)
+reset_cb(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *cb_arg)
 {
-	struct spdk_bdev_io	*bdev_io = arg2;
-	int			status = bdev_io->status;
-	struct bdevperf_task	*task = bdev_io->caller_ctx;
+	struct bdevperf_task	*task = cb_arg;
 	struct io_target	*target = task->target;
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {

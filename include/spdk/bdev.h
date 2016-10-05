@@ -142,7 +142,9 @@ enum spdk_bdev_reset_type {
 	SPDK_BDEV_RESET_SOFT,
 };
 
-typedef spdk_event_fn spdk_bdev_io_completion_cb;
+typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
+		enum spdk_bdev_io_status status,
+		void *cb_arg);
 typedef void (*spdk_bdev_io_get_rbuf_cb)(struct spdk_bdev_io *bdev_io);
 
 /**
@@ -252,8 +254,6 @@ struct spdk_bdev_io {
 
 	/** Context that will be passed to the completion callback */
 	void *caller_ctx;
-
-	struct spdk_event *cb_event;
 
 	/** Callback for when rbuf is allocated */
 	spdk_bdev_io_get_rbuf_cb get_rbuf_cb;

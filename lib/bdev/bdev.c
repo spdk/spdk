@@ -409,10 +409,8 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 }
 
 static void
-__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, struct spdk_event *cb_event)
+__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->cb_event = cb_event;
-
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 			spdk_bdev_cleanup_pending_rbuf_io(bdev);
@@ -445,15 +443,8 @@ static int
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	struct spdk_event *cb_event = NULL;
 
-	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
-		cb_event = spdk_event_allocate(rte_lcore_id(), bdev_io->cb,
-					       bdev_io->caller_ctx, bdev_io);
-		assert(cb_event != NULL);
-	}
-
-	__submit_request(bdev, bdev_io, cb_event);
+	__submit_request(bdev, bdev_io);
 	return 0;
 }
 
@@ -842,8 +833,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 	bdev_io->status = status;
 
-	assert(bdev_io->cb_event != NULL);
-	spdk_event_call(bdev_io->cb_event);
+	assert(bdev_io->cb != NULL);
+	bdev_io->cb(bdev_io, status, bdev_io->caller_ctx);
 }
 
 void
