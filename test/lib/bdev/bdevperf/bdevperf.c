@@ -45,11 +45,11 @@
 #include <rte_malloc.h>
 #include <rte_ring.h>
 #include <rte_lcore.h>
-#include <rte_timer.h>
 
 #include "spdk/bdev.h"
 #include "spdk/copy_engine.h"
 #include "spdk/endian.h"
+#include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
 
@@ -72,7 +72,7 @@ static int g_show_performance_real_time = 0;
 static bool g_run_failed = false;
 static bool g_zcopy = true;
 
-static struct rte_timer g_perf_timer;
+static struct spdk_poller *g_perf_timer = NULL;
 
 static void bdevperf_submit_single(struct io_target *target);
 
@@ -88,8 +88,8 @@ struct io_target {
 	uint64_t		size_in_ios;
 	uint64_t		offset_in_ios;
 	bool			is_draining;
-	struct rte_timer	run_timer;
-	struct rte_timer	reset_timer;
+	struct spdk_poller	*run_timer;
+	struct spdk_poller	*reset_timer;
 };
 
 struct io_target *head[RTE_MAX_LCORE];
@@ -155,8 +155,8 @@ bdevperf_construct_targets(void)
 		}
 
 		target->is_draining = false;
-		rte_timer_init(&target->run_timer);
-		rte_timer_init(&target->reset_timer);
+		target->run_timer = NULL;
+		target->reset_timer = NULL;
 
 		head[index] = target;
 		g_target_count++;
@@ -170,7 +170,7 @@ end_run(spdk_event_t event)
 {
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
-			rte_timer_stop_sync(&g_perf_timer);
+			spdk_poller_unregister(&g_perf_timer, NULL);
 		}
 		spdk_app_stop(0);
 	}
@@ -343,18 +343,19 @@ bdevperf_submit_io(struct io_target *target, int queue_depth)
 }
 
 static void
-end_target(struct rte_timer *timer, void *arg)
+end_target(void *arg)
 {
 	struct io_target *target = arg;
 
+	spdk_poller_unregister(&target->run_timer, NULL);
 	if (g_reset) {
-		rte_timer_stop_sync(&target->reset_timer);
+		spdk_poller_unregister(&target->reset_timer, NULL);
 	}
 
 	target->is_draining = true;
 }
 
-static void reset_target(struct rte_timer *timer, void *arg);
+static void reset_target(void *arg);
 
 static void
 reset_cb(spdk_event_t event)
@@ -371,15 +372,17 @@ reset_cb(spdk_event_t event)
 
 	rte_mempool_put(task_pool, task);
 
-	rte_timer_reset(&target->reset_timer, rte_get_timer_hz() * 10, SINGLE,
-			target->lcore, reset_target, target);
+	spdk_poller_register(&target->reset_timer, reset_target, target, target->lcore,
+			     NULL, 10 * 1000000);
 }
 
 static void
-reset_target(struct rte_timer *timer, void *arg)
+reset_target(void *arg)
 {
 	struct io_target *target = arg;
 	struct bdevperf_task	*task = NULL;
+
+	spdk_poller_unregister(&target->reset_timer, NULL);
 
 	/* Do reset. */
 	rte_mempool_get(task_pool, (void **)&task);
@@ -399,11 +402,11 @@ bdevperf_submit_on_core(spdk_event_t event)
 		target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
 
 		/* Start a timer to stop this I/O chain when the run is over */
-		rte_timer_reset(&target->run_timer, rte_get_timer_hz() * g_time_in_sec, SINGLE,
-				target->lcore, end_target, target);
+		spdk_poller_register(&target->run_timer, end_target, target, target->lcore, NULL,
+				     g_time_in_sec * 1000000);
 		if (g_reset) {
-			rte_timer_reset(&target->reset_timer, rte_get_timer_hz() * 10, SINGLE,
-					target->lcore, reset_target, target);
+			spdk_poller_register(&target->reset_timer, reset_target, target,
+					     target->lcore, NULL, 10 * 1000000);
 		}
 		bdevperf_submit_io(target, g_queue_depth);
 		target = target->next;
@@ -464,7 +467,7 @@ performance_dump(int io_time)
 }
 
 static void
-performance_statistics_thread(struct rte_timer *timer, void *arg)
+performance_statistics_thread(void *arg)
 {
 	performance_dump(1);
 }
@@ -481,9 +484,8 @@ bdevperf_run(spdk_event_t evt)
 
 	/* Start a timer to dump performance numbers */
 	if (g_show_performance_real_time) {
-		rte_timer_init(&g_perf_timer);
-		rte_timer_reset(&g_perf_timer, rte_get_timer_hz(), PERIODICAL,
-				rte_get_master_lcore(), performance_statistics_thread, NULL);
+		spdk_poller_register(&g_perf_timer, performance_statistics_thread, NULL,
+				     spdk_app_get_current_core(), NULL, 1000000);
 	}
 
 	/* Send events to start all I/O */
