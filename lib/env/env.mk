@@ -51,7 +51,7 @@ endif
 
 DPDK_INC = -I$(DPDK_ABS_DIR)/include
 DPDK_LIB = $(DPDK_ABS_DIR)/lib/librte_eal.a $(DPDK_ABS_DIR)/lib/librte_mempool.a \
-	   $(DPDK_ABS_DIR)/lib/librte_ring.a $(DPDK_ABS_DIR)/lib/librte_timer.a
+	   $(DPDK_ABS_DIR)/lib/librte_ring.a
 
 # librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
 #  existence to maintain backward compatibility.

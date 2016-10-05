@@ -51,7 +51,6 @@
 #include <rte_cycles.h>
 #include <rte_mempool.h>
 #include <rte_ring.h>
-#include <rte_timer.h>
 
 #include "reactor.h"
 
@@ -351,8 +350,6 @@ _spdk_reactor_run(void *arg)
 		if (event_count > 0) {
 			last_action = rte_get_timer_cycles();
 		}
-
-		rte_timer_manage();
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
 		if (poller) {
