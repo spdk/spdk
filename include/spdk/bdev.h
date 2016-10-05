@@ -171,14 +171,14 @@ struct spdk_bdev_io {
 	/** Pointer to scratch area reserved for use by the driver consuming this spdk_bdev_io. */
 	void *ctx;
 
-	/** Generation value for each I/O. */
-	uint32_t gencnt;
-
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
 
 	/** The I/O channel to submit this I/O on. */
 	struct spdk_io_channel *ch;
+
+	/** Generation value for each I/O. */
+	uint32_t gencnt;
 
 	/** Enumerated value representing the I/O type. */
 	enum spdk_bdev_io_type type;
