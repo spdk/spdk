@@ -38,8 +38,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <rte_timer.h>
-
 #include "iscsi/iscsi.h"
 #include "spdk/queue.h"
 #include "spdk/event.h"
@@ -94,11 +92,11 @@ struct spdk_iscsi_conn {
 	/* Timer used to destroy connection after logout if initiator does
 	 *  not close the connection.
 	 */
-	struct rte_timer logout_timer;
+	struct spdk_poller *logout_timer;
 
 	/* Timer used to wait for connection to close
 	 */
-	struct rte_timer shutdown_timer;
+	struct spdk_poller *shutdown_timer;
 
 	struct spdk_iscsi_pdu *pdu_in_progress;
 

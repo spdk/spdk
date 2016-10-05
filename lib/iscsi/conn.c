@@ -47,7 +47,6 @@
 #include <rte_config.h>
 #include <rte_mempool.h>
 #include <rte_cycles.h>
-#include <rte_timer.h>
 
 #include "spdk/endian.h"
 #include "spdk/event.h"
@@ -391,8 +390,8 @@ error_return:
 		return -1;
 	}
 	conn->is_idle = 0;
-	rte_timer_init(&conn->logout_timer);
-	rte_timer_init(&conn->shutdown_timer);
+	conn->logout_timer = NULL;
+	conn->shutdown_timer = NULL;
 	SPDK_NOTICELOG("Launching connection on acceptor thread\n");
 	conn->last_activity_tsc = rte_get_timer_cycles();
 	conn->pending_task_cnt = 0;
@@ -551,7 +550,7 @@ _spdk_iscsi_conn_free(spdk_event_t event)
 }
 
 static void
-_spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
+_spdk_iscsi_conn_check_shutdown(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 	int rc;
@@ -561,7 +560,7 @@ _spdk_iscsi_conn_check_shutdown(struct rte_timer *timer, void *arg)
 		return;
 	}
 
-	rte_timer_stop(timer);
+	spdk_poller_unregister(&conn->shutdown_timer, NULL);
 
 	spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_app_get_current_core());
 }
@@ -582,13 +581,13 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 
 	spdk_clear_all_transfer_task(conn, NULL);
 	spdk_sock_close(conn->sock);
-	rte_timer_stop_sync(&conn->logout_timer);
+	spdk_poller_unregister(&conn->logout_timer, NULL);
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
 		/* The connection cannot be freed yet. Check back later. */
-		rte_timer_reset(&conn->shutdown_timer, rte_get_timer_hz() / 1000, PERIODICAL,
-				rte_lcore_id(), _spdk_iscsi_conn_check_shutdown, conn);
+		spdk_poller_register(&conn->shutdown_timer, _spdk_iscsi_conn_check_shutdown, conn,
+				     spdk_app_get_current_core(), NULL, 1000);
 	} else {
 		spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_app_get_current_core());
 	}
@@ -1483,7 +1482,7 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 }
 
 static void
-logout_timeout(struct rte_timer *timer, void *arg)
+logout_timeout(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
@@ -1494,8 +1493,8 @@ void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
 	conn->state = ISCSI_CONN_STATE_LOGGED_OUT;
-	rte_timer_reset(&conn->logout_timer, rte_get_timer_hz() * ISCSI_LOGOUT_TIMEOUT,
-			SINGLE, rte_lcore_id(), logout_timeout, conn);
+	spdk_poller_register(&conn->logout_timer, logout_timeout, conn, spdk_app_get_current_core(),
+			     NULL, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 
 SPDK_TRACE_REGISTER_FN(iscsi_conn_trace)
