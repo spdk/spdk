@@ -40,7 +40,7 @@ _nvme_ns_get_data(struct spdk_nvme_ns *ns)
 }
 
 static
-int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
+int nvme_ns_identify_update(struct spdk_nvme_ns *ns, uint32_t ns_allocated)
 {
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_ns_data		*nsdata;
@@ -49,7 +49,7 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 	nsdata = _nvme_ns_get_data(ns);
 	status.done = false;
 	rc = nvme_ctrlr_cmd_identify_namespace(ns->ctrlr, ns->id, nsdata,
-					       nvme_completion_poll_cb, &status);
+					       nvme_completion_poll_cb, &status, ns_allocated);
 	if (rc != 0) {
 		return rc;
 	}
@@ -174,14 +174,14 @@ spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
 }
 
 const struct spdk_nvme_ns_data *
-spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
+spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns, uint32_t ns_allocated)
 {
-	nvme_ns_identify_update(ns);
+	nvme_ns_identify_update(ns, ns_allocated);
 	return _nvme_ns_get_data(ns);
 }
 
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
-		      struct spdk_nvme_ctrlr *ctrlr)
+		      struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_allocated)
 {
 	uint32_t				pci_devid;
 
@@ -196,7 +196,7 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 		ns->stripe_size = (1 << ctrlr->cdata.vs[3]) * ctrlr->min_page_size;
 	}
 
-	return nvme_ns_identify_update(ns);
+	return nvme_ns_identify_update(ns, ns_allocated);
 }
 
 void nvme_ns_destruct(struct spdk_nvme_ns *ns)

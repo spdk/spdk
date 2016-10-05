@@ -678,6 +678,7 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i, nn = ctrlr->cdata.nn;
 	uint64_t phys_addr = 0;
+    uint32_t ns_allocated = 1;
 
 	if (nn == 0) {
 		SPDK_ERRLOG("controller has 0 namespaces\n");
@@ -709,7 +710,10 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
 		uint32_t 		nsid = i + 1;
 
-		if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
+        /* 
+        *   necessarry to consider whether the namesspace is allocated.
+        */
+		if (nvme_ns_construct(ns, nsid, ctrlr, ns_allocated) != 0) {
 			goto fail;
 		}
 	}

@@ -252,7 +252,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 		fprintf(stderr, "Null namespace\n");
 		return 0;
 	}
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = spdk_nvme_ns_get_data(ns, 0);
 	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns)) {
 		fprintf(stderr, "Empty nsdata or wrong sector size\n");
 		return 0;

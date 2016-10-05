@@ -517,7 +517,7 @@ int	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr,
 		uint16_t nsid, void *payload,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t ns_allocated);
 int	nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 				    struct spdk_nvme_qpair *io_que,
 				    spdk_nvme_cmd_cb cb_fn, void *cb_arg);
@@ -576,7 +576,7 @@ void	nvme_qpair_reset(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
 
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
-			  struct spdk_nvme_ctrlr *ctrlr);
+			  struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_allocated);
 void	nvme_ns_destruct(struct spdk_nvme_ns *ns);
 
 struct nvme_request *nvme_allocate_request(const struct nvme_payload *payload,

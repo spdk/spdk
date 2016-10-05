@@ -227,7 +227,10 @@ display_namespace(struct spdk_nvme_ns *ns)
 	const struct spdk_nvme_ns_data		*nsdata;
 	uint32_t				i;
 
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = spdk_nvme_ns_get_data(ns, 0);
+
+    if (!nsdata->nsze)
+        return;
 
 	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
 
@@ -726,7 +729,7 @@ format_nvm(void)
 		return;
 	}
 
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = spdk_nvme_ns_get_data(ns, 0);
 
 	printf("Please Input Secure Erase Setting: \n");
 	printf("	0: No secure erase operation requested\n");

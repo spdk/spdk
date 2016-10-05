@@ -331,7 +331,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 	uint32_t				i;
 	uint32_t				flags;
 
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = spdk_nvme_ns_get_data(ns, 0);
 	flags  = spdk_nvme_ns_get_flags(ns);
 
 	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
