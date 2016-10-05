@@ -665,6 +665,17 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_io *bdev_io;
 	int rc;
 
+	if (bdesc_count == 0) {
+		SPDK_ERRLOG("Invalid bdesc_count 0\n");
+		return NULL;
+	}
+
+	if (bdesc_count > bdev->max_unmap_bdesc_count) {
+		SPDK_ERRLOG("Invalid bdesc_count %u > max_unmap_bdesc_count %u\n",
+			    bdesc_count, bdev->max_unmap_bdesc_count);
+		return NULL;
+	}
+
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing unmap\n");
