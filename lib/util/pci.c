@@ -472,7 +472,7 @@ spdk_pci_device_unbind_kernel_driver(struct spdk_pci_device *dev)
 
 	n = snprintf(buf, sizeof(buf), PCI_PRI_FMT,
 		     spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
-		     spdk_pci_device_get_dev(dev), spdk_pci_device_get_dev(dev));
+		     spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev));
 
 	if (fwrite(buf, n, 1, fd) == 0)
 		goto error;
