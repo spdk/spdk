@@ -582,8 +582,8 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			return -1;
 		}
 
-		subsystem->dev.virtual.ns_count = 0;
-		snprintf(subsystem->dev.virtual.sn, MAX_SN_LEN, "%s", sn);
+		subsystem->dev.virt.ns_count = 0;
+		snprintf(subsystem->dev.virt.sn, MAX_SN_LEN, "%s", sn);
 		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 
 		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
@@ -778,8 +778,8 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 			return -1;
 		}
 
-		subsystem->dev.virtual.ns_count = 0;
-		snprintf(subsystem->dev.virtual.sn, MAX_SN_LEN, "%s", sn);
+		subsystem->dev.virt.ns_count = 0;
+		snprintf(subsystem->dev.virt.sn, MAX_SN_LEN, "%s", sn);
 		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 
 		for (i = 0; i < num_devs; i++) {

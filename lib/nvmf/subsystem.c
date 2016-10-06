@@ -307,14 +307,14 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	int i = 0;
 
 	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
-	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->dev.virtual.ns_list[i]) {
+	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->dev.virt.ns_list[i]) {
 		i++;
 	}
 	if (i == MAX_VIRTUAL_NAMESPACE) {
 		SPDK_ERRLOG("spdk_nvmf_subsystem_add_ns() failed\n");
 		return -1;
 	}
-	subsystem->dev.virtual.ns_list[i] = bdev;
-	subsystem->dev.virtual.ns_count++;
+	subsystem->dev.virt.ns_list[i] = bdev;
+	subsystem->dev.virt.ns_count++;
 	return 0;
 }

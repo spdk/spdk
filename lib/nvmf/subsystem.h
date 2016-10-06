@@ -119,7 +119,7 @@ struct spdk_nvmf_subsystem {
 			struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
 			struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
 			uint16_t ns_count;
-		} virtual;
+		} virt;
 	} dev;
 
 	const struct spdk_nvmf_ctrlr_ops *ops;

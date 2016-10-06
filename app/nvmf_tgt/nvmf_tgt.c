@@ -95,9 +95,9 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
 	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
-		for (i = 0; i < subsystem->dev.virtual.ns_count; i++) {
-			spdk_put_io_channel(subsystem->dev.virtual.ch[i]);
-			subsystem->dev.virtual.ch[i] = NULL;
+		for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
+			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
+			subsystem->dev.virt.ch[i] = NULL;
 		}
 	}
 
@@ -200,11 +200,11 @@ nvmf_tgt_start_subsystem(struct spdk_event *event)
 
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
 	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
-		for (i = 0; i < subsystem->dev.virtual.ns_count; i++) {
-			bdev = subsystem->dev.virtual.ns_list[i];
+		for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
+			bdev = subsystem->dev.virt.ns_list[i];
 			ch = spdk_bdev_get_io_channel(bdev, SPDK_IO_PRIORITY_DEFAULT);
 			assert(ch != NULL);
-			subsystem->dev.virtual.ch[i] = ch;
+			subsystem->dev.virt.ch[i] = ch;
 		}
 	}
 
