@@ -335,6 +335,7 @@ nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+	int rc;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
@@ -348,10 +349,10 @@ nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_
 	cmd->nsid = nsid;
 	memcpy(&cmd->cdw10, format, sizeof(uint32_t));
 
-	nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
-	return 0;
+	return rc;
 }
 
 int
