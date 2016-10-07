@@ -660,7 +660,7 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			nvme_ns_destruct(&ctrlr->ns[i]);
 		}
 
-		free(ctrlr->ns);
+		nvme_free(ctrlr->ns);
 		ctrlr->ns = NULL;
 		ctrlr->num_ns = 0;
 	}
@@ -688,7 +688,8 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	if (nn != ctrlr->num_ns) {
 		nvme_ctrlr_destruct_namespaces(ctrlr);
 
-		ctrlr->ns = calloc(nn, sizeof(struct spdk_nvme_ns));
+		ctrlr->ns = nvme_malloc(nn * sizeof(struct spdk_nvme_ns), 64,
+					&phys_addr);
 		if (ctrlr->ns == NULL) {
 			goto fail;
 		}
