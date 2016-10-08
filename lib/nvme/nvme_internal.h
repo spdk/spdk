@@ -459,6 +459,9 @@ struct spdk_nvme_ctrlr {
 	uint64_t			cmb_size;
 	/** Current offset of controller memory buffer */
 	uint64_t			cmb_current_offset;
+
+	/** PCI address including domain, bus, device and function */
+	struct spdk_pci_addr		pci_addr;
 };
 
 struct nvme_driver {

@@ -1140,6 +1140,12 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 
 	pthread_mutex_init_recursive(&ctrlr->ctrlr_lock);
 
+	/* Save the PCI address */
+	ctrlr->pci_addr.domain = spdk_pci_device_get_domain(devhandle);
+	ctrlr->pci_addr.bus = spdk_pci_device_get_bus(devhandle);
+	ctrlr->pci_addr.dev = spdk_pci_device_get_dev(devhandle);
+	ctrlr->pci_addr.func = spdk_pci_device_get_func(devhandle);
+
 	return 0;
 }
 

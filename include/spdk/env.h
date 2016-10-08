@@ -152,6 +152,13 @@ enum spdk_pci_device_type {
 	SPDK_PCI_DEVICE_IOAT,
 };
 
+struct spdk_pci_addr {
+	uint16_t			domain;
+	uint8_t				bus;
+	uint8_t				dev;
+	uint8_t				func;
+};
+
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 
 int spdk_pci_enumerate(enum spdk_pci_device_type type,
@@ -181,6 +188,8 @@ int spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uin
 int spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset);
 int spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset);
 int spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset);
+
+bool spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr);
 
 #ifdef __cplusplus
 }

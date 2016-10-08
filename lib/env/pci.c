@@ -385,6 +385,15 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 	return -1;
 }
 
+bool
+spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr)
+{
+	return ((spdk_pci_device_get_domain(dev) == addr->domain) &&
+		(spdk_pci_device_get_bus(dev) == addr->bus) &&
+		(spdk_pci_device_get_dev(dev) == addr->dev) &&
+		(spdk_pci_device_get_func(dev) == addr->func));
+}
+
 #ifdef __linux__
 int
 spdk_pci_device_claim(struct spdk_pci_device *dev)

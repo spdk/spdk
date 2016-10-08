@@ -76,6 +76,12 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	memset(opts, 0, sizeof(*opts));
 }
 
+bool
+spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr)
+{
+	return true;
+}
+
 static void
 test_opc_data_transfer(void)
 {

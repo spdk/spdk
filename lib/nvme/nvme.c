@@ -243,10 +243,11 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
-		/* NOTE: This assumes that the PCI abstraction layer will use the same device handle
-		 *  across enumerations; we could compare by BDF instead if this is not true.
+		/* NOTE: In the case like multi-process environment where the device handle is
+		 * different per each process, we compare by BDF to determine whether it is the
+		 * same controller.
 		 */
-		if (pci_dev == ctrlr->devhandle) {
+		if (spdk_pci_device_compare_addr(pci_dev, &ctrlr->pci_addr)) {
 			return 0;
 		}
 	}
