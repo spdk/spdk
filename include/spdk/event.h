@@ -110,7 +110,7 @@ typedef void (*spdk_sighandler_t)(int);
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		2048
 #define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	0
 #define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	4
-#define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
+#define SPDK_APP_DPDK_DEFAULT_CORE_MASK		NULL
 
 /**
  * \brief Event framework initialization options

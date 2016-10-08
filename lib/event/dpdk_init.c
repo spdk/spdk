@@ -82,7 +82,8 @@ spdk_free_ealargs(void)
 static unsigned long long
 spdk_get_eal_coremask(const char *coremask)
 {
-	unsigned long long core_mask, max_coremask = 0;
+	unsigned long long core_mask = 0;
+	unsigned long long max_coremask = 0;
 	int num_cores_online;
 
 	num_cores_online = sysconf(_SC_NPROCESSORS_ONLN);
@@ -97,9 +98,12 @@ spdk_get_eal_coremask(const char *coremask)
 		}
 	}
 
-	core_mask = strtoull(coremask, NULL, 16);
-	core_mask &= max_coremask;
-
+	if(coremask != NULL) {
+		core_mask = strtoull(coremask, NULL, 16);
+		core_mask &= max_coremask;
+	} else {
+		core_mask = max_coremask;
+	}
 	return core_mask;
 }
 
