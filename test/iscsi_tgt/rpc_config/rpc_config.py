@@ -295,21 +295,21 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
            "get_target_nodes returned {} nodes, expected 1".format(len(jsonvalues)))
-    verify(jsonvalues[0]['lun_names'][0] == "Malloc" + str(rpc_param['lun_total']), 1,
-           "lun_name value is {}, expected Malloc{}".format(jsonvalues[0]['lun_names'][0], str(rpc_param['lun_total'])))
+    verify(jsonvalues[0]['luns'][0]['name'] == "Malloc" + str(rpc_param['lun_total']), 1,
+           "lun_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['name'], str(rpc_param['lun_total'])))
     name = jsonvalues[0]['name']
     verify(name == "iqn.2016-06.io.spdk:" + rpc_param['target_name'], 1,
            "target name value is {}, expected {}".format(name, "iqn.2016-06.io.spdk:" + rpc_param['target_name']))
     verify(jsonvalues[0]['alias_name'] == rpc_param['alias_name'], 1,
            "target alias_name value is {}, expected {}".format(jsonvalues[0]['alias_name'], rpc_param['alias_name']))
-    verify(jsonvalues[0]['lun_ids'][0] == 0, 1,
-           "lun id value is {}, expected 0".format(jsonvalues[0]['lun_ids'][0]))
-    verify(jsonvalues[0]['initiator_group_tags'][0] == int(initiator_tag), 1,
-           "initiator group tag value is {}, expected {}".format(jsonvalues[0]['initiator_group_tags'][0], initiator_tag))
+    verify(jsonvalues[0]['luns'][0]['id'] == 0, 1,
+           "lun id value is {}, expected 0".format(jsonvalues[0]['luns'][0]['id']))
+    verify(jsonvalues[0]['pg_ig_maps'][0]['ig_tag'] == int(initiator_tag), 1,
+           "initiator group tag value is {}, expected {}".format(jsonvalues[0]['pg_ig_maps'][0]['ig_tag'], initiator_tag))
     verify(jsonvalues[0]['queue_depth'] == rpc_param['queue_depth'], 1,
            "queue depth value is {}, expected {}".format(jsonvalues[0]['queue_depth'], rpc_param['queue_depth']))
-    verify(jsonvalues[0]['portal_group_tags'][0] == int(portal_tag), 1,
-           "portal group tag value is {}, expected {}".format(jsonvalues[0]['portal_group_tags'][0], portal_tag))
+    verify(jsonvalues[0]['pg_ig_maps'][0]['pg_tag'] == int(portal_tag), 1,
+           "portal group tag value is {}, expected {}".format(jsonvalues[0]['pg_ig_maps'][0]['pg_tag'], portal_tag))
     verify(jsonvalues[0]['chap_disabled'] == rpc_param['chap_disable'], 1,
            "chap disable value is {}, expected {}".format(jsonvalues[0]['chap_disabled'], rpc_param['chap_disable']))
     verify(jsonvalues[0]['chap_mutual'] == rpc_param['chap_mutal'], 1,

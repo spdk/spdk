@@ -331,43 +331,28 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_server_conn *conn,
 			spdk_json_write_string(w, tgtnode->alias);
 		}
 
-		/*
-		 * TODO: combine portal_group_tags and initiator_group_tags into an array
-		 * of objects (needs rpc script changes to match)
-		 */
-
-		spdk_json_write_name(w, "portal_group_tags");
+		spdk_json_write_name(w, "pg_ig_maps");
 		spdk_json_write_array_begin(w);
 		for (i = 0; i < tgtnode->maxmap; i++) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "pg_tag");
 			spdk_json_write_int32(w, tgtnode->map[i].pg->tag);
-		}
-		spdk_json_write_array_end(w);
-
-		spdk_json_write_name(w, "initiator_group_tags");
-		spdk_json_write_array_begin(w);
-		for (i = 0; i < tgtnode->maxmap; i++) {
+			spdk_json_write_name(w, "ig_tag");
 			spdk_json_write_int32(w, tgtnode->map[i].ig->tag);
+			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
 
-		/*
-		 * TODO: combine lun_names and lun_ids into an array of objects
-		 */
-
-		spdk_json_write_name(w, "lun_names");
+		spdk_json_write_name(w, "luns");
 		spdk_json_write_array_begin(w);
 		for (i = 0; i < tgtnode->dev->maxlun; i++) {
 			if (tgtnode->dev->lun[i]) {
+				spdk_json_write_object_begin(w);
+				spdk_json_write_name(w, "name");
 				spdk_json_write_string(w, tgtnode->dev->lun[i]->name);
-			}
-		}
-		spdk_json_write_array_end(w);
-
-		spdk_json_write_name(w, "lun_ids");
-		spdk_json_write_array_begin(w);
-		for (i = 0; i < tgtnode->dev->maxlun; i++) {
-			if (tgtnode->dev->lun[i]) {
+				spdk_json_write_name(w, "id");
 				spdk_json_write_int32(w, tgtnode->dev->lun[i]->id);
+				spdk_json_write_object_end(w);
 			}
 		}
 		spdk_json_write_array_end(w);
