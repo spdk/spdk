@@ -504,7 +504,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		}
 
 		pdu->data = pdu->data_buf;
-		pdu->data_ref++;
+		pdu->data_from_mempool = true;
 		pdu->data_segment_len = data_len;
 	}
 
@@ -2617,7 +2617,7 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	rsp_pdu = spdk_get_pdu();
 	rsph = (struct iscsi_bhs_data_in *)&rsp_pdu->bhs;
 	rsp_pdu->data = task->scsi.rbuf + offset;
-	rsp_pdu->data_ref++;
+	rsp_pdu->data_from_mempool = true;
 
 	task_tag = task->scsi.id;
 	transfer_tag = 0xffffffffU;
@@ -3147,7 +3147,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	rsp_pdu = spdk_get_pdu();
 	rsph = (struct iscsi_bhs_scsi_resp *)&rsp_pdu->bhs;
 	rsp_pdu->data = task->scsi.sense_data;
-	rsp_pdu->data_ref++;
+	rsp_pdu->data_from_mempool = true;
 
 	/*
 	 * we need to hold onto this task/cmd because until the

@@ -511,7 +511,7 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 		if (pdu->mobj)
 			rte_mempool_put(pdu->mobj->mp, (void *)pdu->mobj);
 
-		if (pdu->data && !pdu->data_ref)
+		if (pdu->data && !pdu->data_from_mempool)
 			free(pdu->data);
 
 		rte_mempool_put(g_spdk_iscsi.pdu_pool, (void *)pdu);

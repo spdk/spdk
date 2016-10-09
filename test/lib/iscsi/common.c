@@ -36,7 +36,7 @@ spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 	}
 
 	if (pdu->ref == 0) {
-		if (pdu->data && !pdu->data_ref) {
+		if (pdu->data && !pdu->data_from_mempool) {
 			free(pdu->data);
 		}
 		free(pdu);
