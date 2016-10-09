@@ -72,24 +72,21 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 	*data = task->rbuf;
 }
 
-int
+void
 spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, int ascq)
 {
 	uint8_t *data;
 	uint8_t *cp;
 	int resp_code;
-	int hlen = 0, len, plen;
-	int total;
 
 	data = task->sense_data;
 	resp_code = 0x70; /* Current + Fixed format */
 
 	/* SenseLength */
 	memset(data, 0, 2);
-	hlen = 2;
 
 	/* Sense Data */
-	cp = &data[hlen];
+	cp = &data[2];
 
 	/* VALID(7) RESPONSE CODE(6-0) */
 	cp[0] = 0x80 | resp_code;
@@ -99,9 +96,9 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 	cp[2] = sk & 0xf;
 	/* INFORMATION */
 	memset(&cp[3], 0, 4);
+
 	/* ADDITIONAL SENSE LENGTH */
-	cp[7] = 0;
-	len = 8;
+	cp[7] = 10;
 
 	/* COMMAND-SPECIFIC INFORMATION */
 	memset(&cp[8], 0, 4);
@@ -116,19 +113,10 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 	cp[15] = 0;
 	cp[16] = 0;
 	cp[17] = 0;
-	/* Additional sense bytes */
-	plen = 18 - len;
-
-	/* ADDITIONAL SENSE LENGTH */
-	cp[7] = plen;
-
-	total = hlen + len + plen;
 
 	/* SenseLength */
-	to_be16(data, total - 2);
-	task->sense_data_len = total;
-
-	return total;
+	to_be16(data, 18);
+	task->sense_data_len = 20;
 }
 
 struct spdk_bdev_io *

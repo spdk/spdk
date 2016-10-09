@@ -255,8 +255,8 @@ void spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
 void spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 			       uint8_t **data);
-int spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc,
-				    int ascq);
+void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc,
+				     int ascq);
 void spdk_scsi_task_set_check_condition(struct spdk_scsi_task *task, int sk,
 					int asc, int ascq);
 
