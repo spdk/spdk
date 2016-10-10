@@ -158,8 +158,8 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
 
-struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *name,
-		enum spdk_nvmf_subtype subtype,
+struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,
+		enum spdk_nvmf_subtype type,
 		enum spdk_nvmf_subsystem_mode mode,
 		void *cb_ctx,
 		spdk_nvmf_subsystem_connect_fn connect_cb,
@@ -189,6 +189,10 @@ int
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev);
 
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
+
+const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
+enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
+enum spdk_nvmf_subsystem_mode spdk_nvmf_subsystem_get_mode(struct spdk_nvmf_subsystem *subsystem);
 
 const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
 const char *spdk_nvmf_transport_get_name(const struct spdk_nvmf_transport *transport);

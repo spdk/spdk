@@ -87,8 +87,8 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 	struct spdk_event *event;
 	int i;
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
-	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME &&
+	    spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
 		for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
 			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
 			subsystem->dev.virt.ch[i] = NULL;

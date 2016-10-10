@@ -117,8 +117,8 @@ spdk_nvmf_valid_nqn(const char *nqn)
 }
 
 struct spdk_nvmf_subsystem *
-spdk_nvmf_create_subsystem(const char *name,
-			   enum spdk_nvmf_subtype subtype,
+spdk_nvmf_create_subsystem(const char *nqn,
+			   enum spdk_nvmf_subtype type,
 			   enum spdk_nvmf_subsystem_mode mode,
 			   void *cb_ctx,
 			   spdk_nvmf_subsystem_connect_fn connect_cb,
@@ -126,7 +126,7 @@ spdk_nvmf_create_subsystem(const char *name,
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 
-	if (!spdk_nvmf_valid_nqn(name)) {
+	if (!spdk_nvmf_valid_nqn(nqn)) {
 		return NULL;
 	}
 
@@ -135,12 +135,12 @@ spdk_nvmf_create_subsystem(const char *name,
 		return NULL;
 	}
 
-	subsystem->subtype = subtype;
+	subsystem->subtype = type;
 	subsystem->mode = mode;
 	subsystem->cb_ctx = cb_ctx;
 	subsystem->connect_cb = connect_cb;
 	subsystem->disconnect_cb = disconnect_cb;
-	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
+	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->listen_addrs);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->sessions);
@@ -337,4 +337,28 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 	snprintf(subsystem->dev.virt.sn, sizeof(subsystem->dev.virt.sn), "%s", sn);
 
 	return 0;
+}
+
+const char *
+spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->subnqn;
+}
+
+/* Workaround for astyle formatting bug */
+typedef enum spdk_nvmf_subtype nvmf_subtype_t;
+
+nvmf_subtype_t
+spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->subtype;
+}
+
+/* Workaround for astyle formatting bug */
+typedef enum spdk_nvmf_subsystem_mode nvmf_mode_t;
+
+nvmf_mode_t
+spdk_nvmf_subsystem_get_mode(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->mode;
 }

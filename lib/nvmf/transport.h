@@ -38,6 +38,8 @@
 
 #include "spdk/nvmf.h"
 
+struct spdk_nvmf_listen_addr;
+
 struct spdk_nvmf_transport {
 	/**
 	 * Name of the transport.

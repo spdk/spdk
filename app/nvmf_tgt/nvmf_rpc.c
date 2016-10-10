@@ -56,17 +56,17 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	spdk_json_write_int32(w, tgt_subsystem->lcore);
 
 	spdk_json_write_name(w, "nqn");
-	spdk_json_write_string(w, subsystem->subnqn);
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+	spdk_json_write_string(w, spdk_nvmf_subsystem_get_nqn(subsystem));
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_json_write_name(w, "mode");
-		if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+		if (spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_DIRECT) {
 			spdk_json_write_string(w, "direct");
 		} else {
 			spdk_json_write_string(w, "virtual");
 		}
 	}
 	spdk_json_write_name(w, "subtype");
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_json_write_string(w, "NVMe");
 	} else {
 		spdk_json_write_string(w, "Discovery");
@@ -98,8 +98,8 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	}
 	spdk_json_write_array_end(w);
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+		if (spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_DIRECT) {
 			char pci_str[20];
 
 			snprintf(pci_str, sizeof(pci_str), "%04x:%02x:%02x.%x",

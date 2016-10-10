@@ -59,7 +59,7 @@
 #define ACCEPT_TIMEOUT_US		1000 /* 1ms */
 
 struct spdk_nvmf_probe_ctx {
-	struct spdk_nvmf_subsystem	*subsystem;
+	struct nvmf_tgt_subsystem	*app_subsystem;
 	bool				any;
 	bool				found;
 	struct spdk_pci_addr		pci_addr;
@@ -361,13 +361,13 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	char path[MAX_STRING_LEN];
 	int numa_node = -1;
 
-	SPDK_NOTICELOG("Attaching NVMe device %p at %x:%x:%x.%x to subsystem %p\n",
+	SPDK_NOTICELOG("Attaching NVMe device %p at %x:%x:%x.%x to subsystem %s\n",
 		       ctrlr,
 		       probe_info->pci_addr.domain,
 		       probe_info->pci_addr.bus,
 		       probe_info->pci_addr.dev,
 		       probe_info->pci_addr.func,
-		       ctx->subsystem);
+		       spdk_nvmf_subsystem_get_nqn(ctx->app_subsystem->subsystem));
 
 	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%04x:%02x:%02x.%1u/numa_node",
 		 probe_info->pci_addr.domain,
@@ -378,15 +378,15 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	numa_node = spdk_get_numa_node_value(path);
 	if (numa_node >= 0) {
 		/* Running subsystem and NVMe device is on the same socket or not */
-		if (rte_lcore_to_socket_id(ctx->subsystem->lcore) != (unsigned)numa_node) {
+		if (rte_lcore_to_socket_id(ctx->app_subsystem->lcore) != (unsigned)numa_node) {
 			SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core belonging "
 				     "to a different NUMA node than the associated NVMe device. "
 				     "This may result in reduced performance.\n",
-				     ctx->subsystem->subnqn);
+				     spdk_nvmf_subsystem_get_nqn(ctx->app_subsystem->subsystem));
 		}
 	}
 
-	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, &probe_info->pci_addr);
+	rc = nvmf_subsystem_add_ctrlr(ctx->app_subsystem->subsystem, ctrlr, &probe_info->pci_addr);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}
@@ -506,11 +506,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		numa_node = spdk_get_ifaddr_numa_node(traddr);
 		if (numa_node >= 0) {
-			if (rte_lcore_to_socket_id(subsystem->lcore) != (unsigned)numa_node) {
+			if (rte_lcore_to_socket_id(app_subsys->lcore) != (unsigned)numa_node) {
 				SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core belonging "
 					     "to a different NUMA node than the associated NIC. "
 					     "This may result in reduced performance.\n",
-					     subsystem->subnqn);
+					     spdk_nvmf_subsystem_get_nqn(app_subsys->subsystem));
 			}
 		}
 		spdk_nvmf_subsystem_add_listener(subsystem, transport, traddr, trsvcid);
@@ -542,7 +542,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			return -1;
 		}
 
-		ctx.subsystem = subsystem;
+		ctx.app_subsystem = app_subsys;
 		ctx.found = false;
 		if (strcmp(bdf, "*") == 0) {
 			ctx.any = true;
@@ -740,7 +740,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 			return -1;
 		}
 
-		ctx.subsystem = subsystem;
+		ctx.app_subsystem = app_subsys;
 		ctx.found = false;
 		if (strcmp(bdf, "*") == 0) {
 			ctx.any = true;
