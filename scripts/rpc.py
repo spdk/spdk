@@ -169,6 +169,20 @@ p = subparsers.add_parser('construct_nvme_bdev', help='Add bdev with nvme backen
 p.add_argument('pci_address', help='PCI address domain:bus:device.function')
 p.set_defaults(func=construct_nvme_bdev)
 
+def construct_rbd_bdev(args):
+    params = {
+        'pool_name': args.pool_name,
+        'rbd_name': args.rbd_name,
+        'size': args.size,
+    }
+    jsonrpc_call('construct_rbd_bdev', params)
+
+p = subparsers.add_parser('construct_rbd_bdev', help='Add a bdev with ceph rbd backend')
+p.add_argument('pool_name', help='rbd pool name')
+p.add_argument('rbd_name', help='rbd image name')
+p.add_argument('size', help='rbd block size', type=int)
+p.set_defaults(func=construct_rbd_bdev)
+
 def set_trace_flag(args):
     params = {'flag': args.flag}
     jsonrpc_call('set_trace_flag', params)
