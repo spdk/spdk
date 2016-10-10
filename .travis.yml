@@ -12,7 +12,7 @@ addons:
       - libcunit1-dev
       - libaio-dev
       - libssl-dev
-      - linux-headers-generic
+      - linux-headers-3.13.0-40-generic
 
 before_script:
   - wget http://fast.dpdk.org/rel/dpdk-16.07.tar.xz
