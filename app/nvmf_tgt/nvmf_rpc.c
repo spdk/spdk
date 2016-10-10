@@ -78,7 +78,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	TAILQ_FOREACH(listen_addr, &subsystem->listen_addrs, link) {
 		spdk_json_write_object_begin(w);
 		spdk_json_write_name(w, "transport");
-		spdk_json_write_string(w, listen_addr->transport->name);
+		spdk_json_write_string(w, spdk_nvmf_transport_get_name(listen_addr->transport));
 		spdk_json_write_name(w, "traddr");
 		spdk_json_write_string(w, listen_addr->traddr);
 		spdk_json_write_name(w, "trsvcid");

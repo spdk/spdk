@@ -192,78 +192,11 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
 
-struct spdk_nvmf_transport {
-	/**
-	 * Name of the transport.
-	 */
-	const char *name;
-
-	/**
-	 * Initialize the transport.
-	 */
-	int (*transport_init)(uint16_t max_queue_depth, uint32_t max_io_size,
-			      uint32_t in_capsule_data_size);
-
-	/**
-	 * Shut down the transport.
-	 */
-	int (*transport_fini)(void);
-
-	/**
-	 * Check for new connections on the transport.
-	 */
-	void (*acceptor_poll)(void);
-
-	/**
-	  * Instruct the acceptor to listen on the address provided. This
-	  * may be called multiple times.
-	  */
-	int (*listen_addr_add)(struct spdk_nvmf_listen_addr *listen_addr);
-
-	/**
-	 * Fill out a discovery log entry for a specific listen address.
-	 */
-	void (*listen_addr_discover)(struct spdk_nvmf_listen_addr *listen_addr,
-				     struct spdk_nvmf_discovery_log_page_entry *entry);
-
-	/**
-	 * Initialize the transport for the given session
-	 */
-	int (*session_init)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
-
-	/**
-	 * Deinitiallize the transport for the given session
-	 */
-	void (*session_fini)(struct spdk_nvmf_session *session);
-
-	/*
-	 * Signal request completion, which sends a response
-	 * to the originator. A request can either
-	 * be completed or released, but not both.
-	 */
-	int (*req_complete)(struct spdk_nvmf_request *req);
-
-	/*
-	 * Signal that the request can be released without sending
-	 * a response. A request can either be completed or release,
-	 * but not both.
-	 */
-	int (*req_release)(struct spdk_nvmf_request *req);
-
-	/*
-	 * Deinitialize a connection.
-	 */
-	void (*conn_fini)(struct spdk_nvmf_conn *conn);
-
-	/*
-	 * Poll a connection for events.
-	 */
-	int (*conn_poll)(struct spdk_nvmf_conn *conn);
-};
-
 int spdk_nvmf_transport_init(void);
 int spdk_nvmf_transport_fini(void);
 const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
+const char *spdk_nvmf_transport_get_name(const struct spdk_nvmf_transport *transport);
+
 void spdk_nvmf_acceptor_poll(void);
 
 void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
