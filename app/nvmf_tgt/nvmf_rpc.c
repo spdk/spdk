@@ -70,7 +70,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 		spdk_json_write_string(w, "Discovery");
 	}
 
-	spdk_json_write_name(w, "listen_addrs");
+	spdk_json_write_name(w, "listen_addresses");
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(listen_addr, &subsystem->listen_addrs, link) {
