@@ -746,6 +746,11 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 			return -1;
 		}
 
+		if (num_devs != 0) {
+			SPDK_ERRLOG("Subsystem %d: Namespaces not allowed for Direct mode\n", num);
+			return -1;
+		}
+
 		ctx.subsystem = subsystem;
 		ctx.found = false;
 		if (strcmp(bdf, "*") == 0) {

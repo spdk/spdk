@@ -309,16 +309,12 @@ p = subparsers.add_parser('get_nvmf_subsystems', help='Display nvmf subsystems')
 p.set_defaults(func=get_nvmf_subsystems)
 
 def construct_nvmf_subsystem(args):
-    namespaces = []
     hosts = []
 
     listen_addresses = [dict(u.split(":") for u in a.split(" ")) for a in args.listen.split(",")]
 
     for u in args.hosts.split(" "):
         hosts.append(u)
-
-    for u in args.namespaces.split(" "):
-        namespaces.append(u)
 
     params = {
         'core': args.core,
@@ -328,8 +324,14 @@ def construct_nvmf_subsystem(args):
         'hosts': hosts,
         'pci_address': args.pci_address,
         'serial_number': args.serial_number,
-        'namespaces': namespaces,
     }
+
+    if args.namespaces:
+        namespaces = []
+        for u in args.namespaces.split(" "):
+            namespaces.append(u)
+        params['namespaces'] = namespaces
+
     jsonrpc_call('construct_nvmf_subsystem', params)
 
 p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
@@ -351,7 +353,7 @@ Example: 'SPDK00000000000001'""",  default='0000:00:01.0')
 p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces.
 Format:  'dev1 dev2 dev3' etc
 Example: 'Malloc0 Malloc1 Malloc2'
-*** The devices must pre-exist ***""",  default='Malloc0')
+*** The devices must pre-exist ***""")
 p.set_defaults(func=construct_nvmf_subsystem)
 
 def delete_nvmf_subsystem(args):
