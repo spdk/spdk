@@ -31,8 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "blockdev_rbd.h"
+
 #include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <pthread.h>
@@ -484,23 +485,6 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.get_io_channel		= blockdev_rbd_get_io_channel,
 };
 
-static int
-blockdev_create_rbd_disk(struct blockdev_rbd *disk, uint32_t block_size)
-{
-	snprintf(disk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
-		 blockdev_rbd_count);
-	snprintf(disk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph rbd");
-	blockdev_rbd_count++;
-
-	disk->disk.write_cache = 0;
-	disk->disk.blocklen = block_size;
-	disk->disk.blockcnt = disk->info.size / disk->disk.blocklen;
-	disk->disk.ctxt = disk;
-	disk->disk.fn_table = &rbd_fn_table;
-
-	return 0;
-}
-
 static void
 blockdev_rbd_library_fini(void)
 {
@@ -542,15 +526,66 @@ blockdev_rbd_pool_info_init(const char *rbd_pool_name)
 	return pool_info;
 }
 
+int
+spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
+{
+	struct blockdev_rbd_pool_info *pool_info;
+	struct blockdev_rbd *rbd;
+	int ret;
+
+	pool_info = blockdev_rbd_pool_info_init(pool_name);
+	if (pool_info == NULL) {
+		SPDK_ERRLOG("failed to create blockdev_rbd_pool_info\n");
+		return -1;
+	}
+
+	rbd = calloc(1, sizeof(struct blockdev_rbd));
+	if (rbd == NULL) {
+		SPDK_ERRLOG("Failed to allocate blockdev_rbd struct\n");
+		free(pool_info);
+		return -1;
+	}
+
+	rbd->pool_info = pool_info;
+	rbd->rbd_name = rbd_name;
+	ret = blockdev_rbd_init(pool_info->name, rbd_name, &rbd->info);
+	if (ret < 0) {
+		free(pool_info);
+		free(rbd);
+		SPDK_ERRLOG("Failed to init rbd device\n");
+		return -1;
+	}
+
+	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
+		 blockdev_rbd_count);
+	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph rbd");
+	blockdev_rbd_count++;
+
+	rbd->disk.write_cache = 0;
+	rbd->disk.blocklen = block_size;
+	rbd->disk.blockcnt = rbd->info.size / rbd->disk.blocklen;
+	rbd->disk.ctxt = rbd;
+	rbd->disk.fn_table = &rbd_fn_table;
+
+	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
+	TAILQ_INSERT_TAIL(&g_rbds, rbd, tailq);
+
+	spdk_io_device_register(&rbd->disk, blockdev_rbd_create_cb,
+				blockdev_rbd_destroy_cb,
+				sizeof(struct blockdev_rbd_io_channel));
+	spdk_bdev_register(&rbd->disk);
+	return 0;
+}
+
 static int
 blockdev_rbd_library_init(void)
 {
 	int i, ret;
 	const char *val;
+	const char *pool_name;
 	const char *rbd_name;
 	uint32_t block_size;
-	struct blockdev_rbd_pool_info *pool_info;
-	struct blockdev_rbd *rbd;
+
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Ceph");
 
 	if (sp == NULL) {
@@ -567,15 +602,9 @@ blockdev_rbd_library_init(void)
 			break;
 
 		/* get the Rbd_pool name */
-		val = spdk_conf_section_get_nmval(sp, "Ceph", i, 0);
-		if (val == NULL) {
+		pool_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 0);
+		if (pool_name == NULL) {
 			SPDK_ERRLOG("Ceph%d: rbd pool name needs to be provided\n", i);
-			goto cleanup;
-		}
-
-		pool_info = blockdev_rbd_pool_info_init(val);
-		if (pool_info == NULL) {
-			SPDK_ERRLOG("Ceph%d: failed to create blockdev_rbd_pool_info\n", i);
 			goto cleanup;
 		}
 
@@ -598,32 +627,10 @@ blockdev_rbd_library_init(void)
 			}
 		}
 
-		rbd = calloc(1, sizeof(struct blockdev_rbd));
-		if (rbd == NULL) {
-			SPDK_ERRLOG("Failed to allocate blockdev_rbd struct\n");
+		ret = spdk_bdev_rbd_create(pool_name, rbd_name, block_size);
+		if (ret) {
 			goto cleanup;
 		}
-
-		rbd->pool_info = pool_info;
-		rbd->rbd_name = rbd_name;
-		ret = blockdev_rbd_init(pool_info->name, rbd_name, &rbd->info);
-		if (ret < 0) {
-			SPDK_ERRLOG("Failed to init rbd device\n");
-			goto cleanup;
-		}
-
-		ret = blockdev_create_rbd_disk(rbd, block_size);
-		if (ret < 0) {
-			SPDK_ERRLOG("Failed to create rbd disk\n");
-			goto cleanup;
-		}
-		SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
-		TAILQ_INSERT_TAIL(&g_rbds, rbd, tailq);
-
-		spdk_io_device_register(&rbd->disk, blockdev_rbd_create_cb,
-					blockdev_rbd_destroy_cb,
-					sizeof(struct blockdev_rbd_io_channel));
-		spdk_bdev_register(&rbd->disk);
 	}
 
 	return 0;
