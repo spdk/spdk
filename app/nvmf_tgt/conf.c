@@ -730,12 +730,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 	/* Parse Host sections */
 	for (i = 0; i < num_hosts; i++) {
-		char *host_nqn;
-
-		host_nqn = hosts[i];
-		if (strcmp(host_nqn, "All") == 0)
-			break;
-		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
+		spdk_nvmf_subsystem_add_host(subsystem, hosts[i]);
 	}
 
 	if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {

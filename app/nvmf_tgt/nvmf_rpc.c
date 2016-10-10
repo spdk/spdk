@@ -283,7 +283,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"mode", offsetof(struct rpc_subsystem, mode), spdk_json_decode_string},
 	{"nqn", offsetof(struct rpc_subsystem, nqn), spdk_json_decode_string},
 	{"listen_addresses", offsetof(struct rpc_subsystem, listen_addresses), decode_rpc_listen_addresses},
-	{"hosts", offsetof(struct rpc_subsystem, hosts), decode_rpc_hosts},
+	{"hosts", offsetof(struct rpc_subsystem, hosts), decode_rpc_hosts, true},
 	{"pci_address", offsetof(struct rpc_subsystem, pci_address), spdk_json_decode_string, true},
 	{"serial_number", offsetof(struct rpc_subsystem, serial_number), spdk_json_decode_string, true},
 	{"namespaces", offsetof(struct rpc_subsystem, namespaces), decode_rpc_dev_names, true},

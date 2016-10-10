@@ -309,22 +309,22 @@ p = subparsers.add_parser('get_nvmf_subsystems', help='Display nvmf subsystems')
 p.set_defaults(func=get_nvmf_subsystems)
 
 def construct_nvmf_subsystem(args):
-    hosts = []
-
     listen_addresses = [dict(u.split(":") for u in a.split(" ")) for a in args.listen.split(",")]
-
-    for u in args.hosts.split(" "):
-        hosts.append(u)
 
     params = {
         'core': args.core,
         'mode': args.mode,
         'nqn': args.nqn,
         'listen_addresses': listen_addresses,
-        'hosts': hosts,
         'pci_address': args.pci_address,
         'serial_number': args.serial_number,
     }
+
+    if args.hosts:
+        hosts = []
+        for u in args.hosts.split(" "):
+            hosts.append(u)
+        params['hosts'] = hosts
 
     if args.namespaces:
         namespaces = []
