@@ -50,10 +50,10 @@
 #define nvmf_min(a,b) (((a)<(b))?(a):(b))
 #define nvmf_max(a,b) (((a)>(b))?(a):(b))
 
-int nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
-		  uint32_t in_capsule_data_size, uint32_t max_io_size);
+int spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
+		       uint32_t in_capsule_data_size, uint32_t max_io_size);
 
-int nvmf_tgt_fini(void);
+int spdk_nvmf_tgt_fini(void);
 
 int spdk_nvmf_check_pools(void);
 

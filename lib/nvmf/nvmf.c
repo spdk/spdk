@@ -48,8 +48,8 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 struct spdk_nvmf_globals g_nvmf_tgt;
 
 int
-nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
-	      uint32_t in_capsule_data_size, uint32_t max_io_size)
+spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
+		   uint32_t in_capsule_data_size, uint32_t max_io_size)
 {
 	int rc;
 
@@ -57,6 +57,8 @@ nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	g_nvmf_tgt.max_queue_depth = max_queue_depth;
 	g_nvmf_tgt.in_capsule_data_size = in_capsule_data_size;
 	g_nvmf_tgt.max_io_size = max_io_size;
+
+	spdk_nvmf_transport_init();
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queues Per Session: %d\n", max_queues_per_sess);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);
@@ -73,9 +75,11 @@ nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 }
 
 int
-nvmf_tgt_fini(void)
+spdk_nvmf_tgt_fini(void)
 {
-	return spdk_nvmf_transport_fini();
+	spdk_nvmf_transport_fini();
+
+	return 0;
 }
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace)

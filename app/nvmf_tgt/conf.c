@@ -216,9 +216,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	}
 	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
 
-	rc = nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size);
+	rc = spdk_nvmf_tgt_init(max_queue_depth, max_queues_per_sess, in_capsule_data_size, max_io_size);
 	if (rc != 0) {
-		SPDK_ERRLOG("nvmf_tgt_init() failed\n");
+		SPDK_ERRLOG("spdk_nvmf_tgt_init() failed\n");
 		return rc;
 	}
 

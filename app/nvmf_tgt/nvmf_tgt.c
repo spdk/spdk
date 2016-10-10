@@ -118,7 +118,7 @@ shutdown_subsystems(void)
 static void
 acceptor_poller_unregistered_event(struct spdk_event *event)
 {
-	nvmf_tgt_fini();
+	spdk_nvmf_tgt_fini();
 	shutdown_subsystems();
 }
 
