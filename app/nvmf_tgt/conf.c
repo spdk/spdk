@@ -762,6 +762,12 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 		}
+
+		if (!ctx.found) {
+			SPDK_ERRLOG("Could not find NVMe controller at PCI address %04x:%02x:%02x.%x\n",
+				    ctx.domain, ctx.bus, ctx.device, ctx.function);
+			return -1;
+		}
 	} else {
 		struct spdk_bdev *bdev;
 		const char *namespace;
