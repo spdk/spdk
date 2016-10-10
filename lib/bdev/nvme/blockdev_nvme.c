@@ -32,8 +32,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "blockdev_nvme.h"
+
 #include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -50,8 +51,6 @@
 #include "spdk/io_channel.h"
 
 #include "bdev_module.h"
-
-#define MAX_NVME_NAME_LENGTH 64
 
 static void blockdev_nvme_get_spdk_running_config(FILE *fp);
 
@@ -93,16 +92,7 @@ enum data_direction {
 	BDEV_DISK_WRITE = 1
 };
 
-struct nvme_bdf_whitelist {
-	uint16_t	domain;
-	uint8_t		bus;
-	uint8_t		dev;
-	uint8_t		func;
-	char		name[MAX_NVME_NAME_LENGTH];
-};
-
 #define NVME_MAX_BLOCKDEVS_PER_CONTROLLER 256
-#define NVME_MAX_CONTROLLERS 16
 #define NVME_MAX_BLOCKDEVS (NVME_MAX_BLOCKDEVS_PER_CONTROLLER * NVME_MAX_CONTROLLERS)
 static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int blockdev_index_max = 0;
@@ -340,12 +330,6 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.get_io_channel		= blockdev_nvme_get_io_channel,
 };
 
-struct nvme_probe_ctx {
-	int controllers_remaining;
-	int num_whitelist_controllers;
-	struct nvme_bdf_whitelist whitelist[NVME_MAX_CONTROLLERS];
-};
-
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -416,6 +400,14 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	}
 }
 
+int
+spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx)
+{
+	if (spdk_nvme_probe(ctx, probe_cb, attach_cb, NULL)) {
+		return -1;
+	}
+	return 0;
+}
 
 static int
 nvme_library_init(void)
@@ -498,11 +490,7 @@ nvme_library_init(void)
 
 	probe_ctx.controllers_remaining = num_controllers;
 
-	if (spdk_nvme_probe(&probe_ctx, probe_cb, attach_cb, NULL)) {
-		return -1;
-	}
-
-	return 0;
+	return spdk_bdev_nvme_create(&probe_ctx);
 }
 
 __attribute__((destructor)) void
