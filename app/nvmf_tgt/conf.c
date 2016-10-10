@@ -482,7 +482,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		char *transport_name, *listen_addr;
 		char *traddr, *trsvcid;
-		const struct spdk_nvmf_transport *transport;
 		int numa_node = -1;
 
 		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
@@ -490,12 +489,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		if (!transport_name || !listen_addr) {
 			break;
-		}
-
-		transport = spdk_nvmf_transport_get(transport_name);
-		if (transport == NULL) {
-			SPDK_ERRLOG("Unknown transport type '%s'\n", transport_name);
-			continue;
 		}
 
 		ret = spdk_nvmf_parse_addr(listen_addr, &traddr, &trsvcid);
@@ -513,7 +506,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 					     spdk_nvmf_subsystem_get_nqn(app_subsys->subsystem));
 			}
 		}
-		spdk_nvmf_subsystem_add_listener(subsystem, transport, traddr, trsvcid);
+		spdk_nvmf_subsystem_add_listener(subsystem, transport_name, traddr, trsvcid);
 
 		free(traddr);
 		free(trsvcid);
@@ -711,15 +704,8 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 	/* Parse Listen sections */
 	for (i = 0; i < num_listen_addresses; i++) {
-		const struct spdk_nvmf_transport *transport;
-
-		transport = spdk_nvmf_transport_get(addresses[i].transport);
-		if (transport == NULL) {
-			SPDK_ERRLOG("Unknown transport type '%s'\n", addresses[i].transport);
-			return -1;
-		}
-
-		spdk_nvmf_subsystem_add_listener(subsystem, transport, addresses[i].traddr, addresses[i].trsvcid);
+		spdk_nvmf_subsystem_add_listener(subsystem, addresses[i].transport, addresses[i].traddr,
+						 addresses[i].trsvcid);
 	}
 
 	/* Parse Host sections */

@@ -63,7 +63,6 @@ struct spdk_nvmf_conn;
 struct spdk_nvmf_request;
 struct spdk_bdev;
 struct spdk_nvme_ctrlr;
-struct spdk_nvmf_transport;
 struct spdk_nvmf_request;
 struct spdk_nvmf_conn;
 
@@ -78,7 +77,7 @@ enum spdk_nvmf_subsystem_mode {
 struct spdk_nvmf_listen_addr {
 	char					*traddr;
 	char					*trsvcid;
-	const struct spdk_nvmf_transport	*transport;
+	char					*trname;
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
 };
 
@@ -172,8 +171,7 @@ nvmf_find_subsystem(const char *subnqn, const char *hostnqn);
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 const struct spdk_nvmf_transport *transport,
-				 char *traddr, char *trsvcid);
+				 char *trname, char *traddr, char *trsvcid);
 
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
@@ -193,9 +191,6 @@ int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char
 const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
 enum spdk_nvmf_subsystem_mode spdk_nvmf_subsystem_get_mode(struct spdk_nvmf_subsystem *subsystem);
-
-const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
-const char *spdk_nvmf_transport_get_name(const struct spdk_nvmf_transport *transport);
 
 void spdk_nvmf_acceptor_poll(void);
 

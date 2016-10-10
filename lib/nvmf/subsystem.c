@@ -173,6 +173,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
 		free(listen_addr->traddr);
 		free(listen_addr->trsvcid);
+		free(listen_addr->trname);
 		free(listen_addr);
 		subsystem->num_listen_addrs--;
 	}
@@ -199,11 +200,16 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 const struct spdk_nvmf_transport *transport,
-				 char *traddr, char *trsvcid)
+				 char *trname, char *traddr, char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
+	const struct spdk_nvmf_transport *transport;
 	int rc;
+
+	transport = spdk_nvmf_transport_get(trname);
+	if (!transport) {
+		return -1;
+	}
 
 	listen_addr = calloc(1, sizeof(*listen_addr));
 	if (!listen_addr) {
@@ -223,7 +229,13 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -1;
 	}
 
-	listen_addr->transport = transport;
+	listen_addr->trname = strdup(trname);
+	if (!listen_addr->trname) {
+		free(listen_addr->traddr);
+		free(listen_addr->trsvcid);
+		free(listen_addr);
+		return -1;
+	}
 
 	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
 	subsystem->num_listen_addrs++;
@@ -280,6 +292,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_listen_addr *listen_addr;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
+	const struct spdk_nvmf_transport *transport;
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
@@ -300,7 +313,10 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 				entry->subtype = subsystem->subtype;
 				snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-				listen_addr->transport->listen_addr_discover(listen_addr, entry);
+				transport = spdk_nvmf_transport_get(listen_addr->trname);
+				assert(transport != NULL);
+
+				transport->listen_addr_discover(listen_addr, entry);
 			}
 			numrec++;
 		}

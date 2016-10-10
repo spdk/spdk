@@ -48,6 +48,12 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
 
+const struct spdk_nvmf_transport *
+spdk_nvmf_transport_get(const char *trname)
+{
+	return NULL;
+}
+
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
