@@ -162,6 +162,12 @@ p = subparsers.add_parser('construct_aio_lun', help='Add a LUN with aio backend'
 p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
 p.set_defaults(func=construct_aio_lun)
 
+def construct_nvme_bdev(args):
+    params = {'pci_address': args.pci_address}
+    jsonrpc_call('construct_nvme_bdev', params)
+p = subparsers.add_parser('construct_nvme_bdev', help='Add bdev with nvme backend')
+p.add_argument('pci_address', help='PCI address domain:bus:device.function')
+p.set_defaults(func=construct_nvme_bdev)
 
 def set_trace_flag(args):
     params = {'flag': args.flag}
