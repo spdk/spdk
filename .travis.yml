@@ -17,7 +17,7 @@ addons:
 before_script:
   - wget http://fast.dpdk.org/rel/dpdk-16.07.tar.xz
   - tar xf dpdk-16.07.tar.xz
-  - pushd dpdk-16.07 && make install T=x86-64-native-linuxapp-$CC DESTDIR=. && popd
-  - export DPDK_DIR=$PWD/dpdk-16.07/x86-64-native-linuxapp-$CC
+  - pushd dpdk-16.07 && make install T=x86_64-native-linuxapp-$CC DESTDIR=. && popd
+  - export DPDK_DIR=$PWD/dpdk-16.07/x86_64-native-linuxapp-$CC
 
 script: ./unittest.sh
