@@ -66,6 +66,7 @@ struct blockdev_rbd_pool_info {
 enum blockdev_rbd_data_direction {
 	BLOCKDEV_RBD_READ = 0,
 	BLOCKDEV_RBD_WRITE = 1,
+	BLOCKDEV_RBD_FLUSH = 2,
 };
 
 struct blockdev_rbd_io {
@@ -199,6 +200,8 @@ blockdev_rbd_start_aio(rbd_image_t image, struct blockdev_rbd_io *cmd,
 	} else if (cmd->direction == BLOCKDEV_RBD_WRITE) {
 		ret = rbd_aio_write(image, offset, len,
 				    buf, cmd->completion);
+	} else if (cmd->direction == BLOCKDEV_RBD_FLUSH) {
+		ret = rbd_aio_flush(image, cmd->completion);
 	}
 
 	if (ret < 0) {
@@ -251,6 +254,18 @@ blockdev_rbd_writev(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, (void *)iov->iov_base, offset, len);
 }
 
+static int64_t
+blockdev_rbd_flush(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
+		   struct blockdev_rbd_io *cmd, uint64_t offset, uint64_t nbytes)
+{
+	struct blockdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
+
+	cmd->ch = (void *)rbdio_ch;
+	cmd->direction = BLOCKDEV_RBD_FLUSH;
+
+	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, NULL, offset, nbytes);
+}
+
 static int
 blockdev_rbd_destruct(struct spdk_bdev *bdev)
 {
@@ -288,6 +303,12 @@ static int _blockdev_rbd_submit_request(struct spdk_bdev_io *bdev_io)
 					   bdev_io->u.write.iovcnt,
 					   bdev_io->u.write.len,
 					   bdev_io->u.write.offset);
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		return blockdev_rbd_flush((struct blockdev_rbd *)bdev_io->ctx,
+					  bdev_io->ch,
+					  (struct blockdev_rbd_io *)bdev_io->driver_ctx,
+					  bdev_io->u.flush.offset,
+					  bdev_io->u.flush.length);
 	default:
 		return -1;
 	}
@@ -307,6 +328,7 @@ blockdev_rbd_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return true;
 
 	default:
