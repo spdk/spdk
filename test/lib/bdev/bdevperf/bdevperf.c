@@ -172,7 +172,11 @@ end_run(spdk_event_t event)
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer, NULL);
 		}
-		spdk_app_stop(0);
+		if (g_run_failed) {
+			spdk_app_stop(1);
+		} else {
+			spdk_app_stop(0);
+		}
 	}
 }
 
@@ -186,17 +190,20 @@ bdevperf_complete(spdk_event_t event)
 	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
 	spdk_event_t		complete;
 
+	target = task->target;
+
 	if (bdev_io->status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		target->is_draining = true;
 		g_run_failed = true;
 	} else if (g_verify || g_reset || g_unmap) {
 		assert(bdev_io->u.read.iovcnt == 1);
 		if (memcmp(task->buf, bdev_io->u.read.iov.iov_base, g_io_size) != 0) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", bdev_io->u.read.offset);
+			target->is_draining = true;
 			g_run_failed = true;
 		}
 	}
 
-	target = task->target;
 	target->current_queue_depth--;
 	target->io_completed++;
 
@@ -368,6 +375,7 @@ reset_cb(spdk_event_t event)
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
 		printf("Reset blockdev=%s failed\n", target->bdev->name);
+		target->is_draining = true;
 		g_run_failed = true;
 	}
 
