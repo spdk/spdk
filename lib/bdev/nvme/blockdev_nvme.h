@@ -36,7 +36,6 @@
 
 #include <stdint.h>
 
-#define MAX_NVME_NAME_LENGTH 64
 #define NVME_MAX_CONTROLLERS 16
 
 struct nvme_bdf_whitelist {
@@ -44,7 +43,6 @@ struct nvme_bdf_whitelist {
 	uint8_t		bus;
 	uint8_t		dev;
 	uint8_t		func;
-	char		name[MAX_NVME_NAME_LENGTH];
 };
 
 struct nvme_probe_ctx {

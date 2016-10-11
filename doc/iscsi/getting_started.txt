@@ -145,9 +145,9 @@ the kernel to avoid interrupts and context switching.
   # is referenced later in the Subsystem section.
   #
   # Alternatively, the user can specify ClaimAllDevices. All
-  # NVMe devices will be claimed and named Nvme0, Nvme1, etc.
-  BDF 0000:00:00.0 Nvme0
-  BDF 0000:01:00.0 Nvme1
+  # NVMe devices will be claimed.
+  BDF 0000:00:00.0
+  BDF 0000:01:00.0
 
   # SPDK supports partitioning each nvme card into multiple LUNs
   #  through the NvmeLunsPerNs parameter. If NvmeLunsPerNs is specified,

@@ -475,15 +475,6 @@ nvme_library_init(void)
 			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].dev = dev;
 			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].func = func;
 
-			val = spdk_conf_section_get_nmval(sp, "BDF", i, 1);
-			if (val == NULL) {
-				SPDK_ERRLOG("BDF section with no device name\n");
-				return -1;
-			}
-
-			snprintf(probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].name, MAX_NVME_NAME_LENGTH, "%s",
-				 val);
-
 			probe_ctx.num_whitelist_controllers++;
 		}
 	}
