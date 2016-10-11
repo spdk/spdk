@@ -70,11 +70,6 @@ malloc_done(void *ref, int status)
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(cp_task), bdev_status);
 }
 
-static void
-malloc_iov_done_nop(void *ref, int status)
-{
-}
-
 static struct malloc_disk *g_malloc_disk_head = NULL;
 
 int malloc_disk_count = 0;
@@ -125,58 +120,16 @@ blockdev_malloc_destruct(struct spdk_bdev *bdev)
 	return 0;
 }
 
-static int
-blockdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
-{
-	int i;
-
-	for (i = 0; nbytes && i < iovcnt; i++) {
-		if (nbytes < iovs[i].iov_len)
-			break;
-
-		nbytes -= iovs[i].iov_len;
-	}
-
-	/* IO len must be equal to total len of all buffers */
-	return nbytes != 0 || iovcnt != i;
-}
-
 static int64_t
-blockdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
-		      struct copy_task *copy_req,
-		      struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+blockdev_malloc_read(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		     struct copy_task *copy_req,
+		     void *buf, uint64_t nbytes, uint64_t offset)
 {
-	int64_t res = 0;
-	copy_completion_cb completion_cb = malloc_iov_done_nop;
-	void *src = mdisk->malloc_buf + offset;
-	int i;
+	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "read %lu bytes from offset %#lx to %p\n",
+		      nbytes, offset, buf);
 
-	if (blockdev_malloc_check_iov_len(iov, iovcnt, len))
-		return -1;
-
-	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "read %lu bytes from offset %#lx\n",
-		      len, offset);
-
-	for (i = 0; i < iovcnt; i++) {
-		/*
-		 * The copy engine will complete all copy operations in order, so
-		 * use a nop callback for the all iov completions before the last one.
-		 * Then when the last iov is completed, we will actually complete the
-		 * bdev operation back to the caller.
-		 */
-		if (len == iov[i].iov_len)
-			completion_cb = malloc_done;
-
-		res = spdk_copy_submit(copy_req, ch, iov[i].iov_base,
-				       src, iov[i].iov_len, completion_cb);
-		if (res)
-			break;
-
-		src += iov[i].iov_len;
-		len -= iov[i].iov_len;
-	}
-
-	return res;
+	return spdk_copy_submit(copy_req, ch, buf, mdisk->malloc_buf + offset,
+				nbytes, malloc_done);
 }
 
 static int64_t
@@ -184,37 +137,14 @@ blockdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		       struct copy_task *copy_req,
 		       struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
-	int64_t res = 0;
-	copy_completion_cb completion_cb = malloc_iov_done_nop;
-	void *dst = mdisk->malloc_buf + offset;
-	int i;
-
-	if (blockdev_malloc_check_iov_len(iov, iovcnt, len))
+	if ((iovcnt != 1) || (iov->iov_len != len))
 		return -1;
 
-	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "wrote %lu bytes to offset %#lx\n",
-		      len, offset);
+	SPDK_TRACELOG(SPDK_TRACE_MALLOC, "wrote %lu bytes to offset %#lx from %p\n",
+		      iov->iov_len, offset, iov->iov_base);
 
-	for (i = 0; i < iovcnt; i++) {
-		/*
-		 * The copy engine will complete all copy operations in order, so
-		 * use a nop callback for the all iov completions before the last one.
-		 * Then when the last iov is completed, we will actually complete the
-		 * bdev operation back to the caller.
-		 */
-		if (len == iov[i].iov_len)
-			completion_cb = malloc_done;
-
-		res = spdk_copy_submit(copy_req, ch, dst, iov[i].iov_base,
-				       iov[i].iov_len, completion_cb);
-		if (res)
-			break;
-
-		dst += iov[i].iov_len;
-		len -= iov[i].iov_len;
-	}
-
-	return res;
+	return spdk_copy_submit(copy_req, ch, mdisk->malloc_buf + offset,
+				iov->iov_base, len, malloc_done);
 }
 
 static int
@@ -268,25 +198,20 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		if (bdev_io->u.read.iovs[0].iov_base == NULL) {
-			assert(bdev_io->u.read.iovcnt == 1);
-			bdev_io->u.read.iovs[0].iov_base =
-				((struct malloc_disk *)bdev_io->ctx)->malloc_buf +
-				bdev_io->u.read.offset;
-			bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
-			bdev_io->u.read.put_rbuf = false;
+		if (bdev_io->u.read.buf == NULL) {
+			bdev_io->u.read.buf = ((struct malloc_disk *)bdev_io->ctx)->malloc_buf +
+					      bdev_io->u.read.offset;
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bdev_io->driver_ctx),
 					      SPDK_BDEV_IO_STATUS_SUCCESS);
 			return 0;
 		}
 
-		return blockdev_malloc_readv((struct malloc_disk *)bdev_io->ctx,
-					     bdev_io->ch,
-					     (struct copy_task *)bdev_io->driver_ctx,
-					     bdev_io->u.read.iovs,
-					     bdev_io->u.read.iovcnt,
-					     bdev_io->u.read.len,
-					     bdev_io->u.read.offset);
+		return blockdev_malloc_read((struct malloc_disk *)bdev_io->ctx,
+					    bdev_io->ch,
+					    (struct copy_task *)bdev_io->driver_ctx,
+					    bdev_io->u.read.buf,
+					    bdev_io->u.read.nbytes,
+					    bdev_io->u.read.offset);
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return blockdev_malloc_writev((struct malloc_disk *)bdev_io->ctx,
