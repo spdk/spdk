@@ -34,10 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdevperf
-# Disable bdevio build for now - it needs to be rewritten to be
-#  event based.
-#DIRS-y = bdevio
+DIRS-y = bdevio bdevperf
 
 .PHONY: all clean $(DIRS-y)
 

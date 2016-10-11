@@ -44,6 +44,7 @@
 #include "spdk/copy_engine.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
+#include "spdk/io_channel.h"
 
 #include "CUnit/Basic.h"
 
@@ -52,12 +53,32 @@
 
 #include "../common.c"
 
+pthread_mutex_t g_test_mutex;
+pthread_cond_t g_test_cond;
+
 struct io_target {
 	struct spdk_bdev	*bdev;
+	struct spdk_io_channel	*ch;
 	struct io_target	*next;
 };
 
+struct bdevio_request {
+	char *buf;
+	int data_len;
+	uint64_t offset;
+	struct iovec iov;
+	struct io_target *target;
+};
+
 struct io_target *g_io_targets = NULL;
+
+static void
+wake_ut_thread(void)
+{
+	pthread_mutex_lock(&g_test_mutex);
+	pthread_cond_signal(&g_test_cond);
+	pthread_mutex_unlock(&g_test_mutex);
+}
 
 static int
 bdevio_construct_targets(void)
@@ -87,8 +108,7 @@ bdevio_construct_targets(void)
 	return 0;
 }
 
-static int complete;
-static enum spdk_bdev_io_status completion_status_per_io;
+static enum spdk_bdev_io_status g_completion_status;
 
 static void
 initialize_buffer(char **buf, int pattern, int size)
@@ -100,72 +120,93 @@ initialize_buffer(char **buf, int pattern, int size)
 static void
 quick_test_complete(spdk_event_t event)
 {
+	struct bdevio_request *req = spdk_event_get_arg1(event);
 	struct spdk_bdev_io *bdev_io = spdk_event_get_arg2(event);
 
-	completion_status_per_io = bdev_io->status;
-	complete = 1;
-
+	spdk_put_io_channel(req->target->ch);
+	g_completion_status = bdev_io->status;
 	spdk_bdev_free_io(bdev_io);
+	wake_ut_thread();
 }
 
-static int
-check_io_completion(void)
+static void
+__blockdev_write(spdk_event_t event)
 {
-	int rc;
-	struct spdk_bdev *bdev;
+	struct bdevio_request *req = spdk_event_get_arg1(event);
+	struct io_target *target = req->target;
+	struct spdk_bdev_io *bdev_io;
 
-	rc = 0;
-	while (!complete) {
-		bdev = spdk_bdev_first();
-		while (bdev != NULL) {
-			spdk_bdev_do_work(bdev);
-			bdev = spdk_bdev_next(bdev);
-		}
-		spdk_event_queue_run_all(rte_lcore_id());
+	req->iov.iov_base = req->buf;
+	req->iov.iov_len = req->data_len;
+	target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
+	bdev_io = spdk_bdev_writev(target->bdev, target->ch, &req->iov, 1, req->offset,
+				   req->data_len, quick_test_complete, req);
+	if (!bdev_io) {
+		spdk_put_io_channel(target->ch);
+		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+		wake_ut_thread();
 	}
-	return rc;
 }
 
-struct iovec iov;
-
-static int
-blockdev_write(struct io_target *target, void *bdev_task_ctx, char *tx_buf,
+static void
+blockdev_write(struct io_target *target, char *tx_buf,
 	       uint64_t offset, int data_len)
 {
-	struct spdk_bdev_io *bdev_io;
+	struct bdevio_request req;
+	spdk_event_t event;
 
-	complete = 0;
-	completion_status_per_io = SPDK_BDEV_IO_STATUS_FAILED;
+	req.target = target;
+	req.buf = tx_buf;
+	req.data_len = data_len;
+	req.offset = offset;
+	req.iov.iov_base = tx_buf;
+	req.iov.iov_len = data_len;
 
-	iov.iov_base = tx_buf;
-	iov.iov_len = data_len;
-	bdev_io = spdk_bdev_writev(target->bdev, &iov, 1, (uint64_t)offset,
-				   iov.iov_len, quick_test_complete,
-				   bdev_task_ctx);
-	if (!bdev_io) {
-		return -1;
-	}
+	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 
-	return data_len;
+	event = spdk_event_allocate(1, __blockdev_write, &req, NULL, NULL);
+	pthread_mutex_lock(&g_test_mutex);
+	spdk_event_call(event);
+	pthread_cond_wait(&g_test_cond, &g_test_mutex);
+	pthread_mutex_unlock(&g_test_mutex);
 }
 
-static int
-blockdev_read(struct io_target *target, void *bdev_task_ctx, char *rx_buf,
-	      uint64_t offset, int data_len)
+static void
+__blockdev_read(spdk_event_t event)
 {
+	struct bdevio_request *req = spdk_event_get_arg1(event);
+	struct io_target *target = req->target;
 	struct spdk_bdev_io *bdev_io;
 
-	complete = 0;
-	completion_status_per_io = SPDK_BDEV_IO_STATUS_FAILED;
-
-	bdev_io = spdk_bdev_read(target->bdev, rx_buf, offset, data_len,
-				 quick_test_complete, bdev_task_ctx);
-
+	target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
+	bdev_io = spdk_bdev_read(target->bdev, target->ch, req->buf, req->offset,
+				 req->data_len, quick_test_complete, req);
 	if (!bdev_io) {
-		return -1;
+		spdk_put_io_channel(target->ch);
+		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+		wake_ut_thread();
 	}
+}
 
-	return data_len;
+static void
+blockdev_read(struct io_target *target, char *rx_buf,
+	      uint64_t offset, int data_len)
+{
+	struct bdevio_request req;
+	spdk_event_t event;
+
+	req.target = target;
+	req.buf = rx_buf;
+	req.data_len = data_len;
+	req.offset = offset;
+
+	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	event = spdk_event_allocate(1, __blockdev_read, &req, NULL, NULL);
+	pthread_mutex_lock(&g_test_mutex);
+	spdk_event_call(event);
+	pthread_cond_wait(&g_test_cond, &g_test_mutex);
+	pthread_mutex_unlock(&g_test_mutex);
 }
 
 static int
@@ -185,7 +226,6 @@ blockdev_write_read(uint32_t data_length, int pattern, uint64_t offset,
 		    int expected_rc)
 {
 	struct io_target *target;
-	char	bdev_task_ctx[BDEV_TASK_ARRAY_SIZE];
 	char	*tx_buf = NULL;
 	char	*rx_buf = NULL;
 	int	rc;
@@ -200,37 +240,23 @@ blockdev_write_read(uint32_t data_length, int pattern, uint64_t offset,
 		initialize_buffer(&tx_buf, pattern, data_length);
 		initialize_buffer(&rx_buf, 0, data_length);
 
-		rc = blockdev_write(target, (void *)bdev_task_ctx, tx_buf,
-				    offset, data_length);
+		blockdev_write(target, tx_buf, offset, data_length);
 
-		/* Assert the rc of the respective blockdev */
-		CU_ASSERT_EQUAL(rc, expected_rc);
-
-		/* If the write was successful, the function returns the data_length
-		 * and the completion_status_per_io is 0 */
-		if (rc < (int)data_length) {
-			CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_FAILED);
+		if (expected_rc == 0) {
+			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
 		} else {
-			check_io_completion();
-			CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 
-		rc = blockdev_read(target, (void *)bdev_task_ctx, rx_buf,
-				   offset, data_length);
+		blockdev_read(target, rx_buf, offset, data_length);
 
-		/* Assert the rc of the respective blockdev */
-		CU_ASSERT_EQUAL(rc, expected_rc);
-
-		/* If the read was successful, the function returns the data_length
-		 * and the completion_status_per_io is 0 */
-		if (rc < (int)data_length) {
-			CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_FAILED);
+		if (expected_rc == 0) {
+			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
 		} else {
-			check_io_completion();
-			CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 
-		if (completion_status_per_io == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		if (g_completion_status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 			rc = blockdev_write_read_data_match(rx_buf, tx_buf, data_length);
 			/* Assert the write by comparing it with values read
 			 * from each blockdev */
@@ -255,8 +281,8 @@ blockdev_write_read_4k(void)
 	offset = 0;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
-	 * of write and read for all blockdevs is the data_length */
-	expected_rc = data_length;
+	 * of write and read for all blockdevs is 0. */
+	expected_rc = 0;
 
 	blockdev_write_read(data_length, pattern, offset, expected_rc);
 }
@@ -275,8 +301,8 @@ blockdev_write_read_512Bytes(void)
 	offset = 2048;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
-	 * of write and read for all blockdevs is the data_length */
-	expected_rc = data_length;
+	 * of write and read for all blockdevs is 0. */
+	expected_rc = 0;
 
 	blockdev_write_read(data_length, pattern, offset, expected_rc);
 }
@@ -295,8 +321,8 @@ blockdev_write_read_size_gt_128k(void)
 	offset = 2048;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
-	 * of write and read for all blockdevs is the data_length */
-	expected_rc = data_length;
+	 * of write and read for all blockdevs is 0. */
+	expected_rc = 0;
 
 	blockdev_write_read(data_length, pattern, offset, expected_rc);
 }
@@ -326,7 +352,6 @@ blockdev_write_read_offset_plus_nbytes_equals_bdev_size(void)
 {
 	struct io_target *target;
 	struct spdk_bdev *bdev;
-	char	bdev_task_ctx[BDEV_TASK_ARRAY_SIZE];
 	char	*tx_buf = NULL;
 	char	*rx_buf = NULL;
 	uint64_t offset;
@@ -344,27 +369,11 @@ blockdev_write_read_offset_plus_nbytes_equals_bdev_size(void)
 		initialize_buffer(&tx_buf, 0xA3, bdev->blocklen);
 		initialize_buffer(&rx_buf, 0, bdev->blocklen);
 
-		rc = blockdev_write(target, (void *)bdev_task_ctx, tx_buf,
-				    offset, bdev->blocklen);
+		blockdev_write(target, tx_buf, offset, bdev->blocklen);
+		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
 
-		/* Assert the rc of the respective blockdev */
-		CU_ASSERT_EQUAL(rc, (int)bdev->blocklen);
-
-		/* If the write was successful, the function returns the data_length
-		 * and the completion_status_per_io is 0 */
-		check_io_completion();
-		CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-
-		rc = blockdev_read(target, (void *)bdev_task_ctx, rx_buf,
-				   offset, bdev->blocklen);
-
-		/* Assert the rc of the respective blockdev */
-		CU_ASSERT_EQUAL(rc, (int)bdev->blocklen);
-
-		/* If the read was successful, the function returns the data_length
-		 * and the completion_status_per_io is 0 */
-		check_io_completion();
-		CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		blockdev_read(target, rx_buf, offset, bdev->blocklen);
+		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
 
 		rc = blockdev_write_read_data_match(rx_buf, tx_buf, bdev->blocklen);
 		/* Assert the write by comparing it with values read
@@ -380,22 +389,16 @@ blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 {
 	struct io_target *target;
 	struct spdk_bdev *bdev;
-	char	bdev_task_ctx[BDEV_TASK_ARRAY_SIZE];
 	char	*tx_buf = NULL;
 	char	*rx_buf = NULL;
 	int	data_length;
 	uint64_t offset;
 	int pattern;
-	int expected_rc;
-	int rc;
 
 	/* Tests the overflow condition of the blockdevs. */
 	data_length = 4096;
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
 	pattern = 0xA3;
-	/* Params are invalid, hence the expected return value
-	 * of write and read is < 0.*/
-	expected_rc = -1;
 
 	target = g_io_targets;
 	while (target != NULL) {
@@ -409,25 +412,11 @@ blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 		initialize_buffer(&tx_buf, pattern, data_length);
 		initialize_buffer(&rx_buf, 0, data_length);
 
-		rc = blockdev_write(target, (void *)bdev_task_ctx, tx_buf,
-				    offset, data_length);
+		blockdev_write(target, tx_buf, offset, data_length);
+		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
 
-		/* Assert the rc of the respective blockdev */
-		CU_ASSERT_EQUAL(rc, expected_rc);
-
-		/* If the write failed, the function returns rc<data_length
-		 * and the completion_status_per_io is SPDK_BDEV_IO_STATUS_FAILED */
-		CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_FAILED);
-
-		rc = blockdev_read(target, (void *)bdev_task_ctx, rx_buf,
-				   offset, data_length);
-
-		/* Assert the rc of the respective blockdev */
-		CU_ASSERT_EQUAL(rc, expected_rc);
-
-		/* If the read failed, the function returns rc<data_length
-		 * and the completion_status_per_io is SPDK_BDEV_IO_STATUS_FAILED */
-		CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_FAILED);
+		blockdev_read(target, rx_buf, offset, data_length);
+		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
 
 		target = target->next;
 	}
@@ -468,8 +457,8 @@ blockdev_overlapped_write_read_8k(void)
 	offset = 0;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
-	 * of write and read for all blockdevs is the data_length */
-	expected_rc = data_length;
+	 * of write and read for all blockdevs is 0. */
+	expected_rc = 0;
 	/* Assert the write by comparing it with values read
 	 * from the same offset for each blockdev */
 	blockdev_write_read(data_length, pattern, offset, expected_rc);
@@ -487,33 +476,27 @@ blockdev_overlapped_write_read_8k(void)
 }
 
 
-int
-main(int argc, char **argv)
+static void
+test_main(spdk_event_t event)
 {
 	CU_pSuite suite = NULL;
-	const char *config_file;
 	unsigned int num_failures;
 
-	if (argc == 1) {
-		config_file = "/usr/local/etc/spdk/iscsi.conf";
-	} else {
-		config_file = argv[1];
-	}
-
-	bdevtest_init(config_file, "0x1");
-
 	if (bdevio_construct_targets() < 0) {
-		return 1;
+		spdk_app_stop(-1);
+		return;
 	}
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
-		return CU_get_error();
+		spdk_app_stop(CU_get_error());
+		return;
 	}
 
 	suite = CU_add_suite("components_suite", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
-		return CU_get_error();
+		spdk_app_stop(CU_get_error());
+		return;
 	}
 
 	if (
@@ -534,12 +517,34 @@ main(int argc, char **argv)
 			       blockdev_overlapped_write_read_8k) == NULL
 	) {
 		CU_cleanup_registry();
-		return CU_get_error();
+		spdk_app_stop(CU_get_error());
+		return;
 	}
 
+	pthread_mutex_init(&g_test_mutex, NULL);
+	pthread_cond_init(&g_test_cond, NULL);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+	spdk_app_stop(num_failures);
+}
+
+int
+main(int argc, char **argv)
+{
+	const char		*config_file;
+	int			num_failures;
+
+	if (argc == 1) {
+		config_file = "/usr/local/etc/spdk/iscsi.conf";
+	} else {
+		config_file = argv[1];
+	}
+	bdevtest_init(config_file, "0x3");
+
+	num_failures = spdk_app_start(test_main, NULL, NULL);
+	spdk_app_fini();
+
 	return num_failures;
 }
