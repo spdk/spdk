@@ -8,4 +8,3 @@ rootdir=$(readlink -f $(dirname $0))
 $rootdir/autobuild.sh
 sudo $rootdir/autotest.sh
 $rootdir/autopackage.sh
-

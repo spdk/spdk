@@ -215,4 +215,3 @@ spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
 {
 	return (uint8_t *)ch + sizeof(*ch);
 }
-

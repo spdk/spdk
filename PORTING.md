@@ -19,4 +19,3 @@ integrated into the SPDK build by updating the following line
 in CONFIG:
 
     CONFIG_NVME_IMPL=nvme_impl.h
-

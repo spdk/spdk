@@ -177,4 +177,3 @@ int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len,
 			      void *buf);
 
 #endif /* SPDK_ISCSI_CONN_H */
-

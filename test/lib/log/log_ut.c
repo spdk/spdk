@@ -106,4 +106,3 @@ int main(int argc, char **argv)
 	CU_cleanup_registry();
 	return num_failures;
 }
-

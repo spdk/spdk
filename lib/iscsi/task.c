@@ -64,4 +64,3 @@ spdk_iscsi_task_get(uint32_t *owner_task_ctr, struct spdk_iscsi_task *parent)
 
 	return task;
 }
-

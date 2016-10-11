@@ -1090,4 +1090,3 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 1 /* do not retry */, true);
 	}
 }
-

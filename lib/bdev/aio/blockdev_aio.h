@@ -72,4 +72,3 @@ struct file_disk {
 struct file_disk *create_aio_disk(char *fname);
 
 #endif // SPDK_BLOCKDEV_AIO_H
-

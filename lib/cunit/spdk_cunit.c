@@ -110,4 +110,3 @@ spdk_cunit_print_results(const char *filename)
 	fclose(out);
 	return 0;
 }
-

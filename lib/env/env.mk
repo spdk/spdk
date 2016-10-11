@@ -70,4 +70,3 @@ ENV_CFLAGS = $(DPDK_INC)
 ENV_CXXFLAGS = $(ENV_CFLAGS)
 ENV_LIBS = $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a $(DPDK_LIB)
 ENV_LINKER_ARGS = -Wl,--start-group -Wl,--whole-archive $(SPDK_ROOT_DIR)/lib/env/libspdk_env.a $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
-
