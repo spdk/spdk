@@ -208,17 +208,19 @@ static void
 nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_intel_log_page_directory *log_page_directory)
 {
-	struct spdk_pci_device *dev;
 	struct pci_id pci_id;
 
-	if (ctrlr->cdata.vid != SPDK_PCI_VID_INTEL || log_page_directory == NULL)
+	if (log_page_directory == NULL) {
 		return;
+	}
 
-	dev = ctrlr->devhandle;
-	pci_id.vendor_id = spdk_pci_device_get_vendor_id(dev);
-	pci_id.dev_id = spdk_pci_device_get_device_id(dev);
-	pci_id.sub_vendor_id = spdk_pci_device_get_subvendor_id(dev);
-	pci_id.sub_dev_id = spdk_pci_device_get_subdevice_id(dev);
+	if (ctrlr->transport->ctrlr_get_pci_id(ctrlr, &pci_id)) {
+		return;
+	}
+
+	if (pci_id.vendor_id != SPDK_PCI_VID_INTEL) {
+		return;
+	}
 
 	ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY] = true;
 

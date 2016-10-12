@@ -92,29 +92,24 @@ spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
 	return 0;
 }
 
-uint16_t
-spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
+static int
+ut_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id)
 {
-	return g_pci_vendor_id;
+	if (ctrlr == NULL || pci_id == NULL) {
+		return -EINVAL;
+	}
+
+	pci_id->vendor_id = g_pci_vendor_id;
+	pci_id->dev_id = g_pci_device_id;
+	pci_id->sub_vendor_id = g_pci_subvendor_id;
+	pci_id->sub_dev_id = g_pci_subdevice_id;
+
+	return 0;
 }
 
-uint16_t
-spdk_pci_device_get_device_id(struct spdk_pci_device *dev)
-{
-	return g_pci_device_id;
-}
-
-uint16_t
-spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev)
-{
-	return g_pci_subvendor_id;
-}
-
-uint16_t
-spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
-{
-	return g_pci_subdevice_id;
-}
+static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
+	.ctrlr_get_pci_id = ut_ctrlr_get_pci_id,
+};
 
 uint16_t
 spdk_pci_device_get_domain(struct spdk_pci_device *dev)
@@ -1092,15 +1087,17 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_intel_log_page_directory	payload = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
+
 	/* set a invalid vendor id */
-	ctrlr.cdata.vid = 0xFFFF;
+	g_pci_vendor_id = 0xFFFF;
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
 	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == false);
 
 	/* set valid vendor id and log page directory*/
-	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
+	g_pci_vendor_id = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 1;
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 

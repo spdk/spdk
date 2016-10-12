@@ -241,8 +241,15 @@ struct nvme_request {
 	void				*user_buffer;
 };
 
+struct pci_id {
+	uint16_t	vendor_id;
+	uint16_t	dev_id;
+	uint16_t	sub_vendor_id;
+	uint16_t	sub_dev_id;
+};
+
 struct spdk_nvme_transport {
-	int reserved;
+	int (*ctrlr_get_pci_id)(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id);
 };
 
 struct nvme_completion_poll_status {
@@ -479,20 +486,13 @@ struct nvme_driver {
 	struct spdk_mempool	*request_mempool;
 };
 
-struct pci_id {
-	uint16_t	vendor_id;
-	uint16_t	dev_id;
-	uint16_t	sub_vendor_id;
-	uint16_t	sub_dev_id;
-};
-
 extern struct nvme_driver *g_spdk_nvme_driver;
 
 extern const struct spdk_nvme_transport spdk_nvme_transport_pcie;
 
 #define nvme_min(a,b) (((a)<(b))?(a):(b))
 
-#define INTEL_DC_P3X00_DEVID	0x09538086
+#define INTEL_DC_P3X00_DEVID	0x0953
 
 #define nvme_mmio_read_4(sc, reg) \
 	spdk_mmio_read_4(&(sc)->regs->reg)
