@@ -827,6 +827,13 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 			return -1;
 		}
 
+		/* Confirm that this sge is prp compatible. */
+		if (phys_addr & 0x3 ||
+		    (length < remaining_transfer_len && ((phys_addr + length) & (PAGE_SIZE - 1)))) {
+			_nvme_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
 		data_transferred = nvme_min(remaining_transfer_len, length);
 
 		nseg = data_transferred >> nvme_u32log2(PAGE_SIZE);
@@ -839,6 +846,7 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 		if (total_nseg == 0) {
 			req->cmd.psdt = SPDK_NVME_PSDT_PRP;
 			req->cmd.dptr.prp.prp1 = phys_addr;
+			phys_addr -= unaligned;
 		}
 
 		total_nseg += nseg;
@@ -847,7 +855,7 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 
 		if (total_nseg == 2) {
 			if (sge_count == 1)
-				tr->req->cmd.dptr.prp.prp2 = phys_addr + PAGE_SIZE - unaligned;
+				tr->req->cmd.dptr.prp.prp2 = phys_addr + PAGE_SIZE;
 			else if (sge_count == 2)
 				tr->req->cmd.dptr.prp.prp2 = phys_addr;
 			/* save prp2 value */
@@ -862,20 +870,12 @@ _nvme_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_re
 			while (cur_nseg < nseg) {
 				if (prp2) {
 					tr->u.prp[0] = prp2;
-					tr->u.prp[last_nseg + 1] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
+					tr->u.prp[last_nseg + 1] = phys_addr + cur_nseg * PAGE_SIZE;
 				} else
-					tr->u.prp[last_nseg] = phys_addr + cur_nseg * PAGE_SIZE - unaligned;
+					tr->u.prp[last_nseg] = phys_addr + cur_nseg * PAGE_SIZE;
 
 				last_nseg++;
 				cur_nseg++;
-
-				/* physical address and length check */
-				if (remaining_transfer_len || (!remaining_transfer_len && (cur_nseg < nseg))) {
-					if ((length & (PAGE_SIZE - 1)) || unaligned) {
-						_nvme_fail_request_bad_vtophys(qpair, tr);
-						return -1;
-					}
-				}
 			}
 		}
 	}

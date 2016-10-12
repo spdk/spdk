@@ -340,15 +340,9 @@ test_sgl_req(void)
 	req->cmd.cdw12 = 7 | 0;
 	req->payload_offset = 1;
 
-	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
-	CU_ASSERT(req->cmd.psdt == SPDK_NVME_PSDT_PRP);
-	CU_ASSERT(req->cmd.dptr.prp.prp1 == 7);
-	CU_ASSERT(req->cmd.dptr.prp.prp2 == 4096);
-
-	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
-	LIST_REMOVE(sgl_tr, list);
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
+	CU_ASSERT(qpair.sq_tail == 0);
 	cleanup_submit_request_test(&qpair);
-	nvme_free_request(req);
 
 	prepare_submit_request_test(&qpair, &ctrlr, &regs);
 	req = nvme_allocate_request(&payload, PAGE_SIZE, NULL, &io_req);

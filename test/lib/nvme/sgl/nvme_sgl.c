@@ -76,6 +76,7 @@ struct io_request {
 	uint32_t current_iov_bytes_left;
 	struct sgl_element iovs[MAX_IOVS];
 	uint32_t nseg;
+	uint32_t misalign;
 };
 
 static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
@@ -216,6 +217,22 @@ static void build_io_request_6(struct io_request *req)
 	req->iovs[1].len = 0x1000;
 }
 
+static void build_io_request_7(struct io_request *req)
+{
+	uint8_t *base;
+
+	req->nseg = 1;
+
+	/*
+	 * Create a 64KB sge, but ensure it is *not* aligned on a 4KB
+	 *  boundary.  This is valid for single element buffers with PRP.
+	 */
+	base = spdk_zmalloc(0x11000, 0x1000, NULL);
+	req->misalign = 64;
+	req->iovs[0].base = base + req->misalign;
+	req->iovs[0].len = 0x10000;
+}
+
 typedef void (*nvme_build_io_req_fn_t)(struct io_request *req);
 
 static void
@@ -228,7 +245,7 @@ free_req(struct io_request *req)
 	}
 
 	for (i = 0; i < req->nseg; i++) {
-		spdk_free(req->iovs[i].base);
+		spdk_free(req->iovs[i].base - req->misalign);
 	}
 
 	spdk_free(req);
@@ -432,7 +449,8 @@ int main(int argc, char **argv)
 		    || TEST(build_io_request_3)
 		    || TEST(build_io_request_4)
 		    || TEST(build_io_request_5)
-		    || TEST(build_io_request_6)) {
+		    || TEST(build_io_request_6)
+		    || TEST(build_io_request_7)) {
 #undef TEST
 			rc = 1;
 			printf("%s: failed sgl tests\n", iter->name);
