@@ -1680,7 +1680,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 
 	case SPDK_SPC_MODE_SELECT_6:
 	case SPDK_SPC_MODE_SELECT_10:
-		data = task->iobuf;
+		data = task->iov.iov_base;
 
 		if (cdb[0] == SPDK_SPC_MODE_SELECT_6) {
 			md = 4;

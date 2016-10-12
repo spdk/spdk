@@ -190,7 +190,7 @@ mode_select_6_test(void)
 	memset(data, 0, sizeof(data));
 	data[4] = 0x08;
 	data[5] = 0x02;
-	task.iobuf = data;
+	task.iov.iov_base = data;
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 
@@ -223,7 +223,7 @@ mode_select_6_test2(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	task.iobuf = NULL;
+	task.iov.iov_base = NULL;
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 

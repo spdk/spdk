@@ -2993,9 +2993,8 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 		if (pdu->data_segment_len == transfer_len) {
 			/* we are doing small writes with no R2T */
-			task->scsi.iobuf = pdu->data;
 			task->scsi.iov.iov_len = transfer_len;
-			task->scsi.iov.iov_base = task->scsi.iobuf;
+			task->scsi.iov.iov_base = pdu->data;
 			task->scsi.length = transfer_len;
 		}
 	} else {

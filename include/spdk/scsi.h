@@ -129,7 +129,6 @@ struct spdk_scsi_task {
 	void (*free_fn)(struct spdk_scsi_task *);
 
 	uint8_t *cdb;
-	uint8_t *iobuf;
 
 	struct iovec iov;
 	struct iovec *iovs;
