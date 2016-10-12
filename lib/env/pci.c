@@ -165,22 +165,31 @@ spdk_pci_enumerate(enum spdk_pci_device_type type,
 {
 	struct spdk_pci_enum_ctx ctx = {};
 	int rc;
-
-	ctx.enum_cb = enum_cb;
-	ctx.enum_ctx = enum_ctx;
-	ctx.driver.devinit = spdk_pci_device_init;
-	ctx.driver.devuninit = spdk_pci_device_fini;
-	ctx.driver.drv_flags = RTE_PCI_DRV_NEED_MAPPING;
+	const char *name;
 
 	if (type == SPDK_PCI_DEVICE_NVME) {
-		ctx.driver.name = "SPDK NVMe";
+		name = "SPDK NVMe";
 		ctx.driver.id_table = nvme_pci_driver_id;
 	} else if (type == SPDK_PCI_DEVICE_IOAT) {
+		name = "SPDK IOAT";
 		ctx.driver.id_table = ioat_driver_id;
-		ctx.driver.name = "SPDK IOAT";
 	} else {
 		return -1;
 	}
+
+	ctx.enum_cb = enum_cb;
+	ctx.enum_ctx = enum_ctx;
+	ctx.driver.drv_flags = RTE_PCI_DRV_NEED_MAPPING;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+	ctx.driver.probe = spdk_pci_device_init;
+	ctx.driver.remove = spdk_pci_device_fini;
+	ctx.driver.driver.name = name;
+#else
+	ctx.driver.devinit = spdk_pci_device_init;
+	ctx.driver.devuninit = spdk_pci_device_fini;
+	ctx.driver.name = name;
+#endif
 
 	rte_eal_pci_register(&ctx.driver);
 	rc = rte_eal_pci_probe();
