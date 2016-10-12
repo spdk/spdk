@@ -546,6 +546,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->sq_in_cmb = false;
 
 	qpair->ctrlr = ctrlr;
+	qpair->transport = ctrlr->transport;
 
 	/* cmd and cpl rings must be aligned on 4KB boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {

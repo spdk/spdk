@@ -39,6 +39,9 @@
 
 struct nvme_request *g_request = NULL;
 
+const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
+};
+
 
 int
 spdk_pci_enumerate(enum spdk_pci_device_type type,

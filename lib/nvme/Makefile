@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
-C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_qpair.c nvme.c nvme_intel.c
+C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_pcie.c nvme_qpair.c nvme.c nvme_intel.c
 LIBNAME = nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

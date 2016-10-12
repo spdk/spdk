@@ -39,6 +39,9 @@
 
 #include "lib/nvme/unit/test_env.c"
 
+const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
+};
+
 int
 spdk_pci_enumerate(enum spdk_pci_device_type type,
 		   spdk_pci_enum_cb enum_cb,

@@ -58,6 +58,8 @@ nvme_attach(void *devhandle)
 		return NULL;
 	}
 
+	ctrlr->transport = &spdk_nvme_transport_pcie;
+
 	status = nvme_ctrlr_construct(ctrlr, devhandle);
 	if (status != 0) {
 		spdk_free(ctrlr);

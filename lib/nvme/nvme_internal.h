@@ -241,6 +241,10 @@ struct nvme_request {
 	void				*user_buffer;
 };
 
+struct spdk_nvme_transport {
+	int reserved;
+};
+
 struct nvme_completion_poll_status {
 	struct spdk_nvme_cpl	cpl;
 	bool			done;
@@ -283,6 +287,8 @@ SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, u.sgl) & 7) == 0, "SGL must be
 struct spdk_nvme_qpair {
 	volatile uint32_t		*sq_tdbl;
 	volatile uint32_t		*cq_hdbl;
+
+	const struct spdk_nvme_transport *transport;
 
 	/**
 	 * Submission queue
@@ -383,6 +389,8 @@ struct spdk_nvme_ctrlr {
 	/** NVMe MMIO register space */
 	volatile struct spdk_nvme_registers	*regs;
 
+	const struct spdk_nvme_transport	*transport;
+
 	/** I/O queue pairs */
 	struct spdk_nvme_qpair		*ioq;
 
@@ -479,6 +487,8 @@ struct pci_id {
 };
 
 extern struct nvme_driver *g_spdk_nvme_driver;
+
+extern const struct spdk_nvme_transport spdk_nvme_transport_pcie;
 
 #define nvme_min(a,b) (((a)<(b))?(a):(b))
 
