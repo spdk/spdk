@@ -188,7 +188,7 @@ disconnect_cb(void *cb_ctx, struct spdk_nvmf_conn *conn)
 }
 
 static void
-nvmf_tgt_start_subsystem(struct spdk_event *event)
+_nvmf_tgt_start_subsystem(struct spdk_event *event)
 {
 	struct nvmf_tgt_subsystem *app_subsys = spdk_event_get_arg1(event);
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
@@ -210,12 +210,21 @@ nvmf_tgt_start_subsystem(struct spdk_event *event)
 	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, NULL, 0);
 }
 
+void
+nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
+{
+	spdk_event_t event;
+
+	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
+				    app_subsys, NULL, NULL);
+	spdk_event_call(event);
+}
+
 struct nvmf_tgt_subsystem *
 nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subtype, uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
-	struct spdk_event *event;
 
 	app_subsys = calloc(1, sizeof(*app_subsys));
 	if (app_subsys == NULL) {
@@ -236,8 +245,6 @@ nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subt
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "allocated subsystem %p on lcore %u\n", subsystem, lcore);
 
 	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
-	event = spdk_event_allocate(lcore, nvmf_tgt_start_subsystem, app_subsys, NULL, NULL);
-	spdk_event_call(event);
 
 	return app_subsys;
 }

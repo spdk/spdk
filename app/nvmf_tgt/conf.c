@@ -148,6 +148,8 @@ spdk_add_nvmf_discovery_subsystem(void)
 		return -1;
 	}
 
+	nvmf_tgt_start_subsystem(app_subsys);
+
 	return 0;
 }
 
@@ -612,6 +614,9 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		}
 	}
+
+	nvmf_tgt_start_subsystem(app_subsys);
+
 	return 0;
 }
 
@@ -804,6 +809,8 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 		}
 	}
+
+	nvmf_tgt_start_subsystem(app_subsys);
 
 	return 0;
 }
