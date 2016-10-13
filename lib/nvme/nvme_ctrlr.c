@@ -37,6 +37,75 @@
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
+static int
+nvme_ctrlr_get_cc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
+{
+	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
+			&cc->raw);
+}
+
+static int
+nvme_ctrlr_get_csts(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_csts_register *csts)
+{
+	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, csts.raw),
+			&csts->raw);
+}
+
+static int
+nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap)
+{
+	return ctrlr->transport->ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, cap.raw),
+			&cap->raw);
+}
+
+static int
+nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs)
+{
+	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, vs.raw),
+			&vs->raw);
+}
+
+static int
+nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc)
+{
+	return ctrlr->transport->ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
+			cc->raw);
+}
+
+static int
+nvme_ctrlr_set_asq(struct spdk_nvme_ctrlr *ctrlr, uint64_t value)
+{
+	return ctrlr->transport->ctrlr_set_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, asq),
+			value);
+}
+
+static int
+nvme_ctrlr_set_acq(struct spdk_nvme_ctrlr *ctrlr, uint64_t value)
+{
+	return ctrlr->transport->ctrlr_set_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, acq),
+			value);
+}
+
+static int
+nvme_ctrlr_set_aqa(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_aqa_register *aqa)
+{
+	return ctrlr->transport->ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, aqa.raw),
+			aqa->raw);
+}
+
+static int
+nvme_ctrlr_get_cmbloc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbloc_register *cmbloc)
+{
+	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw),
+			&cmbloc->raw);
+}
+
+static int
+nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz)
+{
+	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
+			&cmbsz->raw);
+}
 
 void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
@@ -101,7 +170,10 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_qpair			*qpair;
 	union spdk_nvme_cc_register		cc;
 
-	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc failed\n");
+		return NULL;
+	}
 
 	/* Only the low 2 bits (values 0, 1, 2, 3) of QPRIO are valid. */
 	if ((qprio & 3) != qprio) {
@@ -361,12 +433,16 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 
+	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
+		return -EIO;
+	}
+
 	/*
 	 * NVMe spec sets a hard limit of 64K max entries, but
 	 *  devices may specify a smaller limit, so we need to check
 	 *  the MQES field in the capabilities register.
 	 */
-	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
 	num_entries = nvme_min(NVME_IO_ENTRIES, cap.bits.mqes + 1);
 
 	/*
@@ -424,25 +500,40 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_csts_register	csts;
 	int				ms_waited = 0;
 
-	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
-	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
-	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc() failed\n");
+		return;
+	}
 
-	csts.raw = nvme_mmio_read_4(ctrlr, csts.raw);
+	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
+
+	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+		return;
+	}
+
 	/*
 	 * The NVMe spec does not define a timeout period
 	 *  for shutdown notification, so we just pick
 	 *  5 seconds as a reasonable amount of time to
 	 *  wait before proceeding.
 	 */
-	while (csts.bits.shst != SPDK_NVME_SHST_COMPLETE) {
+	do {
+		if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "get_csts() failed\n");
+			return;
+		}
+
+		if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "shutdown complete\n");
+			return;
+		}
+
 		nvme_delay(1000);
-		csts.raw = nvme_mmio_read_4(ctrlr, csts.raw);
-		if (ms_waited++ >= 5000)
-			break;
-	}
-	if (csts.bits.shst != SPDK_NVME_SHST_COMPLETE)
-		SPDK_ERRLOG("did not shutdown within 5 seconds\n");
+		ms_waited++;
+	} while (ms_waited < 5000);
+
+	SPDK_ERRLOG("did not shutdown within 5 seconds\n");
 }
 
 static int
@@ -452,21 +543,40 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_aqa_register	aqa;
 	union spdk_nvme_cap_register	cap;
 
-	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
+	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
+		return -EIO;
+	}
+
+	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc() failed\n");
+		return -EIO;
+	}
 
 	if (cc.bits.en != 0) {
 		SPDK_ERRLOG("%s called with CC.EN = 1\n", __func__);
 		return -EINVAL;
 	}
 
-	nvme_mmio_write_8(ctrlr, asq, ctrlr->adminq.cmd_bus_addr);
-	nvme_mmio_write_8(ctrlr, acq, ctrlr->adminq.cpl_bus_addr);
+	if (nvme_ctrlr_set_asq(ctrlr, ctrlr->adminq.cmd_bus_addr)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_asq() failed\n");
+		return -EIO;
+	}
+
+	if (nvme_ctrlr_set_acq(ctrlr, ctrlr->adminq.cpl_bus_addr)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_acq() failed\n");
+		return -EIO;
+	}
 
 	aqa.raw = 0;
 	/* acqs and asqs are 0-based. */
 	aqa.bits.acqs = ctrlr->adminq.num_entries - 1;
 	aqa.bits.asqs = ctrlr->adminq.num_entries - 1;
-	nvme_mmio_write_4(ctrlr, aqa.raw, aqa.raw);
+
+	if (nvme_ctrlr_set_aqa(ctrlr, &aqa)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_aqa() failed\n");
+		return -EIO;
+	}
 
 	cc.bits.en = 1;
 	cc.bits.css = 0;
@@ -476,8 +586,6 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Page size is 2 ^ (12 + mps). */
 	cc.bits.mps = nvme_u32log2(PAGE_SIZE) - 12;
-
-	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
 
 	switch (ctrlr->opts.arb_mechanism) {
 	case SPDK_NVME_CC_AMS_RR:
@@ -498,7 +606,10 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	cc.bits.ams = ctrlr->opts.arb_mechanism;
 
-	nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
+	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+		return -EIO;
+	}
 
 	return 0;
 }
@@ -823,9 +934,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t ready_timeout_in_ms;
 	int rc;
 
-	cc.raw = nvme_mmio_read_4(ctrlr, cc.raw);
-	csts.raw = nvme_mmio_read_4(ctrlr, csts.raw);
-	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
+	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
+	    nvme_ctrlr_get_csts(ctrlr, &csts) ||
+	    nvme_ctrlr_get_cap(ctrlr, &cap)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
+		nvme_ctrlr_fail(ctrlr);
+		return -EIO;
+	}
 
 	ready_timeout_in_ms = 500 * cap.bits.to;
 
@@ -849,7 +964,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 			/* CC.EN = 1 && CSTS.RDY == 1, so we can immediately disable the controller. */
 			cc.bits.en = 0;
-			nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
+			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+				nvme_ctrlr_fail(ctrlr);
+				return -EIO;
+			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
 			return 0;
 		} else {
@@ -875,7 +994,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		if (csts.bits.rdy == 1) {
 			/* CC.EN = 1 && CSTS.RDY = 1, so we can set CC.EN = 0 now. */
 			cc.bits.en = 0;
-			nvme_mmio_write_4(ctrlr, cc.raw, cc.raw);
+			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+				nvme_ctrlr_fail(ctrlr);
+				return -EIO;
+			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
 			return 0;
 		}
@@ -965,8 +1088,12 @@ nvme_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cmbloc_register cmbloc;
 	uint64_t size, unit_size, offset, bar_size, bar_phys_addr;
 
-	cmbsz.raw = nvme_mmio_read_4(ctrlr, cmbsz.raw);
-	cmbloc.raw = nvme_mmio_read_4(ctrlr, cmbloc.raw);
+	if (nvme_ctrlr_get_cmbsz(ctrlr, &cmbsz) ||
+	    nvme_ctrlr_get_cmbloc(ctrlr, &cmbloc)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
+		goto exit;
+	}
+
 	if (!cmbsz.bits.sz)
 		goto exit;
 
@@ -1020,7 +1147,10 @@ nvme_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	void *addr = ctrlr->cmb_bar_virt_addr;
 
 	if (addr) {
-		cmbloc.raw = nvme_mmio_read_4(ctrlr, cmbloc.raw);
+		if (nvme_ctrlr_get_cmbloc(ctrlr, &cmbloc)) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cmbloc() failed\n");
+			return -EIO;
+		}
 		rc = spdk_pci_device_unmap_bar(ctrlr->devhandle, cmbloc.bits.bir, addr);
 	}
 	return rc;
@@ -1122,7 +1252,10 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	cmd_reg |= 0x404;
 	spdk_pci_device_cfg_write32(devhandle, cmd_reg, 4);
 
-	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
+	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
+		return -EIO;
+	}
 
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
@@ -1208,7 +1341,9 @@ union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr
 {
 	union spdk_nvme_cap_register cap;
 
-	cap.raw = nvme_mmio_read_8(ctrlr, cap.raw);
+	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
+		cap.raw = 0;
+	}
 	return cap;
 }
 
@@ -1216,7 +1351,9 @@ union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *
 {
 	union spdk_nvme_vs_register vs;
 
-	vs.raw = nvme_mmio_read_4(ctrlr, vs.raw);
+	if (nvme_ctrlr_get_vs(ctrlr, &vs)) {
+		vs.raw = 0;
+	}
 	return vs;
 }
 

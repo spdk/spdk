@@ -250,6 +250,12 @@ struct pci_id {
 
 struct spdk_nvme_transport {
 	int (*ctrlr_get_pci_id)(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id);
+
+	int (*ctrlr_set_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
+	int (*ctrlr_set_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
+
+	int (*ctrlr_get_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
+	int (*ctrlr_get_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
 };
 
 struct nvme_completion_poll_status {
@@ -493,18 +499,6 @@ extern const struct spdk_nvme_transport spdk_nvme_transport_pcie;
 #define nvme_min(a,b) (((a)<(b))?(a):(b))
 
 #define INTEL_DC_P3X00_DEVID	0x0953
-
-#define nvme_mmio_read_4(sc, reg) \
-	spdk_mmio_read_4(&(sc)->regs->reg)
-
-#define nvme_mmio_read_8(sc, reg) \
-	spdk_mmio_read_8(&(sc)->regs->reg)
-
-#define nvme_mmio_write_4(sc, reg, val) \
-	spdk_mmio_write_4(&(sc)->regs->reg, val)
-
-#define nvme_mmio_write_8(sc, reg, val) \
-	spdk_mmio_write_8(&(sc)->regs->reg, val)
 
 #define nvme_delay		usleep
 

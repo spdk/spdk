@@ -56,6 +56,52 @@ nvme_pcie_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id)
 	return 0;
 }
 
+static volatile void *
+nvme_pcie_reg_addr(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset)
+{
+	return (volatile void *)((uintptr_t)ctrlr->regs + offset);
+}
+
+static int
+nvme_pcie_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 4);
+	spdk_mmio_write_4(nvme_pcie_reg_addr(ctrlr, offset), value);
+	return 0;
+}
+
+static int
+nvme_pcie_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 8);
+	spdk_mmio_write_8(nvme_pcie_reg_addr(ctrlr, offset), value);
+	return 0;
+}
+
+static int
+nvme_pcie_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 4);
+	assert(value != NULL);
+	*value = spdk_mmio_read_4(nvme_pcie_reg_addr(ctrlr, offset));
+	return 0;
+}
+
+static int
+nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
+{
+	assert(offset <= sizeof(struct spdk_nvme_registers) - 8);
+	assert(value != NULL);
+	*value = spdk_mmio_read_8(nvme_pcie_reg_addr(ctrlr, offset));
+	return 0;
+}
+
 const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 	.ctrlr_get_pci_id = nvme_pcie_ctrlr_get_pci_id,
+
+	.ctrlr_set_reg_4 = nvme_pcie_ctrlr_set_reg_4,
+	.ctrlr_set_reg_8 = nvme_pcie_ctrlr_set_reg_8,
+
+	.ctrlr_get_reg_4 = nvme_pcie_ctrlr_get_reg_4,
+	.ctrlr_get_reg_8 = nvme_pcie_ctrlr_get_reg_8,
 };

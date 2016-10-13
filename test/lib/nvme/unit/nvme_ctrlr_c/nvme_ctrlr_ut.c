@@ -107,8 +107,46 @@ ut_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id)
 	return 0;
 }
 
+static int
+ut_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
+{
+	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 4);
+	*(uint32_t *)((uintptr_t)ctrlr->regs + offset) = value;
+	return 0;
+}
+
+static int
+ut_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
+{
+	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 8);
+	*(uint64_t *)((uintptr_t)ctrlr->regs + offset) = value;
+	return 0;
+}
+
+static int
+ut_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
+{
+	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 4);
+	*value = *(uint32_t *)((uintptr_t)ctrlr->regs + offset);
+	return 0;
+}
+
+static int
+ut_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
+{
+	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 8);
+	*value = *(uint64_t *)((uintptr_t)ctrlr->regs + offset);
+	return 0;
+}
+
 static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 	.ctrlr_get_pci_id = ut_ctrlr_get_pci_id,
+
+	.ctrlr_set_reg_4 = ut_ctrlr_set_reg_4,
+	.ctrlr_set_reg_8 = ut_ctrlr_set_reg_8,
+
+	.ctrlr_get_reg_4 = ut_ctrlr_get_reg_4,
+	.ctrlr_get_reg_8 = ut_ctrlr_get_reg_8,
 };
 
 uint16_t
@@ -390,6 +428,7 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -438,6 +477,7 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -479,6 +519,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -597,6 +638,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -716,6 +758,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -836,6 +879,7 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -868,6 +912,7 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
+	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -905,6 +950,8 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 static void
 setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 {
+	ctrlr->transport = &nvme_ctrlr_ut_transport;
+
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr, NULL) == 0);
 
 	/* Fake out the parts of ctrlr needed for I/O qpair allocation */
