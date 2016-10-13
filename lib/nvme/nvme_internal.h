@@ -256,6 +256,9 @@ struct spdk_nvme_transport {
 
 	int (*ctrlr_get_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
 	int (*ctrlr_get_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
+
+	int (*ctrlr_create_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
+	int (*ctrlr_delete_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
 };
 
 struct nvme_completion_poll_status {

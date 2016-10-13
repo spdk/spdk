@@ -115,54 +115,6 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 }
 
-static int
-spdk_nvme_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	struct nvme_completion_poll_status	status;
-	int rc;
-
-	status.done = false;
-	rc = nvme_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
-
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
-		return -1;
-	}
-
-	status.done = false;
-	rc = nvme_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		return rc;
-	}
-
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
-		/* Attempt to delete the completion queue */
-		status.done = false;
-		rc = nvme_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
-		if (rc != 0) {
-			return -1;
-		}
-		while (status.done == false) {
-			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-		}
-		return -1;
-	}
-
-	nvme_qpair_reset(qpair);
-
-	return 0;
-}
-
 struct spdk_nvme_qpair *
 spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			       enum spdk_nvme_qprio qprio)
@@ -208,9 +160,9 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 * Fill out the submission queue priority and send out the Create I/O Queue commands.
 	 */
 	qpair->qprio = qprio;
-	if (spdk_nvme_ctrlr_create_qpair(ctrlr, qpair) != 0) {
+	if (ctrlr->transport->ctrlr_create_io_qpair(ctrlr, qpair)) {
 		/*
-		 * spdk_nvme_ctrlr_create_qpair() failed, so the qpair structure is still unused.
+		 * ctrlr_create_io_qpair() failed, so the qpair structure is still unused.
 		 * Exit here so we don't insert it into the active_io_qpairs list.
 		 */
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -228,8 +180,6 @@ int
 spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_completion_poll_status status;
-	int rc;
 
 	if (qpair == NULL) {
 		return 0;
@@ -239,32 +189,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
-	/* Delete the I/O submission queue and then the completion queue */
-
-	status.done = false;
-	rc = nvme_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
-		return rc;
-	}
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
-		return -1;
-	}
-
-	status.done = false;
-	rc = nvme_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
-		return rc;
-	}
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+	if (ctrlr->transport->ctrlr_delete_io_qpair(ctrlr, qpair)) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -1;
 	}
@@ -670,7 +595,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	if (!ctrlr->is_failed) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-			if (spdk_nvme_ctrlr_create_qpair(ctrlr, qpair) != 0) {
+			if (ctrlr->transport->ctrlr_create_io_qpair(ctrlr, qpair) != 0) {
 				nvme_ctrlr_fail(ctrlr);
 				rc = -1;
 			}

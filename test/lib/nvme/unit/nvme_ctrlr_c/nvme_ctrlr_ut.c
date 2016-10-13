@@ -139,6 +139,19 @@ ut_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *val
 	return 0;
 }
 
+
+static int
+ut_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+static int
+ut_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
 static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 	.ctrlr_get_pci_id = ut_ctrlr_get_pci_id,
 
@@ -147,6 +160,9 @@ static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 
 	.ctrlr_get_reg_4 = ut_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = ut_ctrlr_get_reg_8,
+
+	.ctrlr_create_io_qpair = ut_ctrlr_create_io_qpair,
+	.ctrlr_delete_io_qpair = ut_ctrlr_delete_io_qpair,
 };
 
 uint16_t

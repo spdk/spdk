@@ -96,6 +96,95 @@ nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 	return 0;
 }
 
+static int
+nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_completion_poll_status	status;
+	int rc;
+
+	assert(ctrlr != NULL);
+	assert(qpair != NULL);
+
+	status.done = false;
+	rc = nvme_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
+		return -1;
+	}
+
+	status.done = false;
+	rc = nvme_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
+		/* Attempt to delete the completion queue */
+		status.done = false;
+		rc = nvme_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
+		if (rc != 0) {
+			return -1;
+		}
+		while (status.done == false) {
+			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		}
+		return -1;
+	}
+
+	nvme_qpair_reset(qpair);
+
+	return 0;
+}
+
+static int
+nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_completion_poll_status status;
+	int rc;
+
+	assert(ctrlr != NULL);
+	assert(qpair != NULL);
+
+	/* Delete the I/O submission queue and then the completion queue */
+
+	status.done = false;
+	rc = nvme_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		return -1;
+	}
+
+	status.done = false;
+	rc = nvme_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		return -1;
+	}
+
+	return 0;
+}
+
 const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 	.ctrlr_get_pci_id = nvme_pcie_ctrlr_get_pci_id,
 
@@ -104,4 +193,7 @@ const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 
 	.ctrlr_get_reg_4 = nvme_pcie_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = nvme_pcie_ctrlr_get_reg_8,
+
+	.ctrlr_create_io_qpair = nvme_pcie_ctrlr_create_io_qpair,
+	.ctrlr_delete_io_qpair = nvme_pcie_ctrlr_delete_io_qpair,
 };
