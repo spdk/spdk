@@ -44,7 +44,6 @@
 
 #include "spdk/conf.h"
 #include "spdk/endian.h"
-#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/nvme.h"

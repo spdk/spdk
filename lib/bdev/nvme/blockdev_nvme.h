@@ -35,20 +35,14 @@
 #define SPDK_BLOCKDEV_NVME_H
 
 #include <stdint.h>
+#include "spdk/env.h"
 
 #define NVME_MAX_CONTROLLERS 16
-
-struct nvme_bdf_whitelist {
-	uint16_t	domain;
-	uint8_t		bus;
-	uint8_t		dev;
-	uint8_t		func;
-};
 
 struct nvme_probe_ctx {
 	int controllers_remaining;
 	int num_whitelist_controllers;
-	struct nvme_bdf_whitelist whitelist[NVME_MAX_CONTROLLERS];
+	struct spdk_pci_addr whitelist[NVME_MAX_CONTROLLERS];
 };
 
 int
