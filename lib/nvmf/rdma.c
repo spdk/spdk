@@ -238,7 +238,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 		SPDK_ERRLOG("Unable to create completion queue\n");
 		SPDK_ERRLOG("Completion Channel: %p Id: %p Verbs: %p\n", channel, id, id->verbs);
 		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
-		free(rdma_conn);
+		spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		return NULL;
 	}
 
@@ -691,7 +691,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
 		      max_queue_depth, max_rw_depth);
 
-
 	/* Init the NVMf rdma transport connection */
 	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, addr->comp_channel, max_queue_depth,
 					       max_rw_depth);
@@ -699,10 +698,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
 	}
-
-	/* Add this RDMA connection to the global list until a CONNECT capsule
-	 * is received. */
-	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_conn, link);
 
 	accept_data.recfmt = 0;
 	accept_data.crqsize = max_queue_depth;
@@ -717,18 +712,24 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	rc = rdma_accept(event->id, &ctrlr_event_data);
 	if (rc) {
 		SPDK_ERRLOG("Error on rdma_accept\n");
-		goto err1;
+		goto err2;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Sent back the accept\n");
 
+	/* Add this RDMA connection to the global list until a CONNECT capsule
+	 * is received. */
+	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_conn, link);
+
 	return 0;
+
+err2:
+	spdk_nvmf_rdma_conn_destroy(rdma_conn);
 
 err1: {
 		struct spdk_nvmf_rdma_reject_private_data rej_data;
 
 		rej_data.status.sc = sts;
 		rdma_reject(event->id, &ctrlr_event_data, sizeof(rej_data));
-		free(rdma_conn);
 	}
 err0:
 	return -1;
