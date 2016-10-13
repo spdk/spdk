@@ -62,25 +62,34 @@ devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 for dev in $devs; do
 	mkfs.ext4 -F /dev/$dev
 	mkdir -p /mnt/${dev}dir
-	mount /dev/$dev /mnt/${dev}dir
+	mount -o sync /dev/$dev /mnt/${dev}dir
 
 	rsync -qav --exclude=".git" $rootdir/ /mnt/${dev}dir/spdk
-	cd /mnt/${dev}dir/spdk
 
-	make DPDK_DIR=$DPDK_DIR clean
-	make DPDK_DIR=$DPDK_DIR -j16
+	make -C /mnt/${dev}dir/spdk DPDK_DIR=$DPDK_DIR clean
+	make -C /mnt/${dev}dir/spdk DPDK_DIR=$DPDK_DIR -j16
 
 	# Print out space consumed on target device to help decide
 	#  if/when we need to increase the size of the malloc LUN
 	df -h /dev/$dev
 
 	rm -rf /mnt/${dev}dir/spdk
-	cd -
 done
 
 for dev in $devs; do
 	umount /mnt/${dev}dir
 	rm -rf /mnt/${dev}dir
+
+	stats=( $(cat /sys/block/$dev/stat) )
+	echo ""
+	echo "$dev stats"
+	printf "READ  IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
+		   ${stats[0]} ${stats[1]} ${stats[2]} ${stats[3]}
+	printf "WRITE IO cnt: % 8u merges: % 8u sectors: % 8u ticks: % 8u\n" \
+		   ${stats[4]} ${stats[5]} ${stats[6]} ${stats[7]}
+	printf "in flight: % 8u io ticks: % 8u time in queue: % 8u\n" \
+		   ${stats[8]} ${stats[9]} ${stats[10]}
+	echo ""
 done
 
 trap - SIGINT SIGTERM EXIT
