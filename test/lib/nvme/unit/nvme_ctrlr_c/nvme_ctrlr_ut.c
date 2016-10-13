@@ -51,45 +51,23 @@ static uint16_t g_pci_vendor_id;
 static uint16_t g_pci_device_id;
 static uint16_t g_pci_subvendor_id;
 static uint16_t g_pci_subdevice_id;
-static uint16_t g_pci_domain;
-static uint8_t g_pci_bus;
-static uint8_t g_pci_dev;
-static uint8_t g_pci_func;
 
 uint64_t g_ut_tsc = 0;
 struct spdk_nvme_registers g_ut_nvme_regs = {};
 
 __thread int    nvme_thread_ioq_index = -1;
 
-int
-spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
-			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+static int
+ut_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
-	*mapped_addr = &g_ut_nvme_regs;
-	*phys_addr = (uintptr_t)&g_ut_nvme_regs;
-	*size = sizeof(g_ut_nvme_regs);
+	ctrlr->regs = &g_ut_nvme_regs;
+
 	return 0;
 }
 
-int
-spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr)
+static void
+ut_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return 0;
-}
-
-int
-spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value,
-			   uint32_t offset)
-{
-	*value = 0xFFFFFFFFu;
-	return 0;
-}
-
-int
-spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value,
-			    uint32_t offset)
-{
-	return 0;
 }
 
 static int
@@ -158,6 +136,9 @@ ut_qpair_reset(struct spdk_nvme_qpair *qpair)
 }
 
 static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
+	.ctrlr_construct = ut_ctrlr_construct,
+	.ctrlr_destruct = ut_ctrlr_destruct,
+
 	.ctrlr_get_pci_id = ut_ctrlr_get_pci_id,
 
 	.ctrlr_set_reg_4 = ut_ctrlr_set_reg_4,
@@ -171,36 +152,6 @@ static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 
 	.qpair_reset = ut_qpair_reset,
 };
-
-uint16_t
-spdk_pci_device_get_domain(struct spdk_pci_device *dev)
-{
-	return g_pci_domain;
-}
-
-uint8_t
-spdk_pci_device_get_bus(struct spdk_pci_device *dev)
-{
-	return g_pci_bus;
-}
-
-uint8_t
-spdk_pci_device_get_dev(struct spdk_pci_device *dev)
-{
-	return g_pci_dev;
-}
-
-uint8_t
-spdk_pci_device_get_func(struct spdk_pci_device *dev)
-{
-	return g_pci_func;
-}
-
-bool
-spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr)
-{
-	return true;
-}
 
 int nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries,
@@ -1218,6 +1169,7 @@ test_nvme_ctrlr_set_supported_features(void)
 	CU_ASSERT(res == true);
 }
 
+#if 0 /* TODO: move to PCIe-specific unit test */
 static void
 test_nvme_ctrlr_alloc_cmb(void)
 {
@@ -1245,6 +1197,7 @@ test_nvme_ctrlr_alloc_cmb(void)
 	rc = nvme_ctrlr_alloc_cmb(&ctrlr, 0x8000000, 0x1000, &offset);
 	CU_ASSERT(rc == -1);
 }
+#endif
 
 int main(int argc, char **argv)
 {
@@ -1284,8 +1237,10 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_supported_features",
 			       test_nvme_ctrlr_set_supported_features) == NULL
+#if 0 /* TODO: move to PCIe-specific unit test */
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_alloc_cmb",
 			       test_nvme_ctrlr_alloc_cmb) == NULL
+#endif
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

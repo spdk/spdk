@@ -249,6 +249,9 @@ struct pci_id {
 };
 
 struct spdk_nvme_transport {
+	int (*ctrlr_construct)(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
+	void (*ctrlr_destruct)(struct spdk_nvme_ctrlr *ctrlr);
+
 	int (*ctrlr_get_pci_id)(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id);
 
 	int (*ctrlr_set_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
@@ -595,8 +598,7 @@ int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 
 int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
-int	nvme_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
-			     uint64_t *offset);
+int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
 int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			     uint16_t num_entries,
 			     struct spdk_nvme_ctrlr *ctrlr);

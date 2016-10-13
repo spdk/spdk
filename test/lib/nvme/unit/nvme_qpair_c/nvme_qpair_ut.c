@@ -182,13 +182,6 @@ nvme_request_remove_child(struct nvme_request *parent,
 	TAILQ_REMOVE(&parent->children, child, child_tailq);
 }
 
-int
-nvme_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
-		     uint64_t *offset)
-{
-	return -1;
-}
-
 static int
 ut_qpair_construct(struct spdk_nvme_qpair *qpair)
 {
