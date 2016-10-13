@@ -60,6 +60,7 @@ struct nvme_device {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr		*ctrlr;
+	struct spdk_pci_device		*pci_dev;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_device)	tailq;
@@ -387,6 +388,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	}
 
 	dev->ctrlr = ctrlr;
+	dev->pci_dev = pci_dev;
 	dev->id = nvme_controller_index++;
 
 	nvme_ctrlr_initialize_blockdevs(dev->ctrlr, nvme_luns_per_ns, dev->id);
@@ -399,9 +401,29 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	}
 }
 
+static bool
+blockdev_nvme_exist(struct nvme_probe_ctx *ctx)
+{
+	int i;
+	struct nvme_device *nvme_dev;
+
+	for (i = 0; i < ctx->num_whitelist_controllers; i++) {
+		TAILQ_FOREACH(nvme_dev, &g_nvme_devices, tailq) {
+			if (spdk_pci_device_compare_addr(nvme_dev->pci_dev, &ctx->whitelist[i])) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 int
 spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx)
 {
+	if (blockdev_nvme_exist(ctx)) {
+		return -1;
+	}
+
 	if (spdk_nvme_probe(ctx, probe_cb, attach_cb, NULL)) {
 		return -1;
 	}
