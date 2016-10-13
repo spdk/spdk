@@ -152,6 +152,11 @@ ut_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *
 	return 0;
 }
 
+static void
+ut_qpair_reset(struct spdk_nvme_qpair *qpair)
+{
+}
+
 static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 	.ctrlr_get_pci_id = ut_ctrlr_get_pci_id,
 
@@ -163,6 +168,8 @@ static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 
 	.ctrlr_create_io_qpair = ut_ctrlr_create_io_qpair,
 	.ctrlr_delete_io_qpair = ut_ctrlr_delete_io_qpair,
+
+	.qpair_reset = ut_qpair_reset,
 };
 
 uint16_t
@@ -196,7 +203,7 @@ spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *
 }
 
 int nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
-			 uint16_t num_entries, uint16_t num_trackers,
+			 uint16_t num_entries,
 			 struct spdk_nvme_ctrlr *ctrlr)
 {
 	qpair->id = id;
@@ -262,11 +269,6 @@ nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 
 void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
-{
-}
-
-void
-nvme_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 }
 

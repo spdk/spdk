@@ -96,6 +96,353 @@ nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 	return 0;
 }
 
+static void
+nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phys_addr)
+{
+	tr->prp_sgl_bus_addr = phys_addr + offsetof(struct nvme_tracker, u.prp);
+	tr->cid = cid;
+	tr->active = false;
+}
+
+static void
+nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
+{
+	qpair->sq_tail = qpair->cq_head = 0;
+
+	/*
+	 * First time through the completion queue, HW will set phase
+	 *  bit on completions to 1.  So set this to 1 here, indicating
+	 *  we're looking for a 1 to know which entries have completed.
+	 *  we'll toggle the bit each time when the completion queue
+	 *  rolls over.
+	 */
+	qpair->phase = 1;
+
+	memset(qpair->cmd, 0,
+	       qpair->num_entries * sizeof(struct spdk_nvme_cmd));
+	memset(qpair->cpl, 0,
+	       qpair->num_entries * sizeof(struct spdk_nvme_cpl));
+}
+
+static int
+nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	struct nvme_tracker	*tr;
+	uint16_t		i;
+	volatile uint32_t	*doorbell_base;
+	uint64_t		phys_addr = 0;
+	uint64_t		offset;
+	uint16_t		num_trackers;
+
+	if (qpair->id == 0) {
+		num_trackers = NVME_ADMIN_TRACKERS;
+	} else {
+		/*
+		 * No need to have more trackers than entries in the submit queue.
+		 *  Note also that for a queue size of N, we can only have (N-1)
+		 *  commands outstanding, hence the "-1" here.
+		 */
+		num_trackers = nvme_min(NVME_IO_TRACKERS, qpair->num_entries - 1);
+	}
+
+	assert(num_trackers != 0);
+
+	qpair->sq_in_cmb = false;
+
+	/* cmd and cpl rings must be aligned on 4KB boundaries. */
+	if (ctrlr->opts.use_cmb_sqs) {
+		if (nvme_ctrlr_alloc_cmb(ctrlr, qpair->num_entries * sizeof(struct spdk_nvme_cmd),
+					 0x1000, &offset) == 0) {
+			qpair->cmd = ctrlr->cmb_bar_virt_addr + offset;
+			qpair->cmd_bus_addr = ctrlr->cmb_bar_phys_addr + offset;
+			qpair->sq_in_cmb = true;
+		}
+	}
+	if (qpair->sq_in_cmb == false) {
+		qpair->cmd = spdk_zmalloc(qpair->num_entries * sizeof(struct spdk_nvme_cmd),
+					  0x1000,
+					  &qpair->cmd_bus_addr);
+		if (qpair->cmd == NULL) {
+			SPDK_ERRLOG("alloc qpair_cmd failed\n");
+			return -ENOMEM;
+		}
+	}
+
+	qpair->cpl = spdk_zmalloc(qpair->num_entries * sizeof(struct spdk_nvme_cpl),
+				  0x1000,
+				  &qpair->cpl_bus_addr);
+	if (qpair->cpl == NULL) {
+		SPDK_ERRLOG("alloc qpair_cpl failed\n");
+		return -ENOMEM;
+	}
+
+	doorbell_base = &ctrlr->regs->doorbell[0].sq_tdbl;
+	qpair->sq_tdbl = doorbell_base + (2 * qpair->id + 0) * ctrlr->doorbell_stride_u32;
+	qpair->cq_hdbl = doorbell_base + (2 * qpair->id + 1) * ctrlr->doorbell_stride_u32;
+
+	/*
+	 * Reserve space for all of the trackers in a single allocation.
+	 *   struct nvme_tracker must be padded so that its size is already a power of 2.
+	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
+	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
+	 */
+	qpair->tr = spdk_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
+	if (qpair->tr == NULL) {
+		SPDK_ERRLOG("nvme_tr failed\n");
+		return -ENOMEM;
+	}
+
+	for (i = 0; i < num_trackers; i++) {
+		tr = &qpair->tr[i];
+		nvme_qpair_construct_tracker(tr, i, phys_addr);
+		LIST_INSERT_HEAD(&qpair->free_tr, tr, list);
+		phys_addr += sizeof(struct nvme_tracker);
+	}
+
+	nvme_pcie_qpair_reset(qpair);
+
+	return 0;
+}
+
+static inline void
+nvme_pcie_copy_command(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *src)
+{
+	/* dst and src are known to be non-overlapping and 64-byte aligned. */
+#if defined(__AVX__)
+	__m256i *d256 = (__m256i *)dst;
+	const __m256i *s256 = (const __m256i *)src;
+
+	_mm256_store_si256(&d256[0], _mm256_load_si256(&s256[0]));
+	_mm256_store_si256(&d256[1], _mm256_load_si256(&s256[1]));
+#elif defined(__SSE2__)
+	__m128i *d128 = (__m128i *)dst;
+	const __m128i *s128 = (const __m128i *)src;
+
+	_mm_store_si128(&d128[0], _mm_load_si128(&s128[0]));
+	_mm_store_si128(&d128[1], _mm_load_si128(&s128[1]));
+	_mm_store_si128(&d128[2], _mm_load_si128(&s128[2]));
+	_mm_store_si128(&d128[3], _mm_load_si128(&s128[3]));
+#else
+	*dst = *src;
+#endif
+}
+
+static void
+nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
+{
+	struct nvme_request	*req;
+
+	req = tr->req;
+	qpair->tr[tr->cid].active = true;
+
+	/* Copy the command from the tracker to the submission queue. */
+	nvme_pcie_copy_command(&qpair->cmd[qpair->sq_tail], &req->cmd);
+
+	if (++qpair->sq_tail == qpair->num_entries) {
+		qpair->sq_tail = 0;
+	}
+
+	spdk_wmb();
+	spdk_mmio_write_4(qpair->sq_tdbl, qpair->sq_tail);
+}
+
+static void
+nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
+				 struct spdk_nvme_cpl *cpl, bool print_on_error)
+{
+	struct nvme_request	*req;
+	bool			retry, error, was_active;
+
+	req = tr->req;
+
+	assert(req != NULL);
+
+	error = spdk_nvme_cpl_is_error(cpl);
+	retry = error && nvme_completion_is_retry(cpl) &&
+		req->retries < spdk_nvme_retry_count;
+
+	if (error && print_on_error) {
+		nvme_qpair_print_command(qpair, &req->cmd);
+		nvme_qpair_print_completion(qpair, cpl);
+	}
+
+	was_active = qpair->tr[cpl->cid].active;
+	qpair->tr[cpl->cid].active = false;
+
+	assert(cpl->cid == req->cmd.cid);
+
+	if (retry) {
+		req->retries++;
+		nvme_pcie_qpair_submit_tracker(qpair, tr);
+	} else {
+		if (was_active && req->cb_fn) {
+			req->cb_fn(req->cb_arg, cpl);
+		}
+
+		nvme_free_request(req);
+		tr->req = NULL;
+
+		LIST_REMOVE(tr, list);
+		LIST_INSERT_HEAD(&qpair->free_tr, tr, list);
+
+		/*
+		 * If the controller is in the middle of resetting, don't
+		 *  try to submit queued requests here - let the reset logic
+		 *  handle that instead.
+		 */
+		if (!STAILQ_EMPTY(&qpair->queued_req) &&
+		    !qpair->ctrlr->is_resetting) {
+			req = STAILQ_FIRST(&qpair->queued_req);
+			STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+			nvme_qpair_submit_request(qpair, req);
+		}
+	}
+}
+
+static void
+nvme_pcie_qpair_manual_complete_tracker(struct spdk_nvme_qpair *qpair,
+					struct nvme_tracker *tr, uint32_t sct, uint32_t sc, uint32_t dnr,
+					bool print_on_error)
+{
+	struct spdk_nvme_cpl	cpl;
+
+	memset(&cpl, 0, sizeof(cpl));
+	cpl.sqid = qpair->id;
+	cpl.cid = tr->cid;
+	cpl.status.sct = sct;
+	cpl.status.sc = sc;
+	cpl.status.dnr = dnr;
+	nvme_pcie_qpair_complete_tracker(qpair, tr, &cpl, print_on_error);
+}
+
+static void
+nvme_pcie_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tracker	*tr;
+
+	tr = LIST_FIRST(&qpair->outstanding_tr);
+	while (tr != NULL) {
+		assert(tr->req != NULL);
+		if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+			nvme_pcie_qpair_manual_complete_tracker(qpair, tr,
+								SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_SQ_DELETION, 0,
+								false);
+			tr = LIST_FIRST(&qpair->outstanding_tr);
+		} else {
+			tr = LIST_NEXT(tr, list);
+		}
+	}
+}
+
+static void
+nvme_pcie_admin_qpair_destroy(struct spdk_nvme_qpair *qpair)
+{
+	nvme_pcie_admin_qpair_abort_aers(qpair);
+}
+
+static void
+nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
+{
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_pcie_admin_qpair_destroy(qpair);
+	}
+	if (qpair->cmd && !qpair->sq_in_cmb) {
+		spdk_free(qpair->cmd);
+		qpair->cmd = NULL;
+	}
+	if (qpair->cpl) {
+		spdk_free(qpair->cpl);
+		qpair->cpl = NULL;
+	}
+	if (qpair->tr) {
+		spdk_free(qpair->tr);
+		qpair->tr = NULL;
+	}
+}
+
+static void
+nvme_pcie_admin_qpair_enable(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tracker *tr, *temp;
+
+	/*
+	 * Manually abort each outstanding admin command.  Do not retry
+	 *  admin commands found here, since they will be left over from
+	 *  a controller reset and its likely the context in which the
+	 *  command was issued no longer applies.
+	 */
+	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, temp) {
+		SPDK_ERRLOG("aborting outstanding admin command\n");
+		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
+							SPDK_NVME_SC_ABORTED_BY_REQUEST, 1 /* do not retry */, true);
+	}
+}
+
+static void
+nvme_pcie_io_qpair_enable(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tracker *tr, *temp;
+
+	/* Manually abort each outstanding I/O. */
+	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, temp) {
+		SPDK_ERRLOG("aborting outstanding i/o\n");
+		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
+							SPDK_NVME_SC_ABORTED_BY_REQUEST, 0, true);
+	}
+}
+
+static void
+nvme_pcie_qpair_enable(struct spdk_nvme_qpair *qpair)
+{
+	if (nvme_qpair_is_io_queue(qpair)) {
+		nvme_pcie_io_qpair_enable(qpair);
+	} else {
+		nvme_pcie_admin_qpair_enable(qpair);
+	}
+}
+
+static void
+nvme_pcie_admin_qpair_disable(struct spdk_nvme_qpair *qpair)
+{
+	nvme_pcie_admin_qpair_abort_aers(qpair);
+}
+
+static void
+nvme_pcie_io_qpair_disable(struct spdk_nvme_qpair *qpair)
+{
+}
+
+static void
+nvme_pcie_qpair_disable(struct spdk_nvme_qpair *qpair)
+{
+	qpair->is_enabled = false;
+	if (nvme_qpair_is_io_queue(qpair)) {
+		nvme_pcie_io_qpair_disable(qpair);
+	} else {
+		nvme_pcie_admin_qpair_disable(qpair);
+	}
+}
+
+
+static void
+nvme_pcie_qpair_fail(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tracker		*tr;
+
+	/* Manually abort each outstanding I/O. */
+	while (!LIST_EMPTY(&qpair->outstanding_tr)) {
+		tr = LIST_FIRST(&qpair->outstanding_tr);
+		/*
+		 * Do not remove the tracker.  The abort_tracker path will
+		 *  do that for us.
+		 */
+		SPDK_ERRLOG("failing outstanding i/o\n");
+		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
+							SPDK_NVME_SC_ABORTED_BY_REQUEST, 1 /* do not retry */, true);
+	}
+}
+
 static int
 nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -142,7 +489,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
-	nvme_qpair_reset(qpair);
+	nvme_pcie_qpair_reset(qpair);
 
 	return 0;
 }
@@ -185,6 +532,361 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	return 0;
 }
 
+static void
+nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
+{
+	/*
+	 * Bad vtophys translation, so abort this request and return
+	 *  immediately.
+	 */
+	nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
+						SPDK_NVME_SC_INVALID_FIELD,
+						1 /* do not retry */, true);
+}
+
+/**
+ * Build PRP list describing physically contiguous payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				     struct nvme_tracker *tr)
+{
+	uint64_t phys_addr;
+	void *seg_addr;
+	uint32_t nseg, cur_nseg, modulo, unaligned;
+	void *md_payload;
+	void *payload = req->payload.u.contig + req->payload_offset;
+
+	phys_addr = spdk_vtophys(payload);
+	if (phys_addr == SPDK_VTOPHYS_ERROR) {
+		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+		return -1;
+	}
+	nseg = req->payload_size >> nvme_u32log2(PAGE_SIZE);
+	modulo = req->payload_size & (PAGE_SIZE - 1);
+	unaligned = phys_addr & (PAGE_SIZE - 1);
+	if (modulo || unaligned) {
+		nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+	}
+
+	if (req->payload.md) {
+		md_payload = req->payload.md + req->md_offset;
+		tr->req->cmd.mptr = spdk_vtophys(md_payload);
+		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+	}
+
+	tr->req->cmd.psdt = SPDK_NVME_PSDT_PRP;
+	tr->req->cmd.dptr.prp.prp1 = phys_addr;
+	if (nseg == 2) {
+		seg_addr = payload + PAGE_SIZE - unaligned;
+		tr->req->cmd.dptr.prp.prp2 = spdk_vtophys(seg_addr);
+	} else if (nseg > 2) {
+		cur_nseg = 1;
+		tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
+		while (cur_nseg < nseg) {
+			seg_addr = payload + cur_nseg * PAGE_SIZE - unaligned;
+			phys_addr = spdk_vtophys(seg_addr);
+			if (phys_addr == SPDK_VTOPHYS_ERROR) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -1;
+			}
+			tr->u.prp[cur_nseg - 1] = phys_addr;
+			cur_nseg++;
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * Build SGL list describing scattered payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				     struct nvme_tracker *tr)
+{
+	int rc;
+	uint64_t phys_addr;
+	uint32_t remaining_transfer_len, length;
+	struct spdk_nvme_sgl_descriptor *sgl;
+	uint32_t nseg = 0;
+
+	/*
+	 * Build scattered payloads.
+	 */
+	assert(req->payload_size != 0);
+	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
+	assert(req->payload.u.sgl.next_sge_fn != NULL);
+	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
+
+	sgl = tr->u.sgl;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
+
+	remaining_transfer_len = req->payload_size;
+
+	while (remaining_transfer_len > 0) {
+		if (nseg >= NVME_MAX_SGL_DESCRIPTORS) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
+		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
+		if (rc) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
+		length = nvme_min(remaining_transfer_len, length);
+		remaining_transfer_len -= length;
+
+		sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		sgl->unkeyed.length = length;
+		sgl->address = phys_addr;
+		sgl->unkeyed.subtype = 0;
+
+		sgl++;
+		nseg++;
+	}
+
+	if (nseg == 1) {
+		/*
+		 * The whole transfer can be described by a single SGL descriptor.
+		 *  Use the special case described by the spec where SGL1's type is Data Block.
+		 *  This means the SGL in the tracker is not used at all, so copy the first (and only)
+		 *  SGL element into SGL1.
+		 */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+		req->cmd.dptr.sgl1.address = tr->u.sgl[0].address;
+		req->cmd.dptr.sgl1.unkeyed.length = tr->u.sgl[0].unkeyed.length;
+	} else {
+		/* For now we can only support 1 SGL segment in NVMe controller */
+		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+		req->cmd.dptr.sgl1.address = tr->prp_sgl_bus_addr;
+		req->cmd.dptr.sgl1.unkeyed.length = nseg * sizeof(struct spdk_nvme_sgl_descriptor);
+	}
+
+	return 0;
+}
+
+/**
+ * Build PRP list describing scattered payload buffer.
+ */
+static int
+nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req,
+				       struct nvme_tracker *tr)
+{
+	int rc;
+	uint64_t phys_addr;
+	uint32_t data_transferred, remaining_transfer_len, length;
+	uint32_t nseg, cur_nseg, total_nseg, last_nseg, modulo, unaligned;
+	uint32_t sge_count = 0;
+	uint64_t prp2 = 0;
+
+	/*
+	 * Build scattered payloads.
+	 */
+	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
+	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
+	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
+
+	remaining_transfer_len = req->payload_size;
+	total_nseg = 0;
+	last_nseg = 0;
+
+	while (remaining_transfer_len > 0) {
+		assert(req->payload.u.sgl.next_sge_fn != NULL);
+		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
+		if (rc) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
+		/* Confirm that this sge is prp compatible. */
+		if (phys_addr & 0x3 ||
+		    (length < remaining_transfer_len && ((phys_addr + length) & (PAGE_SIZE - 1)))) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
+		data_transferred = nvme_min(remaining_transfer_len, length);
+
+		nseg = data_transferred >> nvme_u32log2(PAGE_SIZE);
+		modulo = data_transferred & (PAGE_SIZE - 1);
+		unaligned = phys_addr & (PAGE_SIZE - 1);
+		if (modulo || unaligned) {
+			nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+		}
+
+		if (total_nseg == 0) {
+			req->cmd.psdt = SPDK_NVME_PSDT_PRP;
+			req->cmd.dptr.prp.prp1 = phys_addr;
+			phys_addr -= unaligned;
+		}
+
+		total_nseg += nseg;
+		sge_count++;
+		remaining_transfer_len -= data_transferred;
+
+		if (total_nseg == 2) {
+			if (sge_count == 1)
+				tr->req->cmd.dptr.prp.prp2 = phys_addr + PAGE_SIZE;
+			else if (sge_count == 2)
+				tr->req->cmd.dptr.prp.prp2 = phys_addr;
+			/* save prp2 value */
+			prp2 = tr->req->cmd.dptr.prp.prp2;
+		} else if (total_nseg > 2) {
+			if (sge_count == 1)
+				cur_nseg = 1;
+			else
+				cur_nseg = 0;
+
+			tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
+			while (cur_nseg < nseg) {
+				if (prp2) {
+					tr->u.prp[0] = prp2;
+					tr->u.prp[last_nseg + 1] = phys_addr + cur_nseg * PAGE_SIZE;
+				} else
+					tr->u.prp[last_nseg] = phys_addr + cur_nseg * PAGE_SIZE;
+
+				last_nseg++;
+				cur_nseg++;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static inline bool
+nvme_pcie_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
+{
+	if (!qpair->is_enabled &&
+	    !qpair->ctrlr->is_resetting) {
+		nvme_qpair_enable(qpair);
+	}
+	return qpair->is_enabled;
+}
+
+static int
+nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	struct nvme_tracker *tr;
+	int rc;
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	nvme_pcie_qpair_check_enabled(qpair);
+
+	tr = LIST_FIRST(&qpair->free_tr);
+
+	if (tr == NULL || !qpair->is_enabled) {
+		/*
+		 * No tracker is available, or the qpair is disabled due to
+		 *  an in-progress controller-level reset.
+		 *
+		 * Put the request on the qpair's request queue to be
+		 *  processed when a tracker frees up via a command
+		 *  completion or when the controller reset is
+		 *  completed.
+		 */
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
+	}
+
+	LIST_REMOVE(tr, list); /* remove tr from free_tr */
+	LIST_INSERT_HEAD(&qpair->outstanding_tr, tr, list);
+	tr->req = req;
+	req->cmd.cid = tr->cid;
+
+	if (req->payload_size == 0) {
+		/* Null payload - leave PRP fields zeroed */
+		rc = 0;
+	} else if (req->payload.type == NVME_PAYLOAD_TYPE_CONTIG) {
+		rc = nvme_pcie_qpair_build_contig_request(qpair, req, tr);
+	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL) {
+		if (ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
+			rc = nvme_pcie_qpair_build_hw_sgl_request(qpair, req, tr);
+		} else {
+			rc = nvme_pcie_qpair_build_prps_sgl_request(qpair, req, tr);
+		}
+	} else {
+		assert(0);
+		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+		rc = -EINVAL;
+	}
+
+	if (rc < 0) {
+		return rc;
+	}
+
+	nvme_pcie_qpair_submit_tracker(qpair, tr);
+	return 0;
+}
+
+static int32_t
+nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+{
+	struct nvme_tracker	*tr;
+	struct spdk_nvme_cpl	*cpl;
+	uint32_t num_completions = 0;
+
+	if (!nvme_pcie_qpair_check_enabled(qpair)) {
+		/*
+		 * qpair is not enabled, likely because a controller reset is
+		 *  is in progress.  Ignore the interrupt - any I/O that was
+		 *  associated with this interrupt will get retried when the
+		 *  reset is complete.
+		 */
+		return 0;
+	}
+
+	if (max_completions == 0 || (max_completions > (qpair->num_entries - 1U))) {
+
+		/*
+		 * max_completions == 0 means unlimited, but complete at most one
+		 * queue depth batch of I/O at a time so that the completion
+		 * queue doorbells don't wrap around.
+		 */
+		max_completions = qpair->num_entries - 1;
+	}
+
+	while (1) {
+		cpl = &qpair->cpl[qpair->cq_head];
+
+		if (cpl->status.p != qpair->phase)
+			break;
+
+		tr = &qpair->tr[cpl->cid];
+
+		if (tr->active) {
+			nvme_pcie_qpair_complete_tracker(qpair, tr, cpl, true);
+		} else {
+			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
+			nvme_qpair_print_completion(qpair, cpl);
+			assert(0);
+		}
+
+		if (++qpair->cq_head == qpair->num_entries) {
+			qpair->cq_head = 0;
+			qpair->phase = !qpair->phase;
+		}
+
+		if (++num_completions == max_completions) {
+			break;
+		}
+	}
+
+	if (num_completions > 0) {
+		spdk_mmio_write_4(qpair->cq_hdbl, qpair->cq_head);
+	}
+
+	return num_completions;
+}
+
 const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 	.ctrlr_get_pci_id = nvme_pcie_ctrlr_get_pci_id,
 
@@ -196,4 +898,16 @@ const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 
 	.ctrlr_create_io_qpair = nvme_pcie_ctrlr_create_io_qpair,
 	.ctrlr_delete_io_qpair = nvme_pcie_ctrlr_delete_io_qpair,
+
+	.qpair_construct = nvme_pcie_qpair_construct,
+	.qpair_destroy = nvme_pcie_qpair_destroy,
+
+	.qpair_enable = nvme_pcie_qpair_enable,
+	.qpair_disable = nvme_pcie_qpair_disable,
+
+	.qpair_reset = nvme_pcie_qpair_reset,
+	.qpair_fail = nvme_pcie_qpair_fail,
+
+	.qpair_submit_request = nvme_pcie_qpair_submit_request,
+	.qpair_process_completions = nvme_pcie_qpair_process_completions,
 };

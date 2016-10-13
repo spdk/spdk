@@ -335,7 +335,6 @@ nvme_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_qpair_construct(&ctrlr->adminq,
 				    0, /* qpair ID */
 				    NVME_ADMIN_ENTRIES,
-				    NVME_ADMIN_TRACKERS,
 				    ctrlr);
 }
 
@@ -344,7 +343,7 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair		*qpair;
 	union spdk_nvme_cap_register	cap;
-	uint32_t			i, num_entries, num_trackers;
+	uint32_t			i, num_entries;
 	int				rc;
 	uint64_t			phys_addr = 0;
 
@@ -370,13 +369,6 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	num_entries = nvme_min(NVME_IO_ENTRIES, cap.bits.mqes + 1);
 
-	/*
-	 * No need to have more trackers than entries in the submit queue.
-	 *  Note also that for a queue size of N, we can only have (N-1)
-	 *  commands outstanding, hence the "-1" here.
-	 */
-	num_trackers = nvme_min(NVME_IO_TRACKERS, (num_entries - 1));
-
 	ctrlr->ioq = spdk_zmalloc(ctrlr->opts.num_io_queues * sizeof(struct spdk_nvme_qpair),
 				  64, &phys_addr);
 
@@ -393,7 +385,6 @@ nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		rc = nvme_qpair_construct(qpair,
 					  i + 1, /* qpair ID */
 					  num_entries,
-					  num_trackers,
 					  ctrlr);
 		if (rc)
 			return -1;
@@ -969,7 +960,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_qpair_reset(&ctrlr->adminq);
+	ctrlr->transport->qpair_reset(&ctrlr->adminq);
 
 	nvme_qpair_enable(&ctrlr->adminq);
 

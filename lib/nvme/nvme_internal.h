@@ -259,6 +259,18 @@ struct spdk_nvme_transport {
 
 	int (*ctrlr_create_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
 	int (*ctrlr_delete_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
+
+	int (*qpair_construct)(struct spdk_nvme_qpair *qpair);
+	void (*qpair_destroy)(struct spdk_nvme_qpair *qpair);
+
+	void (*qpair_enable)(struct spdk_nvme_qpair *qpair);
+	void (*qpair_disable)(struct spdk_nvme_qpair *qpair);
+
+	void (*qpair_reset)(struct spdk_nvme_qpair *qpair);
+	void (*qpair_fail)(struct spdk_nvme_qpair *qpair);
+
+	int (*qpair_submit_request)(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
+	int32_t (*qpair_process_completions)(struct spdk_nvme_qpair *qpair, uint32_t max_completions);
 };
 
 struct nvme_completion_poll_status {
@@ -521,6 +533,18 @@ nvme_align32pow2(uint32_t x)
 	return 1u << (1 + nvme_u32log2(x - 1));
 }
 
+static inline bool
+nvme_qpair_is_admin_queue(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->id == 0;
+}
+
+static inline bool
+nvme_qpair_is_io_queue(struct spdk_nvme_qpair *qpair)
+{
+	return qpair->id != 0;
+}
+
 /* Admin functions */
 int	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
 		void *payload,
@@ -575,14 +599,12 @@ int	nvme_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_
 			     uint64_t *offset);
 int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			     uint16_t num_entries,
-			     uint16_t num_trackers,
 			     struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_qpair_destroy(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
-void	nvme_qpair_reset(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
 
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
@@ -603,5 +625,9 @@ bool	nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk);
 void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);
 
 int	nvme_mutex_init_shared(pthread_mutex_t *mtx);
+
+bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
+void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
+void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
 
 #endif /* __NVME_INTERNAL_H__ */
