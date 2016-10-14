@@ -365,7 +365,7 @@ nvme_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *
 			    struct spdk_nvme_cpl *cpl, bool print_on_error)
 {
 	struct nvme_request	*req;
-	bool			retry, error;
+	bool			retry, error, was_active;
 
 	req = tr->req;
 
@@ -380,6 +380,7 @@ nvme_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *
 		nvme_qpair_print_completion(qpair, cpl);
 	}
 
+	was_active = qpair->tr[cpl->cid].active;
 	qpair->tr[cpl->cid].active = false;
 
 	assert(cpl->cid == req->cmd.cid);
@@ -388,7 +389,7 @@ nvme_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *
 		req->retries++;
 		nvme_qpair_submit_tracker(qpair, tr);
 	} else {
-		if (req->cb_fn) {
+		if (was_active && req->cb_fn) {
 			req->cb_fn(req->cb_arg, cpl);
 		}
 
