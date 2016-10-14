@@ -258,40 +258,6 @@ nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 int
-nvme_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
-			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
-			    void *cb_arg)
-{
-	fake_cpl_success(cb_fn, cb_arg);
-	return 0;
-}
-
-int
-nvme_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
-			    struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
-			    void *cb_arg)
-{
-	fake_cpl_success(cb_fn, cb_arg);
-	return 0;
-}
-
-int
-nvme_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-			    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	fake_cpl_success(cb_fn, cb_arg);
-	return 0;
-}
-
-int
-nvme_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-			    spdk_nvme_cmd_cb cb_fn, void *cb_arg)
-{
-	fake_cpl_success(cb_fn, cb_arg);
-	return 0;
-}
-
-int
 nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {

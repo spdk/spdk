@@ -634,6 +634,102 @@ nvme_pcie_qpair_fail(struct spdk_nvme_qpair *qpair)
 }
 
 static int
+nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
+				 struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn,
+				 void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_CREATE_IO_CQ;
+
+	/*
+	 * TODO: create a create io completion queue command data
+	 *  structure.
+	 */
+	cmd->cdw10 = ((io_que->num_entries - 1) << 16) | io_que->id;
+	/*
+	 * 0x2 = interrupts enabled
+	 * 0x1 = physically contiguous
+	 */
+	cmd->cdw11 = 0x1;
+	cmd->dptr.prp.prp1 = io_que->cpl_bus_addr;
+
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
+}
+
+static int
+nvme_pcie_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
+				 struct spdk_nvme_qpair *io_que, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_CREATE_IO_SQ;
+
+	/*
+	 * TODO: create a create io submission queue command data
+	 *  structure.
+	 */
+	cmd->cdw10 = ((io_que->num_entries - 1) << 16) | io_que->id;
+	/* 0x1 = physically contiguous */
+	cmd->cdw11 = (io_que->id << 16) | (io_que->qprio << 1) | 0x1;
+	cmd->dptr.prp.prp1 = io_que->cmd_bus_addr;
+
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
+}
+
+static int
+nvme_pcie_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_DELETE_IO_CQ;
+	cmd->cdw10 = qpair->id;
+
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
+}
+
+static int
+nvme_pcie_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+
+	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	if (req == NULL) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_DELETE_IO_SQ;
+	cmd->cdw10 = qpair->id;
+
+	return nvme_ctrlr_submit_admin_request(ctrlr, req);
+}
+
+static int
 nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_completion_poll_status	status;
@@ -643,7 +739,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	assert(qpair != NULL);
 
 	status.done = false;
-	rc = nvme_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
@@ -657,7 +753,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 
 	status.done = false;
-	rc = nvme_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
+	rc = nvme_pcie_ctrlr_cmd_create_io_sq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
@@ -669,7 +765,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
 		/* Attempt to delete the completion queue */
 		status.done = false;
-		rc = nvme_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
+		rc = nvme_pcie_ctrlr_cmd_delete_io_cq(qpair->ctrlr, qpair, nvme_completion_poll_cb, &status);
 		if (rc != 0) {
 			return -1;
 		}
@@ -696,7 +792,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	/* Delete the I/O submission queue and then the completion queue */
 
 	status.done = false;
-	rc = nvme_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
@@ -708,7 +804,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	}
 
 	status.done = false;
-	rc = nvme_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
+	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
 		return rc;
 	}
