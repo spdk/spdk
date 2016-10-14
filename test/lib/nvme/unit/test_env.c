@@ -45,7 +45,9 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 	if (posix_memalign(&buf, align, size)) {
 		return NULL;
 	}
-	*phys_addr = (uint64_t)buf;
+	if (phys_addr) {
+		*phys_addr = (uint64_t)buf;
+	}
 	return buf;
 }
 
