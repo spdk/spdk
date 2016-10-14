@@ -70,6 +70,13 @@
  */
 #define NVME_INTEL_QUIRK_WRITE_LATENCY 0x2
 
+/*
+ * The controller needs a delay before starts checking the device
+ * readiness, which is done by reading the NVME_CSTS_RDY bit.
+ */
+#define NVME_QUIRK_DELAY_BEFORE_CHK_RDY	0x04
+
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
@@ -388,6 +395,10 @@ struct spdk_nvme_ctrlr {
 
 	/** PCI address including domain, bus, device and function */
 	struct spdk_pci_addr		pci_addr;
+
+	uint64_t			quirks;
+	/* Extra sleep time during controller initialization */
+	uint64_t			sleep_timeout_in_ms;
 };
 
 struct nvme_driver {
@@ -499,7 +510,7 @@ struct nvme_request *nvme_allocate_request_user_copy(void *buffer, uint32_t payl
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 void	nvme_free_request(struct nvme_request *req);
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
-bool	nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk);
+uint64_t nvme_get_ctrlr_quirk(struct spdk_nvme_ctrlr *ctrlr);
 
 void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);
 
