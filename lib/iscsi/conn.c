@@ -920,7 +920,15 @@ void process_task_completion(spdk_event_t event)
 		if (primary->scsi.bytes_completed == primary->scsi.transfer_len) {
 			spdk_del_transfer_task(conn, primary->scsi.id);
 			spdk_iscsi_task_response(conn, primary);
-			if (task != primary) {
+			/*
+			 * Check if this is the last task completed for an iSCSI write
+			 *  that required child subtasks.  If task != primary, we know
+			 *  for sure that it was part of an iSCSI write with child subtasks.
+			 *  The trickier case is when the last task completed was the initial
+			 *  task - in this case the task will have a smaller length than
+			 *  the overall transfer length.
+			 */
+			if (task != primary || task->scsi.length != task->scsi.transfer_len) {
 				TAILQ_REMOVE(&conn->active_r2t_tasks, primary, link);
 				spdk_iscsi_task_put(primary);
 			}
