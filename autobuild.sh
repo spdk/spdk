@@ -15,6 +15,10 @@ if [ -d /usr/src/fio ]; then
 	MAKECONFIG="$MAKECONFIG CONFIG_FIO_PLUGIN=y FIO_SOURCE_DIR=/usr/src/fio"
 fi
 
+if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then
+	MAKECONFIG="$MAKECONFIG CONFIG_RBD=y"
+fi
+
 timing_enter autobuild
 
 timing_enter check_format
