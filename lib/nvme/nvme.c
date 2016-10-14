@@ -47,18 +47,20 @@ int32_t		spdk_nvme_retry_count;
 static struct spdk_nvme_ctrlr *
 nvme_attach(void *devhandle)
 {
+	const struct spdk_nvme_transport *transport;
 	struct spdk_nvme_ctrlr	*ctrlr;
 	int			status;
 	uint64_t		phys_addr = 0;
 
-	ctrlr = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr),
-			     64, &phys_addr);
+	transport = &spdk_nvme_transport_pcie;
+
+	ctrlr = spdk_zmalloc(transport->ctrlr_size, 64, &phys_addr);
 	if (ctrlr == NULL) {
 		SPDK_ERRLOG("could not allocate ctrlr\n");
 		return NULL;
 	}
 
-	ctrlr->transport = &spdk_nvme_transport_pcie;
+	ctrlr->transport = transport;
 
 	status = nvme_ctrlr_construct(ctrlr, devhandle);
 	if (status != 0) {

@@ -217,11 +217,9 @@ static const struct spdk_nvme_transport nvme_qpair_ut_transport = {
 
 static void
 prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
-			    struct spdk_nvme_ctrlr *ctrlr,
-			    struct spdk_nvme_registers *regs)
+			    struct spdk_nvme_ctrlr *ctrlr)
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
-	ctrlr->regs = regs;
 	ctrlr->transport = &nvme_qpair_ut_transport;
 	TAILQ_INIT(&ctrlr->free_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
@@ -282,9 +280,8 @@ test3(void)
 	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req;
 	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 
 	req = nvme_allocate_request_null(expected_success_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -305,10 +302,9 @@ test4(void)
 	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req;
 	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 	char				payload[4096];
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 
 	req = nvme_allocate_request_contig(payload, sizeof(payload), expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -335,7 +331,6 @@ test_sgl_req(void)
 	struct spdk_nvme_qpair	qpair = {};
 	struct nvme_request	*req;
 	struct spdk_nvme_ctrlr	ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 	struct nvme_payload	payload = {};
 	struct nvme_tracker 	*sgl_tr = NULL;
 	uint64_t 		i;
@@ -346,7 +341,7 @@ test_sgl_req(void)
 	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
 	payload.u.sgl.cb_arg = &io_req;
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, PAGE_SIZE, NULL, &io_req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
@@ -358,7 +353,7 @@ test_sgl_req(void)
 	CU_ASSERT(qpair.sq_tail == 0);
 	cleanup_submit_request_test(&qpair);
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, PAGE_SIZE, NULL, &io_req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
@@ -373,7 +368,7 @@ test_sgl_req(void)
 
 	fail_next_sge = false;
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, 2 * PAGE_SIZE, NULL, &io_req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
@@ -385,7 +380,7 @@ test_sgl_req(void)
 	CU_ASSERT(qpair.sq_tail == 0);
 	cleanup_submit_request_test(&qpair);
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, (NVME_MAX_PRP_LIST_ENTRIES + 1) * PAGE_SIZE, NULL, &io_req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
@@ -414,7 +409,6 @@ test_hw_sgl_req(void)
 	struct spdk_nvme_qpair	qpair = {};
 	struct nvme_request	*req;
 	struct spdk_nvme_ctrlr	ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 	struct nvme_payload	payload = {};
 	struct nvme_tracker 	*sgl_tr = NULL;
 	uint64_t 		i;
@@ -425,7 +419,7 @@ test_hw_sgl_req(void)
 	payload.u.sgl.next_sge_fn = nvme_request_next_sge;
 	payload.u.sgl.cb_arg = &io_req;
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, PAGE_SIZE, NULL, &io_req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
@@ -447,7 +441,7 @@ test_hw_sgl_req(void)
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	req = nvme_allocate_request(&payload, NVME_MAX_SGL_DESCRIPTORS * PAGE_SIZE, NULL, &io_req);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	req->cmd.opc = SPDK_NVME_OPC_WRITE;
@@ -479,10 +473,9 @@ test_ctrlr_failed(void)
 	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req;
 	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 	char				payload[4096];
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 
 	req = nvme_allocate_request_contig(payload, sizeof(payload), expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -519,10 +512,9 @@ static void test_nvme_qpair_fail(void)
 	struct spdk_nvme_qpair		qpair = {};
 	struct nvme_request		*req = NULL;
 	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 	struct nvme_tracker		*tr_temp;
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 
 	tr_temp = LIST_FIRST(&qpair.free_tr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
@@ -550,9 +542,8 @@ static void test_nvme_qpair_process_completions(void)
 {
 	struct spdk_nvme_qpair		qpair = {};
 	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	qpair.is_enabled = false;
 	qpair.ctrlr->is_resetting = true;
 
@@ -566,9 +557,8 @@ test_nvme_qpair_process_completions_limit(void)
 {
 	struct spdk_nvme_qpair		qpair = {};
 	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 
-	prepare_submit_request_test(&qpair, &ctrlr, &regs);
+	prepare_submit_request_test(&qpair, &ctrlr);
 	qpair.is_enabled = true;
 
 	/* Insert 4 entries into the completion queue */
@@ -597,11 +587,9 @@ static void test_nvme_qpair_destroy(void)
 {
 	struct spdk_nvme_qpair		qpair = {};
 	struct spdk_nvme_ctrlr		ctrlr = {};
-	struct spdk_nvme_registers	regs = {};
 	struct nvme_tracker		*tr_temp;
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
-	ctrlr.regs = &regs;
 	TAILQ_INIT(&ctrlr.free_io_qpairs);
 	TAILQ_INIT(&ctrlr.active_io_qpairs);
 

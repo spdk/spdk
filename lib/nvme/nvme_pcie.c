@@ -37,6 +37,37 @@
 
 #include "nvme_internal.h"
 
+/* PCIe transport extensions for spdk_nvme_ctrlr */
+struct nvme_pcie_ctrlr {
+	struct spdk_nvme_ctrlr ctrlr;
+
+	/** NVMe MMIO register space */
+	volatile struct spdk_nvme_registers *regs;
+
+	/* BAR mapping address which contains controller memory buffer */
+	void *cmb_bar_virt_addr;
+
+	/* BAR physical address which contains controller memory buffer */
+	uint64_t cmb_bar_phys_addr;
+
+	/* Controller memory buffer size in Bytes */
+	uint64_t cmb_size;
+
+	/* Current offset of controller memory buffer */
+	uint64_t cmb_current_offset;
+
+	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
+	uint32_t doorbell_stride_u32;
+};
+SPDK_STATIC_ASSERT(offsetof(struct nvme_pcie_ctrlr, ctrlr) == 0, "ctrlr must be first field");
+
+static inline struct nvme_pcie_ctrlr *
+nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	assert(ctrlr->transport == &spdk_nvme_transport_pcie);
+	return (struct nvme_pcie_ctrlr *)ctrlr;
+}
+
 static int
 nvme_pcie_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id)
 {
@@ -59,7 +90,9 @@ nvme_pcie_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id)
 static volatile void *
 nvme_pcie_reg_addr(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset)
 {
-	return (volatile void *)((uintptr_t)ctrlr->regs + offset);
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	return (volatile void *)((uintptr_t)pctrlr->regs + offset);
 }
 
 static int
@@ -97,21 +130,21 @@ nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 }
 
 static int
-nvme_pcie_ctrlr_get_cmbloc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbloc_register *cmbloc)
+nvme_pcie_ctrlr_get_cmbloc(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_cmbloc_register *cmbloc)
 {
-	return nvme_pcie_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw),
+	return nvme_pcie_ctrlr_get_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw),
 					 &cmbloc->raw);
 }
 
 static int
-nvme_pcie_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz)
+nvme_pcie_ctrlr_get_cmbsz(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_cmbsz_register *cmbsz)
 {
-	return nvme_pcie_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
+	return nvme_pcie_ctrlr_get_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
 					 &cmbsz->raw);
 }
 
 static void
-nvme_pcie_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
+nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 {
 	int rc;
 	void *addr;
@@ -120,8 +153,8 @@ nvme_pcie_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cmbloc_register cmbloc;
 	uint64_t size, unit_size, offset, bar_size, bar_phys_addr;
 
-	if (nvme_pcie_ctrlr_get_cmbsz(ctrlr, &cmbsz) ||
-	    nvme_pcie_ctrlr_get_cmbloc(ctrlr, &cmbloc)) {
+	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
+	    nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
 		goto exit;
 	}
@@ -141,7 +174,7 @@ nvme_pcie_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
 	/* controller memory buffer offset from BAR in Bytes */
 	offset = unit_size * cmbloc.bits.ofst;
 
-	rc = spdk_pci_device_map_bar(ctrlr->devhandle, bir, &addr,
+	rc = spdk_pci_device_map_bar(pctrlr->ctrlr.devhandle, bir, &addr,
 				     &bar_phys_addr, &bar_size);
 	if ((rc != 0) || addr == NULL) {
 		goto exit;
@@ -155,35 +188,35 @@ nvme_pcie_ctrlr_map_cmb(struct spdk_nvme_ctrlr *ctrlr)
 		goto exit;
 	}
 
-	ctrlr->cmb_bar_virt_addr = addr;
-	ctrlr->cmb_bar_phys_addr = bar_phys_addr;
-	ctrlr->cmb_size = size;
-	ctrlr->cmb_current_offset = offset;
+	pctrlr->cmb_bar_virt_addr = addr;
+	pctrlr->cmb_bar_phys_addr = bar_phys_addr;
+	pctrlr->cmb_size = size;
+	pctrlr->cmb_current_offset = offset;
 
 	if (!cmbsz.bits.sqs) {
-		ctrlr->opts.use_cmb_sqs = false;
+		pctrlr->ctrlr.opts.use_cmb_sqs = false;
 	}
 
 	return;
 exit:
-	ctrlr->cmb_bar_virt_addr = NULL;
-	ctrlr->opts.use_cmb_sqs = false;
+	pctrlr->cmb_bar_virt_addr = NULL;
+	pctrlr->ctrlr.opts.use_cmb_sqs = false;
 	return;
 }
 
 static int
-nvme_pcie_ctrlr_unmap_cmb(struct spdk_nvme_ctrlr *ctrlr)
+nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 {
 	int rc = 0;
 	union spdk_nvme_cmbloc_register cmbloc;
-	void *addr = ctrlr->cmb_bar_virt_addr;
+	void *addr = pctrlr->cmb_bar_virt_addr;
 
 	if (addr) {
-		if (nvme_pcie_ctrlr_get_cmbloc(ctrlr, &cmbloc)) {
+		if (nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
 			SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cmbloc() failed\n");
 			return -EIO;
 		}
-		rc = spdk_pci_device_unmap_bar(ctrlr->devhandle, cmbloc.bits.bir, addr);
+		rc = spdk_pci_device_unmap_bar(pctrlr->ctrlr.devhandle, cmbloc.bits.bir, addr);
 	}
 	return rc;
 }
@@ -192,55 +225,56 @@ static int
 nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64_t aligned,
 			  uint64_t *offset)
 {
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	uint64_t round_offset;
 
-	round_offset = ctrlr->cmb_current_offset;
+	round_offset = pctrlr->cmb_current_offset;
 	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
 
-	if (round_offset + length > ctrlr->cmb_size)
+	if (round_offset + length > pctrlr->cmb_size)
 		return -1;
 
 	*offset = round_offset;
-	ctrlr->cmb_current_offset = round_offset + length;
+	pctrlr->cmb_current_offset = round_offset + length;
 
 	return 0;
 }
 
 static int
-nvme_pcie_ctrlr_allocate_bars(struct spdk_nvme_ctrlr *ctrlr)
+nvme_pcie_ctrlr_allocate_bars(struct nvme_pcie_ctrlr *pctrlr)
 {
 	int rc;
 	void *addr;
 	uint64_t phys_addr, size;
 
-	rc = spdk_pci_device_map_bar(ctrlr->devhandle, 0, &addr,
+	rc = spdk_pci_device_map_bar(pctrlr->ctrlr.devhandle, 0, &addr,
 				     &phys_addr, &size);
-	ctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
-	if ((ctrlr->regs == NULL) || (rc != 0)) {
+	pctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
+	if ((pctrlr->regs == NULL) || (rc != 0)) {
 		SPDK_ERRLOG("nvme_pcicfg_map_bar failed with rc %d or bar %p\n",
-			    rc, ctrlr->regs);
+			    rc, pctrlr->regs);
 		return -1;
 	}
 
-	nvme_pcie_ctrlr_map_cmb(ctrlr);
+	nvme_pcie_ctrlr_map_cmb(pctrlr);
 
 	return 0;
 }
 
 static int
-nvme_pcie_ctrlr_free_bars(struct spdk_nvme_ctrlr *ctrlr)
+nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 {
 	int rc = 0;
-	void *addr = (void *)ctrlr->regs;
+	void *addr = (void *)pctrlr->regs;
 
-	rc = nvme_pcie_ctrlr_unmap_cmb(ctrlr);
+	rc = nvme_pcie_ctrlr_unmap_cmb(pctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_unmap_cmb failed with error code %d\n", rc);
 		return -1;
 	}
 
 	if (addr) {
-		rc = spdk_pci_device_unmap_bar(ctrlr->devhandle, 0, addr);
+		rc = spdk_pci_device_unmap_bar(pctrlr->ctrlr.devhandle, 0, addr);
 	}
 	return rc;
 }
@@ -248,11 +282,12 @@ nvme_pcie_ctrlr_free_bars(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_pcie_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	union spdk_nvme_cap_register cap;
 	uint32_t cmd_reg;
 	int rc;
 
-	rc = nvme_pcie_ctrlr_allocate_bars(ctrlr);
+	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
 		return rc;
 	}
@@ -269,7 +304,7 @@ nvme_pcie_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
-	ctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
+	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
 
 	/* Save the PCI address */
 	ctrlr->pci_addr.domain = spdk_pci_device_get_domain(devhandle);
@@ -283,7 +318,9 @@ nvme_pcie_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 static void
 nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	nvme_pcie_ctrlr_free_bars(ctrlr);
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	nvme_pcie_ctrlr_free_bars(pctrlr);
 }
 
 static void
@@ -318,6 +355,7 @@ static int
 nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(ctrlr);
 	struct nvme_tracker	*tr;
 	uint16_t		i;
 	volatile uint32_t	*doorbell_base;
@@ -344,8 +382,8 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, qpair->num_entries * sizeof(struct spdk_nvme_cmd),
 					      0x1000, &offset) == 0) {
-			qpair->cmd = ctrlr->cmb_bar_virt_addr + offset;
-			qpair->cmd_bus_addr = ctrlr->cmb_bar_phys_addr + offset;
+			qpair->cmd = pctrlr->cmb_bar_virt_addr + offset;
+			qpair->cmd_bus_addr = pctrlr->cmb_bar_phys_addr + offset;
 			qpair->sq_in_cmb = true;
 		}
 	}
@@ -367,9 +405,9 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		return -ENOMEM;
 	}
 
-	doorbell_base = &ctrlr->regs->doorbell[0].sq_tdbl;
-	qpair->sq_tdbl = doorbell_base + (2 * qpair->id + 0) * ctrlr->doorbell_stride_u32;
-	qpair->cq_hdbl = doorbell_base + (2 * qpair->id + 1) * ctrlr->doorbell_stride_u32;
+	doorbell_base = &pctrlr->regs->doorbell[0].sq_tdbl;
+	qpair->sq_tdbl = doorbell_base + (2 * qpair->id + 0) * pctrlr->doorbell_stride_u32;
+	qpair->cq_hdbl = doorbell_base + (2 * qpair->id + 1) * pctrlr->doorbell_stride_u32;
 
 	/*
 	 * Reserve space for all of the trackers in a single allocation.
@@ -1174,6 +1212,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 }
 
 const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
+	.ctrlr_size = sizeof(struct nvme_pcie_ctrlr),
+
 	.ctrlr_construct = nvme_pcie_ctrlr_construct,
 	.ctrlr_destruct = nvme_pcie_ctrlr_destruct,
 

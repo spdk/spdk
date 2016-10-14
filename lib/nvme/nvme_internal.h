@@ -249,6 +249,12 @@ struct pci_id {
 };
 
 struct spdk_nvme_transport {
+	/*
+	 * Size of the transport-specific extended spdk_nvme_ctrlr structure,
+	 * which must contain spdk_nvme_ctrlr as the first element.
+	 */
+	size_t ctrlr_size;
+
 	int (*ctrlr_construct)(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
 	void (*ctrlr_destruct)(struct spdk_nvme_ctrlr *ctrlr);
 
@@ -417,9 +423,6 @@ enum nvme_ctrlr_state {
 struct spdk_nvme_ctrlr {
 	/* Hot data (accessed in I/O path) starts here. */
 
-	/** NVMe MMIO register space */
-	volatile struct spdk_nvme_registers	*regs;
-
 	const struct spdk_nvme_transport	*transport;
 
 	/** I/O queue pairs */
@@ -459,9 +462,6 @@ struct spdk_nvme_ctrlr {
 	/** minimum page size supported by this controller in bytes */
 	uint32_t			min_page_size;
 
-	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
-	uint32_t			doorbell_stride_u32;
-
 	uint32_t			num_aers;
 	struct nvme_async_event_request	aer[NVME_MAX_ASYNC_EVENTS];
 	spdk_nvme_aer_cb		aer_cb_fn;
@@ -489,15 +489,6 @@ struct spdk_nvme_ctrlr {
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
 	struct spdk_nvme_ctrlr_opts	opts;
-
-	/** BAR mapping address which contains controller memory buffer */
-	void				*cmb_bar_virt_addr;
-	/** BAR physical address which contains controller memory buffer */
-	uint64_t			cmb_bar_phys_addr;
-	/** Controller memory buffer size in Bytes */
-	uint64_t			cmb_size;
-	/** Current offset of controller memory buffer */
-	uint64_t			cmb_current_offset;
 
 	/** PCI address including domain, bus, device and function */
 	struct spdk_pci_addr		pci_addr;
