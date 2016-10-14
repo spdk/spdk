@@ -393,6 +393,30 @@ def verify_add_delete_ip_address(rpc_py):
                    (faked_ip, x["name"]))
     print "verify_add_delete_ip_address passed."
 
+def verify_add_nvme_bdev_rpc_methods(rpc_py):
+    rpc = spdk_rpc(rpc_py)
+    test_pass = 0
+    output = check_output("lspci -mm -n | awk '{if ($2 == \"\\\"0108\\\"\") print $0}' | grep p02", shell=True)
+    for out in output.split("\n"):
+        if out != '':
+            ctrlr_address = "0000:{}".format(out.split(" ")[0])
+            output = rpc.construct_nvme_bdev(ctrlr_address)
+            if output.strip()=='':
+                print "add nvme device passed first time"
+                test_pass = 1
+            verify(test_pass == 1, 1, "add nvme device passed first time")
+            test_pass = 0
+            try:
+                output = rpc.construct_nvme_bdev(ctrlr_address)
+            except Exception as e:
+                print "add nvme device passed second time"
+                test_pass = 1
+                pass
+            else:
+                pass
+            verify(test_pass == 1, 1, "add nvme device passed second time")
+    print "verify_add_nvme_bdev_rpc_methods passed."
+
 if __name__ == "__main__":
 
     rpc_py = sys.argv[1]
@@ -407,6 +431,7 @@ if __name__ == "__main__":
         verify_target_nodes_rpc_methods(rpc_py, rpc_param)
         verify_scsi_devices_rpc_methods(rpc_py)
         verify_iscsi_connection_rpc_methods(rpc_py)
+        verify_add_nvme_bdev_rpc_methods(rpc_py)
     except RpcException as e:
         print "{}. Exiting with status {}".format(e.message, e.retval)
         raise e
