@@ -472,6 +472,58 @@ blockdev_overlapped_write_read_8k(void)
 	blockdev_write_read(data_length, pattern, offset, expected_rc);
 }
 
+static int
+blockdev_reset(struct io_target *target, void *bdev_task_ctx, int reset_type)
+{
+	int rc;
+
+	complete = 0;
+	completion_status_per_io = SPDK_BDEV_IO_STATUS_FAILED;
+
+	rc = spdk_bdev_reset(target->bdev, reset_type,
+			     quick_test_complete, bdev_task_ctx);
+
+	return rc;
+}
+
+static void
+blockdev_hard_soft_reset(void)
+{
+	struct io_target *target;
+	int	rc;
+
+	target = g_io_targets;
+	while (target != NULL) {
+		rc = blockdev_reset(target, NULL, SPDK_BDEV_RESET_HARD);
+
+		/* If the reset was submitted, the function returns 0 */
+		if (rc != 0) {
+			CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_FAILED);
+		} else {
+			check_io_completion();
+			/* If the reset was successful, the gencnt is incremented */
+			if (completion_status_per_io == SPDK_BDEV_IO_STATUS_SUCCESS) {
+				CU_ASSERT_EQUAL(target->bdev->gencnt, 1);
+			} else {
+				CU_ASSERT_EQUAL(target->bdev->gencnt, 0);
+			}
+		}
+
+		target->bdev->gencnt = 0;
+		rc = blockdev_reset(target, NULL, SPDK_BDEV_RESET_SOFT);
+
+		/* If the reset was submitted, the function returns 0 */
+		if (rc != 0) {
+			CU_ASSERT_EQUAL(completion_status_per_io, SPDK_BDEV_IO_STATUS_FAILED);
+		} else {
+			check_io_completion();
+			/* The gencnt is always 0 regardless of the failure or success. */
+			CU_ASSERT_EQUAL(target->bdev->gencnt, 0);
+		}
+
+		target = target->next;
+	}
+}
 
 static void
 test_main(spdk_event_t event)
@@ -512,6 +564,8 @@ test_main(spdk_event_t event)
 			       blockdev_write_read_max_offset) == NULL
 		|| CU_add_test(suite, "blockdev write read 8k on overlapped address offset",
 			       blockdev_overlapped_write_read_8k) == NULL
+		|| CU_add_test(suite, "blockdev hard & soft reset",
+			       blockdev_hard_soft_reset) == NULL
 	) {
 		CU_cleanup_registry();
 		spdk_app_stop(CU_get_error());

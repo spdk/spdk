@@ -779,7 +779,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 {
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		/* Successful reset */
-		if (bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 			/* Increase the blockdev generation if it is a hard reset */
 			if (bdev_io->u.reset.type == SPDK_BDEV_RESET_HARD) {
 				bdev_io->bdev->gencnt++;
