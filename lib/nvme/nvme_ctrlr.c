@@ -920,8 +920,8 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-static inline int
-pthread_mutex_init_recursive(pthread_mutex_t *mtx)
+int
+nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 {
 	pthread_mutexattr_t attr;
 	int rc = 0;
@@ -930,6 +930,7 @@ pthread_mutex_init_recursive(pthread_mutex_t *mtx)
 		return -1;
 	}
 	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) ||
+	    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) ||
 	    pthread_mutex_init(mtx, &attr)) {
 		rc = -1;
 	}
@@ -963,7 +964,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 
-	pthread_mutex_init_recursive(&ctrlr->ctrlr_lock);
+	nvme_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 
 	return 0;
 }
