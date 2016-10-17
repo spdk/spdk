@@ -154,13 +154,13 @@ p.add_argument('block_size', help='Block size for this bdev', type=int)
 p.set_defaults(func=construct_malloc_bdev)
 
 
-def construct_aio_lun(args):
+def construct_aio_bdev(args):
     params = {'fname': args.fname}
-    jsonrpc_call('construct_aio_lun', params)
+    jsonrpc_call('construct_aio_bdev', params)
 
-p = subparsers.add_parser('construct_aio_lun', help='Add a LUN with aio backend')
+p = subparsers.add_parser('construct_aio_bdev', help='Add a bdev with aio backend')
 p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
-p.set_defaults(func=construct_aio_lun)
+p.set_defaults(func=construct_aio_bdev)
 
 def construct_nvme_bdev(args):
     params = {'pci_address': args.pci_address}

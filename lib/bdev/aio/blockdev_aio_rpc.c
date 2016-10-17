@@ -50,9 +50,9 @@ static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_aio_lun(struct spdk_jsonrpc_server_conn *conn,
-			   const struct spdk_json_val *params,
-			   const struct spdk_json_val *id)
+spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_server_conn *conn,
+			    const struct spdk_json_val *params,
+			    const struct spdk_json_val *id)
 {
 	struct rpc_construct_aio req = {};
 	struct spdk_json_write_ctx *w;
@@ -83,4 +83,4 @@ invalid:
 	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_construct_aio(&req);
 }
-SPDK_RPC_REGISTER("construct_aio_lun", spdk_rpc_construct_aio_lun)
+SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev)
