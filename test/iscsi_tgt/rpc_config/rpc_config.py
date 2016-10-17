@@ -17,7 +17,7 @@ rpc_param = {
     'initiator_name': 'ALL',
     'netmask': netmask,
     'lun_total': 3,
-    'malloc_lun_size': 64,
+    'malloc_bdev_size': 64,
     'malloc_block_size': 512,
     'queue_depth': 64,
     'target_name': 'Target3',
@@ -84,7 +84,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 
     portal_tag = '1'
     initiator_tag = '1'
-    rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+    rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
 
@@ -127,7 +127,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
 
     portal_tag = '1'
     initiator_tag = '1'
-    rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+    rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
 
@@ -166,7 +166,7 @@ def verify_luns_rpc_methods(rpc_py, rpc_param):
            "get_luns returned {}, expected empty".format(jsonvalue))
 
     for i in range(1, rpc_param['lun_total'] + 1):
-        rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+        rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
         output = rpc.get_luns()
         jsonvalue = json.loads(output)
         verify(not jsonvalue, 1,
@@ -283,7 +283,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     verify(not jsonvalues, 1,
            "get_target_nodes returned {}, expected empty".format(jsonvalues))
 
-    rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+    rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
 
