@@ -33,6 +33,7 @@
 
 #include "spdk_cunit.h"
 
+uint64_t rte_get_timer_hz(void);
 #include "nvme/nvme_ctrlr.c"
 
 struct nvme_driver _g_nvme_driver = {
@@ -1111,6 +1112,12 @@ test_nvme_ctrlr_alloc_cmb(void)
 
 	rc = nvme_ctrlr_alloc_cmb(&ctrlr, 0x8000000, 0x1000, &offset);
 	CU_ASSERT(rc == -1);
+}
+
+uint64_t
+rte_get_timer_hz()
+{
+	return 0;
 }
 
 int main(int argc, char **argv)

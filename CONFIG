@@ -72,3 +72,6 @@ FIO_SOURCE_DIR?=/usr/src/fio
 # Enable RDMA support for the NVMf target.
 # Requires ibverbs development libraries.
 CONFIG_RDMA?=n
+
+# Change NVMe IO timeout value.
+CONFIG_NVME_IO_TIMEOUT=30

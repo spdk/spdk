@@ -32,6 +32,10 @@
  */
 
 #include "nvme_internal.h"
+static int nvme_qpair_check_timeout(struct spdk_nvme_qpair *qpair);
+static void abort_cb(void *arg,const struct spdk_nvme_cpl *cpl);
+static void* abort_completions(void*);
+static int32_t _spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions);
 
 static inline bool nvme_qpair_is_admin_queue(struct spdk_nvme_qpair *qpair)
 {
@@ -395,8 +399,8 @@ nvme_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *
 		nvme_free_request(req);
 		tr->req = NULL;
 
-		LIST_REMOVE(tr, list);
-		LIST_INSERT_HEAD(&qpair->free_tr, tr, list);
+		TAILQ_REMOVE(&qpair->outstanding_tr, tr, tq_list);
+		TAILQ_INSERT_HEAD(&qpair->free_tr, tr, tq_list);
 
 		/*
 		 * If the controller is in the middle of resetting, don't
@@ -467,6 +471,26 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+{
+	int num_completions = _spdk_nvme_qpair_process_completions(qpair, max_completions);
+
+	/* 
+	 * Check timeouts only when Controller is in ready state AND when 
+	 * qpair is i/io qpair
+	 */
+	if (qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
+
+		if (!qpair->ctrlr->abort_in_progress) {
+
+			nvme_qpair_check_timeout(qpair);
+
+		}
+	}
+	return num_completions;
+}
+
+int32_t
+_spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_tracker	*tr;
 	struct spdk_nvme_cpl	*cpl;
@@ -580,8 +604,8 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->sq_tdbl = doorbell_base + (2 * id + 0) * ctrlr->doorbell_stride_u32;
 	qpair->cq_hdbl = doorbell_base + (2 * id + 1) * ctrlr->doorbell_stride_u32;
 
-	LIST_INIT(&qpair->free_tr);
-	LIST_INIT(&qpair->outstanding_tr);
+	TAILQ_INIT(&qpair->free_tr);
+	TAILQ_INIT(&qpair->outstanding_tr);
 	STAILQ_INIT(&qpair->queued_req);
 
 	/*
@@ -599,7 +623,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	for (i = 0; i < num_trackers; i++) {
 		tr = &qpair->tr[i];
 		nvme_qpair_construct_tracker(tr, i, phys_addr);
-		LIST_INSERT_HEAD(&qpair->free_tr, tr, list);
+		TAILQ_INSERT_HEAD(&qpair->free_tr, tr, tq_list);
 		phys_addr += sizeof(struct nvme_tracker);
 	}
 
@@ -611,28 +635,108 @@ fail:
 }
 
 static void
-nvme_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
+nvme_admin_qpair_abort_aers_and_abort_cmd(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tracker	*tr;
 
-	tr = LIST_FIRST(&qpair->outstanding_tr);
+	tr = TAILQ_FIRST(&qpair->outstanding_tr);
 	while (tr != NULL) {
 		assert(tr->req != NULL);
-		if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+		if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST || tr->req->cmd.opc == SPDK_NVME_OPC_ABORT) {
 			nvme_qpair_manual_complete_tracker(qpair, tr,
 							   SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_SQ_DELETION, 0,
 							   false);
-			tr = LIST_FIRST(&qpair->outstanding_tr);
+			tr = TAILQ_FIRST(&qpair->outstanding_tr);
 		} else {
-			tr = LIST_NEXT(tr, list);
+			tr = TAILQ_NEXT(tr, tq_list);
 		}
 	}
+}
+
+int
+nvme_qpair_check_timeout(struct spdk_nvme_qpair* qpair)
+{
+	int rc;
+	uint64_t t02;
+	struct nvme_tracker *tr;
+	struct nvme_request *req;
+	pthread_t tid;
+	pthread_attr_t tattr;
+
+	if (!TAILQ_EMPTY(&qpair->outstanding_tr)) {
+
+		/*
+		 * qpair could be either for normal i/o or for admin command. If qpair is admin
+		 * and request is SPDK_NVME_OPC_ASYNC_EVENT_REQUEST, skip to next previous.
+		 */
+
+		tr=TAILQ_LAST(&qpair->outstanding_tr, nvme_outstanding_tr_head);
+		while (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+
+			/* qpair is for admin request */
+
+			tr = TAILQ_PREV(tr, nvme_outstanding_tr_head, tq_list);
+			if(!tr) {
+				/* 
+			 	 * All request were AER
+			 	 */
+				return 0;
+			}
+		}
+
+		req = tr->req;
+		t02 = rte_get_timer_cycles();
+		if (req->t0 <= t02){
+
+			if (!req->abort_count) {
+				/* 
+			 	 * Request has timed out. No previous Abort attempted for this request.
+				 * This could be i/o or admin request. Abort request and increase timeout.
+			 	 */
+				pthread_mutex_lock(&qpair->ctrlr->ctrlr_lock);
+				req->t0 = rte_get_timer_cycles() + qpair->ctrlr->hz * NVME_IO_TIMEOUT;
+				req->abort_count++;
+
+				qpair->ctrlr->abort_in_progress++;
+				pthread_attr_init(&tattr);
+				pthread_attr_setdetachstate(&tattr,PTHREAD_CREATE_DETACHED);
+				if ((rc=pthread_create(&tid, &tattr, abort_completions, qpair)) != 0) {
+					qpair->ctrlr->abort_in_progress--;
+					pthread_mutex_unlock(&qpair->ctrlr->ctrlr_lock);
+					nvme_printf(qpair->ctrlr, "error: pthread_create, rc =%d\n", rc);
+      					return rc;
+    				}
+
+				rc = nvme_ctrlr_cmd_abort(qpair->ctrlr, req->cmd.cid, qpair->id, abort_cb, qpair);
+				if (rc) {
+					qpair->ctrlr->abort_in_progress--;
+					pthread_mutex_unlock(&qpair->ctrlr->ctrlr_lock);
+					spdk_nvme_ctrlr_reset(qpair->ctrlr);
+					nvme_printf(qpair->ctrlr,"failed to submit abort request\n");
+					return rc;
+				}
+				pthread_mutex_unlock(&qpair->ctrlr->ctrlr_lock);
+
+			} else {
+				/*
+				 * Abort was attempted previously for this request. Reset Controller
+				 */
+				rc = spdk_nvme_ctrlr_reset(qpair->ctrlr);
+				if (rc != 0) {
+					nvme_printf(qpair->ctrlr,"failed to reset controller\n");
+					return rc;
+				}
+			}
+
+		}
+	}
+	return 0;
 }
 
 static void
 _nvme_admin_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
-	nvme_admin_qpair_abort_aers(qpair);
+	nvme_admin_qpair_abort_aers_and_abort_cmd(qpair);
 }
 
 
@@ -921,7 +1025,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		return rc;
 	}
 
-	tr = LIST_FIRST(&qpair->free_tr);
+	tr = TAILQ_FIRST(&qpair->free_tr);
 
 	if (tr == NULL || !qpair->is_enabled) {
 		/*
@@ -937,10 +1041,15 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		return 0;
 	}
 
-	LIST_REMOVE(tr, list); /* remove tr from free_tr */
-	LIST_INSERT_HEAD(&qpair->outstanding_tr, tr, list);
+	TAILQ_REMOVE(&qpair->free_tr, tr, tq_list); /* remove tr from free_tr */
+	TAILQ_INSERT_HEAD(&qpair->outstanding_tr, tr, tq_list);
 	tr->req = req;
 	req->cmd.cid = tr->cid;
+
+	req->t0 = rte_get_timer_cycles() + qpair->ctrlr->hz * NVME_IO_TIMEOUT;
+	if (req->cmd.opc == SPDK_NVME_OPC_ABORT) {
+		req->abort_count = 1;
+	}
 
 	if (req->payload_size == 0) {
 		/* Null payload - leave PRP fields zeroed */
@@ -999,7 +1108,7 @@ _nvme_admin_qpair_enable(struct spdk_nvme_qpair *qpair)
 	 *  a controller reset and its likely the context in which the
 	 *  command was issued no longer applies.
 	 */
-	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, tr_temp) {
+	TAILQ_FOREACH_SAFE(tr, &qpair->outstanding_tr, tq_list, tr_temp) {
 		nvme_printf(qpair->ctrlr,
 			    "aborting outstanding admin command\n");
 		nvme_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
@@ -1028,7 +1137,7 @@ _nvme_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 	}
 
 	/* Manually abort each outstanding I/O. */
-	LIST_FOREACH_SAFE(tr, &qpair->outstanding_tr, list, temp) {
+	TAILQ_FOREACH_SAFE(tr, &qpair->outstanding_tr, tq_list, temp) {
 		nvme_printf(qpair->ctrlr, "aborting outstanding i/o\n");
 		nvme_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 						   SPDK_NVME_SC_ABORTED_BY_REQUEST, 0, true);
@@ -1049,7 +1158,7 @@ static void
 _nvme_admin_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
 	qpair->is_enabled = false;
-	nvme_admin_qpair_abort_aers(qpair);
+	nvme_admin_qpair_abort_aers_and_abort_cmd(qpair);
 }
 
 static void
@@ -1083,8 +1192,8 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 	}
 
 	/* Manually abort each outstanding I/O. */
-	while (!LIST_EMPTY(&qpair->outstanding_tr)) {
-		tr = LIST_FIRST(&qpair->outstanding_tr);
+	while (!TAILQ_EMPTY(&qpair->outstanding_tr)) {
+		tr = TAILQ_FIRST(&qpair->outstanding_tr);
 		/*
 		 * Do not remove the tracker.  The abort_tracker path will
 		 *  do that for us.
@@ -1095,3 +1204,30 @@ nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+void 
+abort_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_qpair *qpair = arg;
+	assert(qpair != NULL);
+
+	/*
+	 * This function runs when the ctrlr->ctrlr_lock is held.
+	 */
+	qpair->ctrlr->abort_in_progress = 0;
+}
+
+void* abort_completions(void* arg)
+{
+	struct spdk_nvme_qpair *qpair = arg;
+	assert(qpair != NULL);
+
+	while (1)
+	{
+		spdk_nvme_ctrlr_process_admin_completions(qpair->ctrlr);
+		if (!qpair->ctrlr->abort_in_progress) {
+			break;
+		}
+		usleep(1000);
+	}
+	return NULL;
+}

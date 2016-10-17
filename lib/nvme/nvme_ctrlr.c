@@ -1132,7 +1132,8 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 
 	TAILQ_INIT(&ctrlr->free_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
-
+	ctrlr->abort_in_progress = 0;
+	ctrlr->hz = rte_get_timer_hz();
 	pthread_mutex_init_recursive(&ctrlr->ctrlr_lock);
 
 	return 0;

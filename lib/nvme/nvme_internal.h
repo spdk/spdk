@@ -118,10 +118,18 @@
 #define NVME_MAX_AER_LOG_SIZE		(4096)
 
 /*
+ * Default i/o timeout value
+ */
+#ifndef NVME_IO_TIMEOUT
+#define NVME_IO_TIMEOUT		30
+#endif
+
+/*
  * NVME_MAX_IO_QUEUES in nvme_spec.h defines the 64K spec-limit, but this
  *  define specifies the maximum number of queues this driver will actually
  *  try to configure, if available.
  */
+
 #define DEFAULT_MAX_IO_QUEUES		(1024)
 
 enum nvme_payload_type {
@@ -196,6 +204,13 @@ struct nvme_request {
 	void				*cb_arg;
 	STAILQ_ENTRY(nvme_request)	stailq;
 
+        /** 
+        * Used to record the time request object is put into outstanding_tr 
+        * bucket 
+        */
+        uint64_t t0;
+        short abort_count;
+
 	/**
 	 * The following members should not be reordered with members
 	 *  above.  These members are only needed when splitting
@@ -252,7 +267,7 @@ struct nvme_async_event_request {
 };
 
 struct nvme_tracker {
-	LIST_ENTRY(nvme_tracker)	list;
+	TAILQ_ENTRY(nvme_tracker)       tq_list;
 
 	struct nvme_request		*req;
 	uint16_t			cid;
@@ -293,8 +308,8 @@ struct spdk_nvme_qpair {
 	 */
 	struct spdk_nvme_cpl		*cpl;
 
-	LIST_HEAD(, nvme_tracker)	free_tr;
-	LIST_HEAD(, nvme_tracker)	outstanding_tr;
+	TAILQ_HEAD(, nvme_tracker)      free_tr;
+	TAILQ_HEAD(nvme_outstanding_tr_head, nvme_tracker)    outstanding_tr;
 
 	/**
 	 * Array of trackers indexed by command ID.
@@ -458,6 +473,12 @@ struct spdk_nvme_ctrlr {
 	uint64_t			cmb_size;
 	/** Current offset of controller memory buffer */
 	uint64_t			cmb_current_offset;
+	/** 
+	 * Indicates there is a pending Abort command on the admin completion Queue
+	 * if value is non-zero. 
+	*/
+	short abort_in_progress;
+	uint64_t hz;
 };
 
 struct nvme_driver {
