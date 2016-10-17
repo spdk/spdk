@@ -5,6 +5,9 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
+MALLOC_BDEV_SIZE=64
+MALLOC_BLOCK_SIZE=512
+
 rpc_py="python $rootdir/scripts/rpc.py"
 
 set -e
@@ -28,6 +31,9 @@ nvmfpid=$!
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid ${RPC_PORT}
+
+$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 
 modprobe -v nvme-rdma
 
