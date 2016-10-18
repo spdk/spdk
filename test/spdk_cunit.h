@@ -43,7 +43,14 @@
  * static analyzers figure out that it really doesn't return.
  * The abort() will never actually execute.
  */
-#define SPDK_CU_ASSERT_FATAL(cond) do { CU_ASSERT_FATAL(cond); if (!(cond)) { abort(); } } while (0)
+#define SPDK_CU_ASSERT_FATAL(cond)		\
+	do {					\
+		int result_ = !!(cond);		\
+		CU_ASSERT_FATAL(result_); 	\
+		if (!result_) {			\
+			abort();		\
+		}				\
+	} while (0)
 
 int spdk_cunit_print_results(const char *filename);
 
