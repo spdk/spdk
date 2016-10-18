@@ -249,13 +249,7 @@ struct pci_id {
 };
 
 struct spdk_nvme_transport {
-	/*
-	 * Size of the transport-specific extended spdk_nvme_ctrlr structure,
-	 * which must contain spdk_nvme_ctrlr as the first element.
-	 */
-	size_t ctrlr_size;
-
-	int (*ctrlr_construct)(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
+	struct spdk_nvme_ctrlr *(*ctrlr_construct)(void *devhandle);
 	void (*ctrlr_destruct)(struct spdk_nvme_ctrlr *ctrlr);
 
 	int (*ctrlr_get_pci_id)(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id);
@@ -572,7 +566,7 @@ int	nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 
-int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
+int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);

@@ -49,24 +49,10 @@ nvme_attach(void *devhandle)
 {
 	const struct spdk_nvme_transport *transport;
 	struct spdk_nvme_ctrlr	*ctrlr;
-	int			status;
-	uint64_t		phys_addr = 0;
 
 	transport = &spdk_nvme_transport_pcie;
 
-	ctrlr = spdk_zmalloc(transport->ctrlr_size, 64, &phys_addr);
-	if (ctrlr == NULL) {
-		SPDK_ERRLOG("could not allocate ctrlr\n");
-		return NULL;
-	}
-
-	ctrlr->transport = transport;
-
-	status = nvme_ctrlr_construct(ctrlr, devhandle);
-	if (status != 0) {
-		spdk_free(ctrlr);
-		return NULL;
-	}
+	ctrlr = transport->ctrlr_construct(devhandle);
 
 	return ctrlr;
 }
@@ -76,9 +62,8 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	nvme_ctrlr_destruct(ctrlr);
 	TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
-	spdk_free(ctrlr);
+	nvme_ctrlr_destruct(ctrlr);
 
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return 0;

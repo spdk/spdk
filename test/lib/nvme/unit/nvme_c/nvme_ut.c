@@ -50,12 +50,6 @@ spdk_pci_enumerate(enum spdk_pci_device_type type,
 	return -1;
 }
 
-int
-nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
-{
-	return 0;
-}
-
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {

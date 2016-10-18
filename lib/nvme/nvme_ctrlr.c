@@ -998,19 +998,13 @@ pthread_mutex_init_recursive(pthread_mutex_t *mtx)
 }
 
 int
-nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
+nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cap_register	cap;
 	int				rc;
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
-	ctrlr->devhandle = devhandle;
 	ctrlr->flags = 0;
-
-	rc = ctrlr->transport->ctrlr_construct(ctrlr, devhandle);
-	if (rc) {
-		return rc;
-	}
 
 	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");

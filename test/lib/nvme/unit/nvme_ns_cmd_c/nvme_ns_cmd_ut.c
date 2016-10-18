@@ -60,12 +60,6 @@ static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *leng
 	return 0;
 }
 
-int
-nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
-{
-	return 0;
-}
-
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {

@@ -59,13 +59,12 @@ struct nvme_pcie_ctrlr {
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
 	uint32_t doorbell_stride_u32;
 };
-SPDK_STATIC_ASSERT(offsetof(struct nvme_pcie_ctrlr, ctrlr) == 0, "ctrlr must be first field");
 
 static inline struct nvme_pcie_ctrlr *
 nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	assert(ctrlr->transport == &spdk_nvme_transport_pcie);
-	return (struct nvme_pcie_ctrlr *)ctrlr;
+	return (struct nvme_pcie_ctrlr *)((uintptr_t)ctrlr - offsetof(struct nvme_pcie_ctrlr, ctrlr));
 }
 
 static int
@@ -279,27 +278,38 @@ nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 	return rc;
 }
 
-static int
-nvme_pcie_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
+static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 {
-	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	struct spdk_pci_device *pci_dev = devhandle;
+	struct nvme_pcie_ctrlr *pctrlr;
 	union spdk_nvme_cap_register cap;
 	uint32_t cmd_reg;
 	int rc;
 
+	pctrlr = spdk_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
+	if (pctrlr == NULL) {
+		SPDK_ERRLOG("could not allocate ctrlr\n");
+		return NULL;
+	}
+
+	pctrlr->ctrlr.transport = &spdk_nvme_transport_pcie;
+	pctrlr->ctrlr.devhandle = devhandle;
+
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
-		return rc;
+		spdk_free(pctrlr);
+		return NULL;
 	}
 
 	/* Enable PCI busmaster and disable INTx */
-	spdk_pci_device_cfg_read32(devhandle, &cmd_reg, 4);
+	spdk_pci_device_cfg_read32(pci_dev, &cmd_reg, 4);
 	cmd_reg |= 0x404;
-	spdk_pci_device_cfg_write32(devhandle, cmd_reg, 4);
+	spdk_pci_device_cfg_write32(pci_dev, cmd_reg, 4);
 
-	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
+	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
-		return -EIO;
+		spdk_free(pctrlr);
+		return NULL;
 	}
 
 	/* Doorbell stride is 2 ^ (dstrd + 2),
@@ -307,12 +317,18 @@ nvme_pcie_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
 
 	/* Save the PCI address */
-	ctrlr->pci_addr.domain = spdk_pci_device_get_domain(devhandle);
-	ctrlr->pci_addr.bus = spdk_pci_device_get_bus(devhandle);
-	ctrlr->pci_addr.dev = spdk_pci_device_get_dev(devhandle);
-	ctrlr->pci_addr.func = spdk_pci_device_get_func(devhandle);
+	pctrlr->ctrlr.pci_addr.domain = spdk_pci_device_get_domain(pci_dev);
+	pctrlr->ctrlr.pci_addr.bus = spdk_pci_device_get_bus(pci_dev);
+	pctrlr->ctrlr.pci_addr.dev = spdk_pci_device_get_dev(pci_dev);
+	pctrlr->ctrlr.pci_addr.func = spdk_pci_device_get_func(pci_dev);
 
-	return 0;
+	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
+	if (rc != 0) {
+		spdk_free(pctrlr);
+		return NULL;
+	}
+
+	return &pctrlr->ctrlr;
 }
 
 static void
@@ -321,6 +337,7 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 
 	nvme_pcie_ctrlr_free_bars(pctrlr);
+	spdk_free(pctrlr);
 }
 
 static void
@@ -1212,8 +1229,6 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 }
 
 const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
-	.ctrlr_size = sizeof(struct nvme_pcie_ctrlr),
-
 	.ctrlr_construct = nvme_pcie_ctrlr_construct,
 	.ctrlr_destruct = nvme_pcie_ctrlr_destruct,
 
