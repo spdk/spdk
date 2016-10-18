@@ -371,7 +371,7 @@ Format:  'domain:device:function' etc
 Example: '0000:00:01.0'""")
 p.add_argument("-s", "--serial_number", help="""Valid if mode == Virtual.
 Format:  'sn' etc
-Example: 'SPDK00000000000001'""",  default='0000:00:01.0')
+Example: 'SPDK00000000000001'""", default='0000:00:01.0')
 p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces.
 Format:  'dev1 dev2 dev3' etc
 Example: 'Malloc0 Malloc1 Malloc2'

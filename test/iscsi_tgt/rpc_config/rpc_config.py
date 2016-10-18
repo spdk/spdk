@@ -401,7 +401,7 @@ def verify_add_nvme_bdev_rpc_methods(rpc_py):
         if out != '':
             ctrlr_address = "0000:{}".format(out.split(" ")[0])
             output = rpc.construct_nvme_bdev(ctrlr_address)
-            if output.strip()=='':
+            if output.strip() == '':
                 print "add nvme device passed first time"
                 test_pass = 1
             verify(test_pass == 1, 1, "add nvme device passed first time")
