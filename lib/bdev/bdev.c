@@ -516,6 +516,28 @@ spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 	return bdev->fn_table->get_io_channel(bdev, priority);
 }
 
+static int
+spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
+{
+	/* Return failure if nbytes is not a multiple of bdev->blocklen */
+	if (nbytes % bdev->blocklen) {
+		return -1;
+	}
+
+	/* Return failure if offset + nbytes is less than offset; indicates there
+	 * has been an overflow and hence the offset has been wrapped around */
+	if (offset + nbytes < offset) {
+		return -1;
+	}
+
+	/* Return failure if offset + nbytes exceeds the size of the blockdev */
+	if (offset + nbytes > bdev->blockcnt * bdev->blocklen) {
+		return -1;
+	}
+
+	return 0;
+}
+
 struct spdk_bdev_io *
 spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
@@ -524,19 +546,7 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_io *bdev_io;
 	int rc;
 
-	/* Return failure if nbytes is not a multiple of bdev->blocklen */
-	if (nbytes % bdev->blocklen) {
-		return NULL;
-	}
-
-	/* Return failure if offset + nbytes is less than offset; indicates there
-	 * has been an overflow and hence the offset has been wrapped around */
-	if ((offset + nbytes) < offset) {
-		return NULL;
-	}
-
-	/* Return failure if offset + nbytes exceeds the size of the blockdev */
-	if ((offset + nbytes) > (bdev->blockcnt * bdev->blocklen)) {
+	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return NULL;
 	}
 
@@ -575,19 +585,7 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_io *bdev_io;
 	int rc;
 
-	/* Return failure if nbytes is not a multiple of bdev->blocklen */
-	if (nbytes % bdev->blocklen) {
-		return NULL;
-	}
-
-	/* Return failure if offset + nbytes is less than offset; indicates there
-	 * has been an overflow and hence the offset has been wrapped around */
-	if ((offset + nbytes) < offset) {
-		return NULL;
-	}
-
-	/* Return failure if offset + nbytes exceeds the size of the blockdev */
-	if ((offset + nbytes) > (bdev->blockcnt * bdev->blocklen)) {
+	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return NULL;
 	}
 
@@ -623,19 +621,7 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_io *bdev_io;
 	int rc;
 
-	/* Return failure if nbytes is not a multiple of bdev->blocklen */
-	if (nbytes % bdev->blocklen) {
-		return NULL;
-	}
-
-	/* Return failure if offset + nbytes is less than offset; indicates there
-	 * has been an overflow and hence the offset has been wrapped around */
-	if ((offset + nbytes) < offset) {
-		return NULL;
-	}
-
-	/* Return failure if offset + nbytes exceeds the size of the blockdev */
-	if ((offset + nbytes) > (bdev->blockcnt * bdev->blocklen)) {
+	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return NULL;
 	}
 
@@ -673,19 +659,7 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_io *bdev_io;
 	int rc;
 
-	/* Return failure if len is not a multiple of bdev->blocklen */
-	if (len % bdev->blocklen) {
-		return NULL;
-	}
-
-	/* Return failure if offset + nbytes is less than offset; indicates there
-	 * has been an overflow and hence the offset has been wrapped around */
-	if ((offset + len) < offset) {
-		return NULL;
-	}
-
-	/* Return failure if offset + len exceeds the size of the blockdev */
-	if ((offset + len) > (bdev->blockcnt * bdev->blocklen)) {
+	if (spdk_bdev_io_valid(bdev, offset, len) != 0) {
 		return NULL;
 	}
 
