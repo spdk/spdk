@@ -115,15 +115,25 @@ ut_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *val
 }
 
 
-static int
-ut_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+static struct spdk_nvme_qpair *
+ut_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, enum spdk_nvme_qprio qprio)
 {
-	return 0;
+	struct spdk_nvme_qpair *qpair;
+
+	qpair = calloc(1, sizeof(*qpair));
+	SPDK_CU_ASSERT_FATAL(qpair != NULL);
+
+	qpair->ctrlr = ctrlr;
+	qpair->id = qid;
+	qpair->qprio = qprio;
+
+	return qpair;
 }
 
 static int
 ut_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
+	free(qpair);
 	return 0;
 }
 
@@ -882,13 +892,21 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 static void
 setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 {
+	uint32_t i;
+
+	CU_ASSERT_FATAL(pthread_mutex_init(&ctrlr->ctrlr_lock, NULL) == 0);
 	ctrlr->transport = &nvme_ctrlr_ut_transport;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr) == 0);
 
-	/* Fake out the parts of ctrlr needed for I/O qpair allocation */
 	ctrlr->opts.num_io_queues = num_io_queues;
-	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct_io_qpairs(ctrlr) == 0);
+	ctrlr->free_io_qids = spdk_bit_array_create(num_io_queues + 1);
+	SPDK_CU_ASSERT_FATAL(ctrlr->free_io_qids != NULL);
+
+	spdk_bit_array_clear(ctrlr->free_io_qids, 0);
+	for (i = 1; i <= num_io_queues; i++) {
+		spdk_bit_array_set(ctrlr->free_io_qids, i);
+	}
 }
 
 static void

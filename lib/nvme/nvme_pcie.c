@@ -785,13 +785,11 @@ nvme_pcie_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 }
 
 static int
-nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+_nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+				 uint16_t qid)
 {
 	struct nvme_completion_poll_status	status;
-	int rc;
-
-	assert(ctrlr != NULL);
-	assert(qpair != NULL);
+	int					rc;
 
 	status.done = false;
 	rc = nvme_pcie_ctrlr_cmd_create_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
@@ -835,6 +833,60 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	return 0;
 }
 
+static struct spdk_nvme_qpair *
+nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
+				enum spdk_nvme_qprio qprio)
+{
+	struct spdk_nvme_qpair *qpair;
+	union spdk_nvme_cap_register cap;
+	uint32_t num_entries;
+	int rc;
+
+	assert(ctrlr != NULL);
+
+	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
+		return NULL;
+	}
+
+	qpair = calloc(1, sizeof(*qpair));
+	if (qpair == NULL) {
+		return NULL;
+	}
+
+	qpair->id = qid;
+	qpair->qprio = qprio;
+
+	/*
+	 * NVMe spec sets a hard limit of 64K max entries, but
+	 *  devices may specify a smaller limit, so we need to check
+	 *  the MQES field in the capabilities register.
+	 */
+	num_entries = nvme_min(NVME_IO_ENTRIES, cap.bits.mqes + 1);
+
+	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr);
+	if (rc != 0) {
+		free(qpair);
+		return NULL;
+	}
+
+	rc = _nvme_pcie_ctrlr_create_io_qpair(ctrlr, qpair, qid);
+
+	if (rc != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "I/O queue creation failed\n");
+		free(qpair);
+		return NULL;
+	}
+
+	return qpair;
+}
+
+static int
+nvme_pcie_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	return _nvme_pcie_ctrlr_create_io_qpair(ctrlr, qpair, qpair->id);
+}
+
 static int
 nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
@@ -869,6 +921,8 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		return -1;
 	}
+
+	free(qpair);
 
 	return 0;
 }
@@ -1242,6 +1296,7 @@ const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 
 	.ctrlr_create_io_qpair = nvme_pcie_ctrlr_create_io_qpair,
 	.ctrlr_delete_io_qpair = nvme_pcie_ctrlr_delete_io_qpair,
+	.ctrlr_reinit_io_qpair = nvme_pcie_ctrlr_reinit_io_qpair,
 
 	.qpair_construct = nvme_pcie_qpair_construct,
 	.qpair_destroy = nvme_pcie_qpair_destroy,

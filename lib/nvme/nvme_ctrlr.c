@@ -105,6 +105,7 @@ struct spdk_nvme_qpair *
 spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			       enum spdk_nvme_qprio qprio)
 {
+	uint32_t				qid;
 	struct spdk_nvme_qpair			*qpair;
 	union spdk_nvme_cc_register		cc;
 
@@ -130,31 +131,22 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
 	/*
-	 * Get the first available qpair structure.
+	 * Get the first available I/O queue ID.
 	 */
-	qpair = TAILQ_FIRST(&ctrlr->free_io_qpairs);
-	if (qpair == NULL) {
-		/* No free queue IDs */
+	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
+	if (qid > ctrlr->opts.num_io_queues) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "No free I/O queue IDs\n");
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
-	/*
-	 * At this point, qpair contains a preallocated submission and completion queue and a
-	 *  unique queue ID, but it is not yet created on the controller.
-	 *
-	 * Fill out the submission queue priority and send out the Create I/O Queue commands.
-	 */
-	qpair->qprio = qprio;
-	if (ctrlr->transport->ctrlr_create_io_qpair(ctrlr, qpair)) {
-		/*
-		 * ctrlr_create_io_qpair() failed, so the qpair structure is still unused.
-		 * Exit here so we don't insert it into the active_io_qpairs list.
-		 */
+	qpair = ctrlr->transport->ctrlr_create_io_qpair(ctrlr, qid, qprio);
+	if (qpair == NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "transport->ctrlr_create_io_qpair() failed\n");
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
-	TAILQ_REMOVE(&ctrlr->free_io_qpairs, qpair, tailq);
+	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
 	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
 
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -175,13 +167,13 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
+	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
+	spdk_bit_array_set(ctrlr->free_io_qids, qpair->id);
+
 	if (ctrlr->transport->ctrlr_delete_io_qpair(ctrlr, qpair)) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -1;
 	}
-
-	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
-	TAILQ_INSERT_HEAD(&ctrlr->free_io_qpairs, qpair, tailq);
 
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	return 0;
@@ -324,74 +316,15 @@ nvme_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 				    ctrlr);
 }
 
-static int
-nvme_ctrlr_construct_io_qpairs(struct spdk_nvme_ctrlr *ctrlr)
-{
-	struct spdk_nvme_qpair		*qpair;
-	union spdk_nvme_cap_register	cap;
-	uint32_t			i, num_entries;
-	int				rc;
-	uint64_t			phys_addr = 0;
-
-	if (ctrlr->ioq != NULL) {
-		/*
-		 * io_qpairs were already constructed, so just return.
-		 *  This typically happens when the controller is
-		 *  initialized a second (or subsequent) time after a
-		 *  controller reset.
-		 */
-		return 0;
-	}
-
-	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
-		return -EIO;
-	}
-
-	/*
-	 * NVMe spec sets a hard limit of 64K max entries, but
-	 *  devices may specify a smaller limit, so we need to check
-	 *  the MQES field in the capabilities register.
-	 */
-	num_entries = nvme_min(NVME_IO_ENTRIES, cap.bits.mqes + 1);
-
-	ctrlr->ioq = spdk_zmalloc(ctrlr->opts.num_io_queues * sizeof(struct spdk_nvme_qpair),
-				  64, &phys_addr);
-
-	if (ctrlr->ioq == NULL)
-		return -1;
-
-	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
-		qpair = &ctrlr->ioq[i];
-
-		/*
-		 * Admin queue has ID=0. IO queues start at ID=1 -
-		 *  hence the 'i+1' here.
-		 */
-		rc = nvme_qpair_construct(qpair,
-					  i + 1, /* qpair ID */
-					  num_entries,
-					  ctrlr);
-		if (rc)
-			return -1;
-
-		TAILQ_INSERT_TAIL(&ctrlr->free_io_qpairs, qpair, tailq);
-	}
-
-	return 0;
-}
-
 static void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint32_t i;
+	struct spdk_nvme_qpair *qpair;
 
 	ctrlr->is_failed = true;
 	nvme_qpair_fail(&ctrlr->adminq);
-	if (ctrlr->ioq) {
-		for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
-			nvme_qpair_fail(&ctrlr->ioq[i]);
-		}
+	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+		nvme_qpair_fail(qpair);
 	}
 }
 
@@ -532,7 +465,6 @@ int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	uint32_t i;
 	struct spdk_nvme_qpair *qpair;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
@@ -553,8 +485,8 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Disable all queues before disabling the controller hardware. */
 	nvme_qpair_disable(&ctrlr->adminq);
-	for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
-		nvme_qpair_disable(&ctrlr->ioq[i]);
+	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+		nvme_qpair_disable(qpair);
 	}
 
 	/* Set the state back to INIT to cause a full hardware reset. */
@@ -572,7 +504,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	if (!ctrlr->is_failed) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-			if (ctrlr->transport->ctrlr_create_io_qpair(ctrlr, qpair) != 0) {
+			if (ctrlr->transport->ctrlr_reinit_io_qpair(ctrlr, qpair) != 0) {
 				nvme_ctrlr_fail(ctrlr);
 				rc = -1;
 			}
@@ -626,6 +558,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_completion_poll_status	status;
 	int					cq_allocated, sq_allocated;
 	int					rc;
+	uint32_t				i;
 
 	status.done = false;
 
@@ -661,6 +594,17 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	cq_allocated = (status.cpl.cdw0 >> 16) + 1;
 
 	ctrlr->opts.num_io_queues = nvme_min(sq_allocated, cq_allocated);
+
+	ctrlr->free_io_qids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
+	if (ctrlr->free_io_qids == NULL) {
+		return -ENOMEM;
+	}
+
+	/* Initialize list of free I/O queue IDs. QID 0 is the admin queue. */
+	spdk_bit_array_clear(ctrlr->free_io_qids, 0);
+	for (i = 1; i <= ctrlr->opts.num_io_queues; i++) {
+		spdk_bit_array_set(ctrlr->free_io_qids, i);
+	}
 
 	return 0;
 }
@@ -958,10 +902,6 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 		return -1;
 	}
 
-	if (nvme_ctrlr_construct_io_qpairs(ctrlr)) {
-		return -1;
-	}
-
 	if (nvme_ctrlr_construct_namespaces(ctrlr) != 0) {
 		return -1;
 	}
@@ -1005,6 +945,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->flags = 0;
+	ctrlr->free_io_qids = NULL;
 
 	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
@@ -1020,7 +961,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
 
-	TAILQ_INIT(&ctrlr->free_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 
 	pthread_mutex_init_recursive(&ctrlr->ctrlr_lock);
@@ -1031,24 +971,18 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint32_t	i;
-
 	while (!TAILQ_EMPTY(&ctrlr->active_io_qpairs)) {
 		struct spdk_nvme_qpair *qpair = TAILQ_FIRST(&ctrlr->active_io_qpairs);
 
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+		nvme_qpair_destroy(qpair);
 	}
 
 	nvme_ctrlr_shutdown(ctrlr);
 
 	nvme_ctrlr_destruct_namespaces(ctrlr);
-	if (ctrlr->ioq) {
-		for (i = 0; i < ctrlr->opts.num_io_queues; i++) {
-			nvme_qpair_destroy(&ctrlr->ioq[i]);
-		}
-	}
 
-	spdk_free(ctrlr->ioq);
+	spdk_bit_array_free(&ctrlr->free_io_qids);
 
 	nvme_qpair_destroy(&ctrlr->adminq);
 

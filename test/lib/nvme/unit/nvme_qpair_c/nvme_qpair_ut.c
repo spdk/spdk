@@ -221,7 +221,7 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
 	ctrlr->transport = &nvme_qpair_ut_transport;
-	TAILQ_INIT(&ctrlr->free_io_qpairs);
+	ctrlr->free_io_qids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	nvme_qpair_construct(qpair, 1, 128, ctrlr);
 

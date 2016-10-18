@@ -52,6 +52,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/barrier.h"
+#include "spdk/bit_array.h"
 #include "spdk/log.h"
 #include "spdk/mmio.h"
 #include "spdk/pci_ids.h"
@@ -260,8 +261,10 @@ struct spdk_nvme_transport {
 	int (*ctrlr_get_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
 	int (*ctrlr_get_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
 
-	int (*ctrlr_create_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
+	struct spdk_nvme_qpair *(*ctrlr_create_io_qpair)(struct spdk_nvme_ctrlr *ctrlr,
+			uint16_t qid, enum spdk_nvme_qprio qprio);
 	int (*ctrlr_delete_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
+	int (*ctrlr_reinit_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
 
 	int (*qpair_construct)(struct spdk_nvme_qpair *qpair);
 	void (*qpair_destroy)(struct spdk_nvme_qpair *qpair);
@@ -419,9 +422,6 @@ struct spdk_nvme_ctrlr {
 
 	const struct spdk_nvme_transport	*transport;
 
-	/** I/O queue pairs */
-	struct spdk_nvme_qpair		*ioq;
-
 	/** Array of namespaces indexed by nsid - 1 */
 	struct spdk_nvme_ns		*ns;
 
@@ -479,7 +479,7 @@ struct spdk_nvme_ctrlr {
 	 */
 	struct spdk_nvme_ns_data	*nsdata;
 
-	TAILQ_HEAD(, spdk_nvme_qpair)	free_io_qpairs;
+	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
 	struct spdk_nvme_ctrlr_opts	opts;
