@@ -489,6 +489,13 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 		return NULL;
 	}
 
+	/* Construct the primary process properties */
+	rc = nvme_ctrlr_add_process(&pctrlr->ctrlr, pci_dev);
+	if (rc != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
+		return NULL;
+	}
+
 	return &pctrlr->ctrlr;
 }
 
@@ -679,6 +686,91 @@ nvme_pcie_copy_command(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *sr
 }
 
 static void
+nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
+		struct nvme_request *req, struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr			*ctrlr = qpair->ctrlr;
+	struct nvme_request			*active_req = req;
+	struct spdk_nvme_controller_process	*active_proc, *tmp;
+	bool					pending_on_proc = false;
+
+	/*
+	 * The admin request is from another process. Move to the per
+	 *  process list for that process to handle it later.
+	 */
+	assert(nvme_qpair_is_admin_queue(qpair));
+	assert(active_req->pid != getpid());
+
+	/* Acquire the recursive lock first if not held already. */
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
+		if (active_proc->pid == active_req->pid) {
+			/* Saved the original completion information */
+			memcpy(&active_req->cpl, cpl, sizeof(*cpl));
+			STAILQ_INSERT_TAIL(&active_proc->active_reqs, active_req, stailq);
+			pending_on_proc = true;
+
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	if (pending_on_proc == false) {
+		SPDK_ERRLOG("The owning process is not found. Drop the request.\n");
+
+		nvme_free_request(active_req);
+	}
+}
+
+static void
+nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	struct nvme_request		*req, *tmp_req;
+	bool				proc_found = false;
+	pid_t				pid = getpid();
+	struct spdk_nvme_controller_process	*proc;
+
+	/*
+	 * Check whether there is any pending admin request from
+	 * other active processes.
+	 */
+	assert(nvme_qpair_is_admin_queue(qpair));
+
+	/* Acquire the recursive lock if not held already */
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
+		if (proc->pid == pid) {
+			proc_found = true;
+
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	if (proc_found == false) {
+		SPDK_ERRLOG("the active process is not found for this controller.");
+		assert(proc_found);
+	}
+
+	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {
+		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);
+
+		assert(req->pid == pid);
+
+		if (req->cb_fn) {
+			req->cb_fn(req->cb_arg, &req->cpl);
+		}
+
+		nvme_free_request(req);
+	}
+}
+
+static void
 nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
 {
 	struct nvme_request	*req;
@@ -702,9 +794,10 @@ static void
 nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr,
 				 struct spdk_nvme_cpl *cpl, bool print_on_error)
 {
-	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_request	*req;
-	bool			retry, error, was_active;
+	struct nvme_pcie_qpair		*pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_request		*req;
+	bool				retry, error, was_active;
+	bool				req_from_current_proc = true;
 
 	req = tr->req;
 
@@ -729,10 +822,19 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		nvme_pcie_qpair_submit_tracker(qpair, tr);
 	} else {
 		if (was_active && req->cb_fn) {
-			req->cb_fn(req->cb_arg, cpl);
+			/* Only check admin requests from different processes. */
+			if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
+				req_from_current_proc = false;
+				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
+			} else {
+				req->cb_fn(req->cb_arg, cpl);
+			}
 		}
 
-		nvme_free_request(req);
+		if (req_from_current_proc == true) {
+			nvme_free_request(req);
+		}
+
 		tr->req = NULL;
 
 		LIST_REMOVE(tr, list);
@@ -1481,6 +1583,11 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 	if (num_completions > 0) {
 		spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
+	}
+
+	/* Before returning, complete any pending admin request. */
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_pcie_qpair_complete_pending_admin_request(qpair);
 	}
 
 	return num_completions;

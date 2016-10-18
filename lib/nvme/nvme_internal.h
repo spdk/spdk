@@ -164,6 +164,16 @@ struct nvme_request {
 	STAILQ_ENTRY(nvme_request)	stailq;
 
 	/**
+	 * The active admin request can be moved to a per process pending
+	 *  list based on the saved pid to tell which process it belongs
+	 *  to. The cpl saves the original completion information which
+	 *  is used in the completion callback.
+	 * NOTE: these below two fields are only used for admin request.
+	 */
+	pid_t				pid;
+	struct spdk_nvme_cpl		cpl;
+
+	/**
 	 * The following members should not be reordered with members
 	 *  above.  These members are only needed when splitting
 	 *  requests which is done rarely, and the driver is careful
@@ -314,6 +324,25 @@ enum nvme_ctrlr_state {
 #define NVME_TIMEOUT_INFINITE	UINT64_MAX
 
 /*
+ * Used to track properties for all processes accessing the controller.
+ */
+struct spdk_nvme_controller_process {
+	/** Whether it is the primary process  */
+	bool						is_primary;
+
+	/** Process ID */
+	pid_t						pid;
+
+	/** Active admin requests to be completed */
+	STAILQ_HEAD(, nvme_request)			active_reqs;
+
+	TAILQ_ENTRY(spdk_nvme_controller_process)	tailq;
+
+	/** Per process PCI device handle */
+	struct spdk_pci_device				*devhandle;
+};
+
+/*
  * One of these per allocated PCI device.
  */
 struct spdk_nvme_ctrlr {
@@ -395,6 +424,9 @@ struct spdk_nvme_ctrlr {
 
 	/* Extra sleep time during controller initialization */
 	uint64_t			sleep_timeout_tsc;
+
+	/** Track all the processes manage this controller */
+	TAILQ_HEAD(, spdk_nvme_controller_process)	active_procs;
 };
 
 struct nvme_driver {
@@ -474,6 +506,9 @@ int	nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t size, uint32_t offset, void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
+
+int	nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
+void	nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr);
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);

@@ -376,6 +376,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 
 		req->cb_fn = cb_fn;
 		req->cb_arg = cb_arg;
+		req->pid = getpid();
 	}
 
 	return req;
@@ -525,6 +526,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.ams == SPDK_NVME_CC_AMS_RR);
 	CU_ASSERT(ctrlr.opts.arb_mechanism == SPDK_NVME_CC_AMS_RR);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -546,6 +550,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -567,6 +574,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -588,6 +598,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -657,6 +670,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.ams == SPDK_NVME_CC_AMS_RR);
 	CU_ASSERT(ctrlr.opts.arb_mechanism == SPDK_NVME_CC_AMS_RR);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -680,6 +696,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.ams == SPDK_NVME_CC_AMS_WRR);
 	CU_ASSERT(ctrlr.opts.arb_mechanism == SPDK_NVME_CC_AMS_WRR);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -701,6 +720,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -722,6 +744,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -790,6 +815,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.ams == SPDK_NVME_CC_AMS_RR);
 	CU_ASSERT(ctrlr.opts.arb_mechanism == SPDK_NVME_CC_AMS_RR);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -811,6 +839,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -834,6 +865,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.ams == SPDK_NVME_CC_AMS_VS);
 	CU_ASSERT(ctrlr.opts.arb_mechanism == SPDK_NVME_CC_AMS_VS);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 
@@ -855,6 +889,9 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1);
 	CU_ASSERT(g_ut_nvme_regs.cc.bits.en == 0);
 
+	/*
+	 * Complete and destroy the controller
+	 */
 	g_ut_nvme_regs.csts.bits.shst = SPDK_NVME_SHST_COMPLETE;
 	nvme_ctrlr_destruct(&ctrlr);
 

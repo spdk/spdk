@@ -107,6 +107,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
 	req->payload_size = payload_size;
+	req->pid = getpid();
 
 	return req;
 }
@@ -142,6 +143,7 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
+			assert(req->pid == getpid());
 			memcpy(req->user_buffer, req->payload.u.contig, req->payload_size);
 		}
 
