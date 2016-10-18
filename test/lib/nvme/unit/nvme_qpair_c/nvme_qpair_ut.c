@@ -146,6 +146,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
 	req->payload_size = payload_size;
+	req->pid = getpid();
 
 	return req;
 }
@@ -223,6 +224,7 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	ctrlr->transport = &nvme_qpair_ut_transport;
 	ctrlr->free_io_qids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
+	TAILQ_INIT(&ctrlr->active_procs);
 	nvme_qpair_construct(qpair, 1, 128, ctrlr, 0);
 
 	ut_fail_vtophys = false;
@@ -581,6 +583,7 @@ static void test_nvme_qpair_destroy(void)
 	memset(&ctrlr, 0, sizeof(ctrlr));
 	TAILQ_INIT(&ctrlr.free_io_qpairs);
 	TAILQ_INIT(&ctrlr.active_io_qpairs);
+	TAILQ_INIT(&ctrlr.active_procs);
 
 	nvme_qpair_construct(&qpair, 1, 128, &ctrlr);
 	nvme_qpair_destroy(&qpair);

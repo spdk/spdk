@@ -801,6 +801,54 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 /**
+ * This function will be called when a new process is using the controller.
+ *  1. For the primary process, it is called when constructing the controller.
+ *  2. For the secondary process, it is called at probing the controller.
+ */
+int
+nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
+{
+	struct spdk_nvme_controller_process	*ctrlr_proc;
+
+	/* Initialize the per process properties for this ctrlr */
+	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_controller_process), 64, NULL);
+	if (ctrlr_proc == NULL) {
+		SPDK_ERRLOG("failed to allocate memory to track the process props\n");
+
+		return -1;
+	}
+
+	ctrlr_proc->is_primary = spdk_process_is_primary();
+	ctrlr_proc->pid = getpid();
+	STAILQ_INIT(&ctrlr_proc->active_reqs);
+	ctrlr_proc->devhandle = devhandle;
+
+	TAILQ_INSERT_TAIL(&ctrlr->active_procs, ctrlr_proc, tailq);
+
+	return 0;
+}
+
+/**
+ * This function will be called when destructing the controller.
+ *  1. There is no more admin request on this controller.
+ *  2. Clean up any left resource allocation when its associated process is gone.
+ */
+void
+nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_controller_process	*active_proc, *tmp;
+
+	/* Free all the processes' properties and make sure no pending admin IOs */
+	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
+		TAILQ_REMOVE(&ctrlr->active_procs, active_proc, tailq);
+
+		assert(STAILQ_EMPTY(&active_proc->active_reqs));
+
+		spdk_free(active_proc);
+	}
+}
+
+/**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
 int
@@ -984,7 +1032,9 @@ nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 		return -1;
 	}
 	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) ||
+#ifndef __FreeBSD__
 	    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) ||
+#endif
 	    pthread_mutex_init(mtx, &attr)) {
 		rc = -1;
 	}
@@ -1014,6 +1064,8 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->quirks = nvme_get_quirks(&pci_id);
 	}
 
+	TAILQ_INIT(&ctrlr->active_procs);
+
 	return 0;
 }
 
@@ -1034,6 +1086,8 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
 	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_free_processes(ctrlr);
 
 	ctrlr->transport->ctrlr_destruct(ctrlr);
 }
