@@ -312,6 +312,8 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 		return NULL;
 	}
 
+	pctrlr->ctrlr.cap = cap;
+
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
@@ -838,16 +840,10 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 				enum spdk_nvme_qprio qprio)
 {
 	struct spdk_nvme_qpair *qpair;
-	union spdk_nvme_cap_register cap;
 	uint32_t num_entries;
 	int rc;
 
 	assert(ctrlr != NULL);
-
-	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
-		return NULL;
-	}
 
 	qpair = calloc(1, sizeof(*qpair));
 	if (qpair == NULL) {
@@ -862,7 +858,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	 *  devices may specify a smaller limit, so we need to check
 	 *  the MQES field in the capabilities register.
 	 */
-	num_entries = nvme_min(NVME_IO_ENTRIES, cap.bits.mqes + 1);
+	num_entries = nvme_min(NVME_IO_ENTRIES, ctrlr->cap.bits.mqes + 1);
 
 	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr);
 	if (rc != 0) {

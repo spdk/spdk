@@ -436,6 +436,8 @@ struct spdk_nvme_ctrlr {
 
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
+	union spdk_nvme_cap_register	cap;
+
 	enum nvme_ctrlr_state		state;
 	uint64_t			state_timeout_tsc;
 

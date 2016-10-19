@@ -381,12 +381,6 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register	cc;
 	union spdk_nvme_aqa_register	aqa;
-	union spdk_nvme_cap_register	cap;
-
-	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
-		return -EIO;
-	}
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc() failed\n");
@@ -431,12 +425,12 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	case SPDK_NVME_CC_AMS_RR:
 		break;
 	case SPDK_NVME_CC_AMS_WRR:
-		if (SPDK_NVME_CAP_AMS_WRR & cap.bits.ams) {
+		if (SPDK_NVME_CAP_AMS_WRR & ctrlr->cap.bits.ams) {
 			break;
 		}
 		return -EINVAL;
 	case SPDK_NVME_CC_AMS_VS:
-		if (SPDK_NVME_CAP_AMS_VS & cap.bits.ams) {
+		if (SPDK_NVME_CAP_AMS_VS & ctrlr->cap.bits.ams) {
 			break;
 		}
 		return -EINVAL;
@@ -781,19 +775,17 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register cc;
 	union spdk_nvme_csts_register csts;
-	union spdk_nvme_cap_register cap;
 	uint32_t ready_timeout_in_ms;
 	int rc;
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
-	    nvme_ctrlr_get_csts(ctrlr, &csts) ||
-	    nvme_ctrlr_get_cap(ctrlr, &cap)) {
+	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
 		nvme_ctrlr_fail(ctrlr);
 		return -EIO;
 	}
 
-	ready_timeout_in_ms = 500 * cap.bits.to;
+	ready_timeout_in_ms = 500 * ctrlr->cap.bits.to;
 
 	/*
 	 * Check if the current initialization step is done or has timed out.
@@ -946,19 +938,13 @@ nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	union spdk_nvme_cap_register	cap;
 	int				rc;
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->flags = 0;
 	ctrlr->free_io_qids = NULL;
 
-	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
-		return -EIO;
-	}
-
-	ctrlr->min_page_size = 1 << (12 + cap.bits.mpsmin);
+	ctrlr->min_page_size = 1 << (12 + ctrlr->cap.bits.mpsmin);
 
 	rc = nvme_ctrlr_construct_admin_qpair(ctrlr);
 	if (rc)
@@ -1027,12 +1013,7 @@ spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 
 union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr *ctrlr)
 {
-	union spdk_nvme_cap_register cap;
-
-	if (nvme_ctrlr_get_cap(ctrlr, &cap)) {
-		cap.raw = 0;
-	}
-	return cap;
+	return ctrlr->cap;
 }
 
 union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr)
