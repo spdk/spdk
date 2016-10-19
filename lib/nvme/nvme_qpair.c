@@ -347,8 +347,6 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->ctrlr = ctrlr;
 	qpair->transport = ctrlr->transport;
 
-	LIST_INIT(&qpair->free_tr);
-	LIST_INIT(&qpair->outstanding_tr);
 	STAILQ_INIT(&qpair->queued_req);
 
 	if (qpair->transport->qpair_construct(qpair)) {
@@ -419,8 +417,6 @@ _nvme_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
-	qpair->is_enabled = true;
-
 	if (nvme_qpair_is_io_queue(qpair)) {
 		_nvme_io_qpair_enable(qpair);
 	}
@@ -431,7 +427,6 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 void
 nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 {
-	qpair->is_enabled = false;
 	qpair->transport->qpair_disable(qpair);
 }
 

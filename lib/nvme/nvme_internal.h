@@ -321,45 +321,13 @@ SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, u.sgl) & 7) == 0, "SGL must be
 
 
 struct spdk_nvme_qpair {
-	volatile uint32_t		*sq_tdbl;
-	volatile uint32_t		*cq_hdbl;
-
 	const struct spdk_nvme_transport *transport;
-
-	/**
-	 * Submission queue
-	 */
-	struct spdk_nvme_cmd		*cmd;
-
-	/**
-	 * Completion queue
-	 */
-	struct spdk_nvme_cpl		*cpl;
-
-	LIST_HEAD(, nvme_tracker)	free_tr;
-	LIST_HEAD(, nvme_tracker)	outstanding_tr;
-
-	/**
-	 * Array of trackers indexed by command ID.
-	 */
-	struct nvme_tracker		*tr;
 
 	STAILQ_HEAD(, nvme_request)	queued_req;
 
 	uint16_t			id;
 
 	uint16_t			num_entries;
-	uint16_t			sq_tail;
-	uint16_t			cq_head;
-
-	uint8_t				phase;
-
-	bool				is_enabled;
-	bool				sq_in_cmb;
-
-	/*
-	 * Fields below this point should not be touched on the normal I/O happy path.
-	 */
 
 	uint8_t				qprio;
 
@@ -367,9 +335,6 @@ struct spdk_nvme_qpair {
 
 	/* List entry for spdk_nvme_ctrlr::free_io_qpairs and active_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
-
-	uint64_t			cmd_bus_addr;
-	uint64_t			cpl_bus_addr;
 };
 
 struct spdk_nvme_ns {

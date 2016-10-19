@@ -225,9 +225,6 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	nvme_qpair_construct(qpair, 1, 128, ctrlr);
 
-	CU_ASSERT(qpair->sq_tail == 0);
-	CU_ASSERT(qpair->cq_head == 0);
-
 	ut_fail_vtophys = false;
 }
 
@@ -285,8 +282,6 @@ test3(void)
 
 	req = nvme_allocate_request_null(expected_success_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
-
-	CU_ASSERT(qpair.sq_tail == 0);
 
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
 
@@ -480,18 +475,13 @@ test_ctrlr_failed(void)
 	req = nvme_allocate_request_contig(payload, sizeof(payload), expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
-	/* Disable the queue and set the controller to failed.
+	/* Set the controller to failed.
 	 * Set the controller to resetting so that the qpair won't get re-enabled.
 	 */
-	qpair.is_enabled = false;
 	ctrlr.is_failed = true;
 	ctrlr.is_resetting = true;
 
-	CU_ASSERT(qpair.sq_tail == 0);
-
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) != 0);
-
-	CU_ASSERT(qpair.sq_tail == 0);
 
 	cleanup_submit_request_test(&qpair);
 }
@@ -544,7 +534,6 @@ static void test_nvme_qpair_process_completions(void)
 	struct spdk_nvme_ctrlr		ctrlr = {};
 
 	prepare_submit_request_test(&qpair, &ctrlr);
-	qpair.is_enabled = false;
 	qpair.ctrlr->is_resetting = true;
 
 	spdk_nvme_qpair_process_completions(&qpair, 0);
