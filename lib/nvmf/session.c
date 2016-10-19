@@ -160,7 +160,6 @@ static void session_destruct(struct spdk_nvmf_session *session)
 {
 	TAILQ_REMOVE(&session->subsys->sessions, session, link);
 	session->transport->session_fini(session);
-	free(session);
 }
 
 void
@@ -246,7 +245,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		}
 
 		/* Establish a new session */
-		session = calloc(1, sizeof(struct spdk_nvmf_session));
+		session = conn->transport->session_init();
 		if (session == NULL) {
 			SPDK_ERRLOG("Memory allocation failure\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -259,12 +258,6 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		session->num_connections = 0;
 		session->subsys = subsystem;
 		session->max_connections_allowed = g_nvmf_tgt.max_queues_per_session;
-		if (conn->transport->session_init(session)) {
-			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			conn->transport->session_fini(session);
-			free(session);
-			return;
-		}
 
 		if (conn->transport->session_add_conn(session, conn)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;

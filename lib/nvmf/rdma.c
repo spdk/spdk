@@ -132,6 +132,8 @@ struct spdk_nvmf_rdma_conn {
 static TAILQ_HEAD(, spdk_nvmf_rdma_conn) g_pending_conns = TAILQ_HEAD_INITIALIZER(g_pending_conns);
 
 struct spdk_nvmf_rdma_session {
+	struct spdk_nvmf_session		session;
+
 	SLIST_HEAD(, spdk_nvmf_rdma_buf)	data_buf_pool;
 
 	struct ibv_context			*verbs;
@@ -177,6 +179,13 @@ get_rdma_req(struct spdk_nvmf_request *req)
 {
 	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req - offsetof(struct spdk_nvmf_rdma_request,
 			req));
+}
+
+static inline struct spdk_nvmf_rdma_session *
+get_rdma_sess(struct spdk_nvmf_session *sess)
+{
+	return (struct spdk_nvmf_rdma_session *)((uintptr_t)sess - offsetof(struct spdk_nvmf_rdma_session,
+			session));
 }
 
 static int nvmf_post_rdma_recv(struct spdk_nvmf_request *req);
@@ -375,7 +384,7 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 
 	rdma_req->sg_list[0].addr = (uintptr_t)req->data;
 	if (req->length > g_rdma.in_capsule_data_size) {
-		rdma_sess = conn->sess->trctx;
+		rdma_sess = get_rdma_sess(conn->sess);
 		rdma_req->sg_list[0].lkey = rdma_sess->buf_mr->lkey;
 	} else {
 		rdma_req->sg_list[0].lkey = rdma_conn->bufs_mr->lkey;
@@ -410,7 +419,7 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 
 	rdma_req->sg_list[0].addr = (uintptr_t)req->data;
 	if (req->length > g_rdma.in_capsule_data_size) {
-		rdma_sess = conn->sess->trctx;
+		rdma_sess = get_rdma_sess(conn->sess);
 		rdma_req->sg_list[0].lkey = rdma_sess->buf_mr->lkey;
 	} else {
 		rdma_req->sg_list[0].lkey = rdma_conn->bufs_mr->lkey;
@@ -555,7 +564,7 @@ spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
 
 	if (req->length > g_rdma.in_capsule_data_size) {
 		/* Put the buffer back in the pool */
-		rdma_sess = conn->sess->trctx;
+		rdma_sess = get_rdma_sess(conn->sess);
 		buf = req->data;
 
 		SLIST_INSERT_HEAD(&rdma_sess->data_buf_pool, buf, link);
@@ -828,7 +837,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 
 		/* TODO: In Capsule Data Size should be tracked per queue (admin, for instance, should always have 4k and no more). */
 		if (sgl->keyed.length > g_rdma.in_capsule_data_size) {
-			rdma_sess = req->conn->sess->trctx;
+			rdma_sess = get_rdma_sess(req->conn->sess);
 			req->data = SLIST_FIRST(&rdma_sess->data_buf_pool);
 			if (!req->data) {
 				/* No available buffers. Queue this request up. */
@@ -898,7 +907,7 @@ spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_conn *conn)
 
 	/* First, try to assign free data buffers to requests that need one */
 	if (conn->sess) {
-		rdma_sess = conn->sess->trctx;
+		rdma_sess = get_rdma_sess(conn->sess);
 		TAILQ_FOREACH_SAFE(rdma_req, &rdma_conn->pending_data_buf_queue, link, tmp) {
 			assert(rdma_req->req.data == NULL);
 			rdma_req->req.data = SLIST_FIRST(&rdma_sess->data_buf_pool);
@@ -1170,8 +1179,8 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 	entry->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
 }
 
-static int
-spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session)
+static struct spdk_nvmf_session *
+spdk_nvmf_rdma_session_init(void)
 {
 	struct spdk_nvmf_rdma_session	*rdma_sess;
 	int				i;
@@ -1179,7 +1188,7 @@ spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session)
 
 	rdma_sess = calloc(1, sizeof(*rdma_sess));
 	if (!rdma_sess) {
-		return -1;
+		return NULL;
 	}
 
 	/* TODO: Make the number of elements in this pool configurable. For now, one full queue
@@ -1191,7 +1200,7 @@ spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session)
 		SPDK_ERRLOG("Large buffer pool allocation failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);
 		free(rdma_sess);
-		return -1;
+		return NULL;
 	}
 
 	SLIST_INIT(&rdma_sess->data_buf_pool);
@@ -1200,16 +1209,15 @@ spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session)
 		SLIST_INSERT_HEAD(&rdma_sess->data_buf_pool, buf, link);
 	}
 
-	session->transport = &spdk_nvmf_transport_rdma;
-	session->trctx = rdma_sess;
+	rdma_sess->session.transport = &spdk_nvmf_transport_rdma;
 
-	return 0;
+	return &rdma_sess->session;
 }
 
 static void
 spdk_nvmf_rdma_session_fini(struct spdk_nvmf_session *session)
 {
-	struct spdk_nvmf_rdma_session *rdma_sess = session->trctx;
+	struct spdk_nvmf_rdma_session *rdma_sess = get_rdma_sess(session);
 
 	if (!rdma_sess) {
 		return;
@@ -1218,14 +1226,13 @@ spdk_nvmf_rdma_session_fini(struct spdk_nvmf_session *session)
 	ibv_dereg_mr(rdma_sess->buf_mr);
 	spdk_free(rdma_sess->buf);
 	free(rdma_sess);
-	session->trctx = NULL;
 }
 
 static int
 spdk_nvmf_rdma_session_add_conn(struct spdk_nvmf_session *session,
 				struct spdk_nvmf_conn *conn)
 {
-	struct spdk_nvmf_rdma_session	*rdma_sess = session->trctx;
+	struct spdk_nvmf_rdma_session	*rdma_sess = get_rdma_sess(session);
 	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
 
 	if (rdma_sess->verbs != NULL) {

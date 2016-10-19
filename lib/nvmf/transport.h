@@ -73,12 +73,12 @@ struct spdk_nvmf_transport {
 				     struct spdk_nvmf_discovery_log_page_entry *entry);
 
 	/**
-	 * Initialize the transport for the given session
+	 * Create a new session
 	 */
-	int (*session_init)(struct spdk_nvmf_session *session);
+	struct spdk_nvmf_session *(*session_init)(void);
 
 	/**
-	 * Deinitiallize the transport for the given session
+	 * Destroy a session
 	 */
 	void (*session_fini)(struct spdk_nvmf_session *session);
 
