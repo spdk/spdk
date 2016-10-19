@@ -253,6 +253,8 @@ struct spdk_nvme_transport {
 	struct spdk_nvme_ctrlr *(*ctrlr_construct)(void *devhandle);
 	void (*ctrlr_destruct)(struct spdk_nvme_ctrlr *ctrlr);
 
+	int (*ctrlr_enable)(struct spdk_nvme_ctrlr *ctrlr);
+
 	int (*ctrlr_get_pci_id)(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id);
 
 	int (*ctrlr_set_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);

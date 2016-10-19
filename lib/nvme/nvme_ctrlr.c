@@ -72,27 +72,6 @@ nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_regist
 			cc->raw);
 }
 
-static int
-nvme_ctrlr_set_asq(struct spdk_nvme_ctrlr *ctrlr, uint64_t value)
-{
-	return ctrlr->transport->ctrlr_set_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, asq),
-			value);
-}
-
-static int
-nvme_ctrlr_set_acq(struct spdk_nvme_ctrlr *ctrlr, uint64_t value)
-{
-	return ctrlr->transport->ctrlr_set_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, acq),
-			value);
-}
-
-static int
-nvme_ctrlr_set_aqa(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_aqa_register *aqa)
-{
-	return ctrlr->transport->ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, aqa.raw),
-			aqa->raw);
-}
-
 void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -380,7 +359,13 @@ static int
 nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register	cc;
-	union spdk_nvme_aqa_register	aqa;
+	int				rc;
+
+	rc = ctrlr->transport->ctrlr_enable(ctrlr);
+	if (rc != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "transport ctrlr_enable failed\n");
+		return rc;
+	}
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc() failed\n");
@@ -390,26 +375,6 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	if (cc.bits.en != 0) {
 		SPDK_ERRLOG("%s called with CC.EN = 1\n", __func__);
 		return -EINVAL;
-	}
-
-	if (nvme_ctrlr_set_asq(ctrlr, ctrlr->adminq->cmd_bus_addr)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_asq() failed\n");
-		return -EIO;
-	}
-
-	if (nvme_ctrlr_set_acq(ctrlr, ctrlr->adminq->cpl_bus_addr)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_acq() failed\n");
-		return -EIO;
-	}
-
-	aqa.raw = 0;
-	/* acqs and asqs are 0-based. */
-	aqa.bits.acqs = ctrlr->adminq->num_entries - 1;
-	aqa.bits.asqs = ctrlr->adminq->num_entries - 1;
-
-	if (nvme_ctrlr_set_aqa(ctrlr, &aqa)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_aqa() failed\n");
-		return -EIO;
 	}
 
 	cc.bits.en = 1;

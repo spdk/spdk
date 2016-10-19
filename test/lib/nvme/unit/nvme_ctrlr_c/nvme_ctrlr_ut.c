@@ -68,6 +68,12 @@ ut_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
+ut_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+static int
 ut_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id)
 {
 	if (ctrlr == NULL || pci_id == NULL) {
@@ -145,6 +151,8 @@ ut_qpair_reset(struct spdk_nvme_qpair *qpair)
 static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 	.ctrlr_construct = ut_ctrlr_construct,
 	.ctrlr_destruct = ut_ctrlr_destruct,
+
+	.ctrlr_enable = ut_ctrlr_enable,
 
 	.ctrlr_get_pci_id = ut_ctrlr_get_pci_id,
 

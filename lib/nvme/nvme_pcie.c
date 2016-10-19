@@ -129,6 +129,27 @@ nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 }
 
 static int
+nvme_pcie_ctrlr_set_asq(struct nvme_pcie_ctrlr *pctrlr, uint64_t value)
+{
+	return nvme_pcie_ctrlr_set_reg_8(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, asq),
+					 value);
+}
+
+static int
+nvme_pcie_ctrlr_set_acq(struct nvme_pcie_ctrlr *pctrlr, uint64_t value)
+{
+	return nvme_pcie_ctrlr_set_reg_8(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, acq),
+					 value);
+}
+
+static int
+nvme_pcie_ctrlr_set_aqa(struct nvme_pcie_ctrlr *pctrlr, const union spdk_nvme_aqa_register *aqa)
+{
+	return nvme_pcie_ctrlr_set_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, aqa.raw),
+					 aqa->raw);
+}
+
+static int
 nvme_pcie_ctrlr_get_cmbloc(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_cmbloc_register *cmbloc)
 {
 	return nvme_pcie_ctrlr_get_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, cmbloc.raw),
@@ -331,6 +352,35 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 	}
 
 	return &pctrlr->ctrlr;
+}
+
+static int
+nvme_pcie_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	union spdk_nvme_aqa_register aqa;
+
+	if (nvme_pcie_ctrlr_set_asq(pctrlr, ctrlr->adminq->cmd_bus_addr)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_asq() failed\n");
+		return -EIO;
+	}
+
+	if (nvme_pcie_ctrlr_set_acq(pctrlr, ctrlr->adminq->cpl_bus_addr)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_acq() failed\n");
+		return -EIO;
+	}
+
+	aqa.raw = 0;
+	/* acqs and asqs are 0-based. */
+	aqa.bits.acqs = ctrlr->adminq->num_entries - 1;
+	aqa.bits.asqs = ctrlr->adminq->num_entries - 1;
+
+	if (nvme_pcie_ctrlr_set_aqa(pctrlr, &aqa)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_aqa() failed\n");
+		return -EIO;
+	}
+
+	return 0;
 }
 
 static void
@@ -1281,6 +1331,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 	.ctrlr_construct = nvme_pcie_ctrlr_construct,
 	.ctrlr_destruct = nvme_pcie_ctrlr_destruct,
+
+	.ctrlr_enable = nvme_pcie_ctrlr_enable,
 
 	.ctrlr_get_pci_id = nvme_pcie_ctrlr_get_pci_id,
 
