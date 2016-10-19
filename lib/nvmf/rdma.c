@@ -183,15 +183,15 @@ static void
 spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 {
 	if (rdma_conn->cmds_mr) {
-		rdma_dereg_mr(rdma_conn->cmds_mr);
+		ibv_dereg_mr(rdma_conn->cmds_mr);
 	}
 
 	if (rdma_conn->cpls_mr) {
-		rdma_dereg_mr(rdma_conn->cpls_mr);
+		ibv_dereg_mr(rdma_conn->cpls_mr);
 	}
 
 	if (rdma_conn->bufs_mr) {
-		rdma_dereg_mr(rdma_conn->bufs_mr);
+		ibv_dereg_mr(rdma_conn->bufs_mr);
 	}
 
 	if (rdma_conn->cm_id) {
@@ -233,7 +233,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	TAILQ_INIT(&rdma_conn->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_conn->pending_rdma_rw_queue);
 
-	rdma_conn->cq = ibv_create_cq(id->verbs, max_queue_depth * 2, NULL, channel, 0);
+	rdma_conn->cq = ibv_create_cq(id->verbs, max_queue_depth * 2, rdma_conn, channel, 0);
 	if (!rdma_conn->cq) {
 		SPDK_ERRLOG("Unable to create completion queue\n");
 		SPDK_ERRLOG("Completion Channel: %p Id: %p Verbs: %p\n", channel, id, id->verbs);
@@ -251,7 +251,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(rdma_conn->cm_id, NULL, &attr);
+	rc = rdma_create_qp(id, NULL, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
@@ -278,12 +278,15 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 		return NULL;
 	}
 
-	rdma_conn->cmds_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->cmds,
-					   max_queue_depth * sizeof(*rdma_conn->cmds));
-	rdma_conn->cpls_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->cpls,
-					   max_queue_depth * sizeof(*rdma_conn->cpls));
-	rdma_conn->bufs_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_conn->bufs,
-					   max_queue_depth * g_rdma.in_capsule_data_size);
+	rdma_conn->cmds_mr = ibv_reg_mr(id->pd, rdma_conn->cmds,
+					max_queue_depth * sizeof(*rdma_conn->cmds),
+					IBV_ACCESS_LOCAL_WRITE);
+	rdma_conn->cpls_mr = ibv_reg_mr(id->pd, rdma_conn->cpls,
+					max_queue_depth * sizeof(*rdma_conn->cpls),
+					0);
+	rdma_conn->bufs_mr = ibv_reg_mr(id->pd, rdma_conn->bufs,
+					max_queue_depth * g_rdma.in_capsule_data_size,
+					IBV_ACCESS_LOCAL_WRITE);
 	if (!rdma_conn->cmds_mr || !rdma_conn->cpls_mr || !rdma_conn->bufs_mr) {
 		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
@@ -996,8 +999,9 @@ spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session, struct spdk_nvmf_
 		return -1;
 	}
 
-	rdma_sess->buf_mr = rdma_reg_msgs(rdma_conn->cm_id, rdma_sess->buf,
-					  g_rdma.max_queue_depth * g_rdma.max_io_size);
+	rdma_sess->buf_mr = ibv_reg_mr(rdma_conn->cm_id->pd, rdma_sess->buf,
+				       g_rdma.max_queue_depth * g_rdma.max_io_size,
+				       IBV_ACCESS_LOCAL_WRITE);
 	if (!rdma_sess->buf_mr) {
 		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);
@@ -1030,7 +1034,7 @@ spdk_nvmf_rdma_session_fini(struct spdk_nvmf_session *session)
 		return;
 	}
 
-	rdma_dereg_mr(rdma_sess->buf_mr);
+	ibv_dereg_mr(rdma_sess->buf_mr);
 	spdk_free(rdma_sess->buf);
 	free(rdma_sess);
 	session->trctx = NULL;
