@@ -139,6 +139,9 @@ spdk_rpc_setup(void *arg)
 	struct sockaddr_in	serv_addr;
 	uint16_t		port;
 
+	/* Unregister the one-shot setup poller */
+	spdk_poller_unregister(&g_rpc_poller, NULL);
+
 	if (!enable_rpc()) {
 		return;
 	}
@@ -157,8 +160,7 @@ spdk_rpc_setup(void *arg)
 		return;
 	}
 
-	/* Unregister the one-shot setup and register the periodic rpc_server_do_work */
-	spdk_poller_unregister(&g_rpc_poller, NULL);
+	/* Register the periodic rpc_server_do_work */
 	spdk_poller_register(&g_rpc_poller, spdk_rpc_server_do_work, NULL, spdk_app_get_current_core(),
 			     NULL, RPC_SELECT_INTERVAL);
 }
