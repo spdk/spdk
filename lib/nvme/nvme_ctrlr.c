@@ -237,7 +237,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 					 nvme_completion_poll_cb,
 					 &status);
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		spdk_free(log_page_directory);
@@ -310,7 +310,12 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return nvme_qpair_construct(&ctrlr->adminq,
+	ctrlr->adminq = spdk_zmalloc(sizeof(struct spdk_nvme_qpair), 64, NULL);
+	if (ctrlr->adminq == NULL) {
+		return -ENOMEM;
+	}
+
+	return nvme_qpair_construct(ctrlr->adminq,
 				    0, /* qpair ID */
 				    NVME_ADMIN_ENTRIES,
 				    ctrlr);
@@ -322,7 +327,7 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_qpair *qpair;
 
 	ctrlr->is_failed = true;
-	nvme_qpair_fail(&ctrlr->adminq);
+	nvme_qpair_fail(ctrlr->adminq);
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 		nvme_qpair_fail(qpair);
 	}
@@ -393,20 +398,20 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 		return -EINVAL;
 	}
 
-	if (nvme_ctrlr_set_asq(ctrlr, ctrlr->adminq.cmd_bus_addr)) {
+	if (nvme_ctrlr_set_asq(ctrlr, ctrlr->adminq->cmd_bus_addr)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_asq() failed\n");
 		return -EIO;
 	}
 
-	if (nvme_ctrlr_set_acq(ctrlr, ctrlr->adminq.cpl_bus_addr)) {
+	if (nvme_ctrlr_set_acq(ctrlr, ctrlr->adminq->cpl_bus_addr)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_acq() failed\n");
 		return -EIO;
 	}
 
 	aqa.raw = 0;
 	/* acqs and asqs are 0-based. */
-	aqa.bits.acqs = ctrlr->adminq.num_entries - 1;
-	aqa.bits.asqs = ctrlr->adminq.num_entries - 1;
+	aqa.bits.acqs = ctrlr->adminq->num_entries - 1;
+	aqa.bits.asqs = ctrlr->adminq->num_entries - 1;
 
 	if (nvme_ctrlr_set_aqa(ctrlr, &aqa)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_aqa() failed\n");
@@ -484,7 +489,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	SPDK_NOTICELOG("resetting controller\n");
 
 	/* Disable all queues before disabling the controller hardware. */
-	nvme_qpair_disable(&ctrlr->adminq);
+	nvme_qpair_disable(ctrlr->adminq);
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 		nvme_qpair_disable(qpair);
 	}
@@ -532,7 +537,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
@@ -578,7 +583,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_set_num_queues failed!\n");
@@ -747,7 +752,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_ctrlr_cmd_set_async_event_config failed!\n");
@@ -890,9 +895,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
-	ctrlr->transport->qpair_reset(&ctrlr->adminq);
+	ctrlr->transport->qpair_reset(ctrlr->adminq);
 
-	nvme_qpair_enable(&ctrlr->adminq);
+	nvme_qpair_enable(ctrlr->adminq);
 
 	if (nvme_ctrlr_identify(ctrlr) != 0) {
 		return -1;
@@ -985,7 +990,10 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
-	nvme_qpair_destroy(&ctrlr->adminq);
+	if (ctrlr->adminq) {
+		nvme_qpair_destroy(ctrlr->adminq);
+		spdk_free(ctrlr->adminq);
+	}
 
 	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
 
@@ -996,7 +1004,7 @@ int
 nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 				struct nvme_request *req)
 {
-	return nvme_qpair_submit_request(&ctrlr->adminq, req);
+	return nvme_qpair_submit_request(ctrlr->adminq, req);
 }
 
 int32_t
@@ -1005,7 +1013,7 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	int32_t num_completions;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
-	num_completions = spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+	num_completions = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return num_completions;
@@ -1092,7 +1100,7 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return res;
 	while (status.done == false) {
 		pthread_mutex_lock(&ctrlr->ctrlr_lock);
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
@@ -1117,7 +1125,7 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return res;
 	while (status.done == false) {
 		pthread_mutex_lock(&ctrlr->ctrlr_lock);
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
@@ -1140,7 +1148,7 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 		return 0;
 	while (status.done == false) {
 		pthread_mutex_lock(&ctrlr->ctrlr_lock);
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
@@ -1169,7 +1177,7 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 		return res;
 	while (status.done == false) {
 		pthread_mutex_lock(&ctrlr->ctrlr_lock);
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
@@ -1194,7 +1202,7 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return res;
 	while (status.done == false) {
 		pthread_mutex_lock(&ctrlr->ctrlr_lock);
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
@@ -1239,7 +1247,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 
 		while (status.done == false) {
 			pthread_mutex_lock(&ctrlr->ctrlr_lock);
-			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+			spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 			pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		}
 		if (spdk_nvme_cpl_is_error(&status.cpl)) {
@@ -1265,7 +1273,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 
 	while (status.done == false) {
 		pthread_mutex_lock(&ctrlr->ctrlr_lock);
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {

@@ -798,7 +798,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	}
 
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_create_io_cq failed!\n");
@@ -812,7 +812,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	}
 
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_create_io_sq failed!\n");
@@ -823,7 +823,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 			return -1;
 		}
 		while (status.done == false) {
-			spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+			spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 		}
 		return -1;
 	}
@@ -904,7 +904,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return rc;
 	}
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		return -1;
@@ -916,7 +916,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return rc;
 	}
 	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		return -1;

@@ -465,7 +465,7 @@ struct spdk_nvme_ctrlr {
 	pthread_mutex_t			ctrlr_lock;
 
 
-	struct spdk_nvme_qpair		adminq;
+	struct spdk_nvme_qpair		*adminq;
 
 	/**
 	 * Identify Controller data.
