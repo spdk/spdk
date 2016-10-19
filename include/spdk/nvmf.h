@@ -192,8 +192,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
 
-int spdk_nvmf_transport_init(void);
-int spdk_nvmf_transport_fini(void);
 const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
 const char *spdk_nvmf_transport_get_name(const struct spdk_nvmf_transport *transport);
 

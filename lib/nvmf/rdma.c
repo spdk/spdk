@@ -1038,14 +1038,30 @@ static int
 spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 		    uint32_t in_capsule_data_size)
 {
+	int rc;
+
 	SPDK_NOTICELOG("*** RDMA Transport Init ***\n");
 
 	pthread_mutex_lock(&g_rdma.lock);
 	g_rdma.max_queue_depth = max_queue_depth;
 	g_rdma.max_io_size = max_io_size;
 	g_rdma.in_capsule_data_size = in_capsule_data_size;
-	pthread_mutex_unlock(&g_rdma.lock);
 
+	g_rdma.event_channel = rdma_create_event_channel();
+	if (g_rdma.event_channel == NULL) {
+		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
+	rc = fcntl(g_rdma.event_channel->fd, F_SETFL, O_NONBLOCK);
+	if (rc < 0) {
+		SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
+		pthread_mutex_unlock(&g_rdma.lock);
+		return -1;
+	}
+
+	pthread_mutex_unlock(&g_rdma.lock);
 	return 0;
 }
 
@@ -1287,27 +1303,13 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	int rc;
 
 	pthread_mutex_lock(&g_rdma.lock);
+	assert(g_rdma.event_channel != NULL);
 	TAILQ_FOREACH(addr, &g_rdma.listen_addrs, link) {
 		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
 		    (!strcasecmp(addr->trsvcid, listen_addr->trsvcid))) {
 			/* Already listening at this address */
 			pthread_mutex_unlock(&g_rdma.lock);
 			return 0;
-		}
-	}
-	if (g_rdma.event_channel == NULL) {
-		g_rdma.event_channel = rdma_create_event_channel();
-		if (g_rdma.event_channel == NULL) {
-			SPDK_ERRLOG("rdma_create_event_channel() failed\n");
-			pthread_mutex_unlock(&g_rdma.lock);
-			return -1;
-		}
-
-		rc = fcntl(g_rdma.event_channel->fd, F_SETFL, O_NONBLOCK);
-		if (rc < 0) {
-			SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
-			pthread_mutex_unlock(&g_rdma.lock);
-			return -1;
 		}
 	}
 

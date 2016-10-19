@@ -107,6 +107,9 @@ struct spdk_nvmf_transport {
 	int (*conn_poll)(struct spdk_nvmf_conn *conn);
 };
 
+int spdk_nvmf_transport_init(void);
+int spdk_nvmf_transport_fini(void);
+
 extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
 
 #endif /* SPDK_NVMF_TRANSPORT_H */
