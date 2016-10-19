@@ -134,6 +134,8 @@ static TAILQ_HEAD(, spdk_nvmf_rdma_conn) g_pending_conns = TAILQ_HEAD_INITIALIZE
 struct spdk_nvmf_rdma_session {
 	SLIST_HEAD(, spdk_nvmf_rdma_buf)	data_buf_pool;
 
+	struct ibv_context			*verbs;
+
 	uint8_t					*buf;
 	struct ibv_mr				*buf_mr;
 };
@@ -1169,10 +1171,9 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 }
 
 static int
-spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn)
+spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session)
 {
 	struct spdk_nvmf_rdma_session	*rdma_sess;
-	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
 	int				i;
 	struct spdk_nvmf_rdma_buf	*buf;
 
@@ -1193,27 +1194,13 @@ spdk_nvmf_rdma_session_init(struct spdk_nvmf_session *session, struct spdk_nvmf_
 		return -1;
 	}
 
-	rdma_sess->buf_mr = ibv_reg_mr(rdma_conn->cm_id->pd, rdma_sess->buf,
-				       g_rdma.max_queue_depth * g_rdma.max_io_size,
-				       IBV_ACCESS_LOCAL_WRITE);
-	if (!rdma_sess->buf_mr) {
-		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
-			    g_rdma.max_queue_depth, g_rdma.max_io_size);
-		spdk_free(rdma_sess->buf);
-		free(rdma_sess);
-		return -1;
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Session Shared Data Pool: %p Length: %x LKey: %x\n",
-		      rdma_sess->buf,  g_rdma.max_queue_depth * g_rdma.max_io_size, rdma_sess->buf_mr->lkey);
-
 	SLIST_INIT(&rdma_sess->data_buf_pool);
 	for (i = 0; i < g_rdma.max_queue_depth; i++) {
 		buf = (struct spdk_nvmf_rdma_buf *)(rdma_sess->buf + (i * g_rdma.max_io_size));
 		SLIST_INSERT_HEAD(&rdma_sess->data_buf_pool, buf, link);
 	}
 
-	session->transport = conn->transport;
+	session->transport = &spdk_nvmf_transport_rdma;
 	session->trctx = rdma_sess;
 
 	return 0;
@@ -1232,6 +1219,48 @@ spdk_nvmf_rdma_session_fini(struct spdk_nvmf_session *session)
 	spdk_free(rdma_sess->buf);
 	free(rdma_sess);
 	session->trctx = NULL;
+}
+
+static int
+spdk_nvmf_rdma_session_add_conn(struct spdk_nvmf_session *session,
+				struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_session	*rdma_sess = session->trctx;
+	struct spdk_nvmf_rdma_conn	*rdma_conn = get_rdma_conn(conn);
+
+	if (rdma_sess->verbs != NULL) {
+		if (rdma_sess->verbs != rdma_conn->cm_id->verbs) {
+			SPDK_ERRLOG("Two connections belonging to the same session cannot connect using different RDMA devices.\n");
+			return -1;
+		}
+
+		/* Nothing else to do. */
+		return 0;
+	}
+
+	rdma_sess->verbs = rdma_conn->cm_id->verbs;
+	rdma_sess->buf_mr = ibv_reg_mr(rdma_conn->cm_id->pd, rdma_sess->buf,
+				       g_rdma.max_queue_depth * g_rdma.max_io_size,
+				       IBV_ACCESS_LOCAL_WRITE);
+	if (!rdma_sess->buf_mr) {
+		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
+			    g_rdma.max_queue_depth, g_rdma.max_io_size);
+		spdk_free(rdma_sess->buf);
+		free(rdma_sess);
+		return -1;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Session Shared Data Pool: %p Length: %x LKey: %x\n",
+		      rdma_sess->buf,  g_rdma.max_queue_depth * g_rdma.max_io_size, rdma_sess->buf_mr->lkey);
+
+	return 0;
+}
+
+static int
+spdk_nvmf_rdma_session_remove_conn(struct spdk_nvmf_session *session,
+				   struct spdk_nvmf_conn *conn)
+{
+	return 0;
 }
 
 static int
@@ -1412,6 +1441,8 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 
 	.session_init = spdk_nvmf_rdma_session_init,
 	.session_fini = spdk_nvmf_rdma_session_fini,
+	.session_add_conn = spdk_nvmf_rdma_session_add_conn,
+	.session_remove_conn = spdk_nvmf_rdma_session_remove_conn,
 
 	.req_complete = spdk_nvmf_rdma_request_complete,
 	.req_release = spdk_nvmf_rdma_request_release,

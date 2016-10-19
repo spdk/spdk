@@ -75,12 +75,22 @@ struct spdk_nvmf_transport {
 	/**
 	 * Initialize the transport for the given session
 	 */
-	int (*session_init)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+	int (*session_init)(struct spdk_nvmf_session *session);
 
 	/**
 	 * Deinitiallize the transport for the given session
 	 */
 	void (*session_fini)(struct spdk_nvmf_session *session);
+
+	/**
+	 * Add a connection to a session
+	 */
+	int (*session_add_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+
+	/**
+	 * Remove a connection from a session
+	 */
+	int (*session_remove_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
 
 	/*
 	 * Signal request completion, which sends a response

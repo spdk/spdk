@@ -259,7 +259,14 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		session->num_connections = 0;
 		session->subsys = subsystem;
 		session->max_connections_allowed = g_nvmf_tgt.max_queues_per_session;
-		if (conn->transport->session_init(session, conn)) {
+		if (conn->transport->session_init(session)) {
+			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			conn->transport->session_fini(session);
+			free(session);
+			return;
+		}
+
+		if (conn->transport->session_add_conn(session, conn)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			conn->transport->session_fini(session);
 			free(session);
@@ -319,6 +326,11 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
 			return;
 		}
+
+		if (conn->transport->session_add_conn(session, conn)) {
+			INVALID_CONNECT_CMD(qid);
+			return;
+		}
 	}
 
 	session->num_connections++;
@@ -339,6 +351,8 @@ spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn)
 	assert(session != NULL);
 	session->num_connections--;
 	TAILQ_REMOVE(&session->connections, conn, link);
+
+	conn->transport->session_remove_conn(session, conn);
 	conn->transport->conn_fini(conn);
 
 	if (session->num_connections == 0) {
