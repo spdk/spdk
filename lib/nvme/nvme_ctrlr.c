@@ -286,20 +286,6 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static int
-nvme_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
-{
-	ctrlr->adminq = spdk_zmalloc(sizeof(struct spdk_nvme_qpair), 64, NULL);
-	if (ctrlr->adminq == NULL) {
-		return -ENOMEM;
-	}
-
-	return nvme_qpair_construct(ctrlr->adminq,
-				    0, /* qpair ID */
-				    NVME_ADMIN_ENTRIES,
-				    ctrlr);
-}
-
 static void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -903,17 +889,11 @@ nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int				rc;
-
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->flags = 0;
 	ctrlr->free_io_qids = NULL;
 
 	ctrlr->min_page_size = 1 << (12 + ctrlr->cap.bits.mpsmin);
-
-	rc = nvme_ctrlr_construct_admin_qpair(ctrlr);
-	if (rc)
-		return rc;
 
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
@@ -940,11 +920,6 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_destruct_namespaces(ctrlr);
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
-
-	if (ctrlr->adminq) {
-		nvme_qpair_destroy(ctrlr->adminq);
-		spdk_free(ctrlr->adminq);
-	}
 
 	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
 

@@ -299,6 +299,20 @@ nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 	return rc;
 }
 
+static int
+nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
+{
+	ctrlr->adminq = spdk_zmalloc(sizeof(struct spdk_nvme_qpair), 64, NULL);
+	if (ctrlr->adminq == NULL) {
+		return -ENOMEM;
+	}
+
+	return nvme_qpair_construct(ctrlr->adminq,
+				    0, /* qpair ID */
+				    NVME_ADMIN_ENTRIES,
+				    ctrlr);
+}
+
 static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 {
 	struct spdk_pci_device *pci_dev = devhandle;
@@ -351,6 +365,12 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 		return NULL;
 	}
 
+	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr);
+	if (rc != 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
+		return NULL;
+	}
+
 	return &pctrlr->ctrlr;
 }
 
@@ -387,6 +407,11 @@ static void
 nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+	if (ctrlr->adminq) {
+		nvme_qpair_destroy(ctrlr->adminq);
+		spdk_free(ctrlr->adminq);
+	}
 
 	nvme_pcie_ctrlr_free_bars(pctrlr);
 	spdk_free(pctrlr);
