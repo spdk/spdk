@@ -324,7 +324,7 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (rc != 0) {
-		spdk_free(pctrlr);
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		return NULL;
 	}
 
