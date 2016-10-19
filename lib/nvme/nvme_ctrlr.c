@@ -493,10 +493,12 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	 * Use MDTS to ensure our default max_xfer_size doesn't exceed what the
 	 *  controller supports.
 	 */
-	ctrlr->max_xfer_size = NVME_MAX_XFER_SIZE;
+	ctrlr->max_xfer_size = ctrlr->transport->ctrlr_get_max_xfer_size(ctrlr);
+	SPDK_TRACELOG(SPDK_TRACE_NVME, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
 	if (ctrlr->cdata.mdts > 0) {
 		ctrlr->max_xfer_size = nvme_min(ctrlr->max_xfer_size,
 						ctrlr->min_page_size * (1 << (ctrlr->cdata.mdts)));
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
 	}
 
 	return 0;

@@ -37,6 +37,38 @@
 
 #include "nvme_internal.h"
 
+#define NVME_ADMIN_ENTRIES	(128)
+#define NVME_ADMIN_TRACKERS	(16)
+
+/*
+ * NVME_IO_ENTRIES defines the size of an I/O qpair's submission and completion
+ *  queues, while NVME_IO_TRACKERS defines the maximum number of I/O that we
+ *  will allow outstanding on an I/O qpair at any time.  The only advantage in
+ *  having IO_ENTRIES > IO_TRACKERS is for debugging purposes - when dumping
+ *  the contents of the submission and completion queues, it will show a longer
+ *  history of data.
+ */
+#define NVME_IO_ENTRIES		(256)
+#define NVME_IO_TRACKERS	(128)
+
+/*
+ * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
+ *  segment.
+ */
+#define NVME_MAX_SGL_DESCRIPTORS	(253)
+
+#define NVME_MAX_PRP_LIST_ENTRIES	(506)
+
+/*
+ * For commands requiring more than 2 PRP entries, one PRP will be
+ *  embedded in the command (prp1), and the rest of the PRP entries
+ *  will be in a list pointed to by the command (prp2).  This means
+ *  that real max number of PRP entries we support is 506+1, which
+ *  results in a max xfer size of 506*PAGE_SIZE.
+ */
+#define NVME_MAX_XFER_SIZE	NVME_MAX_PRP_LIST_ENTRIES * PAGE_SIZE
+
+
 /* PCIe transport extensions for spdk_nvme_ctrlr */
 struct nvme_pcie_ctrlr {
 	struct spdk_nvme_ctrlr ctrlr;
@@ -59,6 +91,33 @@ struct nvme_pcie_ctrlr {
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
 	uint32_t doorbell_stride_u32;
 };
+
+struct nvme_tracker {
+	LIST_ENTRY(nvme_tracker)	list;
+
+	struct nvme_request		*req;
+	uint16_t			cid;
+
+	uint16_t			rsvd1: 15;
+	uint16_t			active: 1;
+
+	uint32_t			rsvd2;
+
+	uint64_t			prp_sgl_bus_addr;
+
+	union {
+		uint64_t			prp[NVME_MAX_PRP_LIST_ENTRIES];
+		struct spdk_nvme_sgl_descriptor	sgl[NVME_MAX_SGL_DESCRIPTORS];
+	} u;
+
+	uint64_t			rsvd3;
+};
+/*
+ * struct nvme_tracker must be exactly 4K so that the prp[] array does not cross a page boundary
+ * and so that there is no padding required to meet alignment requirements.
+ */
+SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) == 4096, "nvme_tracker is not 4K");
+SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, u.sgl) & 7) == 0, "SGL must be Qword aligned");
 
 /* PCIe transport extensions for spdk_nvme_qpair */
 struct nvme_pcie_qpair {
@@ -212,6 +271,12 @@ nvme_pcie_ctrlr_get_cmbsz(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_cmbsz_
 {
 	return nvme_pcie_ctrlr_get_reg_4(&pctrlr->ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
 					 &cmbsz->raw);
+}
+
+static uint32_t
+nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NVME_MAX_XFER_SIZE;
 }
 
 static void
@@ -1453,6 +1518,8 @@ const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
 
 	.ctrlr_get_reg_4 = nvme_pcie_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = nvme_pcie_ctrlr_get_reg_8,
+
+	.ctrlr_get_max_xfer_size = nvme_pcie_ctrlr_get_max_xfer_size,
 
 	.ctrlr_create_io_qpair = nvme_pcie_ctrlr_create_io_qpair,
 	.ctrlr_delete_io_qpair = nvme_pcie_ctrlr_delete_io_qpair,

@@ -120,6 +120,11 @@ ut_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *val
 	return 0;
 }
 
+static uint32_t
+ut_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return UINT32_MAX;
+}
 
 static struct spdk_nvme_qpair *
 ut_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, enum spdk_nvme_qprio qprio)
@@ -161,6 +166,8 @@ static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 
 	.ctrlr_get_reg_4 = ut_ctrlr_get_reg_4,
 	.ctrlr_get_reg_8 = ut_ctrlr_get_reg_8,
+
+	.ctrlr_get_max_xfer_size = ut_ctrlr_get_max_xfer_size,
 
 	.ctrlr_create_io_qpair = ut_ctrlr_create_io_qpair,
 	.ctrlr_delete_io_qpair = ut_ctrlr_delete_io_qpair,

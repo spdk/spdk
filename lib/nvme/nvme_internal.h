@@ -70,47 +70,6 @@
  */
 #define NVME_INTEL_QUIRK_WRITE_LATENCY 0x2
 
-#define NVME_MAX_PRP_LIST_ENTRIES	(506)
-
-/*
- * For commands requiring more than 2 PRP entries, one PRP will be
- *  embedded in the command (prp1), and the rest of the PRP entries
- *  will be in a list pointed to by the command (prp2).  This means
- *  that real max number of PRP entries we support is 506+1, which
- *  results in a max xfer size of 506*PAGE_SIZE.
- */
-#define NVME_MAX_XFER_SIZE	NVME_MAX_PRP_LIST_ENTRIES * PAGE_SIZE
-
-#define NVME_ADMIN_TRACKERS	(16)
-#define NVME_ADMIN_ENTRIES	(128)
-/* min and max are defined in admin queue attributes section of spec */
-#define NVME_MIN_ADMIN_ENTRIES	(2)
-#define NVME_MAX_ADMIN_ENTRIES	(4096)
-
-/*
- * NVME_IO_ENTRIES defines the size of an I/O qpair's submission and completion
- *  queues, while NVME_IO_TRACKERS defines the maximum number of I/O that we
- *  will allow outstanding on an I/O qpair at any time.  The only advantage in
- *  having IO_ENTRIES > IO_TRACKERS is for debugging purposes - when dumping
- *  the contents of the submission and completion queues, it will show a longer
- *  history of data.
- */
-#define NVME_IO_ENTRIES		(256)
-#define NVME_IO_TRACKERS	(128)
-#define NVME_MIN_IO_TRACKERS	(4)
-#define NVME_MAX_IO_TRACKERS	(1024)
-
-/*
- * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
- *  segment.
- */
-#define NVME_MAX_SGL_DESCRIPTORS	(253)
-
-/*
- * NVME_MAX_IO_ENTRIES is not defined, since it is specified in CC.MQES
- *  for each controller.
- */
-
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
@@ -263,6 +222,8 @@ struct spdk_nvme_transport {
 	int (*ctrlr_get_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
 	int (*ctrlr_get_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
 
+	uint32_t (*ctrlr_get_max_xfer_size)(struct spdk_nvme_ctrlr *ctrlr);
+
 	struct spdk_nvme_qpair *(*ctrlr_create_io_qpair)(struct spdk_nvme_ctrlr *ctrlr,
 			uint16_t qid, enum spdk_nvme_qprio qprio);
 	int (*ctrlr_delete_io_qpair)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
@@ -291,34 +252,6 @@ struct nvme_async_event_request {
 	struct nvme_request		*req;
 	struct spdk_nvme_cpl		cpl;
 };
-
-struct nvme_tracker {
-	LIST_ENTRY(nvme_tracker)	list;
-
-	struct nvme_request		*req;
-	uint16_t			cid;
-
-	uint16_t			rsvd1: 15;
-	uint16_t			active: 1;
-
-	uint32_t			rsvd2;
-
-	uint64_t			prp_sgl_bus_addr;
-
-	union {
-		uint64_t			prp[NVME_MAX_PRP_LIST_ENTRIES];
-		struct spdk_nvme_sgl_descriptor	sgl[NVME_MAX_SGL_DESCRIPTORS];
-	} u;
-
-	uint64_t			rsvd3;
-};
-/*
- * struct nvme_tracker must be exactly 4K so that the prp[] array does not cross a page boundary
- * and so that there is no padding required to meet alignment requirements.
- */
-SPDK_STATIC_ASSERT(sizeof(struct nvme_tracker) == 4096, "nvme_tracker is not 4K");
-SPDK_STATIC_ASSERT((offsetof(struct nvme_tracker, u.sgl) & 7) == 0, "SGL must be Qword aligned");
-
 
 struct spdk_nvme_qpair {
 	const struct spdk_nvme_transport *transport;
