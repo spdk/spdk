@@ -43,6 +43,20 @@ SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
 
+void *
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	void *buf = calloc(size, 1);
+	if (phys_addr)
+		*phys_addr = (uint64_t)buf;
+	return buf;
+}
+
+void
+spdk_free(void *buf)
+{
+	free(buf);
+}
 void
 spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 {

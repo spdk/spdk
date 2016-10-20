@@ -34,6 +34,7 @@
 
 #include "scsi_internal.h"
 
+#include "spdk/env.h"
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
@@ -783,6 +784,9 @@ inq_error:
 static void
 mode_sense_page_init(uint8_t *buf, int len, int page, int subpage)
 {
+	if (!buf)
+		return;
+
 	memset(buf, 0, len);
 	if (subpage != 0) {
 		buf[0] = page | 0x40; /* PAGE + SPF=1 */
@@ -797,9 +801,9 @@ mode_sense_page_init(uint8_t *buf, int len, int page, int subpage)
 static int
 spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			       uint8_t *cdb, int pc, int page, int subpage,
-			       uint8_t *data, int alloc_len)
+			       uint8_t *data)
 {
-	uint8_t *cp;
+	uint8_t *cp = data;
 	int len = 0;
 	int plen;
 	int i;
@@ -816,7 +820,6 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		return -1;
 	}
 
-	cp = &data[len];
 	switch (page) {
 	case 0x00:
 		/* Vendor specific */
@@ -874,18 +877,12 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		plen = 0x12 + 2;
 		mode_sense_page_init(cp, plen, page, subpage);
 
-		if (bdev->write_cache)
+		if (cp && bdev->write_cache)
 			cp[2] |= 0x4; /* WCE */
-		// TODO:
-		//fd = bdev->fd;
-		//rc = fcntl(fd , F_GETFL, 0);
-		//if (rc != -1 && !(rc & O_FSYNC))
-		//	cp[2] |= 0x4; /* WCE=1 */
-		//else
-		//	cp[2] &= 0xfb; /* WCE = 0 */
 
 		/* Read Cache Disable (RCD) = 1 */
-		cp[2] |= 0x1;
+		if (cp)
+			cp[2] |= 0x1;
 
 		len += plen;
 		break;
@@ -916,13 +913,11 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			len += spdk_bdev_scsi_mode_sense_page(bdev,
 							      cdb, pc, page,
 							      0x00,
-							      &data[len],
-							      alloc_len);
+							      cp ? &cp[len] : NULL);
 			len += spdk_bdev_scsi_mode_sense_page(bdev,
 							      cdb, pc, page,
 							      0x01,
-							      &data[len],
-							      alloc_len);
+							      cp ? &cp[len] : NULL);
 			break;
 		default:
 			/* 0x02-0x3e: Reserved */
@@ -1039,7 +1034,7 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			for (i = 0x00; i < 0x3e; i ++) {
 				len += spdk_bdev_scsi_mode_sense_page(
 					       bdev, cdb, pc, i, 0x00,
-					       &cp[len], alloc_len);
+					       cp ? &cp[len] : NULL);
 			}
 			break;
 		case 0xff:
@@ -1047,12 +1042,12 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			for (i = 0x00; i < 0x3e; i ++) {
 				len += spdk_bdev_scsi_mode_sense_page(
 					       bdev, cdb, pc, i, 0x00,
-					       &cp[len], alloc_len);
+					       cp ? &cp[len] : NULL);
 			}
 			for (i = 0x00; i < 0x3e; i ++) {
 				len += spdk_bdev_scsi_mode_sense_page(
 					       bdev, cdb, pc, i, 0xff,
-					       &cp[len], alloc_len);
+					       cp ? &cp[len] : NULL);
 			}
 			break;
 		default:
@@ -1065,123 +1060,74 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 }
 
 static int
-spdk_bdev_scsi_mode_sense6(struct spdk_bdev *bdev,
-			   uint8_t *cdb, int dbd, int pc, int page,
-			   int subpage, uint8_t *data, int alloc_len)
+spdk_bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
+			  uint8_t *cdb, int dbd, int llbaa, int pc,
+			  int page, int subpage, uint8_t *data)
 {
-	uint8_t *cp;
-	int hlen, len = 0, plen;
-	int total;
-	int llbaa = 0;
+	uint8_t *hdr, *bdesc, *pages;
+	int hlen;
+	int blen;
+	int plen, total;
 
-	data[0] = 0;                    /* Mode Data Length */
-	data[1] = 0;                    /* Medium Type */
-	data[2] = 0;                    /* Device-Specific Parameter */
-	data[3] = 0;                    /* Block Descripter Length */
-	hlen = 4;
+	assert(md == 6 || md == 10);
 
-	cp = &data[4];
-	if (dbd) {                      /* Disable Block Descripters */
-		len = 0;
+	if (md == 6) {
+		hlen = 4;
+		blen = 8; /* For MODE SENSE 6 only short LBA */
 	} else {
-		if (llbaa) {
-			/* Number of Blocks */
-			to_be64(cp, bdev->blockcnt);
-			/* Reserved */
-			memset(&cp[8], 0, 4);
-			/* Block Length */
-			to_be32(&cp[12], bdev->blocklen);
-			len = 16;
-		} else {
-			/* Number of Blocks */
-			if (bdev->blockcnt > 0xffffffffULL)
-				memset(cp, 0xff, 4);
-			else
-				to_be32(cp, bdev->blockcnt);
-
-			/* Block Length */
-			to_be32(&cp[4], bdev->blocklen);
-			len = 8;
-		}
-
-		cp += len;
+		hlen = 8;
+		blen = llbaa ? 16 : 8;
 	}
 
-	data[3] = len;                  /* Block Descripter Length */
+	if (dbd) {
+		blen = 0;
+	}
 
+	pages = data ? &data[hlen + blen] : NULL;
 	plen = spdk_bdev_scsi_mode_sense_page(bdev, cdb, pc, page,
-					      subpage, &cp[0], alloc_len);
+					      subpage,
+					      pages);
 	if (plen < 0) {
 		return -1;
 	}
 
-	total = hlen + len + plen;
-	data[0] = total - 1;            /* Mode Data Length */
+	total = hlen + blen + plen;
+	if (data == NULL)
+		return total;
 
-	return total;
-}
-
-static int
-spdk_bdev_scsi_mode_sense10(struct spdk_bdev *bdev,
-			    uint8_t *cdb, int dbd, int llbaa, int pc,
-			    int page, int subpage, uint8_t *data,
-			    int alloc_len)
-{
-	uint8_t *cp;
-	int hlen, len = 0, plen;
-	int total;
-
-	/* Mode Data Length */
-	/* Medium Type */
-	/* Device-Specific Parameter */
-	memset(data, 0, 4);
-
-	if (llbaa) {
-		data[4] = 0x1; /* Long LBA */
+	hdr = &data[0];
+	if (hlen == 4) {
+		hdr[0] = total - 1;            /* Mode Data Length */
+		hdr[1] = 0;                    /* Medium Type */
+		hdr[2] = 0;                    /* Device-Specific Parameter */
+		hdr[3] = blen;                 /* Block Descripter Length */
 	} else {
-		data[4] = 0; /* Short LBA */
+		to_be16(&hdr[0], total - 2);   /* Mode Data Length */
+		hdr[2] = 0;                    /* Medium Type */
+		hdr[3] = 0;                    /* Device-Specific Parameter */
+		hdr[4] = llbaa ? 0x1 : 0;      /* Long/short LBA */
+		hdr[5] = 0;                    /* Reserved */
+		to_be16(&hdr[6], blen);        /* Block Descripter Length */
 	}
 
-	/* Reserved */
-	/* Block Descripter Length */
-	memset(&data[5], 0, 3);
-	hlen = 8;
+	bdesc = &data[hlen];
+	if (blen == 16) {
+		/* Number of Blocks */
+		to_be64(&bdesc[0], bdev->blockcnt);
+		/* Reserved */
+		memset(&bdesc[8], 0, 4);
+		/* Block Length */
+		to_be32(&bdesc[12], bdev->blocklen);
+	} else if (blen == 8) {
+		/* Number of Blocks */
+		if (bdev->blockcnt > 0xffffffffULL)
+			memset(&bdesc[0], 0xff, 4);
+		else
+			to_be32(&bdesc[0], bdev->blockcnt);
 
-	cp = &data[8];
-	if (dbd) { /* Disable Block Descripters */
-		len = 0;
-	} else {
-		if (llbaa) {
-			/* Number of Blocks */
-			to_be64(cp, bdev->blockcnt);
-			/* Reserved */
-			memset(&cp[8], 0, 4);
-			/* Block Length */
-			to_be32(&cp[12], bdev->blocklen);
-			len = 16;
-		} else {
-			/* Number of Blocks */
-			if (bdev->blockcnt > 0xffffffffULL)
-				memset(cp, 0xff, 4);
-			else
-				to_be32(cp, bdev->blockcnt);
-
-			/* Block Length */
-			to_be32(&cp[4], bdev->blocklen);
-			len = 8;
-		}
-		cp += len;
+		/* Block Length */
+		to_be32(&bdesc[4], bdev->blocklen);
 	}
-
-	to_be16(&data[6], len);	/* Block Descripter Length */
-
-	plen = spdk_bdev_scsi_mode_sense_page(bdev, cdb, pc, page,
-					      subpage, &cp[0], alloc_len);
-	if (plen < 0)
-		return -1;
-
-	total = hlen + len + plen;
-	to_be16(data, total - 2);	/* Mode Data Length */
 
 	return total;
 }
@@ -1657,7 +1603,7 @@ static int
 spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 			       struct spdk_scsi_task *task)
 {
-	uint32_t alloc_len;
+	int alloc_len;
 	int data_len;
 	uint8_t *cdb = task->cdb;
 	uint8_t *data;
@@ -1793,24 +1739,11 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		page = cdb[2] & 0x3f;
 		subpage = cdb[3];
 
-		data = spdk_scsi_task_alloc_data(task, alloc_len);
-
-		if (md == 6) {
-			data_len = spdk_bdev_scsi_mode_sense6(bdev,
-							      cdb, dbd, pc,
-							      page, subpage,
-							      data,
-							      alloc_len);
-		} else {
-			data_len = spdk_bdev_scsi_mode_sense10(bdev,
-							       cdb, dbd,
-							       llba, pc,
-							       page,
-							       subpage,
-							       data,
-							       alloc_len);
-		}
-
+		/* First call with no buffer to discover needed buffer size */
+		data_len = spdk_bdev_scsi_mode_sense(bdev, md,
+						     cdb, dbd, llba, pc,
+						     page, subpage,
+						     NULL);
 		if (data_len < 0) {
 			/* INVALID FIELD IN CDB */
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
@@ -1818,6 +1751,26 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 						  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
 						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 			break;
+		}
+
+		if (alloc_len > data_len)
+			alloc_len = data_len;
+
+		if (alloc_len) {
+			uint8_t *buffer;
+
+			data = spdk_scsi_task_alloc_data(task, alloc_len);
+			buffer = alloc_len < data_len ? spdk_zmalloc(data_len, 0, NULL) : data;
+
+			data_len = spdk_bdev_scsi_mode_sense(bdev, md,
+							     cdb, dbd, llba, pc,
+							     page, subpage,
+							     buffer);
+			assert(data_len >= 0);
+			if (buffer != data) {
+				memcpy(data, buffer, alloc_len);
+				spdk_free(buffer);
+			}
 		}
 
 		task->data_transferred = (uint64_t)data_len;
