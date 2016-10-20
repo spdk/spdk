@@ -51,7 +51,7 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-
+#include <assert.h>
 
 
 static TAILQ_HEAD(, spdk_interface) g_interface_head;
@@ -68,8 +68,8 @@ static uint32_t spdk_get_ifc_ipv4(void)
 	struct {
 		struct nlmsghdr n;
 		struct ifaddrmsg r;
+		struct rtattr rta;
 	} req;
-	struct rtattr *rta;
 	char buf[16384];
 	struct nlmsghdr *nlmp;
 	struct ifaddrmsg *rtmp;
@@ -96,8 +96,8 @@ static uint32_t spdk_get_ifc_ipv4(void)
 	/*
 	 * Fill up all the attributes for the rtnetlink header.
 	 */
-	rta = (struct rtattr *)(((char *)&req) + NLMSG_ALIGN(req.n.nlmsg_len));
-	rta->rta_len = RTA_LENGTH(16);
+	assert(&req.rta == (struct rtattr *)(((char *)&req) + NLMSG_ALIGN(req.n.nlmsg_len)));
+	req.rta.rta_len = RTA_LENGTH(16);
 
 	/* Send and recv the message from kernel */
 	ret = send(netlink_fd, &req, req.n.nlmsg_len, 0);
