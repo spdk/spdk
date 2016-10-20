@@ -667,7 +667,9 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Host NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
 		      rdma_param->initiator_depth, rdma_param->responder_resources);
-	max_rw_depth = nvmf_min(max_rw_depth, rdma_param->initiator_depth);
+	if (rdma_param->initiator_depth > 0) {
+		max_rw_depth = nvmf_min(max_rw_depth, rdma_param->initiator_depth);
+	}
 
 	/* Finally check for the host software requested values, which are
 	 * optional. */
