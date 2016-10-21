@@ -2602,7 +2602,7 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	/* DATA PDU */
 	rsp_pdu = spdk_get_pdu();
 	rsph = (struct iscsi_bhs_data_in *)&rsp_pdu->bhs;
-	rsp_pdu->data = task->scsi.rbuf + offset;
+	rsp_pdu->data = task->scsi.iov.iov_base + offset;
 	rsp_pdu->data_from_mempool = true;
 
 	task_tag = task->scsi.id;
@@ -2844,7 +2844,7 @@ int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
 			assert(subtask != NULL);
 			subtask->scsi.offset = task->current_datain_offset;
 			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_RBUF_MAX_SIZE, remaining_size);
-			subtask->scsi.rbuf = NULL;
+			subtask->scsi.iov.iov_base = NULL;
 			spdk_iscsi_queue_task(conn, subtask);
 			task->current_datain_offset += subtask->scsi.length;
 			conn->data_in_cnt++;
@@ -2866,7 +2866,7 @@ static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 	task->scsi.parent = NULL;
 	task->scsi.offset = 0;
 	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_RBUF_MAX_SIZE, task->scsi.transfer_len);
-	task->scsi.rbuf = NULL;
+	task->scsi.iov.iov_base = NULL;
 
 	remaining_size = task->scsi.transfer_len - task->scsi.length;
 	task->current_datain_offset = 0;

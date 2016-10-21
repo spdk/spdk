@@ -69,7 +69,7 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 	}
 
 	task->alloc_len = alloc_len;
-	*data = task->rbuf;
+	*data = task->iov.iov_base;
 }
 
 void
@@ -123,6 +123,14 @@ struct spdk_bdev_io *
 spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return NULL;
+}
+
+struct spdk_bdev_io *
+spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return NULL;
 }
@@ -261,7 +269,7 @@ mode_sense_6_test(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	task.rbuf = data;
+	task.iov.iov_base = data;
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	mode_data_len = data[0];
@@ -306,7 +314,7 @@ mode_sense_10_test(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	task.rbuf = data;
+	task.iov.iov_base = data;
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	mode_data_len = ((data[0] << 8) + data[1]);
@@ -350,7 +358,7 @@ inquiry_evpd_test(void)
 	task.lun = &lun;
 
 	memset(data, 0, 4096);
-	task.rbuf = data;
+	task.iov.iov_base = data;
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 
@@ -394,7 +402,7 @@ inquiry_standard_test(void)
 	task.lun = &lun;
 
 	memset(data, 0, 4096);
-	task.rbuf = data;
+	task.iov.iov_base = data;
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 
@@ -433,7 +441,7 @@ _inquiry_overflow_test(uint8_t alloc_len)
 
 	memset(data, 0, sizeof(data));
 	memset(data_compare, 0, sizeof(data_compare));
-	task.rbuf = data;
+	task.iov.iov_base = data;
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 	CU_ASSERT_EQUAL(rc, 0);

@@ -63,6 +63,10 @@
 
 #define SPDK_SCSI_LUN_MAX_NAME_LENGTH		16
 
+/* This flag indicated that data buffers are allocated
+ * internally and hence need to be freed by the SCSI layer.*/
+#define SPDK_SCSI_TASK_ALLOC_BUFFER  1
+
 enum spdk_scsi_data_dir {
 	SPDK_SCSI_DIR_NONE = 0,
 	SPDK_SCSI_DIR_TO_DEV = 1,
@@ -133,11 +137,11 @@ struct spdk_scsi_task {
 	struct iovec iov;
 	struct iovec *iovs;
 	uint16_t iovcnt;
+	uint8_t iov_flags;
 
 	uint8_t sense_data[32];
 	size_t sense_data_len;
 
-	uint8_t *rbuf; /* read buffer */
 	void *blockdev_io;
 
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;

@@ -59,11 +59,9 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 				bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 			spdk_bdev_free_io(bdev_io);
-		} else {
-			spdk_free(task->rbuf);
+		} else if (task->iov_flags & SPDK_SCSI_TASK_ALLOC_BUFFER) {
+			spdk_free(task->iov.iov_base);
 		}
-
-		task->rbuf = NULL;
 
 		assert(task->owner_task_ctr != NULL);
 		if (*(task->owner_task_ctr) > 0) {
@@ -122,13 +120,14 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 	if (alloc_len < 4096) {
 		alloc_len = 4096;
 	}
-
-	task->alloc_len = alloc_len;
-	if (task->rbuf == NULL) {
-		task->rbuf = spdk_zmalloc(alloc_len, 0, NULL);
+	/* This is workaround for buffers shorter than 4kb */
+	if (task->iov.iov_base == NULL) {
+		task->iov.iov_base = spdk_zmalloc(alloc_len, 0, NULL);
+		task->iov_flags |= SPDK_SCSI_TASK_ALLOC_BUFFER;
 	}
-	*data = task->rbuf;
-	memset(task->rbuf, 0, task->alloc_len);
+	task->alloc_len = alloc_len;
+	*data = task->iov.iov_base;
+	memset(task->iov.iov_base, 0, task->alloc_len);
 }
 
 void

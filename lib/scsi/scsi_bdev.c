@@ -1300,9 +1300,8 @@ spdk_bdev_scsi_task_complete(spdk_event_t event)
 			spdk_scsi_lun_clear_all(task->lun);
 		}
 	}
-
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		task->rbuf = bdev_io->u.read.iovs[0].iov_base;
+		task->iov.iov_base = bdev_io->u.read.iovs[0].iov_base;
 	}
 
 	spdk_scsi_lun_complete_task(task->lun, task);
@@ -1334,11 +1333,11 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		SPDK_ERRLOG("end of media\n");
 		return -1;
 	}
-
-	task->blockdev_io = spdk_bdev_read(bdev, task->ch, task->rbuf, offset, nbytes,
-					   spdk_bdev_scsi_task_complete, task);
+	task->blockdev_io = spdk_bdev_readv(bdev, task->ch, task->iovs,
+					    task->iovcnt, offset, nbytes,
+					    spdk_bdev_scsi_task_complete, task);
 	if (!task->blockdev_io) {
-		SPDK_ERRLOG("spdk_bdev_read() failed\n");
+		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
 		return -1;
 	}
 
@@ -1385,8 +1384,8 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	}
 
 	offset += task->offset;
-	task->blockdev_io = spdk_bdev_writev(bdev, task->ch, &task->iov,
-					     1, offset, task->length,
+	task->blockdev_io = spdk_bdev_writev(bdev, task->ch, task->iovs,
+					     task->iovcnt, offset, task->length,
 					     spdk_bdev_scsi_task_complete,
 					     task);
 
