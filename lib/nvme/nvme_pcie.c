@@ -771,6 +771,19 @@ nvme_pcie_qpair_manual_complete_tracker(struct spdk_nvme_qpair *qpair,
 }
 
 static void
+nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_tracker *tr, *temp;
+
+	LIST_FOREACH_SAFE(tr, &pqpair->outstanding_tr, list, temp) {
+		SPDK_ERRLOG("aborting outstanding command\n");
+		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
+							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
+	}
+}
+
+static void
 nvme_pcie_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
@@ -821,34 +834,20 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 static void
 nvme_pcie_admin_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_tracker *tr, *temp;
-
 	/*
 	 * Manually abort each outstanding admin command.  Do not retry
 	 *  admin commands found here, since they will be left over from
 	 *  a controller reset and its likely the context in which the
 	 *  command was issued no longer applies.
 	 */
-	LIST_FOREACH_SAFE(tr, &pqpair->outstanding_tr, list, temp) {
-		SPDK_ERRLOG("aborting outstanding admin command\n");
-		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
-							SPDK_NVME_SC_ABORTED_BY_REQUEST, 1 /* do not retry */, true);
-	}
+	nvme_pcie_qpair_abort_trackers(qpair, 1 /* do not retry */);
 }
 
 static void
 nvme_pcie_io_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_tracker *tr, *temp;
-
 	/* Manually abort each outstanding I/O. */
-	LIST_FOREACH_SAFE(tr, &pqpair->outstanding_tr, list, temp) {
-		SPDK_ERRLOG("aborting outstanding i/o\n");
-		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
-							SPDK_NVME_SC_ABORTED_BY_REQUEST, 0, true);
-	}
+	nvme_pcie_qpair_abort_trackers(qpair, 0);
 }
 
 static void
@@ -892,20 +891,7 @@ nvme_pcie_qpair_disable(struct spdk_nvme_qpair *qpair)
 static void
 nvme_pcie_qpair_fail(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair		*pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_tracker		*tr;
-
-	/* Manually abort each outstanding I/O. */
-	while (!LIST_EMPTY(&pqpair->outstanding_tr)) {
-		tr = LIST_FIRST(&pqpair->outstanding_tr);
-		/*
-		 * Do not remove the tracker.  The abort_tracker path will
-		 *  do that for us.
-		 */
-		SPDK_ERRLOG("failing outstanding i/o\n");
-		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
-							SPDK_NVME_SC_ABORTED_BY_REQUEST, 1 /* do not retry */, true);
-	}
+	nvme_pcie_qpair_abort_trackers(qpair, 1 /* do not retry */);
 }
 
 static int
