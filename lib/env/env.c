@@ -43,14 +43,21 @@
 #include <rte_version.h>
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = rte_malloc(NULL, size, align);
+	if (buf && phys_addr) {
+		*phys_addr = rte_malloc_virt2phy(buf);
+	}
+	return buf;
+}
+
+void *
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	void *buf = spdk_malloc(size, align, phys_addr);
 	if (buf) {
 		memset(buf, 0, size);
-		if (phys_addr) {
-			*phys_addr = rte_malloc_virt2phy(buf);
-		}
 	}
 	return buf;
 }

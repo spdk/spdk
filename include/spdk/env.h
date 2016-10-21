@@ -51,6 +51,13 @@ struct spdk_pci_device;
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
+ *   given size and alignment.
+ */
+void *
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr);
+
+/**
+ * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment. The buffer will be zeroed.
  */
 void *
