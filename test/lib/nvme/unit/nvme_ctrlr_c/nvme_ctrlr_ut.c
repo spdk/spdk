@@ -1142,6 +1142,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 
 	/* set a invalid vendor id */
 	g_pci_vendor_id = 0xFFFF;
+	ctrlr.quirks = nvme_get_ctrlr_quirk(&ctrlr);
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
 	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
@@ -1150,6 +1151,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	/* set valid vendor id and log page directory*/
 	g_pci_vendor_id = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 1;
+	ctrlr.quirks = nvme_get_ctrlr_quirk(&ctrlr);
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
@@ -1169,6 +1171,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	g_pci_device_id = 0x0953;
 	g_pci_subvendor_id = SPDK_PCI_VID_INTEL;
 	g_pci_subdevice_id = 0x3702;
+	ctrlr.quirks = nvme_get_ctrlr_quirk(&ctrlr);
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);

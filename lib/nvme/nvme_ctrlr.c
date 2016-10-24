@@ -33,6 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/env.h"
+#include <unistd.h>
 
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
@@ -179,11 +180,11 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 	ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY] = true;
 
 	if (log_page_directory->read_latency_log_len ||
-	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_READ_LATENCY)) {
+		(ctrlr->quirks & NVME_INTEL_QUIRK_READ_LATENCY)) {
 		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY] = true;
 	}
 	if (log_page_directory->write_latency_log_len ||
-	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_WRITE_LATENCY)) {
+		(ctrlr->quirks & NVME_INTEL_QUIRK_WRITE_LATENCY)) {
 		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY] = true;
 	}
 	if (log_page_directory->temperature_statistics_log_len) {
@@ -731,6 +732,15 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t ready_timeout_in_ms;
 	int rc;
 
+	/*
+	 * May need to avoid accessing any register on the target controller
+	 * for a while. Return early without touching the FSM.
+	 */
+	if (ctrlr->sleep_timeout_in_ms && 
+			(spdk_get_ticks() <= ctrlr->sleep_timeout_in_ms)) {
+		return 0;
+	}
+
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
 	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
@@ -766,6 +776,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 				return -EIO;
 			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
+
+			/*
+			 * Wait 2 secsonds before accessing PCI registers.
+			 * Not using sleep() to avoid blocking other controller's initialization.
+			 */
+			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY)
+				ctrlr->sleep_timeout_in_ms = spdk_get_ticks() + 2 * spdk_get_ticks_hz();
 			return 0;
 		} else {
 			if (csts.bits.rdy == 1) {
@@ -904,6 +921,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 
+	ctrlr->quirks = nvme_get_ctrlr_quirk(ctrlr);
 	return 0;
 }
 
