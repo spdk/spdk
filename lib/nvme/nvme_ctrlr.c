@@ -179,11 +179,11 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 	ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY] = true;
 
 	if (log_page_directory->read_latency_log_len ||
-	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_READ_LATENCY)) {
+	    (ctrlr->quirks & NVME_INTEL_QUIRK_READ_LATENCY)) {
 		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY] = true;
 	}
 	if (log_page_directory->write_latency_log_len ||
-	    nvme_intel_has_quirk(&pci_id, NVME_INTEL_QUIRK_WRITE_LATENCY)) {
+	    (ctrlr->quirks & NVME_INTEL_QUIRK_WRITE_LATENCY)) {
 		ctrlr->log_page_supported[SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY] = true;
 	}
 	if (log_page_directory->temperature_statistics_log_len) {
@@ -891,6 +891,8 @@ nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
+	struct pci_id pci_id;
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->flags = 0;
 	ctrlr->free_io_qids = NULL;
@@ -903,6 +905,10 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 
 	nvme_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
+
+	if (ctrlr->transport->ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
+		ctrlr->quirks = nvme_get_quirks(&pci_id);
+	}
 
 	return 0;
 }

@@ -33,14 +33,12 @@
 
 #include "nvme_internal.h"
 
-/* Intel specific data structures and functions. */
-
-struct nvme_intel_quirk {
+struct nvme_quirk {
 	struct pci_id	id;
 	uint64_t	flags;
 };
 
-static const struct nvme_intel_quirk intel_p3x00[] = {
+static const struct nvme_quirk nvme_quirks[] = {
 	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3702}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
 	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3703}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
 	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3704}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
@@ -50,14 +48,29 @@ static const struct nvme_intel_quirk intel_p3x00[] = {
 	{{0x0000, 0x0000, 0x0000, 0x0000}, 0												}
 };
 
-bool nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk)
+/* Compare each field. SPDK_PCI_ANY_ID in s1 matches everything */
+static bool
+pci_id_match(const struct pci_id *s1, const struct pci_id *s2)
 {
-	const struct nvme_intel_quirk *intel_quirk = intel_p3x00;
+	if ((s1->vendor_id == SPDK_PCI_ANY_ID || s1->vendor_id == s2->vendor_id) &&
+	    (s1->dev_id == SPDK_PCI_ANY_ID || s1->dev_id == s2->dev_id) &&
+	    (s1->sub_vendor_id == SPDK_PCI_ANY_ID || s1->sub_vendor_id == s2->sub_vendor_id) &&
+	    (s1->sub_dev_id == SPDK_PCI_ANY_ID || s1->sub_dev_id == s2->sub_dev_id)) {
+		return true;
+	}
+	return false;
+}
 
-	while (intel_quirk->id.vendor_id) {
-		if (!memcmp(&intel_quirk->id, id, sizeof(*id)) && (intel_quirk->flags & quirk))
-			return true;
-		intel_quirk++;
+uint64_t
+nvme_get_quirks(const struct pci_id *id)
+{
+	const struct nvme_quirk *quirk = nvme_quirks;
+
+	while (quirk->id.vendor_id) {
+		if (pci_id_match(&quirk->id, id)) {
+			return quirk->flags;
+		}
+		quirk++;
 	}
 	return false;
 }

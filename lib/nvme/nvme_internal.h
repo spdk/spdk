@@ -388,6 +388,8 @@ struct spdk_nvme_ctrlr {
 
 	/** PCI address including domain, bus, device and function */
 	struct spdk_pci_addr		pci_addr;
+
+	uint64_t			quirks;
 };
 
 struct nvme_driver {
@@ -499,7 +501,7 @@ struct nvme_request *nvme_allocate_request_user_copy(void *buffer, uint32_t payl
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 void	nvme_free_request(struct nvme_request *req);
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
-bool	nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk);
+uint64_t nvme_get_quirks(const struct pci_id *id);
 
 void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);
 
