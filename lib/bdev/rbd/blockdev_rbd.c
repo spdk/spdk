@@ -43,14 +43,11 @@
 #include <inttypes.h>
 #include <poll.h>
 #include <sys/eventfd.h>
-#include <rte_config.h>
-#include <rte_ring.h>
-#include <rte_mempool.h>
-#include <rte_lcore.h>
 #include <rbd/librbd.h>
 #include <rados/librados.h>
 
 #include "spdk/conf.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
@@ -241,7 +238,6 @@ blockdev_rbd_start_aio(rbd_image_t image, struct blockdev_rbd_io *cmd,
 }
 
 static int blockdev_rbd_library_init(void);
-static int blockdev_rbd_thread_init(struct blockdev_rbd_io_channel *channel);
 static void blockdev_rbd_library_fini(void);
 
 static int
@@ -435,6 +431,18 @@ blockdev_rbd_free_channel(struct blockdev_rbd_io_channel *ch)
 	}
 }
 
+static int blockdev_rbd_handle(void *arg)
+{
+	struct blockdev_rbd_io_channel *ch = (struct blockdev_rbd_io_channel *)arg;
+
+	int ret = rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL);
+	if (ret < 0) {
+		SPDK_ERRLOG("Failed to open specified rbd device\n");
+	}
+
+	return ret;
+}
+
 static int
 blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 		       void *ctx_buf, void *unique_ctx)
@@ -456,7 +464,7 @@ blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 		goto err;
 	}
 
-	ret = blockdev_rbd_thread_init(ch);
+	ret = spdk_use_all_cpu_cores_for_app(blockdev_rbd_handle, ch);
 	if (ret < 0) {
 		goto err;
 	}
@@ -621,75 +629,6 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 				sizeof(struct blockdev_rbd_io_channel));
 	spdk_bdev_register(&rbd->disk);
 	return 0;
-}
-
-#define BDEV_SYS_CPU_DIR "/sys/devices/system/cpu/cpu%u"
-#define BDEV_CORE_ID_FILE "topology/core_id"
-#define BDEV_CPU_PATH_MAX 256
-
-/* Check if a cpu is present by the presence of the cpu information for it */
-static int blockdev_cpu_detected(unsigned lcore_id)
-{
-	char path[BDEV_CPU_PATH_MAX];
-	int len = snprintf(path, sizeof(path), BDEV_SYS_CPU_DIR
-		"/"BDEV_CORE_ID_FILE, lcore_id);
-	if (len <= 0 || (unsigned)len >= sizeof(path))
-		return 0;
-	if (access(path, F_OK) != 0)
-		return 0;
-
-	return 1;
-}
-
-static void *blockdev_rbd_thread_route(void *arg)
-{
-	unsigned i = 0;
-	int ret = 0;
-	/* set CPU affinity */
-	rte_cpuset_t cpuset;
-
-	unsigned num = sysconf(_SC_NPROCESSORS_CONF);
-	struct blockdev_rbd_io_channel *ch = (struct blockdev_rbd_io_channel *)arg;
-
-	CPU_ZERO(&cpuset);
-
-	for (i = 0; i < num; i++) {
-		if (blockdev_cpu_detected(i)) {
-			CPU_SET(i, &cpuset);
-		} else {
-			SPDK_WARNLOG("cpu core %d isn't online\n", i);
-		}
-	}
-
-	if (rte_thread_set_affinity(&cpuset) < 0) {
-		SPDK_NOTICELOG("cannot set affinity rbd_thread to all online cores\n");
-	}
-
-	ret = rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL);
-	if (ret < 0) {
-		SPDK_ERRLOG("Failed to open specified rbd device\n");
-	}
-
-	return (void *)(long int)ret;
-}
-
-static int blockdev_rbd_thread_init(struct blockdev_rbd_io_channel *channel) {
-	pthread_t tid = 0;
-	void * ret_val = NULL;
-
-	int ret = pthread_create(&tid, NULL, (void *)blockdev_rbd_thread_route, channel);
-	if (ret != 0) {
-		rte_panic("Cannot create thread rbd_thread\n");
-		return -1;
-	}
-
-	ret = pthread_join(tid, &ret_val);
-	if (ret != 0) {
-		rte_panic("Thread rbd_thread join is fail\n");
-		return -1;
-	}
-
-	return (ret_val ? -1 : 0);
 }
 
 static int
