@@ -197,6 +197,24 @@ fake_cpl_success(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 }
 
 int
+spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				uint32_t cdw11, uint32_t cdw12, void *payload, uint32_t payload_size,
+				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	CU_ASSERT_FATAL(0);
+	return -1;
+}
+
+int
+spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
+				uint32_t cdw11, void *payload, uint32_t payload_size,
+				spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	CU_ASSERT_FATAL(0);
+	return -1;
+}
+
+int
 spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
 				 uint32_t nsid, void *payload, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
 				 void *cb_arg)

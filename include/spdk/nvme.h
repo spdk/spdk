@@ -77,6 +77,15 @@ struct spdk_nvme_ctrlr_opts {
 	 * Type of arbitration mechanism
 	 */
 	enum spdk_nvme_cc_ams arb_mechanism;
+	/**
+	 * Keep alive timeout in milliseconds (0 = disabled).
+	 *
+	 * The NVMe library will set the Keep Alive Timer feature to this value and automatically
+	 * send Keep Alive commands as needed.  The library user must call
+	 * spdk_nvme_ctrlr_process_admin_completions() periodically to ensure Keep Alive commands
+	 * are sent.
+	 */
+	uint32_t keep_alive_timeout_ms;
 };
 
 /**

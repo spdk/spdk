@@ -347,6 +347,9 @@ struct spdk_nvme_ctrlr {
 	enum nvme_ctrlr_state		state;
 	uint64_t			state_timeout_tsc;
 
+	uint64_t			next_keep_alive_tick;
+	uint64_t			keep_alive_interval_ticks;
+
 	TAILQ_ENTRY(spdk_nvme_ctrlr)	tailq;
 
 	/** All the log pages supported */

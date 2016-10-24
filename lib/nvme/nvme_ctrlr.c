@@ -78,6 +78,7 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
 	opts->use_cmb_sqs = false;
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
+	opts->keep_alive_timeout_ms = 10 * 1000;
 }
 
 struct spdk_nvme_qpair *
@@ -561,6 +562,85 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static int
+nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status status;
+	uint32_t keep_alive_interval_ms;
+	int rc;
+
+	if (ctrlr->opts.keep_alive_timeout_ms == 0) {
+		return 0;
+	}
+
+	if (ctrlr->cdata.kas == 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Controller KAS is 0 - not enabling Keep Alive\n");
+		ctrlr->opts.keep_alive_timeout_ms = 0;
+		return 0;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting keep alive timeout feature to %u ms\n",
+		      ctrlr->opts.keep_alive_timeout_ms);
+
+	rc = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER,
+					     ctrlr->opts.keep_alive_timeout_ms, 0, NULL, 0,
+					     nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Set Feature failed: %d\n", rc);
+		ctrlr->opts.keep_alive_timeout_ms = 0;
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Set Feature failed: SC %x SCT %x\n",
+			      status.cpl.status.sc, status.cpl.status.sct);
+		ctrlr->opts.keep_alive_timeout_ms = 0;
+		return -ENXIO;
+	}
+
+	/* Retrieve actual keep alive timeout, since the controller may have adjusted it. */
+	rc = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, 0, NULL, 0,
+					     nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Get Feature failed: %d\n", rc);
+		ctrlr->opts.keep_alive_timeout_ms = 0;
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Get Feature failed: SC %x SCT %x\n",
+			      status.cpl.status.sc, status.cpl.status.sct);
+		ctrlr->opts.keep_alive_timeout_ms = 0;
+		return -ENXIO;
+	}
+
+	if (ctrlr->opts.keep_alive_timeout_ms != status.cpl.cdw0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Controller adjusted keep alive timeout to %u ms\n",
+			      status.cpl.cdw0);
+	}
+
+	ctrlr->opts.keep_alive_timeout_ms = status.cpl.cdw0;
+
+	keep_alive_interval_ms = ctrlr->opts.keep_alive_timeout_ms / 2;
+	if (keep_alive_interval_ms == 0) {
+		keep_alive_interval_ms = 1;
+	}
+	SPDK_TRACELOG(SPDK_TRACE_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
+
+	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * UINT64_C(1000)) / spdk_get_ticks_hz();
+
+	/* Schedule the first Keep Alive to be sent as soon as possible. */
+	ctrlr->next_keep_alive_tick = spdk_get_ticks();
+
+	return 0;
+}
+
 static void
 nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -886,6 +966,11 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
 	}
 
+	if (nvme_ctrlr_set_keep_alive_timeout(ctrlr) != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting keep alive timeout failed\n");
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -960,12 +1045,54 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 	return nvme_qpair_submit_request(ctrlr->adminq, req);
 }
 
+static void
+nvme_keep_alive_completion(void *cb_ctx, const struct spdk_nvme_cpl *cpl)
+{
+	/* Do nothing */
+}
+
+/*
+ * Check if we need to send a Keep Alive command.
+ * Caller must hold ctrlr->ctrlr_lock.
+ */
+static void
+nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint64_t now;
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+
+	now = spdk_get_ticks();
+	if (now < ctrlr->next_keep_alive_tick) {
+		return;
+	}
+
+	req = nvme_allocate_request_null(nvme_keep_alive_completion, NULL);
+	if (req == NULL) {
+		return;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_KEEP_ALIVE;
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	if (rc != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Submitting Keep Alive failed\n");
+	}
+
+	ctrlr->next_keep_alive_tick = now + ctrlr->keep_alive_interval_ticks;
+}
+
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int32_t num_completions;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+	if (ctrlr->keep_alive_interval_ticks) {
+		nvme_ctrlr_keep_alive(ctrlr);
+	}
 	num_completions = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
