@@ -120,24 +120,11 @@ spdk_scsi_task_free_data(struct spdk_scsi_task *task)
 void *
 spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
-	/*
-	 * SPDK iSCSI target depends on allocating at least 4096 bytes, even if
-	 *  the command requested less.  The individual command code (for
-	 *  example, INQUIRY) will fill out up to 4096 bytes of data, ignoring
-	 *  the allocation length specified in the command.  After the individual
-	 *  command functions are done, spdk_scsi_lun_execute_tasks() takes
-	 *  care of only sending back the amount of data specified in the
-	 *  allocation length.
-	 */
 	assert(task->alloc_len == 0);
 
 	/* Only one buffer is managable */
 	if (task->iovcnt != 1) {
 		return NULL;
-	}
-
-	if (alloc_len < 4096) {
-		alloc_len = 4096;
 	}
 
 	/* This is workaround for buffers shorter than 4kb */

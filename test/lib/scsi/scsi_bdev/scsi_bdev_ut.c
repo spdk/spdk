@@ -104,10 +104,6 @@ spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len)
 void *
 spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
-	if (alloc_len < 4096) {
-		alloc_len = 4096;
-	}
-
 	if (task->iov.iov_base != NULL) {
 		if (task->alloc_len != 0 && alloc_len > task->alloc_len) {
 			spdk_put_task(task);
@@ -458,7 +454,6 @@ inquiry_standard_test(void)
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
 	char cdb[6];
-	/* expects a 4K internal data buffer */
 	char *data;
 	struct spdk_scsi_cdb_inquiry_data *inq_data;
 	int rc;

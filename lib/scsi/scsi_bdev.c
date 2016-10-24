@@ -1635,7 +1635,12 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
-		data = spdk_scsi_task_alloc_data(task, alloc_len);
+		if (alloc_len) {
+			data = spdk_scsi_task_alloc_data(task, alloc_len);
+		} else {
+			data = NULL;
+		}
+
 		data_len = spdk_bdev_scsi_inquiry(bdev, task, cdb,
 						  data, alloc_len);
 		if (data_len < 0) {

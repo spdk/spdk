@@ -183,9 +183,10 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 static void
 complete_task_with_no_lun(struct spdk_scsi_task *task)
 {
+	uint8_t buffer[36];
 	uint8_t *data;
 	uint32_t allocation_len;
-	int data_len;
+	uint32_t data_len;
 
 	if (task->cdb[0] == SPDK_SPC_INQUIRY) {
 		/*
@@ -194,14 +195,22 @@ complete_task_with_no_lun(struct spdk_scsi_task *task)
 		 *  PERIPHERAL DEVICE TYPE = 0x1F.
 		 */
 		allocation_len = from_be16(&task->cdb[3]);
-		data = spdk_scsi_task_alloc_data(task, allocation_len);
-		data_len = 36;
-		memset(data, 0, data_len);
-		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
-		data[0] = 0x03 << 5 | 0x1f;
-		/* ADDITIONAL LENGTH */
-		data[4] = data_len - 5;
-		task->data_transferred = (uint64_t)data_len;
+		data_len = sizeof(buffer);
+		if (allocation_len > data_len)
+			allocation_len = data_len;
+
+		if (allocation_len) {
+			memset(buffer, 0, data_len);
+			/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
+			buffer[0] = 0x03 << 5 | 0x1f;
+			/* ADDITIONAL LENGTH */
+			buffer[4] = data_len - 5;
+
+			data = spdk_scsi_task_alloc_data(task, allocation_len);
+			memcpy(data, buffer, allocation_len);
+		}
+
+		task->data_transferred = data_len;
 		task->status = SPDK_SCSI_STATUS_GOOD;
 	} else {
 		/* LOGICAL UNIT NOT SUPPORTED */
