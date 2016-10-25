@@ -34,6 +34,7 @@
 #include "spdk/env.h"
 
 #include <string.h>
+#include <unistd.h>
 
 #include <rte_config.h>
 #include <rte_cycles.h>
@@ -170,4 +171,57 @@ uint64_t spdk_get_ticks_hz(void)
 void spdk_delay_us(unsigned int us)
 {
 	return rte_delay_us(us);
+}
+
+#define BDEV_SYS_CPU_DIR "/sys/devices/system/cpu/cpu%u"
+#define BDEV_CORE_ID_FILE "topology/core_id"
+#define BDEV_CPU_PATH_MAX 256
+
+/* Check if a cpu is present by the presence of the cpu information for it */
+static int blockdev_cpu_detected(unsigned lcore_id)
+{
+	char path[BDEV_CPU_PATH_MAX];
+	int len = snprintf(path, sizeof(path), BDEV_SYS_CPU_DIR
+		"/"BDEV_CORE_ID_FILE, lcore_id);
+	if (len <= 0 || (unsigned)len >= sizeof(path))
+		return 0;
+	if (access(path, F_OK) != 0)
+		return 0;
+
+	return 1;
+}
+
+int spdk_bind_all_cpu_cores_for_app(app_callback cb, void *args)
+{
+	rte_cpuset_t orig_cpuset, new_cpuset;
+	size_t i;
+	int ret;
+	unsigned core_num = 0;
+
+	if (cb == NULL || args == NULL) {
+		return -1;
+	}
+
+	rte_thread_get_affinity(&orig_cpuset);
+
+	CPU_ZERO(&new_cpuset);
+
+	core_num = sysconf(_SC_NPROCESSORS_CONF);
+
+	/* Create a mask containing all CPUs */
+	for (i = 0; i < core_num; i++) {
+		if (blockdev_cpu_detected(i)) {
+			CPU_SET(i, &new_cpuset);
+		} else {
+			printf("cpu core %u isn't online\n", (unsigned)i);
+		}
+	}
+
+	rte_thread_set_affinity(&new_cpuset);
+
+	ret = cb(args);
+
+	rte_thread_set_affinity(&orig_cpuset);
+
+	return ret;
 }
