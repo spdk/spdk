@@ -56,6 +56,7 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_server_conn *conn,
 {
 	struct rpc_construct_aio req = {};
 	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
 				    sizeof(rpc_construct_aio_decoders) / sizeof(*rpc_construct_aio_decoders),
@@ -64,7 +65,8 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	if (create_aio_disk(req.fname) == NULL) {
+	bdev = create_aio_disk(req.fname);
+	if (bdev == NULL) {
 		goto invalid;
 	}
 
@@ -75,7 +77,9 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_server_conn *conn,
 	}
 
 	w = spdk_jsonrpc_begin_result(conn, id);
-	spdk_json_write_bool(w, true);
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, bdev->name);
+	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(conn, w);
 	return;
 

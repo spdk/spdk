@@ -4,10 +4,18 @@ import argparse
 import json
 import socket
 
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
+
 SPDK_JSONRPC_PORT_BASE = 5260
 
 def print_dict(d):
     print json.dumps(d, indent=2)
+
+def print_array(a):
+    print " ".join((quote(v) for v in a))
 
 parser = argparse.ArgumentParser(description='SPDK RPC command line interface')
 parser.add_argument('-s', dest='server_ip', help='RPC server IP address', default='127.0.0.1')
@@ -146,7 +154,7 @@ p.set_defaults(func=construct_target_node)
 def construct_malloc_bdev(args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'num_blocks': num_blocks, 'block_size': args.block_size}
-    jsonrpc_call('construct_malloc_bdev', params)
+    print_array(jsonrpc_call('construct_malloc_bdev', params))
 
 p = subparsers.add_parser('construct_malloc_bdev', help='Add a bdev with malloc backend')
 p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
@@ -156,7 +164,7 @@ p.set_defaults(func=construct_malloc_bdev)
 
 def construct_aio_bdev(args):
     params = {'fname': args.fname}
-    jsonrpc_call('construct_aio_bdev', params)
+    print_array(jsonrpc_call('construct_aio_bdev', params))
 
 p = subparsers.add_parser('construct_aio_bdev', help='Add a bdev with aio backend')
 p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
@@ -164,7 +172,7 @@ p.set_defaults(func=construct_aio_bdev)
 
 def construct_nvme_bdev(args):
     params = {'pci_address': args.pci_address}
-    jsonrpc_call('construct_nvme_bdev', params)
+    print_array(jsonrpc_call('construct_nvme_bdev', params))
 p = subparsers.add_parser('construct_nvme_bdev', help='Add bdev with nvme backend')
 p.add_argument('pci_address', help='PCI address domain:bus:device.function')
 p.set_defaults(func=construct_nvme_bdev)
@@ -175,7 +183,7 @@ def construct_rbd_bdev(args):
         'rbd_name': args.rbd_name,
         'size': args.size,
     }
-    jsonrpc_call('construct_rbd_bdev', params)
+    print_array(jsonrpc_call('construct_rbd_bdev', params))
 
 p = subparsers.add_parser('construct_rbd_bdev', help='Add a bdev with ceph rbd backend')
 p.add_argument('pool_name', help='rbd pool name')

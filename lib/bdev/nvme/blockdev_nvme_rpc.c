@@ -58,7 +58,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 	struct nvme_probe_ctx ctx = {};
 	unsigned int domain, bus, dev, func;
-	int rc;
+	int rc, i;
 
 	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
 				    sizeof(rpc_construct_nvme_decoders) / sizeof(*rpc_construct_nvme_decoders),
@@ -91,7 +91,11 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	}
 
 	w = spdk_jsonrpc_begin_result(conn, id);
-	spdk_json_write_bool(w, true);
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < ctx.num_created_bdevs; i++) {
+		spdk_json_write_string(w, ctx.created_bdevs[i]->name);
+	}
+	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(conn, w);
 	return;
 

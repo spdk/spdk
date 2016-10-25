@@ -102,8 +102,6 @@ enum data_direction {
 	BDEV_DISK_WRITE = 1
 };
 
-#define NVME_MAX_BLOCKDEVS_PER_CONTROLLER 256
-#define NVME_MAX_BLOCKDEVS (NVME_MAX_BLOCKDEVS_PER_CONTROLLER * NVME_MAX_CONTROLLERS)
 static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int blockdev_index_max = 0;
 static int nvme_luns_per_ns = 1;
@@ -430,13 +428,27 @@ blockdev_nvme_exist(struct nvme_probe_ctx *ctx)
 int
 spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx)
 {
+	int prev_index_max, i;
+
 	if (blockdev_nvme_exist(ctx)) {
 		return -1;
 	}
 
+	prev_index_max = blockdev_index_max;
+
 	if (spdk_nvme_probe(ctx, probe_cb, attach_cb, NULL)) {
 		return -1;
 	}
+
+	/*
+	 * Report the new bdevs that were created in this call.
+	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
+	 */
+	ctx->num_created_bdevs = 0;
+	for (i = prev_index_max; i < blockdev_index_max; i++) {
+		ctx->created_bdevs[ctx->num_created_bdevs++] = &g_blockdev[i].disk;
+	}
+
 	return 0;
 }
 
