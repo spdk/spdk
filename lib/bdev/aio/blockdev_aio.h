@@ -69,6 +69,6 @@ struct file_disk {
 	TAILQ_HEAD(, blockdev_aio_task) sync_completion_list;
 };
 
-struct file_disk *create_aio_disk(char *fname);
+struct spdk_bdev *create_aio_disk(char *fname);
 
 #endif // SPDK_BLOCKDEV_AIO_H

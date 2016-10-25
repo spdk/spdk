@@ -557,7 +557,7 @@ blockdev_rbd_pool_info_init(const char *rbd_pool_name)
 	return pool_info;
 }
 
-int
+struct spdk_bdev *
 spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
 {
 	struct blockdev_rbd_pool_info *pool_info;
@@ -565,20 +565,20 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	int ret;
 
 	if ((pool_name == NULL) || (rbd_name == NULL)) {
-		return -1;
+		return NULL;
 	}
 
 	pool_info = blockdev_rbd_pool_info_init(pool_name);
 	if (pool_info == NULL) {
 		SPDK_ERRLOG("failed to create blockdev_rbd_pool_info\n");
-		return -1;
+		return NULL;
 	}
 
 	rbd = calloc(1, sizeof(struct blockdev_rbd));
 	if (rbd == NULL) {
 		SPDK_ERRLOG("Failed to allocate blockdev_rbd struct\n");
 		blockdev_rbd_free_pool_info(pool_info);
-		return -1;
+		return NULL;
 	}
 
 	rbd->pool_info = pool_info;
@@ -586,7 +586,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	if (!rbd->rbd_name) {
 		blockdev_rbd_free_pool_info(pool_info);
 		blockdev_rbd_free(rbd);
-		return -1;
+		return NULL;
 	}
 
 	ret = blockdev_rbd_init(pool_info->name, rbd_name, &rbd->info);
@@ -594,7 +594,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		blockdev_rbd_free_pool_info(pool_info);
 		blockdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
-		return -1;
+		return NULL;
 	}
 
 	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
@@ -615,13 +615,13 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 				blockdev_rbd_destroy_cb,
 				sizeof(struct blockdev_rbd_io_channel));
 	spdk_bdev_register(&rbd->disk);
-	return 0;
+	return &rbd->disk;
 }
 
 static int
 blockdev_rbd_library_init(void)
 {
-	int i, ret;
+	int i;
 	const char *val;
 	const char *pool_name;
 	const char *rbd_name;
@@ -668,8 +668,7 @@ blockdev_rbd_library_init(void)
 			}
 		}
 
-		ret = spdk_bdev_rbd_create(pool_name, rbd_name, block_size);
-		if (ret) {
+		if (spdk_bdev_rbd_create(pool_name, rbd_name, block_size) == NULL) {
 			goto cleanup;
 		}
 	}

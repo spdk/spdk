@@ -36,6 +36,9 @@
 
 #include <stdint.h>
 
-int
-spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size);
+#include "spdk/bdev.h"
+
+struct spdk_bdev *spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name,
+				       uint32_t block_size);
+
 #endif // SPDK_BLOCKDEV_RBD_H
