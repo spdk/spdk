@@ -297,7 +297,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 					0);
 	rdma_conn->bufs_mr = ibv_reg_mr(id->pd, rdma_conn->bufs,
 					max_queue_depth * g_rdma.in_capsule_data_size,
-					IBV_ACCESS_LOCAL_WRITE);
+					IBV_ACCESS_LOCAL_WRITE |
+					IBV_ACCESS_REMOTE_WRITE);
 	if (!rdma_conn->cmds_mr || !rdma_conn->cpls_mr || !rdma_conn->bufs_mr) {
 		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
@@ -1250,7 +1251,8 @@ spdk_nvmf_rdma_session_add_conn(struct spdk_nvmf_session *session,
 	rdma_sess->verbs = rdma_conn->cm_id->verbs;
 	rdma_sess->buf_mr = ibv_reg_mr(rdma_conn->cm_id->pd, rdma_sess->buf,
 				       g_rdma.max_queue_depth * g_rdma.max_io_size,
-				       IBV_ACCESS_LOCAL_WRITE);
+				       IBV_ACCESS_LOCAL_WRITE |
+				       IBV_ACCESS_REMOTE_WRITE);
 	if (!rdma_sess->buf_mr) {
 		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);
