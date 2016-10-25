@@ -74,10 +74,9 @@ usage(char *executable_name)
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
 	spdk_tracelog_usage(stdout, "-t");
-	printf(" -v         verbose (enable warnings)\n");
 	printf(" -H         show this usage\n");
-	printf(" -V         show version\n");
 	printf(" -d         disable coredump file enabling\n");
+	printf(" -q         disable notice level logging to stderr\n");
 }
 
 static void
