@@ -31,14 +31,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = jsoncat parse util write
+APP = jsoncat
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = jsoncat.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/json/libspdk_json.a
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(SPDK_LIBS)
+
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
