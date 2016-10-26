@@ -177,11 +177,12 @@ static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
 
 int nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries,
-			 struct spdk_nvme_ctrlr *ctrlr)
+			 struct spdk_nvme_ctrlr *ctrlr,
+			 enum spdk_nvme_qprio qprio)
 {
 	qpair->id = id;
 	qpair->num_entries = num_entries;
-	qpair->qprio = 0;
+	qpair->qprio = qprio;
 	qpair->ctrlr = ctrlr;
 
 	return 0;
