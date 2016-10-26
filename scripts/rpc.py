@@ -100,13 +100,13 @@ p.set_defaults(func=get_target_nodes)
 
 def construct_target_node(args):
     lun_name_id_dict = dict(u.split(":")
-                            for u in args.lun_name_id_pairs.split(" "))
+                            for u in args.lun_name_id_pairs.strip().split(" "))
     lun_names = lun_name_id_dict.keys()
     lun_ids = list(map(int, lun_name_id_dict.values()))
 
     pg_tags = []
     ig_tags = []
-    for u in args.pg_ig_mappings.split(" "):
+    for u in args.pg_ig_mappings.strip().split(" "):
         pg, ig = u.split(":")
         pg_tags.append(int(pg))
         ig_tags.append(int(ig))
@@ -236,9 +236,9 @@ p.set_defaults(func=add_portal_group)
 def add_initiator_group(args):
     initiators = []
     netmasks = []
-    for i in args.initiator_list.split(' '):
+    for i in args.initiator_list.strip().split(' '):
         initiators.append(i)
-    for n in args.netmask_list.split(' '):
+    for n in args.netmask_list.strip().split(' '):
         netmasks.append(n)
 
     params = {'tag': args.tag, 'initiators': initiators, 'netmasks': netmasks}
@@ -349,13 +349,13 @@ def construct_nvmf_subsystem(args):
 
     if args.hosts:
         hosts = []
-        for u in args.hosts.split(" "):
+        for u in args.hosts.strip().split(" "):
             hosts.append(u)
         params['hosts'] = hosts
 
     if args.namespaces:
         namespaces = []
-        for u in args.namespaces.split(" "):
+        for u in args.namespaces.strip().split(" "):
             namespaces.append(u)
         params['namespaces'] = namespaces
 
