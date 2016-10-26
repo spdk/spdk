@@ -185,6 +185,8 @@ int spdk_json_number_to_uint32(const struct spdk_json_val *val, uint32_t *num);
 
 struct spdk_json_write_ctx;
 
+#define SPDK_JSON_WRITE_FLAG_FORMATTED	0x00000001
+
 typedef int (*spdk_json_write_cb)(void *cb_ctx, const void *data, size_t size);
 
 struct spdk_json_write_ctx *spdk_json_write_begin(spdk_json_write_cb write_cb, void *cb_ctx,
