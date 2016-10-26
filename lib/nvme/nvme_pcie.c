@@ -430,7 +430,8 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_qpair_construct(ctrlr->adminq,
 				    0, /* qpair ID */
 				    NVME_ADMIN_ENTRIES,
-				    ctrlr);
+				    ctrlr,
+				    SPDK_NVME_QPRIO_URGENT);
 }
 
 static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
@@ -1059,9 +1060,6 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	qpair = &pqpair->qpair;
 
-	qpair->id = qid;
-	qpair->qprio = qprio;
-
 	/*
 	 * NVMe spec sets a hard limit of 64K max entries, but
 	 *  devices may specify a smaller limit, so we need to check
@@ -1069,7 +1067,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	 */
 	num_entries = nvme_min(NVME_IO_ENTRIES, ctrlr->cap.bits.mqes + 1);
 
-	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr);
+	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);
 	if (rc != 0) {
 		free(pqpair);
 		return NULL;

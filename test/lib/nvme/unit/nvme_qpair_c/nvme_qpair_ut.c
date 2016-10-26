@@ -223,7 +223,7 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	ctrlr->transport = &nvme_qpair_ut_transport;
 	ctrlr->free_io_qids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
-	nvme_qpair_construct(qpair, 1, 128, ctrlr);
+	nvme_qpair_construct(qpair, 1, 128, ctrlr, 0);
 
 	ut_fail_vtophys = false;
 }
