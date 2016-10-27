@@ -731,6 +731,16 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t ready_timeout_in_ms;
 	int rc;
 
+	/*
+	 * May need to avoid accessing any register on the target controller
+	 * for a while. Return early without touching the FSM.
+	 * Check sleep_timeout_tsc > 0 for unit test.
+	 */
+	if ((ctrlr->sleep_timeout_tsc > 0) &&
+		(spdk_get_ticks() <= ctrlr->sleep_timeout_tsc))
+		return 0;
+	ctrlr->sleep_timeout_tsc = 0;
+
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
 	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
@@ -766,6 +776,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 				return -EIO;
 			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
+
+			/*
+			 * Wait 2 secsonds before accessing PCI registers.
+			 * Not using sleep() to avoid blocking other controller's initialization.
+			 */
+			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY)
+				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + 2 * spdk_get_ticks_hz();
 			return 0;
 		} else {
 			if (csts.bits.rdy == 1) {
