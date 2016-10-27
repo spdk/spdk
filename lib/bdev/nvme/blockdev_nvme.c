@@ -602,16 +602,18 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 static void
 queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_blockio *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_blockio *)ref);
 	enum spdk_bdev_io_status status;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->error.nvme.sct = cpl->status.sct;
+		bdev_io->error.nvme.sc = cpl->status.sc;
+		status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	} else {
 		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	}
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), status);
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 static void
