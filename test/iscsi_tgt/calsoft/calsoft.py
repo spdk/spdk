@@ -98,9 +98,13 @@ def main():
         exit(1)
     with open(output_file, 'w') as f:
         json.dump(obj=result, fp=f, indent=2)
-    if any(["FAIL" == x["Result"] for x in case_result_list]):
-        print "Test case %s failed." % (x["Name"])
-        sys.exit(1)
+
+    failed = 0
+    for x in case_result_list:
+        if x["Result"] == "FAIL":
+            print "Test case %s failed." % (x["Name"])
+            failed = 1
+    exit(failed)
 
 if __name__ == '__main__':
     main()
