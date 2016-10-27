@@ -188,6 +188,30 @@ spdk_json_write_uint32(struct spdk_json_write_ctx *w, uint32_t val)
 	return emit(w, buf, count);
 }
 
+int
+spdk_json_write_int64(struct spdk_json_write_ctx *w, int64_t val)
+{
+	char buf[32];
+	int count;
+
+	if (begin_value(w)) return fail(w);
+	count = snprintf(buf, sizeof(buf), "%" PRId64, val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) return fail(w);
+	return emit(w, buf, count);
+}
+
+int
+spdk_json_write_uint64(struct spdk_json_write_ctx *w, uint64_t val)
+{
+	char buf[32];
+	int count;
+
+	if (begin_value(w)) return fail(w);
+	count = snprintf(buf, sizeof(buf), "%" PRIu64, val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) return fail(w);
+	return emit(w, buf, count);
+}
+
 static void
 write_hex_4(void *dest, uint16_t val)
 {
