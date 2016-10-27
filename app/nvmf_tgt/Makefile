@@ -54,6 +54,10 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
 	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
 	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
+
+# These libraries do not expose any external API, only constructors,
+# so they must be linked specially to ensure they are not removed.
+SPDK_WHOLE_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
 	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
 
@@ -61,6 +65,8 @@ LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
         $(COPY_MODULES_LINKER_ARGS)
 
 LIBS += $(SPDK_LIBS)
+
+LIBS += -Wl,--whole-archive $(SPDK_WHOLE_LIBS) -Wl,--no-whole-archive
 
 ifeq ($(CONFIG_RDMA),y)
 LIBS += -libverbs -lrdmacm
@@ -70,7 +76,7 @@ LIBS += $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS) $(BLOCKDEV_MODULES) $(LINKER_MODULES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIBS) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES) $(LINKER_MODULES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :
