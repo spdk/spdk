@@ -330,6 +330,12 @@ def get_interfaces(args):
 p = subparsers.add_parser('get_interfaces', help='Display current interface list')
 p.set_defaults(func=get_interfaces)
 
+def get_bdevs(args):
+    print_dict(jsonrpc_call('get_bdevs'))
+
+p = subparsers.add_parser('get_bdevs', help='Display current blockdev list')
+p.set_defaults(func=get_bdevs)
+
 def get_nvmf_subsystems(args):
     print_dict(jsonrpc_call('get_nvmf_subsystems'))
 

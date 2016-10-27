@@ -49,6 +49,7 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
 	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
 	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
+	$(SPDK_ROOT_DIR)/lib/bdev/rpc/libspdk_bdev_rpc.a \
 	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
 	$(SPDK_ROOT_DIR)/lib/iscsi/libspdk_iscsi.a \
 	$(SPDK_ROOT_DIR)/lib/scsi/libspdk_scsi.a \

@@ -60,6 +60,7 @@ SPDK_LIBS = \
 SPDK_WHOLE_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
 	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
+	$(SPDK_ROOT_DIR)/lib/bdev/rpc/libspdk_bdev_rpc.a \
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
         $(COPY_MODULES_LINKER_ARGS)
