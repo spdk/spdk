@@ -996,7 +996,9 @@ spdk_nvmf_rdma_fini(void)
 		rdma_destroy_id(addr->id);
 	}
 
-	rdma_destroy_event_channel(g_rdma.event_channel);
+	if (g_rdma.event_channel != NULL) {
+		rdma_destroy_event_channel(g_rdma.event_channel);
+	}
 	pthread_mutex_unlock(&g_rdma.lock);
 
 	return 0;
