@@ -245,6 +245,7 @@ struct spdk_bdev_io {
 
 	/** Error information from a device */
 	union {
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
 		struct {
 			/** NVMe status code type */
 			int sct;

@@ -185,4 +185,3 @@ spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
 	spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
 	task->status = sc;
 }
-

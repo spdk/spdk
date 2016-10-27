@@ -127,7 +127,7 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "scsi_nvme  - translate nvme error to scsi error", \
+		CU_add_test(suite, "scsi_nvme  - translate nvme error to scsi error",
 			    scsi_nvme_translate_test) == NULL
 	) {
 		CU_cleanup_registry();
@@ -140,4 +140,3 @@ main(int argc, char **argv)
 	CU_cleanup_registry();
 	return num_failures;
 }
-
