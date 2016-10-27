@@ -38,7 +38,7 @@
 struct rpc_construct_rbd {
 	char *pool_name;
 	char *rbd_name;
-	int32_t size;
+	uint32_t block_size;
 };
 
 static void
@@ -51,7 +51,7 @@ free_rpc_construct_rbd(struct rpc_construct_rbd *req)
 static const struct spdk_json_object_decoder rpc_construct_rbd_decoders[] = {
 	{"pool_name", offsetof(struct rpc_construct_rbd, pool_name), spdk_json_decode_string},
 	{"rbd_name", offsetof(struct rpc_construct_rbd, rbd_name), spdk_json_decode_string},
-	{"size", offsetof(struct rpc_construct_rbd, size), spdk_json_decode_int32},
+	{"block_size", offsetof(struct rpc_construct_rbd, block_size), spdk_json_decode_uint32},
 };
 
 static void
@@ -70,7 +70,7 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.pool_name, req.rbd_name, req.size);
+	bdev = spdk_bdev_rbd_create(req.pool_name, req.rbd_name, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}

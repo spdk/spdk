@@ -181,14 +181,14 @@ def construct_rbd_bdev(args):
     params = {
         'pool_name': args.pool_name,
         'rbd_name': args.rbd_name,
-        'size': args.size,
+        'block_size': args.block_size,
     }
     print_array(jsonrpc_call('construct_rbd_bdev', params))
 
 p = subparsers.add_parser('construct_rbd_bdev', help='Add a bdev with ceph rbd backend')
 p.add_argument('pool_name', help='rbd pool name')
 p.add_argument('rbd_name', help='rbd image name')
-p.add_argument('size', help='rbd block size', type=int)
+p.add_argument('block_size', help='rbd block size', type=int)
 p.set_defaults(func=construct_rbd_bdev)
 
 def set_trace_flag(args):
