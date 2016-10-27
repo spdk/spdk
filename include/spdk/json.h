@@ -196,6 +196,8 @@ int spdk_json_write_null(struct spdk_json_write_ctx *w);
 int spdk_json_write_bool(struct spdk_json_write_ctx *w, bool val);
 int spdk_json_write_int32(struct spdk_json_write_ctx *w, int32_t val);
 int spdk_json_write_uint32(struct spdk_json_write_ctx *w, uint32_t val);
+int spdk_json_write_int64(struct spdk_json_write_ctx *w, int64_t val);
+int spdk_json_write_uint64(struct spdk_json_write_ctx *w, uint64_t val);
 int spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val);
 int spdk_json_write_string_raw(struct spdk_json_write_ctx *w, const char *val, size_t len);
 int spdk_json_write_array_begin(struct spdk_json_write_ctx *w);
