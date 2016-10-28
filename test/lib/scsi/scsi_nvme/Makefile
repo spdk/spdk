@@ -1,8 +1,7 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) 2016 FUJITSU LIMITED, All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -14,7 +13,7 @@
 #      notice, this list of conditions and the following disclaimer in
 #      the documentation and/or other materials provided with the
 #      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
+#    * Neither the name of the copyright holder nor the names of its
 #      contributors may be used to endorse or promote products derived
 #      from this software without specific prior written permission.
 #
@@ -31,11 +30,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS)
-C_SRCS = dev.c lun.c lun_db.c port.c scsi.c scsi_bdev.c scsi_nvme.c scsi_rpc.c task.c
-LIBNAME = scsi
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+	     $(SPDK_ROOT_DIR)/lib/cunit/libspdk_cunit.a
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi
+LIBS += $(SPDK_LIBS)
+LIBS += -lcunit
+
+APP = scsi_nvme_ut
+C_SRCS = scsi_nvme_ut.c
+
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
