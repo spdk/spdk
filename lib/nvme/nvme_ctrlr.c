@@ -163,7 +163,7 @@ static void
 nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_intel_log_page_directory *log_page_directory)
 {
-	struct pci_id pci_id;
+	struct spdk_pci_id pci_id;
 
 	if (log_page_directory == NULL) {
 		return;
@@ -995,7 +995,7 @@ nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct pci_id pci_id;
+	struct spdk_pci_id pci_id;
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->flags = 0;

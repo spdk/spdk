@@ -299,6 +299,19 @@ spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
 	return dev->id.subsystem_device_id;
 }
 
+struct spdk_pci_id
+spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_id pci_id;
+
+	pci_id.vendor_id = spdk_pci_device_get_vendor_id(pci_dev);
+	pci_id.device_id = spdk_pci_device_get_device_id(pci_dev);
+	pci_id.subvendor_id = spdk_pci_device_get_subvendor_id(pci_dev);
+	pci_id.subdevice_id = spdk_pci_device_get_subdevice_id(pci_dev);
+
+	return pci_id;
+}
+
 uint32_t
 spdk_pci_device_get_class(struct spdk_pci_device *dev)
 {

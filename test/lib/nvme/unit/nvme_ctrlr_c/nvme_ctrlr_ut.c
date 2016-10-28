@@ -74,16 +74,16 @@ ut_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static int
-ut_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id)
+ut_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
 {
 	if (ctrlr == NULL || pci_id == NULL) {
 		return -EINVAL;
 	}
 
 	pci_id->vendor_id = g_pci_vendor_id;
-	pci_id->dev_id = g_pci_device_id;
-	pci_id->sub_vendor_id = g_pci_subvendor_id;
-	pci_id->sub_dev_id = g_pci_subdevice_id;
+	pci_id->device_id = g_pci_device_id;
+	pci_id->subvendor_id = g_pci_subvendor_id;
+	pci_id->subdevice_id = g_pci_subdevice_id;
 
 	return 0;
 }
@@ -1156,7 +1156,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	bool	res;
 	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_intel_log_page_directory	payload = {};
-	struct pci_id					pci_id;
+	struct spdk_pci_id				pci_id;
 
 	ctrlr.transport = &nvme_ctrlr_ut_transport;
 
