@@ -414,10 +414,12 @@ blockdev_nvme_exist(struct nvme_probe_ctx *ctx)
 {
 	int i;
 	struct nvme_device *nvme_dev;
+	struct spdk_pci_addr dev_addr;
 
 	for (i = 0; i < ctx->num_whitelist_controllers; i++) {
 		TAILQ_FOREACH(nvme_dev, &g_nvme_devices, tailq) {
-			if (spdk_pci_device_compare_addr(nvme_dev->pci_dev, &ctx->whitelist[i])) {
+			dev_addr = spdk_pci_device_get_addr(nvme_dev->pci_dev);
+			if (spdk_pci_addr_compare(&dev_addr, &ctx->whitelist[i]) == 0) {
 				return true;
 			}
 		}

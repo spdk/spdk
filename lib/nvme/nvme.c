@@ -229,6 +229,9 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct nvme_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
+	struct spdk_pci_addr dev_addr;
+
+	dev_addr = spdk_pci_device_get_addr(pci_dev);
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -236,7 +239,7 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 * different per each process, we compare by BDF to determine whether it is the
 		 * same controller.
 		 */
-		if (spdk_pci_device_compare_addr(pci_dev, &ctrlr->pci_addr)) {
+		if (spdk_pci_addr_compare(&dev_addr, &ctrlr->pci_addr) == 0) {
 			return 0;
 		}
 	}

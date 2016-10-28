@@ -77,8 +77,17 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-bool
-spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr)
+struct spdk_pci_addr
+spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_addr pci_addr;
+
+	memset(&pci_addr, 0, sizeof(pci_addr));
+	return pci_addr;
+}
+
+int
+spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
 {
 	return true;
 }

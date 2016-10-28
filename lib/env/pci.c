@@ -394,13 +394,41 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 	return -1;
 }
 
-bool
-spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr)
+struct spdk_pci_addr
+spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
 {
-	return ((spdk_pci_device_get_domain(dev) == addr->domain) &&
-		(spdk_pci_device_get_bus(dev) == addr->bus) &&
-		(spdk_pci_device_get_dev(dev) == addr->dev) &&
-		(spdk_pci_device_get_func(dev) == addr->func));
+	struct spdk_pci_addr pci_addr;
+
+	pci_addr.domain = spdk_pci_device_get_domain(pci_dev);
+	pci_addr.bus = spdk_pci_device_get_bus(pci_dev);
+	pci_addr.dev = spdk_pci_device_get_dev(pci_dev);
+	pci_addr.func = spdk_pci_device_get_func(pci_dev);
+
+	return pci_addr;
+}
+
+int
+spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
+{
+	if (a1->domain > a2->domain) {
+		return 1;
+	} else if (a1->domain < a2->domain) {
+		return -1;
+	} else if (a1->bus > a2->bus) {
+		return 1;
+	} else if (a1->bus < a2->bus) {
+		return -1;
+	} else if (a1->dev > a2->dev) {
+		return 1;
+	} else if (a1->dev < a2->dev) {
+		return -1;
+	} else if (a1->func > a2->func) {
+		return 1;
+	} else if (a1->func < a2->func) {
+		return -1;
+	}
+
+	return 0;
 }
 
 #ifdef __linux__
