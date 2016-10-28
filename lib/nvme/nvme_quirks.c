@@ -34,8 +34,8 @@
 #include "nvme_internal.h"
 
 struct nvme_quirk {
-	struct pci_id	id;
-	uint64_t	flags;
+	struct spdk_pci_id	id;
+	uint64_t		flags;
 };
 
 static const struct nvme_quirk nvme_quirks[] = {
@@ -51,19 +51,19 @@ static const struct nvme_quirk nvme_quirks[] = {
 
 /* Compare each field. SPDK_PCI_ANY_ID in s1 matches everything */
 static bool
-pci_id_match(const struct pci_id *s1, const struct pci_id *s2)
+pci_id_match(const struct spdk_pci_id *s1, const struct spdk_pci_id *s2)
 {
 	if ((s1->vendor_id == SPDK_PCI_ANY_ID || s1->vendor_id == s2->vendor_id) &&
-	    (s1->dev_id == SPDK_PCI_ANY_ID || s1->dev_id == s2->dev_id) &&
-	    (s1->sub_vendor_id == SPDK_PCI_ANY_ID || s1->sub_vendor_id == s2->sub_vendor_id) &&
-	    (s1->sub_dev_id == SPDK_PCI_ANY_ID || s1->sub_dev_id == s2->sub_dev_id)) {
+	    (s1->device_id == SPDK_PCI_ANY_ID || s1->device_id == s2->device_id) &&
+	    (s1->subvendor_id == SPDK_PCI_ANY_ID || s1->subvendor_id == s2->subvendor_id) &&
+	    (s1->subdevice_id == SPDK_PCI_ANY_ID || s1->subdevice_id == s2->subdevice_id)) {
 		return true;
 	}
 	return false;
 }
 
 uint64_t
-nvme_get_quirks(const struct pci_id *id)
+nvme_get_quirks(const struct spdk_pci_id *id)
 {
 	const struct nvme_quirk *quirk = nvme_quirks;
 

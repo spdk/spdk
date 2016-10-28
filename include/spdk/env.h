@@ -159,6 +159,13 @@ struct spdk_pci_addr {
 	uint8_t				func;
 };
 
+struct spdk_pci_id {
+	uint16_t	vendor_id;
+	uint16_t	device_id;
+	uint16_t	subvendor_id;
+	uint16_t	subdevice_id;
+};
+
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 
 int spdk_pci_enumerate(enum spdk_pci_device_type type,
@@ -180,6 +187,9 @@ uint16_t spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev);
 uint16_t spdk_pci_device_get_device_id(struct spdk_pci_device *dev);
 uint16_t spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev);
 uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
+
+struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
+
 uint32_t spdk_pci_device_get_class(struct spdk_pci_device *dev);
 const char *spdk_pci_device_get_device_name(struct spdk_pci_device *dev);
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);

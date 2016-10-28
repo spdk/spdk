@@ -207,20 +207,13 @@ struct nvme_request {
 	void				*user_buffer;
 };
 
-struct pci_id {
-	uint16_t	vendor_id;
-	uint16_t	dev_id;
-	uint16_t	sub_vendor_id;
-	uint16_t	sub_dev_id;
-};
-
 struct spdk_nvme_transport {
 	struct spdk_nvme_ctrlr *(*ctrlr_construct)(void *devhandle);
 	void (*ctrlr_destruct)(struct spdk_nvme_ctrlr *ctrlr);
 
 	int (*ctrlr_enable)(struct spdk_nvme_ctrlr *ctrlr);
 
-	int (*ctrlr_get_pci_id)(struct spdk_nvme_ctrlr *ctrlr, struct pci_id *pci_id);
+	int (*ctrlr_get_pci_id)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id);
 
 	int (*ctrlr_set_reg_4)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 	int (*ctrlr_set_reg_8)(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
@@ -514,7 +507,7 @@ struct nvme_request *nvme_allocate_request_user_copy(void *buffer, uint32_t payl
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 void	nvme_free_request(struct nvme_request *req);
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);
-uint64_t nvme_get_quirks(const struct pci_id *id);
+uint64_t nvme_get_quirks(const struct spdk_pci_id *id);
 
 void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);
 
