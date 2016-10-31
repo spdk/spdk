@@ -69,33 +69,14 @@ enum controller_display_model {
 	CONTROLLER_DISPLAY_SIMPLISTIC		= 0x1,
 };
 
-static uint64_t
-get_pci_addr(struct spdk_pci_device *pci_dev)
-{
-	uint64_t cmp;
-
-	cmp = (uint64_t)spdk_pci_device_get_domain(pci_dev) << 24;
-	cmp |= (uint64_t)spdk_pci_device_get_bus(pci_dev) << 16;
-	cmp |= (uint64_t)spdk_pci_device_get_dev(pci_dev) << 8;
-	cmp |= (uint64_t)spdk_pci_device_get_func(pci_dev);
-
-	return cmp;
-}
-
 static int
 cmp_devs(const void *ap, const void *bp)
 {
 	const struct dev *a = ap, *b = bp;
-	uint64_t cmp_a = get_pci_addr(a->pci_dev);
-	uint64_t cmp_b = get_pci_addr(b->pci_dev);
+	struct spdk_pci_addr a1 = spdk_pci_device_get_addr(a->pci_dev);
+	struct spdk_pci_addr a2 = spdk_pci_device_get_addr(b->pci_dev);
 
-	if (cmp_a < cmp_b) {
-		return -1;
-	} else if (cmp_a > cmp_b) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return spdk_pci_addr_compare(&a1, &a2);
 }
 
 static bool
@@ -322,7 +303,7 @@ get_controller(void)
 	unsigned int				bus;
 	unsigned int				devid;
 	unsigned int				function;
-	uint64_t				pci_addr;
+	struct spdk_pci_addr			pci_addr;
 	char					address[64];
 	char					*p;
 	int					ch;
@@ -359,13 +340,15 @@ get_controller(void)
 		return NULL;
 	}
 
-	pci_addr = (uint64_t)domain << 24;
-	pci_addr |= (uint64_t)bus << 16;
-	pci_addr |= (uint64_t)devid << 8;
-	pci_addr |= (uint64_t)function;
+	pci_addr.domain = domain;
+	pci_addr.bus = bus;
+	pci_addr.dev = devid;
+	pci_addr.func = function;
 
 	foreach_dev(iter) {
-		if (pci_addr == get_pci_addr(iter->pci_dev)) {
+		struct spdk_pci_addr iter_addr = spdk_pci_device_get_addr(iter->pci_dev);
+
+		if (spdk_pci_addr_compare(&pci_addr, &iter_addr) == 0) {
 			return iter;
 		}
 	}
