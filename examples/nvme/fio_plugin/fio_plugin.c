@@ -87,11 +87,9 @@ struct spdk_fio_thread {
 };
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	int found_bus    = spdk_pci_device_get_bus(dev);
-	int found_slot   = spdk_pci_device_get_dev(dev);
-	int found_func   = spdk_pci_device_get_func(dev);
 	struct fio_file		*f;
 	unsigned int		i;
 	struct thread_data 	*td = cb_ctx;
@@ -105,7 +103,9 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 			fprintf(stderr, "Invalid filename: %s\n", f->file_name);
 			continue;
 		}
-		if (bus == found_bus && slot == found_slot && func == found_func) {
+		if (bus == probe_info->pci_addr.bus &&
+		    slot == probe_info->pci_addr.dev &&
+		    func == probe_info->pci_addr.func) {
 			return true;
 		}
 	}
@@ -114,12 +114,9 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	int found_bus    = spdk_pci_device_get_bus(dev);
-	int found_slot   = spdk_pci_device_get_dev(dev);
-	int found_func   = spdk_pci_device_get_func(dev);
 	struct thread_data 	*td = cb_ctx;
 	struct spdk_fio_thread	*fio_thread = td->io_ops->data;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
@@ -139,7 +136,10 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 	for_each_file(fio_thread->td, f, i) {
 		int domain, bus, slot, func, nsid, rc;
 		rc = sscanf(f->file_name, "%x.%x.%x.%x/%x", &domain, &bus, &slot, &func, &nsid);
-		if (rc == 5 && bus == found_bus && slot == found_slot && func == found_func) {
+		if (rc == 5 &&
+		    bus == probe_info->pci_addr.bus &&
+		    slot == probe_info->pci_addr.dev &&
+		    func == probe_info->pci_addr.func) {
 			fio_ns = calloc(1, sizeof(*fio_ns));
 			if (fio_ns == NULL) {
 				continue;

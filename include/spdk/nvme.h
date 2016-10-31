@@ -89,6 +89,25 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
+ * NVMe controller information provided during spdk_nvme_probe().
+ */
+struct spdk_nvme_probe_info {
+	/**
+	 * PCI address.
+	 *
+	 * If not available, each field will be filled with all 0xFs.
+	 */
+	struct spdk_pci_addr pci_addr;
+
+	/**
+	 * PCI device ID.
+	 *
+	 * If not available, each field will be filled with all 0xFs.
+	 */
+	struct spdk_pci_id pci_id;
+};
+
+/**
  * Callback for spdk_nvme_probe() enumeration.
  *
  * \param opts NVMe controller initialization options.  This structure will be populated with the
@@ -97,7 +116,7 @@ struct spdk_nvme_ctrlr_opts {
  * provided during the attach callback.
  * \return true to attach to this device.
  */
-typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 				   struct spdk_nvme_ctrlr_opts *opts);
 
 /**
@@ -106,7 +125,7 @@ typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev
  * \param opts NVMe controller initialization options that were actually used.  Options may differ
  * from the requested options from the probe call depending on what the controller supports.
  */
-typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 				    struct spdk_nvme_ctrlr *ctrlr,
 				    const struct spdk_nvme_ctrlr_opts *opts);
 

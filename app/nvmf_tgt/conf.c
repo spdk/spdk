@@ -334,17 +334,17 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
-	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(dev);
 
 	if (ctx->any && !ctx->found) {
 		ctx->found = true;
 		return true;
 	}
 
-	if (spdk_pci_addr_compare(&pci_addr, &ctx->pci_addr) == 0) {
+	if (spdk_pci_addr_compare(&probe_info->pci_addr, &ctx->pci_addr) == 0) {
 		ctx->found = true;
 		return true;
 	}
@@ -353,20 +353,27 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
-	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(dev);
 	int rc;
 	char path[MAX_STRING_LEN];
 	int numa_node = -1;
 
 	SPDK_NOTICELOG("Attaching NVMe device %p at %x:%x:%x.%x to subsystem %p\n",
-		       ctrlr, pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func, ctx->subsystem);
+		       ctrlr,
+		       probe_info->pci_addr.domain,
+		       probe_info->pci_addr.bus,
+		       probe_info->pci_addr.dev,
+		       probe_info->pci_addr.func,
+		       ctx->subsystem);
 
 	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%04x:%02x:%02x.%1u/numa_node",
-		 pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
+		 probe_info->pci_addr.domain,
+		 probe_info->pci_addr.bus,
+		 probe_info->pci_addr.dev,
+		 probe_info->pci_addr.func);
 
 	numa_node = spdk_get_numa_node_value(path);
 	if (numa_node >= 0) {
@@ -379,7 +386,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 		}
 	}
 
-	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, &pci_addr);
+	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, &probe_info->pci_addr);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}

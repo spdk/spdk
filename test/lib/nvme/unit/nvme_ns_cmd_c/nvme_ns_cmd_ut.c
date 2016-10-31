@@ -92,6 +92,16 @@ spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
 	return pci_addr;
 }
 
+struct spdk_pci_id
+spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_id pci_id;
+
+	memset(&pci_id, 0xFF, sizeof(pci_id));
+
+	return pci_id;
+}
+
 int
 spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
 {

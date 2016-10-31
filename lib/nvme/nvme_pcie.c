@@ -180,15 +180,10 @@ nvme_pcie_qpair(struct spdk_nvme_qpair *qpair)
 static int
 nvme_pcie_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
 {
-	struct spdk_pci_device *pci_dev;
-
 	assert(ctrlr != NULL);
 	assert(pci_id != NULL);
 
-	pci_dev = ctrlr->devhandle;
-	assert(pci_dev != NULL);
-
-	*pci_id = spdk_pci_device_get_id(pci_dev);
+	*pci_id = ctrlr->probe_info.pci_id;
 
 	return 0;
 }
@@ -470,12 +465,6 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */
 	pctrlr->doorbell_stride_u32 = 1 << cap.bits.dstrd;
-
-	/* Save the PCI address */
-	pctrlr->ctrlr.pci_addr.domain = spdk_pci_device_get_domain(pci_dev);
-	pctrlr->ctrlr.pci_addr.bus = spdk_pci_device_get_bus(pci_dev);
-	pctrlr->ctrlr.pci_addr.dev = spdk_pci_device_get_dev(pci_dev);
-	pctrlr->ctrlr.pci_addr.func = spdk_pci_device_get_func(pci_dev);
 
 	rc = nvme_ctrlr_construct(&pctrlr->ctrlr);
 	if (rc != 0) {

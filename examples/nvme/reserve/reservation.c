@@ -46,7 +46,7 @@
 #define MAX_DEVS 64
 
 struct dev {
-	struct spdk_pci_device			*pci_dev;
+	struct spdk_pci_addr			pci_addr;
 	struct spdk_nvme_ctrlr 			*ctrlr;
 	char 					name[100];
 };
@@ -334,7 +334,7 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 
 static void
 reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-		   struct spdk_pci_device *pci_dev)
+		   const struct spdk_pci_addr *pci_addr)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 
@@ -342,8 +342,7 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 
 	printf("=====================================================\n");
 	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
-	       spdk_pci_device_get_bus(pci_dev), spdk_pci_device_get_dev(pci_dev),
-	       spdk_pci_device_get_func(pci_dev));
+	       pci_addr->bus, pci_addr->dev, pci_addr->func);
 	printf("=====================================================\n");
 
 	printf("Reservations:                %s\n",
@@ -363,20 +362,21 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
 
 	/* add to dev list */
 	dev = &devs[num_devs++];
-	dev->pci_dev = pci_dev;
+	dev->pci_addr = probe_info->pci_addr;
 	dev->ctrlr = ctrlr;
 }
 
@@ -415,7 +415,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 			rc = 1;
 		} else {
-			reserve_controller(iter->ctrlr, qpair, iter->pci_dev);
+			reserve_controller(iter->ctrlr, qpair, &iter->pci_addr);
 		}
 	}
 
