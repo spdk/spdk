@@ -101,13 +101,12 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		if (subsystem->mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 			char pci_str[20];
-			struct spdk_pci_device *dev = subsystem->dev.direct.pci_dev;
 
 			snprintf(pci_str, sizeof(pci_str), "%04x:%02x:%02x.%x",
-				 spdk_pci_device_get_domain(dev),
-				 spdk_pci_device_get_bus(dev),
-				 spdk_pci_device_get_dev(dev),
-				 spdk_pci_device_get_func(dev));
+				 subsystem->dev.direct.pci_addr.domain,
+				 subsystem->dev.direct.pci_addr.bus,
+				 subsystem->dev.direct.pci_addr.dev,
+				 subsystem->dev.direct.pci_addr.func);
 
 			spdk_json_write_name(w, "pci_address");
 			spdk_json_write_string(w, pci_str);

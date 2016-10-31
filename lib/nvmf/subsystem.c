@@ -261,10 +261,10 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_n
 
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-			 struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *dev)
+			 struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr)
 {
 	subsystem->dev.direct.ctrlr = ctrlr;
-	subsystem->dev.direct.pci_dev = dev;
+	subsystem->dev.direct.pci_addr = *pci_addr;
 	/* Assume that all I/O will be handled on one thread for now */
 	subsystem->dev.direct.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
 	if (subsystem->dev.direct.io_qpair == NULL) {

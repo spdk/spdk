@@ -366,19 +366,16 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 	  const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
-	uint16_t found_domain = spdk_pci_device_get_domain(dev);
-	uint8_t found_bus    = spdk_pci_device_get_bus(dev);
-	uint8_t found_dev    = spdk_pci_device_get_dev(dev);
-	uint8_t found_func   = spdk_pci_device_get_func(dev);
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(dev);
 	int rc;
 	char path[MAX_STRING_LEN];
 	int numa_node = -1;
 
 	SPDK_NOTICELOG("Attaching NVMe device %p at %x:%x:%x.%x to subsystem %p\n",
-		       ctrlr, found_domain, found_bus, found_dev, found_func, ctx->subsystem);
+		       ctrlr, pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func, ctx->subsystem);
 
 	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%04x:%02x:%02x.%1u/numa_node",
-		 found_domain, found_bus, found_dev, found_func);
+		 pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
 
 	numa_node = spdk_get_numa_node_value(path);
 	if (numa_node >= 0) {
@@ -391,7 +388,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 		}
 	}
 
-	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, dev);
+	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, &pci_addr);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}
