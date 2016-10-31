@@ -56,12 +56,6 @@ struct ioat_device {
 static TAILQ_HEAD(, ioat_device) g_devices = TAILQ_HEAD_INITIALIZER(g_devices);
 static pthread_mutex_t g_ioat_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-struct ioat_whitelist {
-	uint32_t bus;
-	uint32_t dev;
-	uint32_t func;
-};
-
 struct ioat_io_channel {
 	struct spdk_ioat_chan	*ioat_ch;
 	struct ioat_device	*ioat_dev;
@@ -69,17 +63,16 @@ struct ioat_io_channel {
 };
 
 static int
-ioat_find_dev_by_whitelist_bdf(struct spdk_pci_device *dev,
-			       struct ioat_whitelist *whitelist,
+ioat_find_dev_by_whitelist_bdf(const struct spdk_pci_addr *pci_addr,
+			       const struct spdk_pci_addr *whitelist,
 			       int num_whitelist_devices)
 {
 	int i;
 
 	for (i = 0; i < num_whitelist_devices; i++) {
-		if (spdk_pci_device_get_bus(dev) == whitelist[i].bus &&
-		    spdk_pci_device_get_dev(dev) == whitelist[i].dev &&
-		    spdk_pci_device_get_func(dev) == whitelist[i].func)
+		if (spdk_pci_addr_compare(pci_addr, &whitelist[i]) == 0) {
 			return 1;
+		}
 	}
 	return 0;
 }
@@ -234,7 +227,7 @@ ioat_get_io_channel(uint32_t priority)
 
 struct ioat_probe_ctx {
 	int num_whitelist_devices;
-	struct ioat_whitelist whitelist[IOAT_MAX_CHANNELS];
+	struct spdk_pci_addr whitelist[IOAT_MAX_CHANNELS];
 };
 
 static bool
@@ -252,7 +245,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 		       spdk_pci_device_get_device_name(pci_dev));
 
 	if (ctx->num_whitelist_devices > 0 &&
-	    !ioat_find_dev_by_whitelist_bdf(pci_dev, ctx->whitelist, ctx->num_whitelist_devices)) {
+	    !ioat_find_dev_by_whitelist_bdf(&pci_addr, ctx->whitelist, ctx->num_whitelist_devices)) {
 		return false;
 	}
 
@@ -286,6 +279,7 @@ copy_engine_ioat_init(void)
 	const char *val, *pci_bdf;
 	int i;
 	struct ioat_probe_ctx probe_ctx = {};
+	unsigned bus, dev, func;
 
 	if (sp != NULL) {
 		val = spdk_conf_section_get_val(sp, "Disable");
@@ -300,10 +294,11 @@ copy_engine_ioat_init(void)
 			pci_bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
 			if (!pci_bdf)
 				break;
-			sscanf(pci_bdf, "%02x:%02x.%1u",
-			       &probe_ctx.whitelist[probe_ctx.num_whitelist_devices].bus,
-			       &probe_ctx.whitelist[probe_ctx.num_whitelist_devices].dev,
-			       &probe_ctx.whitelist[probe_ctx.num_whitelist_devices].func);
+			sscanf(pci_bdf, "%02x:%02x.%1u", &bus, &dev, &func);
+			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].domain = 0;
+			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].bus = bus;
+			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].dev = dev;
+			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].func = func;
 			probe_ctx.num_whitelist_devices++;
 		}
 	}
