@@ -446,7 +446,7 @@ spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr
 
 #ifdef __linux__
 int
-spdk_pci_device_claim(struct spdk_pci_device *dev)
+spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 {
 	int dev_fd;
 	char shm_name[64];
@@ -459,9 +459,7 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 		.l_len = 0,
 	};
 
-	sprintf(shm_name, PCI_PRI_FMT, spdk_pci_device_get_domain(dev),
-		spdk_pci_device_get_bus(dev), spdk_pci_device_get_dev(dev),
-		spdk_pci_device_get_func(dev));
+	sprintf(shm_name, PCI_PRI_FMT, pci_addr->domain, pci_addr->bus, pci_addr->dev, pci_addr->func);
 
 	dev_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (dev_fd == -1) {
@@ -501,7 +499,7 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 
 #ifdef __FreeBSD__
 int
-spdk_pci_device_claim(struct spdk_pci_device *dev)
+spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 {
 	/* TODO */
 	return 0;

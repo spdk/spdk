@@ -241,11 +241,12 @@ static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
 	struct ioat_probe_ctx *ctx = cb_ctx;
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 
 	SPDK_NOTICELOG(" Found matching device at %d:%d:%d vendor:0x%04x device:0x%04x\n   name:%s\n",
-		       spdk_pci_device_get_bus(pci_dev),
-		       spdk_pci_device_get_dev(pci_dev),
-		       spdk_pci_device_get_func(pci_dev),
+		       pci_addr.bus,
+		       pci_addr.dev,
+		       pci_addr.func,
 		       spdk_pci_device_get_vendor_id(pci_dev),
 		       spdk_pci_device_get_device_id(pci_dev),
 		       spdk_pci_device_get_device_name(pci_dev));
@@ -256,7 +257,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	}
 
 	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(pci_dev) != 0) {
+	if (spdk_pci_device_claim(&pci_addr) != 0) {
 		return false;
 	}
 
