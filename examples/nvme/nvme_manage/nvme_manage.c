@@ -299,10 +299,6 @@ display_controller_list(void)
 static struct dev *
 get_controller(void)
 {
-	unsigned int				domain;
-	unsigned int				bus;
-	unsigned int				devid;
-	unsigned int				function;
 	struct spdk_pci_addr			pci_addr;
 	char					address[64];
 	char					*p;
@@ -327,23 +323,9 @@ get_controller(void)
 		p++;
 	}
 
-	if (sscanf(p, "%x:%x:%x.%x", &domain, &bus, &devid, &function) == 4) {
-		/* Matched a full address - all variables are initialized */
-	} else if (sscanf(p, "%x:%x:%x", &domain, &bus, &devid) == 3) {
-		function = 0;
-	} else if (sscanf(p, "%x:%x.%x", &bus, &devid, &function) == 3) {
-		domain = 0;
-	} else if (sscanf(p, "%x:%x", &bus, &devid) == 2) {
-		domain = 0;
-		function = 0;
-	} else {
+	if (spdk_pci_addr_parse(&pci_addr, p) < 0) {
 		return NULL;
 	}
-
-	pci_addr.domain = domain;
-	pci_addr.bus = bus;
-	pci_addr.dev = devid;
-	pci_addr.func = function;
 
 	foreach_dev(iter) {
 		struct spdk_pci_addr iter_addr = spdk_pci_device_get_addr(iter->pci_dev);
