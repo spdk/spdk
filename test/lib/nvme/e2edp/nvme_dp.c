@@ -606,20 +606,21 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       spdk_pci_device_get_domain(dev),
-	       spdk_pci_device_get_bus(dev),
-	       spdk_pci_device_get_dev(dev),
-	       spdk_pci_device_get_func(dev));
+	       probe_info->pci_addr.domain,
+	       probe_info->pci_addr.bus,
+	       probe_info->pci_addr.dev,
+	       probe_info->pci_addr.func);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
 
@@ -629,10 +630,10 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	dev->ctrlr = ctrlr;
 
 	snprintf(dev->name, sizeof(dev->name), "%04X:%02X:%02X.%02X",
-		 spdk_pci_device_get_domain(pci_dev),
-		 spdk_pci_device_get_bus(pci_dev),
-		 spdk_pci_device_get_dev(pci_dev),
-		 spdk_pci_device_get_func(pci_dev));
+		 probe_info->pci_addr.domain,
+		 probe_info->pci_addr.bus,
+		 probe_info->pci_addr.dev,
+		 probe_info->pci_addr.func);
 
 	printf("Attached to %s\n", dev->name);
 }

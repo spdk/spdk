@@ -50,6 +50,16 @@ spdk_pci_enumerate(enum spdk_pci_device_type type,
 	return -1;
 }
 
+struct spdk_pci_id
+spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_id pci_id;
+
+	memset(&pci_id, 0xFF, sizeof(pci_id));
+
+	return pci_id;
+}
+
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {

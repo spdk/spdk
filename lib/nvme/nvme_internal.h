@@ -417,8 +417,7 @@ struct spdk_nvme_ctrlr {
 
 	struct spdk_nvme_ctrlr_opts	opts;
 
-	/** PCI address including domain, bus, device and function */
-	struct spdk_pci_addr		pci_addr;
+	struct spdk_nvme_probe_info	probe_info;
 
 	uint64_t			quirks;
 
