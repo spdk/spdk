@@ -183,6 +183,11 @@ struct spdk_iscsi_pdu {
 	 * we need to not zero this out when doing memory clear.
 	 */
 	uint8_t ahs_data[ISCSI_AHS_LEN];
+
+	struct {
+		uint16_t length; /* iSCSI SenseLength (big-endian) */
+		uint8_t data[32];
+	} sense;
 };
 
 enum iscsi_connection_state {

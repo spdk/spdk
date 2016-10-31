@@ -3131,7 +3131,10 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu();
 	rsph = (struct iscsi_bhs_scsi_resp *)&rsp_pdu->bhs;
-	rsp_pdu->data = task->scsi.sense_data;
+	assert(task->scsi.sense_data_len <= sizeof(rsp_pdu->sense.data));
+	memcpy(rsp_pdu->sense.data, task->scsi.sense_data, task->scsi.sense_data_len);
+	to_be16(&rsp_pdu->sense.length, task->scsi.sense_data_len);
+	rsp_pdu->data = (uint8_t *)&rsp_pdu->sense;
 	rsp_pdu->data_from_mempool = true;
 
 	/*
@@ -3157,7 +3160,10 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 		rsph->flags |= ISCSI_SCSI_UNDERFLOW;
 
 	rsph->status = task->scsi.status;
-	DSET24(rsph->data_segment_len, task->scsi.sense_data_len);
+	if (task->scsi.sense_data_len) {
+		/* SenseLength (2 bytes) + SenseData  */
+		DSET24(rsph->data_segment_len, 2 + task->scsi.sense_data_len);
+	}
 	to_be32(&rsph->itt, task_tag);
 
 	to_be32(&rsph->stat_sn, conn->StatSN);

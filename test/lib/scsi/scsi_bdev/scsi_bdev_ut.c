@@ -76,18 +76,13 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 void
 spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, int ascq)
 {
-	uint8_t *data;
 	uint8_t *cp;
 	int resp_code;
 
-	data = task->sense_data;
 	resp_code = 0x70; /* Current + Fixed format */
 
-	/* SenseLength */
-	memset(data, 0, 2);
-
 	/* Sense Data */
-	cp = &data[2];
+	cp = task->sense_data;
 
 	/* VALID(7) RESPONSE CODE(6-0) */
 	cp[0] = 0x80 | resp_code;
@@ -116,8 +111,7 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 	cp[17] = 0;
 
 	/* SenseLength */
-	to_be16(data, 18);
-	task->sense_data_len = 20;
+	task->sense_data_len = 18;
 }
 
 void
@@ -370,9 +364,9 @@ inquiry_evpd_test(void)
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT_EQUAL(task.sense_data[4], (SPDK_SCSI_SENSE_ILLEGAL_REQUEST & 0xf));
-	CU_ASSERT_EQUAL(task.sense_data[14], 0x24);
-	CU_ASSERT_EQUAL(task.sense_data[15], 0x0);
+	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT_EQUAL(task.sense_data[12], 0x24);
+	CU_ASSERT_EQUAL(task.sense_data[13], 0x0);
 	CU_ASSERT_EQUAL(rc, 0);
 }
 
@@ -503,9 +497,9 @@ task_complete_test(void)
 	bdev_io.status = SPDK_BDEV_IO_STATUS_FAILED;
 	spdk_bdev_scsi_task_complete(&event);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT_EQUAL(task.sense_data[4], SPDK_SCSI_SENSE_ABORTED_COMMAND);
-	CU_ASSERT_EQUAL(task.sense_data[14], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
-	CU_ASSERT_EQUAL(task.sense_data[15], SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	CU_ASSERT_EQUAL(task.sense_data[2], SPDK_SCSI_SENSE_ABORTED_COMMAND);
+	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
+	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 }
 
 int
