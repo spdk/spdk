@@ -52,7 +52,6 @@ spdk_nvme_qpair_process_completions()   | \copybrief spdk_nvme_qpair_process_com
 
 \section nvme_key_concepts Key Concepts
 
-- \ref nvme_driver_integration
 - \ref nvme_initialization
 - \ref nvme_io_submission
 - \ref nvme_async_completion
