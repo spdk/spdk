@@ -342,15 +342,12 @@ static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
-	uint16_t found_domain = spdk_pci_device_get_domain(pci_dev);
-	uint8_t found_bus    = spdk_pci_device_get_bus(pci_dev);
-	uint8_t found_dev    = spdk_pci_device_get_dev(pci_dev);
-	uint8_t found_func   = spdk_pci_device_get_func(pci_dev);
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 	int i;
 	bool claim_device = false;
 
 	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
-		       found_domain, found_bus, found_dev, found_func);
+		       pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
 
 	if (ctx->controllers_remaining == 0) {
 		return false;
@@ -360,10 +357,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 		claim_device = true;
 	} else {
 		for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
-			if (found_domain == ctx->whitelist[i].domain &&
-			    found_bus == ctx->whitelist[i].bus &&
-			    found_dev == ctx->whitelist[i].dev &&
-			    found_func == ctx->whitelist[i].func) {
+			if (spdk_pci_addr_compare(&pci_addr, &ctx->whitelist[i]) == 0) {
 				claim_device = true;
 				break;
 			}
@@ -375,7 +369,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 	}
 
 	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(pci_dev) != 0) {
+	if (spdk_pci_device_claim(&pci_addr) != 0) {
 		return false;
 	}
 
