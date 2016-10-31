@@ -453,7 +453,7 @@ nvme_library_init(void)
 {
 	struct spdk_conf_section *sp;
 	const char *val;
-	int i, rc;
+	int i;
 	struct nvme_probe_ctx probe_ctx;
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
@@ -496,23 +496,15 @@ nvme_library_init(void)
 
 	if (num_controllers > 0) {
 		for (i = 0; ; i++) {
-			unsigned int domain, bus, dev, func;
-
 			val = spdk_conf_section_get_nmval(sp, "BDF", i, 0);
 			if (val == NULL) {
 				break;
 			}
 
-			rc = sscanf(val, "%x:%x:%x.%x", &domain, &bus, &dev, &func);
-			if (rc != 4) {
+			if (spdk_pci_addr_parse(&probe_ctx.whitelist[probe_ctx.num_whitelist_controllers], val) < 0) {
 				SPDK_ERRLOG("Invalid format for BDF: %s\n", val);
 				return -1;
 			}
-
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].domain = domain;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].bus = bus;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].dev = dev;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].func = func;
 
 			probe_ctx.num_whitelist_controllers++;
 		}

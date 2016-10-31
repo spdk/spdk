@@ -209,6 +209,16 @@ int spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uin
  */
 int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2);
 
+/**
+ * Convert a string representation of a PCI address into a struct spdk_pci_addr.
+ *
+ * \param addr PCI adddress output on success
+ * \param bdf PCI address in domain:bus:device.function format
+ *
+ * \return 0 on success, or a negated errno value on failure.
+ */
+int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
+
 #ifdef __cplusplus
 }
 #endif
