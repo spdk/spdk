@@ -1841,9 +1841,8 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 
 		spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
 
-		/* omit SenseLength */
-		data_len = task->sense_data_len - 2;
-		memcpy(data, &task->sense_data[2], data_len);
+		data_len = task->sense_data_len;
+		memcpy(data, task->sense_data, data_len);
 		task->data_transferred = (uint64_t)data_len;
 		task->status = SPDK_SCSI_STATUS_GOOD;
 		break;

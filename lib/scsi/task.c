@@ -133,18 +133,13 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 void
 spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, int ascq)
 {
-	uint8_t *data;
 	uint8_t *cp;
 	int resp_code;
 
-	data = task->sense_data;
 	resp_code = 0x70; /* Current + Fixed format */
 
-	/* SenseLength */
-	memset(data, 0, 2);
-
 	/* Sense Data */
-	cp = &data[2];
+	cp = task->sense_data;
 
 	/* VALID(7) RESPONSE CODE(6-0) */
 	cp[0] = 0x80 | resp_code;
@@ -173,8 +168,7 @@ spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, in
 	cp[17] = 0;
 
 	/* SenseLength */
-	to_be16(data, 18);
-	task->sense_data_len = 20;
+	task->sense_data_len = 18;
 }
 
 void
