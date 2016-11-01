@@ -23,6 +23,13 @@
   # syslog facility
   LogFacility "local7"
 
+[Rpc]
+  # Defines whether to enable configuration via RPC.
+  # Default is disabled.  Note that the RPC interface is not
+  # authenticated, so users should be careful about enabling
+  # RPC in non-trusted environments.
+  Enable No
+
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
 # This will generate 8 LUNs with a malloc-allocated backend.
