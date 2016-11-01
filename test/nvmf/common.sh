@@ -40,7 +40,7 @@ function detect_mellanox_nics()
 	# for nvmf target loopback test, suppose we only have one type of card.
 	for nvmf_nic_bdf in $nvmf_nic_bdfs
 	do
-		result=`find /sys -name $nvmf_nic_bdf | grep driver | awk -F / '{ print $6 }'`
+		result=`lspci -vvv -s $nvmf_nic_bdf | grep 'Kernel modules' | awk -F ' ' '{print $3}'`
 		if [ "$result" == "mlx5_core" ]; then
 			mlx_core_driver="mlx5_core"
 			mlx_ib_driver="mlx5_ib"
