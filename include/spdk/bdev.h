@@ -137,6 +137,7 @@ struct spdk_bdev_fn_table {
 
 /** Blockdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_SCSI_ERROR = -3,
 	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
 	SPDK_BDEV_IO_STATUS_PENDING = 0,
@@ -252,6 +253,17 @@ struct spdk_bdev_io {
 			/** NVMe status code */
 			int sc;
 		} nvme;
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
+		struct {
+			/** SCSI status code */
+			int sc;
+			/** SCSI sense key */
+			int sk;
+			/** SCSI additional sense code */
+			int asc;
+			/** SCSI additional sense code qualifier */
+			int ascq;
+		} scsi;
 	} error;
 
 	/** User function that will be called when this completes */
@@ -321,4 +333,6 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority);
+
+void spdk_bdev_set_scsi_sense(struct spdk_bdev_io *bdev_io, int sk, int asc, int ascq);
 #endif /* SPDK_BDEV_H_ */

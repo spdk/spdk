@@ -837,6 +837,16 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 }
 
 void
+spdk_bdev_set_scsi_sense(struct spdk_bdev_io *bdev_io, int sk, int asc, int ascq)
+{
+	bdev_io->status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
+	bdev_io->error.scsi.sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
+	bdev_io->error.scsi.sk = sk;
+	bdev_io->error.scsi.asc = asc;
+	bdev_io->error.scsi.ascq = ascq;
+}
+
+void
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	/* initialize the reset generation value to zero */
