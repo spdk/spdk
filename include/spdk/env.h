@@ -198,7 +198,6 @@ uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
 struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 
 uint32_t spdk_pci_device_get_class(struct spdk_pci_device *dev);
-const char *spdk_pci_device_get_device_name(struct spdk_pci_device *dev);
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 

@@ -324,13 +324,6 @@ spdk_pci_device_get_class(struct spdk_pci_device *dev)
 	return class_code;
 }
 
-const char *
-spdk_pci_device_get_device_name(struct spdk_pci_device *dev)
-{
-	/* TODO */
-	return NULL;
-}
-
 int
 spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
 {
