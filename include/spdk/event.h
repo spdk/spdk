@@ -220,7 +220,7 @@ void spdk_event_call(spdk_event_t event);
 #define spdk_event_get_arg2(event)	(event)->arg2
 
 /* TODO: This is only used by tests and should be made private */
-uint32_t spdk_event_queue_run_all(uint32_t lcore);
+uint32_t spdk_event_queue_run_batch(uint32_t lcore);
 
 /**
  * \brief Register a poller on the given lcore.

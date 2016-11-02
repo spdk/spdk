@@ -128,6 +128,12 @@ spdk_mempool_get(struct spdk_mempool *mp);
 void
 spdk_mempool_put(struct spdk_mempool *mp, void *ele);
 
+/**
+ * Put multiple elements back into the memory pool.
+ */
+void
+spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
+
 
 /**
  * Return true if the calling process is primary process

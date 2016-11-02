@@ -60,6 +60,8 @@
 
 #define SPDK_REACTOR_SPIN_TIME_US	1
 
+#define SPDK_EVENT_BATCH_SIZE		8
+
 enum spdk_poller_state {
 	/* The poller is registered with a reactor but not currently executing its fn. */
 	SPDK_POLLER_STATE_WAITING,
@@ -144,7 +146,8 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 		    spdk_event_t next)
 {
 	struct spdk_event *event = NULL;
-	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
+	unsigned socket_id = rte_lcore_to_socket_id(lcore);
+
 	assert(socket_id < SPDK_MAX_SOCKET);
 
 	event = spdk_mempool_get(g_spdk_event_mempool[socket_id]);
@@ -162,15 +165,6 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 	return event;
 }
 
-static void
-spdk_event_free(uint32_t lcore, struct spdk_event *event)
-{
-	uint8_t socket_id = rte_lcore_to_socket_id(lcore);
-	assert(socket_id < SPDK_MAX_SOCKET);
-
-	spdk_mempool_put(g_spdk_event_mempool[socket_id], (void *)event);
-}
-
 void
 spdk_event_call(spdk_event_t event)
 {
@@ -186,55 +180,32 @@ spdk_event_call(spdk_event_t event)
 	}
 }
 
-static uint32_t
-spdk_event_queue_count(uint32_t lcore)
+uint32_t
+spdk_event_queue_run_batch(uint32_t lcore)
 {
 	struct spdk_reactor *reactor;
+	unsigned socket_id;
+	unsigned count, i;
+	void *events[SPDK_EVENT_BATCH_SIZE];
 
 	reactor = spdk_reactor_get(lcore);
+	assert(reactor->events != NULL);
 
-	if (reactor->events == NULL) {
+	socket_id = rte_lcore_to_socket_id(lcore);
+	assert(socket_id < SPDK_MAX_SOCKET);
+
+	count = rte_ring_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+	if (count == 0) {
 		return 0;
 	}
 
-	return rte_ring_count(reactor->events);
-}
+	for (i = 0; i < count; i++) {
+		struct spdk_event *event = events[i];
 
-static void
-spdk_event_queue_run_single(uint32_t lcore)
-{
-	struct spdk_event *event = NULL;
-	struct spdk_reactor *reactor;
-	int rc;
-
-	reactor = spdk_reactor_get(lcore);
-
-	assert(reactor->events != NULL);
-	rc = rte_ring_dequeue(reactor->events, (void **)&event);
-
-	if ((rc != 0) || event == NULL) {
-		return;
+		event->fn(event);
 	}
 
-	event->fn(event);
-	spdk_event_free(lcore, event);
-}
-
-static void
-spdk_event_queue_run(uint32_t lcore, uint32_t count)
-{
-	while (count--) {
-		spdk_event_queue_run_single(lcore);
-	}
-}
-
-uint32_t
-spdk_event_queue_run_all(uint32_t lcore)
-{
-	uint32_t count;
-
-	count = spdk_event_queue_count(lcore);
-	spdk_event_queue_run(lcore, count);
+	spdk_mempool_put_bulk(g_spdk_event_mempool[socket_id], events, count);
 
 	return count;
 }
@@ -344,7 +315,7 @@ _spdk_reactor_run(void *arg)
 	last_action = spdk_get_ticks();
 
 	while (1) {
-		event_count = spdk_event_queue_run_all(rte_lcore_id());
+		event_count = spdk_event_queue_run_batch(rte_lcore_id());
 		if (event_count > 0) {
 			last_action = spdk_get_ticks();
 		}
