@@ -236,13 +236,12 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	struct ioat_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 
-	SPDK_NOTICELOG(" Found matching device at %d:%d:%d vendor:0x%04x device:0x%04x\n   name:%s\n",
+	SPDK_NOTICELOG(" Found matching device at %d:%d:%d vendor:0x%04x device:0x%04x\n",
 		       pci_addr.bus,
 		       pci_addr.dev,
 		       pci_addr.func,
 		       spdk_pci_device_get_vendor_id(pci_dev),
-		       spdk_pci_device_get_device_id(pci_dev),
-		       spdk_pci_device_get_device_name(pci_dev));
+		       spdk_pci_device_get_device_id(pci_dev));
 
 	if (ctx->num_whitelist_devices > 0 &&
 	    !ioat_find_dev_by_whitelist_bdf(&pci_addr, ctx->whitelist, ctx->num_whitelist_devices)) {
