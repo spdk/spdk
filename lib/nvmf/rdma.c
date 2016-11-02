@@ -33,6 +33,7 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
@@ -240,7 +241,6 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 
 	rdma_conn->max_queue_depth = max_queue_depth;
 	rdma_conn->max_rw_depth = max_rw_depth;
-	rdma_conn->cm_id = id;
 	TAILQ_INIT(&rdma_conn->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_conn->pending_rdma_rw_queue);
 
@@ -249,6 +249,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 		SPDK_ERRLOG("Unable to create completion queue\n");
 		SPDK_ERRLOG("Completion Channel: %p Id: %p Verbs: %p\n", channel, id, id->verbs);
 		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
+		rdma_destroy_id(id);
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		return NULL;
 	}
@@ -266,6 +267,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
+		rdma_destroy_id(id);
 		spdk_nvmf_rdma_conn_destroy(rdma_conn);
 		return NULL;
 	}
@@ -273,6 +275,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	conn = &rdma_conn->conn;
 	conn->transport = &spdk_nvmf_transport_rdma;
 	id->context = conn;
+	rdma_conn->cm_id = id;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", conn);
 
@@ -968,7 +971,7 @@ spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 
 	g_rdma.event_channel = rdma_create_event_channel();
 	if (g_rdma.event_channel == NULL) {
-		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
+		SPDK_ERRLOG("rdma_create_event_channel() failed, %s\n", strerror(errno));
 		pthread_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
