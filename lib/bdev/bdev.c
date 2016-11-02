@@ -808,6 +808,109 @@ spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
 	return rc;
 }
 
+struct spdk_bdev_io *
+spdk_bdev_get_smart(struct spdk_bdev *bdev, void *buf, uint16_t nbytes,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io *bdev_io;
+	int rc;
+
+	/* check if buffer is provided */
+	if (buf == NULL) {
+		SPDK_ERRLOG("get smart buffer is NOT provided\n");
+		return NULL;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed during get_smart\n");
+		return NULL;
+	}
+
+	bdev_io->type = SPDK_BDEV_IO_TYPE_GET_SMART;
+	bdev_io->u.get_perf_info.buf = buf;
+	bdev_io->u.get_perf_info.nbytes = nbytes;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		SPDK_ERRLOG("get_smart failed\n");
+		return NULL;
+	}
+
+	return bdev_io;
+}
+
+struct spdk_bdev_io *
+spdk_bdev_set_latency_tracking(struct spdk_bdev *bdev, spdk_bdev_io_completion_cb cb,
+			       void *cb_arg, bool enable)
+{
+	struct spdk_bdev_io *bdev_io;
+	int rc;
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed during disable_latency_tracking\n");
+		return NULL;
+	}
+
+	if (enable) {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_ENABLE_LATENCY_TRACKING;
+	} else {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_DISABLE_LATENCY_TRACKING;
+	}
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		SPDK_ERRLOG("set latency tracking failed\n");
+		return NULL;
+	}
+
+	return bdev_io;
+}
+
+struct spdk_bdev_io *
+spdk_bdev_get_latency(struct spdk_bdev *bdev, void *buf, uint16_t nbytes,
+		      spdk_bdev_io_completion_cb cb, void *cb_arg, bool read)
+{
+	struct spdk_bdev_io *bdev_io;
+	int rc;
+
+	/* check if buffer is provided */
+	if (buf == NULL) {
+		SPDK_ERRLOG("get latency buffer is NOT provided\n");
+		return NULL;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed during get_latency\n");
+		return NULL;
+	}
+
+	if (read) {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_GET_READ_LATENCY;
+	} else {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_GET_WRITE_LATENCY;
+	}
+	bdev_io->u.get_perf_info.buf = buf;
+	bdev_io->u.get_perf_info.nbytes = nbytes;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		SPDK_ERRLOG("get_latency failed\n");
+		return NULL;
+	}
+
+	return bdev_io;
+}
+
 int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {

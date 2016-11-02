@@ -534,3 +534,18 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 
 	return rc;
 }
+
+inline int32_t 
+spdk_nvme_ctrlr_cmd_get_num_outstanding_admin_commands(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->outstanding_admin_commands;
+}
+
+int32_t
+spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(struct spdk_nvme_ctrlr *ctrlr, int32_t num_outstanding)
+{
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+	ctrlr->outstanding_admin_commands += num_outstanding;
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+	return ctrlr->outstanding_admin_commands;
+}

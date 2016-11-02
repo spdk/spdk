@@ -969,6 +969,9 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					void *payload, uint32_t len,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
+int32_t spdk_nvme_ctrlr_cmd_get_num_outstanding_admin_commands(struct spdk_nvme_ctrlr *ctrl);
+int32_t spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(struct spdk_nvme_ctrlr *ctrlr,
+								  int32_t num_completions);
 #ifdef __cplusplus
 }
 #endif

@@ -486,6 +486,8 @@ struct spdk_nvme_ctrlr {
 
 	/** PCI address including domain, bus, device and function */
 	struct spdk_pci_addr		pci_addr;
+
+	int32_t outstanding_admin_commands;
 };
 
 struct nvme_driver {

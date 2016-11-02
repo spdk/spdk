@@ -112,6 +112,11 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_UNMAP,
 	SPDK_BDEV_IO_TYPE_FLUSH,
 	SPDK_BDEV_IO_TYPE_RESET,
+	SPDK_BDEV_IO_TYPE_GET_SMART,
+	SPDK_BDEV_IO_TYPE_ENABLE_LATENCY_TRACKING,
+	SPDK_BDEV_IO_TYPE_DISABLE_LATENCY_TRACKING,
+	SPDK_BDEV_IO_TYPE_GET_READ_LATENCY,
+	SPDK_BDEV_IO_TYPE_GET_WRITE_LATENCY,
 };
 
 /**
@@ -240,6 +245,10 @@ struct spdk_bdev_io {
 		struct {
 			enum spdk_bdev_reset_type type;
 		} reset;
+		struct {
+			void *buf;
+			uint16_t nbytes;
+		} get_perf_info;
 	} u;
 
 	/** User function that will be called when this completes */
@@ -309,4 +318,12 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority);
+struct spdk_bdev_io *spdk_bdev_get_smart(struct spdk_bdev *bdev, void *buf, uint16_t nbytes,
+					 spdk_bdev_io_completion_cb cb, void *cb_arg);
+struct spdk_bdev_io *spdk_bdev_set_latency_tracking(struct spdk_bdev *bdev,
+						    spdk_bdev_io_completion_cb cb, void *cb_arg,
+						    bool enable);
+struct spdk_bdev_io *spdk_bdev_get_latency(struct spdk_bdev *bdev, void *buf, uint16_t nbytes,
+					   spdk_bdev_io_completion_cb cb, void *cb_arg, bool read);
+
 #endif /* SPDK_BDEV_H_ */
