@@ -16,6 +16,10 @@ Dataset Management command's parameters.  Existing callers can be updated to use
 `spdk_nvme_ns_cmd_dataset_management()` with `SPDK_NVME_DSM_ATTR_DEALLOCATE` as the
 `type` parameter.
 
+The NVMe library SGL callback prototype has been changed to return virtual addresses
+rather than physical addresses.  Callers of `spdk_nvme_ns_cmd_readv()` and
+`spdk_nvme_ns_cmd_writev()` must update their `next_sge_fn` callbacks to match.
+
 Libpciaccess has been removed as a dependency and DPDK PCI enumeration is
 used instead. Prior to DPDK 16.07 enumeration by class code was not supported,
 so for earlier DPDK versions only Intel SSDs will be discovered. Starting with

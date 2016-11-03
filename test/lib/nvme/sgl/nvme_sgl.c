@@ -66,7 +66,6 @@ static int io_complete_flag = 0;
 
 struct sgl_element {
 	void *base;
-	uint64_t phys_addr;
 	size_t offset;
 	size_t len;
 };
@@ -97,25 +96,25 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 	return;
 }
 
-static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
+static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
 	struct sgl_element *iov;
 
 	if (req->current_iov_index >= req->nseg) {
 		*length = 0;
-		*address = 0;
+		*address = NULL;
 		return 0;
 	}
 
 	iov = &req->iovs[req->current_iov_index];
 
 	if (req->current_iov_bytes_left) {
-		*address = iov->phys_addr + iov->len - req->current_iov_bytes_left;
+		*address = iov->base + iov->offset + iov->len - req->current_iov_bytes_left;
 		*length = req->current_iov_bytes_left;
 		req->current_iov_bytes_left = 0;
 	} else {
-		*address = iov->phys_addr;
+		*address = iov->base + iov->offset;
 		*length = iov->len;
 	}
 
@@ -288,7 +287,6 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	for (i = 0; i < req->nseg; i++) {
 		struct sgl_element *sge = &req->iovs[i];
 
-		sge->phys_addr = spdk_vtophys(sge->base) + sge->offset;
 		len += sge->len;
 	}
 

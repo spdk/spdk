@@ -88,24 +88,24 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 	return;
 }
 
-static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
+static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
 
 	if (req->address_offset == 0) {
 		if (req->invalid_addr) {
-			*address = 7;
+			*address = (void *)7;
 		} else {
-			*address = 4096 * req->address_offset;
+			*address = (void *)(4096 * req->address_offset);
 		}
 	} else if (req->address_offset == 1) {
 		if (req->invalid_second_addr) {
-			*address = 7;
+			*address = (void *)7;
 		} else {
-			*address = 4096 * req->address_offset;
+			*address = (void *)(4096 * req->address_offset);
 		}
 	} else {
-		*address = 4096 * req->address_offset;
+		*address = (void *)(4096 * req->address_offset);
 	}
 
 	req->address_offset += 1;

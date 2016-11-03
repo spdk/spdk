@@ -51,7 +51,7 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 {
 }
 
-static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
+static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	return 0;
 }

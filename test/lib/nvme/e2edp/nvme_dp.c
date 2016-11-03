@@ -153,13 +153,13 @@ static void nvme_req_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 	return;
 }
 
-static int nvme_req_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
+static int nvme_req_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
 	struct io_request *req = (struct io_request *)cb_arg;
 	void *payload;
 
 	payload = req->contig + req->sgl_offset;
-	*address = spdk_vtophys(payload);
+	*address = payload;
 
 	*length = req->buf_size - req->sgl_offset;
 

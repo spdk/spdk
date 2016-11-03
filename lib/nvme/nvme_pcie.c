@@ -1308,6 +1308,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 				     struct nvme_tracker *tr)
 {
 	int rc;
+	void *virt_addr;
 	uint64_t phys_addr;
 	uint32_t remaining_transfer_len, length;
 	struct spdk_nvme_sgl_descriptor *sgl;
@@ -1334,8 +1335,14 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			return -1;
 		}
 
-		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
+		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &virt_addr, &length);
 		if (rc) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
+		phys_addr = spdk_vtophys(virt_addr);
+		if (phys_addr == SPDK_VTOPHYS_ERROR) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -1;
 		}
@@ -1380,6 +1387,7 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 				       struct nvme_tracker *tr)
 {
 	int rc;
+	void *virt_addr;
 	uint64_t phys_addr;
 	uint32_t data_transferred, remaining_transfer_len, length;
 	uint32_t nseg, cur_nseg, total_nseg, last_nseg, modulo, unaligned;
@@ -1399,8 +1407,14 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 
 	while (remaining_transfer_len > 0) {
 		assert(req->payload.u.sgl.next_sge_fn != NULL);
-		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &phys_addr, &length);
+		rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg, &virt_addr, &length);
 		if (rc) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			return -1;
+		}
+
+		phys_addr = spdk_vtophys(virt_addr);
+		if (phys_addr == SPDK_VTOPHYS_ERROR) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -1;
 		}

@@ -640,7 +640,7 @@ queued_reset_sgl(void *ref, uint32_t sgl_offset)
 }
 
 static int
-queued_next_sge(void *ref, uint64_t *address, uint32_t *length)
+queued_next_sge(void *ref, void **address, uint32_t *length)
 {
 	struct nvme_blockio *bio = ref;
 	struct iovec *iov;
@@ -650,7 +650,7 @@ queued_next_sge(void *ref, uint64_t *address, uint32_t *length)
 	iov = &bio->iovs[bio->iovpos];
 	bio->iovpos++;
 
-	*address = spdk_vtophys(iov->iov_base);
+	*address = iov->iov_base;
 	*length = iov->iov_len;
 
 	if (bio->iov_offset) {
