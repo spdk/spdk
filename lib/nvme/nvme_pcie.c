@@ -288,7 +288,7 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 
 	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
 	    nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
+		SPDK_ERRLOG("get registers failed\n");
 		goto exit;
 	}
 
@@ -346,7 +346,7 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 
 	if (addr) {
 		if (nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cmbloc() failed\n");
+			SPDK_ERRLOG("get_cmbloc() failed\n");
 			return -EIO;
 		}
 		rc = spdk_pci_device_unmap_bar(pctrlr->ctrlr.devhandle, cmbloc.bits.bir, addr);
@@ -460,7 +460,7 @@ static struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(void *devhandle)
 	spdk_pci_device_cfg_write32(pci_dev, cmd_reg, 4);
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cap() failed\n");
+		SPDK_ERRLOG("get_cap() failed\n");
 		spdk_free(pctrlr);
 		return NULL;
 	}
@@ -507,12 +507,12 @@ nvme_pcie_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_aqa_register aqa;
 
 	if (nvme_pcie_ctrlr_set_asq(pctrlr, padminq->cmd_bus_addr)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_asq() failed\n");
+		SPDK_ERRLOG("set_asq() failed\n");
 		return -EIO;
 	}
 
 	if (nvme_pcie_ctrlr_set_acq(pctrlr, padminq->cpl_bus_addr)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_acq() failed\n");
+		SPDK_ERRLOG("set_acq() failed\n");
 		return -EIO;
 	}
 
@@ -522,7 +522,7 @@ nvme_pcie_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	aqa.bits.asqs = ctrlr->adminq->num_entries - 1;
 
 	if (nvme_pcie_ctrlr_set_aqa(pctrlr, &aqa)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_aqa() failed\n");
+		SPDK_ERRLOG("set_aqa() failed\n");
 		return -EIO;
 	}
 
@@ -1175,7 +1175,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	rc = _nvme_pcie_ctrlr_create_io_qpair(ctrlr, qpair, qid);
 
 	if (rc != 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "I/O queue creation failed\n");
+		SPDK_ERRLOG("I/O queue creation failed\n");
 		free(pqpair);
 		return NULL;
 	}

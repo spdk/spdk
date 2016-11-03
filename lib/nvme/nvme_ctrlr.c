@@ -90,7 +90,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	union spdk_nvme_cc_register		cc;
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc failed\n");
+		SPDK_ERRLOG("get_cc failed\n");
 		return NULL;
 	}
 
@@ -115,14 +115,14 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
 	if (qid > ctrlr->opts.num_io_queues) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "No free I/O queue IDs\n");
+		SPDK_ERRLOG("No free I/O queue IDs\n");
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
 
 	qpair = ctrlr->transport->ctrlr_create_io_qpair(ctrlr, qid, qprio);
 	if (qpair == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "transport->ctrlr_create_io_qpair() failed\n");
+		SPDK_ERRLOG("transport->ctrlr_create_io_qpair() failed\n");
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
@@ -307,14 +307,14 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	int				ms_waited = 0;
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc() failed\n");
+		SPDK_ERRLOG("get_cc() failed\n");
 		return;
 	}
 
 	cc.bits.shn = SPDK_NVME_SHN_NORMAL;
 
 	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+		SPDK_ERRLOG("set_cc() failed\n");
 		return;
 	}
 
@@ -326,7 +326,7 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	do {
 		if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "get_csts() failed\n");
+			SPDK_ERRLOG("get_csts() failed\n");
 			return;
 		}
 
@@ -350,12 +350,12 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 	rc = ctrlr->transport->ctrlr_enable(ctrlr);
 	if (rc != 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "transport ctrlr_enable failed\n");
+		SPDK_ERRLOG("transport ctrlr_enable failed\n");
 		return rc;
 	}
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get_cc() failed\n");
+		SPDK_ERRLOG("get_cc() failed\n");
 		return -EIO;
 	}
 
@@ -393,7 +393,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	cc.bits.ams = ctrlr->opts.arb_mechanism;
 
 	if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+		SPDK_ERRLOG("set_cc() failed\n");
 		return -EIO;
 	}
 
@@ -586,7 +586,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 					     ctrlr->opts.keep_alive_timeout_ms, 0, NULL, 0,
 					     nvme_completion_poll_cb, &status);
 	if (rc != 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Set Feature failed: %d\n", rc);
+		SPDK_ERRLOG("Keep alive timeout Set Feature failed: %d\n", rc);
 		ctrlr->opts.keep_alive_timeout_ms = 0;
 		return rc;
 	}
@@ -595,8 +595,8 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Set Feature failed: SC %x SCT %x\n",
-			      status.cpl.status.sc, status.cpl.status.sct);
+		SPDK_ERRLOG("Keep alive timeout Set Feature failed: SC %x SCT %x\n",
+			    status.cpl.status.sc, status.cpl.status.sct);
 		ctrlr->opts.keep_alive_timeout_ms = 0;
 		return -ENXIO;
 	}
@@ -605,7 +605,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	rc = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, 0, NULL, 0,
 					     nvme_completion_poll_cb, &status);
 	if (rc != 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Get Feature failed: %d\n", rc);
+		SPDK_ERRLOG("Keep alive timeout Get Feature failed: %d\n", rc);
 		ctrlr->opts.keep_alive_timeout_ms = 0;
 		return rc;
 	}
@@ -614,8 +614,8 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Keep alive timeout Get Feature failed: SC %x SCT %x\n",
-			      status.cpl.status.sc, status.cpl.status.sct);
+		SPDK_ERRLOG("Keep alive timeout Get Feature failed: SC %x SCT %x\n",
+			    status.cpl.status.sc, status.cpl.status.sct);
 		ctrlr->opts.keep_alive_timeout_ms = 0;
 		return -ENXIO;
 	}
@@ -872,7 +872,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
 	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "get registers failed\n");
+		SPDK_ERRLOG("get registers failed\n");
 		nvme_ctrlr_fail(ctrlr);
 		return -EIO;
 	}
@@ -900,7 +900,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			/* CC.EN = 1 && CSTS.RDY == 1, so we can immediately disable the controller. */
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+				SPDK_ERRLOG("set_cc() failed\n");
 				nvme_ctrlr_fail(ctrlr);
 				return -EIO;
 			}
@@ -938,7 +938,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			/* CC.EN = 1 && CSTS.RDY = 1, so we can set CC.EN = 0 now. */
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "set_cc() failed\n");
+				SPDK_ERRLOG("set_cc() failed\n");
 				nvme_ctrlr_fail(ctrlr);
 				return -EIO;
 			}
@@ -1015,7 +1015,7 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (nvme_ctrlr_set_keep_alive_timeout(ctrlr) != 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting keep alive timeout failed\n");
+		SPDK_ERRLOG("Setting keep alive timeout failed\n");
 		return -1;
 	}
 
@@ -1132,7 +1132,7 @@ nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	if (rc != 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Submitting Keep Alive failed\n");
+		SPDK_ERRLOG("Submitting Keep Alive failed\n");
 	}
 
 	ctrlr->next_keep_alive_tick = now + ctrlr->keep_alive_interval_ticks;

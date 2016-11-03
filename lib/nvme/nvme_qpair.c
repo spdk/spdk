@@ -351,7 +351,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	STAILQ_INIT(&qpair->queued_req);
 
 	if (qpair->transport->qpair_construct(qpair)) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "qpair_construct() failed\n");
+		SPDK_ERRLOG("qpair_construct() failed\n");
 		nvme_qpair_destroy(qpair);
 		return -1;
 	}
