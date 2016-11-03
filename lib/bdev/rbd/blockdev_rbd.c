@@ -47,11 +47,13 @@
 #include <rados/librados.h>
 
 #include "spdk/conf.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
 
 #include "bdev_module.h"
+#include "blockdev_rbd.h"
 
 static TAILQ_HEAD(, blockdev_rbd_pool_info) g_rbd_pools = TAILQ_HEAD_INITIALIZER(g_rbd_pools);
 static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
@@ -429,6 +431,18 @@ blockdev_rbd_free_channel(struct blockdev_rbd_io_channel *ch)
 	}
 }
 
+static int blockdev_rbd_handle(void *arg)
+{
+	struct blockdev_rbd_io_channel *ch = (struct blockdev_rbd_io_channel *)arg;
+
+	int ret = rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL);
+	if (ret < 0) {
+		SPDK_ERRLOG("Failed to open specified rbd device\n");
+	}
+
+	return ret;
+}
+
 static int
 blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 		       void *ctx_buf, void *unique_ctx)
@@ -450,9 +464,8 @@ blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 		goto err;
 	}
 
-	ret = rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL);
+	ret = spdk_use_all_cpu_cores_for_app(blockdev_rbd_handle, ch);
 	if (ret < 0) {
-		SPDK_ERRLOG("Failed to open specified rbd device\n");
 		goto err;
 	}
 

@@ -48,6 +48,7 @@ extern "C" {
 #include <stdio.h>
 
 struct spdk_pci_device;
+typedef int (*app_callback)(void * args);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
@@ -224,6 +225,8 @@ int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_
  * \return 0 on success, or a negated errno value on failure.
  */
 int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
+
+int spdk_use_all_cpu_cores_for_app(app_callback cb, void *args);
 
 #ifdef __cplusplus
 }
