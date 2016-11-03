@@ -189,18 +189,19 @@ spdk_get_log_facility(struct spdk_conf *config)
 	return logfacility;
 }
 
+void
+spdk_app_start_shutdown(void)
+{
+	if (g_shutdown_event != NULL) {
+		spdk_event_call(g_shutdown_event);
+		g_shutdown_event = NULL;
+	}
+}
+
 static void
 __shutdown_signal(int signo)
 {
-	/*
-	 * Call pre-allocated shutdown event.  Note that it is not
-	 *  safe to allocate the event within the signal handlers
-	 *  context, since that context is not a DPDK thread so
-	 *  buffer allocation is not permitted.
-	 */
-	if (g_shutdown_event != NULL) {
-		spdk_event_call(g_shutdown_event);
-	}
+	spdk_app_start_shutdown();
 }
 
 static void

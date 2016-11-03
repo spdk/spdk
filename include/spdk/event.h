@@ -168,6 +168,13 @@ int spdk_app_fini(void);
 int spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2);
 
 /**
+ * \brief Start shutting down the framework.  Typically this function is not called directly, and
+ * the shutdown process is started implicitly by a process signal.  But in applications that are
+ * using SPDK for a subset of its process threads, this function can be called in lieu of a signal.
+ */
+void spdk_app_start_shutdown(void);
+
+/**
  * \brief Stop the framework. This does not wait for all threads to exit. Instead, it kicks off
  * the shutdown process and returns. Once the shutdown process is complete, \ref spdk_app_start will return.
 */
