@@ -56,7 +56,7 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 
 	while (status.done == false) {
 		pthread_mutex_lock(&ns->ctrlr->ctrlr_lock);
-		spdk_nvme_qpair_process_completions(&ns->ctrlr->adminq, 0);
+		spdk_nvme_qpair_process_completions(ns->ctrlr->adminq, 0);
 		pthread_mutex_unlock(&ns->ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
@@ -183,7 +183,7 @@ spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 		      struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct pci_id pci_id;
+	struct spdk_pci_id pci_id;
 
 	assert(id > 0);
 
@@ -193,7 +193,7 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 
 	if (ctrlr->transport->ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
 		if (pci_id.vendor_id == SPDK_PCI_VID_INTEL &&
-		    pci_id.dev_id == INTEL_DC_P3X00_DEVID &&
+		    pci_id.device_id == INTEL_DC_P3X00_DEVID &&
 		    ctrlr->cdata.vs[3] != 0) {
 			ns->stripe_size = (1 << ctrlr->cdata.vs[3]) * ctrlr->min_page_size;
 		}

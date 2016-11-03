@@ -24,7 +24,7 @@ RPC_PORT=5260
 INITIATOR_TAG=2
 INITIATOR_NAME=ALL
 NETMASK=$INITIATOR_IP/32
-MALLOC_LUN_SIZE=64
+MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
@@ -45,7 +45,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_malloc_lun $MALLOC_LUN_SIZE $MALLOC_BLOCK_SIZE
+$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "Malloc0:0" ==> use Malloc0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64

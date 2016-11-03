@@ -31,33 +31,53 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "nvme_internal.h"
+#include "spdk/bdev.h"
+#include "spdk/log.h"
+#include "spdk/rpc.h"
 
-/* Intel specific data structures and functions. */
-
-struct nvme_intel_quirk {
-	struct pci_id	id;
-	uint64_t	flags;
-};
-
-static const struct nvme_intel_quirk intel_p3x00[] = {
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3702}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3703}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3704}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3705}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x3709}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{SPDK_PCI_VID_INTEL, 0x0953, SPDK_PCI_VID_INTEL, 0x370a}, NVME_INTEL_QUIRK_READ_LATENCY | NVME_INTEL_QUIRK_WRITE_LATENCY	},
-	{{0x0000, 0x0000, 0x0000, 0x0000}, 0												}
-};
-
-bool nvme_intel_has_quirk(struct pci_id *id, uint64_t quirk)
+static void
+spdk_rpc_get_bdevs(struct spdk_jsonrpc_server_conn *conn,
+		   const struct spdk_json_val *params,
+		   const struct spdk_json_val *id)
 {
-	const struct nvme_intel_quirk *intel_quirk = intel_p3x00;
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev;
 
-	while (intel_quirk->id.vendor_id) {
-		if (!memcmp(&intel_quirk->id, id, sizeof(*id)) && (intel_quirk->flags & quirk))
-			return true;
-		intel_quirk++;
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_bdevs requires no parameters");
+		return;
 	}
-	return false;
+
+	if (id == NULL) {
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(conn, id);
+	spdk_json_write_array_begin(w);
+
+	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "name");
+		spdk_json_write_string(w, bdev->name);
+
+		spdk_json_write_name(w, "product_name");
+		spdk_json_write_string(w, bdev->product_name);
+
+		spdk_json_write_name(w, "block_size");
+		spdk_json_write_uint32(w, bdev->blocklen);
+
+		spdk_json_write_name(w, "num_blocks");
+		spdk_json_write_uint64(w, bdev->blockcnt);
+
+		spdk_json_write_name(w, "claimed");
+		spdk_json_write_bool(w, bdev->claimed);
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(conn, w);
 }
+SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs)

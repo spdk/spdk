@@ -339,7 +339,7 @@ static void aio_free_disk(struct file_disk *fdisk)
 	free(fdisk);
 }
 
-struct file_disk *
+struct spdk_bdev *
 create_aio_disk(char *fname)
 {
 	struct file_disk *fdisk;
@@ -375,7 +375,7 @@ create_aio_disk(char *fname)
 	spdk_io_device_register(&fdisk->disk, blockdev_aio_create_cb, blockdev_aio_destroy_cb,
 				sizeof(struct blockdev_aio_io_channel));
 	spdk_bdev_register(&fdisk->disk);
-	return fdisk;
+	return &fdisk->disk;
 
 error_return:
 	blockdev_aio_close(fdisk);
@@ -385,7 +385,7 @@ error_return:
 
 static int blockdev_aio_initialize(void)
 {
-	struct file_disk *fdisk;
+	struct spdk_bdev *bdev;
 	int i;
 	const char *val = NULL;
 	char *file;
@@ -410,9 +410,9 @@ static int blockdev_aio_initialize(void)
 				return -1;
 			}
 
-			fdisk = create_aio_disk(file);
+			bdev = create_aio_disk(file);
 
-			if (fdisk == NULL && !skip_missing) {
+			if (bdev == NULL && !skip_missing) {
 				return -1;
 			}
 		}

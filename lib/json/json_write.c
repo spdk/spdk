@@ -36,6 +36,9 @@
 struct spdk_json_write_ctx {
 	spdk_json_write_cb write_cb;
 	void *cb_ctx;
+	uint32_t flags;
+	uint32_t indent;
+	bool new_indent;
 	bool first_value;
 	bool failed;
 };
@@ -52,6 +55,9 @@ spdk_json_write_begin(spdk_json_write_cb write_cb, void *cb_ctx, uint32_t flags)
 
 	w->write_cb = write_cb;
 	w->cb_ctx = cb_ctx;
+	w->flags = flags;
+	w->indent = 0;
+	w->new_indent = false;
 	w->first_value = true;
 	w->failed = false;
 
@@ -94,13 +100,42 @@ emit(struct spdk_json_write_ctx *w, const void *data, size_t size)
 }
 
 static int
+emit_fmt(struct spdk_json_write_ctx *w, const void *data, size_t size)
+{
+	if (w->flags & SPDK_JSON_WRITE_FLAG_FORMATTED) {
+		return emit(w, data, size);
+	}
+	return 0;
+}
+
+static int
+emit_indent(struct spdk_json_write_ctx *w)
+{
+	uint32_t i;
+
+	if (w->flags & SPDK_JSON_WRITE_FLAG_FORMATTED) {
+		for (i = 0; i < w->indent; i++) {
+			if (emit(w, "  ", 2)) return fail(w);
+		}
+	}
+	return 0;
+}
+
+static int
 begin_value(struct spdk_json_write_ctx *w)
 {
 	// TODO: check for value state
+	if (w->new_indent) {
+		if (emit_fmt(w, "\n", 1)) return fail(w);
+		if (emit_indent(w)) return fail(w);
+	}
 	if (!w->first_value) {
 		if (emit(w, ",", 1)) return fail(w);
+		if (emit_fmt(w, "\n", 1)) return fail(w);
+		if (emit_indent(w)) return fail(w);
 	}
 	w->first_value = false;
+	w->new_indent = false;
 	return 0;
 }
 
@@ -149,6 +184,30 @@ spdk_json_write_uint32(struct spdk_json_write_ctx *w, uint32_t val)
 
 	if (begin_value(w)) return fail(w);
 	count = snprintf(buf, sizeof(buf), "%" PRIu32, val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) return fail(w);
+	return emit(w, buf, count);
+}
+
+int
+spdk_json_write_int64(struct spdk_json_write_ctx *w, int64_t val)
+{
+	char buf[32];
+	int count;
+
+	if (begin_value(w)) return fail(w);
+	count = snprintf(buf, sizeof(buf), "%" PRId64, val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) return fail(w);
+	return emit(w, buf, count);
+}
+
+int
+spdk_json_write_uint64(struct spdk_json_write_ctx *w, uint64_t val)
+{
+	char buf[32];
+	int count;
+
+	if (begin_value(w)) return fail(w);
+	count = snprintf(buf, sizeof(buf), "%" PRIu64, val);
 	if (count <= 0 || (size_t)count >= sizeof(buf)) return fail(w);
 	return emit(w, buf, count);
 }
@@ -263,13 +322,23 @@ spdk_json_write_array_begin(struct spdk_json_write_ctx *w)
 {
 	if (begin_value(w)) return fail(w);
 	w->first_value = true;
-	return emit(w, "[", 1);
+	w->new_indent = true;
+	w->indent++;
+	if (emit(w, "[", 1)) return fail(w);
+	return 0;
 }
 
 int
 spdk_json_write_array_end(struct spdk_json_write_ctx *w)
 {
 	w->first_value = false;
+	if (w->indent == 0) return fail(w);
+	w->indent--;
+	if (!w->new_indent) {
+		if (emit_fmt(w, "\n", 1)) return fail(w);
+		if (emit_indent(w)) return fail(w);
+	}
+	w->new_indent = false;
 	return emit(w, "]", 1);
 }
 
@@ -278,13 +347,22 @@ spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
 {
 	if (begin_value(w)) return fail(w);
 	w->first_value = true;
-	return emit(w, "{", 1);
+	w->new_indent = true;
+	w->indent++;
+	if (emit(w, "{", 1)) return fail(w);
+	return 0;
 }
 
 int
 spdk_json_write_object_end(struct spdk_json_write_ctx *w)
 {
 	w->first_value = false;
+	w->indent--;
+	if (!w->new_indent) {
+		if (emit_fmt(w, "\n", 1)) return fail(w);
+		if (emit_indent(w)) return fail(w);
+	}
+	w->new_indent = false;
 	return emit(w, "}", 1);
 }
 
@@ -295,7 +373,8 @@ spdk_json_write_name_raw(struct spdk_json_write_ctx *w, const char *name, size_t
 	if (begin_value(w)) return fail(w);
 	if (write_string_or_name(w, name, len)) return fail(w);
 	w->first_value = true;
-	return emit(w, ":", 1);
+	if (emit(w, ":", 1)) return fail(w);
+	return emit_fmt(w, " ", 1);
 }
 
 int

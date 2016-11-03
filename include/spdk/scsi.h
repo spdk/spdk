@@ -63,6 +63,10 @@
 
 #define SPDK_SCSI_LUN_MAX_NAME_LENGTH		16
 
+/* This flag indicated that data buffers are allocated
+ * internally and hence need to be freed by the SCSI layer.*/
+#define SPDK_SCSI_TASK_ALLOC_BUFFER  1
+
 enum spdk_scsi_data_dir {
 	SPDK_SCSI_DIR_NONE = 0,
 	SPDK_SCSI_DIR_TO_DEV = 1,
@@ -129,16 +133,15 @@ struct spdk_scsi_task {
 	void (*free_fn)(struct spdk_scsi_task *);
 
 	uint8_t *cdb;
-	uint8_t *iobuf;
 
 	struct iovec iov;
 	struct iovec *iovs;
 	uint16_t iovcnt;
+	uint8_t iov_flags;
 
 	uint8_t sense_data[32];
 	size_t sense_data_len;
 
-	uint8_t *rbuf; /* read buffer */
 	void *blockdev_io;
 
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
@@ -255,10 +258,10 @@ void spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
 void spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
 			       uint8_t **data);
-int spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc,
-				    int ascq);
-void spdk_scsi_task_set_check_condition(struct spdk_scsi_task *task, int sk,
-					int asc, int ascq);
+void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc,
+				     int ascq);
+void spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc,
+			       int ascq);
 
 static inline struct spdk_scsi_task *
 spdk_scsi_task_get_primary(struct spdk_scsi_task *task)

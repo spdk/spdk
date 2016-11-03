@@ -104,8 +104,6 @@ enum data_direction {
 	BDEV_DISK_WRITE = 1
 };
 
-#define NVME_MAX_BLOCKDEVS_PER_CONTROLLER 256
-#define NVME_MAX_BLOCKDEVS (NVME_MAX_BLOCKDEVS_PER_CONTROLLER * NVME_MAX_CONTROLLERS)
 static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int blockdev_index_max = 0;
 static int nvme_luns_per_ns = 1;
@@ -427,15 +425,12 @@ static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
-	uint16_t found_domain = spdk_pci_device_get_domain(pci_dev);
-	uint8_t found_bus    = spdk_pci_device_get_bus(pci_dev);
-	uint8_t found_dev    = spdk_pci_device_get_dev(pci_dev);
-	uint8_t found_func   = spdk_pci_device_get_func(pci_dev);
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 	int i;
 	bool claim_device = false;
 
 	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
-		       found_domain, found_bus, found_dev, found_func);
+		       pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
 
 	if (ctx->controllers_remaining == 0) {
 		return false;
@@ -445,10 +440,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 		claim_device = true;
 	} else {
 		for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
-			if (found_domain == ctx->whitelist[i].domain &&
-			    found_bus == ctx->whitelist[i].bus &&
-			    found_dev == ctx->whitelist[i].dev &&
-			    found_func == ctx->whitelist[i].func) {
+			if (spdk_pci_addr_compare(&pci_addr, &ctx->whitelist[i]) == 0) {
 				claim_device = true;
 				break;
 			}
@@ -460,7 +452,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 	}
 
 	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(pci_dev) != 0) {
+	if (spdk_pci_device_claim(&pci_addr) != 0) {
 		return false;
 	}
 
@@ -499,10 +491,12 @@ blockdev_nvme_exist(struct nvme_probe_ctx *ctx)
 {
 	int i;
 	struct nvme_device *nvme_dev;
+	struct spdk_pci_addr dev_addr;
 
 	for (i = 0; i < ctx->num_whitelist_controllers; i++) {
 		TAILQ_FOREACH(nvme_dev, &g_nvme_devices, tailq) {
-			if (spdk_pci_device_compare_addr(nvme_dev->pci_dev, &ctx->whitelist[i])) {
+			dev_addr = spdk_pci_device_get_addr(nvme_dev->pci_dev);
+			if (spdk_pci_addr_compare(&dev_addr, &ctx->whitelist[i]) == 0) {
 				return true;
 			}
 		}
@@ -513,13 +507,27 @@ blockdev_nvme_exist(struct nvme_probe_ctx *ctx)
 int
 spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx)
 {
+	int prev_index_max, i;
+
 	if (blockdev_nvme_exist(ctx)) {
 		return -1;
 	}
 
+	prev_index_max = blockdev_index_max;
+
 	if (spdk_nvme_probe(ctx, probe_cb, attach_cb, NULL)) {
 		return -1;
 	}
+
+	/*
+	 * Report the new bdevs that were created in this call.
+	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
+	 */
+	ctx->num_created_bdevs = 0;
+	for (i = prev_index_max; i < blockdev_index_max; i++) {
+		ctx->created_bdevs[ctx->num_created_bdevs++] = &g_blockdev[i].disk;
+	}
+
 	return 0;
 }
 
@@ -685,16 +693,18 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 static void
 queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_blockio *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_blockio *)ref);
 	enum spdk_bdev_io_status status;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->error.nvme.sct = cpl->status.sct;
+		bdev_io->error.nvme.sc = cpl->status.sc;
+		status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	} else {
 		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	}
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), status);
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 static void

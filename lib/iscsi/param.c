@@ -56,7 +56,6 @@ static const char *non_simple_value_params[] = {
 	NULL,
 };
 
-
 void
 spdk_iscsi_param_free(struct iscsi_param *params)
 {
@@ -375,7 +374,6 @@ spdk_iscsi_param_eq_val(struct iscsi_param *params, const char *key,
 	return 0;
 }
 
-
 struct iscsi_param_table {
 	const char *key;
 	const char *val;
@@ -399,7 +397,6 @@ static const struct iscsi_param_table conn_param_table[] = {
 	{ "CHAP_C", "", "", ISPT_DECLARATIVE },
 	{ NULL, NULL, NULL, ISPT_INVALID },
 };
-
 
 static const struct iscsi_param_table sess_param_table[] = {
 	{ "MaxConnections", "1", "1,65535", ISPT_NUMERICAL_MIN },
@@ -466,7 +463,6 @@ spdk_iscsi_sess_params_init(struct iscsi_param **params)
 	return spdk_iscsi_params_init_internal(params, &sess_param_table[0]);
 }
 
-
 static const char *chap_type[] = {
 	"CHAP_A",
 	"CHAP_N",
@@ -487,11 +483,6 @@ static const char *discovery_ignored_param[] = {
 	NULL,
 };
 
-/* The following params can be negotiated twice*/
-static const char *multi_negot_sess_params[] = {
-	NULL,
-};
-
 static const char *multi_negot_conn_params[] = {
 	"MaxRecvDataSegmentLength",
 	NULL,
@@ -504,8 +495,6 @@ static const char *target_declarative_params[] = {
 	"TargetPortalGroupTag",
 	NULL,
 };
-
-
 
 /* This function is used to contruct the data from the special param (e.g.,
  * MaxRecvDataSegmentLength)
@@ -598,8 +587,6 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 	return total;
 
 }
-
-
 
 /**
 * spdk_iscsi_construct_data_from_param:
@@ -772,7 +759,6 @@ static char *spdk_iscsi_negotiate_param_boolean(int *add_param_value,
  * The entry function to handle each type of the param
  * return value: the new negotiated value
 */
-
 static char *
 spdk_iscsi_negotiate_param_all(int *add_param_value, struct iscsi_param *param,
 			       char *valid_list, char *in_val, char *cur_val)
@@ -821,7 +807,6 @@ spdk_iscsi_negotiate_param_all(int *add_param_value, struct iscsi_param *param,
 	return new_val;
 }
 
-
 /**
  * This function is used to judge whether the param is in session's params or
  * connection's params
@@ -853,8 +838,6 @@ spdk_iscsi_negotiate_param_init(struct spdk_iscsi_conn *conn,
 			index = (*cur_param_p)->state_index;
 			if (conn->sess_param_state_negotiated[index] &&
 			    !spdk_iscsi_find_key_in_array(param->key,
-							  multi_negot_sess_params) &&
-			    !spdk_iscsi_find_key_in_array(param->key,
 							  target_declarative_params))
 				return SPDK_ISCSI_PARAMETER_EXCHANGE_NOT_ONCE;
 			conn->sess_param_state_negotiated[index] = true;
@@ -870,7 +853,6 @@ spdk_iscsi_negotiate_param_init(struct spdk_iscsi_conn *conn,
 
 	return 0;
 }
-
 
 int
 spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
@@ -1085,7 +1067,6 @@ final_return:
 
 	return total;
 }
-
 
 int
 spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)

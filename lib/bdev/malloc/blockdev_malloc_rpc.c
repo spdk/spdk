@@ -46,12 +46,13 @@ static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_malloc_lun(struct spdk_jsonrpc_server_conn *conn,
-			      const struct spdk_json_val *params,
-			      const struct spdk_json_val *id)
+spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_server_conn *conn,
+			       const struct spdk_json_val *params,
+			       const struct spdk_json_val *id)
 {
 	struct rpc_construct_malloc req = {};
 	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
 				    sizeof(rpc_construct_malloc_decoders) / sizeof(*rpc_construct_malloc_decoders),
@@ -60,7 +61,8 @@ spdk_rpc_construct_malloc_lun(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	if (create_malloc_disk(req.num_blocks, req.block_size) == NULL) {
+	bdev = create_malloc_disk(req.num_blocks, req.block_size);
+	if (bdev == NULL) {
 		goto invalid;
 	}
 
@@ -69,11 +71,13 @@ spdk_rpc_construct_malloc_lun(struct spdk_jsonrpc_server_conn *conn,
 	}
 
 	w = spdk_jsonrpc_begin_result(conn, id);
-	spdk_json_write_bool(w, true);
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, bdev->name);
+	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(conn, w);
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
-SPDK_RPC_REGISTER("construct_malloc_lun", spdk_rpc_construct_malloc_lun)
+SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev)

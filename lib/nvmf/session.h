@@ -84,10 +84,6 @@ struct spdk_nvmf_session {
 	uint32_t kato;
 	const struct spdk_nvmf_transport	*transport;
 
-	/* This is filled in by calling the transport's
-	 * session_init function. */
-	void					*trctx;
-
 	TAILQ_ENTRY(spdk_nvmf_session) 		link;
 };
 

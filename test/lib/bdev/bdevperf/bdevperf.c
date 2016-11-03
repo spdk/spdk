@@ -687,5 +687,5 @@ main(int argc, char **argv)
 	performance_dump(g_time_in_sec);
 	spdk_app_fini();
 	printf("done.\n");
-	return 0;
+	return g_run_failed;
 }

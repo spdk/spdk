@@ -40,6 +40,7 @@
 
 #include <stdint.h>
 
+#include "spdk/env.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
@@ -65,7 +66,6 @@ struct spdk_nvme_ctrlr;
 struct spdk_nvmf_transport;
 struct spdk_nvmf_request;
 struct spdk_nvmf_conn;
-struct spdk_pci_device;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_conn *conn);
@@ -130,7 +130,7 @@ struct spdk_nvmf_subsystem {
 		struct {
 			struct spdk_nvme_ctrlr *ctrlr;
 			struct spdk_nvme_qpair *io_qpair;
-			struct spdk_pci_device *pci_dev;
+			struct spdk_pci_addr pci_addr;
 		} direct;
 
 		struct {
@@ -183,7 +183,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-			 struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *dev);
+			 struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr);
 
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
@@ -192,8 +192,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
 
-int spdk_nvmf_transport_init(void);
-int spdk_nvmf_transport_fini(void);
 const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
 const char *spdk_nvmf_transport_get_name(const struct spdk_nvmf_transport *transport);
 

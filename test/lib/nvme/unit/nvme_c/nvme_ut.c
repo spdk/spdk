@@ -50,15 +50,15 @@ spdk_pci_enumerate(enum spdk_pci_device_type type,
 	return -1;
 }
 
-int
-nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
-{
-	return 0;
-}
-
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
+}
+
+int
+nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
+{
+	return 0;
 }
 
 int
@@ -79,8 +79,17 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	memset(opts, 0, sizeof(*opts));
 }
 
-bool
-spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr)
+struct spdk_pci_addr
+spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_addr pci_addr;
+
+	memset(&pci_addr, 0, sizeof(pci_addr));
+	return pci_addr;
+}
+
+int
+spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
 {
 	return true;
 }

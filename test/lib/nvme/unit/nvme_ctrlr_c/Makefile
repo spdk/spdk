@@ -34,6 +34,6 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
 TEST_FILE = nvme_ctrlr_ut.c
-OTHER_FILES = nvme_intel.c
+OTHER_FILES = nvme_quirks.c
 
 include $(SPDK_ROOT_DIR)/mk/nvme.unittest.mk

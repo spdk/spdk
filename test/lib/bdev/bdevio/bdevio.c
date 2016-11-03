@@ -123,8 +123,10 @@ quick_test_complete(spdk_event_t event)
 	struct bdevio_request *req = spdk_event_get_arg1(event);
 	struct spdk_bdev_io *bdev_io = spdk_event_get_arg2(event);
 
-	spdk_put_io_channel(req->target->ch);
-	req->target->ch = NULL;
+	if (req->target->ch) {
+		spdk_put_io_channel(req->target->ch);
+		req->target->ch = NULL;
+	}
 	g_completion_status = bdev_io->status;
 	spdk_bdev_free_io(bdev_io);
 	wake_ut_thread();
@@ -618,6 +620,60 @@ blockdev_overlapped_write_read_8k(void)
 	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
 }
 
+static void
+__blockdev_reset(spdk_event_t event)
+{
+	struct bdevio_request *req = spdk_event_get_arg1(event);
+	enum spdk_bdev_reset_type *reset_type = spdk_event_get_arg2(event);
+	struct io_target *target = req->target;
+	int rc;
+
+	rc = spdk_bdev_reset(target->bdev, *reset_type, quick_test_complete, req);
+	if (rc < 0) {
+		spdk_put_io_channel(target->ch);
+		target->ch = NULL;
+		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+		wake_ut_thread();
+	}
+}
+
+static void
+blockdev_reset(struct io_target *target, enum spdk_bdev_reset_type reset_type)
+{
+	struct bdevio_request req;
+	spdk_event_t event;
+
+	req.target = target;
+
+	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	event = spdk_event_allocate(1, __blockdev_reset, &req, &reset_type, NULL);
+	pthread_mutex_lock(&g_test_mutex);
+	spdk_event_call(event);
+	pthread_cond_wait(&g_test_cond, &g_test_mutex);
+	pthread_mutex_unlock(&g_test_mutex);
+}
+
+static void
+blockdev_test_reset(void)
+{
+	struct io_target	*target;
+
+	target = g_io_targets;
+	while (target != NULL) {
+		target->bdev->gencnt = 0;
+		blockdev_reset(target, SPDK_BDEV_RESET_HARD);
+		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT_EQUAL(target->bdev->gencnt, 1);
+
+		target->bdev->gencnt = 0;
+		blockdev_reset(target, SPDK_BDEV_RESET_SOFT);
+		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT_EQUAL(target->bdev->gencnt, 0);
+
+		target = target->next;
+	}
+}
 
 static void
 test_main(spdk_event_t event)
@@ -667,6 +723,8 @@ test_main(spdk_event_t event)
 			       blockdev_writev_readv_size_gt_128k) == NULL
 		|| CU_add_test(suite, "blockdev writev readv size > 128k in two iovs",
 			       blockdev_writev_readv_size_gt_128k_two_iov) == NULL
+		|| CU_add_test(suite, "blockdev reset",
+			       blockdev_test_reset) == NULL
 	) {
 		CU_cleanup_registry();
 		spdk_app_stop(CU_get_error());

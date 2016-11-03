@@ -142,6 +142,7 @@ struct spdk_bdev_fn_table {
 
 /** Blockdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
 	SPDK_BDEV_IO_STATUS_PENDING = 0,
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
@@ -250,6 +251,17 @@ struct spdk_bdev_io {
 			uint16_t nbytes;
 		} get_perf_info;
 	} u;
+
+	/** Error information from a device */
+	union {
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
+		struct {
+			/** NVMe status code type */
+			int sct;
+			/** NVMe status code */
+			int sc;
+		} nvme;
+	} error;
 
 	/** User function that will be called when this completes */
 	spdk_bdev_io_completion_cb cb;

@@ -16,7 +16,7 @@
 
   # Users can restrict work items to only run on certain cores by
   #  specifying a ReactorMask.  Default is to allow work items to run
-  #  on all cores.
+  #  on core 0.
   #ReactorMask 0xFFFF
 
   # Tracepoint group mask for spdk trace buffers

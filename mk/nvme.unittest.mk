@@ -40,7 +40,8 @@ C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a
+SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a
 
 LIBS += -lcunit $(SPDK_LIBS)
 

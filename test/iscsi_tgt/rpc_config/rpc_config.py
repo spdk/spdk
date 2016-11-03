@@ -17,7 +17,7 @@ rpc_param = {
     'initiator_name': 'ALL',
     'netmask': netmask,
     'lun_total': 3,
-    'malloc_lun_size': 64,
+    'malloc_bdev_size': 64,
     'malloc_block_size': 512,
     'queue_depth': 64,
     'target_name': 'Target3',
@@ -84,7 +84,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 
     portal_tag = '1'
     initiator_tag = '1'
-    rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+    rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
 
@@ -127,7 +127,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
 
     portal_tag = '1'
     initiator_tag = '1'
-    rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+    rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
 
@@ -166,7 +166,7 @@ def verify_luns_rpc_methods(rpc_py, rpc_param):
            "get_luns returned {}, expected empty".format(jsonvalue))
 
     for i in range(1, rpc_param['lun_total'] + 1):
-        rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+        rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
         output = rpc.get_luns()
         jsonvalue = json.loads(output)
         verify(not jsonvalue, 1,
@@ -283,7 +283,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     verify(not jsonvalues, 1,
            "get_target_nodes returned {}, expected empty".format(jsonvalues))
 
-    rpc.construct_malloc_lun(rpc_param['malloc_lun_size'], rpc_param['malloc_block_size'])
+    rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
     rpc.add_portal_group(portal_tag, "{}:{}".format(rpc_param['target_ip'], str(rpc_param['port'])))
     rpc.add_initiator_group(initiator_tag, rpc_param['initiator_name'], rpc_param['netmask'][0])
 
@@ -393,6 +393,27 @@ def verify_add_delete_ip_address(rpc_py):
                    (faked_ip, x["name"]))
     print "verify_add_delete_ip_address passed."
 
+def verify_add_nvme_bdev_rpc_methods(rpc_py):
+    rpc = spdk_rpc(rpc_py)
+    test_pass = 0
+    output = check_output(["lspci", "-mm", "-nn"])
+    addrs = re.findall('^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output, re.MULTILINE)
+    for addr in addrs:
+        ctrlr_address = "0000:{}".format(addr)
+        rpc.construct_nvme_bdev(ctrlr_address)
+        print "add nvme device passed first time"
+        test_pass = 0
+        try:
+            rpc.construct_nvme_bdev(ctrlr_address)
+        except Exception as e:
+            print "add nvme device passed second time"
+            test_pass = 1
+            pass
+        else:
+            pass
+        verify(test_pass == 1, 1, "add nvme device passed second time")
+    print "verify_add_nvme_bdev_rpc_methods passed."
+
 if __name__ == "__main__":
 
     rpc_py = sys.argv[1]
@@ -407,6 +428,7 @@ if __name__ == "__main__":
         verify_target_nodes_rpc_methods(rpc_py, rpc_param)
         verify_scsi_devices_rpc_methods(rpc_py)
         verify_iscsi_connection_rpc_methods(rpc_py)
+        verify_add_nvme_bdev_rpc_methods(rpc_py)
     except RpcException as e:
         print "{}. Exiting with status {}".format(e.message, e.retval)
         raise e

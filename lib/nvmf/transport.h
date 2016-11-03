@@ -73,14 +73,24 @@ struct spdk_nvmf_transport {
 				     struct spdk_nvmf_discovery_log_page_entry *entry);
 
 	/**
-	 * Initialize the transport for the given session
+	 * Create a new session
 	 */
-	int (*session_init)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+	struct spdk_nvmf_session *(*session_init)(void);
 
 	/**
-	 * Deinitiallize the transport for the given session
+	 * Destroy a session
 	 */
 	void (*session_fini)(struct spdk_nvmf_session *session);
+
+	/**
+	 * Add a connection to a session
+	 */
+	int (*session_add_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+
+	/**
+	 * Remove a connection from a session
+	 */
+	int (*session_remove_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
 
 	/*
 	 * Signal request completion, which sends a response
@@ -106,6 +116,9 @@ struct spdk_nvmf_transport {
 	 */
 	int (*conn_poll)(struct spdk_nvmf_conn *conn);
 };
+
+int spdk_nvmf_transport_init(void);
+int spdk_nvmf_transport_fini(void);
 
 extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
 

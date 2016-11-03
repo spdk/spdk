@@ -47,24 +47,12 @@ int32_t		spdk_nvme_retry_count;
 static struct spdk_nvme_ctrlr *
 nvme_attach(void *devhandle)
 {
+	const struct spdk_nvme_transport *transport;
 	struct spdk_nvme_ctrlr	*ctrlr;
-	int			status;
-	uint64_t		phys_addr = 0;
 
-	ctrlr = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr),
-			     64, &phys_addr);
-	if (ctrlr == NULL) {
-		SPDK_ERRLOG("could not allocate ctrlr\n");
-		return NULL;
-	}
+	transport = &spdk_nvme_transport_pcie;
 
-	ctrlr->transport = &spdk_nvme_transport_pcie;
-
-	status = nvme_ctrlr_construct(ctrlr, devhandle);
-	if (status != 0) {
-		spdk_free(ctrlr);
-		return NULL;
-	}
+	ctrlr = transport->ctrlr_construct(devhandle);
 
 	return ctrlr;
 }
@@ -74,9 +62,8 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	nvme_ctrlr_destruct(ctrlr);
 	TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
-	spdk_free(ctrlr);
+	nvme_ctrlr_destruct(ctrlr);
 
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return 0;
@@ -120,6 +107,7 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
 	req->payload_size = payload_size;
+	req->pid = getpid();
 
 	return req;
 }
@@ -155,6 +143,7 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 		if (xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
 		    xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
+			assert(req->pid == getpid());
 			memcpy(req->user_buffer, req->payload.u.contig, req->payload_size);
 		}
 
@@ -242,6 +231,9 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct nvme_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
+	struct spdk_pci_addr dev_addr;
+
+	dev_addr = spdk_pci_device_get_addr(pci_dev);
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -249,7 +241,7 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 * different per each process, we compare by BDF to determine whether it is the
 		 * same controller.
 		 */
-		if (spdk_pci_device_compare_addr(pci_dev, &ctrlr->pci_addr)) {
+		if (spdk_pci_addr_compare(&dev_addr, &ctrlr->pci_addr) == 0) {
 			return 0;
 		}
 	}

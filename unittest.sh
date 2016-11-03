@@ -27,6 +27,7 @@ test/lib/nvmf/subsystem/subsystem_ut
 test/lib/scsi/dev/dev_ut
 test/lib/scsi/lun/lun_ut
 test/lib/scsi/scsi_bdev/scsi_bdev_ut
+test/lib/scsi/scsi_nvme/scsi_nvme_ut
 
 test/lib/util/bit_array/bit_array_ut
 test/lib/util/io_channel/io_channel_ut

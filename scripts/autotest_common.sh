@@ -158,3 +158,13 @@ function start_iscsi_service() {
 		service iscsid start
 	fi
 }
+
+function run_test() {
+	echo "************************************"
+	echo "START TEST $1"
+	echo "************************************"
+	time $1
+	echo "************************************"
+	echo "END TEST $1"
+	echo "************************************"
+}

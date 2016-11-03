@@ -60,7 +60,7 @@ static int blockdev_rbd_count = 0;
 typedef void (*rbd_cb_fn_t)(void *);
 
 struct blockdev_rbd_pool_info {
-	const char *name;
+	char *name;
 	TAILQ_ENTRY(blockdev_rbd_pool_info) tailq;
 };
 
@@ -81,7 +81,7 @@ struct blockdev_rbd_io {
 
 struct blockdev_rbd {
 	struct spdk_bdev disk;
-	const char *rbd_name;
+	char *rbd_name;
 	rbd_image_info_t info;
 	struct blockdev_rbd_pool_info *pool_info;
 	uint64_t size;
@@ -98,6 +98,28 @@ struct blockdev_rbd_io_channel {
 	struct blockdev_rbd *disk;
 	struct spdk_poller *poller;
 };
+
+static void
+blockdev_rbd_free_pool_info(struct blockdev_rbd_pool_info *pool_info)
+{
+	if (!pool_info) {
+		return;
+	}
+
+	free(pool_info->name);
+	free(pool_info);
+}
+
+static void
+blockdev_rbd_free(struct blockdev_rbd *rbd)
+{
+	if (!rbd) {
+		return;
+	}
+
+	free(rbd->rbd_name);
+	free(rbd);
+}
 
 static int
 blockdev_rados_context_init(const char *rbd_pool_name, rados_t *cluster,
@@ -498,12 +520,12 @@ blockdev_rbd_library_fini(void)
 	while (!TAILQ_EMPTY(&g_rbds)) {
 		rbd = TAILQ_FIRST(&g_rbds);
 		TAILQ_REMOVE(&g_rbds, rbd, tailq);
-		free(rbd);
+		blockdev_rbd_free(rbd);
 	}
 	while (!TAILQ_EMPTY(&g_rbd_pools)) {
 		pool_info = TAILQ_FIRST(&g_rbd_pools);
 		TAILQ_REMOVE(&g_rbd_pools, pool_info, tailq);
-		free(pool_info);
+		blockdev_rbd_free_pool_info(pool_info);
 	}
 }
 
@@ -524,40 +546,55 @@ blockdev_rbd_pool_info_init(const char *rbd_pool_name)
 		return NULL;
 	}
 
-	pool_info->name = rbd_pool_name;
+	pool_info->name = strdup(rbd_pool_name);
+	if (!pool_info->name) {
+		blockdev_rbd_free_pool_info(pool_info);
+		return NULL;
+	}
+
 	TAILQ_INSERT_TAIL(&g_rbd_pools, pool_info, tailq);
 
 	return pool_info;
 }
 
-int
+struct spdk_bdev *
 spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
 {
 	struct blockdev_rbd_pool_info *pool_info;
 	struct blockdev_rbd *rbd;
 	int ret;
 
+	if ((pool_name == NULL) || (rbd_name == NULL)) {
+		return NULL;
+	}
+
 	pool_info = blockdev_rbd_pool_info_init(pool_name);
 	if (pool_info == NULL) {
 		SPDK_ERRLOG("failed to create blockdev_rbd_pool_info\n");
-		return -1;
+		return NULL;
 	}
 
 	rbd = calloc(1, sizeof(struct blockdev_rbd));
 	if (rbd == NULL) {
 		SPDK_ERRLOG("Failed to allocate blockdev_rbd struct\n");
-		free(pool_info);
-		return -1;
+		blockdev_rbd_free_pool_info(pool_info);
+		return NULL;
 	}
 
 	rbd->pool_info = pool_info;
-	rbd->rbd_name = rbd_name;
+	rbd->rbd_name = strdup(rbd_name);
+	if (!rbd->rbd_name) {
+		blockdev_rbd_free_pool_info(pool_info);
+		blockdev_rbd_free(rbd);
+		return NULL;
+	}
+
 	ret = blockdev_rbd_init(pool_info->name, rbd_name, &rbd->info);
 	if (ret < 0) {
-		free(pool_info);
-		free(rbd);
+		blockdev_rbd_free_pool_info(pool_info);
+		blockdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
-		return -1;
+		return NULL;
 	}
 
 	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
@@ -578,13 +615,13 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 				blockdev_rbd_destroy_cb,
 				sizeof(struct blockdev_rbd_io_channel));
 	spdk_bdev_register(&rbd->disk);
-	return 0;
+	return &rbd->disk;
 }
 
 static int
 blockdev_rbd_library_init(void)
 {
-	int i, ret;
+	int i;
 	const char *val;
 	const char *pool_name;
 	const char *rbd_name;
@@ -631,8 +668,7 @@ blockdev_rbd_library_init(void)
 			}
 		}
 
-		ret = spdk_bdev_rbd_create(pool_name, rbd_name, block_size);
-		if (ret) {
+		if (spdk_bdev_rbd_create(pool_name, rbd_name, block_size) == NULL) {
 			goto cleanup;
 		}
 	}

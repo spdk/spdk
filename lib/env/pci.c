@@ -299,6 +299,19 @@ spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
 	return dev->id.subsystem_device_id;
 }
 
+struct spdk_pci_id
+spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
+{
+	struct spdk_pci_id pci_id;
+
+	pci_id.vendor_id = spdk_pci_device_get_vendor_id(pci_dev);
+	pci_id.device_id = spdk_pci_device_get_device_id(pci_dev);
+	pci_id.subvendor_id = spdk_pci_device_get_subvendor_id(pci_dev);
+	pci_id.subdevice_id = spdk_pci_device_get_subdevice_id(pci_dev);
+
+	return pci_id;
+}
+
 uint32_t
 spdk_pci_device_get_class(struct spdk_pci_device *dev)
 {
@@ -394,18 +407,46 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 	return -1;
 }
 
-bool
-spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr)
+struct spdk_pci_addr
+spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
 {
-	return ((spdk_pci_device_get_domain(dev) == addr->domain) &&
-		(spdk_pci_device_get_bus(dev) == addr->bus) &&
-		(spdk_pci_device_get_dev(dev) == addr->dev) &&
-		(spdk_pci_device_get_func(dev) == addr->func));
+	struct spdk_pci_addr pci_addr;
+
+	pci_addr.domain = spdk_pci_device_get_domain(pci_dev);
+	pci_addr.bus = spdk_pci_device_get_bus(pci_dev);
+	pci_addr.dev = spdk_pci_device_get_dev(pci_dev);
+	pci_addr.func = spdk_pci_device_get_func(pci_dev);
+
+	return pci_addr;
+}
+
+int
+spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
+{
+	if (a1->domain > a2->domain) {
+		return 1;
+	} else if (a1->domain < a2->domain) {
+		return -1;
+	} else if (a1->bus > a2->bus) {
+		return 1;
+	} else if (a1->bus < a2->bus) {
+		return -1;
+	} else if (a1->dev > a2->dev) {
+		return 1;
+	} else if (a1->dev < a2->dev) {
+		return -1;
+	} else if (a1->func > a2->func) {
+		return 1;
+	} else if (a1->func < a2->func) {
+		return -1;
+	}
+
+	return 0;
 }
 
 #ifdef __linux__
 int
-spdk_pci_device_claim(struct spdk_pci_device *dev)
+spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 {
 	int dev_fd;
 	char shm_name[64];
@@ -418,9 +459,7 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 		.l_len = 0,
 	};
 
-	sprintf(shm_name, PCI_PRI_FMT, spdk_pci_device_get_domain(dev),
-		spdk_pci_device_get_bus(dev), spdk_pci_device_get_dev(dev),
-		spdk_pci_device_get_func(dev));
+	sprintf(shm_name, PCI_PRI_FMT, pci_addr->domain, pci_addr->bus, pci_addr->dev, pci_addr->func);
 
 	dev_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (dev_fd == -1) {
@@ -460,7 +499,7 @@ spdk_pci_device_claim(struct spdk_pci_device *dev)
 
 #ifdef __FreeBSD__
 int
-spdk_pci_device_claim(struct spdk_pci_device *dev)
+spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 {
 	/* TODO */
 	return 0;

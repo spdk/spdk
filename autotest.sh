@@ -71,18 +71,18 @@ timing_exit nvmf_setup
 
 timing_enter lib
 
-time test/lib/bdev/blockdev.sh
-time test/lib/event/event.sh
-time test/lib/nvme/nvme.sh
-time test/lib/nvmf/nvmf.sh
-time test/lib/env/vtophys.sh
-time test/lib/ioat/ioat.sh
-time test/lib/json/json.sh
-time test/lib/jsonrpc/jsonrpc.sh
-time test/lib/log/log.sh
-time test/lib/scsi/scsi.sh
-time test/lib/iscsi/iscsi.sh
-time test/lib/util/util.sh
+run_test test/lib/bdev/blockdev.sh
+run_test test/lib/event/event.sh
+run_test test/lib/nvme/nvme.sh
+run_test test/lib/nvmf/nvmf.sh
+run_test test/lib/env/vtophys.sh
+run_test test/lib/ioat/ioat.sh
+run_test test/lib/json/json.sh
+run_test test/lib/jsonrpc/jsonrpc.sh
+run_test test/lib/log/log.sh
+run_test test/lib/scsi/scsi.sh
+run_test test/lib/iscsi/iscsi.sh
+run_test test/lib/util/util.sh
 
 timing_exit lib
 
@@ -92,22 +92,22 @@ if [ $(uname -s) = Linux ]; then
 	export INITIATOR_IP=127.0.0.1
 
 	timing_enter iscsi_tgt
-	time ./test/iscsi_tgt/calsoft/calsoft.sh
-	time ./test/iscsi_tgt/filesystem/filesystem.sh
-	time ./test/iscsi_tgt/fio/fio.sh
-	time ./test/iscsi_tgt/reset/reset.sh
-	time ./test/iscsi_tgt/rpc_config/rpc_config.sh
-	time ./test/iscsi_tgt/idle_migration/idle_migration.sh
-	time ./test/iscsi_tgt/ext4test/ext4test.sh
+	run_test ./test/iscsi_tgt/calsoft/calsoft.sh
+	run_test ./test/iscsi_tgt/filesystem/filesystem.sh
+	run_test ./test/iscsi_tgt/fio/fio.sh
+	run_test ./test/iscsi_tgt/reset/reset.sh
+	run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
+	run_test ./test/iscsi_tgt/idle_migration/idle_migration.sh
+	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 	timing_exit iscsi_tgt
 fi
 
 timing_enter nvmf
 
-time test/nvmf/fio/fio.sh
-time test/nvmf/filesystem/filesystem.sh
-time test/nvmf/discovery/discovery.sh
-time test/nvmf/nvme_cli/nvme_cli.sh
+run_test test/nvmf/fio/fio.sh
+run_test test/nvmf/filesystem/filesystem.sh
+run_test test/nvmf/discovery/discovery.sh
+run_test test/nvmf/nvme_cli/nvme_cli.sh
 
 timing_exit nvmf
 

@@ -130,8 +130,76 @@ nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
 }
 
 static void
-test_foobar(void)
+test_nvmf_process_discovery_cmd(void)
 {
+	struct	spdk_nvmf_request req = {};
+	int	ret;
+	/* random request length value for testing */
+	int	req_length = 122;
+	struct	spdk_nvmf_conn req_conn = {};
+	struct	spdk_nvmf_session req_sess = {};
+	struct	spdk_nvme_ctrlr_data req_data = {};
+	struct	spdk_nvmf_discovery_log_page req_page = {};
+	union	nvmf_h2c_msg  req_cmd = {};
+	union	nvmf_c2h_msg   req_rsp = {};
+
+	req.conn = &req_conn;
+	req.cmd  = &req_cmd;
+	req.rsp  = &req_rsp;
+
+	/* no request data check */
+	ret = nvmf_process_discovery_cmd(&req);
+	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
+
+	/* IDENTIFY opcode return value check */
+	req.cmd->nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	req.cmd->nvme_cmd.cdw10 = SPDK_NVME_IDENTIFY_CTRLR;
+	req.conn->sess = &req_sess;
+	req.data = &req_data;
+	ret = nvmf_process_discovery_cmd(&req);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* GET_LOG_PAGE opcode return value check */
+	req.cmd->nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	req.cmd->nvme_cmd.cdw10 = SPDK_NVME_LOG_DISCOVERY;
+	req.data = &req_page;
+	req.length = req_length;
+	ret = nvmf_process_discovery_cmd(&req);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
+	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	req.cmd->nvme_cmd.cdw10 = 15;
+	ret = nvmf_process_discovery_cmd(&req);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
+	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+
+	/* Invalid opcode return value check */
+	req.cmd->nvme_cmd.opc = 100;
+	ret = nvmf_process_discovery_cmd(&req);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_OPCODE);
+	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+}
+
+static void
+test_nvmf_process_fabrics_cmd(void)
+{
+	struct	spdk_nvmf_request req = {};
+	int	ret;
+	struct	spdk_nvmf_conn req_conn = {};
+	union	nvmf_h2c_msg  req_cmd = {};
+	union	nvmf_c2h_msg   req_rsp = {};
+
+	req.conn = &req_conn;
+	req.cmd  = &req_cmd;
+	req.rsp  = &req_rsp;
+	req.conn->sess = NULL;
+
+	/* No session and invalid command check */
+	req.cmd->nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
+	ret = nvmf_process_fabrics_command(&req);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 }
 
 int main(int argc, char **argv)
@@ -150,7 +218,8 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "foobar", test_foobar) == NULL) {
+		CU_add_test(suite, "nvmf_process_discovery_command", test_nvmf_process_discovery_cmd) == NULL ||
+		CU_add_test(suite, "nvmf_process_fabrics_command", test_nvmf_process_fabrics_cmd) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

@@ -159,6 +159,13 @@ struct spdk_pci_addr {
 	uint8_t				func;
 };
 
+struct spdk_pci_id {
+	uint16_t	vendor_id;
+	uint16_t	device_id;
+	uint16_t	subvendor_id;
+	uint16_t	subdevice_id;
+};
+
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 
 int spdk_pci_enumerate(enum spdk_pci_device_type type,
@@ -173,14 +180,20 @@ uint16_t spdk_pci_device_get_domain(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_bus(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_dev(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_func(struct spdk_pci_device *dev);
+
+struct spdk_pci_addr spdk_pci_device_get_addr(struct spdk_pci_device *dev);
+
 uint16_t spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev);
 uint16_t spdk_pci_device_get_device_id(struct spdk_pci_device *dev);
 uint16_t spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev);
 uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
+
+struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
+
 uint32_t spdk_pci_device_get_class(struct spdk_pci_device *dev);
 const char *spdk_pci_device_get_device_name(struct spdk_pci_device *dev);
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
-int spdk_pci_device_claim(struct spdk_pci_device *dev);
+int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 
 int spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset);
 int spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset);
@@ -189,7 +202,12 @@ int spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uin
 int spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset);
 int spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset);
 
-bool spdk_pci_device_compare_addr(struct spdk_pci_device *dev, struct spdk_pci_addr *addr);
+/**
+ * Compare two PCI addresses.
+ *
+ * \return 0 if a1 == a2, less than 0 if a1 < a2, greater than 0 if a1 > a2
+ */
+int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2);
 
 #ifdef __cplusplus
 }
