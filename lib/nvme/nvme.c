@@ -231,7 +231,6 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct nvme_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
-	struct spdk_pci_addr dev_addr;
 	struct spdk_nvme_probe_info probe_info;
 
 	probe_info.pci_addr = spdk_pci_device_get_addr(pci_dev);
@@ -243,7 +242,7 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 * different per each process, we compare by BDF to determine whether it is the
 		 * same controller.
 		 */
-		if (spdk_pci_addr_compare(&dev_addr, &ctrlr->probe_info.pci_addr) == 0) {
+		if (spdk_pci_addr_compare(&probe_info.pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
 			return 0;
 		}
 	}
