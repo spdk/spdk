@@ -183,45 +183,55 @@ nvme_request_remove_child(struct nvme_request *parent,
 	TAILQ_REMOVE(&parent->children, child, child_tailq);
 }
 
-static int
-ut_qpair_construct(struct spdk_nvme_qpair *qpair)
+int
+nvme_transport_qpair_construct(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
 }
 
-static void
-ut_qpair_destroy(struct spdk_nvme_qpair *qpair)
+int
+nvme_transport_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
+	return 0;
 }
 
-static int
-ut_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+int
+nvme_transport_qpair_enable(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+int
+nvme_transport_qpair_disable(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+int
+nvme_transport_qpair_fail(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
+int
+nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
 	// TODO
 	return 0;
 }
 
-static int32_t
-ut_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
+int32_t
+nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	// TODO
 	return 0;
 }
-
-static const struct spdk_nvme_transport nvme_qpair_ut_transport = {
-	.qpair_construct = ut_qpair_construct,
-	.qpair_destroy = ut_qpair_destroy,
-
-	.qpair_submit_request = ut_qpair_submit_request,
-	.qpair_process_completions = ut_qpair_process_completions,
-};
 
 static void
 prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_ctrlr *ctrlr)
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
-	ctrlr->transport = &nvme_qpair_ut_transport;
 	ctrlr->free_io_qids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_procs);

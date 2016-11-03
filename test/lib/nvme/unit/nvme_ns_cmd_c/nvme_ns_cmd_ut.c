@@ -39,10 +39,6 @@
 
 struct nvme_request *g_request = NULL;
 
-const struct spdk_nvme_transport spdk_nvme_transport_pcie = {
-};
-
-
 int
 spdk_pci_enumerate(enum spdk_pci_device_type type,
 		   spdk_pci_enum_cb enum_cb,
@@ -58,6 +54,12 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 static int nvme_request_next_sge(void *cb_arg, uint64_t *address, uint32_t *length)
 {
 	return 0;
+}
+
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		void *devhandle)
+{
+	return NULL;
 }
 
 void
