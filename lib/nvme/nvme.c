@@ -38,6 +38,7 @@ struct nvme_driver _g_nvme_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.attached_ctrlrs),
 	.request_mempool = NULL,
+	.initialized = false,
 };
 
 struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
@@ -277,6 +278,12 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 	struct nvme_enum_ctx enum_ctx;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
+	if (!spdk_process_is_primary()) {
+		while (g_spdk_nvme_driver->initialized == false) {
+			usleep(200 * 1000);
+		}
+	}
+
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	if (g_spdk_nvme_driver->request_mempool == NULL) {
@@ -348,6 +355,8 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 			}
 		}
 	}
+
+	g_spdk_nvme_driver->initialized = true;
 
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return rc;

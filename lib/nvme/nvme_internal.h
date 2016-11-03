@@ -402,10 +402,11 @@ struct spdk_nvme_ctrlr {
 };
 
 struct nvme_driver {
-	pthread_mutex_t	lock;
+	pthread_mutex_t			lock;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
-	struct spdk_mempool	*request_mempool;
+	struct spdk_mempool		*request_mempool;
+	bool				initialized;
 };
 
 extern struct nvme_driver *g_spdk_nvme_driver;
