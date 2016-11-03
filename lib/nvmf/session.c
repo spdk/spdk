@@ -331,7 +331,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 	conn->sess = session;
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
-	rsp->status_code_specific.success.cntlid = 0;
+	rsp->status_code_specific.success.cntlid = session->vcdata.cntlid;
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      rsp->status_code_specific.success.cntlid);
 }
