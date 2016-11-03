@@ -490,14 +490,14 @@ task_complete_test(void)
 	bdev_io.error.scsi.ascq = SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED;
 	spdk_bdev_scsi_task_complete(&event);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT_EQUAL(task.sense_data[4], SPDK_SCSI_SENSE_HARDWARE_ERROR);
-	CU_ASSERT_EQUAL(task.sense_data[14], SPDK_SCSI_ASC_WARNING);
-	CU_ASSERT_EQUAL(task.sense_data[15], SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED);
+	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_HARDWARE_ERROR);
+	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_WARNING);
+	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED);
 
 	bdev_io.status = SPDK_BDEV_IO_STATUS_FAILED;
 	spdk_bdev_scsi_task_complete(&event);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
-	CU_ASSERT_EQUAL(task.sense_data[2], SPDK_SCSI_SENSE_ABORTED_COMMAND);
+	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_ABORTED_COMMAND);
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
 	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 }

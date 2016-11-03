@@ -256,13 +256,13 @@ struct spdk_bdev_io {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
 		struct {
 			/** SCSI status code */
-			int sc;
+			enum spdk_scsi_status sc;
 			/** SCSI sense key */
-			int sk;
+			enum spdk_scsi_sense sk;
 			/** SCSI additional sense code */
-			int asc;
+			uint8_t asc;
 			/** SCSI additional sense code qualifier */
-			int ascq;
+			uint8_t ascq;
 		} scsi;
 	} error;
 
@@ -333,6 +333,6 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority);
-
-void spdk_bdev_set_scsi_sense(struct spdk_bdev_io *bdev_io, int sk, int asc, int ascq);
+void spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
+				 enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
 #endif /* SPDK_BDEV_H_ */

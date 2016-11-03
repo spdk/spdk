@@ -1304,7 +1304,6 @@ spdk_bdev_scsi_task_complete(spdk_event_t event)
 				asc  = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
 				ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
 				break;
-
 			}
 			spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
 		}
