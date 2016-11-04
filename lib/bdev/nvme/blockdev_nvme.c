@@ -544,6 +544,12 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 
 	for (ns_id = 1; ns_id <= num_ns; ns_id++) {
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+
+		if (!spdk_nvme_ns_is_active(ns)) {
+			SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Skipping inactive NS %d\n", ns_id);
+			continue;
+		}
+
 		bdev_size = spdk_nvme_ns_get_num_sectors(ns) / bdev_per_ns;
 
 		/*
