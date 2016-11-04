@@ -194,7 +194,7 @@ complete_task_with_no_lun(struct spdk_scsi_task *task)
 		 *  PERIPHERAL DEVICE TYPE = 0x1F.
 		 */
 		allocation_len = from_be16(&task->cdb[3]);
-		spdk_scsi_task_alloc_data(task, allocation_len, &data);
+		data = spdk_scsi_task_alloc_data(task, allocation_len);
 		data_len = 36;
 		memset(data, 0, data_len);
 		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */

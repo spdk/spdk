@@ -63,10 +63,6 @@
 
 #define SPDK_SCSI_LUN_MAX_NAME_LENGTH		16
 
-/* This flag indicated that data buffers are allocated
- * internally and hence need to be freed by the SCSI layer.*/
-#define SPDK_SCSI_TASK_ALLOC_BUFFER  1
-
 enum spdk_scsi_data_dir {
 	SPDK_SCSI_DIR_NONE = 0,
 	SPDK_SCSI_DIR_TO_DEV = 1,
@@ -125,7 +121,6 @@ struct spdk_scsi_task {
 	 *  transfer_len - i.e. SCSI INQUIRY.
 	 */
 	uint32_t data_transferred;
-	uint32_t alloc_len;
 
 	uint64_t offset;
 	struct spdk_scsi_task *parent;
@@ -134,10 +129,18 @@ struct spdk_scsi_task {
 
 	uint8_t *cdb;
 
+	/**
+	 * \internal
+	 * Size of internal buffer or zero when iov.iov_base is not internally managed.
+	 */
+	uint32_t alloc_len;
+	/**
+	 * \internal
+	 * iov is internal buffer. Use iovs to access elements of IO.
+	 */
 	struct iovec iov;
 	struct iovec *iovs;
 	uint16_t iovcnt;
-	uint8_t iov_flags;
 
 	uint8_t sense_data[32];
 	size_t sense_data_len;
@@ -256,8 +259,30 @@ int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,
 void spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 			      struct spdk_scsi_task *parent);
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
-void spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
-			       uint8_t **data);
+
+void spdk_scsi_task_free_data(struct spdk_scsi_task *task);
+/**
+ * Set internal buffer to given one. Caller is owner of that buffer.
+ *
+ * \param task Task struct
+ * \param data Pointer to buffer
+ * \param len Buffer length
+ */
+void spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len);
+
+/**
+ * Allocate internal buffer of requested size. Caller is not owner of
+ * returned buffer and must not free it. Caller is permitted to call
+ * spdk_scsi_task_free_data() to free internal buffer if it is not required
+ * anymore, but must assert that task is done and not used by library.
+ * The count of io vectors must by one. Any previously allocated buffer will be
+ * invalid after this call.
+ *
+ * \param task Task struct
+ * \param alloc_len Size of allocated buffer.
+ * \return Pointer to buffer or NULL on error.
+ */
+void *spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len);
 void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc,
 				     int ascq);
 void spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc,

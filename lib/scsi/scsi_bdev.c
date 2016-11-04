@@ -1317,8 +1317,9 @@ spdk_bdev_scsi_task_complete(spdk_event_t event)
 			spdk_scsi_lun_clear_all(task->lun);
 		}
 	}
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-		task->iov.iov_base = bdev_io->u.read.iovs[0].iov_base;
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ && task->iovs != bdev_io->u.read.iovs) {
+		assert(task->iovcnt == bdev_io->u.read.iovcnt);
+		memcpy(task->iovs, bdev_io->u.read.iovs, sizeof(task->iovs[0]) * task->iovcnt);
 	}
 
 	spdk_scsi_lun_complete_task(task->lun, task);
@@ -1510,7 +1511,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 	uint8_t *data;
 	uint16_t bdesc_data_len, bdesc_count;
 
-	data = (uint8_t *)task->iov.iov_base;
+	data = (uint8_t *)task->iovs[0].iov_base;
 
 	/*
 	 * The UNMAP BLOCK DESCRIPTOR DATA LENGTH field specifies the length in
@@ -1591,7 +1592,7 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len);
 
 	case SPDK_SBC_READ_CAPACITY_10:
-		spdk_scsi_task_alloc_data(task, 8, &data);
+		data = spdk_scsi_task_alloc_data(task, 8);
 		if (bdev->blockcnt - 1 > 0xffffffffULL) {
 			memset(data, 0xff, 4);
 		} else {
@@ -1605,7 +1606,7 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 	case SPDK_SPC_SERVICE_ACTION_IN_16:
 		switch (cdb[1] & 0x1f) { /* SERVICE ACTION */
 		case SPDK_SBC_SAI_READ_CAPACITY_16:
-			spdk_scsi_task_alloc_data(task, 32, &data);
+			data = spdk_scsi_task_alloc_data(task, 32);
 			to_be64(&data[0], bdev->blockcnt - 1);
 			to_be32(&data[8], bdev->blocklen);
 			/*
@@ -1669,7 +1670,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
-		spdk_scsi_task_alloc_data(task, alloc_len, &data);
+		data = spdk_scsi_task_alloc_data(task, alloc_len);
 		data_len = spdk_bdev_scsi_inquiry(bdev, task, cdb,
 						  data, alloc_len);
 		if (data_len < 0) {
@@ -1697,7 +1698,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 			break;
 		}
 
-		spdk_scsi_task_alloc_data(task, alloc_len, &data);
+		data = spdk_scsi_task_alloc_data(task, alloc_len);
 		data_len = spdk_bdev_scsi_report_luns(task->lun, sel, data, task->alloc_len);
 		if (data_len < 0) {
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
@@ -1715,7 +1716,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 
 	case SPDK_SPC_MODE_SELECT_6:
 	case SPDK_SPC_MODE_SELECT_10:
-		data = task->iov.iov_base;
+		data = task->iovs[0].iov_base;
 
 		if (cdb[0] == SPDK_SPC_MODE_SELECT_6) {
 			md = 4;
@@ -1792,7 +1793,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		page = cdb[2] & 0x3f;
 		subpage = cdb[3];
 
-		spdk_scsi_task_alloc_data(task, alloc_len, &data);
+		data = spdk_scsi_task_alloc_data(task, alloc_len);
 
 		if (md == 6) {
 			data_len = spdk_bdev_scsi_mode_sense6(bdev,
@@ -1838,7 +1839,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		}
 
 		alloc_len = cdb[4];
-		spdk_scsi_task_alloc_data(task, alloc_len, &data);
+		data = spdk_scsi_task_alloc_data(task, alloc_len);
 
 		/* NO ADDITIONAL SENSE INFORMATION */
 		sk = SPDK_SCSI_SENSE_NO_SENSE;

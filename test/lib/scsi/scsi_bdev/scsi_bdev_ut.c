@@ -37,7 +37,7 @@
 
 #include "scsi_bdev.c"
 
-#include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
 
@@ -61,16 +61,66 @@ spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
 	task->status = sc;
 }
 
+
+static void
+spdk_put_task(struct spdk_scsi_task *task)
+{
+	spdk_scsi_task_free_data(task);
+}
+
+
+static void
+spdk_init_task(struct spdk_scsi_task *task)
+{
+	memset(task, 0, sizeof(*task));
+	task->id = 1;
+	task->iovs = &task->iov;
+	task->iovcnt = 1;
+}
+
 void
-spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
-			  uint8_t **data)
+spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len)
+{
+	assert(task->alloc_len == 0);
+	task->iov.iov_base = data;
+	task->iov.iov_len = len;
+	task->alloc_len = 0;
+}
+
+void *
+spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
 	if (alloc_len < 4096) {
 		alloc_len = 4096;
 	}
 
-	task->alloc_len = alloc_len;
-	*data = task->iov.iov_base;
+	if (task->iov.iov_base != NULL) {
+		if (task->alloc_len != 0 && alloc_len > task->alloc_len) {
+			spdk_put_task(task);
+		} else if (task->alloc_len == 0 && alloc_len > task->iov.iov_len) {
+			/* External data buffer less than requested. */
+			return NULL;
+		}
+	}
+
+	if (task->iov.iov_base == NULL) {
+		task->iov.iov_base = calloc(alloc_len, 1);
+		task->alloc_len = alloc_len;
+	}
+
+	task->iov.iov_len = alloc_len;
+	return task->iov.iov_base;
+}
+
+void
+spdk_scsi_task_free_data(struct spdk_scsi_task *task)
+{
+	if (task->alloc_len)
+		free(task->iov.iov_base);
+
+	task->iov.iov_base = NULL;
+	task->iov.iov_len = 0;
+	task->alloc_len = 0;
 }
 
 void
@@ -184,6 +234,8 @@ mode_select_6_test(void)
 	char data[24];
 	int rc;
 
+	spdk_init_task(&task);
+
 	cdb[0] = 0x15;
 	cdb[1] = 0x11;
 	cdb[2] = 0x00;
@@ -199,11 +251,13 @@ mode_select_6_test(void)
 	memset(data, 0, sizeof(data));
 	data[4] = 0x08;
 	data[5] = 0x02;
-	task.iov.iov_base = data;
+	spdk_scsi_task_set_data(&task, data, sizeof(data));
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 
 	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_put_task(&task);
 }
 
 /*
@@ -220,6 +274,8 @@ mode_select_6_test2(void)
 	char cdb[16];
 	int rc;
 
+	spdk_init_task(&task);
+
 	cdb[0] = 0x15;
 	cdb[1] = 0x00;
 	cdb[2] = 0x00;
@@ -232,11 +288,11 @@ mode_select_6_test2(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	task.iov.iov_base = NULL;
-
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 
 	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_put_task(&task);
 }
 
 /*
@@ -251,14 +307,15 @@ mode_sense_6_test(void)
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
 	char cdb[12];
-	unsigned char data[4096];
-	int rc = 0;
+	unsigned char *data;
+	int rc;
 	unsigned char mode_data_len = 0;
 	unsigned char medium_type = 0;
 	unsigned char dev_specific_param = 0;
 	unsigned char blk_descriptor_len = 0;
 
 	memset(&bdev, 0 , sizeof(struct spdk_bdev));
+	spdk_init_task(&task);
 	memset(cdb, 0, sizeof(cdb));
 
 	cdb[0] = 0x1A;
@@ -270,9 +327,10 @@ mode_sense_6_test(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	task.iov.iov_base = data;
-
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	data = task.iovs[0].iov_base;
 	mode_data_len = data[0];
 	medium_type = data[1];
 	dev_specific_param = data[2];
@@ -282,7 +340,8 @@ mode_sense_6_test(void)
 	CU_ASSERT_EQUAL(medium_type, 0);
 	CU_ASSERT_EQUAL(dev_specific_param, 0);
 	CU_ASSERT_EQUAL(blk_descriptor_len, 8);
-	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_put_task(&task);
 }
 
 /*
@@ -297,7 +356,7 @@ mode_sense_10_test(void)
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
 	char cdb[12];
-	unsigned char data[4096];
+	unsigned char *data;
 	int rc;
 	unsigned short mode_data_len = 0;
 	unsigned char medium_type = 0;
@@ -305,6 +364,7 @@ mode_sense_10_test(void)
 	unsigned short blk_descriptor_len = 0;
 
 	memset(&bdev, 0 , sizeof(struct spdk_bdev));
+	spdk_init_task(&task);
 	memset(cdb, 0, sizeof(cdb));
 	cdb[0] = 0x5A;
 	cdb[2] = 0x3F;
@@ -315,9 +375,10 @@ mode_sense_10_test(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	task.iov.iov_base = data;
-
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	data = task.iovs[0].iov_base;
 	mode_data_len = ((data[0] << 8) + data[1]);
 	medium_type = data[2];
 	dev_specific_param = data[3];
@@ -327,7 +388,8 @@ mode_sense_10_test(void)
 	CU_ASSERT_EQUAL(medium_type, 0);
 	CU_ASSERT_EQUAL(dev_specific_param, 0);
 	CU_ASSERT_EQUAL(blk_descriptor_len, 8);
-	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_put_task(&task);
 }
 
 /*
@@ -343,8 +405,9 @@ inquiry_evpd_test(void)
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
 	char cdb[6];
-	char data[4096];
 	int rc;
+
+	spdk_init_task(&task);
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
@@ -358,16 +421,15 @@ inquiry_evpd_test(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	memset(data, 0, 4096);
-	task.iov.iov_base = data;
-
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
 	CU_ASSERT_EQUAL(task.sense_data[12], 0x24);
 	CU_ASSERT_EQUAL(task.sense_data[13], 0x0);
-	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_put_task(&task);
 }
 
 /*
@@ -383,9 +445,11 @@ inquiry_standard_test(void)
 	struct spdk_scsi_dev dev;
 	char cdb[6];
 	/* expects a 4K internal data buffer */
-	char data[4096];
+	char *data;
 	struct spdk_scsi_cdb_inquiry_data *inq_data;
 	int rc;
+
+	spdk_init_task(&task);
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
@@ -399,15 +463,15 @@ inquiry_standard_test(void)
 	lun.dev = &dev;
 	task.lun = &lun;
 
-	memset(data, 0, 4096);
-	task.iov.iov_base = data;
-
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
 
+	data = task.iovs[0].iov_base;
 	inq_data = (struct spdk_scsi_cdb_inquiry_data *)&data[0];
 
 	CU_ASSERT_EQUAL(inq_data->version, SPDK_SPC_VERSION_SPC3);
 	CU_ASSERT_EQUAL(rc, 0);
+
+	spdk_put_task(&task);
 }
 
 static void
@@ -418,9 +482,11 @@ _inquiry_overflow_test(uint8_t alloc_len)
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
 	uint8_t cdb[6];
-	/* expects a 4K internal data buffer */
-	char data[256], data_compare[256];
 	int rc;
+	/* expects a 4K internal data buffer */
+	char data[4096], data_compare[4096];
+
+	spdk_init_task(&task);
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
@@ -436,12 +502,16 @@ _inquiry_overflow_test(uint8_t alloc_len)
 
 	memset(data, 0, sizeof(data));
 	memset(data_compare, 0, sizeof(data_compare));
-	task.iov.iov_base = data;
+
+	spdk_scsi_task_set_data(&task, data, sizeof(data));
 
 	rc = spdk_bdev_scsi_execute(&bdev, &task);
-	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
 	CU_ASSERT_EQUAL(memcmp(data + alloc_len, data_compare + alloc_len, sizeof(data) - alloc_len), 0);
 	CU_ASSERT(task.data_transferred <= alloc_len);
+
+	spdk_put_task(&task);
 }
 
 static void
@@ -461,9 +531,11 @@ static void
 task_complete_test(void)
 {
 	struct spdk_event event;
-	struct spdk_scsi_task task = {};
+	struct spdk_scsi_task task;
 	struct spdk_bdev_io bdev_io = {};
 	struct spdk_scsi_lun lun;
+
+	spdk_init_task(&task);
 
 	TAILQ_INIT(&lun.tasks);
 	TAILQ_INSERT_TAIL(&lun.tasks, &task, scsi_link);
@@ -494,6 +566,8 @@ task_complete_test(void)
 	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_ABORTED_COMMAND);
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
 	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+
+	spdk_put_task(&task);
 }
 
 int
