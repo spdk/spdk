@@ -225,6 +225,16 @@ int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_
  */
 int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
 
+/**
+ * Make a wrapper that SPDK can call a function without thread affinity.
+ *
+ * \param cb for application function
+ * \param args for parameter of application function
+ *
+ * \return non-null pointer on success, or null pointer on failure.
+ */
+void *spdk_call_unaffinitized(void *cb(void *), void *args);
+
 #ifdef __cplusplus
 }
 #endif
