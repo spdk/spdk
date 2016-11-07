@@ -1154,7 +1154,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	assert(ctrlr != NULL);
 
-	pqpair = calloc(1, sizeof(*pqpair));
+	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL);
 	if (pqpair == NULL) {
 		return NULL;
 	}
@@ -1170,7 +1170,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);
 	if (rc != 0) {
-		free(pqpair);
+		spdk_free(pqpair);
 		return NULL;
 	}
 
@@ -1178,7 +1178,8 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	if (rc != 0) {
 		SPDK_ERRLOG("I/O queue creation failed\n");
-		free(pqpair);
+		nvme_qpair_destroy(qpair);
+		spdk_free(pqpair);
 		return NULL;
 	}
 
@@ -1226,7 +1227,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
-	free(pqpair);
+	spdk_free(pqpair);
 
 	return 0;
 }
