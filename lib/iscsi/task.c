@@ -54,7 +54,7 @@ spdk_iscsi_task_get(uint32_t *owner_task_ctr, struct spdk_iscsi_task *parent)
 	rc = rte_mempool_get(g_spdk_iscsi.task_pool, (void **)&task);
 	if ((rc < 0) || !task) {
 		SPDK_ERRLOG("Unable to get task\n");
-		rte_panic("no memory\n");
+		abort();
 	}
 
 	memset(task, 0, sizeof(*task));

@@ -340,7 +340,7 @@ struct spdk_bdev_io *spdk_bdev_get_io(void)
 	rc = rte_mempool_get(spdk_bdev_g_io_pool, (void **)&bdev_io);
 	if (rc < 0 || !bdev_io) {
 		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
-		rte_panic("no memory\n");
+		abort();
 	}
 
 	memset(bdev_io, 0, sizeof(*bdev_io));

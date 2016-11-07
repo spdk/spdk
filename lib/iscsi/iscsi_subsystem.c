@@ -512,7 +512,7 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 	rc = rte_mempool_get(g_spdk_iscsi.pdu_pool, (void **)&pdu);
 	if ((rc < 0) || !pdu) {
 		SPDK_ERRLOG("Unable to get PDU\n");
-		rte_panic("no memory\n");
+		abort();
 	}
 
 	/* we do not want to zero out the last part of the structure reserved for AHS and sense data */
