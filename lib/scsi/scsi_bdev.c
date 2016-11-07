@@ -1537,35 +1537,54 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		xfer_len = from_be32(&cdb[10]);
 		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len);
 
-	case SPDK_SBC_READ_CAPACITY_10:
-		data = spdk_scsi_task_alloc_data(task, 8);
+	case SPDK_SBC_READ_CAPACITY_10: {
+		uint8_t buffer[8];
+
 		if (bdev->blockcnt - 1 > 0xffffffffULL) {
-			memset(data, 0xff, 4);
+			memset(buffer, 0xff, 4);
 		} else {
-			to_be32(data, bdev->blockcnt - 1);
+			to_be32(buffer, bdev->blockcnt - 1);
 		}
-		to_be32(&data[4], bdev->blocklen);
+		to_be32(&buffer[4], bdev->blocklen);
+
+		len = task->length < 8 ? task->length : sizeof(buffer);
+		if (len) {
+			data = spdk_scsi_task_alloc_data(task, len);
+			memcpy(data, buffer, len);
+		}
+
 		task->data_transferred = 8;
 		task->status = SPDK_SCSI_STATUS_GOOD;
 		break;
+	}
 
 	case SPDK_SPC_SERVICE_ACTION_IN_16:
 		switch (cdb[1] & 0x1f) { /* SERVICE ACTION */
-		case SPDK_SBC_SAI_READ_CAPACITY_16:
-			data = spdk_scsi_task_alloc_data(task, 32);
-			to_be64(&data[0], bdev->blockcnt - 1);
-			to_be32(&data[8], bdev->blocklen);
+		case SPDK_SBC_SAI_READ_CAPACITY_16: {
+			uint8_t buffer[32] = {0};
+
+			to_be64(&buffer[0], bdev->blockcnt - 1);
+			to_be32(&buffer[8], bdev->blocklen);
 			/*
 			 * Set the TPE bit to 1 to indicate thin provisioning.
 			 * The position of TPE bit is the 7th bit in 14th byte
 			 * in READ CAPACITY (16) parameter data.
 			 */
 			if (bdev->thin_provisioning) {
-				data[14] |= 1 << 7;
+				buffer[14] |= 1 << 7;
 			}
-			task->data_transferred = 32;
+
+			len = from_be32(&cdb[10]);
+			if (len) {
+				len = len < sizeof(buffer) ? len : sizeof(buffer);
+				data = spdk_scsi_task_alloc_data(task, len);
+				memcpy(data, buffer, len);
+			}
+
+			task->data_transferred = len;
 			task->status = SPDK_SCSI_STATUS_GOOD;
 			break;
+		}
 
 		default:
 			return SPDK_SCSI_TASK_UNKNOWN;
