@@ -31,9 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/log.h"
-
 #include "spdk/rpc.h"
+
+#include "spdk_internal/log.h"
 
 struct rpc_trace_flag {
 	char *flag;

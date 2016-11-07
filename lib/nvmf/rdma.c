@@ -46,12 +46,14 @@
 #include "session.h"
 #include "subsystem.h"
 #include "transport.h"
+
 #include "spdk/assert.h"
-#include "spdk/log.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
+
+#include "spdk_internal/log.h"
 
 /*
  RDMA Connection Resouce Defaults

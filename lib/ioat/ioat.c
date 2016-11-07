@@ -33,8 +33,9 @@
 
 #include "ioat_internal.h"
 
-#include "spdk/log.h"
 #include "spdk/env.h"
+
+#include "spdk_internal/log.h"
 
 #include <pthread.h>
 

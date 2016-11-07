@@ -58,7 +58,6 @@
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
-#include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/net.h"
 #include "iscsi/crc32c.h"
@@ -72,6 +71,8 @@
 #include "spdk/bdev.h"
 #include "iscsi/portal_grp.h"
 #include "iscsi/acceptor.h"
+
+#include "spdk_internal/log.h"
 
 #define MAX_TMPBUF 1024
 

@@ -38,8 +38,9 @@
 #include "iscsi/portal_grp.h"
 #include "iscsi/init_grp.h"
 
-#include "spdk/log.h"
 #include "spdk/rpc.h"
+
+#include "spdk_internal/log.h"
 
 extern struct spdk_iscsi_conn *g_conns_array; // TODO: move this to an internal iSCSI header
 

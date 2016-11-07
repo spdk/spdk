@@ -1,8 +1,10 @@
 #include "iscsi/task.h"
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
-#include "spdk/log.h"
+
 #include "spdk/event.h"
+
+#include "spdk_internal/log.h"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
 

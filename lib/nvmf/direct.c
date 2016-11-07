@@ -34,10 +34,12 @@
 #include "subsystem.h"
 #include "session.h"
 #include "request.h"
-#include "spdk/log.h"
+
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
+
+#include "spdk_internal/log.h"
 
 static void
 nvmf_direct_ctrlr_get_data(struct spdk_nvmf_session *session)

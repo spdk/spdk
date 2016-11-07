@@ -53,10 +53,11 @@
 #include "spdk/queue.h"
 #include "spdk/barrier.h"
 #include "spdk/bit_array.h"
-#include "spdk/log.h"
 #include "spdk/mmio.h"
 #include "spdk/pci_ids.h"
 #include "spdk/nvme_intel.h"
+
+#include "spdk_internal/log.h"
 
 /*
  * Some Intel devices support vendor-unique read latency log page even

@@ -39,10 +39,11 @@
 #include "subsystem.h"
 #include "transport.h"
 
-#include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
+
+#include "spdk_internal/log.h"
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 

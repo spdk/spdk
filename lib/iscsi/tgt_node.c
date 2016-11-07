@@ -55,9 +55,11 @@
 #include <sys/ioctl.h>
 
 #include "spdk/event.h"
-#include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/net.h"
+
+#include "spdk_internal/log.h"
+
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
 #include "iscsi/tgt_node.h"

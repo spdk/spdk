@@ -31,61 +31,44 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "blockdev_aio.h"
-#include "spdk/rpc.h"
+/**
+ * \file
+ * Logging interfaces
+ */
 
-#include "spdk_internal/log.h"
+#ifndef SPDK_INTERNAL_LOG_H
+#define SPDK_INTERNAL_LOG_H
 
-struct rpc_construct_aio {
-	char *fname;
-};
+#include "spdk/log.h"
 
-static void
-free_rpc_construct_aio(struct rpc_construct_aio *req)
-{
-	free(req->fname);
+#ifdef DEBUG
+#define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag) \
+bool flag = false; \
+__attribute__((constructor)) static void register_trace_flag_##flag(void) \
+{ \
+	spdk_log_register_trace_flag(str, &flag); \
 }
 
-static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
-	{"fname", offsetof(struct rpc_construct_aio, fname), spdk_json_decode_string},
-};
+#define SPDK_TRACELOG(FLAG, ...)							\
+	do {										\
+		extern bool FLAG;							\
+		if (FLAG) {								\
+			spdk_tracelog(__FILE__, __LINE__, __func__, __VA_ARGS__);	\
+		}									\
+	} while (0)
 
-static void
-spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_server_conn *conn,
-			    const struct spdk_json_val *params,
-			    const struct spdk_json_val *id)
-{
-	struct rpc_construct_aio req = {};
-	struct spdk_json_write_ctx *w;
-	struct spdk_bdev *bdev;
+#define SPDK_TRACEDUMP(FLAG, LABEL, BUF, LEN)						\
+	do {										\
+		extern bool FLAG;							\
+		if ((FLAG) && (LEN)) {							\
+			spdk_trace_dump((LABEL), (BUF), (LEN));				\
+		}									\
+	} while (0)
 
-	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
-				    sizeof(rpc_construct_aio_decoders) / sizeof(*rpc_construct_aio_decoders),
-				    &req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
-	}
+#else
+#define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag)
+#define SPDK_TRACELOG(...) do { } while (0)
+#define SPDK_TRACEDUMP(...) do { } while (0)
+#endif
 
-	bdev = create_aio_disk(req.fname);
-	if (bdev == NULL) {
-		goto invalid;
-	}
-
-	free_rpc_construct_aio(&req);
-
-	if (id == NULL) {
-		return;
-	}
-
-	w = spdk_jsonrpc_begin_result(conn, id);
-	spdk_json_write_array_begin(w);
-	spdk_json_write_string(w, bdev->name);
-	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(conn, w);
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_construct_aio(&req);
-}
-SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev)
+#endif /* SPDK_INTERNAL_LOG_H */

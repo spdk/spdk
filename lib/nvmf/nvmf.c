@@ -33,10 +33,11 @@
 
 #include <arpa/inet.h>
 
-#include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/nvmf.h"
 #include "spdk/trace.h"
+
+#include "spdk_internal/log.h"
 
 #include "subsystem.h"
 #include "transport.h"

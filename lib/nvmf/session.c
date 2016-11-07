@@ -39,9 +39,11 @@
 #include "request.h"
 #include "subsystem.h"
 #include "transport.h"
-#include "spdk/log.h"
+
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
+
+#include "spdk_internal/log.h"
 
 static void
 nvmf_init_discovery_session_properties(struct spdk_nvmf_session *session)

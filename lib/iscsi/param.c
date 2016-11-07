@@ -40,12 +40,13 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "spdk/log.h"
 #include "spdk/string.h"
 #include "iscsi/iscsi.h"
 #include "iscsi/param.h"
 #include "iscsi/conn.h"
 #include "spdk/string.h"
+
+#include "spdk_internal/log.h"
 
 #define MAX_TMPBUF 1024
 

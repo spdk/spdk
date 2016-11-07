@@ -40,12 +40,13 @@
 
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
-#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/string.h"
+
+#include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
 #define MODEL_NUMBER "SPDK Virtual Controller"

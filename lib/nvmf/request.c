@@ -39,10 +39,11 @@
 #include "subsystem.h"
 #include "transport.h"
 
-#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
+
+#include "spdk_internal/log.h"
 
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
