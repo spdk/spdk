@@ -182,7 +182,7 @@ decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 	if (spdk_json_decode_object(val, rpc_listen_address_decoders,
 				    sizeof(rpc_listen_address_decoders) / sizeof(*rpc_listen_address_decoders),
 				    req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		return -1;
 	}
 	return 0;
@@ -302,7 +302,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_subsystem_decoders,
 				    sizeof(rpc_subsystem_decoders) / sizeof(*rpc_subsystem_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -354,17 +354,17 @@ spdk_rpc_delete_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_delete_subsystem_decoders,
 				    sizeof(rpc_delete_subsystem_decoders) / sizeof(*rpc_delete_subsystem_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	if (req.nqn == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "missing name param\n");
+		SPDK_ERRLOG("missing name param\n");
 		goto invalid;
 	}
 
 	if (nvmf_tgt_shutdown_subsystem_by_nqn(req.nqn)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "shutdown_subsystem failed\n");
+		SPDK_ERRLOG("shutdown_subsystem failed\n");
 		goto invalid;
 	}
 
