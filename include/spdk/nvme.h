@@ -47,7 +47,7 @@ extern "C" {
 #include <stdint.h>
 
 #include "spdk/env.h"
-#include "nvme_spec.h"
+#include "spdk/nvme_spec.h"
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;
