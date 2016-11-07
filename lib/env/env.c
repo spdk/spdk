@@ -63,6 +63,16 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 	return buf;
 }
 
+void *
+spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
+{
+	void *new_buf = rte_realloc(buf, size, align);
+	if (new_buf && phys_addr) {
+		*phys_addr = rte_malloc_virt2phy(new_buf);
+	}
+	return new_buf;
+}
+
 void
 spdk_free(void *buf)
 {
