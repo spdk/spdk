@@ -231,6 +231,19 @@ int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_
  */
 int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
 
+/**
+ * Call a function with CPU affinity unset.
+ *
+ * This can be used to run a function that creates other threads without inheriting the calling
+ * thread's CPU affinity.
+ *
+ * \param cb function to call
+ * \param arg parameter to cb function
+ *
+ * \return the return value of cb()
+ */
+void *spdk_call_unaffinitized(void *cb(void *arg), void *arg);
+
 #ifdef __cplusplus
 }
 #endif
