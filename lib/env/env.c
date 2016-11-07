@@ -34,6 +34,7 @@
 #include "spdk/env.h"
 
 #include <string.h>
+#include <unistd.h>
 
 #include <rte_config.h>
 #include <rte_cycles.h>
@@ -183,4 +184,35 @@ uint64_t spdk_get_ticks_hz(void)
 void spdk_delay_us(unsigned int us)
 {
 	return rte_delay_us(us);
+}
+
+void *spdk_call_unaffinitized(void *cb(void *), void *args)
+{
+	rte_cpuset_t orig_cpuset, new_cpuset;
+	size_t i;
+	void *ret;
+	unsigned core_num = 0;
+
+	if (cb == NULL || args == NULL) {
+		return NULL;
+	}
+
+	rte_thread_get_affinity(&orig_cpuset);
+
+	CPU_ZERO(&new_cpuset);
+
+	core_num = sysconf(_SC_NPROCESSORS_CONF);
+
+	/* Create a mask containing all CPUs */
+	for (i = 0; i < core_num; i++) {
+		CPU_SET(i, &new_cpuset);
+	}
+
+	rte_thread_set_affinity(&new_cpuset);
+
+	ret = cb(args);
+
+	rte_thread_set_affinity(&orig_cpuset);
+
+	return ret;
 }
