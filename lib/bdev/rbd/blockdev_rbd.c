@@ -60,7 +60,6 @@ static int blockdev_rbd_count = 0;
 struct blockdev_rbd_io {
 	size_t len;
 	rbd_completion_t completion;
-	struct blockdev_rbd_io_channel *ch;
 };
 
 struct blockdev_rbd {
@@ -230,7 +229,6 @@ blockdev_rbd_readv(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 	if (iovcnt != 1 || iov->iov_len != len)
 		return -1;
 
-	cmd->ch = rbdio_ch;
 	cmd->len = len;
 
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, iov->iov_base, offset, len);
@@ -246,8 +244,6 @@ blockdev_rbd_writev(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 	if ((iovcnt != 1) || (iov->iov_len != len))
 		return -1;
 
-	cmd->ch = (void *)rbdio_ch;
-
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, (void *)iov->iov_base, offset, len);
 }
 
@@ -256,8 +252,6 @@ blockdev_rbd_flush(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 		   struct blockdev_rbd_io *cmd, uint64_t offset, uint64_t nbytes)
 {
 	struct blockdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
-
-	cmd->ch = (void *)rbdio_ch;
 
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, NULL, offset, nbytes);
 }
