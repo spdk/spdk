@@ -381,14 +381,11 @@ inquiry_standard_test(void)
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
-	struct spdk_bdev_fn_table fn_table;
 	char cdb[6];
 	/* expects a 4K internal data buffer */
 	char data[4096];
 	struct spdk_scsi_cdb_inquiry_data *inq_data;
 	int rc;
-
-	bdev.fn_table = &fn_table;
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
@@ -420,13 +417,10 @@ _inquiry_overflow_test(uint8_t alloc_len)
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
-	struct spdk_bdev_fn_table fn_table;
 	uint8_t cdb[6];
 	/* expects a 4K internal data buffer */
 	char data[256], data_compare[256];
 	int rc;
-
-	bdev.fn_table = &fn_table;
 
 	cdb[0] = 0x12;
 	cdb[1] = 0x00; // EVPD = 0
