@@ -58,7 +58,6 @@ static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int blockdev_rbd_count = 0;
 
 struct blockdev_rbd_io {
-	size_t len;
 	rbd_completion_t completion;
 };
 
@@ -229,8 +228,6 @@ blockdev_rbd_readv(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 	if (iovcnt != 1 || iov->iov_len != len)
 		return -1;
 
-	cmd->len = len;
-
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, iov->iov_base, offset, len);
 }
 
@@ -348,7 +345,7 @@ blockdev_rbd_io_poll(void *arg)
 		bdev_io = spdk_bdev_io_from_ctx(req);
 		io_status = rbd_aio_get_return_value(ch->comps[i]);
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			if ((int)req->len == io_status) {
+			if ((int)bdev_io->u.read.len == io_status) {
 				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
 				status = SPDK_BDEV_IO_STATUS_FAILED;
