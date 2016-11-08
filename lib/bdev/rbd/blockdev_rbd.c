@@ -58,8 +58,6 @@ static TAILQ_HEAD(, blockdev_rbd_pool_info) g_rbd_pools = TAILQ_HEAD_INITIALIZER
 static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int blockdev_rbd_count = 0;
 
-typedef void (*rbd_cb_fn_t)(void *);
-
 struct blockdev_rbd_pool_info {
 	char *name;
 	TAILQ_ENTRY(blockdev_rbd_pool_info) tailq;
@@ -76,7 +74,6 @@ struct blockdev_rbd_io {
 	int status;
 	size_t len;
 	rbd_completion_t completion;
-	rbd_cb_fn_t cb_fn;
 	struct blockdev_rbd_io_channel *ch;
 };
 
@@ -85,7 +82,6 @@ struct blockdev_rbd {
 	char *rbd_name;
 	rbd_image_info_t info;
 	struct blockdev_rbd_pool_info *pool_info;
-	uint64_t size;
 	TAILQ_ENTRY(blockdev_rbd) tailq;
 };
 
