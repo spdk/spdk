@@ -107,9 +107,10 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 	return 0;
 }
 
-void
+int
 spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
+	return 0;
 }
 
 void
