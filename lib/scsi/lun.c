@@ -214,15 +214,16 @@ complete_task_with_no_lun(struct spdk_scsi_task *task)
 	spdk_scsi_lun_complete_task(NULL, task);
 }
 
-void
+int
 spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	if (lun == NULL) {
 		complete_task_with_no_lun(task);
-		return;
+		return -1;
 	}
 
 	TAILQ_INSERT_TAIL(&lun->pending_tasks, task, scsi_link);
+	return 0;
 }
 
 void
