@@ -57,14 +57,7 @@
 static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int blockdev_rbd_count = 0;
 
-enum blockdev_rbd_data_direction {
-	BLOCKDEV_RBD_READ = 0,
-	BLOCKDEV_RBD_WRITE = 1,
-	BLOCKDEV_RBD_FLUSH = 2,
-};
-
 struct blockdev_rbd_io {
-	enum blockdev_rbd_data_direction direction;
 	size_t len;
 	rbd_completion_t completion;
 	struct blockdev_rbd_io_channel *ch;
@@ -189,6 +182,7 @@ blockdev_rbd_start_aio(rbd_image_t image, struct blockdev_rbd_io *cmd,
 		       void *buf, uint64_t offset, size_t len)
 {
 	int ret;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(cmd);
 
 	ret = rbd_aio_create_completion((void *)cmd, blockdev_rbd_finish_aiocb,
 					&cmd->completion);
@@ -196,14 +190,13 @@ blockdev_rbd_start_aio(rbd_image_t image, struct blockdev_rbd_io *cmd,
 		return -1;
 	}
 
-	if (cmd->direction == BLOCKDEV_RBD_READ) {
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		ret = rbd_aio_read(image, offset, len,
 				   buf, cmd->completion);
-
-	} else if (cmd->direction == BLOCKDEV_RBD_WRITE) {
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		ret = rbd_aio_write(image, offset, len,
 				    buf, cmd->completion);
-	} else if (cmd->direction == BLOCKDEV_RBD_FLUSH) {
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
 		ret = rbd_aio_flush(image, cmd->completion);
 	}
 
@@ -238,7 +231,6 @@ blockdev_rbd_readv(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 		return -1;
 
 	cmd->ch = rbdio_ch;
-	cmd->direction = BLOCKDEV_RBD_READ;
 	cmd->len = len;
 
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, iov->iov_base, offset, len);
@@ -255,7 +247,6 @@ blockdev_rbd_writev(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 		return -1;
 
 	cmd->ch = (void *)rbdio_ch;
-	cmd->direction = BLOCKDEV_RBD_WRITE;
 
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, (void *)iov->iov_base, offset, len);
 }
@@ -267,7 +258,6 @@ blockdev_rbd_flush(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 	struct blockdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
 
 	cmd->ch = (void *)rbdio_ch;
-	cmd->direction = BLOCKDEV_RBD_FLUSH;
 
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, NULL, offset, nbytes);
 }
@@ -348,6 +338,7 @@ blockdev_rbd_io_poll(void *arg)
 {
 	struct blockdev_rbd_io_channel *ch = arg;
 	struct blockdev_rbd_io *req;
+	struct spdk_bdev_io *bdev_io;
 	int i, io_status, status, rc;
 
 	rc = poll(&ch->pfd, 1, 0);
@@ -360,8 +351,9 @@ blockdev_rbd_io_poll(void *arg)
 	rc = rbd_poll_io_events(ch->image, ch->comps, ch->queue_depth);
 	for (i = 0; i < rc; i++) {
 		req = (struct blockdev_rbd_io *)rbd_aio_get_arg(ch->comps[i]);
+		bdev_io = spdk_bdev_io_from_ctx(req);
 		io_status = rbd_aio_get_return_value(ch->comps[i]);
-		if (req->direction == BLOCKDEV_RBD_READ) {
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 			if ((int)req->len == io_status) {
 				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
@@ -375,7 +367,7 @@ blockdev_rbd_io_poll(void *arg)
 				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		}
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(req), status);
+		spdk_bdev_io_complete(bdev_io, status);
 		rbd_aio_release(req->completion);
 	}
 }
