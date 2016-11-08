@@ -65,7 +65,6 @@ enum blockdev_rbd_data_direction {
 
 struct blockdev_rbd_io {
 	enum blockdev_rbd_data_direction direction;
-	int status;
 	size_t len;
 	rbd_completion_t completion;
 	struct blockdev_rbd_io_channel *ch;
@@ -364,19 +363,18 @@ blockdev_rbd_io_poll(void *arg)
 		io_status = rbd_aio_get_return_value(ch->comps[i]);
 		if (req->direction == BLOCKDEV_RBD_READ) {
 			if ((int)req->len == io_status) {
-				req->status = 0;
+				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
-				req->status = -1;
+				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		} else {
 			/* For others, 0 means success */
 			if (!io_status) {
-				req->status = 0;
+				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
-				req->status = -1;
+				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		}
-		status = req->status == 0 ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(req), status);
 		rbd_aio_release(req->completion);
 	}
