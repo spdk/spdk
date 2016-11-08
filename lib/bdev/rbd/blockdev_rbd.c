@@ -122,6 +122,31 @@ blockdev_rbd_free(struct blockdev_rbd *rbd)
 	free(rbd);
 }
 
+
+static void
+blockdev_rbd_free_pool_info_from_queue(struct blockdev_rbd_pool_info *pool_info)
+{
+	struct blockdev_rbd_pool_info *pool, *pool_tmp;
+	struct blockdev_rbd *rbdq, *rbdq_tmp;
+
+	if (!pool_info) {
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(rbdq, &g_rbds, tailq, rbdq_tmp) {
+		if (pool_info == rbdq->pool_info) {
+			return;
+		}
+	}
+
+	TAILQ_FOREACH_SAFE(pool, &g_rbd_pools, tailq, pool_tmp) {
+		if (pool == pool_info) {
+			TAILQ_REMOVE(&g_rbd_pools, pool, tailq);
+			blockdev_rbd_free_pool_info(pool_info);
+		}
+	}
+}
+
 static int
 blockdev_rados_context_init(const char *rbd_pool_name, rados_t *cluster,
 			    rados_ioctx_t *io_ctx)
@@ -590,21 +615,21 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	rbd = calloc(1, sizeof(struct blockdev_rbd));
 	if (rbd == NULL) {
 		SPDK_ERRLOG("Failed to allocate blockdev_rbd struct\n");
-		blockdev_rbd_free_pool_info(pool_info);
+		blockdev_rbd_free_pool_info_from_queue(pool_info);
 		return NULL;
 	}
 
 	rbd->pool_info = pool_info;
 	rbd->rbd_name = strdup(rbd_name);
 	if (!rbd->rbd_name) {
-		blockdev_rbd_free_pool_info(pool_info);
+		blockdev_rbd_free_pool_info_from_queue(pool_info);
 		blockdev_rbd_free(rbd);
 		return NULL;
 	}
 
 	ret = blockdev_rbd_init(pool_info->name, rbd_name, &rbd->info);
 	if (ret < 0) {
-		blockdev_rbd_free_pool_info(pool_info);
+		blockdev_rbd_free_pool_info_from_queue(pool_info);
 		blockdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
 		return NULL;
