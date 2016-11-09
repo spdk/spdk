@@ -10,7 +10,7 @@ defined in [include/spdk/env.h](include/spdk/env.h).
 
 SPDK includes a default implementation of the *env* library based
 on the Data Plane Development Kit ([DPDK](http://dpdk.org/)).
-This DPDK implementation can be found in `lib/env`.
+This DPDK implementation can be found in `lib/env_dpdk`.
 
 DPDK is currently supported on Linux and FreeBSD only.
 Users who want to use SPDK on other operating systems, or in
@@ -19,4 +19,4 @@ a new version of the *env* library.  The new implementation can be
 integrated into the SPDK build by updating the following line
 in CONFIG:
 
-    CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env
+    CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
