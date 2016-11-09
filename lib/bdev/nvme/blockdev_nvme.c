@@ -648,7 +648,6 @@ queued_next_sge(void *ref, void **address, uint32_t *length)
 	assert(bio->iovpos < bio->iovcnt);
 
 	iov = &bio->iovs[bio->iovpos];
-	bio->iovpos++;
 
 	*address = iov->iov_base;
 	*length = iov->iov_len;
@@ -657,6 +656,11 @@ queued_next_sge(void *ref, void **address, uint32_t *length)
 		assert(bio->iov_offset <= iov->iov_len);
 		*address += bio->iov_offset;
 		*length -= bio->iov_offset;
+	}
+
+	bio->iov_offset += *length;
+	if (bio->iov_offset == iov->iov_len) {
+		bio->iovpos++;
 		bio->iov_offset = 0;
 	}
 
