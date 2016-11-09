@@ -639,6 +639,10 @@ queued_reset_sgl(void *ref, uint32_t sgl_offset)
 	}
 }
 
+#define min(a, b) (((a)<(b))?(a):(b))
+
+#define _2MB_OFFSET(ptr)	(((uintptr_t)ptr) &  (0x200000 - 1))
+
 static int
 queued_next_sge(void *ref, void **address, uint32_t *length)
 {
@@ -657,6 +661,8 @@ queued_next_sge(void *ref, void **address, uint32_t *length)
 		*address += bio->iov_offset;
 		*length -= bio->iov_offset;
 	}
+
+	*length = min(*length, 0x200000 - _2MB_OFFSET(*address));
 
 	bio->iov_offset += *length;
 	if (bio->iov_offset == iov->iov_len) {
