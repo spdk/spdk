@@ -22,7 +22,7 @@ before_script:
   - sed -i s/CONFIG_RTE_KNI_KMOD=y/CONFIG_RTE_KNI_KMOD=n/ build/.config
   - make
   - make install DESTDIR=.
-  - export DPDK_DIR=$PWD/x86_64-native-linuxapp-$CC
+  - export DPDK_DIR=$PWD/usr/local/share/dpdk/x86_64-native-linuxapp-$CC
   - popd
 
 script: ./unittest.sh
