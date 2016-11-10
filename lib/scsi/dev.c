@@ -88,7 +88,7 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 	free_dev(dev);
 }
 
-static void
+void
 spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev,
 		      struct spdk_scsi_lun *lun, int id)
 {

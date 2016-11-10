@@ -14,7 +14,8 @@ BLOCKDEV_MODULES_DEPS += -lrados -lrbd
 endif
 
 COPY_MODULES += $(SPDK_ROOT_DIR)/lib/copy/ioat/libspdk_copy_ioat.a \
-		$(SPDK_ROOT_DIR)/lib/ioat/libspdk_ioat.a
+		$(SPDK_ROOT_DIR)/lib/ioat/libspdk_ioat.a \
+		$(SPDK_ROOT_DIR)/lib/scsi/libspdk_scsi.a
 
 BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			       $(BLOCKDEV_MODULES) \

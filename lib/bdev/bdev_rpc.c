@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2016 Song Jin <song.jin@istuary.com>.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,48 +31,65 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_BLOCKDEV_AIO_H
-#define SPDK_BLOCKDEV_AIO_H
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-#include <stdint.h>
-#include <libaio.h>
+#include "spdk/log.h"
+#include "spdk/scsi.h"
 
-#include "spdk/queue.h"
-#include "spdk/bdev.h"
+#include "bdev_rpc.h"
 
-#include "bdev_module.h"
+struct spdk_scsi_dev *
+spdk_bdev_get_scsi_dev(const char *target_name)
+{
+	struct spdk_scsi_dev *scsi_devs = spdk_scsi_dev_get_list();
+	int i = 0;
 
-#define SPDK_AIO_KEY_NAME "AIO"
+	if (target_name == NULL) {
+		SPDK_ERRLOG("target_name %s is null pointer\n", target_name);
+		return NULL;
+	}
 
-struct blockdev_aio_task {
-	struct iocb			iocb;
-	uint64_t			len;
-	TAILQ_ENTRY(blockdev_aio_task)	link;
-};
+	for (i = 0; i < SPDK_SCSI_MAX_DEVS; i++) {
+		struct spdk_scsi_dev *scsi_dev = &scsi_devs[i];
 
-struct blockdev_aio_io_channel {
-	io_context_t		io_ctx;
-	long			queue_depth;
-	struct io_event		*events;
-	struct spdk_poller	*poller;
-};
+		if (!scsi_dev->is_allocated) {
+			continue;
+		}
+		
+		if (!strcmp(target_name, scsi_dev->name)) {
+			return scsi_dev;
+		}
+	}
 
-struct file_disk {
-	struct spdk_bdev	disk;	/* this must be first element */
-	char			*file;
-	int			fd;
-	char			disk_name[SPDK_BDEV_MAX_NAME_LENGTH];
-	uint64_t		size;
+	return NULL;
+}
 
-	/**
-	 * For storing I/O that were completed synchronously, and will be
-	 *   completed during next check_io call.
-	 */
-	TAILQ_HEAD(, blockdev_aio_task) sync_completion_list;
-};
+int spdk_bdev_rpc_add(struct spdk_bdev *bdev, const char *target_name)
+{
+	struct spdk_scsi_dev *scsi_dev = NULL;
+	struct spdk_scsi_lun *lun = NULL;
 
-struct spdk_bdev *create_aio_disk(char *fname, const char *target_name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev is null pointer\n");
+		return -1;
+	}
 
-void blockdev_aio_free_disk(struct spdk_bdev *bdev);
+	if ((scsi_dev = spdk_bdev_get_scsi_dev(target_name)) == NULL) {
+		SPDK_ERRLOG("%s iscsi target doesn't exist\n", target_name);
+		return -1;
+	}
 
-#endif // SPDK_BLOCKDEV_AIO_H
+	lun = spdk_scsi_lun_construct(bdev->name, bdev);
+	if (lun == NULL) {
+		SPDK_ERRLOG("Construct lun %s failed\n", bdev->name);
+		return -1;
+	}
+
+	spdk_scsi_dev_add_lun(scsi_dev, lun, scsi_dev->maxlun);
+
+	return 0;
+}
+
+

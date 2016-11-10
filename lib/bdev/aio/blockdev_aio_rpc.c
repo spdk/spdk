@@ -32,6 +32,7 @@
  */
 
 #include "blockdev_aio.h"
+#include "bdev_rpc.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
 
@@ -61,11 +62,11 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
 				    sizeof(rpc_construct_aio_decoders) / sizeof(*rpc_construct_aio_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	bdev = create_aio_disk(req.fname);
+	bdev = create_aio_disk(req.fname, NULL);
 	if (bdev == NULL) {
 		goto invalid;
 	}
@@ -87,4 +88,66 @@ invalid:
 	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_construct_aio(&req);
 }
+
+struct rpc_construct_aio_in_target {
+	char *target_name;
+	char *fname;
+};
+
+static void
+free_rpc_construct_aio_in_target(struct rpc_construct_aio_in_target *req)
+{
+	free(req->target_name);
+	free(req->fname);
+}
+
+static const struct spdk_json_object_decoder rpc_construct_aio_in_target_decoders[] = {
+	{"target_name", offsetof(struct rpc_construct_aio_in_target, target_name), spdk_json_decode_string},
+	{"fname", offsetof(struct rpc_construct_aio_in_target, fname), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_construct_aio_bdev_in_target(struct spdk_jsonrpc_server_conn *conn,
+			    const struct spdk_json_val *params,
+			    const struct spdk_json_val *id)
+{
+	struct rpc_construct_aio_in_target req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev = NULL;
+
+	if (spdk_json_decode_object(params, rpc_construct_aio_in_target_decoders,
+				    sizeof(rpc_construct_aio_in_target_decoders) / sizeof(*rpc_construct_aio_in_target_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if ((bdev = (struct spdk_bdev *)create_aio_disk(req.fname, req.target_name)) == NULL) {
+		goto invalid;
+	}
+
+	if (id == NULL) {
+		free_rpc_construct_aio_in_target(&req);
+		return;
+	}
+
+	if (spdk_bdev_rpc_add(bdev, req.target_name)) {
+		SPDK_ERRLOG("spdk_bdev_rpc_add failed\n");
+		blockdev_aio_free_disk(bdev);
+		goto invalid;
+	}
+
+	free_rpc_construct_aio_in_target(&req);
+	w = spdk_jsonrpc_begin_result(conn, id);
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, bdev->name);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(conn, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_construct_aio_in_target(&req);
+}
 SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev)
+SPDK_RPC_REGISTER("construct_aio_bdev_in_target", spdk_rpc_construct_aio_bdev_in_target)

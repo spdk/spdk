@@ -36,6 +36,8 @@
 #include <errno.h>
 
 #include "blockdev_malloc.h"
+#include "bdev_module.h"
+
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
@@ -43,8 +45,6 @@
 #include "spdk/log.h"
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
-
-#include "bdev_module.h"
 
 #define MALLOC_MAX_UNMAP_BDESC	1
 
@@ -397,8 +397,8 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	snprintf(mdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Malloc%d", malloc_disk_count);
-	snprintf(mdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Malloc disk");
+	snprintf(mdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "%s%d", SPDK_MALLOC_KEY_NAME, malloc_disk_count);
+	snprintf(mdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "%s disk", SPDK_MALLOC_KEY_NAME);
 	malloc_disk_count++;
 
 	mdisk->disk.write_cache = 1;
@@ -426,7 +426,7 @@ static void free_malloc_disk(struct malloc_disk *mdisk)
 
 static int blockdev_malloc_initialize(void)
 {
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
+	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, SPDK_MALLOC_KEY_NAME);
 	int NumberOfLuns, LunSizeInMB, BlockSize, i;
 	uint64_t size;
 	struct spdk_bdev *bdev;
@@ -436,7 +436,7 @@ static int blockdev_malloc_initialize(void)
 		LunSizeInMB = spdk_conf_section_get_intval(sp, "LunSizeInMB");
 		BlockSize = spdk_conf_section_get_intval(sp, "BlockSize");
 		if ((NumberOfLuns < 1) || (LunSizeInMB < 1)) {
-			SPDK_ERRLOG("Malloc section present, but no devices specified\n");
+			SPDK_ERRLOG("%s section present, but no devices specified\n", SPDK_MALLOC_KEY_NAME);
 			return EINVAL;
 		}
 		if (BlockSize < 1) {
@@ -453,6 +453,11 @@ static int blockdev_malloc_initialize(void)
 		}
 	}
 	return 0;
+}
+
+void blockdev_malloc_free_disk(struct spdk_bdev *bdev)
+{
+	spdk_bdev_unregister(bdev);
 }
 
 static void blockdev_malloc_finish(void)
@@ -490,13 +495,14 @@ blockdev_malloc_get_spdk_running_config(FILE *fp)
 			"# Users may change this section to create a different number or size of\n"
 			"# malloc LUNs.\n"
 			"# This will generate %d LUNs with a malloc-allocated backend. Each LUN \n"
-			"# will be %" PRIu64 "MB in size and these will be named Malloc0 through Malloc%d.\n"
+			"# will be %" PRIu64 "MB in size and these will be named %s0 through %s%d.\n"
 			"# Not all LUNs defined here are necessarily used below.\n"
-			"[Malloc]\n"
+			"[%s]\n"
 			"  NumberOfLuns %d\n"
 			"  LunSizeInMB %" PRIu64 "\n",
-			num_malloc_luns, malloc_lun_size,
-			num_malloc_luns - 1, num_malloc_luns,
+			num_malloc_luns, malloc_lun_size, 
+			SPDK_MALLOC_KEY_NAME, SPDK_MALLOC_KEY_NAME,
+			num_malloc_luns - 1, SPDK_MALLOC_KEY_NAME, num_malloc_luns,
 			malloc_lun_size);
 	}
 }

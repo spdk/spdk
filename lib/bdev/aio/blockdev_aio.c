@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "blockdev_aio.h"
-
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -41,11 +39,15 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
+#include "blockdev_aio.h"
+#include "bdev_rpc.h"
+
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/fd.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
+#include "spdk/scsi.h"
 
 static int g_blockdev_count = 0;
 
@@ -336,13 +338,53 @@ static void aio_free_disk(struct file_disk *fdisk)
 {
 	if (fdisk == NULL)
 		return;
+	free(fdisk->file);
 	free(fdisk);
 }
 
+static bool
+is_aio_device(const char *fname) {
+	return (strstr(fname, SPDK_AIO_KEY_NAME) ? true : false);
+}
+
+static bool
+blockdev_aio_check_device(const char *fname, const char *target_name)
+{
+	struct file_disk*aio;
+	struct spdk_scsi_dev *scsi_dev;
+	int i;
+
+	if (target_name == NULL) {
+		return true;
+	}
+
+	if ((scsi_dev = spdk_bdev_get_scsi_dev(target_name)) == NULL) {
+		SPDK_ERRLOG("%s iscsi target doesn't exist\n", target_name);
+		return false;
+	}
+
+	for (i = 0; i < scsi_dev->maxlun; i++) {
+		if (is_aio_device(scsi_dev->lun[i]->name)) {
+			aio = (struct file_disk *)scsi_dev->lun[i]->bdev;
+			if (!strcmp(aio->file, fname)) {
+				SPDK_ERRLOG("%s %s device has already been created!\n", SPDK_AIO_KEY_NAME, fname);
+				return false;
+			}
+			
+		}
+	}
+	
+	return true;
+}
+
 struct spdk_bdev *
-create_aio_disk(char *fname)
+create_aio_disk(char *fname, const char *target_name)
 {
 	struct file_disk *fdisk;
+	
+	if (!blockdev_aio_check_device(fname, target_name)) {
+		return NULL;
+	}
 
 	fdisk = calloc(sizeof(*fdisk), 1);
 	if (!fdisk) {
@@ -350,7 +392,12 @@ create_aio_disk(char *fname)
 		return NULL;
 	}
 
-	fdisk->file = fname;
+	fdisk->file = strdup(fname);
+	if (!fdisk->file) {
+		SPDK_ERRLOG("Unable to allocate enough memory for aio backend\n");
+		return NULL;
+	}
+
 	if (blockdev_aio_open(fdisk)) {
 		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fname, fdisk->fd, errno);
 		goto error_return;
@@ -359,9 +406,9 @@ create_aio_disk(char *fname)
 	fdisk->size = spdk_fd_get_size(fdisk->fd);
 
 	TAILQ_INIT(&fdisk->sync_completion_list);
-	snprintf(fdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "AIO%d",
-		 g_blockdev_count);
-	snprintf(fdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "AIO disk");
+	snprintf(fdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "%s%d",
+		 SPDK_AIO_KEY_NAME, g_blockdev_count);
+	snprintf(fdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "%s disk", SPDK_AIO_KEY_NAME);
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;
@@ -383,13 +430,19 @@ error_return:
 	return NULL;
 }
 
+void blockdev_aio_free_disk(struct spdk_bdev *bdev)
+{
+	spdk_io_device_unregister(bdev);
+	spdk_bdev_unregister(bdev);
+}
+
 static int blockdev_aio_initialize(void)
 {
 	struct spdk_bdev *bdev;
 	int i;
 	const char *val = NULL;
 	char *file;
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "AIO");
+	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, SPDK_AIO_KEY_NAME);
 	bool skip_missing = false;
 
 	if (sp != NULL) {
@@ -401,16 +454,16 @@ static int blockdev_aio_initialize(void)
 
 	if (sp != NULL) {
 		for (i = 0; ; i++) {
-			val = spdk_conf_section_get_nval(sp, "AIO", i);
+			val = spdk_conf_section_get_nval(sp, SPDK_AIO_KEY_NAME, i);
 			if (val == NULL)
 				break;
-			file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
+			file = spdk_conf_section_get_nmval(sp, SPDK_AIO_KEY_NAME, i, 0);
 			if (file == NULL) {
-				SPDK_ERRLOG("AIO%d: format error\n", i);
+				SPDK_ERRLOG("%s%d: format error\n", SPDK_AIO_KEY_NAME, i);
 				return -1;
 			}
 
-			bdev = create_aio_disk(file);
+			bdev = create_aio_disk(file, NULL);
 
 			if (bdev == NULL && !skip_missing) {
 				return -1;

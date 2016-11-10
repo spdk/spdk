@@ -52,7 +52,6 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/lib/bdev/rpc/libspdk_bdev_rpc.a \
 	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
 	$(SPDK_ROOT_DIR)/lib/iscsi/libspdk_iscsi.a \
-	$(SPDK_ROOT_DIR)/lib/scsi/libspdk_scsi.a \
 	$(SPDK_ROOT_DIR)/lib/net/libspdk_net.a \
 	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
 	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \

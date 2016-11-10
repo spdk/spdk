@@ -32,6 +32,7 @@
  */
 
 #include "blockdev_rbd.h"
+#include "bdev_rpc.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
 
@@ -66,11 +67,11 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_construct_rbd_decoders,
 				    sizeof(rpc_construct_rbd_decoders) / sizeof(*rpc_construct_rbd_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.pool_name, req.rbd_name, req.block_size);
+	bdev = spdk_bdev_rbd_create(req.pool_name, req.rbd_name, req.block_size, NULL);
 	if (bdev == NULL) {
 		goto invalid;
 	}
@@ -92,4 +93,71 @@ invalid:
 	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_construct_rbd(&req);
 }
+
+struct rpc_construct_rbd_in_target {
+	char *target_name;
+	char *pool_name;
+	char *rbd_name;
+	int32_t size;
+};
+
+static void
+free_rpc_construct_rbd_in_target(struct rpc_construct_rbd_in_target *req)
+{
+	free(req->target_name);
+	free(req->pool_name);
+	free(req->rbd_name);
+}
+
+static const struct spdk_json_object_decoder rpc_construct_rbd_in_target_decoders[] = {
+	{"target_name", offsetof(struct rpc_construct_rbd_in_target, target_name), spdk_json_decode_string},
+	{"pool_name", offsetof(struct rpc_construct_rbd_in_target, pool_name), spdk_json_decode_string},
+	{"rbd_name", offsetof(struct rpc_construct_rbd_in_target, rbd_name), spdk_json_decode_string},
+	{"size", offsetof(struct rpc_construct_rbd_in_target, size), spdk_json_decode_int32},
+};
+
+static void
+spdk_rpc_construct_rbd_bdev_in_target(struct spdk_jsonrpc_server_conn *conn,
+			    const struct spdk_json_val *params,
+			    const struct spdk_json_val *id)
+{
+	struct rpc_construct_rbd_in_target req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev = NULL;
+
+	if (spdk_json_decode_object(params, rpc_construct_rbd_in_target_decoders,
+				    sizeof(rpc_construct_rbd_in_target_decoders) / sizeof(*rpc_construct_rbd_in_target_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if ((bdev = (struct spdk_bdev *)spdk_bdev_rbd_create(req.pool_name, req.rbd_name, req.size, req.target_name)) == NULL) {
+		goto invalid;
+	}
+
+	if (id == NULL) {
+		free_rpc_construct_rbd_in_target(&req);
+		return;
+	}
+
+	if (spdk_bdev_rpc_add(bdev, req.target_name)) {
+		blockdev_rbd_free_disk(bdev);
+		SPDK_ERRLOG("spdk_bdev_rpc_add failed\n");
+		goto invalid;
+	}
+
+	free_rpc_construct_rbd_in_target(&req);
+	w = spdk_jsonrpc_begin_result(conn, id);
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, bdev->name);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(conn, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_construct_rbd_in_target(&req);
+}
 SPDK_RPC_REGISTER("construct_rbd_bdev", spdk_rpc_construct_rbd_bdev)
+SPDK_RPC_REGISTER("construct_rbd_bdev_in_target", spdk_rpc_construct_rbd_bdev_in_target)

@@ -263,6 +263,13 @@ void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int as
 void spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc,
 			       int ascq);
 
+typedef struct spdk_scsi_lun _spdk_scsi_lun;
+
+_spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev);
+void spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun, int id);
+
+struct spdk_scsi_dev *spdk_scsi_dev_get_list(void);
+
 static inline struct spdk_scsi_task *
 spdk_scsi_task_get_primary(struct spdk_scsi_task *task)
 {
