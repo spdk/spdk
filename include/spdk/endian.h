@@ -108,6 +108,69 @@ to_be64(void *out, uint64_t in)
 	tmp[7] = in & 0xFF;
 }
 
+static inline uint16_t
+from_le16(void *ptr)
+{
+	uint8_t *tmp = (uint8_t *)ptr;
+	return (((uint16_t)tmp[1] << 8) | tmp[0]);
+}
+
+static inline void
+to_le16(void *out, uint16_t in)
+{
+	uint8_t *tmp = (uint8_t *)out;
+	tmp[1] = (in >> 8) & 0xFF;
+	tmp[0] = in & 0xFF;
+}
+
+static inline uint32_t
+from_le32(void *ptr)
+{
+	uint8_t *tmp = (uint8_t *)ptr;
+	return (((uint32_t)tmp[3] << 24) |
+		((uint32_t)tmp[2] << 16) |
+		((uint32_t)tmp[1] << 8) |
+		((uint32_t)tmp[0]));
+}
+
+static inline void
+to_le32(void *out, uint32_t in)
+{
+	uint8_t *tmp = (uint8_t *)out;
+	tmp[3] = (in >> 24) & 0xFF;
+	tmp[2] = (in >> 16) & 0xFF;
+	tmp[1] = (in >> 8) & 0xFF;
+	tmp[0] = in & 0xFF;
+}
+
+static inline uint64_t
+from_le64(void *ptr)
+{
+	uint8_t *tmp = (uint8_t *)ptr;
+	return (((uint64_t)tmp[7] << 56) |
+		((uint64_t)tmp[6] << 48) |
+		((uint64_t)tmp[5] << 40) |
+		((uint64_t)tmp[4] << 32) |
+		((uint64_t)tmp[3] << 24) |
+		((uint64_t)tmp[2] << 16) |
+		((uint64_t)tmp[1] << 8) |
+		((uint64_t)tmp[0]));
+}
+
+static inline void
+to_le64(void *out, uint64_t in)
+{
+	uint8_t *tmp = (uint8_t *)out;
+	tmp[7] = (in >> 56) & 0xFF;
+	tmp[6] = (in >> 48) & 0xFF;
+	tmp[5] = (in >> 40) & 0xFF;
+	tmp[4] = (in >> 32) & 0xFF;
+	tmp[3] = (in >> 24) & 0xFF;
+	tmp[2] = (in >> 16) & 0xFF;
+	tmp[1] = (in >> 8) & 0xFF;
+	tmp[0] = in & 0xFF;
+}
+
 #ifdef __cplusplus
 }
 #endif
