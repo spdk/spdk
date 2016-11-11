@@ -258,6 +258,15 @@ void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 		void *aer_cb_arg);
 
 /**
+ * Application may use to register for timeouts
+ *
+ */
+typedef void (*spdk_nvme_timeout_cb)(void *);
+
+void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_timeout_cb cb_fn,
+		void *cb_arg);
+/**
  * \brief Opaque handle to a queue pair.
  *
  * I/O queue pairs may be allocated using spdk_nvme_ctrlr_alloc_io_qpair().

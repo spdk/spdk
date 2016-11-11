@@ -68,3 +68,4 @@ CONFIG_RDMA?=n
 # Build Ceph RBD support in bdev modules
 # Requires librbd development libraries
 CONFIG_RBD?=n
+CONFIG_NVME_IO_TIMEOUT=30
