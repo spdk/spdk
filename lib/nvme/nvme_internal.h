@@ -362,7 +362,6 @@ struct spdk_nvme_ctrlr {
 	/** Controller support flags */
 	uint64_t			flags;
 
-	int32_t outstanding_admin_commands;
 	/* Cold data (not accessed in normal I/O path) is after this point. */
 
 	union spdk_nvme_cap_register	cap;

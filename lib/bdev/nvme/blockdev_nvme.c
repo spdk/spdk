@@ -50,7 +50,6 @@
 #include "spdk/io_channel.h"
 
 #include "bdev_module.h"
-#include "spdk/nvme_intel.h"
 
 static void blockdev_nvme_get_spdk_running_config(FILE *fp);
 
@@ -67,12 +66,15 @@ struct nvme_device {
 	TAILQ_ENTRY(nvme_device)	tailq;
 
 	int				id;
+
+	int				outstanding_admin_cmds;	
 };
 
 struct nvme_blockdev {
 	struct spdk_bdev	disk;
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct spdk_nvme_ns	*ns;
+	struct nvme_device	*nvme_dev;
 	uint64_t		lba_start;
 	uint64_t		lba_end;
 	uint64_t		blocklen;
@@ -81,7 +83,6 @@ struct nvme_blockdev {
 struct nvme_io_channel {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_poller	*poller;
-	struct spdk_poller	*adminq_poller;
 };
 
 #define NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT	1
@@ -114,19 +115,14 @@ static int num_controllers = -1;
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
 static void nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr,
-		int bdev_per_ns, int ctrlr_id);
+		int bdev_per_ns, int ctrlr_id, struct nvme_device *nvme_dev);
 static int nvme_library_init(void);
 static void nvme_library_fini(void);
 static int nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
 			  struct nvme_blockio *bio,
 			  int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
 			  uint64_t offset);
-static int blockdev_nvme_get_smart(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf,
-				   uint16_t nbytes);
-static int blockdev_nvme_set_latency_tracking(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
-					      bool enable);
-static int blockdev_nvme_get_latency(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf,
-				     uint16_t nbytes, bool read);
+static int blockdev_nvme_smart_read_data(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf);
 
 static int
 nvme_get_ctx_size(void)
@@ -186,12 +182,10 @@ blockdev_nvme_poll(void *arg)
 static void
 blockdev_nvme_poll_adminq(void *arg)
 {
-	int32_t outstanding_admin_commands;
-	struct spdk_nvme_ctrlr *ctrlr = arg;
+	struct nvme_device *nvme_dev = arg;
+	struct spdk_nvme_ctrlr *ctrlr = nvme_dev->ctrlr;
 
-	outstanding_admin_commands = spdk_nvme_ctrlr_cmd_get_num_outstanding_admin_commands(ctrlr);
-
-	if (outstanding_admin_commands > 0) {
+	if (nvme_dev->outstanding_admin_cmds > 0){
 		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 }
@@ -252,8 +246,6 @@ static void blockdev_nvme_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 
 static int _blockdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 {
-	struct nvme_blockdev *nbdev;
-	struct spdk_nvme_ctrlr *ctrlr;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -286,61 +278,10 @@ static int _blockdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 					   bdev_io->u.flush.offset,
 					   bdev_io->u.flush.length);
 
-	case SPDK_BDEV_IO_TYPE_GET_SMART:
-		nbdev = bdev_io->ctx;
-		ctrlr = nbdev->ctrlr;
-		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION)){
-			return blockdev_nvme_get_smart((struct nvme_blockdev *)bdev_io->ctx,
+	case SPDK_BDEV_IO_TYPE_SMART:
+		return blockdev_nvme_smart_read_data((struct nvme_blockdev *)bdev_io->ctx,
 					       (struct nvme_blockio *)bdev_io->driver_ctx,
-					       bdev_io->u.get_perf_info.buf,
-					       bdev_io->u.get_perf_info.nbytes);
-		} else {
-			return -1;
-		}
-
-	case SPDK_BDEV_IO_TYPE_ENABLE_LATENCY_TRACKING:
-		nbdev = bdev_io->ctx;
-		ctrlr = nbdev->ctrlr;
-		if (spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)){
-			return blockdev_nvme_set_latency_tracking((struct nvme_blockdev *)bdev_io->ctx,
-							  (struct nvme_blockio *)bdev_io->driver_ctx, true);
-		} else {
-			return -1;
-		}
-
-	case SPDK_BDEV_IO_TYPE_DISABLE_LATENCY_TRACKING:
-		nbdev = bdev_io->ctx;
-		ctrlr = nbdev->ctrlr;
-		if (spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)){
-			return blockdev_nvme_set_latency_tracking((struct nvme_blockdev *)bdev_io->ctx,
-					 		  (struct nvme_blockio *)bdev_io->driver_ctx, false);
-		} else {
-			return -1;
-		}
-
-	case SPDK_BDEV_IO_TYPE_GET_READ_LATENCY:
-		nbdev = bdev_io->ctx;
-		ctrlr = nbdev->ctrlr;
-		if (spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)){
-			return blockdev_nvme_get_latency((struct nvme_blockdev *)bdev_io->ctx,
-						 (struct nvme_blockio *)bdev_io->driver_ctx,
-						 bdev_io->u.get_perf_info.buf,
-						 bdev_io->u.get_perf_info.nbytes, true);
-		} else {
-			return -1;
-		}
-
-	case SPDK_BDEV_IO_TYPE_GET_WRITE_LATENCY:
-		nbdev = bdev_io->ctx;
-		ctrlr = nbdev->ctrlr;
-		if (spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)){
-			return blockdev_nvme_get_latency((struct nvme_blockdev *)bdev_io->ctx,
-						 (struct nvme_blockio *)bdev_io->driver_ctx,
-						 bdev_io->u.get_perf_info.buf,
-						 bdev_io->u.get_perf_info.nbytes, false);
-		} else {
-			return -1;
-		}
+					       bdev_io->smart.nvme.read_data);
 
 	default:
 		return -1;
@@ -391,8 +332,6 @@ blockdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void 
 
 	spdk_poller_register(&ch->poller, blockdev_nvme_poll, ch->qpair,
 			     spdk_app_get_current_core(), NULL, 0);
-	spdk_poller_register(&ch->adminq_poller, blockdev_nvme_poll_adminq, ctrlr,
-			     spdk_app_get_current_core(), NULL, 0);
 	return 0;
 }
 
@@ -403,7 +342,6 @@ blockdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 
 	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
 	spdk_poller_unregister(&ch->poller, NULL);
-	spdk_poller_unregister(&ch->adminq_poller, NULL);
 }
 
 static struct spdk_io_channel *
@@ -465,6 +403,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	struct nvme_device *dev;
+	struct spdk_poller *adminq_poller = NULL;
 
 	dev = malloc(sizeof(struct nvme_device));
 	if (dev == NULL) {
@@ -476,11 +415,14 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	dev->pci_dev = pci_dev;
 	dev->id = nvme_controller_index++;
 
-	nvme_ctrlr_initialize_blockdevs(dev->ctrlr, nvme_luns_per_ns, dev->id);
+	nvme_ctrlr_initialize_blockdevs(dev->ctrlr, nvme_luns_per_ns, dev->id, dev);
 	spdk_io_device_register(ctrlr, blockdev_nvme_create_cb, blockdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_devices, dev, tailq);
 
+	dev->outstanding_admin_cmds = 0;
+	spdk_poller_register(&adminq_poller, blockdev_nvme_poll_adminq, dev,
+			     spdk_app_get_current_core(), NULL, 0);
 	if (ctx->controllers_remaining > 0) {
 		ctx->controllers_remaining--;
 	}
@@ -620,7 +562,8 @@ nvme_library_fini(void)
 }
 
 void
-nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, int ctrlr_id)
+nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, int ctrlr_id,
+				struct nvme_device *nvme_dev)
 {
 	struct nvme_blockdev	*bdev;
 	struct spdk_nvme_ns	*ns;
@@ -661,6 +604,7 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 			bdev->lba_start = lba_offset;
 			bdev->lba_end = lba_offset + bdev_size - 1;
 			lba_offset += bdev_size;
+			bdev->nvme_dev = nvme_dev;
 
 			snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
 				 "Nvme%dn%dp%d", ctrlr_id, spdk_nvme_ns_get_id(ns), bdev_idx);
@@ -750,78 +694,24 @@ queued_next_sge(void *ref, uint64_t *address, uint32_t *length)
 static void
 queued_done_adminq(void *ref, const struct spdk_nvme_cpl *cpl)
 {
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_blockio *)ref);
 	enum spdk_bdev_io_status status;
-	struct nvme_blockio *bio = ref;
-	struct spdk_bdev_io *bdev_io;
 	struct nvme_blockdev *nbdev;
-	struct spdk_nvme_ctrlr *ctrlr;
-
-	bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
+		bdev_io->error.nvme.sct = cpl->status.sct;
+		bdev_io->error.nvme.sc = cpl->status.sc;
+		status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
 	} else {
 		status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	}
 
 	nbdev = bdev_io->ctx;
-	ctrlr = nbdev->ctrlr;
-	spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(ctrlr, -1);
 
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), status);
-}
-
-static void
-queued_done_adminq_get_latency(void *ref, const struct spdk_nvme_cpl *cpl)
-{
-	int i;
-	uint64_t tot_lat = 0, tot_num = 0;
-	uint32_t *average_latency;
-	enum spdk_bdev_io_status status;
-	struct nvme_blockio *bio = ref;
-	struct spdk_bdev_io *bdev_io;
-	struct nvme_blockdev *nbdev;
-	struct spdk_nvme_ctrlr *ctrlr;
-	struct spdk_nvme_intel_rw_latency_page *rw_latency_page;
-
-	bdev_io = spdk_bdev_io_from_ctx(bio);
-
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		status = SPDK_BDEV_IO_STATUS_FAILED;
-	} else {
-		status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
-		rw_latency_page = bdev_io->u.get_perf_info.buf;
-		/* start calculating average latency */
-		for (i = 0; i < 31; i++) {
-			tot_lat += rw_latency_page->buckets_32us[i] * (i * 32 + 16) +
-				   rw_latency_page->buckets_1ms[i]  * (i * 1000 + 500) +
-			           rw_latency_page->buckets_32ms[i] * (i * 32000 + 16000);
-			tot_num += rw_latency_page->buckets_32us[i] +
-				   rw_latency_page->buckets_1ms[i]  +
-				   rw_latency_page->buckets_32ms[i];
-		}
-		tot_lat += rw_latency_page->buckets_32us[i] * (32 * 32 + 16);
-		tot_num += rw_latency_page->buckets_32us[i];
-
-		/* put value to major & minor revison area (4 bytes) */
-		average_latency = (uint32_t *)&rw_latency_page->major_revison;
- 		/* if total number of I/O operation is greater than
-		 * zero. For latency tracking has not been enabled,
-		 * tot_num will be zero.
-		 */
-		if (tot_num > 0) {
-			*average_latency = (uint32_t)(tot_lat / tot_num);
-		} else {
-			*average_latency = 0;
-		}
-	}
-
-	nbdev = bdev_io->ctx;
-	ctrlr = nbdev->ctrlr;
-	spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(ctrlr, -1);
-
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), status);
+	/* decrement the outstanding admin commands by 1 */
+	nbdev->nvme_dev->outstanding_admin_cmds--;
+	
+	spdk_bdev_io_complete(bdev_io, status);
 }
 
 int
@@ -898,60 +788,15 @@ blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 }
 
 static int
-blockdev_nvme_get_smart(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf, uint16_t nbytes)
+blockdev_nvme_smart_read_data(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(nbdev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-					     SPDK_NVME_GLOBAL_NS_TAG, buf, nbytes,
+					     SPDK_NVME_GLOBAL_NS_TAG, buf, 512,
 					     queued_done_adminq, bio)) {
 		return -1;
 	} else {
-		spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(nbdev->ctrlr, 1);
-	}
-
-	return 0;
-}
-
-static int
-blockdev_nvme_set_latency_tracking(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, bool enable)
-{
-	union spdk_nvme_intel_feat_latency_tracking latency_tracking;
-
-	if (enable) {
-		latency_tracking.bits.enable = 0x01;
-	} else {
-		latency_tracking.bits.enable = 0x00;
-	}
-
-	if (spdk_nvme_ctrlr_cmd_set_feature(nbdev->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING,
-					    latency_tracking.raw, 0, NULL, 0, queued_done_adminq, bio)){
-		return -1;
-	} else {
-		spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(nbdev->ctrlr, 1);
-	}           
-
-	return 0;
-}
-
-static int
-blockdev_nvme_get_latency(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf, uint16_t nbytes,
-			  bool read)
-{
-	if (read) {
-		if (spdk_nvme_ctrlr_cmd_get_log_page(nbdev->ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY,
-						     SPDK_NVME_GLOBAL_NS_TAG, buf, nbytes,
-						     queued_done_adminq_get_latency, bio)) {
-			return -1;
-		} else {
-			spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(nbdev->ctrlr, 1);
-		}
-	} else {
-		if (spdk_nvme_ctrlr_cmd_get_log_page(nbdev->ctrlr, SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY,
-						     SPDK_NVME_GLOBAL_NS_TAG, buf, nbytes,
-						     queued_done_adminq_get_latency, bio)) {
-			return -1;
-		} else {
-			spdk_nvme_ctrlr_cmd_update_num_outstanding_admin_commands(nbdev->ctrlr, 1);
-		}
+		/* increment the outstanding admin commands by 1 */
+		nbdev->nvme_dev->outstanding_admin_cmds++;
 	}
 
 	return 0;
