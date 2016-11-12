@@ -57,8 +57,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	struct rpc_construct_nvme req = {};
 	struct spdk_json_write_ctx *w;
 	struct nvme_probe_ctx ctx = {};
-	unsigned int domain, bus, dev, func;
-	int rc, i;
+	int i;
 
 	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
 				    sizeof(rpc_construct_nvme_decoders) / sizeof(*rpc_construct_nvme_decoders),
@@ -70,15 +69,9 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	ctx.controllers_remaining = 1;
 	ctx.num_whitelist_controllers = 1;
 
-	rc = sscanf(req.pci_address, "%x:%x:%x.%x", &domain, &bus, &dev, &func);
-	if (rc != 4) {
+	if (spdk_pci_addr_parse(&ctx.whitelist[0], req.pci_address) < 0) {
 		goto invalid;
 	}
-
-	ctx.whitelist[0].domain = domain;
-	ctx.whitelist[0].bus = bus;
-	ctx.whitelist[0].dev = dev;
-	ctx.whitelist[0].func = func;
 
 	if (spdk_bdev_nvme_create(&ctx)) {
 		goto invalid;

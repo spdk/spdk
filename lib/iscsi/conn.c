@@ -914,6 +914,7 @@ void process_task_completion(spdk_event_t event)
 		    (task->scsi.status != SPDK_SCSI_STATUS_GOOD)) {
 			memcpy(primary->scsi.sense_data, task->scsi.sense_data,
 			       task->scsi.sense_data_len);
+			primary->scsi.sense_data_len = task->scsi.sense_data_len;
 			primary->scsi.status = task->scsi.status;
 		}
 

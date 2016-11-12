@@ -60,7 +60,7 @@ struct nvme_device {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_pci_device		*pci_dev;
+	struct spdk_pci_addr		pci_addr;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_device)	tailq;
@@ -360,15 +360,18 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 };
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
-	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 	int i;
 	bool claim_device = false;
 
 	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
-		       pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
+		       probe_info->pci_addr.domain,
+		       probe_info->pci_addr.bus,
+		       probe_info->pci_addr.dev,
+		       probe_info->pci_addr.func);
 
 	if (ctx->controllers_remaining == 0) {
 		return false;
@@ -378,7 +381,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 		claim_device = true;
 	} else {
 		for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
-			if (spdk_pci_addr_compare(&pci_addr, &ctx->whitelist[i]) == 0) {
+			if (spdk_pci_addr_compare(&probe_info->pci_addr, &ctx->whitelist[i]) == 0) {
 				claim_device = true;
 				break;
 			}
@@ -390,7 +393,7 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 	}
 
 	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(&pci_addr) != 0) {
+	if (spdk_pci_device_claim(&probe_info->pci_addr) != 0) {
 		return false;
 	}
 
@@ -398,8 +401,8 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr_o
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	struct nvme_device *dev;
@@ -412,7 +415,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr 
 	}
 
 	dev->ctrlr = ctrlr;
-	dev->pci_dev = pci_dev;
+	dev->pci_addr = probe_info->pci_addr;
 	dev->id = nvme_controller_index++;
 
 	nvme_ctrlr_initialize_blockdevs(dev->ctrlr, nvme_luns_per_ns, dev->id, dev);
@@ -433,12 +436,10 @@ blockdev_nvme_exist(struct nvme_probe_ctx *ctx)
 {
 	int i;
 	struct nvme_device *nvme_dev;
-	struct spdk_pci_addr dev_addr;
 
 	for (i = 0; i < ctx->num_whitelist_controllers; i++) {
 		TAILQ_FOREACH(nvme_dev, &g_nvme_devices, tailq) {
-			dev_addr = spdk_pci_device_get_addr(nvme_dev->pci_dev);
-			if (spdk_pci_addr_compare(&dev_addr, &ctx->whitelist[i]) == 0) {
+			if (spdk_pci_addr_compare(&nvme_dev->pci_addr, &ctx->whitelist[i]) == 0) {
 				return true;
 			}
 		}
@@ -478,7 +479,7 @@ nvme_library_init(void)
 {
 	struct spdk_conf_section *sp;
 	const char *val;
-	int i, rc;
+	int i;
 	struct nvme_probe_ctx probe_ctx;
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
@@ -521,23 +522,15 @@ nvme_library_init(void)
 
 	if (num_controllers > 0) {
 		for (i = 0; ; i++) {
-			unsigned int domain, bus, dev, func;
-
 			val = spdk_conf_section_get_nmval(sp, "BDF", i, 0);
 			if (val == NULL) {
 				break;
 			}
 
-			rc = sscanf(val, "%x:%x:%x.%x", &domain, &bus, &dev, &func);
-			if (rc != 4) {
+			if (spdk_pci_addr_parse(&probe_ctx.whitelist[probe_ctx.num_whitelist_controllers], val) < 0) {
 				SPDK_ERRLOG("Invalid format for BDF: %s\n", val);
 				return -1;
 			}
-
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].domain = domain;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].bus = bus;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].dev = dev;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_controllers].func = func;
 
 			probe_ctx.num_whitelist_controllers++;
 		}
@@ -577,6 +570,12 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 
 	for (ns_id = 1; ns_id <= num_ns; ns_id++) {
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+
+		if (!spdk_nvme_ns_is_active(ns)) {
+			SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Skipping inactive NS %d\n", ns_id);
+			continue;
+		}
+
 		bdev_size = spdk_nvme_ns_get_num_sectors(ns) / bdev_per_ns;
 
 		/*
@@ -667,8 +666,12 @@ queued_reset_sgl(void *ref, uint32_t sgl_offset)
 	}
 }
 
+#define min(a, b) (((a)<(b))?(a):(b))
+
+#define _2MB_OFFSET(ptr)	(((uintptr_t)ptr) &  (0x200000 - 1))
+
 static int
-queued_next_sge(void *ref, uint64_t *address, uint32_t *length)
+queued_next_sge(void *ref, void **address, uint32_t *length)
 {
 	struct nvme_blockio *bio = ref;
 	struct iovec *iov;
@@ -676,15 +679,21 @@ queued_next_sge(void *ref, uint64_t *address, uint32_t *length)
 	assert(bio->iovpos < bio->iovcnt);
 
 	iov = &bio->iovs[bio->iovpos];
-	bio->iovpos++;
 
-	*address = spdk_vtophys(iov->iov_base);
+	*address = iov->iov_base;
 	*length = iov->iov_len;
 
 	if (bio->iov_offset) {
 		assert(bio->iov_offset <= iov->iov_len);
 		*address += bio->iov_offset;
 		*length -= bio->iov_offset;
+	}
+
+	*length = min(*length, 0x200000 - _2MB_OFFSET(*address));
+
+	bio->iov_offset += *length;
+	if (bio->iov_offset == iov->iov_len) {
+		bio->iovpos++;
 		bio->iov_offset = 0;
 	}
 

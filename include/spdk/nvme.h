@@ -47,7 +47,7 @@ extern "C" {
 #include <stdint.h>
 
 #include "spdk/env.h"
-#include "nvme_spec.h"
+#include "spdk/nvme_spec.h"
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;
@@ -89,6 +89,25 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
+ * NVMe controller information provided during spdk_nvme_probe().
+ */
+struct spdk_nvme_probe_info {
+	/**
+	 * PCI address.
+	 *
+	 * If not available, each field will be filled with all 0xFs.
+	 */
+	struct spdk_pci_addr pci_addr;
+
+	/**
+	 * PCI device ID.
+	 *
+	 * If not available, each field will be filled with all 0xFs.
+	 */
+	struct spdk_pci_id pci_id;
+};
+
+/**
  * Callback for spdk_nvme_probe() enumeration.
  *
  * \param opts NVMe controller initialization options.  This structure will be populated with the
@@ -97,7 +116,7 @@ struct spdk_nvme_ctrlr_opts {
  * provided during the attach callback.
  * \return true to attach to this device.
  */
-typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 				   struct spdk_nvme_ctrlr_opts *opts);
 
 /**
@@ -106,7 +125,7 @@ typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev
  * \param opts NVMe controller initialization options that were actually used.  Options may differ
  * from the requested options from the probe call depending on what the controller supports.
  */
-typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, struct spdk_pci_device *pci_dev,
+typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 				    struct spdk_nvme_ctrlr *ctrlr,
 				    const struct spdk_nvme_ctrlr_opts *opts);
 
@@ -648,10 +667,10 @@ typedef void (*spdk_nvme_req_reset_sgl_cb)(void *cb_arg, uint32_t offset);
  * entry for the next time the callback is invoked.
  *
  * The cb_arg parameter is the value passed to readv/writev.
- * The address parameter contains the physical address of this segment.
+ * The address parameter contains the virtual address of this segment.
  * The length parameter contains the length of this physical segment.
  */
-typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, uint64_t *address, uint32_t *length);
+typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address, uint32_t *length);
 
 /**
  * \brief Submits a write I/O to the specified NVMe namespace.

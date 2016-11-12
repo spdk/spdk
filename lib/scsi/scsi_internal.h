@@ -77,7 +77,7 @@ typedef struct spdk_scsi_lun _spdk_scsi_lun;
 _spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev);
 
 void spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun);
-void spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
+int spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);

@@ -62,10 +62,7 @@ struct spdk_nvmf_probe_ctx {
 	struct spdk_nvmf_subsystem	*subsystem;
 	bool				any;
 	bool				found;
-	uint32_t			domain;
-	uint32_t			bus;
-	uint32_t			device;
-	uint32_t			function;
+	struct spdk_pci_addr		pci_addr;
 };
 
 #define MAX_STRING_LEN 255
@@ -337,23 +334,17 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
-	uint16_t found_domain = spdk_pci_device_get_domain(dev);
-	uint8_t found_bus    = spdk_pci_device_get_bus(dev);
-	uint8_t found_dev    = spdk_pci_device_get_dev(dev);
-	uint8_t found_func   = spdk_pci_device_get_func(dev);
 
 	if (ctx->any && !ctx->found) {
 		ctx->found = true;
 		return true;
 	}
 
-	if (found_domain == ctx->domain &&
-	    found_bus == ctx->bus &&
-	    found_dev == ctx->device &&
-	    found_func == ctx->function) {
+	if (spdk_pci_addr_compare(&probe_info->pci_addr, &ctx->pci_addr) == 0) {
 		ctx->found = true;
 		return true;
 	}
@@ -362,20 +353,27 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts 
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
-	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(dev);
 	int rc;
 	char path[MAX_STRING_LEN];
 	int numa_node = -1;
 
 	SPDK_NOTICELOG("Attaching NVMe device %p at %x:%x:%x.%x to subsystem %p\n",
-		       ctrlr, pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func, ctx->subsystem);
+		       ctrlr,
+		       probe_info->pci_addr.domain,
+		       probe_info->pci_addr.bus,
+		       probe_info->pci_addr.dev,
+		       probe_info->pci_addr.func,
+		       ctx->subsystem);
 
 	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%04x:%02x:%02x.%1u/numa_node",
-		 pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
+		 probe_info->pci_addr.domain,
+		 probe_info->pci_addr.bus,
+		 probe_info->pci_addr.dev,
+		 probe_info->pci_addr.func);
 
 	numa_node = spdk_get_numa_node_value(path);
 	if (numa_node >= 0) {
@@ -388,7 +386,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctr
 		}
 	}
 
-	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, &pci_addr);
+	rc = nvmf_subsystem_add_ctrlr(ctx->subsystem, ctrlr, &probe_info->pci_addr);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}
@@ -549,8 +547,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		if (strcmp(bdf, "*") == 0) {
 			ctx.any = true;
 		} else {
-			ret = sscanf(bdf, "%x:%x:%x.%x", &ctx.domain, &ctx.bus, &ctx.device, &ctx.function);
-			if (ret != 4) {
+			if (spdk_pci_addr_parse(&ctx.pci_addr, bdf) < 0) {
 				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
 				return -1;
 			}
@@ -667,7 +664,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
 	enum spdk_nvmf_subsystem_mode mode;
-	int i, ret;
+	int i;
 	uint64_t mask;
 	int num = 0;
 
@@ -757,8 +754,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		if (strcmp(bdf, "*") == 0) {
 			ctx.any = true;
 		} else {
-			ret = sscanf(bdf, "%x:%x:%x.%x", &ctx.domain, &ctx.bus, &ctx.device, &ctx.function);
-			if (ret != 4) {
+			if (spdk_pci_addr_parse(&ctx.pci_addr, bdf) < 0) {
 				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
 				return -1;
 			}
@@ -771,7 +767,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 		if (!ctx.found) {
 			SPDK_ERRLOG("Could not find NVMe controller at PCI address %04x:%02x:%02x.%x\n",
-				    ctx.domain, ctx.bus, ctx.device, ctx.function);
+				    ctx.pci_addr.domain, ctx.pci_addr.bus, ctx.pci_addr.dev, ctx.pci_addr.func);
 			return -1;
 		}
 	} else {

@@ -82,7 +82,7 @@ event_work_fn(void *arg)
 
 	while (1) {
 
-		spdk_event_queue_run_all(rte_lcore_id());
+		spdk_event_queue_run_batch(rte_lcore_id());
 
 		if (spdk_get_ticks() > tsc_end) {
 			break;

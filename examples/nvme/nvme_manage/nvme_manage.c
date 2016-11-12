@@ -51,7 +51,7 @@
 #define MAX_DEVS 64
 
 struct dev {
-	struct spdk_pci_device			*pci_dev;
+	struct spdk_pci_addr			pci_addr;
 	struct spdk_nvme_ctrlr 			*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvme_ns_data		*common_ns_data;
@@ -73,14 +73,13 @@ static int
 cmp_devs(const void *ap, const void *bp)
 {
 	const struct dev *a = ap, *b = bp;
-	struct spdk_pci_addr a1 = spdk_pci_device_get_addr(a->pci_dev);
-	struct spdk_pci_addr a2 = spdk_pci_device_get_addr(b->pci_dev);
 
-	return spdk_pci_addr_compare(&a1, &a2);
+	return spdk_pci_addr_compare(&a->pci_addr, &b->pci_addr);
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	return true;
 }
@@ -100,15 +99,15 @@ identify_common_ns_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
 	struct spdk_nvme_cmd cmd;
 
 	/* add to dev list */
 	dev = &devs[num_devs++];
-	dev->pci_dev = pci_dev;
+	dev->pci_addr = probe_info->pci_addr;
 	dev->ctrlr = ctrlr;
 
 	/* Retrieve controller data */
@@ -244,8 +243,7 @@ display_controller(struct dev *dev, int model)
 
 	if (model == CONTROLLER_DISPLAY_SIMPLISTIC) {
 		printf("%04x:%02x:%02x.%02x ",
-		       spdk_pci_device_get_domain(dev->pci_dev), spdk_pci_device_get_bus(dev->pci_dev),
-		       spdk_pci_device_get_dev(dev->pci_dev), spdk_pci_device_get_func(dev->pci_dev));
+		       dev->pci_addr.domain, dev->pci_addr.bus, dev->pci_addr.dev, dev->pci_addr.func);
 		printf("%-40.40s %-20.20s ",
 		       cdata->mn, cdata->sn);
 		printf("%5d ", cdata->cntlid);
@@ -255,8 +253,7 @@ display_controller(struct dev *dev, int model)
 
 	printf("=====================================================\n");
 	printf("NVMe Controller:	%04x:%02x:%02x.%02x\n",
-	       spdk_pci_device_get_domain(dev->pci_dev), spdk_pci_device_get_bus(dev->pci_dev),
-	       spdk_pci_device_get_dev(dev->pci_dev), spdk_pci_device_get_func(dev->pci_dev));
+	       dev->pci_addr.domain, dev->pci_addr.bus, dev->pci_addr.dev, dev->pci_addr.func);
 	printf("============================\n");
 	printf("Controller Capabilities/Features\n");
 	printf("Controller ID:		%d\n", cdata->cntlid);
@@ -299,10 +296,6 @@ display_controller_list(void)
 static struct dev *
 get_controller(void)
 {
-	unsigned int				domain;
-	unsigned int				bus;
-	unsigned int				devid;
-	unsigned int				function;
 	struct spdk_pci_addr			pci_addr;
 	char					address[64];
 	char					*p;
@@ -327,28 +320,12 @@ get_controller(void)
 		p++;
 	}
 
-	if (sscanf(p, "%x:%x:%x.%x", &domain, &bus, &devid, &function) == 4) {
-		/* Matched a full address - all variables are initialized */
-	} else if (sscanf(p, "%x:%x:%x", &domain, &bus, &devid) == 3) {
-		function = 0;
-	} else if (sscanf(p, "%x:%x.%x", &bus, &devid, &function) == 3) {
-		domain = 0;
-	} else if (sscanf(p, "%x:%x", &bus, &devid) == 2) {
-		domain = 0;
-		function = 0;
-	} else {
+	if (spdk_pci_addr_parse(&pci_addr, p) < 0) {
 		return NULL;
 	}
 
-	pci_addr.domain = domain;
-	pci_addr.bus = bus;
-	pci_addr.dev = devid;
-	pci_addr.func = function;
-
 	foreach_dev(iter) {
-		struct spdk_pci_addr iter_addr = spdk_pci_device_get_addr(iter->pci_dev);
-
-		if (spdk_pci_addr_compare(&pci_addr, &iter_addr) == 0) {
+		if (spdk_pci_addr_compare(&pci_addr, &iter->pci_addr) == 0) {
 			return iter;
 		}
 	}

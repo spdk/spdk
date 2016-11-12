@@ -47,12 +47,12 @@ int32_t		spdk_nvme_retry_count;
 static struct spdk_nvme_ctrlr *
 nvme_attach(void *devhandle)
 {
-	const struct spdk_nvme_transport *transport;
+	enum spdk_nvme_transport transport;
 	struct spdk_nvme_ctrlr	*ctrlr;
 
-	transport = &spdk_nvme_transport_pcie;
+	transport = SPDK_NVME_TRANSPORT_PCIE;
 
-	ctrlr = transport->ctrlr_construct(devhandle);
+	ctrlr = nvme_transport_ctrlr_construct(transport, devhandle);
 
 	return ctrlr;
 }
@@ -231,9 +231,10 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct nvme_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
-	struct spdk_pci_addr dev_addr;
+	struct spdk_nvme_probe_info probe_info;
 
-	dev_addr = spdk_pci_device_get_addr(pci_dev);
+	probe_info.pci_addr = spdk_pci_device_get_addr(pci_dev);
+	probe_info.pci_id = spdk_pci_device_get_id(pci_dev);
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -241,14 +242,14 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 * different per each process, we compare by BDF to determine whether it is the
 		 * same controller.
 		 */
-		if (spdk_pci_addr_compare(&dev_addr, &ctrlr->pci_addr) == 0) {
+		if (spdk_pci_addr_compare(&probe_info.pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
 			return 0;
 		}
 	}
 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
-	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, pci_dev, &opts)) {
+	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, &probe_info, &opts)) {
 		ctrlr = nvme_attach(pci_dev);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("nvme_attach() failed\n");
@@ -256,6 +257,7 @@ nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		}
 
 		ctrlr->opts = opts;
+		ctrlr->probe_info = probe_info;
 
 		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
 	}
@@ -329,7 +331,7 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 				 *  that may take the driver lock, like nvme_detach().
 				 */
 				pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
-				attach_cb(cb_ctx, ctrlr->devhandle, ctrlr, &ctrlr->opts);
+				attach_cb(cb_ctx, &ctrlr->probe_info, ctrlr, &ctrlr->opts);
 				pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
 				break;

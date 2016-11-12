@@ -46,6 +46,9 @@ $rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode2 'transport:R
 
 nvme discover -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
+echo "Perform nvmf subsystem discovery via RPC"
+$rpc_py get_nvmf_subsystems
+
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
 

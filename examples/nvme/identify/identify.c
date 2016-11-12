@@ -383,7 +383,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 }
 
 static void
-print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
+print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
@@ -402,8 +402,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_device *pci_dev)
 
 	printf("=====================================================\n");
 	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
-	       spdk_pci_device_get_bus(pci_dev), spdk_pci_device_get_dev(pci_dev),
-	       spdk_pci_device_get_func(pci_dev));
+	       pci_addr->bus, pci_addr->dev, pci_addr->func);
 	printf("=====================================================\n");
 
 	if (g_hex_dump) {
@@ -872,16 +871,17 @@ parse_args(int argc, char **argv)
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	print_controller(ctrlr, pci_dev);
+	print_controller(ctrlr, &probe_info->pci_addr);
 	spdk_nvme_detach(ctrlr);
 }
 

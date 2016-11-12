@@ -530,39 +530,40 @@ parse_args(int argc, char **argv)
 }
 
 static bool
-probe_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr_opts *opts)
+probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	static uint32_t ctrlr_found = 0;
 
 	if (ctrlr_found == 1) {
 		fprintf(stderr, "only attching to one controller, so skipping\n");
 		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
-			spdk_pci_device_get_domain(dev),
-			spdk_pci_device_get_bus(dev),
-			spdk_pci_device_get_dev(dev),
-			spdk_pci_device_get_func(dev));
+			probe_info->pci_addr.domain,
+			probe_info->pci_addr.bus,
+			probe_info->pci_addr.dev,
+			probe_info->pci_addr.func);
 		return false;
 	}
 	ctrlr_found = 1;
 
 	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       spdk_pci_device_get_domain(dev),
-	       spdk_pci_device_get_bus(dev),
-	       spdk_pci_device_get_dev(dev),
-	       spdk_pci_device_get_func(dev));
+	       probe_info->pci_addr.domain,
+	       probe_info->pci_addr.bus,
+	       probe_info->pci_addr.dev,
+	       probe_info->pci_addr.func);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, struct spdk_pci_device *dev, struct spdk_nvme_ctrlr *ctrlr,
-	  const struct spdk_nvme_ctrlr_opts *opts)
+attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	printf("Attached to %04x:%02x:%02x.%02x\n",
-	       spdk_pci_device_get_domain(dev),
-	       spdk_pci_device_get_bus(dev),
-	       spdk_pci_device_get_dev(dev),
-	       spdk_pci_device_get_func(dev));
+	       probe_info->pci_addr.domain,
+	       probe_info->pci_addr.bus,
+	       probe_info->pci_addr.dev,
+	       probe_info->pci_addr.func);
 
 	register_ctrlr(ctrlr);
 }

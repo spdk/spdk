@@ -43,6 +43,7 @@ extern "C" {
 #endif
 
 #include <assert.h>
+#include <stdlib.h>
 
 #define SPDK_CONCAT_(x, y) x##y
 #define SPDK_CONCAT(x, y) SPDK_CONCAT_(x, y)
@@ -51,6 +52,12 @@ extern "C" {
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
 #else
 #define SPDK_STATIC_ASSERT(cond, msg)
+#endif
+
+#if !defined(DEBUG) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#define SPDK_UNREACHABLE() __builtin_unreachable()
+#else
+#define SPDK_UNREACHABLE() abort()
 #endif
 
 #ifdef __cplusplus

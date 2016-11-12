@@ -66,6 +66,8 @@ spdk_get_task(uint32_t *owner_task_ctr)
 	}
 
 	task->id = g_task_count;
+	task->iovs = &task->iov;
+	task->iovcnt = 1;
 
 	g_task_count++;
 
@@ -76,7 +78,7 @@ void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
 	g_task_count--;
-	if (task->iov_flags & SPDK_SCSI_TASK_ALLOC_BUFFER) {
+	if (task->alloc_len) {
 		free(task->iov.iov_base);
 	}
 	free(task);
@@ -89,15 +91,17 @@ spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
 	task->status = sc;
 }
 
-void
-spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
-			  uint8_t **data)
+void *
+spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
 	if (alloc_len < 4096)
 		alloc_len = 4096;
 
+	task->iovs = &task->iov;
+	task->iov.iov_base = malloc(alloc_len);
+	task->iov.iov_len = alloc_len;
 	task->alloc_len = alloc_len;
-	*data = task->iov.iov_base;
+	return task->iov.iov_base;
 }
 
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
@@ -419,8 +423,6 @@ lun_append_task_null_lun_task_cdb_spc_inquiry(void)
 	/* alloc_len >= 4096 */
 	task->cdb[3] = 0xFF;
 	task->cdb[4] = 0xFF;
-	task->iov.iov_base = malloc(65536);
-	task->iov_flags |= SPDK_SCSI_TASK_ALLOC_BUFFER;
 	task->lun = NULL;
 
 	spdk_scsi_lun_append_task(NULL, task);
@@ -446,8 +448,6 @@ lun_append_task_null_lun_alloc_len_lt_4096(void)
 	task->cdb[4] = 0;
 	/* alloc_len is set to a minimal value of 4096
 	 * Hence, rbuf of size 4096 is allocated*/
-	task->iov.iov_base = malloc(4096);
-	task->iov_flags |= SPDK_SCSI_TASK_ALLOC_BUFFER;
 	spdk_scsi_lun_append_task(NULL, task);
 
 	CU_ASSERT_EQUAL(task->status, SPDK_SCSI_STATUS_GOOD);

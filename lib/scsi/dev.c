@@ -198,9 +198,10 @@ spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,
 {
 	assert(task != NULL);
 
-	/* ready to enqueue, disk is valid for LUN access */
-	spdk_scsi_lun_append_task(task->lun, task);
-	spdk_scsi_lun_execute_tasks(task->lun);
+	if (spdk_scsi_lun_append_task(task->lun, task) == 0) {
+		/* ready to execute, disk is valid for LUN access */
+		spdk_scsi_lun_execute_tasks(task->lun);
+	}
 }
 
 int

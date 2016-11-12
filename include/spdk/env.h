@@ -51,10 +51,24 @@ struct spdk_pci_device;
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
+ *   given size and alignment.
+ */
+void *
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr);
+
+/**
+ * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment. The buffer will be zeroed.
  */
 void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
+
+/**
+ * Resize the allocated and pinned memory buffer with the given
+ *   new size and alignment. Existing contents are preserved.
+ */
+void *
+spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
 
 /**
  * Free a memory buffer previously allocated with spdk_zmalloc.
@@ -120,6 +134,12 @@ spdk_mempool_get(struct spdk_mempool *mp);
  */
 void
 spdk_mempool_put(struct spdk_mempool *mp, void *ele);
+
+/**
+ * Put multiple elements back into the memory pool.
+ */
+void
+spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
 
 
 /**
@@ -191,7 +211,6 @@ uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
 struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 
 uint32_t spdk_pci_device_get_class(struct spdk_pci_device *dev);
-const char *spdk_pci_device_get_device_name(struct spdk_pci_device *dev);
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 
@@ -208,6 +227,29 @@ int spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uin
  * \return 0 if a1 == a2, less than 0 if a1 < a2, greater than 0 if a1 > a2
  */
 int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2);
+
+/**
+ * Convert a string representation of a PCI address into a struct spdk_pci_addr.
+ *
+ * \param addr PCI adddress output on success
+ * \param bdf PCI address in domain:bus:device.function format
+ *
+ * \return 0 on success, or a negated errno value on failure.
+ */
+int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
+
+/**
+ * Call a function with CPU affinity unset.
+ *
+ * This can be used to run a function that creates other threads without inheriting the calling
+ * thread's CPU affinity.
+ *
+ * \param cb function to call
+ * \param arg parameter to cb function
+ *
+ * \return the return value of cb()
+ */
+void *spdk_call_unaffinitized(void *cb(void *arg), void *arg);
 
 #ifdef __cplusplus
 }

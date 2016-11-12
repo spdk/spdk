@@ -32,6 +32,7 @@
  */
 
 #include "spdk/bit_array.h"
+#include "spdk/env.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -77,7 +78,7 @@ spdk_bit_array_free(struct spdk_bit_array **bap)
 
 	ba = *bap;
 	*bap = NULL;
-	free(ba);
+	spdk_free(ba);
 }
 
 static inline uint32_t
@@ -113,7 +114,7 @@ spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits)
 	 */
 	new_size += SPDK_BIT_ARRAY_WORD_BYTES;
 
-	new_ba = (struct spdk_bit_array *)realloc(*bap, new_size);
+	new_ba = (struct spdk_bit_array *)spdk_realloc(*bap, new_size, 64, NULL);
 	if (!new_ba) {
 		return -ENOMEM;
 	}

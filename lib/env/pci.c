@@ -324,13 +324,6 @@ spdk_pci_device_get_class(struct spdk_pci_device *dev)
 	return class_code;
 }
 
-const char *
-spdk_pci_device_get_device_name(struct spdk_pci_device *dev)
-{
-	/* TODO */
-	return NULL;
-}
-
 int
 spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
 {
@@ -505,3 +498,37 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 	return 0;
 }
 #endif /* __FreeBSD__ */
+
+int
+spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
+{
+	unsigned domain, bus, dev, func;
+
+	if (addr == NULL || bdf == NULL) {
+		return -EINVAL;
+	}
+
+	if (sscanf(bdf, "%x:%x:%x.%x", &domain, &bus, &dev, &func) == 4) {
+		/* Matched a full address - all variables are initialized */
+	} else if (sscanf(bdf, "%x:%x:%x", &domain, &bus, &dev) == 3) {
+		func = 0;
+	} else if (sscanf(bdf, "%x:%x.%x", &bus, &dev, &func) == 3) {
+		domain = 0;
+	} else if (sscanf(bdf, "%x:%x", &bus, &dev) == 2) {
+		domain = 0;
+		func = 0;
+	} else {
+		return -EINVAL;
+	}
+
+	if (domain > 0xFFFF || bus > 0xFF || dev > 0x1F || func > 7) {
+		return -EINVAL;
+	}
+
+	addr->domain = domain;
+	addr->bus = bus;
+	addr->dev = dev;
+	addr->func = func;
+
+	return 0;
+}

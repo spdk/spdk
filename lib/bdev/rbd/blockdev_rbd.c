@@ -47,44 +47,25 @@
 #include <rados/librados.h>
 
 #include "spdk/conf.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
 
 #include "bdev_module.h"
 
-static TAILQ_HEAD(, blockdev_rbd_pool_info) g_rbd_pools = TAILQ_HEAD_INITIALIZER(g_rbd_pools);
 static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int blockdev_rbd_count = 0;
 
-typedef void (*rbd_cb_fn_t)(void *);
-
-struct blockdev_rbd_pool_info {
-	char *name;
-	TAILQ_ENTRY(blockdev_rbd_pool_info) tailq;
-};
-
-enum blockdev_rbd_data_direction {
-	BLOCKDEV_RBD_READ = 0,
-	BLOCKDEV_RBD_WRITE = 1,
-	BLOCKDEV_RBD_FLUSH = 2,
-};
-
 struct blockdev_rbd_io {
-	enum blockdev_rbd_data_direction direction;
-	int status;
-	size_t len;
 	rbd_completion_t completion;
-	rbd_cb_fn_t cb_fn;
-	struct blockdev_rbd_io_channel *ch;
 };
 
 struct blockdev_rbd {
 	struct spdk_bdev disk;
 	char *rbd_name;
+	char *pool_name;
 	rbd_image_info_t info;
-	struct blockdev_rbd_pool_info *pool_info;
-	uint64_t size;
 	TAILQ_ENTRY(blockdev_rbd) tailq;
 };
 
@@ -100,17 +81,6 @@ struct blockdev_rbd_io_channel {
 };
 
 static void
-blockdev_rbd_free_pool_info(struct blockdev_rbd_pool_info *pool_info)
-{
-	if (!pool_info) {
-		return;
-	}
-
-	free(pool_info->name);
-	free(pool_info);
-}
-
-static void
 blockdev_rbd_free(struct blockdev_rbd *rbd)
 {
 	if (!rbd) {
@@ -118,6 +88,7 @@ blockdev_rbd_free(struct blockdev_rbd *rbd)
 	}
 
 	free(rbd->rbd_name);
+	free(rbd->pool_name);
 	free(rbd);
 }
 
@@ -209,6 +180,7 @@ blockdev_rbd_start_aio(rbd_image_t image, struct blockdev_rbd_io *cmd,
 		       void *buf, uint64_t offset, size_t len)
 {
 	int ret;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(cmd);
 
 	ret = rbd_aio_create_completion((void *)cmd, blockdev_rbd_finish_aiocb,
 					&cmd->completion);
@@ -216,14 +188,13 @@ blockdev_rbd_start_aio(rbd_image_t image, struct blockdev_rbd_io *cmd,
 		return -1;
 	}
 
-	if (cmd->direction == BLOCKDEV_RBD_READ) {
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		ret = rbd_aio_read(image, offset, len,
 				   buf, cmd->completion);
-
-	} else if (cmd->direction == BLOCKDEV_RBD_WRITE) {
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 		ret = rbd_aio_write(image, offset, len,
 				    buf, cmd->completion);
-	} else if (cmd->direction == BLOCKDEV_RBD_FLUSH) {
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_FLUSH) {
 		ret = rbd_aio_flush(image, cmd->completion);
 	}
 
@@ -257,10 +228,6 @@ blockdev_rbd_readv(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 	if (iovcnt != 1 || iov->iov_len != len)
 		return -1;
 
-	cmd->ch = rbdio_ch;
-	cmd->direction = BLOCKDEV_RBD_READ;
-	cmd->len = len;
-
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, iov->iov_base, offset, len);
 }
 
@@ -274,9 +241,6 @@ blockdev_rbd_writev(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 	if ((iovcnt != 1) || (iov->iov_len != len))
 		return -1;
 
-	cmd->ch = (void *)rbdio_ch;
-	cmd->direction = BLOCKDEV_RBD_WRITE;
-
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, (void *)iov->iov_base, offset, len);
 }
 
@@ -285,9 +249,6 @@ blockdev_rbd_flush(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 		   struct blockdev_rbd_io *cmd, uint64_t offset, uint64_t nbytes)
 {
 	struct blockdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
-
-	cmd->ch = (void *)rbdio_ch;
-	cmd->direction = BLOCKDEV_RBD_FLUSH;
 
 	return blockdev_rbd_start_aio(rbdio_ch->image, cmd, NULL, offset, nbytes);
 }
@@ -368,6 +329,7 @@ blockdev_rbd_io_poll(void *arg)
 {
 	struct blockdev_rbd_io_channel *ch = arg;
 	struct blockdev_rbd_io *req;
+	struct spdk_bdev_io *bdev_io;
 	int i, io_status, status, rc;
 
 	rc = poll(&ch->pfd, 1, 0);
@@ -380,23 +342,23 @@ blockdev_rbd_io_poll(void *arg)
 	rc = rbd_poll_io_events(ch->image, ch->comps, ch->queue_depth);
 	for (i = 0; i < rc; i++) {
 		req = (struct blockdev_rbd_io *)rbd_aio_get_arg(ch->comps[i]);
+		bdev_io = spdk_bdev_io_from_ctx(req);
 		io_status = rbd_aio_get_return_value(ch->comps[i]);
-		if (req->direction == BLOCKDEV_RBD_READ) {
-			if ((int)req->len == io_status) {
-				req->status = 0;
+		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+			if ((int)bdev_io->u.read.len == io_status) {
+				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
-				req->status = -1;
+				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		} else {
 			/* For others, 0 means success */
 			if (!io_status) {
-				req->status = 0;
+				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
-				req->status = -1;
+				status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		}
-		status = req->status == 0 ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(req), status);
+		spdk_bdev_io_complete(bdev_io, status);
 		rbd_aio_release(req->completion);
 	}
 }
@@ -429,30 +391,40 @@ blockdev_rbd_free_channel(struct blockdev_rbd_io_channel *ch)
 	}
 }
 
+static void *
+blockdev_rbd_handle(void *arg)
+{
+	struct blockdev_rbd_io_channel *ch = arg;
+	void *ret = arg;
+
+	if (rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL) < 0) {
+		SPDK_ERRLOG("Failed to open specified rbd device\n");
+		ret = NULL;
+	}
+
+	return ret;
+}
+
 static int
 blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 		       void *ctx_buf, void *unique_ctx)
 {
 	struct blockdev_rbd_io_channel *ch = ctx_buf;
 	int ret;
-	struct blockdev_rbd_pool_info *pool_info;
 
 	ch->disk = (struct blockdev_rbd *)io_device;
-	pool_info = ch->disk->pool_info;
 	ch->image = NULL;
 	ch->io_ctx = NULL;
 	ch->pfd.fd = -1;
 
-	ret = blockdev_rados_context_init(pool_info->name, &ch->cluster, &ch->io_ctx);
+	ret = blockdev_rados_context_init(ch->disk->pool_name, &ch->cluster, &ch->io_ctx);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to create rados context for rbd_pool=%s\n",
-			    pool_info->name);
+			    ch->disk->pool_name);
 		goto err;
 	}
 
-	ret = rbd_open(ch->io_ctx, ch->disk->rbd_name, &ch->image, NULL);
-	if (ret < 0) {
-		SPDK_ERRLOG("Failed to open specified rbd device\n");
+	if (spdk_call_unaffinitized(blockdev_rbd_handle, ch) == NULL) {
 		goto err;
 	}
 
@@ -514,7 +486,6 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 static void
 blockdev_rbd_library_fini(void)
 {
-	struct blockdev_rbd_pool_info *pool_info;
 	struct blockdev_rbd *rbd;
 
 	while (!TAILQ_EMPTY(&g_rbds)) {
@@ -522,45 +493,11 @@ blockdev_rbd_library_fini(void)
 		TAILQ_REMOVE(&g_rbds, rbd, tailq);
 		blockdev_rbd_free(rbd);
 	}
-	while (!TAILQ_EMPTY(&g_rbd_pools)) {
-		pool_info = TAILQ_FIRST(&g_rbd_pools);
-		TAILQ_REMOVE(&g_rbd_pools, pool_info, tailq);
-		blockdev_rbd_free_pool_info(pool_info);
-	}
-}
-
-static struct blockdev_rbd_pool_info *
-blockdev_rbd_pool_info_init(const char *rbd_pool_name)
-{
-	struct blockdev_rbd_pool_info *pool_info;
-
-	TAILQ_FOREACH(pool_info, &g_rbd_pools, tailq) {
-		if (!strcmp(pool_info->name, rbd_pool_name)) {
-			return pool_info;
-		}
-	}
-
-	pool_info = calloc(1, sizeof(struct blockdev_rbd_pool_info));
-	if (!pool_info) {
-		SPDK_ERRLOG("Failed to allocate blockdev_rbd_pool_info struct\n");
-		return NULL;
-	}
-
-	pool_info->name = strdup(rbd_pool_name);
-	if (!pool_info->name) {
-		blockdev_rbd_free_pool_info(pool_info);
-		return NULL;
-	}
-
-	TAILQ_INSERT_TAIL(&g_rbd_pools, pool_info, tailq);
-
-	return pool_info;
 }
 
 struct spdk_bdev *
 spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
 {
-	struct blockdev_rbd_pool_info *pool_info;
 	struct blockdev_rbd *rbd;
 	int ret;
 
@@ -568,30 +505,26 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
-	pool_info = blockdev_rbd_pool_info_init(pool_name);
-	if (pool_info == NULL) {
-		SPDK_ERRLOG("failed to create blockdev_rbd_pool_info\n");
-		return NULL;
-	}
-
 	rbd = calloc(1, sizeof(struct blockdev_rbd));
 	if (rbd == NULL) {
 		SPDK_ERRLOG("Failed to allocate blockdev_rbd struct\n");
-		blockdev_rbd_free_pool_info(pool_info);
 		return NULL;
 	}
 
-	rbd->pool_info = pool_info;
 	rbd->rbd_name = strdup(rbd_name);
 	if (!rbd->rbd_name) {
-		blockdev_rbd_free_pool_info(pool_info);
 		blockdev_rbd_free(rbd);
 		return NULL;
 	}
 
-	ret = blockdev_rbd_init(pool_info->name, rbd_name, &rbd->info);
+	rbd->pool_name = strdup(pool_name);
+	if (!rbd->pool_name) {
+		blockdev_rbd_free(rbd);
+		return NULL;
+	}
+
+	ret = blockdev_rbd_init(rbd->pool_name, rbd_name, &rbd->info);
 	if (ret < 0) {
-		blockdev_rbd_free_pool_info(pool_info);
 		blockdev_rbd_free(rbd);
 		SPDK_ERRLOG("Failed to init rbd device\n");
 		return NULL;

@@ -37,6 +37,18 @@
 
 #include "bit_array.c"
 
+void *
+spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
+{
+	return realloc(buf, size);
+}
+
+void
+spdk_free(void *buf)
+{
+	free(buf);
+}
+
 static void
 test_1bit(void)
 {

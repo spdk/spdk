@@ -236,13 +236,12 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	struct ioat_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 
-	SPDK_NOTICELOG(" Found matching device at %d:%d:%d vendor:0x%04x device:0x%04x\n   name:%s\n",
+	SPDK_NOTICELOG(" Found matching device at %d:%d:%d vendor:0x%04x device:0x%04x\n",
 		       pci_addr.bus,
 		       pci_addr.dev,
 		       pci_addr.func,
 		       spdk_pci_device_get_vendor_id(pci_dev),
-		       spdk_pci_device_get_device_id(pci_dev),
-		       spdk_pci_device_get_device_name(pci_dev));
+		       spdk_pci_device_get_device_id(pci_dev));
 
 	if (ctx->num_whitelist_devices > 0 &&
 	    !ioat_find_dev_by_whitelist_bdf(&pci_addr, ctx->whitelist, ctx->num_whitelist_devices)) {
@@ -279,7 +278,6 @@ copy_engine_ioat_init(void)
 	const char *val, *pci_bdf;
 	int i;
 	struct ioat_probe_ctx probe_ctx = {};
-	unsigned bus, dev, func;
 
 	if (sp != NULL) {
 		val = spdk_conf_section_get_val(sp, "Disable");
@@ -294,11 +292,11 @@ copy_engine_ioat_init(void)
 			pci_bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
 			if (!pci_bdf)
 				break;
-			sscanf(pci_bdf, "%02x:%02x.%1u", &bus, &dev, &func);
-			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].domain = 0;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].bus = bus;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].dev = dev;
-			probe_ctx.whitelist[probe_ctx.num_whitelist_devices].func = func;
+
+			if (spdk_pci_addr_parse(&probe_ctx.whitelist[probe_ctx.num_whitelist_devices], pci_bdf) < 0) {
+				SPDK_ERRLOG("Invalid Ioat Whitelist address %s\n", pci_bdf);
+				return -1;
+			}
 			probe_ctx.num_whitelist_devices++;
 		}
 	}
