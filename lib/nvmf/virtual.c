@@ -75,8 +75,8 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_session *session)
 		}
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem%d support unmap - enabling DSM\n",
-		      session->subsys->num);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
+		      session->subsys->subnqn);
 	session->vcdata.oncs.dsm = 1;
 }
 

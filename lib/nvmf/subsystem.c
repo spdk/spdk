@@ -117,7 +117,7 @@ spdk_nvmf_valid_nqn(const char *nqn)
 }
 
 struct spdk_nvmf_subsystem *
-spdk_nvmf_create_subsystem(int num, const char *name,
+spdk_nvmf_create_subsystem(const char *name,
 			   enum spdk_nvmf_subtype subtype,
 			   enum spdk_nvmf_subsystem_mode mode,
 			   void *cb_ctx,
@@ -135,7 +135,6 @@ spdk_nvmf_create_subsystem(int num, const char *name,
 		return NULL;
 	}
 
-	subsystem->num = num;
 	subsystem->subtype = subtype;
 	subsystem->mode = mode;
 	subsystem->cb_ctx = cb_ctx;

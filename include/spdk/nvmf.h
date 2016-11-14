@@ -120,7 +120,6 @@ struct spdk_nvmf_ctrlr_ops {
  * access to all the NVMe device/namespaces maintained by the subsystem.
  */
 struct spdk_nvmf_subsystem {
-	uint16_t num;
 	uint32_t lcore;
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN];
 	enum spdk_nvmf_subsystem_mode mode;
@@ -159,8 +158,7 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
 
-struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(int num,
-		const char *name,
+struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *name,
 		enum spdk_nvmf_subtype subtype,
 		enum spdk_nvmf_subsystem_mode mode,
 		void *cb_ctx,

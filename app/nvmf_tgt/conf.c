@@ -139,7 +139,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 {
 	struct nvmf_tgt_subsystem *app_subsys;
 
-	app_subsys = nvmf_tgt_create_subsystem(0, SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
+	app_subsys = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
 					       NVMF_SUBSYSTEM_MODE_DIRECT,
 					       rte_get_master_lcore());
 	if (app_subsys == NULL) {
@@ -471,7 +471,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	app_subsys = nvmf_tgt_create_subsystem(sp->num, nqn, SPDK_NVMF_SUBTYPE_NVME, mode, lcore);
+	app_subsys = nvmf_tgt_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME, mode, lcore);
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem createion failed\n");
 		return -1;
@@ -666,10 +666,9 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 	enum spdk_nvmf_subsystem_mode mode;
 	int i;
 	uint64_t mask;
-	int num = 0;
 
 	if (name == NULL) {
-		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", num);
+		SPDK_ERRLOG("No NQN specified for subsystem\n");
 		return -1;
 	}
 
@@ -683,21 +682,13 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		return -1;
 	}
 
-	app_subsys = nvmf_tgt_subsystem_first();
-	while (app_subsys) {
-		if (num < app_subsys->subsystem->num) {
-			num = app_subsys->subsystem->num + 1;
-		}
-		app_subsys = nvmf_tgt_subsystem_next(app_subsys);
-	}
-
 	/* Determine which core to assign to the subsystem */
 	mask = spdk_app_get_core_mask();
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 
 	/* Determine the mode the subsysem will operate in */
 	if (mode_str == NULL) {
-		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", num);
+		SPDK_ERRLOG("No Mode specified for Subsystem %s\n", name);
 		return -1;
 	}
 
@@ -710,7 +701,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		return -1;
 	}
 
-	app_subsys = nvmf_tgt_create_subsystem(num, name, SPDK_NVMF_SUBTYPE_NVME,
+	app_subsys = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME,
 					       mode, lcore);
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
@@ -740,12 +731,12 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		struct spdk_nvmf_probe_ctx ctx = { 0 };
 
 		if (bdf == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", num);
+			SPDK_ERRLOG("Subsystem %s: missing NVMe directive\n", name);
 			return -1;
 		}
 
 		if (num_devs != 0) {
-			SPDK_ERRLOG("Subsystem %d: Namespaces not allowed for Direct mode\n", num);
+			SPDK_ERRLOG("Subsystem %s: Namespaces not allowed for Direct mode\n", name);
 			return -1;
 		}
 
@@ -775,7 +766,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		const char *namespace;
 
 		if (sn == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing serial number\n", num);
+			SPDK_ERRLOG("Subsystem %s: missing serial number\n", name);
 			return -1;
 		}
 		if (spdk_nvmf_validate_sn(sn) != 0) {
