@@ -77,6 +77,7 @@ usage(char *executable_name)
 	printf(" -H         show this usage\n");
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -q         disable notice level logging to stderr\n");
+	printf(" -f         run iscsi target foreground, the default is background\n");
 }
 
 static void
@@ -93,6 +94,7 @@ main(int argc, char **argv)
 {
 	int ch;
 	int rc, app_rc;
+	int daemon_mode = 1;
 	struct spdk_app_opts opts = {};
 
 	/* default value in opts structure */
@@ -101,7 +103,7 @@ main(int argc, char **argv)
 	opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
 	opts.name = "iscsi";
 
-	while ((ch = getopt(argc, argv, "c:de:i:l:m:n:p:qs:t:H")) != -1) {
+	while ((ch = getopt(argc, argv, "c:de:i:l:m:n:p:qs:t:fH")) != -1) {
 		switch (ch) {
 		case 'd':
 			opts.enable_coredump = false;
@@ -147,10 +149,20 @@ main(int argc, char **argv)
 		case 's':
 			opts.dpdk_mem_size = atoi(optarg);
 			break;
+		case 'f':
+			daemon_mode = 0;
+			break;
 		case 'H':
 		default:
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
+		}
+	}
+
+	if (daemon_mode) {
+		if (daemon(1, 0) < 0) {
+			SPDK_ERRLOG("Start iscsi target daemon faild.\n");
+			exit(EXIT_FAILURE);
 		}
 	}
 
