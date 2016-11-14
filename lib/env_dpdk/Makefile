@@ -36,6 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(DPDK_INC)
 C_SRCS = env.c pci.c vtophys.c
-LIBNAME = env
+LIBNAME = env_dpdk
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

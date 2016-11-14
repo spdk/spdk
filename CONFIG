@@ -45,7 +45,7 @@ CONFIG_ADDRESS_SANITIZER?=n
 
 # Directory that contains the desired SPDK environment library.
 # By default, this is implemented using DPDK.
-CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env
+CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
 
 # This directory should contain 'include' and 'lib' directories for your DPDK
 # installation. Alternatively you can specify this on the command line
