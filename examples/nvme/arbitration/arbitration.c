@@ -1106,6 +1106,7 @@ main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker;
+	char task_pool_name[30];
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
@@ -1128,10 +1129,16 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	task_pool = rte_mempool_create("arbitration_task_pool", 8192,
+	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", getpid());
+
+	task_pool = rte_mempool_create(task_pool_name, 8192,
 				       sizeof(struct arb_task),
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
+	if (task_pool == NULL) {
+		fprintf(stderr, "could not initialize task pool\n");
+		return 1;
+	}
 
 	g_arbitration.tsc_rate = spdk_get_ticks_hz();
 

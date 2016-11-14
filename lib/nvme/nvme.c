@@ -47,12 +47,12 @@ int32_t		spdk_nvme_retry_count;
 static struct spdk_nvme_ctrlr *
 nvme_attach(void *devhandle)
 {
-	const struct spdk_nvme_transport *transport;
+	enum spdk_nvme_transport transport;
 	struct spdk_nvme_ctrlr	*ctrlr;
 
-	transport = &spdk_nvme_transport_pcie;
+	transport = SPDK_NVME_TRANSPORT_PCIE;
 
-	ctrlr = transport->ctrlr_construct(devhandle);
+	ctrlr = nvme_transport_ctrlr_construct(transport, devhandle);
 
 	return ctrlr;
 }

@@ -38,7 +38,7 @@ CFLAGS += $(ENV_CFLAGS)
 ifdef CONFIG_NVME_IO_TIMEOUT
 CFLAGS += -DNVME_IO_TIMEOUT=$(CONFIG_NVME_IO_TIMEOUT)
 endif
-C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_pcie.c nvme_qpair.c nvme.c nvme_quirks.c
+C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_pcie.c nvme_qpair.c nvme.c nvme_quirks.c nvme_transport.c
 LIBNAME = nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

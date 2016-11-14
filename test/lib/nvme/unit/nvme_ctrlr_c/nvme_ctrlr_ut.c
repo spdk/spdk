@@ -57,24 +57,26 @@ struct spdk_nvme_registers g_ut_nvme_regs = {};
 
 __thread int    nvme_thread_ioq_index = -1;
 
-static struct spdk_nvme_ctrlr *ut_ctrlr_construct(void *devhandle)
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		void *devhandle)
 {
 	return NULL;
 }
 
-static void
-ut_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
-{
-}
-
-static int
-ut_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
+int
+nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return 0;
 }
 
-static int
-ut_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
+int
+nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
 {
 	if (ctrlr == NULL || pci_id == NULL) {
 		return -EINVAL;
@@ -88,46 +90,47 @@ ut_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
 	return 0;
 }
 
-static int
-ut_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
+int
+nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 4);
 	*(uint32_t *)((uintptr_t)&g_ut_nvme_regs + offset) = value;
 	return 0;
 }
 
-static int
-ut_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
+int
+nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 8);
 	*(uint64_t *)((uintptr_t)&g_ut_nvme_regs + offset) = value;
 	return 0;
 }
 
-static int
-ut_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
+int
+nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 4);
 	*value = *(uint32_t *)((uintptr_t)&g_ut_nvme_regs + offset);
 	return 0;
 }
 
-static int
-ut_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
+int
+nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 8);
 	*value = *(uint64_t *)((uintptr_t)&g_ut_nvme_regs + offset);
 	return 0;
 }
 
-static uint32_t
-ut_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
+uint32_t
+nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return UINT32_MAX;
 }
 
-static struct spdk_nvme_qpair *
-ut_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, enum spdk_nvme_qprio qprio)
+struct spdk_nvme_qpair *
+nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
+				     enum spdk_nvme_qprio qprio)
 {
 	struct spdk_nvme_qpair *qpair;
 
@@ -141,39 +144,24 @@ ut_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, enum spdk_
 	return qpair;
 }
 
-static int
-ut_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+int
+nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	free(qpair);
 	return 0;
 }
 
-static void
-ut_qpair_reset(struct spdk_nvme_qpair *qpair)
+int
+nvme_transport_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
+	return 0;
 }
 
-static const struct spdk_nvme_transport nvme_ctrlr_ut_transport = {
-	.ctrlr_construct = ut_ctrlr_construct,
-	.ctrlr_destruct = ut_ctrlr_destruct,
-
-	.ctrlr_enable = ut_ctrlr_enable,
-
-	.ctrlr_get_pci_id = ut_ctrlr_get_pci_id,
-
-	.ctrlr_set_reg_4 = ut_ctrlr_set_reg_4,
-	.ctrlr_set_reg_8 = ut_ctrlr_set_reg_8,
-
-	.ctrlr_get_reg_4 = ut_ctrlr_get_reg_4,
-	.ctrlr_get_reg_8 = ut_ctrlr_get_reg_8,
-
-	.ctrlr_get_max_xfer_size = ut_ctrlr_get_max_xfer_size,
-
-	.ctrlr_create_io_qpair = ut_ctrlr_create_io_qpair,
-	.ctrlr_delete_io_qpair = ut_ctrlr_delete_io_qpair,
-
-	.qpair_reset = ut_qpair_reset,
-};
+int
+nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
 
 int nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			 uint16_t num_entries,
@@ -405,7 +393,6 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -454,7 +441,6 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -496,7 +482,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -640,7 +625,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -785,7 +769,6 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -931,7 +914,6 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -964,7 +946,6 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
 	memset(&g_ut_nvme_regs, 0, sizeof(g_ut_nvme_regs));
 
 	/*
@@ -1005,7 +986,6 @@ setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 	uint32_t i;
 
 	CU_ASSERT_FATAL(pthread_mutex_init(&ctrlr->ctrlr_lock, NULL) == 0);
-	ctrlr->transport = &nvme_ctrlr_ut_transport;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(ctrlr) == 0);
 
@@ -1195,11 +1175,9 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	struct spdk_nvme_intel_log_page_directory	payload = {};
 	struct spdk_pci_id				pci_id;
 
-	ctrlr.transport = &nvme_ctrlr_ut_transport;
-
 	/* set a invalid vendor id */
 	g_pci_vendor_id = 0xFFFF;
-	ut_ctrlr_get_pci_id(&ctrlr, &pci_id);
+	nvme_transport_ctrlr_get_pci_id(&ctrlr, &pci_id);
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
@@ -1209,7 +1187,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	/* set valid vendor id and log page directory*/
 	g_pci_vendor_id = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 1;
-	ut_ctrlr_get_pci_id(&ctrlr, &pci_id);
+	nvme_transport_ctrlr_get_pci_id(&ctrlr, &pci_id);
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
@@ -1230,7 +1208,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	g_pci_device_id = 0x0953;
 	g_pci_subvendor_id = SPDK_PCI_VID_INTEL;
 	g_pci_subdevice_id = 0x3702;
-	ut_ctrlr_get_pci_id(&ctrlr, &pci_id);
+	nvme_transport_ctrlr_get_pci_id(&ctrlr, &pci_id);
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 

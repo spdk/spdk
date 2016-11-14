@@ -99,6 +99,7 @@ if [ $(uname -s) = Linux ]; then
 	run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
 	run_test ./test/iscsi_tgt/idle_migration/idle_migration.sh
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
+	run_test ./test/iscsi_tgt/rbd/rbd.sh
 	timing_exit iscsi_tgt
 fi
 

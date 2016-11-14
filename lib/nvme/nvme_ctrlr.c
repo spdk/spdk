@@ -39,36 +39,36 @@ static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 static int
 nvme_ctrlr_get_cc(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cc_register *cc)
 {
-	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
-			&cc->raw);
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
+					      &cc->raw);
 }
 
 static int
 nvme_ctrlr_get_csts(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_csts_register *csts)
 {
-	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, csts.raw),
-			&csts->raw);
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, csts.raw),
+					      &csts->raw);
 }
 
 int
 nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap)
 {
-	return ctrlr->transport->ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, cap.raw),
-			&cap->raw);
+	return nvme_transport_ctrlr_get_reg_8(ctrlr, offsetof(struct spdk_nvme_registers, cap.raw),
+					      &cap->raw);
 }
 
 static int
 nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs)
 {
-	return ctrlr->transport->ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, vs.raw),
-			&vs->raw);
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, vs.raw),
+					      &vs->raw);
 }
 
 static int
 nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_register *cc)
 {
-	return ctrlr->transport->ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
-			cc->raw);
+	return nvme_transport_ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
+					      cc->raw);
 }
 
 void
@@ -119,7 +119,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	qpair = ctrlr->transport->ctrlr_create_io_qpair(ctrlr, qid, qprio);
+	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, qprio);
 	if (qpair == NULL) {
 		SPDK_ERRLOG("transport->ctrlr_create_io_qpair() failed\n");
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -149,7 +149,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
 	spdk_bit_array_set(ctrlr->free_io_qids, qpair->id);
 
-	if (ctrlr->transport->ctrlr_delete_io_qpair(ctrlr, qpair)) {
+	if (nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair)) {
 		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -1;
 	}
@@ -168,7 +168,7 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 		return;
 	}
 
-	if (ctrlr->transport->ctrlr_get_pci_id(ctrlr, &pci_id)) {
+	if (nvme_transport_ctrlr_get_pci_id(ctrlr, &pci_id)) {
 		return;
 	}
 
@@ -347,7 +347,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cc_register	cc;
 	int				rc;
 
-	rc = ctrlr->transport->ctrlr_enable(ctrlr);
+	rc = nvme_transport_ctrlr_enable(ctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("transport ctrlr_enable failed\n");
 		return rc;
@@ -454,7 +454,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	if (!ctrlr->is_failed) {
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-			if (ctrlr->transport->ctrlr_reinit_io_qpair(ctrlr, qpair) != 0) {
+			if (nvme_transport_ctrlr_reinit_io_qpair(ctrlr, qpair) != 0) {
 				nvme_ctrlr_fail(ctrlr);
 				rc = -1;
 			}
@@ -493,7 +493,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	 * Use MDTS to ensure our default max_xfer_size doesn't exceed what the
 	 *  controller supports.
 	 */
-	ctrlr->max_xfer_size = ctrlr->transport->ctrlr_get_max_xfer_size(ctrlr);
+	ctrlr->max_xfer_size = nvme_transport_ctrlr_get_max_xfer_size(ctrlr);
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
 	if (ctrlr->cdata.mdts > 0) {
 		ctrlr->max_xfer_size = nvme_min(ctrlr->max_xfer_size,
@@ -986,7 +986,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 {
-	ctrlr->transport->qpair_reset(ctrlr->adminq);
+	nvme_transport_qpair_reset(ctrlr->adminq);
 
 	nvme_qpair_enable(ctrlr->adminq);
 
@@ -1059,7 +1059,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 
-	if (ctrlr->transport->ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
+	if (nvme_transport_ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
 		ctrlr->quirks = nvme_get_quirks(&pci_id);
 	}
 
@@ -1076,8 +1076,9 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	while (!TAILQ_EMPTY(&ctrlr->active_io_qpairs)) {
 		struct spdk_nvme_qpair *qpair = TAILQ_FIRST(&ctrlr->active_io_qpairs);
 
-		spdk_nvme_ctrlr_free_io_qpair(qpair);
 		nvme_qpair_destroy(qpair);
+
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
 	nvme_ctrlr_shutdown(ctrlr);
@@ -1090,7 +1091,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 
 	nvme_ctrlr_free_processes(ctrlr);
 
-	ctrlr->transport->ctrlr_destruct(ctrlr);
+	nvme_transport_ctrlr_destruct(ctrlr);
 }
 
 int

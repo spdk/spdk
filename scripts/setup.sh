@@ -69,7 +69,7 @@ function configure_linux {
 
 	echo "1" > "/sys/bus/pci/rescan"
 
-	if ! mount | grep -q hugetlbs; then
+	if ! mount | grep -q hugetlbfs; then
 		mkdir -p /mnt/huge
 		mount -t hugetlbfs nodev /mnt/huge
 	fi
@@ -80,7 +80,7 @@ function configure_linux {
 
 		MEMLOCK_AMNT=`ulimit -l`
 		if [ "$MEMLOCK_AMNT" != "unlimited" ] ; then
-			MEMLOCK_MB=`expr $MEMLOCK_AMNT / 1024`
+			MEMLOCK_MB=$(( $MEMLOCK_AMNT / 1024 ))
 			echo ""
 			echo "Current user memlock limit: ${MEMLOCK_MB} MB"
 			echo ""

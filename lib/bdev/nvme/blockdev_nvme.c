@@ -558,6 +558,12 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 
 	for (ns_id = 1; ns_id <= num_ns; ns_id++) {
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+
+		if (!spdk_nvme_ns_is_active(ns)) {
+			SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Skipping inactive NS %d\n", ns_id);
+			continue;
+		}
+
 		bdev_size = spdk_nvme_ns_get_num_sectors(ns) / bdev_per_ns;
 
 		/*
@@ -647,8 +653,12 @@ queued_reset_sgl(void *ref, uint32_t sgl_offset)
 	}
 }
 
+#define min(a, b) (((a)<(b))?(a):(b))
+
+#define _2MB_OFFSET(ptr)	(((uintptr_t)ptr) &  (0x200000 - 1))
+
 static int
-queued_next_sge(void *ref, uint64_t *address, uint32_t *length)
+queued_next_sge(void *ref, void **address, uint32_t *length)
 {
 	struct nvme_blockio *bio = ref;
 	struct iovec *iov;
@@ -656,15 +666,21 @@ queued_next_sge(void *ref, uint64_t *address, uint32_t *length)
 	assert(bio->iovpos < bio->iovcnt);
 
 	iov = &bio->iovs[bio->iovpos];
-	bio->iovpos++;
 
-	*address = spdk_vtophys(iov->iov_base);
+	*address = iov->iov_base;
 	*length = iov->iov_len;
 
 	if (bio->iov_offset) {
 		assert(bio->iov_offset <= iov->iov_len);
 		*address += bio->iov_offset;
 		*length -= bio->iov_offset;
+	}
+
+	*length = min(*length, 0x200000 - _2MB_OFFSET(*address));
+
+	bio->iov_offset += *length;
+	if (bio->iov_offset == iov->iov_len) {
+		bio->iovpos++;
 		bio->iov_offset = 0;
 	}
 

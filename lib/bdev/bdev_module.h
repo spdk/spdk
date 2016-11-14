@@ -120,6 +120,26 @@ struct spdk_bdev_module_if {
 	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
 };
 
+/**
+ * Function table for a block device backend.
+ *
+ * The backend block device function table provides a set of APIs to allow
+ * communication with a backend. The main commands are read/write API
+ * calls for I/O via submit_request.
+ */
+struct spdk_bdev_fn_table {
+	/** Destroy the backend block device object */
+	int (*destruct)(struct spdk_bdev *bdev);
+
+	/** Process the IO. */
+	void (*submit_request)(struct spdk_bdev_io *);
+
+	/** Check if the block device supports a specific I/O type. */
+	bool (*io_type_supported)(struct spdk_bdev *bdev, enum spdk_bdev_io_type);
+
+	/** Get an I/O channel for the specific bdev for the calling thread. */
+	struct spdk_io_channel *(*get_io_channel)(struct spdk_bdev *bdev, uint32_t priority);
+};
 
 void spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb);

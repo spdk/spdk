@@ -64,6 +64,13 @@ void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
+ * Resize the allocated and pinned memory buffer with the given
+ *   new size and alignment. Existing contents are preserved.
+ */
+void *
+spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
+
+/**
  * Free a memory buffer previously allocated with spdk_zmalloc.
  *   This call is never made from the performance path.
  */
@@ -230,6 +237,19 @@ int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_
  * \return 0 on success, or a negated errno value on failure.
  */
 int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
+
+/**
+ * Call a function with CPU affinity unset.
+ *
+ * This can be used to run a function that creates other threads without inheriting the calling
+ * thread's CPU affinity.
+ *
+ * \param cb function to call
+ * \param arg parameter to cb function
+ *
+ * \return the return value of cb()
+ */
+void *spdk_call_unaffinitized(void *cb(void *arg), void *arg);
 
 #ifdef __cplusplus
 }

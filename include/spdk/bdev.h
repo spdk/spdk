@@ -55,6 +55,7 @@
 #define SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH	50
 
 struct spdk_bdev_io;
+struct spdk_bdev_fn_table;
 
 /**
  * \brief SPDK block device.
@@ -114,29 +115,9 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_RESET,
 };
 
-/**
- * Function table for a block device backend.
- *
- * The backend block device function table provides a set of APIs to allow
- * communication with a backend. The main commands are read/write API
- * calls for I/O via submit_request.
- */
-struct spdk_bdev_fn_table {
-	/** Destroy the backend block device object */
-	int (*destruct)(struct spdk_bdev *bdev);
-
-	/** Process the IO. */
-	void (*submit_request)(struct spdk_bdev_io *);
-
-	/** Check if the block device supports a specific I/O type. */
-	bool (*io_type_supported)(struct spdk_bdev *bdev, enum spdk_bdev_io_type);
-
-	/** Get an I/O channel for the specific bdev for the calling thread. */
-	struct spdk_io_channel *(*get_io_channel)(struct spdk_bdev *bdev, uint32_t priority);
-};
-
 /** Blockdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_SCSI_ERROR = -3,
 	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
 	SPDK_BDEV_IO_STATUS_PENDING = 0,
@@ -252,6 +233,17 @@ struct spdk_bdev_io {
 			/** NVMe status code */
 			int sc;
 		} nvme;
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
+		struct {
+			/** SCSI status code */
+			enum spdk_scsi_status sc;
+			/** SCSI sense key */
+			enum spdk_scsi_sense sk;
+			/** SCSI additional sense code */
+			uint8_t asc;
+			/** SCSI additional sense code qualifier */
+			uint8_t ascq;
+		} scsi;
 	} error;
 
 	/** User function that will be called when this completes */
@@ -321,4 +313,6 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority);
+void spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
+				 enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
 #endif /* SPDK_BDEV_H_ */

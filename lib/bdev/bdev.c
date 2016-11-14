@@ -340,7 +340,7 @@ struct spdk_bdev_io *spdk_bdev_get_io(void)
 	rc = rte_mempool_get(spdk_bdev_g_io_pool, (void **)&bdev_io);
 	if (rc < 0 || !bdev_io) {
 		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
-		rte_panic("no memory\n");
+		abort();
 	}
 
 	memset(bdev_io, 0, sizeof(*bdev_io));
@@ -834,6 +834,17 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 	assert(bdev_io->cb_event != NULL);
 	spdk_event_call(bdev_io->cb_event);
+}
+
+void
+spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
+			    enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
+{
+	bdev_io->status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
+	bdev_io->error.scsi.sc = sc;
+	bdev_io->error.scsi.sk = sk;
+	bdev_io->error.scsi.asc = asc;
+	bdev_io->error.scsi.ascq = ascq;
 }
 
 void

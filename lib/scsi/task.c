@@ -59,11 +59,11 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 				bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 			spdk_bdev_free_io(bdev_io);
-		} else if (task->iov_flags & SPDK_SCSI_TASK_ALLOC_BUFFER) {
-			spdk_free(task->iov.iov_base);
 		}
 
+		spdk_scsi_task_free_data(task);
 		assert(task->owner_task_ctr != NULL);
+
 		if (*(task->owner_task_ctr) > 0) {
 			*(task->owner_task_ctr) -= 1;
 		} else {
@@ -87,6 +87,7 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 	/*
 	 * Pre-fill the iov_buffers to point to the embedded iov
 	 */
+	assert(task->iov.iov_base == NULL);
 	task->iovs = &task->iov;
 	task->iovcnt = 1;
 
@@ -105,29 +106,47 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 }
 
 void
-spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len,
-			  uint8_t **data)
+spdk_scsi_task_free_data(struct spdk_scsi_task *task)
 {
-	/*
-	 * SPDK iSCSI target depends on allocating at least 4096 bytes, even if
-	 *  the command requested less.  The individual command code (for
-	 *  example, INQUIRY) will fill out up to 4096 bytes of data, ignoring
-	 *  the allocation length specified in the command.  After the individual
-	 *  command functions are done, spdk_scsi_lun_execute_tasks() takes
-	 *  care of only sending back the amount of data specified in the
-	 *  allocation length.
-	 */
-	if (alloc_len < 4096) {
-		alloc_len = 4096;
+	if (task->alloc_len != 0) {
+		spdk_free(task->iov.iov_base);
+		task->alloc_len = 0;
 	}
+
+	task->iov.iov_base = NULL;
+	task->iov.iov_len = 0;
+}
+
+void *
+spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
+{
+	assert(task->alloc_len == 0);
+
+	/* Only one buffer is managable */
+	if (task->iovcnt != 1) {
+		return NULL;
+	}
+
 	/* This is workaround for buffers shorter than 4kb */
 	if (task->iov.iov_base == NULL) {
 		task->iov.iov_base = spdk_zmalloc(alloc_len, 0, NULL);
-		task->iov_flags |= SPDK_SCSI_TASK_ALLOC_BUFFER;
+		task->alloc_len = alloc_len;
 	}
-	task->alloc_len = alloc_len;
-	*data = task->iov.iov_base;
-	memset(task->iov.iov_base, 0, task->alloc_len);
+
+	task->iov.iov_len = alloc_len;
+	assert(&task->iov == task->iovs);
+
+	return task->iov.iov_base;
+}
+
+void
+spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len)
+{
+	assert(task->iovcnt == 1);
+	assert(task->alloc_len == 0);
+
+	task->iovs[0].iov_base = data;
+	task->iovs[0].iov_len = len;
 }
 
 void

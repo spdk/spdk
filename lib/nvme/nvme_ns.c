@@ -191,7 +191,7 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 	ns->id = id;
 	ns->stripe_size = 0;
 
-	if (ctrlr->transport->ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
+	if (nvme_transport_ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
 		if (pci_id.vendor_id == SPDK_PCI_VID_INTEL &&
 		    pci_id.device_id == INTEL_DC_P3X00_DEVID &&
 		    ctrlr->cdata.vs[3] != 0) {

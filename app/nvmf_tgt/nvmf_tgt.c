@@ -239,7 +239,7 @@ nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subt
 	app_subsys->subsystem = subsystem;
 	app_subsys->lcore = lcore;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "allocated subsystem %p on lcore %u\n", subsystem, lcore);
+	SPDK_NOTICELOG("allocated subsystem %s on lcore %u\n", name, lcore);
 
 	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
 
