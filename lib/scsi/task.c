@@ -122,21 +122,87 @@ spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
 {
 	assert(task->alloc_len == 0);
 
-	/* Only one buffer is managable */
-	if (task->iovcnt != 1) {
+	task->iov.iov_base = spdk_zmalloc(alloc_len, 0, NULL);
+	task->iov.iov_len = alloc_len;
+	task->alloc_len = alloc_len;
+
+	return task->iov.iov_base;
+}
+
+int
+spdk_scsi_task_scatter_data(struct spdk_scsi_task *task, const void *src, size_t buf_len)
+{
+	size_t len = 0;
+	size_t buf_left = buf_len;
+	int i;
+	struct iovec *iovs = task->iovs;
+	const uint8_t *pos;
+
+	if (buf_len == 0)
+		return 0;
+
+	if (task->iovcnt == 1 && iovs[0].iov_base == NULL) {
+		spdk_scsi_task_alloc_data(task, buf_len);
+		iovs[0] = task->iov;
+	}
+
+	for (i = 0; i < task->iovcnt; i++) {
+		assert(iovs[i].iov_base != NULL);
+		len += iovs[i].iov_len;
+	}
+
+	if (len < buf_len) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -1;
+	}
+
+	pos = src;
+
+	for (i = 0; i < task->iovcnt; i++) {
+		len = SPDK_MIN(iovs[i].iov_len, buf_left);
+		buf_left -= len;
+		memcpy(iovs[i].iov_base, pos, len);
+		pos += len;
+	}
+
+	return buf_len;
+}
+
+void *
+spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len)
+{
+	int i;
+	struct iovec *iovs = task->iovs;
+	size_t buf_len = 0;
+	uint8_t *buf, *pos;
+
+	for (i = 0; i < task->iovcnt; i++) {
+		assert(iovs[i].iov_base != NULL);
+		buf_len += iovs[i].iov_len;
+	}
+
+	if (buf_len == 0) {
+		*len = 0;
 		return NULL;
 	}
 
-	/* This is workaround for buffers shorter than 4kb */
-	if (task->iov.iov_base == NULL) {
-		task->iov.iov_base = spdk_zmalloc(alloc_len, 0, NULL);
-		task->alloc_len = alloc_len;
+	buf = spdk_malloc(buf_len, 0, NULL);
+	if (buf == NULL) {
+		*len = -1;
+		return NULL;
 	}
 
-	task->iov.iov_len = alloc_len;
-	assert(&task->iov == task->iovs);
+	pos = buf;
+	for (i = 0; i < task->iovcnt; i++) {
+		memcpy(pos, iovs[i].iov_base, iovs[i].iov_len);
+		pos += iovs[i].iov_len;
+	}
 
-	return task->iov.iov_base;
+	*len = buf_len;
+	return buf;
 }
 
 void
