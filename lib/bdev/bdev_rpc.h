@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
+ *   Copyright (C) 2016 Song Jin <song.jin@istuary.com>.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,48 +31,18 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_BLOCKDEV_AIO_H
-#define SPDK_BLOCKDEV_AIO_H
+/** \file
+ * Block Device Module Interface
+ */
 
-#include <stdint.h>
-#include <libaio.h>
+#ifndef SPDK_BDEV_RPC_H_
+#define SPDK_BDEV_RPC_H_
 
-#include "spdk/queue.h"
 #include "spdk/bdev.h"
 
-#include "bdev_module.h"
+struct spdk_scsi_dev *
+spdk_bdev_get_scsi_dev(const char *target_name);
+int 
+spdk_bdev_rpc_add(struct spdk_bdev *bdev, const char *target_name);
 
-#define SPDK_AIO_KEY_NAME "AIO"
-
-struct blockdev_aio_task {
-	struct iocb			iocb;
-	uint64_t			len;
-	TAILQ_ENTRY(blockdev_aio_task)	link;
-};
-
-struct blockdev_aio_io_channel {
-	io_context_t		io_ctx;
-	long			queue_depth;
-	struct io_event		*events;
-	struct spdk_poller	*poller;
-};
-
-struct file_disk {
-	struct spdk_bdev	disk;	/* this must be first element */
-	char			*file;
-	int			fd;
-	char			disk_name[SPDK_BDEV_MAX_NAME_LENGTH];
-	uint64_t		size;
-
-	/**
-	 * For storing I/O that were completed synchronously, and will be
-	 *   completed during next check_io call.
-	 */
-	TAILQ_HEAD(, blockdev_aio_task) sync_completion_list;
-};
-
-struct spdk_bdev *create_aio_disk(char *fname, const char *target_name);
-
-void blockdev_aio_free_disk(struct spdk_bdev *bdev);
-
-#endif // SPDK_BLOCKDEV_AIO_H
+#endif /* SPDK_BDEV_RPC_H_ */

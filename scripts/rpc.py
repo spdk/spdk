@@ -162,6 +162,18 @@ p.add_argument('block_size', help='Block size for this bdev', type=int)
 p.set_defaults(func=construct_malloc_bdev)
 
 
+def construct_malloc_bdev_in_target(args):
+    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    params = {'target_name': args.target_name, 'num_blocks': num_blocks, 'block_size': args.block_size}
+    print_array(jsonrpc_call('construct_malloc_bdev_in_target', params))
+
+p = subparsers.add_parser('construct_malloc_bdev_in_target', help='Add a bdev in special target with malloc backend')
+p.add_argument('target_name', help='target name (refer to TargetName cell of configure file)')
+p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
+p.add_argument('block_size', help='Block size for this bdev', type=int)
+p.set_defaults(func=construct_malloc_bdev_in_target)
+
+
 def construct_aio_bdev(args):
     params = {'fname': args.fname}
     print_array(jsonrpc_call('construct_aio_bdev', params))
@@ -169,6 +181,15 @@ def construct_aio_bdev(args):
 p = subparsers.add_parser('construct_aio_bdev', help='Add a bdev with aio backend')
 p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
 p.set_defaults(func=construct_aio_bdev)
+
+def construct_aio_bdev_in_target(args):
+    params = {'target_name': args.target_name, 'fname': args.fname}
+    print_array(jsonrpc_call('construct_aio_bdev_in_target', params))
+
+p = subparsers.add_parser('construct_aio_bdev_in_target', help='Add a bdev in special target with aio backend')
+p.add_argument('target_name', help='target name (refer to TargetName cell of configure file)')
+p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
+p.set_defaults(func=construct_aio_bdev_in_target)
 
 def construct_nvme_bdev(args):
     params = {'pci_address': args.pci_address}
@@ -190,6 +211,22 @@ p.add_argument('pool_name', help='rbd pool name')
 p.add_argument('rbd_name', help='rbd image name')
 p.add_argument('block_size', help='rbd block size', type=int)
 p.set_defaults(func=construct_rbd_bdev)
+
+def construct_rbd_bdev_in_target(args):
+    params = {
+        'target_name': args.target_name,
+        'pool_name': args.pool_name,
+        'rbd_name': args.rbd_name,
+        'size': args.size,
+    }
+    print_array(jsonrpc_call('construct_rbd_bdev_in_target', params))
+
+p = subparsers.add_parser('construct_rbd_bdev_in_target', help='Add a bdev in special target with ceph rbd backend')
+p.add_argument('target_name', help='target name ((refer to TargetName cell of configure file))')
+p.add_argument('pool_name', help='rbd pool name')
+p.add_argument('rbd_name', help='rbd image name')
+p.add_argument('size', help='rbd block size', type=int)
+p.set_defaults(func=construct_rbd_bdev_in_target)
 
 def set_trace_flag(args):
     params = {'flag': args.flag}

@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS) -I.
-C_SRCS = bdev.c
+C_SRCS = bdev.c bdev_rpc.c
 LIBNAME = bdev
 
 DIRS-y += malloc nvme rpc

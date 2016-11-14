@@ -34,11 +34,13 @@
 #ifndef SPDK_BLOCKDEV_RBD_H
 #define SPDK_BLOCKDEV_RBD_H
 
+#define SPDK_RBD_KEY_NAME "Ceph"
 #include <stdint.h>
 
 #include "spdk/bdev.h"
 
 struct spdk_bdev *spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name,
-				       uint32_t block_size);
+				       uint32_t block_size, const char *target_name);
 
+void blockdev_rbd_free_disk(struct spdk_bdev *bdev);
 #endif // SPDK_BLOCKDEV_RBD_H

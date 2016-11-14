@@ -72,9 +72,6 @@ extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
 /* This typedef exists to work around an astyle 2.05 bug.
  * Remove it when astyle is fixed.
  */
-typedef struct spdk_scsi_lun _spdk_scsi_lun;
-
-_spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev);
 
 void spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
@@ -94,7 +91,6 @@ int spdk_scsi_lun_db_delete(struct spdk_scsi_lun *lun);
 struct spdk_scsi_lun *spdk_lun_db_get_lun(const char *lun_name, int claim_flag);
 void spdk_lun_db_put_lun(const char *lun_name);
 
-struct spdk_scsi_dev *spdk_scsi_dev_get_list(void);
 
 int spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
 int spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task);

@@ -31,8 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "blockdev_rbd.h"
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <errno.h>
@@ -46,13 +44,17 @@
 #include <rbd/librbd.h>
 #include <rados/librados.h>
 
+#include "blockdev_rbd.h"
+#include "bdev_module.h"
+#include "blockdev_rbd.h"
+#include "bdev_rpc.h"
+
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
-
-#include "bdev_module.h"
+#include "spdk/scsi.h"
 
 static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int blockdev_rbd_count = 0;
@@ -90,6 +92,69 @@ blockdev_rbd_free(struct blockdev_rbd *rbd)
 	free(rbd->rbd_name);
 	free(rbd->pool_name);
 	free(rbd);
+}
+
+static bool
+is_rbd_device(const char *dev_name) {
+	return (strstr(dev_name, SPDK_RBD_KEY_NAME) ? true : false);
+}
+
+static bool
+blockdev_rbd_check_device(const char *pool_name, const char *rbd_name, const char *target_name)
+{
+	struct blockdev_rbd *rbd;
+	struct spdk_scsi_dev *scsi_dev;
+	int i;
+
+	if (target_name == NULL) {
+		return true;
+	}
+
+	if (pool_name == NULL || rbd_name == NULL) {
+		return false;
+	}
+
+	if ((scsi_dev = spdk_bdev_get_scsi_dev(target_name)) == NULL) {
+		SPDK_ERRLOG("%s iscsi target doesn't exist\n", target_name);
+		return false;
+	}
+
+	for (i = 0; i < scsi_dev->maxlun; i++) {
+		if (is_rbd_device(scsi_dev->lun[i]->name)) {
+			rbd = (struct blockdev_rbd *)scsi_dev->lun[i]->bdev;
+			if (!strcmp(rbd->rbd_name, rbd_name) && !strcmp(rbd->pool_name, pool_name)) {
+				SPDK_ERRLOG("%s/%s device has already been created!\n", pool_name, rbd_name);
+				return false;
+			}
+			
+		}
+	}
+	
+	return true;
+}
+
+static void
+blockdev_rbd_free_from_queue(struct blockdev_rbd *rbd)
+{
+	struct blockdev_rbd *rbdq, *rbdq_tmp;
+
+	if (!rbd) {
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(rbdq, &g_rbds, tailq, rbdq_tmp) {
+		if (rbd == rbdq) {
+			TAILQ_REMOVE(&g_rbds, rbdq, tailq);
+			blockdev_rbd_free(rbdq);
+		}
+	}
+}
+
+void 
+blockdev_rbd_free_disk(struct spdk_bdev *bdev)
+{
+	spdk_io_device_unregister(bdev);
+	spdk_bdev_unregister(bdev);
 }
 
 static int
@@ -256,6 +321,8 @@ blockdev_rbd_flush(struct blockdev_rbd *disk, struct spdk_io_channel *ch,
 static int
 blockdev_rbd_destruct(struct spdk_bdev *bdev)
 {
+	struct blockdev_rbd *rbd = (struct blockdev_rbd *)bdev;
+	blockdev_rbd_free_from_queue(rbd);
 	return 0;
 }
 
@@ -496,12 +563,16 @@ blockdev_rbd_library_fini(void)
 }
 
 struct spdk_bdev *
-spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
+spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size, const char *target_name)
 {
 	struct blockdev_rbd *rbd;
 	int ret;
 
 	if ((pool_name == NULL) || (rbd_name == NULL)) {
+		return NULL;
+	}
+	
+	if (!blockdev_rbd_check_device(pool_name, rbd_name, target_name)) {
 		return NULL;
 	}
 
@@ -530,9 +601,9 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
-	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
+	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "%s%d", SPDK_RBD_KEY_NAME,
 		 blockdev_rbd_count);
-	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph rbd");
+	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "%s rbd", SPDK_RBD_KEY_NAME);
 	blockdev_rbd_count++;
 
 	rbd->disk.write_cache = 0;
@@ -560,7 +631,7 @@ blockdev_rbd_library_init(void)
 	const char *rbd_name;
 	uint32_t block_size;
 
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Ceph");
+	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, SPDK_RBD_KEY_NAME);
 
 	if (sp == NULL) {
 		/*
@@ -571,24 +642,24 @@ blockdev_rbd_library_init(void)
 
 	/* Init rbd block devices */
 	for (i = 0; ; i++) {
-		val = spdk_conf_section_get_nval(sp, "Ceph", i);
+		val = spdk_conf_section_get_nval(sp, SPDK_RBD_KEY_NAME, i);
 		if (val == NULL)
 			break;
 
 		/* get the Rbd_pool name */
-		pool_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 0);
+		pool_name = spdk_conf_section_get_nmval(sp, SPDK_RBD_KEY_NAME, i, 0);
 		if (pool_name == NULL) {
-			SPDK_ERRLOG("Ceph%d: rbd pool name needs to be provided\n", i);
+			SPDK_ERRLOG("%s%d: rbd pool name needs to be provided\n", SPDK_RBD_KEY_NAME, i);
 			goto cleanup;
 		}
 
-		rbd_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 1);
+		rbd_name = spdk_conf_section_get_nmval(sp, SPDK_RBD_KEY_NAME, i, 1);
 		if (rbd_name == NULL) {
-			SPDK_ERRLOG("Ceph%d: format error\n", i);
+			SPDK_ERRLOG("%s%d: format error\n", SPDK_RBD_KEY_NAME, i);
 			goto cleanup;
 		}
 
-		val = spdk_conf_section_get_nmval(sp, "Ceph", i, 2);
+		val = spdk_conf_section_get_nmval(sp, SPDK_RBD_KEY_NAME, i, 2);
 
 		if (val == NULL) {
 			block_size = 512; /* default value */
@@ -601,7 +672,7 @@ blockdev_rbd_library_init(void)
 			}
 		}
 
-		if (spdk_bdev_rbd_create(pool_name, rbd_name, block_size) == NULL) {
+		if (spdk_bdev_rbd_create(pool_name, rbd_name, block_size, NULL) == NULL) {
 			goto cleanup;
 		}
 	}

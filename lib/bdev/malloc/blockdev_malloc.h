@@ -38,6 +38,9 @@
 
 #include "spdk/bdev.h"
 
+#define SPDK_MALLOC_KEY_NAME "Malloc"
+
 struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size);
+void blockdev_malloc_free_disk(struct spdk_bdev *bdev);
 
 #endif /* SPDK_BLOCKDEV_MALLOC_H */
