@@ -39,7 +39,7 @@
 
 #ifdef DEBUG
 static __attribute__((noreturn)) void
-nvme_transport_unknown(enum spdk_nvme_transport transport)
+nvme_transport_unknown(enum spdk_nvme_transport_type transport)
 {
 	SPDK_ERRLOG("Unknown transport %d\n", (int)transport);
 	abort();
@@ -50,21 +50,33 @@ nvme_transport_unknown(enum spdk_nvme_transport transport)
 #endif
 
 #define TRANSPORT_PCIE(func_name, args)	case SPDK_NVME_TRANSPORT_PCIE: return nvme_pcie_ ## func_name args;
-
+#ifdef SPDK_CONFIG_RDMA
+#define TRANSPORT_FABRICS_RDMA(func_name, args)	case SPDK_NVME_TRANSPORT_RDMA: return nvme_rdma_ ## func_name args;
+#else
+#define TRANSPORT_FABRICS_RDMA(func_name, args)
+#endif
 #define NVME_TRANSPORT_CALL(transport, func_name, args) 	\
 	do {							\
 		switch (transport) {				\
 		TRANSPORT_PCIE(func_name, args)			\
+		TRANSPORT_FABRICS_RDMA(func_name, args)		\
 		TRANSPORT_DEFAULT(transport)			\
 		}						\
 		SPDK_UNREACHABLE();				\
 	} while (0)
 
 
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport_type transport,
 		void *devhandle)
 {
 	NVME_TRANSPORT_CALL(transport, ctrlr_construct, (transport, devhandle));
+}
+
+int
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport_type transport,
+			  struct nvme_enum_ctx *enum_ctx, void *devhandle)
+{
+	NVME_TRANSPORT_CALL(transport, ctrlr_scan, (transport, enum_ctx, devhandle));
 }
 
 int

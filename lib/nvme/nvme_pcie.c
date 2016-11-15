@@ -426,7 +426,28 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 				    SPDK_NVME_QPRIO_URGENT);
 }
 
-struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport transport,
+/* This function must only be called while holding g_spdk_nvme_driver->lock */
+static int
+pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
+{
+	struct spdk_nvme_probe_info probe_info = {};
+	struct nvme_enum_ctx *enum_ctx = ctx;
+
+	probe_info.pci_addr = spdk_pci_device_get_addr(pci_dev);
+	probe_info.pci_id = spdk_pci_device_get_id(pci_dev);
+
+	return  enum_ctx->enum_cb(SPDK_NVME_TRANSPORT_PCIE, &enum_ctx->usr_ctx, &probe_info,
+				  (void *)pci_dev);
+}
+
+int
+nvme_pcie_ctrlr_scan(enum spdk_nvme_transport_type transport,
+		     struct nvme_enum_ctx *enum_ctx, void *devhandle)
+{
+	return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, enum_ctx);
+}
+
+struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type transport,
 		void *devhandle)
 {
 	struct spdk_pci_device *pci_dev = devhandle;

@@ -44,6 +44,10 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_nvme.a \
 	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
 	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
 
+ifeq ($(CONFIG_RDMA), y)
+LIBS += -libverbs -lrdmacm
+endif
+
 LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 
 ifeq ($(OS),Linux)

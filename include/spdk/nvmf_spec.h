@@ -46,6 +46,9 @@
 
 #pragma pack(push, 1)
 
+/* Minimum number of admin queue entries defined by NVMe over Fabrics spec */
+#define SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES	32
+
 struct spdk_nvmf_capsule_cmd {
 	uint8_t		opcode;
 	uint8_t		reserved1;

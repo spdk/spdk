@@ -55,6 +55,10 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_bdev.a \
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS)
 
+ifeq ($(CONFIG_RDMA), y)
+LIBS += -libverbs -lrdmacm
+endif
+
 LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS) -lcunit
 
 all : $(APP)

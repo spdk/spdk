@@ -56,6 +56,7 @@
 #include "spdk/mmio.h"
 #include "spdk/pci_ids.h"
 #include "spdk/nvme_intel.h"
+#include "spdk/nvmf_spec.h"
 
 #include "spdk_internal/log.h"
 
@@ -91,6 +92,7 @@
  *  try to configure, if available.
  */
 #define DEFAULT_MAX_IO_QUEUES		(1024)
+#define DEFAULT_MAX_QUEUE_SIZE		(256)
 
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
@@ -218,10 +220,6 @@ struct nvme_request {
 	void				*user_buffer;
 };
 
-enum spdk_nvme_transport {
-	SPDK_NVME_TRANSPORT_PCIE,
-};
-
 struct nvme_completion_poll_status {
 	struct spdk_nvme_cpl	cpl;
 	bool			done;
@@ -236,7 +234,7 @@ struct nvme_async_event_request {
 struct spdk_nvme_qpair {
 	STAILQ_HEAD(, nvme_request)	queued_req;
 
-	enum spdk_nvme_transport	transport;
+	enum spdk_nvme_transport_type	transport;
 
 	uint16_t			id;
 
@@ -325,7 +323,7 @@ struct spdk_nvme_ctrlr {
 	/** Array of namespaces indexed by nsid - 1 */
 	struct spdk_nvme_ns		*ns;
 
-	enum spdk_nvme_transport	transport;
+	enum spdk_nvme_transport_type	transport;
 
 	uint32_t			num_ns;
 
@@ -524,11 +522,27 @@ int	nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
 void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
+struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport_type transport, void *devhandle);
+
+struct nvme_enum_usr_ctx {
+	spdk_nvme_probe_cb probe_cb;
+	void *cb_ctx;
+};
+
+typedef int (*nvme_ctrlr_enum_cb)(enum spdk_nvme_transport_type type,
+				  struct nvme_enum_usr_ctx *enum_usr_ctx,
+				  struct spdk_nvme_probe_info *probe_info, void *devhandle);
+
+struct nvme_enum_ctx {
+	struct nvme_enum_usr_ctx usr_ctx;
+	nvme_ctrlr_enum_cb enum_cb;
+};
 
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
-	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport transport, void *devhandle); \
+	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport_type transport, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
+	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport_type transport, struct nvme_enum_ctx *enum_ctx, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \
@@ -550,6 +564,9 @@ void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 
 DECLARE_TRANSPORT(transport) /* generic transport dispatch functions */
 DECLARE_TRANSPORT(pcie)
+#ifdef  SPDK_CONFIG_RDMA
+DECLARE_TRANSPORT(rdma)
+#endif
 
 #undef DECLARE_TRANSPORT
 

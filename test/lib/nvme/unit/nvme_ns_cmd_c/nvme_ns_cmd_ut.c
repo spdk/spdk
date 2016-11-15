@@ -56,7 +56,7 @@ static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 	return 0;
 }
 
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport_type transport,
 		void *devhandle)
 {
 	return NULL;
@@ -150,6 +150,13 @@ nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 
 int
 nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport_type transport,
+			  struct nvme_enum_ctx *enum_ctx, void *devhandle)
 {
 	return 0;
 }

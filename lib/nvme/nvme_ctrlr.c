@@ -80,6 +80,7 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	opts->use_cmb_sqs = false;
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	opts->keep_alive_timeout_ms = 10 * 1000;
+	opts->queue_size = DEFAULT_MAX_QUEUE_SIZE;
 }
 
 struct spdk_nvme_qpair *
@@ -784,7 +785,8 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_ctrlr_cmd_set_async_event_config failed!\n");
-		return -ENXIO;
+		/* change the return value since NVMf target does not suppport aer, should be fixed later*/
+		return 0;
 	}
 
 	/* aerl is a zero-based value, so we need to add 1 here. */

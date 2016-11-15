@@ -36,10 +36,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <rte_config.h>
 #include <rte_lcore.h>
 
+#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
@@ -65,6 +67,8 @@ static struct spdk_nvme_intel_temperature_page intel_temperature_page;
 static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
+
+static struct spdk_nvme_discover_info info;
 
 static void
 hex_dump(const void *data, size_t size)
@@ -845,26 +849,73 @@ usage(const char *program_name)
 {
 	printf("%s [options]", program_name);
 	printf("\n");
+	printf("\t-x print hex dump of raw data\n");
 	printf("options:\n");
-	printf("  -x  print hex dump of raw data\n");
+	printf("\t-a addr         address for nvmf target\n");
+	printf("\t-s service      service id for nvmf target\n");
+	printf("\t-n nqn          nqn for nvmf target\n");
+
+	spdk_tracelog_usage(stdout, "-t");
+
+	printf("\t-v         - verbose (enable warnings)\n");
+	printf("\t-H         - show this usage\n");
 }
 
 static int
 parse_args(int argc, char **argv)
 {
-	int op;
+	int op, rc;
 
-	while ((op = getopt(argc, argv, "x")) != -1) {
+	while ((op = getopt(argc, argv, "a:n:s:t:x:H")) != -1) {
 		switch (op) {
 		case 'x':
 			g_hex_dump = true;
 			break;
+		case 't':
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifndef DEBUG
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
+				argv[0]);
+			usage(argv[0]);
+			return 0;
+#endif
+			break;
+		case 'a':
+			info.traddr = optarg;
+			break;
+		case 's':
+			info.trsvcid = optarg;
+			break;
+		case 'n':
+			info.nqn = optarg;
+			break;
+		case 'H':
 		default:
 			usage(argv[0]);
 			return 1;
 		}
 	}
 
+	if (!info.traddr || !info.trsvcid || !info.nqn) {
+		return 0;
+	}
+
+	if ((strlen(info.traddr) > 255)) {
+		printf("The string len of traddr should <= 255\n");
+		return 0;
+	}
+
+	if ((strlen(info.nqn) > 223)) {
+		printf("The string len of nqn should <= 223\n");
+		return 0;
+	}
+
+	info.type = SPDK_NVME_TRANSPORT_RDMA;
 	optind = 1;
 
 	return 0;
@@ -889,6 +940,7 @@ static const char *ealargs[] = {
 	"identify",
 	"-c 0x1",
 	"-n 4",
+	"-m 512",
 	"--proc-type=auto",
 };
 
@@ -898,6 +950,7 @@ int main(int argc, char **argv)
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
+		printf("parse_args error\n");
 		return rc;
 	}
 
@@ -910,6 +963,12 @@ int main(int argc, char **argv)
 	}
 
 	rc = 0;
+	if (info.type == SPDK_NVME_TRANSPORT_RDMA) {
+		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
+			fprintf(stderr, "spdk_nvme_probe() failed\n");
+		}
+	}
+
 	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;

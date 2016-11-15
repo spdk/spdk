@@ -113,6 +113,7 @@ run_test test/nvmf/fio/fio.sh
 run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
+run_test test/nvmf/host/identify.sh
 
 timing_exit nvmf
 

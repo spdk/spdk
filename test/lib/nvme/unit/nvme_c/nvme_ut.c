@@ -57,10 +57,17 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 	return pci_id;
 }
 
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport_type transport,
 		void *devhandle)
 {
 	return NULL;
+}
+
+int
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport_type transport,
+			  struct nvme_enum_ctx *enum_ctx, void *devhandle)
+{
+	return 0;
 }
 
 void

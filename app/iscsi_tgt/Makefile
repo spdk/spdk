@@ -63,6 +63,9 @@ SPDK_LIBS = \
 	$(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
 	$(SPDK_ROOT_DIR)/build/lib/libspdk_app_rpc.a \
 
+ifeq ($(CONFIG_RDMA), y)
+LIBS += -libverbs -lrdmacm
+endif
 LIBS += -Wl,--whole-archive $(SPDK_LIBS) -Wl,--no-whole-archive
 LIBS += -lcrypto $(ENV_LINKER_ARGS)
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
