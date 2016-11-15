@@ -67,7 +67,7 @@ struct nvme_device {
 
 	int				id;
 
-	int				outstanding_admin_cmds;	
+	int				outstanding_admin_cmds;
 };
 
 struct nvme_blockdev {
@@ -122,7 +122,8 @@ static int nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qp
 			  struct nvme_blockio *bio,
 			  int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
 			  uint64_t offset);
-static int blockdev_nvme_smart_read_data(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf);
+static int blockdev_nvme_get_health_report(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
+		struct spdk_health_report_page *buf);
 
 static int
 nvme_get_ctx_size(void)
@@ -185,9 +186,9 @@ blockdev_nvme_poll_adminq(void *arg)
 	struct nvme_device *nvme_dev = arg;
 	struct spdk_nvme_ctrlr *ctrlr = nvme_dev->ctrlr;
 
-	if (nvme_dev->outstanding_admin_cmds > 0){
+	if (nvme_dev->outstanding_admin_cmds > 0)
 		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
-	}
+
 }
 
 static int
@@ -246,7 +247,6 @@ static void blockdev_nvme_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 
 static int _blockdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 {
-
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_rbuf(bdev_io, blockdev_nvme_get_rbuf_cb);
@@ -278,10 +278,10 @@ static int _blockdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 					   bdev_io->u.flush.offset,
 					   bdev_io->u.flush.length);
 
-	case SPDK_BDEV_IO_TYPE_SMART:
-		return blockdev_nvme_smart_read_data((struct nvme_blockdev *)bdev_io->ctx,
-					       (struct nvme_blockio *)bdev_io->driver_ctx,
-					       bdev_io->smart.nvme.read_data);
+	case SPDK_BDEV_IO_TYPE_GET_HEALTH_REPORT:
+		return blockdev_nvme_get_health_report((struct nvme_blockdev *)bdev_io->ctx,
+						       (struct nvme_blockio *)bdev_io->driver_ctx,
+						       bdev_io->health_report);
 
 	default:
 		return -1;
@@ -307,6 +307,7 @@ blockdev_nvme_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type i
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_GET_HEALTH_REPORT:
 		return true;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -704,23 +705,14 @@ static void
 queued_done_adminq(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_blockio *)ref);
-	enum spdk_bdev_io_status status;
 	struct nvme_blockdev *nbdev;
-
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		bdev_io->error.nvme.sct = cpl->status.sct;
-		bdev_io->error.nvme.sc = cpl->status.sc;
-		status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
-	} else {
-		status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	}
 
 	nbdev = bdev_io->ctx;
 
 	/* decrement the outstanding admin commands by 1 */
-	nbdev->nvme_dev->outstanding_admin_cmds--;
-	
-	spdk_bdev_io_complete(bdev_io, status);
+	__sync_fetch_and_add(&nbdev->nvme_dev->outstanding_admin_cmds, -1);
+
+	queued_done(ref, cpl);
 }
 
 int
@@ -797,15 +789,16 @@ blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 }
 
 static int
-blockdev_nvme_smart_read_data(struct nvme_blockdev *nbdev, struct nvme_blockio *bio, void *buf)
+blockdev_nvme_get_health_report(struct nvme_blockdev *nbdev, struct nvme_blockio *bio,
+				struct spdk_health_report_page *buf)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(nbdev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-					     SPDK_NVME_GLOBAL_NS_TAG, buf, 512,
+					     SPDK_NVME_GLOBAL_NS_TAG, buf, sizeof(struct spdk_health_report_page),
 					     queued_done_adminq, bio)) {
 		return -1;
 	} else {
 		/* increment the outstanding admin commands by 1 */
-		nbdev->nvme_dev->outstanding_admin_cmds++;
+		__sync_fetch_and_add(&nbdev->nvme_dev->outstanding_admin_cmds, 1);
 	}
 
 	return 0;
