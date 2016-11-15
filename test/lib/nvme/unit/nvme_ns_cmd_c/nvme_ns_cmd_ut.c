@@ -37,6 +37,13 @@
 
 #include "lib/nvme/unit/test_env.c"
 
+struct nvme_driver _g_nvme_driver = {
+	.lock = PTHREAD_MUTEX_INITIALIZER,
+	.request_mempool = NULL,
+};
+
+struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
+
 struct nvme_request *g_request = NULL;
 
 struct spdk_uevent;

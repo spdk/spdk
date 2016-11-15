@@ -84,6 +84,46 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	strncpy(opts->hostnqn, DEFAULT_HOSTNQN, sizeof(opts->hostnqn));
 }
 
+/**
+ * This function will be called when the process allocates the IO qpair.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_proc_add_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	pid_t				pid = getpid();
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			TAILQ_INSERT_TAIL(&active_proc->allocated_io_qpairs, qpair,
+					  per_process_tailq);
+			break;
+		}
+	}
+}
+
+/**
+ * This function will be called when the process frees the IO qpair.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	pid_t				pid = getpid();
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			TAILQ_REMOVE(&active_proc->allocated_io_qpairs, qpair,
+				     per_process_tailq);
+			break;
+		}
+	}
+}
+
 struct spdk_nvme_qpair *
 spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			       enum spdk_nvme_qprio qprio)
@@ -132,6 +172,8 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
 	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
 
+	nvme_ctrlr_proc_add_io_qpair(qpair);
+
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return qpair;
@@ -149,6 +191,8 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	ctrlr = qpair->ctrlr;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_proc_remove_io_qpair(qpair);
 
 	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
 	spdk_bit_array_set(ctrlr->free_io_qids, qpair->id);
@@ -867,6 +911,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	STAILQ_INIT(&ctrlr_proc->active_reqs);
 	ctrlr_proc->devhandle = devhandle;
 	ctrlr_proc->ref = 0;
+	TAILQ_INIT(&ctrlr_proc->allocated_io_qpairs);
 
 	TAILQ_INSERT_TAIL(&ctrlr->active_procs, ctrlr_proc, tailq);
 
@@ -874,9 +919,30 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 }
 
 /**
+ * This function will be called when the process detaches the controller.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
+			  struct spdk_nvme_ctrlr_process *proc)
+{
+	struct spdk_nvme_qpair	*qpair, *tmp_qpair;
+
+	assert(STAILQ_EMPTY(&proc->active_reqs));
+
+	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	}
+
+	TAILQ_REMOVE(&ctrlr->active_procs, proc, tailq);
+
+	spdk_free(proc);
+}
+
+/**
  * This function will be called when the process exited unexpectedly
  *  in order to free any incomplete nvme request and allocated memory.
- * Note: the ctrl_lock must be held when calling this function.
+ * Note: the ctrlr_lock must be held when calling this function.
  */
 static void
 nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
@@ -918,12 +984,13 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
  * This function will be called when any other process attaches or
  *  detaches the controller in order to cleanup those unexpectedly
  *  terminated processes.
- * Note: the ctrl_lock must be held when calling this function.
+ * Note: the ctrlr_lock must be held when calling this function.
  */
-static void
+static int
 nvme_ctrlr_remove_inactive_proc(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
+	int				active_proc_count = 0;
 
 	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
 		if ((kill(active_proc->pid, 0) == -1) && (errno == ESRCH)) {
@@ -932,8 +999,12 @@ nvme_ctrlr_remove_inactive_proc(struct spdk_nvme_ctrlr *ctrlr)
 			TAILQ_REMOVE(&ctrlr->active_procs, active_proc, tailq);
 
 			nvme_ctrlr_cleanup_process(active_proc);
+		} else {
+			active_proc_count++;
 		}
 	}
+
+	return active_proc_count;
 }
 
 void
@@ -959,17 +1030,27 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_ctrlr_process	*active_proc;
+	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
 	pid_t				pid = getpid();
+	int				proc_count;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
-	nvme_ctrlr_remove_inactive_proc(ctrlr);
+	proc_count = nvme_ctrlr_remove_inactive_proc(ctrlr);
 
-	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
 		if (active_proc->pid == pid) {
 			active_proc->ref--;
 			assert(active_proc->ref >= 0);
+
+			/*
+			 * The last active process will be removed at the end of
+			 * the destruction of the controller.
+			 */
+			if (active_proc->ref == 0 && proc_count != 1) {
+				nvme_ctrlr_remove_process(ctrlr, active_proc);
+			}
+
 			break;
 		}
 	}
@@ -1244,8 +1325,6 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
 	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
-
-	nvme_ctrlr_free_processes(ctrlr);
 
 	nvme_transport_ctrlr_destruct(ctrlr);
 }
