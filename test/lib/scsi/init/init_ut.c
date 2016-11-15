@@ -39,7 +39,7 @@
 #include "spdk/event.h"
 #include "spdk/scsi.h"
 
-#include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 
 #include "scsi.c"
 
@@ -72,66 +72,31 @@ static struct spdk_conf *
 spdk_config_init_scsi_params(char *key, char *value)
 {
 	struct spdk_conf *spdk_config;
-	struct spdk_conf_section *sp;
-	struct spdk_conf_item *ip;
-	struct spdk_conf_value *val;
+	FILE *f;
+	int fd, rc;
+	char filename[] = "/tmp/scsi_init_ut.XXXXXX";
 
-	spdk_config = calloc(1, sizeof(struct spdk_conf));
-	if (!spdk_config) {
-		perror("spdk_config");
-		return NULL;
-	}
+	/* Create temporary file to hold config */
+	fd = mkstemp(filename);
+	SPDK_CU_ASSERT_FATAL(fd != -1);
 
-	sp = calloc(1, sizeof(struct spdk_conf_section));
-	if (!sp) {
-		perror("sp");
-		free(spdk_config);
-		return NULL;
-	}
+	f = fdopen(fd, "wb+");
+	SPDK_CU_ASSERT_FATAL(f != NULL);
 
-	ip = calloc(1, sizeof(struct spdk_conf_item));
-	if (!ip) {
-		perror("ip");
-		free(spdk_config);
-		free(sp);
-		return NULL;
-	}
+	fprintf(f, "[Scsi]\n");
+	fprintf(f, "%s %s\n", key, value);
 
-	val = calloc(1, sizeof(struct spdk_conf_value));
-	if (!val) {
-		perror("val");
-		free(spdk_config);
-		free(sp);
-		free(ip);
-		return NULL;
-	}
+	fclose(f);
 
-	sp->name = "Scsi";
-	ip->key = malloc(strlen(key) + 1);
-	if (!ip->key) {
-		free(spdk_config);
-		free(sp);
-		free(ip);
-		free(val);
-		return NULL;
-	}
-	val->value = malloc(strlen(value) + 1);
-	if (!val->value) {
-		free(spdk_config);
-		free(sp);
-		free(ip->key);
-		free(ip);
-		free(val);
-		return NULL;
-	}
-	strcpy(ip->key, key);
-	strcpy(val->value, value);
+	spdk_config = spdk_conf_allocate();
+	SPDK_CU_ASSERT_FATAL(spdk_config != NULL);
 
-	ip->val = val;
-	sp->item = ip;
-	spdk_config->section = sp;
+	rc = spdk_conf_read(spdk_config, filename);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	spdk_conf_set_as_default(spdk_config);
+
+	remove(filename);
 
 	return spdk_config;
 }
@@ -151,12 +116,13 @@ set_default_scsi_params(struct spdk_scsi_parameters *params)
 static void
 scsi_init_sp_null(void)
 {
-	struct spdk_conf config;
+	struct spdk_conf *config;
 	int rc;
 
-	memset(&config, 0, sizeof(config));
+	config = spdk_conf_allocate();
+	SPDK_CU_ASSERT_FATAL(config != NULL);
 
-	spdk_conf_set_as_default(&config);
+	spdk_conf_set_as_default(config);
 
 	rc = spdk_scsi_subsystem_init();
 
@@ -164,6 +130,7 @@ scsi_init_sp_null(void)
 	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_set_as_default(NULL);
+	spdk_conf_free(config);
 }
 
 static void

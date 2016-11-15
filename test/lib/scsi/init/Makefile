@@ -40,6 +40,7 @@ SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
 	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi $(ENV_CFLAGS)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
 LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 LIBS += -lcunit
 
