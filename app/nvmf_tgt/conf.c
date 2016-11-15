@@ -437,10 +437,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int i, ret;
 	uint64_t mask;
 	int lcore = 0;
+	int num = spdk_conf_section_get_num(sp);
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	if (nqn == NULL) {
-		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", sp->num);
+		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", num);
 		return -1;
 	}
 
@@ -449,7 +450,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	lcore = spdk_conf_section_get_intval(sp, "Core");
 	if (lcore < 0) {
 		lcore = 0;
-		for (i = 0; i < sp->num; i++) {
+		for (i = 0; i < num; i++) {
 			lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 			lcore++;
 		}
@@ -458,7 +459,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	mode_str = spdk_conf_section_get_val(sp, "Mode");
 	if (mode_str == NULL) {
-		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", sp->num);
+		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", num);
 		return -1;
 	}
 
@@ -531,7 +532,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		/* Parse NVMe section */
 		bdf = spdk_conf_section_get_val(sp, "NVMe");
 		if (bdf == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", sp->num);
+			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", num);
 			return -1;
 		}
 
@@ -552,7 +553,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		}
 
 		if (!ctx.found) {
-			SPDK_ERRLOG("Could not find NVMe controller for Subsystem%d\n", sp->num);
+			SPDK_ERRLOG("Could not find NVMe controller for Subsystem%d\n", num);
 			return -1;
 		}
 	} else {
@@ -561,7 +562,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		sn = spdk_conf_section_get_val(sp, "SN");
 		if (sn == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing serial number\n", sp->num);
+			SPDK_ERRLOG("Subsystem %d: missing serial number\n", num);
 			return -1;
 		}
 		if (spdk_nvmf_validate_sn(sn) != 0) {
@@ -570,7 +571,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		namespace = spdk_conf_section_get_val(sp, "Namespace");
 		if (namespace == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing Namespace directive\n", sp->num);
+			SPDK_ERRLOG("Subsystem %d: missing Namespace directive\n", num);
 			return -1;
 		}
 

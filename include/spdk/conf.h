@@ -75,6 +75,8 @@ struct spdk_conf_section *spdk_conf_first_section(struct spdk_conf *cp);
 struct spdk_conf_section *spdk_conf_next_section(struct spdk_conf_section *sp);
 
 bool spdk_conf_section_match_prefix(const struct spdk_conf_section *sp, const char *name_prefix);
+const char *spdk_conf_section_get_name(const struct spdk_conf_section *sp);
+int spdk_conf_section_get_num(const struct spdk_conf_section *sp);
 char *spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key,
 				  int idx1, int idx2);
 char *spdk_conf_section_get_nval(struct spdk_conf_section *sp, const char *key, int idx);

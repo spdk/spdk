@@ -793,12 +793,12 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN];
 	int num_luns, queue_depth;
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add unit %d\n", sp->num);
+	target_num = spdk_conf_section_get_num(sp);
+
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add unit %d\n", target_num);
 
 	data_digest = 0;
 	header_digest = 0;
-
-	target_num = sp->num;
 
 	name = spdk_conf_section_get_val(sp, "TargetName");
 
@@ -997,8 +997,10 @@ int spdk_iscsi_init_tgt_nodes(void)
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "TargetNode")) {
-			if (sp->num > SPDK_TN_TAG_MAX) {
-				SPDK_ERRLOG("tag %d is invalid\n", sp->num);
+			int tag = spdk_conf_section_get_num(sp);
+
+			if (tag > SPDK_TN_TAG_MAX) {
+				SPDK_ERRLOG("tag %d is invalid\n", tag);
 				return -1;
 			}
 			rc = spdk_cf_add_iscsi_tgt_node(sp);

@@ -325,6 +325,18 @@ spdk_conf_section_match_prefix(const struct spdk_conf_section *sp, const char *n
 	return strncasecmp(sp->name, name_prefix, strlen(name_prefix)) == 0;
 }
 
+const char *
+spdk_conf_section_get_name(const struct spdk_conf_section *sp)
+{
+	return sp->name;
+}
+
+int
+spdk_conf_section_get_num(const struct spdk_conf_section *sp)
+{
+	return sp->num;
+}
+
 char *
 spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int idx1, int idx2)
 {

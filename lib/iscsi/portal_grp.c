@@ -366,9 +366,10 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 	const char *val;
 	char *label, *portal;
 	int portals = 0, i = 0, rc = 0;
+	int tag = spdk_conf_section_get_num(sp);
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add portal group (from config file) %d\n",
-		      sp->num);
+		      tag);
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
@@ -399,9 +400,9 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 		goto error_out;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(sp->num);
+	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
 	if (!pg) {
-		SPDK_ERRLOG("portal group malloc error (%s)\n", sp->name);
+		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
 		goto error_out;
 	}
 
@@ -423,7 +424,7 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG,
 			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
-			      i, p->host, p->port, sp->num);
+			      i, p->host, p->port, tag);
 
 		spdk_iscsi_portal_grp_add_portal(pg, p);
 	}
@@ -472,7 +473,7 @@ spdk_iscsi_portal_grp_array_create(void)
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "PortalGroup")) {
-			if (sp->num == 0) {
+			if (spdk_conf_section_get_num(sp) == 0) {
 				SPDK_ERRLOG("Group 0 is invalid\n");
 				return -1;
 			}
