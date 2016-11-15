@@ -38,11 +38,11 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib/event
 APP = subsystem_ut
 C_SRCS := subsystem_ut.c
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
-	     $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
-	     $(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
-	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_conf.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
 
 LIBS += $(SPDK_LIBS) -lcunit
 

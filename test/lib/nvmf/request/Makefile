@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/nvmf
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a
+SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a
 
 LIBS += $(SPDK_LIBS)
 LIBS += -lcunit

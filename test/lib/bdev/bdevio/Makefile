@@ -41,16 +41,16 @@ C_SRCS := bdevio.c
 
 CFLAGS += -I. $(ENV_CFLAGS)
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
-	     $(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
-	     $(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
-	     $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
-	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
-	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
-	     $(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
-	     $(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
+SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_bdev.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_copy.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_conf.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_rpc.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_jsonrpc.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_json.a \
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS)

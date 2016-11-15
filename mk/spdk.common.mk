@@ -139,7 +139,7 @@ LINK_CXX=\
 
 # Archive $(OBJS) into $@ (.a)
 LIB_C=\
-	$(Q)echo "  LIB $S/$@"; \
+	$(Q)echo "  LIB $(notdir $@)"; \
 	ar crDs $@ $(OBJS)
 
 # Clean up generated files listed as arguments plus a default list

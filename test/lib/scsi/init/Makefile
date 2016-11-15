@@ -34,10 +34,10 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
-	     $(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
-	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a
+SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_conf.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test

@@ -46,22 +46,22 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 C_SRCS := iscsi_tgt.c
 
 SPDK_LIBS = \
-	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
-	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
-	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/bdev/rpc/libspdk_bdev_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
-	$(SPDK_ROOT_DIR)/lib/iscsi/libspdk_iscsi.a \
-	$(SPDK_ROOT_DIR)/lib/scsi/libspdk_scsi.a \
-	$(SPDK_ROOT_DIR)/lib/net/libspdk_net.a \
-	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
-	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
-	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
-	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
-	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_json.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_jsonrpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_bdev_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_bdev.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_iscsi.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_scsi.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_net.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_copy.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_conf.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_log_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_app_rpc.a \
 
 LIBS += -Wl,--whole-archive $(SPDK_LIBS) -Wl,--no-whole-archive
 LIBS += -lcrypto $(ENV_LINKER_ARGS)

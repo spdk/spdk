@@ -42,25 +42,25 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS := conf.c nvmf_tgt.c nvmf_rpc.c
 
 SPDK_LIBS = \
-	$(SPDK_ROOT_DIR)/lib/nvmf/libspdk_nvmf.a \
-	$(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
-	$(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
-	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
-	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
-	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
-	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
-	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
-	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_nvmf.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_nvme.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_conf.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_bdev.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_copy.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_jsonrpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_json.a \
 
 # These libraries do not expose any external API, only constructors,
 # so they must be linked specially to ensure they are not removed.
 SPDK_WHOLE_LIBS = \
-	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/bdev/rpc/libspdk_bdev_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_app_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_log_rpc.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_bdev_rpc.a \
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
         $(COPY_MODULES_LINKER_ARGS)
