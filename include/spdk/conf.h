@@ -41,29 +41,10 @@
 
 #include <stdbool.h>
 
-struct spdk_conf_value {
-	struct spdk_conf_value *next;
-	char *value;
-};
-
-struct spdk_conf_item {
-	struct spdk_conf_item *next;
-	char *key;
-	struct spdk_conf_value *val;
-};
-
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
-struct spdk_conf {
-	char *file;
-	struct spdk_conf_section *current_section;
-	struct spdk_conf_section *section;
-};
+struct spdk_conf_value;
+struct spdk_conf_item;
+struct spdk_conf_section;
+struct spdk_conf;
 
 struct spdk_conf *spdk_conf_allocate(void);
 void spdk_conf_free(struct spdk_conf *cp);

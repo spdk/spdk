@@ -42,6 +42,30 @@
 
 #include "spdk/string.h"
 
+struct spdk_conf_value {
+	struct spdk_conf_value *next;
+	char *value;
+};
+
+struct spdk_conf_item {
+	struct spdk_conf_item *next;
+	char *key;
+	struct spdk_conf_value *val;
+};
+
+struct spdk_conf_section {
+	struct spdk_conf_section *next;
+	char *name;
+	int num;
+	struct spdk_conf_item *item;
+};
+
+struct spdk_conf {
+	char *file;
+	struct spdk_conf_section *current_section;
+	struct spdk_conf_section *section;
+};
+
 #define CF_DELIM " \t"
 
 #define LIB_MAX_TMPBUF 1024
