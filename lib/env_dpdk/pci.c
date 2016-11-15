@@ -246,6 +246,61 @@ static struct rte_driver g_ioat_drv = {
 PMD_REGISTER_DRIVER(g_ioat_drv, spdk_ioat);
 #endif
 
+static struct spdk_pci_enum_ctx *
+spdk_pci_find_driver(enum spdk_pci_device_type type)
+{
+	if (type == SPDK_PCI_DEVICE_NVME) {
+		return &g_nvme_pci_drv;
+	} else if (type == SPDK_PCI_DEVICE_IOAT) {
+		return &g_ioat_pci_drv;
+	} else {
+		return NULL;
+	}
+}
+
+void
+spdk_pci_device_detach(struct spdk_pci_device *device)
+{
+	rte_eal_pci_detach(&device->addr);
+}
+
+int
+spdk_pci_device_attach(enum spdk_pci_device_type type,
+		       spdk_pci_enum_cb enum_cb,
+		       void *enum_ctx, struct spdk_pci_addr *pci_address)
+{
+	struct rte_pci_addr		addr;
+	struct spdk_pci_enum_ctx	*ctx;
+
+	ctx = spdk_pci_find_driver(type);
+	if (ctx == NULL) {
+		return -1;
+	}
+
+	addr.domain = pci_address->domain;
+	addr.bus = pci_address->bus;
+	addr.devid = pci_address->dev;
+	addr.function = pci_address->func;
+
+	pthread_mutex_lock(&ctx->mtx);
+
+	ctx->cb_fn = enum_cb;
+	ctx->cb_arg = enum_ctx;
+
+	if (rte_eal_pci_probe_one(&addr) != 0) {
+		ctx->cb_arg = NULL;
+		ctx->cb_fn = NULL;
+		pthread_mutex_unlock(&ctx->mtx);
+		return -1;
+	}
+
+	ctx->cb_arg = NULL;
+	ctx->cb_fn = NULL;
+	pthread_mutex_unlock(&ctx->mtx);
+
+	return 0;
+}
+
 /* Note: You can call spdk_pci_enumerate from more than one thread
  *       simultaneously safely, but you cannot call spdk_pci_enumerate
  *       and rte_eal_pci_probe simultaneously.
@@ -255,16 +310,11 @@ spdk_pci_enumerate(enum spdk_pci_device_type type,
 		   spdk_pci_enum_cb enum_cb,
 		   void *enum_ctx)
 {
-	struct spdk_pci_enum_ctx *ctx;
+	struct spdk_pci_enum_ctx *ctx = spdk_pci_find_driver(type);
 
-	if (type == SPDK_PCI_DEVICE_NVME) {
-		ctx = &g_nvme_pci_drv;
-	} else if (type == SPDK_PCI_DEVICE_IOAT) {
-		ctx = &g_ioat_pci_drv;
-	} else {
+	if (ctx == NULL) {
 		return -1;
 	}
-
 
 	pthread_mutex_lock(&ctx->mtx);
 

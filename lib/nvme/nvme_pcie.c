@@ -578,6 +578,7 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	nvme_pcie_ctrlr_free_bars(pctrlr);
+	spdk_pci_device_detach(pctrlr->devhandle);
 	spdk_free(pctrlr);
 
 	return 0;
