@@ -245,7 +245,7 @@ struct spdk_nvme_qpair {
 
 	struct spdk_nvme_ctrlr		*ctrlr;
 
-	/* List entry for spdk_nvme_ctrlr::free_io_qpairs and active_io_qpairs */
+	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
 };
 
