@@ -61,7 +61,7 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
 				    sizeof(rpc_construct_aio_decoders) / sizeof(*rpc_construct_aio_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 

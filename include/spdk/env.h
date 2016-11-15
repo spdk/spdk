@@ -82,6 +82,7 @@ spdk_free(void *buf);
  *   socket_id and flags.
  * Return a pointer to the allocated memory address. If the allocation
  *   cannot be done, return NULL.
+ * Note: to pick any socket id, just set socket_id to -1.
  */
 void *
 spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
