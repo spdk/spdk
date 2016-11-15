@@ -35,6 +35,11 @@
  * NVMe over PCIe transport
  */
 
+#include <sys/mman.h>
+#include <signal.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+
 #include "nvme_internal.h"
 
 #define NVME_ADMIN_ENTRIES	(128)
@@ -80,6 +85,9 @@ struct nvme_pcie_ctrlr {
 	/** NVMe MMIO register space */
 	volatile struct spdk_nvme_registers *regs;
 
+	/** NVMe MMIO register size */
+	uint64_t regs_size;
+
 	/* BAR mapping address which contains controller memory buffer */
 	void *cmb_bar_virt_addr;
 
@@ -97,6 +105,9 @@ struct nvme_pcie_ctrlr {
 
 	/* Opaque handle to associated PCI device. */
 	struct spdk_pci_device *devhandle;
+
+	/* Flag to indicate the MMIO register has been remapped */
+	bool is_remapped;
 };
 
 struct nvme_tracker {
@@ -170,6 +181,49 @@ struct nvme_pcie_qpair {
 	uint64_t cpl_bus_addr;
 };
 
+__thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
+static volatile uint16_t g_signal_lock;
+static bool g_sigset = false;
+
+static void
+nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
+{
+	void *map_address;
+
+	if (!__sync_bool_compare_and_swap(&g_signal_lock, 0, 1)) {
+		return;
+	}
+
+	if (g_thread_mmio_ctrlr) {
+		if (!g_thread_mmio_ctrlr->is_remapped) {
+			map_address = mmap((void *)g_thread_mmio_ctrlr->regs, g_thread_mmio_ctrlr->regs_size,
+					   PROT_READ | PROT_WRITE,
+					   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+			if (map_address == MAP_FAILED) {
+				SPDK_ERRLOG("mmap failed\n");
+				g_signal_lock = 0;
+				return;
+			}
+			memset(map_address, 0xFF, sizeof(struct spdk_nvme_registers));
+			g_thread_mmio_ctrlr->regs = (volatile struct spdk_nvme_registers *)map_address;
+			g_thread_mmio_ctrlr->is_remapped = true;
+		}
+	}
+	g_signal_lock = 0;
+	return;
+}
+
+static void
+nvme_pcie_ctrlr_setup_signal(void)
+{
+	struct sigaction sa;
+
+	sa.sa_sigaction = nvme_sigbus_fault_sighandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_SIGINFO;
+	sigaction(SIGBUS, &sa, NULL);
+}
+
 static inline struct nvme_pcie_ctrlr *
 nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -206,34 +260,58 @@ nvme_pcie_reg_addr(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset)
 int
 nvme_pcie_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
 	assert(offset <= sizeof(struct spdk_nvme_registers) - 4);
+	g_thread_mmio_ctrlr = pctrlr;
 	spdk_mmio_write_4(nvme_pcie_reg_addr(ctrlr, offset), value);
+	g_thread_mmio_ctrlr = NULL;
 	return 0;
 }
 
 int
 nvme_pcie_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 {
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
 	assert(offset <= sizeof(struct spdk_nvme_registers) - 8);
+	g_thread_mmio_ctrlr = pctrlr;
 	spdk_mmio_write_8(nvme_pcie_reg_addr(ctrlr, offset), value);
+	g_thread_mmio_ctrlr = NULL;
 	return 0;
 }
 
 int
 nvme_pcie_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
 {
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
 	assert(offset <= sizeof(struct spdk_nvme_registers) - 4);
 	assert(value != NULL);
+	g_thread_mmio_ctrlr = pctrlr;
 	*value = spdk_mmio_read_4(nvme_pcie_reg_addr(ctrlr, offset));
+	g_thread_mmio_ctrlr = NULL;
+	if (~(*value) == 0) {
+		return -1;
+	}
+
 	return 0;
 }
 
 int
 nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
 	assert(offset <= sizeof(struct spdk_nvme_registers) - 8);
 	assert(value != NULL);
+	g_thread_mmio_ctrlr = pctrlr;
 	*value = spdk_mmio_read_8(nvme_pcie_reg_addr(ctrlr, offset));
+	g_thread_mmio_ctrlr = NULL;
+	if (~(*value) == 0) {
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -391,6 +469,7 @@ nvme_pcie_ctrlr_allocate_bars(struct nvme_pcie_ctrlr *pctrlr)
 		return -1;
 	}
 
+	pctrlr->regs_size = size;
 	nvme_pcie_ctrlr_map_cmb(pctrlr);
 
 	return 0;
@@ -409,6 +488,9 @@ nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 	}
 
 	if (addr) {
+		/* NOTE: addr may have been remapped here. We're relying on DPDK to call
+		 * munmap internally.
+		 */
 		rc = spdk_pci_device_unmap_bar(pctrlr->devhandle, 0, addr);
 	}
 	return rc;
@@ -486,6 +568,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport trans
 		return NULL;
 	}
 
+	pctrlr->is_remapped = false;
 	pctrlr->ctrlr.transport = SPDK_NVME_TRANSPORT_PCIE;
 	pctrlr->devhandle = devhandle;
 
@@ -529,6 +612,11 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport trans
 	if (rc != 0) {
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		return NULL;
+	}
+
+	if (g_sigset != true) {
+		nvme_pcie_ctrlr_setup_signal();
+		g_sigset = true;
 	}
 
 	return &pctrlr->ctrlr;
@@ -812,6 +900,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 {
 	struct nvme_request	*req;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
 	req = tr->req;
 	pqpair->tr[tr->cid].active = true;
@@ -824,7 +913,9 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	}
 
 	spdk_wmb();
+	g_thread_mmio_ctrlr = pctrlr;
 	spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
+	g_thread_mmio_ctrlr = NULL;
 }
 
 static void
@@ -1602,6 +1693,7 @@ int32_t
 nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 	struct nvme_tracker	*tr;
 	struct spdk_nvme_cpl	*cpl;
 	uint32_t		 num_completions = 0;
@@ -1658,7 +1750,9 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (num_completions > 0) {
+		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
+		g_thread_mmio_ctrlr = NULL;
 	}
 
 	/* Before returning, complete any pending admin request. */
