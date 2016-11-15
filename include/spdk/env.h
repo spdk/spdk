@@ -154,6 +154,19 @@ void spdk_delay_us(unsigned int us);
 
 uint64_t spdk_vtophys(void *buf);
 
+/**
+ * Register the specified memory region for vtophys address translation.
+ * The memory region must map to pinned huge pages (2MB or greater).
+ */
+void spdk_vtophys_register(void *vaddr, uint64_t len);
+
+/**
+ * Unregister the specified memory region from vtophys address translation.
+ * The caller must ensure all in-flight DMA operations to this memory region
+ *  are completed or cancelled before calling this function.
+ */
+void spdk_vtophys_unregister(void *vaddr, uint64_t len);
+
 enum spdk_pci_device_type {
 	SPDK_PCI_DEVICE_NVME,
 	SPDK_PCI_DEVICE_IOAT,
