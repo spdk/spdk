@@ -154,16 +154,17 @@ static struct spdk_io_channel *mem_get_io_channel(uint32_t priority)
 	return spdk_get_io_channel(&memcpy_copy_engine, priority, false, NULL);
 }
 
-static int
+static size_t
 copy_engine_mem_get_ctx_size(void)
 {
 	return sizeof(struct spdk_copy_task);
 }
 
-int spdk_copy_module_get_max_ctx_size(void)
+size_t
+spdk_copy_task_size(void)
 {
 	struct spdk_copy_module_if *copy_engine;
-	int max_copy_module_size = 0;
+	size_t max_copy_module_size = 0;
 
 	TAILQ_FOREACH(copy_engine, &spdk_copy_module_list, tailq) {
 		if (copy_engine->get_ctx_size && copy_engine->get_ctx_size() > max_copy_module_size) {

@@ -38,6 +38,7 @@
 #ifndef SPDK_COPY_ENGINE_H
 #define SPDK_COPY_ENGINE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef void (*spdk_copy_completion_cb)(void *ref, int status);
@@ -51,6 +52,6 @@ int64_t spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel
 			 void *src, uint64_t nbytes, spdk_copy_completion_cb cb);
 int64_t spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
 			      void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb);
-int spdk_copy_module_get_max_ctx_size(void);
+size_t spdk_copy_task_size(void);
 
 #endif

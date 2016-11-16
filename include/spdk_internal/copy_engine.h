@@ -74,7 +74,7 @@ struct spdk_copy_module_if {
 	 */
 	void	(*config_text)(FILE *fp);
 
-	int	(*get_ctx_size)(void);
+	size_t	(*get_ctx_size)(void);
 	TAILQ_ENTRY(spdk_copy_module_if)	tailq;
 };
 

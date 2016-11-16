@@ -97,7 +97,7 @@ static void blockdev_malloc_get_spdk_running_config(FILE *fp);
 static int
 blockdev_malloc_get_ctx_size(void)
 {
-	return sizeof(struct malloc_task) + spdk_copy_module_get_max_ctx_size();
+	return sizeof(struct malloc_task) + spdk_copy_task_size();
 }
 
 SPDK_BDEV_MODULE_REGISTER(blockdev_malloc_initialize, blockdev_malloc_finish,

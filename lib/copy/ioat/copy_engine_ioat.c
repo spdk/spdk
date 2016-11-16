@@ -111,7 +111,7 @@ struct ioat_task {
 static int copy_engine_ioat_init(void);
 static void copy_engine_ioat_exit(void);
 
-static int
+static size_t
 copy_engine_ioat_get_ctx_size(void)
 {
 	return sizeof(struct ioat_task) + sizeof(struct spdk_copy_task);
