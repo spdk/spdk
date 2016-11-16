@@ -33,10 +33,12 @@
 
 S :=
 
+TARGETS ?= lib test examples app
+
 SPDK_ROOT_DIR := $(CURDIR)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += lib test examples app
+DIRS-y += $(TARGETS)
 
 .PHONY: all clean $(DIRS-y) config.h CONFIG.local
 
