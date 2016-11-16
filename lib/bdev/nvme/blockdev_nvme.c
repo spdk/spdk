@@ -53,21 +53,6 @@
 
 static void blockdev_nvme_get_spdk_running_config(FILE *fp);
 
-struct nvme_device {
-	/**
-	 * points to pinned, physically contiguous memory region;
-	 * contains 4KB IDENTIFY structure for controller which is
-	 *  target for CONTROLLER IDENTIFY command during initialization
-	 */
-	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_pci_addr		pci_addr;
-
-	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_device)	tailq;
-
-	int				id;
-};
-
 struct nvme_blockdev {
 	struct spdk_bdev	disk;
 	struct spdk_nvme_ctrlr	*ctrlr;
@@ -109,7 +94,7 @@ static int nvme_controller_index = 0;
 static int LunSizeInMB = 0;
 static int num_controllers = -1;
 
-static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
+static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);
 
 static void nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr,
 		int bdev_per_ns, int ctrlr_id);
@@ -404,6 +389,36 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	if (ctx->controllers_remaining > 0) {
 		ctx->controllers_remaining--;
 	}
+}
+
+struct nvme_device *
+blockdev_nvme_device_first(void)
+{
+	struct nvme_device *dev;
+
+	dev = TAILQ_FIRST(&g_nvme_devices);
+	if (dev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Starting nvme_device iteration at %04x:%02x:%02x.%x\n",
+			      dev->pci_addr.domain, dev->pci_addr.bus,
+			      dev->pci_addr.dev, dev->pci_addr.func);
+	}
+
+	return dev;
+}
+
+struct nvme_device *
+blockdev_nvme_device_next(struct nvme_device *prev)
+{
+	struct nvme_device *dev;
+
+	dev = TAILQ_NEXT(prev, tailq);
+	if (dev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Continuing nvme_device iteration at %04x:%02x:%02x.%x\n",
+			      dev->pci_addr.domain, dev->pci_addr.bus,
+			      dev->pci_addr.dev, dev->pci_addr.func);
+	}
+
+	return dev;
 }
 
 static bool

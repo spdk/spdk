@@ -53,7 +53,23 @@ struct nvme_probe_ctx {
 	struct spdk_bdev *created_bdevs[NVME_MAX_BLOCKDEVS];
 };
 
-int
-spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx);
+struct nvme_device {
+	/**
+	 * points to pinned, physically contiguous memory region;
+	 * contains 4KB IDENTIFY structure for controller which is
+	 *  target for CONTROLLER IDENTIFY command during initialization
+	 */
+	struct spdk_nvme_ctrlr		*ctrlr;
+	struct spdk_pci_addr		pci_addr;
+
+	/** linked list pointer for device list */
+	TAILQ_ENTRY(nvme_device)	tailq;
+
+	int				id;
+};
+
+struct nvme_device *blockdev_nvme_device_first(void);
+struct nvme_device *blockdev_nvme_device_next(struct nvme_device *prev);
+int spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx);
 
 #endif // SPDK_BLOCKDEV_NVME_H
