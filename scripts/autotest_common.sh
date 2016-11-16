@@ -159,6 +159,23 @@ function start_iscsi_service() {
 	fi
 }
 
+function rbd_setup() {
+	export CEPH_DIR=/home/sys_sgsw/ceph/build
+
+	if [ -d $CEPH_DIR ]; then
+		export RBD_POOL=rbd
+		export RBD_NAME=foo
+		(cd $CEPH_DIR && ../src/vstart.sh -d -n -x -l)
+		/usr/local/bin/rbd create $RBD_NAME --size 1000
+	fi
+}
+
+function rbd_cleanup() {
+	if [ -d $CEPH_DIR ]; then
+		(cd $CEPH_DIR && ../src/stop.sh || true)
+	fi
+}
+
 function run_test() {
 	echo "************************************"
 	echo "START TEST $1"

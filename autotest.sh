@@ -65,6 +65,10 @@ timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
 
+timing_enter rbd_setup
+rbd_setup
+timing_exit rbd_setup
+
 #####################
 # Unit Tests
 #####################
@@ -113,6 +117,7 @@ run_test test/nvmf/nvme_cli/nvme_cli.sh
 timing_exit nvmf
 
 timing_enter cleanup
+rbd_cleanup
 ./scripts/setup.sh reset
 ./scripts/build_kmod.sh clean
 timing_exit cleanup
