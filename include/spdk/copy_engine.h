@@ -38,72 +38,19 @@
 #ifndef SPDK_COPY_ENGINE_H
 #define SPDK_COPY_ENGINE_H
 
-#include <stdio.h>
 #include <stdint.h>
-
-#include "spdk/queue.h"
 
 typedef void (*spdk_copy_completion_cb)(void *ref, int status);
 
 struct spdk_io_channel;
 
-struct spdk_copy_task {
-	spdk_copy_completion_cb	cb;
-	uint8_t			offload_ctx[0];
-};
+struct spdk_copy_task;
 
-struct spdk_copy_engine {
-	int64_t	(*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-			uint64_t nbytes, spdk_copy_completion_cb cb);
-	int64_t	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-			uint64_t nbytes, spdk_copy_completion_cb cb);
-	struct spdk_io_channel *(*get_io_channel)(uint32_t priority);
-};
-
-struct spdk_copy_module_if {
-	/** Initialization function for the module.  Called by the spdk
-	 *   application during startup.
-	 *
-	 *  Modules are required to define this function.
-	 */
-	int	(*module_init)(void);
-
-	/** Finish function for the module.  Called by the spdk application
-	 *   before the spdk application exits to perform any necessary cleanup.
-	 *
-	 *  Modules are not required to define this function.
-	 */
-	void	(*module_fini)(void);
-
-	/** Function called to return a text string representing the
-	 *   module's configuration options for inclusion in an
-	 *   spdk configuration file.
-	 */
-	void	(*config_text)(FILE *fp);
-
-	int	(*get_ctx_size)(void);
-	TAILQ_ENTRY(spdk_copy_module_if)	tailq;
-};
-
-void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
 struct spdk_io_channel *spdk_copy_engine_get_io_channel(uint32_t priority);
 int64_t spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
 			 void *src, uint64_t nbytes, spdk_copy_completion_cb cb);
 int64_t spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
 			      void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb);
 int spdk_copy_module_get_max_ctx_size(void);
-void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
-
-#define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
-	static struct spdk_copy_module_if init_fn ## _if = {						\
-	.module_init 	= init_fn,									\
-	.module_fini	= fini_fn,									\
-	.config_text	= config_fn,									\
-	.get_ctx_size	= ctx_size_fn,                                					\
-	};  												\
-	__attribute__((constructor)) static void init_fn ## _init(void)  				\
-	{                                                           					\
-	    spdk_copy_module_list_add(&init_fn ## _if);                  				\
-	}
 
 #endif

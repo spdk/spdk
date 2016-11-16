@@ -36,7 +36,8 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "spdk/copy_engine.h"
+#include "spdk_internal/copy_engine.h"
+
 #include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
