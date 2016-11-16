@@ -44,6 +44,8 @@
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
 
+static size_t g_max_copy_module_size = 0;
+
 static struct spdk_copy_engine *hw_copy_engine = NULL;
 /* Memcpy engine always exist */
 static struct spdk_copy_engine *mem_copy_engine = NULL;
@@ -163,20 +165,15 @@ copy_engine_mem_get_ctx_size(void)
 size_t
 spdk_copy_task_size(void)
 {
-	struct spdk_copy_module_if *copy_engine;
-	size_t max_copy_module_size = 0;
-
-	TAILQ_FOREACH(copy_engine, &spdk_copy_module_list, tailq) {
-		if (copy_engine->get_ctx_size && copy_engine->get_ctx_size() > max_copy_module_size) {
-			max_copy_module_size = copy_engine->get_ctx_size();
-		}
-	}
-	return max_copy_module_size;
+	return g_max_copy_module_size;
 }
 
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module)
 {
 	TAILQ_INSERT_TAIL(&spdk_copy_module_list, copy_module, tailq);
+	if (copy_module->get_ctx_size && copy_module->get_ctx_size() > g_max_copy_module_size) {
+		g_max_copy_module_size = copy_module->get_ctx_size();
+	}
 }
 
 static int
