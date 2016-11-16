@@ -210,8 +210,12 @@ nvme_free_request(struct nvme_request *req)
 int
 nvme_mutex_init_shared(pthread_mutex_t *mtx)
 {
-	pthread_mutexattr_t attr;
 	int rc = 0;
+
+#ifdef __FreeBSD__
+	pthread_mutex_init(mtx, NULL);
+#else
+	pthread_mutexattr_t attr;
 
 	if (pthread_mutexattr_init(&attr)) {
 		return -1;
@@ -221,6 +225,8 @@ nvme_mutex_init_shared(pthread_mutex_t *mtx)
 		rc = -1;
 	}
 	pthread_mutexattr_destroy(&attr);
+#endif
+
 	return rc;
 }
 
