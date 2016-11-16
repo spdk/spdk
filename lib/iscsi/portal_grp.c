@@ -368,10 +368,9 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 	const char *val;
 	char *label, *portal;
 	int portals = 0, i = 0, rc = 0;
-	int tag = spdk_conf_section_get_num(sp);
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add portal group (from config file) %d\n",
-		      tag);
+		      spdk_conf_section_get_num(sp));
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
@@ -426,7 +425,7 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG,
 			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
-			      i, p->host, p->port, tag);
+			      i, p->host, p->port, spdk_conf_section_get_num(sp));
 
 		spdk_iscsi_portal_grp_add_portal(pg, p);
 	}
