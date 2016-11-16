@@ -43,20 +43,20 @@
 
 #include "spdk/queue.h"
 
-typedef void (*copy_completion_cb)(void *ref, int status);
+typedef void (*spdk_copy_completion_cb)(void *ref, int status);
 
 struct spdk_io_channel;
 
-struct copy_task {
-	copy_completion_cb	cb;
+struct spdk_copy_task {
+	spdk_copy_completion_cb	cb;
 	uint8_t			offload_ctx[0];
 };
 
 struct spdk_copy_engine {
 	int64_t	(*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
-			uint64_t nbytes, copy_completion_cb cb);
+			uint64_t nbytes, spdk_copy_completion_cb cb);
 	int64_t	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-			uint64_t nbytes, copy_completion_cb cb);
+			uint64_t nbytes, spdk_copy_completion_cb cb);
 	struct spdk_io_channel *(*get_io_channel)(uint32_t priority);
 };
 
@@ -87,10 +87,10 @@ struct spdk_copy_module_if {
 
 void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
 struct spdk_io_channel *spdk_copy_engine_get_io_channel(uint32_t priority);
-int64_t spdk_copy_submit(struct copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
-			 void *src, uint64_t nbytes, copy_completion_cb cb);
-int64_t spdk_copy_submit_fill(struct copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
-			      uint8_t fill, uint64_t nbytes, copy_completion_cb cb);
+int64_t spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
+			 void *src, uint64_t nbytes, spdk_copy_completion_cb cb);
+int64_t spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
+			      void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb);
 int spdk_copy_module_get_max_ctx_size(void);
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
 

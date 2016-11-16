@@ -61,15 +61,15 @@ struct malloc_task {
 };
 
 static struct malloc_task *
-__malloc_task_from_copy_task(struct copy_task *ct)
+__malloc_task_from_copy_task(struct spdk_copy_task *ct)
 {
 	return (struct malloc_task *)((uintptr_t)ct - sizeof(struct malloc_task));
 }
 
-static struct copy_task *
+static struct spdk_copy_task *
 __copy_task_from_malloc_task(struct malloc_task *mt)
 {
-	return (struct copy_task *)((uintptr_t)mt + sizeof(struct malloc_task));
+	return (struct spdk_copy_task *)((uintptr_t)mt + sizeof(struct malloc_task));
 }
 
 static void

@@ -73,16 +73,16 @@ spdk_memcpy_register(struct spdk_copy_engine *copy_engine)
 static void
 copy_engine_done(void *ref, int status)
 {
-	struct copy_task *req = (struct copy_task *)ref;
+	struct spdk_copy_task *req = (struct spdk_copy_task *)ref;
 
 	req->cb(req, status);
 }
 
 int64_t
-spdk_copy_submit(struct copy_task *copy_req, struct spdk_io_channel *ch,
-		 void *dst, void *src, uint64_t nbytes, copy_completion_cb cb)
+spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
+		 void *dst, void *src, uint64_t nbytes, spdk_copy_completion_cb cb)
 {
-	struct copy_task *req = copy_req;
+	struct spdk_copy_task *req = copy_req;
 	struct copy_io_channel *copy_ch = spdk_io_channel_get_ctx(ch);
 
 	req->cb = cb;
@@ -91,10 +91,10 @@ spdk_copy_submit(struct copy_task *copy_req, struct spdk_io_channel *ch,
 }
 
 int64_t
-spdk_copy_submit_fill(struct copy_task *copy_req, struct spdk_io_channel *ch,
-		      void *dst, uint8_t fill, uint64_t nbytes, copy_completion_cb cb)
+spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
+		      void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb)
 {
-	struct copy_task *req = copy_req;
+	struct spdk_copy_task *req = copy_req;
 	struct copy_io_channel *copy_ch = spdk_io_channel_get_ctx(ch);
 
 	req->cb = cb;
@@ -105,26 +105,26 @@ spdk_copy_submit_fill(struct copy_task *copy_req, struct spdk_io_channel *ch,
 /* memcpy default copy engine */
 static int64_t
 mem_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-		copy_completion_cb cb)
+		spdk_copy_completion_cb cb)
 {
-	struct copy_task *copy_req;
+	struct spdk_copy_task *copy_req;
 
 	rte_memcpy(dst, src, (size_t)nbytes);
-	copy_req = (struct copy_task *)((uintptr_t)cb_arg -
-					offsetof(struct copy_task, offload_ctx));
+	copy_req = (struct spdk_copy_task *)((uintptr_t)cb_arg -
+					     offsetof(struct spdk_copy_task, offload_ctx));
 	cb(copy_req, 0);
 	return nbytes;
 }
 
 static int64_t
 mem_copy_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
-	      copy_completion_cb cb)
+	      spdk_copy_completion_cb cb)
 {
-	struct copy_task *copy_req;
+	struct spdk_copy_task *copy_req;
 
 	memset(dst, fill, nbytes);
-	copy_req = (struct copy_task *)((uintptr_t)cb_arg -
-					offsetof(struct copy_task, offload_ctx));
+	copy_req = (struct spdk_copy_task *)((uintptr_t)cb_arg -
+					     offsetof(struct spdk_copy_task, offload_ctx));
 	cb(copy_req, 0);
 
 	return nbytes;
@@ -157,7 +157,7 @@ static struct spdk_io_channel *mem_get_io_channel(uint32_t priority)
 static int
 copy_engine_mem_get_ctx_size(void)
 {
-	return sizeof(struct copy_task);
+	return sizeof(struct spdk_copy_task);
 }
 
 int spdk_copy_module_get_max_ctx_size(void)
