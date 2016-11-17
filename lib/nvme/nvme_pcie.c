@@ -683,10 +683,10 @@ static void
 nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 		struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ctrlr			*ctrlr = qpair->ctrlr;
-	struct nvme_request			*active_req = req;
-	struct spdk_nvme_controller_process	*active_proc, *tmp;
-	bool					pending_on_proc = false;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	struct nvme_request		*active_req = req;
+	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
+	bool				pending_on_proc = false;
 
 	/*
 	 * The admin request is from another process. Move to the per
@@ -725,7 +725,7 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 	struct nvme_request		*req, *tmp_req;
 	bool				proc_found = false;
 	pid_t				pid = getpid();
-	struct spdk_nvme_controller_process	*proc;
+	struct spdk_nvme_ctrlr_process	*proc;
 
 	/*
 	 * Check whether there is any pending admin request from

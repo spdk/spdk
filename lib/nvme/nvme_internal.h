@@ -297,7 +297,7 @@ enum nvme_ctrlr_state {
 /*
  * Used to track properties for all processes accessing the controller.
  */
-struct spdk_nvme_controller_process {
+struct spdk_nvme_ctrlr_process {
 	/** Whether it is the primary process  */
 	bool						is_primary;
 
@@ -307,7 +307,7 @@ struct spdk_nvme_controller_process {
 	/** Active admin requests to be completed */
 	STAILQ_HEAD(, nvme_request)			active_reqs;
 
-	TAILQ_ENTRY(spdk_nvme_controller_process)	tailq;
+	TAILQ_ENTRY(spdk_nvme_ctrlr_process)		tailq;
 
 	/** Per process PCI device handle */
 	struct spdk_pci_device				*devhandle;
@@ -399,7 +399,7 @@ struct spdk_nvme_ctrlr {
 	uint64_t			sleep_timeout_tsc;
 
 	/** Track all the processes manage this controller */
-	TAILQ_HEAD(, spdk_nvme_controller_process)	active_procs;
+	TAILQ_HEAD(, spdk_nvme_ctrlr_process)	active_procs;
 };
 
 struct nvme_driver {

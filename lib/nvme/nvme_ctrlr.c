@@ -809,10 +809,10 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
-	struct spdk_nvme_controller_process	*ctrlr_proc;
+	struct spdk_nvme_ctrlr_process	*ctrlr_proc;
 
 	/* Initialize the per process properties for this ctrlr */
-	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_controller_process), 64, NULL);
+	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr_process), 64, NULL);
 	if (ctrlr_proc == NULL) {
 		SPDK_ERRLOG("failed to allocate memory to track the process props\n");
 
@@ -836,7 +836,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
  * Note: the ctrl_lock must be held when calling this function.
  */
 static void
-nvme_ctrlr_cleanup_process(struct spdk_nvme_controller_process *proc)
+nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 {
 	struct nvme_request	*req, *tmp_req;
 
@@ -859,7 +859,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_controller_process *proc)
 void
 nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_controller_process	*active_proc, *tmp;
+	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
 
 	/* Free all the processes' properties and make sure no pending admin IOs */
 	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
@@ -880,7 +880,7 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_remove_inactive_proc(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_controller_process	*active_proc, *tmp;
+	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
 
 	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
 		if ((kill(active_proc->pid, 0) == -1) && (errno == ESRCH)) {
@@ -896,8 +896,8 @@ nvme_ctrlr_remove_inactive_proc(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_controller_process	*active_proc;
-	pid_t					pid = getpid();
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	pid_t				pid = getpid();
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -916,8 +916,8 @@ nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_controller_process	*active_proc;
-	pid_t					pid = getpid();
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	pid_t				pid = getpid();
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -937,8 +937,8 @@ nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_controller_process	*active_proc;
-	int					ref = 0;
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	int				ref = 0;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
