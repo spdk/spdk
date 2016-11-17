@@ -80,7 +80,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 			break;
 	}
 	if (i == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "num_initiator_names = 0\n");
+		SPDK_ERRLOG("num_initiator_names = 0\n");
 		goto cleanup;
 	}
 	num_initiator_names = i;
@@ -94,7 +94,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 			break;
 	}
 	if (i == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "num_initiator_mask = 0\n");
+		SPDK_ERRLOG("num_initiator_mask = 0\n");
 		goto cleanup;
 	}
 	num_initiator_masks = i;

@@ -176,7 +176,7 @@ spdk_iscsi_param_set(struct iscsi_param *params, const char *key,
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "set %s=%s\n", key, val);
 	param = spdk_iscsi_param_find(params, key);
 	if (param == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "no key %s\n", key);
+		SPDK_ERRLOG("no key %s\n", key);
 		return -1;
 	}
 
@@ -196,7 +196,7 @@ spdk_iscsi_param_set_int(struct iscsi_param *params, const char *key, uint32_t v
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "set %s=%d\n", key, val);
 	param = spdk_iscsi_param_find(params, key);
 	if (param == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "no key %s\n", key);
+		SPDK_ERRLOG("no key %s\n", key);
 		return -1;
 	}
 
