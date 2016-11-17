@@ -804,14 +804,23 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 /**
- * This function will be called when a new process is using the controller.
+ * This function will be called when a process is using the controller.
  *  1. For the primary process, it is called when constructing the controller.
  *  2. For the secondary process, it is called at probing the controller.
+ * Note: will check whether the process is already added for the same process.
  */
 int
 nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
-	struct spdk_nvme_ctrlr_process	*ctrlr_proc;
+	struct spdk_nvme_ctrlr_process	*ctrlr_proc, *active_proc;
+	pid_t				pid = getpid();
+
+	/* Check whether the process is already added or not */
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			return 0;
+		}
+	}
 
 	/* Initialize the per process properties for this ctrlr */
 	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr_process), 64, NULL);
@@ -822,7 +831,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	}
 
 	ctrlr_proc->is_primary = spdk_process_is_primary();
-	ctrlr_proc->pid = getpid();
+	ctrlr_proc->pid = pid;
 	STAILQ_INIT(&ctrlr_proc->active_reqs);
 	ctrlr_proc->devhandle = devhandle;
 	ctrlr_proc->ref = 0;
