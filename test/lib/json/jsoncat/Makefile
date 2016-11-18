@@ -39,7 +39,7 @@ APP = jsoncat
 
 C_SRCS = jsoncat.c
 
-SPDK_LIB_LIST = json
+SPDK_LIB_LIST = json util
 
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 

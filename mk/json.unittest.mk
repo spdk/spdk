@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 JSON_DIR := $(SPDK_ROOT_DIR)/lib/json
 JSONRPC_DIR := $(SPDK_ROOT_DIR)/lib/jsonrpc
 
-SPDK_LIB_LIST = json log
+SPDK_LIB_LIST = json util log
 
 C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 

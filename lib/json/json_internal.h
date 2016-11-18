@@ -36,6 +36,7 @@
 
 #include "spdk/json.h"
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -45,6 +46,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#include "spdk/string.h"
 
 #define SPDK_JSON_MAX_NESTING_DEPTH	64
 
