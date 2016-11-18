@@ -1467,5 +1467,5 @@ uint32_t
 nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* Todo, which should get from the NVMF target */
-	return 506 * 4096;
+	return NVME_RDMA_RW_BUFFER_SIZE;
 }
