@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP = sgl
 
-C_SRCS := nvme_sgl.c
+C_SRCS := sgl.c
 
 CFLAGS += -I. $(ENV_CFLAGS)
 
