@@ -47,6 +47,24 @@
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 
+bool
+spdk_nvmf_subsystem_exists(const char *subnqn)
+{
+	struct spdk_nvmf_subsystem	*subsystem;
+
+	if (!subnqn) {
+		return false;
+	}
+
+	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+		if (strcmp(subnqn, subsystem->subnqn) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 struct spdk_nvmf_subsystem *
 nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
 {

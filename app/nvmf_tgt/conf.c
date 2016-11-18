@@ -719,12 +719,12 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 		if (bdf == NULL) {
 			SPDK_ERRLOG("Subsystem %s: missing NVMe directive\n", name);
-			return -1;
+			goto error;
 		}
 
 		if (num_devs != 0) {
 			SPDK_ERRLOG("Subsystem %s: Namespaces not allowed for Direct mode\n", name);
-			return -1;
+			goto error;
 		}
 
 		ctx.app_subsystem = app_subsys;
@@ -734,7 +734,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		} else {
 			if (spdk_pci_addr_parse(&ctx.pci_addr, bdf) < 0) {
 				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
-				return -1;
+				goto error;
 			}
 			ctx.any = false;
 		}
@@ -746,7 +746,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		if (!ctx.found) {
 			SPDK_ERRLOG("Could not find NVMe controller at PCI address %04x:%02x:%02x.%x\n",
 				    ctx.pci_addr.domain, ctx.pci_addr.bus, ctx.pci_addr.dev, ctx.pci_addr.func);
-			return -1;
+			goto error;
 		}
 	} else {
 		struct spdk_bdev *bdev;
@@ -754,14 +754,14 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 		if (sn == NULL) {
 			SPDK_ERRLOG("Subsystem %s: missing serial number\n", name);
-			return -1;
+			goto error;
 		}
 		if (spdk_nvmf_validate_sn(sn) != 0) {
-			return -1;
+			goto error;
 		}
 
 		if (num_devs > MAX_VIRTUAL_NAMESPACE) {
-			return -1;
+			goto error;
 		}
 
 		subsystem->dev.virt.ns_count = 0;
@@ -771,11 +771,11 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 			namespace = dev_list[i];
 			if (!namespace) {
 				SPDK_ERRLOG("Namespace %d: missing block device\n", i);
-				return -1;
+				goto error;
 			}
 			bdev = spdk_bdev_get_by_name(namespace);
 			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
-				return -1;
+				goto error;
 			}
 
 			SPDK_NOTICELOG("Attaching block device %s to subsystem %s\n",
@@ -787,4 +787,9 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 	nvmf_tgt_start_subsystem(app_subsys);
 
 	return 0;
+
+error:
+	spdk_nvmf_delete_subsystem(app_subsys->subsystem);
+	app_subsys->subsystem = NULL;
+	return -1;
 }

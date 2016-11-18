@@ -222,6 +222,11 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
 
+	if (spdk_nvmf_subsystem_exists(name)) {
+		SPDK_ERRLOG("Subsystem already exist\n");
+		return NULL;
+	}
+
 	app_subsys = calloc(1, sizeof(*app_subsys));
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem allocation failed\n");
