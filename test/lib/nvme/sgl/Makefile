@@ -36,26 +36,4 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP = sgl
 
-C_SRCS := sgl.c
-
-CFLAGS += -I. $(ENV_CFLAGS)
-
-SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_nvme.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
-
-ifeq ($(CONFIG_RDMA), y)
-LIBS += -libverbs -lrdmacm
-endif
-
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk

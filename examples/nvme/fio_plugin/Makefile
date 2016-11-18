@@ -38,30 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP := fio_plugin
 
-C_SRCS := fio_plugin.c
-
-CFLAGS += -I. $(ENV_CFLAGS) -I$(FIO_SOURCE_DIR)
-
+CFLAGS += -I$(FIO_SOURCE_DIR)
 LDFLAGS += -shared -rdynamic
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_nvme.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
-
-ifeq ($(CONFIG_RDMA), y)
-LIBS += -libverbs -lrdmacm
-endif
-
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-.PHONY: all clean
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
