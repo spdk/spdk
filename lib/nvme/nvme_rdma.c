@@ -1188,6 +1188,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type 
 {
 	struct nvme_rdma_ctrlr *rctrlr;
 	struct spdk_nvme_discover_info *info;
+	union spdk_nvme_cap_register cap;
 	int rc;
 
 	if (!devhandle) {
@@ -1216,6 +1217,14 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type 
 		SPDK_ERRLOG("create admin qpair failed\n");
 		return NULL;
 	}
+
+	if (nvme_ctrlr_get_cap(&rctrlr->ctrlr, &cap)) {
+		SPDK_ERRLOG("get_cap() failed\n");
+		nvme_ctrlr_destruct(&rctrlr->ctrlr);
+		return NULL;
+	}
+
+	rctrlr->ctrlr.cap = cap;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "succesully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;
