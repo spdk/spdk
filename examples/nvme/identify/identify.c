@@ -45,6 +45,7 @@
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
+#include "spdk/nvmf_spec.h"
 #include "spdk/pci_ids.h"
 
 static int outstanding_commands;
@@ -849,16 +850,16 @@ usage(const char *program_name)
 {
 	printf("%s [options]", program_name);
 	printf("\n");
-	printf("\t-x print hex dump of raw data\n");
 	printf("options:\n");
-	printf("\t-a addr         address for nvmf target\n");
-	printf("\t-s service      service id for nvmf target\n");
-	printf("\t-n nqn          nqn for nvmf target\n");
+	printf(" -a addr    address of NVMe over Fabrics discovery service\n");
+	printf(" -s service service ID for NVMe over Fabrics discovery service\n");
+	printf(" -n nqn     NQN of NVMe over Fabrics discovery service\n");
 
 	spdk_tracelog_usage(stdout, "-t");
 
-	printf("\t-v         - verbose (enable warnings)\n");
-	printf("\t-H         - show this usage\n");
+	printf(" -x         print hex dump of raw data\n");
+	printf(" -v         verbose (enable warnings)\n");
+	printf(" -H         show this usage\n");
 }
 
 static int
@@ -866,7 +867,9 @@ parse_args(int argc, char **argv)
 {
 	int op, rc;
 
-	while ((op = getopt(argc, argv, "a:n:s:t:x:H")) != -1) {
+	info.nqn = SPDK_NVMF_DISCOVERY_NQN;
+
+	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
 		switch (op) {
 		case 'x':
 			g_hex_dump = true;
@@ -910,8 +913,8 @@ parse_args(int argc, char **argv)
 		return 0;
 	}
 
-	if ((strlen(info.nqn) > 223)) {
-		printf("The string len of nqn should <= 223\n");
+	if (strlen(info.nqn) >= SPDK_NVMF_NQN_MAX_LEN) {
+		printf("NQN must be less than %d bytes long\n", SPDK_NVMF_NQN_MAX_LEN);
 		return 0;
 	}
 
@@ -950,7 +953,6 @@ int main(int argc, char **argv)
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
-		printf("parse_args error\n");
 		return rc;
 	}
 
