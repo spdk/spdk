@@ -324,7 +324,6 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 				/* Controller failed to initialize. */
 				TAILQ_REMOVE(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
 				nvme_ctrlr_destruct(ctrlr);
-				spdk_free(ctrlr);
 				rc = -1;
 				break;
 			}
