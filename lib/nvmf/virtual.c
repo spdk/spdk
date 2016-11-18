@@ -286,6 +286,10 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 		response->cdw0 = session->kato;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
+		response->cdw0 = session->async_event_config.raw;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
 		SPDK_ERRLOG("get features command with invalid code\n");
 		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
@@ -325,6 +329,11 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 		} else {
 			session->kato = cmd->cdw11;
 		}
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
+			      cmd->cdw11);
+		session->async_event_config.raw = cmd->cdw11;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
 		SPDK_ERRLOG("set features command with invalid code\n");

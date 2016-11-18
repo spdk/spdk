@@ -82,6 +82,14 @@ struct spdk_nvmf_session {
 	int num_connections;
 	int max_connections_allowed;
 	uint32_t kato;
+	union {
+		uint32_t raw;
+		struct {
+			union spdk_nvme_critical_warning_state crit_warn;
+			uint8_t ns_attr_notice : 1;
+			uint8_t fw_activation_notice : 1;
+		} bits;
+	} async_event_config;
 	const struct spdk_nvmf_transport	*transport;
 
 	TAILQ_ENTRY(spdk_nvmf_session) 		link;
