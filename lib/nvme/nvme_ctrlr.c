@@ -634,7 +634,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
 
-	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * UINT64_C(1000)) / spdk_get_ticks_hz();
+	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * spdk_get_ticks_hz()) / UINT64_C(1000);
 
 	/* Schedule the first Keep Alive to be sent as soon as possible. */
 	ctrlr->next_keep_alive_tick = spdk_get_ticks();
