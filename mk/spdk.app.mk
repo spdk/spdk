@@ -31,27 +31,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+# RPC libraries only export constructor functions, so these need to be treated
+#  separately and wrapped in whole-archive linker args
+SPDK_RPC_LIB_LIST = $(filter %_rpc,$(SPDK_LIB_LIST))
 
-SPDK_LIB_LIST = log cunit
+# Currently the iscsi, net, and scsi libraries contain their respective RPC methods
+#  rather than breaking them out into separate libraries.  So we must also include
+#  these directories in the RPC library list.
+SPDK_RPC_LIB_LIST += $(filter iscsi,$(SPDK_LIB_LIST))
+SPDK_RPC_LIB_LIST += $(filter net,$(SPDK_LIB_LIST))
+SPDK_RPC_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
 
-CFLAGS += $(DPDK_INC)
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-LIBS += -lcunit
+SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_RPC_LIB_LIST),$(SPDK_LIB_LIST))
 
-APP = io_channel_ut
-C_SRCS = $(APP).c
-
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+SPDK_LIB_FILES = $(call spdk_lib_list_to_files,$(SPDK_LIB_LIST))
+SPDK_LIB_LINKER_ARGS = \
+	-L$(SPDK_ROOT_DIR)/build/lib \
+	-Wl,--whole-archive \
+	$(SPDK_RPC_LIB_LIST:%=-lspdk_%) \
+	-Wl,--no-whole-archive \
+	$(SPDK_REMAINING_LIB_LIST:%=-lspdk_%)

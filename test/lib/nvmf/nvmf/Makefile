@@ -34,13 +34,9 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 
 CFLAGS += $(ENV_CFLAGS)
-SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
-             $(SPDK_ROOT_DIR)/bulid/lib/libspdk_conf.a \
-             $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
-             $(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
-             $(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
 
-LIBS += $(SPDK_LIBS)
+NVMF_UT_LIB_LIST = log conf util trace event
+LIBS += $(call spdk_lib_list_to_files,$(NVMF_UT_LIB_LIST))
 
 TEST_FILE = nvmf_ut.c
 

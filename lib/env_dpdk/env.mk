@@ -68,5 +68,6 @@ endif
 
 ENV_CFLAGS = $(DPDK_INC)
 ENV_CXXFLAGS = $(ENV_CFLAGS)
-ENV_LIBS = $(SPDK_ROOT_DIR)/build/lib/libspdk_env_dpdk.a $(DPDK_LIB)
-ENV_LINKER_ARGS = -Wl,--start-group -Wl,--whole-archive $(SPDK_ROOT_DIR)/build/lib/libspdk_env_dpdk.a $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
+ENV_DPDK_FILE = $(call spdk_lib_list_to_files,env_dpdk)
+ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
+ENV_LINKER_ARGS = -Wl,--start-group -Wl,--whole-archive $(ENV_LIBS) -Wl,--end-group -Wl,--no-whole-archive

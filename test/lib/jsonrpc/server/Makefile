@@ -35,7 +35,4 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 
 TEST_FILE = jsonrpc_server_ut.c
 
-LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_json.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
-
 include $(SPDK_ROOT_DIR)/mk/json.unittest.mk

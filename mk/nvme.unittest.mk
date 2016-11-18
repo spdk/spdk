@@ -34,22 +34,22 @@
 NVME_DIR := $(SPDK_ROOT_DIR)/lib/nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a
+SPDK_LIB_LIST = util log nvme
 
-LIBS += -lcunit $(SPDK_LIBS)
+LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
 
 APP = $(TEST_FILE:.c=)
 
 all: $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
 	$(LINK_C)
 
 clean:

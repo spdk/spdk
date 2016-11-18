@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = nvmf_tgt
@@ -41,43 +42,16 @@ CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS := conf.c nvmf_tgt.c nvmf_rpc.c
 
-SPDK_LIBS = \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_nvmf.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_nvme.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_conf.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_bdev.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_copy.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_rpc.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_jsonrpc.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_json.a \
-
-# These libraries do not expose any external API, only constructors,
-# so they must be linked specially to ensure they are not removed.
-SPDK_WHOLE_LIBS = \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_app_rpc.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_log_rpc.a \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_bdev_rpc.a \
+SPDK_LIB_LIST = nvmf event log trace conf util bdev copy rpc jsonrpc json
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
-        $(COPY_MODULES_LINKER_ARGS)
-
-LIBS += $(SPDK_LIBS)
-
-LIBS += -Wl,--whole-archive $(SPDK_WHOLE_LIBS) -Wl,--no-whole-archive
-
-ifeq ($(CONFIG_RDMA),y)
-LIBS += -libverbs -lrdmacm
-endif
-
-LIBS += $(ENV_LINKER_ARGS)
+	$(COPY_MODULES_LINKER_ARGS) \
+	$(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES) $(LINKER_MODULES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = bdevperf
@@ -41,29 +42,16 @@ C_SRCS := bdevperf.c
 
 CFLAGS += -I. $(ENV_CFLAGS)
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_bdev.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_copy.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_event.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_trace.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_conf.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_rpc.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_jsonrpc.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_json.a \
+SPDK_LIB_LIST = bdev copy event trace log conf util rpc jsonrpc json
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS)
 
-ifeq ($(CONFIG_RDMA), y)
-LIBS += -libverbs -lrdmacm
-endif
-
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS) $(BLOCKDEV_MODULES) $(COPY_MODULES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

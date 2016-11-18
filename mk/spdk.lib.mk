@@ -33,7 +33,7 @@
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-LIB := $(SPDK_ROOT_DIR)/build/lib/libspdk_$(LIBNAME).a
+LIB := $(call spdk_lib_list_to_files,$(LIBNAME))
 
 .PHONY: all clean $(DIRS-y)
 

@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 APP = perf
 
@@ -40,15 +41,13 @@ C_SRCS := perf.c
 
 CFLAGS += -I. $(ENV_CFLAGS)
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_ioat.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
+SPDK_LIB_LIST = ioat util log
 
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
 all: $(APP)
 
-$(APP): $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
+$(APP): $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:
