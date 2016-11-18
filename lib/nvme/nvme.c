@@ -33,9 +33,11 @@
 
 #include "spdk/nvmf_spec.h"
 #include "nvme_internal.h"
+#include "nvme_uevent.h"
 
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
+	.hotplug_fd = -1,
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.attached_ctrlrs),
 	.request_mempool = NULL,
@@ -254,50 +256,13 @@ nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, 
 }
 
 static int
-_spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
-		 spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
-		 spdk_nvme_remove_cb remove_cb)
+nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 {
-	int rc, start_rc;
+	int rc = 0;
+	int start_rc;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
-	enum spdk_nvme_transport transport;
-
-	if (!spdk_process_is_primary()) {
-		while (g_spdk_nvme_driver->initialized == false) {
-			usleep(200 * 1000);
-		}
-	}
 
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
-
-	if (g_spdk_nvme_driver->request_mempool == NULL) {
-		g_spdk_nvme_driver->request_mempool = spdk_mempool_create("nvme_request", 8192,
-						      sizeof(struct nvme_request), -1);
-		if (g_spdk_nvme_driver->request_mempool == NULL) {
-			SPDK_ERRLOG("Unable to allocate pool of requests\n");
-			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
-			return -1;
-		}
-	}
-
-	if (!info) {
-		transport = SPDK_NVME_TRANSPORT_PCIE;
-	} else {
-		if (!spdk_nvme_transport_available(info->trtype)) {
-			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", info->trtype);
-			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
-			return -1;
-		}
-
-		transport = (uint8_t)info->trtype;
-	}
-
-	rc = nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info, NULL);
-
-	/*
-	 * Keep going even if one or more nvme_attach() calls failed,
-	 *  but maintain the value of rc to signal errors when we return.
-	 */
 
 	/* Initialize all new controllers in the init_ctrlrs list in parallel. */
 	while (!TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs)) {
@@ -349,8 +314,75 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		}
 	}
 
-	g_spdk_nvme_driver->initialized = true;
+	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+	return rc;
+}
 
+static int
+nvme_attach_one(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		struct spdk_pci_addr *pci_address)
+{
+	nvme_transport_ctrlr_scan(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, NULL, pci_address);
+	return nvme_init_controllers(cb_ctx, attach_cb);
+}
+
+static int
+_spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
+		 spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		 spdk_nvme_remove_cb remove_cb)
+{
+	int rc;
+	enum spdk_nvme_transport transport;
+
+	if (!spdk_process_is_primary()) {
+		while (g_spdk_nvme_driver->initialized == false) {
+			usleep(200 * 1000);
+		}
+	}
+
+	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+
+	if (g_spdk_nvme_driver->hotplug_fd < 0) {
+		g_spdk_nvme_driver->hotplug_fd = spdk_uevent_connect();
+		if (g_spdk_nvme_driver->hotplug_fd < 0) {
+			SPDK_ERRLOG("Failed to open uevent netlink socket\n");
+		}
+	}
+
+	if (g_spdk_nvme_driver->request_mempool == NULL) {
+		g_spdk_nvme_driver->request_mempool = spdk_mempool_create("nvme_request", 8192,
+						      sizeof(struct nvme_request), -1);
+		if (g_spdk_nvme_driver->request_mempool == NULL) {
+			SPDK_ERRLOG("Unable to allocate pool of requests\n");
+			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return -1;
+		}
+	}
+
+	if (!info) {
+		transport = SPDK_NVME_TRANSPORT_PCIE;
+	} else {
+		if (!spdk_nvme_transport_available(info->trtype)) {
+			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", info->trtype);
+			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return -1;
+		}
+
+		transport = (uint8_t)info->trtype;
+	}
+
+	nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info, NULL);
+
+	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+	/*
+	 * Keep going even if one or more nvme_attach() calls failed,
+	 *  but maintain the value of rc to signal errors when we return.
+	 */
+
+	rc = nvme_init_controllers(cb_ctx, attach_cb);
+
+	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+	g_spdk_nvme_driver->initialized = true;
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return rc;
 }
@@ -367,11 +399,66 @@ int spdk_nvme_discover(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 	return _spdk_nvme_probe(info, cb_ctx, probe_cb, attach_cb, remove_cb);
 }
 
+static int
+nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		     spdk_nvme_remove_cb remove_cb)
+{
+	int rc = 0;
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_uevent event;
+	struct nvme_driver *nvme_driver = g_spdk_nvme_driver;
+
+	while (spdk_get_uevent(nvme_driver->hotplug_fd, &event) > 0) {
+		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO) {
+			if (event.action == SPDK_NVME_UEVENT_ADD) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %04x:%02x:%02x.%u\n",
+					      event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev, event.pci_addr.func);
+				if (spdk_process_is_primary()) {
+					nvme_attach_one(cb_ctx, probe_cb, attach_cb, &event.pci_addr);
+				}
+			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
+				bool in_list = false;
+
+				TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+					if (spdk_pci_addr_compare(&event.pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
+						in_list = true;
+						break;
+					}
+				}
+				if (in_list == false) {
+					return 0;
+				}
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "remove nvme address: %04x:%02x:%02x.%u\n",
+					      event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev, event.pci_addr.func);
+
+				nvme_ctrlr_fail(ctrlr, true);
+
+				/* get the user app to clean up and stop I/O */
+				if (remove_cb) {
+					remove_cb(cb_ctx, ctrlr);
+				}
+				if (spdk_process_is_primary()) {
+					rc = spdk_nvme_detach(ctrlr);
+					if (rc) {
+						SPDK_ERRLOG("Failed to hot detach nvme address: %04x:%04x:%04x.%u\n",
+							    event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev,
+							    event.pci_addr.func);
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 int
 spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		spdk_nvme_remove_cb remove_cb)
 {
-	return _spdk_nvme_probe(NULL, cb_ctx, probe_cb, attach_cb, remove_cb);
+	if (g_spdk_nvme_driver->hotplug_fd < 0) {
+		return _spdk_nvme_probe(NULL, cb_ctx, probe_cb, attach_cb, remove_cb);
+	} else {
+		return nvme_hotplug_monitor(cb_ctx, probe_cb, attach_cb, remove_cb);
+	}
 }
-
 SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)

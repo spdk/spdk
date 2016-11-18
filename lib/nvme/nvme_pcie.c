@@ -483,6 +483,10 @@ nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 	int rc = 0;
 	void *addr = (void *)pctrlr->regs;
 
+	if (pctrlr->ctrlr.is_removed) {
+		return rc;
+	}
+
 	rc = nvme_pcie_ctrlr_unmap_cmb(pctrlr);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_ctrlr_unmap_cmb failed with error code %d\n", rc);
@@ -577,6 +581,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport trans
 	}
 
 	pctrlr->is_remapped = false;
+	pctrlr->ctrlr.is_removed = false;
 	pctrlr->ctrlr.transport = SPDK_NVME_TRANSPORT_PCIE;
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
@@ -1343,6 +1348,10 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 
 	assert(ctrlr != NULL);
 
+	if (ctrlr->is_removed) {
+		goto free;
+	}
+
 	/* Delete the I/O submission queue and then the completion queue */
 
 	status.done = false;
@@ -1369,8 +1378,8 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
+free:
 	nvme_pcie_qpair_destroy(qpair);
-
 	return 0;
 }
 

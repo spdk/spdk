@@ -341,6 +341,8 @@ struct spdk_nvme_ctrlr {
 
 	uint32_t			num_ns;
 
+	bool				is_removed;
+
 	bool				is_resetting;
 
 	bool				is_failed;
@@ -413,6 +415,7 @@ struct spdk_nvme_ctrlr {
 
 struct nvme_driver {
 	pthread_mutex_t			lock;
+	int				hotplug_fd;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
 	struct spdk_mempool		*request_mempool;
@@ -496,6 +499,7 @@ int	nvme_probe_one(enum spdk_nvme_transport type, spdk_nvme_probe_cb probe_cb, v
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 

@@ -1169,7 +1169,7 @@ test_nvme_ctrlr_fail(void)
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
 	ctrlr.opts.num_io_queues = 0;
-	nvme_ctrlr_fail(&ctrlr);
+	nvme_ctrlr_fail(&ctrlr, false);
 
 	CU_ASSERT(ctrlr.is_failed == true);
 }

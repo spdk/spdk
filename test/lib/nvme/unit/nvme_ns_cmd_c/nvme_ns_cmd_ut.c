@@ -39,6 +39,14 @@
 
 struct nvme_request *g_request = NULL;
 
+struct spdk_uevent;
+
+int
+spdk_uevent_connect(void);
+
+int
+spdk_get_uevent(int fd, struct spdk_uevent *uevent);
+
 int
 spdk_pci_enumerate(enum spdk_pci_device_type type,
 		   spdk_pci_enum_cb enum_cb,
@@ -89,6 +97,23 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+void
+nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
+{
+}
+
+int
+spdk_uevent_connect(void)
+{
+	return 0;
+}
+
+int
+spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
 	return 0;
 }
