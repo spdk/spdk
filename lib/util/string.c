@@ -42,9 +42,9 @@
 #include "spdk/string.h"
 
 char *
-spdk_sprintf_alloc(const char *format, ...)
+spdk_vsprintf_alloc(const char *format, va_list args)
 {
-	va_list args;
+	va_list args_copy;
 	char *buf;
 	size_t bufsize;
 	int rc;
@@ -59,9 +59,9 @@ spdk_sprintf_alloc(const char *format, ...)
 			return NULL;
 		}
 
-		va_start(args, format);
-		rc = vsnprintf(buf, bufsize, format, args);
-		va_end(args);
+		va_copy(args_copy, args);
+		rc = vsnprintf(buf, bufsize, format, args_copy);
+		va_end(args_copy);
 
 		/*
 		 * If vsnprintf() returned a count within our current buffer size, we are done.
@@ -83,6 +83,19 @@ spdk_sprintf_alloc(const char *format, ...)
 	}
 
 	return NULL;
+}
+
+char *
+spdk_sprintf_alloc(const char *format, ...)
+{
+	va_list args;
+	char *ret;
+
+	va_start(args, format);
+	ret = spdk_vsprintf_alloc(format, args);
+	va_end(args);
+
+	return ret;
 }
 
 char *

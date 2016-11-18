@@ -42,6 +42,7 @@
 extern "C" {
 #endif
 
+#include <stdarg.h>
 #include <stddef.h>
 
 /**
@@ -52,6 +53,15 @@ extern "C" {
  * or NULL on failure.
  */
 char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 1, 2)));
+
+/**
+ * vsprintf with automatic buffer allocation.
+ *
+ * The return value is the formatted string,
+ * which should be passed to free() when no longer needed,
+ * or NULL on failure.
+ */
+char *spdk_vsprintf_alloc(const char *format, va_list args);
 
 /**
  * Convert string to lowercase in place.

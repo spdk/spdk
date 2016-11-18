@@ -54,7 +54,7 @@ ifeq ($(CONFIG_WERROR), y)
 COMMON_CFLAGS += -Werror
 endif
 
-COMMON_CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
+COMMON_CFLAGS += -Wformat -Wformat-security
 
 COMMON_CFLAGS += -D_GNU_SOURCE
 
