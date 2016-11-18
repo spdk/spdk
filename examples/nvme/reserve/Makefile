@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP = reserve
 
-C_SRCS := reservation.c
+C_SRCS := reserve.c
 
 CFLAGS += -I. $(ENV_CFLAGS)
 
