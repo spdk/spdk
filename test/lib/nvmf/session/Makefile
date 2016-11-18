@@ -32,25 +32,7 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/nvmf
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
+TEST_FILE = session_ut.c
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a
-
-LIBS += $(SPDK_LIBS)
-LIBS += -lcunit
-
-APP = session_ut
-C_SRCS = session_ut.c
-
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/nvmf.unittest.mk
