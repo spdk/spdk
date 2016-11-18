@@ -53,7 +53,7 @@ nvme_transport_unknown(enum spdk_nvme_transport_type transport)
 #ifdef SPDK_CONFIG_RDMA
 #define TRANSPORT_FABRICS_RDMA(func_name, args)	case SPDK_NVME_TRANSPORT_RDMA: return nvme_rdma_ ## func_name args;
 #else
-#define TRANSPORT_FABRICS_RDMA(func_name, args)
+#define TRANSPORT_FABRICS_RDMA(func_name, args)	case SPDK_NVME_TRANSPORT_RDMA: SPDK_UNREACHABLE();
 #endif
 #define NVME_TRANSPORT_CALL(transport, func_name, args) 	\
 	do {							\
