@@ -68,9 +68,6 @@ NVME RDMA qpair Resouce Defaults
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
-typedef void (*spdk_nvme_rdma_req_cb)(struct nvme_request *req,
-				      struct spdk_nvme_cpl *rsp);
-
 /* NVMe RDMA transport extensions for spdk_nvme_ctrlr */
 struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
@@ -107,8 +104,6 @@ struct spdk_nvme_rdma_req {
 	enum spdk_nvme_data_transfer		xfer;
 
 	struct nvme_rdma_qpair			*rqpair;
-
-	spdk_nvme_rdma_req_cb			cb;
 
 	struct spdk_nvme_cmd			cmd;
 
@@ -539,7 +534,7 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 
 	nvme_rdma_post_copy_mem(rdma_req);
 	req = rdma_req->req;
-	rdma_req->cb(req, &rdma_rsp->rsp);
+	nvme_rdma_req_complete(req, &rdma_rsp->rsp);
 	nvme_rdma_req_put(rdma_req);
 
 	if (nvme_rdma_post_recv(rqpair, rdma_rsp)) {
@@ -787,7 +782,6 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
 	}
 
 	rdma_req->req = req;
-	rdma_req->cb = nvme_rdma_req_complete;
 	req->cmd.cid = rdma_req->id;
 
 	/* setup the RDMA SGL details */
