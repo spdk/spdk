@@ -100,16 +100,12 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		if (spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_DIRECT) {
-			char pci_str[20];
-
-			snprintf(pci_str, sizeof(pci_str), "%04x:%02x:%02x.%x",
-				 subsystem->dev.direct.pci_addr.domain,
-				 subsystem->dev.direct.pci_addr.bus,
-				 subsystem->dev.direct.pci_addr.dev,
-				 subsystem->dev.direct.pci_addr.func);
-
 			spdk_json_write_name(w, "pci_address");
-			spdk_json_write_string(w, pci_str);
+			spdk_json_write_string_fmt(w, "%04x:%02x:%02x.%x",
+						   subsystem->dev.direct.pci_addr.domain,
+						   subsystem->dev.direct.pci_addr.bus,
+						   subsystem->dev.direct.pci_addr.dev,
+						   subsystem->dev.direct.pci_addr.func);
 		} else {
 			int i;
 			spdk_json_write_name(w, "serial_number");
