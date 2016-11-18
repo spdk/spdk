@@ -511,6 +511,16 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 	return bdev->fn_table->io_type_supported(bdev, io_type);
 }
 
+int
+spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	if (bdev->fn_table->dump_config_json) {
+		return bdev->fn_table->dump_config_json(bdev, w);
+	}
+
+	return 0;
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {

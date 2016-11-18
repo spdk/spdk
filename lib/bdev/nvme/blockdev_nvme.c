@@ -45,6 +45,7 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/bdev.h"
+#include "spdk/json.h"
 #include "spdk/nvme.h"
 #include "spdk/io_channel.h"
 
@@ -332,11 +333,28 @@ blockdev_nvme_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 	return spdk_get_io_channel(nvme_bdev->ctrlr, priority, false, NULL);
 }
 
+static int
+blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct nvme_blockdev *nvme_bdev = (struct nvme_blockdev *)bdev;
+
+	spdk_json_write_name(w, "nvme");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "nsid");
+	spdk_json_write_uint32(w, spdk_nvme_ns_get_id(nvme_bdev->ns));
+
+	spdk_json_write_object_end(w);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= blockdev_nvme_destruct,
 	.submit_request		= blockdev_nvme_submit_request,
 	.io_type_supported	= blockdev_nvme_io_type_supported,
 	.get_io_channel		= blockdev_nvme_get_io_channel,
+	.dump_config_json	= blockdev_nvme_dump_config_json,
 };
 
 static bool

@@ -74,6 +74,11 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_server_conn *conn,
 		spdk_json_write_name(w, "claimed");
 		spdk_json_write_bool(w, bdev->claimed);
 
+		spdk_json_write_name(w, "driver_specific");
+		spdk_json_write_object_begin(w);
+		spdk_bdev_dump_config_json(bdev, w);
+		spdk_json_write_object_end(w);
+
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
