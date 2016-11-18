@@ -857,8 +857,8 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 
 	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
 		strlen((char *)NVME_HOST_ID_DEFAULT));
-	strncpy((char *)&nvmf_data->hostnqn, (char *)NVME_HOST_NQN, strlen((char *)NVME_HOST_NQN));
-	strncpy((char *)&nvmf_data->subnqn, rctrlr->info.nqn, strlen(rctrlr->info.nqn));
+	strncpy((char *)nvmf_data->hostnqn, NVME_HOST_NQN, sizeof(nvmf_data->hostnqn));
+	strncpy((char *)nvmf_data->subnqn, rctrlr->info.nqn, sizeof(nvmf_data->subnqn));
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
 					   (struct spdk_nvme_cmd *)&cmd,
