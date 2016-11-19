@@ -69,14 +69,17 @@ struct spdk_nvme_ctrlr_opts {
 	 * Number of I/O queues to request (used to set Number of Queues feature)
 	 */
 	uint32_t num_io_queues;
+
 	/**
 	 * Enable submission queue in controller memory buffer
 	 */
 	bool use_cmb_sqs;
+
 	/**
 	 * Type of arbitration mechanism
 	 */
 	enum spdk_nvme_cc_ams arb_mechanism;
+
 	/**
 	 * Keep alive timeout in milliseconds (0 = disabled).
 	 *
@@ -86,10 +89,12 @@ struct spdk_nvme_ctrlr_opts {
 	 * are sent.
 	 */
 	uint32_t keep_alive_timeout_ms;
+
 	/**
 	 * Specify the retry number when there is issue with the transport
 	 */
 	int transport_retry_count;
+
 	/**
 	 * The queue depth of each NVMe I/O queue.
 	 */
@@ -97,34 +102,45 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
- * Define the NVMe transport type
+ * NVMe transport type
  */
 enum spdk_nvme_transport_type {
+	/**
+	 * NVMe connected via local PCI Express
+	 */
 	SPDK_NVME_TRANSPORT_PCIE,
+
+	/**
+	 * NVMe over Fabrics with RDMA transport
+	 */
 	SPDK_NVME_TRANSPORT_RDMA,
 };
 
 /**
+ * NVMe over Fabrics discovery parameters.
  *
- *  A pointer to this structure will be provided for connecting remote NVMe controller.
+ * This structure must be provided when connecting to remote NVMe controllers via NVMe over Fabrics.
  */
 struct spdk_nvme_discover_info {
 	/**
-	 * Specify the NVMe transport type;
+	 * NVMe over Fabrics transport type.
 	 */
 	enum spdk_nvme_transport_type type;
+
 	/**
-	 * Subsystem NQN to be connected
+	 * Subsystem NQN of the NVMe over Fabrics discovery service.
 	 */
 	const char *nqn;
+
 	/**
-	 * Transport address of the NVMe over fabrics target. For transports which uses IP
-	 * addressing (e.g. rdma), this should be an IP-based address.
+	 * Transport address of the NVMe over Fabrics discovery service. For transports which use IP
+	 * addressing (e.g. RDMA), this should be an IP-based address.
 	 */
 	const char *traddr;
+
 	/**
-	 * Specifiy the transport service identifier.  For transports which uses IP addressing
-	 * (e.g. rdma), this field shoud be the port number.
+	 * Specifiy the transport service identifier.  For transports which use IP addressing
+	 * (e.g. RDMA), this field shoud be the port number.
 	 */
 	const char *trsvcid;
 };
@@ -148,17 +164,21 @@ struct spdk_nvme_probe_info {
 	struct spdk_pci_id pci_id;
 
 	/**
-	 * Subsystem NQN which is newly discovered
+	 * Subsystem NQN.
+	 *
+	 * If this is not an NVMe over Fabrics controller, this field will be NULL.
 	 */
 	const char *nqn;
+
 	/**
-	 * Transport address of the NVMe over fabrics target. For transports which uses IP
-	 * addressing (e.g. rdma), this should be an IP-based address.
+	 * Transport address of the NVMe over Fabrics target. For transports which use IP
+	 * addressing (e.g. RDMA), this will be an IP-based address.
 	 */
 	const char *traddr;
+
 	/**
-	 * Specifiy the transport service identifier.  For transports which uses IP addressing
-	 * (e.g. rdma), this field shoud be the port number.
+	 * Transport service identifier.  For transports which use IP addressing
+	 * (e.g. RDMA), this field will be the port number.
 	 */
 	const char *trsvcid;
 };
