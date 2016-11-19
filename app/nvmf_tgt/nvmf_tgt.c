@@ -327,6 +327,11 @@ spdk_nvmf_startup(spdk_event_t event)
 		goto initialize_error;
 	}
 
+	if (((1ULL << g_spdk_nvmf_tgt_conf.acceptor_lcore) & spdk_app_get_core_mask()) == 0) {
+		SPDK_ERRLOG("Invalid AcceptorCore setting\n");
+		goto initialize_error;
+	}
+
 	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
 			     g_spdk_nvmf_tgt_conf.acceptor_lcore, NULL,
 			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
