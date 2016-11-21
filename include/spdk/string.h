@@ -92,6 +92,17 @@ char *spdk_str_trim(char *s);
  */
 void spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad);
 
+/**
+ * Find the length of a string that has been padded with a specific byte.
+ *
+ * \param str Right-padded string to find the length of.
+ * \param size Size of the full string pointed to by str, including padding.
+ * \param pad Character that was used to pad str up to size.
+ *
+ * \return Length of the non-padded portion of str.
+ */
+size_t spdk_strlen_pad(const void *str, size_t size, int pad);
+
 #ifdef __cplusplus
 }
 #endif

@@ -34,6 +34,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -212,5 +213,33 @@ spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad)
 		memset((char *)dst + len, pad, size - len);
 	} else {
 		memcpy(dst, src, size);
+	}
+}
+
+size_t
+spdk_strlen_pad(const void *str, size_t size, int pad)
+{
+	const uint8_t *start;
+	const uint8_t *iter;
+	uint8_t pad_byte;
+
+	pad_byte = (uint8_t)pad;
+	start = (const uint8_t *)str;
+
+	if (size == 0) {
+		return 0;
+	}
+
+	iter = start + size - 1;
+	while (1) {
+		if (*iter != pad_byte) {
+			return iter - start + 1;
+		}
+
+		if (iter == start) {
+			/* Hit the start of the string finding only pad_byte. */
+			return 0;
+		}
+		iter--;
 	}
 }
