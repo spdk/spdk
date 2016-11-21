@@ -325,6 +325,9 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fabric_prop_set_cmd) == 64, "Incorrec
 #define SPDK_NVMF_NQN_MAX_LEN 223
 #define SPDK_NVMF_DISCOVERY_NQN "nqn.2014-08.org.nvmexpress.discovery"
 
+#define SPDK_NVMF_TRADDR_MAX_LEN 256
+#define SPDK_NVMF_TRSVCID_MAX_LEN 32
+
 /** RDMA transport-specific address subtype */
 struct spdk_nvmf_rdma_transport_specific_address_subtype {
 	/** RDMA QP service type (\ref spdk_nvmf_rdma_qptype) */
@@ -389,7 +392,7 @@ struct spdk_nvmf_discovery_log_page_entry {
 	uint8_t		reserved0[22];
 
 	/** Transport service identifier */
-	uint8_t		trsvcid[32];
+	uint8_t		trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN];
 
 	uint8_t		reserved1[192];
 
@@ -397,7 +400,7 @@ struct spdk_nvmf_discovery_log_page_entry {
 	uint8_t		subnqn[256];
 
 	/** Transport address */
-	uint8_t		traddr[256];
+	uint8_t		traddr[SPDK_NVMF_TRADDR_MAX_LEN];
 
 	/** Transport-specific address subtype */
 	union spdk_nvmf_transport_specific_address_subtype tsas;

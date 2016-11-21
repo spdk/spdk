@@ -48,6 +48,7 @@ extern "C" {
 
 #include "spdk/env.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/nvmf_spec.h"
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;
@@ -166,21 +167,21 @@ struct spdk_nvme_probe_info {
 	/**
 	 * Subsystem NQN.
 	 *
-	 * If this is not an NVMe over Fabrics controller, this field will be NULL.
+	 * If this is not an NVMe over Fabrics controller, this field will be a zero-length string.
 	 */
-	const char *nqn;
+	char nqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 	/**
 	 * Transport address of the NVMe over Fabrics target. For transports which use IP
 	 * addressing (e.g. RDMA), this will be an IP-based address.
 	 */
-	const char *traddr;
+	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 
 	/**
 	 * Transport service identifier.  For transports which use IP addressing
 	 * (e.g. RDMA), this field will be the port number.
 	 */
-	const char *trsvcid;
+	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 };
 
 /**

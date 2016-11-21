@@ -54,6 +54,7 @@
 #include "spdk/queue.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/string.h"
 
 #include "nvme_internal.h"
 
@@ -73,8 +74,6 @@ struct nvme_rdma_ctrlr {
 	struct spdk_nvme_ctrlr			ctrlr;
 
 	uint16_t				cntlid;
-
-	struct spdk_nvme_discover_info 		info;
 };
 
 /* NVMe RDMA qpair extensions for spdk_nvme_qpair */
@@ -703,27 +702,27 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 {
 	struct sockaddr_storage  sin;
 	int rc;
-	struct nvme_rdma_ctrlr *rctrlr;
+	struct spdk_nvme_ctrlr *ctrlr;
 
 	rc = nvmf_cm_construct(rqpair);
 	if (rc < 0) {
 		return nvme_transport_qpair_destroy(&rqpair->qpair);
 	}
 
-	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
+	ctrlr = rqpair->qpair.ctrlr;
 	memset(&sin, 0, sizeof(struct sockaddr_storage));
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "port is %s\n", rctrlr->info.trsvcid);
-	rc = nvme_rdma_parse_ipaddr((struct sockaddr_in *)&sin, rctrlr->info.traddr);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "port is %s\n", ctrlr->probe_info.trsvcid);
+	rc = nvme_rdma_parse_ipaddr((struct sockaddr_in *)&sin, ctrlr->probe_info.traddr);
 	if (rc < 0) {
 		goto err;
 	}
 
 	/* need to tranfer the host*/
 	if (sin.ss_family == AF_INET)
-		((struct sockaddr_in *) &sin)->sin_port = htons(atoi(rctrlr->info.trsvcid));
+		((struct sockaddr_in *) &sin)->sin_port = htons(atoi(ctrlr->probe_info.trsvcid));
 	else
-		((struct sockaddr_in6 *) &sin)->sin6_port = htons(atoi(rctrlr->info.trsvcid));
+		((struct sockaddr_in6 *) &sin)->sin6_port = htons(atoi(ctrlr->probe_info.trsvcid));
 
 	rc = rdma_create_id(rqpair->cm_channel, &rqpair->cm_id, rqpair, RDMA_PS_TCP);
 	if (rc < 0) {
@@ -852,7 +851,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
 		strlen((char *)NVME_HOST_ID_DEFAULT));
 	strncpy((char *)nvmf_data->hostnqn, NVME_HOST_NQN, sizeof(nvmf_data->hostnqn));
-	strncpy((char *)nvmf_data->subnqn, rctrlr->info.nqn, sizeof(nvmf_data->subnqn));
+	strncpy((char *)nvmf_data->subnqn, ctrlr->probe_info.nqn, sizeof(nvmf_data->subnqn));
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
 					   (struct spdk_nvme_cmd *)&cmd,
@@ -1140,17 +1139,20 @@ int
 nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
 		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
 {
-	struct spdk_nvme_discover_info *info = (struct spdk_nvme_discover_info *)devhandle;
+	struct spdk_nvme_discover_info *discover_info = devhandle;
 	struct spdk_nvme_probe_info probe_info;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
 	struct spdk_nvmf_discovery_log_page *log_page;
-	struct spdk_nvme_discover_info discover_info;
 	char buffer[4096];
 	int rc;
 	uint32_t i;
 
+	snprintf(probe_info.nqn, sizeof(probe_info.nqn), "%s", discover_info->nqn);
+	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", discover_info->traddr);
+	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", discover_info->trsvcid);
+
 	memset(buffer, 0x0, 4096);
-	discovery_ctrlr = nvme_attach(info->type, (void *)info);
+	discovery_ctrlr = nvme_attach(discover_info->type, &probe_info);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1163,15 +1165,33 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
 	}
 
 	log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
-	discover_info.type = info->type;
 	for (i = 0; i < log_page->numrec; i++) {
-		discover_info.nqn = probe_info.nqn  = (const char *)log_page->entries[i].subnqn;
-		discover_info.traddr = probe_info.traddr  = (const char *)log_page->entries[i].traddr;
-		discover_info.trsvcid = probe_info.trsvcid = (const char *)log_page->entries[i].trsvcid;
-		SPDK_NOTICELOG("nqn=%s, traddr=%s, trsvcid=%s\n", discover_info.nqn,
-			       discover_info.traddr, discover_info.trsvcid);
+		struct spdk_nvmf_discovery_log_page_entry *entry = &log_page->entries[i];
+		uint8_t *end;
+		size_t len;
+
+		/* Ensure that subnqn is null terminated. */
+		end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
+		if (!end) {
+			SPDK_ERRLOG("Discovery entry %u: SUBNQN is not null terminated\n", i);
+			continue;
+		}
+		len = end - entry->subnqn;
+		memcpy(probe_info.nqn, entry->subnqn, len);
+		probe_info.nqn[len] = '\0';
+
+		/* Convert traddr to a null terminated string. */
+		len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
+		memcpy(probe_info.traddr, entry->traddr, len);
+
+		/* Convert trsvcid to a null terminated string. */
+		len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
+		memcpy(probe_info.trsvcid, entry->trsvcid, len);
+
+		SPDK_NOTICELOG("nqn=%s, traddr=%s, trsvcid=%s\n", probe_info.nqn,
+			       probe_info.traddr, probe_info.trsvcid);
 		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
-		nvme_probe_one(info->type, probe_cb, cb_ctx, &probe_info, (void *)&discover_info);
+		nvme_probe_one(discover_info->type, probe_cb, cb_ctx, &probe_info, &probe_info);
 	}
 
 	nvme_ctrlr_destruct(discovery_ctrlr);
@@ -1182,7 +1202,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type 
 		void *devhandle)
 {
 	struct nvme_rdma_ctrlr *rctrlr;
-	struct spdk_nvme_discover_info *info;
+	struct spdk_nvme_probe_info *probe_info;
 	union spdk_nvme_cap_register cap;
 	int rc;
 
@@ -1191,7 +1211,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type 
 		return NULL;
 	}
 
-	info = (struct spdk_nvme_discover_info *)devhandle;
+	probe_info = devhandle;
 	rctrlr = calloc(1, sizeof(struct nvme_rdma_ctrlr));
 	if (rctrlr == NULL) {
 		SPDK_ERRLOG("could not allocate ctrlr\n");
@@ -1199,7 +1219,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type 
 	}
 
 	rctrlr->ctrlr.transport = SPDK_NVME_TRANSPORT_RDMA;
-	rctrlr->info = *info;
+	rctrlr->ctrlr.probe_info = *probe_info;
 
 	rc = nvme_ctrlr_construct(&rctrlr->ctrlr);
 	if (rc != 0) {
