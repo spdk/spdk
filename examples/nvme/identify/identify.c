@@ -388,7 +388,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 }
 
 static void
-print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr)
+print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_info *probe_info)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
@@ -406,8 +406,15 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
-	       pci_addr->bus, pci_addr->dev, pci_addr->func);
+	if (probe_info->nqn[0]) {
+		printf("NVMe over Fabrics controller at %s:%s: %s\n",
+		       probe_info->traddr, probe_info->trsvcid, probe_info->nqn);
+	} else {
+		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
+		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
+		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
+		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+	}
 	printf("=====================================================\n");
 
 	if (g_hex_dump) {
@@ -935,7 +942,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	print_controller(ctrlr, &probe_info->pci_addr);
+	print_controller(ctrlr, probe_info);
 	spdk_nvme_detach(ctrlr);
 }
 
