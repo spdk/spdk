@@ -49,7 +49,8 @@
 
 #include "spdk/event.h"
 #include "spdk/env.h"
-#include "spdk/log.h"
+
+#include "spdk_internal/log.h"
 
 #define ISCSI_CONFIG_TMPL \
 "[iSCSI]\n" \

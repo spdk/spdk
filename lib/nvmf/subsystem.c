@@ -39,10 +39,11 @@
 #include "subsystem.h"
 #include "transport.h"
 
-#include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
+
+#include "spdk_internal/log.h"
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 
@@ -117,8 +118,8 @@ spdk_nvmf_valid_nqn(const char *nqn)
 }
 
 struct spdk_nvmf_subsystem *
-spdk_nvmf_create_subsystem(int num, const char *name,
-			   enum spdk_nvmf_subtype subtype,
+spdk_nvmf_create_subsystem(const char *nqn,
+			   enum spdk_nvmf_subtype type,
 			   enum spdk_nvmf_subsystem_mode mode,
 			   void *cb_ctx,
 			   spdk_nvmf_subsystem_connect_fn connect_cb,
@@ -126,7 +127,7 @@ spdk_nvmf_create_subsystem(int num, const char *name,
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 
-	if (!spdk_nvmf_valid_nqn(name)) {
+	if (!spdk_nvmf_valid_nqn(nqn)) {
 		return NULL;
 	}
 
@@ -135,13 +136,12 @@ spdk_nvmf_create_subsystem(int num, const char *name,
 		return NULL;
 	}
 
-	subsystem->num = num;
-	subsystem->subtype = subtype;
+	subsystem->subtype = type;
 	subsystem->mode = mode;
 	subsystem->cb_ctx = cb_ctx;
 	subsystem->connect_cb = connect_cb;
 	subsystem->disconnect_cb = disconnect_cb;
-	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", name);
+	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->listen_addrs);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->sessions);
@@ -174,6 +174,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
 		free(listen_addr->traddr);
 		free(listen_addr->trsvcid);
+		free(listen_addr->trname);
 		free(listen_addr);
 		subsystem->num_listen_addrs--;
 	}
@@ -200,11 +201,16 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 const struct spdk_nvmf_transport *transport,
-				 char *traddr, char *trsvcid)
+				 char *trname, char *traddr, char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
+	const struct spdk_nvmf_transport *transport;
 	int rc;
+
+	transport = spdk_nvmf_transport_get(trname);
+	if (!transport) {
+		return -1;
+	}
 
 	listen_addr = calloc(1, sizeof(*listen_addr));
 	if (!listen_addr) {
@@ -224,7 +230,13 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -1;
 	}
 
-	listen_addr->transport = transport;
+	listen_addr->trname = strdup(trname);
+	if (!listen_addr->trname) {
+		free(listen_addr->traddr);
+		free(listen_addr->trsvcid);
+		free(listen_addr);
+		return -1;
+	}
 
 	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
 	subsystem->num_listen_addrs++;
@@ -281,6 +293,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_listen_addr *listen_addr;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
+	const struct spdk_nvmf_transport *transport;
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
@@ -301,7 +314,10 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 				entry->subtype = subsystem->subtype;
 				snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-				listen_addr->transport->listen_addr_discover(listen_addr, entry);
+				transport = spdk_nvmf_transport_get(listen_addr->trname);
+				assert(transport != NULL);
+
+				transport->listen_addr_discover(listen_addr, entry);
 			}
 			numrec++;
 		}
@@ -338,4 +354,28 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 	snprintf(subsystem->dev.virt.sn, sizeof(subsystem->dev.virt.sn), "%s", sn);
 
 	return 0;
+}
+
+const char *
+spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->subnqn;
+}
+
+/* Workaround for astyle formatting bug */
+typedef enum spdk_nvmf_subtype nvmf_subtype_t;
+
+nvmf_subtype_t
+spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->subtype;
+}
+
+/* Workaround for astyle formatting bug */
+typedef enum spdk_nvmf_subsystem_mode nvmf_mode_t;
+
+nvmf_mode_t
+spdk_nvmf_subsystem_get_mode(struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->mode;
 }

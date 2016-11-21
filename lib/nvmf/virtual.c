@@ -40,12 +40,13 @@
 
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
-#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/string.h"
+
+#include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
 #define MODEL_NUMBER "SPDK Virtual Controller"
@@ -75,8 +76,8 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_session *session)
 		}
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem%d support unmap - enabling DSM\n",
-		      session->subsys->num);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
+		      spdk_nvmf_subsystem_get_nqn(session->subsys));
 	session->vcdata.oncs.dsm = 1;
 }
 

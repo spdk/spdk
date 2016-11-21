@@ -42,6 +42,30 @@
 
 #include "spdk/string.h"
 
+struct spdk_conf_value {
+	struct spdk_conf_value *next;
+	char *value;
+};
+
+struct spdk_conf_item {
+	struct spdk_conf_item *next;
+	char *key;
+	struct spdk_conf_value *val;
+};
+
+struct spdk_conf_section {
+	struct spdk_conf_section *next;
+	char *name;
+	int num;
+	struct spdk_conf_item *item;
+};
+
+struct spdk_conf {
+	char *file;
+	struct spdk_conf_section *current_section;
+	struct spdk_conf_section *section;
+};
+
 #define CF_DELIM " \t"
 
 #define LIB_MAX_TMPBUF 1024
@@ -323,6 +347,18 @@ bool
 spdk_conf_section_match_prefix(const struct spdk_conf_section *sp, const char *name_prefix)
 {
 	return strncasecmp(sp->name, name_prefix, strlen(name_prefix)) == 0;
+}
+
+const char *
+spdk_conf_section_get_name(const struct spdk_conf_section *sp)
+{
+	return sp->name;
+}
+
+int
+spdk_conf_section_get_num(const struct spdk_conf_section *sp)
+{
+	return sp->num;
 }
 
 char *

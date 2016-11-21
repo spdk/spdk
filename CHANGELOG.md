@@ -25,6 +25,12 @@ used instead. Prior to DPDK 16.07 enumeration by class code was not supported,
 so for earlier DPDK versions only Intel SSDs will be discovered. Starting with
 DPDK 16.07 all devices will be discovered correctly by class code.
 
+The build process has been modified to produce all of the library files in the
+`build/lib` directory.  This is intended to simplify the use of SPDK from external
+projects, which can now link to SPDK libraries by adding the `build/lib` directory
+to the library path via `-L` and linking the SPDK libraries by name (for example,
+`-lspdk_nvme -lspdk_log -lspdk_util`).
+
 v16.08: iSCSI target, NVMe over Fabrics maturity
 ------------------------------------------------
 

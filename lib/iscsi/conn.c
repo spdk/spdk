@@ -51,8 +51,10 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/trace.h"
-#include "spdk/log.h"
 #include "spdk/net.h"
+
+#include "spdk_internal/log.h"
+
 #include "iscsi/task.h"
 #include "iscsi/conn.h"
 #include "iscsi/tgt_node.h"

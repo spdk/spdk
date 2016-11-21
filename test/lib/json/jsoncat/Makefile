@@ -38,7 +38,7 @@ APP = jsoncat
 
 C_SRCS = jsoncat.c
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/json/libspdk_json.a
+SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_json.a
 
 LIBS += $(SPDK_LIBS)
 

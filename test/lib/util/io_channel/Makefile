@@ -34,8 +34,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/lib/cunit/libspdk_cunit.a
+SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_cunit.a
 
 CFLAGS += $(DPDK_INC)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test

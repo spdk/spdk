@@ -44,10 +44,11 @@
 
 #include "spdk/conf.h"
 #include "spdk/endian.h"
-#include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/nvme.h"
 #include "spdk/io_channel.h"
+
+#include "spdk_internal/log.h"
 
 #include "bdev_module.h"
 
@@ -608,7 +609,12 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 				bdev->disk.max_unmap_bdesc_count =
 					NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT;
 			}
-			bdev->disk.write_cache = 1;
+
+			bdev->disk.write_cache = 0;
+			if (cdata->vwc.present) {
+				/* Enable if the Volatile Write Cache exists */
+				bdev->disk.write_cache = 1;
+			}
 			bdev->blocklen = spdk_nvme_ns_get_sector_size(ns);
 			bdev->disk.blocklen = bdev->blocklen;
 			bdev->disk.blockcnt = bdev->lba_end - bdev->lba_start + 1;

@@ -50,10 +50,11 @@
 #include <sys/uio.h>
 
 #include "spdk/bdev.h"
-#include "spdk/log.h"
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/trace.h"
+
+#include "spdk_internal/log.h"
 
 enum {
 	SPDK_SCSI_TASK_UNKNOWN = -1,

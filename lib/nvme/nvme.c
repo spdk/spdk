@@ -38,6 +38,7 @@ struct nvme_driver _g_nvme_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.attached_ctrlrs),
 	.request_mempool = NULL,
+	.initialized = false,
 };
 
 struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
@@ -62,8 +63,12 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
-	nvme_ctrlr_destruct(ctrlr);
+	nvme_ctrlr_proc_put_ref(ctrlr);
+
+	if (nvme_ctrlr_get_ref_count(ctrlr) == 0) {
+		TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
+		nvme_ctrlr_destruct(ctrlr);
+	}
 
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return 0;
@@ -205,8 +210,12 @@ nvme_free_request(struct nvme_request *req)
 int
 nvme_mutex_init_shared(pthread_mutex_t *mtx)
 {
-	pthread_mutexattr_t attr;
 	int rc = 0;
+
+#ifdef __FreeBSD__
+	pthread_mutex_init(mtx, NULL);
+#else
+	pthread_mutexattr_t attr;
 
 	if (pthread_mutexattr_init(&attr)) {
 		return -1;
@@ -216,6 +225,8 @@ nvme_mutex_init_shared(pthread_mutex_t *mtx)
 		rc = -1;
 	}
 	pthread_mutexattr_destroy(&attr);
+#endif
+
 	return rc;
 }
 
@@ -273,6 +284,12 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 	struct nvme_enum_ctx enum_ctx;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
+	if (!spdk_process_is_primary()) {
+		while (g_spdk_nvme_driver->initialized == false) {
+			usleep(200 * 1000);
+		}
+	}
+
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	if (g_spdk_nvme_driver->request_mempool == NULL) {
@@ -327,6 +344,12 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 				TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
 
 				/*
+				 * Increase the ref count before calling attach_cb() as the user may
+				 * call nvme_detach() immediately.
+				 */
+				nvme_ctrlr_proc_get_ref(ctrlr);
+
+				/*
 				 * Unlock while calling attach_cb() so the user can call other functions
 				 *  that may take the driver lock, like nvme_detach().
 				 */
@@ -338,6 +361,8 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 			}
 		}
 	}
+
+	g_spdk_nvme_driver->initialized = true;
 
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return rc;

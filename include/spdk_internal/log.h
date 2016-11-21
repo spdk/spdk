@@ -31,27 +31,44 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Memory copy offload engine abstraction layer
+/**
+ * \file
+ * Logging interfaces
  */
 
-#ifndef SPDK_COPY_ENGINE_H
-#define SPDK_COPY_ENGINE_H
+#ifndef SPDK_INTERNAL_LOG_H
+#define SPDK_INTERNAL_LOG_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "spdk/log.h"
 
-typedef void (*spdk_copy_completion_cb)(void *ref, int status);
+#ifdef DEBUG
+#define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag) \
+bool flag = false; \
+__attribute__((constructor)) static void register_trace_flag_##flag(void) \
+{ \
+	spdk_log_register_trace_flag(str, &flag); \
+}
 
-struct spdk_io_channel;
+#define SPDK_TRACELOG(FLAG, ...)							\
+	do {										\
+		extern bool FLAG;							\
+		if (FLAG) {								\
+			spdk_tracelog(__FILE__, __LINE__, __func__, __VA_ARGS__);	\
+		}									\
+	} while (0)
 
-struct spdk_copy_task;
+#define SPDK_TRACEDUMP(FLAG, LABEL, BUF, LEN)						\
+	do {										\
+		extern bool FLAG;							\
+		if ((FLAG) && (LEN)) {							\
+			spdk_trace_dump((LABEL), (BUF), (LEN));				\
+		}									\
+	} while (0)
 
-struct spdk_io_channel *spdk_copy_engine_get_io_channel(uint32_t priority);
-int64_t spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
-			 void *src, uint64_t nbytes, spdk_copy_completion_cb cb);
-int64_t spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
-			      void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb);
-size_t spdk_copy_task_size(void);
-
+#else
+#define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag)
+#define SPDK_TRACELOG(...) do { } while (0)
+#define SPDK_TRACEDUMP(...) do { } while (0)
 #endif
+
+#endif /* SPDK_INTERNAL_LOG_H */

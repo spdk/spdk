@@ -56,10 +56,8 @@
 #include "spdk/env.h"
 #include "spdk/pci_ids.h"
 
-#define SYSFS_PCI_DEVICES	"/sys/bus/pci/devices"
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
-#define SPDK_PCI_PATH_MAX	256
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
 
@@ -217,40 +215,6 @@ spdk_pci_device_unmap_bar(struct spdk_pci_device *device, uint32_t bar, void *ad
 	return 0;
 }
 
-static int
-pci_device_get_u32(struct spdk_pci_device *dev, const char *file, uint32_t *val)
-{
-	char filename[SPDK_PCI_PATH_MAX];
-	FILE *fd;
-	char buf[10];
-	char *end;
-
-	snprintf(filename, sizeof(filename),
-		 SYSFS_PCI_DEVICES "/" PCI_PRI_FMT "/%s",
-		 spdk_pci_device_get_domain(dev), spdk_pci_device_get_bus(dev),
-		 spdk_pci_device_get_dev(dev), spdk_pci_device_get_func(dev), file);
-
-	fd = fopen(filename, "r");
-	if (!fd) {
-		return -1;
-	}
-
-	if (fgets(buf, sizeof(buf), fd) == NULL) {
-		fclose(fd);
-		return -1;
-	}
-
-	*val = strtoul(buf, &end, 0);
-	if ((buf[0] == '\0') || (end == NULL) || (*end != '\n')) {
-		fclose(fd);
-		return -1;
-	}
-
-	fclose(fd);
-	return 0;
-
-}
-
 uint16_t
 spdk_pci_device_get_domain(struct spdk_pci_device *dev)
 {
@@ -310,18 +274,6 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 	pci_id.subdevice_id = spdk_pci_device_get_subdevice_id(pci_dev);
 
 	return pci_id;
-}
-
-uint32_t
-spdk_pci_device_get_class(struct spdk_pci_device *dev)
-{
-	uint32_t class_code;
-
-	if (pci_device_get_u32(dev, "class", &class_code) < 0) {
-		return 0xFFFFFFFFu;
-	}
-
-	return class_code;
 }
 
 int

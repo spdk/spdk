@@ -44,9 +44,9 @@ CFLAGS += -I. $(ENV_CFLAGS) -I$(FIO_SOURCE_DIR)
 
 LDFLAGS += -shared -rdynamic
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
-	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
+SPDK_LIBS += $(SPDK_ROOT_DIR)/build/lib/libspdk_nvme.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_util.a \
+	     $(SPDK_ROOT_DIR)/build/lib/libspdk_log.a \
 
 LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 

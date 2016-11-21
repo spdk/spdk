@@ -45,9 +45,6 @@ extern "C" {
 #include <assert.h>
 #include <stdlib.h>
 
-#define SPDK_CONCAT_(x, y) x##y
-#define SPDK_CONCAT(x, y) SPDK_CONCAT_(x, y)
-
 #ifdef static_assert
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
 #else

@@ -87,8 +87,8 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 	struct spdk_event *event;
 	int i;
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
-	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME &&
+	    spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
 		for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
 			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
 			subsystem->dev.virt.ch[i] = NULL;
@@ -118,7 +118,7 @@ shutdown_subsystems(void)
 static void
 acceptor_poller_unregistered_event(struct spdk_event *event)
 {
-	nvmf_tgt_fini();
+	spdk_nvmf_tgt_fini();
 	shutdown_subsystems();
 }
 
@@ -216,7 +216,7 @@ nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 }
 
 struct nvmf_tgt_subsystem *
-nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subtype,
+nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 			  enum spdk_nvmf_subsystem_mode mode, uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem *subsystem;
@@ -228,7 +228,7 @@ nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subt
 		return NULL;
 	}
 
-	subsystem = spdk_nvmf_create_subsystem(num, name, subtype, mode, app_subsys, connect_cb,
+	subsystem = spdk_nvmf_create_subsystem(name, subtype, mode, app_subsys, connect_cb,
 					       disconnect_cb);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
@@ -324,6 +324,11 @@ spdk_nvmf_startup(spdk_event_t event)
 	if (rc < 0) {
 		nvmf_tgt_delete_subsystems();
 		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
+		goto initialize_error;
+	}
+
+	if (((1ULL << g_spdk_nvmf_tgt_conf.acceptor_lcore) & spdk_app_get_core_mask()) == 0) {
+		SPDK_ERRLOG("Invalid AcceptorCore setting\n");
 		goto initialize_error;
 	}
 

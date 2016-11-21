@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/copy_engine.h"
+#include "spdk_internal/copy_engine.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -43,6 +43,8 @@
 #include "spdk/log.h"
 #include "spdk/event.h"
 #include "spdk/io_channel.h"
+
+static size_t g_max_copy_module_size = 0;
 
 static struct spdk_copy_engine *hw_copy_engine = NULL;
 /* Memcpy engine always exist */
@@ -73,16 +75,16 @@ spdk_memcpy_register(struct spdk_copy_engine *copy_engine)
 static void
 copy_engine_done(void *ref, int status)
 {
-	struct copy_task *req = (struct copy_task *)ref;
+	struct spdk_copy_task *req = (struct spdk_copy_task *)ref;
 
 	req->cb(req, status);
 }
 
 int64_t
-spdk_copy_submit(struct copy_task *copy_req, struct spdk_io_channel *ch,
-		 void *dst, void *src, uint64_t nbytes, copy_completion_cb cb)
+spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
+		 void *dst, void *src, uint64_t nbytes, spdk_copy_completion_cb cb)
 {
-	struct copy_task *req = copy_req;
+	struct spdk_copy_task *req = copy_req;
 	struct copy_io_channel *copy_ch = spdk_io_channel_get_ctx(ch);
 
 	req->cb = cb;
@@ -91,10 +93,10 @@ spdk_copy_submit(struct copy_task *copy_req, struct spdk_io_channel *ch,
 }
 
 int64_t
-spdk_copy_submit_fill(struct copy_task *copy_req, struct spdk_io_channel *ch,
-		      void *dst, uint8_t fill, uint64_t nbytes, copy_completion_cb cb)
+spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
+		      void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb)
 {
-	struct copy_task *req = copy_req;
+	struct spdk_copy_task *req = copy_req;
 	struct copy_io_channel *copy_ch = spdk_io_channel_get_ctx(ch);
 
 	req->cb = cb;
@@ -105,26 +107,26 @@ spdk_copy_submit_fill(struct copy_task *copy_req, struct spdk_io_channel *ch,
 /* memcpy default copy engine */
 static int64_t
 mem_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-		copy_completion_cb cb)
+		spdk_copy_completion_cb cb)
 {
-	struct copy_task *copy_req;
+	struct spdk_copy_task *copy_req;
 
 	rte_memcpy(dst, src, (size_t)nbytes);
-	copy_req = (struct copy_task *)((uintptr_t)cb_arg -
-					offsetof(struct copy_task, offload_ctx));
+	copy_req = (struct spdk_copy_task *)((uintptr_t)cb_arg -
+					     offsetof(struct spdk_copy_task, offload_ctx));
 	cb(copy_req, 0);
 	return nbytes;
 }
 
 static int64_t
 mem_copy_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
-	      copy_completion_cb cb)
+	      spdk_copy_completion_cb cb)
 {
-	struct copy_task *copy_req;
+	struct spdk_copy_task *copy_req;
 
 	memset(dst, fill, nbytes);
-	copy_req = (struct copy_task *)((uintptr_t)cb_arg -
-					offsetof(struct copy_task, offload_ctx));
+	copy_req = (struct spdk_copy_task *)((uintptr_t)cb_arg -
+					     offsetof(struct spdk_copy_task, offload_ctx));
 	cb(copy_req, 0);
 
 	return nbytes;
@@ -154,28 +156,24 @@ static struct spdk_io_channel *mem_get_io_channel(uint32_t priority)
 	return spdk_get_io_channel(&memcpy_copy_engine, priority, false, NULL);
 }
 
-static int
+static size_t
 copy_engine_mem_get_ctx_size(void)
 {
-	return sizeof(struct copy_task);
+	return sizeof(struct spdk_copy_task);
 }
 
-int spdk_copy_module_get_max_ctx_size(void)
+size_t
+spdk_copy_task_size(void)
 {
-	struct spdk_copy_module_if *copy_engine;
-	int max_copy_module_size = 0;
-
-	TAILQ_FOREACH(copy_engine, &spdk_copy_module_list, tailq) {
-		if (copy_engine->get_ctx_size && copy_engine->get_ctx_size() > max_copy_module_size) {
-			max_copy_module_size = copy_engine->get_ctx_size();
-		}
-	}
-	return max_copy_module_size;
+	return g_max_copy_module_size;
 }
 
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module)
 {
 	TAILQ_INSERT_TAIL(&spdk_copy_module_list, copy_module, tailq);
+	if (copy_module->get_ctx_size && copy_module->get_ctx_size() > g_max_copy_module_size) {
+		g_max_copy_module_size = copy_module->get_ctx_size();
+	}
 }
 
 static int
