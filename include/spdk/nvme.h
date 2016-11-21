@@ -103,21 +103,6 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
- * NVMe transport type
- */
-enum spdk_nvme_transport_type {
-	/**
-	 * NVMe connected via local PCI Express
-	 */
-	SPDK_NVME_TRANSPORT_PCIE,
-
-	/**
-	 * NVMe over Fabrics with RDMA transport
-	 */
-	SPDK_NVME_TRANSPORT_RDMA,
-};
-
-/**
  * NVMe over Fabrics discovery parameters.
  *
  * This structure must be provided when connecting to remote NVMe controllers via NVMe over Fabrics.
@@ -126,7 +111,7 @@ struct spdk_nvme_discover_info {
 	/**
 	 * NVMe over Fabrics transport type.
 	 */
-	enum spdk_nvme_transport_type type;
+	enum spdk_nvmf_trtype trtype;
 
 	/**
 	 * Subsystem NQN of the NVMe over Fabrics discovery service.
@@ -172,6 +157,13 @@ struct spdk_nvme_probe_info {
 	char nqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 	/**
+	 * NVMe over Fabrics transport type.
+	 *
+	 * This field will be 0 if this is not an NVMe over Fabrics controller.
+	 */
+	enum spdk_nvmf_trtype trtype;
+
+	/**
 	 * Transport address of the NVMe over Fabrics target. For transports which use IP
 	 * addressing (e.g. RDMA), this will be an IP-based address.
 	 */
@@ -183,6 +175,15 @@ struct spdk_nvme_probe_info {
 	 */
 	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 };
+
+/**
+ * Determine whether the NVMe library can handle a specific NVMe over Fabrics transport type.
+ *
+ * \param trtype NVMe over Fabrics transport type to check.
+ *
+ * \return true if trtype is supported or false if it is not supported.
+ */
+bool spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype);
 
 /**
  * Callback for spdk_nvme_probe() enumeration.

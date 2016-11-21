@@ -925,7 +925,7 @@ parse_args(int argc, char **argv)
 		return 0;
 	}
 
-	info.type = SPDK_NVME_TRANSPORT_RDMA;
+	info.trtype = SPDK_NVMF_TRTYPE_RDMA;
 	optind = 1;
 
 	return 0;
@@ -972,7 +972,7 @@ int main(int argc, char **argv)
 	}
 
 	rc = 0;
-	if (info.type == SPDK_NVME_TRANSPORT_RDMA) {
+	if (info.trtype == SPDK_NVMF_TRTYPE_RDMA) {
 		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 		}

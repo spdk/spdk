@@ -220,6 +220,20 @@ struct nvme_request {
 	void				*user_buffer;
 };
 
+/*
+ * NVMe library transports
+ *
+ * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
+ * which is a special case since NVMe over Fabrics does not define a TRTYPE for local PCIe.
+ *
+ * Currently, this uses 0 for PCIe since it is reserved by NVMe-oF.  If 0 is ever assigned as a
+ * valid TRTYPE, this would need to be changed.
+ */
+enum spdk_nvme_transport {
+	SPDK_NVME_TRANSPORT_PCIE = 0,
+	SPDK_NVME_TRANSPORT_RDMA = SPDK_NVMF_TRTYPE_RDMA,
+};
+
 struct nvme_completion_poll_status {
 	struct spdk_nvme_cpl	cpl;
 	bool			done;
@@ -234,7 +248,7 @@ struct nvme_async_event_request {
 struct spdk_nvme_qpair {
 	STAILQ_HEAD(, nvme_request)	queued_req;
 
-	enum spdk_nvme_transport_type	transport;
+	enum spdk_nvme_transport	transport;
 
 	uint16_t			id;
 
@@ -323,7 +337,7 @@ struct spdk_nvme_ctrlr {
 	/** Array of namespaces indexed by nsid - 1 */
 	struct spdk_nvme_ns		*ns;
 
-	enum spdk_nvme_transport_type	transport;
+	enum spdk_nvme_transport	transport;
 
 	uint32_t			num_ns;
 
@@ -480,7 +494,7 @@ void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 int	nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
 void	nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr);
 
-int	nvme_probe_one(enum spdk_nvme_transport_type type, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+int	nvme_probe_one(enum spdk_nvme_transport type, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
 		       struct spdk_nvme_probe_info *probe_info, void *devhandle);
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
@@ -525,13 +539,13 @@ int	nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
 void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
-struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport_type transport, void *devhandle);
+struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport transport, void *devhandle);
 
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
-	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport_type transport, void *devhandle); \
+	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport transport, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport_type transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle); \
+	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \

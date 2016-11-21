@@ -457,7 +457,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 int
-nvme_pcie_ctrlr_scan(enum spdk_nvme_transport_type transport,
+nvme_pcie_ctrlr_scan(enum spdk_nvme_transport transport,
 		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
 {
 	struct nvme_pcie_enum_ctx enum_ctx;
@@ -468,7 +468,7 @@ nvme_pcie_ctrlr_scan(enum spdk_nvme_transport_type transport,
 	return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx);
 }
 
-struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type transport,
+struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport transport,
 		void *devhandle)
 {
 	struct spdk_pci_device *pci_dev = devhandle;

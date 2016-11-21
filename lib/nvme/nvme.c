@@ -47,7 +47,7 @@ struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
 int32_t		spdk_nvme_retry_count;
 
 struct spdk_nvme_ctrlr *
-nvme_attach(enum spdk_nvme_transport_type transport, void *devhandle)
+nvme_attach(enum spdk_nvme_transport transport, void *devhandle)
 {
 	struct spdk_nvme_ctrlr	*ctrlr;
 
@@ -229,7 +229,7 @@ nvme_mutex_init_shared(pthread_mutex_t *mtx)
 }
 
 int
-nvme_probe_one(enum spdk_nvme_transport_type type, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
 	       struct spdk_nvme_probe_info *probe_info, void *devhandle)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -238,7 +238,7 @@ nvme_probe_one(enum spdk_nvme_transport_type type, spdk_nvme_probe_cb probe_cb, 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
 	if (probe_cb(cb_ctx, probe_info, &opts)) {
-		ctrlr = nvme_attach(type, devhandle);
+		ctrlr = nvme_attach(transport, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("nvme_attach() failed\n");
 			return -1;
@@ -260,7 +260,7 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 {
 	int rc, start_rc;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
-	enum spdk_nvme_transport_type type;
+	enum spdk_nvme_transport transport;
 
 	if (!spdk_process_is_primary()) {
 		while (g_spdk_nvme_driver->initialized == false) {
@@ -281,12 +281,18 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 	}
 
 	if (!info) {
-		type = SPDK_NVME_TRANSPORT_PCIE;
+		transport = SPDK_NVME_TRANSPORT_PCIE;
 	} else {
-		type = info->type;
+		if (!spdk_nvme_transport_available(info->trtype)) {
+			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", info->trtype);
+			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return -1;
+		}
+
+		transport = (uint8_t)info->trtype;
 	}
 
-	rc = nvme_transport_ctrlr_scan(type, probe_cb, cb_ctx, (void *)info);
+	rc = nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info);
 
 	/*
 	 * Keep going even if one or more nvme_attach() calls failed,

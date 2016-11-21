@@ -57,14 +57,20 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 	return pci_id;
 }
 
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport_type transport,
+bool
+spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
+{
+	return true;
+}
+
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
 		void *devhandle)
 {
 	return NULL;
 }
 
 int
-nvme_transport_ctrlr_scan(enum spdk_nvme_transport_type transport,
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
 			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
 {
 	return 0;

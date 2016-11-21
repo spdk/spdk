@@ -1136,7 +1136,7 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
-nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
+nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
 {
 	struct spdk_nvme_discover_info *discover_info = devhandle;
@@ -1147,12 +1147,13 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
 	int rc;
 	uint32_t i;
 
+	probe_info.trtype = (uint8_t)transport;
 	snprintf(probe_info.nqn, sizeof(probe_info.nqn), "%s", discover_info->nqn);
 	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", discover_info->traddr);
 	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", discover_info->trsvcid);
 
 	memset(buffer, 0x0, 4096);
-	discovery_ctrlr = nvme_attach(discover_info->type, &probe_info);
+	discovery_ctrlr = nvme_attach(transport, &probe_info);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1169,6 +1170,13 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
 		struct spdk_nvmf_discovery_log_page_entry *entry = &log_page->entries[i];
 		uint8_t *end;
 		size_t len;
+
+		probe_info.trtype = entry->trtype;
+		if (!spdk_nvme_transport_available(probe_info.trtype)) {
+			SPDK_WARNLOG("NVMe transport type %u not available; skipping probe\n",
+				     probe_info.trtype);
+			continue;
+		}
 
 		/* Ensure that subnqn is null terminated. */
 		end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
@@ -1188,17 +1196,17 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
 		len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
 		memcpy(probe_info.trsvcid, entry->trsvcid, len);
 
-		SPDK_NOTICELOG("nqn=%s, traddr=%s, trsvcid=%s\n", probe_info.nqn,
-			       probe_info.traddr, probe_info.trsvcid);
+		SPDK_NOTICELOG("nqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n", probe_info.nqn,
+			       probe_info.trtype, probe_info.traddr, probe_info.trsvcid);
 		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
-		nvme_probe_one(discover_info->type, probe_cb, cb_ctx, &probe_info, &probe_info);
+		nvme_probe_one(entry->trtype, probe_cb, cb_ctx, &probe_info, &probe_info);
 	}
 
 	nvme_ctrlr_destruct(discovery_ctrlr);
 	return 0;
 }
 
-struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type transport,
+struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport transport,
 		void *devhandle)
 {
 	struct nvme_rdma_ctrlr *rctrlr;
