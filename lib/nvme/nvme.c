@@ -228,31 +228,16 @@ nvme_mutex_init_shared(pthread_mutex_t *mtx)
 	return rc;
 }
 
-static int
-nvme_enum_cb(enum spdk_nvme_transport_type type, struct nvme_enum_usr_ctx *enum_ctx,
-	     struct spdk_nvme_probe_info *probe_info, void *devhandle)
+int
+nvme_probe_one(enum spdk_nvme_transport_type type, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+	       struct spdk_nvme_probe_info *probe_info, void *devhandle)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
 
-	/* Verify that this controller is not already attached */
-	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
-		/* NOTE: In the case like multi-process environment where the device handle is
-		 * different per each process, we compare by BDF to determine whether it is the
-		 * same controller.
-		 */
-		if (type == SPDK_NVME_TRANSPORT_PCIE) {
-			if (spdk_pci_addr_compare(&probe_info->pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
-				return 0;
-			}
-		}
-
-		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
-	}
-
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
-	if (enum_ctx->probe_cb(enum_ctx->cb_ctx, probe_info, &opts)) {
+	if (probe_cb(cb_ctx, probe_info, &opts)) {
 		ctrlr = nvme_attach(type, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("nvme_attach() failed\n");
@@ -274,7 +259,6 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		 spdk_nvme_remove_cb remove_cb)
 {
 	int rc, start_rc;
-	struct nvme_enum_ctx enum_ctx;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 	enum spdk_nvme_transport_type type;
 
@@ -296,16 +280,13 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		}
 	}
 
-	enum_ctx.usr_ctx.probe_cb = probe_cb;
-	enum_ctx.usr_ctx.cb_ctx = cb_ctx;
-	enum_ctx.enum_cb = nvme_enum_cb;
 	if (!info) {
 		type = SPDK_NVME_TRANSPORT_PCIE;
 	} else {
 		type = info->type;
 	}
 
-	rc = nvme_transport_ctrlr_scan(type, &enum_ctx, (void *)info);
+	rc = nvme_transport_ctrlr_scan(type, probe_cb, cb_ctx, (void *)info);
 
 	/*
 	 * Keep going even if one or more nvme_attach() calls failed,

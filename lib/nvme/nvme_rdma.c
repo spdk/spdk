@@ -1138,7 +1138,7 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
 nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
-		     struct nvme_enum_ctx *enum_ctx, void *devhandle)
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
 {
 	struct spdk_nvme_discover_info *info = (struct spdk_nvme_discover_info *)devhandle;
 	struct spdk_nvme_probe_info probe_info;
@@ -1170,7 +1170,8 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type transport,
 		discover_info.trsvcid = probe_info.trsvcid = (const char *)log_page->entries[i].trsvcid;
 		SPDK_NOTICELOG("nqn=%s, traddr=%s, trsvcid=%s\n", discover_info.nqn,
 			       discover_info.traddr, discover_info.trsvcid);
-		enum_ctx->enum_cb(info->type, &enum_ctx->usr_ctx, &probe_info, (void *)&discover_info);
+		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
+		nvme_probe_one(info->type, probe_cb, cb_ctx, &probe_info, (void *)&discover_info);
 	}
 
 	nvme_ctrlr_destruct(discovery_ctrlr);

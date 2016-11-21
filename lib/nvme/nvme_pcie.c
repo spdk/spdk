@@ -68,6 +68,10 @@
  */
 #define NVME_MAX_XFER_SIZE	NVME_MAX_PRP_LIST_ENTRIES * PAGE_SIZE
 
+struct nvme_pcie_enum_ctx {
+	spdk_nvme_probe_cb probe_cb;
+	void *cb_ctx;
+};
 
 /* PCIe transport extensions for spdk_nvme_ctrlr */
 struct nvme_pcie_ctrlr {
@@ -431,20 +435,37 @@ static int
 pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
 	struct spdk_nvme_probe_info probe_info = {};
-	struct nvme_enum_ctx *enum_ctx = ctx;
+	struct nvme_pcie_enum_ctx *enum_ctx = ctx;
+	struct spdk_nvme_ctrlr *ctrlr;
 
 	probe_info.pci_addr = spdk_pci_device_get_addr(pci_dev);
 	probe_info.pci_id = spdk_pci_device_get_id(pci_dev);
 
-	return  enum_ctx->enum_cb(SPDK_NVME_TRANSPORT_PCIE, &enum_ctx->usr_ctx, &probe_info,
-				  (void *)pci_dev);
+	/* Verify that this controller is not already attached */
+	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+		/* NOTE: In the case like multi-process environment where the device handle is
+		 * different per each process, we compare by BDF to determine whether it is the
+		 * same controller.
+		 */
+		if (spdk_pci_addr_compare(&probe_info.pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
+			return 0;
+		}
+	}
+
+	return nvme_probe_one(SPDK_NVME_TRANSPORT_PCIE, enum_ctx->probe_cb, enum_ctx->cb_ctx,
+			      &probe_info, pci_dev);
 }
 
 int
 nvme_pcie_ctrlr_scan(enum spdk_nvme_transport_type transport,
-		     struct nvme_enum_ctx *enum_ctx, void *devhandle)
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
 {
-	return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, enum_ctx);
+	struct nvme_pcie_enum_ctx enum_ctx;
+
+	enum_ctx.probe_cb = probe_cb;
+	enum_ctx.cb_ctx = cb_ctx;
+
+	return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx);
 }
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type transport,

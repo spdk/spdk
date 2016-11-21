@@ -65,7 +65,7 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport_
 
 int
 nvme_transport_ctrlr_scan(enum spdk_nvme_transport_type transport,
-			  struct nvme_enum_ctx *enum_ctx, void *devhandle)
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
 {
 	return 0;
 }

@@ -480,6 +480,9 @@ void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 int	nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
 void	nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr);
 
+int	nvme_probe_one(enum spdk_nvme_transport_type type, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+		       struct spdk_nvme_probe_info *probe_info, void *devhandle);
+
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
@@ -524,25 +527,11 @@ void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cm
 void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
 struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport_type transport, void *devhandle);
 
-struct nvme_enum_usr_ctx {
-	spdk_nvme_probe_cb probe_cb;
-	void *cb_ctx;
-};
-
-typedef int (*nvme_ctrlr_enum_cb)(enum spdk_nvme_transport_type type,
-				  struct nvme_enum_usr_ctx *enum_usr_ctx,
-				  struct spdk_nvme_probe_info *probe_info, void *devhandle);
-
-struct nvme_enum_ctx {
-	struct nvme_enum_usr_ctx usr_ctx;
-	nvme_ctrlr_enum_cb enum_cb;
-};
-
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
 	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport_type transport, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport_type transport, struct nvme_enum_ctx *enum_ctx, void *devhandle); \
+	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport_type transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \
