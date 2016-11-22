@@ -165,7 +165,8 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
 		SPDK_ERRLOG("Unsupported Get Log Page 0x%02X\n", lid);
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_LOG_PAGE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 }
