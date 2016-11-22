@@ -293,6 +293,8 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
 		response->cdw0 = session->async_event_config.raw;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		return spdk_nvmf_session_get_features_host_identifier(req);
 	default:
 		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -338,6 +340,8 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 			      cmd->cdw11);
 		session->async_event_config.raw = cmd->cdw11;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		return spdk_nvmf_session_set_features_host_identifier(req);
 	default:
 		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;

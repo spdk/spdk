@@ -262,6 +262,8 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		session->subsys = subsystem;
 		session->max_connections_allowed = g_nvmf_tgt.max_queues_per_session;
 
+		memcpy(session->hostid, data->hostid, sizeof(session->hostid));
+
 		if (conn->transport->session_add_conn(session, conn)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			conn->transport->session_fini(session);
@@ -579,4 +581,39 @@ spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 	}
 
 	return 0;
+}
+
+int
+spdk_nvmf_session_set_features_host_identifier(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	SPDK_ERRLOG("Set Features - Host Identifier not allowed\n");
+	response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_host_identifier(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Host Identifier\n");
+	if (!(cmd->cdw11 & 1)) {
+		/* NVMe over Fabrics requires EXHID=1 (128-bit/16-byte host ID) */
+		SPDK_ERRLOG("Get Features - Host Identifier with EXHID=0 not allowed\n");
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (req->data == NULL || req->length < sizeof(session->hostid)) {
+		SPDK_ERRLOG("Invalid data buffer for Get Features - Host Identifier\n");
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	memcpy(req->data, session->hostid, sizeof(session->hostid));
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

@@ -157,6 +157,8 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			response->cdw0 = ((nr_io_queues - 1) << 16) |
 					 (nr_io_queues - 1);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+			return spdk_nvmf_session_get_features_host_identifier(req);
 		default:
 			goto passthrough;
 		}
@@ -177,6 +179,8 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 						 (nr_io_queues - 1);
 			}
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+			return spdk_nvmf_session_set_features_host_identifier(req);
 		default:
 			goto passthrough;
 		}
