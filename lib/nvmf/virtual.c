@@ -155,6 +155,8 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	memset(req->data, 0, req->length);
+
 	lid = cmd->cdw10 & 0xFF;
 	switch (lid) {
 	case SPDK_NVME_LOG_ERROR:
