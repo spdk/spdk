@@ -12,4 +12,8 @@ timing_enter vtophys
 $testdir/vtophys/vtophys
 timing_exit vtophys
 
+timing_enter pci
+$testdir/pci/pci_ut
+timing_exit pci
+
 timing_exit env

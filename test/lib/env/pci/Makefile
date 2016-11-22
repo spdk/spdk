@@ -31,14 +31,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = pci vtophys
+APP = pci_ut
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = pci_ut.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CFLAGS += $(ENV_CFLAGS)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(ENV_LINKER_ARGS) -lcunit
+
+all: $(APP)
+
+$(APP): $(OBJS) $(ENV_LIBS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
