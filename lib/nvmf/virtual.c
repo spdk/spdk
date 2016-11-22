@@ -133,10 +133,13 @@ nvmf_virtual_ctrlr_complete_cmd(spdk_event_t event)
 		free(bdev_io->u.unmap.unmap_bdesc);
 	}
 
-	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
-		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-	} else {
+	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		response->status.sc = SPDK_NVME_SC_SUCCESS;
+	} else if (status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
+		response->status.sct = bdev_io->error.nvme.sct;
+		response->status.sc = bdev_io->error.nvme.sc;
+	} else {
+		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
 	spdk_nvmf_request_complete(req);
 	spdk_bdev_free_io(bdev_io);
