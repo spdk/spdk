@@ -408,6 +408,37 @@ p = subparsers.add_parser('kill_instance', help='Send signal to instance')
 p.add_argument('sig_name', help='signal will be sent to server.')
 p.set_defaults(func=kill_instance)
 
+def get_vhost_scsi_controllers(args):
+    print_dict(jsonrpc_call('get_vhost_scsi_controllers'))
+
+p = subparsers.add_parser('get_vhost_scsi_controllers', help='List vhost controllers')
+p.set_defaults(func=get_vhost_scsi_controllers)
+
+def construct_vhost_scsi_controller(args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'cpumask': args.cpu_mask
+    }
+    jsonrpc_call('construct_vhost_scsi_controller', params)
+
+p = subparsers.add_parser('construct_vhost_scsi_controller', help='Add new vhost controller')
+p.add_argument('ctrlr', help='conntroller name')
+p.add_argument('cpumask', help='cpu mask for this controller')
+p.set_defaults(func=construct_vhost_scsi_controller)
+
+def add_vhost_scsi_lun(args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'scsi_dev_num': args.scsi_dev_num,
+        'lun_name': args.lun_name
+    }
+    jsonrpc_call('add_vhost_scsi_lun', params)
+
+p = subparsers.add_parser('add_vhost_scsi_lun', help='Add lun to vhost controller')
+p.add_argument('ctrlr', help='conntroller name where add lun')
+p.add_argument('scsi_dev_num', help='scsi_dev_num', type=int)
+p.add_argument('lun_name', help='lun name')
+p.set_defaults(func=add_vhost_scsi_lun)
 
 args = parser.parse_args()
 args.func(args)
