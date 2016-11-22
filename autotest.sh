@@ -79,7 +79,7 @@ run_test test/lib/bdev/blockdev.sh
 run_test test/lib/event/event.sh
 run_test test/lib/nvme/nvme.sh
 run_test test/lib/nvmf/nvmf.sh
-run_test test/lib/env/vtophys.sh
+run_test test/lib/env/env.sh
 run_test test/lib/ioat/ioat.sh
 run_test test/lib/json/json.sh
 run_test test/lib/jsonrpc/jsonrpc.sh
