@@ -293,8 +293,8 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 		response->cdw0 = session->async_event_config.raw;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
-		SPDK_ERRLOG("get features command with invalid code\n");
-		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 }
@@ -338,8 +338,8 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 		session->async_event_config.raw = cmd->cdw11;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
-		SPDK_ERRLOG("set features command with invalid code\n");
-		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 }
