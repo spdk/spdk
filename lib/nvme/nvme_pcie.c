@@ -38,7 +38,7 @@
 #include "nvme_internal.h"
 
 #define NVME_ADMIN_ENTRIES	(128)
-#define NVME_ADMIN_TRACKERS	(16)
+#define NVME_ADMIN_TRACKERS	(64)
 
 /*
  * NVME_IO_ENTRIES defines the size of an I/O qpair's submission and completion
