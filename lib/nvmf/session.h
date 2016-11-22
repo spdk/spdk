@@ -122,4 +122,7 @@ int spdk_nvmf_session_get_features_host_identifier(struct spdk_nvmf_request *req
 int spdk_nvmf_session_set_features_keep_alive_timer(struct spdk_nvmf_request *req);
 int spdk_nvmf_session_get_features_keep_alive_timer(struct spdk_nvmf_request *req);
 
+int spdk_nvmf_session_set_features_number_of_queues(struct spdk_nvmf_request *req);
+int spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req);
+
 #endif

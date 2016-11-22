@@ -271,7 +271,6 @@ static int
 nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
-	uint32_t nr_io_queues;
 	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -279,12 +278,7 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
-		nr_io_queues = session->max_connections_allowed - 1;
-		/* Number of IO queues has a zero based value */
-		response->cdw0 = ((nr_io_queues - 1) << 16) |
-				 (nr_io_queues - 1);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_get_features_number_of_queues(req);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
 		response->cdw0 = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -307,7 +301,6 @@ static int
 nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
-	uint32_t nr_io_queues = 0;
 	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -315,18 +308,7 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n", cmd->cdw11);
-		nr_io_queues = session->max_connections_allowed - 1;
-		/* verify that the contoller is ready to process commands */
-		if (session->num_connections > 1) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Queue pairs already active!\n");
-			response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		} else {
-			/* Number of IO queues has a zero based value */
-			response->cdw0 = ((nr_io_queues - 1) << 16) |
-					 (nr_io_queues - 1);
-		}
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_set_features_number_of_queues(req);
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 		return spdk_nvmf_session_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:

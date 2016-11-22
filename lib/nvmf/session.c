@@ -652,3 +652,47 @@ spdk_nvmf_session_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	rsp->cdw0 = session->kato;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
+
+int
+spdk_nvmf_session_set_features_number_of_queues(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint32_t nr_io_queues;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n",
+		      req->cmd->nvme_cmd.cdw11);
+
+	/* Extra 1 connection for Admin queue */
+	nr_io_queues = session->max_connections_allowed - 1;
+
+	/* verify that the contoller is ready to process commands */
+	if (session->num_connections > 1) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Queue pairs already active!\n");
+		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+	} else {
+		/* Number of IO queues has a zero based value */
+		rsp->cdw0 = ((nr_io_queues - 1) << 16) |
+			    (nr_io_queues - 1);
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint32_t nr_io_queues;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
+
+	nr_io_queues = session->max_connections_allowed - 1;
+
+	/* Number of IO queues has a zero based value */
+	rsp->cdw0 = ((nr_io_queues - 1) << 16) |
+		    (nr_io_queues - 1);
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
