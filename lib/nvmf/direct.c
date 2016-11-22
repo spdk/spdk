@@ -159,6 +159,8 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 			return spdk_nvmf_session_get_features_host_identifier(req);
+		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+			return spdk_nvmf_session_get_features_keep_alive_timer(req);
 		default:
 			goto passthrough;
 		}
@@ -181,6 +183,8 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 			return spdk_nvmf_session_set_features_host_identifier(req);
+		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+			return spdk_nvmf_session_set_features_keep_alive_timer(req);
 		default:
 			goto passthrough;
 		}

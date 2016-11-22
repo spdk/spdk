@@ -45,6 +45,8 @@
 
 #include "spdk_internal/log.h"
 
+#define MIN_KEEP_ALIVE_TIMEOUT 10000
+
 static void
 nvmf_init_discovery_session_properties(struct spdk_nvmf_session *session)
 {
@@ -615,5 +617,38 @@ spdk_nvmf_session_get_features_host_identifier(struct spdk_nvmf_request *req)
 	}
 
 	memcpy(req->data, session->hostid, sizeof(session->hostid));
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Keep Alive Timer (%u ms)\n", cmd->cdw11);
+
+	if (cmd->cdw11 == 0) {
+		rsp->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
+	} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT) {
+		session->kato = MIN_KEEP_ALIVE_TIMEOUT;
+	} else {
+		session->kato = cmd->cdw11;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Keep Alive Timer set to %u ms\n", session->kato);
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Keep Alive Timer\n");
+	rsp->cdw0 = session->kato;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

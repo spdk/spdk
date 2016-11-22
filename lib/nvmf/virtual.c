@@ -48,7 +48,6 @@
 
 #include "spdk_internal/log.h"
 
-#define MIN_KEEP_ALIVE_TIMEOUT 10000
 #define MODEL_NUMBER "SPDK Virtual Controller"
 #define FW_VERSION "FFFFFFFF"
 
@@ -290,8 +289,7 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 		response->cdw0 = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		response->cdw0 = session->kato;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_get_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
 		response->cdw0 = session->async_event_config.raw;
@@ -330,14 +328,7 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 		}
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		if (cmd->cdw11 == 0) {
-			response->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
-		} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT) {
-			session->kato = MIN_KEEP_ALIVE_TIMEOUT;
-		} else {
-			session->kato = cmd->cdw11;
-		}
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
 			      cmd->cdw11);
