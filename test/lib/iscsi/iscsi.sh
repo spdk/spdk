@@ -16,4 +16,8 @@ timing_enter target_node
 $testdir/target_node/target_node_ut $testdir/target_node/target_node.conf
 timing_exit target_node
 
+timing_enter pdu
+$testdir/pdu/pdu
+timing_exit pdu
+
 timing_exit iscsi

@@ -31,17 +31,29 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = bdev env event log json jsonrpc nvme nvmf scsi ioat util
-ifeq ($(OS),Linux)
-DIRS-y += iscsi
-endif
+SPDK_LIB_LIST = log util cunit trace conf
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += $(DPDK_INC)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+LIBS += -lcunit -lcrypto
+ISCSI_OBJS = iscsi crc32c md5 param
+OBJS += $(ISCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/iscsi/%.o)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+APP = pdu
+C_SRCS = pdu.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

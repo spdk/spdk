@@ -159,3 +159,10 @@ void
 spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc, int ascq)
 {
 }
+
+void
+spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len)
+{
+	task->iovs[0].iov_base = data;
+	task->iovs[0].iov_len = len;
+}

@@ -85,7 +85,6 @@ run_test test/lib/json/json.sh
 run_test test/lib/jsonrpc/jsonrpc.sh
 run_test test/lib/log/log.sh
 run_test test/lib/scsi/scsi.sh
-run_test test/lib/iscsi/iscsi.sh
 run_test test/lib/util/util.sh
 
 timing_exit lib
@@ -105,6 +104,8 @@ if [ $(uname -s) = Linux ]; then
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
 	timing_exit iscsi_tgt
+
+	run_test test/lib/iscsi/iscsi.sh
 fi
 
 timing_enter nvmf
