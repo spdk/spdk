@@ -400,9 +400,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_session *session, uint64_t value)
 			session->vcprop.cc.bits.en = 1;
 			session->vcprop.csts.bits.rdy = 1;
 		} else {
-			/* TODO: reset is not really supported here */
-			session->vcprop.cc.bits.en = 0;
-			session->vcprop.csts.bits.rdy = 0;
+			SPDK_ERRLOG("CC.EN transition from 1 to 0 (reset) not implemented!\n");
 
 		}
 		diff.bits.en = 0;

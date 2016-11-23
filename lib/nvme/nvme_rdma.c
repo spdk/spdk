@@ -1057,7 +1057,6 @@ static int
 nvme_rdma_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair *qpair;
-	union spdk_nvme_cc_register cc = {};
 	int rc;
 
 	qpair = nvme_rdma_ctrlr_create_qpair(ctrlr, 0, 0);
@@ -1067,16 +1066,6 @@ nvme_rdma_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 		goto error;
 	}
 
-	/* Must enable CC.EN, otherwise we can not send nvme commands to the disabled controller */
-	cc.raw = 0;
-	cc.bits.en = 1;
-	rc = nvme_transport_ctrlr_set_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
-					    cc.raw);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to set cc\n");
-		rc = -1;
-		goto error;
-	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "successfully create admin qpair\n");
 	return 0;
 
@@ -1137,6 +1126,7 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 	struct spdk_nvme_probe_info probe_info;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
 	struct spdk_nvmf_discovery_log_page *log_page;
+	union spdk_nvme_cc_register cc;
 	char buffer[4096];
 	int rc;
 	uint32_t i;
@@ -1152,10 +1142,22 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		return -1;
 	}
 
+	/* TODO: this should be using the normal NVMe controller initialization process */
+	cc.raw = 0;
+	cc.bits.en = 1;
+	rc = nvme_transport_ctrlr_set_reg_4(discovery_ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
+					    cc.raw);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to set cc\n");
+		nvme_ctrlr_destruct(discovery_ctrlr);
+		return -1;
+	}
+
 	rc = nvme_fabrics_get_log_discovery_page(discovery_ctrlr, buffer);
 	if (rc < 0) {
 		SPDK_ERRLOG("nvme_fabrics_get_log_discovery_page error\n");
 		nvme_ctrlr_destruct(discovery_ctrlr);
+		return -1;
 	}
 
 	log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
