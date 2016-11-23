@@ -1233,6 +1233,9 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 	uint64_t			tsc;
 	bool				conn_active = false;
 
+	if (conn->state == ISCSI_CONN_STATE_EXITING) {
+		return -1;
+	}
 	/* Check for nop interval expiration */
 	rc = spdk_iscsi_conn_handle_nop(conn);
 	if (rc < 0) {
