@@ -40,27 +40,42 @@
 #define SPDK_INTERNAL_LOG_H
 
 #include "spdk/log.h"
+#include "spdk/queue.h"
+
+struct spdk_trace_flag {
+	TAILQ_ENTRY(spdk_trace_flag) tailq;
+	const char *name;
+	bool enabled;
+};
+
+void spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag);
+
+struct spdk_trace_flag *spdk_log_get_first_trace_flag(void);
+struct spdk_trace_flag *spdk_log_get_next_trace_flag(struct spdk_trace_flag *flag);
 
 #ifdef DEBUG
 #define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag) \
-bool flag = false; \
+struct spdk_trace_flag flag = { \
+	.enabled = false, \
+	.name = str, \
+}; \
 __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 { \
 	spdk_log_register_trace_flag(str, &flag); \
 }
 
-#define SPDK_TRACELOG(FLAG, ...)							\
-	do {										\
-		extern bool FLAG;							\
-		if (FLAG) {								\
-			spdk_tracelog(__FILE__, __LINE__, __func__, __VA_ARGS__);	\
-		}									\
+#define SPDK_TRACELOG(FLAG, ...)								\
+	do {											\
+		extern struct spdk_trace_flag FLAG;						\
+		if (FLAG.enabled) {								\
+			spdk_tracelog(FLAG.name, __FILE__, __LINE__, __func__, __VA_ARGS__);	\
+		}										\
 	} while (0)
 
 #define SPDK_TRACEDUMP(FLAG, LABEL, BUF, LEN)						\
 	do {										\
-		extern bool FLAG;							\
-		if ((FLAG) && (LEN)) {							\
+		extern struct spdk_trace_flag FLAG;					\
+		if ((FLAG.enabled) && (LEN)) {						\
 			spdk_trace_dump((LABEL), (BUF), (LEN));				\
 		}									\
 	} while (0)

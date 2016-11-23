@@ -63,19 +63,15 @@ void spdk_noticelog(const char *file, const int line, const char *func,
 		    const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
 void spdk_warnlog(const char *file, const int line, const char *func,
 		  const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
-void spdk_tracelog(const char *file, const int line,
-		   const char *func, const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
+void spdk_tracelog(const char *flag, const char *file, const int line,
+		   const char *func, const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 void spdk_errlog(const char *file, const int line, const char *func,
 		 const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
 void spdk_trace_dump(const char *label, const uint8_t *buf, size_t len);
 
-void spdk_log_register_trace_flag(const char *name, bool *enabled);
 bool spdk_log_get_trace_flag(const char *flag);
 int spdk_log_set_trace_flag(const char *flag);
 int spdk_log_clear_trace_flag(const char *flag);
-
-size_t spdk_log_get_num_trace_flags(void);
-const char *spdk_log_get_trace_flag_name(size_t idx);
 
 void spdk_open_log(void);
 void spdk_close_log(void);

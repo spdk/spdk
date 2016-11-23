@@ -33,12 +33,16 @@
 
 #include "spdk_cunit.h"
 
+#include "spdk_internal/log.h"
+
 #include <stdbool.h>
 
 #include "lib/nvme/unit/test_env.c"
 
-bool trace_flag = false;
-#define SPDK_TRACE_NVME trace_flag
+struct spdk_trace_flag SPDK_TRACE_NVME = {
+	.name = "nvme",
+	.enabled = false,
+};
 
 #include "nvme/nvme_ctrlr.c"
 

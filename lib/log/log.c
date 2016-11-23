@@ -42,13 +42,7 @@
 #include <ctype.h>
 #include <errno.h>
 
-struct spdk_trace_flag {
-	const char *name;
-	bool *enabled;
-};
-
-static size_t g_num_trace_flags = 0;
-static struct spdk_trace_flag *g_trace_flags = NULL;
+static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
 
 unsigned int spdk_g_notice_stderr_flag = 1;
 unsigned int spdk_g_log_facility = LOG_DAEMON;
@@ -171,7 +165,7 @@ spdk_warnlog(const char *file, const int line, const char *func,
 }
 
 void
-spdk_tracelog(const char *file, const int line, const char *func,
+spdk_tracelog(const char *flag, const char *file, const int line, const char *func,
 	      const char *format, ...)
 {
 	char buf[MAX_TMPBUF];
@@ -180,11 +174,11 @@ spdk_tracelog(const char *file, const int line, const char *func,
 	va_start(ap, format);
 	vsnprintf(buf, sizeof buf, format, ap);
 	if (func != NULL) {
-		fprintf(stderr, "%s:%4d:%s: %s", file, line, func, buf);
-		//syslog(LOG_INFO, "%s:%4d:%s: %s", file, line, func, buf);
+		fprintf(stderr, "[%s] %s:%4d:%s: %s", flag, file, line, func, buf);
+		//syslog(LOG_INFO, "[%s] %s:%4d:%s: %s", flag, file, line, func, buf);
 	} else {
-		fprintf(stderr, "%s:%4d: %s", file, line, buf);
-		//syslog(LOG_INFO, "%s:%4d: %s", file, line, buf);
+		fprintf(stderr, "[%s] %s:%4d: %s", flag, file, line, buf);
+		//syslog(LOG_INFO, "[%s] %s:%4d: %s", flag, file, line, buf);
 	}
 	va_end(ap);
 }
@@ -254,26 +248,26 @@ spdk_trace_dump(const char *label, const uint8_t *buf, size_t len)
 	fdump(stderr, label, buf, len);
 }
 
-static int compare_trace_flags(const void *key, const void *p)
-{
-	const struct spdk_trace_flag *flag = p;
-
-	return strcasecmp(key, flag->name);
-}
-
 static struct spdk_trace_flag *
 get_trace_flag(const char *name)
 {
-	return bsearch(name, g_trace_flags, g_num_trace_flags, sizeof(struct spdk_trace_flag),
-		       compare_trace_flags);
+	struct spdk_trace_flag *flag;
+
+	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
+		if (strcasecmp(name, flag->name) == 0) {
+			return flag;
+		}
+	}
+
+	return NULL;
 }
 
 void
-spdk_log_register_trace_flag(const char *name, bool *enabled)
+spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag)
 {
-	struct spdk_trace_flag *flag, *new_flags;
+	struct spdk_trace_flag *iter;
 
-	if (name == NULL || enabled == NULL) {
+	if (name == NULL || flag == NULL) {
 		fprintf(stderr, "missing spdk_trace_flag parameters\n");
 		abort();
 	}
@@ -283,27 +277,14 @@ spdk_log_register_trace_flag(const char *name, bool *enabled)
 		abort();
 	}
 
-	new_flags = realloc(g_trace_flags, (g_num_trace_flags + 1) * sizeof(struct spdk_trace_flag));
-	if (new_flags == NULL) {
-		fprintf(stderr, "spdk_trace_flag allocation error\n");
-		abort();
-	}
-
-	g_trace_flags = new_flags;
-
-	/* Find slot so that new flag is inserted in sorted order */
-	for (flag = g_trace_flags; flag != g_trace_flags + g_num_trace_flags; flag++) {
-		if (strcasecmp(name, flag->name) < 0) {
-			size_t to_move = g_num_trace_flags - (flag - g_trace_flags);
-
-			memmove(flag + 1, flag, to_move * sizeof(struct spdk_trace_flag));
-			break;
+	TAILQ_FOREACH(iter, &g_trace_flags, tailq) {
+		if (strcasecmp(iter->name, flag->name) > 0) {
+			TAILQ_INSERT_BEFORE(iter, flag, tailq);
+			return;
 		}
 	}
 
-	flag->name = name;
-	flag->enabled = enabled;
-	g_num_trace_flags++;
+	TAILQ_INSERT_TAIL(&g_trace_flags, flag, tailq);
 }
 
 bool
@@ -311,7 +292,7 @@ spdk_log_get_trace_flag(const char *name)
 {
 	struct spdk_trace_flag *flag = get_trace_flag(name);
 
-	if (flag && *flag->enabled) {
+	if (flag && flag->enabled) {
 		return true;
 	}
 
@@ -322,11 +303,10 @@ static int
 set_trace_flag(const char *name, bool value)
 {
 	struct spdk_trace_flag *flag;
-	size_t i;
 
 	if (strcasecmp(name, "all") == 0) {
-		for (i = 0; i < g_num_trace_flags; i++) {
-			*g_trace_flags[i].enabled = value;
+		TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
+			flag->enabled = value;
 		}
 		return 0;
 	}
@@ -336,7 +316,7 @@ set_trace_flag(const char *name, bool value)
 		return -1;
 	}
 
-	*flag->enabled = value;
+	flag->enabled = value;
 
 	return 0;
 }
@@ -353,19 +333,16 @@ spdk_log_clear_trace_flag(const char *name)
 	return set_trace_flag(name, false);
 }
 
-
-size_t spdk_log_get_num_trace_flags(void)
+struct spdk_trace_flag *
+spdk_log_get_first_trace_flag(void)
 {
-	return g_num_trace_flags;
+	return TAILQ_FIRST(&g_trace_flags);
 }
 
-const char *spdk_log_get_trace_flag_name(size_t idx)
+struct spdk_trace_flag *
+spdk_log_get_next_trace_flag(struct spdk_trace_flag *flag)
 {
-	if (idx >= g_num_trace_flags) {
-		return NULL;
-	}
-
-	return g_trace_flags[idx].name;
+	return TAILQ_NEXT(flag, tailq);
 }
 
 void
@@ -388,12 +365,12 @@ void
 spdk_tracelog_usage(FILE *f, const char *trace_arg)
 {
 #ifdef DEBUG
-	size_t i;
+	struct spdk_trace_flag *flag;
 
 	fprintf(f, " %s flag    enable trace flag (all", trace_arg);
 
-	for (i = 0; i < g_num_trace_flags; i++) {
-		fprintf(f, ", %s", g_trace_flags[i].name);
+	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
+		fprintf(f, ", %s", flag->name);
 	}
 
 	fprintf(f, ")\n");
