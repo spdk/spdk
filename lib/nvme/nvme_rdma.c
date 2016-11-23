@@ -869,7 +869,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_rdma_fabric_prop_get_cmd failed\n");
+		SPDK_ERRLOG("Connect command failed\n");
 		return -1;
 	}
 
