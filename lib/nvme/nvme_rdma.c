@@ -660,24 +660,23 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 }
 
 static int
-nvme_rdma_parse_ipaddr(struct sockaddr_in *sin, const char *addr)
+nvme_rdma_parse_addr(struct sockaddr_storage *sa, const char *addr, const char *service)
 {
 	struct addrinfo *res;
 	int ret;
 
-	if (addr == NULL) {
-		sin->sin_addr.s_addr = htonl(INADDR_ANY);
-		sin->sin_family = AF_INET;
-		return 0;
-	}
-
-	ret = getaddrinfo(addr, NULL, NULL, &res);
+	ret = getaddrinfo(addr, service, NULL, &res);
 	if (ret) {
 		SPDK_ERRLOG("getaddrinfo failed - invalid hostname or IP address\n");
 		return ret;
 	}
 
-	*sin = *(struct sockaddr_in *) res->ai_addr;
+	if (res->ai_addrlen > sizeof(*sa)) {
+		SPDK_ERRLOG("getaddrinfo() ai_addrlen %zu too large\n", (size_t)res->ai_addrlen);
+		ret = EINVAL;
+	} else {
+		memcpy(sa, res->ai_addr, res->ai_addrlen);
+	}
 
 	freeaddrinfo(res);
 	return ret;
@@ -712,17 +711,11 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	ctrlr = rqpair->qpair.ctrlr;
 	memset(&sin, 0, sizeof(struct sockaddr_storage));
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "port is %s\n", ctrlr->probe_info.trsvcid);
-	rc = nvme_rdma_parse_ipaddr((struct sockaddr_in *)&sin, ctrlr->probe_info.traddr);
-	if (rc < 0) {
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "trsvcid is %s\n", ctrlr->probe_info.trsvcid);
+	rc = nvme_rdma_parse_addr(&sin, ctrlr->probe_info.traddr, ctrlr->probe_info.trsvcid);
+	if (rc != 0) {
 		goto err;
 	}
-
-	/* need to tranfer the host*/
-	if (sin.ss_family == AF_INET)
-		((struct sockaddr_in *) &sin)->sin_port = htons(atoi(ctrlr->probe_info.trsvcid));
-	else
-		((struct sockaddr_in6 *) &sin)->sin6_port = htons(atoi(ctrlr->probe_info.trsvcid));
 
 	rc = rdma_create_id(rqpair->cm_channel, &rqpair->cm_id, rqpair, RDMA_PS_TCP);
 	if (rc < 0) {
