@@ -1158,7 +1158,6 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		return -1;
 	}
 
-	TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->attached_ctrlrs, discovery_ctrlr, tailq);
 	rc = nvme_fabrics_get_log_discovery_page(discovery_ctrlr, buffer);
 	if (rc < 0) {
 		SPDK_ERRLOG("nvme_fabrics_get_log_discovery_page error\n");
