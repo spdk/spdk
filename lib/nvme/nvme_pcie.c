@@ -1265,6 +1265,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
+	nvme_qpair_destroy(qpair);
 	spdk_free(pqpair);
 
 	return 0;
