@@ -1035,10 +1035,11 @@ nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair;
 
-	rqpair = nvme_rdma_qpair(qpair);
-	if (!rqpair) {
+	if (!qpair) {
 		return -1;
 	}
+
+	rqpair = nvme_rdma_qpair(qpair);
 
 	nvme_rdma_free_reqs(rqpair);
 	nvme_rdma_free_rsps(rqpair);
