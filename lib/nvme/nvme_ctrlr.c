@@ -584,6 +584,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting keep alive timeout feature to %u ms\n",
 		      ctrlr->opts.keep_alive_timeout_ms);
 
+	status.done = false;
 	rc = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER,
 					     ctrlr->opts.keep_alive_timeout_ms, 0, NULL, 0,
 					     nvme_completion_poll_cb, &status);
@@ -604,6 +605,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* Retrieve actual keep alive timeout, since the controller may have adjusted it. */
+	status.done = false;
 	rc = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, 0, NULL, 0,
 					     nvme_completion_poll_cb, &status);
 	if (rc != 0) {
