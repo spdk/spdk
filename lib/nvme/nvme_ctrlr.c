@@ -402,10 +402,33 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+#ifdef DEBUG
+static const char *
+nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
+{
+	switch (state) {
+	case NVME_CTRLR_STATE_INIT:
+		return "init";
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
+		return "disable and wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
+		return "disable and wait for CSTS.RDY = 0";
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
+		return "enable and wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_READY:
+		return "ready";
+	}
+	return "unknown";
+};
+#endif /* DEBUG */
+
 static void
 nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 		     uint64_t timeout_in_ms)
 {
+	SPDK_TRACELOG(SPDK_TRACE_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
+		      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
+
 	ctrlr->state = state;
 	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
 		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
@@ -1003,6 +1026,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_INIT:
 		/* Begin the hardware initialization by making sure the controller is disabled. */
 		if (cc.bits.en) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1\n");
 			/*
 			 * Controller is currently enabled. We need to disable it to cause a reset.
 			 *
@@ -1010,11 +1034,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 *  Wait for the ready bit to be 1 before disabling the controller.
 			 */
 			if (csts.bits.rdy == 0) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 0 - waiting for reset to complete\n");
 				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 				return 0;
 			}
 
 			/* CC.EN = 1 && CSTS.RDY == 1, so we can immediately disable the controller. */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
@@ -1028,11 +1054,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 * Not using sleep() to avoid blocking other controller's initialization.
 			 */
 			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "Applying quirk: delay 2 seconds before reading registers\n");
 				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + 2 * spdk_get_ticks_hz();
 			}
 			return 0;
 		} else {
 			if (csts.bits.rdy == 1) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 1 - waiting for shutdown to complete\n");
 				/*
 				 * Controller is in the process of shutting down.
 				 * We need to wait for RDY to become 0.
@@ -1044,6 +1072,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			/*
 			 * Controller is currently disabled. We can jump straight to enabling it.
 			 */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0 - enabling controller\n");
 			rc = nvme_ctrlr_enable(ctrlr);
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 			return rc;
@@ -1052,7 +1081,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - disabling controller\n");
 			/* CC.EN = 1 && CSTS.RDY = 1, so we can set CC.EN = 0 now. */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
@@ -1066,7 +1097,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		if (csts.bits.rdy == 0) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0 - enabling controller\n");
 			/* CC.EN = 0 && CSTS.RDY = 0, so we can enable the controller now. */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 1\n");
 			rc = nvme_ctrlr_enable(ctrlr);
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 			return rc;
@@ -1075,6 +1108,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
 			/*
 			 * The controller has been enabled.
 			 *  Perform the rest of initialization in nvme_ctrlr_start() serially.
