@@ -167,8 +167,11 @@ struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,
 void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn, const char *hostnqn);
+nvmf_find_subsystem(const char *subnqn);
+
 bool spdk_nvmf_subsystem_exists(const char *subnqn);
+
+bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,

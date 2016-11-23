@@ -126,10 +126,8 @@ nvmf_test_create_subsystem(void)
 static void
 nvmf_test_find_subsystem(void)
 {
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem(NULL, NULL));
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem("fake", NULL));
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem(NULL, "fake"));
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem("fake", "fake"));
+	CU_ASSERT_PTR_NULL(nvmf_find_subsystem(NULL));
+	CU_ASSERT_PTR_NULL(nvmf_find_subsystem("fake"));
 }
 
 int main(int argc, char **argv)

@@ -66,31 +66,44 @@ spdk_nvmf_subsystem_exists(const char *subnqn)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
+nvmf_find_subsystem(const char *subnqn)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
-	struct spdk_nvmf_host		*host;
 
-	if (!subnqn || !hostnqn) {
+	if (!subnqn) {
 		return NULL;
 	}
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
-			if (subsystem->num_hosts == 0) {
-				/* No hosts means any host can connect */
-				return subsystem;
-			}
-
-			TAILQ_FOREACH(host, &subsystem->hosts, link) {
-				if (strcmp(hostnqn, host->nqn) == 0) {
-					return subsystem;
-				}
-			}
+			return subsystem;
 		}
 	}
 
 	return NULL;
+}
+
+bool
+spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	if (!hostnqn) {
+		return false;
+	}
+
+	if (subsystem->num_hosts == 0) {
+		/* No hosts means any host can connect */
+		return true;
+	}
+
+	TAILQ_FOREACH(host, &subsystem->hosts, link) {
+		if (strcmp(hostnqn, host->nqn) == 0) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void

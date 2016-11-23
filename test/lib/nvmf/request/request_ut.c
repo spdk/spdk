@@ -124,9 +124,15 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn, const char *hostnqn)
+nvmf_find_subsystem(const char *subnqn)
 {
 	return NULL;
+}
+
+bool
+spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	return false;
 }
 
 static void
