@@ -308,7 +308,8 @@ _spdk_reactor_run(void *arg)
 
 	spdk_allocate_thread();
 	set_reactor_thread_name();
-	SPDK_NOTICELOG("Reactor started on core 0x%x\n", rte_lcore_id());
+	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", rte_lcore_id(),
+		       rte_lcore_to_socket_id(rte_lcore_id()));
 
 	spin_cycles = SPDK_REACTOR_SPIN_TIME_US * spdk_get_ticks_hz() / 1000000ULL;
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
