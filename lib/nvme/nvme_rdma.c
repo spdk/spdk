@@ -197,7 +197,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	rqpair->max_queue_depth = rqpair->qpair.num_entries;
 
-	SPDK_NOTICELOG("rqpair depth =%d\n", rqpair->max_queue_depth);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rqpair depth = %d\n", rqpair->max_queue_depth);
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
 	attr.cap.max_send_wr	= rqpair->max_queue_depth; /* SEND operations */
@@ -277,8 +277,8 @@ static void
 nvme_rdma_trace_ibv_sge(struct ibv_sge *sg_list)
 {
 	if (sg_list) {
-		SPDK_NOTICELOG("local addr %p length 0x%x lkey 0x%x\n",
-			       (void *)sg_list->addr, sg_list->length, sg_list->lkey);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "local addr %p length 0x%x lkey 0x%x\n",
+			      (void *)sg_list->addr, sg_list->length, sg_list->lkey);
 	}
 }
 
@@ -308,8 +308,8 @@ nvme_rdma_ibv_send_wr_init(struct ibv_send_wr *wr,
 		wr->wr.rdma.rkey = sgl->keyed.key;
 		wr->wr.rdma.remote_addr = sgl->address;
 
-		SPDK_NOTICELOG("rkey %x remote_addr %p\n",
-			       wr->wr.rdma.rkey, (void *)wr->wr.rdma.remote_addr);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rkey %x remote_addr %p\n",
+			      wr->wr.rdma.rkey, (void *)wr->wr.rdma.remote_addr);
 	}
 
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
@@ -586,7 +586,7 @@ nvme_rdma_bind_addr(struct nvme_rdma_qpair *rqpair,
 	}
 	rdma_ack_cm_event(event);
 
-	SPDK_NOTICELOG("rdma_resolve_addr - rdma_resolve_route successful\n");
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_resolve_addr - rdma_resolve_route successful\n");
 	return 0;
 }
 
@@ -646,16 +646,16 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		if (data->pd_accept.recfmt != 0) {
 			SPDK_ERRLOG("NVMF fabric connect accept: invalid private data format!\n");
 		} else {
-			SPDK_NOTICELOG("NVMF fabric connect accept, Private data length %d\n",
-				       event->param.conn.private_data_len);
-			SPDK_NOTICELOG("NVMF fabric connect accept, RECFMT %d\n",
-				       data->pd_accept.recfmt);
-			SPDK_NOTICELOG("NVMF fabric connect accept, CRQSIZE %d\n",
-				       data->pd_accept.crqsize);
+			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMF fabric connect accept, Private data length %d\n",
+				      event->param.conn.private_data_len);
+			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMF fabric connect accept, RECFMT %d\n",
+				      data->pd_accept.recfmt);
+			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMF fabric connect accept, CRQSIZE %d\n",
+				      data->pd_accept.crqsize);
 		}
 	}
 
-	SPDK_NOTICELOG("connect successful\n");
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "connect successful\n");
 	return 0;
 }
 
@@ -1189,8 +1189,8 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
 		memcpy(probe_info.trsvcid, entry->trsvcid, len);
 
-		SPDK_NOTICELOG("nqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n", probe_info.nqn,
-			       probe_info.trtype, probe_info.traddr, probe_info.trsvcid);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "nqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n", probe_info.nqn,
+			      probe_info.trtype, probe_info.traddr, probe_info.trsvcid);
 		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
 		nvme_probe_one(entry->trtype, probe_cb, cb_ctx, &probe_info, &probe_info);
 	}
@@ -1357,7 +1357,7 @@ nvme_rdma_qpair_construct(struct spdk_nvme_qpair *qpair)
 	rqpair->outstanding_reqs = 0;
 	STAILQ_INIT(&rqpair->free_reqs);
 
-	SPDK_NOTICELOG("qpair num entries = %d\n", qpair->num_entries);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "qpair num entries = %d\n", qpair->num_entries);
 	for (i = 0; i < qpair->num_entries; i++) {
 		STAILQ_INSERT_TAIL(&rqpair->free_reqs, &rqpair->rdma_reqs[i], link);
 		rqpair->rdma_reqs[i].rqpair = rqpair;
@@ -1425,13 +1425,13 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		}
 
 		if (wc.status) {
-			SPDK_NOTICELOG("CQ completion error status %d, exiting handler\n",
-				       wc.status);
+			SPDK_ERRLOG("CQ completion error status %d, exiting handler\n",
+				    wc.status);
 			break;
 		}
 
 		if (wc.opcode == IBV_WC_SEND) {
-			SPDK_NOTICELOG("CQ send completion\n");
+			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "CQ send completion\n");
 		} else {
 			SPDK_ERRLOG("Poll cq opcode type unknown!!!!! completion\n");
 			return -1;
@@ -1452,13 +1452,12 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		}
 
 		if (wc.status) {
-			SPDK_NOTICELOG("CQ completion error status %d, exiting handler\n",
-				       wc.status);
+			SPDK_ERRLOG("CQ completion error status %d, exiting handler\n", wc.status);
 			break;
 		}
 
 		if (wc.opcode == IBV_WC_RECV) {
-			SPDK_NOTICELOG("CQ recv completion\n");
+			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "CQ recv completion\n");
 			rc = nvme_rdma_recv(rqpair, &wc);
 			if (rc) {
 				SPDK_ERRLOG("nvme_rdma_recv processing failure\n");
