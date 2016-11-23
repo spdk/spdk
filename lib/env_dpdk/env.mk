@@ -49,7 +49,11 @@ else
 export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))
 endif
 
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/include/rte_config.h))
 DPDK_INC = -I$(DPDK_ABS_DIR)/include
+else
+DPDK_INC = -I$(DPDK_ABS_DIR)/include/dpdk
+endif
 DPDK_LIB = $(DPDK_ABS_DIR)/lib/librte_eal.a $(DPDK_ABS_DIR)/lib/librte_mempool.a \
 	   $(DPDK_ABS_DIR)/lib/librte_ring.a
 
