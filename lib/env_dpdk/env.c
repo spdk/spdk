@@ -76,7 +76,7 @@ spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 void
 spdk_free(void *buf)
 {
-	return rte_free(buf);
+	rte_free(buf);
 }
 
 void *
@@ -194,7 +194,7 @@ uint64_t spdk_get_ticks_hz(void)
 
 void spdk_delay_us(unsigned int us)
 {
-	return rte_delay_us(us);
+	rte_delay_us(us);
 }
 
 void *
