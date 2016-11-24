@@ -545,7 +545,7 @@ struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport transport,
 	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport transport, const struct spdk_nvme_ctrlr_opts *opts, \
 		const struct spdk_nvme_probe_info *probe_info, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle); \
+	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \

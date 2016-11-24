@@ -545,14 +545,18 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 int
 nvme_pcie_ctrlr_scan(enum spdk_nvme_transport transport,
-		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
 {
 	struct nvme_pcie_enum_ctx enum_ctx;
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
-
-	return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx);
+	if (!pci_address) {
+		return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx);
+	} else {
+		return spdk_pci_device_attach(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx,
+					      (struct spdk_pci_addr *)pci_address);
+	}
 }
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport transport,

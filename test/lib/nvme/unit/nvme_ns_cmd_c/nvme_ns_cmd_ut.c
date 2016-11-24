@@ -164,7 +164,7 @@ nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
 
 int
 nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
 {
 	return 0;
 }

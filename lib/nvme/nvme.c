@@ -292,7 +292,7 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		transport = (uint8_t)info->trtype;
 	}
 
-	rc = nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info);
+	rc = nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info, NULL);
 
 	/*
 	 * Keep going even if one or more nvme_attach() calls failed,

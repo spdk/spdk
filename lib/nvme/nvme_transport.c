@@ -94,9 +94,9 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport 
 
 int
 nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
 {
-	NVME_TRANSPORT_CALL(transport, ctrlr_scan, (transport, probe_cb, cb_ctx, devhandle));
+	NVME_TRANSPORT_CALL(transport, ctrlr_scan, (transport, probe_cb, cb_ctx, devhandle, pci_address));
 }
 
 int
