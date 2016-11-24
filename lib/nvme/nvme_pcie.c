@@ -949,13 +949,15 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		req->retries++;
 		nvme_pcie_qpair_submit_tracker(qpair, tr);
 	} else {
-		if (was_active && req->cb_fn) {
+		if (was_active) {
 			/* Only check admin requests from different processes. */
 			if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
 				req_from_current_proc = false;
 				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
 			} else {
-				req->cb_fn(req->cb_arg, cpl);
+				if (req->cb_fn) {
+					req->cb_fn(req->cb_arg, cpl);
+				}
 			}
 		}
 
