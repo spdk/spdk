@@ -245,6 +245,12 @@ int spdk_nvme_discover(const struct spdk_nvme_discover_info *info,
  * call but are no longer attached to the system. Optional; specify NULL if removal notices are not
  * desired.
  *
+ * This function is not thread safe and should only be called from one thread at a time while no
+ * other threads are actively using any NVMe devices.
+ *
+ * If called from a secondary process, only devices that have been attached to the userspace driver
+ * in the primary process will be probed.
+ *
  * If called more than once, only devices that are not already attached to the SPDK NVMe driver
  * will be reported.
  *
