@@ -730,7 +730,7 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 {
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
 	struct nvme_request		*active_req = req;
-	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
+	struct spdk_nvme_ctrlr_process	*active_proc;
 	bool				pending_on_proc = false;
 
 	/*
@@ -740,7 +740,7 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	assert(nvme_qpair_is_admin_queue(qpair));
 	assert(active_req->pid != getpid());
 
-	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
 		if (active_proc->pid == active_req->pid) {
 			/* Saved the original completion information */
 			memcpy(&active_req->cpl, cpl, sizeof(*cpl));
@@ -752,7 +752,8 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	if (pending_on_proc == false) {
-		SPDK_ERRLOG("The owning process is not found. Drop the request.\n");
+		SPDK_ERRLOG("The owning process (pid %d) is not found. Drop the request.\n",
+			    active_req->pid);
 
 		nvme_free_request(active_req);
 	}
@@ -785,7 +786,7 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (proc_found == false) {
-		SPDK_ERRLOG("the active process is not found for this controller.");
+		SPDK_ERRLOG("the active process (pid %d) is not found for this controller.\n", pid);
 		assert(proc_found);
 	}
 
