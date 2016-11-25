@@ -56,7 +56,7 @@
 #define PORTNUMSTRLEN 32
 #define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
 
-#define ACCEPT_TIMEOUT_US		1000 /* 1ms */
+#define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
 struct spdk_nvmf_probe_ctx {
 	struct nvmf_tgt_subsystem	*app_subsystem;
