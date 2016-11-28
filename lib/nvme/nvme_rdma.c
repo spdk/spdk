@@ -61,7 +61,6 @@
 #define NVME_RDMA_TIME_OUT_IN_MS 2000
 #define NVME_RDMA_RW_BUFFER_SIZE 131072
 #define NVME_HOST_ID_DEFAULT "12345679890"
-#define NVME_HOST_NQN  "nqn.2016-06.io.spdk:host"
 
 #define NVME_HOST_MAX_ENTRIES_PER_QUEUE (127)
 
@@ -765,7 +764,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 
 	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
 		strlen((char *)NVME_HOST_ID_DEFAULT));
-	strncpy((char *)nvmf_data->hostnqn, NVME_HOST_NQN, sizeof(nvmf_data->hostnqn));
+	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
 	strncpy((char *)nvmf_data->subnqn, ctrlr->probe_info.nqn, sizeof(nvmf_data->subnqn));
 
 	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {

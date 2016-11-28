@@ -94,6 +94,8 @@
 #define DEFAULT_MAX_IO_QUEUES		(1024)
 #define DEFAULT_MAX_QUEUE_SIZE		(256)
 
+#define DEFAULT_HOSTNQN			"nqn.2016-06.io.spdk:host"
+
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 
