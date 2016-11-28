@@ -252,14 +252,11 @@ nvme_rdma_post_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 	}
 }
 
-static void
-nvme_rdma_trace_ibv_sge(struct ibv_sge *sg_list)
-{
-	if (sg_list) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "local addr %p length 0x%x lkey 0x%x\n",
-			      (void *)sg_list->addr, sg_list->length, sg_list->lkey);
+#define nvme_rdma_trace_ibv_sge(sg_list) \
+	if (sg_list) { \
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "local addr %p length 0x%x lkey 0x%x\n", \
+			      (void *)(sg_list)->addr, (sg_list)->length, (sg_list)->lkey); \
 	}
-}
 
 static int
 nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair,
