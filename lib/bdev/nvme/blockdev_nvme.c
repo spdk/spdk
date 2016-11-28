@@ -108,7 +108,7 @@ static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int blockdev_index_max = 0;
 static int nvme_luns_per_ns = 1;
 static int nvme_controller_index = 0;
-static int LunSizeInMB = 0;
+static int lun_size_in_mb = 0;
 static int num_controllers = -1;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
@@ -495,10 +495,10 @@ nvme_library_init(void)
 		return -1;
 	}
 
-	LunSizeInMB = spdk_conf_section_get_intval(sp, "LunSizeInMB");
+	lun_size_in_mb = spdk_conf_section_get_intval(sp, "LunSizeInMB");
 
-	if (LunSizeInMB < 0)
-		LunSizeInMB = 0;
+	if (lun_size_in_mb < 0)
+		lun_size_in_mb = 0;
 
 	spdk_nvme_retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount");
 	if (spdk_nvme_retry_count < 0)
@@ -556,7 +556,7 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 	const struct spdk_nvme_ctrlr_data *cdata;
 	uint64_t		bdev_size, lba_offset, sectors_per_stripe;
 	int			ns_id, num_ns, bdev_idx;
-	uint64_t LunSizeInsector;
+	uint64_t lun_size_in_sector;
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -579,9 +579,9 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 		 */
 		sectors_per_stripe = (1 << 20) / spdk_nvme_ns_get_sector_size(ns);
 
-		LunSizeInsector = ((uint64_t)LunSizeInMB << 20) / spdk_nvme_ns_get_sector_size(ns);
-		if ((LunSizeInMB > 0) && (LunSizeInsector < bdev_size))
-			bdev_size = LunSizeInsector;
+		lun_size_in_sector = ((uint64_t)lun_size_in_mb << 20) / spdk_nvme_ns_get_sector_size(ns);
+		if ((lun_size_in_mb > 0) && (lun_size_in_sector < bdev_size))
+			bdev_size = lun_size_in_sector;
 
 		bdev_size &= ~(sectors_per_stripe - 1);
 
@@ -782,8 +782,8 @@ blockdev_nvme_get_spdk_running_config(FILE *fp)
 	if (num_controllers != -1) {
 		fprintf(fp, "  NumControllers %d\n", num_controllers);
 	}
-	if (LunSizeInMB != 0) {
-		fprintf(fp, "  LunSizeInMB %d\n", LunSizeInMB);
+	if (lun_size_in_mb != 0) {
+		fprintf(fp, "  LunSizeInMB %d\n", lun_size_in_mb);
 	}
 }
 
