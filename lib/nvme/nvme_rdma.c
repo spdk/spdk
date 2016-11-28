@@ -144,12 +144,10 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 {
 	struct spdk_nvme_rdma_req *rdma_req;
 
-	if (!rqpair || STAILQ_EMPTY(&rqpair->free_reqs)) {
-		return NULL;
-	}
-
 	rdma_req = STAILQ_FIRST(&rqpair->free_reqs);
-	STAILQ_REMOVE(&rqpair->free_reqs, rdma_req, spdk_nvme_rdma_req, link);
+	if (rdma_req) {
+		STAILQ_REMOVE_HEAD(&rqpair->free_reqs, link);
+	}
 
 	return rdma_req;
 }
