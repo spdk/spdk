@@ -207,7 +207,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	return 0;
 }
 
-static int
+static void
 nvme_rdma_pre_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 {
 	struct spdk_nvme_sgl_descriptor *nvme_sgl;
@@ -229,8 +229,6 @@ nvme_rdma_pre_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 
 	nvme_sgl = &rdma_req->cmd.dptr.sgl1;
 	nvme_sgl->keyed.key = rdma_req->bb_sgl.lkey;
-
-	return 0;
 }
 
 static void
@@ -1270,9 +1268,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
-	if (nvme_rdma_pre_copy_mem(rdma_req) < 0) {
-		return -1;
-	}
+	nvme_rdma_pre_copy_mem(rdma_req);
 
 	memset(&wr, 0, sizeof(wr));
 	wr.wr_id = (uint64_t)rdma_req;
