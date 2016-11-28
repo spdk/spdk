@@ -318,7 +318,6 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 				/* Controller failed to initialize. */
 				TAILQ_REMOVE(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
 				nvme_ctrlr_destruct(ctrlr);
-				spdk_free(ctrlr);
 				rc = -1;
 				break;
 			}
