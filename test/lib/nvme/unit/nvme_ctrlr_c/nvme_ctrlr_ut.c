@@ -249,11 +249,6 @@ nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 }
 
 void
-nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-}
-
-void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 }

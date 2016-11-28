@@ -358,17 +358,10 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	if (nvme_transport_qpair_construct(qpair)) {
 		SPDK_ERRLOG("qpair_construct() failed\n");
-		nvme_qpair_destroy(qpair);
 		return -1;
 	}
 
 	return 0;
-}
-
-void
-nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-	nvme_transport_qpair_destroy(qpair);
 }
 
 int

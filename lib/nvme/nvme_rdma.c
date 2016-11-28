@@ -127,6 +127,8 @@ struct spdk_nvme_rdma_rsp {
 	struct ibv_sge		recv_sgl;
 };
 
+static int nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair);
+
 static inline struct nvme_rdma_qpair *
 nvme_rdma_qpair(struct spdk_nvme_qpair *qpair)
 {
@@ -649,7 +651,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 
 	rc = nvmf_cm_construct(rqpair);
 	if (rc < 0) {
-		return nvme_transport_qpair_destroy(&rqpair->qpair);
+		return nvme_rdma_qpair_destroy(&rqpair->qpair);
 	}
 
 	ctrlr = rqpair->qpair.ctrlr;
@@ -699,7 +701,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 
 	return 0;
 err:
-	return nvme_transport_qpair_destroy(&rqpair->qpair);;
+	return nvme_rdma_qpair_destroy(&rqpair->qpair);
 }
 
 static struct spdk_nvme_rdma_req *
@@ -914,21 +916,16 @@ _nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	rc = nvme_rdma_qpair_connect(rqpair);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to connect through rdma qpair\n");
-		goto err;
+		return rc;
 	}
 
 	rc = nvme_rdma_qpair_fabric_connect(rqpair);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to send/receive the qpair fabric request\n");
-		goto err;
+		return rc;
 	}
 
 	return 0;
-
-err:
-	nvme_transport_qpair_destroy(&rqpair->qpair);
-	return rc;
-
 }
 
 
@@ -968,15 +965,15 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	}
 
 	rc = _nvme_rdma_ctrlr_create_qpair(ctrlr, qpair);
-
 	if (rc < 0) {
+		nvme_rdma_qpair_destroy(qpair);
 		return NULL;
 	}
 
 	return qpair;
 }
 
-int
+static int
 nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_rdma_qpair *rqpair;
@@ -1213,6 +1210,10 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_rdma_ctrlr *rctrlr = nvme_rdma_ctrlr(ctrlr);
 
+	if (ctrlr->adminq) {
+		nvme_rdma_qpair_destroy(ctrlr->adminq);
+	}
+
 	free(rctrlr);
 
 	return 0;
@@ -1299,8 +1300,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 int
 nvme_rdma_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-
-	return nvme_transport_qpair_destroy(qpair);
+	return nvme_rdma_qpair_destroy(qpair);
 }
 
 int
@@ -1318,6 +1318,7 @@ nvme_rdma_qpair_construct(struct spdk_nvme_qpair *qpair)
 	rqpair = nvme_rdma_qpair(qpair);
 	rqpair->rdma_reqs = calloc(qpair->num_entries, sizeof(struct spdk_nvme_rdma_req));
 	if (rqpair->rdma_reqs == NULL) {
+		nvme_rdma_qpair_destroy(qpair);
 		return -1;
 	}
 

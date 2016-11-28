@@ -181,6 +181,8 @@ struct nvme_pcie_qpair {
 	uint64_t cpl_bus_addr;
 };
 
+static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
+
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 static volatile uint16_t g_signal_lock;
 static bool g_sigset = false;
@@ -660,13 +662,9 @@ int
 nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-	struct nvme_pcie_qpair *pqpair;
 
 	if (ctrlr->adminq) {
-		pqpair = nvme_pcie_qpair(ctrlr->adminq);
-
-		nvme_qpair_destroy(ctrlr->adminq);
-		spdk_free(pqpair);
+		nvme_pcie_qpair_destroy(ctrlr->adminq);
 	}
 
 	nvme_pcie_ctrlr_free_bars(pctrlr);
@@ -1043,7 +1041,7 @@ nvme_pcie_admin_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	nvme_pcie_admin_qpair_abort_aers(qpair);
 }
 
-int
+static int
 nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
@@ -1053,16 +1051,15 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	}
 	if (pqpair->cmd && !pqpair->sq_in_cmb) {
 		spdk_free(pqpair->cmd);
-		pqpair->cmd = NULL;
 	}
 	if (pqpair->cpl) {
 		spdk_free(pqpair->cpl);
-		pqpair->cpl = NULL;
 	}
 	if (pqpair->tr) {
 		spdk_free(pqpair->tr);
-		pqpair->tr = NULL;
 	}
+
+	spdk_free(pqpair);
 
 	return 0;
 }
@@ -1313,7 +1310,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);
 	if (rc != 0) {
-		spdk_free(pqpair);
+		nvme_pcie_qpair_destroy(qpair);
 		return NULL;
 	}
 
@@ -1321,8 +1318,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	if (rc != 0) {
 		SPDK_ERRLOG("I/O queue creation failed\n");
-		nvme_qpair_destroy(qpair);
-		spdk_free(pqpair);
+		nvme_pcie_qpair_destroy(qpair);
 		return NULL;
 	}
 
@@ -1338,7 +1334,6 @@ nvme_pcie_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 int
 nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_completion_poll_status status;
 	int rc;
 
@@ -1370,8 +1365,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
-	nvme_qpair_destroy(qpair);
-	spdk_free(pqpair);
+	nvme_pcie_qpair_destroy(qpair);
 
 	return 0;
 }

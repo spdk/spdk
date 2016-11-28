@@ -190,12 +190,6 @@ nvme_transport_qpair_construct(struct spdk_nvme_qpair *qpair)
 }
 
 int
-nvme_transport_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
-int
 nvme_transport_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
@@ -243,7 +237,6 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 static void
 cleanup_submit_request_test(struct spdk_nvme_qpair *qpair)
 {
-	nvme_qpair_destroy(qpair);
 }
 
 #if 0 /* TODO: move to PCIe-specific unit test */

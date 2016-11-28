@@ -173,12 +173,6 @@ nvme_transport_qpair_construct(struct spdk_nvme_qpair *qpair)
 }
 
 int
-nvme_transport_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-	NVME_TRANSPORT_CALL(qpair->transport, qpair_destroy, (qpair));
-}
-
-int
 nvme_transport_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 	NVME_TRANSPORT_CALL(qpair->transport, qpair_enable, (qpair));

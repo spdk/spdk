@@ -506,7 +506,6 @@ int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			     uint16_t num_entries,
 			     struct spdk_nvme_ctrlr *ctrlr,
 			     enum spdk_nvme_qprio qprio);
-void	nvme_qpair_destroy(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
@@ -558,7 +557,6 @@ struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport transport,
 	int nvme_ ## name ## _ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_construct(struct spdk_nvme_qpair *qpair); \
-	int nvme_ ## name ## _qpair_destroy(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_enable(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_disable(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_reset(struct spdk_nvme_qpair *qpair); \
