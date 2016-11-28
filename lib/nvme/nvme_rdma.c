@@ -1077,6 +1077,7 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 {
 	struct spdk_nvme_discover_info *discover_info = devhandle;
 	struct spdk_nvme_probe_info probe_info;
+	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
 	struct spdk_nvmf_discovery_log_page *log_page;
 	union spdk_nvme_cc_register cc;
@@ -1084,13 +1085,15 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 	int rc;
 	uint32_t i;
 
+	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
+
 	probe_info.trtype = (uint8_t)transport;
 	snprintf(probe_info.nqn, sizeof(probe_info.nqn), "%s", discover_info->nqn);
 	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", discover_info->traddr);
 	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", discover_info->trsvcid);
 
 	memset(buffer, 0x0, 4096);
-	discovery_ctrlr = nvme_attach(transport, &probe_info);
+	discovery_ctrlr = nvme_attach(transport, &discovery_opts, &probe_info, NULL);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1155,7 +1158,7 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "nqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n", probe_info.nqn,
 			      probe_info.trtype, probe_info.traddr, probe_info.trsvcid);
 		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
-		nvme_probe_one(entry->trtype, probe_cb, cb_ctx, &probe_info, &probe_info);
+		nvme_probe_one(entry->trtype, probe_cb, cb_ctx, &probe_info, NULL);
 	}
 
 	nvme_ctrlr_destruct(discovery_ctrlr);
@@ -1163,19 +1166,14 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 }
 
 struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport transport,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
 	struct nvme_rdma_ctrlr *rctrlr;
-	struct spdk_nvme_probe_info *probe_info;
 	union spdk_nvme_cap_register cap;
 	int rc;
 
-	if (!devhandle) {
-		SPDK_ERRLOG("devhandle is NULL\n");
-		return NULL;
-	}
-
-	probe_info = devhandle;
 	rctrlr = calloc(1, sizeof(struct nvme_rdma_ctrlr));
 	if (rctrlr == NULL) {
 		SPDK_ERRLOG("could not allocate ctrlr\n");
@@ -1183,6 +1181,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport trans
 	}
 
 	rctrlr->ctrlr.transport = SPDK_NVME_TRANSPORT_RDMA;
+	rctrlr->ctrlr.opts = *opts;
 	rctrlr->ctrlr.probe_info = *probe_info;
 
 	rc = nvme_ctrlr_construct(&rctrlr->ctrlr);

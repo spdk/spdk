@@ -47,11 +47,14 @@ struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
 int32_t		spdk_nvme_retry_count;
 
 struct spdk_nvme_ctrlr *
-nvme_attach(enum spdk_nvme_transport transport, void *devhandle)
+nvme_attach(enum spdk_nvme_transport transport,
+	    const struct spdk_nvme_ctrlr_opts *opts,
+	    const struct spdk_nvme_probe_info *probe_info,
+	    void *devhandle)
 {
 	struct spdk_nvme_ctrlr	*ctrlr;
 
-	ctrlr = nvme_transport_ctrlr_construct(transport, devhandle);
+	ctrlr = nvme_transport_ctrlr_construct(transport, opts, probe_info, devhandle);
 
 	return ctrlr;
 }
@@ -238,14 +241,11 @@ nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
 	if (probe_cb(cb_ctx, probe_info, &opts)) {
-		ctrlr = nvme_attach(transport, devhandle);
+		ctrlr = nvme_attach(transport, &opts, probe_info, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("nvme_attach() failed\n");
 			return -1;
 		}
-
-		ctrlr->opts = opts;
-		ctrlr->probe_info = *probe_info;
 
 		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
 	}
