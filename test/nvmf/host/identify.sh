@@ -29,24 +29,13 @@ waitforlisten $nvmfpid ${RPC_PORT}
 
 bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
-modprobe -v nvme-rdma
-
-if [ -e "/dev/nvme-fabrics" ]; then
-        chmod a+rw /dev/nvme-fabrics
-fi
-
 $rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -s SPDK00000000000001 -n "$bdevs"
 
 $rootdir/examples/nvme/identify/identify -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n nqn.2014-08.org.nvmexpress.discovery -t all
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
-rm -f ./local-job0-0-verify.state
-rm -f ./local-job1-1-verify.state
-rm -f ./local-job2-2-verify.state
-
 trap - SIGINT SIGTERM EXIT
 
-nvmfcleanup
 killprocess $nvmfpid
 timing_exit host
