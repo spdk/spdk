@@ -90,7 +90,12 @@ struct nvme_rdma_qpair {
 
 	struct	spdk_nvme_rdma_req		*rdma_reqs;
 
-	struct	spdk_nvme_rdma_rsp		*rdma_rsps;
+	/* Parallel arrays of response buffers + response SGLs of size max_queue_depth */
+	struct ibv_sge				*rsp_sgls;
+	struct spdk_nvme_cpl			*rsps;
+
+	/* Memory region describing all rsps for this qpair */
+	struct ibv_mr				*rsp_mr;
 
 	STAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
 };
@@ -117,14 +122,6 @@ struct spdk_nvme_rdma_req {
 	uint32_t				bb_len;
 
 	STAILQ_ENTRY(spdk_nvme_rdma_req)	link;
-};
-
-struct spdk_nvme_rdma_rsp {
-	struct spdk_nvme_cpl	rsp;
-
-	struct ibv_mr		*rsp_mr;
-
-	struct ibv_sge		recv_sgl;
 };
 
 static int nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair);
@@ -259,18 +256,17 @@ nvme_rdma_post_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 	}
 
 static int
-nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair,
-		    struct spdk_nvme_rdma_rsp *rsp)
+nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 {
 	struct ibv_recv_wr wr, *bad_wr = NULL;
 	int rc;
 
-	wr.wr_id = (uintptr_t)rsp;
+	wr.wr_id = rsp_idx;
 	wr.next = NULL;
-	wr.sg_list = &rsp->recv_sgl;
+	wr.sg_list = &rqpair->rsp_sgls[rsp_idx];
 	wr.num_sge = 1;
 
-	nvme_rdma_trace_ibv_sge(&rsp->recv_sgl);
+	nvme_rdma_trace_ibv_sge(wr.sg_list);
 
 	rc = ibv_post_recv(rqpair->cm_id->qp, &wr, &bad_wr);
 	if (rc) {
@@ -280,80 +276,62 @@ nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair,
 	return rc;
 }
 
-static struct spdk_nvme_rdma_rsp *
-config_rdma_rsp(struct nvme_rdma_qpair *rqpair, int i)
-{
-	struct spdk_nvme_rdma_rsp *rdma_rsp;
-
-	rdma_rsp = &rqpair->rdma_rsps[i];
-	if (!rdma_rsp) {
-		return NULL;
-	}
-
-	rdma_rsp->rsp_mr = rdma_reg_msgs(rqpair->cm_id, &rqpair->rdma_rsps[i].rsp,
-					 sizeof(rqpair->rdma_rsps[i].rsp));
-	if (rdma_rsp->rsp_mr == NULL) {
-		SPDK_ERRLOG("Unable to register rsp_mr\n");
-		return NULL;
-	}
-
-	/* initialize recv_sgl */
-	rdma_rsp->recv_sgl.addr = (uint64_t)&rqpair->rdma_rsps[i].rsp;
-	rdma_rsp->recv_sgl.length = sizeof(rqpair->rdma_rsps[i].rsp);
-	rdma_rsp->recv_sgl.lkey = rdma_rsp->rsp_mr->lkey;
-
-	return rdma_rsp;
-}
-
 static void
 nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
 {
-	struct spdk_nvme_rdma_rsp *rdma_rsp;
-	int i;
-
-	if (!rqpair->rdma_rsps) {
-		return;
+	if (rqpair->rsp_mr && rdma_dereg_mr(rqpair->rsp_mr)) {
+		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
 	}
+	rqpair->rsp_mr = NULL;
 
-	for (i = 0; i < rqpair->max_queue_depth; i++) {
-		rdma_rsp = &rqpair->rdma_rsps[i];
-		if (rdma_rsp->rsp_mr && rdma_dereg_mr(rdma_rsp->rsp_mr)) {
-			SPDK_ERRLOG("Unable to de-register rsp_mr\n");
-		}
-	}
-
-	free(rqpair->rdma_rsps);
+	free(rqpair->rsps);
+	rqpair->rsps = NULL;
+	free(rqpair->rsp_sgls);
+	rqpair->rsp_sgls = NULL;
 }
 
 static int
 nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 {
-	struct spdk_nvme_rdma_rsp *rdma_rsp;
-	int i;
+	uint16_t i;
 
-	rqpair->rdma_rsps = calloc(rqpair->max_queue_depth, sizeof(struct spdk_nvme_rdma_rsp));
+	rqpair->rsp_mr = NULL;
+	rqpair->rsps = NULL;
 
-	if (!rqpair->rdma_rsps) {
+	rqpair->rsp_sgls = calloc(rqpair->max_queue_depth, sizeof(*rqpair->rsp_sgls));
+	if (!rqpair->rsp_sgls) {
+		SPDK_ERRLOG("Failed to allocate rsp_sgls\n");
+		goto fail;
+	}
+
+	rqpair->rsps = calloc(rqpair->max_queue_depth, sizeof(*rqpair->rsps));
+	if (!rqpair->rsps) {
 		SPDK_ERRLOG("can not allocate rdma rsps\n");
-		return -1;
+		goto fail;
+	}
+
+	rqpair->rsp_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->rsps,
+				       rqpair->max_queue_depth * sizeof(*rqpair->rsps));
+	if (rqpair->rsp_mr == NULL) {
+		SPDK_ERRLOG("Unable to register rsp_mr\n");
+		goto fail;
 	}
 
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
-		rdma_rsp = config_rdma_rsp(rqpair, i);
-		if (rdma_rsp == NULL) {
-			goto fail;
-		}
+		struct ibv_sge *rsp_sgl = &rqpair->rsp_sgls[i];
 
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_rsq %p: rsp %p\n",
-			      rdma_rsp, &rdma_rsp->rsp);
+		rsp_sgl->addr = (uint64_t)&rqpair->rsps[i];
+		rsp_sgl->length = sizeof(rqpair->rsps[i]);
+		rsp_sgl->lkey = rqpair->rsp_mr->lkey;
 
-		if (nvme_rdma_post_recv(rqpair, rdma_rsp)) {
+		if (nvme_rdma_post_recv(rqpair, i)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
 			goto fail;
 		}
 	}
 
 	return 0;
+
 fail:
 	nvme_rdma_free_rsps(rqpair);
 	return -ENOMEM;
@@ -462,24 +440,25 @@ static int
 nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 {
 	struct spdk_nvme_rdma_req *rdma_req;
-	struct spdk_nvme_rdma_rsp *rdma_rsp;
+	struct spdk_nvme_cpl *rsp;
 	struct nvme_request *req;
-
-	rdma_rsp = (struct spdk_nvme_rdma_rsp *)wc->wr_id;
+	uint64_t rsp_idx = wc->wr_id;
 
 	if (wc->byte_len < sizeof(struct spdk_nvmf_fabric_connect_rsp)) {
 		SPDK_ERRLOG("recv length %u less than capsule header\n", wc->byte_len);
 		return -1;
 	}
 
-	rdma_req = &rqpair->rdma_reqs[rdma_rsp->rsp.cid];
+	assert(rsp_idx < rqpair->max_queue_depth);
+	rsp = &rqpair->rsps[rsp_idx];
+	rdma_req = &rqpair->rdma_reqs[rsp->cid];
 
 	nvme_rdma_post_copy_mem(rdma_req);
 	req = rdma_req->req;
-	nvme_rdma_req_complete(req, &rdma_rsp->rsp);
+	nvme_rdma_req_complete(req, rsp);
 	nvme_rdma_req_put(rqpair, rdma_req);
 
-	if (nvme_rdma_post_recv(rqpair, rdma_rsp)) {
+	if (nvme_rdma_post_recv(rqpair, rsp_idx)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
 	}
