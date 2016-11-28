@@ -80,8 +80,6 @@ struct nvme_rdma_ctrlr {
 struct nvme_rdma_qpair {
 	struct spdk_nvme_qpair			qpair;
 
-	uint16_t				outstanding_reqs;
-
 	struct rdma_event_channel		*cm_channel;
 
 	struct rdma_cm_id			*cm_id;
@@ -155,7 +153,6 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 	rdma_req = STAILQ_FIRST(&rqpair->free_reqs);
 	STAILQ_REMOVE(&rqpair->free_reqs, rdma_req, spdk_nvme_rdma_req, link);
 
-	rqpair->outstanding_reqs++;
 	return rdma_req;
 }
 
@@ -173,12 +170,7 @@ nvme_rdma_req_put(struct spdk_nvme_rdma_req *rdma_req)
 		return;
 	}
 
-	if (rqpair->outstanding_reqs) {
-		rqpair->outstanding_reqs--;
-		STAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
-	} else {
-		SPDK_ERRLOG("There is no outstanding IOs\n");
-	}
+	STAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
 }
 
 static void
@@ -1338,7 +1330,6 @@ nvme_rdma_qpair_construct(struct spdk_nvme_qpair *qpair)
 		return -1;
 	}
 
-	rqpair->outstanding_reqs = 0;
 	STAILQ_INIT(&rqpair->free_reqs);
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "qpair num entries = %d\n", qpair->num_entries);
