@@ -1188,6 +1188,7 @@ int main(int argc, char **argv)
 	int rc;
 	struct worker_thread *worker;
 	char task_pool_name[30];
+	uint32_t task_count;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
@@ -1217,17 +1218,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", getpid());
-
-	task_pool = rte_mempool_create(task_pool_name, 8192,
-				       sizeof(struct perf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
-	if (task_pool == NULL) {
-		fprintf(stderr, "could not initialize task pool\n");
-		return 1;
-	}
-
 	g_tsc_rate = spdk_get_ticks_hz();
 
 	if (register_workers() != 0) {
@@ -1246,6 +1236,26 @@ int main(int argc, char **argv)
 	}
 
 	if (associate_workers_with_ns() != 0) {
+		rc = -1;
+		goto cleanup;
+	}
+
+	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", getpid());
+
+	/*
+	 * The task_count will be dynamically calculated based on the
+	 * number of attached active namespaces(aio files), queue depth
+	 * and number of cores (workers) involved in the IO operations.
+	 */
+	task_count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
+	task_count *= g_queue_depth;
+
+	task_pool = rte_mempool_create(task_pool_name, task_count,
+				       sizeof(struct perf_task),
+				       0, 0, NULL, NULL, task_ctor, NULL,
+				       SOCKET_ID_ANY, 0);
+	if (task_pool == NULL) {
+		fprintf(stderr, "could not initialize task pool\n");
 		rc = -1;
 		goto cleanup;
 	}
