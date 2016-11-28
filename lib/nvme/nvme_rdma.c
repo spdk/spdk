@@ -1166,6 +1166,14 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		uint8_t *end;
 		size_t len;
 
+		if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+			SPDK_WARNLOG("Skipping unsupported discovery service referral\n");
+			continue;
+		} else if (entry->subtype != SPDK_NVMF_SUBTYPE_NVME) {
+			SPDK_WARNLOG("Skipping unknown subtype %u\n", entry->subtype);
+			continue;
+		}
+
 		probe_info.trtype = entry->trtype;
 		if (!spdk_nvme_transport_available(probe_info.trtype)) {
 			SPDK_WARNLOG("NVMe transport type %u not available; skipping probe\n",
