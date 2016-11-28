@@ -282,39 +282,6 @@ nvme_rdma_trace_ibv_sge(struct ibv_sge *sg_list)
 	}
 }
 
-static void
-nvme_rdma_ibv_send_wr_init(struct ibv_send_wr *wr,
-			   struct spdk_nvme_rdma_req *req,
-			   struct ibv_sge *sg_list,
-			   uint64_t wr_id,
-			   enum ibv_wr_opcode opcode,
-			   int send_flags)
-{
-	if (!wr || !sg_list) {
-		return;
-	}
-
-	memset(wr, 0, sizeof(*wr));
-	wr->wr_id = wr_id;
-	wr->next = NULL;
-	wr->opcode = opcode;
-	wr->send_flags = send_flags;
-	wr->sg_list = sg_list;
-	wr->num_sge = 1;
-
-	if (req != NULL) {
-		struct spdk_nvme_sgl_descriptor *sgl = &req->cmd.dptr.sgl1;
-
-		wr->wr.rdma.rkey = sgl->keyed.key;
-		wr->wr.rdma.remote_addr = sgl->address;
-
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rkey %x remote_addr %p\n",
-			      wr->wr.rdma.rkey, (void *)wr->wr.rdma.remote_addr);
-	}
-
-	nvme_rdma_trace_ibv_sge(wr->sg_list);
-}
-
 static int
 nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair,
 		    struct spdk_nvme_rdma_rsp *rsp)
@@ -1328,8 +1295,15 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
-	nvme_rdma_ibv_send_wr_init(&wr, NULL, &rdma_req->send_sgl, (uint64_t)rdma_req,
-				   IBV_WR_SEND, IBV_SEND_SIGNALED);
+	memset(&wr, 0, sizeof(wr));
+	wr.wr_id = (uint64_t)rdma_req;
+	wr.next = NULL;
+	wr.opcode = IBV_WR_SEND;
+	wr.send_flags = IBV_SEND_SIGNALED;
+	wr.sg_list = &rdma_req->send_sgl;
+	wr.num_sge = 1;
+
+	nvme_rdma_trace_ibv_sge(wr.sg_list);
 
 	rc = ibv_post_send(rqpair->cm_id->qp, &wr, &bad_wr);
 	if (rc) {
