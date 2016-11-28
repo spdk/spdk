@@ -17,7 +17,7 @@ if ! rdma_nic_available; then
         exit 0
 fi
 
-timing_enter host
+timing_enter identify
 
 # Start up the NVMf target in another process
 $rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf -m 0x2 -p 1 -s 512 -t nvmf &
@@ -38,4 +38,4 @@ $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 killprocess $nvmfpid
-timing_exit host
+timing_exit identify
