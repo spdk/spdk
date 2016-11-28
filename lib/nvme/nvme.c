@@ -392,7 +392,7 @@ int spdk_nvme_discover(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		       spdk_nvme_attach_cb attach_cb,
 		       spdk_nvme_remove_cb remove_cb)
 {
-	if (!info || !info->traddr || !info->trsvcid || !info->nqn) {
+	if (!info || !info->traddr || !info->trsvcid || !info->subnqn) {
 		return -1;
 	}
 

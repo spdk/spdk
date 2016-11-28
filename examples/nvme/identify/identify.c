@@ -406,9 +406,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	if (probe_info->nqn[0]) {
+	if (probe_info->subnqn[0]) {
 		printf("NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->traddr, probe_info->trsvcid, probe_info->nqn);
+		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
 	} else {
 		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
 		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
@@ -874,7 +874,7 @@ parse_args(int argc, char **argv)
 {
 	int op, rc;
 
-	info.nqn = SPDK_NVMF_DISCOVERY_NQN;
+	info.subnqn = SPDK_NVMF_DISCOVERY_NQN;
 
 	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
 		switch (op) {
@@ -902,7 +902,7 @@ parse_args(int argc, char **argv)
 			info.trsvcid = optarg;
 			break;
 		case 'n':
-			info.nqn = optarg;
+			info.subnqn = optarg;
 			break;
 		case 'H':
 		default:
@@ -911,7 +911,7 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	if (!info.traddr || !info.trsvcid || !info.nqn) {
+	if (!info.traddr || !info.trsvcid || !info.subnqn) {
 		return 0;
 	}
 
@@ -920,7 +920,7 @@ parse_args(int argc, char **argv)
 		return 0;
 	}
 
-	if (strlen(info.nqn) >= SPDK_NVMF_NQN_MAX_LEN) {
+	if (strlen(info.subnqn) >= SPDK_NVMF_NQN_MAX_LEN) {
 		printf("NQN must be less than %d bytes long\n", SPDK_NVMF_NQN_MAX_LEN);
 		return 0;
 	}

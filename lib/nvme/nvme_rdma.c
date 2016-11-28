@@ -765,7 +765,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
 		strlen((char *)NVME_HOST_ID_DEFAULT));
 	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
-	strncpy((char *)nvmf_data->subnqn, ctrlr->probe_info.nqn, sizeof(nvmf_data->subnqn));
+	strncpy((char *)nvmf_data->subnqn, ctrlr->probe_info.subnqn, sizeof(nvmf_data->subnqn));
 
 	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
@@ -1060,7 +1060,7 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
 
 	probe_info.trtype = (uint8_t)transport;
-	snprintf(probe_info.nqn, sizeof(probe_info.nqn), "%s", discover_info->nqn);
+	snprintf(probe_info.subnqn, sizeof(probe_info.subnqn), "%s", discover_info->subnqn);
 	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", discover_info->traddr);
 	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", discover_info->trsvcid);
 
@@ -1116,8 +1116,8 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 			continue;
 		}
 		len = end - entry->subnqn;
-		memcpy(probe_info.nqn, entry->subnqn, len);
-		probe_info.nqn[len] = '\0';
+		memcpy(probe_info.subnqn, entry->subnqn, len);
+		probe_info.subnqn[len] = '\0';
 
 		/* Convert traddr to a null terminated string. */
 		len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
@@ -1127,8 +1127,8 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
 		memcpy(probe_info.trsvcid, entry->trsvcid, len);
 
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "nqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n", probe_info.nqn,
-			      probe_info.trtype, probe_info.traddr, probe_info.trsvcid);
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
+			      probe_info.subnqn, probe_info.trtype, probe_info.traddr, probe_info.trsvcid);
 		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
 		nvme_probe_one(entry->trtype, probe_cb, cb_ctx, &probe_info, NULL);
 	}

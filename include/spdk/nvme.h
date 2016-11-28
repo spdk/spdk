@@ -123,7 +123,7 @@ struct spdk_nvme_discover_info {
 	/**
 	 * Subsystem NQN of the NVMe over Fabrics discovery service.
 	 */
-	const char *nqn;
+	const char *subnqn;
 
 	/**
 	 * Transport address of the NVMe over Fabrics discovery service. For transports which use IP
@@ -161,7 +161,7 @@ struct spdk_nvme_probe_info {
 	 *
 	 * If this is not an NVMe over Fabrics controller, this field will be a zero-length string.
 	 */
-	char nqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 	/**
 	 * NVMe over Fabrics transport type.
