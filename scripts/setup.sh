@@ -35,7 +35,9 @@ function linux_bind_driver() {
 
 	iommu_group=$(basename $(readlink -f /sys/bus/pci/devices/$bdf/iommu_group))
 	if [ -e "/dev/vfio/$iommu_group" ]; then
-		chown "$username" "/dev/vfio/$iommu_group"
+		if [ "$username" != "" ]; then
+			chown "$username" "/dev/vfio/$iommu_group"
+		fi
 	fi
 }
 
@@ -76,7 +78,9 @@ function configure_linux {
 	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
-		chown "$username" /dev/hugepages
+		if [ "$username" != "" ]; then
+			chown "$username" /dev/hugepages
+		fi
 
 		MEMLOCK_AMNT=`ulimit -l`
 		if [ "$MEMLOCK_AMNT" != "unlimited" ] ; then
@@ -174,7 +178,10 @@ if [ "$mode" == "" ]; then
 fi
 
 if [ "$username" = "" ]; then
-	username=`logname`
+	username="$SUDO_USER"
+	if [ "$username" = "" ]; then
+		username=`logname 2>/dev/null` || true
+	fi
 fi
 
 if [ `uname` = Linux ]; then
