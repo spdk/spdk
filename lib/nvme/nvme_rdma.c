@@ -63,6 +63,8 @@
 #define NVME_HOST_ID_DEFAULT "12345679890"
 #define NVME_HOST_NQN  "nqn.2016-06.io.spdk:host"
 
+#define NVME_HOST_MAX_ENTRIES_PER_QUEUE (127)
+
 /*
 NVME RDMA qpair Resouce Defaults
  */
@@ -788,10 +790,17 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	strncpy((char *)nvmf_data->hostnqn, NVME_HOST_NQN, sizeof(nvmf_data->hostnqn));
 	strncpy((char *)nvmf_data->subnqn, ctrlr->probe_info.nqn, sizeof(nvmf_data->subnqn));
 
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
-					   (struct spdk_nvme_cmd *)&cmd,
-					   nvmf_data, sizeof(*nvmf_data),
-					   nvme_completion_poll_cb, &status);
+	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
+						   (struct spdk_nvme_cmd *)&cmd,
+						   nvmf_data, sizeof(*nvmf_data),
+						   nvme_completion_poll_cb, &status);
+	} else {
+		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, &rqpair->qpair,
+						(struct spdk_nvme_cmd *)&cmd,
+						nvmf_data, sizeof(*nvmf_data),
+						nvme_completion_poll_cb, &status);
+	}
 
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_nvme_rdma_req_fabric_connect failed\n");
@@ -948,7 +957,9 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		num_entries = SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES;
 		ctrlr->adminq = qpair;
 	} else {
-		num_entries = rctrlr->ctrlr.opts.queue_size;
+		num_entries = nvme_min(NVME_HOST_MAX_ENTRIES_PER_QUEUE,
+				       ctrlr->cap.bits.mqes + 1);
+		num_entries = nvme_min(num_entries, rctrlr->ctrlr.opts.queue_size);
 	}
 
 	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);

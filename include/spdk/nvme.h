@@ -99,7 +99,7 @@ struct spdk_nvme_ctrlr_opts {
 	/**
 	 * The queue depth of each NVMe I/O queue.
 	 */
-	int queue_size;
+	uint32_t queue_size;
 };
 
 /**

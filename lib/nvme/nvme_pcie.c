@@ -1302,6 +1302,9 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	 */
 	num_entries = nvme_min(NVME_IO_ENTRIES, ctrlr->cap.bits.mqes + 1);
 
+	/* Also should choose minmal between original and the value passed by users */
+	num_entries = nvme_min(num_entries, ctrlr->opts.queue_size);
+
 	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);
 	if (rc != 0) {
 		spdk_free(pqpair);
