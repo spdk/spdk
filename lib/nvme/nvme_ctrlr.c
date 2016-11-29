@@ -810,7 +810,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_ctrlr_cmd_set_async_event_config failed!\n");
-		return -ENXIO;
+		return 0;
 	}
 
 	/* aerl is a zero-based value, so we need to add 1 here. */
