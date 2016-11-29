@@ -366,9 +366,6 @@ struct spdk_nvme_ctrlr {
 	/** All the features supported */
 	bool				feature_supported[256];
 
-	/* Opaque handle to associated PCI device. */
-	struct spdk_pci_device		*devhandle;
-
 	/** maximum i/o size in bytes */
 	uint32_t			max_xfer_size;
 
