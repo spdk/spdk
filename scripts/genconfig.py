@@ -15,6 +15,10 @@ for arg in sys.argv:
         val = m.group(3).strip()
         args[var] = val
 
+# special case for DPDK_DIR, which is short for CONFIG_DPDK_DIR
+if 'DPDK_DIR' in args and 'CONFIG_DPDK_DIR' not in args:
+    args['CONFIG_DPDK_DIR'] = args['DPDK_DIR']
+
 with open('CONFIG') as f:
     for line in f:
         line = line.strip()
