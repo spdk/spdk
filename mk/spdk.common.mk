@@ -100,6 +100,11 @@ COMMON_CFLAGS += -fsanitize=address
 LDFLAGS += -fsanitize=address
 endif
 
+ifeq ($(CONFIG_UBSAN),y)
+COMMON_CFLAGS += -fsanitize=undefined
+LDFLAGS += -fsanitize=undefined
+endif
+
 COMMON_CFLAGS += -pthread
 LDFLAGS += -pthread
 
