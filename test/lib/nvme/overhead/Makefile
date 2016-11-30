@@ -36,27 +36,9 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP = overhead
 
-C_SRCS := overhead.c
-
-CFLAGS += -I. $(ENV_CFLAGS)
-
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
-	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
-
 ifeq ($(OS),Linux)
 LIBS += -laio
 CFLAGS += -DHAVE_LIBAIO
 endif
 
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk

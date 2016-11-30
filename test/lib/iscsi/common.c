@@ -1,8 +1,10 @@
 #include "iscsi/task.h"
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
-#include "spdk/log.h"
+
 #include "spdk/event.h"
+
+#include "spdk_internal/log.h"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
 
@@ -156,4 +158,11 @@ spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
 void
 spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc, int ascq)
 {
+}
+
+void
+spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len)
+{
+	task->iovs[0].iov_base = data;
+	task->iovs[0].iov_len = len;
 }

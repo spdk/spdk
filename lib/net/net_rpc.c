@@ -36,9 +36,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "spdk/log.h"
 #include "spdk/rpc.h"
 #include "spdk/net.h"
+
+#include "spdk_internal/log.h"
 
 struct rpc_ip_address {
 	int32_t ifc_index;

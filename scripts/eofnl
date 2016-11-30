@@ -23,4 +23,10 @@ if [[ ! $(tail -c2 "$f") ]]; then
 	exit 1
 fi
 
+if grep -q $'\r' "$f"; then
+	echo "$f: DOS-style newlines"
+	dos2unix "$f" &> /dev/null
+	exit 1
+fi
+
 exit 0

@@ -38,6 +38,8 @@
 
 #include "spdk/nvmf.h"
 
+struct spdk_nvmf_listen_addr;
+
 struct spdk_nvmf_transport {
 	/**
 	 * Name of the transport.
@@ -119,6 +121,8 @@ struct spdk_nvmf_transport {
 
 int spdk_nvmf_transport_init(void);
 int spdk_nvmf_transport_fini(void);
+
+const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
 
 extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
 

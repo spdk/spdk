@@ -38,8 +38,9 @@
 #include "iscsi/portal_grp.h"
 #include "iscsi/init_grp.h"
 
-#include "spdk/log.h"
 #include "spdk/rpc.h"
+
+#include "spdk_internal/log.h"
 
 extern struct spdk_iscsi_conn *g_conns_array; // TODO: move this to an internal iSCSI header
 
@@ -173,7 +174,7 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_server_conn *conn,
 
 	if (spdk_json_decode_object(params, rpc_initiator_group_decoders,
 				    sizeof(rpc_initiator_group_decoders) / sizeof(*rpc_initiator_group_decoders), &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -209,7 +210,7 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_server_conn *conn,
 			initiators,
 			req.netmask_list.num_netmasks,
 			netmasks)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "create_from_initiator_list failed\n");
+		SPDK_ERRLOG("create_from_initiator_list failed\n");
 		goto invalid;
 	}
 
@@ -262,7 +263,7 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_delete_initiator_group_decoders,
 				    sizeof(rpc_delete_initiator_group_decoders) / sizeof(*rpc_delete_initiator_group_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -503,17 +504,17 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_target_node_decoders,
 				    sizeof(rpc_target_node_decoders) / sizeof(*rpc_target_node_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	if (req.pg_tags.num_tags != req.ig_tags.num_tags) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "pg_tags/ig_tags count mismatch\n");
+		SPDK_ERRLOG("pg_tags/ig_tags count mismatch\n");
 		goto invalid;
 	}
 
 	if (req.lun_names.num_names != req.lun_ids.num_ids) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "lun_names/lun_ids count mismatch\n");
+		SPDK_ERRLOG("lun_names/lun_ids count mismatch\n");
 		goto invalid;
 	}
 
@@ -583,17 +584,17 @@ spdk_rpc_delete_target_node(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_delete_target_node_decoders,
 				    sizeof(rpc_delete_target_node_decoders) / sizeof(*rpc_delete_target_node_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	if (req.name == NULL) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "missing name param\n");
+		SPDK_ERRLOG("missing name param\n");
 		goto invalid;
 	}
 
 	if (spdk_iscsi_shutdown_tgt_node_by_name(req.name)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "shutdown_tgt_node_by_name failed\n");
+		SPDK_ERRLOG("shutdown_tgt_node_by_name failed\n");
 		goto invalid;
 	}
 
@@ -746,7 +747,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_portal_group_decoders,
 				    sizeof(rpc_portal_group_decoders) / sizeof(*rpc_portal_group_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -754,14 +755,14 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
 		portal_list[i] = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
 				 req.portal_list.portals[i].port, 0);
 		if (portal_list[i] == NULL) {
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "portal_list allocation failed\n");
+			SPDK_ERRLOG("portal_list allocation failed\n");
 			goto invalid;
 		}
 	}
 
 	if (spdk_iscsi_portal_grp_create_from_portal_list(req.tag, portal_list,
 			req.portal_list.num_portals)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "create_from_portal_list failed\n");
+		SPDK_ERRLOG("create_from_portal_list failed\n");
 		goto invalid;
 	}
 
@@ -808,7 +809,7 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_server_conn *conn,
 	if (spdk_json_decode_object(params, rpc_delete_portal_group_decoders,
 				    sizeof(rpc_delete_portal_group_decoders) / sizeof(*rpc_delete_portal_group_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 

@@ -42,6 +42,7 @@
 extern "C" {
 #endif
 
+#include <stdarg.h>
 #include <stddef.h>
 
 /**
@@ -52,6 +53,15 @@ extern "C" {
  * or NULL on failure.
  */
 char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 1, 2)));
+
+/**
+ * vsprintf with automatic buffer allocation.
+ *
+ * The return value is the formatted string,
+ * which should be passed to free() when no longer needed,
+ * or NULL on failure.
+ */
+char *spdk_vsprintf_alloc(const char *format, va_list args);
 
 /**
  * Convert string to lowercase in place.
@@ -91,6 +101,17 @@ char *spdk_str_trim(char *s);
  * If src is longer than size, only size bytes will be copied.
  */
 void spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad);
+
+/**
+ * Find the length of a string that has been padded with a specific byte.
+ *
+ * \param str Right-padded string to find the length of.
+ * \param size Size of the full string pointed to by str, including padding.
+ * \param pad Character that was used to pad str up to size.
+ *
+ * \return Length of the non-padded portion of str.
+ */
+size_t spdk_strlen_pad(const void *str, size_t size, int pad);
 
 #ifdef __cplusplus
 }

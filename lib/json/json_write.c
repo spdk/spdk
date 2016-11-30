@@ -318,6 +318,26 @@ spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 }
 
 int
+spdk_json_write_string_fmt(struct spdk_json_write_ctx *w, const char *fmt, ...)
+{
+	char *s;
+	va_list args;
+	int rc;
+
+	va_start(args, fmt);
+	s = spdk_vsprintf_alloc(fmt, args);
+	va_end(args);
+
+	if (s == NULL) {
+		return -1;
+	}
+
+	rc = spdk_json_write_string(w, s);
+	free(s);
+	return rc;
+}
+
+int
 spdk_json_write_array_begin(struct spdk_json_write_ctx *w)
 {
 	if (begin_value(w)) return fail(w);

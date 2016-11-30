@@ -56,10 +56,6 @@ log_test(void)
 	CU_ASSERT(rc == 0);
 
 #ifdef DEBUG
-	rc = spdk_log_get_num_trace_flags();
-	CU_ASSERT(rc == 1);
-	CU_ASSERT(strcasecmp(spdk_log_get_trace_flag_name(0), "debug") == 0);
-
 	CU_ASSERT(spdk_log_get_trace_flag("debug") == false);
 
 	spdk_log_set_trace_flag("debug");

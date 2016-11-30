@@ -65,6 +65,10 @@ timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
 
+timing_enter rbd_setup
+rbd_setup
+timing_exit rbd_setup
+
 #####################
 # Unit Tests
 #####################
@@ -75,13 +79,12 @@ run_test test/lib/bdev/blockdev.sh
 run_test test/lib/event/event.sh
 run_test test/lib/nvme/nvme.sh
 run_test test/lib/nvmf/nvmf.sh
-run_test test/lib/env/vtophys.sh
+run_test test/lib/env/env.sh
 run_test test/lib/ioat/ioat.sh
 run_test test/lib/json/json.sh
 run_test test/lib/jsonrpc/jsonrpc.sh
 run_test test/lib/log/log.sh
 run_test test/lib/scsi/scsi.sh
-run_test test/lib/iscsi/iscsi.sh
 run_test test/lib/util/util.sh
 
 timing_exit lib
@@ -101,6 +104,8 @@ if [ $(uname -s) = Linux ]; then
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
 	timing_exit iscsi_tgt
+
+	run_test test/lib/iscsi/iscsi.sh
 fi
 
 timing_enter nvmf
@@ -110,9 +115,16 @@ run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
 
+timing_enter host
+
+run_test test/nvmf/host/identify.sh
+
+timing_exit host
+
 timing_exit nvmf
 
 timing_enter cleanup
+rbd_cleanup
 ./scripts/setup.sh reset
 ./scripts/build_kmod.sh clean
 timing_exit cleanup

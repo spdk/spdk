@@ -40,6 +40,8 @@ echo "iscsi_tgt is listening. Running tests..."
 
 $rpc_config_py $rpc_py
 
+$rpc_py get_bdevs
+
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup

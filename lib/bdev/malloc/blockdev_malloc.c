@@ -40,9 +40,10 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
-#include "spdk/log.h"
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
+
+#include "spdk_internal/log.h"
 
 #include "bdev_module.h"
 
@@ -60,15 +61,15 @@ struct malloc_task {
 };
 
 static struct malloc_task *
-__malloc_task_from_copy_task(struct copy_task *ct)
+__malloc_task_from_copy_task(struct spdk_copy_task *ct)
 {
 	return (struct malloc_task *)((uintptr_t)ct - sizeof(struct malloc_task));
 }
 
-static struct copy_task *
+static struct spdk_copy_task *
 __copy_task_from_malloc_task(struct malloc_task *mt)
 {
-	return (struct copy_task *)((uintptr_t)mt + sizeof(struct malloc_task));
+	return (struct spdk_copy_task *)((uintptr_t)mt + sizeof(struct malloc_task));
 }
 
 static void
@@ -96,7 +97,7 @@ static void blockdev_malloc_get_spdk_running_config(FILE *fp);
 static int
 blockdev_malloc_get_ctx_size(void)
 {
-	return sizeof(struct malloc_task) + spdk_copy_module_get_max_ctx_size();
+	return sizeof(struct malloc_task) + spdk_copy_task_size();
 }
 
 SPDK_BDEV_MODULE_REGISTER(blockdev_malloc_initialize, blockdev_malloc_finish,

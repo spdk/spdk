@@ -108,9 +108,3 @@ spdk_nvmf_transport_get(const char *name)
 
 	return NULL;
 }
-
-const char *
-spdk_nvmf_transport_get_name(const struct spdk_nvmf_transport *transport)
-{
-	return transport->name;
-}

@@ -56,6 +56,12 @@ static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 	return 0;
 }
 
+bool
+spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
+{
+	return true;
+}
+
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
 		void *devhandle)
 {
@@ -133,6 +139,31 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	g_request = req;
 
+	return 0;
+}
+
+void
+nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+void
+nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+int
+nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
+{
 	return 0;
 }
 

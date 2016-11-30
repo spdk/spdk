@@ -190,8 +190,10 @@ bdevperf_complete(spdk_event_t event)
 	target = task->target;
 
 	if (bdev_io->status != SPDK_BDEV_IO_STATUS_SUCCESS) {
-		target->is_draining = true;
-		g_run_failed = true;
+		if (!g_reset) {
+			target->is_draining = true;
+			g_run_failed = true;
+		}
 	} else if (g_verify || g_reset || g_unmap) {
 		assert(bdev_io->u.read.iovcnt == 1);
 		if (memcmp(task->buf, bdev_io->u.read.iov.iov_base, g_io_size) != 0) {

@@ -38,7 +38,7 @@
 #include "nvme_internal.h"
 
 #define NVME_ADMIN_ENTRIES	(128)
-#define NVME_ADMIN_TRACKERS	(16)
+#define NVME_ADMIN_TRACKERS	(64)
 
 /*
  * NVME_IO_ENTRIES defines the size of an I/O qpair's submission and completion
@@ -68,6 +68,10 @@
  */
 #define NVME_MAX_XFER_SIZE	NVME_MAX_PRP_LIST_ENTRIES * PAGE_SIZE
 
+struct nvme_pcie_enum_ctx {
+	spdk_nvme_probe_cb probe_cb;
+	void *cb_ctx;
+};
 
 /* PCIe transport extensions for spdk_nvme_ctrlr */
 struct nvme_pcie_ctrlr {
@@ -90,6 +94,9 @@ struct nvme_pcie_ctrlr {
 
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
 	uint32_t doorbell_stride_u32;
+
+	/* Opaque handle to associated PCI device. */
+	struct spdk_pci_device *devhandle;
 };
 
 struct nvme_tracker {
@@ -305,7 +312,7 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	/* controller memory buffer offset from BAR in Bytes */
 	offset = unit_size * cmbloc.bits.ofst;
 
-	rc = spdk_pci_device_map_bar(pctrlr->ctrlr.devhandle, bir, &addr,
+	rc = spdk_pci_device_map_bar(pctrlr->devhandle, bir, &addr,
 				     &bar_phys_addr, &bar_size);
 	if ((rc != 0) || addr == NULL) {
 		goto exit;
@@ -347,7 +354,7 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 			SPDK_ERRLOG("get_cmbloc() failed\n");
 			return -EIO;
 		}
-		rc = spdk_pci_device_unmap_bar(pctrlr->ctrlr.devhandle, cmbloc.bits.bir, addr);
+		rc = spdk_pci_device_unmap_bar(pctrlr->devhandle, cmbloc.bits.bir, addr);
 	}
 	return rc;
 }
@@ -378,7 +385,7 @@ nvme_pcie_ctrlr_allocate_bars(struct nvme_pcie_ctrlr *pctrlr)
 	void *addr;
 	uint64_t phys_addr, size;
 
-	rc = spdk_pci_device_map_bar(pctrlr->ctrlr.devhandle, 0, &addr,
+	rc = spdk_pci_device_map_bar(pctrlr->devhandle, 0, &addr,
 				     &phys_addr, &size);
 	pctrlr->regs = (volatile struct spdk_nvme_registers *)addr;
 	if ((pctrlr->regs == NULL) || (rc != 0)) {
@@ -405,7 +412,7 @@ nvme_pcie_ctrlr_free_bars(struct nvme_pcie_ctrlr *pctrlr)
 	}
 
 	if (addr) {
-		rc = spdk_pci_device_unmap_bar(pctrlr->ctrlr.devhandle, 0, addr);
+		rc = spdk_pci_device_unmap_bar(pctrlr->devhandle, 0, addr);
 	}
 	return rc;
 }
@@ -429,6 +436,44 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 				    SPDK_NVME_QPRIO_URGENT);
 }
 
+/* This function must only be called while holding g_spdk_nvme_driver->lock */
+static int
+pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
+{
+	struct spdk_nvme_probe_info probe_info = {};
+	struct nvme_pcie_enum_ctx *enum_ctx = ctx;
+	struct spdk_nvme_ctrlr *ctrlr;
+
+	probe_info.pci_addr = spdk_pci_device_get_addr(pci_dev);
+	probe_info.pci_id = spdk_pci_device_get_id(pci_dev);
+
+	/* Verify that this controller is not already attached */
+	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+		/* NOTE: In the case like multi-process environment where the device handle is
+		 * different per each process, we compare by BDF to determine whether it is the
+		 * same controller.
+		 */
+		if (spdk_pci_addr_compare(&probe_info.pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
+			return 0;
+		}
+	}
+
+	return nvme_probe_one(SPDK_NVME_TRANSPORT_PCIE, enum_ctx->probe_cb, enum_ctx->cb_ctx,
+			      &probe_info, pci_dev);
+}
+
+int
+nvme_pcie_ctrlr_scan(enum spdk_nvme_transport transport,
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
+{
+	struct nvme_pcie_enum_ctx enum_ctx;
+
+	enum_ctx.probe_cb = probe_cb;
+	enum_ctx.cb_ctx = cb_ctx;
+
+	return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx);
+}
+
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport transport,
 		void *devhandle)
 {
@@ -445,7 +490,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport trans
 	}
 
 	pctrlr->ctrlr.transport = SPDK_NVME_TRANSPORT_PCIE;
-	pctrlr->ctrlr.devhandle = devhandle;
+	pctrlr->devhandle = devhandle;
 
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
@@ -682,14 +727,17 @@ nvme_pcie_copy_command(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *sr
 #endif
 }
 
+/**
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
 static void
 nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 		struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ctrlr			*ctrlr = qpair->ctrlr;
-	struct nvme_request			*active_req = req;
-	struct spdk_nvme_controller_process	*active_proc, *tmp;
-	bool					pending_on_proc = false;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	struct nvme_request		*active_req = req;
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	bool				pending_on_proc = false;
 
 	/*
 	 * The admin request is from another process. Move to the per
@@ -698,10 +746,7 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 	assert(nvme_qpair_is_admin_queue(qpair));
 	assert(active_req->pid != getpid());
 
-	/* Acquire the recursive lock first if not held already. */
-	pthread_mutex_lock(&ctrlr->ctrlr_lock);
-
-	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
 		if (active_proc->pid == active_req->pid) {
 			/* Saved the original completion information */
 			memcpy(&active_req->cpl, cpl, sizeof(*cpl));
@@ -712,15 +757,17 @@ nvme_pcie_qpair_insert_pending_admin_request(struct spdk_nvme_qpair *qpair,
 		}
 	}
 
-	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
-
 	if (pending_on_proc == false) {
-		SPDK_ERRLOG("The owning process is not found. Drop the request.\n");
+		SPDK_ERRLOG("The owning process (pid %d) is not found. Drop the request.\n",
+			    active_req->pid);
 
 		nvme_free_request(active_req);
 	}
 }
 
+/**
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
 static void
 nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 {
@@ -728,16 +775,13 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 	struct nvme_request		*req, *tmp_req;
 	bool				proc_found = false;
 	pid_t				pid = getpid();
-	struct spdk_nvme_controller_process	*proc;
+	struct spdk_nvme_ctrlr_process	*proc;
 
 	/*
 	 * Check whether there is any pending admin request from
 	 * other active processes.
 	 */
 	assert(nvme_qpair_is_admin_queue(qpair));
-
-	/* Acquire the recursive lock if not held already */
-	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 
 	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
 		if (proc->pid == pid) {
@@ -747,10 +791,8 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 		}
 	}
 
-	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
-
 	if (proc_found == false) {
-		SPDK_ERRLOG("the active process is not found for this controller.");
+		SPDK_ERRLOG("the active process (pid %d) is not found for this controller.\n", pid);
 		assert(proc_found);
 	}
 
@@ -1230,6 +1272,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
+	nvme_qpair_destroy(qpair);
 	spdk_free(pqpair);
 
 	return 0;
@@ -1494,12 +1537,16 @@ nvme_pcie_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 int
 nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
-	struct nvme_tracker *tr;
-	int rc;
-	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
-	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_tracker	*tr;
+	int			rc = 0;
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
+	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 
 	nvme_pcie_qpair_check_enabled(qpair);
+
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
+	}
 
 	tr = TAILQ_FIRST(&pqpair->free_tr);
 
@@ -1514,7 +1561,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		 *  completed.
 		 */
 		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
-		return 0;
+		goto exit;
 	}
 
 	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
@@ -1542,11 +1589,17 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	}
 
 	if (rc < 0) {
-		return rc;
+		goto exit;
 	}
 
 	nvme_pcie_qpair_submit_tracker(qpair, tr);
-	return 0;
+
+exit:
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
+
+	return rc;
 }
 
 int32_t
@@ -1555,7 +1608,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker	*tr;
 	struct spdk_nvme_cpl	*cpl;
-	uint32_t num_completions = 0;
+	uint32_t		 num_completions = 0;
+	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 
 	if (!nvme_pcie_qpair_check_enabled(qpair)) {
 		/*
@@ -1565,6 +1619,10 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		 *  reset is complete.
 		 */
 		return 0;
+	}
+
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		pthread_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
 	if (max_completions == 0 || (max_completions > (qpair->num_entries - 1U))) {
@@ -1610,6 +1668,8 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	/* Before returning, complete any pending admin request. */
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_pcie_qpair_complete_pending_admin_request(qpair);
+
+		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 
 	if (qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {

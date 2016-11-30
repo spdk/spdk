@@ -254,7 +254,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 			fprintf(stderr, "Could not read config file %s\n", opts->config_file);
 			exit(EXIT_FAILURE);
 		}
-		if (config->section == NULL) {
+		if (spdk_conf_first_section(config) == NULL) {
 			fprintf(stderr, "Invalid config file %s\n", opts->config_file);
 			exit(EXIT_FAILURE);
 		}

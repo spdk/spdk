@@ -33,12 +33,16 @@
 
 #include "spdk_cunit.h"
 
+#include "spdk_internal/log.h"
+
 #include <stdbool.h>
 
 #include "lib/nvme/unit/test_env.c"
 
-bool trace_flag = false;
-#define SPDK_TRACE_NVME trace_flag
+struct spdk_trace_flag SPDK_TRACE_NVME = {
+	.name = "nvme",
+	.enabled = false,
+};
 
 #include "nvme/nvme_ctrlr.c"
 
@@ -386,6 +390,12 @@ struct nvme_request *
 nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
+}
+
+void
+nvme_free_request(struct nvme_request *req)
+{
+	spdk_mempool_put(_g_nvme_driver.request_mempool, req);
 }
 
 static void

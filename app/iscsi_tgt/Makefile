@@ -33,6 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = iscsi_tgt
@@ -45,32 +46,17 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 C_SRCS := iscsi_tgt.c
 
-SPDK_LIBS = \
-	$(SPDK_ROOT_DIR)/lib/json/libspdk_json.a \
-	$(SPDK_ROOT_DIR)/lib/jsonrpc/libspdk_jsonrpc.a \
-	$(SPDK_ROOT_DIR)/lib/rpc/libspdk_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/bdev/rpc/libspdk_bdev_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/bdev/libspdk_bdev.a \
-	$(SPDK_ROOT_DIR)/lib/iscsi/libspdk_iscsi.a \
-	$(SPDK_ROOT_DIR)/lib/scsi/libspdk_scsi.a \
-	$(SPDK_ROOT_DIR)/lib/net/libspdk_net.a \
-	$(SPDK_ROOT_DIR)/lib/copy/libspdk_copy.a \
-	$(SPDK_ROOT_DIR)/lib/trace/libspdk_trace.a \
-	$(SPDK_ROOT_DIR)/lib/conf/libspdk_conf.a \
-	$(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	$(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	$(SPDK_ROOT_DIR)/lib/log/rpc/libspdk_log_rpc.a \
-	$(SPDK_ROOT_DIR)/lib/event/libspdk_event.a \
-	$(SPDK_ROOT_DIR)/lib/event/rpc/libspdk_app_rpc.a \
+SPDK_LIB_LIST = jsonrpc json rpc bdev_rpc bdev iscsi scsi net copy trace conf
+SPDK_LIB_LIST += util log log_rpc event app_rpc
 
-LIBS += -Wl,--whole-archive $(SPDK_LIBS) -Wl,--no-whole-archive
-LIBS += -lcrypto $(ENV_LINKER_ARGS)
+LIBS += $(ENV_LINKER_ARGS)
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) -lcrypto
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

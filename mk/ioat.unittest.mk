@@ -34,18 +34,21 @@
 IOAT_DIR := $(SPDK_ROOT_DIR)/lib/ioat
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-LIBS += -lcunit $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a
+SPDK_LIB_LIST = log
+
+LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
 
 APP = $(TEST_FILE:.c=)
 
 all: $(APP)
 
-$(APP) : $(OBJS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
 	$(LINK_C)
 
 clean:

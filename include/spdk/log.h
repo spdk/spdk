@@ -57,56 +57,21 @@ extern unsigned int spdk_g_notice_stderr_flag;
 #define SPDK_ERRLOG(...) \
 	spdk_errlog(__FILE__, __LINE__, __func__, __VA_ARGS__)
 
-
-#ifdef DEBUG
-#define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag) \
-bool flag = false; \
-__attribute__((constructor)) static void register_trace_flag_##flag(void) \
-{ \
-	spdk_log_register_trace_flag(str, &flag); \
-}
-
-#define SPDK_TRACELOG(FLAG, ...)							\
-	do {										\
-		extern bool FLAG;							\
-		if (FLAG) {								\
-			spdk_tracelog(__FILE__, __LINE__, __func__, __VA_ARGS__);	\
-		}									\
-	} while (0)
-
-#define SPDK_TRACEDUMP(FLAG, LABEL, BUF, LEN)						\
-	do {										\
-		extern bool FLAG;							\
-		if ((FLAG) && (LEN)) {								\
-			spdk_trace_dump((LABEL), (BUF), (LEN));				\
-		}									\
-	} while (0)
-
-#else
-#define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag)
-#define SPDK_TRACELOG(...) do { } while (0)
-#define SPDK_TRACEDUMP(...) do { } while (0)
-#endif
-
 int spdk_set_log_facility(const char *facility);
 int spdk_set_log_priority(const char *priority);
 void spdk_noticelog(const char *file, const int line, const char *func,
 		    const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
 void spdk_warnlog(const char *file, const int line, const char *func,
 		  const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
-void spdk_tracelog(const char *file, const int line,
-		   const char *func, const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
+void spdk_tracelog(const char *flag, const char *file, const int line,
+		   const char *func, const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 void spdk_errlog(const char *file, const int line, const char *func,
 		 const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
 void spdk_trace_dump(const char *label, const uint8_t *buf, size_t len);
 
-void spdk_log_register_trace_flag(const char *name, bool *enabled);
 bool spdk_log_get_trace_flag(const char *flag);
 int spdk_log_set_trace_flag(const char *flag);
 int spdk_log_clear_trace_flag(const char *flag);
-
-size_t spdk_log_get_num_trace_flags(void);
-const char *spdk_log_get_trace_flag_name(size_t idx);
 
 void spdk_open_log(void);
 void spdk_close_log(void);

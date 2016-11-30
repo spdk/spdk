@@ -38,6 +38,7 @@
 
 #include "spdk_cunit.h"
 
+#include "task.c"
 #include "lun.c"
 #include "lun_db.c"
 
@@ -55,6 +56,12 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 {
 }
 
+static void
+spdk_lun_ut_free_task(struct spdk_scsi_task *task)
+{
+	free(task);
+}
+
 static struct spdk_scsi_task *
 spdk_get_task(uint32_t *owner_task_ctr)
 {
@@ -65,43 +72,41 @@ spdk_get_task(uint32_t *owner_task_ctr)
 		return NULL;
 	}
 
-	task->id = g_task_count;
-	task->iovs = &task->iov;
-	task->iovcnt = 1;
-
-	g_task_count++;
+	spdk_scsi_task_construct(task, &g_task_count, NULL);
+	task->free_fn = spdk_lun_ut_free_task;
 
 	return task;
 }
 
-void
-spdk_scsi_task_put(struct spdk_scsi_task *task)
+void *
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	g_task_count--;
-	if (task->alloc_len) {
-		free(task->iov.iov_base);
-	}
-	free(task);
-}
-
-void
-spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
-			  int asc, int ascq)
-{
-	task->status = sc;
+	void *buf = malloc(size);
+	if (phys_addr)
+		*phys_addr = (uint64_t)buf;
+	return buf;
 }
 
 void *
-spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	if (alloc_len < 4096)
-		alloc_len = 4096;
+	void *buf = calloc(size, 1);
+	if (phys_addr)
+		*phys_addr = (uint64_t)buf;
+	return buf;
+}
 
-	task->iovs = &task->iov;
-	task->iov.iov_base = malloc(alloc_len);
-	task->iov.iov_len = alloc_len;
-	task->alloc_len = alloc_len;
-	return task->iov.iov_base;
+void
+spdk_free(void *buf)
+{
+	free(buf);
+}
+
+int
+spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
+{
+	CU_ASSERT(0);
+	return -1;
 }
 
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,

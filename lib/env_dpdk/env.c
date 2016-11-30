@@ -76,7 +76,7 @@ spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 void
 spdk_free(void *buf)
 {
-	return rte_free(buf);
+	rte_free(buf);
 }
 
 void *
@@ -85,6 +85,7 @@ spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags
 	const struct rte_memzone *mz = rte_memzone_reserve(name, len, socket_id, flags);
 
 	if (mz != NULL) {
+		memset(mz->addr, 0, len);
 		return mz->addr;
 	} else {
 		return NULL;
@@ -193,7 +194,7 @@ uint64_t spdk_get_ticks_hz(void)
 
 void spdk_delay_us(unsigned int us)
 {
-	return rte_delay_us(us);
+	rte_delay_us(us);
 }
 
 void *

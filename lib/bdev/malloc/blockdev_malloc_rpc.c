@@ -32,8 +32,9 @@
  */
 
 #include "blockdev_malloc.h"
-#include "spdk/log.h"
 #include "spdk/rpc.h"
+
+#include "spdk_internal/log.h"
 
 struct rpc_construct_malloc {
 	uint32_t num_blocks;

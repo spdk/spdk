@@ -31,9 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/log.h"
-
 #include "spdk/rpc.h"
+
+#include "spdk_internal/log.h"
 
 struct rpc_trace_flag {
 	char *flag;
@@ -129,7 +129,7 @@ spdk_rpc_get_trace_flags(struct spdk_jsonrpc_server_conn *conn,
 			 const struct spdk_json_val *id)
 {
 	struct spdk_json_write_ctx *w;
-	size_t i, count;
+	struct spdk_trace_flag *flag;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -141,14 +141,13 @@ spdk_rpc_get_trace_flags(struct spdk_jsonrpc_server_conn *conn,
 		return;
 	}
 
-	count = spdk_log_get_num_trace_flags();
+	flag = spdk_log_get_first_trace_flag();
 	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_object_begin(w);
-	for (i = 0; i < count; i++) {
-		const char *name = spdk_log_get_trace_flag_name(i);
-
-		spdk_json_write_name(w, name);
-		spdk_json_write_bool(w, spdk_log_get_trace_flag(name));
+	while (flag) {
+		spdk_json_write_name(w, flag->name);
+		spdk_json_write_bool(w, flag->enabled);
+		flag = spdk_log_get_next_trace_flag(flag);
 	}
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(conn, w);

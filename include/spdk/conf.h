@@ -41,29 +41,10 @@
 
 #include <stdbool.h>
 
-struct spdk_conf_value {
-	struct spdk_conf_value *next;
-	char *value;
-};
-
-struct spdk_conf_item {
-	struct spdk_conf_item *next;
-	char *key;
-	struct spdk_conf_value *val;
-};
-
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
-struct spdk_conf {
-	char *file;
-	struct spdk_conf_section *current_section;
-	struct spdk_conf_section *section;
-};
+struct spdk_conf_value;
+struct spdk_conf_item;
+struct spdk_conf_section;
+struct spdk_conf;
 
 struct spdk_conf *spdk_conf_allocate(void);
 void spdk_conf_free(struct spdk_conf *cp);
@@ -75,6 +56,8 @@ struct spdk_conf_section *spdk_conf_first_section(struct spdk_conf *cp);
 struct spdk_conf_section *spdk_conf_next_section(struct spdk_conf_section *sp);
 
 bool spdk_conf_section_match_prefix(const struct spdk_conf_section *sp, const char *name_prefix);
+const char *spdk_conf_section_get_name(const struct spdk_conf_section *sp);
+int spdk_conf_section_get_num(const struct spdk_conf_section *sp);
 char *spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key,
 				  int idx1, int idx2);
 char *spdk_conf_section_get_nval(struct spdk_conf_section *sp, const char *key, int idx);
