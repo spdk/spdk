@@ -86,6 +86,11 @@ struct spdk_nvme_ctrlr_opts {
 	 * are sent.
 	 */
 	uint32_t keep_alive_timeout_ms;
+	/**
+	 * Holds nvme timeout value. It is initialized to the value
+	 * of NVME_IO_TIMEOUT.
+	 */
+	uint32_t nvme_io_timeout;
 };
 
 /**
@@ -258,20 +263,31 @@ void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 		void *aer_cb_arg);
 
 /**
- * Application may use to register for timeouts
- *
- */
-typedef void (*spdk_nvme_timeout_cb)(void *);
-
-void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
-		spdk_nvme_timeout_cb cb_fn,
-		void *cb_arg);
-/**
  * \brief Opaque handle to a queue pair.
  *
  * I/O queue pairs may be allocated using spdk_nvme_ctrlr_alloc_io_qpair().
  */
 struct spdk_nvme_qpair;
+
+/**
+ * Signature for the callback function invoked when a timeout is
+ * detected on a request.
+ */
+typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
+				     struct spdk_nvme_qpair *qpair);
+
+/**
+ * \brief Register for timeout callback on a controller.
+ *
+ * The application can choose to register for timeout callback or not register
+ * for timeout callback.
+ *
+ * \param ctrlr NVMe controller on which to monitor for timeout.
+ * \param cb_fn A function pointer that points to the callback function
+ * \param cb_arg Argument to the callback function.
+ */
+void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_timeout_cb cb_fn, uint32_t timeout);
 
 /**
  * \brief Allocate an I/O queue pair (submission and completion queue).

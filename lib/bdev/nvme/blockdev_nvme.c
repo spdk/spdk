@@ -33,7 +33,7 @@
  */
 
 #include "blockdev_nvme.h"
-
+#include "../lib/nvme/nvme_internal.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -108,7 +108,8 @@ static int nvme_luns_per_ns = 1;
 static int nvme_controller_index = 0;
 static int LunSizeInMB = 0;
 static int num_controllers = -1;
-static int resetcontrollerontimeout = 0;
+static int g_reset_controller_on_timeout = 0;
+static int g_timeout = 0;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
@@ -120,8 +121,6 @@ static int nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qp
 			  struct nvme_blockio *bio,
 			  int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
 			  uint64_t offset);
-void
-blockdev_nvme_timeout_cb(void *arg_cb);
 
 static int
 nvme_get_ctx_size(void)
@@ -383,6 +382,19 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 }
 
 static void
+blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	int rc;
+
+	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
+
+	rc = spdk_nvme_ctrlr_reset(ctrlr);
+	if (rc) {
+		SPDK_ERRLOG("resetting controller failed\n");
+	}
+}
+
+static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -408,8 +420,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 		ctx->controllers_remaining--;
 	}
 
-	if (resetcontrollerontimeout) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, blockdev_nvme_timeout_cb, ctrlr);
+	if (g_reset_controller_on_timeout) {
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, blockdev_nvme_timeout_cb, g_timeout);
 	}
 }
 
@@ -523,8 +535,12 @@ nvme_library_init(void)
 	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
 	if (val != NULL) {
 		if (!strcmp(val, "Yes")) {
-			resetcontrollerontimeout = 1;
+			g_reset_controller_on_timeout = 1;
 		}
+	}
+
+	if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
+		g_timeout = 0;
 	}
 
 	return spdk_bdev_nvme_create(&probe_ctx);
@@ -774,23 +790,6 @@ blockdev_nvme_get_spdk_running_config(FILE *fp)
 	}
 	if (LunSizeInMB != 0) {
 		fprintf(fp, "  LunSizeInMB %d\n", LunSizeInMB);
-	}
-}
-
-void
-blockdev_nvme_timeout_cb(void *arg)
-{
-	int rc;
-	struct spdk_nvme_ctrlr *ctrlr = arg;
-
-	SPDK_WARNLOG("Warning: Detected a timeout.\n");
-
-	if (resetcontrollerontimeout) {
-
-		rc = spdk_nvme_ctrlr_reset(ctrlr);
-		if (rc) {
-			SPDK_ERRLOG("resetting controller failed\n");
-		}
 	}
 }
 

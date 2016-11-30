@@ -175,7 +175,6 @@ struct nvme_request {
 	 * bucket
 	 */
 	uint64_t t0;
-	short timeout_count;
 
 	/**
 	 * The active admin request can be moved to a per process pending
@@ -415,7 +414,6 @@ struct spdk_nvme_ctrlr {
 	 * A function pointer to timeout callback function
 	 */
 	spdk_nvme_timeout_cb            timeout_cb_fn;
-	void                            *timeout_cb_arg;
 };
 
 struct nvme_driver {

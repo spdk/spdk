@@ -1522,8 +1522,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	tr->req = req;
 	req->cmd.cid = tr->cid;
 
-	req->timeout_count = 0;
-	req->t0 = rte_get_timer_cycles() + (rte_get_timer_hz() * NVME_IO_TIMEOUT);
+	req->t0 = spdk_get_ticks() + (spdk_get_ticks_hz() * qpair->ctrlr->opts.nvme_io_timeout);
 
 	if (req->payload_size == 0) {
 		/* Null payload - leave PRP fields zeroed */
@@ -1614,8 +1613,12 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
-
-		nvme_pcie_qpair_check_timeout(qpair);
+		if (qpair->ctrlr->timeout_cb_fn) {
+			/*
+			 * User registered for timeout callback
+			 */
+			nvme_pcie_qpair_check_timeout(qpair);
+		}
 	}
 
 	return num_completions;
@@ -1651,27 +1654,15 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 		}
 
 		req = tr->req;
-		t02 = rte_get_timer_cycles();
+		t02 = spdk_get_ticks();
 		if (req->t0 <= t02) {
 
-			if (!req->timeout_count) {
-				/*
-				 * Request has timed out. This could be i/o or admin request.
-				 * Call the registered timeout function for user to take action.
-				 */
-				req->t0 = rte_get_timer_cycles() + (rte_get_timer_hz() * NVME_IO_TIMEOUT);
-				req->timeout_count++;
+			/*
+			 * Request has timed out. This could be i/o or admin request.
+			 * Call the registered timeout function for user to take action.
+			 */
 
-				if ((qpair->ctrlr != NULL) && (qpair->ctrlr->timeout_cb_fn != NULL)) {
-					qpair->ctrlr->timeout_cb_fn(qpair->ctrlr->timeout_cb_arg);
-				}
-
-			} else {
-				/*
-				 * For current implementation, we reset the first time a timeout
-				 * occurs, so we should never get here.
-				 */
-			}
+			qpair->ctrlr->timeout_cb_fn(qpair->ctrlr, qpair);
 		}
 	}
 }

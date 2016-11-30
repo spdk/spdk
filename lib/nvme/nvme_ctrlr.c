@@ -78,6 +78,7 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	opts->use_cmb_sqs = false;
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	opts->keep_alive_timeout_ms = 10 * 1000;
+	opts->nvme_io_timeout = NVME_IO_TIMEOUT;
 }
 
 struct spdk_nvme_qpair *
@@ -1065,7 +1066,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr->active_procs);
 	ctrlr->timeout_cb_fn = NULL;
-	ctrlr->timeout_cb_arg = NULL;
 
 	return 0;
 }
@@ -1203,12 +1203,12 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 
 void
 spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
-		spdk_nvme_timeout_cb cb_fn,
-		void *cb_arg)
+		spdk_nvme_timeout_cb cb_fn, uint32_t nvme_timeout)
 {
-
 	ctrlr->timeout_cb_fn = cb_fn;
-	ctrlr->timeout_cb_arg = cb_arg;
+	if (nvme_timeout) {
+		ctrlr->opts.nvme_io_timeout = nvme_timeout;
+	}
 }
 
 bool
