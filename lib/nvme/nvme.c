@@ -43,19 +43,6 @@ int32_t			spdk_nvme_retry_count;
 
 static int		hotplug_fd = -1;
 
-struct spdk_nvme_ctrlr *
-nvme_attach(enum spdk_nvme_transport_type trtype,
-	    const struct spdk_nvme_ctrlr_opts *opts,
-	    const struct spdk_nvme_probe_info *probe_info,
-	    void *devhandle)
-{
-	struct spdk_nvme_ctrlr	*ctrlr;
-
-	ctrlr = nvme_transport_ctrlr_construct(trtype, opts, probe_info, devhandle);
-
-	return ctrlr;
-}
-
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -324,9 +311,9 @@ nvme_probe_one(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
 	if (probe_cb(cb_ctx, probe_info, &opts)) {
-		ctrlr = nvme_attach(trtype, &opts, probe_info, devhandle);
+		ctrlr = nvme_transport_ctrlr_construct(trtype, &opts, probe_info, devhandle);
 		if (ctrlr == NULL) {
-			SPDK_ERRLOG("nvme_attach() failed\n");
+			SPDK_ERRLOG("Failed to construct NVMe controller\n");
 			return -1;
 		}
 

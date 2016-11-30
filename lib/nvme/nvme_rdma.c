@@ -1068,7 +1068,7 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", trid->trsvcid);
 
 	memset(buffer, 0x0, 4096);
-	discovery_ctrlr = nvme_attach(trtype, &discovery_opts, &probe_info, NULL);
+	discovery_ctrlr = nvme_rdma_ctrlr_construct(trtype, &discovery_opts, &probe_info, devhandle);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
