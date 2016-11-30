@@ -87,9 +87,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	running_config
 fi
 
-if [ -f "./local-job0-0-verify.state" ]; then
-	mv ./local-job0-0-verify.state $output_dir
-fi
+rm -f ./local-job0-0-verify.state
 
 trap - SIGINT SIGTERM EXIT
 
