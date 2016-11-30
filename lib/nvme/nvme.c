@@ -44,14 +44,14 @@ int32_t			spdk_nvme_retry_count;
 static int		hotplug_fd = -1;
 
 struct spdk_nvme_ctrlr *
-nvme_attach(enum spdk_nvme_transport transport,
+nvme_attach(enum spdk_nvme_transport_type trtype,
 	    const struct spdk_nvme_ctrlr_opts *opts,
 	    const struct spdk_nvme_probe_info *probe_info,
 	    void *devhandle)
 {
 	struct spdk_nvme_ctrlr	*ctrlr;
 
-	ctrlr = nvme_transport_ctrlr_construct(transport, opts, probe_info, devhandle);
+	ctrlr = nvme_transport_ctrlr_construct(trtype, opts, probe_info, devhandle);
 
 	return ctrlr;
 }
@@ -314,7 +314,7 @@ nvme_driver_init(void)
 }
 
 int
-nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+nvme_probe_one(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
 	       struct spdk_nvme_probe_info *probe_info, void *devhandle)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -323,7 +323,7 @@ nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
 	if (probe_cb(cb_ctx, probe_info, &opts)) {
-		ctrlr = nvme_attach(transport, &opts, probe_info, devhandle);
+		ctrlr = nvme_attach(trtype, &opts, probe_info, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("nvme_attach() failed\n");
 			return -1;
@@ -414,7 +414,7 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		 spdk_nvme_remove_cb remove_cb)
 {
 	int rc;
-	enum spdk_nvme_transport transport;
+	enum spdk_nvme_transport_type trtype;
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	rc = nvme_driver_init();
@@ -432,7 +432,7 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 	}
 
 	if (!info) {
-		transport = SPDK_NVME_TRANSPORT_PCIE;
+		trtype = SPDK_NVME_TRANSPORT_PCIE;
 	} else {
 		if (!spdk_nvme_transport_available(info->trtype)) {
 			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", info->trtype);
@@ -440,10 +440,10 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 			return -1;
 		}
 
-		transport = (uint8_t)info->trtype;
+		trtype = (uint8_t)info->trtype;
 	}
 
-	nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info, NULL);
+	nvme_transport_ctrlr_scan(trtype, probe_cb, cb_ctx, (void *)info, NULL);
 
 	if (!spdk_process_is_primary()) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {

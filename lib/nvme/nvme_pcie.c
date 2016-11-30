@@ -229,14 +229,14 @@ nvme_pcie_ctrlr_setup_signal(void)
 static inline struct nvme_pcie_ctrlr *
 nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
-	assert(ctrlr->transport == SPDK_NVME_TRANSPORT_PCIE);
+	assert(ctrlr->trtype == SPDK_NVME_TRANSPORT_PCIE);
 	return (struct nvme_pcie_ctrlr *)((uintptr_t)ctrlr - offsetof(struct nvme_pcie_ctrlr, ctrlr));
 }
 
 static inline struct nvme_pcie_qpair *
 nvme_pcie_qpair(struct spdk_nvme_qpair *qpair)
 {
-	assert(qpair->transport == SPDK_NVME_TRANSPORT_PCIE);
+	assert(qpair->trtype == SPDK_NVME_TRANSPORT_PCIE);
 	return (struct nvme_pcie_qpair *)((uintptr_t)qpair - offsetof(struct nvme_pcie_qpair, qpair));
 }
 
@@ -552,8 +552,9 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 int
-nvme_pcie_ctrlr_scan(enum spdk_nvme_transport transport,
-		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
+nvme_pcie_ctrlr_scan(enum spdk_nvme_transport_type trtype,
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+		     void *devhandle, void *pci_address)
 {
 	struct nvme_pcie_enum_ctx enum_ctx;
 
@@ -567,7 +568,7 @@ nvme_pcie_ctrlr_scan(enum spdk_nvme_transport transport,
 	}
 }
 
-struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport transport,
+struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type trtype,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
@@ -586,7 +587,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport trans
 
 	pctrlr->is_remapped = false;
 	pctrlr->ctrlr.is_removed = false;
-	pctrlr->ctrlr.transport = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr->ctrlr.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
 	pctrlr->ctrlr.probe_info = *probe_info;
