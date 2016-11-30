@@ -68,17 +68,14 @@ nvme_transport_unknown(enum spdk_nvme_transport_type trtype)
 	} while (0)
 
 bool
-spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
+spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 {
 	switch (trtype) {
-	case SPDK_NVMF_TRTYPE_RDMA:
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return true;
+
+	case SPDK_NVME_TRANSPORT_RDMA:
 		return TRANSPORT_RDMA_AVAILABLE;
-
-	case SPDK_NVMF_TRTYPE_FC:
-		return false;
-
-	case SPDK_NVMF_TRTYPE_INTRA_HOST:
-		return false;
 	}
 
 	return false;

@@ -56,7 +56,7 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 }
 
 bool
-spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
+spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 {
 	return true;
 }

@@ -1048,7 +1048,7 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 		     spdk_nvme_probe_cb probe_cb, void *cb_ctx,
 		     void *devhandle, void *pci_address)
 {
-	struct spdk_nvme_discover_info *discover_info = devhandle;
+	struct spdk_nvme_transport_id *trid = devhandle;
 	struct spdk_nvme_probe_info probe_info;
 	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
@@ -1063,9 +1063,9 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 	discovery_opts.keep_alive_timeout_ms = 0;
 
 	probe_info.trtype = (uint8_t)trtype;
-	snprintf(probe_info.subnqn, sizeof(probe_info.subnqn), "%s", discover_info->subnqn);
-	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", discover_info->traddr);
-	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", discover_info->trsvcid);
+	snprintf(probe_info.subnqn, sizeof(probe_info.subnqn), "%s", trid->subnqn);
+	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", trid->traddr);
+	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", trid->trsvcid);
 
 	memset(buffer, 0x0, 4096);
 	discovery_ctrlr = nvme_attach(trtype, &discovery_opts, &probe_info, NULL);

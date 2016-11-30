@@ -110,32 +110,56 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
- * NVMe over Fabrics discovery parameters.
+ * NVMe library transports
  *
- * This structure must be provided when connecting to remote NVMe controllers via NVMe over Fabrics.
+ * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
+ * which is a special case since NVMe over Fabrics does not define a TRTYPE for local PCIe.
+ *
+ * Currently, this uses 256 for PCIe which is intentionally outside of the 8-bit range of TRTYPE.
+ * If the NVMe-oF specification ever defines a PCIe TRTYPE, this should be updated.
  */
-struct spdk_nvme_discover_info {
+enum spdk_nvme_transport_type {
+	/**
+	 * PCIe Transport (locally attached devices)
+	 */
+	SPDK_NVME_TRANSPORT_PCIE = 256,
+
+	/**
+	 * RDMA Transport (RoCE, iWARP, etc.)
+	 */
+	SPDK_NVME_TRANSPORT_RDMA = SPDK_NVMF_TRTYPE_RDMA,
+};
+
+/**
+ * NVMe transport identifier.
+ *
+ * This identifies a unique endpoint on an NVMe fabric.
+ */
+struct spdk_nvme_transport_id {
 	/**
 	 * NVMe over Fabrics transport type.
 	 */
-	enum spdk_nvmf_trtype trtype;
+	enum spdk_nvme_transport_type trtype;
 
 	/**
-	 * Subsystem NQN of the NVMe over Fabrics discovery service.
-	 */
-	const char *subnqn;
-
-	/**
-	 * Transport address of the NVMe over Fabrics discovery service. For transports which use IP
-	 * addressing (e.g. RDMA), this should be an IP-based address.
+	 * Transport address of the NVMe-oF endpoint. For transports which use IP
+	 * addressing (e.g. RDMA), this should be an IP address. For PCIe, this
+	 * can either be NULL (the whole bus) or a PCI address in the format
+	 * DDDD:BB:DD.FF
 	 */
 	const char *traddr;
 
 	/**
-	 * Specifiy the transport service identifier.  For transports which use IP addressing
-	 * (e.g. RDMA), this field shoud be the port number.
+	 * Transport service id of the NVMe-oF endpoint.  For transports which use
+	 * IP addressing (e.g. RDMA), this field shoud be the port number. For PCIe,
+	 * this is always NULL.
 	 */
 	const char *trsvcid;
+
+	/**
+	 * Subsystem NQN of the NVMe over Fabrics endpoint. May be NULL.
+	 */
+	const char *subnqn;
 };
 
 /**
@@ -190,7 +214,7 @@ struct spdk_nvme_probe_info {
  *
  * \return true if trtype is supported or false if it is not supported.
  */
-bool spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype);
+bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
 
 /**
  * Callback for spdk_nvme_probe() enumeration.
@@ -229,10 +253,10 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_i
 typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * \brief discover the remote Controller via NVMe over fabrics protocol
+ * \brief Perform a device discovery using the discovery service specified by trid.
  *
+ * \param trid The address of the discovery service on which to perform the discovery.
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
- * \param info which specifies the info used to discover the NVMe over fabrics target.
  * \param probe_cb will be called once per NVMe device found in the system.
  * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
  * controller has been attached to the userspace driver.
@@ -241,8 +265,9 @@ typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
  * desired.
  *
  */
-int spdk_nvme_discover(const struct spdk_nvme_discover_info *info,
-		       void *cb_ctx, spdk_nvme_probe_cb  probe_cb,
+int spdk_nvme_discover(const struct spdk_nvme_transport_id *trid,
+		       void *cb_ctx,
+		       spdk_nvme_probe_cb  probe_cb,
 		       spdk_nvme_attach_cb attach_cb,
 		       spdk_nvme_remove_cb remove_cb);
 

@@ -222,20 +222,6 @@ struct nvme_request {
 	void				*user_buffer;
 };
 
-/*
- * NVMe library transports
- *
- * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
- * which is a special case since NVMe over Fabrics does not define a TRTYPE for local PCIe.
- *
- * Currently, this uses 0 for PCIe since it is reserved by NVMe-oF.  If 0 is ever assigned as a
- * valid TRTYPE, this would need to be changed.
- */
-enum spdk_nvme_transport_type {
-	SPDK_NVME_TRANSPORT_PCIE = 0,
-	SPDK_NVME_TRANSPORT_RDMA = SPDK_NVMF_TRTYPE_RDMA,
-};
-
 struct nvme_completion_poll_status {
 	struct spdk_nvme_cpl	cpl;
 	bool			done;

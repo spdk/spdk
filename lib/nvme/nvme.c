@@ -410,7 +410,7 @@ nvme_attach_one(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 }
 
 static int
-_spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
+_spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		 spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		 spdk_nvme_remove_cb remove_cb)
 {
@@ -432,19 +432,19 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		}
 	}
 
-	if (!info) {
+	if (!trid) {
 		trtype = SPDK_NVME_TRANSPORT_PCIE;
 	} else {
-		if (!spdk_nvme_transport_available(info->trtype)) {
-			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", info->trtype);
+		if (!spdk_nvme_transport_available(trid->trtype)) {
+			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", trid->trtype);
 			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 			return -1;
 		}
 
-		trtype = (uint8_t)info->trtype;
+		trtype = (uint8_t)trid->trtype;
 	}
 
-	nvme_transport_ctrlr_scan(trtype, probe_cb, cb_ctx, (void *)info, NULL);
+	nvme_transport_ctrlr_scan(trtype, probe_cb, cb_ctx, (void *)trid, NULL);
 
 	if (!spdk_process_is_primary()) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -474,16 +474,17 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 	return rc;
 }
 
-int spdk_nvme_discover(const struct spdk_nvme_discover_info *info, void *cb_ctx,
+int spdk_nvme_discover(const struct spdk_nvme_transport_id *trid,
+		       void *cb_ctx,
 		       spdk_nvme_probe_cb probe_cb,
 		       spdk_nvme_attach_cb attach_cb,
 		       spdk_nvme_remove_cb remove_cb)
 {
-	if (!info || !info->traddr || !info->trsvcid || !info->subnqn) {
+	if (!trid || !trid->traddr || !trid->trsvcid || !trid->subnqn) {
 		return -1;
 	}
 
-	return _spdk_nvme_probe(info, cb_ctx, probe_cb, attach_cb, remove_cb);
+	return _spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 }
 
 static int

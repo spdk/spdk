@@ -69,7 +69,7 @@ static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
 
-static struct spdk_nvme_discover_info info;
+static struct spdk_nvme_transport_id trid;
 
 static void
 hex_dump(const void *data, size_t size)
@@ -874,7 +874,7 @@ parse_args(int argc, char **argv)
 {
 	int op, rc;
 
-	info.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+	trid.subnqn = SPDK_NVMF_DISCOVERY_NQN;
 
 	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
 		switch (op) {
@@ -896,13 +896,13 @@ parse_args(int argc, char **argv)
 #endif
 			break;
 		case 'a':
-			info.traddr = optarg;
+			trid.traddr = optarg;
 			break;
 		case 's':
-			info.trsvcid = optarg;
+			trid.trsvcid = optarg;
 			break;
 		case 'n':
-			info.subnqn = optarg;
+			trid.subnqn = optarg;
 			break;
 		case 'H':
 		default:
@@ -911,21 +911,21 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	if (!info.traddr || !info.trsvcid || !info.subnqn) {
+	if (!trid.traddr || !trid.trsvcid || !trid.subnqn) {
 		return 0;
 	}
 
-	if ((strlen(info.traddr) > 255)) {
+	if ((strlen(trid.traddr) > 255)) {
 		printf("The string len of traddr should <= 255\n");
 		return 0;
 	}
 
-	if (strlen(info.subnqn) >= SPDK_NVMF_NQN_MAX_LEN) {
+	if (strlen(trid.subnqn) >= SPDK_NVMF_NQN_MAX_LEN) {
 		printf("NQN must be less than %d bytes long\n", SPDK_NVMF_NQN_MAX_LEN);
 		return 0;
 	}
 
-	info.trtype = SPDK_NVMF_TRTYPE_RDMA;
+	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	optind = 1;
 
 	return 0;
@@ -972,8 +972,8 @@ int main(int argc, char **argv)
 	}
 
 	rc = 0;
-	if (info.trtype == SPDK_NVMF_TRTYPE_RDMA) {
-		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		if (spdk_nvme_discover(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 		}
 	}

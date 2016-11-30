@@ -1009,7 +1009,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 static int
 register_controllers(void)
 {
-	struct spdk_nvme_discover_info info;
+	struct spdk_nvme_transport_id trid;
 	char *p, *p1;
 	int n;
 
@@ -1021,7 +1021,7 @@ register_controllers(void)
 
 	/* The format of g_nvmf_discover_info should be: TRTYPE:TRADDR:TRVCSID */
 	if (g_nvmf_discover_info) {
-		info.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+		trid.subnqn = SPDK_NVMF_DISCOVERY_NQN;
 
 		p = (char *)g_nvmf_discover_info;
 		p1 = strchr(p, ':');
@@ -1041,7 +1041,7 @@ register_controllers(void)
 			fprintf(stderr, "wrong transport type \n");
 			return 0;
 		}
-		info.trtype = SPDK_NVMF_TRTYPE_RDMA;
+		trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 
 		p = (char *)p1 + 1;
 		p1 = strchr(p, ':');
@@ -1056,11 +1056,11 @@ register_controllers(void)
 			return 0;
 		}
 		p[n] = '\0';
-		info.traddr = p;
+		trid.traddr = p;
 
 		p = (char *)p1 + 1;
-		info.trsvcid = p;
-		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
+		trid.trsvcid = p;
+		if (spdk_nvme_discover(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_discover() failed\n");
 		}
 	}
