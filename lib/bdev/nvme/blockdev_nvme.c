@@ -390,6 +390,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 		return false;
 	}
 
+	if (ctx->controllers_remaining > 0) {
+		ctx->controllers_remaining--;
+	}
+
 	/* Claim the device in case conflict with other process */
 	if (spdk_pci_device_claim(&probe_info->pci_addr) != 0) {
 		return false;
@@ -402,7 +406,6 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct nvme_probe_ctx *ctx = cb_ctx;
 	struct nvme_device *dev;
 
 	dev = malloc(sizeof(struct nvme_device));
@@ -419,10 +422,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	spdk_io_device_register(ctrlr, blockdev_nvme_create_cb, blockdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_devices, dev, tailq);
-
-	if (ctx->controllers_remaining > 0) {
-		ctx->controllers_remaining--;
-	}
 }
 
 static bool
