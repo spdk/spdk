@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import os
 import re
 import sys
 
 comment = re.compile('^\s*#')
 assign = re.compile('^\s*([a-zA-Z_]+)\s*(\?)?=\s*([^#]*)')
 
-args = {}
+args = os.environ.copy()
 for arg in sys.argv:
     m = assign.match(arg)
     if m:
