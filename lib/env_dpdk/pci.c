@@ -182,6 +182,7 @@ static struct spdk_pci_enum_ctx g_nvme_pci_drv = {
 #else
 		.devinit	= spdk_pci_device_init,
 		.devuninit	= spdk_pci_device_fini,
+		.name		= "spdk_nvme",
 #endif
 	},
 
@@ -206,7 +207,11 @@ static struct rte_driver g_nvme_drv = {
 	.init = spdk_nvme_drv_register,
 };
 
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 0)
 PMD_REGISTER_DRIVER(g_nvme_drv, spdk_nvme);
+#else
+PMD_REGISTER_DRIVER(g_nvme_drv);
+#endif
 #endif
 
 static struct spdk_pci_enum_ctx g_ioat_pci_drv = {
@@ -219,6 +224,7 @@ static struct spdk_pci_enum_ctx g_ioat_pci_drv = {
 #else
 		.devinit	= spdk_pci_device_init,
 		.devuninit	= spdk_pci_device_fini,
+		.name		= "spdk_ioat",
 #endif
 	},
 
@@ -243,7 +249,11 @@ static struct rte_driver g_ioat_drv = {
 	.init = spdk_ioat_drv_register,
 };
 
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 0)
 PMD_REGISTER_DRIVER(g_ioat_drv, spdk_ioat);
+#else
+PMD_REGISTER_DRIVER(g_ioat_drv);
+#endif
 #endif
 
 static struct spdk_pci_enum_ctx *
