@@ -137,29 +137,29 @@ enum spdk_nvme_transport_type {
  */
 struct spdk_nvme_transport_id {
 	/**
-	 * NVMe over Fabrics transport type.
+	 * NVMe transport type.
 	 */
 	enum spdk_nvme_transport_type trtype;
 
 	/**
 	 * Transport address of the NVMe-oF endpoint. For transports which use IP
 	 * addressing (e.g. RDMA), this should be an IP address. For PCIe, this
-	 * can either be NULL (the whole bus) or a PCI address in the format
-	 * DDDD:BB:DD.FF
+	 * can either be a zero length string (the whole bus) or a PCI address
+	 * in the format DDDD:BB:DD.FF
 	 */
-	const char *traddr;
+	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 
 	/**
 	 * Transport service id of the NVMe-oF endpoint.  For transports which use
 	 * IP addressing (e.g. RDMA), this field shoud be the port number. For PCIe,
-	 * this is always NULL.
+	 * this is always a zero length string.
 	 */
-	const char *trsvcid;
+	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 
 	/**
-	 * Subsystem NQN of the NVMe over Fabrics endpoint. May be NULL.
+	 * Subsystem NQN of the NVMe over Fabrics endpoint. May be a zero length string.
 	 */
-	const char *subnqn;
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 };
 
 /**
@@ -180,31 +180,8 @@ struct spdk_nvme_probe_info {
 	 */
 	struct spdk_pci_id pci_id;
 
-	/**
-	 * Subsystem NQN.
-	 *
-	 * If this is not an NVMe over Fabrics controller, this field will be a zero-length string.
-	 */
-	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-
-	/**
-	 * NVMe over Fabrics transport type.
-	 *
-	 * This field will be 0 if this is not an NVMe over Fabrics controller.
-	 */
-	enum spdk_nvmf_trtype trtype;
-
-	/**
-	 * Transport address of the NVMe over Fabrics target. For transports which use IP
-	 * addressing (e.g. RDMA), this will be an IP-based address.
-	 */
-	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
-
-	/**
-	 * Transport service identifier.  For transports which use IP addressing
-	 * (e.g. RDMA), this field will be the port number.
-	 */
-	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
+	/* The transport identifier */
+	struct spdk_nvme_transport_id	trid;
 };
 
 /**

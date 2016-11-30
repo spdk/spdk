@@ -428,7 +428,7 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 			return -1;
 		}
 
-		trtype = (uint8_t)trid->trtype;
+		trtype = trid->trtype;
 	}
 
 	nvme_transport_ctrlr_scan(trtype, probe_cb, cb_ctx, (void *)trid, NULL);
@@ -521,7 +521,11 @@ spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 		spdk_nvme_remove_cb remove_cb)
 {
 	if (hotplug_fd < 0) {
-		return _spdk_nvme_probe(NULL, cb_ctx, probe_cb, attach_cb, remove_cb);
+		struct spdk_nvme_transport_id trid = {};
+
+		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
+		return _spdk_nvme_probe(&trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 	} else {
 		return nvme_hotplug_monitor(cb_ctx, probe_cb, attach_cb, remove_cb);
 	}

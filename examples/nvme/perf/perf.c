@@ -976,9 +976,10 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (probe_info->subnqn[0]) {
+	if (probe_info->trid.subnqn[0]) {
 		printf("Attaching to NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+		       probe_info->trid.traddr, probe_info->trid.trsvcid,
+		       probe_info->trid.subnqn);
 	} else {
 		printf("Attaching to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
 		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
@@ -993,9 +994,10 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (probe_info->subnqn[0]) {
+	if (probe_info->trid.subnqn[0]) {
 		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+		       probe_info->trid.traddr, probe_info->trid.trsvcid,
+		       probe_info->trid.subnqn);
 	} else {
 		printf("Attached to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
 		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
@@ -1021,7 +1023,7 @@ register_controllers(void)
 
 	/* The format of g_nvmf_discover_info should be: TRTYPE:TRADDR:TRVCSID */
 	if (g_nvmf_discover_info) {
-		trid.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
 		p = (char *)g_nvmf_discover_info;
 		p1 = strchr(p, ':');
@@ -1056,10 +1058,10 @@ register_controllers(void)
 			return 0;
 		}
 		p[n] = '\0';
-		trid.traddr = p;
+		snprintf(trid.traddr, sizeof(trid.traddr), "%s", p);
 
 		p = (char *)p1 + 1;
-		trid.trsvcid = p;
+		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", p);
 		if (spdk_nvme_discover(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_discover() failed\n");
 		}

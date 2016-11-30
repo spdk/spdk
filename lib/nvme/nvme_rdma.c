@@ -633,8 +633,8 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	ctrlr = rqpair->qpair.ctrlr;
 	memset(&sin, 0, sizeof(struct sockaddr_storage));
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "trsvcid is %s\n", ctrlr->probe_info.trsvcid);
-	rc = nvme_rdma_parse_addr(&sin, ctrlr->probe_info.traddr, ctrlr->probe_info.trsvcid);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "trsvcid is %s\n", ctrlr->probe_info.trid.trsvcid);
+	rc = nvme_rdma_parse_addr(&sin, ctrlr->probe_info.trid.traddr, ctrlr->probe_info.trid.trsvcid);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_rdma_parse_addr() failed\n");
 		return -1;
@@ -769,7 +769,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
 		strlen((char *)NVME_HOST_ID_DEFAULT));
 	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
-	strncpy((char *)nvmf_data->subnqn, ctrlr->probe_info.subnqn, sizeof(nvmf_data->subnqn));
+	strncpy((char *)nvmf_data->subnqn, ctrlr->probe_info.trid.subnqn, sizeof(nvmf_data->subnqn));
 
 	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
@@ -1062,10 +1062,10 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
 
-	probe_info.trtype = (uint8_t)trtype;
-	snprintf(probe_info.subnqn, sizeof(probe_info.subnqn), "%s", trid->subnqn);
-	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", trid->traddr);
-	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", trid->trsvcid);
+	probe_info.trid.trtype = (uint8_t)trtype;
+	snprintf(probe_info.trid.subnqn, sizeof(probe_info.trid.subnqn), "%s", trid->subnqn);
+	snprintf(probe_info.trid.traddr, sizeof(probe_info.trid.traddr), "%s", trid->traddr);
+	snprintf(probe_info.trid.trsvcid, sizeof(probe_info.trid.trsvcid), "%s", trid->trsvcid);
 
 	memset(buffer, 0x0, 4096);
 	discovery_ctrlr = nvme_rdma_ctrlr_construct(trtype, &discovery_opts, &probe_info, devhandle);
@@ -1107,10 +1107,10 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 			continue;
 		}
 
-		probe_info.trtype = entry->trtype;
-		if (!spdk_nvme_transport_available(probe_info.trtype)) {
+		probe_info.trid.trtype = entry->trtype;
+		if (!spdk_nvme_transport_available(probe_info.trid.trtype)) {
 			SPDK_WARNLOG("NVMe transport type %u not available; skipping probe\n",
-				     probe_info.trtype);
+				     probe_info.trid.trtype);
 			continue;
 		}
 
@@ -1121,19 +1121,20 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 			continue;
 		}
 		len = end - entry->subnqn;
-		memcpy(probe_info.subnqn, entry->subnqn, len);
-		probe_info.subnqn[len] = '\0';
+		memcpy(probe_info.trid.subnqn, entry->subnqn, len);
+		probe_info.trid.subnqn[len] = '\0';
 
 		/* Convert traddr to a null terminated string. */
 		len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
-		memcpy(probe_info.traddr, entry->traddr, len);
+		memcpy(probe_info.trid.traddr, entry->traddr, len);
 
 		/* Convert trsvcid to a null terminated string. */
 		len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
-		memcpy(probe_info.trsvcid, entry->trsvcid, len);
+		memcpy(probe_info.trid.trsvcid, entry->trsvcid, len);
 
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
-			      probe_info.subnqn, probe_info.trtype, probe_info.traddr, probe_info.trsvcid);
+			      probe_info.trid.subnqn, probe_info.trid.trtype,
+			      probe_info.trid.traddr, probe_info.trid.trsvcid);
 		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
 		nvme_probe_one(entry->trtype, probe_cb, cb_ctx, &probe_info, NULL);
 	}

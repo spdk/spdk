@@ -406,9 +406,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	if (probe_info->subnqn[0]) {
+	if (probe_info->trid.subnqn[0]) {
 		printf("NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+		       probe_info->trid.traddr, probe_info->trid.trsvcid, probe_info->trid.subnqn);
 	} else {
 		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
 		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
@@ -874,7 +874,8 @@ parse_args(int argc, char **argv)
 {
 	int op, rc;
 
-	trid.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
 	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
 		switch (op) {
@@ -896,13 +897,14 @@ parse_args(int argc, char **argv)
 #endif
 			break;
 		case 'a':
-			trid.traddr = optarg;
+			trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+			snprintf(trid.traddr, sizeof(trid.traddr), "%s", optarg);
 			break;
 		case 's':
-			trid.trsvcid = optarg;
+			snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", optarg);
 			break;
 		case 'n':
-			trid.subnqn = optarg;
+			snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", optarg);
 			break;
 		case 'H':
 		default:
@@ -925,7 +927,6 @@ parse_args(int argc, char **argv)
 		return 0;
 	}
 
-	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	optind = 1;
 
 	return 0;
