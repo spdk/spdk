@@ -5,6 +5,8 @@ export RUN_NIGHTLY=0
 
 MAKECONFIG='CONFIG_DEBUG=y CONFIG_WERROR=y'
 
+export UBSAN_OPTIONS=halt_on_error=1
+
 case `uname` in
 	FreeBSD)
 		DPDK_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
@@ -16,6 +18,7 @@ case `uname` in
 		MAKE=make
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		MAKECONFIG="$MAKECONFIG CONFIG_COVERAGE=y"
+		MAKECONFIG="$MAKECONFIG CONFIG_UBSAN=y"
 		;;
 	*)
 		echo "Unknown OS in $0"
