@@ -95,7 +95,7 @@ endif
 
 include $(CONFIG_ENV)/env.mk
 
-ifeq ($(CONFIG_ADDRESS_SANITIZER),y)
+ifeq ($(CONFIG_ASAN),y)
 COMMON_CFLAGS += -fsanitize=address
 LDFLAGS += -fsanitize=address
 endif
