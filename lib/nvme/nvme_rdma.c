@@ -544,7 +544,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 
 	ret = rdma_connect(rqpair->cm_id, &conn_param);
 	if (ret) {
-		SPDK_ERRLOG("nvme rdma connect eror");
+		SPDK_ERRLOG("nvme rdma connect error\n");
 		return ret;
 	}
 	ret = rdma_get_cm_event(rqpair->cm_channel, &event);
@@ -626,7 +626,8 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 
 	rc = nvmf_cm_construct(rqpair);
 	if (rc < 0) {
-		return nvme_rdma_qpair_destroy(&rqpair->qpair);
+		SPDK_ERRLOG("nvmf_cm_construct() failed\n");
+		return -1;
 	}
 
 	ctrlr = rqpair->qpair.ctrlr;
@@ -635,28 +636,32 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "trsvcid is %s\n", ctrlr->probe_info.trsvcid);
 	rc = nvme_rdma_parse_addr(&sin, ctrlr->probe_info.traddr, ctrlr->probe_info.trsvcid);
 	if (rc != 0) {
-		goto err;
+		SPDK_ERRLOG("nvme_rdma_parse_addr() failed\n");
+		return -1;
 	}
 
 	rc = rdma_create_id(rqpair->cm_channel, &rqpair->cm_id, rqpair, RDMA_PS_TCP);
 	if (rc < 0) {
-		goto err;
+		SPDK_ERRLOG("rdma_create_id() failed\n");
+		return -1;
 	}
 
 	rc = nvme_rdma_bind_addr(rqpair, &sin, rqpair->cm_channel);
 	if (rc < 0) {
-		goto err;
+		SPDK_ERRLOG("nvme_rdma_bind_addr() failed\n");
+		return -1;
 	}
 
 	rc = nvme_rdma_qpair_init(rqpair);
 	if (rc < 0) {
-		goto err;
+		SPDK_ERRLOG("nvme_rdma_qpair_init() failed\n");
+		return -1;
 	}
 	rc = nvme_rdma_alloc_reqs(rqpair);
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rc =%d\n", rc);
 	if (rc) {
 		SPDK_ERRLOG("Unable to allocate rqpair  RDMA requests\n");
-		goto err;
+		return -1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA requests allocated\n");
 
@@ -664,19 +669,17 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rc =%d\n", rc);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to allocate rqpair RDMA responses\n");
-		goto err;
+		return -1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA responses allocated\n");
 
 	rc = nvme_rdma_connect(rqpair);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to conduct the rqpair\n");
-		goto err;
+	if (rc != 0) {
+		SPDK_ERRLOG("Unable to connect the rqpair\n");
+		return -1;
 	}
 
 	return 0;
-err:
-	return nvme_rdma_qpair_destroy(&rqpair->qpair);
 }
 
 static struct spdk_nvme_rdma_req *
