@@ -987,6 +987,7 @@ int main(int argc, char **argv)
 
 	detect_hotplug();
 
+	rc = 0;
 	worker = g_workers;
 	while (worker != NULL) {
 		if (rte_eal_wait_lcore(worker->lcore) < 0) {
