@@ -121,6 +121,7 @@ run_test test/nvmf/nvme_cli/nvme_cli.sh
 timing_enter host
 
 run_test test/nvmf/host/identify.sh
+run_test test/nvmf/host/perf.sh
 
 timing_exit host
 
