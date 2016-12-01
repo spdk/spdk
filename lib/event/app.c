@@ -118,10 +118,9 @@ spdk_app_config_dump_global_section(FILE *fp)
 	if (NULL == fp)
 		return;
 
-	/* FIXME - lookup log facility and put it in place of "local7" below */
 	fprintf(fp, GLOBAL_CONFIG_TMPL,
 		spdk_app_get_core_mask(), spdk_trace_get_tpoint_group_mask(),
-		"local7");
+		spdk_get_log_facility());
 }
 
 int
@@ -171,7 +170,7 @@ spdk_app_get_running_config(char **config_str, char *name)
 }
 
 static const char *
-spdk_get_log_facility(struct spdk_conf *config)
+spdk_app_get_log_facility(struct spdk_conf *config)
 {
 	struct spdk_conf_section *sp;
 	const char *logfacility;
@@ -282,7 +281,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 
 	/* open log files */
 	if (opts->log_facility == NULL) {
-		opts->log_facility = spdk_get_log_facility(g_spdk_app.config);
+		opts->log_facility = spdk_app_get_log_facility(g_spdk_app.config);
 		if (opts->log_facility == NULL) {
 			fprintf(stderr, "NULL logfacility\n");
 			spdk_conf_free(g_spdk_app.config);
