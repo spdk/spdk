@@ -233,52 +233,6 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	return 0;
 }
 
-static void
-nvme_rdma_pre_copy_mem(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
-{
-	struct spdk_nvme_cmd *cmd;
-	struct spdk_nvme_sgl_descriptor *nvme_sgl;
-	void *address;
-
-	assert(rdma_req->bb_mr != NULL);
-	assert(rdma_req->bb != NULL);
-
-	nvme_sgl = &rdma_req->req->cmd.dptr.sgl1;
-	address = (void *)nvme_sgl->address;
-
-	if (address != NULL) {
-		if (rdma_req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ||
-		    rdma_req->xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
-			memcpy(rdma_req->bb, address, nvme_sgl->keyed.length);
-		}
-
-		cmd = &rqpair->cmds[rdma_req->id];
-
-		nvme_sgl = &cmd->dptr.sgl1;
-		nvme_sgl->address = (uint64_t)rdma_req->bb;
-		nvme_sgl->keyed.key = rdma_req->bb_rkey;
-	}
-}
-
-static void
-nvme_rdma_post_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
-{
-	struct spdk_nvme_sgl_descriptor *nvme_sgl;
-	void *address;
-
-	assert(rdma_req != NULL);
-	assert(rdma_req->req != NULL);
-
-	nvme_sgl = &rdma_req->req->cmd.dptr.sgl1;
-	address = (void *)nvme_sgl->address;
-
-	if ((address != NULL) &&
-	    (rdma_req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST ||
-	     rdma_req->xfer == SPDK_NVME_DATA_BIDIRECTIONAL)) {
-		memcpy(address, rdma_req->bb, nvme_sgl->keyed.length);
-	}
-}
-
 #define nvme_rdma_trace_ibv_sge(sg_list) \
 	if (sg_list) { \
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "local addr %p length 0x%x lkey 0x%x\n", \
@@ -478,6 +432,72 @@ fail:
 }
 
 static int
+nvme_rdma_copy_mem(struct spdk_nvme_rdma_req *rdma_req, bool copy_from_user)
+{
+	int rc;
+	uint32_t remaining_transfer_len, len, offset = 0;
+	void *addr, *src, *dst;
+	struct spdk_nvme_sgl_descriptor *nvme_sgl;
+	struct nvme_request *req = rdma_req->req;
+
+	if (!req->payload_size) {
+		return 0;
+	}
+
+	nvme_sgl = &req->cmd.dptr.sgl1;
+	if (req->payload.type == NVME_PAYLOAD_TYPE_CONTIG) {
+		addr = (void *)((uint64_t)req->payload.u.contig + req->payload_offset);
+		if (!addr) {
+			return -1;
+		}
+
+		len = req->payload_size;
+		if (copy_from_user) {
+			src = addr;
+			dst = (void *)nvme_sgl->address;
+		} else {
+			src = (void *)nvme_sgl->address;
+			dst = addr;
+		}
+		memcpy(dst, src, len);
+
+	} else {
+		if (!req->payload.u.sgl.reset_sgl_fn ||
+		    !req->payload.u.sgl.next_sge_fn) {
+			return -1;
+		}
+
+		req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
+		remaining_transfer_len = req->payload_size;
+
+		while (remaining_transfer_len > 0) {
+			rc = req->payload.u.sgl.next_sge_fn(req->payload.u.sgl.cb_arg,
+							    &addr, &len);
+			if (rc || !addr) {
+				SPDK_ERRLOG("Invalid address returned from user next_sge_fn callback\n");
+				return -1;
+			}
+
+			len = nvme_min(remaining_transfer_len, len);
+			remaining_transfer_len -= len;
+
+			if (copy_from_user) {
+				src = addr;
+				dst = (void *)nvme_sgl->address + offset;
+			} else {
+				src = (void *)nvme_sgl->address + offset;
+				dst = addr;
+			}
+			memcpy(dst, src, len);
+
+			offset += len;
+		}
+	}
+
+	return 0;
+}
+
+static int
 nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 {
 	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
@@ -489,11 +509,18 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 	rsp = &rqpair->rsps[rsp_idx];
 	rdma_req = &rqpair->rdma_reqs[rsp->cid];
 
-	nvme_rdma_post_copy_mem(rdma_req);
+	if (rdma_req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		if (nvme_rdma_copy_mem(rdma_req, false) < 0) {
+			SPDK_ERRLOG("Failed to copy to user memory\n");
+			goto done;
+		}
+	}
+
 	req = rdma_req->req;
 	nvme_rdma_req_complete(req, rsp);
-	nvme_rdma_req_put(rqpair, rdma_req);
 
+done:
+	nvme_rdma_req_put(rqpair, rdma_req);
 	if (nvme_rdma_post_recv(rqpair, rsp_idx)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
@@ -786,37 +813,66 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	return 0;
 }
 
+/**
+ * Build SGL list describing scattered payload buffer.
+ */
+static int
+nvme_rdma_build_sgl_request(struct spdk_nvme_rdma_req *rdma_req)
+{
+	struct spdk_nvme_sgl_descriptor *nvme_sgl;
+	struct nvme_request *req = rdma_req->req;
+
+	if (req->payload_size > rdma_req->bb_mr->length) {
+		return -1;
+	}
+
+	if ((req->payload.type != NVME_PAYLOAD_TYPE_CONTIG) &&
+	    (req->payload.type != NVME_PAYLOAD_TYPE_SGL)) {
+		return -1;
+	}
+
+	/* setup the RDMA SGL details */
+	nvme_sgl = &req->cmd.dptr.sgl1;
+	nvme_sgl->keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+	nvme_sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+	nvme_sgl->keyed.length = req->payload_size;
+	nvme_sgl->keyed.key = rdma_req->bb_rkey;
+	nvme_sgl->address = (uint64_t)rdma_req->bb;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+
+	if (rdma_req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		if (nvme_rdma_copy_mem(rdma_req, true) < 0) {
+			SPDK_ERRLOG("Failed to copy from user memory\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 static int
 nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 		   struct spdk_nvme_rdma_req *rdma_req)
 {
-	struct spdk_nvme_sgl_descriptor *nvme_sgl;
-
-	assert(rqpair != NULL);
-	assert(req != NULL);
 
 	rdma_req->req = req;
 	req->cmd.cid = rdma_req->id;
-
-	/* setup the RDMA SGL details */
-	nvme_sgl = &req->cmd.dptr.sgl1;
-	if (req->payload.type == NVME_PAYLOAD_TYPE_CONTIG) {
-		nvme_sgl->address = (uint64_t)req->payload.u.contig + req->payload_offset;
-		nvme_sgl->keyed.length = req->payload_size;
-	} else {
-		/* Need to handle other case later */
-		return -1;
-	}
-
-	rdma_req->req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
-	nvme_sgl->keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
-	nvme_sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
 
 	if (req->cmd.opc == SPDK_NVME_OPC_FABRIC) {
 		struct spdk_nvmf_capsule_cmd *nvmf_cmd = (struct spdk_nvmf_capsule_cmd *)&req->cmd;
 		rdma_req->xfer = spdk_nvme_opc_get_data_transfer(nvmf_cmd->fctype);
 	} else {
 		rdma_req->xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
+	}
+
+	/* We do not support bi-directional transfer yet */
+	if (rdma_req->xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
+		SPDK_ERRLOG("Do not support bi-directional data transfer\n");
+		return -1;
+	}
+
+	if (nvme_rdma_build_sgl_request(rdma_req) < 0) {
+		return -1;
 	}
 
 	memcpy(&rqpair->cmds[rdma_req->id], &req->cmd, sizeof(req->cmd));
@@ -1227,6 +1283,8 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	int rc;
 
 	rqpair = nvme_rdma_qpair(qpair);
+	assert(rqpair != NULL);
+	assert(req != NULL);
 
 	rdma_req = nvme_rdma_req_get(rqpair);
 	if (!rdma_req) {
@@ -1242,8 +1300,6 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		nvme_rdma_req_put(rqpair, rdma_req);
 		return -1;
 	}
-
-	nvme_rdma_pre_copy_mem(rqpair, rdma_req);
 
 	wr = &rdma_req->send_wr;
 	wr->wr_id = (uint64_t)rdma_req;
