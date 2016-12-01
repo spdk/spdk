@@ -489,7 +489,6 @@ static int
 nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		     spdk_nvme_remove_cb remove_cb)
 {
-	int rc = 0;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_uevent event;
 
@@ -521,14 +520,6 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach
 				/* get the user app to clean up and stop I/O */
 				if (remove_cb) {
 					remove_cb(cb_ctx, ctrlr);
-				}
-				if (spdk_process_is_primary()) {
-					rc = spdk_nvme_detach(ctrlr);
-					if (rc) {
-						SPDK_ERRLOG("Failed to hot detach nvme address: %04x:%04x:%04x.%u\n",
-							    event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev,
-							    event.pci_addr.func);
-					}
 				}
 			}
 		}
