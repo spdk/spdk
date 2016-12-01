@@ -770,6 +770,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	while (entry) {
 		if (entry->ctrlr == ctrlr) {
 			entry->is_removed = true;
+			printf("Controller removed: %s\n", entry->name);
 			break;
 		}
 		entry = entry->next;
