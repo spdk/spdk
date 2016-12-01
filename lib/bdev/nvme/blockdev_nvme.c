@@ -33,7 +33,6 @@
  */
 
 #include "blockdev_nvme.h"
-#include "../lib/nvme/nvme_internal.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
