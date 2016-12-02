@@ -65,11 +65,15 @@ function timing() {
 }
 
 function timing_enter() {
+	set +x
 	timing "enter" "$1"
+	set -x
 }
 
 function timing_exit() {
+	set +x
 	timing "exit" "$1"
+	set -x
 }
 
 function timing_finish() {
@@ -177,11 +181,15 @@ function rbd_cleanup() {
 }
 
 function run_test() {
+	set +x
 	echo "************************************"
 	echo "START TEST $1"
 	echo "************************************"
+	set -x
 	time $1
+	set +x
 	echo "************************************"
 	echo "END TEST $1"
 	echo "************************************"
+	set -x
 }
