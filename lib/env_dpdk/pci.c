@@ -47,10 +47,7 @@
 #include <rte_eal.h>
 #include <rte_pci.h>
 #include <rte_version.h>
-
-#if RTE_VERSION < RTE_VERSION_NUM(16, 11, 0, 0)
 #include <rte_dev.h>
-#endif
 
 #define spdk_pci_device rte_pci_device
 
@@ -271,6 +268,9 @@ spdk_pci_find_driver(enum spdk_pci_device_type type)
 void
 spdk_pci_device_detach(struct spdk_pci_device *device)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+	rte_eal_device_remove(&device->device);
+#endif
 	rte_eal_pci_detach(&device->addr);
 }
 
