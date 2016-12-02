@@ -429,3 +429,19 @@ spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
 
 	return 0;
 }
+
+int
+spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
+{
+	int rc;
+
+	rc = snprintf(bdf, sz, PCI_PRI_FMT,
+		      addr->domain, addr->bus,
+		      addr->dev, addr->func);
+
+	if (rc > 0 && (size_t)rc < sz) {
+		return 0;
+	}
+
+	return -1;
+}

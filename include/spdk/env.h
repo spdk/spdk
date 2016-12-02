@@ -238,6 +238,19 @@ int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_
 int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
 
 /**
+ * Convert a struct spdk_pci_addr to a string.
+ *
+ * \param bdf String into which a string will be output in the format
+ *            domain:bus:device.function. The string must be at least
+ *            14 characters in size.
+ * \param sz Size of bdf. Must be at least 14.
+ * \param addr PCI address input
+ *
+ * \return 0 on success, or a negated errno value on failure.
+ */
+int spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr);
+
+/**
  * Call a function with CPU affinity unset.
  *
  * This can be used to run a function that creates other threads without inheriting the calling
