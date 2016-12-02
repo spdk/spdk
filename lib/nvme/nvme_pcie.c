@@ -632,6 +632,8 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type 
 		return NULL;
 	}
 
+	pctrlr->ctrlr.quirks = nvme_get_quirks(&probe_info->pci_id);
+
 	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr);
 	if (rc != 0) {
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);

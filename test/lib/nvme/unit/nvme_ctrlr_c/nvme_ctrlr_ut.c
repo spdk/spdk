@@ -51,11 +51,6 @@ struct nvme_driver _g_nvme_driver = {
 	.request_mempool = NULL,
 };
 
-static uint16_t g_pci_vendor_id;
-static uint16_t g_pci_device_id;
-static uint16_t g_pci_subvendor_id;
-static uint16_t g_pci_subdevice_id;
-
 uint64_t g_ut_tsc = 0;
 struct spdk_nvme_registers g_ut_nvme_regs = {};
 
@@ -88,11 +83,6 @@ nvme_transport_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_i
 	if (ctrlr == NULL || pci_id == NULL) {
 		return -EINVAL;
 	}
-
-	pci_id->vendor_id = g_pci_vendor_id;
-	pci_id->device_id = g_pci_device_id;
-	pci_id->subvendor_id = g_pci_subvendor_id;
-	pci_id->subdevice_id = g_pci_subdevice_id;
 
 	return 0;
 }
@@ -1181,21 +1171,19 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	bool	res;
 	struct spdk_nvme_ctrlr				ctrlr = {};
 	struct spdk_nvme_intel_log_page_directory	payload = {};
-	struct spdk_pci_id				pci_id;
+	struct spdk_pci_id 				pci_id = {};
 
-	/* set a invalid vendor id */
-	g_pci_vendor_id = 0xFFFF;
-	nvme_transport_ctrlr_get_pci_id(&ctrlr, &pci_id);
+	/* Get quirks for a device with all 0 vendor/device id */
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
+	CU_ASSERT(ctrlr.quirks == 0);
 
 	nvme_ctrlr_construct_intel_support_log_page_list(&ctrlr, &payload);
 	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE);
 	CU_ASSERT(res == false);
 
-	/* set valid vendor id and log page directory*/
-	g_pci_vendor_id = SPDK_PCI_VID_INTEL;
+	/* Set the vendor to Intel, but provide no device id */
+	ctrlr.cdata.vid = pci_id.vendor_id = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 1;
-	nvme_transport_ctrlr_get_pci_id(&ctrlr, &pci_id);
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 
@@ -1212,11 +1200,10 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	/* set valid vendor id, device id and sub device id*/
 	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 0;
-	g_pci_vendor_id = SPDK_PCI_VID_INTEL;
-	g_pci_device_id = 0x0953;
-	g_pci_subvendor_id = SPDK_PCI_VID_INTEL;
-	g_pci_subdevice_id = 0x3702;
-	nvme_transport_ctrlr_get_pci_id(&ctrlr, &pci_id);
+	pci_id.vendor_id = SPDK_PCI_VID_INTEL;
+	pci_id.device_id = 0x0953;
+	pci_id.subvendor_id = SPDK_PCI_VID_INTEL;
+	pci_id.subdevice_id = 0x3702;
 	ctrlr.quirks = nvme_get_quirks(&pci_id);
 	memset(ctrlr.log_page_supported, 0, sizeof(ctrlr.log_page_supported));
 

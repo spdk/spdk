@@ -225,17 +225,11 @@ static void
 nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_intel_log_page_directory *log_page_directory)
 {
-	struct spdk_pci_id pci_id;
-
 	if (log_page_directory == NULL) {
 		return;
 	}
 
-	if (nvme_transport_ctrlr_get_pci_id(ctrlr, &pci_id)) {
-		return;
-	}
-
-	if (pci_id.vendor_id != SPDK_PCI_VID_INTEL) {
+	if (ctrlr->cdata.vid != SPDK_PCI_VID_INTEL) {
 		return;
 	}
 
@@ -1286,7 +1280,6 @@ nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_pci_id pci_id;
 	int rc;
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
@@ -1303,10 +1296,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	rc = nvme_robust_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 	if (rc != 0) {
 		return rc;
-	}
-
-	if (nvme_transport_ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
-		ctrlr->quirks = nvme_get_quirks(&pci_id);
 	}
 
 	TAILQ_INIT(&ctrlr->active_procs);

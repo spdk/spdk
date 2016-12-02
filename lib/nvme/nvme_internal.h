@@ -78,6 +78,12 @@
  */
 #define NVME_QUIRK_DELAY_BEFORE_CHK_RDY	0x4
 
+/*
+ * The controller performs best when I/O is split on particular
+ * LBA boundaries.
+ */
+#define NVME_INTEL_QUIRK_STRIPING 0x8
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
@@ -418,8 +424,6 @@ struct nvme_driver {
 extern struct nvme_driver *g_spdk_nvme_driver;
 
 #define nvme_min(a,b) (((a)<(b))?(a):(b))
-
-#define INTEL_DC_P3X00_DEVID	0x0953
 
 #define nvme_delay		usleep
 
