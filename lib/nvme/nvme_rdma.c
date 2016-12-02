@@ -1018,14 +1018,19 @@ nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 static int
 nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
-				    char *log_page)
+				    char *log_page, uint32_t size)
 {
 	struct spdk_nvme_cmd cmd = {};
 	struct nvme_completion_poll_status status = {};
 	int rc;
+	uint32_t zero_based_value = ((size / sizeof(uint32_t)) - 1);
+	uint16_t numdl = zero_based_value & 0xFFFF;
+	uint16_t numdu = (zero_based_value >> 16) & 0xFFFF;
 
 	cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd.cdw10 = SPDK_NVME_LOG_DISCOVERY;
+	cmd.cdw10 |= (numdl << 16);
+	cmd.cdw11 = numdu;
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
 					   (void *)log_page, 4096,
 					   nvme_completion_poll_cb, &status);
@@ -1084,7 +1089,7 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 		return -1;
 	}
 
-	rc = nvme_fabrics_get_log_discovery_page(discovery_ctrlr, buffer);
+	rc = nvme_fabrics_get_log_discovery_page(discovery_ctrlr, buffer, sizeof(buffer));
 	if (rc < 0) {
 		SPDK_ERRLOG("nvme_fabrics_get_log_discovery_page error\n");
 		nvme_ctrlr_destruct(discovery_ctrlr);
