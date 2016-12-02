@@ -1064,6 +1064,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		       pci_id.vendor_id, pci_id.device_id);
 	}
 
+	opts->io_queue_size = g_queue_depth + 1;
+
 	return true;
 }
 
