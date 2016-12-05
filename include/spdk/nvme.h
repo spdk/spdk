@@ -104,7 +104,14 @@ struct spdk_nvme_ctrlr_opts {
 	/**
 	 * The queue depth of each NVMe I/O queue.
 	 */
-	int queue_size;
+	uint32_t queue_size;
+
+	/**
+	 * The host NQN to use when connecting to NVMe over Fabrics controllers.
+	 *
+	 * Unused for local PCIe-attached NVMe devices.
+	 */
+	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 };
 
 /**
@@ -121,7 +128,7 @@ struct spdk_nvme_discover_info {
 	/**
 	 * Subsystem NQN of the NVMe over Fabrics discovery service.
 	 */
-	const char *nqn;
+	const char *subnqn;
 
 	/**
 	 * Transport address of the NVMe over Fabrics discovery service. For transports which use IP
@@ -159,7 +166,7 @@ struct spdk_nvme_probe_info {
 	 *
 	 * If this is not an NVMe over Fabrics controller, this field will be a zero-length string.
 	 */
-	char nqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 
 	/**
 	 * NVMe over Fabrics transport type.

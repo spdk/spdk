@@ -64,6 +64,8 @@ spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
 }
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
 	return NULL;
@@ -71,7 +73,7 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport 
 
 int
 nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
 {
 	return 0;
 }
@@ -95,6 +97,23 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+void
+nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
+{
+}
+
+int
+spdk_uevent_connect(void)
+{
+	return 0;
+}
+
+int
+spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
 	return 0;
 }

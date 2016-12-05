@@ -212,6 +212,10 @@ struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
+void spdk_pci_device_detach(struct spdk_pci_device *device);
+int spdk_pci_device_attach(enum spdk_pci_device_type type,
+			   spdk_pci_enum_cb enum_cb,
+			   void *enum_ctx, struct spdk_pci_addr *pci_addres);
 
 int spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset);
 int spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset);

@@ -101,6 +101,9 @@ if [ $(uname -s) = Linux ]; then
 	run_test ./test/iscsi_tgt/reset/reset.sh
 	run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
 	run_test ./test/iscsi_tgt/idle_migration/idle_migration.sh
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
+	fi
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
 	timing_exit iscsi_tgt
@@ -118,6 +121,7 @@ run_test test/nvmf/nvme_cli/nvme_cli.sh
 timing_enter host
 
 run_test test/nvmf/host/identify.sh
+run_test test/nvmf/host/perf.sh
 
 timing_exit host
 

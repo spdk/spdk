@@ -101,6 +101,8 @@
 #define DEFAULT_MAX_IO_QUEUES		(1024)
 #define DEFAULT_MAX_QUEUE_SIZE		(256)
 
+#define DEFAULT_HOSTNQN			"nqn.2016-06.io.spdk:host"
+
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 
@@ -354,6 +356,8 @@ struct spdk_nvme_ctrlr {
 
 	uint32_t			num_ns;
 
+	bool				is_removed;
+
 	bool				is_resetting;
 
 	bool				is_failed;
@@ -431,6 +435,7 @@ struct spdk_nvme_ctrlr {
 
 struct nvme_driver {
 	pthread_mutex_t			lock;
+	int				hotplug_fd;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
 	struct spdk_mempool		*request_mempool;
@@ -514,6 +519,7 @@ int	nvme_probe_one(enum spdk_nvme_transport type, spdk_nvme_probe_cb probe_cb, v
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr);
 
@@ -524,7 +530,6 @@ int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 			     uint16_t num_entries,
 			     struct spdk_nvme_ctrlr *ctrlr,
 			     enum spdk_nvme_qprio qprio);
-void	nvme_qpair_destroy(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
@@ -554,13 +559,17 @@ int	nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
 void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
-struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport transport, void *devhandle);
+struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport transport,
+				     const struct spdk_nvme_ctrlr_opts *opts,
+				     const struct spdk_nvme_probe_info *probe_info,
+				     void *devhandle);
 
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
-	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport transport, void *devhandle); \
+	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport transport, const struct spdk_nvme_ctrlr_opts *opts, \
+		const struct spdk_nvme_probe_info *probe_info, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle); \
+	int nvme_ ## name ## _ctrlr_scan(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \
@@ -572,7 +581,6 @@ struct	spdk_nvme_ctrlr *nvme_attach(enum spdk_nvme_transport transport, void *de
 	int nvme_ ## name ## _ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_construct(struct spdk_nvme_qpair *qpair); \
-	int nvme_ ## name ## _qpair_destroy(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_enable(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_disable(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_reset(struct spdk_nvme_qpair *qpair); \

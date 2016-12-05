@@ -62,6 +62,8 @@ struct spdk_nvme_registers g_ut_nvme_regs = {};
 __thread int    nvme_thread_ioq_index = -1;
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
 	return NULL;
@@ -243,11 +245,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 void
 nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
-{
-}
-
-void
-nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
 }
 
@@ -1172,7 +1169,7 @@ test_nvme_ctrlr_fail(void)
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
 	ctrlr.opts.num_io_queues = 0;
-	nvme_ctrlr_fail(&ctrlr);
+	nvme_ctrlr_fail(&ctrlr, false);
 
 	CU_ASSERT(ctrlr.is_failed == true);
 }

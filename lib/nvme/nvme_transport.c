@@ -85,16 +85,18 @@ spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
 }
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
-	NVME_TRANSPORT_CALL(transport, ctrlr_construct, (transport, devhandle));
+	NVME_TRANSPORT_CALL(transport, ctrlr_construct, (transport, opts, probe_info, devhandle));
 }
 
 int
 nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle)
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
 {
-	NVME_TRANSPORT_CALL(transport, ctrlr_scan, (transport, probe_cb, cb_ctx, devhandle));
+	NVME_TRANSPORT_CALL(transport, ctrlr_scan, (transport, probe_cb, cb_ctx, devhandle, pci_address));
 }
 
 int
@@ -168,12 +170,6 @@ int
 nvme_transport_qpair_construct(struct spdk_nvme_qpair *qpair)
 {
 	NVME_TRANSPORT_CALL(qpair->transport, qpair_construct, (qpair));
-}
-
-int
-nvme_transport_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-	NVME_TRANSPORT_CALL(qpair->transport, qpair_destroy, (qpair));
 }
 
 int
