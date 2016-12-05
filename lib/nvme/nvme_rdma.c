@@ -854,8 +854,8 @@ nvme_rdma_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 	cmd.attrib.size = size;
 
 	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
-					   NULL, sizeof(uint32_t),
-					   nvme_completion_poll_cb, &status);
+					   NULL, 0, nvme_completion_poll_cb,
+					   &status);
 
 	if (rc < 0) {
 		SPDK_ERRLOG("failed to send nvme_rdma_fabric_prop_get_cmd\n");
