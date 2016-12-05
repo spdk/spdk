@@ -218,15 +218,15 @@ nvme_rdma_pre_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 	address = (void *)nvme_sgl->address;
 
 	if (address != NULL) {
-		rdma_req->cmd.dptr.sgl1.address = (uint64_t)rdma_req->bb;
 		if (rdma_req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER ||
 		    rdma_req->xfer == SPDK_NVME_DATA_BIDIRECTIONAL) {
 			memcpy(rdma_req->bb, address, nvme_sgl->keyed.length);
 		}
-	}
 
-	nvme_sgl = &rdma_req->cmd.dptr.sgl1;
-	nvme_sgl->keyed.key = rdma_req->bb_sgl.lkey;
+		nvme_sgl = &rdma_req->cmd.dptr.sgl1;
+		nvme_sgl->address = (uint64_t)rdma_req->bb;
+		nvme_sgl->keyed.key = rdma_req->bb_sgl.lkey;
+	}
 }
 
 static void
