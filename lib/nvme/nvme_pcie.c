@@ -560,10 +560,10 @@ nvme_pcie_ctrlr_scan(enum spdk_nvme_transport transport,
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
 	if (!pci_address) {
-		return spdk_pci_enumerate(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx);
+		return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
 	} else {
-		return spdk_pci_device_attach(SPDK_PCI_DEVICE_NVME, pcie_nvme_enum_cb, &enum_ctx,
-					      (struct spdk_pci_addr *)pci_address);
+		return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx,
+						   (struct spdk_pci_addr *)pci_address);
 	}
 }
 

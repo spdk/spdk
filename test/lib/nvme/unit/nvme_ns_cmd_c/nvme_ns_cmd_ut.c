@@ -55,9 +55,7 @@ int
 spdk_get_uevent(int fd, struct spdk_uevent *uevent);
 
 int
-spdk_pci_enumerate(enum spdk_pci_device_type type,
-		   spdk_pci_enum_cb enum_cb,
-		   void *enum_ctx)
+spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
 	return -1;
 }

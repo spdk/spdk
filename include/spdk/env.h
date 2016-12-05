@@ -167,11 +167,6 @@ void spdk_vtophys_register(void *vaddr, uint64_t len);
  */
 void spdk_vtophys_unregister(void *vaddr, uint64_t len);
 
-enum spdk_pci_device_type {
-	SPDK_PCI_DEVICE_NVME,
-	SPDK_PCI_DEVICE_IOAT,
-};
-
 struct spdk_pci_addr {
 	uint16_t			domain;
 	uint8_t				bus;
@@ -188,9 +183,8 @@ struct spdk_pci_id {
 
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 
-int spdk_pci_enumerate(enum spdk_pci_device_type type,
-		       spdk_pci_enum_cb enum_cb,
-		       void *enum_ctx);
+int spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
+int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 int spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
 			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
@@ -213,9 +207,11 @@ struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 void spdk_pci_device_detach(struct spdk_pci_device *device);
-int spdk_pci_device_attach(enum spdk_pci_device_type type,
-			   spdk_pci_enum_cb enum_cb,
-			   void *enum_ctx, struct spdk_pci_addr *pci_addres);
+
+int spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
+				struct spdk_pci_addr *pci_address);
+int spdk_pci_ioat_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
+				struct spdk_pci_addr *pci_address);
 
 int spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset);
 int spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset);
