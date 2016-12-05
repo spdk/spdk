@@ -1286,6 +1286,7 @@ int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_pci_id pci_id;
+	int rc;
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->flags = 0;
@@ -1298,7 +1299,10 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 
-	nvme_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
+	rc = nvme_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
+	if (rc != 0) {
+		return rc;
+	}
 
 	if (nvme_transport_ctrlr_get_pci_id(ctrlr, &pci_id) == 0) {
 		ctrlr->quirks = nvme_get_quirks(&pci_id);
@@ -1306,7 +1310,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr->active_procs);
 
-	return 0;
+	return rc;
 }
 
 void
