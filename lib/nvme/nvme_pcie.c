@@ -552,20 +552,28 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 int
-nvme_pcie_ctrlr_scan(enum spdk_nvme_transport_type trtype,
-		     spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-		     void *devhandle, void *pci_address)
+nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx)
 {
 	struct nvme_pcie_enum_ctx enum_ctx;
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
-	if (!pci_address) {
-		return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
-	} else {
-		return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx,
-						   (struct spdk_pci_addr *)pci_address);
-	}
+
+	return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
+}
+
+int
+nvme_pcie_ctrlr_attach(enum spdk_nvme_transport_type trtype,
+		       spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+		       struct spdk_pci_addr *pci_addr)
+{
+	struct nvme_pcie_enum_ctx enum_ctx;
+
+	enum_ctx.probe_cb = probe_cb;
+	enum_ctx.cb_ctx = cb_ctx;
+
+	return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx, pci_addr);
 }
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type trtype,

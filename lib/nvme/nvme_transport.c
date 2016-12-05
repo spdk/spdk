@@ -91,11 +91,18 @@ struct spdk_nvme_ctrlr *
 }
 
 int
-nvme_transport_ctrlr_scan(enum spdk_nvme_transport_type trtype,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-			  void *devhandle, void *pci_address)
+nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx)
 {
-	NVME_TRANSPORT_CALL(trtype, ctrlr_scan, (trtype, probe_cb, cb_ctx, devhandle, pci_address));
+	NVME_TRANSPORT_CALL(trid->trtype, ctrlr_scan, (trid, probe_cb, cb_ctx));
+}
+
+int
+nvme_transport_ctrlr_attach(enum spdk_nvme_transport_type trtype,
+			    spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+			    struct spdk_pci_addr *addr)
+{
+	NVME_TRANSPORT_CALL(trtype, ctrlr_attach, (trtype, probe_cb, cb_ctx, addr));
 }
 
 int

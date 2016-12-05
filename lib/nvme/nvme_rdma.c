@@ -1051,11 +1051,9 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
-nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
-		     spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-		     void *devhandle, void *pci_address)
+nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx)
 {
-	struct spdk_nvme_transport_id *trid = devhandle;
 	struct spdk_nvme_probe_info probe_info;
 	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
@@ -1069,13 +1067,14 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
 
-	probe_info.trid.trtype = (uint8_t)trtype;
+	probe_info.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	snprintf(probe_info.trid.subnqn, sizeof(probe_info.trid.subnqn), "%s", trid->subnqn);
 	snprintf(probe_info.trid.traddr, sizeof(probe_info.trid.traddr), "%s", trid->traddr);
 	snprintf(probe_info.trid.trsvcid, sizeof(probe_info.trid.trsvcid), "%s", trid->trsvcid);
 
 	memset(buffer, 0x0, 4096);
-	discovery_ctrlr = nvme_rdma_ctrlr_construct(trtype, &discovery_opts, &probe_info, devhandle);
+	discovery_ctrlr = nvme_rdma_ctrlr_construct(SPDK_NVME_TRANSPORT_RDMA, &discovery_opts, &probe_info,
+			  NULL);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1148,6 +1147,15 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 
 	nvme_ctrlr_destruct(discovery_ctrlr);
 	return 0;
+}
+
+int
+nvme_rdma_ctrlr_attach(enum spdk_nvme_transport_type trtype,
+		       spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+		       struct spdk_pci_addr *addr)
+{
+	/* Not implemented yet */
+	return -1;
 }
 
 struct spdk_nvme_ctrlr *
