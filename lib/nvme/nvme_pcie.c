@@ -1657,7 +1657,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	nvme_pcie_qpair_check_enabled(qpair);
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		pthread_mutex_lock(&ctrlr->ctrlr_lock);
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
 	tr = LIST_FIRST(&pqpair->free_tr);
@@ -1706,7 +1706,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 exit:
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 
 	return rc;
@@ -1733,7 +1733,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
-		pthread_mutex_lock(&ctrlr->ctrlr_lock);
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
 	if (max_completions == 0 || (max_completions > (qpair->num_entries - 1U))) {
@@ -1782,7 +1782,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_pcie_qpair_complete_pending_admin_request(qpair);
 
-		pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 
 	return num_completions;
