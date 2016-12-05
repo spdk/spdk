@@ -206,7 +206,7 @@ nvme_free_request(struct nvme_request *req)
 }
 
 int
-nvme_mutex_init_shared(pthread_mutex_t *mtx)
+nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 {
 	int rc = 0;
 
@@ -219,6 +219,7 @@ nvme_mutex_init_shared(pthread_mutex_t *mtx)
 		return -1;
 	}
 	if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) ||
+	    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST) ||
 	    pthread_mutex_init(mtx, &attr)) {
 		rc = -1;
 	}
@@ -281,7 +282,7 @@ nvme_driver_init(void)
 	 */
 	assert(spdk_process_is_primary());
 
-	ret = nvme_mutex_init_shared(&g_spdk_nvme_driver->lock);
+	ret = nvme_robust_mutex_init_shared(&g_spdk_nvme_driver->lock);
 	if (ret != 0) {
 		SPDK_ERRLOG("failed to initialize mutex\n");
 		spdk_memzone_free(SPDK_NVME_DRIVER_NAME);

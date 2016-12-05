@@ -1240,7 +1240,7 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
-nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
+nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 {
 	pthread_mutexattr_t attr;
 	int rc = 0;
@@ -1250,6 +1250,7 @@ nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 	}
 	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) ||
 #ifndef __FreeBSD__
+	    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST) ||
 	    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) ||
 #endif
 	    pthread_mutex_init(mtx, &attr)) {
@@ -1276,7 +1277,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 
-	rc = nvme_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
+	rc = nvme_robust_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 	if (rc != 0) {
 		return rc;
 	}

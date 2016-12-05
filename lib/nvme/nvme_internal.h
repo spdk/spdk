@@ -465,6 +465,26 @@ nvme_qpair_is_io_queue(struct spdk_nvme_qpair *qpair)
 	return qpair->id != 0;
 }
 
+static inline int
+nvme_robust_mutex_lock(pthread_mutex_t *mtx)
+{
+	int rc = pthread_mutex_lock(mtx);
+
+#ifndef __FreeBSD__
+	if (rc == EOWNERDEAD) {
+		rc = pthread_mutex_consistent(mtx);
+	}
+#endif
+
+	return rc;
+}
+
+static inline int
+nvme_robust_mutex_unlock(pthread_mutex_t *mtx)
+{
+	return pthread_mutex_unlock(mtx);
+}
+
 /* Admin functions */
 int	nvme_ctrlr_cmd_identify_controller(struct spdk_nvme_ctrlr *ctrlr,
 		void *payload,
@@ -540,8 +560,8 @@ uint64_t nvme_get_quirks(const struct spdk_pci_id *id);
 
 void	spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts);
 
-int	nvme_mutex_init_shared(pthread_mutex_t *mtx);
-int	nvme_mutex_init_recursive_shared(pthread_mutex_t *mtx);
+int	nvme_robust_mutex_init_shared(pthread_mutex_t *mtx);
+int	nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
