@@ -530,6 +530,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct spdk_nvme_ctrlr *ctrlr;
 	int rc = 0;
 
+	probe_info.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	probe_info.pci_addr = spdk_pci_device_get_addr(pci_dev);
 	probe_info.pci_id = spdk_pci_device_get_id(pci_dev);
 
@@ -547,8 +548,8 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		}
 	}
 
-	return nvme_probe_one(SPDK_NVME_TRANSPORT_PCIE, enum_ctx->probe_cb, enum_ctx->cb_ctx,
-			      &probe_info, pci_dev);
+	return nvme_ctrlr_probe(&probe_info, pci_dev,
+				enum_ctx->probe_cb, enum_ctx->cb_ctx);
 }
 
 int

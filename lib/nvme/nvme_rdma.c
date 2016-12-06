@@ -1143,8 +1143,8 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
 			      probe_info.trid.subnqn, probe_info.trid.trtype,
 			      probe_info.trid.traddr, probe_info.trid.trsvcid);
-		/* Todo: need to differentiate the NVMe over fabrics to avoid duplicated connection */
-		nvme_probe_one(entry->trtype, probe_cb, cb_ctx, &probe_info, NULL);
+
+		nvme_ctrlr_probe(&probe_info, NULL, probe_cb, cb_ctx);
 	}
 
 	nvme_ctrlr_destruct(discovery_ctrlr);

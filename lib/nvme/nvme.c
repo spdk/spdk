@@ -302,8 +302,8 @@ nvme_driver_init(void)
 }
 
 int
-nvme_probe_one(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-	       struct spdk_nvme_probe_info *probe_info, void *devhandle)
+nvme_ctrlr_probe(struct spdk_nvme_probe_info *probe_info, void *devhandle,
+		 spdk_nvme_probe_cb probe_cb, void *cb_ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
@@ -311,7 +311,7 @@ nvme_probe_one(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
 	if (probe_cb(cb_ctx, probe_info, &opts)) {
-		ctrlr = nvme_transport_ctrlr_construct(trtype, &opts, probe_info, devhandle);
+		ctrlr = nvme_transport_ctrlr_construct(probe_info->trid.trtype, &opts, probe_info, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Failed to construct NVMe controller\n");
 			return -1;
