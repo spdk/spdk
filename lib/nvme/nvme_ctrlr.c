@@ -113,12 +113,27 @@ nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	struct spdk_nvme_qpair          *active_qpair, *tmp_qpair;
 	pid_t				pid = getpid();
+	bool				proc_found = false;
 
 	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
 		if (active_proc->pid == pid) {
-			TAILQ_REMOVE(&active_proc->allocated_io_qpairs, qpair,
-				     per_process_tailq);
+			proc_found = true;
+			break;
+		}
+	}
+
+	if (proc_found == false) {
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(active_qpair, &active_proc->allocated_io_qpairs,
+			   per_process_tailq, tmp_qpair) {
+		if (active_qpair == qpair) {
+			TAILQ_REMOVE(&active_proc->allocated_io_qpairs,
+				     active_qpair, per_process_tailq);
+
 			break;
 		}
 	}
