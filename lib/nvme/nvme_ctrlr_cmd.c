@@ -345,7 +345,16 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+	uint32_t numd, numdl, numdu;
 	int rc;
+
+	if (payload_size == 0) {
+		return -EINVAL;
+	}
+
+	numd = payload_size / sizeof(uint32_t) - 1u;
+	numdl = numd & 0xFFFFu;
+	numdu = (numd >> 16) & 0xFFFFu;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_user_copy(payload, payload_size, cb_fn, cb_arg, false);
@@ -357,8 +366,9 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_GET_LOG_PAGE;
 	cmd->nsid = nsid;
-	cmd->cdw10 = ((payload_size / sizeof(uint32_t)) - 1) << 16;
+	cmd->cdw10 = numdl << 16;
 	cmd->cdw10 |= log_page;
+	cmd->cdw11 = numdu;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
