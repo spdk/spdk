@@ -358,7 +358,7 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 				   nvme_dev->pci_addr.func);
 
 	spdk_json_write_name(w, "vendor_id");
-	spdk_json_write_string_fmt(w, "%#04x", cdata->vid);
+	spdk_json_write_string_fmt(w, "0x%04x", cdata->vid);
 
 	snprintf(buf, sizeof(cdata->mn) + 1, "%s", cdata->mn);
 	spdk_str_trim(buf);
