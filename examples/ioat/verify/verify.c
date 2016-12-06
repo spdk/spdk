@@ -163,20 +163,20 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 static void
 ioat_done(void *cb_arg)
 {
-	uint64_t *value;
+	char *value;
 	int i, failed = 0;
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct thread_entry *thread_entry = ioat_task->thread_entry;
 
 	if (ioat_task->type == IOAT_FILL_TYPE) {
-		value = (uint64_t *)ioat_task->dst;
+		value = ioat_task->dst;
 		for (i = 0; i < ioat_task->len / 8; i++) {
-			if (*value != ioat_task->fill_pattern) {
+			if (memcmp(value, &ioat_task->fill_pattern, 8) != 0) {
 				thread_entry->fill_failed++;
 				failed = 1;
 				break;
 			}
-			value++;
+			value += 8;
 		}
 		if (!failed)
 			thread_entry->fill_completed++;
