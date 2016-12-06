@@ -77,6 +77,10 @@ static uint64_t g_tsc_rate;
 static uint32_t g_io_size_bytes = 4096;
 static int g_queue_depth = 4;
 static int g_time_in_sec;
+static int g_expected_insert_times = -1;
+static int g_expected_removal_times = -1;
+static int g_insert_times;
+static int g_removal_times;
 
 static void
 task_complete(struct perf_task *task);
@@ -126,7 +130,7 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		goto skip;
 	}
-
+	g_insert_times++;
 	TAILQ_INSERT_TAIL(&g_devs, dev, tailq);
 	return;
 
@@ -310,7 +314,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	spdk_nvme_detach(ctrlr);
 }
 
-static int
+static void
 io_loop(void)
 {
 	struct dev_ctx *dev, *dev_tmp;
@@ -355,6 +359,7 @@ io_loop(void)
 		 */
 		TAILQ_FOREACH_SAFE(dev, &g_devs, tailq, dev_tmp) {
 			if (dev->is_removed && dev->current_queue_depth == 0) {
+				g_removal_times++;
 				unregister_dev(dev);
 			}
 		}
@@ -373,14 +378,14 @@ io_loop(void)
 		drain_io(dev);
 		unregister_dev(dev);
 	}
-
-	return 0;
 }
 
 static void usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
+	printf("\t[-i expected hot insert times]\n");
+	printf("\t[-r expected hot removal times]\n");
 	printf("\t[-t time in seconds]\n");
 }
 
@@ -392,8 +397,14 @@ parse_args(int argc, char **argv)
 	/* default value*/
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "t:")) != -1) {
+	while ((op = getopt(argc, argv, "i:r:t:")) != -1) {
 		switch (op) {
+		case 'i':
+			g_expected_insert_times = atoi(optarg);
+			break;
+		case 'r':
+			g_expected_removal_times = atoi(optarg);
+			break;
 		case 't':
 			g_time_in_sec = atoi(optarg);
 			break;
@@ -422,7 +433,8 @@ register_controllers(void)
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
-
+	/* Reset g_insert_times to 0 so that we do not count controllers attached at start as hotplug events. */
+	g_insert_times = 0;
 	return 0;
 }
 
@@ -460,7 +472,12 @@ int main(int argc, char **argv)
 	}
 
 	printf("Initialization complete. Starting I/O...\n");
-	rc = io_loop();
+	io_loop();
 
-	return rc;
+	if ((g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) ||
+	    (g_expected_removal_times != -1 && g_removal_times != g_expected_removal_times)) {
+		return 1;
+	}
+
+	return 0;
 }
