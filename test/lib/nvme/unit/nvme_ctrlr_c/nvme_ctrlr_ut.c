@@ -33,12 +33,16 @@
 
 #include "spdk_cunit.h"
 
+#include "spdk_internal/log.h"
+
 #include <stdbool.h>
 
 #include "lib/nvme/unit/test_env.c"
 
-bool trace_flag = false;
-#define SPDK_TRACE_NVME trace_flag
+struct spdk_trace_flag SPDK_TRACE_NVME = {
+	.name = "nvme",
+	.enabled = false,
+};
 
 #include "nvme/nvme_ctrlr.c"
 
@@ -58,6 +62,8 @@ struct spdk_nvme_registers g_ut_nvme_regs = {};
 __thread int    nvme_thread_ioq_index = -1;
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
 	return NULL;
@@ -243,11 +249,6 @@ nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 }
 
 void
-nvme_qpair_destroy(struct spdk_nvme_qpair *qpair)
-{
-}
-
-void
 nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 }
@@ -386,6 +387,12 @@ struct nvme_request *
 nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
+}
+
+void
+nvme_free_request(struct nvme_request *req)
+{
+	spdk_mempool_put(_g_nvme_driver.request_mempool, req);
 }
 
 static void
@@ -1162,7 +1169,7 @@ test_nvme_ctrlr_fail(void)
 	struct spdk_nvme_ctrlr	ctrlr = {};
 
 	ctrlr.opts.num_io_queues = 0;
-	nvme_ctrlr_fail(&ctrlr);
+	nvme_ctrlr_fail(&ctrlr, false);
 
 	CU_ASSERT(ctrlr.is_failed == true);
 }

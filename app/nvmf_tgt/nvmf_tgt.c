@@ -87,8 +87,8 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 	struct spdk_event *event;
 	int i;
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
-	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME &&
+	    spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
 		for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
 			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
 			subsystem->dev.virt.ch[i] = NULL;
@@ -118,7 +118,7 @@ shutdown_subsystems(void)
 static void
 acceptor_poller_unregistered_event(struct spdk_event *event)
 {
-	nvmf_tgt_fini();
+	spdk_nvmf_tgt_fini();
 	shutdown_subsystems();
 }
 
@@ -216,11 +216,16 @@ nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 }
 
 struct nvmf_tgt_subsystem *
-nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subtype,
+nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 			  enum spdk_nvmf_subsystem_mode mode, uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
+
+	if (spdk_nvmf_subsystem_exists(name)) {
+		SPDK_ERRLOG("Subsystem already exist\n");
+		return NULL;
+	}
 
 	app_subsys = calloc(1, sizeof(*app_subsys));
 	if (app_subsys == NULL) {
@@ -228,7 +233,7 @@ nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subt
 		return NULL;
 	}
 
-	subsystem = spdk_nvmf_create_subsystem(num, name, subtype, mode, app_subsys, connect_cb,
+	subsystem = spdk_nvmf_create_subsystem(name, subtype, mode, app_subsys, connect_cb,
 					       disconnect_cb);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
@@ -239,7 +244,8 @@ nvmf_tgt_create_subsystem(int num, const char *name, enum spdk_nvmf_subtype subt
 	app_subsys->subsystem = subsystem;
 	app_subsys->lcore = lcore;
 
-	SPDK_NOTICELOG("allocated subsystem %s on lcore %u\n", name, lcore);
+	SPDK_NOTICELOG("allocated subsystem %s on lcore %u on socket %u\n", name, lcore,
+		       rte_lcore_to_socket_id(lcore));
 
 	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
 
@@ -327,11 +333,17 @@ spdk_nvmf_startup(spdk_event_t event)
 		goto initialize_error;
 	}
 
+	if (((1ULL << g_spdk_nvmf_tgt_conf.acceptor_lcore) & spdk_app_get_core_mask()) == 0) {
+		SPDK_ERRLOG("Invalid AcceptorCore setting\n");
+		goto initialize_error;
+	}
+
 	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
 			     g_spdk_nvmf_tgt_conf.acceptor_lcore, NULL,
 			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 
-	SPDK_NOTICELOG("Acceptor running on core %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore);
+	SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,
+		       rte_lcore_to_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
 
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);

@@ -39,9 +39,13 @@
 #include "request.h"
 #include "subsystem.h"
 #include "transport.h"
-#include "spdk/log.h"
+
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
+
+#include "spdk_internal/log.h"
+
+#define MIN_KEEP_ALIVE_TIMEOUT 10000
 
 static void
 nvmf_init_discovery_session_properties(struct spdk_nvmf_session *session)
@@ -213,7 +217,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
 
-	subsystem = nvmf_find_subsystem(data->subnqn, data->hostnqn);
+	subsystem = nvmf_find_subsystem(data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
 		INVALID_CONNECT_DATA(subnqn);
@@ -255,9 +259,12 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		TAILQ_INIT(&session->connections);
 		session->id = subsystem->session_id++;
 		session->kato = cmd->kato;
+		session->async_event_config.raw = 0;
 		session->num_connections = 0;
 		session->subsys = subsystem;
 		session->max_connections_allowed = g_nvmf_tgt.max_queues_per_session;
+
+		memcpy(session->hostid, data->hostid, sizeof(session->hostid));
 
 		if (conn->transport->session_add_conn(session, conn)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -394,7 +401,7 @@ nvmf_prop_set_cc(struct spdk_nvmf_session *session, uint64_t value)
 			session->vcprop.csts.bits.rdy = 1;
 		} else {
 			SPDK_ERRLOG("CC.EN transition from 1 to 0 (reset) not implemented!\n");
-			/* TODO: reset */
+
 		}
 		diff.bits.en = 0;
 	}
@@ -574,4 +581,116 @@ spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 	}
 
 	return 0;
+}
+
+int
+spdk_nvmf_session_set_features_host_identifier(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	SPDK_ERRLOG("Set Features - Host Identifier not allowed\n");
+	response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_host_identifier(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Host Identifier\n");
+	if (!(cmd->cdw11 & 1)) {
+		/* NVMe over Fabrics requires EXHID=1 (128-bit/16-byte host ID) */
+		SPDK_ERRLOG("Get Features - Host Identifier with EXHID=0 not allowed\n");
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (req->data == NULL || req->length < sizeof(session->hostid)) {
+		SPDK_ERRLOG("Invalid data buffer for Get Features - Host Identifier\n");
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	memcpy(req->data, session->hostid, sizeof(session->hostid));
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Keep Alive Timer (%u ms)\n", cmd->cdw11);
+
+	if (cmd->cdw11 == 0) {
+		rsp->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
+	} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT) {
+		session->kato = MIN_KEEP_ALIVE_TIMEOUT;
+	} else {
+		session->kato = cmd->cdw11;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Keep Alive Timer set to %u ms\n", session->kato);
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Keep Alive Timer\n");
+	rsp->cdw0 = session->kato;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_set_features_number_of_queues(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint32_t nr_io_queues;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n",
+		      req->cmd->nvme_cmd.cdw11);
+
+	/* Extra 1 connection for Admin queue */
+	nr_io_queues = session->max_connections_allowed - 1;
+
+	/* verify that the contoller is ready to process commands */
+	if (session->num_connections > 1) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Queue pairs already active!\n");
+		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+	} else {
+		/* Number of IO queues has a zero based value */
+		rsp->cdw0 = ((nr_io_queues - 1) << 16) |
+			    (nr_io_queues - 1);
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint32_t nr_io_queues;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
+
+	nr_io_queues = session->max_connections_allowed - 1;
+
+	/* Number of IO queues has a zero based value */
+	rsp->cdw0 = ((nr_io_queues - 1) << 16) |
+		    (nr_io_queues - 1);
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

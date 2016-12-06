@@ -36,13 +36,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <rte_config.h>
 #include <rte_lcore.h>
 
+#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"
+#include "spdk/nvmf_spec.h"
 #include "spdk/pci_ids.h"
 
 static int outstanding_commands;
@@ -65,6 +68,8 @@ static struct spdk_nvme_intel_temperature_page intel_temperature_page;
 static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
+
+static struct spdk_nvme_discover_info info;
 
 static void
 hex_dump(const void *data, size_t size)
@@ -383,7 +388,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 }
 
 static void
-print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr)
+print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_info *probe_info)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
@@ -401,8 +406,15 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	printf("NVMe Controller at PCI bus %d, device %d, function %d\n",
-	       pci_addr->bus, pci_addr->dev, pci_addr->func);
+	if (probe_info->subnqn[0]) {
+		printf("NVMe over Fabrics controller at %s:%s: %s\n",
+		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+	} else {
+		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
+		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
+		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
+		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+	}
 	printf("=====================================================\n");
 
 	if (g_hex_dump) {
@@ -846,25 +858,74 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\n");
 	printf("options:\n");
-	printf("  -x  print hex dump of raw data\n");
+	printf(" -a addr    address of NVMe over Fabrics discovery service\n");
+	printf(" -s service service ID for NVMe over Fabrics discovery service\n");
+	printf(" -n nqn     NQN of NVMe over Fabrics discovery service\n");
+
+	spdk_tracelog_usage(stdout, "-t");
+
+	printf(" -x         print hex dump of raw data\n");
+	printf(" -v         verbose (enable warnings)\n");
+	printf(" -H         show this usage\n");
 }
 
 static int
 parse_args(int argc, char **argv)
 {
-	int op;
+	int op, rc;
 
-	while ((op = getopt(argc, argv, "x")) != -1) {
+	info.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+
+	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
 		switch (op) {
 		case 'x':
 			g_hex_dump = true;
 			break;
+		case 't':
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifndef DEBUG
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
+				argv[0]);
+			usage(argv[0]);
+			return 0;
+#endif
+			break;
+		case 'a':
+			info.traddr = optarg;
+			break;
+		case 's':
+			info.trsvcid = optarg;
+			break;
+		case 'n':
+			info.subnqn = optarg;
+			break;
+		case 'H':
 		default:
 			usage(argv[0]);
 			return 1;
 		}
 	}
 
+	if (!info.traddr || !info.trsvcid || !info.subnqn) {
+		return 0;
+	}
+
+	if ((strlen(info.traddr) > 255)) {
+		printf("The string len of traddr should <= 255\n");
+		return 0;
+	}
+
+	if (strlen(info.subnqn) >= SPDK_NVMF_NQN_MAX_LEN) {
+		printf("NQN must be less than %d bytes long\n", SPDK_NVMF_NQN_MAX_LEN);
+		return 0;
+	}
+
+	info.trtype = SPDK_NVMF_TRTYPE_RDMA;
 	optind = 1;
 
 	return 0;
@@ -881,7 +942,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	print_controller(ctrlr, &probe_info->pci_addr);
+	print_controller(ctrlr, probe_info);
 	spdk_nvme_detach(ctrlr);
 }
 
@@ -889,6 +950,7 @@ static const char *ealargs[] = {
 	"identify",
 	"-c 0x1",
 	"-n 4",
+	"-m 512",
 	"--proc-type=auto",
 };
 
@@ -910,6 +972,12 @@ int main(int argc, char **argv)
 	}
 
 	rc = 0;
+	if (info.trtype == SPDK_NVMF_TRTYPE_RDMA) {
+		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
+			fprintf(stderr, "spdk_nvme_probe() failed\n");
+		}
+	}
+
 	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;

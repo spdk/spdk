@@ -58,7 +58,6 @@
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
-#include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/net.h"
 #include "iscsi/crc32c.h"
@@ -72,6 +71,8 @@
 #include "spdk/bdev.h"
 #include "iscsi/portal_grp.h"
 #include "iscsi/acceptor.h"
+
+#include "spdk_internal/log.h"
 
 #define MAX_TMPBUF 1024
 
@@ -700,15 +701,17 @@ spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authfile,
 	}
 	//spdk_conf_print(config);
 
-	sp = config->section;
+	sp = spdk_conf_first_section(config);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "AuthGroup")) {
-			if (sp->num == 0) {
+			int group = spdk_conf_section_get_num(sp);
+
+			if (group == 0) {
 				SPDK_ERRLOG("Group 0 is invalid\n");
 				spdk_conf_free(config);
 				return -1;
 			}
-			if (ag_tag != sp->num) {
+			if (ag_tag != group) {
 				goto skip_ag_tag;
 			}
 
@@ -742,7 +745,7 @@ spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authfile,
 			}
 		}
 skip_ag_tag:
-		sp = sp->next;
+		sp = spdk_conf_next_section(sp);
 	}
 
 	spdk_conf_free(config);

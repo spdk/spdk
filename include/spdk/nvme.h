@@ -48,6 +48,7 @@ extern "C" {
 
 #include "spdk/env.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/nvmf_spec.h"
 
 #define SPDK_NVME_DEFAULT_RETRY_COUNT	(4)
 extern int32_t		spdk_nvme_retry_count;
@@ -69,14 +70,17 @@ struct spdk_nvme_ctrlr_opts {
 	 * Number of I/O queues to request (used to set Number of Queues feature)
 	 */
 	uint32_t num_io_queues;
+
 	/**
 	 * Enable submission queue in controller memory buffer
 	 */
 	bool use_cmb_sqs;
+
 	/**
 	 * Type of arbitration mechanism
 	 */
 	enum spdk_nvme_cc_ams arb_mechanism;
+
 	/**
 	 * Keep alive timeout in milliseconds (0 = disabled).
 	 *
@@ -86,6 +90,52 @@ struct spdk_nvme_ctrlr_opts {
 	 * are sent.
 	 */
 	uint32_t keep_alive_timeout_ms;
+
+	/**
+	 * Specify the retry number when there is issue with the transport
+	 */
+	int transport_retry_count;
+
+	/**
+	 * The queue depth of each NVMe I/O queue.
+	 */
+	uint32_t queue_size;
+
+	/**
+	 * The host NQN to use when connecting to NVMe over Fabrics controllers.
+	 *
+	 * Unused for local PCIe-attached NVMe devices.
+	 */
+	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+};
+
+/**
+ * NVMe over Fabrics discovery parameters.
+ *
+ * This structure must be provided when connecting to remote NVMe controllers via NVMe over Fabrics.
+ */
+struct spdk_nvme_discover_info {
+	/**
+	 * NVMe over Fabrics transport type.
+	 */
+	enum spdk_nvmf_trtype trtype;
+
+	/**
+	 * Subsystem NQN of the NVMe over Fabrics discovery service.
+	 */
+	const char *subnqn;
+
+	/**
+	 * Transport address of the NVMe over Fabrics discovery service. For transports which use IP
+	 * addressing (e.g. RDMA), this should be an IP-based address.
+	 */
+	const char *traddr;
+
+	/**
+	 * Specifiy the transport service identifier.  For transports which use IP addressing
+	 * (e.g. RDMA), this field shoud be the port number.
+	 */
+	const char *trsvcid;
 };
 
 /**
@@ -105,7 +155,42 @@ struct spdk_nvme_probe_info {
 	 * If not available, each field will be filled with all 0xFs.
 	 */
 	struct spdk_pci_id pci_id;
+
+	/**
+	 * Subsystem NQN.
+	 *
+	 * If this is not an NVMe over Fabrics controller, this field will be a zero-length string.
+	 */
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+
+	/**
+	 * NVMe over Fabrics transport type.
+	 *
+	 * This field will be 0 if this is not an NVMe over Fabrics controller.
+	 */
+	enum spdk_nvmf_trtype trtype;
+
+	/**
+	 * Transport address of the NVMe over Fabrics target. For transports which use IP
+	 * addressing (e.g. RDMA), this will be an IP-based address.
+	 */
+	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+
+	/**
+	 * Transport service identifier.  For transports which use IP addressing
+	 * (e.g. RDMA), this field will be the port number.
+	 */
+	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 };
+
+/**
+ * Determine whether the NVMe library can handle a specific NVMe over Fabrics transport type.
+ *
+ * \param trtype NVMe over Fabrics transport type to check.
+ *
+ * \return true if trtype is supported or false if it is not supported.
+ */
+bool spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype);
 
 /**
  * Callback for spdk_nvme_probe() enumeration.
@@ -133,9 +218,33 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_i
  * Callback for spdk_nvme_probe() to report that a device attached to the userspace NVMe driver
  * has been removed from the system.
  *
+ * The controller will remain in a failed state (any new I/O submitted will fail).
+ *
+ * The controller must be detached from the userspace driver by calling spdk_nvme_detach()
+ * once the controller is no longer in use.  It is up to the library user to ensure that
+ * no other threads are using the controller before calling spdk_nvme_detach().
+ *
  * \param ctrlr NVMe controller instance that was removed.
  */
 typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * \brief discover the remote Controller via NVMe over fabrics protocol
+ *
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
+ * \param info which specifies the info used to discover the NVMe over fabrics target.
+ * \param probe_cb will be called once per NVMe device found in the system.
+ * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
+ * controller has been attached to the userspace driver.
+ * \param remove_cb will be called for devices that were attached in a previous spdk_nvme_probe()
+ * call but are no longer attached to the system. Optional; specify NULL if removal notices are not
+ * desired.
+ *
+ */
+int spdk_nvme_discover(const struct spdk_nvme_discover_info *info,
+		       void *cb_ctx, spdk_nvme_probe_cb  probe_cb,
+		       spdk_nvme_attach_cb attach_cb,
+		       spdk_nvme_remove_cb remove_cb);
 
 /**
  * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver
@@ -148,6 +257,12 @@ typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
  * \param remove_cb will be called for devices that were attached in a previous spdk_nvme_probe()
  * call but are no longer attached to the system. Optional; specify NULL if removal notices are not
  * desired.
+ *
+ * This function is not thread safe and should only be called from one thread at a time while no
+ * other threads are actively using any NVMe devices.
+ *
+ * If called from a secondary process, only devices that have been attached to the userspace driver
+ * in the primary process will be probed.
  *
  * If called more than once, only devices that are not already attached to the SPDK NVMe driver
  * will be reported.

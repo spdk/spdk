@@ -56,6 +56,7 @@
 
 struct spdk_bdev_io;
 struct spdk_bdev_fn_table;
+struct spdk_json_write_ctx;
 
 /**
  * \brief SPDK block device.
@@ -339,6 +340,8 @@ struct spdk_bdev *spdk_bdev_first(void);
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
 
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
+
+int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				    void *buf, uint64_t offset, uint64_t nbytes,

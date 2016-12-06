@@ -48,6 +48,12 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
 
+const struct spdk_nvmf_transport *
+spdk_nvmf_transport_get(const char *trname)
+{
+	return NULL;
+}
+
 int32_t
 spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -90,10 +96,9 @@ nvmf_test_create_subsystem(void)
 	struct spdk_nvmf_subsystem *subsystem;
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
-	subsystem = spdk_nvmf_create_subsystem(1, nqn, SPDK_NVMF_SUBTYPE_NVME,
+	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
 					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
-	CU_ASSERT_EQUAL(subsystem->num, 1);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_delete_subsystem(subsystem);
 
@@ -102,7 +107,7 @@ nvmf_test_create_subsystem(void)
 	memset(nqn + strlen(nqn), 'a', 222 - strlen(nqn));
 	nqn[222] = '\0';
 	CU_ASSERT(strlen(nqn) == 222);
-	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME,
+	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
 					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
@@ -113,7 +118,7 @@ nvmf_test_create_subsystem(void)
 	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
 	nqn[223] = '\0';
 	CU_ASSERT(strlen(nqn) == 223);
-	subsystem = spdk_nvmf_create_subsystem(2, nqn, SPDK_NVMF_SUBTYPE_NVME,
+	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
 					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	CU_ASSERT(subsystem == NULL);
 }
@@ -121,10 +126,8 @@ nvmf_test_create_subsystem(void)
 static void
 nvmf_test_find_subsystem(void)
 {
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem(NULL, NULL));
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem("fake", NULL));
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem(NULL, "fake"));
-	CU_ASSERT_PTR_NULL(nvmf_find_subsystem("fake", "fake"));
+	CU_ASSERT_PTR_NULL(nvmf_find_subsystem(NULL));
+	CU_ASSERT_PTR_NULL(nvmf_find_subsystem("fake"));
 }
 
 int main(int argc, char **argv)

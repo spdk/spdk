@@ -34,20 +34,11 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-APP = vtophys
+DIRS-y = pci vtophys
 
-C_SRCS = vtophys.c
+.PHONY: all clean $(DIRS-y)
 
-CFLAGS += $(ENV_CFLAGS)
+all: $(DIRS-y)
+clean: $(DIRS-y)
 
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
-
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

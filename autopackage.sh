@@ -36,7 +36,7 @@ echo "tmpdir=$tmpdir"
 tar -C "$tmpdir" -xf $out/$tarball
 (
 	cd "$tmpdir"/spdk-*
-	time $MAKE ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR CONFIG_DEBUG=n
+	time $MAKE ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR CONFIG_DEBUG=n CONFIG_WERROR=y
 )
 rm -rf "$tmpdir"
 

@@ -4,19 +4,10 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$testdir/../../..
 source $rootdir/scripts/autotest_common.sh
 
-CEPH_DIR=/home/sys_sgsw/ceph/build
-
-# RBD pool name and RBD name
-RBD_POOL=rbd
-RBD_NAME=foo
-
 if [ ! -d $CEPH_DIR ]; then
 	echo "Ceph directory not detected on this system; skipping RBD tests"
 	exit 0
 fi
-
-(cd $CEPH_DIR && ../src/vstart.sh -d -n -x -l)
-/usr/local/bin/rbd create $RBD_NAME --size 1000
 
 if [ -z "$TARGET_IP" ]; then
 	echo "TARGET_IP not defined in environment"
@@ -73,6 +64,5 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
-(cd $CEPH_DIR && sh -x ../src/stop.sh || true)
 
 timing_exit rbd

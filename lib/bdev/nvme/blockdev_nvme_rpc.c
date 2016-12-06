@@ -32,8 +32,9 @@
  */
 
 #include "blockdev_nvme.h"
-#include "spdk/log.h"
 #include "spdk/rpc.h"
+
+#include "spdk_internal/log.h"
 
 struct rpc_construct_nvme {
 	char *pci_address;

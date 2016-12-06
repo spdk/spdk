@@ -57,10 +57,25 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 	return pci_id;
 }
 
+bool
+spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
+{
+	return true;
+}
+
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
 	return NULL;
+}
+
+int
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
+{
+	return 0;
 }
 
 void
@@ -87,6 +102,23 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
+nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
+{
+}
+
+int
+spdk_uevent_connect(void)
+{
+	return 0;
+}
+
+int
+spdk_get_uevent(int fd, struct spdk_uevent *uevent)
+{
+	return 0;
+}
+
+void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
 	memset(opts, 0, sizeof(*opts));
@@ -105,6 +137,24 @@ int
 spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
 {
 	return true;
+}
+
+void
+nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+void
+nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+int
+nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
 }
 
 static void

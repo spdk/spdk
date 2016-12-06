@@ -37,7 +37,22 @@
 
 #include "lib/nvme/unit/test_env.c"
 
+struct nvme_driver _g_nvme_driver = {
+	.lock = PTHREAD_MUTEX_INITIALIZER,
+	.request_mempool = NULL,
+};
+
+struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
+
 struct nvme_request *g_request = NULL;
+
+struct spdk_uevent;
+
+int
+spdk_uevent_connect(void);
+
+int
+spdk_get_uevent(int fd, struct spdk_uevent *uevent);
 
 int
 spdk_pci_enumerate(enum spdk_pci_device_type type,
@@ -56,7 +71,15 @@ static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 	return 0;
 }
 
+bool
+spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
+{
+	return true;
+}
+
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
 	return NULL;
@@ -81,6 +104,23 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 int
 nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+void
+nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
+{
+}
+
+int
+spdk_uevent_connect(void)
+{
+	return 0;
+}
+
+int
+spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
 	return 0;
 }
@@ -133,6 +173,31 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 {
 	g_request = req;
 
+	return 0;
+}
+
+void
+nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+void
+nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return;
+}
+
+int
+nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
+{
 	return 0;
 }
 

@@ -47,9 +47,11 @@
 #include <signal.h>
 #include <sys/types.h>
 
-#include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/net.h"
+
+#include "spdk_internal/log.h"
+
 #include "iscsi/iscsi.h"
 #include "iscsi/tgt_node.h"
 #include "iscsi/conn.h"
@@ -65,8 +67,9 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	int num_initiator_names;
 	int num_initiator_masks;
 	char **initiators = NULL, **netmasks = NULL;
+	int tag = spdk_conf_section_get_num(sp);
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add initiator group %d\n", sp->num);
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add initiator group %d\n", tag);
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
@@ -80,7 +83,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 			break;
 	}
 	if (i == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "num_initiator_names = 0\n");
+		SPDK_ERRLOG("num_initiator_names = 0\n");
 		goto cleanup;
 	}
 	num_initiator_names = i;
@@ -94,7 +97,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 			break;
 	}
 	if (i == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "num_initiator_mask = 0\n");
+		SPDK_ERRLOG("num_initiator_mask = 0\n");
 		goto cleanup;
 	}
 	num_initiator_masks = i;
@@ -145,7 +148,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 		}
 	}
 
-	rc = spdk_iscsi_init_grp_create_from_initiator_list(sp->num,
+	rc = spdk_iscsi_init_grp_create_from_initiator_list(tag,
 			num_initiator_names, initiators, num_initiator_masks, netmasks);
 	if (rc < 0) {
 		goto cleanup;
@@ -307,7 +310,7 @@ spdk_iscsi_init_grp_array_create(void)
 	sp = spdk_conf_first_section(NULL);
 	while (sp != NULL) {
 		if (spdk_conf_section_match_prefix(sp, "InitiatorGroup")) {
-			if (sp->num == 0) {
+			if (spdk_conf_section_get_num(sp) == 0) {
 				SPDK_ERRLOG("Group 0 is invalid\n");
 				return -1;
 			}

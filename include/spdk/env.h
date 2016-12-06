@@ -53,29 +53,25 @@ struct spdk_pci_device;
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment.
  */
-void *
-spdk_malloc(size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment. The buffer will be zeroed.
  */
-void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
  * Resize the allocated and pinned memory buffer with the given
  *   new size and alignment. Existing contents are preserved.
  */
-void *
-spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
 
 /**
  * Free a memory buffer previously allocated with spdk_zmalloc.
  *   This call is never made from the performance path.
  */
-void
-spdk_free(void *buf);
+void spdk_free(void *buf);
 
 /**
  * Reserve a named, process shared memory zone with the given size,
@@ -84,28 +80,24 @@ spdk_free(void *buf);
  *   cannot be done, return NULL.
  * Note: to pick any socket id, just set socket_id to -1.
  */
-void *
-spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
+void *spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
 
 /**
  * Lookup the memory zone identified by the given name.
  * Return a pointer to the reserved memory address. If the reservation
  *   cannot be found, return NULL.
  */
-void *
-spdk_memzone_lookup(const char *name);
+void *spdk_memzone_lookup(const char *name);
 
 /**
  * Free the memory zone identified by the given name.
  */
-int
-spdk_memzone_free(const char *name);
+int spdk_memzone_free(const char *name);
 
 /**
  * Dump debug information about all memzones.
  */
-void
-spdk_memzone_dump(FILE *f);
+void spdk_memzone_dump(FILE *f);
 
 struct spdk_mempool;
 
@@ -114,40 +106,34 @@ struct spdk_mempool;
  * elements in a thread-local cache. Can be 0 for no caching, or -1
  * for unspecified.
  */
-struct spdk_mempool *
-spdk_mempool_create(const char *name, size_t count,
-		    size_t ele_size, size_t cache_size);
+struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
+		size_t ele_size, size_t cache_size);
 
 /**
  * Free a memory pool.
  */
-void
-spdk_mempool_free(struct spdk_mempool *mp);
+void spdk_mempool_free(struct spdk_mempool *mp);
 
 /**
  * Get an element from a memory pool. If no elements remain, return NULL.
  */
-void *
-spdk_mempool_get(struct spdk_mempool *mp);
+void *spdk_mempool_get(struct spdk_mempool *mp);
 
 /**
  * Put an element back into the memory pool.
  */
-void
-spdk_mempool_put(struct spdk_mempool *mp, void *ele);
+void spdk_mempool_put(struct spdk_mempool *mp, void *ele);
 
 /**
  * Put multiple elements back into the memory pool.
  */
-void
-spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
+void spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
 
 
 /**
  * Return true if the calling process is primary process
  */
-bool
-spdk_process_is_primary(void);
+bool spdk_process_is_primary(void);
 
 /**
  * Get a monotonic timestamp counter.
@@ -167,6 +153,19 @@ void spdk_delay_us(unsigned int us);
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
 uint64_t spdk_vtophys(void *buf);
+
+/**
+ * Register the specified memory region for vtophys address translation.
+ * The memory region must map to pinned huge pages (2MB or greater).
+ */
+void spdk_vtophys_register(void *vaddr, uint64_t len);
+
+/**
+ * Unregister the specified memory region from vtophys address translation.
+ * The caller must ensure all in-flight DMA operations to this memory region
+ *  are completed or cancelled before calling this function.
+ */
+void spdk_vtophys_unregister(void *vaddr, uint64_t len);
 
 enum spdk_pci_device_type {
 	SPDK_PCI_DEVICE_NVME,
@@ -211,9 +210,12 @@ uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
 
 struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 
-uint32_t spdk_pci_device_get_class(struct spdk_pci_device *dev);
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
+void spdk_pci_device_detach(struct spdk_pci_device *device);
+int spdk_pci_device_attach(enum spdk_pci_device_type type,
+			   spdk_pci_enum_cb enum_cb,
+			   void *enum_ctx, struct spdk_pci_addr *pci_addres);
 
 int spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset);
 int spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset);

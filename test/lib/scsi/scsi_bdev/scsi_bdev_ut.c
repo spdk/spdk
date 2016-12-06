@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "task.c"
 #include "scsi_bdev.c"
 
 #include "spdk_cunit.h"
@@ -44,11 +45,22 @@ SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
 struct spdk_scsi_globals g_spdk_scsi;
 
 void *
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	void *buf = malloc(size);
+	if (phys_addr)
+		*phys_addr = (uint64_t)buf;
+
+	return buf;
+}
+
+void *
 spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = calloc(size, 1);
 	if (phys_addr)
 		*phys_addr = (uint64_t)buf;
+
 	return buf;
 }
 
@@ -57,6 +69,14 @@ spdk_free(void *buf)
 {
 	free(buf);
 }
+
+int
+spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
+{
+	CU_ASSERT(0);
+	return -1;
+}
+
 void
 spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 {
@@ -67,19 +87,15 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 {
 }
 
-void
-spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
-			  int asc, int ascq)
-{
-	spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
-	task->status = sc;
-}
-
-
 static void
 spdk_put_task(struct spdk_scsi_task *task)
 {
-	spdk_scsi_task_free_data(task);
+	if (task->alloc_len)
+		free(task->iov.iov_base);
+
+	task->iov.iov_base = NULL;
+	task->iov.iov_len = 0;
+	task->alloc_len = 0;
 }
 
 
@@ -90,88 +106,6 @@ spdk_init_task(struct spdk_scsi_task *task)
 	task->id = 1;
 	task->iovs = &task->iov;
 	task->iovcnt = 1;
-}
-
-void
-spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t len)
-{
-	assert(task->alloc_len == 0);
-	task->iov.iov_base = data;
-	task->iov.iov_len = len;
-	task->alloc_len = 0;
-}
-
-void *
-spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len)
-{
-	if (task->iov.iov_base != NULL) {
-		if (task->alloc_len != 0 && alloc_len > task->alloc_len) {
-			spdk_put_task(task);
-		} else if (task->alloc_len == 0 && alloc_len > task->iov.iov_len) {
-			/* External data buffer less than requested. */
-			return NULL;
-		}
-	}
-
-	if (task->iov.iov_base == NULL) {
-		task->iov.iov_base = calloc(alloc_len, 1);
-		task->alloc_len = alloc_len;
-	}
-
-	task->iov.iov_len = alloc_len;
-	return task->iov.iov_base;
-}
-
-void
-spdk_scsi_task_free_data(struct spdk_scsi_task *task)
-{
-	if (task->alloc_len)
-		free(task->iov.iov_base);
-
-	task->iov.iov_base = NULL;
-	task->iov.iov_len = 0;
-	task->alloc_len = 0;
-}
-
-void
-spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc, int ascq)
-{
-	uint8_t *cp;
-	int resp_code;
-
-	resp_code = 0x70; /* Current + Fixed format */
-
-	/* Sense Data */
-	cp = task->sense_data;
-
-	/* VALID(7) RESPONSE CODE(6-0) */
-	cp[0] = 0x80 | resp_code;
-	/* Obsolete */
-	cp[1] = 0;
-	/* FILEMARK(7) EOM(6) ILI(5) SENSE KEY(3-0) */
-	cp[2] = sk & 0xf;
-	/* INFORMATION */
-	memset(&cp[3], 0, 4);
-
-	/* ADDITIONAL SENSE LENGTH */
-	cp[7] = 10;
-
-	/* COMMAND-SPECIFIC INFORMATION */
-	memset(&cp[8], 0, 4);
-	/* ADDITIONAL SENSE CODE */
-	cp[12] = asc;
-	/* ADDITIONAL SENSE CODE QUALIFIER */
-	cp[13] = ascq;
-	/* FIELD REPLACEABLE UNIT CODE */
-	cp[14] = 0;
-
-	/* SKSV(7) SENSE KEY SPECIFIC(6-0,7-0,7-0) */
-	cp[15] = 0;
-	cp[16] = 0;
-	cp[17] = 0;
-
-	/* SenseLength */
-	task->sense_data_len = 18;
 }
 
 void

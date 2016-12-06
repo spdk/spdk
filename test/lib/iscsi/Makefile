@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = param target_node
+DIRS-y = param pdu target_node
 
 .PHONY: all clean $(DIRS-y)
 

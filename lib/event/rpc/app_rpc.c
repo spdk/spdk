@@ -38,8 +38,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "spdk/log.h"
 #include "spdk/rpc.h"
+
+#include "spdk_internal/log.h"
 
 struct rpc_kill_instance {
 	char *sig_name;

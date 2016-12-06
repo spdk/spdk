@@ -44,6 +44,7 @@
 #define MAX_SESSION_IO_QUEUES 64
 
 struct spdk_nvmf_transport;
+struct spdk_nvmf_request;
 
 enum conn_type {
 	CONN_TYPE_AQ = 0,
@@ -82,6 +83,15 @@ struct spdk_nvmf_session {
 	int num_connections;
 	int max_connections_allowed;
 	uint32_t kato;
+	union {
+		uint32_t raw;
+		struct {
+			union spdk_nvme_critical_warning_state crit_warn;
+			uint8_t ns_attr_notice : 1;
+			uint8_t fw_activation_notice : 1;
+		} bits;
+	} async_event_config;
+	uint8_t hostid[16];
 	const struct spdk_nvmf_transport	*transport;
 
 	TAILQ_ENTRY(spdk_nvmf_session) 		link;
@@ -105,5 +115,14 @@ spdk_nvmf_property_set(struct spdk_nvmf_session *session,
 int spdk_nvmf_session_poll(struct spdk_nvmf_session *session);
 
 void spdk_nvmf_session_destruct(struct spdk_nvmf_session *session);
+
+int spdk_nvmf_session_set_features_host_identifier(struct spdk_nvmf_request *req);
+int spdk_nvmf_session_get_features_host_identifier(struct spdk_nvmf_request *req);
+
+int spdk_nvmf_session_set_features_keep_alive_timer(struct spdk_nvmf_request *req);
+int spdk_nvmf_session_get_features_keep_alive_timer(struct spdk_nvmf_request *req);
+
+int spdk_nvmf_session_set_features_number_of_queues(struct spdk_nvmf_request *req);
+int spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req);
 
 #endif

@@ -40,14 +40,14 @@
 
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
-#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/string.h"
 
-#define MIN_KEEP_ALIVE_TIMEOUT 10000
+#include "spdk_internal/log.h"
+
 #define MODEL_NUMBER "SPDK Virtual Controller"
 #define FW_VERSION "FFFFFFFF"
 
@@ -75,8 +75,8 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_session *session)
 		}
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem%d support unmap - enabling DSM\n",
-		      session->subsys->num);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
+		      spdk_nvmf_subsystem_get_nqn(session->subsys));
 	session->vcdata.oncs.dsm = 1;
 }
 
@@ -132,10 +132,13 @@ nvmf_virtual_ctrlr_complete_cmd(spdk_event_t event)
 		free(bdev_io->u.unmap.unmap_bdesc);
 	}
 
-	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
-		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-	} else {
+	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		response->status.sc = SPDK_NVME_SC_SUCCESS;
+	} else if (status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
+		response->status.sct = bdev_io->error.nvme.sct;
+		response->status.sc = bdev_io->error.nvme.sc;
+	} else {
+		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
 	spdk_nvmf_request_complete(req);
 	spdk_bdev_free_io(bdev_io);
@@ -154,6 +157,8 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	memset(req->data, 0, req->length);
+
 	lid = cmd->cdw10 & 0xFF;
 	switch (lid) {
 	case SPDK_NVME_LOG_ERROR:
@@ -162,7 +167,8 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	default:
 		SPDK_ERRLOG("Unsupported Get Log Page 0x%02X\n", lid);
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_LOG_PAGE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 }
@@ -265,7 +271,6 @@ static int
 nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
-	uint32_t nr_io_queues;
 	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -273,21 +278,21 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
-		nr_io_queues = session->max_connections_allowed - 1;
-		/* Number of IO queues has a zero based value */
-		response->cdw0 = ((nr_io_queues - 1) << 16) |
-				 (nr_io_queues - 1);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_get_features_number_of_queues(req);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
 		response->cdw0 = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		response->cdw0 = session->kato;
+		return spdk_nvmf_session_get_features_keep_alive_timer(req);
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
+		response->cdw0 = session->async_event_config.raw;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		return spdk_nvmf_session_get_features_host_identifier(req);
 	default:
-		SPDK_ERRLOG("get features command with invalid code\n");
-		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 }
@@ -296,7 +301,6 @@ static int
 nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
-	uint32_t nr_io_queues = 0;
 	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -304,30 +308,19 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Number of Queues, cdw11 0x%x\n", cmd->cdw11);
-		nr_io_queues = session->max_connections_allowed - 1;
-		/* verify that the contoller is ready to process commands */
-		if (session->num_connections > 1) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Queue pairs already active!\n");
-			response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		} else {
-			/* Number of IO queues has a zero based value */
-			response->cdw0 = ((nr_io_queues - 1) << 16) |
-					 (nr_io_queues - 1);
-		}
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_set_features_number_of_queues(req);
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		if (cmd->cdw11 == 0) {
-			response->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
-		} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT) {
-			session->kato = MIN_KEEP_ALIVE_TIMEOUT;
-		} else {
-			session->kato = cmd->cdw11;
-		}
+		return spdk_nvmf_session_set_features_keep_alive_timer(req);
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
+			      cmd->cdw11);
+		session->async_event_config.raw = cmd->cdw11;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		return spdk_nvmf_session_set_features_host_identifier(req);
 	default:
-		SPDK_ERRLOG("set features command with invalid code\n");
-		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 }

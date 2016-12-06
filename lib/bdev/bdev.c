@@ -44,8 +44,9 @@
 #include <rte_version.h>
 
 #include "spdk/event.h"
-#include "spdk/log.h"
 #include "spdk/queue.h"
+
+#include "spdk_internal/log.h"
 
 #include "bdev_module.h"
 
@@ -508,6 +509,16 @@ bool
 spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
 {
 	return bdev->fn_table->io_type_supported(bdev, io_type);
+}
+
+int
+spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	if (bdev->fn_table->dump_config_json) {
+		return bdev->fn_table->dump_config_json(bdev, w);
+	}
+
+	return 0;
 }
 
 struct spdk_io_channel *

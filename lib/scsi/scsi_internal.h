@@ -50,10 +50,30 @@
 #include <sys/uio.h>
 
 #include "spdk/bdev.h"
-#include "spdk/log.h"
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/trace.h"
+
+#include "spdk_internal/log.h"
+
+
+/**
+ * Macro to return the minimum of two numbers
+ */
+#define SPDK_MIN(a, b) ({ \
+		typeof (a) _a = (a); \
+		typeof (b) _b = (b); \
+		_a < _b ? _a : _b; \
+	})
+
+/**
+ * Macro to return the maximum of two numbers
+ */
+#define SPDK_MAX(a, b) ({ \
+		typeof (a) _a = (a); \
+		typeof (b) _b = (b); \
+		_a > _b ? _a : _b; \
+	})
 
 enum {
 	SPDK_SCSI_TASK_UNKNOWN = -1,

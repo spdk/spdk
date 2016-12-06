@@ -62,7 +62,7 @@
   # Set how often the acceptor polls for incoming connections. The acceptor is also
   # responsible for polling existing connections that have gone idle. 0 means continuously
   # poll. Units in microseconds.
-  AcceptorPollRate  1000
+  AcceptorPollRate 10000
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.

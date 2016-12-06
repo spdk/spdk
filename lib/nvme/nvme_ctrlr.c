@@ -33,6 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/env.h"
+#include <signal.h>
 
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
@@ -79,6 +80,48 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	opts->use_cmb_sqs = false;
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	opts->keep_alive_timeout_ms = 10 * 1000;
+	opts->queue_size = DEFAULT_MAX_QUEUE_SIZE;
+	strncpy(opts->hostnqn, DEFAULT_HOSTNQN, sizeof(opts->hostnqn));
+}
+
+/**
+ * This function will be called when the process allocates the IO qpair.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_proc_add_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	pid_t				pid = getpid();
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			TAILQ_INSERT_TAIL(&active_proc->allocated_io_qpairs, qpair,
+					  per_process_tailq);
+			break;
+		}
+	}
+}
+
+/**
+ * This function will be called when the process frees the IO qpair.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	struct spdk_nvme_ctrlr		*ctrlr = qpair->ctrlr;
+	pid_t				pid = getpid();
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			TAILQ_REMOVE(&active_proc->allocated_io_qpairs, qpair,
+				     per_process_tailq);
+			break;
+		}
+	}
 }
 
 struct spdk_nvme_qpair *
@@ -129,6 +172,8 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
 	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
 
+	nvme_ctrlr_proc_add_io_qpair(qpair);
+
 	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
 
 	return qpair;
@@ -146,6 +191,8 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	ctrlr = qpair->ctrlr;
 
 	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_proc_remove_io_qpair(qpair);
 
 	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
 	spdk_bit_array_set(ctrlr->free_io_qids, qpair->id);
@@ -287,11 +334,14 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static void
-nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr)
+void
+nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
 	struct spdk_nvme_qpair *qpair;
 
+	if (hot_remove) {
+		ctrlr->is_removed = true;
+	}
 	ctrlr->is_failed = true;
 	nvme_qpair_fail(ctrlr->adminq);
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
@@ -305,6 +355,10 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	union spdk_nvme_cc_register	cc;
 	union spdk_nvme_csts_register	csts;
 	int				ms_waited = 0;
+
+	if (ctrlr->is_removed) {
+		return;
+	}
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
 		SPDK_ERRLOG("get_cc() failed\n");
@@ -400,10 +454,33 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+#ifdef DEBUG
+static const char *
+nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
+{
+	switch (state) {
+	case NVME_CTRLR_STATE_INIT:
+		return "init";
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
+		return "disable and wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
+		return "disable and wait for CSTS.RDY = 0";
+	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
+		return "enable and wait for CSTS.RDY = 1";
+	case NVME_CTRLR_STATE_READY:
+		return "ready";
+	}
+	return "unknown";
+};
+#endif /* DEBUG */
+
 static void
 nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 		     uint64_t timeout_in_ms)
 {
+	SPDK_TRACELOG(SPDK_TRACE_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
+		      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
+
 	ctrlr->state = state;
 	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
 		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
@@ -446,7 +523,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
 			SPDK_ERRLOG("%s: controller reinitialization failed\n", __func__);
-			nvme_ctrlr_fail(ctrlr);
+			nvme_ctrlr_fail(ctrlr, false);
 			rc = -1;
 			break;
 		}
@@ -456,7 +533,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			if (nvme_transport_ctrlr_reinit_io_qpair(ctrlr, qpair) != 0) {
-				nvme_ctrlr_fail(ctrlr);
+				nvme_ctrlr_fail(ctrlr, false);
 				rc = -1;
 			}
 		}
@@ -582,6 +659,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting keep alive timeout feature to %u ms\n",
 		      ctrlr->opts.keep_alive_timeout_ms);
 
+	status.done = false;
 	rc = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER,
 					     ctrlr->opts.keep_alive_timeout_ms, 0, NULL, 0,
 					     nvme_completion_poll_cb, &status);
@@ -602,6 +680,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* Retrieve actual keep alive timeout, since the controller may have adjusted it. */
+	status.done = false;
 	rc = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, 0, NULL, 0,
 					     nvme_completion_poll_cb, &status);
 	if (rc != 0) {
@@ -633,7 +712,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
 
-	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * UINT64_C(1000)) / spdk_get_ticks_hz();
+	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * spdk_get_ticks_hz()) / UINT64_C(1000);
 
 	/* Schedule the first Keep Alive to be sent as soon as possible. */
 	ctrlr->next_keep_alive_tick = spdk_get_ticks();
@@ -783,7 +862,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_ctrlr_cmd_set_async_event_config failed!\n");
-		return -ENXIO;
+		return 0;
 	}
 
 	/* aerl is a zero-based value, so we need to add 1 here. */
@@ -801,17 +880,26 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 /**
- * This function will be called when a new process is using the controller.
+ * This function will be called when a process is using the controller.
  *  1. For the primary process, it is called when constructing the controller.
  *  2. For the secondary process, it is called at probing the controller.
+ * Note: will check whether the process is already added for the same process.
  */
 int
 nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 {
-	struct spdk_nvme_controller_process	*ctrlr_proc;
+	struct spdk_nvme_ctrlr_process	*ctrlr_proc, *active_proc;
+	pid_t				pid = getpid();
+
+	/* Check whether the process is already added or not */
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			return 0;
+		}
+	}
 
 	/* Initialize the per process properties for this ctrlr */
-	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_controller_process), 64, NULL);
+	ctrlr_proc = spdk_zmalloc(sizeof(struct spdk_nvme_ctrlr_process), 64, NULL);
 	if (ctrlr_proc == NULL) {
 		SPDK_ERRLOG("failed to allocate memory to track the process props\n");
 
@@ -819,13 +907,57 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	}
 
 	ctrlr_proc->is_primary = spdk_process_is_primary();
-	ctrlr_proc->pid = getpid();
+	ctrlr_proc->pid = pid;
 	STAILQ_INIT(&ctrlr_proc->active_reqs);
 	ctrlr_proc->devhandle = devhandle;
+	ctrlr_proc->ref = 0;
+	TAILQ_INIT(&ctrlr_proc->allocated_io_qpairs);
 
 	TAILQ_INSERT_TAIL(&ctrlr->active_procs, ctrlr_proc, tailq);
 
 	return 0;
+}
+
+/**
+ * This function will be called when the process detaches the controller.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
+			  struct spdk_nvme_ctrlr_process *proc)
+{
+	struct spdk_nvme_qpair	*qpair, *tmp_qpair;
+
+	assert(STAILQ_EMPTY(&proc->active_reqs));
+
+	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	}
+
+	TAILQ_REMOVE(&ctrlr->active_procs, proc, tailq);
+
+	spdk_free(proc);
+}
+
+/**
+ * This function will be called when the process exited unexpectedly
+ *  in order to free any incomplete nvme request and allocated memory.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static void
+nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
+{
+	struct nvme_request	*req, *tmp_req;
+
+	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {
+		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);
+
+		assert(req->pid == proc->pid);
+
+		nvme_free_request(req);
+	}
+
+	spdk_free(proc);
 }
 
 /**
@@ -836,7 +968,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 void
 nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_controller_process	*active_proc, *tmp;
+	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
 
 	/* Free all the processes' properties and make sure no pending admin IOs */
 	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
@@ -846,6 +978,103 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 
 		spdk_free(active_proc);
 	}
+}
+
+/**
+ * This function will be called when any other process attaches or
+ *  detaches the controller in order to cleanup those unexpectedly
+ *  terminated processes.
+ * Note: the ctrlr_lock must be held when calling this function.
+ */
+static int
+nvme_ctrlr_remove_inactive_proc(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
+	int				active_proc_count = 0;
+
+	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
+		if ((kill(active_proc->pid, 0) == -1) && (errno == ESRCH)) {
+			SPDK_ERRLOG("process %d terminated unexpected\n", active_proc->pid);
+
+			TAILQ_REMOVE(&ctrlr->active_procs, active_proc, tailq);
+
+			nvme_ctrlr_cleanup_process(active_proc);
+		} else {
+			active_proc_count++;
+		}
+	}
+
+	return active_proc_count;
+}
+
+void
+nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	pid_t				pid = getpid();
+
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_remove_inactive_proc(ctrlr);
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			active_proc->ref++;
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
+void
+nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc, *tmp;
+	pid_t				pid = getpid();
+	int				proc_count;
+
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	proc_count = nvme_ctrlr_remove_inactive_proc(ctrlr);
+
+	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
+		if (active_proc->pid == pid) {
+			active_proc->ref--;
+			assert(active_proc->ref >= 0);
+
+			/*
+			 * The last active process will be removed at the end of
+			 * the destruction of the controller.
+			 */
+			if (active_proc->ref == 0 && proc_count != 1) {
+				nvme_ctrlr_remove_process(ctrlr, active_proc);
+			}
+
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+}
+
+int
+nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	int				ref = 0;
+
+	pthread_mutex_lock(&ctrlr->ctrlr_lock);
+
+	nvme_ctrlr_remove_inactive_proc(ctrlr);
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		ref += active_proc->ref;
+	}
+
+	pthread_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return ref;
 }
 
 /**
@@ -873,7 +1102,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
 	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
 		SPDK_ERRLOG("get registers failed\n");
-		nvme_ctrlr_fail(ctrlr);
+		nvme_ctrlr_fail(ctrlr, false);
 		return -EIO;
 	}
 
@@ -886,6 +1115,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_INIT:
 		/* Begin the hardware initialization by making sure the controller is disabled. */
 		if (cc.bits.en) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1\n");
 			/*
 			 * Controller is currently enabled. We need to disable it to cause a reset.
 			 *
@@ -893,15 +1123,17 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 *  Wait for the ready bit to be 1 before disabling the controller.
 			 */
 			if (csts.bits.rdy == 0) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 0 - waiting for reset to complete\n");
 				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 				return 0;
 			}
 
 			/* CC.EN = 1 && CSTS.RDY == 1, so we can immediately disable the controller. */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
-				nvme_ctrlr_fail(ctrlr);
+				nvme_ctrlr_fail(ctrlr, false);
 				return -EIO;
 			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
@@ -911,11 +1143,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 * Not using sleep() to avoid blocking other controller's initialization.
 			 */
 			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "Applying quirk: delay 2 seconds before reading registers\n");
 				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + 2 * spdk_get_ticks_hz();
 			}
 			return 0;
 		} else {
 			if (csts.bits.rdy == 1) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 1 - waiting for shutdown to complete\n");
 				/*
 				 * Controller is in the process of shutting down.
 				 * We need to wait for RDY to become 0.
@@ -927,6 +1161,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			/*
 			 * Controller is currently disabled. We can jump straight to enabling it.
 			 */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0 - enabling controller\n");
 			rc = nvme_ctrlr_enable(ctrlr);
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 			return rc;
@@ -935,11 +1170,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - disabling controller\n");
 			/* CC.EN = 1 && CSTS.RDY = 1, so we can set CC.EN = 0 now. */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
-				nvme_ctrlr_fail(ctrlr);
+				nvme_ctrlr_fail(ctrlr, false);
 				return -EIO;
 			}
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
@@ -949,7 +1186,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		if (csts.bits.rdy == 0) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0 - enabling controller\n");
 			/* CC.EN = 0 && CSTS.RDY = 0, so we can enable the controller now. */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 1\n");
 			rc = nvme_ctrlr_enable(ctrlr);
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 			return rc;
@@ -958,6 +1197,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
 			/*
 			 * The controller has been enabled.
 			 *  Perform the rest of initialization in nvme_ctrlr_start() serially.
@@ -970,14 +1210,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	default:
 		assert(0);
-		nvme_ctrlr_fail(ctrlr);
+		nvme_ctrlr_fail(ctrlr, false);
 		return -1;
 	}
 
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
 	    spdk_get_ticks() > ctrlr->state_timeout_tsc) {
 		SPDK_ERRLOG("Initialization timed out in state %d\n", ctrlr->state);
-		nvme_ctrlr_fail(ctrlr);
+		nvme_ctrlr_fail(ctrlr, false);
 		return -1;
 	}
 
@@ -1075,8 +1315,6 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	while (!TAILQ_EMPTY(&ctrlr->active_io_qpairs)) {
 		struct spdk_nvme_qpair *qpair = TAILQ_FIRST(&ctrlr->active_io_qpairs);
 
-		nvme_qpair_destroy(qpair);
-
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
@@ -1087,8 +1325,6 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	spdk_bit_array_free(&ctrlr->free_io_qids);
 
 	pthread_mutex_destroy(&ctrlr->ctrlr_lock);
-
-	nvme_ctrlr_free_processes(ctrlr);
 
 	nvme_transport_ctrlr_destruct(ctrlr);
 }

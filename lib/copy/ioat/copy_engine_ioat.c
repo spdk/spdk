@@ -36,7 +36,8 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "spdk/copy_engine.h"
+#include "spdk_internal/copy_engine.h"
+
 #include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
@@ -104,16 +105,16 @@ ioat_free_device(struct ioat_device *dev)
 }
 
 struct ioat_task {
-	copy_completion_cb	cb;
+	spdk_copy_completion_cb	cb;
 };
 
 static int copy_engine_ioat_init(void);
 static void copy_engine_ioat_exit(void);
 
-static int
+static size_t
 copy_engine_ioat_get_ctx_size(void)
 {
-	return sizeof(struct ioat_task) + sizeof(struct copy_task);
+	return sizeof(struct ioat_task) + sizeof(struct spdk_copy_task);
 }
 
 SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit, NULL,
@@ -137,19 +138,19 @@ copy_engine_ioat_exit(void)
 static void
 ioat_done(void *cb_arg)
 {
-	struct copy_task *copy_req;
+	struct spdk_copy_task *copy_req;
 	struct ioat_task *ioat_task = cb_arg;
 
-	copy_req = (struct copy_task *)
+	copy_req = (struct spdk_copy_task *)
 		   ((uintptr_t)ioat_task -
-		    offsetof(struct copy_task, offload_ctx));
+		    offsetof(struct spdk_copy_task, offload_ctx));
 
 	ioat_task->cb(copy_req, 0);
 }
 
 static int64_t
 ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
-		 copy_completion_cb cb)
+		 spdk_copy_completion_cb cb)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);
@@ -163,7 +164,7 @@ ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 
 static int64_t
 ioat_copy_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
-		      uint64_t nbytes, copy_completion_cb cb)
+		      uint64_t nbytes, spdk_copy_completion_cb cb)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
 	struct ioat_io_channel *ioat_ch = spdk_io_channel_get_ctx(ch);

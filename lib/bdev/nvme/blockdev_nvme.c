@@ -44,10 +44,13 @@
 
 #include "spdk/conf.h"
 #include "spdk/endian.h"
-#include "spdk/log.h"
 #include "spdk/bdev.h"
+#include "spdk/json.h"
 #include "spdk/nvme.h"
 #include "spdk/io_channel.h"
+#include "spdk/string.h"
+
+#include "spdk_internal/log.h"
 
 #include "bdev_module.h"
 
@@ -73,8 +76,8 @@ struct nvme_device {
 struct nvme_blockdev {
 	struct spdk_bdev	disk;
 	struct spdk_nvme_ctrlr	*ctrlr;
+	struct nvme_device	*dev;
 	struct spdk_nvme_ns	*ns;
-	struct nvme_device	*nvme_dev;
 	uint64_t		lba_start;
 	uint64_t		lba_end;
 	uint64_t		blocklen;
@@ -109,13 +112,13 @@ static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int blockdev_index_max = 0;
 static int nvme_luns_per_ns = 1;
 static int nvme_controller_index = 0;
-static int LunSizeInMB = 0;
+static int lun_size_in_mb = 0;
 static int num_controllers = -1;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
-static void nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr,
-		int bdev_per_ns, int ctrlr_id, struct nvme_device *nvme_dev);
+static void nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev,
+		int bdev_per_ns, int ctrlr_id);
 static int nvme_library_init(void);
 static void nvme_library_fini(void);
 static int nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
@@ -353,11 +356,74 @@ blockdev_nvme_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 	return spdk_get_io_channel(nvme_bdev->ctrlr, priority, false, NULL);
 }
 
+static int
+blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct nvme_blockdev *nvme_bdev = (struct nvme_blockdev *)bdev;
+	struct nvme_device *nvme_dev = nvme_bdev->dev;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	struct spdk_nvme_ns *ns;
+	union spdk_nvme_vs_register vs;
+	char buf[128];
+
+	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev->ctrlr);
+	vs = spdk_nvme_ctrlr_get_regs_vs(nvme_bdev->ctrlr);
+	ns = nvme_bdev->ns;
+
+	spdk_json_write_name(w, "nvme");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "pci_address");
+	spdk_json_write_string_fmt(w, "%04x:%02x:%02x.%x", nvme_dev->pci_addr.domain,
+				   nvme_dev->pci_addr.bus, nvme_dev->pci_addr.dev,
+				   nvme_dev->pci_addr.func);
+
+	spdk_json_write_name(w, "vendor_id");
+	spdk_json_write_string_fmt(w, "%#04x", cdata->vid);
+
+	snprintf(buf, sizeof(cdata->mn) + 1, "%s", cdata->mn);
+	spdk_str_trim(buf);
+	spdk_json_write_name(w, "model_number");
+	spdk_json_write_string(w, buf);
+
+	snprintf(buf, sizeof(cdata->sn) + 1, "%s", cdata->sn);
+	spdk_str_trim(buf);
+	spdk_json_write_name(w, "serial_number");
+	spdk_json_write_string(w, buf);
+
+	snprintf(buf, sizeof(cdata->fr) + 1, "%s", cdata->fr);
+	spdk_str_trim(buf);
+	spdk_json_write_name(w, "firmware_revision");
+	spdk_json_write_string(w, buf);
+
+	snprintf(buf, sizeof(buf), "%u.%u", vs.bits.mjr, vs.bits.mnr);
+	if (vs.bits.ter) {
+		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
+			 ".%u", vs.bits.ter);
+	}
+	spdk_json_write_name(w, "nvme_version");
+	spdk_json_write_string(w, buf);
+
+	spdk_json_write_name(w, "nsid");
+	spdk_json_write_uint32(w, spdk_nvme_ns_get_id(ns));
+
+	spdk_json_write_name(w, "ns_block_size");
+	spdk_json_write_uint32(w, spdk_nvme_ns_get_sector_size(ns));
+
+	spdk_json_write_name(w, "ns_total_size");
+	spdk_json_write_uint64(w, spdk_nvme_ns_get_size(ns));
+
+	spdk_json_write_object_end(w);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= blockdev_nvme_destruct,
 	.submit_request		= blockdev_nvme_submit_request,
 	.io_type_supported	= blockdev_nvme_io_type_supported,
 	.get_io_channel		= blockdev_nvme_get_io_channel,
+	.dump_config_json	= blockdev_nvme_dump_config_json,
 };
 
 static bool
@@ -419,7 +485,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	dev->pci_addr = probe_info->pci_addr;
 	dev->id = nvme_controller_index++;
 
-	nvme_ctrlr_initialize_blockdevs(dev->ctrlr, nvme_luns_per_ns, dev->id, dev);
+	nvme_ctrlr_initialize_blockdevs(dev, nvme_luns_per_ns, dev->id);
 	spdk_io_device_register(ctrlr, blockdev_nvme_create_cb, blockdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_devices, dev, tailq);
@@ -502,10 +568,10 @@ nvme_library_init(void)
 		return -1;
 	}
 
-	LunSizeInMB = spdk_conf_section_get_intval(sp, "LunSizeInMB");
+	lun_size_in_mb = spdk_conf_section_get_intval(sp, "LunSizeInMB");
 
-	if (LunSizeInMB < 0)
-		LunSizeInMB = 0;
+	if (lun_size_in_mb < 0)
+		lun_size_in_mb = 0;
 
 	spdk_nvme_retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount");
 	if (spdk_nvme_retry_count < 0)
@@ -555,16 +621,16 @@ nvme_library_fini(void)
 	}
 }
 
-void
-nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, int ctrlr_id,
-				struct nvme_device *nvme_dev)
+static void
+nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int bdev_per_ns, int ctrlr_id)
 {
 	struct nvme_blockdev	*bdev;
+	struct spdk_nvme_ctrlr	*ctrlr = nvme_dev->ctrlr;
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	uint64_t		bdev_size, lba_offset, sectors_per_stripe;
 	int			ns_id, num_ns, bdev_idx;
-	uint64_t LunSizeInsector;
+	uint64_t lun_size_in_sector;
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -587,9 +653,9 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 		 */
 		sectors_per_stripe = (1 << 20) / spdk_nvme_ns_get_sector_size(ns);
 
-		LunSizeInsector = ((uint64_t)LunSizeInMB << 20) / spdk_nvme_ns_get_sector_size(ns);
-		if ((LunSizeInMB > 0) && (LunSizeInsector < bdev_size))
-			bdev_size = LunSizeInsector;
+		lun_size_in_sector = ((uint64_t)lun_size_in_mb << 20) / spdk_nvme_ns_get_sector_size(ns);
+		if ((lun_size_in_mb > 0) && (lun_size_in_sector < bdev_size))
+			bdev_size = lun_size_in_sector;
 
 		bdev_size &= ~(sectors_per_stripe - 1);
 
@@ -600,11 +666,11 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 
 			bdev = &g_blockdev[blockdev_index_max];
 			bdev->ctrlr = ctrlr;
+			bdev->dev = nvme_dev;
 			bdev->ns = ns;
 			bdev->lba_start = lba_offset;
 			bdev->lba_end = lba_offset + bdev_size - 1;
 			lba_offset += bdev_size;
-			bdev->nvme_dev = nvme_dev;
 
 			snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
 				 "Nvme%dn%dp%d", ctrlr_id, spdk_nvme_ns_get_id(ns), bdev_idx);
@@ -621,7 +687,12 @@ nvme_ctrlr_initialize_blockdevs(struct spdk_nvme_ctrlr *ctrlr, int bdev_per_ns, 
 				bdev->disk.max_unmap_bdesc_count =
 					NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT;
 			}
-			bdev->disk.write_cache = 1;
+
+			bdev->disk.write_cache = 0;
+			if (cdata->vwc.present) {
+				/* Enable if the Volatile Write Cache exists */
+				bdev->disk.write_cache = 1;
+			}
 			bdev->blocklen = spdk_nvme_ns_get_sector_size(ns);
 			bdev->disk.blocklen = bdev->blocklen;
 			bdev->disk.blockcnt = bdev->lba_end - bdev->lba_start + 1;
@@ -710,7 +781,7 @@ queued_done_adminq(void *ref, const struct spdk_nvme_cpl *cpl)
 	nbdev = bdev_io->ctx;
 
 	/* decrement the outstanding admin commands by 1 */
-	__sync_fetch_and_add(&nbdev->nvme_dev->outstanding_admin_cmds, -1);
+	__sync_fetch_and_add(&nbdev->dev->outstanding_admin_cmds, -1);
 
 	queued_done(ref, cpl);
 }
@@ -798,7 +869,7 @@ blockdev_nvme_get_health_report(struct nvme_blockdev *nbdev, struct nvme_blockio
 		return -1;
 	} else {
 		/* increment the outstanding admin commands by 1 */
-		__sync_fetch_and_add(&nbdev->nvme_dev->outstanding_admin_cmds, 1);
+		__sync_fetch_and_add(&nbdev->dev->outstanding_admin_cmds, 1);
 	}
 
 	return 0;
@@ -816,8 +887,8 @@ blockdev_nvme_get_spdk_running_config(FILE *fp)
 	if (num_controllers != -1) {
 		fprintf(fp, "  NumControllers %d\n", num_controllers);
 	}
-	if (LunSizeInMB != 0) {
-		fprintf(fp, "  LunSizeInMB %d\n", LunSizeInMB);
+	if (lun_size_in_mb != 0) {
+		fprintf(fp, "  LunSizeInMB %d\n", lun_size_in_mb);
 	}
 }
 

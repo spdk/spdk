@@ -54,7 +54,7 @@ ifeq ($(CONFIG_WERROR), y)
 COMMON_CFLAGS += -Werror
 endif
 
-COMMON_CFLAGS += -Wformat -Wformat-security -Wformat-nonliteral
+COMMON_CFLAGS += -Wformat -Wformat-security
 
 COMMON_CFLAGS += -D_GNU_SOURCE
 
@@ -139,7 +139,8 @@ LINK_CXX=\
 
 # Archive $(OBJS) into $@ (.a)
 LIB_C=\
-	$(Q)echo "  LIB $S/$@"; \
+	$(Q)echo "  LIB $(notdir $@)"; \
+	rm -f $@; \
 	ar crDs $@ $(OBJS)
 
 # Clean up generated files listed as arguments plus a default list
@@ -153,3 +154,7 @@ CLEAN_C=\
 	$(COMPILE_CXX)
 
 %.d: ;
+
+define spdk_lib_list_to_files
+	$(1:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.a)
+endef

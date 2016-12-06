@@ -36,22 +36,4 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 APP = identify
 
-C_SRCS := identify.c
-
-CFLAGS += -I. $(ENV_CFLAGS)
-
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/nvme/libspdk_nvme.a \
-	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-
-LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIBS) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk

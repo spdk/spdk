@@ -44,8 +44,9 @@
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/fd.h"
-#include "spdk/log.h"
 #include "spdk/io_channel.h"
+
+#include "spdk_internal/log.h"
 
 static int g_blockdev_count = 0;
 

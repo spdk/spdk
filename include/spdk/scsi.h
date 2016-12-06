@@ -275,14 +275,17 @@ void spdk_scsi_task_set_data(struct spdk_scsi_task *task, void *data, uint32_t l
  * returned buffer and must not free it. Caller is permitted to call
  * spdk_scsi_task_free_data() to free internal buffer if it is not required
  * anymore, but must assert that task is done and not used by library.
- * The count of io vectors must by one. Any previously allocated buffer will be
- * invalid after this call.
+ *
+ * Allocated buffer is stored in iov field of task object.
  *
  * \param task Task struct
  * \param alloc_len Size of allocated buffer.
  * \return Pointer to buffer or NULL on error.
  */
 void *spdk_scsi_task_alloc_data(struct spdk_scsi_task *task, uint32_t alloc_len);
+
+int spdk_scsi_task_scatter_data(struct spdk_scsi_task *task, const void *src, size_t len);
+void *spdk_scsi_task_gather_data(struct spdk_scsi_task *task, int *len);
 void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int asc,
 				     int ascq);
 void spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc,

@@ -39,10 +39,11 @@
 #include "subsystem.h"
 #include "transport.h"
 
-#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
+
+#include "spdk_internal/log.h"
 
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
@@ -214,11 +215,18 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		INVALID_CONNECT_DATA(hostnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
-	/* Look up the requested subsystem */
-	subsystem = nvmf_find_subsystem(data->subnqn, data->hostnqn);
+
+	subsystem = nvmf_find_subsystem(data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
 		INVALID_CONNECT_DATA(subnqn);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (!spdk_nvmf_subsystem_host_allowed(subsystem, data->hostnqn)) {
+		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", data->subnqn, data->hostnqn);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 

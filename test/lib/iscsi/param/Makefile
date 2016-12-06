@@ -33,15 +33,14 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-SPDK_LIBS += $(SPDK_ROOT_DIR)/lib/log/libspdk_log.a \
-	     $(SPDK_ROOT_DIR)/lib/util/libspdk_util.a \
-	     $(SPDK_ROOT_DIR)/lib/cunit/libspdk_cunit.a
+SPDK_LIB_LIST = log util cunit
 
 CFLAGS += $(DPDK_INC)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-LIBS += $(SPDK_LIBS)
+LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += -lcunit
 
 APP = param_ut
@@ -49,7 +48,7 @@ C_SRCS = param_ut.c
 
 all: $(APP)
 
-$(APP): $(OBJS) $(SPDK_LIBS)
+$(APP): $(OBJS) $(SPDK_LIB_FILES)
 	$(LINK_C)
 
 clean:

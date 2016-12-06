@@ -146,8 +146,10 @@ static int g_is_random;
 static int g_queue_depth;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
+static int g_dpdk_mem;
 
 static const char *g_core_mask;
+static char *g_nvmf_discover_info;
 
 static int g_aio_optind; /* Index of first AIO filename in argv */
 
@@ -640,6 +642,9 @@ static void usage(char *program_name)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
+	printf("\t[-r discover info of remote NVMe over Fabrics target:\n");
+	printf("\t Format: TRTYPE:TRADDR:TRVCSID e.g., rdma:192.168.100.8:4420]\n");
+	printf("\t[-d DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 }
@@ -799,10 +804,13 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:lm:q:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:lm:q:r:s:t:w:M:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
+			break;
+		case 'd':
+			g_dpdk_mem = atoi(optarg);
 			break;
 		case 'l':
 			g_latency_tracking_enable = true;
@@ -812,6 +820,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'q':
 			g_queue_depth = atoi(optarg);
+			break;
+		case 'r':
+			g_nvmf_discover_info = optarg;
 			break;
 		case 's':
 			g_io_size_bytes = atoi(optarg);
@@ -965,11 +976,15 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	if (probe_info->subnqn[0]) {
+		printf("Attaching to NVMe over Fabrics controller at %s:%s: %s\n",
+		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+	} else {
+		printf("Attaching to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
+		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
+		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
+		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+	}
 
 	return true;
 }
@@ -978,11 +993,15 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attached to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	if (probe_info->subnqn[0]) {
+		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
+		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+	} else {
+		printf("Attached to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
+		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
+		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
+		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+	}
 
 	register_ctrlr(ctrlr);
 }
@@ -990,11 +1009,60 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 static int
 register_controllers(void)
 {
+	struct spdk_nvme_discover_info info;
+	char *p, *p1;
+	int n;
+
 	printf("Initializing NVMe Controllers\n");
 
 	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		return 1;
+	}
+
+	/* The format of g_nvmf_discover_info should be: TRTYPE:TRADDR:TRVCSID */
+	if (g_nvmf_discover_info) {
+		info.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+
+		p = (char *)g_nvmf_discover_info;
+		p1 = strchr(p, ':');
+		if (p1 == NULL) {
+			fprintf(stderr, "wrong format of discover info\n");
+			return 0;
+		}
+
+		n = p1 - p;
+		if (n == 0) {
+			fprintf(stderr, "wrong format of discover info\n");
+			return 0;
+		}
+		p[n] = '\0';
+
+		if (strncmp(p, "rdma", 4) != 0) {
+			fprintf(stderr, "wrong transport type \n");
+			return 0;
+		}
+		info.trtype = SPDK_NVMF_TRTYPE_RDMA;
+
+		p = (char *)p1 + 1;
+		p1 = strchr(p, ':');
+		if (p1 == NULL) {
+			fprintf(stderr, "wrong format of discover info\n");
+			return 0;
+		}
+
+		n = p1 - p;
+		if ((n == 0) || (n > SPDK_NVMF_TRADDR_MAX_LEN)) {
+			fprintf(stderr, "wrong format of discover info\n");
+			return 0;
+		}
+		p[n] = '\0';
+		info.traddr = p;
+
+		p = (char *)p1 + 1;
+		info.trsvcid = p;
+		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
+			fprintf(stderr, "spdk_nvme_discover() failed\n");
+		}
 	}
 
 	return 0;
@@ -1080,6 +1148,7 @@ static char *ealargs[] = {
 	"perf",
 	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
 	"-n 4",
+	"-m 512",  /* This can be overwritten by index in main(). */
 	"--proc-type=auto",
 };
 
@@ -1100,9 +1169,17 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	ealargs[3] = spdk_sprintf_alloc("-m %d", g_dpdk_mem ? g_dpdk_mem : 512);
+	if (ealargs[3] == NULL) {
+		free(ealargs[1]);
+		perror("ealargs spdk_sprintf_alloc");
+		return 1;
+	}
+
 	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
 
 	free(ealargs[1]);
+	free(ealargs[3]);
 
 	if (rc < 0) {
 		fprintf(stderr, "could not initialize dpdk\n");

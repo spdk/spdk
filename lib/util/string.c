@@ -34,6 +34,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -41,9 +42,9 @@
 #include "spdk/string.h"
 
 char *
-spdk_sprintf_alloc(const char *format, ...)
+spdk_vsprintf_alloc(const char *format, va_list args)
 {
-	va_list args;
+	va_list args_copy;
 	char *buf;
 	size_t bufsize;
 	int rc;
@@ -58,9 +59,9 @@ spdk_sprintf_alloc(const char *format, ...)
 			return NULL;
 		}
 
-		va_start(args, format);
-		rc = vsnprintf(buf, bufsize, format, args);
-		va_end(args);
+		va_copy(args_copy, args);
+		rc = vsnprintf(buf, bufsize, format, args_copy);
+		va_end(args_copy);
 
 		/*
 		 * If vsnprintf() returned a count within our current buffer size, we are done.
@@ -82,6 +83,19 @@ spdk_sprintf_alloc(const char *format, ...)
 	}
 
 	return NULL;
+}
+
+char *
+spdk_sprintf_alloc(const char *format, ...)
+{
+	va_list args;
+	char *ret;
+
+	va_start(args, format);
+	ret = spdk_vsprintf_alloc(format, args);
+	va_end(args);
+
+	return ret;
 }
 
 char *
@@ -212,5 +226,33 @@ spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad)
 		memset((char *)dst + len, pad, size - len);
 	} else {
 		memcpy(dst, src, size);
+	}
+}
+
+size_t
+spdk_strlen_pad(const void *str, size_t size, int pad)
+{
+	const uint8_t *start;
+	const uint8_t *iter;
+	uint8_t pad_byte;
+
+	pad_byte = (uint8_t)pad;
+	start = (const uint8_t *)str;
+
+	if (size == 0) {
+		return 0;
+	}
+
+	iter = start + size - 1;
+	while (1) {
+		if (*iter != pad_byte) {
+			return iter - start + 1;
+		}
+
+		if (iter == start) {
+			/* Hit the start of the string finding only pad_byte. */
+			return 0;
+		}
+		iter--;
 	}
 }

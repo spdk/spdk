@@ -49,7 +49,11 @@ else
 export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))
 endif
 
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/include/rte_config.h))
 DPDK_INC = -I$(DPDK_ABS_DIR)/include
+else
+DPDK_INC = -I$(DPDK_ABS_DIR)/include/dpdk
+endif
 DPDK_LIB = $(DPDK_ABS_DIR)/lib/librte_eal.a $(DPDK_ABS_DIR)/lib/librte_mempool.a \
 	   $(DPDK_ABS_DIR)/lib/librte_ring.a
 
@@ -68,5 +72,6 @@ endif
 
 ENV_CFLAGS = $(DPDK_INC)
 ENV_CXXFLAGS = $(ENV_CFLAGS)
-ENV_LIBS = $(SPDK_ROOT_DIR)/lib/env_dpdk/libspdk_env_dpdk.a $(DPDK_LIB)
-ENV_LINKER_ARGS = -Wl,--start-group -Wl,--whole-archive $(SPDK_ROOT_DIR)/lib/env_dpdk/libspdk_env_dpdk.a $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
+ENV_DPDK_FILE = $(call spdk_lib_list_to_files,env_dpdk)
+ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
+ENV_LINKER_ARGS = -Wl,--start-group -Wl,--whole-archive $(ENV_LIBS) -Wl,--end-group -Wl,--no-whole-archive
