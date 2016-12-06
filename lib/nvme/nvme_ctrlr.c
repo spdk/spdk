@@ -933,13 +933,15 @@ nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
 
 /**
  * This function will be called when the process exited unexpectedly
- *  in order to free any incomplete nvme request and allocated memory.
+ *  in order to free any incomplete nvme request, allocated IO qpairs
+ *  and allocated memory.
  * Note: the ctrlr_lock must be held when calling this function.
  */
 static void
 nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 {
 	struct nvme_request	*req, *tmp_req;
+	struct spdk_nvme_qpair	*qpair, *tmp_qpair;
 
 	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {
 		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);
@@ -947,6 +949,12 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		assert(req->pid == proc->pid);
 
 		nvme_free_request(req);
+	}
+
+	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
+		TAILQ_REMOVE(&proc->allocated_io_qpairs, qpair, per_process_tailq);
+
+		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
 	spdk_free(proc);
