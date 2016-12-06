@@ -1052,7 +1052,9 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
 nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
-		     spdk_nvme_probe_cb probe_cb, void *cb_ctx)
+		     void *cb_ctx,
+		     spdk_nvme_probe_cb probe_cb,
+		     spdk_nvme_remove_cb remove_cb)
 {
 	struct spdk_nvme_probe_info probe_info;
 	struct spdk_nvme_ctrlr_opts discovery_opts;

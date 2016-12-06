@@ -553,7 +553,9 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 int
 nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
-		     spdk_nvme_probe_cb probe_cb, void *cb_ctx)
+		     void *cb_ctx,
+		     spdk_nvme_probe_cb probe_cb,
+		     spdk_nvme_remove_cb remove_cb)
 {
 	struct nvme_pcie_enum_ctx enum_ctx;
 

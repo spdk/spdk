@@ -72,7 +72,9 @@ struct spdk_nvme_ctrlr *
 
 int
 nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx)
+			  void *cb_ctx,
+			  spdk_nvme_probe_cb probe_cb,
+			  spdk_nvme_remove_cb remove_cb)
 {
 	return 0;
 }

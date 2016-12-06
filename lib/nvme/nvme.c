@@ -426,7 +426,7 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		}
 	}
 
-	nvme_transport_ctrlr_scan(trid, probe_cb, cb_ctx);
+	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
 
 	if (!spdk_process_is_primary()) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
