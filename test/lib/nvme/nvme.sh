@@ -60,7 +60,7 @@ timing_enter arbitration
 $rootdir/examples/nvme/arbitration/arbitration -t 3
 timing_exit arbitration
 
-if [ $(uname -s) = Linux ]; then
+if false && [ $(uname -s) = Linux ]; then
 	timing_enter multi_process
 	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 10 &
 	pid=$!
