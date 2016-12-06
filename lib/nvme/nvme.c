@@ -429,14 +429,12 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 			if (hotplug_fd < 0) {
 				SPDK_ERRLOG("Failed to open uevent netlink socket\n");
 			}
-
-			nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
 		} else {
 			nvme_hotplug_monitor(cb_ctx, probe_cb, attach_cb, remove_cb);
 		}
-	} else {
-		nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
 	}
+
+	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
 
 	if (!spdk_process_is_primary()) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {

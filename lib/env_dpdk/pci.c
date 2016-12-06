@@ -127,13 +127,6 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
 
-	if (rte_eal_pci_scan() != 0) {
-		ctx->cb_arg = NULL;
-		ctx->cb_fn = NULL;
-		pthread_mutex_unlock(&ctx->mtx);
-		return -1;
-	}
-
 	if (rte_eal_pci_probe() != 0) {
 		ctx->cb_arg = NULL;
 		ctx->cb_fn = NULL;
