@@ -1676,7 +1676,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	tr->req = req;
 	req->cmd.cid = tr->cid;
 
-	req->t0 = spdk_get_ticks() + (spdk_get_ticks_hz() * qpair->ctrlr->opts.nvme_io_timeout);
+	req->t0 = spdk_get_ticks() + (spdk_get_ticks_hz() * qpair->ctrlr->opts.nvme_io_timeout_sec);
 
 	if (req->payload_size == 0) {
 		/* Null payload - leave PRP fields zeroed */
@@ -1832,7 +1832,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 			 * Call the registered timeout function for user to take action.
 			 */
 
-			qpair->ctrlr->timeout_cb_fn(qpair->ctrlr, qpair);
+			qpair->ctrlr->timeout_cb_fn(qpair->ctrlr, qpair, qpair->ctrlr->cb_arg);
 		}
 	}
 }

@@ -87,10 +87,10 @@
 #define NVME_MAX_AER_LOG_SIZE		(4096)
 
 /*
- * Default i/o timeout
+ * Nvme i/o timeout in seconds
  */
 #ifndef NVME_IO_TIMEOUT
-#define NVME_IO_TIMEOUT		30
+#define NVME_IO_TIMEOUT			30
 #endif
 
 /*
@@ -431,6 +431,7 @@ struct spdk_nvme_ctrlr {
 	 * A function pointer to timeout callback function
 	 */
 	spdk_nvme_timeout_cb            timeout_cb_fn;
+	void 				*cb_arg;
 };
 
 struct nvme_driver {

@@ -91,10 +91,9 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	uint32_t keep_alive_timeout_ms;
 	/**
-	 * Holds nvme timeout value. It is initialized to the value
-	 * of NVME_IO_TIMEOUT.
+	 * Store nvme timeout value in seconds.
 	 */
-	uint32_t nvme_io_timeout;
+	uint32_t nvme_io_timeout_sec;
 
 	/**
 	 * Specify the retry number when there is issue with the transport
@@ -383,7 +382,8 @@ struct spdk_nvme_qpair;
  * detected on a request.
  */
 typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
-				     struct spdk_nvme_qpair *qpair);
+				     struct spdk_nvme_qpair *qpair,
+				     void *cb_arg);
 
 /**
  * \brief Register for timeout callback on a controller.
@@ -393,10 +393,11 @@ typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
  *
  * \param ctrlr NVMe controller on which to monitor for timeout.
  * \param cb_fn A function pointer that points to the callback function
+ * \param timeout_sec Timeout value in seconds.
  * \param cb_arg Argument to the callback function.
  */
 void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
-		spdk_nvme_timeout_cb cb_fn, uint32_t timeout);
+		spdk_nvme_timeout_cb cb_fn, uint32_t timeout_sec, void *cb_arg);
 
 /**
  * \brief Allocate an I/O queue pair (submission and completion queue).

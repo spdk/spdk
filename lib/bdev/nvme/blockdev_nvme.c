@@ -400,11 +400,16 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 }
 
 static void
-blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr, 
+	struct spdk_nvme_qpair *qpair, void *cb_arg)
 {
 	int rc;
 
-	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
+	if (cb_arg) {
+		SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cb_arg=%p\n", ctrlr, qpair, cb_arg);
+	} else {
+		SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
+	}
 
 	rc = spdk_nvme_ctrlr_reset(ctrlr);
 	if (rc) {
@@ -418,6 +423,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	struct nvme_device *dev;
+	void *user_data = NULL;
 
 	dev = malloc(sizeof(struct nvme_device));
 	if (dev == NULL) {
@@ -439,7 +445,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	}
 
 	if (g_reset_controller_on_timeout) {
-		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, blockdev_nvme_timeout_cb, g_timeout);
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, blockdev_nvme_timeout_cb, 
+							g_timeout, user_data);
 	}
 }
 
