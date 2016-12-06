@@ -35,18 +35,13 @@
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
 
-struct nvme_driver _g_nvme_driver = {
-	.lock = PTHREAD_MUTEX_INITIALIZER,
-	.hotplug_fd = -1,
-	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.init_ctrlrs),
-	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(_g_nvme_driver.attached_ctrlrs),
-	.request_mempool = NULL,
-	.initialized = false,
-};
+#define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
-struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
+struct nvme_driver	*g_spdk_nvme_driver;
 
-int32_t		spdk_nvme_retry_count;
+int32_t			spdk_nvme_retry_count;
+
+static int		hotplug_fd = -1;
 
 struct spdk_nvme_ctrlr *
 nvme_attach(enum spdk_nvme_transport transport,
@@ -233,6 +228,91 @@ nvme_mutex_init_shared(pthread_mutex_t *mtx)
 	return rc;
 }
 
+static int
+nvme_driver_init(void)
+{
+	int ret = 0;
+	/* Any socket ID */
+	int socket_id = -1;
+
+	/*
+	 * Only one thread from one process will do this driver init work.
+	 * The primary process will reserve the shared memory and do the
+	 *  initialization.
+	 * The secondary process will lookup the existing reserved memory.
+	 */
+	if (spdk_process_is_primary()) {
+		/* The unique named memzone already reserved. */
+		if (g_spdk_nvme_driver != NULL) {
+			assert(g_spdk_nvme_driver->initialized == true);
+
+			return 0;
+		} else {
+			g_spdk_nvme_driver = spdk_memzone_reserve(SPDK_NVME_DRIVER_NAME,
+					     sizeof(struct nvme_driver), socket_id, 0);
+		}
+
+		if (g_spdk_nvme_driver == NULL) {
+			SPDK_ERRLOG("primary process failed to reserve memory\n");
+
+			return -1;
+		}
+	} else {
+		g_spdk_nvme_driver = spdk_memzone_lookup(SPDK_NVME_DRIVER_NAME);
+
+		/* The unique named memzone already reserved by the primary process. */
+		if (g_spdk_nvme_driver != NULL) {
+			/* Wait the nvme driver to get initialized. */
+			while (g_spdk_nvme_driver->initialized == false) {
+				nvme_delay(1000);
+			}
+		} else {
+			SPDK_ERRLOG("primary process is not started yet\n");
+
+			return -1;
+		}
+
+		return 0;
+	}
+
+	/*
+	 * At this moment, only one thread from the primary process will do
+	 * the g_spdk_nvme_driver initialization
+	 */
+	assert(spdk_process_is_primary());
+
+	ret = nvme_mutex_init_shared(&g_spdk_nvme_driver->lock);
+	if (ret != 0) {
+		SPDK_ERRLOG("failed to initialize mutex\n");
+		spdk_memzone_free(SPDK_NVME_DRIVER_NAME);
+		return ret;
+	}
+
+	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+
+	g_spdk_nvme_driver->initialized = false;
+
+	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
+	TAILQ_INIT(&g_spdk_nvme_driver->attached_ctrlrs);
+
+	g_spdk_nvme_driver->request_mempool = spdk_mempool_create("nvme_request", 8192,
+					      sizeof(struct nvme_request), 128);
+	if (g_spdk_nvme_driver->request_mempool == NULL) {
+		SPDK_ERRLOG("unable to allocate pool of requests\n");
+
+		pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+		pthread_mutex_destroy(&g_spdk_nvme_driver->lock);
+
+		spdk_memzone_free(SPDK_NVME_DRIVER_NAME);
+
+		return -1;
+	}
+
+	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+	return ret;
+}
+
 int
 nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
 	       struct spdk_nvme_probe_info *probe_info, void *devhandle)
@@ -314,6 +394,8 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 		}
 	}
 
+	g_spdk_nvme_driver->initialized = true;
+
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return rc;
 }
@@ -333,29 +415,19 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 {
 	int rc;
 	enum spdk_nvme_transport transport;
+	struct spdk_nvme_ctrlr *ctrlr;
 
-	if (!spdk_process_is_primary()) {
-		while (g_spdk_nvme_driver->initialized == false) {
-			usleep(200 * 1000);
-		}
+	rc = nvme_driver_init();
+	if (rc != 0) {
+		return rc;
 	}
 
 	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	if (g_spdk_nvme_driver->hotplug_fd < 0) {
-		g_spdk_nvme_driver->hotplug_fd = spdk_uevent_connect();
-		if (g_spdk_nvme_driver->hotplug_fd < 0) {
+	if (hotplug_fd < 0) {
+		hotplug_fd = spdk_uevent_connect();
+		if (hotplug_fd < 0) {
 			SPDK_ERRLOG("Failed to open uevent netlink socket\n");
-		}
-	}
-
-	if (g_spdk_nvme_driver->request_mempool == NULL) {
-		g_spdk_nvme_driver->request_mempool = spdk_mempool_create("nvme_request", 8192,
-						      sizeof(struct nvme_request), -1);
-		if (g_spdk_nvme_driver->request_mempool == NULL) {
-			SPDK_ERRLOG("Unable to allocate pool of requests\n");
-			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
-			return -1;
 		}
 	}
 
@@ -373,6 +445,23 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 
 	nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info, NULL);
 
+	if (!spdk_process_is_primary()) {
+		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+			nvme_ctrlr_proc_get_ref(ctrlr);
+
+			/*
+			 * Unlock while calling attach_cb() so the user can call other functions
+			 *  that may take the driver lock, like nvme_detach().
+			 */
+			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			attach_cb(cb_ctx, &ctrlr->probe_info, ctrlr, &ctrlr->opts);
+			pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+		}
+
+		pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+		return 0;
+	}
+
 	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	/*
 	 * Keep going even if one or more nvme_attach() calls failed,
@@ -381,9 +470,6 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 
 	rc = nvme_init_controllers(cb_ctx, attach_cb);
 
-	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
-	g_spdk_nvme_driver->initialized = true;
-	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return rc;
 }
 
@@ -403,12 +489,10 @@ static int
 nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		     spdk_nvme_remove_cb remove_cb)
 {
-	int rc = 0;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_uevent event;
-	struct nvme_driver *nvme_driver = g_spdk_nvme_driver;
 
-	while (spdk_get_uevent(nvme_driver->hotplug_fd, &event) > 0) {
+	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
 		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO) {
 			if (event.action == SPDK_NVME_UEVENT_ADD) {
 				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %04x:%02x:%02x.%u\n",
@@ -437,14 +521,6 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach
 				if (remove_cb) {
 					remove_cb(cb_ctx, ctrlr);
 				}
-				if (spdk_process_is_primary()) {
-					rc = spdk_nvme_detach(ctrlr);
-					if (rc) {
-						SPDK_ERRLOG("Failed to hot detach nvme address: %04x:%04x:%04x.%u\n",
-							    event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev,
-							    event.pci_addr.func);
-					}
-				}
 			}
 		}
 	}
@@ -455,7 +531,7 @@ int
 spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		spdk_nvme_remove_cb remove_cb)
 {
-	if (g_spdk_nvme_driver->hotplug_fd < 0) {
+	if (hotplug_fd < 0) {
 		return _spdk_nvme_probe(NULL, cb_ctx, probe_cb, attach_cb, remove_cb);
 	} else {
 		return nvme_hotplug_monitor(cb_ctx, probe_cb, attach_cb, remove_cb);

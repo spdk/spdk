@@ -60,6 +60,28 @@ timing_enter arbitration
 $rootdir/examples/nvme/arbitration/arbitration -t 3
 timing_exit arbitration
 
+if [ $(uname -s) = Linux ]; then
+	timing_enter multi_process
+	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 10 &
+	pid=$!
+	sleep 3
+	$rootdir/examples/nvme/perf/perf -q 1 -w randread -s 4096 -t 10 &
+	sleep 1
+	kill -9 $!
+	count=0
+	while [ $count -le 2 ]; do
+		$rootdir/examples/nvme/perf/perf -q 1 -w read -s 4096 -t 1
+		count=$(( $count + 1 ))
+	done
+	count=0
+	while [ $count -le 1 ]; do
+		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1 &
+		count=$(( $count + 1 ))
+	done
+	wait $pid
+	timing_exit multi_process
+fi
+
 #Now test nvme reset function
 timing_enter reset
 $testdir/reset/reset -q 64 -w write -s 4096 -t 2

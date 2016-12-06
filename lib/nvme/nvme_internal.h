@@ -275,6 +275,9 @@ struct spdk_nvme_qpair {
 
 	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
+
+	/* List entry for spdk_nvme_ctrlr_process::allocated_io_qpairs */
+	TAILQ_ENTRY(spdk_nvme_qpair)	per_process_tailq;
 };
 
 struct spdk_nvme_ns {
@@ -341,6 +344,9 @@ struct spdk_nvme_ctrlr_process {
 
 	/** Reference to track the number of attachment to this controller. */
 	int						ref;
+
+	/** Allocated IO qpairs */
+	TAILQ_HEAD(, spdk_nvme_qpair)			allocated_io_qpairs;
 };
 
 /*
@@ -436,7 +442,6 @@ struct spdk_nvme_ctrlr {
 
 struct nvme_driver {
 	pthread_mutex_t			lock;
-	int				hotplug_fd;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
 	struct spdk_mempool		*request_mempool;

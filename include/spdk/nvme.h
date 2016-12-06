@@ -222,6 +222,12 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_i
  * Callback for spdk_nvme_probe() to report that a device attached to the userspace NVMe driver
  * has been removed from the system.
  *
+ * The controller will remain in a failed state (any new I/O submitted will fail).
+ *
+ * The controller must be detached from the userspace driver by calling spdk_nvme_detach()
+ * once the controller is no longer in use.  It is up to the library user to ensure that
+ * no other threads are using the controller before calling spdk_nvme_detach().
+ *
  * \param ctrlr NVMe controller instance that was removed.
  */
 typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
