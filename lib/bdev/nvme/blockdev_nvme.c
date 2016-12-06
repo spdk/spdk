@@ -375,13 +375,12 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "firmware_revision");
 	spdk_json_write_string(w, buf);
 
-	snprintf(buf, sizeof(buf), "%u.%u", vs.bits.mjr, vs.bits.mnr);
-	if (vs.bits.ter) {
-		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-			 ".%u", vs.bits.ter);
-	}
 	spdk_json_write_name(w, "nvme_version");
-	spdk_json_write_string(w, buf);
+	if (vs.bits.ter) {
+		spdk_json_write_string_fmt(w, "%u.%u.%u", vs.bits.mjr, vs.bits.mnr, vs.bits.ter);
+	} else {
+		spdk_json_write_string_fmt(w, "%u.%u", vs.bits.mjr, vs.bits.mnr);
+	}
 
 	spdk_json_write_name(w, "nsid");
 	spdk_json_write_uint32(w, spdk_nvme_ns_get_id(ns));
