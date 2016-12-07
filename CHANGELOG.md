@@ -1,8 +1,10 @@
 Changelog
 =========
 
-Upcoming Release
-----------------
+v16.12: NVMe over Fabrics host, hotplug, and multi-process
+----------------------------------------------------------
+
+### NVMe library
 
 The NVMe library has been changed to create its own request memory pool rather than
 requiring the user to initialize the global `request_mempool` variable.  Apps can be
@@ -20,16 +22,53 @@ The NVMe library SGL callback prototype has been changed to return virtual addre
 rather than physical addresses.  Callers of `spdk_nvme_ns_cmd_readv()` and
 `spdk_nvme_ns_cmd_writev()` must update their `next_sge_fn` callbacks to match.
 
-Libpciaccess has been removed as a dependency and DPDK PCI enumeration is
+The NVMe library now supports NVMe over Fabrics devices in addition to the existing
+support for local PCIe-attached NVMe devices.  For an example of how to enable
+NVMe over Fabrics support in an application, see `examples/nvme/identify` and
+`examples/nvme/perf`.
+
+Hot insert/remove support for NVMe devices has been added.  To enable NVMe hotplug
+support, an application should call the `spdk_nvme_probe()` function on a regular
+basis to probe for new devices (reported via the existing `probe_cb` callback) and
+removed devices (reported via a new `remove_cb` callback).  Hotplug is currently
+only supported on Linux with the `uio_pci_generic` driver, and newly-added NVMe
+devices must be bound to `uio_pci_generic` by an external script or tool.
+
+### NVMe over Fabrics target (`nvmf_tgt`)
+
+The `nvmf_tgt` configuration file format has been updated significantly to enable
+new features.  See the example configuration file `etc/spdk/nvmf.conf.in` for
+more details on the new and changed options.
+
+The NVMe over Fabrics target now supports virtual mode subsystems, which allow the
+user to export devices from the SPDK block device abstraction layer as NVMe over
+Fabrics subsystems.  Direct mode (raw NVMe device access) is also still supported,
+and a single `nvmf_tgt` may export both types of subsystems simultaneously.
+
+### General changes
+
+`libpciaccess` has been removed as a dependency and DPDK PCI enumeration is
 used instead. Prior to DPDK 16.07 enumeration by class code was not supported,
-so for earlier DPDK versions only Intel SSDs will be discovered. Starting with
-DPDK 16.07 all devices will be discovered correctly by class code.
+so for earlier DPDK versions, only Intel SSD DC P3x00 devices will be discovered
+by the NVMe library.
+
+The `env` environment abstraction library has been introduced, and a default
+DPDK-based implementation is provided as part of SPDK.  The goal of the `env`
+layer is to enable use of alternate user-mode memory allocation and PCI access
+libraries.  See `PORTING.md` for more details.
 
 The build process has been modified to produce all of the library files in the
 `build/lib` directory.  This is intended to simplify the use of SPDK from external
 projects, which can now link to SPDK libraries by adding the `build/lib` directory
 to the library path via `-L` and linking the SPDK libraries by name (for example,
 `-lspdk_nvme -lspdk_log -lspdk_util`).
+
+`nvmf_tgt` and `iscsi_tgt` now have a JSON-RPC interface, which allows the user
+to query and modify the configuration at runtime.  The RPC service is disabled by
+default, since it currently does not provide any authentication or security
+mechanisms; it should only be enabled on systems with controlled user access
+behind a firewall. An example RPC client implemented in Python is provided in
+`scripts/rpc.py`.
 
 v16.08: iSCSI target, NVMe over Fabrics maturity
 ------------------------------------------------
