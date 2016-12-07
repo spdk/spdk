@@ -189,7 +189,7 @@ function run_test() {
 	echo "START TEST $1"
 	echo "************************************"
 	set -x
-	time $1
+	time "$@"
 	set +x
 	echo "************************************"
 	echo "END TEST $1"
