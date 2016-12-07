@@ -36,10 +36,10 @@ if [ ! -d /sys/kernel/config/nvmet/ports/1 ]; then
 	mkdir /sys/kernel/config/nvmet/ports/1
 fi
 
-echo rdma > /sys/kernel/config/nvmet/ports/1/addr_trtype
-echo ipv4 > /sys/kernel/config/nvmet/ports/1/addr_adrfam
-echo $NVMF_FIRST_TARGET_IP > /sys/kernel/config/nvmet/ports/1/addr_traddr
-echo $NVMF_PORT > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
+echo -n rdma > /sys/kernel/config/nvmet/ports/1/addr_trtype
+echo -n ipv4 > /sys/kernel/config/nvmet/ports/1/addr_adrfam
+echo -n $NVMF_FIRST_TARGET_IP > /sys/kernel/config/nvmet/ports/1/addr_traddr
+echo -n $NVMF_PORT > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
 
 ln -s /sys/kernel/config/nvmet/subsystems/$subsystemname /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
