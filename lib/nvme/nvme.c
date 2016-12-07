@@ -331,6 +331,9 @@ nvme_probe_one(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb
 		}
 
 		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
+	} else {
+		/* The device is not supported */
+		return 1;
 	}
 
 	return 0;
