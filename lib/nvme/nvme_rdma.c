@@ -1082,6 +1082,8 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 	/* TODO: this should be using the normal NVMe controller initialization process */
 	cc.raw = 0;
 	cc.bits.en = 1;
+	cc.bits.iosqes = 6; /* SQ entry size == 64 == 2^6 */
+	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
 	rc = nvme_transport_ctrlr_set_reg_4(discovery_ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
 					    cc.raw);
 	if (rc < 0) {
