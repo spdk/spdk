@@ -41,7 +41,7 @@ as an NVMe submission queue entry on the queue pair specified in the command.
 The application must poll for I/O completion on each queue pair with outstanding I/O
 to receive completion callbacks.
 
-\sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_deallocate,
+\sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_dataset_management,
 spdk_nvme_ns_cmd_flush, spdk_nvme_qpair_process_completions
 
 */
