@@ -1400,6 +1400,16 @@ spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 	return &ctrlr->cdata;
 }
 
+union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_csts_register csts;
+
+	if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
+		csts.raw = 0;
+	}
+	return csts;
+}
+
 union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->cap;

@@ -343,10 +343,12 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	const struct spdk_nvme_ctrlr_data *cdata;
 	struct spdk_nvme_ns *ns;
 	union spdk_nvme_vs_register vs;
+	union spdk_nvme_csts_register csts;
 	char buf[128];
 
 	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev->ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(nvme_bdev->ctrlr);
+	csts = spdk_nvme_ctrlr_get_regs_csts(nvme_bdev->ctrlr);
 	ns = nvme_bdev->ns;
 
 	spdk_json_write_name(w, "nvme");
@@ -356,6 +358,9 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_string_fmt(w, "%04x:%02x:%02x.%x", nvme_dev->pci_addr.domain,
 				   nvme_dev->pci_addr.bus, nvme_dev->pci_addr.dev,
 				   nvme_dev->pci_addr.func);
+
+	spdk_json_write_name(w, "ctrlr_data");
+	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "vendor_id");
 	spdk_json_write_string_fmt(w, "%#04x", cdata->vid);
@@ -375,6 +380,11 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "firmware_revision");
 	spdk_json_write_string(w, buf);
 
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "vs");
+	spdk_json_write_object_begin(w);
+
 	snprintf(buf, sizeof(buf), "%u.%u", vs.bits.mjr, vs.bits.mnr);
 	if (vs.bits.ter) {
 		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
@@ -383,14 +393,35 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "nvme_version");
 	spdk_json_write_string(w, buf);
 
-	spdk_json_write_name(w, "nsid");
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "csts");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "rdy");
+	spdk_json_write_string_fmt(w, "%u", csts.bits.rdy);
+
+	spdk_json_write_name(w, "cfs");
+	spdk_json_write_string_fmt(w, "%u", csts.bits.cfs);
+
+	spdk_json_write_name(w, "shst");
+	spdk_json_write_string_fmt(w, "%u", csts.bits.shst);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "ns_data");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "id");
 	spdk_json_write_uint32(w, spdk_nvme_ns_get_id(ns));
 
-	spdk_json_write_name(w, "ns_block_size");
+	spdk_json_write_name(w, "block_size");
 	spdk_json_write_uint32(w, spdk_nvme_ns_get_sector_size(ns));
 
-	spdk_json_write_name(w, "ns_total_size");
+	spdk_json_write_name(w, "total_size");
 	spdk_json_write_uint64(w, spdk_nvme_ns_get_size(ns));
+
+	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
 
