@@ -656,29 +656,6 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting keep alive timeout feature to %u ms\n",
-		      ctrlr->opts.keep_alive_timeout_ms);
-
-	status.done = false;
-	rc = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER,
-					     ctrlr->opts.keep_alive_timeout_ms, 0, NULL, 0,
-					     nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		SPDK_ERRLOG("Keep alive timeout Set Feature failed: %d\n", rc);
-		ctrlr->opts.keep_alive_timeout_ms = 0;
-		return rc;
-	}
-
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
-	}
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("Keep alive timeout Set Feature failed: SC %x SCT %x\n",
-			    status.cpl.status.sc, status.cpl.status.sct);
-		ctrlr->opts.keep_alive_timeout_ms = 0;
-		return -ENXIO;
-	}
-
 	/* Retrieve actual keep alive timeout, since the controller may have adjusted it. */
 	status.done = false;
 	rc = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_KEEP_ALIVE_TIMER, 0, NULL, 0,
