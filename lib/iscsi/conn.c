@@ -413,6 +413,26 @@ error_return:
 	return 0;
 }
 
+void
+spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+	if (pdu->task) {
+		if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
+			if (pdu->task->scsi.offset > 0) {
+				conn->data_in_cnt--;
+				if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
+					/* Free the primary task after the last subtask done */
+					conn->data_in_cnt--;
+					spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
+				}
+				spdk_iscsi_conn_handle_queued_tasks(conn);
+			}
+		}
+		spdk_iscsi_task_put(pdu->task);
+	}
+	spdk_put_pdu(pdu);
+}
+
 static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_pdu *pdu;
@@ -1102,21 +1122,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 				TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
 						  tailq);
 			} else {
-				if (pdu->task) {
-					if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAIN) {
-						if (pdu->task->scsi.offset > 0) {
-							conn->data_in_cnt--;
-							if (pdu->bhs.flags & ISCSI_DATAIN_STATUS) {
-								/* Free the primary task after the last subtask done */
-								conn->data_in_cnt--;
-								spdk_iscsi_task_put(spdk_iscsi_task_get_primary(pdu->task));
-							}
-							spdk_iscsi_conn_handle_queued_tasks(conn);
-						}
-					}
-					spdk_iscsi_task_put(pdu->task);
-				}
-				spdk_put_pdu(pdu);
+				spdk_iscsi_conn_free_pdu(conn, pdu);
 			}
 
 			pdu = TAILQ_FIRST(&conn->write_pdu_list);

@@ -77,6 +77,11 @@ spdk_iscsi_portal_grp_close_all(void)
 	return 0;
 }
 
+void
+spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
+{
+}
+
 static void
 maxburstlength_test(void)
 {
