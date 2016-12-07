@@ -43,17 +43,7 @@ echo -n $NVMF_PORT > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
 
 ln -s /sys/kernel/config/nvmet/subsystems/$subsystemname /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
-modprobe -v nvme-rdma
-
-if [ -e "/dev/nvme-fabrics" ]; then
-	chmod a+rw /dev/nvme-fabrics
-fi
-
-nvme discover -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
-
-#will replace with our own identify later
-#$rootdir/examples/nvme/identify/identify -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n nqn.2014-08.org.nvmexpress.discovery -t all
-nvmfcleanup
+$rootdir/examples/nvme/identify/identify -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n nqn.2014-08.org.nvmexpress.discovery -t all
 
 rm -rf /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
