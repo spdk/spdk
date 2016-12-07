@@ -128,14 +128,14 @@ static int nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair);
 static inline struct nvme_rdma_qpair *
 nvme_rdma_qpair(struct spdk_nvme_qpair *qpair)
 {
-	assert(qpair->transport == SPDK_NVME_TRANSPORT_RDMA);
+	assert(qpair->trtype == SPDK_NVME_TRANSPORT_RDMA);
 	return (struct nvme_rdma_qpair *)((uintptr_t)qpair - offsetof(struct nvme_rdma_qpair, qpair));
 }
 
 static inline struct nvme_rdma_ctrlr *
 nvme_rdma_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
-	assert(ctrlr->transport == SPDK_NVME_TRANSPORT_RDMA);
+	assert(ctrlr->trtype == SPDK_NVME_TRANSPORT_RDMA);
 	return (struct nvme_rdma_ctrlr *)((uintptr_t)ctrlr - offsetof(struct nvme_rdma_ctrlr, ctrlr));
 }
 
@@ -537,7 +537,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	memset(&pdata, 0, sizeof(pdata));
 	pdata.qid = rqpair->qpair.id;
 	pdata.hrqsize = rqpair->max_queue_depth;
-	pdata.hsqsize = rqpair->max_queue_depth;
+	pdata.hsqsize = rqpair->max_queue_depth - 1;
 	conn_param.private_data = &pdata;
 	conn_param.private_data_len = sizeof(pdata);
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "qid =%d\n", pdata.qid);
@@ -758,6 +758,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
 	cmd.qid = rqpair->qpair.id;
 	cmd.sqsize = rqpair->qpair.num_entries - 1;
+	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
 
 	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
 		nvmf_data->cntlid = 0xFFFF;
@@ -1018,23 +1019,14 @@ nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 static int
 nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
-				    char *log_page, uint32_t size)
+				    void *log_page, uint32_t size)
 {
-	struct spdk_nvme_cmd cmd = {};
-	struct nvme_completion_poll_status status = {};
+	struct nvme_completion_poll_status status;
 	int rc;
-	uint32_t zero_based_value = ((size / sizeof(uint32_t)) - 1);
-	uint16_t numdl = zero_based_value & 0xFFFF;
-	uint16_t numdu = (zero_based_value >> 16) & 0xFFFF;
 
-	cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	cmd.cdw10 = SPDK_NVME_LOG_DISCOVERY;
-	cmd.cdw10 |= (numdl << 16);
-	cmd.cdw11 = numdu;
-	rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, (struct spdk_nvme_cmd *)&cmd,
-					   (void *)log_page, 4096,
-					   nvme_completion_poll_cb, &status);
-
+	status.done = false;
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size,
+					      nvme_completion_poll_cb, &status);
 	if (rc < 0) {
 		return -1;
 	}
@@ -1052,8 +1044,9 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
-nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
-		     spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
+nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
+		     spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+		     void *devhandle, void *pci_address)
 {
 	struct spdk_nvme_discover_info *discover_info = devhandle;
 	struct spdk_nvme_probe_info probe_info;
@@ -1066,14 +1059,16 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 	uint32_t i;
 
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
+	/* For discovery_ctrlr set the timeout to 0 */
+	discovery_opts.keep_alive_timeout_ms = 0;
 
-	probe_info.trtype = (uint8_t)transport;
+	probe_info.trtype = (uint8_t)trtype;
 	snprintf(probe_info.subnqn, sizeof(probe_info.subnqn), "%s", discover_info->subnqn);
 	snprintf(probe_info.traddr, sizeof(probe_info.traddr), "%s", discover_info->traddr);
 	snprintf(probe_info.trsvcid, sizeof(probe_info.trsvcid), "%s", discover_info->trsvcid);
 
 	memset(buffer, 0x0, 4096);
-	discovery_ctrlr = nvme_attach(transport, &discovery_opts, &probe_info, NULL);
+	discovery_ctrlr = nvme_attach(trtype, &discovery_opts, &probe_info, NULL);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1081,6 +1076,8 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 	/* TODO: this should be using the normal NVMe controller initialization process */
 	cc.raw = 0;
 	cc.bits.en = 1;
+	cc.bits.iosqes = 6; /* SQ entry size == 64 == 2^6 */
+	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
 	rc = nvme_transport_ctrlr_set_reg_4(discovery_ctrlr, offsetof(struct spdk_nvme_registers, cc.raw),
 					    cc.raw);
 	if (rc < 0) {
@@ -1145,10 +1142,11 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport transport,
 	return 0;
 }
 
-struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport transport,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		const struct spdk_nvme_probe_info *probe_info,
-		void *devhandle)
+struct spdk_nvme_ctrlr *
+	nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type trtype,
+			  const struct spdk_nvme_ctrlr_opts *opts,
+			  const struct spdk_nvme_probe_info *probe_info,
+			  void *devhandle)
 {
 	struct nvme_rdma_ctrlr *rctrlr;
 	union spdk_nvme_cap_register cap;
@@ -1160,7 +1158,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(enum spdk_nvme_transport trans
 		return NULL;
 	}
 
-	rctrlr->ctrlr.transport = SPDK_NVME_TRANSPORT_RDMA;
+	rctrlr->ctrlr.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rctrlr->ctrlr.opts = *opts;
 	rctrlr->ctrlr.probe_info = *probe_info;
 

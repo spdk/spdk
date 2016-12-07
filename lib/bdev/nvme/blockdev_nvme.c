@@ -363,7 +363,7 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "vendor_id");
-	spdk_json_write_string_fmt(w, "%#04x", cdata->vid);
+	spdk_json_write_string_fmt(w, "0x%04x", cdata->vid);
 
 	snprintf(buf, sizeof(cdata->mn) + 1, "%s", cdata->mn);
 	spdk_str_trim(buf);
@@ -385,13 +385,12 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "vs");
 	spdk_json_write_object_begin(w);
 
-	snprintf(buf, sizeof(buf), "%u.%u", vs.bits.mjr, vs.bits.mnr);
-	if (vs.bits.ter) {
-		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-			 ".%u", vs.bits.ter);
-	}
 	spdk_json_write_name(w, "nvme_version");
-	spdk_json_write_string(w, buf);
+	if (vs.bits.ter) {
+		spdk_json_write_string_fmt(w, "%u.%u.%u", vs.bits.mjr, vs.bits.mnr, vs.bits.ter);
+	} else {
+		spdk_json_write_string_fmt(w, "%u.%u", vs.bits.mjr, vs.bits.mnr);
+	}
 
 	spdk_json_write_object_end(w);
 

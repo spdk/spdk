@@ -10,26 +10,26 @@ if [ $(uname -s) = Linux ]; then
         timing_enter nvme_mp
 
 	timing_enter mp_func_test
-	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 5 &
+	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 5 -c 0xf &
 	sleep 3
-	$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1
+	$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1 -c 0x10
 	wait $!
 	timing_exit mp_func_test
 
 	timing_enter mp_fault_test
 	timing_enter mp_fault_test_1
-	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 5 &
+	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 5 -c 0xf &
 	sleep 3
-	$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 3
+	$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 3 -c 0x10
 	sleep 1
 	kill -9 $!
 	timing_exit mp_fault_test_1
 
 	timing_enter mp_fault_test_2
-	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 7 &
+	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 7 -c 0xf &
 	pid=$!
 	sleep 3
-	$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 3 &
+	$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 3 -c 0x10 &
 	sleep 2
 	kill -9 $!
 	wait $pid
@@ -38,23 +38,23 @@ if [ $(uname -s) = Linux ]; then
 
 	timing_enter mp_stress_test
 	timing_enter mp_stress_test_1
-	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 10 &
+	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 10 -c 0xf &
 	sleep 3
 	count=0
 	while [ $count -le 4 ]; do
-		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1
+		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1 -c 0x10
 		count=$(( $count + 1 ))
 	done
 	wait $!
 	timing_exit mp_stress_test_1
 
 	timing_enter mp_stress_test_2
-	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 15 &
+	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 15 -c 0xf &
 	pid=$!
 	sleep 3
 	count=0
 	while [ $count -le 4 ]; do
-		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 3 &
+		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 3 -c 0x10 &
 		sleep 2
 		kill -9 $!
 		count=$(( $count + 1 ))
@@ -68,7 +68,9 @@ if [ $(uname -s) = Linux ]; then
 	sleep 3
 	count=0
 	while [ $count -le 4 ]; do
-		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1 &
+		core=$((1 << (($count + 4))))
+		printf -v hexcore "0x%x" "$core"
+		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1 -c $hexcore &
 		count=$(( $count + 1 ))
 	done
 	wait $pid

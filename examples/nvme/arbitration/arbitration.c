@@ -559,18 +559,6 @@ print_configuration(char *program_name)
 	       g_arbitration.arbitration_mechanism,
 	       g_arbitration.arbitration_config ,
 	       g_arbitration.io_count);
-
-	printf("\t[-q io depth]\n");
-	printf("\t[-s io size in bytes]\n");
-	printf("\t[-w io pattern type]\n");
-	printf("\t[-M rwmixread (default: 100 for reads)]\n");
-	printf("\t[-l enable latency tracking (default: 0 for disabled)]\n");
-	printf("\t[-t time in seconds]\n");
-	printf("\t[-c core mask for I/O submission/completion]\n");
-	printf("\t[-m max completions per poll (default: 0 for unlimited)]\n");
-	printf("\t[-a arbitration mechanism (default: 0 for default round robin mechanism)]\n");
-	printf("\t[-b enable arbitration user configuration (default: 0 for disabled)]\n");
-	printf("\t[-i subjected IOs for performance comparison]\n");
 }
 
 

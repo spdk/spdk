@@ -61,17 +61,19 @@ spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
 	return true;
 }
 
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		const struct spdk_nvme_probe_info *probe_info,
-		void *devhandle)
+struct spdk_nvme_ctrlr *
+	nvme_transport_ctrlr_construct(enum spdk_nvme_transport_type trtype,
+			       const struct spdk_nvme_ctrlr_opts *opts,
+			       const struct spdk_nvme_probe_info *probe_info,
+			       void *devhandle)
 {
 	return NULL;
 }
 
 int
-nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
+nvme_transport_ctrlr_scan(enum spdk_nvme_transport_type trtype,
+			  spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+			  void *devhandle, void *pci_address)
 {
 	return 0;
 }

@@ -44,14 +44,14 @@ int32_t			spdk_nvme_retry_count;
 static int		hotplug_fd = -1;
 
 struct spdk_nvme_ctrlr *
-nvme_attach(enum spdk_nvme_transport transport,
+nvme_attach(enum spdk_nvme_transport_type trtype,
 	    const struct spdk_nvme_ctrlr_opts *opts,
 	    const struct spdk_nvme_probe_info *probe_info,
 	    void *devhandle)
 {
 	struct spdk_nvme_ctrlr	*ctrlr;
 
-	ctrlr = nvme_transport_ctrlr_construct(transport, opts, probe_info, devhandle);
+	ctrlr = nvme_transport_ctrlr_construct(trtype, opts, probe_info, devhandle);
 
 	return ctrlr;
 }
@@ -59,7 +59,7 @@ nvme_attach(enum spdk_nvme_transport transport,
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
-	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	nvme_ctrlr_proc_put_ref(ctrlr);
 
@@ -68,7 +68,7 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_ctrlr_destruct(ctrlr);
 	}
 
-	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return 0;
 }
 
@@ -206,7 +206,7 @@ nvme_free_request(struct nvme_request *req)
 }
 
 int
-nvme_mutex_init_shared(pthread_mutex_t *mtx)
+nvme_robust_mutex_init_shared(pthread_mutex_t *mtx)
 {
 	int rc = 0;
 
@@ -219,6 +219,7 @@ nvme_mutex_init_shared(pthread_mutex_t *mtx)
 		return -1;
 	}
 	if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) ||
+	    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST) ||
 	    pthread_mutex_init(mtx, &attr)) {
 		rc = -1;
 	}
@@ -281,14 +282,14 @@ nvme_driver_init(void)
 	 */
 	assert(spdk_process_is_primary());
 
-	ret = nvme_mutex_init_shared(&g_spdk_nvme_driver->lock);
+	ret = nvme_robust_mutex_init_shared(&g_spdk_nvme_driver->lock);
 	if (ret != 0) {
 		SPDK_ERRLOG("failed to initialize mutex\n");
 		spdk_memzone_free(SPDK_NVME_DRIVER_NAME);
 		return ret;
 	}
 
-	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	g_spdk_nvme_driver->initialized = false;
 
@@ -300,7 +301,7 @@ nvme_driver_init(void)
 	if (g_spdk_nvme_driver->request_mempool == NULL) {
 		SPDK_ERRLOG("unable to allocate pool of requests\n");
 
-		pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 		pthread_mutex_destroy(&g_spdk_nvme_driver->lock);
 
 		spdk_memzone_free(SPDK_NVME_DRIVER_NAME);
@@ -308,13 +309,13 @@ nvme_driver_init(void)
 		return -1;
 	}
 
-	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 
 	return ret;
 }
 
 int
-nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+nvme_probe_one(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb, void *cb_ctx,
 	       struct spdk_nvme_probe_info *probe_info, void *devhandle)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -323,7 +324,7 @@ nvme_probe_one(enum spdk_nvme_transport transport, spdk_nvme_probe_cb probe_cb, 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
 	if (probe_cb(cb_ctx, probe_info, &opts)) {
-		ctrlr = nvme_attach(transport, &opts, probe_info, devhandle);
+		ctrlr = nvme_attach(trtype, &opts, probe_info, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("nvme_attach() failed\n");
 			return -1;
@@ -342,7 +343,7 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 	int start_rc;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
-	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	/* Initialize all new controllers in the init_ctrlrs list in parallel. */
 	while (!TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs)) {
@@ -355,9 +356,9 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 			 *  the functions it calls (in particular nvme_ctrlr_set_num_qpairs())
 			 *  can assume it is held.
 			 */
-			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 			start_rc = nvme_ctrlr_process_init(ctrlr);
-			pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 			if (start_rc) {
 				/* Controller failed to initialize. */
@@ -385,9 +386,9 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 				 * Unlock while calling attach_cb() so the user can call other functions
 				 *  that may take the driver lock, like nvme_detach().
 				 */
-				pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 				attach_cb(cb_ctx, &ctrlr->probe_info, ctrlr, &ctrlr->opts);
-				pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 				break;
 			}
@@ -396,7 +397,7 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 
 	g_spdk_nvme_driver->initialized = true;
 
-	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 	return rc;
 }
 
@@ -414,7 +415,7 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		 spdk_nvme_remove_cb remove_cb)
 {
 	int rc;
-	enum spdk_nvme_transport transport;
+	enum spdk_nvme_transport_type trtype;
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	rc = nvme_driver_init();
@@ -422,7 +423,7 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 		return rc;
 	}
 
-	pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	if (hotplug_fd < 0) {
 		hotplug_fd = spdk_uevent_connect();
@@ -432,18 +433,18 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 	}
 
 	if (!info) {
-		transport = SPDK_NVME_TRANSPORT_PCIE;
+		trtype = SPDK_NVME_TRANSPORT_PCIE;
 	} else {
 		if (!spdk_nvme_transport_available(info->trtype)) {
 			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", info->trtype);
-			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 			return -1;
 		}
 
-		transport = (uint8_t)info->trtype;
+		trtype = (uint8_t)info->trtype;
 	}
 
-	nvme_transport_ctrlr_scan(transport, probe_cb, cb_ctx, (void *)info, NULL);
+	nvme_transport_ctrlr_scan(trtype, probe_cb, cb_ctx, (void *)info, NULL);
 
 	if (!spdk_process_is_primary()) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -453,16 +454,16 @@ _spdk_nvme_probe(const struct spdk_nvme_discover_info *info, void *cb_ctx,
 			 * Unlock while calling attach_cb() so the user can call other functions
 			 *  that may take the driver lock, like nvme_detach().
 			 */
-			pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 			attach_cb(cb_ctx, &ctrlr->probe_info, ctrlr, &ctrlr->opts);
-			pthread_mutex_lock(&g_spdk_nvme_driver->lock);
+			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		}
 
-		pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 		return 0;
 	}
 
-	pthread_mutex_unlock(&g_spdk_nvme_driver->lock);
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 	/*
 	 * Keep going even if one or more nvme_attach() calls failed,
 	 *  but maintain the value of rc to signal errors when we return.
