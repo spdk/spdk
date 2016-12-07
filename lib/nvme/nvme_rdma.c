@@ -758,6 +758,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
 	cmd.qid = rqpair->qpair.id;
 	cmd.sqsize = rqpair->qpair.num_entries - 1;
+	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
 
 	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
 		nvmf_data->cntlid = 0xFFFF;
@@ -1067,6 +1068,8 @@ nvme_rdma_ctrlr_scan(enum spdk_nvme_transport_type trtype,
 	uint32_t i;
 
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
+	/* For discovery_ctrlr set the timeout to 0 */
+	discovery_opts.keep_alive_timeout_ms = 0;
 
 	probe_info.trtype = (uint8_t)trtype;
 	snprintf(probe_info.subnqn, sizeof(probe_info.subnqn), "%s", discover_info->subnqn);
