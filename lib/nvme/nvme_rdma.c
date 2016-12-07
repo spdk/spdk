@@ -537,7 +537,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	memset(&pdata, 0, sizeof(pdata));
 	pdata.qid = rqpair->qpair.id;
 	pdata.hrqsize = rqpair->max_queue_depth;
-	pdata.hsqsize = rqpair->max_queue_depth;
+	pdata.hsqsize = rqpair->max_queue_depth - 1;
 	conn_param.private_data = &pdata;
 	conn_param.private_data_len = sizeof(pdata);
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "qid =%d\n", pdata.qid);
