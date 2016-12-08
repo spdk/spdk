@@ -397,6 +397,10 @@ nvme_attach_one(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb a
 }
 
 static int
+nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		     spdk_nvme_remove_cb remove_cb);
+
+static int
 _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		 spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		 spdk_nvme_remove_cb remove_cb)
@@ -411,13 +415,6 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	if (hotplug_fd < 0) {
-		hotplug_fd = spdk_uevent_connect();
-		if (hotplug_fd < 0) {
-			SPDK_ERRLOG("Failed to open uevent netlink socket\n");
-		}
-	}
-
 	if (trid) {
 		if (!spdk_nvme_transport_available(trid->trtype)) {
 			SPDK_ERRLOG("NVMe over Fabrics trtype %u not available\n", trid->trtype);
@@ -426,7 +423,20 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		}
 	}
 
-	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		if (hotplug_fd < 0) {
+			hotplug_fd = spdk_uevent_connect();
+			if (hotplug_fd < 0) {
+				SPDK_ERRLOG("Failed to open uevent netlink socket\n");
+			}
+
+			nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
+		} else {
+			nvme_hotplug_monitor(cb_ctx, probe_cb, attach_cb, remove_cb);
+		}
+	} else {
+		nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
+	}
 
 	if (!spdk_process_is_primary()) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -515,14 +525,10 @@ int
 spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		spdk_nvme_remove_cb remove_cb)
 {
-	if (hotplug_fd < 0) {
-		struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_transport_id trid = {};
 
-		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
-		return _spdk_nvme_probe(&trid, cb_ctx, probe_cb, attach_cb, remove_cb);
-	} else {
-		return nvme_hotplug_monitor(cb_ctx, probe_cb, attach_cb, remove_cb);
-	}
+	return _spdk_nvme_probe(&trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 }
 SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)
