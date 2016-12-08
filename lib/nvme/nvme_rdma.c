@@ -93,6 +93,8 @@ struct nvme_rdma_qpair {
 	struct ibv_sge				*rsp_sgls;
 	struct spdk_nvme_cpl			*rsps;
 
+	struct ibv_recv_wr			*rsp_recv_wrs;
+
 	/* Memory region describing all rsps for this qpair */
 	struct ibv_mr				*rsp_mr;
 
@@ -101,6 +103,8 @@ struct nvme_rdma_qpair {
 
 struct spdk_nvme_rdma_req {
 	int					id;
+
+	struct ibv_send_wr			send_wr;
 
 	struct nvme_request 			*req;
 
@@ -257,17 +261,18 @@ nvme_rdma_post_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 static int
 nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 {
-	struct ibv_recv_wr wr, *bad_wr = NULL;
+	struct ibv_recv_wr *wr, *bad_wr = NULL;
 	int rc;
 
-	wr.wr_id = rsp_idx;
-	wr.next = NULL;
-	wr.sg_list = &rqpair->rsp_sgls[rsp_idx];
-	wr.num_sge = 1;
+	wr = &rqpair->rsp_recv_wrs[rsp_idx];
+	wr->wr_id = rsp_idx;
+	wr->next = NULL;
+	wr->sg_list = &rqpair->rsp_sgls[rsp_idx];
+	wr->num_sge = 1;
 
-	nvme_rdma_trace_ibv_sge(wr.sg_list);
+	nvme_rdma_trace_ibv_sge(wr->sg_list);
 
-	rc = ibv_post_recv(rqpair->cm_id->qp, &wr, &bad_wr);
+	rc = ibv_post_recv(rqpair->cm_id->qp, wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma recv, rc = 0x%x\n", rc);
 	}
@@ -287,6 +292,8 @@ nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
 	rqpair->rsps = NULL;
 	free(rqpair->rsp_sgls);
 	rqpair->rsp_sgls = NULL;
+	free(rqpair->rsp_recv_wrs);
+	rqpair->rsp_recv_wrs = NULL;
 }
 
 static int
@@ -296,10 +303,18 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 
 	rqpair->rsp_mr = NULL;
 	rqpair->rsps = NULL;
+	rqpair->rsp_recv_wrs = NULL;
 
 	rqpair->rsp_sgls = calloc(rqpair->max_queue_depth, sizeof(*rqpair->rsp_sgls));
 	if (!rqpair->rsp_sgls) {
 		SPDK_ERRLOG("Failed to allocate rsp_sgls\n");
+		goto fail;
+	}
+
+	rqpair->rsp_recv_wrs = calloc(rqpair->max_queue_depth,
+				      sizeof(*rqpair->rsp_recv_wrs));
+	if (!rqpair->rsp_recv_wrs) {
+		SPDK_ERRLOG("Failed to allocate rsp_recv_wrs\n");
 		goto fail;
 	}
 
@@ -1255,7 +1270,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_rdma_qpair *rqpair;
 	struct spdk_nvme_rdma_req *rdma_req;
-	struct ibv_send_wr wr, *bad_wr = NULL;
+	struct ibv_send_wr *wr, *bad_wr = NULL;
 	int rc;
 
 	rqpair = nvme_rdma_qpair(qpair);
@@ -1267,17 +1282,18 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	nvme_rdma_pre_copy_mem(rdma_req);
 
-	memset(&wr, 0, sizeof(wr));
-	wr.wr_id = (uint64_t)rdma_req;
-	wr.next = NULL;
-	wr.opcode = IBV_WR_SEND;
-	wr.send_flags = IBV_SEND_SIGNALED;
-	wr.sg_list = &rdma_req->send_sgl;
-	wr.num_sge = 1;
+	wr = &rdma_req->send_wr;
+	wr->wr_id = (uint64_t)rdma_req;
+	wr->next = NULL;
+	wr->opcode = IBV_WR_SEND;
+	wr->send_flags = IBV_SEND_SIGNALED;
+	wr->sg_list = &rdma_req->send_sgl;
+	wr->num_sge = 1;
+	wr->imm_data = 0;
 
-	nvme_rdma_trace_ibv_sge(wr.sg_list);
+	nvme_rdma_trace_ibv_sge(wr->sg_list);
 
-	rc = ibv_post_send(rqpair->cm_id->qp, &wr, &bad_wr);
+	rc = ibv_post_send(rqpair->cm_id->qp, wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma send for NVMf completion, rc = 0x%x\n", rc);
 	}
