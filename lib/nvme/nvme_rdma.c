@@ -518,7 +518,14 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	struct spdk_nvmf_rdma_request_private_data pdata;
 	const union spdk_nvmf_rdma_private_data	*data;
 	struct rdma_cm_event *event;
+	struct ibv_device_attr attr;
 	int ret;
+
+	ret = ibv_query_device(rqpair->cm_id->verbs, &attr);
+	if (ret != 0) {
+		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+		return ret;
+	}
 
 	memset(&conn_param, 0, sizeof(conn_param));
 	/* Note:  the following parameters apply only for PS = RDMA_PS_TCP,
@@ -529,7 +536,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	   replaced.
 	*/
 	conn_param.responder_resources = 1;  /* 0 or 1*/
-	conn_param.initiator_depth = rqpair->max_queue_depth;
+	conn_param.initiator_depth = nvme_min(rqpair->max_queue_depth, attr.max_qp_init_rd_atom);
 	conn_param.retry_count = 7;
 	conn_param.rnr_retry_count = 7;
 
