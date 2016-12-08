@@ -472,6 +472,7 @@ fail:
 static int
 nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 {
+	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
 	struct spdk_nvme_rdma_req *rdma_req;
 	struct spdk_nvme_cpl *rsp;
 	struct nvme_request *req;
@@ -494,6 +495,12 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 	if (nvme_rdma_post_recv(rqpair, rsp_idx)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
+	}
+
+	if (!STAILQ_EMPTY(&qpair->queued_req) && !qpair->ctrlr->is_resetting) {
+		req = STAILQ_FIRST(&qpair->queued_req);
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		nvme_qpair_submit_request(qpair, req);
 	}
 
 	return 0;
@@ -1327,8 +1334,11 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	rdma_req = nvme_rdma_req_get(rqpair);
 	if (!rdma_req) {
-		SPDK_ERRLOG("nvme_rdma_req_get() failed\n");
-		return -1;
+		/*
+		 * No rdma_req is available.  Queue the request to be processed later.
+		 */
+		STAILQ_INSERT_TAIL(&qpair->queued_req, req, stailq);
+		return 0;
 	}
 
 	if (nvme_rdma_req_init(rqpair, req, rdma_req)) {
