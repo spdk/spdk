@@ -389,15 +389,7 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 }
 
 static int
-nvme_attach_one(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
-		struct spdk_pci_addr *pci_address)
-{
-	nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, pci_address);
-	return nvme_init_controllers(cb_ctx, attach_cb);
-}
-
-static int
-nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 		     spdk_nvme_remove_cb remove_cb);
 
 static int
@@ -430,7 +422,7 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 				SPDK_ERRLOG("Failed to open uevent netlink socket\n");
 			}
 		} else {
-			nvme_hotplug_monitor(cb_ctx, probe_cb, attach_cb, remove_cb);
+			nvme_hotplug_monitor(cb_ctx, probe_cb, remove_cb);
 		}
 	}
 
@@ -478,7 +470,7 @@ int spdk_nvme_discover(const struct spdk_nvme_transport_id *trid,
 }
 
 static int
-nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 		     spdk_nvme_remove_cb remove_cb)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -490,7 +482,7 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach
 				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %04x:%02x:%02x.%u\n",
 					      event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev, event.pci_addr.func);
 				if (spdk_process_is_primary()) {
-					nvme_attach_one(cb_ctx, probe_cb, attach_cb, &event.pci_addr);
+					nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, &event.pci_addr);
 				}
 			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
 				bool in_list = false;
