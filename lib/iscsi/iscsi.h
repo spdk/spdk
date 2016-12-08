@@ -195,6 +195,7 @@ enum iscsi_connection_state {
 	ISCSI_CONN_STATE_RUNNING = 1,
 	ISCSI_CONN_STATE_LOGGED_OUT = 2,
 	ISCSI_CONN_STATE_EXITING = 3,
+	ISCSI_CONN_STATE_EXITED = 4,
 };
 
 enum iscsi_chap_phase {

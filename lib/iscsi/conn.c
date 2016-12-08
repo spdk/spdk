@@ -592,7 +592,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	struct spdk_iscsi_tgt_node	*target;
 	int				rc;
 
-	conn->state = ISCSI_CONN_STATE_EXITING;
+	conn->state = ISCSI_CONN_STATE_EXITED;
 
 	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
 		target = conn->sess->target;
@@ -1239,8 +1239,12 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 	uint64_t			tsc;
 	bool				conn_active = false;
 
-	if (conn->state == ISCSI_CONN_STATE_EXITING) {
+	if (conn->state == ISCSI_CONN_STATE_EXITED) {
 		return -1;
+	}
+
+	if (conn->state == ISCSI_CONN_STATE_EXITING) {
+		goto conn_exit;
 	}
 	/* Check for nop interval expiration */
 	rc = spdk_iscsi_conn_handle_nop(conn);
