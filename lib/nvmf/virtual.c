@@ -88,8 +88,6 @@ nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 	memset(&session->vcdata, 0, sizeof(struct spdk_nvme_ctrlr_data));
 	spdk_strcpy_pad(session->vcdata.fr, FW_VERSION, sizeof(session->vcdata.fr), ' ');
 	spdk_strcpy_pad(session->vcdata.mn, MODEL_NUMBER, sizeof(session->vcdata.mn), ' ');
-	session->vcdata.vid = 0x8086;
-	session->vcdata.ssvid = 0x8086;
 	spdk_strcpy_pad(session->vcdata.sn, subsys->dev.virt.sn, sizeof(session->vcdata.sn), ' ');
 	session->vcdata.rab = 6;
 	session->vcdata.ver.bits.mjr = 1;
