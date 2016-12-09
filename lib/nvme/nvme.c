@@ -311,7 +311,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
 	if (probe_cb(cb_ctx, trid, &opts)) {
-		ctrlr = nvme_transport_ctrlr_construct(trid->trtype, &opts, trid, devhandle);
+		ctrlr = nvme_transport_ctrlr_construct(trid, &opts, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Failed to construct NVMe controller\n");
 			return -1;

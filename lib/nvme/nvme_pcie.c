@@ -582,9 +582,8 @@ nvme_pcie_ctrlr_attach(enum spdk_nvme_transport_type trtype,
 	return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx, pci_addr);
 }
 
-struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type trtype,
+struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
-		const struct spdk_nvme_transport_id *trid,
 		void *devhandle)
 {
 	struct spdk_pci_device *pci_dev = devhandle;

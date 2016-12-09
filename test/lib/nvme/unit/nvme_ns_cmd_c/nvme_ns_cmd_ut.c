@@ -75,11 +75,9 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 	return true;
 }
 
-struct spdk_nvme_ctrlr *
-	nvme_transport_ctrlr_construct(enum spdk_nvme_transport_type trtype,
-			       const struct spdk_nvme_ctrlr_opts *opts,
-			       const struct spdk_nvme_transport_id *trid,
-			       void *devhandle)
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		void *devhandle)
 {
 	return NULL;
 }

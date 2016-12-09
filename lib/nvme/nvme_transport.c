@@ -81,13 +81,11 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 	return false;
 }
 
-struct spdk_nvme_ctrlr *
-	nvme_transport_ctrlr_construct(enum spdk_nvme_transport_type trtype,
-			       const struct spdk_nvme_ctrlr_opts *opts,
-			       const struct spdk_nvme_transport_id *trid,
-			       void *devhandle)
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		void *devhandle)
 {
-	NVME_TRANSPORT_CALL(trtype, ctrlr_construct, (trtype, opts, trid, devhandle));
+	NVME_TRANSPORT_CALL(trid->trtype, ctrlr_construct, (trid, opts, devhandle));
 }
 
 int

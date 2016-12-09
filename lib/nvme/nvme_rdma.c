@@ -1070,9 +1070,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	discovery_opts.keep_alive_timeout_ms = 0;
 
 	memset(buffer, 0x0, 4096);
-	discovery_ctrlr = nvme_rdma_ctrlr_construct(SPDK_NVME_TRANSPORT_RDMA, &discovery_opts,
-			  discovery_trid,
-			  NULL);
+	discovery_ctrlr = nvme_rdma_ctrlr_construct(discovery_trid, &discovery_opts, NULL);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1156,11 +1154,9 @@ nvme_rdma_ctrlr_attach(enum spdk_nvme_transport_type trtype,
 	return -1;
 }
 
-struct spdk_nvme_ctrlr *
-	nvme_rdma_ctrlr_construct(enum spdk_nvme_transport_type trtype,
-			  const struct spdk_nvme_ctrlr_opts *opts,
-			  const struct spdk_nvme_transport_id *trid,
-			  void *devhandle)
+struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		void *devhandle)
 {
 	struct nvme_rdma_ctrlr *rctrlr;
 	union spdk_nvme_cap_register cap;
