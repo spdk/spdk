@@ -356,11 +356,6 @@ spdk_scsi_lun_deletable(const char *name)
 		goto out;
 	}
 
-	if (lun->dev == NULL) {
-		ret = 0;
-		goto out;
-	}
-
 out:
 	pthread_mutex_unlock(&g_spdk_scsi.mutex);
 	return ret;
