@@ -251,9 +251,9 @@ ut_insert_cq_entry(struct spdk_nvme_qpair *qpair, uint32_t slot)
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	memset(req, 0, sizeof(*req));
 
-	tr = LIST_FIRST(&qpair->free_tr);
-	LIST_REMOVE(tr, list); /* remove tr from free_tr */
-	LIST_INSERT_HEAD(&qpair->outstanding_tr, tr, list);
+	tr = TAILQ_FIRST(&qpair->free_tr);
+	TAILQ_REMOVE(&qpair->free_tr, tr, tq_list); /* remove tr from free_tr */
+	TAILQ_INSERT_HEAD(&qpair->outstanding_tr, tr, tq_list);
 	req->cmd.cid = tr->cid;
 	tr->req = req;
 	qpair->tr[tr->cid].active = true;
@@ -391,13 +391,13 @@ test_sgl_req(void)
 
 	CU_ASSERT(req->cmd.dptr.prp.prp1 == 0);
 	CU_ASSERT(qpair.sq_tail == 1);
-	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
+	sgl_tr = TAILQ_FIRST(&qpair.outstanding_tr);
 	if (sgl_tr != NULL) {
 		for (i = 0; i < NVME_MAX_PRP_LIST_ENTRIES; i++) {
 			CU_ASSERT(sgl_tr->u.prp[i] == (PAGE_SIZE * (i + 1)));
 		}
 
-		LIST_REMOVE(sgl_tr, list);
+		TAILQ_REMOVE(&qpair.outstanding_tr, sgl_tr, tq_list);
 	}
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
@@ -430,14 +430,14 @@ test_hw_sgl_req(void)
 
 	nvme_qpair_submit_request(&qpair, req);
 
-	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
+	sgl_tr = TAILQ_FIRST(&qpair.outstanding_tr);
 	CU_ASSERT(sgl_tr != NULL);
 	CU_ASSERT(sgl_tr->u.sgl[0].generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
 	CU_ASSERT(sgl_tr->u.sgl[0].generic.subtype == 0);
 	CU_ASSERT(sgl_tr->u.sgl[0].unkeyed.length == 4096);
 	CU_ASSERT(sgl_tr->u.sgl[0].address == 0);
 	CU_ASSERT(req->cmd.dptr.sgl1.generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
-	LIST_REMOVE(sgl_tr, list);
+	TAILQ_REMOVE(&qpair.outstanding_tr, sgl_tr, tq_list);
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
 
@@ -452,7 +452,7 @@ test_hw_sgl_req(void)
 
 	nvme_qpair_submit_request(&qpair, req);
 
-	sgl_tr = LIST_FIRST(&qpair.outstanding_tr);
+	sgl_tr = TAILQ_FIRST(&qpair.outstanding_tr);
 	CU_ASSERT(sgl_tr != NULL);
 	for (i = 0; i < NVME_MAX_SGL_DESCRIPTORS; i++) {
 		CU_ASSERT(sgl_tr->u.sgl[i].generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK);
@@ -461,7 +461,7 @@ test_hw_sgl_req(void)
 		CU_ASSERT(sgl_tr->u.sgl[i].address == i * 4096);
 	}
 	CU_ASSERT(req->cmd.dptr.sgl1.generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT);
-	LIST_REMOVE(sgl_tr, list);
+	TAILQ_REMOVE(&qpair.outstanding_tr, sgl_tr, tq_list);
 	cleanup_submit_request_test(&qpair);
 	nvme_free_request(req);
 }
@@ -511,16 +511,16 @@ static void test_nvme_qpair_fail(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 
-	tr_temp = LIST_FIRST(&qpair.free_tr);
+	tr_temp = TAILQ_FIRST(&qpair.free_tr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
-	LIST_REMOVE(tr_temp, list);
+	TAILQ_REMOVE(&qpair.free_tr, tr_temp, tq_list);
 	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 	tr_temp->req->cmd.cid = tr_temp->cid;
 
-	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
+	TAILQ_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, tq_list);
 	nvme_qpair_fail(&qpair);
-	CU_ASSERT_TRUE(LIST_EMPTY(&qpair.outstanding_tr));
+	CU_ASSERT_TRUE(TAILQ_EMPTY(&qpair.outstanding_tr));
 
 	req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
@@ -593,18 +593,18 @@ static void test_nvme_qpair_destroy(void)
 
 
 	nvme_qpair_construct(&qpair, 0, 128, &ctrlr);
-	tr_temp = LIST_FIRST(&qpair.free_tr);
+	tr_temp = TAILQ_FIRST(&qpair.free_tr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
-	LIST_REMOVE(tr_temp, list);
+	TAILQ_REMOVE(&qpair.free_tr, tr_temp, tq_list);
 	tr_temp->req = nvme_allocate_request_null(expected_failure_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(tr_temp->req != NULL);
 
 	tr_temp->req->cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
 	tr_temp->req->cmd.cid = tr_temp->cid;
-	LIST_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, list);
+	TAILQ_INSERT_HEAD(&qpair.outstanding_tr, tr_temp, tq_list);
 
 	nvme_qpair_destroy(&qpair);
-	CU_ASSERT(LIST_EMPTY(&qpair.outstanding_tr));
+	CU_ASSERT(TAILQ_EMPTY(&qpair.outstanding_tr));
 }
 #endif
 

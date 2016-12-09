@@ -63,6 +63,10 @@
   # responsible for polling existing connections that have gone idle. 0 means continuously
   # poll. Units in microseconds.
   AcceptorPollRate 10000
+  # Registers the application to receive timeout callback and to reset the controller.
+  ResetControllerOnTimeout Yes
+  # Timeout value.
+  NvmeTimeoutValue 30
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.

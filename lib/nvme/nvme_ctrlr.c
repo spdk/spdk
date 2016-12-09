@@ -30,7 +30,6 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include "nvme_internal.h"
 #include "spdk/env.h"
 #include <signal.h>
@@ -81,6 +80,7 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	opts->keep_alive_timeout_ms = 10 * 1000;
 	opts->queue_size = DEFAULT_MAX_QUEUE_SIZE;
+	opts->nvme_io_timeout_sec = NVME_IO_TIMEOUT;
 	strncpy(opts->hostnqn, DEFAULT_HOSTNQN, sizeof(opts->hostnqn));
 }
 
@@ -1299,6 +1299,8 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	TAILQ_INIT(&ctrlr->active_procs);
+	ctrlr->timeout_cb_fn = NULL;
+	ctrlr->cb_arg = NULL;
 
 	return rc;
 }
@@ -1428,6 +1430,17 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 {
 	ctrlr->aer_cb_fn = aer_cb_fn;
 	ctrlr->aer_cb_arg = aer_cb_arg;
+}
+
+void
+spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
+		spdk_nvme_timeout_cb cb_fn, uint32_t nvme_timeout, void *cb_arg)
+{
+	ctrlr->timeout_cb_fn = cb_fn;
+	ctrlr->cb_arg = cb_arg;
+	if (nvme_timeout) {
+		ctrlr->opts.nvme_io_timeout_sec = nvme_timeout;
+	}
 }
 
 bool

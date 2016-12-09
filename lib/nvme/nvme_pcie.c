@@ -34,7 +34,7 @@
 /*
  * NVMe over PCIe transport
  */
-
+#include <rte_cycles.h>
 #include <sys/mman.h>
 #include <signal.h>
 #include <sys/syscall.h>
@@ -111,7 +111,7 @@ struct nvme_pcie_ctrlr {
 };
 
 struct nvme_tracker {
-	LIST_ENTRY(nvme_tracker)	list;
+	TAILQ_ENTRY(nvme_tracker)       tq_list;
 
 	struct nvme_request		*req;
 	uint16_t			cid;
@@ -151,8 +151,8 @@ struct nvme_pcie_qpair {
 	/* Completion queue */
 	struct spdk_nvme_cpl *cpl;
 
-	LIST_HEAD(, nvme_tracker) free_tr;
-	LIST_HEAD(, nvme_tracker) outstanding_tr;
+	TAILQ_HEAD(, nvme_tracker) free_tr;
+	TAILQ_HEAD(nvme_outstanding_tr_head, nvme_tracker) outstanding_tr;
 
 	/* Array of trackers indexed by command ID. */
 	struct nvme_tracker *tr;
@@ -181,6 +181,8 @@ struct nvme_pcie_qpair {
 	uint64_t cpl_bus_addr;
 };
 
+void
+nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair);
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
@@ -806,13 +808,13 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		return -ENOMEM;
 	}
 
-	LIST_INIT(&pqpair->free_tr);
-	LIST_INIT(&pqpair->outstanding_tr);
+	TAILQ_INIT(&pqpair->free_tr);
+	TAILQ_INIT(&pqpair->outstanding_tr);
 
 	for (i = 0; i < num_trackers; i++) {
 		tr = &pqpair->tr[i];
 		nvme_qpair_construct_tracker(tr, i, phys_addr);
-		LIST_INSERT_HEAD(&pqpair->free_tr, tr, list);
+		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
 		phys_addr += sizeof(struct nvme_tracker);
 	}
 
@@ -998,8 +1000,8 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 
 		tr->req = NULL;
 
-		LIST_REMOVE(tr, list);
-		LIST_INSERT_HEAD(&pqpair->free_tr, tr, list);
+		TAILQ_REMOVE(&pqpair->outstanding_tr, tr, tq_list);
+		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
 
 		/*
 		 * If the controller is in the middle of resetting, don't
@@ -1037,7 +1039,7 @@ nvme_pcie_qpair_abort_trackers(struct spdk_nvme_qpair *qpair, uint32_t dnr)
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker *tr, *temp;
 
-	LIST_FOREACH_SAFE(tr, &pqpair->outstanding_tr, list, temp) {
+	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, temp) {
 		SPDK_ERRLOG("aborting outstanding command\n");
 		nvme_pcie_qpair_manual_complete_tracker(qpair, tr, SPDK_NVME_SCT_GENERIC,
 							SPDK_NVME_SC_ABORTED_BY_REQUEST, dnr, true);
@@ -1050,16 +1052,16 @@ nvme_pcie_admin_qpair_abort_aers(struct spdk_nvme_qpair *qpair)
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_tracker	*tr;
 
-	tr = LIST_FIRST(&pqpair->outstanding_tr);
+	tr = TAILQ_FIRST(&pqpair->outstanding_tr);
 	while (tr != NULL) {
 		assert(tr->req != NULL);
 		if (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 			nvme_pcie_qpair_manual_complete_tracker(qpair, tr,
 								SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_ABORTED_SQ_DELETION, 0,
 								false);
-			tr = LIST_FIRST(&pqpair->outstanding_tr);
+			tr = TAILQ_FIRST(&pqpair->outstanding_tr);
 		} else {
-			tr = LIST_NEXT(tr, list);
+			tr = TAILQ_NEXT(tr, tq_list);
 		}
 	}
 }
@@ -1673,7 +1675,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
-	tr = LIST_FIRST(&pqpair->free_tr);
+	tr = TAILQ_FIRST(&pqpair->free_tr);
 
 	if (tr == NULL || !pqpair->is_enabled) {
 		/*
@@ -1689,10 +1691,12 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 		goto exit;
 	}
 
-	LIST_REMOVE(tr, list); /* remove tr from free_tr */
-	LIST_INSERT_HEAD(&pqpair->outstanding_tr, tr, list);
+	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
+	TAILQ_INSERT_HEAD(&pqpair->outstanding_tr, tr, tq_list);
 	tr->req = req;
 	req->cmd.cid = tr->cid;
+
+	req->t0 = spdk_get_ticks() + (spdk_get_ticks_hz() * qpair->ctrlr->opts.nvme_io_timeout_sec);
 
 	if (req->payload_size == 0) {
 		/* Null payload - leave PRP fields zeroed */
@@ -1798,5 +1802,57 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 
+	if (qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
+		if (qpair->ctrlr->timeout_cb_fn) {
+			/*
+			 * User registered for timeout callback
+			 */
+			nvme_pcie_qpair_check_timeout(qpair);
+		}
+	}
+
 	return num_completions;
+}
+
+void
+nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
+{
+	uint64_t t02;
+	struct nvme_tracker *tr;
+	struct nvme_request *req;
+	struct nvme_pcie_qpair  *pqpair = nvme_pcie_qpair(qpair);
+
+	if (!TAILQ_EMPTY(&pqpair->outstanding_tr)) {
+
+		/*
+		 * qpair could be either for normal i/o or for admin command. If qpair is admin
+		 * and request is SPDK_NVME_OPC_ASYNC_EVENT_REQUEST, skip to next previous.
+		 */
+
+		tr = TAILQ_LAST(&pqpair->outstanding_tr, nvme_outstanding_tr_head);
+		while (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+
+			/* qpair is for admin request */
+
+			tr = TAILQ_PREV(tr, nvme_outstanding_tr_head, tq_list);
+			if (!tr) {
+				/*
+				 * All request were AER
+				 */
+				return;
+			}
+		}
+
+		req = tr->req;
+		t02 = spdk_get_ticks();
+		if (req->t0 <= t02) {
+
+			/*
+			 * Request has timed out. This could be i/o or admin request.
+			 * Call the registered timeout function for user to take action.
+			 */
+
+			qpair->ctrlr->timeout_cb_fn(qpair->ctrlr, qpair, qpair->ctrlr->cb_arg);
+		}
+	}
 }

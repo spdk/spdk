@@ -93,6 +93,13 @@
 #define NVME_MAX_AER_LOG_SIZE		(4096)
 
 /*
+ * Nvme i/o timeout in seconds
+ */
+#ifndef NVME_IO_TIMEOUT
+#define NVME_IO_TIMEOUT			30
+#endif
+
+/*
  * NVME_MAX_IO_QUEUES in nvme_spec.h defines the 64K spec-limit, but this
  *  define specifies the maximum number of queues this driver will actually
  *  try to configure, if available.
@@ -173,6 +180,12 @@ struct nvme_request {
 	spdk_nvme_cmd_cb		cb_fn;
 	void				*cb_arg;
 	STAILQ_ENTRY(nvme_request)	stailq;
+
+	/**
+	 * Used to record the time request object is put into outstanding_tr
+	 * bucket
+	 */
+	uint64_t t0;
 
 	/**
 	 * The active admin request can be moved to a per process pending
@@ -411,6 +424,12 @@ struct spdk_nvme_ctrlr {
 
 	/** Track all the processes manage this controller */
 	TAILQ_HEAD(, spdk_nvme_ctrlr_process)	active_procs;
+
+	/**
+	 * A function pointer to timeout callback function
+	 */
+	spdk_nvme_timeout_cb            timeout_cb_fn;
+	void 				*cb_arg;
 };
 
 struct nvme_driver {
