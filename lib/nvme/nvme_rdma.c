@@ -1221,12 +1221,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_rdma_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
 {
-	assert(ctrlr != NULL);
-	assert(pci_id != NULL);
-
-	*pci_id = ctrlr->probe_info.pci_id;
-
-	return 0;
+	return -1;
 }
 
 int

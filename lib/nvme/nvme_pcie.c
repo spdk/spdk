@@ -242,10 +242,12 @@ nvme_pcie_qpair(struct spdk_nvme_qpair *qpair)
 int
 nvme_pcie_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
 {
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
 	assert(ctrlr != NULL);
 	assert(pci_id != NULL);
 
-	*pci_id = ctrlr->probe_info.pci_id;
+	*pci_id = spdk_pci_device_get_id(pctrlr->devhandle);
 
 	return 0;
 }
@@ -534,7 +536,6 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	probe_info.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	spdk_pci_addr_fmt(probe_info.trid.traddr, sizeof(probe_info.trid.traddr), &pci_addr);
-	probe_info.pci_id = spdk_pci_device_get_id(pci_dev);
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -591,6 +592,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type 
 	union spdk_nvme_cap_register cap;
 	uint32_t cmd_reg;
 	int rc;
+	struct spdk_pci_id pci_id;
 
 	pctrlr = spdk_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
 	if (pctrlr == NULL) {
@@ -634,7 +636,8 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type 
 		return NULL;
 	}
 
-	pctrlr->ctrlr.quirks = nvme_get_quirks(&probe_info->pci_id);
+	pci_id = spdk_pci_device_get_id(pci_dev);
+	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
 
 	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr);
 	if (rc != 0) {

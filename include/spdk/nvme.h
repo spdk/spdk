@@ -166,13 +166,6 @@ struct spdk_nvme_transport_id {
  * NVMe controller information provided during spdk_nvme_probe().
  */
 struct spdk_nvme_probe_info {
-	/**
-	 * PCI device ID.
-	 *
-	 * If not available, each field will be filled with all 0xFs.
-	 */
-	struct spdk_pci_id pci_id;
-
 	/* The transport identifier */
 	struct spdk_nvme_transport_id	trid;
 };

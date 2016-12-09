@@ -396,7 +396,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
-	struct spdk_pci_addr pci_addr;
+	struct spdk_pci_addr 			pci_addr;
+	struct spdk_pci_device			*pci_dev;
+	struct spdk_pci_id			pci_id;
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
@@ -415,10 +417,17 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 			return;
 		}
 
+		pci_dev = spdk_pci_get_device(&pci_addr);
+		if (!pci_dev) {
+			return;
+		}
+
+		pci_id = spdk_pci_device_get_id(pci_dev);
+
 		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
 		       pci_addr.domain, pci_addr.bus,
 		       pci_addr.dev, pci_addr.func,
-		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+		       pci_id.vendor_id, pci_id.device_id);
 	}
 	printf("=====================================================\n");
 
