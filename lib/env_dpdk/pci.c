@@ -141,6 +141,34 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 	return 0;
 }
 
+struct spdk_pci_device *
+spdk_pci_get_device(struct spdk_pci_addr *pci_addr)
+{
+	struct rte_pci_device	*dev;
+	struct rte_pci_addr	addr;
+	int			rc;
+
+	addr.domain = pci_addr->domain;
+	addr.bus = pci_addr->bus;
+	addr.devid = pci_addr->dev;
+	addr.function = pci_addr->func;
+
+	TAILQ_FOREACH(dev, &pci_device_list, next) {
+		rc = rte_eal_compare_pci_addr(&dev->addr, &addr);
+		if (rc < 0) {
+			continue;
+		}
+
+		if (rc == 0) {
+			return (struct spdk_pci_device *)dev;
+		} else {
+			break;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_pci_device_map_bar(struct spdk_pci_device *device, uint32_t bar,
 			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
