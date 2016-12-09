@@ -265,11 +265,7 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attaching to %s\n", probe_info->trid.traddr);
 
 	return true;
 }
@@ -278,11 +274,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attached to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attached to %s\n", probe_info->trid.traddr);
 
 	register_dev(ctrlr);
 }

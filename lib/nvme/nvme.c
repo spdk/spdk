@@ -476,20 +476,23 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_uevent event;
+	struct spdk_pci_addr pci_addr;
 
 	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
 		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO) {
 			if (event.action == SPDK_NVME_UEVENT_ADD) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %04x:%02x:%02x.%u\n",
-					      event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev, event.pci_addr.func);
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %s\n",
+					      event.traddr);
 				if (spdk_process_is_primary()) {
-					nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, &event.pci_addr);
+					if (spdk_pci_addr_parse(&pci_addr, event.traddr)) {
+						nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, &pci_addr);
+					}
 				}
 			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
 				bool in_list = false;
 
 				TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
-					if (spdk_pci_addr_compare(&event.pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
+					if (strcmp(event.traddr, ctrlr->probe_info.trid.traddr) == 0) {
 						in_list = true;
 						break;
 					}
@@ -497,8 +500,8 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 				if (in_list == false) {
 					return 0;
 				}
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "remove nvme address: %04x:%02x:%02x.%u\n",
-					      event.pci_addr.domain, event.pci_addr.bus, event.pci_addr.dev, event.pci_addr.func);
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "remove nvme address: %s\n",
+					      event.traddr);
 
 				nvme_ctrlr_fail(ctrlr, true);
 

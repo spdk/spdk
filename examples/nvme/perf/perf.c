@@ -976,14 +976,13 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (probe_info->trid.subnqn[0]) {
+	if (probe_info->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attaching to NVMe over Fabrics controller at %s:%s: %s\n",
 		       probe_info->trid.traddr, probe_info->trid.trsvcid,
 		       probe_info->trid.subnqn);
 	} else {
-		printf("Attaching to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
-		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
-		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
+		printf("Attaching to NVMe Controller at %s [%04x:%04x]\n",
+		       probe_info->trid.traddr,
 		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
 	}
 
@@ -994,14 +993,13 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (probe_info->trid.subnqn[0]) {
+	if (probe_info->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
 		       probe_info->trid.traddr, probe_info->trid.trsvcid,
 		       probe_info->trid.subnqn);
 	} else {
-		printf("Attached to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
-		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
-		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
+		printf("Attached to NVMe Controller at %s [%04x:%04x]\n",
+		       probe_info->trid.traddr,
 		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
 	}
 

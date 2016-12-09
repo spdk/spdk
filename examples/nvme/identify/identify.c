@@ -396,6 +396,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
+	struct spdk_pci_addr pci_addr;
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
@@ -406,13 +407,17 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	if (probe_info->trid.subnqn[0]) {
+	if (probe_info->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("NVMe over Fabrics controller at %s:%s: %s\n",
 		       probe_info->trid.traddr, probe_info->trid.trsvcid, probe_info->trid.subnqn);
 	} else {
+		if (spdk_pci_addr_parse(&pci_addr, probe_info->trid.traddr) != 0) {
+			return;
+		}
+
 		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
-		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
-		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
+		       pci_addr.domain, pci_addr.bus,
+		       pci_addr.dev, pci_addr.func,
 		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
 	}
 	printf("=====================================================\n");

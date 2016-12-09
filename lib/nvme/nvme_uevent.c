@@ -38,6 +38,8 @@
 #ifdef __linux__
 
 #include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -48,6 +50,7 @@
 #include <linux/netlink.h>
 
 #define SPDK_UEVENT_MSG_LEN 4096
+#define TRADDR_FMT "%.4" PRIx16 ":%.2" PRIx8 ":%.2" PRIx8 ".%" PRIx8
 
 int
 spdk_uevent_connect(void)
@@ -138,10 +141,7 @@ parse_event(const char *buf, struct spdk_uevent *event)
 		if (ret != 4) {
 			SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", pci_address);
 		}
-		event->pci_addr.domain = domain;
-		event->pci_addr.bus = bus;
-		event->pci_addr.dev = dev;
-		event->pci_addr.func = func;
+		snprintf(event->traddr, sizeof(event->traddr), TRADDR_FMT, domain, bus, dev, func);
 		return 1;
 	}
 	return -1;

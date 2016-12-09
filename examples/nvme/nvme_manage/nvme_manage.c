@@ -107,7 +107,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 
 	/* add to dev list */
 	dev = &devs[num_devs++];
-	dev->pci_addr = probe_info->pci_addr;
+	spdk_pci_addr_parse(&dev->pci_addr, probe_info->trid.traddr);
 	dev->ctrlr = ctrlr;
 
 	/* Retrieve controller data */

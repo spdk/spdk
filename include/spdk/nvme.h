@@ -167,13 +167,6 @@ struct spdk_nvme_transport_id {
  */
 struct spdk_nvme_probe_info {
 	/**
-	 * PCI address.
-	 *
-	 * If not available, each field will be filled with all 0xFs.
-	 */
-	struct spdk_pci_addr pci_addr;
-
-	/**
 	 * PCI device ID.
 	 *
 	 * If not available, each field will be filled with all 0xFs.

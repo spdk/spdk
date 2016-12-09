@@ -528,9 +528,12 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct nvme_pcie_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
 	int rc = 0;
+	struct spdk_pci_addr pci_addr;
+
+	pci_addr = spdk_pci_device_get_addr(pci_dev);
 
 	probe_info.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	probe_info.pci_addr = spdk_pci_device_get_addr(pci_dev);
+	spdk_pci_addr_fmt(probe_info.trid.traddr, sizeof(probe_info.trid.traddr), &pci_addr);
 	probe_info.pci_id = spdk_pci_device_get_id(pci_dev);
 
 	/* Verify that this controller is not already attached */
@@ -539,7 +542,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 * different per each process, we compare by BDF to determine whether it is the
 		 * same controller.
 		 */
-		if (spdk_pci_addr_compare(&probe_info.pci_addr, &ctrlr->probe_info.pci_addr) == 0) {
+		if (strcmp(probe_info.trid.traddr, ctrlr->probe_info.trid.traddr) == 0) {
 			if (!spdk_process_is_primary()) {
 				rc = nvme_ctrlr_add_process(ctrlr, pci_dev);
 			}

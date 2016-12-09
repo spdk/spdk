@@ -36,6 +36,7 @@
  */
 
 #include "spdk/env.h"
+#include "spdk/nvmf_spec.h"
 
 #ifndef SPDK_UEVENT_H_
 #define SPDK_UEVENT_H_
@@ -50,7 +51,7 @@ enum spdk_nvme_uevent_action {
 struct spdk_uevent {
 	enum spdk_nvme_uevent_action action;
 	int subsystem;
-	struct spdk_pci_addr pci_addr;
+	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 };
 
 int spdk_uevent_connect(void);
