@@ -434,10 +434,10 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 	return 0;
 }
 
-static int
-_spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
-		 spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
-		 spdk_nvme_remove_cb remove_cb)
+int
+spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
+		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_remove_cb remove_cb)
 {
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -501,19 +501,4 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	return rc;
 }
 
-int spdk_nvme_discover(const struct spdk_nvme_transport_id *trid,
-		       void *cb_ctx,
-		       spdk_nvme_probe_cb probe_cb,
-		       spdk_nvme_attach_cb attach_cb,
-		       spdk_nvme_remove_cb remove_cb)
-{
-	return _spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
-}
-
-int
-spdk_nvme_probe(void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
-		spdk_nvme_remove_cb remove_cb)
-{
-	return _spdk_nvme_probe(NULL, cb_ctx, probe_cb, attach_cb, remove_cb);
-}
 SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)

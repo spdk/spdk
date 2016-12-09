@@ -215,28 +215,12 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_transpo
 typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * \brief Perform a device discovery using the discovery service specified by trid.
+ * \brief Enumerate the bus indicated by the transport ID and attach the userspace NVMe driver
+ * to each device found if desired.
  *
- * \param trid The address of the discovery service on which to perform the discovery.
- * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
- * \param probe_cb will be called once per NVMe device found in the system.
- * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
- * controller has been attached to the userspace driver.
- * \param remove_cb will be called for devices that were attached in a previous spdk_nvme_probe()
- * call but are no longer attached to the system. Optional; specify NULL if removal notices are not
- * desired.
- *
- */
-int spdk_nvme_discover(const struct spdk_nvme_transport_id *trid,
-		       void *cb_ctx,
-		       spdk_nvme_probe_cb  probe_cb,
-		       spdk_nvme_attach_cb attach_cb,
-		       spdk_nvme_remove_cb remove_cb);
-
-/**
- * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver
- * to them if desired.
- *
+ * \param trid The transport ID indicating which bus to enumerate. If the trtype is PCIe or trid is NULL,
+ * this will scan the local PCIe bus. If the trtype is RDMA, the traddr and trsvcid must point at the
+ * location of an NVMe-oF discovery service.
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
  * \param probe_cb will be called once per NVMe device found in the system.
  * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
@@ -257,7 +241,8 @@ int spdk_nvme_discover(const struct spdk_nvme_transport_id *trid,
  * To stop using the the controller and release its associated resources,
  * call \ref spdk_nvme_detach with the spdk_nvme_ctrlr instance returned by this function.
  */
-int spdk_nvme_probe(void *cb_ctx,
+int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
+		    void *cb_ctx,
 		    spdk_nvme_probe_cb probe_cb,
 		    spdk_nvme_attach_cb attach_cb,
 		    spdk_nvme_remove_cb remove_cb);

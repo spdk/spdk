@@ -205,7 +205,7 @@ static int spdk_fio_setup(struct thread_data *td)
 	}
 
 	/* Enumerate all of the controllers */
-	if (spdk_nvme_probe(td, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, td, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}

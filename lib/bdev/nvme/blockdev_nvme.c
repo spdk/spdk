@@ -551,7 +551,7 @@ spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx)
 
 	prev_index_max = blockdev_index_max;
 
-	if (spdk_nvme_probe(ctx, probe_cb, attach_cb, NULL)) {
+	if (spdk_nvme_probe(NULL, ctx, probe_cb, attach_cb, NULL)) {
 		return -1;
 	}
 

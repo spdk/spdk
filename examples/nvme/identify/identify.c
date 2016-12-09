@@ -990,12 +990,12 @@ int main(int argc, char **argv)
 
 	rc = 0;
 	if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
-		if (spdk_nvme_discover(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
+		if (spdk_nvme_probe(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 		}
 	}
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;
 	}

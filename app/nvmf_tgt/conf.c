@@ -557,7 +557,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			ctx.any = false;
 		}
 
-		if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(NULL, &ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 		}
 
@@ -748,7 +748,7 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 			ctx.any = false;
 		}
 
-		if (spdk_nvme_probe(&ctx, probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(NULL, &ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 		}
 

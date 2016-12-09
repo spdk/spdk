@@ -337,7 +337,7 @@ io_loop(void)
 		/*
 		 * Check for hotplug events.
 		 */
-		if (spdk_nvme_probe(NULL, probe_cb, attach_cb, remove_cb) != 0) {
+		if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 			break;
 		}
@@ -421,7 +421,7 @@ register_controllers(void)
 {
 	fprintf(stderr, "Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, remove_cb) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
