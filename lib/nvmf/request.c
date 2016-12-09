@@ -67,6 +67,14 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
+static inline uint32_t
+nvmf_get_log_page_len(struct spdk_nvme_cmd *cmd)
+{
+	uint32_t numdl = (cmd->cdw10 >> 16) & 0xFFFFu;
+	uint32_t numdu = (cmd->cdw11) & 0xFFFFu;
+	return ((numdu << 16) + numdl + 1) * sizeof(uint32_t);
+}
+
 static spdk_nvmf_request_exec_status
 nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 {
@@ -74,6 +82,7 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint64_t log_page_offset;
+	uint32_t len;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -105,8 +114,16 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
+		len = nvmf_get_log_page_len(cmd);
+		if (len > req->length) {
+			SPDK_ERRLOG("Get log page: len (%u) > buf size (%u)\n",
+				    len, req->length);
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+
 		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_LOG_DISCOVERY) {
-			spdk_nvmf_get_discovery_log_page(req->data, log_page_offset, req->length);
+			spdk_nvmf_get_discovery_log_page(req->data, log_page_offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		} else {
 			SPDK_ERRLOG("Unsupported log page %u\n", cmd->cdw10 & 0xFF);
