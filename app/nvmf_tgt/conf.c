@@ -334,13 +334,13 @@ spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr;
 
-	if (spdk_pci_addr_parse(&pci_addr, probe_info->trid.traddr)) {
+	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
 		return false;
 	}
 
@@ -358,7 +358,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
@@ -367,15 +367,15 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	int numa_node = -1;
 	struct spdk_pci_addr pci_addr;
 
-	spdk_pci_addr_parse(&pci_addr, probe_info->trid.traddr);
+	spdk_pci_addr_parse(&pci_addr, trid->traddr);
 
 	SPDK_NOTICELOG("Attaching NVMe device %p at %s to subsystem %s\n",
 		       ctrlr,
-		       probe_info->trid.traddr,
+		       trid->traddr,
 		       spdk_nvmf_subsystem_get_nqn(ctx->app_subsystem->subsystem));
 
 	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/numa_node",
-		 probe_info->trid.traddr);
+		 trid->traddr);
 
 	numa_node = spdk_get_numa_node_value(path);
 	if (numa_node >= 0) {

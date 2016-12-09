@@ -388,7 +388,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 }
 
 static void
-print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_info *probe_info)
+print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
@@ -409,11 +409,11 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	if (probe_info->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->trid.traddr, probe_info->trid.trsvcid, probe_info->trid.subnqn);
+		       trid->traddr, trid->trsvcid, trid->subnqn);
 	} else {
-		if (spdk_pci_addr_parse(&pci_addr, probe_info->trid.traddr) != 0) {
+		if (spdk_pci_addr_parse(&pci_addr, trid->traddr) != 0) {
 			return;
 		}
 
@@ -947,17 +947,17 @@ parse_args(int argc, char **argv)
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	print_controller(ctrlr, probe_info);
+	print_controller(ctrlr, trid);
 	spdk_nvme_detach(ctrlr);
 }
 

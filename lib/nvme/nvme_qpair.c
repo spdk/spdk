@@ -352,7 +352,7 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->qprio = qprio;
 
 	qpair->ctrlr = ctrlr;
-	qpair->trtype = ctrlr->trtype;
+	qpair->trtype = ctrlr->trid.trtype;
 
 	STAILQ_INIT(&qpair->queued_req);
 

@@ -87,7 +87,7 @@ struct spdk_fio_thread {
 };
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct fio_file		*f;
@@ -96,7 +96,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	int rc;
 	struct spdk_pci_addr pci_addr;
 
-	if (spdk_pci_addr_parse(&pci_addr, probe_info->trid.traddr)) {
+	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
 		return false;
 	}
 
@@ -119,7 +119,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct thread_data 	*td = cb_ctx;
@@ -130,7 +130,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	unsigned int i;
 	struct spdk_pci_addr pci_addr;
 
-	spdk_pci_addr_parse(&pci_addr, probe_info->trid.traddr);
+	spdk_pci_addr_parse(&pci_addr, trid->traddr);
 
 	/* Create an fio_ctrlr and add it to the list */
 	fio_ctrlr = calloc(1, sizeof(*fio_ctrlr));

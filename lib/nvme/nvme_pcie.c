@@ -228,7 +228,7 @@ nvme_pcie_ctrlr_setup_signal(void)
 static inline struct nvme_pcie_ctrlr *
 nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
-	assert(ctrlr->trtype == SPDK_NVME_TRANSPORT_PCIE);
+	assert(ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
 	return (struct nvme_pcie_ctrlr *)((uintptr_t)ctrlr - offsetof(struct nvme_pcie_ctrlr, ctrlr));
 }
 
@@ -526,7 +526,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 static int
 pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
-	struct spdk_nvme_probe_info probe_info = {};
+	struct spdk_nvme_transport_id trid = {};
 	struct nvme_pcie_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
 	int rc = 0;
@@ -534,8 +534,8 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	pci_addr = spdk_pci_device_get_addr(pci_dev);
 
-	probe_info.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	spdk_pci_addr_fmt(probe_info.trid.traddr, sizeof(probe_info.trid.traddr), &pci_addr);
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
 
 	/* Verify that this controller is not already attached */
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
@@ -543,7 +543,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 * different per each process, we compare by BDF to determine whether it is the
 		 * same controller.
 		 */
-		if (strcmp(probe_info.trid.traddr, ctrlr->probe_info.trid.traddr) == 0) {
+		if (strcmp(trid.traddr, ctrlr->trid.traddr) == 0) {
 			if (!spdk_process_is_primary()) {
 				rc = nvme_ctrlr_add_process(ctrlr, pci_dev);
 			}
@@ -551,7 +551,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		}
 	}
 
-	return nvme_ctrlr_probe(&probe_info, pci_dev,
+	return nvme_ctrlr_probe(&trid, pci_dev,
 				enum_ctx->probe_cb, enum_ctx->cb_ctx);
 }
 
@@ -584,7 +584,7 @@ nvme_pcie_ctrlr_attach(enum spdk_nvme_transport_type trtype,
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type trtype,
 		const struct spdk_nvme_ctrlr_opts *opts,
-		const struct spdk_nvme_probe_info *probe_info,
+		const struct spdk_nvme_transport_id *trid,
 		void *devhandle)
 {
 	struct spdk_pci_device *pci_dev = devhandle;
@@ -602,10 +602,10 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(enum spdk_nvme_transport_type 
 
 	pctrlr->is_remapped = false;
 	pctrlr->ctrlr.is_removed = false;
-	pctrlr->ctrlr.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
-	pctrlr->ctrlr.probe_info = *probe_info;
+	memcpy(&pctrlr->ctrlr.trid, trid, sizeof(pctrlr->ctrlr.trid));
 
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {

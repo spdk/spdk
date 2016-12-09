@@ -407,7 +407,7 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 };
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
@@ -415,12 +415,12 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	bool claim_device = false;
 	struct spdk_pci_addr pci_addr;
 
-	if (spdk_pci_addr_parse(&pci_addr, probe_info->trid.traddr)) {
+	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
 		return false;
 	}
 
 	SPDK_NOTICELOG("Probing device %s\n",
-		       probe_info->trid.traddr);
+		       trid->traddr);
 
 	if (ctx->controllers_remaining == 0) {
 		return false;
@@ -464,7 +464,7 @@ blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
@@ -477,7 +477,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	}
 
 	dev->ctrlr = ctrlr;
-	spdk_pci_addr_parse(&dev->pci_addr, probe_info->trid.traddr);
+	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
 	dev->id = nvme_controller_index++;
 
 	nvme_ctrlr_initialize_blockdevs(dev, nvme_luns_per_ns, dev->id);

@@ -163,14 +163,6 @@ struct spdk_nvme_transport_id {
 };
 
 /**
- * NVMe controller information provided during spdk_nvme_probe().
- */
-struct spdk_nvme_probe_info {
-	/* The transport identifier */
-	struct spdk_nvme_transport_id	trid;
-};
-
-/**
  * Determine whether the NVMe library can handle a specific NVMe over Fabrics transport type.
  *
  * \param trtype NVMe over Fabrics transport type to check.
@@ -188,7 +180,7 @@ bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
  * provided during the attach callback.
  * \return true to attach to this device.
  */
-typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				   struct spdk_nvme_ctrlr_opts *opts);
 
 /**
@@ -197,7 +189,7 @@ typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_probe_in
  * \param opts NVMe controller initialization options that were actually used.  Options may differ
  * from the requested options from the probe call depending on what the controller supports.
  */
-typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				    struct spdk_nvme_ctrlr *ctrlr,
 				    const struct spdk_nvme_ctrlr_opts *opts);
 

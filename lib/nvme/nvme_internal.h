@@ -337,7 +337,7 @@ struct spdk_nvme_ctrlr {
 	/** Array of namespaces indexed by nsid - 1 */
 	struct spdk_nvme_ns		*ns;
 
-	enum spdk_nvme_transport_type	trtype;
+	struct spdk_nvme_transport_id	trid;
 
 	uint32_t			num_ns;
 
@@ -401,8 +401,6 @@ struct spdk_nvme_ctrlr {
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
 	struct spdk_nvme_ctrlr_opts	opts;
-
-	struct spdk_nvme_probe_info	probe_info;
 
 	uint64_t			quirks;
 
@@ -518,7 +516,7 @@ void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 int	nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
 void	nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr);
 
-int	nvme_ctrlr_probe(struct spdk_nvme_probe_info *probe_info, void *devhandle,
+int	nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 			 spdk_nvme_probe_cb probe_cb, void *cb_ctx);
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
@@ -567,7 +565,7 @@ void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
 	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(enum spdk_nvme_transport_type trtype, const struct spdk_nvme_ctrlr_opts *opts, \
-		const struct spdk_nvme_probe_info *probe_info, void *devhandle); \
+		const struct spdk_nvme_transport_id *trid, void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_scan(const struct spdk_nvme_transport_id *trid, void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_remove_cb remove_cb); \
 	int nvme_ ## name ## _ctrlr_attach(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb, void *cb_ctx, struct spdk_pci_addr *addr); \

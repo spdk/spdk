@@ -853,22 +853,22 @@ register_workers(void)
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	/* Update with user specified arbitration configuration */
 	opts->arb_mechanism = g_arbitration.arbitration_mechanism;
 
-	printf("Attaching to %s\n", probe_info->trid.traddr);
+	printf("Attaching to %s\n", trid->traddr);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attached to %s\n", probe_info->trid.traddr);
+	printf("Attached to %s\n", trid->traddr);
 
 	/* Update with actual arbitration configuration in use */
 	g_arbitration.arbitration_mechanism = opts->arb_mechanism;

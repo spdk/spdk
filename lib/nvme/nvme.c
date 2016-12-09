@@ -302,7 +302,7 @@ nvme_driver_init(void)
 }
 
 int
-nvme_ctrlr_probe(struct spdk_nvme_probe_info *probe_info, void *devhandle,
+nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 		 spdk_nvme_probe_cb probe_cb, void *cb_ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -310,8 +310,8 @@ nvme_ctrlr_probe(struct spdk_nvme_probe_info *probe_info, void *devhandle,
 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
-	if (probe_cb(cb_ctx, probe_info, &opts)) {
-		ctrlr = nvme_transport_ctrlr_construct(probe_info->trid.trtype, &opts, probe_info, devhandle);
+	if (probe_cb(cb_ctx, trid, &opts)) {
+		ctrlr = nvme_transport_ctrlr_construct(trid->trtype, &opts, trid, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Failed to construct NVMe controller\n");
 			return -1;
@@ -375,7 +375,7 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 				 *  that may take the driver lock, like nvme_detach().
 				 */
 				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-				attach_cb(cb_ctx, &ctrlr->probe_info, ctrlr, &ctrlr->opts);
+				attach_cb(cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
 				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 				break;
@@ -438,7 +438,7 @@ _spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 			 *  that may take the driver lock, like nvme_detach().
 			 */
 			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-			attach_cb(cb_ctx, &ctrlr->probe_info, ctrlr, &ctrlr->opts);
+			attach_cb(cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
 			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		}
 
@@ -492,7 +492,7 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 				bool in_list = false;
 
 				TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
-					if (strcmp(event.traddr, ctrlr->probe_info.trid.traddr) == 0) {
+					if (strcmp(event.traddr, ctrlr->trid.traddr) == 0) {
 						in_list = true;
 						break;
 					}
