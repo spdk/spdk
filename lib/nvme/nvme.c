@@ -318,9 +318,10 @@ nvme_ctrlr_probe(struct spdk_nvme_probe_info *probe_info, void *devhandle,
 		}
 
 		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
+		return 0;
 	}
 
-	return 0;
+	return 1;
 }
 
 static int
