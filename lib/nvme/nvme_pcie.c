@@ -121,14 +121,13 @@ struct nvme_tracker {
 
 	uint32_t			rsvd2;
 
+	uint64_t			timeout_tick;
 	uint64_t			prp_sgl_bus_addr;
 
 	union {
 		uint64_t			prp[NVME_MAX_PRP_LIST_ENTRIES];
 		struct spdk_nvme_sgl_descriptor	sgl[NVME_MAX_SGL_DESCRIPTORS];
 	} u;
-
-	uint64_t			rsvd3;
 };
 /*
  * struct nvme_tracker must be exactly 4K so that the prp[] array does not cross a page boundary
@@ -933,6 +932,8 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
+	tr->timeout_tick = spdk_get_ticks() + qpair->ctrlr->timeout_ticks;
+
 	req = tr->req;
 	pqpair->tr[tr->cid].active = true;
 
@@ -1725,6 +1726,44 @@ exit:
 	return rc;
 }
 
+static void
+nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
+{
+	uint64_t t02;
+	struct nvme_tracker *tr;
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+
+	if (TAILQ_EMPTY(&pqpair->outstanding_tr)) {
+		return;
+	}
+
+	/*
+	 * qpair could be either for normal i/o or for admin command. If qpair is admin
+	 * and request is SPDK_NVME_OPC_ASYNC_EVENT_REQUEST, skip to next previous.
+	 */
+	tr = TAILQ_LAST(&pqpair->outstanding_tr, nvme_outstanding_tr_head);
+	while (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+		/* qpair is for admin request */
+		tr = TAILQ_PREV(tr, nvme_outstanding_tr_head, tq_list);
+		if (!tr) {
+			/*
+			 * All request were AER
+			 */
+			return;
+		}
+	}
+
+	t02 = spdk_get_ticks();
+	if (tr->timeout_tick <= t02) {
+		/*
+		 * Request has timed out. This could be i/o or admin request.
+		 * Call the registered timeout function for user to take action.
+		 */
+		ctrlr->timeout_cb_fn(ctrlr, qpair, ctrlr->timeout_cb_arg);
+	}
+}
+
 int32_t
 nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -1789,6 +1828,15 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
 		g_thread_mmio_ctrlr = NULL;
+	}
+
+	if (qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
+		if (qpair->ctrlr->timeout_cb_fn) {
+			/*
+			 * User registered for timeout callback
+			 */
+			nvme_pcie_qpair_check_timeout(qpair);
+		}
 	}
 
 	/* Before returning, complete any pending admin request. */

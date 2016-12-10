@@ -382,6 +382,28 @@ void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 struct spdk_nvme_qpair;
 
 /**
+ * Signature for the callback function invoked when a timeout is
+ * detected on a request.
+ */
+typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
+				     struct spdk_nvme_qpair *qpair,
+				     void *cb_arg);
+
+/**
+ * \brief Register for timeout callback on a controller.
+ *
+ * The application can choose to register for timeout callback or not register
+ * for timeout callback.
+ *
+ * \param ctrlr NVMe controller on which to monitor for timeout.
+ * \param timeout_sec Timeout value in seconds.
+ * \param cb_fn A function pointer that points to the callback function
+ * \param cb_arg Argument to the callback function.
+ */
+void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
+		uint32_t timeout_sec, spdk_nvme_timeout_cb cb_fn, void *cb_arg);
+
+/**
  * \brief Allocate an I/O queue pair (submission and completion queue).
  *
  * Each queue pair should only be used from a single thread at a time (mutual exclusion must be

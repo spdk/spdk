@@ -411,6 +411,13 @@ struct spdk_nvme_ctrlr {
 
 	/** Track all the processes manage this controller */
 	TAILQ_HEAD(, spdk_nvme_ctrlr_process)	active_procs;
+
+	/**
+	 * A function pointer to timeout callback function
+	 */
+	spdk_nvme_timeout_cb		timeout_cb_fn;
+	void				*timeout_cb_arg;
+	uint64_t			timeout_ticks;
 };
 
 struct nvme_driver {

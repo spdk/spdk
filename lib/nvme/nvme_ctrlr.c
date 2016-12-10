@@ -1299,6 +1299,9 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	TAILQ_INIT(&ctrlr->active_procs);
+	ctrlr->timeout_cb_fn = NULL;
+	ctrlr->timeout_cb_arg = NULL;
+	ctrlr->timeout_ticks = 0;
 
 	return rc;
 }
@@ -1428,6 +1431,15 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 {
 	ctrlr->aer_cb_fn = aer_cb_fn;
 	ctrlr->aer_cb_arg = aer_cb_arg;
+}
+
+void
+spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
+		uint32_t nvme_timeout, spdk_nvme_timeout_cb cb_fn, void *cb_arg)
+{
+	ctrlr->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
+	ctrlr->timeout_cb_fn = cb_fn;
+	ctrlr->timeout_cb_arg = cb_arg;
 }
 
 bool
