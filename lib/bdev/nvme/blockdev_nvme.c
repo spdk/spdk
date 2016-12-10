@@ -112,6 +112,8 @@ static int nvme_luns_per_ns = 1;
 static int nvme_controller_index = 0;
 static int lun_size_in_mb = 0;
 static int num_controllers = -1;
+static int g_reset_controller_on_timeout = 0;
+static int g_timeout = 0;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
@@ -446,6 +448,20 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 }
 
 static void
+blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
+			 struct spdk_nvme_qpair *qpair, void *cb_arg)
+{
+	int rc;
+
+	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
+
+	rc = spdk_nvme_ctrlr_reset(ctrlr);
+	if (rc) {
+		SPDK_ERRLOG("resetting controller failed\n");
+	}
+}
+
+static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -469,6 +485,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 
 	if (ctx->controllers_remaining > 0) {
 		ctx->controllers_remaining--;
+	}
+
+	if (g_reset_controller_on_timeout) {
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
+				blockdev_nvme_timeout_cb, NULL);
 	}
 }
 
@@ -578,6 +599,17 @@ nvme_library_init(void)
 	}
 
 	probe_ctx.controllers_remaining = num_controllers;
+
+	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
+	if (val != NULL) {
+		if (!strcmp(val, "Yes")) {
+			g_reset_controller_on_timeout = 1;
+		}
+	}
+
+	if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
+		g_timeout = 0;
+	}
 
 	return spdk_bdev_nvme_create(&probe_ctx);
 }
