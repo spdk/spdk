@@ -1101,6 +1101,8 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		uint8_t *end;
 		size_t len;
 
+		memset(&trid, 0, sizeof(trid));
+
 		if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			SPDK_WARNLOG("Skipping unsupported discovery service referral\n");
 			continue;
