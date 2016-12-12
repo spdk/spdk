@@ -99,7 +99,7 @@ struct spdk_nvme_ctrlr_opts {
 	/**
 	 * The queue depth of each NVMe I/O queue.
 	 */
-	uint32_t queue_size;
+	uint32_t io_queue_size;
 
 	/**
 	 * The host NQN to use when connecting to NVMe over Fabrics controllers.
