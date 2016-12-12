@@ -288,6 +288,11 @@ int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 const struct spdk_nvme_ctrlr_data *spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Get the NVMe controller CSTS (Status) register.
+ */
+union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * \brief Get the NVMe controller CAP (Capabilities) register.
  */
 union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr *ctrlr);
