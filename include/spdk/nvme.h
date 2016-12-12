@@ -142,6 +142,13 @@ struct spdk_nvme_transport_id {
 	enum spdk_nvme_transport_type trtype;
 
 	/**
+	 * Address family of the transport address.
+	 *
+	 * For PCIe, this value is ignored.
+	 */
+	enum spdk_nvmf_adrfam adrfam;
+
+	/**
 	 * Transport address of the NVMe-oF endpoint. For transports which use IP
 	 * addressing (e.g. RDMA), this should be an IP address. For PCIe, this
 	 * can either be a zero length string (the whole bus) or a PCI address

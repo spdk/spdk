@@ -912,6 +912,7 @@ parse_args(int argc, char **argv)
 			break;
 		case 'a':
 			trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+			trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 			snprintf(trid.traddr, sizeof(trid.traddr), "%s", optarg);
 			break;
 		case 's':

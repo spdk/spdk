@@ -1133,6 +1133,8 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 			continue;
 		}
 
+		trid.adrfam = entry->adrfam;
+
 		/* Ensure that subnqn is null terminated. */
 		end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
 		if (!end) {

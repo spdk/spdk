@@ -1072,6 +1072,7 @@ register_controllers(void)
 			return 0;
 		}
 		trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+		trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 
 		p = (char *)p1 + 1;
 		p1 = strchr(p, ':');
