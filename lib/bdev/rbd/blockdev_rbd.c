@@ -532,7 +532,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 
 	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
 		 blockdev_rbd_count);
-	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph rbd");
+	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph Rbd Disk");
 	blockdev_rbd_count++;
 
 	rbd->disk.write_cache = 0;
