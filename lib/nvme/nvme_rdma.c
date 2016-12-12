@@ -1100,7 +1100,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	union spdk_nvme_cc_register cc;
 	char buffer[4096];
 	int rc;
-	uint32_t i;
+	uint64_t i, numrec, buffer_max_entries;
 
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
 	/* For discovery_ctrlr set the timeout to 0 */
@@ -1133,7 +1133,21 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	}
 
 	log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
-	for (i = 0; i < log_page->numrec; i++) {
+
+	/*
+	 * For now, only support retrieving one buffer of discovery entries.
+	 * This could be extended to call Get Log Page multiple times as needed.
+	 */
+	buffer_max_entries = (sizeof(buffer) - offsetof(struct spdk_nvmf_discovery_log_page, entries[0])) /
+			     sizeof(struct spdk_nvmf_discovery_log_page_entry);
+	numrec = nvme_min(log_page->numrec, buffer_max_entries);
+	if (numrec != log_page->numrec) {
+		SPDK_WARNLOG("Discovery service returned %" PRIu64 " entries,"
+			     "but buffer can only hold %" PRIu64 "\n",
+			     log_page->numrec, numrec);
+	}
+
+	for (i = 0; i < numrec; i++) {
 		struct spdk_nvmf_discovery_log_page_entry *entry = &log_page->entries[i];
 		uint8_t *end;
 		size_t len;
@@ -1160,7 +1174,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		/* Ensure that subnqn is null terminated. */
 		end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
 		if (!end) {
-			SPDK_ERRLOG("Discovery entry %u: SUBNQN is not null terminated\n", i);
+			SPDK_ERRLOG("Discovery entry %" PRIu64 ": SUBNQN is not null terminated\n", i);
 			continue;
 		}
 		len = end - entry->subnqn;
