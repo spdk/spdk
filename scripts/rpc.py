@@ -173,10 +173,26 @@ p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
 p.set_defaults(func=construct_aio_bdev)
 
 def construct_nvme_bdev(args):
-    params = {'pci_address': args.pci_address}
-    print_array(jsonrpc_call('construct_nvme_bdev', params))
+    params = {'trtype': args.trtype,
+              'traddr': args.traddr}
+
+    if args.adrfam:
+        params['adrfam'] = args.adrfam
+
+    if args.trsvcid:
+        params['trsvcid'] = args.trsvcid
+
+    if args.subnqn:
+        params['subnqn'] = args.subnqn
+
+    jsonrpc_call('construct_nvme_bdev', params)
+
 p = subparsers.add_parser('construct_nvme_bdev', help='Add bdev with nvme backend')
-p.add_argument('pci_address', help='PCI address domain:bus:device.function')
+p.add_argument('-t', '--trtype', help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
+p.add_argument('-a', '--traddr', help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
+p.add_argument('-f', '--adrfam', help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+p.add_argument('-s', '--trsvcid', help='NVMe-oF target trsvcid: e.g., a port number')
+p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
 p.set_defaults(func=construct_nvme_bdev)
 
 def construct_rbd_bdev(args):

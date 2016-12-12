@@ -135,6 +135,7 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	fi
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
+	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
 	timing_exit iscsi_tgt
 
 	run_test test/lib/iscsi/iscsi.sh

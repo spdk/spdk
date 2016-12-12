@@ -543,6 +543,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (!claim_device) {
+		SPDK_ERRLOG("Not claiming device at %s\n", trid->traddr);
 		return false;
 	}
 
@@ -675,11 +676,13 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	probe_ctx.count = 1;
 	probe_ctx.trids[0] = *trid;
 	if (spdk_nvme_probe(trid, &probe_ctx, probe_cb, attach_cb, NULL)) {
+		SPDK_ERRLOG("Failed to probe for new devices\n");
 		return -1;
 	}
 
 	nvme_ctrlr = nvme_ctrlr_get(trid);
 	if (!nvme_ctrlr) {
+		SPDK_ERRLOG("Failed to find new NVMe controller\n");
 		return -1;
 	}
 

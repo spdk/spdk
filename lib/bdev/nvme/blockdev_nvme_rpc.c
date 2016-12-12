@@ -34,23 +34,38 @@
 #include <string.h>
 
 #include "blockdev_nvme.h"
+
+#include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
 struct rpc_construct_nvme {
-	char *pci_address;
+	char *trtype;
+	char *adrfam;
+	char *traddr;
+	char *trsvcid;
+	char *subnqn;
 };
 
 static void
 free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 {
-	free(req->pci_address);
+	free(req->trtype);
+	free(req->adrfam);
+	free(req->traddr);
+	free(req->trsvcid);
+	free(req->subnqn);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
-	{"pci_address", offsetof(struct rpc_construct_nvme, pci_address), spdk_json_decode_string},
+	{"trtype", offsetof(struct rpc_construct_nvme, trtype), spdk_json_decode_string},
+	{"traddr", offsetof(struct rpc_construct_nvme, traddr), spdk_json_decode_string},
+
+	{"adrfam", offsetof(struct rpc_construct_nvme, adrfam), spdk_json_decode_string, true},
+	{"trsvcid", offsetof(struct rpc_construct_nvme, trsvcid), spdk_json_decode_string, true},
+	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
 };
 
 #define NVME_MAX_BLOCKDEVS_PER_RPC 32
@@ -66,16 +81,43 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	const char *names[NVME_MAX_BLOCKDEVS_PER_RPC];
 	size_t count = 0;
 	size_t i;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
 				    SPDK_COUNTOF(rpc_construct_nvme_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	snprintf(trid.traddr, sizeof(trid.traddr), "%s", req.pci_address);
+	/* Parse trtype */
+	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, req.trtype);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to parse trtype: %s\n", req.trtype);
+		goto invalid;
+	}
+
+	/* Parse traddr */
+	snprintf(trid.traddr, sizeof(trid.traddr), "%s", req.traddr);
+
+	/* Parse adrfam */
+	if (req.adrfam) {
+		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, req.adrfam);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to parse adrfam: %s\n", req.adrfam);
+			goto invalid;
+		}
+	}
+
+	/* Parse trsvcid */
+	if (req.trsvcid) {
+		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", req.trsvcid);
+	}
+
+	/* Parse subnqn */
+	if (req.subnqn) {
+		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", req.subnqn);
+	}
 
 	count = NVME_MAX_BLOCKDEVS_PER_RPC;
 	if (spdk_bdev_nvme_create(&trid, names, &count)) {
