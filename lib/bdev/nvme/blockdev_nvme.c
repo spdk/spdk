@@ -398,13 +398,10 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "rdy");
-	spdk_json_write_string_fmt(w, "%u", csts.bits.rdy);
+	spdk_json_write_uint32(w, csts.bits.rdy);
 
 	spdk_json_write_name(w, "cfs");
-	spdk_json_write_string_fmt(w, "%u", csts.bits.cfs);
-
-	spdk_json_write_name(w, "shst");
-	spdk_json_write_string_fmt(w, "%u", csts.bits.shst);
+	spdk_json_write_uint32(w, csts.bits.cfs);
 
 	spdk_json_write_object_end(w);
 
