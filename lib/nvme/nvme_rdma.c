@@ -603,12 +603,18 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 }
 
 static int
-nvme_rdma_parse_addr(struct sockaddr_storage *sa, const char *addr, const char *service)
+nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, const char *service)
 {
 	struct addrinfo *res;
+	struct addrinfo hints;
 	int ret;
 
-	ret = getaddrinfo(addr, service, NULL, &res);
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = family;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = 0;
+
+	ret = getaddrinfo(addr, service, &hints, &res);
 	if (ret) {
 		SPDK_ERRLOG("getaddrinfo failed - invalid hostname or IP address\n");
 		return ret;
@@ -645,6 +651,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	struct sockaddr_storage  sin;
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
+	int family;
 
 	rc = nvmf_cm_construct(rqpair);
 	if (rc < 0) {
@@ -653,10 +660,25 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	ctrlr = rqpair->qpair.ctrlr;
+
+	switch (ctrlr->trid.adrfam) {
+	case SPDK_NVMF_ADRFAM_IPV4:
+		family = AF_INET;
+		break;
+	case SPDK_NVMF_ADRFAM_IPV6:
+		family = AF_INET6;
+		break;
+	default:
+		SPDK_ERRLOG("Unhandled ADRFAM %d\n", ctrlr->trid.adrfam);
+		return -1;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVME, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
+
 	memset(&sin, 0, sizeof(struct sockaddr_storage));
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "trsvcid is %s\n", ctrlr->trid.trsvcid);
-	rc = nvme_rdma_parse_addr(&sin, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
+	rc = nvme_rdma_parse_addr(&sin, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_rdma_parse_addr() failed\n");
 		return -1;
