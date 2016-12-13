@@ -74,6 +74,7 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_discovery_log_page *log;
+	uint64_t log_page_offset;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -98,6 +99,13 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 		}
 		break;
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
+		log_page_offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
+		if (log_page_offset & 3) {
+			SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 "\n", log_page_offset);
+			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+
 		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_LOG_DISCOVERY) {
 			log = (struct spdk_nvmf_discovery_log_page *)req->data;
 			log->numrec = 0;
