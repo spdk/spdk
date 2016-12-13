@@ -382,6 +382,23 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "firmware_revision");
 	spdk_json_write_string(w, buf);
 
+	spdk_json_write_name(w, "oacs");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "security");
+	spdk_json_write_uint32(w, cdata->oacs.security);
+
+	spdk_json_write_name(w, "format");
+	spdk_json_write_uint32(w, cdata->oacs.format);
+
+	spdk_json_write_name(w, "firmware");
+	spdk_json_write_uint32(w, cdata->oacs.firmware);
+
+	spdk_json_write_name(w, "ns_manage");
+	spdk_json_write_uint32(w, cdata->oacs.ns_manage);
+
+	spdk_json_write_object_end(w);
+
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_name(w, "vs");
