@@ -484,7 +484,7 @@ nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %s\n",
 					      event.traddr);
 				if (spdk_process_is_primary()) {
-					if (spdk_pci_addr_parse(&pci_addr, event.traddr)) {
+					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
 						nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, &pci_addr);
 					}
 				}
