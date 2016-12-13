@@ -63,7 +63,9 @@
   # Default is disabled.  Note that the RPC interface is not
   # authenticated, so users should be careful about enabling
   # RPC in non-trusted environments.
-  #Enable No
+  Enable No
+  # Listen address for the RPC service.
+  Listen 127.0.0.1
 
 # Users must change the PortalGroup section(s) to match the IP addresses
 #  for their environment.

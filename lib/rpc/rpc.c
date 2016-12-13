@@ -53,6 +53,7 @@
 #include "spdk/log.h"
 
 #define RPC_SELECT_INTERVAL	4000 /* 4ms */
+#define RPC_DEFAULT_LISTEN_ADDR	"127.0.0.1"
 
 static struct spdk_poller *g_rpc_poller = NULL;
 
@@ -93,6 +94,25 @@ enable_rpc(void)
 	}
 
 	return 0;
+}
+
+static const char *
+rpc_get_listen_addr(void)
+{
+	struct spdk_conf_section *sp;
+	const char *val;
+
+	sp = spdk_conf_find_section(NULL, "Rpc");
+	if (sp == NULL) {
+		return 0;
+	}
+
+	val = spdk_conf_section_get_val(sp, "Listen");
+	if (val == NULL) {
+		val = RPC_DEFAULT_LISTEN_ADDR;
+	}
+
+	return val;
 }
 
 void
@@ -136,9 +156,11 @@ spdk_jsonrpc_handler(
 static void
 spdk_rpc_setup(void *arg)
 {
-	struct sockaddr_in	serv_addr;
 	uint16_t		port;
-	int			family, protocol;
+	char			port_str[16];
+	struct addrinfo		hints;
+	struct addrinfo		*res;
+	const char		*listen_addr;
 
 	/* Unregister the one-shot setup poller */
 	spdk_poller_unregister(&g_rpc_poller, NULL);
@@ -147,19 +169,26 @@ spdk_rpc_setup(void *arg)
 		return;
 	}
 
+	listen_addr = rpc_get_listen_addr();
+
 	port = SPDK_JSONRPC_PORT_BASE + spdk_app_get_instance_id();
+	snprintf(port_str, sizeof(port_str), "%" PRIu16, port);
 
-	family = AF_INET;
-	protocol = IPPROTO_TCP;
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
 
-	memset(&serv_addr, 0, sizeof(serv_addr));
-	serv_addr.sin_family = family;
-	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons(port);
+	if (getaddrinfo(listen_addr, port_str, &hints, &res) != 0) {
+		SPDK_ERRLOG("Unable to look up RPC listen address '%s'\n", listen_addr);
+		return;
+	}
 
-	g_jsonrpc_server = spdk_jsonrpc_server_listen(family, protocol,
-			   (struct sockaddr *)&serv_addr, sizeof(serv_addr),
+	g_jsonrpc_server = spdk_jsonrpc_server_listen(res->ai_family, res->ai_protocol,
+			   res->ai_addr, res->ai_addrlen,
 			   spdk_jsonrpc_handler);
+
+	freeaddrinfo(res);
+
 	if (g_jsonrpc_server == NULL) {
 		SPDK_ERRLOG("spdk_jsonrpc_server_listen() failed\n");
 		return;
@@ -213,8 +242,10 @@ spdk_rpc_config_text(FILE *fp)
 		"  # Default is disabled.  Note that the RPC interface is not\n"
 		"  # authenticated, so users should be careful about enabling\n"
 		"  # RPC in non-trusted environments.\n"
-		"  Enable %s\n",
-		enable_rpc() ? "Yes" : "No");
+		"  Enable %s\n"
+		"  # Listen address for the RPC service.\n"
+		"  Listen %s\n",
+		enable_rpc() ? "Yes" : "No", rpc_get_listen_addr());
 }
 
 SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_initialize, spdk_rpc_finish, spdk_rpc_config_text)

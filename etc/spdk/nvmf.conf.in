@@ -29,6 +29,8 @@
   # authenticated, so users should be careful about enabling
   # RPC in non-trusted environments.
   Enable No
+  # Listen address for the RPC service.
+  Listen 127.0.0.1
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
