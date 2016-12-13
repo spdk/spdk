@@ -183,7 +183,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 	}
 
-	TAILQ_INSERT_HEAD(&g_subsystems, subsystem, entries);
+	TAILQ_INSERT_TAIL(&g_subsystems, subsystem, entries);
 
 	return subsystem;
 }
