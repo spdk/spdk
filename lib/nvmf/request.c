@@ -100,11 +100,6 @@ nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
 		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_LOG_DISCOVERY) {
 			log = (struct spdk_nvmf_discovery_log_page *)req->data;
-			/*
-			 * Does not support change discovery
-			 *  information at runtime now.
-			 */
-			log->genctr = 0;
 			log->numrec = 0;
 			spdk_format_discovery_log(log, req->length);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

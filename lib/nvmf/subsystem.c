@@ -46,6 +46,7 @@
 #include "spdk_internal/log.h"
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
+static uint64_t g_discovery_genctr = 0;
 
 bool
 spdk_nvmf_subsystem_exists(const char *subnqn)
@@ -184,6 +185,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	}
 
 	TAILQ_INSERT_TAIL(&g_subsystems, subsystem, entries);
+	g_discovery_genctr++;
 
 	return subsystem;
 }
@@ -226,6 +228,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
+	g_discovery_genctr++;
 
 	free(subsystem);
 }
@@ -271,6 +274,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
 	subsystem->num_listen_addrs++;
+	g_discovery_genctr++;
 
 	rc = transport->listen_addr_add(listen_addr);
 	if (rc < 0) {
@@ -298,6 +302,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_n
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 	subsystem->num_hosts++;
+	g_discovery_genctr++;
 
 	return 0;
 }
@@ -355,6 +360,7 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 	}
 
 	disc_log->numrec = numrec;
+	disc_log->genctr = g_discovery_genctr;
 }
 
 int
