@@ -1086,6 +1086,58 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+static void
+nvme_rdma_discovery_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
+			  void *cb_ctx, spdk_nvme_probe_cb probe_cb)
+{
+	struct spdk_nvme_transport_id trid;
+	uint8_t *end;
+	size_t len;
+
+	memset(&trid, 0, sizeof(trid));
+
+	if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		SPDK_WARNLOG("Skipping unsupported discovery service referral\n");
+		return;
+	} else if (entry->subtype != SPDK_NVMF_SUBTYPE_NVME) {
+		SPDK_WARNLOG("Skipping unknown subtype %u\n", entry->subtype);
+		return;
+	}
+
+	trid.trtype = entry->trtype;
+	if (!spdk_nvme_transport_available(trid.trtype)) {
+		SPDK_WARNLOG("NVMe transport type %u not available; skipping probe\n",
+			     trid.trtype);
+		return;
+	}
+
+	trid.adrfam = entry->adrfam;
+
+	/* Ensure that subnqn is null terminated. */
+	end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
+	if (!end) {
+		SPDK_ERRLOG("Discovery entry SUBNQN is not null terminated\n");
+		return;
+	}
+	len = end - entry->subnqn;
+	memcpy(trid.subnqn, entry->subnqn, len);
+	trid.subnqn[len] = '\0';
+
+	/* Convert traddr to a null terminated string. */
+	len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
+	memcpy(trid.traddr, entry->traddr, len);
+
+	/* Convert trsvcid to a null terminated string. */
+	len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
+	memcpy(trid.trsvcid, entry->trsvcid, len);
+
+	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
+		      trid.subnqn, trid.trtype,
+		      trid.traddr, trid.trsvcid);
+
+	nvme_ctrlr_probe(&trid, NULL, probe_cb, cb_ctx);
+}
+
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
 nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
@@ -1093,7 +1145,6 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		     spdk_nvme_probe_cb probe_cb,
 		     spdk_nvme_remove_cb remove_cb)
 {
-	struct spdk_nvme_transport_id trid;
 	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
 	struct spdk_nvmf_discovery_log_page *log_page;
@@ -1148,52 +1199,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	}
 
 	for (i = 0; i < numrec; i++) {
-		struct spdk_nvmf_discovery_log_page_entry *entry = &log_page->entries[i];
-		uint8_t *end;
-		size_t len;
-
-		memset(&trid, 0, sizeof(trid));
-
-		if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-			SPDK_WARNLOG("Skipping unsupported discovery service referral\n");
-			continue;
-		} else if (entry->subtype != SPDK_NVMF_SUBTYPE_NVME) {
-			SPDK_WARNLOG("Skipping unknown subtype %u\n", entry->subtype);
-			continue;
-		}
-
-		trid.trtype = entry->trtype;
-		if (!spdk_nvme_transport_available(trid.trtype)) {
-			SPDK_WARNLOG("NVMe transport type %u not available; skipping probe\n",
-				     trid.trtype);
-			continue;
-		}
-
-		trid.adrfam = entry->adrfam;
-
-		/* Ensure that subnqn is null terminated. */
-		end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
-		if (!end) {
-			SPDK_ERRLOG("Discovery entry %" PRIu64 ": SUBNQN is not null terminated\n", i);
-			continue;
-		}
-		len = end - entry->subnqn;
-		memcpy(trid.subnqn, entry->subnqn, len);
-		trid.subnqn[len] = '\0';
-
-		/* Convert traddr to a null terminated string. */
-		len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
-		memcpy(trid.traddr, entry->traddr, len);
-
-		/* Convert trsvcid to a null terminated string. */
-		len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
-		memcpy(trid.trsvcid, entry->trsvcid, len);
-
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
-			      trid.subnqn, trid.trtype,
-			      trid.traddr, trid.trsvcid);
-
-		nvme_ctrlr_probe(&trid, NULL, probe_cb, cb_ctx);
+		nvme_rdma_discovery_probe(&log_page->entries[i], cb_ctx, probe_cb);
 	}
 
 	nvme_ctrlr_destruct(discovery_ctrlr);
