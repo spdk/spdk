@@ -37,6 +37,7 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -54,6 +55,8 @@
 
 #define RPC_SELECT_INTERVAL	4000 /* 4ms */
 #define RPC_DEFAULT_LISTEN_ADDR	"127.0.0.1"
+
+static struct sockaddr_un g_rpc_listen_addr_unix = {};
 
 static struct spdk_poller *g_rpc_poller = NULL;
 
@@ -162,6 +165,8 @@ spdk_rpc_setup(void *arg)
 	struct addrinfo		*res;
 	const char		*listen_addr;
 
+	memset(&g_rpc_listen_addr_unix, 0, sizeof(g_rpc_listen_addr_unix));
+
 	/* Unregister the one-shot setup poller */
 	spdk_poller_unregister(&g_rpc_poller, NULL);
 
@@ -170,24 +175,49 @@ spdk_rpc_setup(void *arg)
 	}
 
 	listen_addr = rpc_get_listen_addr();
-
-	port = SPDK_JSONRPC_PORT_BASE + spdk_app_get_instance_id();
-	snprintf(port_str, sizeof(port_str), "%" PRIu16, port);
-
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-
-	if (getaddrinfo(listen_addr, port_str, &hints, &res) != 0) {
-		SPDK_ERRLOG("Unable to look up RPC listen address '%s'\n", listen_addr);
+	if (!listen_addr) {
 		return;
 	}
 
-	g_jsonrpc_server = spdk_jsonrpc_server_listen(res->ai_family, res->ai_protocol,
-			   res->ai_addr, res->ai_addrlen,
-			   spdk_jsonrpc_handler);
+	if (listen_addr[0] == '/') {
+		int rc;
 
-	freeaddrinfo(res);
+		g_rpc_listen_addr_unix.sun_family = AF_UNIX;
+		rc = snprintf(g_rpc_listen_addr_unix.sun_path,
+			      sizeof(g_rpc_listen_addr_unix.sun_path),
+			      "%s.%d", listen_addr, spdk_app_get_instance_id());
+		if (rc < 0 || (size_t)rc >= sizeof(g_rpc_listen_addr_unix.sun_path)) {
+			SPDK_ERRLOG("RPC Listen address Unix socket path too long\n");
+			g_rpc_listen_addr_unix.sun_path[0] = '\0';
+			return;
+		}
+
+		unlink(g_rpc_listen_addr_unix.sun_path);
+
+		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
+				   (struct sockaddr *)&g_rpc_listen_addr_unix,
+				   sizeof(g_rpc_listen_addr_unix),
+				   spdk_jsonrpc_handler);
+	} else {
+		port = SPDK_JSONRPC_PORT_BASE + spdk_app_get_instance_id();
+		snprintf(port_str, sizeof(port_str), "%" PRIu16, port);
+
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+
+		if (getaddrinfo(listen_addr, port_str, &hints, &res) != 0) {
+			SPDK_ERRLOG("Unable to look up RPC listen address '%s'\n", listen_addr);
+			return;
+		}
+
+		g_jsonrpc_server = spdk_jsonrpc_server_listen(res->ai_family, res->ai_protocol,
+				   res->ai_addr, res->ai_addrlen,
+				   spdk_jsonrpc_handler);
+
+		freeaddrinfo(res);
+	}
 
 	if (g_jsonrpc_server == NULL) {
 		SPDK_ERRLOG("spdk_jsonrpc_server_listen() failed\n");
@@ -226,6 +256,11 @@ spdk_rpc_finish(void)
 {
 	struct spdk_event *complete;
 
+	if (g_rpc_listen_addr_unix.sun_path[0]) {
+		/* Delete the Unix socket file */
+		unlink(g_rpc_listen_addr_unix.sun_path);
+	}
+
 	complete = spdk_event_allocate(spdk_app_get_current_core(), spdk_rpc_finish_cleanup,
 				       NULL, NULL, NULL);
 	spdk_poller_unregister(&g_rpc_poller, complete);
@@ -244,6 +279,7 @@ spdk_rpc_config_text(FILE *fp)
 		"  # RPC in non-trusted environments.\n"
 		"  Enable %s\n"
 		"  # Listen address for the RPC service.\n"
+		"  # May be an IP address or an absolute path to a Unix socket.\n"
 		"  Listen %s\n",
 		enable_rpc() ? "Yes" : "No", rpc_get_listen_addr());
 }

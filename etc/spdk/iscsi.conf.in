@@ -65,6 +65,7 @@
   # RPC in non-trusted environments.
   Enable No
   # Listen address for the RPC service.
+  # May be an IP address or an absolute path to a Unix socket.
   Listen 127.0.0.1
 
 # Users must change the PortalGroup section(s) to match the IP addresses
