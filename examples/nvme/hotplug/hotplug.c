@@ -107,18 +107,18 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, 1);
 
 	if (!dev->ns || !spdk_nvme_ns_is_active(dev->ns)) {
-		printf("Controller %s: No active namespace; skipping\n", dev->name);
+		fprintf(stderr, "Controller %s: No active namespace; skipping\n", dev->name);
 		goto skip;
 	}
 
 	if (spdk_nvme_ns_get_size(dev->ns) < g_io_size_bytes ||
 	    spdk_nvme_ns_get_sector_size(dev->ns) > g_io_size_bytes) {
-		printf("Controller %s: Invalid "
-		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
-		       dev->name,
-		       spdk_nvme_ns_get_size(dev->ns),
-		       spdk_nvme_ns_get_sector_size(dev->ns),
-		       g_io_size_bytes);
+		fprintf(stderr, "Controller %s: Invalid "
+			"ns size %" PRIu64 " / block size %u for I/O size %u\n",
+			dev->name,
+			spdk_nvme_ns_get_size(dev->ns),
+			spdk_nvme_ns_get_sector_size(dev->ns),
+			g_io_size_bytes);
 		goto skip;
 	}
 
@@ -127,7 +127,7 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 
 	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
 	if (!dev->qpair) {
-		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+		fprintf(stderr, "ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		goto skip;
 	}
 	g_insert_times++;
@@ -141,7 +141,7 @@ skip:
 static void
 unregister_dev(struct dev_ctx *dev)
 {
-	printf("unregister_dev: %s\n", dev->name);
+	fprintf(stderr, "unregister_dev: %s\n", dev->name);
 
 	spdk_nvme_ctrlr_free_io_qpair(dev->qpair);
 	spdk_nvme_detach(dev->ctrlr);
@@ -251,21 +251,21 @@ print_stats(void)
 	struct dev_ctx *dev;
 
 	TAILQ_FOREACH(dev, &g_devs, tailq) {
-		printf("%-43.43s: %10" PRIu64 " I/Os completed (+%" PRIu64 ")\n",
-		       dev->name,
-		       dev->io_completed,
-		       dev->io_completed - dev->prev_io_completed);
+		fprintf(stderr, "%-43.43s: %10" PRIu64 " I/Os completed (+%" PRIu64 ")\n",
+			dev->name,
+			dev->io_completed,
+			dev->io_completed - dev->prev_io_completed);
 		dev->prev_io_completed = dev->io_completed;
 	}
 
-	printf("\n");
+	fprintf(stderr, "\n");
 }
 
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attaching to %s\n", trid->traddr);
+	fprintf(stderr, "Attaching to %s\n", trid->traddr);
 
 	return true;
 }
@@ -274,7 +274,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attached to %s\n", trid->traddr);
+	fprintf(stderr, "Attached to %s\n", trid->traddr);
 
 	register_dev(ctrlr);
 }
@@ -293,7 +293,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 			 * is_removed is true and all outstanding I/O have been completed.
 			 */
 			dev->is_removed = true;
-			printf("Controller removed: %s\n", dev->name);
+			fprintf(stderr, "Controller removed: %s\n", dev->name);
 			return;
 		}
 	}
@@ -419,7 +419,7 @@ parse_args(int argc, char **argv)
 static int
 register_controllers(void)
 {
-	printf("Initializing NVMe Controllers\n");
+	fprintf(stderr, "Initializing NVMe Controllers\n");
 
 	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, remove_cb) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
@@ -463,7 +463,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	printf("Initialization complete. Starting I/O...\n");
+	fprintf(stderr, "Initialization complete. Starting I/O...\n");
 	io_loop();
 
 	if ((g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) ||
