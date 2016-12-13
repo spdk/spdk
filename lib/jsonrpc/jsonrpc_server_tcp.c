@@ -34,7 +34,8 @@
 #include "jsonrpc_internal.h"
 
 struct spdk_jsonrpc_server *
-spdk_jsonrpc_server_listen(struct sockaddr *listen_addr, socklen_t addrlen,
+spdk_jsonrpc_server_listen(int domain, int protocol,
+			   struct sockaddr *listen_addr, socklen_t addrlen,
 			   spdk_jsonrpc_handle_request_fn handle_request)
 {
 	struct spdk_jsonrpc_server *server;
@@ -47,7 +48,7 @@ spdk_jsonrpc_server_listen(struct sockaddr *listen_addr, socklen_t addrlen,
 
 	server->handle_request = handle_request;
 
-	server->sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	server->sockfd = socket(domain, SOCK_STREAM, protocol);
 	if (server->sockfd < 0) {
 		SPDK_ERRLOG("socket() failed\n");
 		free(server);
@@ -56,7 +57,9 @@ spdk_jsonrpc_server_listen(struct sockaddr *listen_addr, socklen_t addrlen,
 
 	val = 1;
 	setsockopt(server->sockfd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-	setsockopt(server->sockfd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+	if (protocol == IPPROTO_TCP) {
+		setsockopt(server->sockfd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+	}
 
 	val = 1;
 	rc = ioctl(server->sockfd, FIONBIO, &val);

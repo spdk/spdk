@@ -71,8 +71,8 @@ typedef void (*spdk_jsonrpc_handle_request_fn)(
 	const struct spdk_json_val *params,
 	const struct spdk_json_val *id);
 
-struct spdk_jsonrpc_server *spdk_jsonrpc_server_listen(struct sockaddr *listen_addr,
-		socklen_t addrlen, spdk_jsonrpc_handle_request_fn handle_request);
+struct spdk_jsonrpc_server *spdk_jsonrpc_server_listen(int domain, int protocol,
+		struct sockaddr *listen_addr, socklen_t addrlen, spdk_jsonrpc_handle_request_fn handle_request);
 
 int spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server);
 

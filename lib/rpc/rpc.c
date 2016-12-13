@@ -138,6 +138,7 @@ spdk_rpc_setup(void *arg)
 {
 	struct sockaddr_in	serv_addr;
 	uint16_t		port;
+	int			family, protocol;
 
 	/* Unregister the one-shot setup poller */
 	spdk_poller_unregister(&g_rpc_poller, NULL);
@@ -148,12 +149,16 @@ spdk_rpc_setup(void *arg)
 
 	port = SPDK_JSONRPC_PORT_BASE + spdk_app_get_instance_id();
 
+	family = AF_INET;
+	protocol = IPPROTO_TCP;
+
 	memset(&serv_addr, 0, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_family = family;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(port);
 
-	g_jsonrpc_server = spdk_jsonrpc_server_listen((struct sockaddr *)&serv_addr, sizeof(serv_addr),
+	g_jsonrpc_server = spdk_jsonrpc_server_listen(family, protocol,
+			   (struct sockaddr *)&serv_addr, sizeof(serv_addr),
 			   spdk_jsonrpc_handler);
 	if (g_jsonrpc_server == NULL) {
 		SPDK_ERRLOG("spdk_jsonrpc_server_listen() failed\n");
