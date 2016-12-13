@@ -34,6 +34,9 @@ removed devices (reported via a new `remove_cb` callback).  Hotplug is currently
 only supported on Linux with the `uio_pci_generic` driver, and newly-added NVMe
 devices must be bound to `uio_pci_generic` by an external script or tool.
 
+Multiple processes may now coordinate and use a single NVMe device simultaneously
+using [DPDK Multi-process Support](http://dpdk.org/doc/guides/prog_guide/multi_proc_support.html).
+
 ### NVMe over Fabrics target (`nvmf_tgt`)
 
 The `nvmf_tgt` configuration file format has been updated significantly to enable
@@ -44,6 +47,21 @@ The NVMe over Fabrics target now supports virtual mode subsystems, which allow t
 user to export devices from the SPDK block device abstraction layer as NVMe over
 Fabrics subsystems.  Direct mode (raw NVMe device access) is also still supported,
 and a single `nvmf_tgt` may export both types of subsystems simultaneously.
+
+### Block device abstraction layer (bdev)
+
+The bdev layer now supports scatter/gather read and write I/O APIs, and the NVMe
+blockdev driver has been updated to support scatter/gather.  Apps can use the
+new scatter/gather support via the `spdk_bdev_readv()` and `spdk_bdev_writev()`
+functions.
+
+The bdev status returned from each I/O has been extended to pass through NVMe
+or SCSI status codes directly in cases where the underlying device can provide
+a more specific status code.
+
+A Ceph RBD (RADOS Block Device) blockdev driver has been added.  This allows the
+`iscsi_tgt` and `nvmf_tgt` apps to export Ceph RBD volumes as iSCSI LUNs or
+NVMe namespaces.
 
 ### General changes
 
