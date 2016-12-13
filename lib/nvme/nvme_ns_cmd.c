@@ -155,14 +155,41 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 	return req;
 }
 
+static void
+_nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
+			   uint32_t opc, uint32_t lba, uint32_t lba_count,
+			   uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
+{
+	struct spdk_nvme_cmd	*cmd;
+
+	cmd = &req->cmd;
+	cmd->opc = opc;
+	cmd->nsid = ns->id;
+
+	*(uint64_t *)&cmd->cdw10 = lba;
+
+	if (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
+		switch (ns->pi_type) {
+		case SPDK_NVME_FMT_NVM_PROTECTION_TYPE1:
+		case SPDK_NVME_FMT_NVM_PROTECTION_TYPE2:
+			cmd->cdw14 = (uint32_t)lba;
+			break;
+		}
+	}
+
+	cmd->cdw12 = lba_count - 1;
+	cmd->cdw12 |= io_flags;
+
+	cmd->cdw15 = apptag_mask;
+	cmd->cdw15 = (cmd->cdw15 << 16 | apptag);
+}
+
 static struct nvme_request *
 _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, const struct nvme_payload *payload,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t opc,
 		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
 {
 	struct nvme_request	*req;
-	struct spdk_nvme_cmd	*cmd;
-	uint64_t		*tmp_lba;
 	uint32_t		sector_size;
 	uint32_t		sectors_per_max_io;
 	uint32_t		sectors_per_stripe;
@@ -201,30 +228,9 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, const struct nvme_payload *payload,
 	} else if (lba_count > sectors_per_max_io) {
 		return _nvme_ns_cmd_split_request(ns, payload, lba, lba_count, cb_fn, cb_arg, opc,
 						  io_flags, req, sectors_per_max_io, 0, apptag_mask, apptag);
-	} else {
-		cmd = &req->cmd;
-		cmd->opc = opc;
-		cmd->nsid = ns->id;
-
-		tmp_lba = (uint64_t *)&cmd->cdw10;
-		*tmp_lba = lba;
-
-		if (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
-			switch (ns->pi_type) {
-			case SPDK_NVME_FMT_NVM_PROTECTION_TYPE1:
-			case SPDK_NVME_FMT_NVM_PROTECTION_TYPE2:
-				cmd->cdw14 = (uint32_t)lba;
-				break;
-			}
-		}
-
-		cmd->cdw12 = lba_count - 1;
-		cmd->cdw12 |= io_flags;
-
-		cmd->cdw15 = apptag_mask;
-		cmd->cdw15 = (cmd->cdw15 << 16 | apptag);
 	}
 
+	_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag);
 	return req;
 }
 
