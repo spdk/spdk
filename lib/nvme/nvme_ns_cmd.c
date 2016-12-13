@@ -93,6 +93,22 @@ nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *chil
 	TAILQ_REMOVE(&parent->children, child, child_tailq);
 }
 
+static void
+nvme_request_free_children(struct nvme_request *req)
+{
+	struct nvme_request *child, *tmp;
+
+	if (req->num_children == 0) {
+		return;
+	}
+
+	/* free all child nvme_request */
+	TAILQ_FOREACH_SAFE(child, &req->children, child_tailq, tmp) {
+		nvme_request_remove_child(req, child);
+		nvme_free_request(child);
+	}
+}
+
 static struct nvme_request *
 _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 			   const struct nvme_payload *payload,
@@ -107,7 +123,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 	uint32_t		remaining_lba_count = lba_count;
 	uint32_t		offset = 0;
 	uint32_t		md_offset = 0;
-	struct nvme_request	*child, *tmp;
+	struct nvme_request	*child;
 
 	if (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
 		/* for extended LBA only */
@@ -122,14 +138,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 		child = _nvme_ns_cmd_rw(ns, payload, lba, lba_count, cb_fn,
 					cb_arg, opc, io_flags, apptag_mask, apptag);
 		if (child == NULL) {
-			if (req->num_children) {
-				/* free all child nvme_request  */
-				TAILQ_FOREACH_SAFE(child, &req->children,
-						   child_tailq, tmp) {
-					nvme_request_remove_child(req, child);
-					nvme_free_request(child);
-				}
-			}
+			nvme_request_free_children(req);
 			return NULL;
 		}
 		child->payload_offset = offset;
