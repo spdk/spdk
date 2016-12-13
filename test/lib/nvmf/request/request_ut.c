@@ -119,7 +119,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_session *session,
 }
 
 void
-spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length)
+spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 {
 }
 

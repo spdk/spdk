@@ -47,6 +47,8 @@
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 static uint64_t g_discovery_genctr = 0;
+static struct spdk_nvmf_discovery_log_page *g_discovery_log_page = NULL;
+static size_t g_discovery_log_page_size = 0;
 
 bool
 spdk_nvmf_subsystem_exists(const char *subnqn)
@@ -322,14 +324,26 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
-void
-spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length)
+static void
+nvmf_update_discovery_log(void)
 {
-	int numrec = 0;
+	uint64_t numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_listen_addr *listen_addr;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	const struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_discovery_log_page *disc_log;
+	size_t cur_size;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Generating log page for genctr %" PRIu64 "\n",
+		      g_discovery_genctr);
+
+	cur_size = sizeof(struct spdk_nvmf_discovery_log_page);
+	disc_log = calloc(1, cur_size);
+	if (disc_log == NULL) {
+		SPDK_ERRLOG("Discovery log page memory allocation error\n");
+		return;
+	}
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
@@ -337,30 +351,68 @@ spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_
 		}
 
 		TAILQ_FOREACH(listen_addr, &subsystem->listen_addrs, link) {
-			/* include the discovery log entry */
-			if (length > sizeof(struct spdk_nvmf_discovery_log_page)) {
-				if (sizeof(struct spdk_nvmf_discovery_log_page) + (numrec + 1) * sizeof(
-					    struct spdk_nvmf_discovery_log_page_entry) > length) {
-					break;
-				}
-				entry = &disc_log->entries[numrec];
-				entry->portid = numrec;
-				entry->cntlid = 0xffff;
-				entry->asqsz = g_nvmf_tgt.max_queue_depth;
-				entry->subtype = subsystem->subtype;
-				snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
+			size_t new_size = cur_size + sizeof(*entry);
+			void *new_log_page = realloc(disc_log, new_size);
 
-				transport = spdk_nvmf_transport_get(listen_addr->trname);
-				assert(transport != NULL);
-
-				transport->listen_addr_discover(listen_addr, entry);
+			if (new_log_page == NULL) {
+				SPDK_ERRLOG("Discovery log page memory allocation error\n");
+				break;
 			}
+
+			disc_log = new_log_page;
+			cur_size = new_size;
+
+			entry = &disc_log->entries[numrec];
+			memset(entry, 0, sizeof(*entry));
+			entry->portid = numrec;
+			entry->cntlid = 0xffff;
+			entry->asqsz = g_nvmf_tgt.max_queue_depth;
+			entry->subtype = subsystem->subtype;
+			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
+
+			transport = spdk_nvmf_transport_get(listen_addr->trname);
+			assert(transport != NULL);
+
+			transport->listen_addr_discover(listen_addr, entry);
+
 			numrec++;
 		}
 	}
 
 	disc_log->numrec = numrec;
 	disc_log->genctr = g_discovery_genctr;
+
+	free(g_discovery_log_page);
+
+	g_discovery_log_page = disc_log;
+	g_discovery_log_page_size = cur_size;
+}
+
+void
+spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
+{
+	size_t copy_len = 0;
+	size_t zero_len = length;
+
+	if (g_discovery_log_page == NULL ||
+	    g_discovery_log_page->genctr != g_discovery_genctr) {
+		nvmf_update_discovery_log();
+	}
+
+	/* Copy the valid part of the discovery log page, if any */
+	if (g_discovery_log_page && offset < g_discovery_log_page_size) {
+		copy_len = nvmf_min(g_discovery_log_page_size - offset, length);
+		zero_len -= copy_len;
+		memcpy(buffer, (char *)g_discovery_log_page + offset, copy_len);
+	}
+
+	/* Zero out the rest of the buffer */
+	if (zero_len) {
+		memset((char *)buffer + copy_len, 0, zero_len);
+	}
+
+	/* We should have copied or zeroed every byte of the output buffer. */
+	assert(copy_len + zero_len == length);
 }
 
 int
