@@ -98,6 +98,15 @@ struct nvme_rdma_qpair {
 	/* Memory region describing all rsps for this qpair */
 	struct ibv_mr				*rsp_mr;
 
+	/*
+	 * Array of qpair.num_entries NVMe commands registered as RDMA message buffers.
+	 * Indexed by rdma_req->id.
+	 */
+	struct spdk_nvme_cmd			*cmds;
+
+	/* Memory region describing all cmds for this qpair */
+	struct ibv_mr				*cmd_mr;
+
 	STAILQ_HEAD(, spdk_nvme_rdma_req)	free_reqs;
 };
 
@@ -109,10 +118,6 @@ struct spdk_nvme_rdma_req {
 	struct nvme_request 			*req;
 
 	enum spdk_nvme_data_transfer		xfer;
-
-	struct spdk_nvme_cmd			cmd;
-
-	struct ibv_mr				*cmd_mr;
 
 	struct ibv_sge				send_sgl;
 
@@ -208,8 +213,9 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 }
 
 static void
-nvme_rdma_pre_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
+nvme_rdma_pre_copy_mem(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
+	struct spdk_nvme_cmd *cmd;
 	struct spdk_nvme_sgl_descriptor *nvme_sgl;
 	void *address;
 
@@ -225,7 +231,9 @@ nvme_rdma_pre_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 			memcpy(rdma_req->bb, address, nvme_sgl->keyed.length);
 		}
 
-		nvme_sgl = &rdma_req->cmd.dptr.sgl1;
+		cmd = &rqpair->cmds[rdma_req->id];
+
+		nvme_sgl = &cmd->dptr.sgl1;
 		nvme_sgl->address = (uint64_t)rdma_req->bb;
 		nvme_sgl->keyed.key = rdma_req->bb_mr->lkey;
 	}
@@ -360,18 +368,10 @@ config_rdma_req(struct nvme_rdma_qpair *rqpair, int i)
 		return NULL;
 	}
 
-	rdma_req->cmd_mr = rdma_reg_msgs(rqpair->cm_id, &rdma_req->cmd,
-					 sizeof(rdma_req->cmd));
-
-	if (!rdma_req->cmd_mr) {
-		SPDK_ERRLOG("Unable to register cmd_mr\n");
-		return NULL;
-	}
-
 	/* initialize send_sgl */
-	rdma_req->send_sgl.addr = (uint64_t)&rdma_req->cmd;
-	rdma_req->send_sgl.length = sizeof(rdma_req->cmd);
-	rdma_req->send_sgl.lkey = rdma_req->cmd_mr->lkey;
+	rdma_req->send_sgl.addr = (uint64_t)&rqpair->cmds[i];
+	rdma_req->send_sgl.length = sizeof(rqpair->cmds[i]);
+	rdma_req->send_sgl.lkey = rqpair->cmd_mr->lkey;
 
 	rdma_req->bb = calloc(1, NVME_RDMA_RW_BUFFER_SIZE);
 	if (!rdma_req->bb) {
@@ -405,9 +405,7 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
 		rdma_req = &rqpair->rdma_reqs[i];
-		if (rdma_req->cmd_mr && rdma_dereg_mr(rdma_req->cmd_mr)) {
-			SPDK_ERRLOG("Unable to de-register cmd_mr\n");
-		}
+
 		if (rdma_req->bb_mr && ibv_dereg_mr(rdma_req->bb_mr)) {
 			SPDK_ERRLOG("Unable to de-register bb_mr\n");
 		}
@@ -417,7 +415,16 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 		}
 	}
 
+	if (rqpair->cmd_mr && rdma_dereg_mr(rqpair->cmd_mr)) {
+		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
+	}
+	rqpair->cmd_mr = NULL;
+
+	free(rqpair->cmds);
+	rqpair->cmds = NULL;
+
 	free(rqpair->rdma_reqs);
+	rqpair->rdma_reqs = NULL;
 }
 
 static int
@@ -426,6 +433,19 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 	struct spdk_nvme_rdma_req *rdma_req;
 	int i;
 
+	rqpair->cmds = calloc(rqpair->max_queue_depth, sizeof(*rqpair->cmds));
+	if (!rqpair->cmds) {
+		SPDK_ERRLOG("Failed to allocate RDMA cmds\n");
+		goto fail;
+	}
+
+	rqpair->cmd_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->cmds,
+				       rqpair->max_queue_depth * sizeof(*rqpair->cmds));
+	if (!rqpair->cmd_mr) {
+		SPDK_ERRLOG("Unable to register cmd_mr\n");
+		goto fail;
+	}
+
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
 		rdma_req = config_rdma_req(rqpair, i);
 		if (rdma_req == NULL) {
@@ -433,7 +453,7 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 		}
 
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_req %p: cmd %p\n",
-			      rdma_req, &rdma_req->cmd);
+			      rdma_req, &rqpair->cmds[i]);
 	}
 
 	return 0;
@@ -757,10 +777,9 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
 		rdma_req->xfer = spdk_nvme_opc_get_data_transfer(nvmf_cmd->fctype);
 	} else {
 		rdma_req->xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
-
 	}
 
-	memcpy(&rdma_req->cmd, &req->cmd, sizeof(req->cmd));
+	memcpy(&rqpair->cmds[rdma_req->id], &req->cmd, sizeof(req->cmd));
 	return rdma_req;
 }
 
@@ -1317,7 +1336,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
-	nvme_rdma_pre_copy_mem(rdma_req);
+	nvme_rdma_pre_copy_mem(rqpair, rdma_req);
 
 	wr = &rdma_req->send_wr;
 	wr->wr_id = (uint64_t)rdma_req;
