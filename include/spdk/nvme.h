@@ -517,6 +517,9 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
  * \param nsid Depending on the log page, this may be 0, a namespace identifier, or SPDK_NVME_GLOBAL_NS_TAG.
  * \param payload The pointer to the payload buffer.
  * \param payload_size The size of payload buffer.
+ * \param offset Offset in bytes within the log page to start retrieving log page data.
+ *               May only be non-zero if the controller supports extended data for Get Log Page
+ *               as reported in the controller data log page attributes.
  * \param cb_fn Callback function to invoke when the log page has been retrieved.
  * \param cb_arg Argument to pass to the callback function.
  *
@@ -533,6 +536,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				     uint8_t log_page, uint32_t nsid,
 				     void *payload, uint32_t payload_size,
+				     uint64_t offset,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**

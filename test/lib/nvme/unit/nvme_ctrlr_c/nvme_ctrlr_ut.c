@@ -206,8 +206,8 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 
 int
 spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
-				 uint32_t nsid, void *payload, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
-				 void *cb_arg)
+				 uint32_t nsid, void *payload, uint32_t payload_size,
+				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	fake_cpl_success(cb_fn, cb_arg);
 	return 0;

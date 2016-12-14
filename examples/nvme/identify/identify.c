@@ -189,6 +189,7 @@ get_error_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_ERROR,
 					     SPDK_NVME_GLOBAL_NS_TAG, error_page,
 					     sizeof(*error_page) * (cdata->elpe + 1),
+					     0,
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
@@ -201,7 +202,7 @@ static int
 get_health_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-					     SPDK_NVME_GLOBAL_NS_TAG, &health_page, sizeof(health_page), get_log_page_completion, NULL)) {
+					     SPDK_NVME_GLOBAL_NS_TAG, &health_page, sizeof(health_page), 0, get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
@@ -213,7 +214,7 @@ static int
 get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
-					     &intel_smart_page, sizeof(intel_smart_page), get_log_page_completion, NULL)) {
+					     &intel_smart_page, sizeof(intel_smart_page), 0, get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
@@ -225,7 +226,7 @@ static int
 get_intel_temperature_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE,
-					     SPDK_NVME_GLOBAL_NS_TAG, &intel_temperature_page, sizeof(intel_temperature_page),
+					     SPDK_NVME_GLOBAL_NS_TAG, &intel_temperature_page, sizeof(intel_temperature_page), 0,
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
@@ -237,7 +238,7 @@ static int
 get_intel_md_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION,
-					     SPDK_NVME_GLOBAL_NS_TAG, &intel_md_page, sizeof(intel_md_page),
+					     SPDK_NVME_GLOBAL_NS_TAG, &intel_md_page, sizeof(intel_md_page), 0,
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);

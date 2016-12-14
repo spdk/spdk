@@ -340,15 +340,20 @@ nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 
 int
 spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
-				 uint32_t nsid, void *payload, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
-				 void *cb_arg)
+				 uint32_t nsid, void *payload, uint32_t payload_size,
+				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 	uint32_t numd, numdl, numdu;
+	uint32_t lpol, lpou;
 	int rc;
 
 	if (payload_size == 0) {
+		return -EINVAL;
+	}
+
+	if (offset & 3) {
 		return -EINVAL;
 	}
 
@@ -356,7 +361,16 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	numdl = numd & 0xFFFFu;
 	numdu = (numd >> 16) & 0xFFFFu;
 
+	lpol = (uint32_t)offset;
+	lpou = (uint32_t)(offset >> 32);
+
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	if (offset && !ctrlr->cdata.lpa.edlp) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -EINVAL;
+	}
+
 	req = nvme_allocate_request_user_copy(payload, payload_size, cb_fn, cb_arg, false);
 	if (req == NULL) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
@@ -369,6 +383,8 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	cmd->cdw10 = numdl << 16;
 	cmd->cdw10 |= log_page;
 	cmd->cdw11 = numdu;
+	cmd->cdw12 = lpol;
+	cmd->cdw13 = lpou;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);

@@ -269,7 +269,7 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 
 	status.done = false;
 	spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY, SPDK_NVME_GLOBAL_NS_TAG,
-					 log_page_directory, sizeof(struct spdk_nvme_intel_log_page_directory),
+					 log_page_directory, sizeof(struct spdk_nvme_intel_log_page_directory), 0,
 					 nvme_completion_poll_cb,
 					 &status);
 	while (status.done == false) {

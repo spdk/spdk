@@ -742,7 +742,7 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 	while (ctrlr) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
 			if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, SPDK_NVME_GLOBAL_NS_TAG,
-							     ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page),
+							     ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page), 0,
 							     enable_latency_tracking_complete,
 							     NULL)) {
 				printf("nvme_ctrlr_cmd_get_log_page() failed\n");

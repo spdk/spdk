@@ -1082,7 +1082,7 @@ nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
 	int rc;
 
 	status.done = false;
-	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size,
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size, 0,
 					      nvme_completion_poll_cb, &status);
 	if (rc < 0) {
 		return -1;

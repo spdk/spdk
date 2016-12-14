@@ -146,7 +146,7 @@ static int
 get_health_log_page(struct dev *dev)
 {
 	return spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-						SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page),
+						SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
 						get_log_page_completion, dev);
 }
 
