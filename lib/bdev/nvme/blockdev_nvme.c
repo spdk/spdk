@@ -132,7 +132,8 @@ nvme_get_ctx_size(void)
 	return sizeof(struct nvme_blockio);
 }
 
-SPDK_BDEV_MODULE_REGISTER(nvme_library_init, NULL, blockdev_nvme_get_spdk_running_config,
+SPDK_BDEV_MODULE_REGISTER(nvme_library_init, nvme_library_fini,
+			  blockdev_nvme_get_spdk_running_config,
 			  nvme_get_ctx_size)
 
 static int64_t
@@ -644,7 +645,7 @@ nvme_library_init(void)
 	return spdk_bdev_nvme_create(&probe_ctx);
 }
 
-__attribute__((destructor)) void
+static void
 nvme_library_fini(void)
 {
 	struct nvme_device *dev;
