@@ -34,8 +34,13 @@ case $param in
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu
     ;;
+	-f|--fs-integrity)
+	echo Running filesystem integrity suite...
+	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
+	;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test"
+	echo "-f|--fs-integrity 	for running an integrity test with filesystem"
 	echo "-p|--performance 		for running a performance test"
 	echo "-h|--help 		prints this message"
     ;;

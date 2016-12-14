@@ -34,11 +34,6 @@
 [Ioat]
   Disable Yes
 
-[Malloc]
-  NumberOfLuns 1
-  LunSizeInMb 512
-
- [VhostScsi0]
-  Name naa.123
-  Dev 0 Nvme0n1
-  Dev 1 Malloc0
+[VhostScsi0]
+  Name naa.0
+  Dev 1 Nvme0n1
