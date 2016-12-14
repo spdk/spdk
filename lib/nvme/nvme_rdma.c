@@ -116,8 +116,6 @@ struct spdk_nvme_rdma_req {
 
 	struct ibv_sge				send_sgl;
 
-	struct ibv_sge				bb_sgl;
-
 	struct ibv_mr				*bb_mr;
 
 	uint8_t					*bb;
@@ -229,7 +227,7 @@ nvme_rdma_pre_copy_mem(struct spdk_nvme_rdma_req *rdma_req)
 
 		nvme_sgl = &rdma_req->cmd.dptr.sgl1;
 		nvme_sgl->address = (uint64_t)rdma_req->bb;
-		nvme_sgl->keyed.key = rdma_req->bb_sgl.lkey;
+		nvme_sgl->keyed.key = rdma_req->bb_mr->lkey;
 	}
 }
 
@@ -391,11 +389,6 @@ config_rdma_req(struct nvme_rdma_qpair *rqpair, int i)
 		SPDK_ERRLOG("Unable to register bb_mr\n");
 		return NULL;
 	}
-
-	/* initialize bb_sgl */
-	rdma_req->bb_sgl.addr = (uint64_t)rdma_req->bb;
-	rdma_req->bb_sgl.length = rdma_req->bb_len;
-	rdma_req->bb_sgl.lkey = rdma_req->bb_mr->lkey;
 
 	return rdma_req;
 }
