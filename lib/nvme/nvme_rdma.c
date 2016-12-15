@@ -233,7 +233,7 @@ nvme_rdma_pre_copy_mem(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req
 
 		nvme_sgl = &cmd->dptr.sgl1;
 		nvme_sgl->address = (uint64_t)rdma_req->bb;
-		nvme_sgl->keyed.key = rdma_req->bb_mr->lkey;
+		nvme_sgl->keyed.key = rdma_req->bb_mr->rkey;
 	}
 }
 
