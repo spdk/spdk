@@ -125,8 +125,6 @@ struct spdk_nvme_rdma_req {
 
 	uint8_t					*bb;
 
-	uint32_t				bb_len;
-
 	STAILQ_ENTRY(spdk_nvme_rdma_req)	link;
 };
 
@@ -377,8 +375,7 @@ config_rdma_req(struct nvme_rdma_qpair *rqpair, int i)
 		return NULL;
 	}
 
-	rdma_req->bb_len = NVME_RDMA_RW_BUFFER_SIZE;
-	rdma_req->bb_mr = ibv_reg_mr(rqpair->cm_id->qp->pd, rdma_req->bb, rdma_req->bb_len,
+	rdma_req->bb_mr = ibv_reg_mr(rqpair->cm_id->qp->pd, rdma_req->bb, NVME_RDMA_RW_BUFFER_SIZE,
 				     IBV_ACCESS_LOCAL_WRITE |
 				     IBV_ACCESS_REMOTE_READ |
 				     IBV_ACCESS_REMOTE_WRITE);
