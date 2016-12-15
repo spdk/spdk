@@ -1263,7 +1263,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	rctrlr->ctrlr.cap = cap;
+	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap);
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "succesully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;

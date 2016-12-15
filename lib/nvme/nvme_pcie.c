@@ -623,7 +623,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	pctrlr->ctrlr.cap = cap;
+	nvme_ctrlr_init_cap(&pctrlr->ctrlr, &cap);
 
 	/* Doorbell stride is 2 ^ (dstrd + 2),
 	 * but we want multiples of 4, so drop the + 2 */

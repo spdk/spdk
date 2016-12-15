@@ -1285,9 +1285,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 	ctrlr->flags = 0;
 	ctrlr->free_io_qids = NULL;
-
-	ctrlr->min_page_size = 1 << (12 + ctrlr->cap.bits.mpsmin);
-
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
 
@@ -1304,6 +1301,15 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->timeout_ticks = 0;
 
 	return rc;
+}
+
+/* This function should be called once at ctrlr initialization to set up constant properties. */
+void
+nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap)
+{
+	ctrlr->cap = *cap;
+
+	ctrlr->min_page_size = 1u << (12 + ctrlr->cap.bits.mpsmin);
 }
 
 void
