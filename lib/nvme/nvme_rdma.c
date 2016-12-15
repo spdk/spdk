@@ -172,6 +172,31 @@ nvme_rdma_req_complete(struct nvme_request *req,
 }
 
 static int
+nvme_rdma_get_event(struct rdma_event_channel *channel,
+		    enum rdma_cm_event_type evt)
+{
+	struct rdma_cm_event	*event;
+	int			rc;
+
+	rc = rdma_get_cm_event(channel, &event);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to get event from CM event channel. Error %d (%s)\n",
+			    errno, strerror(errno));
+		return -1;
+	}
+
+	if (event->event != evt) {
+		SPDK_ERRLOG("Received event %d from CM event channel, but expected event %d\n",
+			    event->event, evt);
+		return -1;
+	}
+
+	rdma_ack_cm_event(event);
+
+	return 0;
+}
+
+static int
 nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 {
 	int			rc;
@@ -509,7 +534,6 @@ nvme_rdma_bind_addr(struct nvme_rdma_qpair *rqpair,
 		    struct rdma_event_channel *cm_channel)
 {
 	int ret;
-	struct rdma_cm_event *event;
 
 	ret = rdma_resolve_addr(rqpair->cm_id, NULL, (struct sockaddr *) sin,
 				NVME_RDMA_TIME_OUT_IN_MS);
@@ -518,34 +542,22 @@ nvme_rdma_bind_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	ret = rdma_get_cm_event(cm_channel, &event);
-	if (ret) {
-		SPDK_ERRLOG("rdma address resolution error\n");
-		return ret;
-	}
-	if (event->event != RDMA_CM_EVENT_ADDR_RESOLVED) {
+	if (nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ADDR_RESOLVED) < 0) {
+		SPDK_ERRLOG("RDMA address resolution error\n");
 		return -1;
 	}
-	rdma_ack_cm_event(event);
-
 
 	ret = rdma_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
 		SPDK_ERRLOG("rdma_resolve_route\n");
 		return ret;
 	}
-	ret = rdma_get_cm_event(cm_channel, &event);
-	if (ret) {
-		SPDK_ERRLOG("rdma address resolution error\n");
-		return ret;
-	}
-	if (event->event != RDMA_CM_EVENT_ROUTE_RESOLVED) {
-		SPDK_ERRLOG("rdma route resolution error\n");
+
+	if (nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ROUTE_RESOLVED) < 0) {
+		SPDK_ERRLOG("RDMA route resolution error\n");
 		return -1;
 	}
-	rdma_ack_cm_event(event);
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_resolve_addr - rdma_resolve_route successful\n");
 	return 0;
 }
 
@@ -554,7 +566,6 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 {
 	struct rdma_conn_param conn_param;
 	struct spdk_nvmf_rdma_request_private_data pdata;
-	struct rdma_cm_event *event;
 	struct ibv_device_attr attr;
 	int ret;
 
@@ -582,20 +593,10 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	ret = rdma_get_cm_event(rqpair->cm_channel, &event);
-	if (ret) {
-		SPDK_ERRLOG("rdma address resolution error\n");
-		return ret;
-	}
-
-	if (event->event != RDMA_CM_EVENT_ESTABLISHED) {
-		SPDK_ERRLOG("rdma connect error\n");
+	if (nvme_rdma_get_event(rqpair->cm_channel, RDMA_CM_EVENT_ESTABLISHED) < 0) {
+		SPDK_ERRLOG("RDMA connect error\n");
 		return -1;
 	}
-
-	rdma_ack_cm_event(event);
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "connect successful\n");
 
 	return 0;
 }
