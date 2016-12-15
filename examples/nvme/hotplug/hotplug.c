@@ -466,8 +466,15 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Initialization complete. Starting I/O...\n");
 	io_loop();
 
-	if ((g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) ||
-	    (g_expected_removal_times != -1 && g_removal_times != g_expected_removal_times)) {
+	if (g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) {
+		fprintf(stderr, "Expected inserts %d != actual inserts %d\n",
+			g_expected_insert_times, g_insert_times);
+		return 1;
+	}
+
+	if (g_expected_removal_times != -1 && g_removal_times != g_expected_removal_times) {
+		fprintf(stderr, "Expected removals %d != actual removals %d\n",
+			g_expected_removal_times, g_removal_times);
 		return 1;
 	}
 
