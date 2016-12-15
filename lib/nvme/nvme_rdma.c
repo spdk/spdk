@@ -174,7 +174,7 @@ nvme_rdma_req_complete(struct nvme_request *req,
 	nvme_free_request(req);
 }
 
-static int
+static struct rdma_cm_event *
 nvme_rdma_get_event(struct rdma_event_channel *channel,
 		    enum rdma_cm_event_type evt)
 {
@@ -185,18 +185,16 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to get event from CM event channel. Error %d (%s)\n",
 			    errno, strerror(errno));
-		return -1;
+		return NULL;
 	}
 
 	if (event->event != evt) {
 		SPDK_ERRLOG("Received event %d from CM event channel, but expected event %d\n",
 			    event->event, evt);
-		return -1;
+		return NULL;
 	}
 
-	rdma_ack_cm_event(event);
-
-	return 0;
+	return event;
 }
 
 static int
@@ -525,6 +523,7 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		       struct rdma_event_channel *cm_channel)
 {
 	int ret;
+	struct rdma_cm_event *event;
 
 	ret = rdma_resolve_addr(rqpair->cm_id, NULL, (struct sockaddr *) sin,
 				NVME_RDMA_TIME_OUT_IN_MS);
@@ -533,10 +532,12 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	if (nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ADDR_RESOLVED) < 0) {
+	event = nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ADDR_RESOLVED);
+	if (event == NULL) {
 		SPDK_ERRLOG("RDMA address resolution error\n");
 		return -1;
 	}
+	rdma_ack_cm_event(event);
 
 	ret = rdma_resolve_route(rqpair->cm_id, NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
@@ -544,10 +545,12 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 		return ret;
 	}
 
-	if (nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ROUTE_RESOLVED) < 0) {
+	event = nvme_rdma_get_event(cm_channel, RDMA_CM_EVENT_ROUTE_RESOLVED);
+	if (event == NULL) {
 		SPDK_ERRLOG("RDMA route resolution error\n");
 		return -1;
 	}
+	rdma_ack_cm_event(event);
 
 	return 0;
 }
@@ -555,10 +558,12 @@ nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
 static int
 nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 {
-	struct rdma_conn_param conn_param;
-	struct spdk_nvmf_rdma_request_private_data pdata;
-	struct ibv_device_attr attr;
-	int ret;
+	struct rdma_conn_param				param = {};
+	struct spdk_nvmf_rdma_request_private_data 	request_data = {};
+	struct spdk_nvmf_rdma_accept_private_data	*accept_data;
+	struct ibv_device_attr 				attr;
+	int 						ret;
+	struct rdma_cm_event 				*event;
 
 	ret = ibv_query_device(rqpair->cm_id->verbs, &attr);
 	if (ret != 0) {
@@ -566,28 +571,39 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	memset(&conn_param, 0, sizeof(conn_param));
-	conn_param.responder_resources = nvme_min(rqpair->max_queue_depth, attr.max_qp_rd_atom);
+	param.responder_resources = nvme_min(rqpair->max_queue_depth, attr.max_qp_rd_atom);
 
-	/* init private data for connect */
-	memset(&pdata, 0, sizeof(pdata));
-	pdata.qid = rqpair->qpair.id;
-	pdata.hrqsize = rqpair->max_queue_depth;
-	pdata.hsqsize = rqpair->max_queue_depth - 1;
-	conn_param.private_data = &pdata;
-	conn_param.private_data_len = sizeof(pdata);
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "qid =%d\n", pdata.qid);
+	request_data.qid = rqpair->qpair.id;
+	request_data.hrqsize = rqpair->max_queue_depth;
+	request_data.hsqsize = rqpair->max_queue_depth - 1;
 
-	ret = rdma_connect(rqpair->cm_id, &conn_param);
+	param.private_data = &request_data;
+	param.private_data_len = sizeof(request_data);
+
+	ret = rdma_connect(rqpair->cm_id, &param);
 	if (ret) {
 		SPDK_ERRLOG("nvme rdma connect error\n");
 		return ret;
 	}
 
-	if (nvme_rdma_get_event(rqpair->cm_channel, RDMA_CM_EVENT_ESTABLISHED) < 0) {
+	event = nvme_rdma_get_event(rqpair->cm_channel, RDMA_CM_EVENT_ESTABLISHED);
+	if (event == NULL) {
 		SPDK_ERRLOG("RDMA connect error\n");
 		return -1;
 	}
+
+	accept_data = (struct spdk_nvmf_rdma_accept_private_data *)event->param.conn.private_data;
+	if (accept_data == NULL) {
+		SPDK_ERRLOG("NVMe-oF target did not return accept data\n");
+		return -1;
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVME, "Requested queue depth %d. Actually got queue depth %d.\n",
+		      rqpair->max_queue_depth, accept_data->crqsize);
+
+	rqpair->max_queue_depth = nvme_min(rqpair->max_queue_depth, accept_data->crqsize);
+
+	rdma_ack_cm_event(event);
 
 	return 0;
 }
