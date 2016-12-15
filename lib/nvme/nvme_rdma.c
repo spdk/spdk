@@ -658,20 +658,6 @@ nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, 
 }
 
 static int
-nvmf_cm_construct(struct nvme_rdma_qpair *rqpair)
-{
-	/* create an event channel with rdmacm to receive
-	   connection oriented requests and notifications */
-	rqpair->cm_channel = rdma_create_event_channel();
-	if (rqpair->cm_channel == NULL) {
-		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 {
 	struct sockaddr_storage  sin;
@@ -679,9 +665,9 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	struct spdk_nvme_ctrlr *ctrlr;
 	int family;
 
-	rc = nvmf_cm_construct(rqpair);
-	if (rc < 0) {
-		SPDK_ERRLOG("nvmf_cm_construct() failed\n");
+	rqpair->cm_channel = rdma_create_event_channel();
+	if (rqpair->cm_channel == NULL) {
+		SPDK_ERRLOG("rdma_create_event_channel() failed\n");
 		return -1;
 	}
 
