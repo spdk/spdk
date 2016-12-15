@@ -906,12 +906,12 @@ nvme_rdma_fabric_prop_get_cmd(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static struct spdk_nvme_qpair *
-nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
+nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
+			     uint16_t qid, uint32_t qsize,
 			     enum spdk_nvme_qprio qprio)
 {
 	struct nvme_rdma_qpair *rqpair;
 	struct spdk_nvme_qpair *qpair;
-	uint32_t num_entries;
 	int rc;
 
 	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
@@ -922,14 +922,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	qpair = &rqpair->qpair;
 
-	/* At this time, queue is not initialized,  so use the passing parameter qid */
-	if (!qid) {
-		num_entries = SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES;
-	} else {
-		num_entries = ctrlr->opts.io_queue_size;
-	}
-
-	rc = nvme_qpair_init(qpair, qid, num_entries, ctrlr, qprio);
+	rc = nvme_qpair_init(qpair, qid, qsize, ctrlr, qprio);
 	if (rc != 0) {
 		return NULL;
 	}
@@ -977,7 +970,7 @@ struct spdk_nvme_qpair *
 nvme_rdma_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 				enum spdk_nvme_qprio qprio)
 {
-	return nvme_rdma_ctrlr_create_qpair(ctrlr, qid, qprio);
+	return nvme_rdma_ctrlr_create_qpair(ctrlr, qid, ctrlr->opts.io_queue_size, qprio);
 }
 
 int
@@ -1165,7 +1158,8 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	rctrlr->ctrlr.adminq = nvme_rdma_ctrlr_create_qpair(&rctrlr->ctrlr, 0, 0);
+	rctrlr->ctrlr.adminq = nvme_rdma_ctrlr_create_qpair(&rctrlr->ctrlr, 0,
+			       SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0);
 	if (!rctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
 		return NULL;
