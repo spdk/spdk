@@ -153,6 +153,12 @@ nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_get_max_xfer_size, (ctrlr));
 }
 
+uint32_t
+nvme_transport_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
+{
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_get_max_io_queue_size, (ctrlr));
+}
+
 struct spdk_nvme_qpair *
 nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 				     enum spdk_nvme_qprio qprio)

@@ -359,6 +359,12 @@ nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	return NVME_MAX_XFER_SIZE;
 }
 
+uint32_t
+nvme_pcie_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NVME_IO_ENTRIES;
+}
+
 static void
 nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 {
@@ -1321,7 +1327,6 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 {
 	struct nvme_pcie_qpair *pqpair;
 	struct spdk_nvme_qpair *qpair;
-	uint32_t num_entries;
 	int rc;
 
 	assert(ctrlr != NULL);
@@ -1333,15 +1338,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	qpair = &pqpair->qpair;
 
-	/*
-	 * NVMe spec sets a hard limit of 64K max entries, but
-	 *  devices may specify a smaller limit, so we need to check
-	 *  the MQES field in the capabilities register.
-	 */
-	num_entries = nvme_min(NVME_IO_ENTRIES, ctrlr->cap.bits.mqes + 1);
-	num_entries = nvme_min(num_entries, ctrlr->opts.io_queue_size);
-
-	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);
+	rc = nvme_qpair_construct(qpair, qid, ctrlr->opts.io_queue_size, ctrlr, qprio);
 	if (rc != 0) {
 		nvme_pcie_qpair_destroy(qpair);
 		return NULL;

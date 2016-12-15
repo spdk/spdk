@@ -970,11 +970,8 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 {
 	struct nvme_rdma_qpair *rqpair;
 	struct spdk_nvme_qpair *qpair;
-	struct nvme_rdma_ctrlr *rctrlr;
 	uint32_t num_entries;
 	int rc;
-
-	rctrlr = nvme_rdma_ctrlr(ctrlr);
 
 	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
 	if (!rqpair) {
@@ -989,9 +986,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		num_entries = SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES;
 		ctrlr->adminq = qpair;
 	} else {
-		num_entries = nvme_min(NVME_HOST_MAX_ENTRIES_PER_QUEUE,
-				       ctrlr->cap.bits.mqes + 1);
-		num_entries = nvme_min(num_entries, rctrlr->ctrlr.opts.io_queue_size);
+		num_entries = ctrlr->opts.io_queue_size;
 	}
 
 	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);
@@ -1509,4 +1504,10 @@ nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* Todo, which should get from the NVMF target */
 	return NVME_RDMA_RW_BUFFER_SIZE;
+}
+
+uint32_t
+nvme_rdma_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NVME_HOST_MAX_ENTRIES_PER_QUEUE;
 }
