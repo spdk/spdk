@@ -529,9 +529,9 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 }
 
 static int
-nvme_rdma_bind_addr(struct nvme_rdma_qpair *rqpair,
-		    struct sockaddr_storage *sin,
-		    struct rdma_event_channel *cm_channel)
+nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
+		       struct sockaddr_storage *sin,
+		       struct rdma_event_channel *cm_channel)
 {
 	int ret;
 
@@ -675,9 +675,9 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	rc = nvme_rdma_bind_addr(rqpair, &sin, rqpair->cm_channel);
+	rc = nvme_rdma_resolve_addr(rqpair, &sin, rqpair->cm_channel);
 	if (rc < 0) {
-		SPDK_ERRLOG("nvme_rdma_bind_addr() failed\n");
+		SPDK_ERRLOG("nvme_rdma_resolve_addr() failed\n");
 		return -1;
 	}
 
