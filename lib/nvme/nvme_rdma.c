@@ -617,6 +617,84 @@ nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, 
 }
 
 static int
+nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
+{
+	struct nvme_completion_poll_status status;
+	struct spdk_nvmf_fabric_connect_rsp *rsp;
+	struct spdk_nvmf_fabric_connect_cmd cmd;
+	struct spdk_nvmf_fabric_connect_data *nvmf_data;
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_rdma_ctrlr *rctrlr;
+	int rc = 0;
+
+	ctrlr = rqpair->qpair.ctrlr;
+	if (!ctrlr) {
+		return -1;
+	}
+
+	rctrlr = nvme_rdma_ctrlr(ctrlr);
+	nvmf_data = calloc(1, sizeof(*nvmf_data));
+	if (!nvmf_data) {
+		SPDK_ERRLOG("nvmf_data allocation error\n");
+		rc = -1;
+		return rc;
+	}
+
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&status, 0, sizeof(struct nvme_completion_poll_status));
+
+	cmd.opcode = SPDK_NVME_OPC_FABRIC;
+	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
+	cmd.qid = rqpair->qpair.id;
+	cmd.sqsize = rqpair->qpair.num_entries - 1;
+	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
+
+	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
+		nvmf_data->cntlid = 0xFFFF;
+	} else {
+		nvmf_data->cntlid = rctrlr->cntlid;
+	}
+
+	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
+		strlen((char *)NVME_HOST_ID_DEFAULT));
+	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
+	strncpy((char *)nvmf_data->subnqn, ctrlr->trid.subnqn, sizeof(nvmf_data->subnqn));
+
+	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
+		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
+						   (struct spdk_nvme_cmd *)&cmd,
+						   nvmf_data, sizeof(*nvmf_data),
+						   nvme_completion_poll_cb, &status);
+	} else {
+		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, &rqpair->qpair,
+						(struct spdk_nvme_cmd *)&cmd,
+						nvmf_data, sizeof(*nvmf_data),
+						nvme_completion_poll_cb, &status);
+	}
+
+	if (rc < 0) {
+		SPDK_ERRLOG("spdk_nvme_rdma_req_fabric_connect failed\n");
+		rc = -1;
+		goto ret;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(&rqpair->qpair, 0);
+	}
+
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_ERRLOG("Connect command failed\n");
+		return -1;
+	}
+
+	rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
+	rctrlr->cntlid = rsp->status_code_specific.success.cntlid;
+ret:
+	free(nvmf_data);
+	return rc;
+}
+
+static int
 nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 {
 	struct sockaddr_storage  sin;
@@ -695,6 +773,12 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	}
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "RDMA responses allocated\n");
 
+	rc = nvme_rdma_qpair_fabric_connect(rqpair);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to send an NVMe-oF Fabric CONNECT command\n");
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -733,84 +817,6 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 
 	memcpy(&rqpair->cmds[rdma_req->id], &req->cmd, sizeof(req->cmd));
 	return 0;
-}
-
-static int
-nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
-{
-	struct nvme_completion_poll_status status;
-	struct spdk_nvmf_fabric_connect_rsp *rsp;
-	struct spdk_nvmf_fabric_connect_cmd cmd;
-	struct spdk_nvmf_fabric_connect_data *nvmf_data;
-	struct spdk_nvme_ctrlr *ctrlr;
-	struct nvme_rdma_ctrlr *rctrlr;
-	int rc = 0;
-
-	ctrlr = rqpair->qpair.ctrlr;
-	if (!ctrlr) {
-		return -1;
-	}
-
-	rctrlr = nvme_rdma_ctrlr(ctrlr);
-	nvmf_data = calloc(1, sizeof(*nvmf_data));
-	if (!nvmf_data) {
-		SPDK_ERRLOG("nvmf_data allocation error\n");
-		rc = -1;
-		return rc;
-	}
-
-	memset(&cmd, 0, sizeof(cmd));
-	memset(&status, 0, sizeof(struct nvme_completion_poll_status));
-
-	cmd.opcode = SPDK_NVME_OPC_FABRIC;
-	cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_CONNECT;
-	cmd.qid = rqpair->qpair.id;
-	cmd.sqsize = rqpair->qpair.num_entries - 1;
-	cmd.kato = ctrlr->opts.keep_alive_timeout_ms;
-
-	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
-		nvmf_data->cntlid = 0xFFFF;
-	} else {
-		nvmf_data->cntlid = rctrlr->cntlid;
-	}
-
-	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
-		strlen((char *)NVME_HOST_ID_DEFAULT));
-	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
-	strncpy((char *)nvmf_data->subnqn, ctrlr->trid.subnqn, sizeof(nvmf_data->subnqn));
-
-	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
-		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
-						   (struct spdk_nvme_cmd *)&cmd,
-						   nvmf_data, sizeof(*nvmf_data),
-						   nvme_completion_poll_cb, &status);
-	} else {
-		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, &rqpair->qpair,
-						(struct spdk_nvme_cmd *)&cmd,
-						nvmf_data, sizeof(*nvmf_data),
-						nvme_completion_poll_cb, &status);
-	}
-
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_nvme_rdma_req_fabric_connect failed\n");
-		rc = -1;
-		goto ret;
-	}
-
-	while (status.done == false) {
-		spdk_nvme_qpair_process_completions(&rqpair->qpair, 0);
-	}
-
-	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("Connect command failed\n");
-		return -1;
-	}
-
-	rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
-	rctrlr->cntlid = rsp->status_code_specific.success.cntlid;
-ret:
-	free(nvmf_data);
-	return rc;
 }
 
 static int
@@ -903,12 +909,6 @@ _nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	rc = nvme_rdma_qpair_connect(rqpair);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to connect through rdma qpair\n");
-		return rc;
-	}
-
-	rc = nvme_rdma_qpair_fabric_connect(rqpair);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to send/receive the qpair fabric request\n");
 		return rc;
 	}
 
