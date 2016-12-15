@@ -85,11 +85,9 @@ struct nvme_rdma_qpair {
 
 	struct rdma_cm_id			*cm_id;
 
-	uint16_t				max_queue_depth;
-
 	struct	spdk_nvme_rdma_req		*rdma_reqs;
 
-	/* Parallel arrays of response buffers + response SGLs of size max_queue_depth */
+	/* Parallel arrays of response buffers + response SGLs of size qpair.num_entries */
 	struct ibv_sge				*rsp_sgls;
 	struct spdk_nvme_cpl			*rsps;
 
@@ -99,7 +97,7 @@ struct nvme_rdma_qpair {
 	struct ibv_mr				*rsp_mr;
 
 	/*
-	 * Array of max_queue_depth NVMe commands registered as RDMA message buffers.
+	 * Array of qpair.num_entries NVMe commands registered as RDMA message buffers.
 	 * Indexed by rdma_req->id.
 	 */
 	struct spdk_nvme_cmd			*cmds;
@@ -203,13 +201,10 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	int			rc;
 	struct ibv_qp_init_attr	attr;
 
-	rqpair->max_queue_depth = rqpair->qpair.num_entries;
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rqpair depth = %d\n", rqpair->max_queue_depth);
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
-	attr.cap.max_send_wr	= rqpair->max_queue_depth; /* SEND operations */
-	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
+	attr.cap.max_send_wr	= rqpair->qpair.num_entries; /* SEND operations */
+	attr.cap.max_recv_wr	= rqpair->qpair.num_entries; /* RECV operations */
 	attr.cap.max_send_sge	= NVME_RDMA_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVME_RDMA_DEFAULT_RX_SGE;
 
@@ -335,33 +330,33 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 	rqpair->rsps = NULL;
 	rqpair->rsp_recv_wrs = NULL;
 
-	rqpair->rsp_sgls = calloc(rqpair->max_queue_depth, sizeof(*rqpair->rsp_sgls));
+	rqpair->rsp_sgls = calloc(rqpair->qpair.num_entries, sizeof(*rqpair->rsp_sgls));
 	if (!rqpair->rsp_sgls) {
 		SPDK_ERRLOG("Failed to allocate rsp_sgls\n");
 		goto fail;
 	}
 
-	rqpair->rsp_recv_wrs = calloc(rqpair->max_queue_depth,
+	rqpair->rsp_recv_wrs = calloc(rqpair->qpair.num_entries,
 				      sizeof(*rqpair->rsp_recv_wrs));
 	if (!rqpair->rsp_recv_wrs) {
 		SPDK_ERRLOG("Failed to allocate rsp_recv_wrs\n");
 		goto fail;
 	}
 
-	rqpair->rsps = calloc(rqpair->max_queue_depth, sizeof(*rqpair->rsps));
+	rqpair->rsps = calloc(rqpair->qpair.num_entries, sizeof(*rqpair->rsps));
 	if (!rqpair->rsps) {
 		SPDK_ERRLOG("can not allocate rdma rsps\n");
 		goto fail;
 	}
 
 	rqpair->rsp_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->rsps,
-				       rqpair->max_queue_depth * sizeof(*rqpair->rsps));
+				       rqpair->qpair.num_entries * sizeof(*rqpair->rsps));
 	if (rqpair->rsp_mr == NULL) {
 		SPDK_ERRLOG("Unable to register rsp_mr\n");
 		goto fail;
 	}
 
-	for (i = 0; i < rqpair->max_queue_depth; i++) {
+	for (i = 0; i < rqpair->qpair.num_entries; i++) {
 		struct ibv_sge *rsp_sgl = &rqpair->rsp_sgls[i];
 
 		rsp_sgl->addr = (uint64_t)&rqpair->rsps[i];
@@ -391,7 +386,7 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 		return;
 	}
 
-	for (i = 0; i < rqpair->max_queue_depth; i++) {
+	for (i = 0; i < rqpair->qpair.num_entries; i++) {
 		rdma_req = &rqpair->rdma_reqs[i];
 
 		if (rdma_req->bb_mr && ibv_dereg_mr(rdma_req->bb_mr)) {
@@ -420,27 +415,27 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 {
 	int i;
 
-	rqpair->rdma_reqs = calloc(rqpair->max_queue_depth, sizeof(struct spdk_nvme_rdma_req));
+	rqpair->rdma_reqs = calloc(rqpair->qpair.num_entries, sizeof(struct spdk_nvme_rdma_req));
 	if (rqpair->rdma_reqs == NULL) {
 		SPDK_ERRLOG("Failed to allocate rdma_reqs\n");
 		goto fail;
 	}
 
-	rqpair->cmds = calloc(rqpair->max_queue_depth, sizeof(*rqpair->cmds));
+	rqpair->cmds = calloc(rqpair->qpair.num_entries, sizeof(*rqpair->cmds));
 	if (!rqpair->cmds) {
 		SPDK_ERRLOG("Failed to allocate RDMA cmds\n");
 		goto fail;
 	}
 
 	rqpair->cmd_mr = rdma_reg_msgs(rqpair->cm_id, rqpair->cmds,
-				       rqpair->max_queue_depth * sizeof(*rqpair->cmds));
+				       rqpair->qpair.num_entries * sizeof(*rqpair->cmds));
 	if (!rqpair->cmd_mr) {
 		SPDK_ERRLOG("Unable to register cmd_mr\n");
 		goto fail;
 	}
 
 	STAILQ_INIT(&rqpair->free_reqs);
-	for (i = 0; i < rqpair->max_queue_depth; i++) {
+	for (i = 0; i < rqpair->qpair.num_entries; i++) {
 		struct spdk_nvme_rdma_req	*rdma_req;
 		struct spdk_nvme_cmd		*cmd;
 
@@ -494,7 +489,7 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
 		return -1;
 	}
 
-	assert(rsp_idx < rqpair->max_queue_depth);
+	assert(rsp_idx < rqpair->qpair.num_entries);
 	rsp = &rqpair->rsps[rsp_idx];
 	rdma_req = &rqpair->rdma_reqs[rsp->cid];
 
@@ -571,11 +566,11 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	param.responder_resources = nvme_min(rqpair->max_queue_depth, attr.max_qp_rd_atom);
+	param.responder_resources = nvme_min(rqpair->qpair.num_entries, attr.max_qp_rd_atom);
 
 	request_data.qid = rqpair->qpair.id;
-	request_data.hrqsize = rqpair->max_queue_depth;
-	request_data.hsqsize = rqpair->max_queue_depth - 1;
+	request_data.hrqsize = rqpair->qpair.num_entries;
+	request_data.hsqsize = rqpair->qpair.num_entries - 1;
 
 	param.private_data = &request_data;
 	param.private_data_len = sizeof(request_data);
@@ -599,9 +594,9 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "Requested queue depth %d. Actually got queue depth %d.\n",
-		      rqpair->max_queue_depth, accept_data->crqsize);
+		      rqpair->qpair.num_entries, accept_data->crqsize);
 
-	rqpair->max_queue_depth = nvme_min(rqpair->max_queue_depth, accept_data->crqsize);
+	rqpair->qpair.num_entries  = nvme_min(rqpair->qpair.num_entries , accept_data->crqsize);
 
 	rdma_ack_cm_event(event);
 
