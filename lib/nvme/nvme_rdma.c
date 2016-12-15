@@ -380,40 +380,6 @@ fail:
 	return -ENOMEM;
 }
 
-static struct spdk_nvme_rdma_req *
-config_rdma_req(struct nvme_rdma_qpair *rqpair, int i)
-{
-	struct spdk_nvme_rdma_req *rdma_req;
-
-	rdma_req = &rqpair->rdma_reqs[i];
-
-	rdma_req->id = i;
-
-	/* initialize send_sgl */
-	rdma_req->send_sgl.addr = (uint64_t)&rqpair->cmds[i];
-	rdma_req->send_sgl.length = sizeof(rqpair->cmds[i]);
-	rdma_req->send_sgl.lkey = rqpair->cmd_mr->lkey;
-
-	rdma_req->bb = calloc(1, NVME_RDMA_RW_BUFFER_SIZE);
-	if (!rdma_req->bb) {
-		SPDK_ERRLOG("Unable to register allocate read/write buffer\n");
-		return NULL;
-	}
-
-	rdma_req->bb_mr = ibv_reg_mr(rqpair->cm_id->qp->pd, rdma_req->bb, NVME_RDMA_RW_BUFFER_SIZE,
-				     IBV_ACCESS_LOCAL_WRITE |
-				     IBV_ACCESS_REMOTE_READ |
-				     IBV_ACCESS_REMOTE_WRITE);
-
-	if (!rdma_req->bb_mr) {
-		SPDK_ERRLOG("Unable to register bb_mr\n");
-		return NULL;
-	}
-
-	STAILQ_INSERT_TAIL(&rqpair->free_reqs, &rqpair->rdma_reqs[i], link);
-	return rdma_req;
-}
-
 static void
 nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 {
@@ -451,7 +417,6 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 static int
 nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 {
-	struct spdk_nvme_rdma_req *rdma_req;
 	int i;
 
 	rqpair->rdma_reqs = calloc(rqpair->max_queue_depth, sizeof(struct spdk_nvme_rdma_req));
@@ -475,13 +440,34 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 
 	STAILQ_INIT(&rqpair->free_reqs);
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
-		rdma_req = config_rdma_req(rqpair, i);
-		if (rdma_req == NULL) {
+		struct spdk_nvme_rdma_req	*rdma_req;
+		struct spdk_nvme_cmd		*cmd;
+
+		rdma_req = &rqpair->rdma_reqs[i];
+		cmd = &rqpair->cmds[i];
+
+		rdma_req->id = i;
+
+		rdma_req->send_sgl.addr = (uint64_t)cmd;
+		rdma_req->send_sgl.length = sizeof(*cmd);
+		rdma_req->send_sgl.lkey = rqpair->cmd_mr->lkey;
+
+		rdma_req->bb = calloc(1, NVME_RDMA_RW_BUFFER_SIZE);
+		if (!rdma_req->bb) {
+			SPDK_ERRLOG("Unable to register allocate read/write buffer\n");
 			goto fail;
 		}
 
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "rdma_req %p: cmd %p\n",
-			      rdma_req, &rqpair->cmds[i]);
+		rdma_req->bb_mr = ibv_reg_mr(rqpair->cm_id->qp->pd, rdma_req->bb, NVME_RDMA_RW_BUFFER_SIZE,
+					     IBV_ACCESS_LOCAL_WRITE |
+					     IBV_ACCESS_REMOTE_READ |
+					     IBV_ACCESS_REMOTE_WRITE);
+		if (!rdma_req->bb_mr) {
+			SPDK_ERRLOG("Unable to register bb_mr\n");
+			goto fail;
+		}
+
+		STAILQ_INSERT_TAIL(&rqpair->free_reqs, rdma_req, link);
 	}
 
 	return 0;
