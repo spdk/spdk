@@ -554,7 +554,6 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 {
 	struct rdma_conn_param conn_param;
 	struct spdk_nvmf_rdma_request_private_data pdata;
-	const union spdk_nvmf_rdma_private_data	*data;
 	struct rdma_cm_event *event;
 	struct ibv_device_attr attr;
 	int ret;
@@ -566,17 +565,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	memset(&conn_param, 0, sizeof(conn_param));
-	/* Note:  the following parameters apply only for PS = RDMA_PS_TCP,
-	   and even then it appears that any values supplied here by host
-	   application are over-written by the rdma_cm layer for the given
-	   device.  Verified at target side that private data arrived as
-	   specified here, but the other param values either zeroed out or
-	   replaced.
-	*/
 	conn_param.responder_resources = nvme_min(rqpair->max_queue_depth, attr.max_qp_rd_atom);
-	conn_param.initiator_depth = 0;
-	conn_param.retry_count = 7;
-	conn_param.rnr_retry_count = 7;
 
 	/* init private data for connect */
 	memset(&pdata, 0, sizeof(pdata));
@@ -592,36 +581,22 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		SPDK_ERRLOG("nvme rdma connect error\n");
 		return ret;
 	}
+
 	ret = rdma_get_cm_event(rqpair->cm_channel, &event);
 	if (ret) {
 		SPDK_ERRLOG("rdma address resolution error\n");
 		return ret;
 	}
+
 	if (event->event != RDMA_CM_EVENT_ESTABLISHED) {
 		SPDK_ERRLOG("rdma connect error\n");
 		return -1;
 	}
+
 	rdma_ack_cm_event(event);
 
-
-	/* Look for any rdma connection returned by server */
-	data = event->param.conn.private_data;
-
-	if (event->param.conn.private_data_len >= sizeof(union spdk_nvmf_rdma_private_data) &&
-	    data != NULL) {
-		if (data->pd_accept.recfmt != 0) {
-			SPDK_ERRLOG("NVMF fabric connect accept: invalid private data format!\n");
-		} else {
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMF fabric connect accept, Private data length %d\n",
-				      event->param.conn.private_data_len);
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMF fabric connect accept, RECFMT %d\n",
-				      data->pd_accept.recfmt);
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "NVMF fabric connect accept, CRQSIZE %d\n",
-				      data->pd_accept.crqsize);
-		}
-	}
-
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "connect successful\n");
+
 	return 0;
 }
 
