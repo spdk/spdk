@@ -340,10 +340,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 }
 
 int
-nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
-		     uint16_t num_entries,
-		     struct spdk_nvme_ctrlr *ctrlr,
-		     enum spdk_nvme_qprio qprio)
+nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+		uint16_t num_entries,
+		struct spdk_nvme_ctrlr *ctrlr,
+		enum spdk_nvme_qprio qprio)
 {
 	assert(num_entries != 0);
 

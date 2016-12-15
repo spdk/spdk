@@ -941,7 +941,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		num_entries = ctrlr->opts.io_queue_size;
 	}
 
-	rc = nvme_qpair_construct(qpair, qid, num_entries, ctrlr, qprio);
+	rc = nvme_qpair_init(qpair, qid, num_entries, ctrlr, qprio);
 	if (rc != 0) {
 		return NULL;
 	}

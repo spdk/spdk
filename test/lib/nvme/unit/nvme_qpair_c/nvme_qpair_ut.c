@@ -223,7 +223,7 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	ctrlr->free_io_qids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_procs);
-	nvme_qpair_construct(qpair, 1, 128, ctrlr, 0);
+	nvme_qpair_init(qpair, 1, 128, ctrlr, 0);
 
 	ut_fail_vtophys = false;
 }
@@ -582,11 +582,11 @@ static void test_nvme_qpair_destroy(void)
 	TAILQ_INIT(&ctrlr.active_io_qpairs);
 	TAILQ_INIT(&ctrlr.active_procs);
 
-	nvme_qpair_construct(&qpair, 1, 128, &ctrlr);
+	nvme_qpair_init(&qpair, 1, 128, &ctrlr);
 	nvme_qpair_destroy(&qpair);
 
 
-	nvme_qpair_construct(&qpair, 0, 128, &ctrlr);
+	nvme_qpair_init(&qpair, 0, 128, &ctrlr);
 	tr_temp = TAILQ_FIRST(&qpair.free_tr);
 	SPDK_CU_ASSERT_FATAL(tr_temp != NULL);
 	TAILQ_REMOVE(&qpair.free_tr, tr_temp, tq_list);

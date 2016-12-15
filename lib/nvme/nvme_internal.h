@@ -529,10 +529,10 @@ int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
 int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
 void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap);
-int	nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
-			     uint16_t num_entries,
-			     struct spdk_nvme_ctrlr *ctrlr,
-			     enum spdk_nvme_qprio qprio);
+int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
+			uint16_t num_entries,
+			struct spdk_nvme_ctrlr *ctrlr,
+			enum spdk_nvme_qprio qprio);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,

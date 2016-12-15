@@ -523,11 +523,11 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->adminq = &pqpair->qpair;
 
-	rc = nvme_qpair_construct(ctrlr->adminq,
-				  0, /* qpair ID */
-				  NVME_ADMIN_ENTRIES,
-				  ctrlr,
-				  SPDK_NVME_QPRIO_URGENT);
+	rc = nvme_qpair_init(ctrlr->adminq,
+			     0, /* qpair ID */
+			     NVME_ADMIN_ENTRIES,
+			     ctrlr,
+			     SPDK_NVME_QPRIO_URGENT);
 	if (rc != 0) {
 		return rc;
 	}
@@ -1345,7 +1345,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	qpair = &pqpair->qpair;
 
-	rc = nvme_qpair_construct(qpair, qid, ctrlr->opts.io_queue_size, ctrlr, qprio);
+	rc = nvme_qpair_init(qpair, qid, ctrlr->opts.io_queue_size, ctrlr, qprio);
 	if (rc != 0) {
 		nvme_pcie_qpair_destroy(qpair);
 		return NULL;
