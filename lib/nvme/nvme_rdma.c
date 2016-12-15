@@ -130,6 +130,7 @@ struct spdk_nvme_rdma_req {
 	STAILQ_ENTRY(spdk_nvme_rdma_req)	link;
 };
 
+static int nvme_rdma_qpair_construct(struct spdk_nvme_qpair *qpair);
 static int nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
 static inline struct nvme_rdma_qpair *
@@ -994,6 +995,11 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		return NULL;
 	}
 
+	rc = nvme_rdma_qpair_construct(qpair);
+	if (rc != 0) {
+		return NULL;
+	}
+
 	rc = _nvme_rdma_ctrlr_create_qpair(ctrlr, qpair);
 	if (rc < 0) {
 		nvme_rdma_qpair_destroy(qpair);
@@ -1364,7 +1370,7 @@ nvme_rdma_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 	return _nvme_rdma_ctrlr_create_qpair(ctrlr, qpair);
 }
 
-int
+static int
 nvme_rdma_qpair_construct(struct spdk_nvme_qpair *qpair)
 {
 	int32_t i;

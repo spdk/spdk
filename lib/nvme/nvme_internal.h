@@ -581,7 +581,6 @@ void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 	struct spdk_nvme_qpair *nvme_ ## name ## _ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid, enum spdk_nvme_qprio qprio); \
 	int nvme_ ## name ## _ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair); \
-	int nvme_ ## name ## _qpair_construct(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_enable(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_disable(struct spdk_nvme_qpair *qpair); \
 	int nvme_ ## name ## _qpair_reset(struct spdk_nvme_qpair *qpair); \

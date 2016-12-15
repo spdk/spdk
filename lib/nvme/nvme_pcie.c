@@ -180,6 +180,7 @@ struct nvme_pcie_qpair {
 	uint64_t cpl_bus_addr;
 };
 
+static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair);
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
@@ -513,6 +514,7 @@ static int
 nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_qpair *pqpair;
+	int rc;
 
 	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL);
 	if (pqpair == NULL) {
@@ -521,11 +523,16 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 
 	ctrlr->adminq = &pqpair->qpair;
 
-	return nvme_qpair_construct(ctrlr->adminq,
-				    0, /* qpair ID */
-				    NVME_ADMIN_ENTRIES,
-				    ctrlr,
-				    SPDK_NVME_QPRIO_URGENT);
+	rc = nvme_qpair_construct(ctrlr->adminq,
+				  0, /* qpair ID */
+				  NVME_ADMIN_ENTRIES,
+				  ctrlr,
+				  SPDK_NVME_QPRIO_URGENT);
+	if (rc != 0) {
+		return rc;
+	}
+
+	return nvme_pcie_qpair_construct(ctrlr->adminq);
 }
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
@@ -745,7 +752,7 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
-int
+static int
 nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
@@ -1339,6 +1346,12 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	qpair = &pqpair->qpair;
 
 	rc = nvme_qpair_construct(qpair, qid, ctrlr->opts.io_queue_size, ctrlr, qprio);
+	if (rc != 0) {
+		nvme_pcie_qpair_destroy(qpair);
+		return NULL;
+	}
+
+	rc = nvme_pcie_qpair_construct(qpair);
 	if (rc != 0) {
 		nvme_pcie_qpair_destroy(qpair);
 		return NULL;

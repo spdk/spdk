@@ -356,11 +356,6 @@ nvme_qpair_construct(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	STAILQ_INIT(&qpair->queued_req);
 
-	if (nvme_transport_qpair_construct(qpair)) {
-		SPDK_ERRLOG("qpair_construct() failed\n");
-		return -1;
-	}
-
 	return 0;
 }
 

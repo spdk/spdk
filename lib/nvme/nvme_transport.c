@@ -179,12 +179,6 @@ nvme_transport_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 }
 
 int
-nvme_transport_qpair_construct(struct spdk_nvme_qpair *qpair)
-{
-	NVME_TRANSPORT_CALL(qpair->trtype, qpair_construct, (qpair));
-}
-
-int
 nvme_transport_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 	NVME_TRANSPORT_CALL(qpair->trtype, qpair_enable, (qpair));

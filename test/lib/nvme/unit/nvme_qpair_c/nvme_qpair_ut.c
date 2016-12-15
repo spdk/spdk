@@ -184,12 +184,6 @@ nvme_request_remove_child(struct nvme_request *parent,
 }
 
 int
-nvme_transport_qpair_construct(struct spdk_nvme_qpair *qpair)
-{
-	return 0;
-}
-
-int
 nvme_transport_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
