@@ -676,18 +676,10 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
 	strncpy((char *)nvmf_data->subnqn, ctrlr->trid.subnqn, sizeof(nvmf_data->subnqn));
 
-	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
-		rc = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr,
-						   (struct spdk_nvme_cmd *)&cmd,
-						   nvmf_data, sizeof(*nvmf_data),
-						   nvme_completion_poll_cb, &status);
-	} else {
-		rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, &rqpair->qpair,
-						(struct spdk_nvme_cmd *)&cmd,
-						nvmf_data, sizeof(*nvmf_data),
-						nvme_completion_poll_cb, &status);
-	}
-
+	rc = spdk_nvme_ctrlr_cmd_io_raw(ctrlr, &rqpair->qpair,
+					(struct spdk_nvme_cmd *)&cmd,
+					nvmf_data, sizeof(*nvmf_data),
+					nvme_completion_poll_cb, &status);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_nvme_rdma_req_fabric_connect failed\n");
 		rc = -1;
@@ -933,7 +925,6 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	/* At this time, queue is not initialized,  so use the passing parameter qid */
 	if (!qid) {
 		num_entries = SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES;
-		ctrlr->adminq = qpair;
 	} else {
 		num_entries = ctrlr->opts.io_queue_size;
 	}
@@ -980,27 +971,6 @@ nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	free(rqpair);
 
 	return 0;
-}
-
-static int
-nvme_rdma_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
-{
-	struct spdk_nvme_qpair *qpair;
-	int rc;
-
-	qpair = nvme_rdma_ctrlr_create_qpair(ctrlr, 0, 0);
-	if (!qpair) {
-		SPDK_ERRLOG("failed to create admin qpair\n");
-		rc = -1;
-		goto error;
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "successfully create admin qpair\n");
-	return 0;
-
-error:
-	nvme_rdma_qpair_destroy(qpair);
-	return rc;
 }
 
 struct spdk_nvme_qpair *
@@ -1195,9 +1165,9 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 		return NULL;
 	}
 
-	rc = nvme_rdma_ctrlr_construct_admin_qpair(&rctrlr->ctrlr);
-	if (rc != 0) {
-		SPDK_ERRLOG("create admin qpair failed\n");
+	rctrlr->ctrlr.adminq = nvme_rdma_ctrlr_create_qpair(&rctrlr->ctrlr, 0, 0);
+	if (!rctrlr->ctrlr.adminq) {
+		SPDK_ERRLOG("failed to create admin qpair\n");
 		return NULL;
 	}
 
