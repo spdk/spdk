@@ -576,8 +576,8 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	   specified here, but the other param values either zeroed out or
 	   replaced.
 	*/
-	conn_param.responder_resources = 1;  /* 0 or 1*/
-	conn_param.initiator_depth = nvme_min(rqpair->max_queue_depth, attr.max_qp_init_rd_atom);
+	conn_param.responder_resources = nvme_min(rqpair->max_queue_depth, attr.max_qp_rd_atom);
+	conn_param.initiator_depth = 0;
 	conn_param.retry_count = 7;
 	conn_param.rnr_retry_count = 7;
 
