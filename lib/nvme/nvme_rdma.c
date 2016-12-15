@@ -123,6 +123,9 @@ struct spdk_nvme_rdma_req {
 
 	struct ibv_mr				*bb_mr;
 
+	/* Cached value of bb_mr->rkey */
+	uint32_t				bb_rkey;
+
 	uint8_t					*bb;
 
 	STAILQ_ENTRY(spdk_nvme_rdma_req)	link;
@@ -258,7 +261,7 @@ nvme_rdma_pre_copy_mem(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req
 
 		nvme_sgl = &cmd->dptr.sgl1;
 		nvme_sgl->address = (uint64_t)rdma_req->bb;
-		nvme_sgl->keyed.key = rdma_req->bb_mr->rkey;
+		nvme_sgl->keyed.key = rdma_req->bb_rkey;
 	}
 }
 
@@ -466,6 +469,8 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 			SPDK_ERRLOG("Unable to register bb_mr\n");
 			goto fail;
 		}
+
+		rdma_req->bb_rkey = rdma_req->bb_mr->rkey;
 
 		STAILQ_INSERT_TAIL(&rqpair->free_reqs, rdma_req, link);
 	}
