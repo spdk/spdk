@@ -745,20 +745,14 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	return 0;
 }
 
-static struct spdk_nvme_rdma_req *
-nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
+static int
+nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
+		   struct spdk_nvme_rdma_req *rdma_req)
 {
-	struct spdk_nvme_rdma_req *rdma_req;
 	struct spdk_nvme_sgl_descriptor *nvme_sgl;
 
-	if (!rqpair || !req) {
-		return NULL;
-	}
-
-	rdma_req = nvme_rdma_req_get(rqpair);
-	if (!rdma_req) {
-		return NULL;
-	}
+	assert(rqpair != NULL);
+	assert(req != NULL);
 
 	rdma_req->req = req;
 	req->cmd.cid = rdma_req->id;
@@ -769,9 +763,8 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
 		nvme_sgl->address = (uint64_t)req->payload.u.contig + req->payload_offset;
 		nvme_sgl->keyed.length = req->payload_size;
 	} else {
-		nvme_rdma_req_put(rqpair, rdma_req);
 		/* Need to handle other case later */
-		return NULL;
+		return -1;
 	}
 
 	rdma_req->req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
@@ -786,7 +779,7 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
 	}
 
 	memcpy(&rqpair->cmds[rdma_req->id], &req->cmd, sizeof(req->cmd));
-	return rdma_req;
+	return 0;
 }
 
 static int
@@ -1331,9 +1324,16 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	int rc;
 
 	rqpair = nvme_rdma_qpair(qpair);
-	rdma_req = nvme_rdma_req_init(rqpair, req);
+
+	rdma_req = nvme_rdma_req_get(rqpair);
 	if (!rdma_req) {
-		SPDK_ERRLOG("spdk_nvme_rdma_req memory allocation failed duing read\n");
+		SPDK_ERRLOG("nvme_rdma_req_get() failed\n");
+		return -1;
+	}
+
+	if (nvme_rdma_req_init(rqpair, req, rdma_req)) {
+		SPDK_ERRLOG("nvme_rdma_req_init() failed\n");
+		nvme_rdma_req_put(rqpair, rdma_req);
 		return -1;
 	}
 
