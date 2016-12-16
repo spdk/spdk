@@ -61,7 +61,7 @@
 
 #define SPDK_SCSI_PORT_MAX_NAME_LENGTH		255
 
-#define SPDK_SCSI_LUN_MAX_NAME_LENGTH		16
+#define SPDK_SCSI_LUN_MAX_NAME_LENGTH		128
 
 enum spdk_scsi_data_dir {
 	SPDK_SCSI_DIR_NONE = 0,

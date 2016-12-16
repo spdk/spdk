@@ -87,6 +87,13 @@
 
 # NVMe configuration options
 [Nvme]
+# A name for NVMe device can be confirmed by SPDK identify command like below.
+# # /path/to/spdk/examples/nvme/identify/identify -c
+# ...
+# 0000:05:00.0
+#          1 8086-INTEL_SSDPEDMD800G4-CVFT421500DE800CGN-1
+#            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
 # NVMe Device Whitelist
 # Users may specify which NVMe devices to claim by their PCI
 # domain, bus, device, and function. The format is dddd:bb:dd.f, which is
@@ -95,9 +102,9 @@
 # is referenced later in the Subsystem section.
 #
 # Alternatively, the user can specify ClaimAllDevices. All
-# NVMe devices will be claimed and named Nvme0, Nvme1, etc.
-  BDF 0000:00:00.0 Nvme0
-  BDF 0000:01:00.0 Nvme1
+# NVMe devices will be claimed.
+  BDF 0000:00:00.0
+  BDF 0000:01:00.0
 
   # The following two arguments allow the user to partition NVMe namespaces
   # into multiple LUNs
@@ -170,5 +177,5 @@
   AuthMethod Auto
   AuthGroup AuthGroup1
   UseDigest Auto
-  LUN0 Nvme0
+  LUN0 8086-INTEL_SSDPEDMD800G4-CVFT421500DE800CGN-1
   QueueDepth 32

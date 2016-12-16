@@ -106,6 +106,8 @@ enum data_direction {
 	BDEV_DISK_WRITE = 1
 };
 
+#define NVME_BUF_SIZE 128
+
 static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int blockdev_index_max = 0;
 static int nvme_luns_per_ns = 1;
@@ -347,7 +349,7 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	struct spdk_nvme_ns *ns;
 	union spdk_nvme_vs_register vs;
 	union spdk_nvme_csts_register csts;
-	char buf[128];
+	char buf[NVME_BUF_SIZE];
 
 	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev->ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(nvme_bdev->ctrlr);
@@ -666,8 +668,10 @@ nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int bdev_per_ns, i
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	uint64_t		bdev_size, lba_offset, sectors_per_stripe;
-	int			ns_id, num_ns, bdev_idx;
-	uint64_t lun_size_in_sector;
+	uint32_t		ns_id, num_ns;
+	int			bdev_idx;
+	uint64_t		lun_size_in_sector, eui64;
+	char			uid[NVME_BUF_SIZE];
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -709,8 +713,19 @@ nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int bdev_per_ns, i
 			bdev->lba_end = lba_offset + bdev_size - 1;
 			lba_offset += bdev_size;
 
-			snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
-				 "Nvme%dn%dp%d", ctrlr_id, spdk_nvme_ns_get_id(ns), bdev_idx);
+			eui64 = spdk_nvme_ns_get_eui64(ns);
+			if (eui64 != 0) {
+				snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
+					 "%"PRIx64, eui64);
+			} else if (spdk_nvme_ctrlr_get_uid(ctrlr, uid, sizeof(uid)) == 0) {
+				snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
+					 "%s-%u", uid, ns_id);
+			} else {
+				SPDK_ERRLOG("Failed to set bdev name: Controller=%d, \
+					    Namespace=%u, bdev_idx=%d", ctrlr_id, ns_id, bdev_idx);
+				continue;
+			}
+
 			snprintf(bdev->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH,
 				 "NVMe disk");
 

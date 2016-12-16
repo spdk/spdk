@@ -1244,6 +1244,29 @@ test_nvme_ctrlr_set_supported_features(void)
 	CU_ASSERT(res == true);
 }
 
+static void
+test_nvme_ctrlr_get_uid(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	char short_buf[32], buf[128];
+	int res;
+
+	memset(short_buf, ' ', sizeof(short_buf));
+	memset(buf, ' ', sizeof(buf));
+	ctrlr.cdata.vid = 0x1234;
+	res = snprintf(ctrlr.cdata.mn, sizeof(ctrlr.cdata.mn), "%s", "   TEST NVME SSD");
+	ctrlr.cdata.mn[res] = ' ';
+	res = snprintf(ctrlr.cdata.sn, sizeof(ctrlr.cdata.sn), "%s", "   TEST SN 100");
+	ctrlr.cdata.sn[res] = ' ';
+
+	res = spdk_nvme_ctrlr_get_uid(&ctrlr, short_buf, sizeof(short_buf));
+	CU_ASSERT(res == -1);
+
+	res = spdk_nvme_ctrlr_get_uid(&ctrlr, buf, sizeof(buf));
+	CU_ASSERT(res == 0);
+	CU_ASSERT_STRING_EQUAL(buf, "1234-TEST_NVME_SSD-TEST_SN_100");
+}
+
 #if 0 /* TODO: move to PCIe-specific unit test */
 static void
 test_nvme_ctrlr_alloc_cmb(void)
@@ -1312,6 +1335,8 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_supported_features",
 			       test_nvme_ctrlr_set_supported_features) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_get_uid",
+			       test_nvme_ctrlr_get_uid) == NULL
 #if 0 /* TODO: move to PCIe-specific unit test */
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_alloc_cmb",
 			       test_nvme_ctrlr_alloc_cmb) == NULL
