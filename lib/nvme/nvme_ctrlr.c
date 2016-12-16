@@ -33,6 +33,7 @@
 
 #include "nvme_internal.h"
 #include "spdk/env.h"
+#include "spdk/string.h"
 #include <signal.h>
 
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
@@ -1402,6 +1403,28 @@ const struct spdk_nvme_ctrlr_data *
 spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return &ctrlr->cdata;
+}
+
+int
+spdk_nvme_ctrlr_get_uid(struct spdk_nvme_ctrlr *ctrlr, char *uid, size_t size)
+{
+	const struct spdk_nvme_ctrlr_data *cdata = &ctrlr->cdata;
+	char mn[64], sn[64];
+
+	/* UID: xxxx-mn-sn (xxxx: VID) */
+	if (size < sizeof(cdata->mn) + sizeof(cdata->sn) + 7) {
+		return -1;
+	}
+
+	snprintf(mn, sizeof(cdata->mn) + 1, "%s", cdata->mn);
+	spdk_str_trim(mn);
+	spdk_str_replace_space(mn, '_');
+	snprintf(sn, sizeof(cdata->sn) + 1, "%s", cdata->sn);
+	spdk_str_trim(sn);
+	spdk_str_replace_space(sn, '_');
+	snprintf(uid, size, "%x-%s-%s", cdata->vid, mn, sn);
+
+	return 0;
 }
 
 union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)

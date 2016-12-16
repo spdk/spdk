@@ -295,6 +295,15 @@ int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
 const struct spdk_nvme_ctrlr_data *spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * \brief Get the NVMe controller Unique ID ("Vendor ID"-"Model Number"-"Serial Number").
+ *
+ * \param ctrlr NVMe controller to get UID.
+ * \param uid buffer to store UID.
+ * \param size size of uid.
+ */
+int spdk_nvme_ctrlr_get_uid(struct spdk_nvme_ctrlr *ctrlr, char *uid, size_t size);
+
+/**
  * \brief Get the NVMe controller CSTS (Status) register.
  */
 union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr);
@@ -763,6 +772,14 @@ uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
  *  the SPDK NVMe driver.
  */
 bool spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns);
+
+/**
+ * \brief Get the IEEE Extended Unique Identifier (EUI64) of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ */
+uint64_t spdk_nvme_ns_get_eui64(struct spdk_nvme_ns *ns);
 
 /**
  * \brief Namespace command support flags.
