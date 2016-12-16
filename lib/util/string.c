@@ -215,6 +215,19 @@ spdk_str_trim(char *s)
 	return s;
 }
 
+char *
+spdk_str_replace_space(char *s, char rep)
+{
+	while (*s != '\0') {
+		if (isspace(*s)) {
+			*s = rep;
+		}
+		s++;
+	}
+
+	return s;
+}
+
 void
 spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad)
 {
