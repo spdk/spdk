@@ -11,6 +11,9 @@ umask 022
 
 cd $rootdir
 
+date -u
+git describe --tags
+
 if [ -d /usr/src/fio ]; then
 	MAKECONFIG="$MAKECONFIG CONFIG_FIO_PLUGIN=y FIO_SOURCE_DIR=/usr/src/fio"
 fi
