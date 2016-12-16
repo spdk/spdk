@@ -171,7 +171,7 @@ nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_c
 
 	req = nvme_allocate_request_contig(contig_buffer, payload_size, nvme_user_copy_cmd_complete, NULL);
 	if (!req) {
-		spdk_free(buffer);
+		spdk_free(contig_buffer);
 		return NULL;
 	}
 
