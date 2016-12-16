@@ -232,6 +232,48 @@ static void build_io_request_7(struct io_request *req)
 	req->iovs[0].len = 0x10000;
 }
 
+static void build_io_request_8(struct io_request *req)
+{
+	req->nseg = 2;
+
+	/*
+	 * 1KB for 1st sge, make sure the iov address does not start and end
+	 * at 0x1000 boundary
+	 */
+	req->iovs[0].base = spdk_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[0].offset = 0x400;
+	req->iovs[0].len = 0x400;
+
+	/*
+	 * 1KB for 1st sge, make sure the iov address does not start and end
+	 * at 0x1000 boundary
+	 */
+	req->iovs[1].base = spdk_zmalloc(0x1000, 0x1000, NULL);
+	req->iovs[1].offset = 0x400;
+	req->iovs[1].len = 0x400;
+}
+
+static void build_io_request_9(struct io_request *req)
+{
+	/*
+	 * Check if mixed PRP complaint and not complaint requests are handled
+	 * properly by spliting them into subrequests.
+	 * Construct buffers with following theme:
+	 */
+	const size_t req_len[] = {  2048, 4096, 2048,  4096,  2048,  1024 };
+	const size_t req_off[] = { 0x800,  0x0,  0x0, 0x100, 0x800, 0x800 };
+	struct sgl_element *iovs = req->iovs;
+	uint32_t i;
+	req->nseg = sizeof(req_len) / sizeof(req_len[0]);
+	assert(sizeof(req_len) / sizeof(req_len[0]) == sizeof(req_off) / sizeof(req_off[0]));
+
+	for (i = 0; i < req->nseg; i++) {
+		iovs[i].base = spdk_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
+		iovs[i].offset = req_off[i];
+		iovs[i].len = req_len[i];
+	}
+}
+
 typedef void (*nvme_build_io_req_fn_t)(struct io_request *req);
 
 static void
@@ -442,7 +484,9 @@ int main(int argc, char **argv)
 		    || TEST(build_io_request_4)
 		    || TEST(build_io_request_5)
 		    || TEST(build_io_request_6)
-		    || TEST(build_io_request_7)) {
+		    || TEST(build_io_request_7)
+		    || TEST(build_io_request_8)
+		    || TEST(build_io_request_9)) {
 #undef TEST
 			rc = 1;
 			printf("%s: failed sgl tests\n", iter->name);

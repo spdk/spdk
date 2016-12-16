@@ -1666,12 +1666,15 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 			return -1;
 		}
 
-		/* Confirm that this sge is prp compatible. */
-		if (phys_addr & 0x3 ||
-		    (length < remaining_transfer_len && ((phys_addr + length) & (PAGE_SIZE - 1)))) {
-			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			return -1;
-		}
+		/*
+		 * Any incompatible sges should have been handled up in the splitting routine,
+		 *  but assert here as an additional check.
+		 */
+		assert((phys_addr & 0x3) == 0); /* Address must be dword aligned. */
+		/* All SGEs except last must end on a page boundary. */
+		assert((length >= remaining_transfer_len) || _is_page_aligned(phys_addr + length));
+		/* All SGe except first must start on a page boundary. */
+		assert((sge_count == 0) || _is_page_aligned(phys_addr));
 
 		data_transferred = nvme_min(remaining_transfer_len, length);
 

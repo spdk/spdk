@@ -58,6 +58,16 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 
 static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 {
+	uint32_t *lba_count = cb_arg;
+
+	/*
+	 * We need to set address to something here, since the SGL splitting code will
+	 *  use it to determine PRP compatibility.  Just use a rather arbitrary address
+	 *  for now - these tests will not actually cause data to be read from or written
+	 *  to this address.
+	 */
+	*address = (void *)(uintptr_t)0x10000000;
+	*length = *lba_count;
 	return 0;
 }
 
@@ -187,6 +197,11 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 		 uint32_t stripe_size)
 {
 	ctrlr->max_xfer_size = max_xfer_size;
+	/*
+	 * Clear the flags field - we especially want to make sure the SGL_SUPPORTED flag is not set
+	 *  so that we test the SGL splitting path.
+	 */
+	ctrlr->flags = 0;
 	memset(ns, 0, sizeof(*ns));
 	ns->ctrlr = ctrlr;
 	ns->sector_size = sector_size;
@@ -583,11 +598,14 @@ test_nvme_ns_cmd_readv(void)
 	struct spdk_nvme_qpair		qpair;
 	int				rc = 0;
 	void				*cb_arg;
+	uint32_t			lba_count = 256;
+	uint32_t			sector_size = 512;
+	uint64_t			sge_length = lba_count * sector_size;
 
 	cb_arg = malloc(512);
-	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128 * 1024, 0);
-	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, 256, NULL, cb_arg, 0, nvme_request_reset_sgl,
-				    nvme_request_next_sge);
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 128 * 1024, 0);
+	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, lba_count, NULL, &sge_length, 0,
+				    nvme_request_reset_sgl, nvme_request_next_sge);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -595,7 +613,7 @@ test_nvme_ns_cmd_readv(void)
 	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_SGL);
 	CU_ASSERT(g_request->payload.u.sgl.reset_sgl_fn == nvme_request_reset_sgl);
 	CU_ASSERT(g_request->payload.u.sgl.next_sge_fn == nvme_request_next_sge);
-	CU_ASSERT(g_request->payload.u.sgl.cb_arg == cb_arg);
+	CU_ASSERT(g_request->payload.u.sgl.cb_arg == &sge_length);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
 	rc = spdk_nvme_ns_cmd_readv(&ns, &qpair, 0x1000, 256, NULL, cb_arg, 0, nvme_request_reset_sgl,
@@ -614,12 +632,14 @@ test_nvme_ns_cmd_writev(void)
 	struct spdk_nvme_qpair		qpair;
 	int				rc = 0;
 	void				*cb_arg;
+	uint32_t			lba_count = 256;
+	uint32_t			sector_size = 512;
+	uint64_t			sge_length = lba_count * sector_size;
 
 	cb_arg = malloc(512);
-	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128 * 1024, 0);
-	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, 256, NULL, cb_arg, 0,
-				     nvme_request_reset_sgl,
-				     nvme_request_next_sge);
+	prepare_for_test(&ns, &ctrlr, &qpair, sector_size, 128 * 1024, 0);
+	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, lba_count, NULL, &sge_length, 0,
+				     nvme_request_reset_sgl, nvme_request_next_sge);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -627,7 +647,7 @@ test_nvme_ns_cmd_writev(void)
 	CU_ASSERT(g_request->payload.type == NVME_PAYLOAD_TYPE_SGL);
 	CU_ASSERT(g_request->payload.u.sgl.reset_sgl_fn == nvme_request_reset_sgl);
 	CU_ASSERT(g_request->payload.u.sgl.next_sge_fn == nvme_request_next_sge);
-	CU_ASSERT(g_request->payload.u.sgl.cb_arg == cb_arg);
+	CU_ASSERT(g_request->payload.u.sgl.cb_arg == &sge_length);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
 	rc = spdk_nvme_ns_cmd_writev(&ns, &qpair, 0x1000, 256, NULL, cb_arg, 0,

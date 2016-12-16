@@ -133,7 +133,7 @@ struct __attribute__((packed)) nvme_payload {
 		/**
 		 * Functions for retrieving physical addresses for scattered payloads.
 		 */
-		struct {
+		struct nvme_sgl_args {
 			spdk_nvme_req_reset_sgl_cb reset_sgl_fn;
 			spdk_nvme_req_next_sge_cb next_sge_fn;
 			void *cb_arg;
@@ -602,5 +602,11 @@ DECLARE_TRANSPORT(rdma)
 void	nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr);
+
+static inline bool
+_is_page_aligned(uint64_t address)
+{
+	return (address & (PAGE_SIZE - 1)) == 0;
+}
 
 #endif /* __NVME_INTERNAL_H__ */

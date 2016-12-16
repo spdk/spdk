@@ -37,7 +37,7 @@ static struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns,
 		const struct nvme_payload *payload, uint32_t payload_offset, uint32_t md_offset,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
 		void *cb_arg, uint32_t opc, uint32_t io_flags,
-		uint16_t apptag_mask, uint16_t apptag);
+		uint16_t apptag_mask, uint16_t apptag, bool check_sgl);
 
 static void
 nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
@@ -114,12 +114,12 @@ _nvme_add_child_request(struct spdk_nvme_ns *ns, const struct nvme_payload *payl
 			uint32_t payload_offset, uint32_t md_offset,
 			uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t opc,
 			uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag,
-			struct nvme_request *parent)
+			struct nvme_request *parent, bool check_sgl)
 {
 	struct nvme_request	*child;
 
 	child = _nvme_ns_cmd_rw(ns, payload, payload_offset, md_offset, lba, lba_count, cb_fn,
-				cb_arg, opc, io_flags, apptag_mask, apptag);
+				cb_arg, opc, io_flags, apptag_mask, apptag, check_sgl);
 	if (child == NULL) {
 		nvme_request_free_children(parent);
 		nvme_free_request(parent);
@@ -157,7 +157,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 
 		child = _nvme_add_child_request(ns, payload, payload_offset, md_offset,
 						lba, lba_count, cb_fn, cb_arg, opc,
-						io_flags, apptag_mask, apptag, req);
+						io_flags, apptag_mask, apptag, req, true);
 		if (child == NULL) {
 			return NULL;
 		}
@@ -201,10 +201,116 @@ _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
 }
 
 static struct nvme_request *
+_nvme_ns_cmd_split_sgl_request(struct spdk_nvme_ns *ns,
+			       const struct nvme_payload *payload,
+			       uint32_t payload_offset, uint32_t md_offset,
+			       uint64_t lba, uint32_t lba_count,
+			       spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t opc,
+			       uint32_t io_flags, struct nvme_request *req,
+			       uint16_t apptag_mask, uint16_t apptag)
+{
+	struct nvme_sgl_args *args;
+	bool start_valid, end_valid, last_sge, child_equals_parent;
+	uint64_t child_lba = lba;
+	uint32_t req_current_length = 0;
+	uint32_t child_length = 0;
+	uint32_t sge_length;
+	uintptr_t address;
+
+	args = &req->payload.u.sgl;
+
+	args->reset_sgl_fn(args->cb_arg, payload_offset);
+	args->next_sge_fn(args->cb_arg, (void **)&address, &sge_length);
+	while (req_current_length < req->payload_size) {
+
+		if (sge_length == 0) {
+			continue;
+		} else if (req_current_length + sge_length > req->payload_size) {
+			sge_length = req->payload_size - req_current_length;
+		}
+
+		/*
+		 * The start of the SGE is invalid if the start address is not page aligned,
+		 *  unless it is the first SGE in the child request.
+		 */
+		start_valid = child_length == 0 || _is_page_aligned(address);
+
+		/* Boolean for whether this is the last SGE in the parent request. */
+		last_sge = (req_current_length + sge_length == req->payload_size);
+
+		/*
+		 * The end of the SGE is invalid if the end address is not page aligned,
+		 *  unless it is the last SGE in the parent request.
+		 */
+		end_valid = last_sge || _is_page_aligned(address + sge_length);
+
+		/*
+		 * This child request equals the parent request, meaning that no splitting
+		 *  was required for the parent request (the one passed into this function).
+		 *  In this case, we do not create a child request at all - we just send
+		 *  the original request as a single request at the end of this function.
+		 */
+		child_equals_parent = (child_length + sge_length == req->payload_size);
+
+		if (start_valid) {
+			/*
+			 * The start of the SGE is valid, so advance the length parameters,
+			 *  to include this SGE with previous SGEs for this child request
+			 *  (if any).  If it is not valid, we do not advance the length
+			 *  parameters nor get the next SGE, because we must send what has
+			 *  been collected before this SGE as a child request.
+			 */
+			child_length += sge_length;
+			req_current_length += sge_length;
+			if (req_current_length < req->payload_size) {
+				args->next_sge_fn(args->cb_arg, (void **)&address, &sge_length);
+			}
+		}
+
+		/*
+		 * If one of these criteria is met, send what we have accumlated so far as a
+		 *  child request.
+		 */
+		if (!start_valid || !end_valid || !child_equals_parent) {
+			struct nvme_request *child;
+			uint32_t child_lba_count;
+
+			if ((child_length % ns->sector_size) != 0) {
+				return NULL;
+			}
+			child_lba_count = child_length / ns->sector_size;
+			/*
+			 * Note the last parameter is set to "false" - this tells the recursive
+			 *  call to _nvme_ns_cmd_rw() to not bother with checking for SGL splitting
+			 *  since we have already verified it here.
+			 */
+			child = _nvme_add_child_request(ns, payload, payload_offset, md_offset,
+							child_lba, child_lba_count,
+							cb_fn, cb_arg, opc, io_flags,
+							apptag_mask, apptag, req, false);
+			if (child == NULL) {
+				return NULL;
+			}
+			payload_offset += child_length;
+			md_offset += child_lba_count * ns->md_size;
+			child_lba += child_lba_count;
+			child_length = 0;
+		}
+	}
+
+	if (child_length == req->payload_size) {
+		/* No splitting was required, so setup the whole payload as one request. */
+		_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag);
+	}
+
+	return req;
+}
+
+static struct nvme_request *
 _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, const struct nvme_payload *payload,
 		uint32_t payload_offset, uint32_t md_offset,
 		uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t opc,
-		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
+		uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag, bool check_sgl)
 {
 	struct nvme_request	*req;
 	uint32_t		sector_size;
@@ -250,6 +356,10 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, const struct nvme_payload *payload,
 		return _nvme_ns_cmd_split_request(ns, payload, payload_offset, md_offset, lba, lba_count, cb_fn,
 						  cb_arg, opc,
 						  io_flags, req, sectors_per_max_io, 0, apptag_mask, apptag);
+	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL && check_sgl &&
+		   !(ns->ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED)) {
+		return _nvme_ns_cmd_split_sgl_request(ns, payload, payload_offset, md_offset, lba, lba_count,
+						      cb_fn, cb_arg, opc, io_flags, req, apptag_mask, apptag);
 	}
 
 	_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag);
@@ -271,7 +381,7 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 
 	req = _nvme_ns_cmd_rw(ns, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
 			      io_flags, 0,
-			      0);
+			      0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
@@ -295,7 +405,7 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 
 	req = _nvme_ns_cmd_rw(ns, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
 			      io_flags,
-			      apptag_mask, apptag);
+			      apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
@@ -323,7 +433,7 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	payload.u.sgl.cb_arg = cb_arg;
 
 	req = _nvme_ns_cmd_rw(ns, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
-			      io_flags, 0, 0);
+			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
@@ -345,7 +455,7 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	payload.md = NULL;
 
 	req = _nvme_ns_cmd_rw(ns, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-			      io_flags, 0, 0);
+			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
@@ -367,7 +477,7 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	payload.md = metadata;
 
 	req = _nvme_ns_cmd_rw(ns, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-			      io_flags, apptag_mask, apptag);
+			      io_flags, apptag_mask, apptag, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
@@ -395,7 +505,7 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	payload.u.sgl.cb_arg = cb_arg;
 
 	req = _nvme_ns_cmd_rw(ns, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
-			      io_flags, 0, 0);
+			      io_flags, 0, 0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else {
