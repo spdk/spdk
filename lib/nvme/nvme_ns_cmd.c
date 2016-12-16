@@ -110,6 +110,27 @@ nvme_request_free_children(struct nvme_request *req)
 }
 
 static struct nvme_request *
+_nvme_add_child_request(struct spdk_nvme_ns *ns, const struct nvme_payload *payload,
+			uint32_t payload_offset, uint32_t md_offset,
+			uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t opc,
+			uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag,
+			struct nvme_request *parent)
+{
+	struct nvme_request	*child;
+
+	child = _nvme_ns_cmd_rw(ns, payload, payload_offset, md_offset, lba, lba_count, cb_fn,
+				cb_arg, opc, io_flags, apptag_mask, apptag);
+	if (child == NULL) {
+		nvme_request_free_children(parent);
+		nvme_free_request(parent);
+		return NULL;
+	}
+
+	nvme_request_add_child(parent, child);
+	return child;
+}
+
+static struct nvme_request *
 _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 			   const struct nvme_payload *payload,
 			   uint32_t payload_offset, uint32_t md_offset,
@@ -134,14 +155,13 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 		lba_count = sectors_per_max_io - (lba & sector_mask);
 		lba_count = nvme_min(remaining_lba_count, lba_count);
 
-		child = _nvme_ns_cmd_rw(ns, payload, payload_offset, md_offset, lba, lba_count, cb_fn,
-					cb_arg, opc, io_flags, apptag_mask, apptag);
+		child = _nvme_add_child_request(ns, payload, payload_offset, md_offset,
+						lba, lba_count, cb_fn, cb_arg, opc,
+						io_flags, apptag_mask, apptag, req);
 		if (child == NULL) {
-			nvme_request_free_children(req);
 			return NULL;
 		}
 
-		nvme_request_add_child(req, child);
 		remaining_lba_count -= lba_count;
 		lba += lba_count;
 		payload_offset += lba_count * sector_size;
