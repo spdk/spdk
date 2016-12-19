@@ -252,125 +252,100 @@ static int
 json_valid_number(uint8_t *start, uint8_t *buf_end)
 {
 	uint8_t *p = start;
-	enum {
-		NUM_STATE_START,
-		NUM_STATE_INT_FIRST_DIGIT,
-		NUM_STATE_INT_DIGITS,
-		NUM_STATE_FRAC_OR_EXP,
-		NUM_STATE_FRAC_FIRST_DIGIT,
-		NUM_STATE_FRAC_DIGITS,
-		NUM_STATE_EXP_SIGN,
-		NUM_STATE_EXP_FIRST_DIGIT,
-		NUM_STATE_EXP_DIGITS,
-	} state = NUM_STATE_START;
+	uint8_t c;
 
 	if (p >= buf_end) return -1;
 
-	while (p != buf_end) {
-		uint8_t c = *p++;
+	c = *p++;
+	if (c >= '1' && c <= '9') goto num_int_digits;
+	if (c == '0') goto num_frac_or_exp;
+	if (c == '-') goto num_int_first_digit;
+	p--;
+	goto done_invalid;
 
-		switch (c) {
-		case '0':
-			if (state == NUM_STATE_START || state == NUM_STATE_INT_FIRST_DIGIT) {
-				/*
-				 * If the very first digit is 0,
-				 *  it must be the last digit of the integer part
-				 *  (no leading zeroes allowed).
-				 */
-				state = NUM_STATE_FRAC_OR_EXP;
-				break;
-			}
-		/* fallthrough */
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			switch (state) {
-			case NUM_STATE_START:
-			case NUM_STATE_INT_FIRST_DIGIT:
-				state = NUM_STATE_INT_DIGITS;
-				break;
-
-			case NUM_STATE_FRAC_FIRST_DIGIT:
-				state = NUM_STATE_FRAC_DIGITS;
-				break;
-
-			case NUM_STATE_EXP_SIGN:
-			case NUM_STATE_EXP_FIRST_DIGIT:
-				state = NUM_STATE_EXP_DIGITS;
-				break;
-
-			case NUM_STATE_INT_DIGITS:
-			case NUM_STATE_FRAC_DIGITS:
-			case NUM_STATE_EXP_DIGITS:
-				/* stay in same state */
-				break;
-
-			default:
-				return SPDK_JSON_PARSE_INVALID;
-			}
-			break;
-
-		case '.':
-			if (state != NUM_STATE_INT_DIGITS && state != NUM_STATE_FRAC_OR_EXP) {
-				return SPDK_JSON_PARSE_INVALID;
-			}
-			state = NUM_STATE_FRAC_FIRST_DIGIT;
-			break;
-
-		case 'e':
-		case 'E':
-			switch (state) {
-			case NUM_STATE_INT_DIGITS:
-			case NUM_STATE_FRAC_OR_EXP:
-			case NUM_STATE_FRAC_DIGITS:
-				state = NUM_STATE_EXP_SIGN;
-				break;
-			default:
-				return SPDK_JSON_PARSE_INVALID;
-			}
-			break;
-
-		case '-':
-			if (state == NUM_STATE_START) {
-				state = NUM_STATE_INT_FIRST_DIGIT;
-				break;
-			}
-		/* fallthrough */
-		case '+':
-			if (state == NUM_STATE_EXP_SIGN) {
-				state = NUM_STATE_EXP_FIRST_DIGIT;
-			} else {
-				return SPDK_JSON_PARSE_INVALID;
-			}
-			break;
-		default:
-			/*
-			 * Got an unexpected character - back up and stop parsing number.
-			 * The top-level parsing code will handle invalid trailing characters.
-			 */
-			p--;
-			goto done;
-		}
+num_int_first_digit:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c == '0') goto num_frac_or_exp;
+		if (c >= '1' && c <= '9') goto num_int_digits;
+		p--;
 	}
+	goto done_invalid;
 
-done:
-	switch (state) {
-	case NUM_STATE_INT_DIGITS:
-	case NUM_STATE_FRAC_OR_EXP:
-	case NUM_STATE_FRAC_DIGITS:
-	case NUM_STATE_EXP_DIGITS:
-		/* Valid end state */
-		return p - start;
+num_int_digits:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c >= '0' && c <= '9') goto num_int_digits;
+		if (c == '.') goto num_frac_first_digit;
+		if (c == 'e' || c == 'E') goto num_exp_sign;
+		p--;
+	}
+	goto done_valid;
 
-	default:
+num_frac_or_exp:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c == '.') goto num_frac_first_digit;
+		if (c == 'e' || c == 'E') goto num_exp_sign;
+		p--;
+	}
+	goto done_valid;
+
+num_frac_first_digit:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c >= '0' && c <= '9') goto num_frac_digits;
+		p--;
+	}
+	goto done_invalid;
+
+num_frac_digits:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c >= '0' && c <= '9') goto num_frac_digits;
+		if (c == 'e' || c == 'E') goto num_exp_sign;
+		p--;
+	}
+	goto done_valid;
+
+num_exp_sign:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c >= '0' && c <= '9') goto num_exp_digits;
+		if (c == '-' || c == '+') goto num_exp_first_digit;
+		p--;
+	}
+	goto done_invalid;
+
+num_exp_first_digit:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c >= '0' && c <= '9') goto num_exp_digits;
+		p--;
+	}
+	goto done_invalid;
+
+num_exp_digits:
+	if (spdk_likely(p != buf_end)) {
+		c = *p++;
+		if (c >= '0' && c <= '9') goto num_exp_digits;
+		p--;
+	}
+	goto done_valid;
+
+done_valid:
+	/* Valid end state */
+	return p - start;
+
+done_invalid:
+	/* Invalid end state */
+	if (p == buf_end) {
+		/* Hit the end of the buffer - the stream is incomplete. */
 		return SPDK_JSON_PARSE_INCOMPLETE;
 	}
+
+	/* Found an invalid character in an invalid end state */
+	return SPDK_JSON_PARSE_INVALID;
 }
 
 static int
