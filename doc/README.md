@@ -2,7 +2,7 @@ SPDK Documentation
 ==================
 
 The current version of the SPDK documentation can be found online at
-http://www.spdk.io/spdk/doc/
+http://www.spdk.io/doc/
 
 Building the Documentation
 ==========================
