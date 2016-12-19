@@ -1268,42 +1268,85 @@ spdk_bdev_scsi_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_sta
 }
 
 static int
+spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *primary,
+				    struct spdk_scsi_task *task,
+				    uint64_t lba, uint64_t cmd_lba_count,
+				    uint64_t maxlba)
+{
+	if (!primary) {
+		/*
+		 * Indicates this task is a primary task, we check whether the LBA and
+		 * range is valid. If such info of primary is valid, all subtasks' are valid.
+		 */
+		if (lba >= maxlba || cmd_lba_count > maxlba || lba > (maxlba - cmd_lba_count)) {
+			SPDK_TRACELOG(SPDK_TRACE_SCSI, "end of media\n");
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+						  SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			return -1;
+		}
+	} else {
+		/*
+		 * Indicates this task is a subtask, we do not need to check the LBA range.
+		 * Need to check condition of primary task.
+		 */
+		if (primary->status == SPDK_SCSI_STATUS_CHECK_CONDITION) {
+			memcpy(task->sense_data, primary->sense_data,
+			       primary->sense_data_len);
+			task->status = SPDK_SCSI_STATUS_CHECK_CONDITION;
+			task->sense_data_len = primary->sense_data_len;
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static int
 spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		    struct spdk_scsi_task *task, uint64_t lba,
 		    uint32_t len)
 {
 	uint64_t maxlba;
-	uint64_t llen;
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
+	int rc;
 
 	maxlba = bdev->blockcnt;
 	blen = bdev->blocklen;
+
+	rc = spdk_bdev_scsi_read_write_lba_check(task->parent, task, lba,
+			task->transfer_len / blen, maxlba);
+	if (rc < 0) {
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
 	lba += (task->offset / blen);
 	offset = lba * blen;
 	nbytes = task->length;
-	llen = task->length / blen;
 
 	SPDK_TRACELOG(SPDK_TRACE_SCSI,
 		      "Read: max=%"PRIu64", lba=%"PRIu64", len=%"PRIu64"\n",
-		      maxlba, lba, llen);
+		      maxlba, lba, (uint64_t)task->length / blen);
 
-	if (lba >= maxlba || llen > maxlba || lba > (maxlba - llen)) {
-		SPDK_ERRLOG("end of media\n");
-		return -1;
-	}
 	task->blockdev_io = spdk_bdev_readv(bdev, task->ch, task->iovs,
 					    task->iovcnt, offset, nbytes,
 					    spdk_bdev_scsi_task_complete, task);
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
-		return -1;
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
 	task->data_transferred = nbytes;
+	task->status = SPDK_SCSI_STATUS_GOOD;
 
-	return 0;
+	return SPDK_SCSI_TASK_PENDING;
 }
 
 static int
@@ -1311,36 +1354,43 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 		     struct spdk_scsi_task *task, uint64_t lba, uint32_t len)
 {
 	uint64_t maxlba;
-	uint64_t llen;
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
+	int rc;
 	struct spdk_scsi_task *primary = task->parent;
 
 	if (len == 0) {
 		task->data_transferred = 0;
-		return -1;
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
 	maxlba = bdev->blockcnt;
-	llen = (uint64_t) len;
+	rc = spdk_bdev_scsi_read_write_lba_check(primary, task, lba, len, maxlba);
+	if (rc < 0) {
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
 	blen = bdev->blocklen;
 	offset = lba * blen;
-	nbytes = llen * blen;
+	nbytes = ((uint64_t)len) * blen;
 
 	SPDK_TRACELOG(SPDK_TRACE_SCSI,
 		      "Write: max=%"PRIu64", lba=%"PRIu64", len=%u\n",
 		      maxlba, lba, len);
 
-	if (lba >= maxlba || llen > maxlba || lba > (maxlba - llen)) {
-		SPDK_ERRLOG("end of media\n");
-		return -1;
-	}
-
 	if (nbytes > task->transfer_len) {
 		SPDK_ERRLOG("nbytes(%zu) > transfer_len(%u)\n",
 			    (size_t)nbytes, task->transfer_len);
-		return -1;
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
 	offset += task->offset;
@@ -1351,7 +1401,11 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("spdk_bdev_writev failed\n");
-		return -1;
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
 	} else {
 		if (!primary) {
 			task->data_transferred += task->length;
@@ -1362,7 +1416,9 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 
 	SPDK_TRACELOG(SPDK_TRACE_SCSI, "Wrote %"PRIu64"/%"PRIu64" bytes\n",
 		      (uint64_t)task->length, nbytes);
-	return 0;
+
+	task->status = SPDK_SCSI_STATUS_GOOD;
+	return SPDK_SCSI_TASK_PENDING;
 }
 
 static int
@@ -1415,12 +1471,10 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 			 struct spdk_scsi_task *task,
 			 uint64_t lba, uint32_t xfer_len)
 {
-	int rc;
-
 	if (task->dxfer_dir == SPDK_SCSI_DIR_FROM_DEV) {
-		rc = spdk_bdev_scsi_read(bdev, task, lba, xfer_len);
+		return spdk_bdev_scsi_read(bdev, task, lba, xfer_len);
 	} else if (task->dxfer_dir == SPDK_SCSI_DIR_TO_DEV) {
-		rc = spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
+		return spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
 	} else {
 		SPDK_ERRLOG("Incorrect data direction\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
@@ -1429,20 +1483,6 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
-
-	if (rc < 0) {
-		SPDK_ERRLOG("disk op (rw) failed\n");
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-
-		return SPDK_SCSI_TASK_COMPLETE;
-	} else {
-		task->status = SPDK_SCSI_STATUS_GOOD;
-	}
-
-	return SPDK_SCSI_TASK_PENDING;
 }
 
 static int
