@@ -41,7 +41,33 @@ struct spdk_json_write_ctx {
 	bool new_indent;
 	bool first_value;
 	bool failed;
+	size_t buf_filled;
+	uint8_t buf[4096];
 };
+
+static int emit_buf_full(struct spdk_json_write_ctx *w, const void *data, size_t size);
+
+static int
+fail(struct spdk_json_write_ctx *w)
+{
+	w->failed = true;
+	return -1;
+}
+
+static int
+flush_buf(struct spdk_json_write_ctx *w)
+{
+	int rc;
+
+	rc = w->write_cb(w->cb_ctx, w->buf, w->buf_filled);
+	if (rc != 0) {
+		return fail(w);
+	}
+
+	w->buf_filled = 0;
+
+	return 0;
+}
 
 struct spdk_json_write_ctx *
 spdk_json_write_begin(spdk_json_write_cb write_cb, void *cb_ctx, uint32_t flags)
@@ -60,6 +86,7 @@ spdk_json_write_begin(spdk_json_write_cb write_cb, void *cb_ctx, uint32_t flags)
 	w->new_indent = false;
 	w->first_value = true;
 	w->failed = false;
+	w->buf_filled = 0;
 
 	return w;
 }
@@ -68,6 +95,7 @@ int
 spdk_json_write_end(struct spdk_json_write_ctx *w)
 {
 	bool failed;
+	int rc;
 
 	if (w == NULL) {
 		return 0;
@@ -75,28 +103,51 @@ spdk_json_write_end(struct spdk_json_write_ctx *w)
 
 	failed = w->failed;
 
+	rc = flush_buf(w);
+	if (rc != 0) {
+		failed = true;
+	}
+
 	free(w);
 
 	return failed ? -1 : 0;
 }
 
-static int
-fail(struct spdk_json_write_ctx *w)
+static inline int
+emit(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
-	w->failed = true;
-	return -1;
+	size_t buf_remain = sizeof(w->buf) - w->buf_filled;
+
+	if (spdk_unlikely(size > buf_remain)) {
+		/* Not enough space in buffer for the new data. */
+		return emit_buf_full(w, data, size);
+	}
+
+	/* Copy the new data into buf. */
+	memcpy(w->buf + w->buf_filled, data, size);
+	w->buf_filled += size;
+	return 0;
 }
 
 static int
-emit(struct spdk_json_write_ctx *w, const void *data, size_t size)
+emit_buf_full(struct spdk_json_write_ctx *w, const void *data, size_t size)
 {
+	size_t buf_remain = sizeof(w->buf) - w->buf_filled;
 	int rc;
 
-	rc = w->write_cb(w->cb_ctx, data, size);
+	assert(size > buf_remain);
+
+	/* Copy as much of the new data as possible into the buffer and flush it. */
+	memcpy(w->buf + w->buf_filled, data, buf_remain);
+	w->buf_filled += buf_remain;
+
+	rc = flush_buf(w);
 	if (rc != 0) {
 		return fail(w);
 	}
-	return 0;
+
+	/* Recurse to emit the rest of the data. */
+	return emit(w, data + buf_remain, size - buf_remain);
 }
 
 static int

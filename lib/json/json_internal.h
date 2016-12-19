@@ -47,6 +47,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include "spdk/likely.h"
 #include "spdk/string.h"
 
 #define SPDK_JSON_MAX_NESTING_DEPTH	64
