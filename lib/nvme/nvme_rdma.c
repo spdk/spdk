@@ -476,18 +476,12 @@ fail:
 }
 
 static int
-nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, struct ibv_wc *wc)
+nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 {
 	struct spdk_nvme_qpair *qpair = &rqpair->qpair;
 	struct spdk_nvme_rdma_req *rdma_req;
 	struct spdk_nvme_cpl *rsp;
 	struct nvme_request *req;
-	uint64_t rsp_idx = wc->wr_id;
-
-	if (wc->byte_len < sizeof(struct spdk_nvmf_fabric_connect_rsp)) {
-		SPDK_ERRLOG("recv length %u less than capsule header\n", wc->byte_len);
-		return -1;
-	}
 
 	assert(rsp_idx < rqpair->qpair.num_entries);
 	rsp = &rqpair->rsps[rsp_idx];
@@ -1378,7 +1372,12 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 
 		if (wc.opcode == IBV_WC_RECV) {
 			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "CQ recv completion\n");
-			rc = nvme_rdma_recv(rqpair, &wc);
+			if (wc.byte_len < sizeof(struct spdk_nvme_cpl)) {
+				SPDK_ERRLOG("recv length %u less than expected response size\n", wc.byte_len);
+				return -1;
+			}
+
+			rc = nvme_rdma_recv(rqpair, wc.wr_id);
 			if (rc) {
 				SPDK_ERRLOG("nvme_rdma_recv processing failure\n");
 
