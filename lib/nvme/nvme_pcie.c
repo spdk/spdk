@@ -41,6 +41,7 @@
 #include <sys/types.h>
 
 #include "nvme_internal.h"
+#include "nvme_uevent.h"
 
 #define NVME_ADMIN_ENTRIES	(128)
 #define NVME_ADMIN_TRACKERS	(64)
@@ -186,6 +187,7 @@ static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 static volatile uint16_t g_signal_lock;
 static bool g_sigset = false;
+static int hotplug_fd = -1;
 
 static void
 nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
@@ -224,6 +226,51 @@ nvme_pcie_ctrlr_setup_signal(void)
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGBUS, &sa, NULL);
+}
+
+static int
+_nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
+			   spdk_nvme_remove_cb remove_cb)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_uevent event;
+	struct spdk_pci_addr pci_addr;
+
+	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
+		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO) {
+			if (event.action == SPDK_NVME_UEVENT_ADD) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %s\n",
+					      event.traddr);
+				if (spdk_process_is_primary()) {
+					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
+						nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, &pci_addr);
+					}
+				}
+			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
+				bool in_list = false;
+
+				TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+					if (strcmp(event.traddr, ctrlr->trid.traddr) == 0) {
+						in_list = true;
+						break;
+					}
+				}
+				if (in_list == false) {
+					return 0;
+				}
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "remove nvme address: %s\n",
+					      event.traddr);
+
+				nvme_ctrlr_fail(ctrlr, true);
+
+				/* get the user app to clean up and stop I/O */
+				if (remove_cb) {
+					remove_cb(cb_ctx, ctrlr);
+				}
+			}
+		}
+	}
+	return 0;
 }
 
 static inline struct nvme_pcie_ctrlr *
@@ -578,6 +625,15 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
+
+	if (hotplug_fd < 0) {
+		hotplug_fd = spdk_uevent_connect();
+		if (hotplug_fd < 0) {
+			SPDK_ERRLOG("Failed to open uevent netlink socket\n");
+		}
+	} else {
+		_nvme_pcie_hotplug_monitor(cb_ctx, probe_cb, remove_cb);
+	}
 
 	return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
 }

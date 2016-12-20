@@ -33,15 +33,12 @@
 
 #include "spdk/nvmf_spec.h"
 #include "nvme_internal.h"
-#include "nvme_uevent.h"
 
 #define SPDK_NVME_DRIVER_NAME "spdk_nvme_driver"
 
 struct nvme_driver	*g_spdk_nvme_driver;
 
 int32_t			spdk_nvme_retry_count;
-
-static int		hotplug_fd = -1;
 
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
@@ -389,51 +386,6 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 	return rc;
 }
 
-static int
-nvme_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
-		     spdk_nvme_remove_cb remove_cb)
-{
-	struct spdk_nvme_ctrlr *ctrlr;
-	struct spdk_uevent event;
-	struct spdk_pci_addr pci_addr;
-
-	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
-		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO) {
-			if (event.action == SPDK_NVME_UEVENT_ADD) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "add nvme address: %s\n",
-					      event.traddr);
-				if (spdk_process_is_primary()) {
-					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
-						nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, &pci_addr);
-					}
-				}
-			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
-				bool in_list = false;
-
-				TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
-					if (strcmp(event.traddr, ctrlr->trid.traddr) == 0) {
-						in_list = true;
-						break;
-					}
-				}
-				if (in_list == false) {
-					return 0;
-				}
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "remove nvme address: %s\n",
-					      event.traddr);
-
-				nvme_ctrlr_fail(ctrlr, true);
-
-				/* get the user app to clean up and stop I/O */
-				if (remove_cb) {
-					remove_cb(cb_ctx, ctrlr);
-				}
-			}
-		}
-	}
-	return 0;
-}
-
 int
 spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
@@ -460,16 +412,6 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	}
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		if (hotplug_fd < 0) {
-			hotplug_fd = spdk_uevent_connect();
-			if (hotplug_fd < 0) {
-				SPDK_ERRLOG("Failed to open uevent netlink socket\n");
-			}
-		} else {
-			nvme_hotplug_monitor(cb_ctx, probe_cb, remove_cb);
-		}
-	}
 
 	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
 

@@ -46,14 +46,6 @@ struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
 
 struct nvme_request *g_request = NULL;
 
-struct spdk_uevent;
-
-int
-spdk_uevent_connect(void);
-
-int
-spdk_get_uevent(int fd, struct spdk_uevent *uevent);
-
 int
 spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
@@ -108,18 +100,6 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
-}
-
-int
-spdk_uevent_connect(void)
-{
-	return 0;
-}
-
-int
-spdk_get_uevent(int fd, struct spdk_uevent *uevent)
-{
-	return 0;
 }
 
 struct spdk_pci_addr

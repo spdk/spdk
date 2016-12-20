@@ -113,18 +113,6 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
 }
 
-int
-spdk_uevent_connect(void)
-{
-	return 0;
-}
-
-int
-spdk_get_uevent(int fd, struct spdk_uevent *uevent)
-{
-	return 0;
-}
-
 void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
