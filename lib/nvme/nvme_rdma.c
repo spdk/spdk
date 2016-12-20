@@ -1263,7 +1263,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	rc = ibv_post_send(rqpair->cm_id->qp, wr, &bad_wr);
 	if (rc) {
-		SPDK_ERRLOG("Failure posting rdma send for NVMf completion, rc = 0x%x\n", rc);
+		SPDK_ERRLOG("Failure posting rdma send for NVMf completion: %d (%s)\n", rc, strerror(rc));
 	}
 
 	return rc;
@@ -1366,7 +1366,8 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 		}
 
 		if (wc.status) {
-			SPDK_ERRLOG("CQ completion error status %d, exiting handler\n", wc.status);
+			SPDK_ERRLOG("CQ Completion Error For Response %lu: %d (%s)\n",
+				    wc.wr_id, wc.status, ibv_wc_status_str(wc.status));
 			break;
 		}
 
