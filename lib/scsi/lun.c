@@ -366,19 +366,10 @@ spdk_scsi_lun_delete(const char *lun_name)
 {
 	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_dev *dev;
-	struct spdk_lun_db_entry *current;
 
 	pthread_mutex_lock(&g_spdk_scsi.mutex);
-	current = spdk_scsi_lun_list_head;
-	while (current != NULL) {
-		lun = current->lun;
-		if (strncmp(lun->name, lun_name, sizeof(lun->name)) == 0) {
-			break;
-		}
-		current = current->next;
-	}
-
-	if (current == NULL) {
+	lun = spdk_lun_db_get_lun(lun_name, 0);
+	if (lun == NULL) {
 		pthread_mutex_unlock(&g_spdk_scsi.mutex);
 		return;
 	}
