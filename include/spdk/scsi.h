@@ -212,6 +212,9 @@ struct spdk_scsi_lun {
 	 */
 	pthread_t thread_id;
 
+	/**  The reference number for this LUN, thus we can correctly free the io_channel */
+	uint32_t ref;
+
 	/** Name for this LUN. */
 	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
 
