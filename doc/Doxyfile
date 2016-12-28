@@ -759,7 +759,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../include/spdk \
-                         mainpage.txt \
+                         index.md \
                          directory_structure.txt \
                          ioat/index.txt \
                          nvme/index.txt \
