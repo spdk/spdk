@@ -13,7 +13,7 @@ which avoids kernel context switches and eliminates interrupt handling overhead.
 
 ## General Information {#general}
 
- - \ref directory_structure
+ - @ref directory_structure
 
 ## Modules {#modules}
 
