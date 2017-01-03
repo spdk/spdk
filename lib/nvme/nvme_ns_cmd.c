@@ -153,7 +153,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 
 static void
 _nvme_ns_cmd_setup_request(struct spdk_nvme_ns *ns, struct nvme_request *req,
-			   uint32_t opc, uint32_t lba, uint32_t lba_count,
+			   uint32_t opc, uint64_t lba, uint32_t lba_count,
 			   uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
 {
 	struct spdk_nvme_cmd	*cmd;
