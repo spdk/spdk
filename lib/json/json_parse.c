@@ -202,10 +202,12 @@ json_decode_string(uint8_t *str_start, uint8_t *buf_end, uint8_t **str_end, uint
 		 * Shortest valid string (the empty string) is two bytes (""),
 		 *  so this can't possibly be valid
 		 */
+		*str_end = str;
 		return SPDK_JSON_PARSE_INCOMPLETE;
 	}
 
 	if (*str++ != '"') {
+		*str_end = str;
 		return SPDK_JSON_PARSE_INVALID;
 	}
 
@@ -222,17 +224,21 @@ json_decode_string(uint8_t *str_start, uint8_t *buf_end, uint8_t **str_end, uint
 						       flags & SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE ? out : NULL);
 			assert(rc != 0);
 			if (rc < 0) {
+				*str_end = str;
 				return rc;
 			}
 			out += rc;
 		} else if (str[0] <= 0x1f) {
 			/* control characters must be escaped */
+			*str_end = str;
 			return SPDK_JSON_PARSE_INVALID;
 		} else {
 			rc = utf8_valid(str, buf_end);
 			if (rc == 0) {
+				*str_end = str;
 				return SPDK_JSON_PARSE_INCOMPLETE;
 			} else if (rc < 0) {
+				*str_end = str;
 				return SPDK_JSON_PARSE_INVALID;
 			}
 
@@ -245,6 +251,7 @@ json_decode_string(uint8_t *str_start, uint8_t *buf_end, uint8_t **str_end, uint
 	}
 
 	/* If execution gets here, we ran out of buffer. */
+	*str_end = str;
 	return SPDK_JSON_PARSE_INCOMPLETE;
 }
 
@@ -442,7 +449,7 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 	size_t con_start_value;
 	uint8_t *data = json;
 	uint8_t *new_data;
-	int rc;
+	int rc = 0;
 	const struct json_literal *lit;
 	enum {
 		STATE_VALUE, /* initial state */
@@ -476,11 +483,11 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 		case 'f':
 		case 'n':
 			/* true, false, or null */
-			if (state != STATE_VALUE) return SPDK_JSON_PARSE_INVALID;
+			if (state != STATE_VALUE) goto done_invalid;
 			lit = &g_json_literals[(c >> 3) & 3]; /* See comment above g_json_literals[] */
 			assert(lit->str[0] == c);
 			rc = match_literal(data, json_end, lit->str, lit->len);
-			if (rc < 0) return rc;
+			if (rc < 0) goto done_rc;
 			ADD_VALUE(lit->type, data, data + rc);
 			data += rc;
 			state = depth ? STATE_VALUE_SEPARATOR : STATE_END;
@@ -488,9 +495,12 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			break;
 
 		case '"':
-			if (state != STATE_VALUE && state != STATE_NAME) return SPDK_JSON_PARSE_INVALID;
+			if (state != STATE_VALUE && state != STATE_NAME) goto done_invalid;
 			rc = json_decode_string(data, json_end, &new_data, flags);
-			if (rc < 0) return rc;
+			if (rc < 0) {
+				data = new_data;
+				goto done_rc;
+			}
 			/*
 			 * Start is data + 1 to skip initial quote.
 			 * Length is data + rc - 1 to skip both quotes.
@@ -517,9 +527,9 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 		case '7':
 		case '8':
 		case '9':
-			if (state != STATE_VALUE) return SPDK_JSON_PARSE_INVALID;
+			if (state != STATE_VALUE) goto done_invalid;
 			rc = json_valid_number(data, json_end);
-			if (rc < 0) return rc;
+			if (rc < 0) goto done_rc;
 			ADD_VALUE(SPDK_JSON_VAL_NUMBER, data, data + rc);
 			data += rc;
 			state = depth ? STATE_VALUE_SEPARATOR : STATE_END;
@@ -528,9 +538,10 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 
 		case '{':
 		case '[':
-			if (state != STATE_VALUE) return SPDK_JSON_PARSE_INVALID;
+			if (state != STATE_VALUE) goto done_invalid;
 			if (depth == SPDK_JSON_MAX_NESTING_DEPTH) {
-				return SPDK_JSON_PARSE_MAX_DEPTH_EXCEEDED;
+				rc = SPDK_JSON_PARSE_MAX_DEPTH_EXCEEDED;
+				goto done_rc;
 			}
 			if (c == '{') {
 				con_type = SPDK_JSON_VAL_OBJECT_BEGIN;
@@ -548,8 +559,8 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 
 		case '}':
 		case ']':
-			if (trailing_comma) return SPDK_JSON_PARSE_INVALID;
-			if (depth == 0) return SPDK_JSON_PARSE_INVALID;
+			if (trailing_comma) goto done_invalid;
+			if (depth == 0) goto done_invalid;
 			con_type = containers[--depth];
 			con_start_value = con_value[depth];
 			if (values && con_start_value < num_values) {
@@ -557,18 +568,18 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			}
 			if (c == '}') {
 				if (state != STATE_NAME && state != STATE_VALUE_SEPARATOR) {
-					return SPDK_JSON_PARSE_INVALID;
+					goto done_invalid;
 				}
 				if (con_type != SPDK_JSON_VAL_OBJECT_BEGIN) {
-					return SPDK_JSON_PARSE_INVALID;
+					goto done_invalid;
 				}
 				ADD_VALUE(SPDK_JSON_VAL_OBJECT_END, data, data + 1);
 			} else {
 				if (state != STATE_VALUE && state != STATE_VALUE_SEPARATOR) {
-					return SPDK_JSON_PARSE_INVALID;
+					goto done_invalid;
 				}
 				if (con_type != SPDK_JSON_VAL_ARRAY_BEGIN) {
-					return SPDK_JSON_PARSE_INVALID;
+					goto done_invalid;
 				}
 				ADD_VALUE(SPDK_JSON_VAL_ARRAY_END, data, data + 1);
 			}
@@ -579,7 +590,7 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			break;
 
 		case ',':
-			if (state != STATE_VALUE_SEPARATOR) return SPDK_JSON_PARSE_INVALID;
+			if (state != STATE_VALUE_SEPARATOR) goto done_invalid;
 			data++;
 			assert(con_type == SPDK_JSON_VAL_ARRAY_BEGIN ||
 			       con_type == SPDK_JSON_VAL_OBJECT_BEGIN);
@@ -588,23 +599,23 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 			break;
 
 		case ':':
-			if (state != STATE_NAME_SEPARATOR) return SPDK_JSON_PARSE_INVALID;
+			if (state != STATE_NAME_SEPARATOR) goto done_invalid;
 			data++;
 			state = STATE_VALUE;
 			break;
 
 		case '/':
 			if (!(flags & SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS)) {
-				return SPDK_JSON_PARSE_INVALID;
+				goto done_invalid;
 			}
 			rc = json_valid_comment(data, json_end);
-			if (rc < 0) return rc;
+			if (rc < 0) goto done_rc;
 			/* Skip over comment */
 			data += rc;
 			break;
 
 		default:
-			return SPDK_JSON_PARSE_INVALID;
+			goto done_invalid;
 		}
 
 		if (state == STATE_END) {
@@ -638,8 +649,16 @@ spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t nu
 	}
 
 	/* Invalid end state - ran out of data */
+	rc = SPDK_JSON_PARSE_INCOMPLETE;
+
+done_rc:
+	assert(rc < 0);
 	if (end) {
 		*end = data;
 	}
-	return SPDK_JSON_PARSE_INCOMPLETE;
+	return rc;
+
+done_invalid:
+	rc = SPDK_JSON_PARSE_INVALID;
+	goto done_rc;
 }
