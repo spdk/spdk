@@ -202,7 +202,7 @@ _nvmf_tgt_start_subsystem(struct spdk_event *event)
 		}
 	}
 
-	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, NULL, 0);
+	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, 0);
 }
 
 void
@@ -339,7 +339,7 @@ spdk_nvmf_startup(spdk_event_t event)
 	}
 
 	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
-			     g_spdk_nvmf_tgt_conf.acceptor_lcore, NULL,
+			     g_spdk_nvmf_tgt_conf.acceptor_lcore,
 			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 
 	SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,

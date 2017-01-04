@@ -449,7 +449,7 @@ blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 	}
 
 	spdk_poller_register(&ch->poller, blockdev_rbd_io_poll, ch,
-			     spdk_app_get_current_core(), NULL, 0);
+			     spdk_app_get_current_core(), 0);
 
 	return 0;
 

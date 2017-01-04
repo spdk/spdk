@@ -227,7 +227,7 @@ spdk_rpc_setup(void *arg)
 
 	/* Register the periodic rpc_server_do_work */
 	spdk_poller_register(&g_rpc_poller, spdk_rpc_server_do_work, NULL, spdk_app_get_current_core(),
-			     NULL, RPC_SELECT_INTERVAL);
+			     RPC_SELECT_INTERVAL);
 }
 
 static int
@@ -239,8 +239,7 @@ spdk_rpc_initialize(void)
 	 *  when the SPDK application has finished initialization and ready for logins
 	 *  or RPC commands.
 	 */
-	spdk_poller_register(&g_rpc_poller, spdk_rpc_setup, NULL, spdk_app_get_current_core(),
-			     NULL, 0);
+	spdk_poller_register(&g_rpc_poller, spdk_rpc_setup, NULL, spdk_app_get_current_core(), 0);
 	return 0;
 }
 

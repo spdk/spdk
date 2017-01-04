@@ -95,7 +95,7 @@ void
 spdk_iscsi_acceptor_start(void)
 {
 	spdk_poller_register(&g_acceptor_poller, spdk_acceptor, &g_spdk_iscsi, spdk_app_get_current_core(),
-			     NULL, ACCEPT_TIMEOUT_US);
+			     ACCEPT_TIMEOUT_US);
 }
 
 void

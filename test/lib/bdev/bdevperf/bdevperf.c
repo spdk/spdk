@@ -381,7 +381,7 @@ reset_cb(spdk_event_t event)
 	rte_mempool_put(task_pool, task);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target, target->lcore,
-			     NULL, 10 * 1000000);
+			     10 * 1000000);
 }
 
 static void
@@ -410,11 +410,11 @@ bdevperf_submit_on_core(spdk_event_t event)
 		target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
 
 		/* Start a timer to stop this I/O chain when the run is over */
-		spdk_poller_register(&target->run_timer, end_target, target, target->lcore, NULL,
+		spdk_poller_register(&target->run_timer, end_target, target, target->lcore,
 				     g_time_in_sec * 1000000);
 		if (g_reset) {
 			spdk_poller_register(&target->reset_timer, reset_target, target,
-					     target->lcore, NULL, 10 * 1000000);
+					     target->lcore, 10 * 1000000);
 		}
 		bdevperf_submit_io(target, g_queue_depth);
 		target = target->next;
@@ -493,7 +493,7 @@ bdevperf_run(spdk_event_t evt)
 	/* Start a timer to dump performance numbers */
 	if (g_show_performance_real_time) {
 		spdk_poller_register(&g_perf_timer, performance_statistics_thread, NULL,
-				     spdk_app_get_current_core(), NULL, 1000000);
+				     spdk_app_get_current_core(), 1000000);
 	}
 
 	/* Send events to start all I/O */

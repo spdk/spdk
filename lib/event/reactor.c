@@ -625,17 +625,12 @@ spdk_reactors_fini(void)
 }
 
 static void
-_spdk_poller_register(struct spdk_reactor *reactor, struct spdk_poller *poller,
-		      struct spdk_event *next)
+_spdk_poller_register(struct spdk_reactor *reactor, struct spdk_poller *poller)
 {
 	if (poller->period_ticks) {
 		spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
 	} else {
 		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
-	}
-
-	if (next) {
-		spdk_event_call(next);
 	}
 }
 
@@ -644,14 +639,13 @@ _spdk_event_add_poller(spdk_event_t event)
 {
 	struct spdk_reactor *reactor = spdk_event_get_arg1(event);
 	struct spdk_poller *poller = spdk_event_get_arg2(event);
-	struct spdk_event *next = event->next;
 
-	_spdk_poller_register(reactor, poller, next);
+	_spdk_poller_register(reactor, poller);
 }
 
 void
 spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-		     uint32_t lcore, struct spdk_event *complete, uint64_t period_microseconds)
+		     uint32_t lcore, uint64_t period_microseconds)
 {
 	struct spdk_poller *poller;
 	struct spdk_reactor *reactor;
@@ -686,14 +680,14 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 		 * The poller is registered to run on the current core, so call the add function
 		 * directly.
 		 */
-		_spdk_poller_register(reactor, poller, complete);
+		_spdk_poller_register(reactor, poller);
 	} else {
 		/*
 		 * The poller is registered to run on a different core.
 		 * Schedule an event to run on the poller's core that will add the poller.
 		 */
 		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_add_poller, reactor, poller,
-						    complete));
+						    NULL));
 	}
 }
 

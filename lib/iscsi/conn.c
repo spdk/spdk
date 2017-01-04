@@ -286,7 +286,7 @@ int spdk_initialize_iscsi_conns(void)
 	}
 
 	spdk_poller_register(&g_idle_conn_poller, spdk_iscsi_conn_idle_do_work, NULL,
-			     rte_get_master_lcore(), NULL, 0);
+			     rte_get_master_lcore(), 0);
 
 	return 0;
 }
@@ -408,7 +408,7 @@ error_return:
 	spdk_net_framework_clear_socket_association(conn->sock);
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 	spdk_poller_register(&conn->poller, spdk_iscsi_conn_login_do_work, conn,
-			     conn->lcore, NULL, 0);
+			     conn->lcore, 0);
 
 	return 0;
 }
@@ -609,7 +609,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	if (rc < 0) {
 		/* The connection cannot be freed yet. Check back later. */
 		spdk_poller_register(&conn->shutdown_timer, _spdk_iscsi_conn_check_shutdown, conn,
-				     spdk_app_get_current_core(), NULL, 1000);
+				     spdk_app_get_current_core(), 1000);
 	} else {
 		spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_app_get_current_core());
 	}
@@ -741,7 +741,7 @@ void spdk_shutdown_iscsi_conns(void)
 
 	pthread_mutex_unlock(&g_conns_mutex);
 	spdk_poller_register(&g_shutdown_timer, spdk_iscsi_conn_check_shutdown, NULL,
-			     rte_get_master_lcore(), NULL, 1000);
+			     rte_get_master_lcore(), 1000);
 }
 
 int
@@ -1299,7 +1299,7 @@ spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event)
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
 	conn->lcore = spdk_app_get_current_core();
 	spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
-			     conn->lcore, NULL, 0);
+			     conn->lcore, 0);
 }
 
 void
@@ -1518,7 +1518,7 @@ spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
 	conn->state = ISCSI_CONN_STATE_LOGGED_OUT;
 	spdk_poller_register(&conn->logout_timer, logout_timeout, conn, spdk_app_get_current_core(),
-			     NULL, ISCSI_LOGOUT_TIMEOUT * 1000000);
+			     ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 
 SPDK_TRACE_REGISTER_FN(iscsi_conn_trace)

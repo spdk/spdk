@@ -235,7 +235,6 @@ void spdk_poller_register(struct spdk_poller **ppoller,
 			  spdk_poller_fn fn,
 			  void *arg,
 			  uint32_t lcore,
-			  struct spdk_event *complete,
 			  uint64_t period_microseconds);
 
 /**
