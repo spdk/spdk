@@ -222,7 +222,6 @@ spdk_event_t spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
  */
 void spdk_event_call(spdk_event_t event);
 
-#define spdk_event_get_next(event)	(event)->next
 #define spdk_event_get_arg1(event)	(event)->arg1
 #define spdk_event_get_arg2(event)	(event)->arg2
 

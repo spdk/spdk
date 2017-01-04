@@ -646,7 +646,7 @@ _spdk_event_add_poller(spdk_event_t event)
 {
 	struct spdk_reactor *reactor = spdk_event_get_arg1(event);
 	struct spdk_poller *poller = spdk_event_get_arg2(event);
-	struct spdk_event *next = spdk_event_get_next(event);
+	struct spdk_event *next = event->next;
 
 	_spdk_poller_register(reactor, poller, next);
 }
@@ -731,7 +731,7 @@ _spdk_event_remove_poller(spdk_event_t event)
 {
 	struct spdk_poller *poller = spdk_event_get_arg1(event);
 	struct spdk_reactor *reactor = spdk_reactor_get(poller->lcore);
-	struct spdk_event *next = spdk_event_get_next(event);
+	struct spdk_event *next = event->next;
 
 	_spdk_poller_unregister(reactor, poller, next);
 }
