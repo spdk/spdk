@@ -1,43 +1,9 @@
-/*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+# Getting Started Guide {#iscsi_getting_started}
 
-/**
- * \page iscsi_getting_started iSCSI Target Getting Started Guide
-
-The Intel(R) Storage Performance Development Kit iSCSI target application is named "iscsi_tgt".
+The Intel(R) Storage Performance Development Kit iSCSI target application is named `iscsi_tgt`.
 This following section describes how to run iscsi from your cloned package.
 
-\section iscsi_prereqs Prerequisites
+# Prerequisites {#iscsi_prereqs}
 
 This guide starts by assuming that you can already build the standard SPDK distribution on your
 platform. The SPDK iSCSI target has been known to work on several Linux distributions, namely
@@ -45,7 +11,7 @@ Ubuntu 14.04, 15.04, and 15.10, Fedora 21, 22, and 23, and CentOS 7.
 
 Once built, the binary will be in `app/iscsi_tgt`.
 
-\section iscsi_config Configuring iSCSI Target
+# Configuring iSCSI Target {#iscsi_config}
 
 A `iscsi_tgt` specific configuration file is used to configure the iSCSI target. A fully documented
 example configuration file is located at `etc/spdk/iscsi.conf.in`.
@@ -61,30 +27,28 @@ SCSI LUNs which can be exported via iSCSI target nodes.
 The storage backends can be configured in the iscsi.conf configuration file to specify the number or
 size of LUNs, block device names (for exporting in-kernel block devices), or other parameters.
 
-Currently there are 3 types of stroage backends supported by iSCSI target:
+Currently there are 3 types of storage backends supported by the iSCSI target:
 
-Malloc
-======
+## Malloc
 
 Configuration file syntax:
-\verbatim
+~~~
 [Malloc]
   NumberOfLuns 4
   LunSizeInMB  64
-\endverbatim
+~~~
 
 Other TargetNode parameters go here (TargetName, Mapping, etc.):
-\verbatim
+~~~
 [TargetNodeX]
   LUN0 Malloc0
-\endverbatim
+~~~
 
 This exports a malloc'd target. The disk is a RAM disk that is a chunk of memory allocated by iscsi in
 user space. It will use offload engine to do the copy job instead of memcpy if the system has enough DMA
 channels.
 
-Block Device
-============
+## Block Device
 
 AIO devices are accessed using Linux AIO. O_DIRECT is used and thus unaligned writes will be double buffered.
 This option also bypasses the Linux page cache. This mode is probably as close to a typical kernel based
@@ -92,50 +56,48 @@ target as a user space target can get without using a user-space driver.
 
 Configuration file syntax:
 
-\verbatim
+~~~
 [AIO]
   #normal file or block device
   AIO /dev/sdb
-\endverbatim
+~~~
 
 Other TargetNode parameters go here (TargetName, Mapping, etc.):
-\verbatim
+~~~
 [TargetNodeX]
   LUN0 AIO0
-\endverbatim
+~~~
 
-Ceph RBD
-========
+## Ceph RBD
 
 Ceph RBD devices are accessed via librbd and librados libraries to access the RADOS block device
 exported by Ceph.
 
 Configuration file syntax:
 
-\verbatim
+~~~
 [Ceph]
   # The format of provided rbd info should be: Ceph rbd_pool_name rbd_name size.
   # In the following example, rbd is the name of rbd_pool; foo is the name of
   # rbd device exported by Ceph; value 512 represents the configured block size
   # for this rbd, the block size should be a multiple of 512.
   Ceph rbd foo 512
-\endverbatim
+~~~
 
 Other TargetNode parameters go here (TargetName, Mapping, etc.):
-\verbatim
+~~~
 [TargetNodeX]
   LUN0 Ceph0
-\endverbatim
+~~~
 
-NVMe
-====
+## NVMe
 
 The SPDK NVMe driver by default binds to all NVMe controllers which are not bound to the kernel-mode
 nvme driver. Users can choose to bind to fewer controllers by setting the NumControllers parameter.
 Then the NVMe backend controls NVMe controller(s) directly from userspace and completely bypasses
 the kernel to avoid interrupts and context switching.
 
-\verbatim
+~~~
 [Nvme]
   # NVMe Device Whitelist
   # Users may specify which NVMe devices to claim by their PCI
@@ -173,47 +135,46 @@ the kernel to avoid interrupts and context switching.
   # Note: NVMe namespace IDs always start at 1, not 0 - and most
   #  controllers have only 1 namespace.
   LUN0 Nvme0n1p0
-\endverbatim
+~~~
 
 You should make a copy of the example configuration file, modify it to suit your environment, and
 then run the iscsi_tgt application and pass it the configuration file using the -c option. Right now,
 the target requires elevated privileges (root) to run.
 
-\verbatim
+~~~
 app/iscsi_tgt/iscsi_tgt -c /path/to/iscsi.conf
-\endverbatim
+~~~
 
-\section iscsi_initiator_config Configuring iSCSI Initiator
+# Configuring iSCSI Initiator {#iscsi_initiator}
 
 The Linux initiator is open-iscsi.
 
 Installing open-iscsi package
 Fedora:
-\verbatim
+~~~
 yum install -y iscsi-initiator-utils
-\endverbatim
+~~~
 
 Ubuntu:
-\verbatim
+~~~
 apt-get install -y open-iscsi
-\endverbatim
+~~~
 
-Setup
-=====
+## Setup
 
 Edit /etc/iscsi/iscsid.conf
-\verbatim
+~~~
 node.session.cmds_max = 4096
 node.session.queue_depth = 128
-\endverbatim
+~~~
 
 iscsid must be restarted or receive SIGHUP for changes to take effect. To send SIGHUP, run:
-\verbatim
+~~~
 killall -HUP iscsid
-\endverbatim
+~~~
 
 Recommended changes to /etc/sysctl.conf
-\verbatim
+~~~
 net.ipv4.tcp_timestamps = 1
 net.ipv4.tcp_sack = 0
 
@@ -226,63 +187,64 @@ net.core.rmem_max = 524287
 net.core.wmem_max = 524287
 net.core.optmem_max = 524287
 net.core.netdev_max_backlog = 300000
-\endverbatim
+~~~
 
-Discovery
+### Discovery
 
 Assume target is at 192.168.1.5
-\verbatim
+~~~
 iscsiadm -m discovery -t sendtargets -p 192.168.1.5
-\endverbatim
+~~~
 
-Connect to target
+### Connect to target
 
-\verbatim
+~~~
 iscsiadm -m node --login
-\endverbatim
+~~~
 
 At this point the iSCSI target should show up as SCSI disks. Check dmesg to see what
 they came up as.
 
-Disconnect from target
+### Disconnect from target
 
-\verbatim
+~~~
 iscsiadm -m node --logout
-\endverbatim
+~~~
 
-Deleting target node cache
+### Deleting target node cache
 
-\verbatim
+~~~
 iscsiadm -m node -o delete
-\endverbatim
+~~~
 
 This will cause the initiator to forget all previously discovered iSCSI target nodes.
 
-Finding /dev/sdX nodes for iSCSI LUNs
+### Finding /dev/sdX nodes for iSCSI LUNs
 
-\verbatim
+~~~
 iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}'
-\endverbatim
+~~~
 
 This will show the /dev node name for each SCSI LUN in all logged in iSCSI sessions.
+
+### Tuning
 
 After the targets are connected, they can be tuned. For example if /dev/sdc is
 an iSCSI disk then the following can be done:
 Set noop to scheduler
 
-\verbatim
+~~~
 echo noop > /sys/block/sdc/queue/scheduler
-\endverbatim
+~~~
 
 Disable merging/coalescing (can be useful for precise workload measurements)
 
-\verbatim
+~~~
 echo "2" > /sys/block/sdc/queue/nomerges
-\endverbatim
+~~~
 
 Increase requests for block queue
 
-\verbatim
+~~~
 echo "1024" > /sys/block/sdc/queue/nr_requests
-\endverbatim
-*/
+~~~
