@@ -221,7 +221,7 @@ static void set_reactor_thread_name(void)
 {
 	char thread_name[16];
 
-	snprintf(thread_name, sizeof(thread_name), "reactor %d",
+	snprintf(thread_name, sizeof(thread_name), "reactor_%d",
 		 rte_lcore_id());
 
 #if defined(__linux__)
