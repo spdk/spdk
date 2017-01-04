@@ -36,8 +36,8 @@
  * Block Device Module Interface
  */
 
-#ifndef SPDK_BDEV_MODULE_H_
-#define SPDK_BDEV_MODULE_H_
+#ifndef SPDK_INTERNAL_BDEV_H
+#define SPDK_INTERNAL_BDEV_H
 
 #include <inttypes.h>
 #include <unistd.h>
@@ -193,4 +193,4 @@ spdk_bdev_io_from_ctx(void *ctx)
 	    spdk_vbdev_module_list_add(&init_fn ## _if);                  			\
 	}
 
-#endif /* SPDK_BDEV_MODULE_H_ */
+#endif /* SPDK_INTERNAL_BDEV_H */

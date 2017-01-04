@@ -46,9 +46,8 @@
 #include "spdk/event.h"
 #include "spdk/queue.h"
 
+#include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
-
-#include "bdev_module.h"
 
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
 #define RBUF_SMALL_POOL_SIZE	8192

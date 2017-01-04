@@ -52,7 +52,7 @@
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
 
-#include "bdev_module.h"
+#include "spdk_internal/bdev.h"
 
 static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int blockdev_rbd_count = 0;

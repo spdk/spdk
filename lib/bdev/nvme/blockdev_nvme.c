@@ -50,9 +50,8 @@
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
 
+#include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
-
-#include "bdev_module.h"
 
 static void blockdev_nvme_get_spdk_running_config(FILE *fp);
 
