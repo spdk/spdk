@@ -762,10 +762,10 @@ INPUT                  = ../include/spdk \
                          index.md \
                          directory_structure.md \
                          ioat/index.txt \
-                         nvme/index.txt \
-                         nvme/async_completion.txt \
-                         nvme/initialization.txt \
-                         nvme/io_submission.txt \
+                         nvme/index.md \
+                         nvme/async_completion.md \
+                         nvme/initialization.md \
+                         nvme/io_submission.md \
                          nvmf/index.txt \
                          nvmf/getting_started.txt \
                          iscsi/index.txt \
