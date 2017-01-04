@@ -18,6 +18,6 @@ which avoids kernel context switches and eliminates interrupt handling overhead.
 ## Modules {#modules}
 
 - @ref nvme
-- \ref nvmf
+- @ref nvmf
 - @ref ioat
 - \ref iscsi

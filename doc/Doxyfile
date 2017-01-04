@@ -766,8 +766,8 @@ INPUT                  = ../include/spdk \
                          nvme/async_completion.md \
                          nvme/initialization.md \
                          nvme/io_submission.md \
-                         nvmf/index.txt \
-                         nvmf/getting_started.txt \
+                         nvmf/index.md \
+                         nvmf/getting_started.md \
                          iscsi/index.txt \
                          iscsi/getting_started.txt
 
