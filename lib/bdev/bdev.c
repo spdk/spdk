@@ -441,7 +441,7 @@ __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, spdk_even
 	}
 }
 
-int
+static int
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;

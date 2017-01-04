@@ -311,7 +311,6 @@ struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_chan
 struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     uint64_t offset, uint64_t length,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
-int spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
