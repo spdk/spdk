@@ -58,6 +58,7 @@
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
 
+#include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 
 /*

@@ -31,27 +31,25 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Runtime and compile-time assert macros
- */
-
-#ifndef SPDK_ASSERT_H
-#define SPDK_ASSERT_H
+#ifndef SPDK_INTERNAL_ASSERT_H
+#define SPDK_INTERNAL_ASSERT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <assert.h>
+#include "spdk/assert.h"
 
-#ifdef static_assert
-#define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
+#include <stdlib.h>
+
+#if !defined(DEBUG) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#define SPDK_UNREACHABLE() __builtin_unreachable()
 #else
-#define SPDK_STATIC_ASSERT(cond, msg)
+#define SPDK_UNREACHABLE() abort()
 #endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* SPDK_ASSERT_H */
+#endif /* SPDK_INTERNAL_ASSERT_H */
