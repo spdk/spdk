@@ -31,8 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/event.h"
 #include "spdk/net.h"
+
+#include "spdk_internal/event.h"
 
 __attribute__((weak))
 const char *spdk_net_framework_get_name(void)

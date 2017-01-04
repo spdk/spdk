@@ -31,13 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/event.h"
+#include "spdk_internal/event.h"
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
-
-#include "subsystem.h"
 
 static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 	TAILQ_HEAD_INITIALIZER(g_subsystems);

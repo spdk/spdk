@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/event.h"
+#include "spdk_internal/event.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -49,8 +49,6 @@
 
 #include <rte_config.h>
 #include <rte_ring.h>
-
-#include "reactor.h"
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"

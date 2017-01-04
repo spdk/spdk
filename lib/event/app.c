@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/event.h"
+#include "spdk_internal/event.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -52,9 +52,6 @@
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/trace.h"
-
-#include "reactor.h"
-#include "subsystem.h"
 
 /* Add enough here to append ".pid" plus 2 digit instance ID */
 #define SPDK_APP_PIDFILE_MAX_LENGTH	40

@@ -49,9 +49,10 @@
 #include "spdk/queue.h"
 #include "spdk/rpc.h"
 #include "spdk/env.h"
-#include "spdk/event.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
+
+#include "spdk_internal/event.h"
 
 #define RPC_SELECT_INTERVAL	4000 /* 4ms */
 #define RPC_DEFAULT_LISTEN_ADDR	"127.0.0.1"

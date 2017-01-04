@@ -47,9 +47,9 @@
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
 
-#include "spdk/event.h"
 #include "spdk/env.h"
 
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 #define ISCSI_CONFIG_TMPL \

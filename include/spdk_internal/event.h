@@ -31,13 +31,69 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_SUBSYSTEM_H_
-#define SPDK_SUBSYSTEM_H_
+#ifndef SPDK_INTERNAL_EVENT_H
+#define SPDK_INTERNAL_EVENT_H
 
 #include <stdio.h>
+
+#include "spdk/event.h"
+
+int spdk_reactors_init(const char *mask, unsigned int max_delay_us);
+int spdk_reactors_fini(void);
+
+void spdk_reactors_start(void);
+void spdk_reactors_stop(void);
+
+struct spdk_subsystem {
+	const char *name;
+	int (*init)(void);
+	int (*fini)(void);
+	void (*config)(FILE *fp);
+	TAILQ_ENTRY(spdk_subsystem) tailq;
+};
+
+struct spdk_subsystem_depend {
+	const char *name;
+	const char *depends_on;
+	struct spdk_subsystem *depends_on_subsystem;
+	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
+};
+
+void spdk_add_subsystem(struct spdk_subsystem *subsystem);
+void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
 int spdk_subsystem_init(void);
 int spdk_subsystem_fini(void);
 void spdk_subsystem_config(FILE *fp);
 
-#endif
+/**
+ * \brief Register a new subsystem
+ */
+#define SPDK_SUBSYSTEM_REGISTER(_name, _init, _fini, _config)			\
+	struct spdk_subsystem __spdk_subsystem_ ## _name = {			\
+	.name = #_name,								\
+	.init = _init,								\
+	.fini = _fini,								\
+	.config = _config,							\
+	};									\
+	__attribute__((constructor)) static void _name ## _register(void)	\
+	{									\
+		spdk_add_subsystem(&__spdk_subsystem_ ## _name);		\
+	}
+
+/**
+ * \brief Declare that a subsystem depends on another subsystem.
+ */
+#define SPDK_SUBSYSTEM_DEPEND(_name, _depends_on)						\
+	extern struct spdk_subsystem __spdk_subsystem_ ## _depends_on;				\
+	static struct spdk_subsystem_depend __subsystem_ ## _name ## _depend_on ## _depends_on = { \
+	.name = #_name,										\
+	.depends_on = #_depends_on,								\
+	.depends_on_subsystem = &__spdk_subsystem_ ## _depends_on,				\
+	};											\
+	__attribute__((constructor)) static void _name ## _depend_on ## _depends_on(void)	\
+	{											\
+		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
+	}
+
+#endif /* SPDK_INTERNAL_EVENT_H */
