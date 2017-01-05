@@ -38,6 +38,14 @@
 
 #include "spdk/event.h"
 
+struct spdk_event {
+	uint32_t		lcore;
+	spdk_event_fn		fn;
+	void			*arg1;
+	void			*arg2;
+	struct spdk_event	*next;
+};
+
 int spdk_reactors_init(const char *mask, unsigned int max_delay_us);
 int spdk_reactors_fini(void);
 

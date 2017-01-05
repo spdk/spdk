@@ -86,13 +86,7 @@ typedef void (*spdk_event_fn)(void *arg1, void *arg2);
 /**
  * \brief An event is a function that is passed to and called on an lcore.
  */
-struct spdk_event {
-	uint32_t		lcore;
-	spdk_event_fn		fn;
-	void			*arg1;
-	void			*arg2;
-	struct spdk_event	*next;
-};
+struct spdk_event;
 
 typedef void (*spdk_poller_fn)(void *arg);
 
