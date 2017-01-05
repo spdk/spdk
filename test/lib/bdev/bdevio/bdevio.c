@@ -92,6 +92,15 @@ wake_ut_thread(void)
 	pthread_mutex_unlock(&g_test_mutex);
 }
 
+static void
+__get_io_channel(void *arg1, void *arg2)
+{
+	struct io_target *target = arg1;
+
+	target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
+	wake_ut_thread();
+}
+
 static int
 bdevio_construct_targets(void)
 {
@@ -112,12 +121,36 @@ bdevio_construct_targets(void)
 		}
 		target->bdev = bdev;
 		target->next = g_io_targets;
+		execute_spdk_function(__get_io_channel, target, NULL);
 		g_io_targets = target;
 
 		bdev = spdk_bdev_next(bdev);
 	}
 
 	return 0;
+}
+
+static void
+__put_io_channel(void *arg1, void *arg2)
+{
+	struct io_target *target = arg1;
+
+	spdk_put_io_channel(target->ch);
+	wake_ut_thread();
+}
+
+static void
+bdevio_cleanup_targets(void)
+{
+	struct io_target *target;
+
+	target = g_io_targets;
+	while (target != NULL) {
+		execute_spdk_function(__put_io_channel, target, NULL);
+		g_io_targets = target->next;
+		free(target);
+		target = g_io_targets;
+	}
 }
 
 static enum spdk_bdev_io_status g_completion_status;
@@ -132,13 +165,8 @@ initialize_buffer(char **buf, int pattern, int size)
 static void
 quick_test_complete(void *arg1, void *arg2)
 {
-	struct bdevio_request *req = arg1;
 	struct spdk_bdev_io *bdev_io = arg2;
 
-	if (req->target->ch) {
-		spdk_put_io_channel(req->target->ch);
-		req->target->ch = NULL;
-	}
 	g_completion_status = bdev_io->status;
 	spdk_bdev_free_io(bdev_io);
 	wake_ut_thread();
@@ -151,18 +179,15 @@ __blockdev_write(void *arg1, void *arg2)
 	struct io_target *target = req->target;
 	struct spdk_bdev_io *bdev_io;
 
-	target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
 	if (req->iovcnt) {
 		bdev_io = spdk_bdev_writev(target->bdev, target->ch, req->iov, req->iovcnt, req->offset,
-					   req->data_len, quick_test_complete, req);
+					   req->data_len, quick_test_complete, NULL);
 	} else {
 		bdev_io = spdk_bdev_write(target->bdev, target->ch, req->buf, req->offset,
-					  req->data_len, quick_test_complete, req);
+					  req->data_len, quick_test_complete, NULL);
 	}
 
 	if (!bdev_io) {
-		spdk_put_io_channel(target->ch);
-		target->ch = NULL;
 		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 		wake_ut_thread();
 	}
@@ -216,18 +241,15 @@ __blockdev_read(void *arg1, void *arg2)
 	struct io_target *target = req->target;
 	struct spdk_bdev_io *bdev_io;
 
-	target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
 	if (req->iovcnt) {
 		bdev_io = spdk_bdev_readv(target->bdev, target->ch, req->iov, req->iovcnt, req->offset,
-					  req->data_len, quick_test_complete, req);
+					  req->data_len, quick_test_complete, NULL);
 	} else {
 		bdev_io = spdk_bdev_read(target->bdev, target->ch, req->buf, req->offset,
-					 req->data_len, quick_test_complete, req);
+					 req->data_len, quick_test_complete, NULL);
 	}
 
 	if (!bdev_io) {
-		spdk_put_io_channel(target->ch);
-		target->ch = NULL;
 		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 		wake_ut_thread();
 	}
@@ -630,10 +652,8 @@ __blockdev_reset(void *arg1, void *arg2)
 	struct io_target *target = req->target;
 	int rc;
 
-	rc = spdk_bdev_reset(target->bdev, *reset_type, quick_test_complete, req);
+	rc = spdk_bdev_reset(target->bdev, *reset_type, quick_test_complete, NULL);
 	if (rc < 0) {
-		spdk_put_io_channel(target->ch);
-		target->ch = NULL;
 		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 		wake_ut_thread();
 	}
@@ -677,6 +697,9 @@ test_main(void *arg1, void *arg2)
 {
 	CU_pSuite suite = NULL;
 	unsigned int num_failures;
+
+	pthread_mutex_init(&g_test_mutex, NULL);
+	pthread_cond_init(&g_test_cond, NULL);
 
 	if (bdevio_construct_targets() < 0) {
 		spdk_app_stop(-1);
@@ -728,12 +751,11 @@ test_main(void *arg1, void *arg2)
 		return;
 	}
 
-	pthread_mutex_init(&g_test_mutex, NULL);
-	pthread_cond_init(&g_test_cond, NULL);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
+	bdevio_cleanup_targets();
 	spdk_app_stop(num_failures);
 }
 

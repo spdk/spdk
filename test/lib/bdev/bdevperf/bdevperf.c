@@ -165,6 +165,9 @@ bdevperf_construct_targets(void)
 static void
 end_run(void *arg1, void *arg2)
 {
+	struct io_target *target = arg1;
+
+	spdk_put_io_channel(target->ch);
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer, NULL);
@@ -220,8 +223,7 @@ bdevperf_complete(void *arg1, void *arg2)
 	if (!target->is_draining) {
 		bdevperf_submit_single(target);
 	} else if (target->current_queue_depth == 0) {
-		spdk_put_io_channel(target->ch);
-		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, NULL, NULL);
+		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, target, NULL);
 		spdk_event_call(complete);
 	}
 }
