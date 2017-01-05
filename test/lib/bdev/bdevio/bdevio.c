@@ -185,7 +185,7 @@ blockdev_write(struct io_target *target, char *tx_buf,
 	       uint64_t offset, int data_len, int iov_len)
 {
 	struct bdevio_request req;
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	req.target = target;
 	req.buf = tx_buf;
@@ -231,7 +231,7 @@ blockdev_read(struct io_target *target, char *rx_buf,
 	      uint64_t offset, int data_len, int iov_len)
 {
 	struct bdevio_request req;
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	req.target = target;
 	req.buf = rx_buf;
@@ -641,7 +641,7 @@ static void
 blockdev_reset(struct io_target *target, enum spdk_bdev_reset_type reset_type)
 {
 	struct bdevio_request req;
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	req.target = target;
 

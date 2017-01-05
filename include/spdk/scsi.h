@@ -104,7 +104,7 @@ struct spdk_scsi_task {
 	struct spdk_io_channel		*ch;
 	struct spdk_scsi_port		*target_port;
 	struct spdk_scsi_port		*initiator_port;
-	spdk_event_t			cb_event;
+	struct spdk_event 		*cb_event;
 
 	uint32_t ref;
 	uint32_t id;

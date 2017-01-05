@@ -74,7 +74,7 @@ struct spdk_app {
 };
 
 static struct spdk_app g_spdk_app;
-static spdk_event_t g_shutdown_event = NULL;
+static struct spdk_event *g_shutdown_event = NULL;
 
 static int spdk_app_write_pidfile(void);
 static void spdk_app_remove_pidfile(void);
@@ -429,7 +429,7 @@ spdk_app_fini(void)
 int
 spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 {
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	g_spdk_app.rc = 0;
 

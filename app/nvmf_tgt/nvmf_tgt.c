@@ -208,7 +208,7 @@ _nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 void
 nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
 				    app_subsys, NULL, NULL);

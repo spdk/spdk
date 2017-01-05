@@ -139,9 +139,9 @@ spdk_reactor_get(uint32_t lcore)
 	return reactor;
 }
 
-spdk_event_t
+struct spdk_event *
 spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
-		    spdk_event_t next)
+		    struct spdk_event *next)
 {
 	struct spdk_event *event = NULL;
 	unsigned socket_id = rte_lcore_to_socket_id(lcore);
@@ -164,7 +164,7 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 }
 
 void
-spdk_event_call(spdk_event_t event)
+spdk_event_call(struct spdk_event *event)
 {
 	int rc;
 	struct spdk_reactor *reactor;

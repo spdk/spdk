@@ -185,7 +185,7 @@ bdevperf_complete(void *arg1, void *arg2)
 	struct io_target	*target;
 	struct bdevperf_task	*task = arg1;
 	struct spdk_bdev_io	*bdev_io = arg2;
-	spdk_event_t		complete;
+	struct spdk_event 	*complete;
 
 	target = task->target;
 
@@ -485,7 +485,7 @@ bdevperf_run(void *arg1, void *arg2)
 {
 	int i;
 	struct io_target *target;
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);

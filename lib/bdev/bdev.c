@@ -409,7 +409,7 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 }
 
 static void
-__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, spdk_event_t cb_event)
+__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, struct spdk_event *cb_event)
 {
 	bdev_io->cb_event = cb_event;
 

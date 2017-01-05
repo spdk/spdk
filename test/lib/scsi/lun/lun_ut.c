@@ -161,7 +161,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 }
 
-void spdk_event_call(spdk_event_t event)
+void spdk_event_call(struct spdk_event *event)
 {
 }
 

@@ -80,7 +80,6 @@
 
 #include "spdk/queue.h"
 
-typedef struct spdk_event *spdk_event_t;
 typedef void (*spdk_event_fn)(void *arg1, void *arg2);
 
 /**
@@ -199,14 +198,14 @@ uint32_t spdk_app_get_current_core(void);
 /**
  * \brief Allocate an event to be passed to \ref spdk_event_call
  */
-spdk_event_t spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
-				 void *arg1, void *arg2,
-				 spdk_event_t next);
+struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
+				       void *arg1, void *arg2,
+				       struct spdk_event *next);
 
 /**
  * \brief Pass the given event to the associated lcore and call the function.
  */
-void spdk_event_call(spdk_event_t event);
+void spdk_event_call(struct spdk_event *event);
 
 /* TODO: This is only used by tests and should be made private */
 uint32_t spdk_event_queue_run_batch(uint32_t lcore);
