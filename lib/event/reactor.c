@@ -114,7 +114,7 @@ struct spdk_reactor {
 	struct rte_ring					*events;
 
 	uint64_t					max_delay_us;
-};
+} __attribute__((aligned(64)));
 
 static struct spdk_reactor g_reactors[RTE_MAX_LCORE];
 static uint64_t	g_reactor_mask  = 0;
