@@ -165,12 +165,10 @@ nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 }
 
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
-		    uint16_t num_entries,
 		    struct spdk_nvme_ctrlr *ctrlr,
 		    enum spdk_nvme_qprio qprio)
 {
 	qpair->id = id;
-	qpair->num_entries = num_entries;
 	qpair->qprio = qprio;
 	qpair->ctrlr = ctrlr;
 
