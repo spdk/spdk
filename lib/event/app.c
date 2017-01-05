@@ -210,7 +210,7 @@ __shutdown_signal(int signo)
 }
 
 static void
-__shutdown_event_cb(spdk_event_t event)
+__shutdown_event_cb(void *arg1, void *arg2)
 {
 	g_spdk_app.shutdown_cb();
 }

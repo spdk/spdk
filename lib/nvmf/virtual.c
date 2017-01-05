@@ -118,10 +118,10 @@ nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_session *session)
 }
 
 static void
-nvmf_virtual_ctrlr_complete_cmd(spdk_event_t event)
+nvmf_virtual_ctrlr_complete_cmd(void *arg1, void *arg2)
 {
-	struct spdk_bdev_io		*bdev_io = spdk_event_get_arg2(event);
-	struct spdk_nvmf_request 	*req = spdk_event_get_arg1(event);
+	struct spdk_bdev_io		*bdev_io = arg2;
+	struct spdk_nvmf_request 	*req = arg1;
 	enum spdk_bdev_io_status	status = bdev_io->status;
 	struct spdk_nvme_cpl 		*response = &req->rsp->nvme_cpl;
 	struct spdk_nvme_cmd 		*cmd = &req->cmd->nvme_cmd;

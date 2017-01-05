@@ -163,7 +163,7 @@ bdevperf_construct_targets(void)
 }
 
 static void
-end_run(spdk_event_t event)
+end_run(void *arg1, void *arg2)
 {
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
@@ -180,11 +180,11 @@ end_run(spdk_event_t event)
 struct rte_mempool *task_pool;
 
 static void
-bdevperf_complete(spdk_event_t event)
+bdevperf_complete(void *arg1, void *arg2)
 {
 	struct io_target	*target;
-	struct bdevperf_task	*task = spdk_event_get_arg1(event);
-	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+	struct bdevperf_task	*task = arg1;
+	struct spdk_bdev_io	*bdev_io = arg2;
 	spdk_event_t		complete;
 
 	target = task->target;
@@ -227,11 +227,11 @@ bdevperf_complete(spdk_event_t event)
 }
 
 static void
-bdevperf_unmap_complete(spdk_event_t event)
+bdevperf_unmap_complete(void *arg1, void *arg2)
 {
 	struct io_target	*target;
-	struct bdevperf_task	*task = spdk_event_get_arg1(event);
-	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+	struct bdevperf_task	*task = arg1;
+	struct spdk_bdev_io	*bdev_io = arg2;
 
 	target = task->target;
 
@@ -250,11 +250,11 @@ bdevperf_unmap_complete(spdk_event_t event)
 }
 
 static void
-bdevperf_verify_write_complete(spdk_event_t event)
+bdevperf_verify_write_complete(void *arg1, void *arg2)
 {
 	struct io_target	*target;
-	struct bdevperf_task	*task = spdk_event_get_arg1(event);
-	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+	struct bdevperf_task	*task = arg1;
+	struct spdk_bdev_io	*bdev_io = arg2;
 
 	target = task->target;
 
@@ -365,9 +365,9 @@ end_target(void *arg)
 static void reset_target(void *arg);
 
 static void
-reset_cb(spdk_event_t event)
+reset_cb(void *arg1, void *arg2)
 {
-	struct spdk_bdev_io	*bdev_io = spdk_event_get_arg2(event);
+	struct spdk_bdev_io	*bdev_io = arg2;
 	int			status = bdev_io->status;
 	struct bdevperf_task	*task = bdev_io->caller_ctx;
 	struct io_target	*target = task->target;
@@ -400,9 +400,9 @@ reset_target(void *arg)
 }
 
 static void
-bdevperf_submit_on_core(spdk_event_t event)
+bdevperf_submit_on_core(void *arg1, void *arg2)
 {
-	struct io_target *target = spdk_event_get_arg1(event);
+	struct io_target *target = arg1;
 
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
@@ -481,7 +481,7 @@ performance_statistics_thread(void *arg)
 }
 
 static void
-bdevperf_run(spdk_event_t evt)
+bdevperf_run(void *arg1, void *arg2)
 {
 	int i;
 	struct io_target *target;

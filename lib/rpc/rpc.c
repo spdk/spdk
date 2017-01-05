@@ -244,7 +244,7 @@ spdk_rpc_initialize(void)
 }
 
 static void
-spdk_rpc_finish_cleanup(struct spdk_event *event)
+spdk_rpc_finish_cleanup(void *arg1, void *arg2)
 {
 	if (g_jsonrpc_server) {
 		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);

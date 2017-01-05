@@ -118,10 +118,10 @@ initialize_buffer(char **buf, int pattern, int size)
 }
 
 static void
-quick_test_complete(spdk_event_t event)
+quick_test_complete(void *arg1, void *arg2)
 {
-	struct bdevio_request *req = spdk_event_get_arg1(event);
-	struct spdk_bdev_io *bdev_io = spdk_event_get_arg2(event);
+	struct bdevio_request *req = arg1;
+	struct spdk_bdev_io *bdev_io = arg2;
 
 	if (req->target->ch) {
 		spdk_put_io_channel(req->target->ch);
@@ -133,9 +133,9 @@ quick_test_complete(spdk_event_t event)
 }
 
 static void
-__blockdev_write(spdk_event_t event)
+__blockdev_write(void *arg1, void *arg2)
 {
-	struct bdevio_request *req = spdk_event_get_arg1(event);
+	struct bdevio_request *req = arg1;
 	struct io_target *target = req->target;
 	struct spdk_bdev_io *bdev_io;
 
@@ -203,9 +203,9 @@ blockdev_write(struct io_target *target, char *tx_buf,
 }
 
 static void
-__blockdev_read(spdk_event_t event)
+__blockdev_read(void *arg1, void *arg2)
 {
-	struct bdevio_request *req = spdk_event_get_arg1(event);
+	struct bdevio_request *req = arg1;
 	struct io_target *target = req->target;
 	struct spdk_bdev_io *bdev_io;
 
@@ -621,10 +621,10 @@ blockdev_overlapped_write_read_8k(void)
 }
 
 static void
-__blockdev_reset(spdk_event_t event)
+__blockdev_reset(void *arg1, void *arg2)
 {
-	struct bdevio_request *req = spdk_event_get_arg1(event);
-	enum spdk_bdev_reset_type *reset_type = spdk_event_get_arg2(event);
+	struct bdevio_request *req = arg1;
+	enum spdk_bdev_reset_type *reset_type = arg2;
 	struct io_target *target = req->target;
 	int rc;
 
@@ -676,7 +676,7 @@ blockdev_test_reset(void)
 }
 
 static void
-test_main(spdk_event_t event)
+test_main(void *arg1, void *arg2)
 {
 	CU_pSuite suite = NULL;
 	unsigned int num_failures;

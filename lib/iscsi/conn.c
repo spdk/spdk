@@ -81,7 +81,7 @@ static pthread_mutex_t g_conns_mutex;
 static struct spdk_poller *g_shutdown_timer = NULL;
 
 static uint32_t spdk_iscsi_conn_allocate_reactor(uint64_t cpumask);
-static void __add_idle_conn(spdk_event_t event);
+static void __add_idle_conn(void *arg1, void *arg2);
 
 /** Global variables used for managing idle connections. */
 static int g_epoll_fd = 0;
@@ -92,7 +92,7 @@ void spdk_iscsi_conn_login_do_work(void *arg);
 void spdk_iscsi_conn_full_feature_do_work(void *arg);
 void spdk_iscsi_conn_idle_do_work(void *arg);
 
-static void spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event);
+static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static struct spdk_event *spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn,
 		int *lcore);
 static void spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop,
@@ -559,10 +559,9 @@ spdk_iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 }
 
 static void
-_spdk_iscsi_conn_free(spdk_event_t event)
+_spdk_iscsi_conn_free(void *arg1, void *arg2)
 {
-
-	struct spdk_iscsi_conn	*conn = spdk_event_get_arg1(event);
+	struct spdk_iscsi_conn	*conn = arg1;
 
 	pthread_mutex_lock(&g_conns_mutex);
 	spdk_iscsi_remove_conn(conn);
@@ -854,10 +853,10 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 }
 
 void
-process_task_mgmt_completion(spdk_event_t event)
+process_task_mgmt_completion(void *arg1, void *arg2)
 {
-	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
-	struct spdk_iscsi_task *task = spdk_event_get_arg2(event);
+	struct spdk_iscsi_conn *conn = arg1;
+	struct spdk_iscsi_task *task = arg2;
 
 	conn->last_activity_tsc = spdk_get_ticks();
 	spdk_iscsi_task_mgmt_response(conn, task);
@@ -916,10 +915,10 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	process_completed_read_subtask_list(conn, primary);
 }
 
-void process_task_completion(spdk_event_t event)
+void process_task_completion(void *arg1, void *arg2)
 {
-	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
-	struct spdk_iscsi_task *task = spdk_event_get_arg2(event);
+	struct spdk_iscsi_conn *conn = arg1;
+	struct spdk_iscsi_task *task = arg2;
 	struct spdk_iscsi_task *primary;
 
 	assert(task != NULL);
@@ -1287,9 +1286,9 @@ conn_exit:
 }
 
 static void
-spdk_iscsi_conn_full_feature_migrate(struct spdk_event *event)
+spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 {
-	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(event);
+	struct spdk_iscsi_conn *conn = arg1;
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		assert(conn->dev != NULL);
@@ -1405,9 +1404,9 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 }
 
 static void
-__add_idle_conn(spdk_event_t e)
+__add_idle_conn(void *arg1, void *arg2)
 {
-	struct spdk_iscsi_conn *conn = spdk_event_get_arg1(e);
+	struct spdk_iscsi_conn *conn = arg1;
 	int rc;
 
 	/*

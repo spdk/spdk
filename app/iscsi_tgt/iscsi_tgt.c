@@ -85,7 +85,7 @@ usage(char *executable_name)
 }
 
 static void
-spdk_startup(spdk_event_t event)
+spdk_startup(void *arg1, void *arg2)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);

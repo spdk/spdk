@@ -129,12 +129,12 @@ spdk_shutdown_iscsi_conns(void)
 }
 
 void
-process_task_completion(spdk_event_t event)
+process_task_completion(void *arg1, void *arg2)
 {
 }
 
 void
-process_task_mgmt_completion(spdk_event_t event)
+process_task_mgmt_completion(void *arg1, void *arg2)
 {
 }
 

@@ -74,7 +74,7 @@ nop(void *arg)
 }
 
 static void
-test_start(spdk_event_t evt)
+test_start(void *arg1, void *arg2)
 {
 	printf("test_start\n");
 

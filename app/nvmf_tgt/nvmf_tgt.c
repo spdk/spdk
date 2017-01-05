@@ -64,9 +64,9 @@ shutdown_complete(void)
 }
 
 static void
-subsystem_delete_event(struct spdk_event *event)
+subsystem_delete_event(void *arg1, void *arg2)
 {
-	struct nvmf_tgt_subsystem *app_subsys = spdk_event_get_arg1(event);
+	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 
 	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
@@ -116,7 +116,7 @@ shutdown_subsystems(void)
 }
 
 static void
-acceptor_poller_unregistered_event(struct spdk_event *event)
+acceptor_poller_unregistered_event(void *arg1, void *arg2)
 {
 	spdk_nvmf_tgt_fini();
 	shutdown_subsystems();
@@ -145,9 +145,9 @@ subsystem_poll(void *arg)
 }
 
 static void
-connect_event(struct spdk_event *event)
+connect_event(void *arg1, void *arg2)
 {
-	struct spdk_nvmf_request *req = spdk_event_get_arg1(event);
+	struct spdk_nvmf_request *req = arg1;
 
 	spdk_nvmf_handle_connect(req);
 }
@@ -164,9 +164,9 @@ connect_cb(void *cb_ctx, struct spdk_nvmf_request *req)
 }
 
 static void
-disconnect_event(struct spdk_event *event)
+disconnect_event(void *arg1, void *arg2)
 {
-	struct spdk_nvmf_conn *conn = spdk_event_get_arg1(event);
+	struct spdk_nvmf_conn *conn = arg1;
 
 	spdk_nvmf_session_disconnect(conn);
 }
@@ -183,9 +183,9 @@ disconnect_cb(void *cb_ctx, struct spdk_nvmf_conn *conn)
 }
 
 static void
-_nvmf_tgt_start_subsystem(struct spdk_event *event)
+_nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 {
-	struct nvmf_tgt_subsystem *app_subsys = spdk_event_get_arg1(event);
+	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 	struct spdk_bdev *bdev;
 	struct spdk_io_channel *ch;
@@ -326,7 +326,7 @@ acceptor_poll(void *arg)
 }
 
 static void
-spdk_nvmf_startup(spdk_event_t event)
+spdk_nvmf_startup(void *arg1, void *arg2)
 {
 	int rc;
 

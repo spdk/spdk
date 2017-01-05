@@ -200,7 +200,7 @@ spdk_event_queue_run_batch(uint32_t lcore)
 	for (i = 0; i < count; i++) {
 		struct spdk_event *event = events[i];
 
-		event->fn(event);
+		event->fn(event->arg1, event->arg2);
 	}
 
 	spdk_mempool_put_bulk(g_spdk_event_mempool[socket_id], events, count);
@@ -635,10 +635,10 @@ _spdk_poller_register(struct spdk_reactor *reactor, struct spdk_poller *poller)
 }
 
 static void
-_spdk_event_add_poller(spdk_event_t event)
+_spdk_event_add_poller(void *arg1, void *arg2)
 {
-	struct spdk_reactor *reactor = spdk_event_get_arg1(event);
-	struct spdk_poller *poller = spdk_event_get_arg2(event);
+	struct spdk_reactor *reactor = arg1;
+	struct spdk_poller *poller = arg2;
 
 	_spdk_poller_register(reactor, poller);
 }
@@ -719,11 +719,11 @@ _spdk_poller_unregister(struct spdk_reactor *reactor, struct spdk_poller *poller
 }
 
 static void
-_spdk_event_remove_poller(spdk_event_t event)
+_spdk_event_remove_poller(void *arg1, void *arg2)
 {
-	struct spdk_poller *poller = spdk_event_get_arg1(event);
+	struct spdk_poller *poller = arg1;
 	struct spdk_reactor *reactor = spdk_reactor_get(poller->lcore);
-	struct spdk_event *next = event->next;
+	struct spdk_event *next = arg2;
 
 	_spdk_poller_unregister(reactor, poller, next);
 }
@@ -759,7 +759,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 		 * The poller is registered on a different core.
 		 * Schedule an event to run on the poller's core that will remove the poller.
 		 */
-		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, NULL,
-						    complete));
+		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, complete,
+						    NULL));
 	}
 }

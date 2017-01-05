@@ -929,7 +929,7 @@ spdk_iscsi_app_read_parameters(void)
 }
 
 static void
-spdk_iscsi_setup(struct spdk_event *event)
+spdk_iscsi_setup(void *arg1, void *arg2)
 {
 	int rc;
 

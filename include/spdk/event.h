@@ -81,7 +81,7 @@
 #include "spdk/queue.h"
 
 typedef struct spdk_event *spdk_event_t;
-typedef void (*spdk_event_fn)(spdk_event_t);
+typedef void (*spdk_event_fn)(void *arg1, void *arg2);
 
 /**
  * \brief An event is a function that is passed to and called on an lcore.
@@ -213,9 +213,6 @@ spdk_event_t spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
  * \brief Pass the given event to the associated lcore and call the function.
  */
 void spdk_event_call(spdk_event_t event);
-
-#define spdk_event_get_arg1(event)	(event)->arg1
-#define spdk_event_get_arg2(event)	(event)->arg2
 
 /* TODO: This is only used by tests and should be made private */
 uint32_t spdk_event_queue_run_batch(uint32_t lcore);
