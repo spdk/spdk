@@ -62,6 +62,10 @@ spdk_sigusr1(int signo __attribute__((__unused__)))
 static void
 usage(char *executable_name)
 {
+	struct spdk_app_opts opts;
+
+	spdk_app_opts_init(&opts);
+
 	printf("%s [options]\n", executable_name);
 	printf("options:\n");
 	printf(" -c config  config file (default %s)\n", SPDK_ISCSI_DEFAULT_CONFIG);
@@ -69,7 +73,7 @@ usage(char *executable_name)
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -i instance ID\n");
 	printf(" -l facility use specific syslog facility (default %s)\n",
-	       SPDK_APP_DEFAULT_LOG_FACILITY);
+	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");

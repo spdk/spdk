@@ -296,6 +296,10 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 static void
 usage(void)
 {
+	struct spdk_app_opts opts;
+
+	spdk_app_opts_init(&opts);
+
 	printf("nvmf [options]\n");
 	printf("options:\n");
 	printf(" -c config  - config file (default %s)\n", SPDK_NVMF_DEFAULT_CONFIG);
@@ -303,7 +307,7 @@ usage(void)
 	printf(" -m mask    - core mask for DPDK\n");
 	printf(" -i instance ID\n");
 	printf(" -l facility - use specific syslog facility (default %s)\n",
-	       SPDK_APP_DEFAULT_LOG_FACILITY);
+	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");

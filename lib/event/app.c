@@ -53,6 +53,14 @@
 #include "spdk/conf.h"
 #include "spdk/trace.h"
 
+#define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
+#define SPDK_APP_DEFAULT_LOG_PRIORITY	"info"
+
+#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		2048
+#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	0
+#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	4
+#define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
+
 /* Add enough here to append ".pid" plus 2 digit instance ID */
 #define SPDK_APP_PIDFILE_MAX_LENGTH	40
 #define SPDK_APP_PIDFILE_PREFIX		"/var/run"
@@ -215,9 +223,10 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 
 	memset(opts, 0, sizeof(*opts));
 
+	opts->log_facility = SPDK_APP_DEFAULT_LOG_FACILITY;
 	opts->enable_coredump = true;
 	opts->instance_id = -1;
-	opts->dpdk_mem_size = -1;
+	opts->dpdk_mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
 	opts->dpdk_master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->dpdk_mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;

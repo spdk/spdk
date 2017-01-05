@@ -80,9 +80,6 @@
 
 #include "spdk/queue.h"
 
-#define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
-#define SPDK_APP_DEFAULT_LOG_PRIORITY	"info"
-
 typedef struct spdk_event *spdk_event_t;
 typedef void (*spdk_event_fn)(spdk_event_t);
 
@@ -106,11 +103,6 @@ struct spdk_poller;
 
 typedef void (*spdk_app_shutdown_cb)(void);
 typedef void (*spdk_sighandler_t)(int);
-
-#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		2048
-#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	0
-#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	4
-#define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 
 /**
  * \brief Event framework initialization options
