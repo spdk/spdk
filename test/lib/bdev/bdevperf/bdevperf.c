@@ -221,7 +221,7 @@ bdevperf_complete(void *arg1, void *arg2)
 		bdevperf_submit_single(target);
 	} else if (target->current_queue_depth == 0) {
 		spdk_put_io_channel(target->ch);
-		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, NULL, NULL, NULL);
+		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, NULL, NULL);
 		spdk_event_call(complete);
 	}
 }
@@ -502,7 +502,7 @@ bdevperf_run(void *arg1, void *arg2)
 			target = head[i];
 			if (target != NULL) {
 				event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
-							    target, NULL, NULL);
+							    target, NULL);
 				spdk_event_call(event);
 			}
 		}

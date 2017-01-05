@@ -140,8 +140,7 @@ spdk_reactor_get(uint32_t lcore)
 }
 
 struct spdk_event *
-spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
-		    struct spdk_event *next)
+spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 {
 	struct spdk_event *event = NULL;
 	unsigned socket_id = rte_lcore_to_socket_id(lcore);
@@ -158,7 +157,6 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 	event->fn = fn;
 	event->arg1 = arg1;
 	event->arg2 = arg2;
-	event->next = next;
 
 	return event;
 }
@@ -686,8 +684,7 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 		 * The poller is registered to run on a different core.
 		 * Schedule an event to run on the poller's core that will add the poller.
 		 */
-		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_add_poller, reactor, poller,
-						    NULL));
+		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_add_poller, reactor, poller));
 	}
 }
 
@@ -759,7 +756,6 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 		 * The poller is registered on a different core.
 		 * Schedule an event to run on the poller's core that will remove the poller.
 		 */
-		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, complete,
-						    NULL));
+		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, complete));
 	}
 }

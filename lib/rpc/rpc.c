@@ -262,7 +262,7 @@ spdk_rpc_finish(void)
 	}
 
 	complete = spdk_event_allocate(spdk_app_get_current_core(), spdk_rpc_finish_cleanup,
-				       NULL, NULL, NULL);
+				       NULL, NULL);
 	spdk_poller_unregister(&g_rpc_poller, complete);
 	return 0;
 }

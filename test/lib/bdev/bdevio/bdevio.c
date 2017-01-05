@@ -195,7 +195,7 @@ blockdev_write(struct io_target *target, char *tx_buf,
 
 	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 
-	event = spdk_event_allocate(1, __blockdev_write, &req, NULL, NULL);
+	event = spdk_event_allocate(1, __blockdev_write, &req, NULL);
 	pthread_mutex_lock(&g_test_mutex);
 	spdk_event_call(event);
 	pthread_cond_wait(&g_test_cond, &g_test_mutex);
@@ -242,7 +242,7 @@ blockdev_read(struct io_target *target, char *rx_buf,
 
 	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 
-	event = spdk_event_allocate(1, __blockdev_read, &req, NULL, NULL);
+	event = spdk_event_allocate(1, __blockdev_read, &req, NULL);
 	pthread_mutex_lock(&g_test_mutex);
 	spdk_event_call(event);
 	pthread_cond_wait(&g_test_cond, &g_test_mutex);
@@ -647,7 +647,7 @@ blockdev_reset(struct io_target *target, enum spdk_bdev_reset_type reset_type)
 
 	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 
-	event = spdk_event_allocate(1, __blockdev_reset, &req, &reset_type, NULL);
+	event = spdk_event_allocate(1, __blockdev_reset, &req, &reset_type);
 	pthread_mutex_lock(&g_test_mutex);
 	spdk_event_call(event);
 	pthread_cond_wait(&g_test_cond, &g_test_mutex);

@@ -449,7 +449,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
 		cb_event = spdk_event_allocate(rte_lcore_id(), bdev_io->cb,
-					       bdev_io->caller_ctx, bdev_io, NULL);
+					       bdev_io->caller_ctx, bdev_io);
 		assert(cb_event != NULL);
 	}
 

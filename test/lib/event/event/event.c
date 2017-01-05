@@ -65,7 +65,7 @@ submit_new_event(void *arg1, void *arg2)
 	}
 
 	++__call_count;
-	event = spdk_event_allocate(next_lcore, submit_new_event, NULL, NULL, NULL);
+	event = spdk_event_allocate(next_lcore, submit_new_event, NULL, NULL);
 	spdk_event_call(event);
 }
 

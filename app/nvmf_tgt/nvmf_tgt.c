@@ -100,7 +100,7 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 	 * the subsystem's memory.
 	 */
 	event = spdk_event_allocate(spdk_app_get_current_core(), subsystem_delete_event,
-				    app_subsys, NULL, NULL);
+				    app_subsys, NULL);
 	spdk_poller_unregister(&app_subsys->poller, event);
 }
 
@@ -132,7 +132,7 @@ spdk_nvmf_shutdown_cb(void)
 	fprintf(stdout, "=========================\n");
 
 	event = spdk_event_allocate(spdk_app_get_current_core(), acceptor_poller_unregistered_event,
-				    NULL, NULL, NULL);
+				    NULL, NULL);
 	spdk_poller_unregister(&g_acceptor_poller, event);
 }
 
@@ -159,7 +159,7 @@ connect_cb(void *cb_ctx, struct spdk_nvmf_request *req)
 	struct spdk_event *event;
 
 	/* Pass an event to the lcore that owns this subsystem */
-	event = spdk_event_allocate(app_subsys->lcore, connect_event, req, NULL, NULL);
+	event = spdk_event_allocate(app_subsys->lcore, connect_event, req, NULL);
 	spdk_event_call(event);
 }
 
@@ -178,7 +178,7 @@ disconnect_cb(void *cb_ctx, struct spdk_nvmf_conn *conn)
 	struct spdk_event *event;
 
 	/* Pass an event to the core that owns this connection */
-	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, conn, NULL, NULL);
+	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, conn, NULL);
 	spdk_event_call(event);
 }
 
@@ -211,7 +211,7 @@ nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 	struct spdk_event *event;
 
 	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
-				    app_subsys, NULL, NULL);
+				    app_subsys, NULL);
 	spdk_event_call(event);
 }
 

@@ -684,7 +684,7 @@ spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn, int *_lcore)
 		*_lcore = lcore;
 	}
 
-	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL, NULL);
+	event = spdk_event_allocate(lcore, spdk_iscsi_conn_full_feature_migrate, conn, NULL);
 
 	return event;
 }
@@ -710,7 +710,7 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 	}
 	__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
 	spdk_net_framework_clear_socket_association(conn->sock);
-	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL, NULL);
+	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL);
 	spdk_poller_unregister(&conn->poller, event);
 }
 

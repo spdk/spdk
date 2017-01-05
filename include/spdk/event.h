@@ -199,8 +199,7 @@ uint32_t spdk_app_get_current_core(void);
  * \brief Allocate an event to be passed to \ref spdk_event_call
  */
 struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
-				       void *arg1, void *arg2,
-				       struct spdk_event *next);
+				       void *arg1, void *arg2);
 
 /**
  * \brief Pass the given event to the associated lcore and call the function.

@@ -93,8 +93,7 @@ spdk_app_get_current_core(void)
 }
 
 struct spdk_event *
-spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2,
-		    struct spdk_event *next)
+spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
 {
 	return NULL;
 }

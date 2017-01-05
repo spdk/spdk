@@ -975,8 +975,7 @@ spdk_iscsi_subsystem_init(void)
 	/*
 	 * Defer creation of listening sockets until the reactor has started.
 	 */
-	spdk_event_call(spdk_event_allocate(spdk_app_get_current_core(), spdk_iscsi_setup, NULL, NULL,
-					    NULL));
+	spdk_event_call(spdk_event_allocate(spdk_app_get_current_core(), spdk_iscsi_setup, NULL, NULL));
 
 	return 0;
 }
