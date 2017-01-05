@@ -73,6 +73,18 @@ struct bdevio_request {
 struct io_target *g_io_targets = NULL;
 
 static void
+execute_spdk_function(spdk_event_fn fn, void *arg1, void *arg2)
+{
+	struct spdk_event *event;
+
+	event = spdk_event_allocate(1, fn, arg1, arg2);
+	pthread_mutex_lock(&g_test_mutex);
+	spdk_event_call(event);
+	pthread_cond_wait(&g_test_cond, &g_test_mutex);
+	pthread_mutex_unlock(&g_test_mutex);
+}
+
+static void
 wake_ut_thread(void)
 {
 	pthread_mutex_lock(&g_test_mutex);
@@ -185,7 +197,6 @@ blockdev_write(struct io_target *target, char *tx_buf,
 	       uint64_t offset, int data_len, int iov_len)
 {
 	struct bdevio_request req;
-	struct spdk_event *event;
 
 	req.target = target;
 	req.buf = tx_buf;
@@ -195,11 +206,7 @@ blockdev_write(struct io_target *target, char *tx_buf,
 
 	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 
-	event = spdk_event_allocate(1, __blockdev_write, &req, NULL);
-	pthread_mutex_lock(&g_test_mutex);
-	spdk_event_call(event);
-	pthread_cond_wait(&g_test_cond, &g_test_mutex);
-	pthread_mutex_unlock(&g_test_mutex);
+	execute_spdk_function(__blockdev_write, &req, NULL);
 }
 
 static void
@@ -231,7 +238,6 @@ blockdev_read(struct io_target *target, char *rx_buf,
 	      uint64_t offset, int data_len, int iov_len)
 {
 	struct bdevio_request req;
-	struct spdk_event *event;
 
 	req.target = target;
 	req.buf = rx_buf;
@@ -242,11 +248,7 @@ blockdev_read(struct io_target *target, char *rx_buf,
 
 	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 
-	event = spdk_event_allocate(1, __blockdev_read, &req, NULL);
-	pthread_mutex_lock(&g_test_mutex);
-	spdk_event_call(event);
-	pthread_cond_wait(&g_test_cond, &g_test_mutex);
-	pthread_mutex_unlock(&g_test_mutex);
+	execute_spdk_function(__blockdev_read, &req, NULL);
 }
 
 static int
@@ -641,17 +643,12 @@ static void
 blockdev_reset(struct io_target *target, enum spdk_bdev_reset_type reset_type)
 {
 	struct bdevio_request req;
-	struct spdk_event *event;
 
 	req.target = target;
 
 	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
 
-	event = spdk_event_allocate(1, __blockdev_reset, &req, &reset_type);
-	pthread_mutex_lock(&g_test_mutex);
-	spdk_event_call(event);
-	pthread_cond_wait(&g_test_cond, &g_test_mutex);
-	pthread_mutex_unlock(&g_test_mutex);
+	execute_spdk_function(__blockdev_reset, &req, &reset_type);
 }
 
 static void
