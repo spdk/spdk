@@ -77,14 +77,6 @@ nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
-int
-nvme_transport_ctrlr_attach(enum spdk_nvme_transport_type trtype,
-			    spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-			    struct spdk_pci_addr *addr)
-{
-	return 0;
-}
-
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {

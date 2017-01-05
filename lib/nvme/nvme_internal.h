@@ -567,7 +567,6 @@ void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 		void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_scan(const struct spdk_nvme_transport_id *trid, void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_remove_cb remove_cb); \
-	int nvme_ ## name ## _ctrlr_attach(enum spdk_nvme_transport_type trtype, spdk_nvme_probe_cb probe_cb, void *cb_ctx, struct spdk_pci_addr *addr); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \

@@ -1123,15 +1123,6 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	return 0;
 }
 
-int
-nvme_rdma_ctrlr_attach(enum spdk_nvme_transport_type trtype,
-		       spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-		       struct spdk_pci_addr *addr)
-{
-	/* Not implemented yet */
-	return -1;
-}
-
 struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)

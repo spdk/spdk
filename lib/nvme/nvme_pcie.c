@@ -183,6 +183,8 @@ struct nvme_pcie_qpair {
 	uint64_t cpl_bus_addr;
 };
 
+static int nvme_pcie_ctrlr_attach(spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+				  struct spdk_pci_addr *pci_addr);
 static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair);
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
@@ -245,7 +247,7 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 					      event.traddr);
 				if (spdk_process_is_primary()) {
 					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
-						nvme_transport_ctrlr_attach(SPDK_NVME_TRANSPORT_PCIE, probe_cb, cb_ctx, &pci_addr);
+						nvme_pcie_ctrlr_attach(probe_cb, cb_ctx, &pci_addr);
 					}
 				}
 			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
@@ -641,10 +643,8 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
 }
 
-int
-nvme_pcie_ctrlr_attach(enum spdk_nvme_transport_type trtype,
-		       spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-		       struct spdk_pci_addr *pci_addr)
+static int
+nvme_pcie_ctrlr_attach(spdk_nvme_probe_cb probe_cb, void *cb_ctx, struct spdk_pci_addr *pci_addr)
 {
 	struct nvme_pcie_enum_ctx enum_ctx;
 
