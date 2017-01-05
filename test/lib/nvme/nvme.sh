@@ -18,6 +18,7 @@ $valgrind $testdir/unit/nvme_c/nvme_ut
 $valgrind $testdir/unit/nvme_qpair_c/nvme_qpair_ut
 $valgrind $testdir/unit/nvme_ctrlr_c/nvme_ctrlr_ut
 $valgrind $testdir/unit/nvme_ctrlr_cmd_c/nvme_ctrlr_cmd_ut
+$valgrind $testdir/unit/nvme_pcie_c/nvme_pcie_ut
 timing_exit unit
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
