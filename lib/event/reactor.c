@@ -125,7 +125,7 @@ static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
 				   uint64_t max_delay_us);
 
-struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
+static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 
 /** \file
 
