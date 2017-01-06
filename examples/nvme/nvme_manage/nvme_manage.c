@@ -78,7 +78,7 @@ cmp_devs(const void *ap, const void *bp)
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	return true;
@@ -99,7 +99,7 @@ identify_common_ns_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
@@ -107,7 +107,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 
 	/* add to dev list */
 	dev = &devs[num_devs++];
-	dev->pci_addr = probe_info->pci_addr;
+	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
 	dev->ctrlr = ctrlr;
 
 	/* Retrieve controller data */
@@ -853,7 +853,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}

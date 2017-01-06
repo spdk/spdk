@@ -29,6 +29,9 @@
   # authenticated, so users should be careful about enabling
   # RPC in non-trusted environments.
   Enable No
+  # Listen address for the RPC service.
+  # May be an IP address or an absolute path to a Unix socket.
+  Listen 127.0.0.1
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
@@ -63,6 +66,11 @@
   # responsible for polling existing connections that have gone idle. 0 means continuously
   # poll. Units in microseconds.
   AcceptorPollRate 10000
+
+  # Registers the application to receive timeout callback and to reset the controller.
+  ResetControllerOnTimeout Yes
+  # Timeout value.
+  NvmeTimeoutValue 30
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.

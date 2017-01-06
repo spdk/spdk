@@ -63,7 +63,10 @@
   # Default is disabled.  Note that the RPC interface is not
   # authenticated, so users should be careful about enabling
   # RPC in non-trusted environments.
-  #Enable No
+  Enable No
+  # Listen address for the RPC service.
+  # May be an IP address or an absolute path to a Unix socket.
+  Listen 127.0.0.1
 
 # Users must change the PortalGroup section(s) to match the IP addresses
 #  for their environment.
@@ -106,6 +109,10 @@
   # The maximum number of NVMe controllers to claim. Do not include this key to
   # claim all of them.
   NumControllers 2
+  # Registers the application to receive timeout callback and to reset the controller.
+  ResetControllerOnTimeout Yes
+  # Timeout value.
+  NvmeTimeoutValue 30
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.

@@ -473,7 +473,6 @@ inquiry_overflow_test(void)
 static void
 task_complete_test(void)
 {
-	struct spdk_event event;
 	struct spdk_scsi_task task;
 	struct spdk_bdev_io bdev_io = {};
 	struct spdk_scsi_lun lun;
@@ -484,12 +483,9 @@ task_complete_test(void)
 	TAILQ_INSERT_TAIL(&lun.tasks, &task, scsi_link);
 	task.lun = &lun;
 
-	event.arg1 = &task;
-	event.arg2 = &bdev_io;
-
 	task.type = SPDK_SCSI_TASK_TYPE_CMD;
 	bdev_io.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	spdk_bdev_scsi_task_complete(&event);
+	spdk_bdev_scsi_task_complete(&task, &bdev_io);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_GOOD);
 
 	bdev_io.status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
@@ -497,14 +493,14 @@ task_complete_test(void)
 	bdev_io.error.scsi.sk = SPDK_SCSI_SENSE_HARDWARE_ERROR;
 	bdev_io.error.scsi.asc = SPDK_SCSI_ASC_WARNING;
 	bdev_io.error.scsi.ascq = SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED;
-	spdk_bdev_scsi_task_complete(&event);
+	spdk_bdev_scsi_task_complete(&task, &bdev_io);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_HARDWARE_ERROR);
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_WARNING);
 	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED);
 
 	bdev_io.status = SPDK_BDEV_IO_STATUS_FAILED;
-	spdk_bdev_scsi_task_complete(&event);
+	spdk_bdev_scsi_task_complete(&task, &bdev_io);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_ABORTED_COMMAND);
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);

@@ -41,7 +41,7 @@ C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIB_LIST = util log nvme
+SPDK_LIB_LIST = util log
 
 LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
 

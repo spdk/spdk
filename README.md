@@ -15,15 +15,15 @@ interrupts, which avoids kernel context switches and eliminates interrupt
 handling overhead.
 
 The development kit currently includes:
-* [NVMe driver](http://www.spdk.io/spdk/doc/nvme.html)
-* [I/OAT (DMA engine) driver](http://www.spdk.io/spdk/doc/ioat.html)
-* [NVMe over Fabrics target](http://www.spdk.io/spdk/doc/nvmf.html)
-* [iSCSI target](http://www.spdk.io/spdk/doc/iscsi.html)
+* [NVMe driver](http://www.spdk.io/doc/nvme.html)
+* [I/OAT (DMA engine) driver](http://www.spdk.io/doc/ioat.html)
+* [NVMe over Fabrics target](http://www.spdk.io/doc/nvmf.html)
+* [iSCSI target](http://www.spdk.io/doc/iscsi.html)
 
 Documentation
 =============
 
-[Doxygen API documentation](http://spdk.io/spdk/doc/) is available, as
+[Doxygen API documentation](http://www.spdk.io/doc/) is available, as
 well as a [Porting Guide](PORTING.md) for porting SPDK to different frameworks
 and operating systems.
 

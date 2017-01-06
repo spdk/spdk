@@ -356,11 +356,6 @@ spdk_scsi_lun_deletable(const char *name)
 		goto out;
 	}
 
-	if (lun->dev == NULL) {
-		ret = 0;
-		goto out;
-	}
-
 out:
 	pthread_mutex_unlock(&g_spdk_scsi.mutex);
 	return ret;
@@ -371,19 +366,10 @@ spdk_scsi_lun_delete(const char *lun_name)
 {
 	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_dev *dev;
-	struct spdk_lun_db_entry *current;
 
 	pthread_mutex_lock(&g_spdk_scsi.mutex);
-	current = spdk_scsi_lun_list_head;
-	while (current != NULL) {
-		lun = current->lun;
-		if (strncmp(lun->name, lun_name, sizeof(lun->name)) == 0) {
-			break;
-		}
-		current = current->next;
-	}
-
-	if (current == NULL) {
+	lun = spdk_lun_db_get_lun(lun_name, 0);
+	if (lun == NULL) {
 		pthread_mutex_unlock(&g_spdk_scsi.mutex);
 		return;
 	}
@@ -409,6 +395,7 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 {
 	if (lun->io_channel != NULL) {
 		if (pthread_self() == lun->thread_id) {
+			lun->ref++;
 			return 0;
 		}
 		SPDK_ERRLOG("io_channel already allocated for lun %s\n", lun->name);
@@ -420,13 +407,17 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 		return -1;
 	}
 	lun->thread_id = pthread_self();
+	lun->ref = 1;
 	return 0;
 }
 
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 {
 	if (lun->io_channel != NULL) {
-		spdk_put_io_channel(lun->io_channel);
-		lun->io_channel = NULL;
+		lun->ref--;
+		if (lun->ref == 0) {
+			spdk_put_io_channel(lun->io_channel);
+			lun->io_channel = NULL;
+		}
 	}
 }

@@ -34,8 +34,9 @@
 #include <stdlib.h>
 
 #include "spdk/log.h"
-#include "spdk/event.h"
 #include "spdk/net.h"
+
+#include "spdk_internal/event.h"
 
 #ifdef __linux__ /* Interface management is Linux-specific */
 

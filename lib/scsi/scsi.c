@@ -34,8 +34,9 @@
 
 #include "scsi_internal.h"
 
-#include "spdk/event.h"
 #include "spdk/conf.h"
+
+#include "spdk_internal/event.h"
 
 #define DEFAULT_MAX_UNMAP_LBA_COUNT			4194304
 #define DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT	1

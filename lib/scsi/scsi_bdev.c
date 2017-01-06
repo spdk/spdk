@@ -43,7 +43,7 @@
 #define SPDK_WORK_ATS_BLOCK_SIZE	(1ULL * 1024ULL * 1024ULL)
 #define MAX_SERIAL_STRING		32
 
-#define DEFAULT_DISK_VENDOR		"Intel"
+#define DEFAULT_DISK_VENDOR		"INTEL"
 #define DEFAULT_DISK_REVISION		"0001"
 #define DEFAULT_DISK_ROTATION_RATE	7200	/* 7200 rpm */
 #define DEFAULT_DISK_FORM_FACTOR	0x02	/* 3.5 inch */
@@ -1222,10 +1222,10 @@ spdk_bdev_scsi_mode_select_page(struct spdk_bdev *bdev,
 }
 
 static void
-spdk_bdev_scsi_task_complete(spdk_event_t event)
+spdk_bdev_scsi_task_complete(void *arg1, void *arg2)
 {
-	struct spdk_bdev_io		*bdev_io = spdk_event_get_arg2(event);
-	struct spdk_scsi_task		*task = spdk_event_get_arg1(event);
+	struct spdk_bdev_io		*bdev_io = arg2;
+	struct spdk_scsi_task		*task = arg1;
 	enum spdk_bdev_io_status	status = bdev_io->status;
 
 	if (task->type == SPDK_SCSI_TASK_TYPE_CMD) {

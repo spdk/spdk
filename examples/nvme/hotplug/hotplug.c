@@ -77,6 +77,10 @@ static uint64_t g_tsc_rate;
 static uint32_t g_io_size_bytes = 4096;
 static int g_queue_depth = 4;
 static int g_time_in_sec;
+static int g_expected_insert_times = -1;
+static int g_expected_removal_times = -1;
+static int g_insert_times;
+static int g_removal_times;
 
 static void
 task_complete(struct perf_task *task);
@@ -103,18 +107,18 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, 1);
 
 	if (!dev->ns || !spdk_nvme_ns_is_active(dev->ns)) {
-		printf("Controller %s: No active namespace; skipping\n", dev->name);
+		fprintf(stderr, "Controller %s: No active namespace; skipping\n", dev->name);
 		goto skip;
 	}
 
 	if (spdk_nvme_ns_get_size(dev->ns) < g_io_size_bytes ||
 	    spdk_nvme_ns_get_sector_size(dev->ns) > g_io_size_bytes) {
-		printf("Controller %s: Invalid "
-		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
-		       dev->name,
-		       spdk_nvme_ns_get_size(dev->ns),
-		       spdk_nvme_ns_get_sector_size(dev->ns),
-		       g_io_size_bytes);
+		fprintf(stderr, "Controller %s: Invalid "
+			"ns size %" PRIu64 " / block size %u for I/O size %u\n",
+			dev->name,
+			spdk_nvme_ns_get_size(dev->ns),
+			spdk_nvme_ns_get_sector_size(dev->ns),
+			g_io_size_bytes);
 		goto skip;
 	}
 
@@ -123,10 +127,10 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 
 	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
 	if (!dev->qpair) {
-		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
+		fprintf(stderr, "ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		goto skip;
 	}
-
+	g_insert_times++;
 	TAILQ_INSERT_TAIL(&g_devs, dev, tailq);
 	return;
 
@@ -137,7 +141,7 @@ skip:
 static void
 unregister_dev(struct dev_ctx *dev)
 {
-	printf("unregister_dev: %s\n", dev->name);
+	fprintf(stderr, "unregister_dev: %s\n", dev->name);
 
 	spdk_nvme_ctrlr_free_io_qpair(dev->qpair);
 	spdk_nvme_detach(dev->ctrlr);
@@ -247,38 +251,30 @@ print_stats(void)
 	struct dev_ctx *dev;
 
 	TAILQ_FOREACH(dev, &g_devs, tailq) {
-		printf("%-43.43s: %10" PRIu64 " I/Os completed (+%" PRIu64 ")\n",
-		       dev->name,
-		       dev->io_completed,
-		       dev->io_completed - dev->prev_io_completed);
+		fprintf(stderr, "%-43.43s: %10" PRIu64 " I/Os completed (+%" PRIu64 ")\n",
+			dev->name,
+			dev->io_completed,
+			dev->io_completed - dev->prev_io_completed);
 		dev->prev_io_completed = dev->io_completed;
 	}
 
-	printf("\n");
+	fprintf(stderr, "\n");
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	fprintf(stderr, "Attaching to %s\n", trid->traddr);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attached to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	fprintf(stderr, "Attached to %s\n", trid->traddr);
 
 	register_dev(ctrlr);
 }
@@ -297,7 +293,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 			 * is_removed is true and all outstanding I/O have been completed.
 			 */
 			dev->is_removed = true;
-			printf("Controller removed: %s\n", dev->name);
+			fprintf(stderr, "Controller removed: %s\n", dev->name);
 			return;
 		}
 	}
@@ -310,7 +306,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	spdk_nvme_detach(ctrlr);
 }
 
-static int
+static void
 io_loop(void)
 {
 	struct dev_ctx *dev, *dev_tmp;
@@ -341,7 +337,7 @@ io_loop(void)
 		/*
 		 * Check for hotplug events.
 		 */
-		if (spdk_nvme_probe(NULL, probe_cb, attach_cb, remove_cb) != 0) {
+		if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 			break;
 		}
@@ -355,6 +351,7 @@ io_loop(void)
 		 */
 		TAILQ_FOREACH_SAFE(dev, &g_devs, tailq, dev_tmp) {
 			if (dev->is_removed && dev->current_queue_depth == 0) {
+				g_removal_times++;
 				unregister_dev(dev);
 			}
 		}
@@ -373,14 +370,14 @@ io_loop(void)
 		drain_io(dev);
 		unregister_dev(dev);
 	}
-
-	return 0;
 }
 
 static void usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
+	printf("\t[-i expected hot insert times]\n");
+	printf("\t[-r expected hot removal times]\n");
 	printf("\t[-t time in seconds]\n");
 }
 
@@ -392,8 +389,14 @@ parse_args(int argc, char **argv)
 	/* default value*/
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "t:")) != -1) {
+	while ((op = getopt(argc, argv, "i:r:t:")) != -1) {
 		switch (op) {
+		case 'i':
+			g_expected_insert_times = atoi(optarg);
+			break;
+		case 'r':
+			g_expected_removal_times = atoi(optarg);
+			break;
 		case 't':
 			g_time_in_sec = atoi(optarg);
 			break;
@@ -416,13 +419,14 @@ parse_args(int argc, char **argv)
 static int
 register_controllers(void)
 {
-	printf("Initializing NVMe Controllers\n");
+	fprintf(stderr, "Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, remove_cb) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
-
+	/* Reset g_insert_times to 0 so that we do not count controllers attached at start as hotplug events. */
+	g_insert_times = 0;
 	return 0;
 }
 
@@ -459,8 +463,20 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	printf("Initialization complete. Starting I/O...\n");
-	rc = io_loop();
+	fprintf(stderr, "Initialization complete. Starting I/O...\n");
+	io_loop();
 
-	return rc;
+	if (g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) {
+		fprintf(stderr, "Expected inserts %d != actual inserts %d\n",
+			g_expected_insert_times, g_insert_times);
+		return 1;
+	}
+
+	if (g_expected_removal_times != -1 && g_removal_times != g_expected_removal_times) {
+		fprintf(stderr, "Expected removals %d != actual removals %d\n",
+			g_expected_removal_times, g_removal_times);
+		return 1;
+	}
+
+	return 0;
 }

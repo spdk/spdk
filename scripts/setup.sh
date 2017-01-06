@@ -163,7 +163,7 @@ function reset_freebsd {
 	kldunload nic_uio.ko || true
 }
 
-NRHUGE=1024
+: ${NRHUGE:=1024}
 
 username=$1
 mode=$2

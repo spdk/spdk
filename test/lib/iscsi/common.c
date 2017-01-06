@@ -92,8 +92,8 @@ spdk_app_get_current_core(void)
 	return 0;
 }
 
-spdk_event_t
-spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2, spdk_event_t next)
+struct spdk_event *
+spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
 {
 	return NULL;
 }
@@ -129,12 +129,12 @@ spdk_shutdown_iscsi_conns(void)
 }
 
 void
-process_task_completion(spdk_event_t event)
+process_task_completion(void *arg1, void *arg2)
 {
 }
 
 void
-process_task_mgmt_completion(spdk_event_t event)
+process_task_mgmt_completion(void *arg1, void *arg2)
 {
 }
 

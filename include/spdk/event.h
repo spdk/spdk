@@ -80,22 +80,12 @@
 
 #include "spdk/queue.h"
 
-#define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
-#define SPDK_APP_DEFAULT_LOG_PRIORITY	"info"
-
-typedef struct spdk_event *spdk_event_t;
-typedef void (*spdk_event_fn)(spdk_event_t);
+typedef void (*spdk_event_fn)(void *arg1, void *arg2);
 
 /**
  * \brief An event is a function that is passed to and called on an lcore.
  */
-struct spdk_event {
-	uint32_t		lcore;
-	spdk_event_fn		fn;
-	void			*arg1;
-	void			*arg2;
-	struct spdk_event	*next;
-};
+struct spdk_event;
 
 typedef void (*spdk_poller_fn)(void *arg);
 
@@ -106,11 +96,6 @@ struct spdk_poller;
 
 typedef void (*spdk_app_shutdown_cb)(void);
 typedef void (*spdk_sighandler_t)(int);
-
-#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		2048
-#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	0
-#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	4
-#define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 
 /**
  * \brief Event framework initialization options
@@ -213,18 +198,13 @@ uint32_t spdk_app_get_current_core(void);
 /**
  * \brief Allocate an event to be passed to \ref spdk_event_call
  */
-spdk_event_t spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
-				 void *arg1, void *arg2,
-				 spdk_event_t next);
+struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
+				       void *arg1, void *arg2);
 
 /**
  * \brief Pass the given event to the associated lcore and call the function.
  */
-void spdk_event_call(spdk_event_t event);
-
-#define spdk_event_get_next(event)	(event)->next
-#define spdk_event_get_arg1(event)	(event)->arg1
-#define spdk_event_get_arg2(event)	(event)->arg2
+void spdk_event_call(struct spdk_event *event);
 
 /* TODO: This is only used by tests and should be made private */
 uint32_t spdk_event_queue_run_batch(uint32_t lcore);
@@ -236,7 +216,6 @@ void spdk_poller_register(struct spdk_poller **ppoller,
 			  spdk_poller_fn fn,
 			  void *arg,
 			  uint32_t lcore,
-			  struct spdk_event *complete,
 			  uint64_t period_microseconds);
 
 /**
@@ -244,53 +223,5 @@ void spdk_poller_register(struct spdk_poller **ppoller,
  */
 void spdk_poller_unregister(struct spdk_poller **ppoller,
 			    struct spdk_event *complete);
-
-struct spdk_subsystem {
-	const char *name;
-	int (*init)(void);
-	int (*fini)(void);
-	void (*config)(FILE *fp);
-	TAILQ_ENTRY(spdk_subsystem) tailq;
-};
-
-struct spdk_subsystem_depend {
-	const char *name;
-	const char *depends_on;
-	struct spdk_subsystem *depends_on_subsystem;
-	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
-};
-
-void spdk_add_subsystem(struct spdk_subsystem *subsystem);
-void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
-
-/**
- * \brief Register a new subsystem
- */
-#define SPDK_SUBSYSTEM_REGISTER(_name, _init, _fini, _config)			\
-	struct spdk_subsystem __spdk_subsystem_ ## _name = {			\
-	.name = #_name,								\
-	.init = _init,								\
-	.fini = _fini,								\
-	.config = _config,							\
-	};									\
-	__attribute__((constructor)) static void _name ## _register(void)	\
-	{									\
-		spdk_add_subsystem(&__spdk_subsystem_ ## _name);		\
-	}
-
-/**
- * \brief Declare that a subsystem depends on another subsystem.
- */
-#define SPDK_SUBSYSTEM_DEPEND(_name, _depends_on)						\
-	extern struct spdk_subsystem __spdk_subsystem_ ## _depends_on;				\
-	static struct spdk_subsystem_depend __subsystem_ ## _name ## _depend_on ## _depends_on = { \
-	.name = #_name,										\
-	.depends_on = #_depends_on,								\
-	.depends_on_subsystem = &__spdk_subsystem_ ## _depends_on,				\
-	};											\
-	__attribute__((constructor)) static void _name ## _depend_on ## _depends_on(void)	\
-	{											\
-		spdk_add_subsystem_depend(&__subsystem_ ## _name ## _depend_on ## _depends_on); \
-	}
 
 #endif

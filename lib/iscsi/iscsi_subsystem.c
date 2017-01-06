@@ -47,9 +47,9 @@
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
 
-#include "spdk/event.h"
 #include "spdk/env.h"
 
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
 #define ISCSI_CONFIG_TMPL \
@@ -929,7 +929,7 @@ spdk_iscsi_app_read_parameters(void)
 }
 
 static void
-spdk_iscsi_setup(struct spdk_event *event)
+spdk_iscsi_setup(void *arg1, void *arg2)
 {
 	int rc;
 
@@ -975,8 +975,7 @@ spdk_iscsi_subsystem_init(void)
 	/*
 	 * Defer creation of listening sockets until the reactor has started.
 	 */
-	spdk_event_call(spdk_event_allocate(spdk_app_get_current_core(), spdk_iscsi_setup, NULL, NULL,
-					    NULL));
+	spdk_event_call(spdk_event_allocate(spdk_app_get_current_core(), spdk_iscsi_setup, NULL, NULL));
 
 	return 0;
 }

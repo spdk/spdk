@@ -195,6 +195,7 @@ enum iscsi_connection_state {
 	ISCSI_CONN_STATE_RUNNING = 1,
 	ISCSI_CONN_STATE_LOGGED_OUT = 2,
 	ISCSI_CONN_STATE_EXITING = 3,
+	ISCSI_CONN_STATE_EXITED = 4,
 };
 
 enum iscsi_chap_phase {
@@ -356,8 +357,8 @@ int spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 				int alloc_len, int data_len);
 int spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
 
-void process_task_completion(spdk_event_t event);
-void process_task_mgmt_completion(spdk_event_t event);
+void process_task_completion(void *arg1, void *arg2);
+void process_task_mgmt_completion(void *arg1, void *arg2);
 
 /* Memory management */
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);

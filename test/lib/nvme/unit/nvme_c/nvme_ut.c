@@ -40,9 +40,7 @@
 #include "lib/nvme/unit/test_env.c"
 
 int
-spdk_pci_enumerate(enum spdk_pci_device_type type,
-		   spdk_pci_enum_cb enum_cb,
-		   void *enum_ctx)
+spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
 	return -1;
 }
@@ -58,22 +56,31 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 }
 
 bool
-spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype)
+spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 {
 	return true;
 }
 
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(enum spdk_nvme_transport transport,
+struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
-		const struct spdk_nvme_probe_info *probe_info,
 		void *devhandle)
 {
 	return NULL;
 }
 
 int
-nvme_transport_ctrlr_scan(enum spdk_nvme_transport transport,
-			  spdk_nvme_probe_cb probe_cb, void *cb_ctx, void *devhandle, void *pci_address)
+nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
+			  void *cb_ctx,
+			  spdk_nvme_probe_cb probe_cb,
+			  spdk_nvme_remove_cb remove_cb)
+{
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_attach(enum spdk_nvme_transport_type trtype,
+			    spdk_nvme_probe_cb probe_cb, void *cb_ctx,
+			    struct spdk_pci_addr *addr)
 {
 	return 0;
 }
@@ -104,18 +111,6 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
-}
-
-int
-spdk_uevent_connect(void)
-{
-	return 0;
-}
-
-int
-spdk_get_uevent(int fd, struct spdk_uevent *uevent)
-{
-	return 0;
 }
 
 void

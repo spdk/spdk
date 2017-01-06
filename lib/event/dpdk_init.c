@@ -130,8 +130,6 @@ spdk_build_eal_cmdline(struct spdk_app_opts *opts)
 	}
 
 	/* set the memory size */
-	if (opts->dpdk_mem_size == -1)
-		opts->dpdk_mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
 	g_arg_strings[EAL_MEMSIZE_ARG] = spdk_sprintf_alloc("-m %d", opts->dpdk_mem_size);
 	if (g_arg_strings[EAL_MEMSIZE_ARG] == NULL) {
 		spdk_free_ealargs();

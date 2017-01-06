@@ -41,8 +41,9 @@
 #include <rte_memcpy.h>
 
 #include "spdk/log.h"
-#include "spdk/event.h"
 #include "spdk/io_channel.h"
+
+#include "spdk_internal/event.h"
 
 static size_t g_max_copy_module_size = 0;
 

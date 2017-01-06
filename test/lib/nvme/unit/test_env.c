@@ -145,3 +145,53 @@ uint64_t spdk_get_ticks_hz(void)
 {
 	return 1000000;
 }
+
+int
+spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
+{
+	unsigned domain, bus, dev, func;
+
+	if (addr == NULL || bdf == NULL) {
+		return -EINVAL;
+	}
+
+	if (sscanf(bdf, "%x:%x:%x.%x", &domain, &bus, &dev, &func) == 4) {
+		/* Matched a full address - all variables are initialized */
+	} else if (sscanf(bdf, "%x:%x:%x", &domain, &bus, &dev) == 3) {
+		func = 0;
+	} else if (sscanf(bdf, "%x:%x.%x", &bus, &dev, &func) == 3) {
+		domain = 0;
+	} else if (sscanf(bdf, "%x:%x", &bus, &dev) == 2) {
+		domain = 0;
+		func = 0;
+	} else {
+		return -EINVAL;
+	}
+
+	if (domain > 0xFFFF || bus > 0xFF || dev > 0x1F || func > 7) {
+		return -EINVAL;
+	}
+
+	addr->domain = domain;
+	addr->bus = bus;
+	addr->dev = dev;
+	addr->func = func;
+
+	return 0;
+}
+
+int
+spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
+{
+	int rc;
+
+	rc = snprintf(bdf, sz, "%04x:%02x:%02x.%x",
+		      addr->domain, addr->bus,
+		      addr->dev, addr->func);
+
+	if (rc > 0 && (size_t)rc < sz) {
+		return 0;
+	}
+
+	return -1;
+}

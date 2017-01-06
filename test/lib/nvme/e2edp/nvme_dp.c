@@ -606,20 +606,16 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attaching to %s\n", trid->traddr);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
@@ -629,11 +625,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 
 	dev->ctrlr = ctrlr;
 
-	snprintf(dev->name, sizeof(dev->name), "%04X:%02X:%02X.%02X",
-		 probe_info->pci_addr.domain,
-		 probe_info->pci_addr.bus,
-		 probe_info->pci_addr.dev,
-		 probe_info->pci_addr.func);
+	snprintf(dev->name, sizeof(dev->name), "%s",
+		 trid->traddr);
 
 	printf("Attached to %s\n", dev->name);
 }
@@ -660,7 +653,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "nvme_probe() failed\n");
 		exit(1);
 	}

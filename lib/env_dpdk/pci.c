@@ -31,112 +31,16 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <pthread.h>
-#include <stdbool.h>
-
-#include <rte_config.h>
-#include <rte_eal.h>
-#include <rte_pci.h>
-#include <rte_version.h>
-#include <rte_dev.h>
-
-#define spdk_pci_device rte_pci_device
-
-#ifdef __FreeBSD__
-#include <sys/pciio.h>
-#endif
+#include "env_internal.h"
 
 #include "spdk/env.h"
-#include "spdk/pci_ids.h"
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
 
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
 
-struct spdk_pci_enum_ctx {
-	struct rte_pci_driver	driver;
-	spdk_pci_enum_cb	cb_fn;
-	void 			*cb_arg;
-	pthread_mutex_t		mtx;
-};
-
-static struct rte_pci_id nvme_pci_driver_id[] = {
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
-	{
-		.class_id = SPDK_PCI_CLASS_NVME,
-		.vendor_id = PCI_ANY_ID,
-		.device_id = PCI_ANY_ID,
-		.subsystem_vendor_id = PCI_ANY_ID,
-		.subsystem_device_id = PCI_ANY_ID,
-	},
-#else
-	{RTE_PCI_DEVICE(0x8086, 0x0953)},
-#endif
-	{ .vendor_id = 0, /* sentinel */ },
-};
-
-#define SPDK_IOAT_PCI_DEVICE(DEVICE_ID) RTE_PCI_DEVICE(SPDK_PCI_VID_INTEL, DEVICE_ID)
-static struct rte_pci_id ioat_driver_id[] = {
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB0)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB1)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB2)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB3)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB4)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB5)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB6)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB7)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_SNB8)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB0)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB1)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB2)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB3)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB4)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB5)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB6)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB7)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB8)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_IVB9)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW0)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW2)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW3)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW4)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW5)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW6)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW7)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW8)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_HSW9)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD0)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD1)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD2)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BWD3)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE0)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE1)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE2)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDXDE3)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX0)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX1)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX2)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX3)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX4)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX5)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX6)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX7)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX8)},
-	{SPDK_IOAT_PCI_DEVICE(PCI_DEVICE_ID_INTEL_IOAT_BDX9)},
-	{ .vendor_id = 0, /* sentinel */ },
-};
-
-static int
+int
 spdk_pci_device_init(struct rte_pci_driver *driver,
 		     struct rte_pci_device *device)
 {
@@ -163,106 +67,10 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	return ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
 }
 
-static int
+int
 spdk_pci_device_fini(struct rte_pci_device *device)
 {
 	return 0;
-}
-
-static struct spdk_pci_enum_ctx g_nvme_pci_drv = {
-	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
-		.id_table	= nvme_pci_driver_id,
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
-		.probe		= spdk_pci_device_init,
-		.remove		= spdk_pci_device_fini,
-#else
-		.devinit	= spdk_pci_device_init,
-		.devuninit	= spdk_pci_device_fini,
-		.name		= "spdk_nvme",
-#endif
-	},
-
-	.cb_fn = NULL,
-	.cb_arg = NULL,
-	.mtx = PTHREAD_MUTEX_INITIALIZER,
-};
-
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
-RTE_PMD_REGISTER_PCI(spdk_nvme, g_nvme_pci_drv.driver);
-#else
-static int
-spdk_nvme_drv_register(const char *name __rte_unused, const char *params __rte_unused)
-{
-	rte_eal_pci_register(&g_nvme_pci_drv.driver);
-
-	return 0;
-}
-
-static struct rte_driver g_nvme_drv = {
-	.type = PMD_PDEV,
-	.init = spdk_nvme_drv_register,
-};
-
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 0)
-PMD_REGISTER_DRIVER(g_nvme_drv, spdk_nvme);
-#else
-PMD_REGISTER_DRIVER(g_nvme_drv);
-#endif
-#endif
-
-static struct spdk_pci_enum_ctx g_ioat_pci_drv = {
-	.driver = {
-		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
-		.id_table	= ioat_driver_id,
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
-		.probe		= spdk_pci_device_init,
-		.remove		= spdk_pci_device_fini,
-#else
-		.devinit	= spdk_pci_device_init,
-		.devuninit	= spdk_pci_device_fini,
-		.name		= "spdk_ioat",
-#endif
-	},
-
-	.cb_fn = NULL,
-	.cb_arg = NULL,
-	.mtx = PTHREAD_MUTEX_INITIALIZER,
-};
-
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
-RTE_PMD_REGISTER_PCI(spdk_ioat, g_ioat_pci_drv.driver);
-#else
-static int
-spdk_ioat_drv_register(const char *name __rte_unused, const char *params __rte_unused)
-{
-	rte_eal_pci_register(&g_ioat_pci_drv.driver);
-
-	return 0;
-}
-
-static struct rte_driver g_ioat_drv = {
-	.type = PMD_PDEV,
-	.init = spdk_ioat_drv_register,
-};
-
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 0)
-PMD_REGISTER_DRIVER(g_ioat_drv, spdk_ioat);
-#else
-PMD_REGISTER_DRIVER(g_ioat_drv);
-#endif
-#endif
-
-static struct spdk_pci_enum_ctx *
-spdk_pci_find_driver(enum spdk_pci_device_type type)
-{
-	if (type == SPDK_PCI_DEVICE_NVME) {
-		return &g_nvme_pci_drv;
-	} else if (type == SPDK_PCI_DEVICE_IOAT) {
-		return &g_ioat_pci_drv;
-	} else {
-		return NULL;
-	}
 }
 
 void
@@ -275,17 +83,11 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 }
 
 int
-spdk_pci_device_attach(enum spdk_pci_device_type type,
+spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 		       spdk_pci_enum_cb enum_cb,
 		       void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
 	struct rte_pci_addr		addr;
-	struct spdk_pci_enum_ctx	*ctx;
-
-	ctx = spdk_pci_find_driver(type);
-	if (ctx == NULL) {
-		return -1;
-	}
 
 	addr.domain = pci_address->domain;
 	addr.bus = pci_address->bus;
@@ -316,27 +118,14 @@ spdk_pci_device_attach(enum spdk_pci_device_type type,
  *       and rte_eal_pci_probe simultaneously.
 */
 int
-spdk_pci_enumerate(enum spdk_pci_device_type type,
+spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 		   spdk_pci_enum_cb enum_cb,
 		   void *enum_ctx)
 {
-	struct spdk_pci_enum_ctx *ctx = spdk_pci_find_driver(type);
-
-	if (ctx == NULL) {
-		return -1;
-	}
-
 	pthread_mutex_lock(&ctx->mtx);
 
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
-
-	if (rte_eal_pci_scan() != 0) {
-		ctx->cb_arg = NULL;
-		ctx->cb_fn = NULL;
-		pthread_mutex_unlock(&ctx->mtx);
-		return -1;
-	}
 
 	if (rte_eal_pci_probe() != 0) {
 		ctx->cb_arg = NULL;
@@ -350,6 +139,34 @@ spdk_pci_enumerate(enum spdk_pci_device_type type,
 	pthread_mutex_unlock(&ctx->mtx);
 
 	return 0;
+}
+
+struct spdk_pci_device *
+spdk_pci_get_device(struct spdk_pci_addr *pci_addr)
+{
+	struct rte_pci_device	*dev;
+	struct rte_pci_addr	addr;
+	int			rc;
+
+	addr.domain = pci_addr->domain;
+	addr.bus = pci_addr->bus;
+	addr.devid = pci_addr->dev;
+	addr.function = pci_addr->func;
+
+	TAILQ_FOREACH(dev, &pci_device_list, next) {
+		rc = rte_eal_compare_pci_addr(&dev->addr, &addr);
+		if (rc < 0) {
+			continue;
+		}
+
+		if (rc == 0) {
+			return (struct spdk_pci_device *)dev;
+		} else {
+			break;
+		}
+	}
+
+	return NULL;
 }
 
 int
@@ -639,4 +456,20 @@ spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
 	addr->func = func;
 
 	return 0;
+}
+
+int
+spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
+{
+	int rc;
+
+	rc = snprintf(bdf, sz, PCI_PRI_FMT,
+		      addr->domain, addr->bus,
+		      addr->dev, addr->func);
+
+	if (rc > 0 && (size_t)rc < sz) {
+		return 0;
+	}
+
+	return -1;
 }

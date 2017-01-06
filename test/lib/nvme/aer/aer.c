@@ -146,7 +146,7 @@ static int
 get_health_log_page(struct dev *dev)
 {
 	return spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-						SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page),
+						SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
 						get_log_page_completion, dev);
 }
 
@@ -185,20 +185,16 @@ static void aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attaching to %s\n", trid->traddr);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
@@ -208,11 +204,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 
 	dev->ctrlr = ctrlr;
 
-	snprintf(dev->name, sizeof(dev->name), "%04x:%02x:%02x.%02x",
-		 probe_info->pci_addr.domain,
-		 probe_info->pci_addr.bus,
-		 probe_info->pci_addr.dev,
-		 probe_info->pci_addr.func);
+	snprintf(dev->name, sizeof(dev->name), "%s",
+		 trid->traddr);
 
 	printf("Attached to %s\n", dev->name);
 
@@ -244,7 +237,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}

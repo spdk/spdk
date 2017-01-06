@@ -161,7 +161,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 }
 
-void spdk_event_call(spdk_event_t event)
+void spdk_event_call(struct spdk_event *event)
 {
 }
 
@@ -637,6 +637,21 @@ lun_construct_success(void)
 	CU_ASSERT_EQUAL(g_task_count, 0);
 }
 
+static void
+lun_deletable(void)
+{
+	struct spdk_scsi_lun *lun;
+	int rc;
+
+	lun = lun_construct();
+	rc = spdk_scsi_lun_deletable(lun->name);
+	CU_ASSERT_EQUAL(rc, 0);
+	lun_destruct(lun);
+
+	rc = spdk_scsi_lun_deletable("test");
+	CU_ASSERT_EQUAL(rc, -1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -686,6 +701,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "destruct task - success", lun_destruct_success) == NULL
 		|| CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx) == NULL
 		|| CU_add_test(suite, "construct - success", lun_construct_success) == NULL
+		|| CU_add_test(suite, "deletable", lun_deletable) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

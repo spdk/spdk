@@ -55,8 +55,9 @@ static __thread uint64_t __call_count = 0;
 static uint64_t call_count[RTE_MAX_LCORE];
 
 static void
-submit_new_event(spdk_event_t event)
+submit_new_event(void *arg1, void *arg2)
 {
+	struct spdk_event *event;
 	static __thread uint32_t next_lcore = RTE_MAX_LCORE;
 
 	if (next_lcore == RTE_MAX_LCORE) {
@@ -64,7 +65,7 @@ submit_new_event(spdk_event_t event)
 	}
 
 	++__call_count;
-	event = spdk_event_allocate(next_lcore, submit_new_event, NULL, NULL, NULL);
+	event = spdk_event_allocate(next_lcore, submit_new_event, NULL, NULL);
 	spdk_event_call(event);
 }
 
@@ -75,10 +76,10 @@ event_work_fn(void *arg)
 
 	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
 
-	submit_new_event(NULL);
-	submit_new_event(NULL);
-	submit_new_event(NULL);
-	submit_new_event(NULL);
+	submit_new_event(NULL, NULL);
+	submit_new_event(NULL, NULL);
+	submit_new_event(NULL, NULL);
+	submit_new_event(NULL, NULL);
 
 	while (1) {
 

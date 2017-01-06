@@ -61,9 +61,7 @@ void spdk_delay_us(unsigned int us)
 }
 
 int
-spdk_pci_enumerate(enum spdk_pci_device_type type,
-		   spdk_pci_enum_cb enum_cb,
-		   void *enum_ctx)
+spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
 	return -1;
 }

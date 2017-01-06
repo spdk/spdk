@@ -31,22 +31,43 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \page nvme_initialization NVMe Initialization
+#ifndef SPDK_ENV_INTERNAL_H
+#define SPDK_ENV_INTERNAL_H
 
-\msc
+#define spdk_pci_device rte_pci_device
 
-	app [label="Application"], nvme [label="NVMe Driver"];
-	app=>nvme [label="nvme_probe()"];
-	app<<nvme [label="probe_cb(pci_dev)"];
-	nvme=>nvme [label="nvme_attach(devhandle)"];
-	nvme=>nvme [label="nvme_ctrlr_start(nvme_controller ptr)"];
-	nvme=>nvme [label="identify controller"];
-	nvme=>nvme [label="create queue pairs"];
-	nvme=>nvme [label="identify namespace(s)"];
-	app<<nvme [label="attach_cb(pci_dev, nvme_controller)"];
-	app=>app [label="create block devices based on controller's namespaces"];
+#include "spdk/env.h"
 
-\endmsc
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <stdbool.h>
 
-*/
+#include <rte_config.h>
+#include <rte_eal.h>
+#include <rte_pci.h>
+#include <rte_version.h>
+#include <rte_dev.h>
+
+struct spdk_pci_enum_ctx {
+	struct rte_pci_driver	driver;
+	spdk_pci_enum_cb	cb_fn;
+	void 			*cb_arg;
+	pthread_mutex_t		mtx;
+};
+
+int spdk_pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
+int spdk_pci_device_fini(struct rte_pci_device *device);
+
+int spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, void *enum_ctx);
+int spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, void *enum_ctx,
+			   struct spdk_pci_addr *pci_address);
+
+#endif

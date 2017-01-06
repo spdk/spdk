@@ -41,7 +41,10 @@ CONFIG_WERROR?=n
 CONFIG_COVERAGE?=n
 
 # Build with Address Sanitizer enabled
-CONFIG_ADDRESS_SANITIZER?=n
+CONFIG_ASAN?=n
+
+# Build with Undefined Behavior Sanitizer enabled
+CONFIG_UBSAN?=n
 
 # Directory that contains the desired SPDK environment library.
 # By default, this is implemented using DPDK.

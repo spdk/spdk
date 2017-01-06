@@ -742,7 +742,7 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 	while (ctrlr) {
 		if (spdk_nvme_ctrlr_is_log_page_supported(ctrlr->ctrlr, log_page)) {
 			if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr->ctrlr, log_page, SPDK_NVME_GLOBAL_NS_TAG,
-							     ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page),
+							     ctrlr->latency_page, sizeof(struct spdk_nvme_intel_rw_latency_page), 0,
 							     enable_latency_tracking_complete,
 							     NULL)) {
 				printf("nvme_ctrlr_cmd_get_log_page() failed\n");
@@ -973,34 +973,64 @@ unregister_workers(void)
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (probe_info->subnqn[0]) {
+	struct spdk_pci_addr	pci_addr;
+	struct spdk_pci_device	*pci_dev;
+	struct spdk_pci_id	pci_id;
+
+	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attaching to NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+		       trid->traddr, trid->trsvcid,
+		       trid->subnqn);
 	} else {
-		printf("Attaching to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
-		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
-		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
-		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
+			return false;
+		}
+
+		pci_dev = spdk_pci_get_device(&pci_addr);
+		if (!pci_dev) {
+			return false;
+		}
+
+		pci_id = spdk_pci_device_get_id(pci_dev);
+
+		printf("Attaching to NVMe Controller at %s [%04x:%04x]\n",
+		       trid->traddr,
+		       pci_id.vendor_id, pci_id.device_id);
 	}
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	if (probe_info->subnqn[0]) {
+	struct spdk_pci_addr	pci_addr;
+	struct spdk_pci_device	*pci_dev;
+	struct spdk_pci_id	pci_id;
+
+	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+		       trid->traddr, trid->trsvcid,
+		       trid->subnqn);
 	} else {
-		printf("Attached to NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
-		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
-		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
-		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
+			return;
+		}
+
+		pci_dev = spdk_pci_get_device(&pci_addr);
+		if (!pci_dev) {
+			return;
+		}
+
+		pci_id = spdk_pci_device_get_id(pci_dev);
+
+		printf("Attached to NVMe Controller at %s [%04x:%04x]\n",
+		       trid->traddr,
+		       pci_id.vendor_id, pci_id.device_id);
 	}
 
 	register_ctrlr(ctrlr);
@@ -1009,19 +1039,19 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 static int
 register_controllers(void)
 {
-	struct spdk_nvme_discover_info info;
+	struct spdk_nvme_transport_id trid;
 	char *p, *p1;
 	int n;
 
 	printf("Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 	}
 
 	/* The format of g_nvmf_discover_info should be: TRTYPE:TRADDR:TRVCSID */
 	if (g_nvmf_discover_info) {
-		info.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
 		p = (char *)g_nvmf_discover_info;
 		p1 = strchr(p, ':');
@@ -1041,7 +1071,8 @@ register_controllers(void)
 			fprintf(stderr, "wrong transport type \n");
 			return 0;
 		}
-		info.trtype = SPDK_NVMF_TRTYPE_RDMA;
+		trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+		trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 
 		p = (char *)p1 + 1;
 		p1 = strchr(p, ':');
@@ -1056,12 +1087,12 @@ register_controllers(void)
 			return 0;
 		}
 		p[n] = '\0';
-		info.traddr = p;
+		snprintf(trid.traddr, sizeof(trid.traddr), "%s", p);
 
 		p = (char *)p1 + 1;
-		info.trsvcid = p;
-		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
-			fprintf(stderr, "spdk_nvme_discover() failed\n");
+		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", p);
+		if (spdk_nvme_probe(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
+			fprintf(stderr, "spdk_nvme_probe() failed\n");
 		}
 	}
 

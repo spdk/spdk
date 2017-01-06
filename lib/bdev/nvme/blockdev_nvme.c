@@ -50,9 +50,8 @@
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
 
+#include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
-
-#include "bdev_module.h"
 
 static void blockdev_nvme_get_spdk_running_config(FILE *fp);
 
@@ -114,6 +113,8 @@ static int nvme_luns_per_ns = 1;
 static int nvme_controller_index = 0;
 static int lun_size_in_mb = 0;
 static int num_controllers = -1;
+static int g_reset_controller_on_timeout = 0;
+static int g_timeout = 0;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
@@ -134,7 +135,8 @@ nvme_get_ctx_size(void)
 	return sizeof(struct nvme_blockio);
 }
 
-SPDK_BDEV_MODULE_REGISTER(nvme_library_init, NULL, blockdev_nvme_get_spdk_running_config,
+SPDK_BDEV_MODULE_REGISTER(nvme_library_init, nvme_library_fini,
+			  blockdev_nvme_get_spdk_running_config,
 			  nvme_get_ctx_size)
 
 static int64_t
@@ -335,7 +337,7 @@ blockdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void 
 	}
 
 	spdk_poller_register(&ch->poller, blockdev_nvme_poll, ch->qpair,
-			     spdk_app_get_current_core(), NULL, 0);
+			     spdk_app_get_current_core(), 0);
 	return 0;
 }
 
@@ -364,10 +366,12 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	const struct spdk_nvme_ctrlr_data *cdata;
 	struct spdk_nvme_ns *ns;
 	union spdk_nvme_vs_register vs;
+	union spdk_nvme_csts_register csts;
 	char buf[128];
 
 	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev->ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(nvme_bdev->ctrlr);
+	csts = spdk_nvme_ctrlr_get_regs_csts(nvme_bdev->ctrlr);
 	ns = nvme_bdev->ns;
 
 	spdk_json_write_name(w, "nvme");
@@ -378,8 +382,11 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 				   nvme_dev->pci_addr.bus, nvme_dev->pci_addr.dev,
 				   nvme_dev->pci_addr.func);
 
+	spdk_json_write_name(w, "ctrlr_data");
+	spdk_json_write_object_begin(w);
+
 	spdk_json_write_name(w, "vendor_id");
-	spdk_json_write_string_fmt(w, "%#04x", cdata->vid);
+	spdk_json_write_string_fmt(w, "0x%04x", cdata->vid);
 
 	snprintf(buf, sizeof(cdata->mn) + 1, "%s", cdata->mn);
 	spdk_str_trim(buf);
@@ -396,22 +403,61 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "firmware_revision");
 	spdk_json_write_string(w, buf);
 
-	snprintf(buf, sizeof(buf), "%u.%u", vs.bits.mjr, vs.bits.mnr);
-	if (vs.bits.ter) {
-		snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-			 ".%u", vs.bits.ter);
-	}
-	spdk_json_write_name(w, "nvme_version");
-	spdk_json_write_string(w, buf);
+	spdk_json_write_name(w, "oacs");
+	spdk_json_write_object_begin(w);
 
-	spdk_json_write_name(w, "nsid");
+	spdk_json_write_name(w, "security");
+	spdk_json_write_uint32(w, cdata->oacs.security);
+
+	spdk_json_write_name(w, "format");
+	spdk_json_write_uint32(w, cdata->oacs.format);
+
+	spdk_json_write_name(w, "firmware");
+	spdk_json_write_uint32(w, cdata->oacs.firmware);
+
+	spdk_json_write_name(w, "ns_manage");
+	spdk_json_write_uint32(w, cdata->oacs.ns_manage);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "vs");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "nvme_version");
+	if (vs.bits.ter) {
+		spdk_json_write_string_fmt(w, "%u.%u.%u", vs.bits.mjr, vs.bits.mnr, vs.bits.ter);
+	} else {
+		spdk_json_write_string_fmt(w, "%u.%u", vs.bits.mjr, vs.bits.mnr);
+	}
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "csts");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "rdy");
+	spdk_json_write_uint32(w, csts.bits.rdy);
+
+	spdk_json_write_name(w, "cfs");
+	spdk_json_write_uint32(w, csts.bits.cfs);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "ns_data");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "id");
 	spdk_json_write_uint32(w, spdk_nvme_ns_get_id(ns));
 
-	spdk_json_write_name(w, "ns_block_size");
+	spdk_json_write_name(w, "block_size");
 	spdk_json_write_uint32(w, spdk_nvme_ns_get_sector_size(ns));
 
-	spdk_json_write_name(w, "ns_total_size");
+	spdk_json_write_name(w, "total_size");
 	spdk_json_write_uint64(w, spdk_nvme_ns_get_size(ns));
+
+	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
 
@@ -427,18 +473,20 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 };
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	int i;
 	bool claim_device = false;
+	struct spdk_pci_addr pci_addr;
 
-	SPDK_NOTICELOG("Probing device %x:%x:%x.%x\n",
-		       probe_info->pci_addr.domain,
-		       probe_info->pci_addr.bus,
-		       probe_info->pci_addr.dev,
-		       probe_info->pci_addr.func);
+	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
+		return false;
+	}
+
+	SPDK_NOTICELOG("Probing device %s\n",
+		       trid->traddr);
 
 	if (ctx->controllers_remaining == 0) {
 		return false;
@@ -448,7 +496,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 		claim_device = true;
 	} else {
 		for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
-			if (spdk_pci_addr_compare(&probe_info->pci_addr, &ctx->whitelist[i]) == 0) {
+			if (spdk_pci_addr_compare(&pci_addr, &ctx->whitelist[i]) == 0) {
 				claim_device = true;
 				break;
 			}
@@ -460,7 +508,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	}
 
 	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(&probe_info->pci_addr) != 0) {
+	if (spdk_pci_device_claim(&pci_addr) != 0) {
 		return false;
 	}
 
@@ -468,7 +516,21 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
+			 struct spdk_nvme_qpair *qpair, void *cb_arg)
+{
+	int rc;
+
+	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
+
+	rc = spdk_nvme_ctrlr_reset(ctrlr);
+	if (rc) {
+		SPDK_ERRLOG("resetting controller failed\n");
+	}
+}
+
+static void
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
@@ -482,7 +544,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	}
 
 	dev->ctrlr = ctrlr;
-	dev->pci_addr = probe_info->pci_addr;
+	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
 	dev->id = nvme_controller_index++;
 
 	nvme_ctrlr_initialize_blockdevs(dev, nvme_luns_per_ns, dev->id);
@@ -495,6 +557,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 			     spdk_app_get_current_core(), NULL, 0);
 	if (ctx->controllers_remaining > 0) {
 		ctx->controllers_remaining--;
+	}
+
+	if (g_reset_controller_on_timeout) {
+		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
+				blockdev_nvme_timeout_cb, NULL);
 	}
 }
 
@@ -525,7 +592,7 @@ spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx)
 
 	prev_index_max = blockdev_index_max;
 
-	if (spdk_nvme_probe(ctx, probe_cb, attach_cb, NULL)) {
+	if (spdk_nvme_probe(NULL, ctx, probe_cb, attach_cb, NULL)) {
 		return -1;
 	}
 
@@ -605,10 +672,21 @@ nvme_library_init(void)
 
 	probe_ctx.controllers_remaining = num_controllers;
 
+	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
+	if (val != NULL) {
+		if (!strcmp(val, "Yes")) {
+			g_reset_controller_on_timeout = 1;
+		}
+	}
+
+	if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
+		g_timeout = 0;
+	}
+
 	return spdk_bdev_nvme_create(&probe_ctx);
 }
 
-__attribute__((destructor)) void
+static void
 nvme_library_fini(void)
 {
 	struct nvme_device *dev;
@@ -738,10 +816,6 @@ queued_reset_sgl(void *ref, uint32_t sgl_offset)
 	}
 }
 
-#define min(a, b) (((a)<(b))?(a):(b))
-
-#define _2MB_OFFSET(ptr)	(((uintptr_t)ptr) &  (0x200000 - 1))
-
 static int
 queued_next_sge(void *ref, void **address, uint32_t *length)
 {
@@ -760,8 +834,6 @@ queued_next_sge(void *ref, void **address, uint32_t *length)
 		*address += bio->iov_offset;
 		*length -= bio->iov_offset;
 	}
-
-	*length = min(*length, 0x200000 - _2MB_OFFSET(*address));
 
 	bio->iov_offset += *length;
 	if (bio->iov_offset == iov->iov_len) {

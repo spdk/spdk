@@ -2809,7 +2809,7 @@ static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task)
 {
 	task->scsi.cb_event = spdk_event_allocate(spdk_app_get_current_core(), process_task_completion,
-			      conn, task, NULL);
+			      conn, task);
 	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
 			  (uintptr_t)task, (uintptr_t)task->pdu);
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
@@ -2819,7 +2819,7 @@ static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
 				       struct spdk_iscsi_task *task)
 {
 	task->scsi.cb_event = spdk_event_allocate(spdk_app_get_current_core(), process_task_mgmt_completion,
-			      conn, task, NULL);
+			      conn, task);
 	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi);
 }
 
@@ -3992,10 +3992,7 @@ spdk_remove_acked_pdu(struct spdk_iscsi_conn *conn,
 		stat_sn = from_be32(&pdu->bhs.stat_sn);
 		if (SN32_LT(stat_sn, conn->exp_statsn)) {
 			TAILQ_REMOVE(&conn->snack_pdu_list, pdu, tailq);
-			if (pdu->task) {
-				spdk_iscsi_task_put(pdu->task);
-			}
-			spdk_put_pdu(pdu);
+			spdk_iscsi_conn_free_pdu(conn, pdu);
 		}
 	}
 }

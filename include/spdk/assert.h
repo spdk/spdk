@@ -43,18 +43,19 @@ extern "C" {
 #endif
 
 #include <assert.h>
-#include <stdlib.h>
 
 #ifdef static_assert
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
 #else
+/**
+ * Compatibility wrapper for static_assert.
+ *
+ * This won't actually enforce the condition when compiled with an environment that doesn't support
+ * C11 static_assert; it is only intended to allow end users with old compilers to build the package.
+ *
+ * Developers should use a recent compiler that provides static_assert.
+ */
 #define SPDK_STATIC_ASSERT(cond, msg)
-#endif
-
-#if !defined(DEBUG) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
-#define SPDK_UNREACHABLE() __builtin_unreachable()
-#else
-#define SPDK_UNREACHABLE() abort()
 #endif
 
 #ifdef __cplusplus

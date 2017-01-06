@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/event.h"
+#include "spdk_internal/event.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -53,8 +53,13 @@
 #include "spdk/conf.h"
 #include "spdk/trace.h"
 
-#include "reactor.h"
-#include "subsystem.h"
+#define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
+#define SPDK_APP_DEFAULT_LOG_PRIORITY	"info"
+
+#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		2048
+#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	0
+#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	4
+#define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 
 /* Add enough here to append ".pid" plus 2 digit instance ID */
 #define SPDK_APP_PIDFILE_MAX_LENGTH	40
@@ -69,7 +74,7 @@ struct spdk_app {
 };
 
 static struct spdk_app g_spdk_app;
-static spdk_event_t g_shutdown_event = NULL;
+static struct spdk_event *g_shutdown_event = NULL;
 
 static int spdk_app_write_pidfile(void);
 static void spdk_app_remove_pidfile(void);
@@ -205,7 +210,7 @@ __shutdown_signal(int signo)
 }
 
 static void
-__shutdown_event_cb(spdk_event_t event)
+__shutdown_event_cb(void *arg1, void *arg2)
 {
 	g_spdk_app.shutdown_cb();
 }
@@ -218,9 +223,10 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 
 	memset(opts, 0, sizeof(*opts));
 
+	opts->log_facility = SPDK_APP_DEFAULT_LOG_FACILITY;
 	opts->enable_coredump = true;
 	opts->instance_id = -1;
-	opts->dpdk_mem_size = -1;
+	opts->dpdk_mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
 	opts->dpdk_master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->dpdk_mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;
@@ -343,7 +349,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 
 	if (opts->shutdown_cb != NULL) {
 		g_shutdown_event = spdk_event_allocate(rte_lcore_id(), __shutdown_event_cb,
-						       NULL, NULL, NULL);
+						       NULL, NULL);
 
 		sigact.sa_handler = __shutdown_signal;
 		sigemptyset(&sigact.sa_mask);
@@ -423,12 +429,12 @@ spdk_app_fini(void)
 int
 spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 {
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	g_spdk_app.rc = 0;
 
 	event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
-				    arg1, arg2, NULL);
+				    arg1, arg2);
 	/* Queues up the event, but can't run it until the reactors start */
 	spdk_event_call(event);
 

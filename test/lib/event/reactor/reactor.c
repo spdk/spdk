@@ -74,19 +74,19 @@ nop(void *arg)
 }
 
 static void
-test_start(spdk_event_t evt)
+test_start(void *arg1, void *arg2)
 {
 	printf("test_start\n");
 
 	/* Register a poller that will stop the test after the time has elapsed. */
-	spdk_poller_register(&test_end_poller, test_end, NULL, 0, NULL, g_time_in_sec * 1000000ULL);
+	spdk_poller_register(&test_end_poller, test_end, NULL, 0, g_time_in_sec * 1000000ULL);
 
-	spdk_poller_register(&poller_100ms, tick, (void *)100, 0, NULL, 100000);
-	spdk_poller_register(&poller_250ms, tick, (void *)250, 0, NULL, 250000);
-	spdk_poller_register(&poller_500ms, tick, (void *)500, 0, NULL, 500000);
-	spdk_poller_register(&poller_oneshot, oneshot, NULL, 0, NULL, 0);
+	spdk_poller_register(&poller_100ms, tick, (void *)100, 0, 100000);
+	spdk_poller_register(&poller_250ms, tick, (void *)250, 0, 250000);
+	spdk_poller_register(&poller_500ms, tick, (void *)500, 0, 500000);
+	spdk_poller_register(&poller_oneshot, oneshot, NULL, 0, 0);
 
-	spdk_poller_register(&poller_unregister, nop, NULL, 0, NULL, 0);
+	spdk_poller_register(&poller_unregister, nop, NULL, 0, 0);
 	spdk_poller_unregister(&poller_unregister, NULL);
 }
 

@@ -64,9 +64,9 @@ shutdown_complete(void)
 }
 
 static void
-subsystem_delete_event(struct spdk_event *event)
+subsystem_delete_event(void *arg1, void *arg2)
 {
-	struct nvmf_tgt_subsystem *app_subsys = spdk_event_get_arg1(event);
+	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 
 	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
@@ -100,7 +100,7 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 	 * the subsystem's memory.
 	 */
 	event = spdk_event_allocate(spdk_app_get_current_core(), subsystem_delete_event,
-				    app_subsys, NULL, NULL);
+				    app_subsys, NULL);
 	spdk_poller_unregister(&app_subsys->poller, event);
 }
 
@@ -116,7 +116,7 @@ shutdown_subsystems(void)
 }
 
 static void
-acceptor_poller_unregistered_event(struct spdk_event *event)
+acceptor_poller_unregistered_event(void *arg1, void *arg2)
 {
 	spdk_nvmf_tgt_fini();
 	shutdown_subsystems();
@@ -132,7 +132,7 @@ spdk_nvmf_shutdown_cb(void)
 	fprintf(stdout, "=========================\n");
 
 	event = spdk_event_allocate(spdk_app_get_current_core(), acceptor_poller_unregistered_event,
-				    NULL, NULL, NULL);
+				    NULL, NULL);
 	spdk_poller_unregister(&g_acceptor_poller, event);
 }
 
@@ -145,9 +145,9 @@ subsystem_poll(void *arg)
 }
 
 static void
-connect_event(struct spdk_event *event)
+connect_event(void *arg1, void *arg2)
 {
-	struct spdk_nvmf_request *req = spdk_event_get_arg1(event);
+	struct spdk_nvmf_request *req = arg1;
 
 	spdk_nvmf_handle_connect(req);
 }
@@ -159,14 +159,14 @@ connect_cb(void *cb_ctx, struct spdk_nvmf_request *req)
 	struct spdk_event *event;
 
 	/* Pass an event to the lcore that owns this subsystem */
-	event = spdk_event_allocate(app_subsys->lcore, connect_event, req, NULL, NULL);
+	event = spdk_event_allocate(app_subsys->lcore, connect_event, req, NULL);
 	spdk_event_call(event);
 }
 
 static void
-disconnect_event(struct spdk_event *event)
+disconnect_event(void *arg1, void *arg2)
 {
-	struct spdk_nvmf_conn *conn = spdk_event_get_arg1(event);
+	struct spdk_nvmf_conn *conn = arg1;
 
 	spdk_nvmf_session_disconnect(conn);
 }
@@ -178,14 +178,14 @@ disconnect_cb(void *cb_ctx, struct spdk_nvmf_conn *conn)
 	struct spdk_event *event;
 
 	/* Pass an event to the core that owns this connection */
-	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, conn, NULL, NULL);
+	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, conn, NULL);
 	spdk_event_call(event);
 }
 
 static void
-_nvmf_tgt_start_subsystem(struct spdk_event *event)
+_nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 {
-	struct nvmf_tgt_subsystem *app_subsys = spdk_event_get_arg1(event);
+	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 	struct spdk_bdev *bdev;
 	struct spdk_io_channel *ch;
@@ -202,16 +202,16 @@ _nvmf_tgt_start_subsystem(struct spdk_event *event)
 		}
 	}
 
-	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, NULL, 0);
+	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, 0);
 }
 
 void
 nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
-	spdk_event_t event;
+	struct spdk_event *event;
 
 	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
-				    app_subsys, NULL, NULL);
+				    app_subsys, NULL);
 	spdk_event_call(event);
 }
 
@@ -296,6 +296,10 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 static void
 usage(void)
 {
+	struct spdk_app_opts opts;
+
+	spdk_app_opts_init(&opts);
+
 	printf("nvmf [options]\n");
 	printf("options:\n");
 	printf(" -c config  - config file (default %s)\n", SPDK_NVMF_DEFAULT_CONFIG);
@@ -303,7 +307,7 @@ usage(void)
 	printf(" -m mask    - core mask for DPDK\n");
 	printf(" -i instance ID\n");
 	printf(" -l facility - use specific syslog facility (default %s)\n",
-	       SPDK_APP_DEFAULT_LOG_FACILITY);
+	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
@@ -322,7 +326,7 @@ acceptor_poll(void *arg)
 }
 
 static void
-spdk_nvmf_startup(spdk_event_t event)
+spdk_nvmf_startup(void *arg1, void *arg2)
 {
 	int rc;
 
@@ -339,7 +343,7 @@ spdk_nvmf_startup(spdk_event_t event)
 	}
 
 	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
-			     g_spdk_nvmf_tgt_conf.acceptor_lcore, NULL,
+			     g_spdk_nvmf_tgt_conf.acceptor_lcore,
 			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 
 	SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,

@@ -62,6 +62,10 @@ spdk_sigusr1(int signo __attribute__((__unused__)))
 static void
 usage(char *executable_name)
 {
+	struct spdk_app_opts opts;
+
+	spdk_app_opts_init(&opts);
+
 	printf("%s [options]\n", executable_name);
 	printf("options:\n");
 	printf(" -c config  config file (default %s)\n", SPDK_ISCSI_DEFAULT_CONFIG);
@@ -69,18 +73,19 @@ usage(char *executable_name)
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -i instance ID\n");
 	printf(" -l facility use specific syslog facility (default %s)\n",
-	       SPDK_APP_DEFAULT_LOG_FACILITY);
+	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
 	spdk_tracelog_usage(stdout, "-t");
 	printf(" -H         show this usage\n");
+	printf(" -b         run iscsi target background, the default is foreground\n");
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -q         disable notice level logging to stderr\n");
 }
 
 static void
-spdk_startup(spdk_event_t event)
+spdk_startup(void *arg1, void *arg2)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
@@ -93,6 +98,7 @@ main(int argc, char **argv)
 {
 	int ch;
 	int rc, app_rc;
+	int daemon_mode = 0;
 	struct spdk_app_opts opts = {};
 
 	/* default value in opts structure */
@@ -101,7 +107,7 @@ main(int argc, char **argv)
 	opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
 	opts.name = "iscsi";
 
-	while ((ch = getopt(argc, argv, "c:de:i:l:m:n:p:qs:t:H")) != -1) {
+	while ((ch = getopt(argc, argv, "bc:de:i:l:m:n:p:qs:t:H")) != -1) {
 		switch (ch) {
 		case 'd':
 			opts.enable_coredump = false;
@@ -147,10 +153,20 @@ main(int argc, char **argv)
 		case 's':
 			opts.dpdk_mem_size = atoi(optarg);
 			break;
+		case 'b':
+			daemon_mode = 1;
+			break;
 		case 'H':
 		default:
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
+		}
+	}
+
+	if (daemon_mode) {
+		if (daemon(1, 0) < 0) {
+			SPDK_ERRLOG("Start iscsi target daemon faild.\n");
+			exit(EXIT_FAILURE);
 		}
 	}
 

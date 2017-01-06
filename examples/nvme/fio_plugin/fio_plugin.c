@@ -87,13 +87,18 @@ struct spdk_fio_thread {
 };
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct fio_file		*f;
 	unsigned int		i;
 	struct thread_data 	*td = cb_ctx;
 	int rc;
+	struct spdk_pci_addr pci_addr;
+
+	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
+		return false;
+	}
 
 	/* Check if we want to claim this device */
 	for_each_file(td, f, i) {
@@ -103,9 +108,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 			fprintf(stderr, "Invalid filename: %s\n", f->file_name);
 			continue;
 		}
-		if (bus == probe_info->pci_addr.bus &&
-		    slot == probe_info->pci_addr.dev &&
-		    func == probe_info->pci_addr.func) {
+		if (bus == pci_addr.bus &&
+		    slot == pci_addr.dev &&
+		    func == pci_addr.func) {
 			return true;
 		}
 	}
@@ -114,7 +119,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct thread_data 	*td = cb_ctx;
@@ -123,6 +128,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 	struct spdk_fio_ns	*fio_ns;
 	struct fio_file *f;
 	unsigned int i;
+	struct spdk_pci_addr pci_addr;
+
+	spdk_pci_addr_parse(&pci_addr, trid->traddr);
 
 	/* Create an fio_ctrlr and add it to the list */
 	fio_ctrlr = calloc(1, sizeof(*fio_ctrlr));
@@ -137,9 +145,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
 		int domain, bus, slot, func, nsid, rc;
 		rc = sscanf(f->file_name, "%x.%x.%x.%x/%x", &domain, &bus, &slot, &func, &nsid);
 		if (rc == 5 &&
-		    bus == probe_info->pci_addr.bus &&
-		    slot == probe_info->pci_addr.dev &&
-		    func == probe_info->pci_addr.func) {
+		    bus == pci_addr.bus &&
+		    slot == pci_addr.dev &&
+		    func == pci_addr.func) {
 			fio_ns = calloc(1, sizeof(*fio_ns));
 			if (fio_ns == NULL) {
 				continue;
@@ -197,7 +205,7 @@ static int spdk_fio_setup(struct thread_data *td)
 	}
 
 	/* Enumerate all of the controllers */
-	if (spdk_nvme_probe(td, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, td, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}

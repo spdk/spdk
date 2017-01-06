@@ -530,40 +530,29 @@ parse_args(int argc, char **argv)
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	static uint32_t ctrlr_found = 0;
 
 	if (ctrlr_found == 1) {
 		fprintf(stderr, "only attching to one controller, so skipping\n");
-		fprintf(stderr, " controller at PCI address %04x:%02x:%02x.%02x\n",
-			probe_info->pci_addr.domain,
-			probe_info->pci_addr.bus,
-			probe_info->pci_addr.dev,
-			probe_info->pci_addr.func);
+		fprintf(stderr, " controller at PCI address %s\n",
+			trid->traddr);
 		return false;
 	}
 	ctrlr_found = 1;
 
-	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attaching to %s\n", trid->traddr);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attached to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attached to %s\n", trid->traddr);
 
 	register_ctrlr(ctrlr);
 }
@@ -573,7 +562,7 @@ register_controllers(void)
 {
 	printf("Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}

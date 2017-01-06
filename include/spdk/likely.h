@@ -39,6 +39,6 @@
 #define SPDK_LIKELY_H
 
 #define spdk_unlikely(cond)	__builtin_expect((cond), 0)
-#define spdk_likely(cond)	__builtin_expect(!(cond), 0)
+#define spdk_likely(cond)	__builtin_expect(!!(cond), 1)
 
 #endif

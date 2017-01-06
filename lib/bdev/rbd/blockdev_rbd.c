@@ -52,7 +52,7 @@
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
 
-#include "bdev_module.h"
+#include "spdk_internal/bdev.h"
 
 static TAILQ_HEAD(, blockdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int blockdev_rbd_count = 0;
@@ -449,7 +449,7 @@ blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 	}
 
 	spdk_poller_register(&ch->poller, blockdev_rbd_io_poll, ch,
-			     spdk_app_get_current_core(), NULL, 0);
+			     spdk_app_get_current_core(), 0);
 
 	return 0;
 
@@ -532,7 +532,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 
 	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
 		 blockdev_rbd_count);
-	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph rbd");
+	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph Rbd Disk");
 	blockdev_rbd_count++;
 
 	rbd->disk.write_cache = 0;

@@ -88,8 +88,6 @@ nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 	memset(&session->vcdata, 0, sizeof(struct spdk_nvme_ctrlr_data));
 	spdk_strcpy_pad(session->vcdata.fr, FW_VERSION, sizeof(session->vcdata.fr), ' ');
 	spdk_strcpy_pad(session->vcdata.mn, MODEL_NUMBER, sizeof(session->vcdata.mn), ' ');
-	session->vcdata.vid = 0x8086;
-	session->vcdata.ssvid = 0x8086;
 	spdk_strcpy_pad(session->vcdata.sn, subsys->dev.virt.sn, sizeof(session->vcdata.sn), ' ');
 	session->vcdata.rab = 6;
 	session->vcdata.ver.bits.mjr = 1;
@@ -120,10 +118,10 @@ nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_session *session)
 }
 
 static void
-nvmf_virtual_ctrlr_complete_cmd(spdk_event_t event)
+nvmf_virtual_ctrlr_complete_cmd(void *arg1, void *arg2)
 {
-	struct spdk_bdev_io		*bdev_io = spdk_event_get_arg2(event);
-	struct spdk_nvmf_request 	*req = spdk_event_get_arg1(event);
+	struct spdk_bdev_io		*bdev_io = arg2;
+	struct spdk_nvmf_request 	*req = arg1;
 	enum spdk_bdev_io_status	status = bdev_io->status;
 	struct spdk_nvme_cpl 		*response = &req->rsp->nvme_cpl;
 	struct spdk_nvme_cmd 		*cmd = &req->cmd->nvme_cmd;
@@ -150,6 +148,7 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	uint8_t lid;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	uint64_t log_page_offset;
 
 	if (req->data == NULL) {
 		SPDK_ERRLOG("get log command with no buffer\n");
@@ -158,6 +157,13 @@ nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	}
 
 	memset(req->data, 0, req->length);
+
+	log_page_offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
+	if (log_page_offset & 3) {
+		SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 "\n", log_page_offset);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	lid = cmd->cdw10 & 0xFF;
 	switch (lid) {

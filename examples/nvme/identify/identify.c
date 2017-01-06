@@ -69,7 +69,7 @@ static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
 
-static struct spdk_nvme_discover_info info;
+static struct spdk_nvme_transport_id trid;
 
 static void
 hex_dump(const void *data, size_t size)
@@ -189,6 +189,7 @@ get_error_log_page(struct spdk_nvme_ctrlr *ctrlr)
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_ERROR,
 					     SPDK_NVME_GLOBAL_NS_TAG, error_page,
 					     sizeof(*error_page) * (cdata->elpe + 1),
+					     0,
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
@@ -201,7 +202,7 @@ static int
 get_health_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-					     SPDK_NVME_GLOBAL_NS_TAG, &health_page, sizeof(health_page), get_log_page_completion, NULL)) {
+					     SPDK_NVME_GLOBAL_NS_TAG, &health_page, sizeof(health_page), 0, get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
@@ -213,7 +214,7 @@ static int
 get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
-					     &intel_smart_page, sizeof(intel_smart_page), get_log_page_completion, NULL)) {
+					     &intel_smart_page, sizeof(intel_smart_page), 0, get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
 	}
@@ -225,7 +226,7 @@ static int
 get_intel_temperature_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE,
-					     SPDK_NVME_GLOBAL_NS_TAG, &intel_temperature_page, sizeof(intel_temperature_page),
+					     SPDK_NVME_GLOBAL_NS_TAG, &intel_temperature_page, sizeof(intel_temperature_page), 0,
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
@@ -237,7 +238,7 @@ static int
 get_intel_md_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION,
-					     SPDK_NVME_GLOBAL_NS_TAG, &intel_md_page, sizeof(intel_md_page),
+					     SPDK_NVME_GLOBAL_NS_TAG, &intel_md_page, sizeof(intel_md_page), 0,
 					     get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);
@@ -388,7 +389,7 @@ print_namespace(struct spdk_nvme_ns *ns)
 }
 
 static void
-print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_info *probe_info)
+print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
 {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
@@ -396,6 +397,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
+	struct spdk_pci_addr 			pci_addr;
+	struct spdk_pci_device			*pci_dev;
+	struct spdk_pci_id			pci_id;
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
@@ -406,14 +410,25 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_probe_inf
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	printf("=====================================================\n");
-	if (probe_info->subnqn[0]) {
+	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("NVMe over Fabrics controller at %s:%s: %s\n",
-		       probe_info->traddr, probe_info->trsvcid, probe_info->subnqn);
+		       trid->traddr, trid->trsvcid, trid->subnqn);
 	} else {
+		if (spdk_pci_addr_parse(&pci_addr, trid->traddr) != 0) {
+			return;
+		}
+
+		pci_dev = spdk_pci_get_device(&pci_addr);
+		if (!pci_dev) {
+			return;
+		}
+
+		pci_id = spdk_pci_device_get_id(pci_dev);
+
 		printf("NVMe Controller at %04x:%02x:%02x.%x [%04x:%04x]\n",
-		       probe_info->pci_addr.domain, probe_info->pci_addr.bus,
-		       probe_info->pci_addr.dev, probe_info->pci_addr.func,
-		       probe_info->pci_id.vendor_id, probe_info->pci_id.device_id);
+		       pci_addr.domain, pci_addr.bus,
+		       pci_addr.dev, pci_addr.func,
+		       pci_id.vendor_id, pci_id.device_id);
 	}
 	printf("=====================================================\n");
 
@@ -874,7 +889,8 @@ parse_args(int argc, char **argv)
 {
 	int op, rc;
 
-	info.subnqn = SPDK_NVMF_DISCOVERY_NQN;
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
 	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
 		switch (op) {
@@ -896,13 +912,15 @@ parse_args(int argc, char **argv)
 #endif
 			break;
 		case 'a':
-			info.traddr = optarg;
+			trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+			trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+			snprintf(trid.traddr, sizeof(trid.traddr), "%s", optarg);
 			break;
 		case 's':
-			info.trsvcid = optarg;
+			snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", optarg);
 			break;
 		case 'n':
-			info.subnqn = optarg;
+			snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", optarg);
 			break;
 		case 'H':
 		default:
@@ -911,38 +929,37 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	if (!info.traddr || !info.trsvcid || !info.subnqn) {
+	if (!trid.traddr || !trid.trsvcid || !trid.subnqn) {
 		return 0;
 	}
 
-	if ((strlen(info.traddr) > 255)) {
+	if ((strlen(trid.traddr) > 255)) {
 		printf("The string len of traddr should <= 255\n");
 		return 0;
 	}
 
-	if (strlen(info.subnqn) >= SPDK_NVMF_NQN_MAX_LEN) {
+	if (strlen(trid.subnqn) >= SPDK_NVMF_NQN_MAX_LEN) {
 		printf("NQN must be less than %d bytes long\n", SPDK_NVMF_NQN_MAX_LEN);
 		return 0;
 	}
 
-	info.trtype = SPDK_NVMF_TRTYPE_RDMA;
 	optind = 1;
 
 	return 0;
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	print_controller(ctrlr, probe_info);
+	print_controller(ctrlr, trid);
 	spdk_nvme_detach(ctrlr);
 }
 
@@ -972,13 +989,13 @@ int main(int argc, char **argv)
 	}
 
 	rc = 0;
-	if (info.trtype == SPDK_NVMF_TRTYPE_RDMA) {
-		if (spdk_nvme_discover(&info, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		if (spdk_nvme_probe(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 		}
 	}
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;
 	}

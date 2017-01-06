@@ -315,7 +315,7 @@ test_firmware_get_log_page(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_FIRMWARE_SLOT, SPDK_NVME_GLOBAL_NS_TAG,
 					 &payload,
-					 sizeof(payload), NULL, NULL);
+					 sizeof(payload), 0, NULL, NULL);
 }
 
 static void
@@ -328,7 +328,7 @@ test_health_get_log_page(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION, health_log_nsid,
 					 &payload,
-					 sizeof(payload), NULL, NULL);
+					 sizeof(payload), 0, NULL, NULL);
 }
 
 static void
@@ -344,7 +344,7 @@ test_error_get_log_page(void)
 	/* valid page */
 	error_num_entries = 1;
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_LOG_ERROR, SPDK_NVME_GLOBAL_NS_TAG, &payload,
-					 sizeof(payload), NULL, NULL);
+					 sizeof(payload), 0, NULL, NULL);
 }
 
 static void test_intel_smart_get_log_page(void)
@@ -355,7 +355,7 @@ static void test_intel_smart_get_log_page(void)
 	verify_fn = verify_intel_smart_log_page;
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_SMART, health_log_nsid, &payload,
-					 sizeof(payload), NULL, NULL);
+					 sizeof(payload), 0, NULL, NULL);
 }
 
 static void test_intel_temperature_get_log_page(void)
@@ -366,7 +366,7 @@ static void test_intel_temperature_get_log_page(void)
 	verify_fn = verify_intel_temperature_log_page;
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_TEMPERATURE, SPDK_NVME_GLOBAL_NS_TAG,
-					 &payload, sizeof(payload), NULL, NULL);
+					 &payload, sizeof(payload), 0, NULL, NULL);
 }
 
 static void test_intel_read_latency_get_log_page(void)
@@ -378,7 +378,7 @@ static void test_intel_read_latency_get_log_page(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY,
 					 SPDK_NVME_GLOBAL_NS_TAG,
-					 &payload, sizeof(payload), NULL, NULL);
+					 &payload, sizeof(payload), 0, NULL, NULL);
 }
 
 static void test_intel_write_latency_get_log_page(void)
@@ -390,7 +390,7 @@ static void test_intel_write_latency_get_log_page(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY,
 					 SPDK_NVME_GLOBAL_NS_TAG,
-					 &payload, sizeof(payload), NULL, NULL);
+					 &payload, sizeof(payload), 0, NULL, NULL);
 }
 
 static void test_intel_get_log_page_directory(void)
@@ -402,7 +402,7 @@ static void test_intel_get_log_page_directory(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_LOG_PAGE_DIRECTORY,
 					 SPDK_NVME_GLOBAL_NS_TAG,
-					 &payload, sizeof(payload), NULL, NULL);
+					 &payload, sizeof(payload), 0, NULL, NULL);
 }
 
 static void test_intel_marketing_description_get_log_page(void)
@@ -414,7 +414,7 @@ static void test_intel_marketing_description_get_log_page(void)
 
 	spdk_nvme_ctrlr_cmd_get_log_page(&ctrlr, SPDK_NVME_INTEL_MARKETING_DESCRIPTION,
 					 SPDK_NVME_GLOBAL_NS_TAG,
-					 &payload, sizeof(payload), NULL, NULL);
+					 &payload, sizeof(payload), 0, NULL, NULL);
 }
 
 static void test_generic_get_log_pages(void)

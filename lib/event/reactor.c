@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/event.h"
+#include "spdk_internal/event.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -49,8 +49,6 @@
 
 #include <rte_config.h>
 #include <rte_ring.h>
-
-#include "reactor.h"
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
@@ -116,7 +114,7 @@ struct spdk_reactor {
 	struct rte_ring					*events;
 
 	uint64_t					max_delay_us;
-};
+} __attribute__((aligned(64)));
 
 static struct spdk_reactor g_reactors[RTE_MAX_LCORE];
 static uint64_t	g_reactor_mask  = 0;
@@ -127,7 +125,7 @@ static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
 				   uint64_t max_delay_us);
 
-struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
+static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 
 /** \file
 
@@ -141,9 +139,8 @@ spdk_reactor_get(uint32_t lcore)
 	return reactor;
 }
 
-spdk_event_t
-spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
-		    spdk_event_t next)
+struct spdk_event *
+spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 {
 	struct spdk_event *event = NULL;
 	unsigned socket_id = rte_lcore_to_socket_id(lcore);
@@ -160,13 +157,12 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2,
 	event->fn = fn;
 	event->arg1 = arg1;
 	event->arg2 = arg2;
-	event->next = next;
 
 	return event;
 }
 
 void
-spdk_event_call(spdk_event_t event)
+spdk_event_call(struct spdk_event *event)
 {
 	int rc;
 	struct spdk_reactor *reactor;
@@ -202,7 +198,7 @@ spdk_event_queue_run_batch(uint32_t lcore)
 	for (i = 0; i < count; i++) {
 		struct spdk_event *event = events[i];
 
-		event->fn(event);
+		event->fn(event->arg1, event->arg2);
 	}
 
 	spdk_mempool_put_bulk(g_spdk_event_mempool[socket_id], events, count);
@@ -221,7 +217,7 @@ static void set_reactor_thread_name(void)
 {
 	char thread_name[16];
 
-	snprintf(thread_name, sizeof(thread_name), "reactor %d",
+	snprintf(thread_name, sizeof(thread_name), "reactor_%d",
 		 rte_lcore_id());
 
 #if defined(__linux__)
@@ -627,33 +623,27 @@ spdk_reactors_fini(void)
 }
 
 static void
-_spdk_poller_register(struct spdk_reactor *reactor, struct spdk_poller *poller,
-		      struct spdk_event *next)
+_spdk_poller_register(struct spdk_reactor *reactor, struct spdk_poller *poller)
 {
 	if (poller->period_ticks) {
 		spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
 	} else {
 		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 	}
-
-	if (next) {
-		spdk_event_call(next);
-	}
 }
 
 static void
-_spdk_event_add_poller(spdk_event_t event)
+_spdk_event_add_poller(void *arg1, void *arg2)
 {
-	struct spdk_reactor *reactor = spdk_event_get_arg1(event);
-	struct spdk_poller *poller = spdk_event_get_arg2(event);
-	struct spdk_event *next = spdk_event_get_next(event);
+	struct spdk_reactor *reactor = arg1;
+	struct spdk_poller *poller = arg2;
 
-	_spdk_poller_register(reactor, poller, next);
+	_spdk_poller_register(reactor, poller);
 }
 
 void
 spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-		     uint32_t lcore, struct spdk_event *complete, uint64_t period_microseconds)
+		     uint32_t lcore, uint64_t period_microseconds)
 {
 	struct spdk_poller *poller;
 	struct spdk_reactor *reactor;
@@ -688,14 +678,13 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 		 * The poller is registered to run on the current core, so call the add function
 		 * directly.
 		 */
-		_spdk_poller_register(reactor, poller, complete);
+		_spdk_poller_register(reactor, poller);
 	} else {
 		/*
 		 * The poller is registered to run on a different core.
 		 * Schedule an event to run on the poller's core that will add the poller.
 		 */
-		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_add_poller, reactor, poller,
-						    complete));
+		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_add_poller, reactor, poller));
 	}
 }
 
@@ -727,11 +716,11 @@ _spdk_poller_unregister(struct spdk_reactor *reactor, struct spdk_poller *poller
 }
 
 static void
-_spdk_event_remove_poller(spdk_event_t event)
+_spdk_event_remove_poller(void *arg1, void *arg2)
 {
-	struct spdk_poller *poller = spdk_event_get_arg1(event);
+	struct spdk_poller *poller = arg1;
 	struct spdk_reactor *reactor = spdk_reactor_get(poller->lcore);
-	struct spdk_event *next = spdk_event_get_next(event);
+	struct spdk_event *next = arg2;
 
 	_spdk_poller_unregister(reactor, poller, next);
 }
@@ -767,7 +756,6 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 		 * The poller is registered on a different core.
 		 * Schedule an event to run on the poller's core that will remove the poller.
 		 */
-		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, NULL,
-						    complete));
+		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, complete));
 	}
 }

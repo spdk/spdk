@@ -31,13 +31,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-CFLAGS += $(ENV_CFLAGS)
-
-NVMF_UT_LIB_LIST = log conf util trace event
-LIBS += $(call spdk_lib_list_to_files,$(NVMF_UT_LIB_LIST))
-
-TEST_FILE = nvmf_ut.c
+TEST_FILE = nvme_quirks_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/nvme.unittest.mk

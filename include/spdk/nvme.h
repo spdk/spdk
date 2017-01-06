@@ -99,7 +99,7 @@ struct spdk_nvme_ctrlr_opts {
 	/**
 	 * The queue depth of each NVMe I/O queue.
 	 */
-	uint32_t queue_size;
+	uint32_t io_queue_size;
 
 	/**
 	 * The host NQN to use when connecting to NVMe over Fabrics controllers.
@@ -110,77 +110,63 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
- * NVMe over Fabrics discovery parameters.
+ * NVMe library transports
  *
- * This structure must be provided when connecting to remote NVMe controllers via NVMe over Fabrics.
+ * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
+ * which is a special case since NVMe over Fabrics does not define a TRTYPE for local PCIe.
+ *
+ * Currently, this uses 256 for PCIe which is intentionally outside of the 8-bit range of TRTYPE.
+ * If the NVMe-oF specification ever defines a PCIe TRTYPE, this should be updated.
  */
-struct spdk_nvme_discover_info {
+enum spdk_nvme_transport_type {
 	/**
-	 * NVMe over Fabrics transport type.
+	 * PCIe Transport (locally attached devices)
 	 */
-	enum spdk_nvmf_trtype trtype;
+	SPDK_NVME_TRANSPORT_PCIE = 256,
 
 	/**
-	 * Subsystem NQN of the NVMe over Fabrics discovery service.
+	 * RDMA Transport (RoCE, iWARP, etc.)
 	 */
-	const char *subnqn;
-
-	/**
-	 * Transport address of the NVMe over Fabrics discovery service. For transports which use IP
-	 * addressing (e.g. RDMA), this should be an IP-based address.
-	 */
-	const char *traddr;
-
-	/**
-	 * Specifiy the transport service identifier.  For transports which use IP addressing
-	 * (e.g. RDMA), this field shoud be the port number.
-	 */
-	const char *trsvcid;
+	SPDK_NVME_TRANSPORT_RDMA = SPDK_NVMF_TRTYPE_RDMA,
 };
 
 /**
- * NVMe controller information provided during spdk_nvme_probe().
+ * NVMe transport identifier.
+ *
+ * This identifies a unique endpoint on an NVMe fabric.
  */
-struct spdk_nvme_probe_info {
+struct spdk_nvme_transport_id {
 	/**
-	 * PCI address.
-	 *
-	 * If not available, each field will be filled with all 0xFs.
+	 * NVMe transport type.
 	 */
-	struct spdk_pci_addr pci_addr;
+	enum spdk_nvme_transport_type trtype;
 
 	/**
-	 * PCI device ID.
+	 * Address family of the transport address.
 	 *
-	 * If not available, each field will be filled with all 0xFs.
+	 * For PCIe, this value is ignored.
 	 */
-	struct spdk_pci_id pci_id;
+	enum spdk_nvmf_adrfam adrfam;
 
 	/**
-	 * Subsystem NQN.
-	 *
-	 * If this is not an NVMe over Fabrics controller, this field will be a zero-length string.
-	 */
-	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-
-	/**
-	 * NVMe over Fabrics transport type.
-	 *
-	 * This field will be 0 if this is not an NVMe over Fabrics controller.
-	 */
-	enum spdk_nvmf_trtype trtype;
-
-	/**
-	 * Transport address of the NVMe over Fabrics target. For transports which use IP
-	 * addressing (e.g. RDMA), this will be an IP-based address.
+	 * Transport address of the NVMe-oF endpoint. For transports which use IP
+	 * addressing (e.g. RDMA), this should be an IP address. For PCIe, this
+	 * can either be a zero length string (the whole bus) or a PCI address
+	 * in the format DDDD:BB:DD.FF
 	 */
 	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 
 	/**
-	 * Transport service identifier.  For transports which use IP addressing
-	 * (e.g. RDMA), this field will be the port number.
+	 * Transport service id of the NVMe-oF endpoint.  For transports which use
+	 * IP addressing (e.g. RDMA), this field shoud be the port number. For PCIe,
+	 * this is always a zero length string.
 	 */
 	char trsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
+
+	/**
+	 * Subsystem NQN of the NVMe over Fabrics endpoint. May be a zero length string.
+	 */
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 };
 
 /**
@@ -190,7 +176,7 @@ struct spdk_nvme_probe_info {
  *
  * \return true if trtype is supported or false if it is not supported.
  */
-bool spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype);
+bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
 
 /**
  * Callback for spdk_nvme_probe() enumeration.
@@ -201,7 +187,7 @@ bool spdk_nvme_transport_available(enum spdk_nvmf_trtype trtype);
  * provided during the attach callback.
  * \return true to attach to this device.
  */
-typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				   struct spdk_nvme_ctrlr_opts *opts);
 
 /**
@@ -210,7 +196,7 @@ typedef bool (*spdk_nvme_probe_cb)(void *cb_ctx, const struct spdk_nvme_probe_in
  * \param opts NVMe controller initialization options that were actually used.  Options may differ
  * from the requested options from the probe call depending on what the controller supports.
  */
-typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				    struct spdk_nvme_ctrlr *ctrlr,
 				    const struct spdk_nvme_ctrlr_opts *opts);
 
@@ -229,27 +215,12 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_probe_i
 typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
 /**
- * \brief discover the remote Controller via NVMe over fabrics protocol
+ * \brief Enumerate the bus indicated by the transport ID and attach the userspace NVMe driver
+ * to each device found if desired.
  *
- * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
- * \param info which specifies the info used to discover the NVMe over fabrics target.
- * \param probe_cb will be called once per NVMe device found in the system.
- * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
- * controller has been attached to the userspace driver.
- * \param remove_cb will be called for devices that were attached in a previous spdk_nvme_probe()
- * call but are no longer attached to the system. Optional; specify NULL if removal notices are not
- * desired.
- *
- */
-int spdk_nvme_discover(const struct spdk_nvme_discover_info *info,
-		       void *cb_ctx, spdk_nvme_probe_cb  probe_cb,
-		       spdk_nvme_attach_cb attach_cb,
-		       spdk_nvme_remove_cb remove_cb);
-
-/**
- * \brief Enumerate the NVMe devices attached to the system and attach the userspace NVMe driver
- * to them if desired.
- *
+ * \param trid The transport ID indicating which bus to enumerate. If the trtype is PCIe or trid is NULL,
+ * this will scan the local PCIe bus. If the trtype is RDMA, the traddr and trsvcid must point at the
+ * location of an NVMe-oF discovery service.
  * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of the callbacks.
  * \param probe_cb will be called once per NVMe device found in the system.
  * \param attach_cb will be called for devices for which probe_cb returned true once that NVMe
@@ -270,7 +241,8 @@ int spdk_nvme_discover(const struct spdk_nvme_discover_info *info,
  * To stop using the the controller and release its associated resources,
  * call \ref spdk_nvme_detach with the spdk_nvme_ctrlr instance returned by this function.
  */
-int spdk_nvme_probe(void *cb_ctx,
+int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
+		    void *cb_ctx,
 		    spdk_nvme_probe_cb probe_cb,
 		    spdk_nvme_attach_cb attach_cb,
 		    spdk_nvme_remove_cb remove_cb);
@@ -306,6 +278,11 @@ int spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr);
  *
  */
 const struct spdk_nvme_ctrlr_data *spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * \brief Get the NVMe controller CSTS (Status) register.
+ */
+union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * \brief Get the NVMe controller CAP (Capabilities) register.
@@ -378,6 +355,28 @@ void spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
  * I/O queue pairs may be allocated using spdk_nvme_ctrlr_alloc_io_qpair().
  */
 struct spdk_nvme_qpair;
+
+/**
+ * Signature for the callback function invoked when a timeout is
+ * detected on a request.
+ */
+typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
+				     struct spdk_nvme_qpair *qpair,
+				     void *cb_arg);
+
+/**
+ * \brief Register for timeout callback on a controller.
+ *
+ * The application can choose to register for timeout callback or not register
+ * for timeout callback.
+ *
+ * \param ctrlr NVMe controller on which to monitor for timeout.
+ * \param timeout_sec Timeout value in seconds.
+ * \param cb_fn A function pointer that points to the callback function
+ * \param cb_arg Argument to the callback function.
+ */
+void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
+		uint32_t timeout_sec, spdk_nvme_timeout_cb cb_fn, void *cb_arg);
 
 /**
  * \brief Allocate an I/O queue pair (submission and completion queue).
@@ -503,6 +502,9 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
  * \param nsid Depending on the log page, this may be 0, a namespace identifier, or SPDK_NVME_GLOBAL_NS_TAG.
  * \param payload The pointer to the payload buffer.
  * \param payload_size The size of payload buffer.
+ * \param offset Offset in bytes within the log page to start retrieving log page data.
+ *               May only be non-zero if the controller supports extended data for Get Log Page
+ *               as reported in the controller data log page attributes.
  * \param cb_fn Callback function to invoke when the log page has been retrieved.
  * \param cb_arg Argument to pass to the callback function.
  *
@@ -519,6 +521,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				     uint8_t log_page, uint32_t nsid,
 				     void *payload, uint32_t payload_size,
+				     uint64_t offset,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**

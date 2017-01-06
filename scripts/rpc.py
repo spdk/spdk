@@ -18,7 +18,7 @@ def print_array(a):
     print " ".join((quote(v) for v in a))
 
 parser = argparse.ArgumentParser(description='SPDK RPC command line interface')
-parser.add_argument('-s', dest='server_ip', help='RPC server IP address', default='127.0.0.1')
+parser.add_argument('-s', dest='server_addr', help='RPC server address', default='127.0.0.1')
 parser.add_argument('-p', dest='instance_id', help='RPC server instance ID', default=0, type=int)
 subparsers = parser.add_subparsers(help='RPC methods')
 
@@ -28,8 +28,12 @@ def int_arg(arg):
 
 
 def jsonrpc_call(method, params={}):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((args.server_ip, SPDK_JSONRPC_PORT_BASE + args.instance_id))
+    if args.server_addr.startswith('/'):
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect("{}.{}".format(args.server_addr, args.instance_id))
+    else:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((args.server_addr, SPDK_JSONRPC_PORT_BASE + args.instance_id))
     req = {}
     req['jsonrpc'] = '2.0'
     req['method'] = method

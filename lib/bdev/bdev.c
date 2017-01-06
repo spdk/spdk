@@ -43,12 +43,11 @@
 #include <rte_mempool.h>
 #include <rte_version.h>
 
-#include "spdk/event.h"
 #include "spdk/queue.h"
 
+#include "spdk_internal/bdev.h"
+#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
-
-#include "bdev_module.h"
 
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
 #define RBUF_SMALL_POOL_SIZE	8192
@@ -410,7 +409,7 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 }
 
 static void
-__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, spdk_event_t cb_event)
+__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, struct spdk_event *cb_event)
 {
 	bdev_io->cb_event = cb_event;
 
@@ -442,7 +441,7 @@ __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, spdk_even
 	}
 }
 
-int
+static int
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
@@ -450,7 +449,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
 		cb_event = spdk_event_allocate(rte_lcore_id(), bdev_io->cb,
-					       bdev_io->caller_ctx, bdev_io, NULL);
+					       bdev_io->caller_ctx, bdev_io);
 		assert(cb_event != NULL);
 	}
 

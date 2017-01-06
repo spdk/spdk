@@ -104,7 +104,7 @@ struct spdk_scsi_task {
 	struct spdk_io_channel		*ch;
 	struct spdk_scsi_port		*target_port;
 	struct spdk_scsi_port		*initiator_port;
-	spdk_event_t			cb_event;
+	struct spdk_event 		*cb_event;
 
 	uint32_t ref;
 	uint32_t id;
@@ -211,6 +211,9 @@ struct spdk_scsi_lun {
 	 *   LUN.  All I/O to this LUN must be performed from this thread.
 	 */
 	pthread_t thread_id;
+
+	/**  The reference number for this LUN, thus we can correctly free the io_channel */
+	uint32_t ref;
 
 	/** Name for this LUN. */
 	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];

@@ -559,18 +559,6 @@ print_configuration(char *program_name)
 	       g_arbitration.arbitration_mechanism,
 	       g_arbitration.arbitration_config ,
 	       g_arbitration.io_count);
-
-	printf("\t[-q io depth]\n");
-	printf("\t[-s io size in bytes]\n");
-	printf("\t[-w io pattern type]\n");
-	printf("\t[-M rwmixread (default: 100 for reads)]\n");
-	printf("\t[-l enable latency tracking (default: 0 for disabled)]\n");
-	printf("\t[-t time in seconds]\n");
-	printf("\t[-c core mask for I/O submission/completion]\n");
-	printf("\t[-m max completions per poll (default: 0 for unlimited)]\n");
-	printf("\t[-a arbitration mechanism (default: 0 for default round robin mechanism)]\n");
-	printf("\t[-b enable arbitration user configuration (default: 0 for disabled)]\n");
-	printf("\t[-i subjected IOs for performance comparison]\n");
 }
 
 
@@ -640,6 +628,7 @@ print_latency_statistics(const char *op_name, enum spdk_nvme_intel_log_page log_
 				    SPDK_NVME_GLOBAL_NS_TAG,
 				    &ctrlr->latency_page,
 				    sizeof(struct spdk_nvme_intel_rw_latency_page),
+				    0,
 				    enable_latency_tracking_complete,
 				    NULL)) {
 				printf("nvme_ctrlr_cmd_get_log_page() failed\n");
@@ -865,30 +854,22 @@ register_workers(void)
 }
 
 static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	/* Update with user specified arbitration configuration */
 	opts->arb_mechanism = g_arbitration.arbitration_mechanism;
 
-	printf("Attaching to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attaching to %s\n", trid->traddr);
 
 	return true;
 }
 
 static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_probe_info *probe_info,
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	printf("Attached to %04x:%02x:%02x.%02x\n",
-	       probe_info->pci_addr.domain,
-	       probe_info->pci_addr.bus,
-	       probe_info->pci_addr.dev,
-	       probe_info->pci_addr.func);
+	printf("Attached to %s\n", trid->traddr);
 
 	/* Update with actual arbitration configuration in use */
 	g_arbitration.arbitration_mechanism = opts->arb_mechanism;
@@ -901,7 +882,7 @@ register_controllers(void)
 {
 	printf("Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}

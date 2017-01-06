@@ -39,8 +39,7 @@
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
 
-void
-spdk_format_discovery_log(struct spdk_nvmf_discovery_log_page *disc_log, uint32_t length);
+void spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length);
 
 extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
 extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;

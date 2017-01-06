@@ -42,7 +42,10 @@
 extern "C" {
 #endif
 
+/** Write memory barrier */
 #define spdk_wmb()	__asm volatile("sfence" ::: "memory")
+
+/** Full read/write memory barrier */
 #define spdk_mb()	__asm volatile("mfence" ::: "memory")
 
 #ifdef __cplusplus

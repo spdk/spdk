@@ -31,17 +31,25 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
+#ifndef SPDK_INTERNAL_ASSERT_H
+#define SPDK_INTERNAL_ASSERT_H
 
-\page nvme_io_submission NVMe I/O Submission
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-I/O is submitted to an NVMe namespace using nvme_ns_cmd_xxx functions
-defined in nvme_ns_cmd.c.  The NVMe driver submits the I/O request
-as an NVMe submission queue entry on the queue pair specified in the command.
-The application must poll for I/O completion on each queue pair with outstanding I/O
-to receive completion callbacks.
+#include "spdk/assert.h"
 
-\sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_deallocate,
-spdk_nvme_ns_cmd_flush, spdk_nvme_qpair_process_completions
+#include <stdlib.h>
 
-*/
+#if !defined(DEBUG) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#define SPDK_UNREACHABLE() __builtin_unreachable()
+#else
+#define SPDK_UNREACHABLE() abort()
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* SPDK_INTERNAL_ASSERT_H */

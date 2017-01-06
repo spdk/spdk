@@ -43,9 +43,8 @@
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
 
+#include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
-
-#include "bdev_module.h"
 
 #define MALLOC_MAX_UNMAP_BDESC	1
 

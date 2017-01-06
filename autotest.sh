@@ -79,6 +79,7 @@ run_test test/lib/bdev/blockdev.sh
 run_test test/lib/event/event.sh
 run_test test/lib/nvme/nvme.sh
 if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test test/lib/nvme/hotplug.sh intel
 	run_test test/lib/nvme/nvmemp.sh
 fi
 run_test test/lib/nvmf/nvmf.sh
@@ -125,6 +126,7 @@ timing_enter host
 
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
+run_test test/nvmf/host/identify_kernel_nvmf.sh
 
 timing_exit host
 
