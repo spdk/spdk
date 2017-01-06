@@ -2700,6 +2700,20 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 	data_len = task->scsi.data_transferred;
 	transfer_len = task->scsi.length;
 
+	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
+		if (task != primary) {
+			conn->data_in_cnt--;
+		} else {
+			/* handle the case that it is a primary task which has subtasks */
+			if (primary->scsi.transfer_len != task->scsi.length) {
+				conn->data_in_cnt--;
+				spdk_iscsi_task_put(task);
+			}
+		}
+
+		return 0;
+	}
+
 	if (data_len < transfer_len) {
 		/* underflow */
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Underflow %u/%u\n",
