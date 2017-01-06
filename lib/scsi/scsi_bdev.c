@@ -1253,9 +1253,6 @@ spdk_bdev_scsi_task_complete(void *arg1, void *arg2)
 			}
 			spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
 		}
-
-		/* command completed. remove from outstanding task list */
-		TAILQ_REMOVE(&task->lun->tasks, task, scsi_link);
 	} else if (task->type == SPDK_SCSI_TASK_TYPE_MANAGE) {
 		if (status == SPDK_BDEV_IO_STATUS_SUCCESS)
 			task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;

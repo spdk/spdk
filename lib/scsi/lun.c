@@ -40,13 +40,12 @@ void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	if (lun) {
+		if (task->type == SPDK_SCSI_TASK_TYPE_CMD) {
+			TAILQ_REMOVE(&lun->tasks, task, scsi_link);
+		}
 		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
 	}
 	spdk_event_call(task->cb_event);
-
-	if (lun && !TAILQ_EMPTY(&lun->pending_tasks)) {
-		spdk_scsi_lun_execute_tasks(lun);
-	}
 }
 
 void
@@ -65,7 +64,6 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 	 */
 
 	TAILQ_FOREACH_SAFE(task, &lun->tasks, scsi_link, task_tmp) {
-		TAILQ_REMOVE(&lun->tasks, task, scsi_link);
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
@@ -75,6 +73,7 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
+		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
@@ -239,18 +238,12 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 		task->status = SPDK_SCSI_STATUS_GOOD;
 		task->ch = lun->io_channel;
 		spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
-		rc = spdk_bdev_scsi_execute(lun->bdev, task);
-
-		/* Task is removed from the pending list if it gets the slot. */
-		if (task->status == SPDK_SCSI_STATUS_TASK_SET_FULL) {
-			break;
-		}
-
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
+		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
+		rc = spdk_bdev_scsi_execute(lun->bdev, task);
 
 		switch (rc) {
 		case SPDK_SCSI_TASK_PENDING:
-			TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 			break;
 
 		case SPDK_SCSI_TASK_COMPLETE:

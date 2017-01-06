@@ -47,7 +47,6 @@ SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
 struct spdk_scsi_globals g_spdk_scsi;
 
 static bool g_lun_execute_fail = false;
-static bool g_lun_task_set_full_flag = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
 
@@ -132,10 +131,7 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 	if (g_lun_execute_fail)
 		return -EINVAL;
 	else {
-		if (g_lun_task_set_full_flag)
-			task->status = SPDK_SCSI_STATUS_TASK_SET_FULL;
-		else
-			task->status = SPDK_SCSI_STATUS_GOOD;
+		task->status = SPDK_SCSI_STATUS_GOOD;
 
 		if (g_lun_execute_status == SPDK_SCSI_TASK_PENDING)
 			return g_lun_execute_status;
@@ -235,6 +231,7 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
+	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_ABORT_TASK;
 	mgmt_task->lun = lun;
 	mgmt_task->initiator_port = &initiator_port;
@@ -308,6 +305,7 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
+	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET;
 	mgmt_task->lun = lun;
 	mgmt_task->initiator_port = &initiator_port;
@@ -349,6 +347,7 @@ lun_task_mgmt_execute_lun_reset_failure(void)
 	int rc;
 
 	mgmt_task = spdk_get_task(NULL);
+	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->lun = NULL;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
@@ -374,6 +373,7 @@ lun_task_mgmt_execute_lun_reset(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
+	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->lun = lun;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
@@ -401,6 +401,7 @@ lun_task_mgmt_execute_invalid_case(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
+	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	/* Pass an invalid value to the switch statement */
 	mgmt_task->function = 5;
 
@@ -484,46 +485,6 @@ lun_append_task_null_lun_not_supported(void)
 }
 
 static void
-lun_execute_task_set_full(void)
-{
-	struct spdk_scsi_lun *lun;
-	struct spdk_scsi_task *task;
-	struct spdk_scsi_dev dev = { 0 };
-
-	lun = lun_construct();
-
-	task = spdk_get_task(NULL);
-	task->lun = lun;
-	lun->dev = &dev;
-
-	g_lun_execute_fail = false;
-	g_lun_task_set_full_flag = true;
-
-	spdk_scsi_lun_append_task(lun, task);
-
-	/* task should now be on the pending_task list */
-	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
-
-	/* but the tasks list should still be empty since it has not been
-	   executed yet
-	 */
-	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
-
-	spdk_scsi_lun_execute_tasks(lun);
-
-	/* Assert the lun's task set is full; hence the  function
-	has failed to add another task to the tasks queue */
-	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
-	CU_ASSERT(task->status == SPDK_SCSI_STATUS_TASK_SET_FULL);
-
-	spdk_scsi_task_put(task);
-
-	lun_destruct(lun);
-
-	CU_ASSERT_EQUAL(g_task_count, 0);
-}
-
-static void
 lun_execute_scsi_task_pending(void)
 {
 	struct spdk_scsi_lun *lun;
@@ -537,7 +498,6 @@ lun_execute_scsi_task_pending(void)
 	lun->dev = &dev;
 
 	g_lun_execute_fail = false;
-	g_lun_task_set_full_flag = false;
 	g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 
 	spdk_scsi_lun_append_task(lun, task);
@@ -576,7 +536,6 @@ lun_execute_scsi_task_complete(void)
 	lun->dev = &dev;
 
 	g_lun_execute_fail = false;
-	g_lun_task_set_full_flag = false;
 	g_lun_execute_status = SPDK_SCSI_TASK_COMPLETE;
 
 	spdk_scsi_lun_append_task(lun, task);
@@ -692,8 +651,6 @@ main(int argc, char **argv)
 			       lun_append_task_null_lun_alloc_len_lt_4096) == NULL
 		|| CU_add_test(suite, "append task - unsupported lun",
 			       lun_append_task_null_lun_not_supported) == NULL
-		|| CU_add_test(suite, "execute task - task set full",
-			       lun_execute_task_set_full) == NULL
 		|| CU_add_test(suite, "execute task - scsi task pending",
 			       lun_execute_scsi_task_pending) == NULL
 		|| CU_add_test(suite, "execute task - scsi task complete",
