@@ -554,7 +554,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	dev->outstanding_admin_cmds = 0;
 	spdk_poller_register(&adminq_poller, blockdev_nvme_poll_adminq, dev,
-			     spdk_app_get_current_core(), NULL, 0);
+			     spdk_app_get_current_core(), 0);
 	if (ctx->controllers_remaining > 0) {
 		ctx->controllers_remaining--;
 	}
@@ -937,7 +937,7 @@ blockdev_nvme_get_health_report(struct nvme_blockdev *nbdev, struct nvme_blockio
 {
 	if (spdk_nvme_ctrlr_cmd_get_log_page(nbdev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
 					     SPDK_NVME_GLOBAL_NS_TAG, buf, sizeof(struct spdk_health_report_page),
-					     queued_done_adminq, bio)) {
+					     0, queued_done_adminq, bio)) {
 		return -1;
 	} else {
 		/* increment the outstanding admin commands by 1 */
