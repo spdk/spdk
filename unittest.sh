@@ -8,6 +8,7 @@ set -xe
 $valgrind test/lib/nvme/unit/nvme_c/nvme_ut
 $valgrind test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut
 $valgrind test/lib/nvme/unit/nvme_ctrlr_cmd_c/nvme_ctrlr_cmd_ut
+$valgrind test/lib/nvme/unit/nvme_ns_c/nvme_ns_ut
 $valgrind test/lib/nvme/unit/nvme_ns_cmd_c/nvme_ns_cmd_ut
 $valgrind test/lib/nvme/unit/nvme_qpair_c/nvme_qpair_ut
 $valgrind test/lib/nvme/unit/nvme_pcie_c/nvme_pcie_ut
