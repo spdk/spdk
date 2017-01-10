@@ -108,6 +108,17 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	return -1;
 }
 
+bool
+spdk_bdev_claim(struct spdk_bdev *bdev)
+{
+	return true;
+}
+
+void
+spdk_bdev_unclaim(struct spdk_bdev *bdev)
+{
+}
+
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 				   struct spdk_scsi_task *task)
 {

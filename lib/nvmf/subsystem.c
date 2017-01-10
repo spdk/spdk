@@ -43,6 +43,7 @@
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
 
+#include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
 static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
@@ -419,6 +420,12 @@ int
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev)
 {
 	int i = 0;
+
+	if (!spdk_bdev_claim(bdev)) {
+		SPDK_ERRLOG("Subsystem %s: bdev %s is already claimed\n",
+			    subsystem->subnqn, bdev->name);
+		return -1;
+	}
 
 	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
 	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->dev.virt.ns_list[i]) {

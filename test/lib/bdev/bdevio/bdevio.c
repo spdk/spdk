@@ -110,7 +110,7 @@ bdevio_construct_targets(void)
 	bdev = spdk_bdev_first();
 	while (bdev != NULL) {
 
-		if (bdev->claimed) {
+		if (!spdk_bdev_claim(bdev)) {
 			bdev = spdk_bdev_next(bdev);
 			continue;
 		}
@@ -147,6 +147,7 @@ bdevio_cleanup_targets(void)
 	target = g_io_targets;
 	while (target != NULL) {
 		execute_spdk_function(__put_io_channel, target, NULL);
+		spdk_bdev_unclaim(target->bdev);
 		g_io_targets = target->next;
 		free(target);
 		target = g_io_targets;

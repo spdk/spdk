@@ -120,7 +120,7 @@ bdevperf_construct_targets(void)
 	bdev = spdk_bdev_first();
 	while (bdev != NULL) {
 
-		if (bdev->claimed) {
+		if (!spdk_bdev_claim(bdev)) {
 			bdev = spdk_bdev_next(bdev);
 			continue;
 		}
@@ -168,6 +168,7 @@ end_run(void *arg1, void *arg2)
 	struct io_target *target = arg1;
 
 	spdk_put_io_channel(target->ch);
+	spdk_bdev_unclaim(target->bdev);
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer, NULL);

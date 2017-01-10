@@ -854,6 +854,9 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
 
+	pthread_mutex_init(&bdev->mutex, NULL);
+	bdev->claimed = false;
+
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);
 }
@@ -866,10 +869,44 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Removing bdev %s from list\n", bdev->name);
 	TAILQ_REMOVE(&spdk_bdev_list, bdev, link);
 
+	pthread_mutex_destroy(&bdev->mutex);
+
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
 	}
+}
+
+bool
+spdk_bdev_claim(struct spdk_bdev *bdev)
+{
+	bool success;
+
+	pthread_mutex_lock(&bdev->mutex);
+
+	if (!bdev->claimed) {
+		/* Take ownership of bdev. */
+		bdev->claimed = true;
+		success = true;
+	} else {
+		/* bdev is already claimed. */
+		success = false;
+	}
+
+	pthread_mutex_unlock(&bdev->mutex);
+
+	return success;
+}
+
+void
+spdk_bdev_unclaim(struct spdk_bdev *bdev)
+{
+	pthread_mutex_lock(&bdev->mutex);
+
+	assert(bdev->claimed);
+	bdev->claimed = false;
+
+	pthread_mutex_unlock(&bdev->mutex);
 }
 
 void

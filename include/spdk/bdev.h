@@ -43,6 +43,7 @@
 #include <stddef.h>  /* for offsetof */
 #include <sys/uio.h> /* for struct iovec */
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "spdk/event.h"
 #include "spdk/queue.h"
@@ -99,6 +100,9 @@ struct spdk_bdev {
 
 	/** generation value used by block device reset */
 	uint32_t gencnt;
+
+	/** Mutex protecting claimed */
+	pthread_mutex_t mutex;
 
 	/** True if another blockdev or a LUN is using this device */
 	bool claimed;
@@ -284,6 +288,28 @@ void spdk_bdev_unregister(struct spdk_bdev *bdev);
 
 struct spdk_bdev *spdk_bdev_first(void);
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
+
+/**
+ * Claim ownership of a block device.
+ *
+ * User applications and virtual blockdevs may use this to mediate access to bdevs.
+ *
+ * When the ownership of the bdev is no longer needed, the user should call spdk_bdev_unclaim().
+ *
+ * \param bdev Block device to claim.
+ * \return true if the caller claimed the bdev, or false if it was already claimed by another user.
+ */
+bool spdk_bdev_claim(struct spdk_bdev *bdev);
+
+/**
+ * Release claim of ownership of a block device.
+ *
+ * When a bdev reference acquired with spdk_bdev_claim() is no longer needed, the user should
+ * release the claim using spdk_bdev_unclaim().
+ *
+ * \param bdev Block device to release.
+ */
+void spdk_bdev_unclaim(struct spdk_bdev *bdev);
 
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 

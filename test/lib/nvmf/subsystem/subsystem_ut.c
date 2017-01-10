@@ -111,6 +111,12 @@ spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 	return -1;
 }
 
+bool
+spdk_bdev_claim(struct spdk_bdev *bdev)
+{
+	return true;
+}
+
 static void
 nvmf_test_create_subsystem(void)
 {

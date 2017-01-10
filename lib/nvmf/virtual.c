@@ -534,7 +534,11 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 static void
 nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 {
-	return;
+	uint32_t i;
+
+	for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
+		spdk_bdev_unclaim(subsystem->dev.virt.ns_list[i]);
+	}
 }
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops = {

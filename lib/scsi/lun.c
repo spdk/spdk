@@ -289,6 +289,12 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 		return NULL;
 	}
 
+	if (!spdk_bdev_claim(bdev)) {
+		SPDK_ERRLOG("LUN %s: bdev %s is already claimed\n", name, bdev->name);
+		free(lun);
+		return NULL;
+	}
+
 	TAILQ_INIT(&lun->tasks);
 	TAILQ_INIT(&lun->pending_tasks);
 
@@ -308,6 +314,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 static int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
+	spdk_bdev_unclaim(lun->bdev);
 	spdk_scsi_lun_db_delete(lun);
 
 	free(lun);
