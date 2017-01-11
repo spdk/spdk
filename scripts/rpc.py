@@ -340,6 +340,12 @@ def get_bdevs(args):
 p = subparsers.add_parser('get_bdevs', help='Display current blockdev list')
 p.set_defaults(func=get_bdevs)
 
+def get_nvme_devices(args):
+    print_dict(jsonrpc_call('get_nvme_devices'))
+
+p = subparsers.add_parser('get_nvme_devices', help='Display current NVMe device list')
+p.set_defaults(func=get_nvme_devices)
+
 def get_nvmf_subsystems(args):
     print_dict(jsonrpc_call('get_nvmf_subsystems'))
 
