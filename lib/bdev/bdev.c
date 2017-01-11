@@ -411,32 +411,11 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 static void
 __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 {
-	if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
-		if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-			spdk_bdev_cleanup_pending_rbuf_io(bdev);
-		}
-		bdev->fn_table->submit_request(bdev_io);
-	} else {
-		struct spdk_bdev_io *child_io, *tmp;
-
-		TAILQ_FOREACH_SAFE(child_io, &bdev_io->child_io, link, tmp) {
-			/*
-			 * Make sure no references to the parent I/O remain, since it is being
-			 * returned to the free pool.
-			 */
-			child_io->parent = NULL;
-			TAILQ_REMOVE(&bdev_io->child_io, child_io, link);
-
-			/*
-			 * Child I/O may have an rbuf that needs to be returned to a pool
-			 *  on a different core, so free it through the request submission
-			 *  process rather than calling put_io directly here.
-			 */
-			spdk_bdev_free_io(child_io);
-		}
-
-		spdk_bdev_put_io(bdev_io);
+	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
+		spdk_bdev_cleanup_pending_rbuf_io(bdev);
 	}
+	bdev->fn_table->submit_request(bdev_io);
 }
 
 static int
@@ -786,7 +765,7 @@ spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
 int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
-	int rc;
+	struct spdk_bdev_io *child_io, *tmp;
 
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io is NULL\n");
@@ -798,13 +777,25 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		return -1;
 	}
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		SPDK_ERRLOG("free_request failure\n");
+	TAILQ_FOREACH_SAFE(child_io, &bdev_io->child_io, link, tmp) {
+		/*
+		 * Make sure no references to the parent I/O remain, since it is being
+		 * returned to the free pool.
+		 */
+		child_io->parent = NULL;
+		TAILQ_REMOVE(&bdev_io->child_io, child_io, link);
+
+		/*
+		 * Child I/O may have an rbuf that needs to be returned to a pool
+		 *  on a different core, so free it through the request submission
+		 *  process rather than calling put_io directly here.
+		 */
+		spdk_bdev_free_io(child_io);
 	}
 
-	return rc;
+	spdk_bdev_put_io(bdev_io);
+
+	return 0;
 }
 
 void
