@@ -69,7 +69,7 @@ static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
 
-static struct spdk_nvme_transport_id trid;
+static struct spdk_nvme_transport_id g_trid;
 
 static void
 hex_dump(const void *data, size_t size)
@@ -889,8 +889,8 @@ parse_args(int argc, char **argv)
 {
 	int op, rc;
 
-	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-	snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
 	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
 		switch (op) {
@@ -912,15 +912,15 @@ parse_args(int argc, char **argv)
 #endif
 			break;
 		case 'a':
-			trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-			trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-			snprintf(trid.traddr, sizeof(trid.traddr), "%s", optarg);
+			g_trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+			g_trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+			snprintf(g_trid.traddr, sizeof(g_trid.traddr), "%s", optarg);
 			break;
 		case 's':
-			snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", optarg);
+			snprintf(g_trid.trsvcid, sizeof(g_trid.trsvcid), "%s", optarg);
 			break;
 		case 'n':
-			snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", optarg);
+			snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", optarg);
 			break;
 		case 'H':
 		default:
@@ -929,17 +929,8 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	if (!trid.traddr || !trid.trsvcid || !trid.subnqn) {
-		return 0;
-	}
-
-	if ((strlen(trid.traddr) > 255)) {
-		printf("The string len of traddr should <= 255\n");
-		return 0;
-	}
-
-	if (strlen(trid.subnqn) >= SPDK_NVMF_NQN_MAX_LEN) {
-		printf("NQN must be less than %d bytes long\n", SPDK_NVMF_NQN_MAX_LEN);
+	if ((strlen(g_trid.traddr) == 0) || (strlen(g_trid.trsvcid) == 0) ||
+	    (strlen(g_trid.subnqn) == 0)) {
 		return 0;
 	}
 
@@ -989,8 +980,8 @@ int main(int argc, char **argv)
 	}
 
 	rc = 0;
-	if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
-		if (spdk_nvme_probe(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (g_trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 		}
 	}
