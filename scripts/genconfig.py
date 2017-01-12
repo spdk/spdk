@@ -32,9 +32,9 @@ with open('CONFIG') as f:
                     val = args[var]
                 if default.lower() == 'y' or default.lower() == 'n':
                     if val.lower() == 'y':
-                        print "#define SPDK_{} 1".format(var)
+                        print "#define SPDK_{0} 1".format(var)
                     else:
-                        print "#undef SPDK_{}".format(var)
+                        print "#undef SPDK_{0}".format(var)
                 else:
                     strval = val.replace('"', '\"')
-                    print "#define SPDK_{} \"{}\"".format(var, strval)
+                    print "#define SPDK_{0} \"{1}\"".format(var, strval)
