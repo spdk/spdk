@@ -379,21 +379,12 @@ init_src_buffer(void)
 static int
 init(void)
 {
-	char *core_mask_conf;
+	struct spdk_env_opts opts;
 
-	core_mask_conf = spdk_sprintf_alloc("-c %s", g_user_config.core_mask);
-	if (!core_mask_conf) {
-		return 1;
-	}
-
-	char *ealargs[] = {"verify", core_mask_conf, "-n 4"};
-	if (rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs) < 0) {
-		free(core_mask_conf);
-		fprintf(stderr, "Could not init eal\n");
-		return 1;
-	}
-
-	free(core_mask_conf);
+	spdk_env_opts_init(&opts);
+	opts.name = "verify";
+	opts.core_mask = g_user_config.core_mask;
+	spdk_env_init(&opts);
 
 	if (init_src_buffer() != 0) {
 		fprintf(stderr, "Could not init src buffer\n");

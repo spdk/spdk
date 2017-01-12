@@ -216,26 +216,18 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-static const char *ealargs[] = {
-	"aer",
-	"-c 0x1",
-	"-n 4",
-};
-
 int main(int argc, char **argv)
 {
-	struct dev			*dev;
-	int				rc, i;
+	struct dev		*dev;
+	int			i;
+	struct spdk_env_opts	opts;
+
+	spdk_env_opts_init(&opts);
+	opts.name = "aer";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	printf("Asynchronous Event Request test\n");
-
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
-			  (char **)(void *)(uintptr_t)ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		exit(1);
-	}
 
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");

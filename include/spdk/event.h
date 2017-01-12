@@ -81,8 +81,8 @@ struct spdk_app_opts {
 	spdk_sighandler_t	usr1_handler;
 
 	bool			enable_coredump;
-	uint32_t		dpdk_mem_channel;
-	uint32_t 		dpdk_master_core;
+	int			dpdk_mem_channel;
+	int	 		dpdk_master_core;
 	int			dpdk_mem_size;
 
 	/* The maximum latency allowed when passing an event
@@ -97,11 +97,6 @@ struct spdk_app_opts {
  * \brief Initialize the default value of opts
 */
 void spdk_app_opts_init(struct spdk_app_opts *opts);
-
-/**
- * \brief Initialize DPDK via opts.
-*/
-void spdk_dpdk_framework_init(struct spdk_app_opts *opts);
 
 /**
  * \brief Initialize an application to use the event framework. This must be called prior to using

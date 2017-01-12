@@ -37,9 +37,6 @@
 #include <assert.h>
 #include <pthread.h>
 
-#include "rte_config.h"
-#include "rte_eal.h"
-
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -175,19 +172,13 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-static char *ealargs[] = {
-	"fio",
-	"-n 4",
-	"--proc-type=auto",
-};
-
 /* Called once at initialization. This is responsible for gathering the size of
  * each "file", which in our case are in the form
  * "05:00.0/0" (PCI bus:device.function/NVMe NSID) */
 static int spdk_fio_setup(struct thread_data *td)
 {
-	int rc;
 	struct spdk_fio_thread *fio_thread;
+	struct spdk_env_opts opts;
 
 	fio_thread = calloc(1, sizeof(*fio_thread));
 	assert(fio_thread != NULL);
@@ -198,11 +189,9 @@ static int spdk_fio_setup(struct thread_data *td)
 	fio_thread->iocq = calloc(td->o.iodepth + 1, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "fio";
+	spdk_env_init(&opts);
 
 	/* Enumerate all of the controllers */
 	if (spdk_nvme_probe(NULL, td, probe_cb, attach_cb, NULL) != 0) {

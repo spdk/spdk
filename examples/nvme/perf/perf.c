@@ -1193,71 +1193,30 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
-static char *ealargs[] = {
-	"perf",
-	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
-	"-n 4",
-	"-m 512",  /* This can be overwritten by index in main(). */
-	"--proc-type=auto",
-#ifdef __linux__
-	"--base-virtaddr=0x1000000000",
-	"", /* May be replaced by --file-prefix */
-#endif
-
-};
-
 int main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker;
 	char task_pool_name[30];
 	uint32_t task_count;
-	size_t argcount;
-	char *core_mask = NULL;
-	char *mem_size = NULL;
-	char *file_prefix = NULL;
+	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
 
-	ealargs[1] = core_mask = spdk_sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
-	if (ealargs[1] == NULL) {
-		perror("ealargs spdk_sprintf_alloc");
-		return 1;
+	spdk_env_opts_init(&opts);
+	opts.name = "perf";
+	opts.shm_id = g_shm_id;
+	if (g_core_mask) {
+		opts.core_mask = g_core_mask;
 	}
 
-	ealargs[3] = mem_size = spdk_sprintf_alloc("-m %d", g_dpdk_mem ? g_dpdk_mem : 512);
-	if (ealargs[3] == NULL) {
-		free(ealargs[1]);
-		perror("ealargs spdk_sprintf_alloc");
-		return 1;
+	if (g_dpdk_mem) {
+		opts.dpdk_mem_size = g_dpdk_mem;
 	}
-
-	argcount = (sizeof(ealargs) / sizeof(ealargs[0])) - 1;
-
-#ifdef __linux__
-	if (g_shm_id >= 0) {
-		ealargs[6] = file_prefix = spdk_sprintf_alloc("--file-prefix=spdk%d",
-					   g_shm_id);
-		argcount++;
-	}
-#endif
-
-	rc = rte_eal_init(argcount, ealargs);
-
-	free(core_mask);
-	free(mem_size);
-
-	if (file_prefix) {
-		free(file_prefix);
-	}
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
+	spdk_env_init(&opts);
 
 	g_tsc_rate = spdk_get_ticks_hz();
 

@@ -138,13 +138,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-static const char *ealargs[] = {
-	"nvme_manage",
-	"-c 0x1",
-	"-n 4",
-	"--proc-type=auto",
-};
-
 static void usage(void)
 {
 	printf("NVMe Management Options");
@@ -843,15 +836,13 @@ update_firmware_image(void)
 
 int main(int argc, char **argv)
 {
-	int				rc, i;
+	int		i;
+	struct spdk_env_opts	opts;
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
-			  (char **)(void *)(uintptr_t)ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		exit(1);
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "nvme_manage";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
@@ -917,5 +908,5 @@ int main(int argc, char **argv)
 		spdk_nvme_detach(dev->ctrlr);
 	}
 
-	return rc;
+	return 0;
 }

@@ -133,6 +133,7 @@ static struct arb_context g_arbitration = {
 	.arbitration_config			= 0,
 	.io_size_bytes				= 131072,
 	.max_completions			= 0,
+	/* Default 4 cores for urgent/high/medium/low */
 	.core_mask				= "0xf",
 	.workload_type				= "randrw",
 };
@@ -1080,18 +1081,6 @@ set_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-
-static char *ealargs[] = {
-	"arb",
-	"-c 0xf", /* This must be the second parameter. It is overwritten by index in main(). */
-	"-n 4",
-	"--proc-type=auto",
-#ifdef __linux__
-	"--base-virtaddr=0x1000000000",
-	"", /* May be replaced by --file-prefix */
-#endif
-};
-
 int
 main(int argc, char **argv)
 {
@@ -1099,45 +1088,18 @@ main(int argc, char **argv)
 	struct worker_thread *worker;
 	char task_pool_name[30];
 	uint32_t task_count;
-	size_t argcount;
-	char *core_mask = NULL;
-	char *file_prefix = NULL;
+	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
 
-	/* Default 4 cores for (urgent / high / medium / low) 4 kinds of queues respectively */
-	ealargs[1] = core_mask = spdk_sprintf_alloc("-c %s", g_arbitration.core_mask);
-	if (ealargs[1] == NULL) {
-		perror("ealargs spdk_sprintf_alloc");
-		return 1;
-	}
-
-
-	argcount = (sizeof(ealargs) / sizeof(ealargs[0])) - 1;
-
-#ifdef __linux__
-	if (g_arbitration.shm_id >= 0) {
-		ealargs[5] = file_prefix = spdk_sprintf_alloc("--file-prefix=spdk%d",
-					   g_arbitration.shm_id);
-		argcount++;
-	}
-#endif
-
-	rc = rte_eal_init(argcount, ealargs);
-
-	free(core_mask);
-
-	if (file_prefix) {
-		free(file_prefix);
-	}
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "arb";
+	opts.core_mask = g_arbitration.core_mask;
+	opts.shm_id = g_arbitration.shm_id;
+	spdk_env_init(&opts);
 
 	g_arbitration.tsc_rate = spdk_get_ticks_hz();
 

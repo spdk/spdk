@@ -950,29 +950,19 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	spdk_nvme_detach(ctrlr);
 }
 
-static const char *ealargs[] = {
-	"identify",
-	"-c 0x1",
-	"-n 4",
-	"-m 512",
-	"--proc-type=auto",
-};
-
 int main(int argc, char **argv)
 {
 	int				rc;
+	struct spdk_env_opts		opts;
+
+	spdk_env_opts_init(&opts);
+	opts.name = "identify";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
-	}
-
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
-			  (char **)(void *)(uintptr_t)ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		exit(1);
 	}
 
 	rc = 0;

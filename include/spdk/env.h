@@ -52,6 +52,29 @@ extern "C" {
 struct spdk_pci_device;
 
 /**
+ * \brief Environment initialization options
+ */
+struct spdk_env_opts {
+	const char 		*name;
+	const char 		*core_mask;
+	int 			shm_id;
+	int	 		dpdk_mem_channel;
+	int	 		dpdk_master_core;
+	int			dpdk_mem_size;
+};
+
+/**
+ * \brief Initialize the default value of opts
+*/
+void spdk_env_opts_init(struct spdk_env_opts *opts);
+
+/**
+ * \brief Initialize the environment library. This must be called prior to using
+ * any other functions in this library.
+*/
+void spdk_env_init(const struct spdk_env_opts *opts);
+
+/**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment.
  */

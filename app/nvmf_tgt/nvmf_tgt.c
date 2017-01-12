@@ -372,9 +372,8 @@ This is the main file.
 
 \msc
 
-	c_runtime [label="C Runtime"], dpdk [label="DPDK"], nvmf [label="NVMf target"];
+	c_runtime [label="C Runtime"], nvmf [label="NVMf target"];
 	c_runtime=>nvmf [label="main()"];
-	nvmf=> [label="rte_eal_init()"];
 	nvmf=>nvmf [label="spdk_app_init()"];
 	nvmf=>nvmf [label="spdk_event_allocate()"];
 	nvmf=>nvmf [label="spdk_app_start()"];

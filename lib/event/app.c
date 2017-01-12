@@ -49,6 +49,7 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/trace.h"
@@ -56,9 +57,9 @@
 #define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
 #define SPDK_APP_DEFAULT_LOG_PRIORITY	"info"
 
-#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		2048
-#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	0
-#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	4
+#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
+#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
+#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 
 /* Add enough here to append ".pid" plus 2 digit instance ID */
@@ -243,6 +244,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	int			rc;
 	uint64_t		tpoint_group_mask;
 	char			*end;
+	struct spdk_env_opts env_opts = {};
 
 	if (opts->enable_coredump) {
 		struct rlimit core_limits;
@@ -277,6 +279,13 @@ spdk_app_init(struct spdk_app_opts *opts)
 
 	if (opts->shm_id < 0) {
 		opts->shm_id = getpid();
+	}
+
+	if (opts->shm_id == -1) {
+		sp = spdk_conf_find_section(config, "Global");
+		if (sp != NULL) {
+			opts->shm_id = spdk_conf_section_get_intval(sp, "MultiprocessGroupID");
+		}
 	}
 
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
@@ -324,7 +333,16 @@ spdk_app_init(struct spdk_app_opts *opts)
 		}
 	}
 
-	spdk_dpdk_framework_init(opts);
+	spdk_env_opts_init(&env_opts);
+
+	env_opts.name = opts->name;
+	env_opts.core_mask = opts->reactor_mask;
+	env_opts.shm_id = opts->shm_id;
+	env_opts.dpdk_mem_channel = opts->dpdk_mem_channel;
+	env_opts.dpdk_master_core = opts->dpdk_master_core;
+	env_opts.dpdk_mem_size = opts->dpdk_mem_size;
+
+	spdk_env_init(&env_opts);
 
 	/*
 	 * If mask not specified on command line or in configuration file,
