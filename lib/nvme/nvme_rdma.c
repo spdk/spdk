@@ -1151,9 +1151,11 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 
 	rc = nvme_fabrics_get_log_discovery_page(discovery_ctrlr, buffer, sizeof(buffer));
 	if (rc < 0) {
-		SPDK_ERRLOG("nvme_fabrics_get_log_discovery_page error\n");
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "nvme_fabrics_get_log_discovery_page error\n");
 		nvme_ctrlr_destruct(discovery_ctrlr);
-		return -1;
+		/* It is not a discovery_ctrlr info and try to directly connect it */
+		rc = nvme_ctrlr_probe(discovery_trid, NULL, probe_cb, cb_ctx);
+		return rc;
 	}
 
 	log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
