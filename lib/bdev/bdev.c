@@ -415,7 +415,9 @@ __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		spdk_bdev_cleanup_pending_rbuf_io(bdev);
 	}
+	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(bdev_io);
+	bdev_io->in_submit_request = false;
 }
 
 static int
@@ -438,6 +440,7 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->cb = cb;
 	bdev_io->gencnt = bdev->gencnt;
 	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
+	bdev_io->in_submit_request = false;
 	TAILQ_INIT(&bdev_io->child_io);
 }
 
@@ -798,9 +801,32 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	return 0;
 }
 
+static void
+bdev_io_deferred_completion(void *arg1, void *arg2)
+{
+	struct spdk_bdev_io *bdev_io = arg1;
+	enum spdk_bdev_io_status status = (enum spdk_bdev_io_status)arg2;
+
+	assert(bdev_io->in_submit_request == false);
+
+	spdk_bdev_io_complete(bdev_io, status);
+}
+
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
+	if (bdev_io->in_submit_request) {
+		/*
+		 * Defer completion via an event to avoid potential infinite recursion if the
+		 * user's completion callback issues a new I/O.
+		 */
+		spdk_event_call(spdk_event_allocate(spdk_app_get_current_core(),
+						    bdev_io_deferred_completion,
+						    bdev_io,
+						    (void *)status));
+		return;
+	}
+
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		/* Successful reset */
 		if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {

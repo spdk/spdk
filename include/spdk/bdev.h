@@ -265,6 +265,14 @@ struct spdk_bdev_io {
 	/** Status for the IO */
 	enum spdk_bdev_io_status status;
 
+	/**
+	 * Set to true while the bdev module submit_request function is in progress.
+	 *
+	 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
+	 * or if completion must be deferred via an event.
+	 */
+	bool in_submit_request;
+
 	/** Used in virtual device (e.g., RAID), indicates its parent spdk_bdev_io **/
 	struct spdk_bdev_io *parent;
 
