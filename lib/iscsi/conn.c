@@ -1320,7 +1320,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
 		event = spdk_iscsi_conn_get_migrate_event(conn, &lcore);
 		__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
-		__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
+		__sync_fetch_and_add(&g_num_connections[lcore], 1);
 		spdk_net_framework_clear_socket_association(conn->sock);
 		spdk_poller_unregister(&conn->poller, event);
 	}
