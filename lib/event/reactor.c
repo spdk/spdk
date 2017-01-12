@@ -345,6 +345,7 @@ _spdk_reactor_run(void *arg)
 					poller->state = SPDK_POLLER_STATE_WAITING;
 					spdk_poller_insert_timer(reactor, poller, now);
 				}
+				last_action = spdk_get_ticks();
 			}
 		}
 
