@@ -87,6 +87,23 @@ nvmf_find_subsystem(const char *subnqn)
 	return NULL;
 }
 
+struct spdk_nvmf_subsystem *
+spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
+{
+	struct spdk_nvmf_subsystem	*subsystem;
+	struct spdk_nvmf_session 	*session;
+
+	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+		TAILQ_FOREACH(session, &subsystem->sessions, link) {
+			if (session->cntlid == cntlid) {
+				return subsystem;
+			}
+		}
+	}
+
+	return NULL;
+}
+
 bool
 spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
 {
