@@ -67,10 +67,14 @@
   # poll. Units in microseconds.
   AcceptorPollRate 10000
 
+[Nvme]
   # Registers the application to receive timeout callback and to reset the controller.
   ResetControllerOnTimeout Yes
   # Timeout value.
   NvmeTimeoutValue 30
+  # Set how often the admin queue is polled for asynchronous events
+  # Units in microseconds.
+  AdminPollRate 100000
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.

@@ -64,6 +64,8 @@ struct nvme_device {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	struct spdk_pci_addr		pci_addr;
 
+	struct spdk_poller		*adminq_timer_poller;
+
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_device)	tailq;
 
@@ -113,6 +115,7 @@ static int lun_size_in_mb = 0;
 static int num_controllers = -1;
 static int g_reset_controller_on_timeout = 0;
 static int g_timeout = 0;
+static int g_nvme_adminq_poll_timeout_us = 0;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
@@ -179,6 +182,14 @@ blockdev_nvme_poll(void *arg)
 	struct spdk_nvme_qpair *qpair = arg;
 
 	spdk_nvme_qpair_process_completions(qpair, 0);
+}
+
+static void
+blockdev_nvme_poll_adminq(void *arg)
+{
+	struct spdk_nvme_ctrlr *ctrlr = arg;
+
+	spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
 static int
@@ -526,6 +537,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	dev->id = nvme_controller_index++;
 
 	nvme_ctrlr_initialize_blockdevs(dev, nvme_luns_per_ns, dev->id);
+
+	spdk_poller_register(&dev->adminq_timer_poller, blockdev_nvme_poll_adminq, ctrlr,
+			     spdk_app_get_current_core(), g_nvme_adminq_poll_timeout_us);
+
 	spdk_io_device_register(ctrlr, blockdev_nvme_create_cb, blockdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_devices, dev, tailq);
@@ -658,6 +673,11 @@ nvme_library_init(void)
 		g_timeout = 0;
 	}
 
+	g_nvme_adminq_poll_timeout_us = spdk_conf_section_get_intval(sp, "AdminPollRate");
+	if (g_nvme_adminq_poll_timeout_us <= 0) {
+		g_nvme_adminq_poll_timeout_us = 1000000;
+	}
+
 	return spdk_bdev_nvme_create(&probe_ctx);
 }
 
@@ -669,6 +689,7 @@ nvme_library_fini(void)
 	while (!TAILQ_EMPTY(&g_nvme_devices)) {
 		dev = TAILQ_FIRST(&g_nvme_devices);
 		TAILQ_REMOVE(&g_nvme_devices, dev, tailq);
+		spdk_poller_unregister(&dev->adminq_timer_poller, NULL);
 		spdk_nvme_detach(dev->ctrlr);
 		free(dev);
 	}
@@ -898,6 +919,9 @@ blockdev_nvme_get_spdk_running_config(FILE *fp)
 	if (lun_size_in_mb != 0) {
 		fprintf(fp, "  LunSizeInMB %d\n", lun_size_in_mb);
 	}
+	fprintf(fp, "  # Set how often the admin queue is polled for asynchronous events.\n"
+		"  # Units in microseconds.\n"
+		"  AdminPollRate %d\n", g_nvme_adminq_poll_timeout_us);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)

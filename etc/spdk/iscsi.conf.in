@@ -113,6 +113,9 @@
   ResetControllerOnTimeout Yes
   # Timeout value.
   NvmeTimeoutValue 30
+  # Set how often the admin queue is polled for asynchronous events.
+  # Units in microseconds.
+  AdminPollRate 100000
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
