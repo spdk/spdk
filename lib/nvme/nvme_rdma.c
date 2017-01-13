@@ -582,6 +582,8 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	struct ibv_device_attr 				attr;
 	int 						ret;
 	struct rdma_cm_event 				*event;
+	struct spdk_nvme_ctrlr 				*ctrlr;
+	struct nvme_rdma_ctrlr 				*rctrlr;
 
 	ret = ibv_query_device(rqpair->cm_id->verbs, &attr);
 	if (ret != 0) {
@@ -591,9 +593,17 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 
 	param.responder_resources = nvme_min(rqpair->num_entries, attr.max_qp_rd_atom);
 
+	ctrlr = rqpair->qpair.ctrlr;
+	if (!ctrlr) {
+		return -1;
+	}
+
+	rctrlr = nvme_rdma_ctrlr(ctrlr);
+
 	request_data.qid = rqpair->qpair.id;
 	request_data.hrqsize = rqpair->num_entries;
 	request_data.hsqsize = rqpair->num_entries - 1;
+	request_data.cntlid = rctrlr->cntlid;
 
 	param.private_data = &request_data;
 	param.private_data_len = sizeof(request_data);
