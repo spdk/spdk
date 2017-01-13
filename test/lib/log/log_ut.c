@@ -45,7 +45,7 @@ static void
 log_test(void)
 {
 	int rc = 0;
-	char *buf;
+	const char *buf;
 
 	rc = spdk_set_log_facility("test");
 	CU_ASSERT(rc == -1);

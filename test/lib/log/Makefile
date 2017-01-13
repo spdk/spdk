@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 APP = log_ut
 
 C_SRCS := log_ut.c
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/log -DSYSLOG_NAMES
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/log
 
 LIBS += $(SPDK_LIBS) -lcunit
 
