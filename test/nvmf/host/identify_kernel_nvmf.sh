@@ -43,7 +43,12 @@ echo -n $NVMF_PORT > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
 
 ln -s /sys/kernel/config/nvmet/subsystems/$subsystemname /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
-$rootdir/examples/nvme/identify/identify -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT" -n nqn.2014-08.org.nvmexpress.discovery -t all
+$rootdir/examples/nvme/identify/identify -r "\
+	trtype:RDMA \
+	adrfam:IPv4 \
+	traddr:$NVMF_FIRST_TARGET_IP \
+	trsvcid:$NVMF_PORT \
+	subnqn:nqn.2014-08.org.nvmexpress.discovery" -t all
 
 rm -rf /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
