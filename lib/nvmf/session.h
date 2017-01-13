@@ -68,7 +68,7 @@ struct spdk_nvmf_conn {
  * At least one admin connection and additional IOQ connections.
  */
 struct spdk_nvmf_session {
-	uint32_t			id;
+	uint16_t			cntlid;
 	struct spdk_nvmf_subsystem 	*subsys;
 
 	struct {

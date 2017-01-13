@@ -47,13 +47,15 @@
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
 
+static uint16_t g_next_cntlid = 1;
+
 static void
 nvmf_init_discovery_session_properties(struct spdk_nvmf_session *session)
 {
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
 	/* extended data for get log page supportted */
 	session->vcdata.lpa.edlp = 1;
-	session->vcdata.cntlid = 0; /* There is one controller per subsystem, so its id is 0 */
+	session->vcdata.cntlid = session->cntlid;
 	session->vcdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
 	session->vcdata.nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
 	session->vcdata.nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
@@ -95,7 +97,7 @@ nvmf_init_nvme_session_properties(struct spdk_nvmf_session *session)
 	session->subsys->ops->ctrlr_get_data(session);
 
 	session->vcdata.aerl = 0;
-	session->vcdata.cntlid = session->id;
+	session->vcdata.cntlid = session->cntlid;
 	session->vcdata.kas = 10;
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
 	session->vcdata.mdts = nvmf_u32log2(g_nvmf_tgt.max_io_size / 4096);
@@ -257,7 +259,8 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		}
 
 		TAILQ_INIT(&session->connections);
-		session->id = subsystem->session_id++;
+
+		session->cntlid = g_next_cntlid++;
 		session->kato = cmd->kato;
 		session->async_event_config.raw = 0;
 		session->num_connections = 0;
@@ -288,7 +291,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 
 		session = NULL;
 		TAILQ_FOREACH(tmp, &subsystem->sessions, link) {
-			if (tmp->id == data->cntlid) {
+			if (tmp->cntlid == data->cntlid) {
 				session = tmp;
 				break;
 			}

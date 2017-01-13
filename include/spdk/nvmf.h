@@ -146,7 +146,6 @@ struct spdk_nvmf_subsystem {
 	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
 
 	TAILQ_HEAD(, spdk_nvmf_session)		sessions;
-	uint32_t				session_id;
 
 	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
 	uint32_t				num_listen_addrs;
