@@ -643,6 +643,15 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_ERRLOG("connect request: missing cm_id ibv_context\n");
 		goto err0;
 	}
+
+	rdma_param = &event->param.conn;
+	if (rdma_param->private_data == NULL ||
+	    rdma_param->private_data_len < sizeof(struct spdk_nvmf_rdma_request_private_data)) {
+		SPDK_ERRLOG("connect request: no private data provided\n");
+		goto err0;
+	}
+	private_data = rdma_param->private_data;
+
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      event->id->verbs->device->name, event->id->verbs->device->dev_name);
 
@@ -669,7 +678,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	max_rw_depth = nvmf_min(max_rw_depth, addr->attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
-	rdma_param = &event->param.conn;
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Host (Initiator) NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
 		      rdma_param->initiator_depth, rdma_param->responder_resources);
@@ -681,7 +689,6 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	 * optional. */
 	if (rdma_param->private_data != NULL &&
 	    rdma_param->private_data_len >= sizeof(struct spdk_nvmf_rdma_request_private_data)) {
-		private_data = rdma_param->private_data;
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Receive Queue Size: %d\n", private_data->hrqsize);
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Send Queue Size: %d\n", private_data->hsqsize);
 		max_queue_depth = nvmf_min(max_queue_depth, private_data->hrqsize);
