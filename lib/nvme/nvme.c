@@ -443,4 +443,123 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	return rc;
 }
 
+static int
+parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
+{
+	if (strcasecmp(str, "PCIe") == 0) {
+		*trtype = SPDK_NVME_TRANSPORT_PCIE;
+	} else if (strcasecmp(str, "RDMA") == 0) {
+		*trtype = SPDK_NVME_TRANSPORT_RDMA;
+	} else {
+		return -ENOENT;
+	}
+	return 0;
+}
+
+static int
+parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *str)
+{
+	if (strcasecmp(str, "IPv4") == 0) {
+		*adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	} else if (strcasecmp(str, "IPv6") == 0) {
+		*adrfam = SPDK_NVMF_ADRFAM_IPV6;
+	} else if (strcasecmp(str, "IB") == 0) {
+		*adrfam = SPDK_NVMF_ADRFAM_IB;
+	} else if (strcasecmp(str, "FC") == 0) {
+		*adrfam = SPDK_NVMF_ADRFAM_FC;
+	} else {
+		return -ENOENT;
+	}
+	return 0;
+}
+
+int
+spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str)
+{
+	const char *sep;
+	const char *whitespace = " \t\n";
+	size_t key_len, val_len;
+	char key[32];
+	char val[1024];
+
+	if (trid == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
+	while (*str != '\0') {
+		str += strspn(str, whitespace);
+
+		sep = strchr(str, ':');
+		if (!sep) {
+			SPDK_ERRLOG("Key without : separator\n");
+			return -EINVAL;
+		}
+
+		key_len = sep - str;
+		if (key_len >= sizeof(key)) {
+			SPDK_ERRLOG("Transport key length %zu greater than maximum allowed %zu\n",
+				    key_len, sizeof(key) - 1);
+			return -EINVAL;
+		}
+
+		memcpy(key, str, key_len);
+		key[key_len] = '\0';
+
+		str += key_len + 1; /* Skip key: */
+		val_len = strcspn(str, whitespace);
+		if (val_len == 0) {
+			SPDK_ERRLOG("Key without value\n");
+			return -EINVAL;
+		}
+
+		if (val_len >= sizeof(val)) {
+			SPDK_ERRLOG("Transport value length %zu greater than maximum allowed %zu\n",
+				    val_len, sizeof(val) - 1);
+			return -EINVAL;
+		}
+
+		memcpy(val, str, val_len);
+		val[val_len] = '\0';
+
+		str += val_len;
+
+		if (strcasecmp(key, "trtype") == 0) {
+			if (parse_trtype(&trid->trtype, val) != 0) {
+				SPDK_ERRLOG("Unknown trtype '%s'\n", val);
+				return -EINVAL;
+			}
+		} else if (strcasecmp(key, "adrfam") == 0) {
+			if (parse_adrfam(&trid->adrfam, val) != 0) {
+				SPDK_ERRLOG("Unknown adrfam '%s'\n", val);
+				return -EINVAL;
+			}
+		} else if (strcasecmp(key, "traddr") == 0) {
+			if (val_len > SPDK_NVMF_TRADDR_MAX_LEN) {
+				SPDK_ERRLOG("traddr length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRADDR_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(trid->traddr, val, val_len + 1);
+		} else if (strcasecmp(key, "trsvcid") == 0) {
+			if (val_len > SPDK_NVMF_TRSVCID_MAX_LEN) {
+				SPDK_ERRLOG("trsvcid length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRSVCID_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(trid->trsvcid, val, val_len + 1);
+		} else if (strcasecmp(key, "subnqn") == 0) {
+			if (val_len > SPDK_NVMF_NQN_MAX_LEN) {
+				SPDK_ERRLOG("subnqn length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_NQN_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(trid->subnqn, val, val_len + 1);
+		} else {
+			SPDK_ERRLOG("Unknown transport ID key '%s'\n", key);
+		}
+	}
+
+	return 0;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)

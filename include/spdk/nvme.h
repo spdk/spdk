@@ -170,6 +170,29 @@ struct spdk_nvme_transport_id {
 };
 
 /**
+ * Parse the string representation of a transport ID.
+ *
+ * \param trid Output transport ID structure (must be allocated and initialized by caller).
+ * \param str Input string representation of a transport ID to parse.
+ * \return 0 if parsing was successful and trid is filled out, or negated errno values on failure.
+ *
+ * str must be a zero-terminated C string containing one or more key:value pairs separated by
+ * whitespace.
+ *
+ * Key          | Value
+ * ------------ | -----
+ * trtype       | Transport type (e.g. PCIe, RDMA)
+ * adrfam       | Address family (e.g. IPv4, IPv6)
+ * traddr       | Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)
+ * trsvcid      | Transport service identifier (e.g. 4420)
+ * subnqn       | Subsystem NQN
+ *
+ * Unspecified fields of trid are left unmodified, so the caller must initialize trid (for example,
+ * memset() to 0) before calling this function.
+ */
+int spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str);
+
+/**
  * Determine whether the NVMe library can handle a specific NVMe over Fabrics transport type.
  *
  * \param trtype NVMe over Fabrics transport type to check.

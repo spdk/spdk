@@ -162,6 +162,30 @@ test_opc_data_transfer(void)
 	CU_ASSERT(xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST);
 }
 
+static void
+test_trid_parse(void)
+{
+	struct spdk_nvme_transport_id trid;
+
+	memset(&trid, 0, sizeof(trid));
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid,
+					       "trtype:rdma\n"
+					       "adrfam:ipv4\n"
+					       "traddr:192.168.100.8\n"
+					       "trsvcid:4420\n"
+					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(trid.trtype == SPDK_NVME_TRANSPORT_RDMA);
+	CU_ASSERT(trid.adrfam == SPDK_NVMF_ADRFAM_IPV4);
+	CU_ASSERT(strcmp(trid.traddr, "192.168.100.8") == 0);
+	CU_ASSERT(strcmp(trid.trsvcid, "4420") == 0);
+	CU_ASSERT(strcmp(trid.subnqn, "nqn.2014-08.org.nvmexpress.discovery") == 0);
+
+	memset(&trid, 0, sizeof(trid));
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid, "trtype:PCIe traddr:0000:04:00.0") == 0);
+	CU_ASSERT(trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
+	CU_ASSERT(strcmp(trid.traddr, "0000:04:00.0") == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -178,7 +202,8 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test_opc_data_transfer", test_opc_data_transfer) == NULL
+		CU_add_test(suite, "test_opc_data_transfer", test_opc_data_transfer) == NULL ||
+		CU_add_test(suite, "test_trid_parse", test_trid_parse) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
