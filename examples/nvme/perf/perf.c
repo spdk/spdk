@@ -642,8 +642,15 @@ static void usage(char *program_name)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
-	printf("\t[-r discover info of remote NVMe over Fabrics target:\n");
-	printf("\t Format: TRTYPE:TRADDR:TRVCSID e.g., rdma:192.168.100.8:4420]\n");
+	printf("\t[-r discover info of remote NVMe over Fabrics target]\n");
+	printf("\t Format: 'key:value [key:value] ...'\n");
+	printf("\t Keys:\n");
+	printf("\t  trtype      Transport type (e.g. RDMA)\n");
+	printf("\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
+	printf("\t  traddr      Transport address (e.g. 192.168.100.8)\n");
+	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
+	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("\t Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
 	printf("\t[-d DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
@@ -1040,8 +1047,6 @@ static int
 register_controllers(void)
 {
 	struct spdk_nvme_transport_id trid;
-	char *p, *p1;
-	int n;
 
 	printf("Initializing NVMe Controllers\n");
 
@@ -1049,48 +1054,15 @@ register_controllers(void)
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 	}
 
-	/* The format of g_nvmf_discover_info should be: TRTYPE:TRADDR:TRVCSID */
 	if (g_nvmf_discover_info) {
+		memset(&trid, 0, sizeof(trid));
 		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-		p = (char *)g_nvmf_discover_info;
-		p1 = strchr(p, ':');
-		if (p1 == NULL) {
-			fprintf(stderr, "wrong format of discover info\n");
-			return 0;
+		if (spdk_nvme_transport_id_parse(&trid, g_nvmf_discover_info) != 0) {
+			fprintf(stderr, "Invalid transport ID format\n");
+			return 1;
 		}
 
-		n = p1 - p;
-		if (n == 0) {
-			fprintf(stderr, "wrong format of discover info\n");
-			return 0;
-		}
-		p[n] = '\0';
-
-		if (strncmp(p, "rdma", 4) != 0) {
-			fprintf(stderr, "wrong transport type \n");
-			return 0;
-		}
-		trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-		trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-
-		p = (char *)p1 + 1;
-		p1 = strchr(p, ':');
-		if (p1 == NULL) {
-			fprintf(stderr, "wrong format of discover info\n");
-			return 0;
-		}
-
-		n = p1 - p;
-		if ((n == 0) || (n > SPDK_NVMF_TRADDR_MAX_LEN)) {
-			fprintf(stderr, "wrong format of discover info\n");
-			return 0;
-		}
-		p[n] = '\0';
-		snprintf(trid.traddr, sizeof(trid.traddr), "%s", p);
-
-		p = (char *)p1 + 1;
-		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", p);
 		if (spdk_nvme_probe(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed\n");
 		}
