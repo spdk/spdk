@@ -912,8 +912,6 @@ parse_args(int argc, char **argv)
 #endif
 			break;
 		case 'a':
-			g_trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-			g_trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 			snprintf(g_trid.traddr, sizeof(g_trid.traddr), "%s", optarg);
 			break;
 		case 's':
@@ -933,6 +931,9 @@ parse_args(int argc, char **argv)
 	    (strlen(g_trid.subnqn) == 0)) {
 		return 0;
 	}
+
+	g_trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	g_trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 
 	optind = 1;
 
@@ -965,6 +966,7 @@ static const char *ealargs[] = {
 int main(int argc, char **argv)
 {
 	int				rc;
+	struct spdk_nvme_transport_id	*tr_id = NULL;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
@@ -986,7 +988,11 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if ((g_trid.trtype == SPDK_NVME_TRANSPORT_PCIE) && (strlen(g_trid.traddr) != 0)) {
+		tr_id = &g_trid;
+	}
+
+	if (spdk_nvme_probe(tr_id, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;
 	}

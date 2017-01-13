@@ -29,6 +29,9 @@ fi
 
 timing_enter identify
 $rootdir/examples/nvme/identify/identify
+for bdf in $(linux_iter_pci 0108); do
+	$rootdir/examples/nvme/identify/identify -a ${bdf}
+done
 timing_exit identify
 
 timing_enter perf

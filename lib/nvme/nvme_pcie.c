@@ -77,6 +77,8 @@
 struct nvme_pcie_enum_ctx {
 	spdk_nvme_probe_cb probe_cb;
 	void *cb_ctx;
+	struct spdk_pci_addr pci_addr;
+	bool has_pci_addr;
 };
 
 /* PCIe transport extensions for spdk_nvme_ctrlr */
@@ -616,6 +618,12 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		}
 	}
 
+	/* check whether user passes the pci_addr */
+	if (enum_ctx->has_pci_addr &&
+	    (spdk_pci_addr_compare(&pci_addr, &enum_ctx->pci_addr) != 0)) {
+		return 0;
+	}
+
 	return nvme_ctrlr_probe(&trid, pci_dev,
 				enum_ctx->probe_cb, enum_ctx->cb_ctx);
 }
@@ -626,10 +634,17 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 		     spdk_nvme_probe_cb probe_cb,
 		     spdk_nvme_remove_cb remove_cb)
 {
-	struct nvme_pcie_enum_ctx enum_ctx;
+	struct nvme_pcie_enum_ctx enum_ctx = {};
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
+
+	if (strlen(trid->traddr) != 0) {
+		if (spdk_pci_addr_parse(&enum_ctx.pci_addr, trid->traddr)) {
+			return -1;
+		}
+		enum_ctx.has_pci_addr = true;
+	}
 
 	if (hotplug_fd < 0) {
 		hotplug_fd = spdk_uevent_connect();
