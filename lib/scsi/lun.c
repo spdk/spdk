@@ -35,6 +35,7 @@
 #include "scsi_internal.h"
 #include "spdk/endian.h"
 #include "spdk/io_channel.h"
+#include "spdk/event.h"
 
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
@@ -235,7 +236,15 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 		spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
 		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
-		rc = spdk_bdev_scsi_execute(lun->bdev, task);
+		if (!lun->removed) {
+			rc = spdk_bdev_scsi_execute(lun->bdev, task);
+		} else {
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ABORTED_COMMAND,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			rc = SPDK_SCSI_TASK_COMPLETE;
+		}
 
 		switch (rc) {
 		case SPDK_SCSI_TASK_PENDING:
@@ -249,6 +258,26 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 			abort();
 		}
 	}
+}
+
+static void
+spdk_scsi_lun_hotplug(void *arg)
+{
+	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
+
+	if (TAILQ_EMPTY(&lun->pending_tasks) && TAILQ_EMPTY(&lun->tasks)) {
+		spdk_scsi_lun_free_io_channel(lun);
+		spdk_scsi_lun_delete(lun->name);
+	}
+}
+
+static void spdk_scsi_lun_hot_remove(void *remove_ctx)
+{
+	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
+
+	lun->removed = true;
+	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun,
+			     lun->lcore, 0);
 }
 
 /*!
@@ -285,7 +314,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 		return NULL;
 	}
 
-	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
+	if (!spdk_bdev_claim(bdev, spdk_scsi_lun_hot_remove, lun)) {
 		SPDK_ERRLOG("LUN %s: bdev %s is already claimed\n", name, bdev->name);
 		free(lun);
 		return NULL;
@@ -312,6 +341,7 @@ int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_unclaim(lun->bdev);
+	spdk_poller_unregister(&lun->hotplug_poller, NULL);
 	spdk_scsi_lun_db_delete(lun);
 
 	free(lun);
@@ -393,6 +423,8 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 		SPDK_ERRLOG("io_channel already allocated for lun %s\n", lun->name);
 		return -1;
 	}
+
+	lun->lcore = spdk_app_get_current_core();
 
 	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev, SPDK_IO_PRIORITY_DEFAULT);
 	if (lun->io_channel == NULL) {

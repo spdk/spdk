@@ -218,6 +218,15 @@ struct spdk_scsi_lun {
 	/** Name for this LUN. */
 	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
 
+	/** Poller to release the resource of the lun when it is hot removed */
+	struct spdk_poller *hotplug_poller;
+
+	/** The core hotplug_poller is assigned */
+	uint32_t			lcore;
+
+	/** The LUN is removed */
+	bool				removed;
+
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
 	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
 };
