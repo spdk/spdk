@@ -346,16 +346,14 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
-	struct spdk_nvme_qpair *qpair;
-
+	/*
+	 * Set the flag here and leave the work failure of qpairs to
+	 * spdk_nvme_qpair_process_completions().
+	 */
 	if (hot_remove) {
 		ctrlr->is_removed = true;
 	}
 	ctrlr->is_failed = true;
-	nvme_qpair_fail(ctrlr->adminq);
-	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-		nvme_qpair_fail(qpair);
-	}
 }
 
 static void

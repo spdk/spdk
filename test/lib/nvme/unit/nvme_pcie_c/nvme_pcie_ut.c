@@ -66,6 +66,11 @@ struct io_request {
 };
 
 void
+nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
+{
+}
+
+void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
 	abort();

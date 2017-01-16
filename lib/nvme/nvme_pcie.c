@@ -1866,6 +1866,11 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	uint32_t		 num_completions = 0;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 
+	if (qpair->ctrlr->is_failed) {
+		nvme_qpair_fail(qpair);
+		return 0;
+	}
+
 	if (!nvme_pcie_qpair_check_enabled(qpair)) {
 		/*
 		 * qpair is not enabled, likely because a controller reset is
