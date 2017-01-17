@@ -45,41 +45,78 @@
 static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
 
 unsigned int spdk_g_notice_stderr_flag = 1;
-unsigned int spdk_g_log_facility = LOG_DAEMON;
+int spdk_g_log_facility = LOG_DAEMON;
 unsigned int spdk_g_log_priority = LOG_NOTICE;
 
 SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
 
 #define MAX_TMPBUF 1024
 
+struct syslog_code {
+	const char *c_name;
+	int c_val;
+};
+
+static const struct syslog_code facilitynames[] = {
+	{ "auth",	LOG_AUTH,	},
+	{ "authpriv",	LOG_AUTHPRIV,	},
+	{ "cron",	LOG_CRON,	},
+	{ "daemon",	LOG_DAEMON,	},
+	{ "ftp",	LOG_FTP,	},
+	{ "kern",	LOG_KERN,	},
+	{ "lpr",	LOG_LPR,	},
+	{ "mail",	LOG_MAIL,	},
+	{ "news",	LOG_NEWS,	},
+	{ "syslog",	LOG_SYSLOG,	},
+	{ "user",	LOG_USER,	},
+	{ "uucp",	LOG_UUCP,	},
+	{ "local0",	LOG_LOCAL0,	},
+	{ "local1",	LOG_LOCAL1,	},
+	{ "local2",	LOG_LOCAL2,	},
+	{ "local3",	LOG_LOCAL3,	},
+	{ "local4",	LOG_LOCAL4,	},
+	{ "local5",	LOG_LOCAL5,	},
+	{ "local6",	LOG_LOCAL6,	},
+	{ "local7",	LOG_LOCAL7,	},
+#ifdef __FreeBSD__
+	{ "console",	LOG_CONSOLE,	},
+	{ "ntp",	LOG_NTP,	},
+	{ "security",	LOG_SECURITY,	},
+#endif
+	{ NULL,		-1,		}
+};
+
 int
 spdk_set_log_facility(const char *facility)
 {
-	if (strcasecmp(facility, "daemon") == 0) {
-		spdk_g_log_facility = LOG_DAEMON;
-	} else if (strcasecmp(facility, "auth") == 0) {
-		spdk_g_log_facility = LOG_AUTH;
-	} else if (strcasecmp(facility, "authpriv") == 0) {
-		spdk_g_log_facility = LOG_AUTHPRIV;
-	} else if (strcasecmp(facility, "local1") == 0) {
-		spdk_g_log_facility = LOG_LOCAL1;
-	} else if (strcasecmp(facility, "local2") == 0) {
-		spdk_g_log_facility = LOG_LOCAL2;
-	} else if (strcasecmp(facility, "local3") == 0) {
-		spdk_g_log_facility = LOG_LOCAL3;
-	} else if (strcasecmp(facility, "local4") == 0) {
-		spdk_g_log_facility = LOG_LOCAL4;
-	} else if (strcasecmp(facility, "local5") == 0) {
-		spdk_g_log_facility = LOG_LOCAL5;
-	} else if (strcasecmp(facility, "local6") == 0) {
-		spdk_g_log_facility = LOG_LOCAL6;
-	} else if (strcasecmp(facility, "local7") == 0) {
-		spdk_g_log_facility = LOG_LOCAL7;
-	} else {
-		spdk_g_log_facility = LOG_DAEMON;
-		return -1;
+	int i;
+
+	for (i = 0; facilitynames[i].c_name != NULL; i++) {
+		if (strcasecmp(facilitynames[i].c_name, facility) == 0) {
+			spdk_g_log_facility = facilitynames[i].c_val;
+			return 0;
+		}
 	}
-	return 0;
+
+	spdk_g_log_facility = LOG_DAEMON;
+	return -1;
+}
+
+const char *
+spdk_get_log_facility(void)
+{
+	const char *def_name = NULL;
+	int i;
+
+	for (i = 0; facilitynames[i].c_name != NULL; i++) {
+		if (facilitynames[i].c_val == spdk_g_log_facility) {
+			return facilitynames[i].c_name;
+		} else if (facilitynames[i].c_val == LOG_DAEMON) {
+			def_name = facilitynames[i].c_name;
+		}
+	}
+
+	return def_name;
 }
 
 int

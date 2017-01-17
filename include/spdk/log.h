@@ -58,6 +58,7 @@ extern unsigned int spdk_g_notice_stderr_flag;
 	spdk_errlog(__FILE__, __LINE__, __func__, __VA_ARGS__)
 
 int spdk_set_log_facility(const char *facility);
+const char *spdk_get_log_facility(void);
 int spdk_set_log_priority(const char *priority);
 void spdk_noticelog(const char *file, const int line, const char *func,
 		    const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));

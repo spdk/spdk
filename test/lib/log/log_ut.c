@@ -45,11 +45,22 @@ static void
 log_test(void)
 {
 	int rc = 0;
+	const char *buf;
 
 	rc = spdk_set_log_facility("test");
 	CU_ASSERT(rc == -1);
+	CU_ASSERT_EQUAL(spdk_g_log_facility, LOG_DAEMON);
 	rc = spdk_set_log_facility("local7");
 	CU_ASSERT(rc == 0);
+	CU_ASSERT_EQUAL(spdk_g_log_facility, LOG_LOCAL7);
+
+	spdk_g_log_facility = -1;
+	buf = spdk_get_log_facility();
+	CU_ASSERT_STRING_EQUAL(buf, "daemon");
+	spdk_g_log_facility = LOG_LOCAL7;
+	buf = spdk_get_log_facility();
+	CU_ASSERT_STRING_EQUAL(buf, "local7");
+
 	rc = spdk_set_log_priority("test");
 	CU_ASSERT(rc == -1);
 	rc = spdk_set_log_priority("debug");
