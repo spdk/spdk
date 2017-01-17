@@ -1,12 +1,11 @@
-SPDK Porting Guide
-==================
+# SPDK Porting Guide {#porting}
 
 SPDK is ported to new environments by implementing the *env*
 library interface.  The *env* interface provides APIs for drivers
 to allocate physically contiguous and pinned memory, perform PCI
 operations (config cycles and mapping BARs), virtual to physical
 address translation and managing memory pools.  The *env* API is
-defined in [include/spdk/env.h](include/spdk/env.h).
+defined in include/spdk/env.h.
 
 SPDK includes a default implementation of the *env* library based
 on the Data Plane Development Kit ([DPDK](http://dpdk.org/)).

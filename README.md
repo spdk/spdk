@@ -24,7 +24,7 @@ Documentation
 =============
 
 [Doxygen API documentation](http://www.spdk.io/doc/) is available, as
-well as a [Porting Guide](PORTING.md) for porting SPDK to different frameworks
+well as a [Porting Guide](http://www.spdk.io/doc/porting.html) for porting SPDK to different frameworks
 and operating systems.
 
 Many examples are available in the `examples` directory.

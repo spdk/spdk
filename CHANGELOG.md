@@ -73,7 +73,7 @@ by the NVMe library.
 The `env` environment abstraction library has been introduced, and a default
 DPDK-based implementation is provided as part of SPDK.  The goal of the `env`
 layer is to enable use of alternate user-mode memory allocation and PCI access
-libraries.  See `PORTING.md` for more details.
+libraries.  See `doc/porting.md` for more details.
 
 The build process has been modified to produce all of the library files in the
 `build/lib` directory.  This is intended to simplify the use of SPDK from external

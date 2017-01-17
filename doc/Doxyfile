@@ -761,6 +761,7 @@ WARN_LOGFILE           =
 INPUT                  = ../include/spdk \
                          index.md \
                          directory_structure.md \
+                         porting.md \
                          ioat/index.md \
                          nvme/index.md \
                          nvme/async_completion.md \
