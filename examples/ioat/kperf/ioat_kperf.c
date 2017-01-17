@@ -39,6 +39,8 @@
 #include <inttypes.h>
 #include <assert.h>
 
+#define ioat_max(a,b) (((a)>(b))?(a):(b))
+
 static int
 check_modules(char *driver_name)
 {
@@ -331,26 +333,31 @@ int main(int argc, char *argv[])
 		sprintf(channel, "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/copied", i);
 		rc = get_u64_from_file(channel, &copied);
 		if (rc < 0) {
-			fprintf(stderr, "Cannot get channel copied bytes\n");
+			fprintf(stderr, "Cannot get channel copied data\n");
 			return -1;
 		}
 		/* time in microseconds for total data transfer length */
 		sprintf(channel, "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/elapsed_time", i);
+		/* elapsed_time is in microsecond */
 		rc = get_u64_from_file(channel, &elapsed_time);
 		if (rc < 0) {
 			fprintf(stderr, "Cannot get channel elapsed time\n");
 			return -1;
 		}
 		assert(elapsed_time != 0);
-		perf = copied / elapsed_time;
+		perf = (copied * 1000 * 1000) / (elapsed_time * 1024 * 1024);
 		total_copied += copied;
-		total_time += elapsed_time;
-		fprintf(stdout, "Channel %d Performance Data %"PRIu64" MB/s\n",
+		total_time = ioat_max(elapsed_time, total_time);
+		fprintf(stdout, "Channel %d Bandwidth %"PRIu64" MiB/s\n",
 			i, perf);
 	}
 
-	if (total_time && threads)
-		fprintf(stdout, "Total Channel Performance Data %"PRIu64" MB/s\n",
-			total_copied / total_time / threads);
+	if (total_time && threads) {
+		fprintf(stdout, "Total Channel Bandwidth: %"PRIu64" MiB/s\n",
+			total_copied / total_time);
+		fprintf(stdout, "Average Bandwidth Per Channel: %"PRIu64" MiB/s\n",
+			(total_copied * 1000 * 1000) / (total_time * threads * 1024 * 1024));
+	}
+
 	return 0;
 }
