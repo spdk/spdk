@@ -43,6 +43,12 @@
   NumberOfLuns 8
   LunSizeInMB 64
 
+# Users must change this section to match the /dev/sdX devices to be virtual
+# NVMe devices. The devices are accessed using Linux AIO.
+[AIO]
+  AIO /dev/sdb
+  AIO /dev/sdc
+
 # Define NVMf protocol global options
 [Nvmf]
   # Set the maximum number of submission and completion queues per session.
@@ -130,3 +136,5 @@
   SN SPDK00000000000001
   Namespace Malloc0
   Namespace Malloc1
+  Namespace AIO0
+  Namespace AIO1
