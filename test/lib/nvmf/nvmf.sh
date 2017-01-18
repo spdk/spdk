@@ -12,6 +12,7 @@ timing_enter unit
 $valgrind $testdir/request/request_ut
 $valgrind $testdir/session/session_ut
 $valgrind $testdir/subsystem/subsystem_ut
+$valgrind $testdir/direct/direct_ut
 timing_exit unit
 
 timing_exit nvmf

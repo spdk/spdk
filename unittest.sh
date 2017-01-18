@@ -24,6 +24,7 @@ test/lib/log/log_ut
 test/lib/nvmf/request/request_ut
 test/lib/nvmf/session/session_ut
 test/lib/nvmf/subsystem/subsystem_ut
+test/lib/nvmf/direct/direct_ut
 
 test/lib/scsi/dev/dev_ut
 test/lib/scsi/lun/lun_ut
