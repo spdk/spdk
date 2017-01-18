@@ -169,6 +169,19 @@ void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
  */
 void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc);
 
+/**
+ * Complete a bdev_io with a SCSI status code.
+ *
+ * \param bdev_io I/O to complete.
+ * \param sc SCSI Status Code.
+ * \param sk SCSI Sense Key.
+ * \param asc SCSI Additional Sense Code.
+ * \param ascq SCSI Additional Sense Code Qualifier.
+ */
+void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
+				       enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
+
+
 void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			      int *sc, int *sk, int *asc, int *ascq);
 

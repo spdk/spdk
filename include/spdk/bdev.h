@@ -367,8 +367,6 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority);
-void spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
-				 enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
 
 /**
  * Get the status of bdev_io as an NVMe status code.

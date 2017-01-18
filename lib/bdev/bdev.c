@@ -916,14 +916,20 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 }
 
 void
-spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
-			    enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
+spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
+				  enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq)
 {
-	bdev_io->status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
-	bdev_io->error.scsi.sc = sc;
-	bdev_io->error.scsi.sk = sk;
-	bdev_io->error.scsi.asc = asc;
-	bdev_io->error.scsi.ascq = ascq;
+	if (sc == SPDK_SCSI_STATUS_GOOD) {
+		bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else {
+		bdev_io->status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
+		bdev_io->error.scsi.sc = sc;
+		bdev_io->error.scsi.sk = sk;
+		bdev_io->error.scsi.asc = asc;
+		bdev_io->error.scsi.ascq = ascq;
+	}
+
+	spdk_bdev_io_complete(bdev_io, bdev_io->status);
 }
 
 void
