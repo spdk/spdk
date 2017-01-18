@@ -159,6 +159,16 @@ struct spdk_bdev_io *spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
 		void *cb_arg);
 void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
+
+/**
+ * Complete a bdev_io with an NVMe status code.
+ *
+ * \param bdev_io I/O to complete.
+ * \param sct NVMe Status Code Type.
+ * \param sc NVMe Status Code.
+ */
+void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc);
+
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
 void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module);
 

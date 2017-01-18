@@ -351,4 +351,14 @@ int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority);
 void spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
 				 enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
+
+/**
+ * Get the status of bdev_io as an NVMe status code.
+ *
+ * \param bdev_io I/O to get the status from.
+ * \param sct Status Code Type return value, as defined by the NVMe specification.
+ * \param sc Status Code return value, as defined by the NVMe specification.
+ */
+void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc);
+
 #endif /* SPDK_BDEV_H_ */

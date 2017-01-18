@@ -44,6 +44,7 @@
 #include <rte_version.h>
 
 #include "spdk/queue.h"
+#include "spdk/nvme_spec.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/event.h"
@@ -863,6 +864,38 @@ spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status 
 	bdev_io->error.scsi.sk = sk;
 	bdev_io->error.scsi.asc = asc;
 	bdev_io->error.scsi.ascq = ascq;
+}
+
+void
+spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc)
+{
+	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
+		bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else {
+		bdev_io->error.nvme.sct = sct;
+		bdev_io->error.nvme.sc = sc;
+		bdev_io->status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
+	}
+
+	spdk_bdev_io_complete(bdev_io, bdev_io->status);
+}
+
+void
+spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc)
+{
+	assert(sct != NULL);
+	assert(sc != NULL);
+
+	if (bdev_io->status == SPDK_BDEV_IO_STATUS_NVME_ERROR) {
+		*sct = bdev_io->error.nvme.sct;
+		*sc = bdev_io->error.nvme.sc;
+	} else if (bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		*sct = SPDK_NVME_SCT_GENERIC;
+		*sc = SPDK_NVME_SC_SUCCESS;
+	} else {
+		*sct = SPDK_NVME_SCT_GENERIC;
+		*sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	}
 }
 
 void
