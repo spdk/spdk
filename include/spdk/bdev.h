@@ -118,6 +118,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_UNMAP,
 	SPDK_BDEV_IO_TYPE_FLUSH,
 	SPDK_BDEV_IO_TYPE_RESET,
+	SPDK_BDEV_IO_TYPE_GET_HEALTH_REPORT,
 };
 
 /** Blockdev I/O completion status */
@@ -150,6 +151,56 @@ typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
 		enum spdk_bdev_io_status status,
 		void *cb_arg);
 typedef void (*spdk_bdev_io_get_rbuf_cb)(struct spdk_bdev_io *bdev_io);
+
+union spdk_critical_warning_state {
+	uint8_t		raw;
+
+	struct {
+		uint8_t	available_spare		: 1;
+		uint8_t	temperature		: 1;
+		uint8_t	device_reliability	: 1;
+		uint8_t	read_only		: 1;
+		uint8_t	volatile_memory_backup	: 1;
+		uint8_t	reserved		: 3;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_critical_warning_state) == 1, "Incorrect size");
+
+/**
+ * health report page
+ */
+struct __attribute__((packed)) spdk_health_report_page {
+	union spdk_critical_warning_state	critical_warning;
+
+	uint16_t		temperature;
+	uint8_t			available_spare;
+	uint8_t			available_spare_threshold;
+	uint8_t			percentage_used;
+
+	uint8_t			reserved[26];
+
+	/*
+	 * Note that the following are 128-bit values, but are
+	 *  defined as an array of 2 64-bit values.
+	 */
+	/* Data Units Read is always in 512-byte units. */
+	uint64_t		data_units_read[2];
+	/* Data Units Written is always in 512-byte units. */
+	uint64_t		data_units_written[2];
+	/* For NVM command set, this includes Compare commands. */
+	uint64_t		host_read_commands[2];
+	uint64_t		host_write_commands[2];
+	/* Controller Busy Time is reported in minutes. */
+	uint64_t		controller_busy_time[2];
+	uint64_t		power_cycles[2];
+	uint64_t		power_on_hours[2];
+	uint64_t		unsafe_shutdowns[2];
+	uint64_t		media_errors[2];
+	uint64_t		num_error_info_log_entries[2];
+
+	uint8_t			reserved2[320];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_health_report_page) == 512, "Incorrect size");
 
 /**
  * Block device I/O
@@ -253,6 +304,9 @@ struct spdk_bdev_io {
 		} scsi;
 	} error;
 
+	/* report health information page */
+	struct spdk_health_report_page *health_report;
+
 	/** User function that will be called when this completes */
 	spdk_bdev_io_completion_cb cb;
 
@@ -345,6 +399,9 @@ struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_chan
 struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     uint64_t offset, uint64_t length,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+struct spdk_bdev_io *spdk_bdev_get_health_report(struct spdk_bdev *bdev,
+		struct spdk_health_report_page *buf,
+		spdk_bdev_io_completion_cb cb, void *cb_arg);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
