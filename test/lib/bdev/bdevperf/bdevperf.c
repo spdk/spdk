@@ -51,9 +51,11 @@
 #include "spdk/io_channel.h"
 
 struct bdevperf_task {
-	struct iovec		iov;
-	struct io_target	*target;
-	void			*buf;
+	struct iovec			iov;
+	struct io_target		*target;
+	void				*buf;
+	uint64_t			offset;
+	struct spdk_scsi_unmap_bdesc	bdesc;
 };
 
 static int g_io_size = 0;
@@ -200,7 +202,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 	} else if (g_verify || g_reset || g_unmap) {
 		assert(bdev_io->u.read.iovcnt == 1);
 		if (memcmp(task->buf, bdev_io->u.read.iov.iov_base, g_io_size) != 0) {
-			printf("Buffer mismatch! Disk Offset: %lu\n", bdev_io->u.read.offset);
+			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset);
 			target->is_draining = true;
 			g_run_failed = true;
 		}
@@ -240,12 +242,9 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status s
 	memset(task->buf, 0, g_io_size);
 
 	/* Read the data back in */
-	spdk_bdev_read(target->bdev, target->ch, NULL,
-		       from_be64(&bdev_io->u.unmap.unmap_bdesc->lba) * target->bdev->blocklen,
-		       from_be32(&bdev_io->u.unmap.unmap_bdesc->block_count) * target->bdev->blocklen,
+	spdk_bdev_read(target->bdev, target->ch, NULL, task->offset, g_io_size,
 		       bdevperf_complete, task);
 
-	free(bdev_io->u.unmap.unmap_bdesc);
 	spdk_bdev_free_io(bdev_io);
 
 }
@@ -261,22 +260,16 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_s
 
 	if (g_unmap) {
 		/* Unmap the data */
-		struct spdk_scsi_unmap_bdesc *bdesc = calloc(1, sizeof(*bdesc));
-		if (bdesc == NULL) {
-			fprintf(stderr, "memory allocation failure\n");
-			exit(1);
-		}
+		to_be64(&task->bdesc.lba, task->offset / target->bdev->blocklen);
+		to_be32(&task->bdesc.block_count, g_io_size / target->bdev->blocklen);
 
-		to_be64(&bdesc->lba, bdev_io->u.write.offset / target->bdev->blocklen);
-		to_be32(&bdesc->block_count, bdev_io->u.write.len / target->bdev->blocklen);
-
-		spdk_bdev_unmap(target->bdev, target->ch, bdesc, 1, bdevperf_unmap_complete,
+		spdk_bdev_unmap(target->bdev, target->ch, &task->bdesc, 1, bdevperf_unmap_complete,
 				task);
 	} else {
 		/* Read the data back in */
 		spdk_bdev_read(target->bdev, target->ch, NULL,
-			       bdev_io->u.write.offset,
-			       bdev_io->u.write.len,
+			       task->offset,
+			       g_io_size,
 			       bdevperf_complete, task);
 	}
 
@@ -321,21 +314,22 @@ bdevperf_submit_single(struct io_target *target)
 		}
 	}
 
+	task->offset = offset_in_ios * g_io_size;
 	if (g_verify || g_reset || g_unmap) {
 		memset(task->buf, rand_r(&seed) % 256, g_io_size);
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		spdk_bdev_writev(bdev, ch, &task->iov, 1, offset_in_ios * g_io_size, g_io_size,
+		spdk_bdev_writev(bdev, ch, &task->iov, 1, task->offset, g_io_size,
 				 bdevperf_verify_write_complete, task);
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 		rbuf = g_zcopy ? NULL : task->buf;
-		spdk_bdev_read(bdev, ch, rbuf, offset_in_ios * g_io_size, g_io_size,
+		spdk_bdev_read(bdev, ch, rbuf, task->offset, g_io_size,
 			       bdevperf_complete, task);
 	} else {
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		spdk_bdev_writev(bdev, ch, &task->iov, 1, offset_in_ios * g_io_size, g_io_size,
+		spdk_bdev_writev(bdev, ch, &task->iov, 1, task->offset, g_io_size,
 				 bdevperf_complete, task);
 	}
 
