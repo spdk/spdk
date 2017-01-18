@@ -27,6 +27,7 @@ $valgrind test/lib/nvmf/request/request_ut
 $valgrind test/lib/nvmf/session/session_ut
 $valgrind test/lib/nvmf/subsystem/subsystem_ut
 $valgrind test/lib/nvmf/direct/direct_ut
+$valgrind test/lib/nvmf/virtual/virtual_ut
 
 $valgrind test/lib/scsi/dev/dev_ut
 $valgrind test/lib/scsi/init/init_ut
