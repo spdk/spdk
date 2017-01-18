@@ -36,7 +36,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 #include "spdk/log.h"
 
 #include "log.c"
@@ -56,9 +56,11 @@ log_test(void)
 
 	spdk_g_log_facility = -1;
 	buf = spdk_get_log_facility();
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
 	CU_ASSERT_STRING_EQUAL(buf, "daemon");
 	spdk_g_log_facility = LOG_LOCAL7;
 	buf = spdk_get_log_facility();
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
 	CU_ASSERT_STRING_EQUAL(buf, "local7");
 
 	rc = spdk_set_log_priority("test");
