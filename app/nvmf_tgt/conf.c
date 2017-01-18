@@ -783,6 +783,10 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 				goto error;
 			}
 			bdev = spdk_bdev_get_by_name(namespace);
+			if (bdev == NULL) {
+				SPDK_ERRLOG("Could not find namespace bdev '%s'\n", namespace);
+				goto error;
+			}
 			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
 				goto error;
 			}
