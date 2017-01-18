@@ -47,6 +47,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/scsi_spec.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/event.h"
@@ -923,6 +924,40 @@ spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status 
 	bdev_io->error.scsi.sk = sk;
 	bdev_io->error.scsi.asc = asc;
 	bdev_io->error.scsi.ascq = ascq;
+}
+
+void
+spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
+			     int *sc, int *sk, int *asc, int *ascq)
+{
+	assert(sc != NULL);
+	assert(sk != NULL);
+	assert(asc != NULL);
+	assert(ascq != NULL);
+
+	switch (bdev_io->status) {
+	case SPDK_BDEV_IO_STATUS_SUCCESS:
+		*sc = SPDK_SCSI_STATUS_GOOD;
+		*sk = SPDK_SCSI_SENSE_NO_SENSE;
+		*asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
+		break;
+	case SPDK_BDEV_IO_STATUS_NVME_ERROR:
+		spdk_scsi_nvme_translate(bdev_io, sc, sk, asc, ascq);
+		break;
+	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
+		*sc = bdev_io->error.scsi.sc;
+		*sk = bdev_io->error.scsi.sk;
+		*asc = bdev_io->error.scsi.asc;
+		*ascq = bdev_io->error.scsi.ascq;
+		break;
+	default:
+		*sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
+		*sk = SPDK_SCSI_SENSE_ABORTED_COMMAND;
+		*asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
+		break;
+	}
 }
 
 void

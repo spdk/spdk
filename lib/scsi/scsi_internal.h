@@ -161,8 +161,6 @@ int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,
 int spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
 int spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
 
-void spdk_scsi_nvme_translate(struct spdk_bdev_io *bdev_io, int *sc, int *sk, int *asc, int *ascq);
-
 struct spdk_scsi_parameters {
 	uint32_t max_unmap_lba_count;
 	uint32_t max_unmap_block_descriptor_count;

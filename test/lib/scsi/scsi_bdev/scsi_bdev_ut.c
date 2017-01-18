@@ -109,9 +109,29 @@ spdk_init_task(struct spdk_scsi_task *task)
 }
 
 void
-spdk_scsi_nvme_translate(struct spdk_bdev_io *bdev_io, int *sc, int *sk,
-			 int *asc, int *ascq)
+spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
+			     int *sc, int *sk, int *asc, int *ascq)
 {
+	switch (bdev_io->status) {
+	case SPDK_BDEV_IO_STATUS_SUCCESS:
+		*sc = SPDK_SCSI_STATUS_GOOD;
+		*sk = SPDK_SCSI_SENSE_NO_SENSE;
+		*asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
+		break;
+	case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
+		*sc = bdev_io->error.scsi.sc;
+		*sk = bdev_io->error.scsi.sk;
+		*asc = bdev_io->error.scsi.asc;
+		*ascq = bdev_io->error.scsi.ascq;
+		break;
+	default:
+		*sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
+		*sk = SPDK_SCSI_SENSE_ABORTED_COMMAND;
+		*asc = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
+		*ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
+		break;
+	}
 }
 
 struct spdk_bdev_io *

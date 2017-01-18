@@ -1227,30 +1227,10 @@ spdk_bdev_scsi_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_sta
 	struct spdk_scsi_task		*task = cb_arg;
 
 	if (task->type == SPDK_SCSI_TASK_TYPE_CMD) {
-		if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-			task->status = SPDK_SCSI_STATUS_GOOD;
-		} else {
-			int sc, sk, asc, ascq;
+		int sc, sk, asc, ascq;
 
-			switch (status) {
-			case SPDK_BDEV_IO_STATUS_NVME_ERROR:
-				spdk_scsi_nvme_translate(bdev_io, &sc, &sk, &asc, &ascq);
-				break;
-			case SPDK_BDEV_IO_STATUS_SCSI_ERROR:
-				sc   = bdev_io->error.scsi.sc;
-				sk   = bdev_io->error.scsi.sk;
-				asc  = bdev_io->error.scsi.asc;
-				ascq = bdev_io->error.scsi.ascq;
-				break;
-			default:
-				sc   = SPDK_SCSI_STATUS_CHECK_CONDITION;
-				sk   = SPDK_SCSI_SENSE_ABORTED_COMMAND;
-				asc  = SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE;
-				ascq = SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE;
-				break;
-			}
-			spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
-		}
+		spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
+		spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
 	} else if (task->type == SPDK_SCSI_TASK_TYPE_MANAGE) {
 		if (status == SPDK_BDEV_IO_STATUS_SUCCESS)
 			task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;

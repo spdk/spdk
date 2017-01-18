@@ -169,6 +169,9 @@ void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
  */
 void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, int sc);
 
+void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
+			      int *sc, int *sk, int *asc, int *ascq);
+
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
 void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module);
 

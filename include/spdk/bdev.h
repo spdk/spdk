@@ -379,4 +379,16 @@ void spdk_bdev_io_set_scsi_error(struct spdk_bdev_io *bdev_io, enum spdk_scsi_st
  */
 void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc);
 
+/**
+ * Get the status of bdev_io as a SCSI status code.
+ *
+ * \param bdev_io I/O to get the status from.
+ * \param sc SCSI Status Code.
+ * \param sk SCSI Sense Key.
+ * \param asc SCSI Additional Sense Code.
+ * \param ascq SCSI Additional Sense Code Qualifier.
+ */
+void spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
+				  int *sc, int *sk, int *asc, int *ascq);
+
 #endif /* SPDK_BDEV_H_ */

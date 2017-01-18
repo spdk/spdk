@@ -30,11 +30,12 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "scsi_internal.h"
+#include "spdk_internal/bdev.h"
+
 #include "spdk/nvme_spec.h"
 
 void
-spdk_scsi_nvme_translate(struct spdk_bdev_io *bdev_io, int *sc, int *sk,
+spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io, int *sc, int *sk,
 			 int *asc, int *ascq)
 {
 	int nvme_sct = bdev_io->error.nvme.sct;
