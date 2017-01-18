@@ -15,6 +15,7 @@ which avoids kernel context switches and eliminates interrupt handling overhead.
 
  - @ref directory_structure
  - @ref porting
+ - [Public API header files](files.html)
 
 ## Modules {#modules}
 
