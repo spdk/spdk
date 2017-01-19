@@ -78,4 +78,8 @@ nvmf_u32log2(uint32_t x)
 
 extern struct spdk_nvmf_globals g_nvmf_tgt;
 
+struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(char *trname, char *traddr,
+		char *trsvcid);
+void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
+
 #endif /* __NVMF_INTERNAL_H__ */

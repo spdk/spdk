@@ -225,10 +225,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	TAILQ_FOREACH_SAFE(listen_addr, &subsystem->listen_addrs, link, listen_addr_tmp) {
 		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr->trname);
-		free(listen_addr);
+		spdk_nvmf_listen_addr_destroy(listen_addr);
 		subsystem->num_listen_addrs--;
 	}
 
@@ -266,29 +263,8 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -1;
 	}
 
-	listen_addr = calloc(1, sizeof(*listen_addr));
+	listen_addr = spdk_nvmf_listen_addr_create(trname, traddr, trsvcid);
 	if (!listen_addr) {
-		return -1;
-	}
-
-	listen_addr->traddr = strdup(traddr);
-	if (!listen_addr->traddr) {
-		free(listen_addr);
-		return -1;
-	}
-
-	listen_addr->trsvcid = strdup(trsvcid);
-	if (!listen_addr->trsvcid) {
-		free(listen_addr->traddr);
-		free(listen_addr);
-		return -1;
-	}
-
-	listen_addr->trname = strdup(trname);
-	if (!listen_addr->trname) {
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr);
 		return -1;
 	}
 

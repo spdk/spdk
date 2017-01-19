@@ -48,6 +48,49 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_globals g_nvmf_tgt;
 
+struct spdk_nvmf_listen_addr *
+spdk_nvmf_listen_addr_create(char *trname, char *traddr, char *trsvcid)
+{
+	struct spdk_nvmf_listen_addr *listen_addr;
+
+	listen_addr = calloc(1, sizeof(*listen_addr));
+	if (!listen_addr) {
+		return NULL;
+	}
+
+	listen_addr->traddr = strdup(traddr);
+	if (!listen_addr->traddr) {
+		free(listen_addr);
+		return NULL;
+	}
+
+	listen_addr->trsvcid = strdup(trsvcid);
+	if (!listen_addr->trsvcid) {
+		free(listen_addr->traddr);
+		free(listen_addr);
+		return NULL;
+	}
+
+	listen_addr->trname = strdup(trname);
+	if (!listen_addr->trname) {
+		free(listen_addr->traddr);
+		free(listen_addr->trsvcid);
+		free(listen_addr);
+		return NULL;
+	}
+
+	return listen_addr;
+}
+
+void
+spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
+{
+	free(addr->trname);
+	free(addr->trsvcid);
+	free(addr->traddr);
+	free(addr);
+}
+
 static int
 test_transport1_listen_addr_add(struct spdk_nvmf_listen_addr *listen_addr)
 {

@@ -83,6 +83,55 @@ spdk_nvmf_tgt_fini(void)
 	return 0;
 }
 
+struct spdk_nvmf_listen_addr *
+spdk_nvmf_listen_addr_create(char *trname, char *traddr, char *trsvcid)
+{
+	struct spdk_nvmf_listen_addr *listen_addr;
+	const struct spdk_nvmf_transport *transport;
+
+	transport = spdk_nvmf_transport_get(trname);
+	if (!transport) {
+		return NULL;
+	}
+
+	listen_addr = calloc(1, sizeof(*listen_addr));
+	if (!listen_addr) {
+		return NULL;
+	}
+
+	listen_addr->traddr = strdup(traddr);
+	if (!listen_addr->traddr) {
+		free(listen_addr);
+		return NULL;
+	}
+
+	listen_addr->trsvcid = strdup(trsvcid);
+	if (!listen_addr->trsvcid) {
+		free(listen_addr->traddr);
+		free(listen_addr);
+		return NULL;
+	}
+
+	listen_addr->trname = strdup(trname);
+	if (!listen_addr->trname) {
+		free(listen_addr->traddr);
+		free(listen_addr->trsvcid);
+		free(listen_addr);
+		return NULL;
+	}
+
+	return listen_addr;
+}
+
+void
+spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
+{
+	free(addr->trname);
+	free(addr->trsvcid);
+	free(addr->traddr);
+	free(addr);
+}
+
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');
