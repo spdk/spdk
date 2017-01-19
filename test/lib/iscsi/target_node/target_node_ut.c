@@ -42,6 +42,8 @@
 #include "../common.c"
 #include "iscsi/tgt_node.c"
 
+struct spdk_iscsi_globals g_spdk_iscsi;
+
 const char *config_file;
 
 bool
