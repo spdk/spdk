@@ -621,7 +621,7 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	/* check whether user passes the pci_addr */
 	if (enum_ctx->has_pci_addr &&
 	    (spdk_pci_addr_compare(&pci_addr, &enum_ctx->pci_addr) != 0)) {
-		return 0;
+		return 1;
 	}
 
 	return nvme_ctrlr_probe(&trid, pci_dev,
