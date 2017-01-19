@@ -43,6 +43,7 @@
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
 
@@ -149,7 +150,13 @@ static uint32_t g_max_completions;
 static int g_dpdk_mem;
 
 static const char *g_core_mask;
-static char *g_nvmf_discover_info;
+
+struct trid_entry {
+	struct spdk_nvme_transport_id	trid;
+	TAILQ_ENTRY(trid_entry)		tailq;
+};
+
+static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
 
 static int g_aio_optind; /* Index of first AIO filename in argv */
 
@@ -795,6 +802,42 @@ print_stats(void)
 	}
 }
 
+static void
+unregister_trids(void)
+{
+	struct trid_entry *trid_entry, *tmp;
+
+	TAILQ_FOREACH_SAFE(trid_entry, &g_trid_list, tailq, tmp) {
+		free(trid_entry);
+	}
+}
+
+static int
+add_trid(const char *trid_str)
+{
+	struct trid_entry *trid_entry;
+	struct spdk_nvme_transport_id *trid;
+
+	trid_entry = calloc(1, sizeof(*trid_entry));
+	if (trid_entry == NULL) {
+		return -1;
+	}
+
+	trid = &trid_entry->trid;
+	memset(trid, 0, sizeof(*trid));
+	trid->trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	if (spdk_nvme_transport_id_parse(trid, trid_str) != 0) {
+		fprintf(stderr, "Invalid transport ID format '%s'\n", trid_str);
+		free(trid_entry);
+		return 1;
+	}
+
+	TAILQ_INSERT_TAIL(&g_trid_list, trid_entry, tailq);
+	return 0;
+}
+
 static int
 parse_args(int argc, char **argv)
 {
@@ -829,7 +872,10 @@ parse_args(int argc, char **argv)
 			g_queue_depth = atoi(optarg);
 			break;
 		case 'r':
-			g_nvmf_discover_info = optarg;
+			if (add_trid(optarg)) {
+				usage(argv[0]);
+				return 1;
+			}
 			break;
 		case 's':
 			g_io_size_bytes = atoi(optarg);
@@ -915,6 +961,11 @@ parse_args(int argc, char **argv)
 		g_is_random = 0;
 	} else {
 		g_is_random = 1;
+	}
+
+	if (TAILQ_EMPTY(&g_trid_list)) {
+		/* If no transport IDs specified, default to enumerating all local PCIe devices */
+		add_trid("trtype:pcie");
 	}
 
 	g_aio_optind = optind;
@@ -1046,25 +1097,15 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static int
 register_controllers(void)
 {
-	struct spdk_nvme_transport_id trid;
+	struct trid_entry *trid_entry;
 
 	printf("Initializing NVMe Controllers\n");
 
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
-		fprintf(stderr, "spdk_nvme_probe() failed\n");
-	}
-
-	if (g_nvmf_discover_info) {
-		memset(&trid, 0, sizeof(trid));
-		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
-
-		if (spdk_nvme_transport_id_parse(&trid, g_nvmf_discover_info) != 0) {
-			fprintf(stderr, "Invalid transport ID format\n");
-			return 1;
-		}
-
-		if (spdk_nvme_probe(&trid, NULL, probe_cb, attach_cb, NULL) != 0) {
-			fprintf(stderr, "spdk_nvme_probe() failed\n");
+	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
+		if (spdk_nvme_probe(&trid_entry->trid, NULL, probe_cb, attach_cb, NULL) != 0) {
+			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
+				trid_entry->trid.traddr);
+			return -1;
 		}
 	}
 
@@ -1254,6 +1295,7 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
+	unregister_trids();
 	unregister_namespaces();
 	unregister_controllers();
 	unregister_workers();
