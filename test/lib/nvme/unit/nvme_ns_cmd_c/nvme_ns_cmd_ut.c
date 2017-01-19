@@ -37,14 +37,12 @@
 
 #include "lib/nvme/unit/test_env.c"
 
-struct nvme_driver _g_nvme_driver = {
+static struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 	.request_mempool = NULL,
 };
 
-struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
-
-struct nvme_request *g_request = NULL;
+static struct nvme_request *g_request = NULL;
 
 int
 spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
@@ -906,6 +904,8 @@ int main(int argc, char **argv)
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
+
+	g_spdk_nvme_driver = &_g_nvme_driver;
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
