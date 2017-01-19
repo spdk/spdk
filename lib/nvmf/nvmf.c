@@ -46,7 +46,7 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 #define MAX_SUBSYSTEMS 4
 
-struct spdk_nvmf_globals g_nvmf_tgt;
+struct spdk_nvmf_tgt g_nvmf_tgt;
 
 int
 spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,

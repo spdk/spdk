@@ -45,7 +45,7 @@
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
 
-struct spdk_nvmf_globals {
+struct spdk_nvmf_tgt {
 	uint16_t max_queue_depth;
 	uint16_t max_queues_per_session;
 
@@ -63,7 +63,7 @@ nvmf_u32log2(uint32_t x)
 	return 31u - __builtin_clz(x);
 }
 
-extern struct spdk_nvmf_globals g_nvmf_tgt;
+extern struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(char *trname, char *traddr,
 		char *trsvcid);

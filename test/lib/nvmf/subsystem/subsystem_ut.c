@@ -46,7 +46,7 @@ const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
-struct spdk_nvmf_globals g_nvmf_tgt;
+struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *
 spdk_nvmf_listen_addr_create(char *trname, char *traddr, char *trsvcid)
