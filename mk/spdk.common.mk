@@ -64,6 +64,9 @@ COMMON_CFLAGS += -fPIC
 # Enable stack buffer overflow checking
 COMMON_CFLAGS += -fstack-protector
 
+# Prevent accidental multiple definitions of global variables
+COMMON_CFLAGS += -fno-common
+
 # Enable full RELRO - no lazy relocation (resolve everything at load time).
 # This allows the GOT to be made read-only early in the loading process.
 LDFLAGS += -Wl,-z,relro,-z,now
