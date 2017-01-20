@@ -134,6 +134,9 @@ enum spdk_nvme_transport_type {
  * NVMe transport identifier.
  *
  * This identifies a unique endpoint on an NVMe fabric.
+ *
+ * A string representation of a transport ID may be converted to this type using
+ * spdk_nvme_transport_id_parse().
  */
 struct spdk_nvme_transport_id {
 	/**
