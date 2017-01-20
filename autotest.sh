@@ -150,7 +150,6 @@ if hash lcov; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o $out/cov_test.info
 	$LCOV -q -a $out/cov_base.info -a $out/cov_test.info -o $out/cov_total.info
-	$LCOV -q -r $out/cov_total.info 'test/*' -o $out/cov_total.info
 	$GENHTML $out/cov_total.info -t "$(hostname)" -o $out/coverage
 	chmod -R a+rX $out/coverage
 	find . -name "*.gcda" -delete
