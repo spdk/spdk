@@ -57,7 +57,7 @@
 #define SPDK_MAX_SOCKET		64
 
 #define SPDK_REACTOR_SPIN_TIME_US	1000
-
+#define SPDK_TIMER_POLL_ITERATIONS	5
 #define SPDK_EVENT_BATCH_SIZE		8
 
 enum spdk_poller_state {
@@ -312,6 +312,7 @@ _spdk_reactor_run(void *arg)
 	uint64_t		idle_started, now;
 	uint64_t		spin_cycles, sleep_cycles;
 	uint32_t		sleep_us;
+	uint32_t 		timer_poll_count;
 
 	spdk_allocate_thread();
 	set_reactor_thread_name(reactor->lcore);
@@ -321,6 +322,7 @@ _spdk_reactor_run(void *arg)
 	spin_cycles = SPDK_REACTOR_SPIN_TIME_US * spdk_get_ticks_hz() / 1000000ULL;
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
 	idle_started = 0;
+	timer_poll_count = 0;
 
 	while (1) {
 		bool took_action = false;
@@ -344,22 +346,27 @@ _spdk_reactor_run(void *arg)
 			took_action = true;
 		}
 
-		poller = TAILQ_FIRST(&reactor->timer_pollers);
-		if (poller) {
-			now = spdk_get_ticks();
+		if (timer_poll_count >= SPDK_TIMER_POLL_ITERATIONS) {
+			poller = TAILQ_FIRST(&reactor->timer_pollers);
+			if (poller) {
+				now = spdk_get_ticks();
 
-			if (now >= poller->next_run_tick) {
-				TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
-				poller->state = SPDK_POLLER_STATE_RUNNING;
-				poller->fn(poller->arg);
-				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-					_spdk_poller_unregister_complete(poller);
-				} else {
-					poller->state = SPDK_POLLER_STATE_WAITING;
-					spdk_poller_insert_timer(reactor, poller, now);
+				if (now >= poller->next_run_tick) {
+					TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
+					poller->state = SPDK_POLLER_STATE_RUNNING;
+					poller->fn(poller->arg);
+					if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+						_spdk_poller_unregister_complete(poller);
+					} else {
+						poller->state = SPDK_POLLER_STATE_WAITING;
+						spdk_poller_insert_timer(reactor, poller, now);
+					}
+					took_action = true;
 				}
-				took_action = true;
 			}
+			timer_poll_count = 0;
+		} else {
+			timer_poll_count++;
 		}
 
 		if (took_action) {
@@ -392,6 +399,9 @@ _spdk_reactor_run(void *arg)
 				if (sleep_us > 0) {
 					usleep(sleep_us);
 				}
+
+				/* After sleeping, always poll for timers */
+				timer_poll_count = SPDK_TIMER_POLL_ITERATIONS;
 			}
 		}
 
