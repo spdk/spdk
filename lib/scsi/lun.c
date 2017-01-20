@@ -280,7 +280,8 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 
 	lun = spdk_lun_db_get_lun(name, 0);
 	if (lun) {
-		return lun;
+		SPDK_ERRLOG("LUN %s already created\n", lun->name);
+		return NULL;
 	}
 
 	lun = calloc(1, sizeof(*lun));
