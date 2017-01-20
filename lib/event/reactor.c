@@ -227,12 +227,11 @@ spdk_event_queue_run_batch(uint32_t lcore)
 This makes the reactor threads distinguishable in top and gdb.
 
 */
-static void set_reactor_thread_name(void)
+static void set_reactor_thread_name(uint32_t lcore)
 {
 	char thread_name[16];
 
-	snprintf(thread_name, sizeof(thread_name), "reactor_%d",
-		 rte_lcore_id());
+	snprintf(thread_name, sizeof(thread_name), "reactor_%u", lcore);
 
 #if defined(__linux__)
 	prctl(PR_SET_NAME, thread_name, 0, 0, 0);
@@ -317,7 +316,7 @@ _spdk_reactor_run(void *arg)
 	uint32_t		sleep_us;
 
 	spdk_allocate_thread();
-	set_reactor_thread_name();
+	set_reactor_thread_name(reactor->lcore);
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 
