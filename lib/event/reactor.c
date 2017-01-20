@@ -149,11 +149,9 @@ struct spdk_event *
 spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 {
 	struct spdk_event *event = NULL;
-	unsigned socket_id = rte_lcore_to_socket_id(lcore);
+	struct spdk_reactor *reactor = spdk_reactor_get(lcore);
 
-	assert(socket_id < SPDK_MAX_SOCKET);
-
-	event = spdk_mempool_get(g_spdk_event_mempool[socket_id]);
+	event = spdk_mempool_get(reactor->event_mempool);
 	if (event == NULL) {
 		assert(false);
 		return NULL;
