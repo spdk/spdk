@@ -298,7 +298,7 @@ _spdk_reactor_run(void *arg)
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_poller	*poller;
 	uint32_t		event_count;
-	uint64_t		last_action, now;
+	uint64_t		idle_started, now;
 	uint64_t		spin_cycles, sleep_cycles;
 	uint32_t		sleep_us;
 
@@ -309,12 +309,14 @@ _spdk_reactor_run(void *arg)
 
 	spin_cycles = SPDK_REACTOR_SPIN_TIME_US * spdk_get_ticks_hz() / 1000000ULL;
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
-	last_action = spdk_get_ticks();
+	idle_started = 0;
 
 	while (1) {
+		bool took_action = false;
+
 		event_count = spdk_event_queue_run_batch(rte_lcore_id());
 		if (event_count > 0) {
-			last_action = spdk_get_ticks();
+			took_action = true;
 		}
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
@@ -328,7 +330,7 @@ _spdk_reactor_run(void *arg)
 				poller->state = SPDK_POLLER_STATE_WAITING;
 				TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 			}
-			last_action = spdk_get_ticks();
+			took_action = true;
 		}
 
 		poller = TAILQ_FIRST(&reactor->timer_pollers);
@@ -345,14 +347,22 @@ _spdk_reactor_run(void *arg)
 					poller->state = SPDK_POLLER_STATE_WAITING;
 					spdk_poller_insert_timer(reactor, poller, now);
 				}
-				last_action = spdk_get_ticks();
+				took_action = true;
 			}
 		}
 
+		if (took_action) {
+			/* We were busy this loop iteration. Reset the idle timer. */
+			idle_started = 0;
+		} else if (idle_started == 0) {
+			/* We were previously busy, but this loop we took no actions. */
+			idle_started = spdk_get_ticks();
+		}
+
 		/* Determine if the thread can sleep */
-		if (sleep_cycles > 0) {
+		if (sleep_cycles && idle_started) {
 			now = spdk_get_ticks();
-			if (now >= (last_action + spin_cycles)) {
+			if (now >= (idle_started + spin_cycles)) {
 				sleep_us = reactor->max_delay_us;
 
 				poller = TAILQ_FIRST(&reactor->timer_pollers);
