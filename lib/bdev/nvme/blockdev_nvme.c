@@ -532,6 +532,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
+	dev->adminq_timer_poller = NULL;
 	dev->ctrlr = ctrlr;
 	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
 	dev->id = nvme_controller_index++;
