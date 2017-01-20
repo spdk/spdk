@@ -44,6 +44,7 @@
 
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk_internal/event.h"
 #include "spdk/log.h"
 
 static uint64_t g_tsc_rate;
@@ -125,7 +126,7 @@ main(int argc, char **argv)
 	int i;
 
 	spdk_app_opts_init(&opts);
-	opts.name = "event";
+	opts.name = "event_perf";
 
 	g_time_in_sec = 0;
 

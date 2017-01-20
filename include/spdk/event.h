@@ -206,9 +206,6 @@ struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
  */
 void spdk_event_call(struct spdk_event *event);
 
-/* TODO: This is only used by tests and should be made private */
-uint32_t spdk_event_queue_run_batch(uint32_t lcore);
-
 /**
  * \brief Register a poller on the given lcore.
  */
