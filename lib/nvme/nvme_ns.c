@@ -96,13 +96,15 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_RESERVATION_SUPPORTED;
 	}
 
+	if (nsdata->flbas.extended) {
+		ns->flags |= SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED;
+	}
+
 	ns->md_size = nsdata->lbaf[nsdata->flbas.format].ms;
 	ns->pi_type = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
 	if (nsdata->lbaf[nsdata->flbas.format].ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
-		if (nsdata->flbas.extended)
-			ns->flags |= SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED;
 	}
 	return rc;
 }
