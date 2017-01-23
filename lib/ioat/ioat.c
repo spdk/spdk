@@ -593,14 +593,20 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 
 	vdst = (uint64_t)dst;
 	vsrc = (uint64_t)src;
-	vsrc_page = _2MB_PAGE(vsrc);
-	vdst_page = _2MB_PAGE(vdst);
-	psrc_page = spdk_vtophys((void *)vsrc_page);
-	pdst_page = spdk_vtophys((void *)vdst_page);
+	vdst_page = vsrc_page = 0;
+	pdst_page = psrc_page = SPDK_VTOPHYS_ERROR;
 
 	remaining = nbytes;
-
 	while (remaining) {
+		if (_2MB_PAGE(vsrc) != vsrc_page) {
+			vsrc_page = _2MB_PAGE(vsrc);
+			psrc_page = spdk_vtophys((void *)vsrc_page);
+		}
+
+		if (_2MB_PAGE(vdst) != vdst_page) {
+			vdst_page = _2MB_PAGE(vdst);
+			pdst_page = spdk_vtophys((void *)vdst_page);
+		}
 		op_size = remaining;
 		op_size = min(op_size, (0x200000 - _2MB_OFFSET(vsrc)));
 		op_size = min(op_size, (0x200000 - _2MB_OFFSET(vdst)));
@@ -619,15 +625,6 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		vsrc += op_size;
 		vdst += op_size;
 
-		if (_2MB_PAGE(vsrc) != vsrc_page) {
-			vsrc_page = _2MB_PAGE(vsrc);
-			psrc_page = spdk_vtophys((void *)vsrc_page);
-		}
-
-		if (_2MB_PAGE(vdst) != vdst_page) {
-			vdst_page = _2MB_PAGE(vdst);
-			pdst_page = spdk_vtophys((void *)vdst_page);
-		}
 	}
 	/* Issue null descriptor for null transfer */
 	if (nbytes == 0) {
