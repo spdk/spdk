@@ -263,6 +263,14 @@ struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	uint32_t			stripe_size;
 	uint32_t			sector_size;
+
+	/*
+	 * Size of data transferred as part of each block,
+	 * including metadata if FLBAS indicates the metadata is transferred
+	 * as part of the data buffer at the end of each LBA.
+	 */
+	uint32_t			extended_lba_size;
+
 	uint32_t			md_size;
 	uint32_t			pi_type;
 	uint32_t			sectors_per_max_io;
