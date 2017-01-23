@@ -204,20 +204,20 @@ nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
 		return;
 	}
 
-	if (g_thread_mmio_ctrlr) {
-		if (!g_thread_mmio_ctrlr->is_remapped) {
-			map_address = mmap((void *)g_thread_mmio_ctrlr->regs, g_thread_mmio_ctrlr->regs_size,
-					   PROT_READ | PROT_WRITE,
-					   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
-			if (map_address == MAP_FAILED) {
-				SPDK_ERRLOG("mmap failed\n");
-				g_signal_lock = 0;
-				return;
-			}
-			memset(map_address, 0xFF, sizeof(struct spdk_nvme_registers));
-			g_thread_mmio_ctrlr->regs = (volatile struct spdk_nvme_registers *)map_address;
-			g_thread_mmio_ctrlr->is_remapped = true;
+	assert(g_thread_mmio_ctrlr != NULL);
+
+	if (!g_thread_mmio_ctrlr->is_remapped) {
+		map_address = mmap((void *)g_thread_mmio_ctrlr->regs, g_thread_mmio_ctrlr->regs_size,
+				   PROT_READ | PROT_WRITE,
+				   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+		if (map_address == MAP_FAILED) {
+			SPDK_ERRLOG("mmap failed\n");
+			g_signal_lock = 0;
+			return;
 		}
+		memset(map_address, 0xFF, sizeof(struct spdk_nvme_registers));
+		g_thread_mmio_ctrlr->regs = (volatile struct spdk_nvme_registers *)map_address;
+		g_thread_mmio_ctrlr->is_remapped = true;
 	}
 	g_signal_lock = 0;
 	return;
