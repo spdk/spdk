@@ -65,8 +65,10 @@ log_test(void)
 
 	rc = spdk_set_log_priority("test");
 	CU_ASSERT(rc == -1);
+	CU_ASSERT_EQUAL(spdk_g_log_priority, LOG_NOTICE);
 	rc = spdk_set_log_priority("debug");
 	CU_ASSERT(rc == 0);
+	CU_ASSERT_EQUAL(spdk_g_log_priority, LOG_DEBUG);
 
 #ifdef DEBUG
 	CU_ASSERT(spdk_log_get_trace_flag("debug") == false);

@@ -86,6 +86,18 @@ static const struct syslog_code facilitynames[] = {
 	{ NULL,		-1,		}
 };
 
+static const struct syslog_code prioritynames[] = {
+	{ "alert",	LOG_ALERT,	},
+	{ "crit",	LOG_CRIT,	},
+	{ "debug",	LOG_DEBUG,	},
+	{ "emerg",	LOG_EMERG,	},
+	{ "err",	LOG_ERR,	},
+	{ "info",	LOG_INFO,	},
+	{ "notice",	LOG_NOTICE,	},
+	{ "warning",	LOG_WARNING,	},
+	{ NULL,		-1,		}
+};
+
 int
 spdk_set_log_facility(const char *facility)
 {
@@ -122,27 +134,17 @@ spdk_get_log_facility(void)
 int
 spdk_set_log_priority(const char *priority)
 {
-	if (strcasecmp(priority, "emerg") == 0) {
-		spdk_g_log_priority = LOG_EMERG;
-	} else if (strcasecmp(priority, "alert") == 0) {
-		spdk_g_log_priority = LOG_ALERT;
-	} else if (strcasecmp(priority, "crit") == 0) {
-		spdk_g_log_priority = LOG_CRIT;
-	} else if (strcasecmp(priority, "err") == 0) {
-		spdk_g_log_priority = LOG_ERR;
-	} else if (strcasecmp(priority, "warning") == 0) {
-		spdk_g_log_priority = LOG_WARNING;
-	} else if (strcasecmp(priority, "notice") == 0) {
-		spdk_g_log_priority = LOG_NOTICE;
-	} else if (strcasecmp(priority, "info") == 0) {
-		spdk_g_log_priority = LOG_INFO;
-	} else if (strcasecmp(priority, "debug") == 0) {
-		spdk_g_log_priority = LOG_DEBUG;
-	} else {
-		spdk_g_log_priority = LOG_NOTICE;
-		return -1;
+	int i;
+
+	for (i = 0; prioritynames[i].c_name != NULL; i++) {
+		if (strcasecmp(prioritynames[i].c_name, priority) == 0) {
+			spdk_g_log_priority = prioritynames[i].c_val;
+			return 0;
+		}
 	}
-	return 0;
+
+	spdk_g_log_priority = LOG_NOTICE;
+	return -1;
 }
 
 void
