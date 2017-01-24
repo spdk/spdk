@@ -214,13 +214,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	rc = get_u32_from_file("/sys/module/ioatdma/parameters/ioat_ring_alloc_order",
-			       &order);
-	if (rc < 0) {
-		fprintf(stderr, "Cannot get default ioat queue depth\n");
-		return -1;
-	}
-	ring_size = 1UL << order;
+	ring_size = 1UL << 16;
 
 	while ((op = getopt(argc, argv, "hn:q:s:t:")) != -1) {
 		switch (op) {
