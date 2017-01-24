@@ -8,10 +8,6 @@ source $rootdir/scripts/autotest_common.sh
 
 timing_enter ioat
 
-timing_enter unit
-$valgrind $testdir/unit/ioat_ut
-timing_exit unit
-
 timing_enter perf
 $rootdir/examples/ioat/perf/perf -t 1
 timing_exit perf

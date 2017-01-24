@@ -29,6 +29,7 @@ $valgrind test/lib/nvmf/subsystem/subsystem_ut
 $valgrind test/lib/nvmf/direct/direct_ut
 
 $valgrind test/lib/scsi/dev/dev_ut
+$valgrind test/lib/scsi/init/init_ut
 $valgrind test/lib/scsi/lun/lun_ut
 $valgrind test/lib/scsi/scsi_bdev/scsi_bdev_ut
 $valgrind test/lib/scsi/scsi_nvme/scsi_nvme_ut

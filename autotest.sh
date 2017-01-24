@@ -86,14 +86,8 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test test/lib/nvme/hotplug.sh intel
 	run_test test/lib/nvme/nvmemp.sh
 fi
-run_test test/lib/nvmf/nvmf.sh
 run_test test/lib/env/env.sh
 run_test test/lib/ioat/ioat.sh
-run_test test/lib/json/json.sh
-run_test test/lib/jsonrpc/jsonrpc.sh
-run_test test/lib/log/log.sh
-run_test test/lib/scsi/scsi.sh
-run_test test/lib/util/util.sh
 
 timing_exit lib
 
