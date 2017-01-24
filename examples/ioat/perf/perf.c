@@ -542,6 +542,12 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
+	if (g_ioat_chan_num == 0) {
+		printf("No channels found\n");
+		rc = 0;
+		goto cleanup;
+	}
+
 	if (g_user_config.ioat_chan_num > g_ioat_chan_num) {
 		printf("%d channels are requested, but only %d are found,"
 		       "so only test %d channels\n", g_user_config.ioat_chan_num,
