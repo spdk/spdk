@@ -78,7 +78,7 @@ struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(const char *name,
 
 int
 spdk_nvmf_parse_subsystem_for_rpc(const char *name,
-				  const char *mode, uint32_t lcore,
+				  const char *mode, int32_t lcore,
 				  int num_listen_addresses, struct rpc_listen_address *addresses,
 				  int num_hosts, char *hosts[], const char *bdf,
 				  const char *sn, int num_devs, char *dev_list[]);

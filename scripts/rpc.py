@@ -375,7 +375,7 @@ def construct_nvmf_subsystem(args):
     jsonrpc_call('construct_nvmf_subsystem', params)
 
 p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
-p.add_argument("-c", "--core", help='The core Nvmf target run on', type=int, default=0)
+p.add_argument("-c", "--core", help='The core Nvmf target run on', type=int, default=-1)
 p.add_argument('mode', help='Target mode: Virtual or Direct')
 p.add_argument('nqn', help='Target nqn(ASCII)')
 p.add_argument('listen', help="""comma-separated list of Listen <transport:transport_name traddr:address trsvcid:port_id> pairs enclosed
