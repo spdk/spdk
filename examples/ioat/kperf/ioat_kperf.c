@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
 	}
 	ring_size = 1UL << order;
 
-	while ((op = getopt(argc, argv, "h:n:q:s:t:")) != -1) {
+	while ((op = getopt(argc, argv, "hn:q:s:t:")) != -1) {
 		switch (op) {
 		case 'n':
 			threads = atoi(optarg);
