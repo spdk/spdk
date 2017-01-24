@@ -25,4 +25,6 @@ before_script:
   - export DPDK_DIR=$PWD/usr/local/share/dpdk/x86_64-native-linuxapp-$CC
   - popd
 
-script: ./unittest.sh
+script:
+  - make CONFIG_WERROR=y
+  - ./unittest.sh
