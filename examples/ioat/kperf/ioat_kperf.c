@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 
 	if (check_modules("ioatdma")) {
 		fprintf(stderr, "Ioat driver not loaded,"
-			" run `modprove -v ioatdma` first\n");
+			" run `modprobe -v ioatdma` first\n");
 		return -1;
 	}
 	if (check_modules("dmaperf")) {
