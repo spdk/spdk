@@ -73,6 +73,10 @@ timing_exit rbd_setup
 # Unit Tests
 #####################
 
+timing_enter unittest
+run_test ./unittest.sh
+timing_exit unittest
+
 timing_enter lib
 
 run_test test/lib/bdev/blockdev.sh
