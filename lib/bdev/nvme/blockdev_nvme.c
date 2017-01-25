@@ -77,6 +77,7 @@ struct nvme_blockdev {
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct nvme_device	*dev;
 	struct spdk_nvme_ns	*ns;
+	bool			allocated;
 };
 
 struct nvme_io_channel {
@@ -111,7 +112,6 @@ struct nvme_probe_ctx {
 };
 
 static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
-static int g_blockdev_index_max = 0;
 static int nvme_controller_index = 0;
 static int num_controllers = -1;
 static int g_reset_controller_on_timeout = 0;
@@ -566,7 +566,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char **names, size_t *count)
 {
 	struct nvme_probe_ctx probe_ctx;
-	int prev_index_max, i;
+	int i;
 	size_t j;
 
 	if (spdk_pci_addr_parse(&probe_ctx.whitelist[0], trid->traddr) < 0) {
@@ -579,20 +579,21 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	prev_index_max = g_blockdev_index_max;
-
 	if (spdk_nvme_probe(trid, &probe_ctx, probe_cb, attach_cb, NULL)) {
 		return -1;
 	}
-
-	assert((g_blockdev_index_max - prev_index_max) <= (int)*count);
 
 	/*
 	 * Report the new bdevs that were created in this call.
 	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
 	 */
-	for (i = prev_index_max, j = 0; i < g_blockdev_index_max; i++, j++) {
-		names[j] = g_blockdev[i].disk.name;
+	for (j = 0, i = 0; i < NVME_MAX_BLOCKDEVS; i++) {
+		if (g_blockdev[i].allocated) {
+			if (spdk_pci_addr_compare(&probe_ctx.whitelist[0], &g_blockdev[i].dev->pci_addr) == 0) {
+				names[j] = g_blockdev[i].disk.name;
+				j++;
+			}
+		}
 	}
 	*count = j;
 
@@ -685,6 +686,20 @@ nvme_library_fini(void)
 	}
 }
 
+static struct nvme_blockdev *
+allocate_nvme_blockdev(void)
+{
+	int i;
+
+	for (i = 0; i < NVME_MAX_BLOCKDEVS; i++) {
+		if (g_blockdev[i].allocated == false) {
+			g_blockdev[i].allocated = true;
+			return &g_blockdev[i];
+		}
+	}
+	return NULL;
+}
+
 static void
 nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int ctrlr_id)
 {
@@ -705,11 +720,11 @@ nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int ctrlr_id)
 			continue;
 		}
 
-		if (g_blockdev_index_max >= NVME_MAX_BLOCKDEVS) {
+		bdev = allocate_nvme_blockdev();
+		if (bdev == NULL) {
 			return;
 		}
 
-		bdev = &g_blockdev[g_blockdev_index_max];
 		bdev->ctrlr = ctrlr;
 		bdev->dev = nvme_dev;
 		bdev->ns = ns;
@@ -739,8 +754,6 @@ nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int ctrlr_id)
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
 		spdk_bdev_register(&bdev->disk);
-
-		g_blockdev_index_max++;
 	}
 }
 
