@@ -124,6 +124,12 @@ spdk_nvmf_listen_addr_create(char *trname, char *traddr, char *trsvcid)
 void
 spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 {
+	const struct spdk_nvmf_transport *transport;
+
+	transport = spdk_nvmf_transport_get(addr->trname);
+	assert(transport != NULL);
+	transport->listen_addr_remove(addr);
+
 	free(addr->trname);
 	free(addr->trsvcid);
 	free(addr->traddr);

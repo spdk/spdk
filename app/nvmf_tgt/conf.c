@@ -517,8 +517,15 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 					     rte_lcore_to_socket_id(app_subsys->lcore));
 			}
 		}
-		spdk_nvmf_subsystem_add_listener(subsystem, transport_name, traddr, trsvcid);
 
+		ret = spdk_nvmf_subsystem_add_listener(subsystem, transport_name, traddr, trsvcid);
+
+		if (ret < 0) {
+			SPDK_ERRLOG("Failed to listen on traddr=%s, trsvcid=%s\n", traddr, trsvcid);
+			free(traddr);
+			free(trsvcid);
+			return -1;
+		}
 		free(traddr);
 		free(trsvcid);
 	}
