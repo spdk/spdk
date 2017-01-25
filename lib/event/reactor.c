@@ -174,7 +174,7 @@ spdk_event_call(struct spdk_event *event)
 	reactor = spdk_reactor_get(event->lcore);
 
 	assert(reactor->events != NULL);
-	rc = rte_ring_enqueue(reactor->events, event);
+	rc = rte_ring_mp_enqueue(reactor->events, event);
 	if (rc != 0) {
 		assert(false);
 	}
@@ -195,7 +195,7 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 	memset(events, 0, sizeof(events));
 #endif
 
-	count = rte_ring_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+	count = rte_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
 	if (count == 0) {
 		return 0;
 	}
