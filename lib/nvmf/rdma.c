@@ -1452,7 +1452,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				}
 				break;
 			case SPDK_NVMF_REQUEST_PREP_ERROR:
-				spdk_nvmf_rdma_request_complete(req);
+				spdk_nvmf_request_complete(req);
 				break;
 			}
 			break;
