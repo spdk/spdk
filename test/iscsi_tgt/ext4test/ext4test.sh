@@ -24,6 +24,9 @@ fi
 
 timing_enter ext4test
 
+cp $testdir/iscsi.conf.in $testdir/iscsi.conf
+$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
+
 # iSCSI target configuration
 PORT=3260
 RPC_PORT=5260
@@ -100,6 +103,7 @@ done
 
 trap - SIGINT SIGTERM EXIT
 
+rm -f $testdir/iscsi.conf
 iscsicleanup
 killprocess $pid
 timing_exit ext4test

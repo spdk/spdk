@@ -1,4 +1,4 @@
-# vhost configuration file
+# spdk configuration file
 #
 # Please write all parameters using ASCII.
 # The parameter must be quoted if it includes whitespace.
@@ -25,7 +25,7 @@
   LogFacility "local7"
 
 [Rpc]
-  # Defines whether vhost will enable configuration via RPC.
+  # Defines whether ids will enable configuration via RPC.
   # Default is disabled.  Note that the RPC interface is not
   # authenticated, so users should be careful about enabling
   # RPC in non-trusted environments.
@@ -34,8 +34,11 @@
 [Ioat]
   Disable Yes
 
-[Nvme]
-  ClaimAllDevices
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMb 512
 
-[Split]
-  Split Nvme0n1 4
+ [VhostScsi0]
+  Name naa.123
+  Dev 0 Nvme0n1
+  Dev 1 Malloc0

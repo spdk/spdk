@@ -62,7 +62,7 @@ struct nvme_ctrlr {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_pci_addr		pci_addr;
+	struct spdk_nvme_transport_id	trid;
 
 	struct spdk_poller		*adminq_timer_poller;
 
@@ -106,9 +106,8 @@ enum data_direction {
 };
 
 struct nvme_probe_ctx {
-	int controllers_remaining;
-	int num_whitelist_controllers;
-	struct spdk_pci_addr whitelist[NVME_MAX_CONTROLLERS];
+	size_t count;
+	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
 };
 
 static int nvme_controller_index = 0;
@@ -399,10 +398,39 @@ bdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_name(w, "nvme");
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_name(w, "pci_address");
-	spdk_json_write_string_fmt(w, "%04x:%02x:%02x.%x", nvme_ctrlr->pci_addr.domain,
-				   nvme_ctrlr->pci_addr.bus, nvme_ctrlr->pci_addr.dev,
-				   nvme_ctrlr->pci_addr.func);
+	if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		spdk_json_write_name(w, "pci_address");
+		spdk_json_write_string(w, nvme_ctrlr->trid.traddr);
+	}
+
+	spdk_json_write_name(w, "trid");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "trtype");
+	if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		spdk_json_write_string(w, "PCIe");
+	} else if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		spdk_json_write_string(w, "RDMA");
+	} else {
+		spdk_json_write_string(w, "Unknown");
+	}
+
+	if (nvme_ctrlr->trid.traddr) {
+		spdk_json_write_name(w, "traddr");
+		spdk_json_write_string(w, nvme_ctrlr->trid.traddr);
+	}
+
+	if (nvme_ctrlr->trid.trsvcid) {
+		spdk_json_write_name(w, "trsvcid");
+		spdk_json_write_string(w, nvme_ctrlr->trid.trsvcid);
+	}
+
+	if (nvme_ctrlr->trid.subnqn) {
+		spdk_json_write_name(w, "subnqn");
+		spdk_json_write_string(w, nvme_ctrlr->trid.subnqn);
+	}
+
+	spdk_json_write_object_end(w);
 
 	spdk_json_write_name(w, "ctrlr_data");
 	spdk_json_write_object_begin(w);
@@ -502,29 +530,15 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
-	int i;
+	size_t i;
 	bool claim_device = false;
-	struct spdk_pci_addr pci_addr;
 
-	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-		return false;
-	}
+	SPDK_NOTICELOG("Probing device %s\n", trid->traddr);
 
-	SPDK_NOTICELOG("Probing device %s\n",
-		       trid->traddr);
-
-	if (ctx->controllers_remaining == 0) {
-		return false;
-	}
-
-	if (ctx->num_whitelist_controllers == 0) {
-		claim_device = true;
-	} else {
-		for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
-			if (spdk_pci_addr_compare(&pci_addr, &ctx->whitelist[i]) == 0) {
-				claim_device = true;
-				break;
-			}
+	for (i = 0; i < ctx->count; i++) {
+		if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
+			claim_device = true;
+			break;
 		}
 	}
 
@@ -532,12 +546,17 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return false;
 	}
 
-	/* Claim the device in case conflict with other process */
-	if (spdk_pci_device_claim(&pci_addr) != 0) {
-		return false;
-	}
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		struct spdk_pci_addr pci_addr;
 
-	ctx->controllers_remaining--;
+		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
+			return false;
+		}
+
+		if (spdk_pci_device_claim(&pci_addr) != 0) {
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -571,7 +590,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	dev->adminq_timer_poller = NULL;
 	dev->ctrlr = ctrlr;
 	dev->ref = 0;
-	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
+	dev->trid = *trid;
 	dev->id = nvme_controller_index++;
 
 	nvme_ctrlr_create_bdevs(dev, dev->id);
@@ -590,12 +609,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static struct nvme_ctrlr *
-nvme_ctrlr_get(struct spdk_pci_addr *addr)
+nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 {
-	struct nvme_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr	*nvme_ctrlr;
 
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (spdk_pci_addr_compare(&nvme_ctrlr->pci_addr, addr) == 0) {
+		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->trid) == 0) {
 			return nvme_ctrlr;
 		}
 	}
@@ -648,21 +667,18 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	struct nvme_bdev	*nvme_bdev;
 	size_t			j;
 
-	if (spdk_pci_addr_parse(&probe_ctx.whitelist[0], trid->traddr) < 0) {
-		return -1;
-	}
-	probe_ctx.num_whitelist_controllers = 1;
-	probe_ctx.controllers_remaining = 1;
-
-	if (nvme_ctrlr_get(&probe_ctx.whitelist[0]) != NULL) {
+	if (nvme_ctrlr_get(trid) != NULL) {
+		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
 		return -1;
 	}
 
+	probe_ctx.count = 1;
+	probe_ctx.trids[0] = *trid;
 	if (spdk_nvme_probe(trid, &probe_ctx, probe_cb, attach_cb, NULL)) {
 		return -1;
 	}
 
-	nvme_ctrlr = nvme_ctrlr_get(&probe_ctx.whitelist[0]);
+	nvme_ctrlr = nvme_ctrlr_get(trid);
 	if (!nvme_ctrlr) {
 		return -1;
 	}
@@ -693,49 +709,32 @@ bdev_nvme_library_init(void)
 {
 	struct spdk_conf_section *sp;
 	const char *val;
-	int i;
-	struct nvme_probe_ctx probe_ctx;
+	int i, rc;
+	struct nvme_probe_ctx probe_ctx = {};
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {
-		/*
-		 * If configuration file did not specify the Nvme section, do
-		 *  not take the time to initialize the NVMe devices.
-		 */
 		return 0;
 	}
 
 	spdk_nvme_retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount");
-	if (spdk_nvme_retry_count < 0)
+	if (spdk_nvme_retry_count < 0) {
 		spdk_nvme_retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
-
-	/*
-	 * If NumControllers is not found, this will return -1, which we
-	 * will later use to denote that we should initialize all
-	 * controllers.
-	 */
-	num_controllers = spdk_conf_section_get_intval(sp, "NumControllers");
-
-	/* Init the whitelist */
-	probe_ctx.num_whitelist_controllers = 0;
-
-	if (num_controllers > 0) {
-		for (i = 0; ; i++) {
-			val = spdk_conf_section_get_nmval(sp, "BDF", i, 0);
-			if (val == NULL) {
-				break;
-			}
-
-			if (spdk_pci_addr_parse(&probe_ctx.whitelist[probe_ctx.num_whitelist_controllers], val) < 0) {
-				SPDK_ERRLOG("Invalid format for BDF: %s\n", val);
-				return -1;
-			}
-
-			probe_ctx.num_whitelist_controllers++;
-		}
 	}
 
-	probe_ctx.controllers_remaining = num_controllers;
+	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
+		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
+		if (val == NULL) {
+			break;
+		}
+
+		rc = spdk_nvme_transport_id_parse(&probe_ctx.trids[i], val);
+		if (rc < 0) {
+			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
+			return -1;
+		}
+		probe_ctx.count++;
+	}
 
 	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
 	if (val != NULL) {

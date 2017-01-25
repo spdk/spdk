@@ -100,23 +100,16 @@ the kernel to avoid interrupts and context switching.
 ~~~
 [Nvme]
   # NVMe Device Whitelist
-  # Users may specify which NVMe devices to claim by their PCI
-  # domain, bus, device, and function. The format is dddd:bb:dd.f, which is
-  # the same format displayed by lspci or in /sys/bus/pci/devices. The second
-  # argument is a "name" for the device that can be anything. The name
-  # is referenced later in the Subsystem section.
-  #
-  # Alternatively, the user can specify ClaimAllDevices. All
-  # NVMe devices will be claimed.
-  BDF 0000:00:00.0
-  BDF 0000:01:00.0
+  # Users may specify which NVMe devices to claim by their transport id.
+  # See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.
+  # The devices will be assigned names in the format NvmeXnY, where X starts at 0 and
+  # increases by 1 for each entry and Y is the namespace id, which starts at 1.
+  TransportID "trtype:PCIe traddr:0000:00:00.0"
+  TransportID "trtype:PCIe traddr:0000:01:00.0"
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
   NvmeRetryCount 4
-  # The maximum number of NVMe controllers to claim. Do not include this key to
-  # claim all of them.
-  NumControllers 2
 
 [TargetNodeX]
   # other TargetNode parameters go here (TargetName, Mapping, etc.)

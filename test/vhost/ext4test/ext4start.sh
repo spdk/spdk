@@ -39,6 +39,9 @@ qemu-img create -f qcow2 -o backing_file=$VM_IMG $VM_BAK_IMG
 cp $testdir/spdk_vm_base.xml $testdir/spdk_vm.xml
 cp $testdir/spdk_vnet_base.xml $testdir/spdk_vnet.xml
 
+cp $testdir/vhost.conf.in $testdir/vhost.conf
+$rootdir/scripts/gen_nvme.sh >> $testdir/vhost.conf
+
 sed -i "s@<name></name>@<name>$VM_NAME</name>@g" $testdir/spdk_vm.xml
 sed -i "s@source file=''@source file='$VM_BAK_IMG'@g" $testdir/spdk_vm.xml
 sed -i "s@<emulator></emulator>@<emulator>$VM_QEMU</emulator>@g" $testdir/spdk_vm.xml
@@ -93,5 +96,6 @@ trap - SIGINT SIGTERM EXIT
 cleanup_virsh
 rm $testdir/spdk_vm.xml
 rm $testdir/spdk_vnet.xml
+rm $testdir/vhost.conf
 killprocess $pid
 timing_exit ext4test

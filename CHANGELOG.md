@@ -17,6 +17,22 @@ The `identify` and `perf` NVMe examples were modified to add a consistent format
 specifying remote NVMe over Fabrics devices via the `-r` option.
 This is implemented using the new `spdk_nvme_transport_id_parse()` function.
 
+### iSCSI Target
+
+The [Nvme] section of the configuration file was modified to remove the `BDF` directive
+and replace it with a `TransportID` directive. Both local (PCIe) and remote (NVMe-oF)
+devices can now be specified as the backing block device. A script to generate an
+entire [Nvme] section based on the local NVMe devices attached was added at
+`scripts/gen_nvme.sh`.
+
+### NVMe-oF Target
+
+The [Nvme] section of the configuration file was modified to remove the `BDF` directive
+and replace it with a `TransportID` directive. Both local (PCIe) and remote (NVMe-oF)
+devices can now be specified as the backing block device. A script to generate an
+entire [Nvme] section based on the local NVMe devices attached was added at
+`scripts/gen_nvme.sh`.
+
 ## v16.12: NVMe over Fabrics host, hotplug, and multi-process
 
 ### NVMe library

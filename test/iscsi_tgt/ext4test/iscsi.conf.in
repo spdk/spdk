@@ -43,8 +43,6 @@
 # Do not specify InitiatorGroup, PortalGroup, Malloc,
 #  or TargetNode entries here - the autotest.sh script
 #  will use RPC to set up this part of the configuration.
-[Nvme]
-  NumControllers 1
 
 [Malloc]
   NumberOfLuns 1

@@ -116,6 +116,7 @@ function spdk_vhost_run()
 	local vhost_log_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.log"
 	local vhost_pid_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.pid"
 	local vhost_socket="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
+	local vhost_conf_template="$BASE_DIR/vhost.conf.in"
 	local vhost_conf_file="$BASE_DIR/vhost.conf"
 	echo "INFO: starting vhost app in background"
 	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill
@@ -126,6 +127,9 @@ function spdk_vhost_run()
 		error "application not found: $vhost_app"
 		return 1
 	fi
+
+	cp $vhost_conf_template $vhost_conf_file
+	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
 	local cmd="$vhost_app -m $(cat $BASE_DIR/autotest.config|grep vhost_reactor_mask|awk -F'=' '{print $2}') \
 	-p $(cat $BASE_DIR/autotest.config|grep vhost_master_core|awk -F'=' '{print $2}') \
@@ -142,6 +146,8 @@ function spdk_vhost_run()
 	sleep 25
 	kill -0 $(cat $vhost_pid_file)
 	echo "INFO: vhost started - pid=$(cat $vhost_pid_file)"
+
+	rm $vhost_conf_file
 }
 
 function spdk_vhost_kill()

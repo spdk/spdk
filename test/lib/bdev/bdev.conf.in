@@ -1,5 +1,3 @@
-[Nvme]
-
 # autotest.sh will automatically rmmod ioatdma, so we do
 #  not need to specify Whitelist
 #  entries to enable ioat offload for this malloc LUN

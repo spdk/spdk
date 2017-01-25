@@ -38,6 +38,9 @@ fi
 
 timing_enter fio
 
+cp $testdir/iscsi.conf.in $testdir/iscsi.conf
+$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
+
 # iSCSI target configuration
 PORT=3260
 RPC_PORT=5260
@@ -92,5 +95,6 @@ rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
+rm -f $testdir/iscsi.conf
 killprocess $pid
 timing_exit fio
