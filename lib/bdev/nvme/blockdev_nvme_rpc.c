@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
+
 #include "blockdev_nvme.h"
 #include "spdk/rpc.h"
 
@@ -57,8 +59,10 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 {
 	struct rpc_construct_nvme req = {};
 	struct spdk_json_write_ctx *w;
-	struct nvme_probe_ctx ctx = {};
-	int i;
+	struct spdk_nvme_transport_id trid = {};
+	const char *names[NVME_MAX_BLOCKDEVS];
+	size_t count = 0;
+	size_t i;
 
 	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
 				    sizeof(rpc_construct_nvme_decoders) / sizeof(*rpc_construct_nvme_decoders),
@@ -67,14 +71,11 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	ctx.controllers_remaining = 1;
-	ctx.num_whitelist_controllers = 1;
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(trid.traddr, sizeof(trid.traddr), "%s", req.pci_address);
 
-	if (spdk_pci_addr_parse(&ctx.whitelist[0], req.pci_address) < 0) {
-		goto invalid;
-	}
-
-	if (spdk_bdev_nvme_create(&ctx)) {
+	count = NVME_MAX_BLOCKDEVS;
+	if (spdk_bdev_nvme_create(&trid, names, &count)) {
 		goto invalid;
 	}
 
@@ -86,8 +87,8 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 
 	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
-	for (i = 0; i < ctx.num_created_bdevs; i++) {
-		spdk_json_write_string(w, ctx.created_bdevs[i]->name);
+	for (i = 0; i < count; i++) {
+		spdk_json_write_string(w, names[i]);
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(conn, w);

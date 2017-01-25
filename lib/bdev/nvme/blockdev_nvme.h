@@ -36,24 +36,13 @@
 
 #include <stdint.h>
 
-#include "spdk/bdev.h"
-#include "spdk/env.h"
+#include "spdk/nvme.h"
 
 #define NVME_MAX_CONTROLLERS 16
 #define NVME_MAX_BLOCKDEVS_PER_CONTROLLER 256
 #define NVME_MAX_BLOCKDEVS (NVME_MAX_BLOCKDEVS_PER_CONTROLLER * NVME_MAX_CONTROLLERS)
 
-struct nvme_probe_ctx {
-	int controllers_remaining;
-	int num_whitelist_controllers;
-	struct spdk_pci_addr whitelist[NVME_MAX_CONTROLLERS];
-
-	/* Filled by spdk_bdev_nvme_create() with the bdevs that were added */
-	int num_created_bdevs;
-	struct spdk_bdev *created_bdevs[NVME_MAX_BLOCKDEVS];
-};
-
-int
-spdk_bdev_nvme_create(struct nvme_probe_ctx *ctx);
+int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
+			  const char **names, size_t *count);
 
 #endif // SPDK_BLOCKDEV_NVME_H
