@@ -281,26 +281,18 @@ _spdk_poller_unregister_complete(struct spdk_poller *poller)
 \code
 
 while (1)
-	if (new work items to be scheduled)
-		dequeue work item from new work item ring
-		enqueue work item to active work item ring
-	else if (active work item count > 0)
-		dequeue work item from active work item ring
-		invoke work item function pointer
-		if (work item state == RUNNING)
-			enqueue work item to active work item ring
-	else if (application state != RUNNING)
-		# exit the reactor loop
-		break
-	else
-		sleep for 100ms
+	if (events to run)
+		dequeue and run a batch of events
 
+	if (active pollers)
+		run the first poller in the list and move it to the back
+
+	if (first timer poller has expired)
+		run the first timer poller and reinsert it in the timer list
+
+	if (idle for at least SPDK_REACTOR_SPIN_TIME_US)
+		sleep until next timer poller is scheduled to expire
 \endcode
-
-Note that new work items are posted to a separate ring so that the
-active work item ring can be kept single producer/single consumer and
-only be touched by reactor itself.  This avoids atomic operations
-on the active work item ring which would hurt performance.
 
 */
 static int
