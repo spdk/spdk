@@ -290,7 +290,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 		return NULL;
 	}
 
-	if (!spdk_bdev_claim(bdev)) {
+	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
 		SPDK_ERRLOG("LUN %s: bdev %s is already claimed\n", name, bdev->name);
 		free(lun);
 		return NULL;

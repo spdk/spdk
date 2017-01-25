@@ -241,7 +241,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	int rc;
 	struct split_base *split_base;
 
-	if (!spdk_bdev_claim(base_bdev)) {
+	if (!spdk_bdev_claim(base_bdev, NULL, NULL)) {
 		SPDK_ERRLOG("Split bdev %s is already claimed\n", base_bdev->name);
 		return -1;
 	}

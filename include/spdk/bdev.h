@@ -55,9 +55,19 @@
 #define SPDK_BDEV_MAX_NAME_LENGTH		16
 #define SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH	50
 
+typedef void (*spdk_bdev_remove_cb_t)(void *remove_ctx);
+
 struct spdk_bdev_io;
 struct spdk_bdev_fn_table;
 struct spdk_json_write_ctx;
+
+/** Blockdev status */
+enum spdk_bdev_status {
+	SPDK_BDEV_STATUS_INVALID,
+	SPDK_BDEV_STATUS_UNCLAIMED,
+	SPDK_BDEV_STATUS_CLAIMED,
+	SPDK_BDEV_STATUS_REMOVING,
+};
 
 /**
  * \brief SPDK block device.
@@ -104,8 +114,14 @@ struct spdk_bdev {
 	/** Mutex protecting claimed */
 	pthread_mutex_t mutex;
 
-	/** True if another blockdev or a LUN is using this device */
-	bool claimed;
+	/** The bdev status */
+	enum spdk_bdev_status status;
+
+	/** Remove callback function pointer to upper level stack */
+	spdk_bdev_remove_cb_t remove_cb;
+
+	/** Callback context for hot remove the device */
+	void *remove_ctx;
 
 	TAILQ_ENTRY(spdk_bdev) link;
 };
@@ -305,9 +321,11 @@ struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
  * When the ownership of the bdev is no longer needed, the user should call spdk_bdev_unclaim().
  *
  * \param bdev Block device to claim.
+ * \param remove_cb callback function for hot remove the device.
+ * \param remove_ctx param for hot removal callback function.
  * \return true if the caller claimed the bdev, or false if it was already claimed by another user.
  */
-bool spdk_bdev_claim(struct spdk_bdev *bdev);
+bool spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx);
 
 /**
  * Release claim of ownership of a block device.

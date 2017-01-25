@@ -161,7 +161,8 @@ spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 }
 
 bool
-spdk_bdev_claim(struct spdk_bdev *bdev)
+spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
+		void *remove_ctx)
 {
 	return true;
 }

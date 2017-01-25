@@ -122,7 +122,7 @@ bdevperf_construct_targets(void)
 	bdev = spdk_bdev_first();
 	while (bdev != NULL) {
 
-		if (!spdk_bdev_claim(bdev)) {
+		if (!spdk_bdev_claim(bdev, NULL, NULL)) {
 			bdev = spdk_bdev_next(bdev);
 			continue;
 		}
