@@ -98,7 +98,7 @@ spdk_memzone_free(const char *name)
 
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
-		    size_t ele_size, size_t cache_size)
+		    size_t ele_size, size_t cache_size, int socket_id)
 {
 	static int mp = 0;
 

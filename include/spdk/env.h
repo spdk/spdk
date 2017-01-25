@@ -107,9 +107,11 @@ struct spdk_mempool;
  * Create a thread-safe memory pool. Cache size is the number of
  * elements in a thread-local cache. Can be 0 for no caching, or -1
  * for unspecified.
+ *
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY for any socket.
  */
 struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
-		size_t ele_size, size_t cache_size);
+		size_t ele_size, size_t cache_size, int socket_id);
 
 /**
  * Free a memory pool.
