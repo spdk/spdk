@@ -191,6 +191,7 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 	if (event->event != evt) {
 		SPDK_ERRLOG("Received event %d from CM event channel, but expected event %d\n",
 			    event->event, evt);
+		rdma_ack_cm_event(event);
 		return NULL;
 	}
 
@@ -622,6 +623,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 
 	accept_data = (struct spdk_nvmf_rdma_accept_private_data *)event->param.conn.private_data;
 	if (accept_data == NULL) {
+		rdma_ack_cm_event(event);
 		SPDK_ERRLOG("NVMe-oF target did not return accept data\n");
 		return -1;
 	}
