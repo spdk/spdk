@@ -63,15 +63,15 @@ ifneq ($(wildcard $(DPDK_ABS_DIR)/lib/librte_malloc.*),)
 DPDK_LIB += $(DPDK_ABS_DIR)/lib/librte_malloc.a
 endif
 
-ifeq ($(OS),Linux)
-DPDK_LIB += -ldl
-endif
-ifeq ($(OS),FreeBSD)
-DPDK_LIB += -lexecinfo
-endif
-
 ENV_CFLAGS = $(DPDK_INC)
 ENV_CXXFLAGS = $(ENV_CFLAGS)
 ENV_DPDK_FILE = $(call spdk_lib_list_to_files,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--start-group -Wl,--whole-archive $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
+
+ifeq ($(OS),Linux)
+ENV_LINKER_ARGS += -ldl
+endif
+ifeq ($(OS),FreeBSD)
+ENV_LINKER_ARGS += -lexecinfo
+endif
