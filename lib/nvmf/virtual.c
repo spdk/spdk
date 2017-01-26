@@ -127,7 +127,7 @@ nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_
 	int				sc, sct;
 
 	if (cmd->opc == SPDK_NVME_OPC_DATASET_MANAGEMENT) {
-		free(bdev_io->u.unmap.unmap_bdesc);
+		free(req->unmap_bdesc);
 	}
 
 	spdk_bdev_io_get_nvme_status(bdev_io, &sc, &sct);
@@ -482,6 +482,7 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
+		req->unmap_bdesc = unmap;
 		async = true;
 	}
 
