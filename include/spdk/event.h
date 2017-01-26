@@ -31,44 +31,12 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
-* Event framework public API.
-*
-* This is a framework for writing asynchronous, polled-mode, shared-nothing
-* server applications. The framework relies on DPDK for much of its underlying
-* architecture. The framework defines several concepts - reactors, events, pollers,
-* and subsystems - that are described in the following sections.
-*
-* The framework runs one thread per core (the user provides a core mask), where
-* each thread is a tight loop. The threads never block for any reason. These threads
-* are called reactors and their main responsibility is to process incoming events
-* from a queue.
-*
-* An event, defined by \ref spdk_event is a bundled function pointer and arguments that
-* can be sent to a different core and executed. The function pointer is executed only once,
-* and then the entire event is freed. These functions should never block and preferably
-* should execute very quickly. Events also have a pointer to a 'next' event that will be
-* executed upon completion of the given event, which allows chaining. This is
-* very much a simplified version of futures, promises, and continuations designed within
-* the constraints of the C programming language.
-*
-* The framework also defines another type of function called a poller. Pollers are also
-* functions with arguments that can be bundled and sent to a different core to be executed,
-* but they are instead executed repeatedly on that core until unregistered. The reactor
-* will handle interspersing calls to the pollers with other event processing automatically.
-* Pollers are intended to poll hardware as a replacement for interrupts and they should not
-* generally be used for any other purpose.
-*
-* The framework also defines an interface for subsystems, which are libraries of code that
-* depend on this framework. A library can register itself as a subsystem and provide
-* pointers to initialize and destroy itself which will be called at the appropriate time.
-* This is purely for sequencing initialization code in a convenient manner within the
-* framework.
-*
-* The framework itself is bundled into a higher level abstraction called an "app". Once
-* \ref spdk_app_start is called it will block the current thread until the application
-* terminates (by calling \ref spdk_app_stop).
-*/
+/**
+ * \file
+ * Event framework public API.
+ *
+ * See @ref event_components for an overview of the SPDK event framework API.
+ */
 
 #ifndef SPDK_EVENT_H
 #define SPDK_EVENT_H
