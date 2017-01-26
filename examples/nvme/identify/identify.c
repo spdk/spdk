@@ -47,6 +47,7 @@
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/pci_ids.h"
+#include "spdk/string.h"
 
 static int outstanding_commands;
 
@@ -68,6 +69,7 @@ static struct spdk_nvme_intel_temperature_page intel_temperature_page;
 static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
+static bool g_consistent_name = false;
 
 static struct spdk_nvme_transport_id g_trid;
 
@@ -330,6 +332,42 @@ print_uint_var_dec(uint8_t *array, unsigned int len)
 		i--;
 	}
 	printf("%lu", result);
+}
+
+static void
+print_consistent_name(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvme_ns *ns;
+	struct spdk_pci_addr pci_addr;
+	char uid[128];
+	uint64_t eui64;
+	uint32_t ns_id, num_ns;
+
+	if (spdk_pci_addr_parse(&pci_addr, trid->traddr) != 0) {
+		return;
+	}
+	printf("%04x:%02x:%02x.%x\n", pci_addr.domain, pci_addr.bus,
+	       pci_addr.dev, pci_addr.func);
+
+	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+
+	for (ns_id = 1; ns_id <= num_ns; ns_id++) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+		if (!spdk_nvme_ns_is_active(ns)) {
+			printf("%10u Inactive namespace\n", ns_id);
+			continue;
+		}
+
+		printf("%10u ", ns_id);
+		eui64 = spdk_nvme_ns_get_eui64(ns);
+		if (eui64 != 0) {
+			printf("%"PRIx64"\n", eui64);
+		} else if (spdk_nvme_ctrlr_get_uid(ctrlr, uid, sizeof(uid)) == 0) {
+			printf("%s-%u\n", uid, ns_id);
+		} else {
+			printf("Failed to get consistent name\n");
+		}
+	}
 }
 
 static void
@@ -874,6 +912,7 @@ usage(const char *program_name)
 	printf("\n");
 	printf("options:\n");
 	printf(" -a addr    address of NVMe over Fabrics discovery service\n");
+	printf(" -c         show consistent name used in iscsi.conf\n");
 	printf(" -s service service ID for NVMe over Fabrics discovery service\n");
 	printf(" -n nqn     NQN of NVMe over Fabrics discovery service\n");
 
@@ -892,7 +931,7 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
+	while ((op = getopt(argc, argv, "a:cn:s:t:xH")) != -1) {
 		switch (op) {
 		case 'x':
 			g_hex_dump = true;
@@ -913,6 +952,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'a':
 			snprintf(g_trid.traddr, sizeof(g_trid.traddr), "%s", optarg);
+			break;
+		case 'c':
+			g_consistent_name = true;
 			break;
 		case 's':
 			snprintf(g_trid.trsvcid, sizeof(g_trid.trsvcid), "%s", optarg);
@@ -951,7 +993,11 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	print_controller(ctrlr, trid);
+	if (g_consistent_name) {
+		print_consistent_name(ctrlr, trid);
+	} else {
+		print_controller(ctrlr, trid);
+	}
 	spdk_nvme_detach(ctrlr);
 }
 

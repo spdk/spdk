@@ -91,6 +91,14 @@ char *spdk_strsepq(char **stringp, const char *delim);
 char *spdk_str_trim(char *s);
 
 /**
+ * Replace whitespace with specified character.
+ *
+ * \param s String that has whitespace.
+ * \param rep Character to replace whitespace in s.
+ */
+char *spdk_str_replace_space(char *s, char rep);
+
+/**
  * Copy a string into a fixed-size buffer, padding extra bytes with a specific character.
  *
  * \param dst Pointer to destination fixed-size buffer to fill.

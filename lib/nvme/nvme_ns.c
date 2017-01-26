@@ -175,6 +175,12 @@ spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
 	return ns->md_size;
 }
 
+uint64_t
+spdk_nvme_ns_get_eui64(struct spdk_nvme_ns *ns)
+{
+	return _nvme_ns_get_data(ns)->eui64;
+}
+
 const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {

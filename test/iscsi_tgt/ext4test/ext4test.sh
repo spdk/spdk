@@ -33,6 +33,9 @@ NETMASK=$INITIATOR_IP/32
 
 rpc_py="python $rootdir/scripts/rpc.py"
 
+identify="$rootdir/examples/nvme/identify/identify -c"
+NVME=`$identify | awk '/^[A-Fa-f0-9]+:[A-Fa-f0-9]+:[A-Fa-f0-9]+\.[A-Fa-f0-9]+/ {getline; print $2; exit}'`
+
 $ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
@@ -48,7 +51,7 @@ $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 # "64" ==> iSCSI queue depth 64
 # "1 0 0 0" ==> disable CHAP authentication
 if [ -z "$NO_NVME" ]; then
-$rpc_py construct_target_node Target0 Target0_alias Nvme0n1p0:0 1:2 64 1 0 0 0
+	$rpc_py construct_target_node Target0 Target0_alias $NVME:0 1:2 64 1 0 0 0
 fi
 $rpc_py construct_target_node Target1 Target1_alias Malloc0:0 1:2 64 1 0 0 0
 
