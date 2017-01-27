@@ -47,6 +47,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 
+#define SPDK_ENV_SOCKET_ID_ANY	(-1)
+
 struct spdk_pci_device;
 
 /**
@@ -78,7 +80,7 @@ void spdk_free(void *buf);
  *   socket_id and flags.
  * Return a pointer to the allocated memory address. If the allocation
  *   cannot be done, return NULL.
- * Note: to pick any socket id, just set socket_id to -1.
+ * Note: to pick any socket id, just set socket_id to SPDK_ENV_SOCKET_ID_ANY.
  */
 void *spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
 

@@ -82,7 +82,13 @@ spdk_free(void *buf)
 void *
 spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
 {
-	const struct rte_memzone *mz = rte_memzone_reserve(name, len, socket_id, flags);
+	const struct rte_memzone *mz;
+
+	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
+		socket_id = SOCKET_ID_ANY;
+	}
+
+	mz = rte_memzone_reserve(name, len, socket_id, flags);
 
 	if (mz != NULL) {
 		memset(mz->addr, 0, len);
