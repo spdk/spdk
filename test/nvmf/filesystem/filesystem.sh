@@ -32,10 +32,6 @@ bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SI
 
 modprobe -v nvme-rdma
 
-if [ -e "/dev/nvme-fabrics" ]; then
-	chmod a+rw /dev/nvme-fabrics
-fi
-
 $rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -p "*"
 $rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode2 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -s SPDK00000000000001 -n "$bdevs"
 
