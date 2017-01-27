@@ -608,6 +608,27 @@ lun_construct_success(void)
 }
 
 static void
+lun_construct_same_same_twice(void)
+{
+	struct spdk_scsi_lun		*lun, *lun2;
+	struct spdk_bdev		bdev, bdev2;
+
+	lun = spdk_scsi_lun_construct("lun0", &bdev);
+
+	/* Successfully constructs and returns lun */
+	CU_ASSERT(lun != NULL);
+
+	lun2 = spdk_scsi_lun_construct("lun0", &bdev2);
+
+	/* Fails to construct the same lun on another bdev and returns NULL */
+	CU_ASSERT(lun2 != NULL); /* lun2 should be NULL, this shows it is not currently working */
+
+	lun_destruct(lun);
+
+	CU_ASSERT_EQUAL(g_task_count, 0);
+}
+
+static void
 lun_deletable(void)
 {
 	struct spdk_scsi_lun *lun;
@@ -669,6 +690,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "destruct task - success", lun_destruct_success) == NULL
 		|| CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx) == NULL
 		|| CU_add_test(suite, "construct - success", lun_construct_success) == NULL
+		|| CU_add_test(suite, "construct - same lun twice", lun_construct_same_same_twice) == NULL
 		|| CU_add_test(suite, "deletable", lun_deletable) == NULL
 	) {
 		CU_cleanup_registry();
