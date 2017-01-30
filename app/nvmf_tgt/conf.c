@@ -627,6 +627,21 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 	/* Parse Listen sections */
 	for (i = 0; i < num_listen_addresses; i++) {
+		int nic_numa_node = spdk_get_ifaddr_numa_node(addresses[i].traddr);
+		unsigned subsys_numa_node = rte_lcore_to_socket_id(app_subsys->lcore);
+
+		if (nic_numa_node >= 0) {
+			if (subsys_numa_node != (unsigned)nic_numa_node) {
+				SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core %d belonging "
+					     "to a different NUMA node than the associated NIC. "
+					     "This may result in reduced performance.\n",
+					     name, lcore);
+				SPDK_WARNLOG("The NIC is on socket %d\n", nic_numa_node);
+				SPDK_WARNLOG("The Subsystem is on socket %u\n",
+					     subsys_numa_node);
+			}
+		}
+
 		spdk_nvmf_subsystem_add_listener(subsystem, addresses[i].transport, addresses[i].traddr,
 						 addresses[i].trsvcid);
 	}
