@@ -76,16 +76,6 @@ nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
-nvme_transport_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
-{
-	if (ctrlr == NULL || pci_id == NULL) {
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-int
 nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 4);

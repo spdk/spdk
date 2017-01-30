@@ -293,19 +293,6 @@ nvme_pcie_qpair(struct spdk_nvme_qpair *qpair)
 	return (struct nvme_pcie_qpair *)((uintptr_t)qpair - offsetof(struct nvme_pcie_qpair, qpair));
 }
 
-int
-nvme_pcie_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
-{
-	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-
-	assert(ctrlr != NULL);
-	assert(pci_id != NULL);
-
-	*pci_id = spdk_pci_device_get_id(pctrlr->devhandle);
-
-	return 0;
-}
-
 static volatile void *
 nvme_pcie_reg_addr(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset)
 {
