@@ -333,197 +333,72 @@ static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode_str;
-	struct nvmf_tgt_subsystem *app_subsys;
-	struct spdk_nvmf_subsystem *subsystem;
-	enum spdk_nvmf_subsystem_mode mode;
 	int i, ret;
-	uint64_t mask;
-	int lcore = 0;
-	int num = spdk_conf_section_get_num(sp);
+	int lcore;
+	int num_listen_addrs;
+	struct rpc_listen_address listen_addrs[MAX_LISTEN_ADDRESSES];
+	int num_hosts;
+	char *hosts[MAX_HOSTS];
+	const char *bdf;
+	const char *sn;
+	int num_devs;
+	char *devs[MAX_VIRTUAL_NAMESPACE];
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
-	if (nqn == NULL) {
-		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", num);
-		return -1;
-	}
-
-	/* Determine which core to assign to the subsystem */
-	mask = spdk_app_get_core_mask();
-	lcore = spdk_conf_section_get_intval(sp, "Core");
-	if (lcore < 0) {
-		lcore = 0;
-		for (i = 0; i < num; i++) {
-			lcore = spdk_nvmf_allocate_lcore(mask, lcore);
-			lcore++;
-		}
-	}
-	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
-
 	mode_str = spdk_conf_section_get_val(sp, "Mode");
-	if (mode_str == NULL) {
-		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", num);
-		return -1;
-	}
-
-	if (strcasecmp(mode_str, "Direct") == 0) {
-		mode = NVMF_SUBSYSTEM_MODE_DIRECT;
-	} else if (strcasecmp(mode_str, "Virtual") == 0) {
-		mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
-	} else {
-		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode_str);
-		return -1;
-	}
-
-	app_subsys = nvmf_tgt_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME, mode, lcore);
-	if (app_subsys == NULL) {
-		SPDK_ERRLOG("Subsystem createion failed\n");
-		return -1;
-	}
-	subsystem = app_subsys->subsystem;
+	lcore = spdk_conf_section_get_intval(sp, "Core");
 
 	/* Parse Listen sections */
+	num_listen_addrs = 0;
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
-		char *transport_name, *listen_addr;
-		char *traddr, *trsvcid;
-		int numa_node = -1;
+		char *listen_addr;
 
-		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
+		listen_addrs[i].transport = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
 		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
 
-		if (!transport_name || !listen_addr) {
+		if (!listen_addrs[i].transport || !listen_addr) {
 			break;
 		}
 
 		listen_addr = strdup(listen_addr);
 
-		ret = spdk_parse_ip_addr(listen_addr, &traddr, &trsvcid);
+		ret = spdk_parse_ip_addr(listen_addr, &listen_addrs[i].traddr, &listen_addrs[i].trsvcid);
 		if (ret < 0) {
 			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addr);
+			free(listen_addr);
 			continue;
 		}
 
-		numa_node = spdk_get_ifaddr_numa_node(traddr);
-		if (numa_node >= 0) {
-			if (rte_lcore_to_socket_id(app_subsys->lcore) != (unsigned)numa_node) {
-				SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core %u belonging "
-					     "to a different NUMA node than the associated NIC. "
-					     "This may result in reduced performance.\n",
-					     spdk_nvmf_subsystem_get_nqn(app_subsys->subsystem), app_subsys->lcore);
-				SPDK_WARNLOG("The NIC is on socket %u\n", numa_node);
-				SPDK_WARNLOG("The Subsystem is on socket %u\n",
-					     rte_lcore_to_socket_id(app_subsys->lcore));
-			}
-		}
-
-		ret = spdk_nvmf_subsystem_add_listener(subsystem, transport_name, traddr, trsvcid);
-
-		if (ret < 0) {
-			SPDK_ERRLOG("Failed to listen on traddr=%s, trsvcid=%s\n", traddr, trsvcid);
-			free(listen_addr);
-			return -1;
-		}
-		free(listen_addr);
+		num_listen_addrs++;
 	}
 
 	/* Parse Host sections */
+	num_hosts = 0;
 	for (i = 0; i < MAX_HOSTS; i++) {
-		char *host_nqn;
+		hosts[i] = spdk_conf_section_get_nval(sp, "Host", i);
+		if (!hosts[i]) {
+			break;
+		}
+	}
 
-		host_nqn = spdk_conf_section_get_nval(sp, "Host", i);
-		if (!host_nqn) {
+	bdf = spdk_conf_section_get_val(sp, "NVMe");
+	sn = spdk_conf_section_get_val(sp, "SN");
+
+	num_devs = 0;
+	for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
+		devs[i] = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
+		if (!devs[i]) {
 			break;
 		}
 
-		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
+		num_devs++;
 	}
 
-	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
-		const char *bdf;
-		struct spdk_nvmf_probe_ctx ctx = { 0 };
-		struct spdk_nvme_transport_id trid = {};
-		struct spdk_pci_addr pci_addr;
-
-		/* Parse NVMe section */
-		bdf = spdk_conf_section_get_val(sp, "NVMe");
-		if (bdf == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", num);
-			return -1;
-		}
-
-		ctx.app_subsystem = app_subsys;
-		ctx.found = false;
-		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-		if (strcmp(bdf, "*") == 0) {
-			ctx.any = true;
-		} else {
-			if (spdk_pci_addr_parse(&pci_addr, bdf) < 0) {
-				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
-				return -1;
-			}
-			ctx.any = false;
-			spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
-			ctx.trid = trid;
-		}
-
-		if (spdk_nvme_probe(&trid, &ctx, probe_cb, attach_cb, NULL)) {
-			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
-		}
-
-		if (!ctx.found) {
-			SPDK_ERRLOG("Could not find NVMe controller for Subsystem%d\n", num);
-			return -1;
-		}
-	} else {
-		struct spdk_bdev *bdev;
-		const char *namespace, *sn, *val;
-
-		sn = spdk_conf_section_get_val(sp, "SN");
-		if (sn == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing serial number\n", num);
-			return -1;
-		}
-		if (spdk_nvmf_validate_sn(sn) != 0) {
-			return -1;
-		}
-
-		namespace = spdk_conf_section_get_val(sp, "Namespace");
-		if (namespace == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing Namespace directive\n", num);
-			return -1;
-		}
-
-		spdk_nvmf_subsystem_set_sn(subsystem, sn);
-
-		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
-			val = spdk_conf_section_get_nval(sp, "Namespace", i);
-			if (val == NULL) {
-				break;
-			}
-			namespace = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
-			if (!namespace) {
-				SPDK_ERRLOG("Namespace %d: missing block device\n", i);
-				return -1;
-			}
-
-			bdev = spdk_bdev_get_by_name(namespace);
-			if (!bdev) {
-				SPDK_ERRLOG("bdev is NULL\n");
-				return -1;
-			}
-
-			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
-				return -1;
-			}
-
-			SPDK_NOTICELOG("Attaching block device %s to subsystem %p\n",
-				       bdev->name, subsystem);
-
-		}
-	}
-
-	nvmf_tgt_start_subsystem(app_subsys);
-
-	return 0;
+	return spdk_nvmf_parse_subsystem_for_rpc(nqn, mode_str, lcore,
+			num_listen_addrs, listen_addrs,
+			num_hosts, hosts,
+			bdf, sn,
+			num_devs, devs);
 }
 
 static int
