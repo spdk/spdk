@@ -33,6 +33,8 @@
 
 #include "nvme_internal.h"
 
+static void nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
+
 struct nvme_string {
 	uint16_t	value;
 	const char 	*str;
@@ -336,6 +338,11 @@ nvme_qpair_manual_complete_request(struct spdk_nvme_qpair *qpair,
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
+	if (qpair->ctrlr->is_failed) {
+		nvme_qpair_fail(qpair);
+		return 0;
+	}
+
 	return nvme_transport_qpair_process_completions(qpair, max_completions);
 }
 
@@ -421,7 +428,7 @@ nvme_qpair_disable(struct spdk_nvme_qpair *qpair)
 	nvme_transport_qpair_disable(qpair);
 }
 
-void
+static void
 nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_request		*req;
