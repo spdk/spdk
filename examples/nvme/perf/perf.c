@@ -1194,6 +1194,9 @@ static char *ealargs[] = {
 	"-n 4",
 	"-m 512",  /* This can be overwritten by index in main(). */
 	"--proc-type=auto",
+#ifdef __linux__
+	"--base-virtaddr=0x1000000000",
+#endif
 };
 
 int main(int argc, char **argv)

@@ -1080,6 +1080,9 @@ static char *ealargs[] = {
 	"-c 0xf", /* This must be the second parameter. It is overwritten by index in main(). */
 	"-n 4",
 	"--proc-type=auto",
+#ifdef __linux__
+	"--base-virtaddr=0x1000000000",
+#endif
 };
 
 int
