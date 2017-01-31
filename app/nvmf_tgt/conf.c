@@ -364,9 +364,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
 	int rc;
-	char path[MAX_STRING_LEN];
 	int numa_node = -1;
 	struct spdk_pci_addr pci_addr;
+	struct spdk_pci_device *pci_dev;
 
 	spdk_pci_addr_parse(&pci_addr, trid->traddr);
 
@@ -375,10 +375,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		       trid->traddr,
 		       spdk_nvmf_subsystem_get_nqn(ctx->app_subsystem->subsystem));
 
-	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/numa_node",
-		 trid->traddr);
-
-	numa_node = spdk_get_numa_node_value(path);
+	pci_dev = spdk_pci_get_device(&pci_addr);
+	if (pci_dev) {
+		numa_node = spdk_pci_device_get_socket_id(pci_dev);
+	}
 	if (numa_node >= 0) {
 		/* Running subsystem and NVMe device is on the same socket or not */
 		if (rte_lcore_to_socket_id(ctx->app_subsystem->lcore) != (unsigned)numa_node) {

@@ -250,6 +250,16 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 }
 
 int
+spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+	return pci_dev->device.numa_node;
+#else
+	return pci_dev->numa_node;
+#endif
+}
+
+int
 spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
 {
 	return rte_eal_pci_read_config(dev, value, 1, offset) == 1 ? 0 : -1;

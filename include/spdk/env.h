@@ -210,6 +210,15 @@ uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
 
 struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 
+/**
+ * Get the NUMA socket ID of a PCI device.
+ *
+ * \param dev PCI device to get the socket ID of.
+ *
+ * \return Socket ID (>= 0), or negative if unknown.
+ */
+int spdk_pci_device_get_socket_id(struct spdk_pci_device *dev);
+
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 void spdk_pci_device_detach(struct spdk_pci_device *device);
