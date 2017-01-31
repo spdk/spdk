@@ -275,6 +275,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		d->disk.write_cache = base_bdev->write_cache;
 		d->disk.need_aligned_buffer = base_bdev->need_aligned_buffer;
 		d->disk.thin_provisioning = base_bdev->thin_provisioning;
+		d->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
 
 		/* Append partition number to the base bdev's name, e.g. Malloc0 -> Malloc0p0 */
 		snprintf(d->disk.name, sizeof(d->disk.name), "%sp%" PRIu64, base_bdev->name, i);
