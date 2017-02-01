@@ -38,3 +38,4 @@ $valgrind test/lib/scsi/scsi_nvme/scsi_nvme_ut
 
 $valgrind test/lib/util/bit_array/bit_array_ut
 $valgrind test/lib/util/io_channel/io_channel_ut
+$valgrind test/lib/util/string/string_ut

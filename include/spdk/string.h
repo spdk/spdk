@@ -113,6 +113,21 @@ void spdk_strcpy_pad(void *dst, const char *src, size_t size, int pad);
  */
 size_t spdk_strlen_pad(const void *str, size_t size, int pad);
 
+/**
+ * Parse an IP address into its hostname and port components.
+ * This modifies the IP address in place.
+ *
+ * \param ip A null terminated IP address, including port.
+ *           Both IPv4 and IPv6 are supported.
+ * \param host Will point to the start of the hostname within ip.
+ *             The string will be null terminated.
+ * \param port Will point to the start of the port within ip.
+ *             The string will be null terminated.
+ *
+ * \return 0 if successful. -1 on error.
+ */
+int spdk_parse_ip_addr(char *ip, const char **host, const char **port);
+
 #ifdef __cplusplus
 }
 #endif

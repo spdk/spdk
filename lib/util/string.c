@@ -256,3 +256,59 @@ spdk_strlen_pad(const void *str, size_t size, int pad)
 		iter--;
 	}
 }
+
+int
+spdk_parse_ip_addr(char *ip, const char **host, const char **port)
+{
+	char *p;
+
+	if (ip == NULL) {
+		return -1;
+	}
+
+	*host = NULL;
+	*port = NULL;
+
+	if (ip[0] == '[') {
+		/* IPv6 */
+		p = strchr(ip, ']');
+		if (p == NULL) {
+			return -1;
+		}
+		*host = &ip[1];
+		*p = '\0';
+
+		p++;
+		if (*p == '\0') {
+			return 0;
+		} else if (*p != ':') {
+			return -1;
+		}
+
+		p++;
+		if (*p == '\0') {
+			return 0;
+		}
+
+		*port = p;
+	} else {
+		/* IPv4 */
+		p = strchr(ip, ':');
+		if (p == NULL) {
+			*host = ip;
+			return 0;
+		}
+
+		*host = ip;
+		*p = '\0';
+
+		p++;
+		if (*p == '\0') {
+			return 0;
+		}
+
+		*port = p;
+	}
+
+	return 0;
+}
