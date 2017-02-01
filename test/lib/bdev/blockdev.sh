@@ -15,7 +15,7 @@ $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
 timing_enter verify
-$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 5
+$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
 timing_exit verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
