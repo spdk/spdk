@@ -38,8 +38,6 @@
 
 #include "spdk/jsonrpc.h"
 
-#define SPDK_JSONRPC_PORT_BASE 5260
-
 typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_server_conn *conn,
 					const struct spdk_json_val *params,
 					const struct spdk_json_val *id);

@@ -51,11 +51,13 @@
 #include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/event.h"
 
 #define RPC_SELECT_INTERVAL	4000 /* 4ms */
-#define RPC_DEFAULT_LISTEN_ADDR	"127.0.0.1"
+#define RPC_DEFAULT_LISTEN_ADDR	"127.0.0.1:5260"
+#define RPC_DEFAULT_PORT	"5260"
 
 static struct sockaddr_un g_rpc_listen_addr_unix = {};
 
@@ -160,8 +162,6 @@ spdk_jsonrpc_handler(
 static void
 spdk_rpc_setup(void *arg)
 {
-	uint16_t		port;
-	char			port_str[16];
 	struct addrinfo		hints;
 	struct addrinfo		*res;
 	const char		*listen_addr;
@@ -186,7 +186,7 @@ spdk_rpc_setup(void *arg)
 		g_rpc_listen_addr_unix.sun_family = AF_UNIX;
 		rc = snprintf(g_rpc_listen_addr_unix.sun_path,
 			      sizeof(g_rpc_listen_addr_unix.sun_path),
-			      "%s.%d", listen_addr, spdk_app_get_instance_id());
+			      "%s", listen_addr);
 		if (rc < 0 || (size_t)rc >= sizeof(g_rpc_listen_addr_unix.sun_path)) {
 			SPDK_ERRLOG("RPC Listen address Unix socket path too long\n");
 			g_rpc_listen_addr_unix.sun_path[0] = '\0';
@@ -200,15 +200,32 @@ spdk_rpc_setup(void *arg)
 				   sizeof(g_rpc_listen_addr_unix),
 				   spdk_jsonrpc_handler);
 	} else {
-		port = SPDK_JSONRPC_PORT_BASE + spdk_app_get_instance_id();
-		snprintf(port_str, sizeof(port_str), "%" PRIu16, port);
+		char *tmp;
+		char *host, *port;
+
+		tmp = strdup(listen_addr);
+		if (!tmp) {
+			SPDK_ERRLOG("Out of memory\n");
+			return;
+		}
+
+		if (spdk_parse_ip_addr(tmp, &host, &port) < 0) {
+			free(tmp);
+			SPDK_ERRLOG("Invalid listen address '%s'\n", listen_addr);
+			return;
+		}
+
+		if (port == NULL) {
+			port = RPC_DEFAULT_PORT;
+		}
 
 		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = AF_UNSPEC;
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
 
-		if (getaddrinfo(listen_addr, port_str, &hints, &res) != 0) {
+		if (getaddrinfo(host, port, &hints, &res) != 0) {
+			free(tmp);
 			SPDK_ERRLOG("Unable to look up RPC listen address '%s'\n", listen_addr);
 			return;
 		}
@@ -218,6 +235,7 @@ spdk_rpc_setup(void *arg)
 				   spdk_jsonrpc_handler);
 
 		freeaddrinfo(res);
+		free(tmp);
 	}
 
 	if (g_jsonrpc_server == NULL) {
