@@ -50,6 +50,7 @@
 #include "spdk/bdev.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
+#include "spdk/string.h"
 
 #define MAX_LISTEN_ADDRESSES 255
 #define MAX_HOSTS 255
@@ -232,108 +233,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	return 0;
 }
 
-static int
-spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
-{
-	int n, len;
-	const char *p, *q;
-
-	if (listen_addr == NULL) {
-		SPDK_ERRLOG("Invalid listen addr for Fabric Interface (NULL)\n");
-		return -1;
-	}
-
-	*host = NULL;
-	*port = NULL;
-
-	if (listen_addr[0] == '[') {
-		/* IPv6 */
-		p = strchr(listen_addr + 1, ']');
-		if (p == NULL) {
-			return -1;
-		}
-		p++;
-		n = p - listen_addr;
-		*host = calloc(1, n + 1);
-		if (!*host) {
-			return -1;
-		}
-		memcpy(*host, listen_addr, n);
-		(*host)[n] = '\0';
-		if (p[0] == '\0') {
-			*port = calloc(1, PORTNUMSTRLEN);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			snprintf(*port, PORTNUMSTRLEN, "%d", SPDK_NVMF_DEFAULT_SIN_PORT);
-		} else {
-			if (p[0] != ':') {
-				free(*host);
-				return -1;
-			}
-			q = strchr(listen_addr, '@');
-			if (q == NULL) {
-				q = listen_addr + strlen(listen_addr);
-			}
-			len = q - p - 1;
-
-			*port = calloc(1, len + 1);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			memcpy(*port, p + 1, len);
-		}
-	} else {
-		/* IPv4 */
-		p = strchr(listen_addr, ':');
-		if (p == NULL) {
-			p = listen_addr + strlen(listen_addr);
-		}
-		n = p - listen_addr;
-		*host = calloc(1, n + 1);
-		if (!*host) {
-			return -1;
-		}
-		memcpy(*host, listen_addr, n);
-		(*host)[n] = '\0';
-		if (p[0] == '\0') {
-			*port = calloc(1, PORTNUMSTRLEN);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			snprintf(*port, PORTNUMSTRLEN, "%d", SPDK_NVMF_DEFAULT_SIN_PORT);
-		} else {
-			if (p[0] != ':') {
-				free(*host);
-				return -1;
-			}
-			q = strchr(listen_addr, '@');
-			if (q == NULL) {
-				q = listen_addr + strlen(listen_addr);
-			}
-
-			if (q == p) {
-				free(*host);
-				return -1;
-			}
-
-			len = q - p - 1;
-			*port = calloc(1, len + 1);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			memcpy(*port, p + 1, len);
-
-		}
-	}
-
-	return 0;
-}
-
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -489,7 +388,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	/* Parse Listen sections */
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		char *transport_name, *listen_addr;
-		char *traddr, *trsvcid;
+		const char *traddr, *trsvcid;
 		int numa_node = -1;
 
 		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
@@ -499,9 +398,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			break;
 		}
 
-		ret = spdk_nvmf_parse_addr(listen_addr, &traddr, &trsvcid);
+		listen_addr = strdup(listen_addr);
+
+		ret = spdk_parse_ip_addr(listen_addr, &traddr, &trsvcid);
 		if (ret < 0) {
-			SPDK_ERRLOG("Unable to parse transport address '%s'\n", listen_addr);
+			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addr);
 			continue;
 		}
 
@@ -522,12 +423,10 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		if (ret < 0) {
 			SPDK_ERRLOG("Failed to listen on traddr=%s, trsvcid=%s\n", traddr, trsvcid);
-			free(traddr);
-			free(trsvcid);
+			free(listen_addr);
 			return -1;
 		}
-		free(traddr);
-		free(trsvcid);
+		free(listen_addr);
 	}
 
 	/* Parse Host sections */
