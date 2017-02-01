@@ -64,16 +64,12 @@
 #define MAP_128TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB + 1)) - 1))
 
-/* Max value for a 48-bit PFN. */
-#define INVALID_PFN	(0xFFFFFFFFFFFFULL)
-
 /* Max value for a 16-bit ref count. */
 #define VTOPHYS_MAX_REF_COUNT (0xFFFF)
 
 /* Physical page frame number of a single 2MB page. */
 struct map_2mb {
-	uint64_t pfn_2mb : 48;
-	uint64_t ref_count : 16;
+	uint64_t pfn_2mb;
 };
 
 /* Second-level map table indexed by bits [21..29] of the virtual address.
@@ -82,6 +78,7 @@ struct map_2mb {
  */
 struct map_1gb {
 	struct map_2mb map[1ULL << (SHIFT_1GB - SHIFT_2MB + 1)];
+	uint16_t ref_count[1ULL << (SHIFT_1GB - SHIFT_2MB + 1)];
 };
 
 /* Top-level map table indexed by bits [30..46] of the virtual address.
@@ -94,13 +91,11 @@ struct map_128tb {
 static struct map_128tb vtophys_map_128tb = {};
 static pthread_mutex_t vtophys_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static struct map_2mb *
-vtophys_get_map(uint64_t vfn_2mb)
+static struct map_1gb *
+vtophys_get_map_1gb(uint64_t vfn_2mb)
 {
 	struct map_1gb *map_1gb;
-	struct map_2mb *map_2mb;
 	uint64_t idx_128tb = MAP_128TB_IDX(vfn_2mb);
-	uint64_t idx_1gb = MAP_1GB_IDX(vfn_2mb);
 
 	map_1gb = vtophys_map_128tb.map[idx_128tb];
 
@@ -113,7 +108,8 @@ vtophys_get_map(uint64_t vfn_2mb)
 			map_1gb = malloc(sizeof(struct map_1gb));
 			if (map_1gb) {
 				/* initialize all entries to all 0xFF (SPDK_VTOPHYS_ERROR) */
-				memset(map_1gb, 0xFF, sizeof(struct map_1gb));
+				memset(map_1gb->map, 0xFF, sizeof(map_1gb->map));
+				memset(map_1gb->ref_count, 0, sizeof(map_1gb->ref_count));
 				vtophys_map_128tb.map[idx_128tb] = map_1gb;
 			}
 		}
@@ -126,8 +122,21 @@ vtophys_get_map(uint64_t vfn_2mb)
 		}
 	}
 
-	map_2mb = &map_1gb->map[idx_1gb];
-	return map_2mb;
+	return map_1gb;
+}
+
+static struct map_2mb *
+vtophys_get_map_2mb(uint64_t vfn_2mb)
+{
+	struct map_1gb *map_1gb;
+	uint64_t idx_1gb = MAP_1GB_IDX(vfn_2mb);
+
+	map_1gb = vtophys_get_map_1gb(vfn_2mb);
+	if (!map_1gb) {
+		return NULL;
+	}
+
+	return &map_1gb->map[idx_1gb];
 }
 
 static uint64_t
@@ -175,23 +184,29 @@ vtophys_get_pfn_2mb(uint64_t vfn_2mb)
 	}
 
 	fprintf(stderr, "could not find 2MB vfn 0x%jx in DPDK mem config\n", vfn_2mb);
-	return INVALID_PFN;
+	return SPDK_VTOPHYS_ERROR;
 }
 
 static void
 _spdk_vtophys_register_one(uint64_t vfn_2mb)
 {
+	struct map_1gb *map_1gb;
+	uint64_t idx_1gb = MAP_1GB_IDX(vfn_2mb);
 	struct map_2mb *map_2mb;
+	uint16_t *ref_count;
 	void *vaddr;
 	uint64_t paddr;
 
-	map_2mb = vtophys_get_map(vfn_2mb);
-	if (!map_2mb) {
+	map_1gb = vtophys_get_map_1gb(vfn_2mb);
+	if (!map_1gb) {
 		fprintf(stderr, "could not get vfn_2mb %p map\n", (void *)vfn_2mb);
 		return;
 	}
 
-	if (map_2mb->pfn_2mb == INVALID_PFN) {
+	map_2mb = &map_1gb->map[idx_1gb];
+	ref_count = &map_1gb->ref_count[idx_1gb];
+
+	if (map_2mb->pfn_2mb == SPDK_VTOPHYS_ERROR) {
 		vaddr = (void *)(vfn_2mb << SHIFT_2MB);
 		paddr = vtophys_get_dpdk_paddr(vaddr);
 		if (paddr == RTE_BAD_PHYS_ADDR) {
@@ -200,37 +215,43 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb)
 		}
 
 		map_2mb->pfn_2mb = paddr >> SHIFT_2MB;
-		map_2mb->ref_count = 0;
+		*ref_count = 0;
 	}
 
-	if (map_2mb->ref_count == VTOPHYS_MAX_REF_COUNT) {
+	if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
 		fprintf(stderr, "ref count for %p already at %d\n",
 			(void *)(vfn_2mb << SHIFT_2MB), VTOPHYS_MAX_REF_COUNT);
 		return;
 	}
 
-	map_2mb->ref_count++;
+	(*ref_count)++;
 }
 
 static void
 _spdk_vtophys_unregister_one(uint64_t vfn_2mb)
 {
+	struct map_1gb *map_1gb;
+	uint64_t idx_1gb = MAP_1GB_IDX(vfn_2mb);
 	struct map_2mb *map_2mb;
+	uint16_t *ref_count;
 
-	map_2mb = vtophys_get_map(vfn_2mb);
-	if (!map_2mb) {
+	map_1gb = vtophys_get_map_1gb(vfn_2mb);
+	if (!map_1gb) {
 		fprintf(stderr, "could not get vfn_2mb %p map\n", (void *)vfn_2mb);
 		return;
 	}
 
-	if (map_2mb->pfn_2mb == INVALID_PFN || map_2mb->ref_count == 0) {
+	map_2mb = &map_1gb->map[idx_1gb];
+	ref_count = &map_1gb->ref_count[idx_1gb];
+
+	if (map_2mb->pfn_2mb == SPDK_VTOPHYS_ERROR || *ref_count == 0) {
 		fprintf(stderr, "vaddr %p not registered\n", (void *)(vfn_2mb << SHIFT_2MB));
 		return;
 	}
 
-	map_2mb->ref_count--;
-	if (map_2mb->ref_count == 0) {
-		map_2mb->pfn_2mb = INVALID_PFN;
+	(*ref_count)--;
+	if (*ref_count == 0) {
+		map_2mb->pfn_2mb = SPDK_VTOPHYS_ERROR;
 	}
 }
 
@@ -300,15 +321,15 @@ spdk_vtophys(void *buf)
 
 	vfn_2mb = vaddr >> SHIFT_2MB;
 
-	map_2mb = vtophys_get_map(vfn_2mb);
+	map_2mb = vtophys_get_map_2mb(vfn_2mb);
 	if (!map_2mb) {
 		return SPDK_VTOPHYS_ERROR;
 	}
 
 	pfn_2mb = map_2mb->pfn_2mb;
-	if (pfn_2mb == INVALID_PFN) {
+	if (pfn_2mb == SPDK_VTOPHYS_ERROR) {
 		pfn_2mb = vtophys_get_pfn_2mb(vfn_2mb);
-		if (pfn_2mb == INVALID_PFN) {
+		if (pfn_2mb == SPDK_VTOPHYS_ERROR) {
 			return SPDK_VTOPHYS_ERROR;
 		}
 		map_2mb->pfn_2mb = pfn_2mb;
