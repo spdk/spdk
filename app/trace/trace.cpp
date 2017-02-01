@@ -94,7 +94,7 @@ struct object_stats g_stats[SPDK_TRACE_MAX_OBJECT];
 
 static char *exe_name;
 static int verbose = 1;
-static int g_instance_id = 0;
+static int g_shm_id = 0;
 static int g_fudge_factor = 20;
 
 static uint64_t tsc_rate;
@@ -306,7 +306,7 @@ static void usage(void)
 	fprintf(stderr, "                 '-c' to display single lcore history\n");
 	fprintf(stderr, "                 '-f' to specify number of events to ignore at\n");
 	fprintf(stderr, "                      beginning and end of trace (default: 20)\n");
-	fprintf(stderr, "                 '-i' to specify the instance ID, (default: 0)\n");
+	fprintf(stderr, "                 '-i' to specify the shared memory ID, (required)\n");
 }
 
 int main(int argc, char **argv)
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
 			g_fudge_factor = atoi(optarg);
 			break;
 		case 'i':
-			g_instance_id = atoi(optarg);
+			g_shm_id = atoi(optarg);
 			break;
 		case 'q':
 			verbose = 0;
@@ -350,7 +350,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, g_instance_id);
+	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, g_shm_id);
 	fd = shm_open(shm_name, O_RDONLY, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "Could not open shm %s.\n", shm_name);

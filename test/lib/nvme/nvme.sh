@@ -57,22 +57,22 @@ timing_exit arbitration
 
 if [ $(uname -s) = Linux ]; then
 	timing_enter multi_process
-	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 10 -c 0xf &
+	$rootdir/examples/nvme/arbitration/arbitration -i 0 -s 4096 -t 10 -c 0xf &
 	pid=$!
 	sleep 3
-	$rootdir/examples/nvme/perf/perf -q 1 -w randread -s 4096 -t 10 -c 0x10 &
+	$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w randread -s 4096 -t 10 -c 0x10 &
 	sleep 1
 	kill -9 $!
 	count=0
 	while [ $count -le 2 ]; do
-		$rootdir/examples/nvme/perf/perf -q 1 -w read -s 4096 -t 1 -c 0x10
+		$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w read -s 4096 -t 1 -c 0x10
 		count=$(($count + 1))
 	done
 	count=0
 	while [ $count -le 1 ]; do
 		core=$((1 << (($count + 4))))
 		printf -v hexcore "0x%x" "$core"
-		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1 -c $hexcore &
+		$rootdir/examples/nvme/perf/perf -i 0 -q 128 -w read -s 4096 -t 1 -c $hexcore &
 		count=$(($count + 1))
 	done
 	wait $pid

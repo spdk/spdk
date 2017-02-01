@@ -68,7 +68,7 @@
 struct spdk_app {
 	struct spdk_conf		*config;
 	char				pidfile[SPDK_APP_PIDFILE_MAX_LENGTH];
-	int				instance_id;
+	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
 };
@@ -80,9 +80,9 @@ static int spdk_app_write_pidfile(void);
 static void spdk_app_remove_pidfile(void);
 
 int
-spdk_app_get_instance_id(void)
+spdk_app_get_shm_id(void)
 {
-	return g_spdk_app.instance_id;
+	return g_spdk_app.shm_id;
 }
 
 /* Global section */
@@ -224,7 +224,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 
 	opts->log_facility = SPDK_APP_DEFAULT_LOG_FACILITY;
 	opts->enable_coredump = true;
-	opts->instance_id = -1;
+	opts->shm_id = -1;
 	opts->dpdk_mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
 	opts->dpdk_master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->dpdk_mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
@@ -268,23 +268,23 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 	spdk_conf_set_as_default(config);
 
-	if (opts->instance_id == -1) {
+	if (opts->shm_id == -1) {
 		sp = spdk_conf_find_section(config, "Global");
 		if (sp != NULL) {
-			opts->instance_id = spdk_conf_section_get_intval(sp, "InstanceID");
+			opts->shm_id = spdk_conf_section_get_intval(sp, "SharedMemoryID");
 		}
 	}
 
-	if (opts->instance_id < 0) {
-		opts->instance_id = 0;
+	if (opts->shm_id < 0) {
+		opts->shm_id = getpid();
 	}
 
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
-	g_spdk_app.instance_id = opts->instance_id;
+	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	snprintf(g_spdk_app.pidfile, sizeof(g_spdk_app.pidfile), "%s/%s.pid.%d",
-		 SPDK_APP_PIDFILE_PREFIX, opts->name, opts->instance_id);
+		 SPDK_APP_PIDFILE_PREFIX, opts->name, opts->shm_id);
 	spdk_app_write_pidfile();
 
 	/* open log files */
@@ -391,7 +391,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	sigaddset(&signew, SIGHUP);
 	pthread_sigmask(SIG_SETMASK, &signew, NULL);
 
-	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->instance_id);
+	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
 	spdk_trace_init(shm_name);
 
 	if (opts->tpoint_group_mask == NULL) {

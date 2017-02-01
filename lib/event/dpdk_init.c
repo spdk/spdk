@@ -146,8 +146,8 @@ spdk_build_eal_cmdline(struct spdk_app_opts *opts)
 
 #ifdef __linux__
 	/* set the hugepage file prefix */
-	g_arg_strings[EAL_FILE_PREFIX_ARG] = spdk_sprintf_alloc("--file-prefix=rte%d",
-					     opts->instance_id);
+	g_arg_strings[EAL_FILE_PREFIX_ARG] = spdk_sprintf_alloc("--file-prefix=spdk%d",
+					     opts->shm_id);
 #else
 	/* --file-prefix is not required on FreeBSD */
 	g_arg_strings[EAL_FILE_PREFIX_ARG] = strdup("");

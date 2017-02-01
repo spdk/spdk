@@ -71,7 +71,7 @@ usage(char *executable_name)
 	printf(" -c config  config file (default %s)\n", SPDK_ISCSI_DEFAULT_CONFIG);
 	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
 	printf(" -m mask    core mask for DPDK\n");
-	printf(" -i instance ID\n");
+	printf(" -i shared memory ID (optional)\n");
 	printf(" -l facility use specific syslog facility (default %s)\n",
 	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
@@ -116,7 +116,7 @@ main(int argc, char **argv)
 			opts.config_file = optarg;
 			break;
 		case 'i':
-			opts.instance_id = atoi(optarg);
+			opts.shm_id = atoi(optarg);
 			break;
 		case 'l':
 			opts.log_facility = optarg;

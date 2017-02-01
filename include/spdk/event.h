@@ -75,7 +75,7 @@ struct spdk_app_opts {
 	const char *log_facility;
 	const char *tpoint_group_mask;
 
-	int instance_id;
+	int shm_id;
 
 	spdk_app_shutdown_cb	shutdown_cb;
 	spdk_sighandler_t	usr1_handler;
@@ -139,9 +139,9 @@ void spdk_app_stop(int rc);
 int spdk_app_get_running_config(char **config_str, char *name);
 
 /**
- * \brief Return the instance id for this application.
+ * \brief Return the shared memory id for this application.
 */
-int spdk_app_get_instance_id(void);
+int spdk_app_get_shm_id(void);
 
 /**
  * \brief Convert a string containing a CPU core mask into a bitmask

@@ -51,7 +51,7 @@ do
 	cp $testdir/iscsi.conf $testdir/iscsi.conf.$i
 	port=$(($RPC_PORT + $i))
 	echo "Listen 127.0.0.1:$port" >> $testdir/iscsi.conf.$i
-	$exe -c $testdir/iscsi.conf.$i -i $i -s 1000 &
+	$exe -c $testdir/iscsi.conf.$i -s 1000 -i $i &
 	pid=$!
 	echo "Process pid: $pid"
 

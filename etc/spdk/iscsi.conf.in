@@ -10,9 +10,9 @@
 # Bracketed ([]) names define sections
 
 [Global]
-  # Instance ID for multi-process support
-  # Default: 0
-  #InstanceID 0
+  # Shared Memory Group ID. SPDK applications with the same ID will share memory.
+  # Default: <the process PID>
+  #SharedMemoryID 0
 
   # Users can restrict work items to only run on certain cores by
   #  specifying a ReactorMask.  Default is to allow work items to run

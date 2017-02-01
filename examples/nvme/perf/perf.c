@@ -148,6 +148,7 @@ static int g_queue_depth;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
+static int g_shm_id = -1;
 
 static const char *g_core_mask;
 
@@ -661,6 +662,7 @@ static void usage(char *program_name)
 	printf("\t[-d DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
+	printf("\t[-i shared memory group ID]\n");
 }
 
 static void
@@ -854,13 +856,16 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:lm:q:r:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:M:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
 			break;
 		case 'd':
 			g_dpdk_mem = atoi(optarg);
+			break;
+		case 'i':
+			g_shm_id = atoi(optarg);
 			break;
 		case 'l':
 			g_latency_tracking_enable = true;
@@ -1196,7 +1201,9 @@ static char *ealargs[] = {
 	"--proc-type=auto",
 #ifdef __linux__
 	"--base-virtaddr=0x1000000000",
+	"", /* May be replaced by --file-prefix */
 #endif
+
 };
 
 int main(int argc, char **argv)
@@ -1205,29 +1212,47 @@ int main(int argc, char **argv)
 	struct worker_thread *worker;
 	char task_pool_name[30];
 	uint32_t task_count;
+	size_t argcount;
+	char *core_mask = NULL;
+	char *mem_size = NULL;
+	char *file_prefix = NULL;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
 
-	ealargs[1] = spdk_sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
+	ealargs[1] = core_mask = spdk_sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
 	if (ealargs[1] == NULL) {
 		perror("ealargs spdk_sprintf_alloc");
 		return 1;
 	}
 
-	ealargs[3] = spdk_sprintf_alloc("-m %d", g_dpdk_mem ? g_dpdk_mem : 512);
+	ealargs[3] = mem_size = spdk_sprintf_alloc("-m %d", g_dpdk_mem ? g_dpdk_mem : 512);
 	if (ealargs[3] == NULL) {
 		free(ealargs[1]);
 		perror("ealargs spdk_sprintf_alloc");
 		return 1;
 	}
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
+	argcount = (sizeof(ealargs) / sizeof(ealargs[0])) - 1;
 
-	free(ealargs[1]);
-	free(ealargs[3]);
+#ifdef __linux__
+	if (g_shm_id >= 0) {
+		ealargs[6] = file_prefix = spdk_sprintf_alloc("--file-prefix=spdk%d",
+					   g_shm_id);
+		argcount++;
+	}
+#endif
+
+	rc = rte_eal_init(argcount, ealargs);
+
+	free(core_mask);
+	free(mem_size);
+
+	if (file_prefix) {
+		free(file_prefix);
+	}
 
 	if (rc < 0) {
 		fprintf(stderr, "could not initialize dpdk\n");
