@@ -153,7 +153,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 
 	while (remaining_lba_count > 0) {
 		lba_count = sectors_per_max_io - (lba & sector_mask);
-		lba_count = nvme_min(remaining_lba_count, lba_count);
+		lba_count = spdk_min(remaining_lba_count, lba_count);
 
 		child = _nvme_add_child_request(ns, payload, payload_offset, md_offset,
 						lba, lba_count, cb_fn, cb_arg, opc,

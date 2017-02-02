@@ -836,7 +836,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		 *  Note also that for a queue size of N, we can only have (N-1)
 		 *  commands outstanding, hence the "-1" here.
 		 */
-		num_trackers = nvme_min(NVME_IO_TRACKERS, pqpair->num_entries - 1);
+		num_trackers = spdk_min(NVME_IO_TRACKERS, pqpair->num_entries - 1);
 	}
 
 	assert(num_trackers != 0);
@@ -1512,11 +1512,11 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 		return -1;
 	}
-	nseg = req->payload_size >> nvme_u32log2(PAGE_SIZE);
+	nseg = req->payload_size >> spdk_u32log2(PAGE_SIZE);
 	modulo = req->payload_size & (PAGE_SIZE - 1);
 	unaligned = phys_addr & (PAGE_SIZE - 1);
 	if (modulo || unaligned) {
-		nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+		nseg += 1 + ((modulo + unaligned - 1) >> spdk_u32log2(PAGE_SIZE));
 	}
 
 	if (req->payload.md) {
@@ -1598,7 +1598,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			return -1;
 		}
 
-		length = nvme_min(remaining_transfer_len, length);
+		length = spdk_min(remaining_transfer_len, length);
 		remaining_transfer_len -= length;
 
 		sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
@@ -1680,13 +1680,13 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 		/* All SGe except first must start on a page boundary. */
 		assert((sge_count == 0) || _is_page_aligned(phys_addr));
 
-		data_transferred = nvme_min(remaining_transfer_len, length);
+		data_transferred = spdk_min(remaining_transfer_len, length);
 
-		nseg = data_transferred >> nvme_u32log2(PAGE_SIZE);
+		nseg = data_transferred >> spdk_u32log2(PAGE_SIZE);
 		modulo = data_transferred & (PAGE_SIZE - 1);
 		unaligned = phys_addr & (PAGE_SIZE - 1);
 		if (modulo || unaligned) {
-			nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+			nseg += 1 + ((modulo + unaligned - 1) >> spdk_u32log2(PAGE_SIZE));
 		}
 
 		if (total_nseg == 0) {

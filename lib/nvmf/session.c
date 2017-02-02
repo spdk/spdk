@@ -99,7 +99,7 @@ nvmf_init_nvme_session_properties(struct spdk_nvmf_session *session)
 	session->vcdata.cntlid = session->cntlid;
 	session->vcdata.kas = 10;
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
-	session->vcdata.mdts = nvmf_u32log2(g_nvmf_tgt.max_io_size / 4096);
+	session->vcdata.mdts = spdk_u32log2(g_nvmf_tgt.max_io_size / 4096);
 	session->vcdata.sgls.keyed_sgl = 1;
 	session->vcdata.sgls.sgl_offset = 1;
 

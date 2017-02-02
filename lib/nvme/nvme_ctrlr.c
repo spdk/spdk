@@ -432,7 +432,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
 
 	/* Page size is 2 ^ (12 + mps). */
-	cc.bits.mps = nvme_u32log2(PAGE_SIZE) - 12;
+	cc.bits.mps = spdk_u32log2(PAGE_SIZE) - 12;
 
 	switch (ctrlr->opts.arb_mechanism) {
 	case SPDK_NVME_CC_AMS_RR:
@@ -582,7 +582,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->max_xfer_size = nvme_transport_ctrlr_get_max_xfer_size(ctrlr);
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
 	if (ctrlr->cdata.mdts > 0) {
-		ctrlr->max_xfer_size = nvme_min(ctrlr->max_xfer_size,
+		ctrlr->max_xfer_size = spdk_min(ctrlr->max_xfer_size,
 						ctrlr->min_page_size * (1 << (ctrlr->cdata.mdts)));
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
 	}
@@ -631,7 +631,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	sq_allocated = (status.cpl.cdw0 & 0xFFFF) + 1;
 	cq_allocated = (status.cpl.cdw0 >> 16) + 1;
 
-	ctrlr->opts.num_io_queues = nvme_min(sq_allocated, cq_allocated);
+	ctrlr->opts.num_io_queues = spdk_min(sq_allocated, cq_allocated);
 
 	ctrlr->free_io_qids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
 	if (ctrlr->free_io_qids == NULL) {
@@ -851,7 +851,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* aerl is a zero-based value, so we need to add 1 here. */
-	ctrlr->num_aers = nvme_min(NVME_MAX_ASYNC_EVENTS, (ctrlr->cdata.aerl + 1));
+	ctrlr->num_aers = spdk_min(NVME_MAX_ASYNC_EVENTS, (ctrlr->cdata.aerl + 1));
 
 	for (i = 0; i < ctrlr->num_aers; i++) {
 		aer = &ctrlr->aer[i];
@@ -1312,8 +1312,8 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 
 	ctrlr->min_page_size = 1u << (12 + ctrlr->cap.bits.mpsmin);
 
-	ctrlr->opts.io_queue_size = nvme_min(ctrlr->opts.io_queue_size, ctrlr->cap.bits.mqes + 1u);
-	ctrlr->opts.io_queue_size = nvme_min(ctrlr->opts.io_queue_size, max_io_queue_size);
+	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, ctrlr->cap.bits.mqes + 1u);
+	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, max_io_queue_size);
 }
 
 void
@@ -1628,7 +1628,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	p = payload;
 
 	while (size_remaining > 0) {
-		transfer = nvme_min(size_remaining, ctrlr->min_page_size);
+		transfer = spdk_min(size_remaining, ctrlr->min_page_size);
 		status.done = false;
 
 		res = nvme_ctrlr_cmd_fw_image_download(ctrlr, transfer, offset, p,

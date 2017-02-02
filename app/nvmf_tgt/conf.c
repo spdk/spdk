@@ -51,6 +51,7 @@
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 #define MAX_LISTEN_ADDRESSES 255
 #define MAX_HOSTS 255
@@ -176,15 +177,15 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	if (max_queue_depth < 0) {
 		max_queue_depth = SPDK_NVMF_CONFIG_QUEUE_DEPTH_DEFAULT;
 	}
-	max_queue_depth = nvmf_max(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MIN);
-	max_queue_depth = nvmf_min(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX);
+	max_queue_depth = spdk_max(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MIN);
+	max_queue_depth = spdk_min(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX);
 
 	max_queues_per_sess = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
 	if (max_queues_per_sess < 0) {
 		max_queues_per_sess = SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_DEFAULT;
 	}
-	max_queues_per_sess = nvmf_max(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN);
-	max_queues_per_sess = nvmf_min(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX);
+	max_queues_per_sess = spdk_max(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN);
+	max_queues_per_sess = spdk_min(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX);
 
 	in_capsule_data_size = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
 	if (in_capsule_data_size < 0) {
@@ -193,8 +194,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		SPDK_ERRLOG("InCapsuleDataSize must be a multiple of 16\n");
 		return -1;
 	}
-	in_capsule_data_size = nvmf_max(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MIN);
-	in_capsule_data_size = nvmf_min(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MAX);
+	in_capsule_data_size = spdk_max(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MIN);
+	in_capsule_data_size = spdk_min(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MAX);
 
 	max_io_size = spdk_conf_section_get_intval(sp, "MaxIOSize");
 	if (max_io_size < 0) {
@@ -203,8 +204,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		SPDK_ERRLOG("MaxIOSize must be a multiple of 4096\n");
 		return -1;
 	}
-	max_io_size = nvmf_max(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN);
-	max_io_size = nvmf_min(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX);
+	max_io_size = spdk_max(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN);
+	max_io_size = spdk_min(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX);
 
 	acceptor_lcore = spdk_conf_section_get_intval(sp, "AcceptorCore");
 	if (acceptor_lcore < 0) {

@@ -395,7 +395,7 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 
 	/* Copy the valid part of the discovery log page, if any */
 	if (g_discovery_log_page && offset < g_discovery_log_page_size) {
-		copy_len = nvmf_min(g_discovery_log_page_size - offset, length);
+		copy_len = spdk_min(g_discovery_log_page_size - offset, length);
 		zero_len -= copy_len;
 		memcpy(buffer, (char *)g_discovery_log_page + offset, copy_len);
 	}

@@ -43,13 +43,14 @@
 #include <string.h>
 
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 typedef uint64_t spdk_bit_array_word;
 #define SPDK_BIT_ARRAY_WORD_TZCNT(x)	(__builtin_ctzll(x))
 #define SPDK_BIT_ARRAY_WORD_C(x)	((spdk_bit_array_word)(x))
 #define SPDK_BIT_ARRAY_WORD_BYTES	sizeof(spdk_bit_array_word)
 #define SPDK_BIT_ARRAY_WORD_BITS	(SPDK_BIT_ARRAY_WORD_BYTES * 8)
-#define SPDK_BIT_ARRAY_WORD_INDEX_SHIFT	(31u - __builtin_clz(SPDK_BIT_ARRAY_WORD_BITS))
+#define SPDK_BIT_ARRAY_WORD_INDEX_SHIFT	spdk_u32log2(SPDK_BIT_ARRAY_WORD_BITS)
 #define SPDK_BIT_ARRAY_WORD_INDEX_MASK	((1u << SPDK_BIT_ARRAY_WORD_INDEX_SHIFT) - 1)
 
 struct spdk_bit_array {

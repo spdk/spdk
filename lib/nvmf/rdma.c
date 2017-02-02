@@ -675,15 +675,15 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
 		      addr->attr.max_qp_wr, addr->attr.max_qp_rd_atom);
-	max_queue_depth = nvmf_min(max_queue_depth, addr->attr.max_qp_wr);
-	max_rw_depth = nvmf_min(max_rw_depth, addr->attr.max_qp_rd_atom);
+	max_queue_depth = spdk_min(max_queue_depth, addr->attr.max_qp_wr);
+	max_rw_depth = spdk_min(max_rw_depth, addr->attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Host (Initiator) NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
 		      rdma_param->initiator_depth, rdma_param->responder_resources);
 	if (rdma_param->initiator_depth > 0) {
-		max_rw_depth = nvmf_min(max_rw_depth, rdma_param->initiator_depth);
+		max_rw_depth = spdk_min(max_rw_depth, rdma_param->initiator_depth);
 	}
 
 	/* Finally check for the host software requested values, which are
@@ -692,8 +692,8 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	    rdma_param->private_data_len >= sizeof(struct spdk_nvmf_rdma_request_private_data)) {
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Receive Queue Size: %d\n", private_data->hrqsize);
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Send Queue Size: %d\n", private_data->hsqsize);
-		max_queue_depth = nvmf_min(max_queue_depth, private_data->hrqsize);
-		max_queue_depth = nvmf_min(max_queue_depth, private_data->hsqsize);
+		max_queue_depth = spdk_min(max_queue_depth, private_data->hrqsize);
+		max_queue_depth = spdk_min(max_queue_depth, private_data->hsqsize);
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",

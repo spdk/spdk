@@ -34,6 +34,7 @@
 #include "ioat_internal.h"
 
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -569,8 +570,6 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 	return 0;
 }
 
-#define min(a, b) (((a)<(b))?(a):(b))
-
 #define _2MB_PAGE(ptr)		((ptr) & ~(0x200000 - 1))
 #define _2MB_OFFSET(ptr)	((ptr) &  (0x200000 - 1))
 
@@ -608,9 +607,9 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 			pdst_page = spdk_vtophys((void *)vdst_page);
 		}
 		op_size = remaining;
-		op_size = min(op_size, (0x200000 - _2MB_OFFSET(vsrc)));
-		op_size = min(op_size, (0x200000 - _2MB_OFFSET(vdst)));
-		op_size = min(op_size, ioat->max_xfer_size);
+		op_size = spdk_min(op_size, (0x200000 - _2MB_OFFSET(vsrc)));
+		op_size = spdk_min(op_size, (0x200000 - _2MB_OFFSET(vdst)));
+		op_size = spdk_min(op_size, ioat->max_xfer_size);
 		remaining -= op_size;
 
 		last_desc = ioat_prep_copy(ioat,
@@ -672,7 +671,7 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 
 	while (remaining) {
 		op_size = remaining;
-		op_size = min(op_size, ioat->max_xfer_size);
+		op_size = spdk_min(op_size, ioat->max_xfer_size);
 		remaining -= op_size;
 
 		last_desc = ioat_prep_fill(ioat,

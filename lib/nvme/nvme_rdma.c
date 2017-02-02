@@ -479,7 +479,7 @@ nvme_rdma_copy_mem(struct spdk_nvme_rdma_req *rdma_req, bool copy_from_user)
 				return -1;
 			}
 
-			len = nvme_min(remaining_transfer_len, len);
+			len = spdk_min(remaining_transfer_len, len);
 			remaining_transfer_len -= len;
 
 			if (copy_from_user) {
@@ -592,7 +592,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	param.responder_resources = nvme_min(rqpair->num_entries, attr.max_qp_rd_atom);
+	param.responder_resources = spdk_min(rqpair->num_entries, attr.max_qp_rd_atom);
 
 	ctrlr = rqpair->qpair.ctrlr;
 	if (!ctrlr) {
@@ -631,7 +631,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "Requested queue depth %d. Actually got queue depth %d.\n",
 		      rqpair->num_entries, accept_data->crqsize);
 
-	rqpair->num_entries  = nvme_min(rqpair->num_entries , accept_data->crqsize);
+	rqpair->num_entries = spdk_min(rqpair->num_entries, accept_data->crqsize);
 
 	rdma_ack_cm_event(event);
 
@@ -1178,7 +1178,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	 */
 	buffer_max_entries = (sizeof(buffer) - offsetof(struct spdk_nvmf_discovery_log_page, entries[0])) /
 			     sizeof(struct spdk_nvmf_discovery_log_page_entry);
-	numrec = nvme_min(log_page->numrec, buffer_max_entries);
+	numrec = spdk_min(log_page->numrec, buffer_max_entries);
 	if (numrec != log_page->numrec) {
 		SPDK_WARNLOG("Discovery service returned %" PRIu64 " entries,"
 			     "but buffer can only hold %" PRIu64 "\n",
@@ -1382,13 +1382,13 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	if (max_completions == 0) {
 		max_completions = rqpair->num_entries;
 	} else {
-		max_completions = nvme_min(max_completions, rqpair->num_entries);
+		max_completions = spdk_min(max_completions, rqpair->num_entries);
 	}
 
 	/* Consume all send completions */
 	reaped = 0;
 	do {
-		batch_size = nvme_min((max_completions - reaped),
+		batch_size = spdk_min((max_completions - reaped),
 				      MAX_COMPLETIONS_PER_POLL);
 		rc = ibv_poll_cq(rqpair->cm_id->send_cq, batch_size, wc);
 		if (rc < 0) {
@@ -1405,7 +1405,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	/* Poll for recv completions */
 	reaped = 0;
 	do {
-		batch_size = nvme_min((max_completions - reaped),
+		batch_size = spdk_min((max_completions - reaped),
 				      MAX_COMPLETIONS_PER_POLL);
 		rc = ibv_poll_cq(rqpair->cm_id->recv_cq, batch_size, wc);
 		if (rc < 0) {

@@ -55,6 +55,7 @@
 #include "spdk/bit_array.h"
 #include "spdk/mmio.h"
 #include "spdk/pci_ids.h"
+#include "spdk/util.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
 
@@ -427,25 +428,7 @@ struct nvme_driver {
 
 extern struct nvme_driver *g_spdk_nvme_driver;
 
-#define nvme_min(a,b) (((a)<(b))?(a):(b))
-
 #define nvme_delay		usleep
-
-static inline uint32_t
-nvme_u32log2(uint32_t x)
-{
-	if (x == 0) {
-		/* __builtin_clz(0) is undefined, so just bail */
-		return 0;
-	}
-	return 31u - __builtin_clz(x);
-}
-
-static inline uint32_t
-nvme_align32pow2(uint32_t x)
-{
-	return 1u << (1 + nvme_u32log2(x - 1));
-}
 
 static inline bool
 nvme_qpair_is_admin_queue(struct spdk_nvme_qpair *qpair)

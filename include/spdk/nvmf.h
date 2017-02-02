@@ -47,9 +47,6 @@
 #define MAX_VIRTUAL_NAMESPACE 16
 #define MAX_SN_LEN 20
 
-#define nvmf_min(a,b) (((a)<(b))?(a):(b))
-#define nvmf_max(a,b) (((a)>(b))?(a):(b))
-
 int spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
 		       uint32_t in_capsule_data_size, uint32_t max_io_size);
 

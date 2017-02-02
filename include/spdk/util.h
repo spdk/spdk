@@ -31,46 +31,41 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __NVMF_INTERNAL_H__
-#define __NVMF_INTERNAL_H__
+/** \file
+ * General utility functions
+ */
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#ifndef SPDK_UTIL_H
+#define SPDK_UTIL_H
 
-#include "spdk/nvmf_spec.h"
-#include "spdk/assert.h"
-#include "spdk/queue.h"
-#include "spdk/util.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
+#include <stddef.h>
+#include <stdint.h>
 
-struct spdk_nvmf_tgt {
-	uint16_t max_queue_depth;
-	uint16_t max_queues_per_session;
+#define spdk_min(a,b) (((a)<(b))?(a):(b))
+#define spdk_max(a,b) (((a)>(b))?(a):(b))
 
-	uint32_t in_capsule_data_size;
-	uint32_t max_io_size;
-};
+static inline uint32_t
+spdk_u32log2(uint32_t x)
+{
+	if (x == 0) {
+		/* log(0) is undefined */
+		return 0;
+	}
+	return 31u - __builtin_clz(x);
+}
 
-extern struct spdk_nvmf_tgt g_nvmf_tgt;
+static inline uint32_t
+spdk_align32pow2(uint32_t x)
+{
+	return 1u << (1 + spdk_u32log2(x - 1));
+}
 
-struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(const char *trname, const char *traddr,
-		const char *trsvcid);
-void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
+#ifdef __cplusplus
+}
+#endif
 
-#define OBJECT_NVMF_IO				0x30
-
-#define TRACE_GROUP_NVMF			0x3
-#define TRACE_NVMF_IO_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0)
-#define TRACE_RDMA_READ_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x1)
-#define TRACE_RDMA_WRITE_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x2)
-#define TRACE_RDMA_READ_COMPLETE      		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x3)
-#define TRACE_RDMA_WRITE_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x4)
-#define TRACE_NVMF_LIB_READ_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x5)
-#define TRACE_NVMF_LIB_WRITE_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x6)
-#define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
-#define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
-
-#endif /* __NVMF_INTERNAL_H__ */
+#endif
