@@ -174,11 +174,11 @@ bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, con
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 char *trname, char *traddr, char *trsvcid);
+				 const char *trname, const char *traddr, const char *trsvcid);
 
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
-			     char *host_nqn);
+			     const char *host_nqn);
 
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,

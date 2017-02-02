@@ -252,7 +252,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 char *trname, char *traddr, char *trsvcid)
+				 const char *trname, const char *traddr, const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
@@ -282,7 +282,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 }
 
 int
-spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_nqn)
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *host_nqn)
 {
 	struct spdk_nvmf_host *host;
 

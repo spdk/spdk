@@ -87,7 +87,7 @@ struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 static int32_t g_last_rpc_lcore = -1;
 
 static int
-spdk_get_numa_node_value(char *path)
+spdk_get_numa_node_value(const char *path)
 {
 	FILE *fd;
 	int numa_node = -1;
@@ -107,7 +107,7 @@ spdk_get_numa_node_value(char *path)
 }
 
 static int
-spdk_get_ifaddr_numa_node(char *if_addr)
+spdk_get_ifaddr_numa_node(const char *if_addr)
 {
 	int ret;
 	struct ifaddrs *ifaddrs, *ifa;

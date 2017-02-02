@@ -49,7 +49,7 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(char *trname, char *traddr, char *trsvcid)
+spdk_nvmf_listen_addr_create(const char *trname, const char *traddr, const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 
