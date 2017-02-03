@@ -1372,6 +1372,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 	struct spdk_nvmf_request *req;
 	int reaped, i, rc;
 	int count = 0;
+	bool error = false;
 
 	/* Poll for completing operations. */
 	rc = ibv_poll_cq(rdma_conn->cq, 32, wc);
@@ -1386,13 +1387,15 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 		if (wc[i].status) {
 			SPDK_ERRLOG("CQ error on Connection %p, Request 0x%lu (%d): %s\n",
 				    conn, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
-			return -1;
+			error = true;
+			continue;
 		}
 
 		rdma_req = (struct spdk_nvmf_rdma_request *)wc[i].wr_id;
 		if (rdma_req == NULL) {
 			SPDK_ERRLOG("NULL wr_id in RDMA work completion\n");
-			return -1;
+			error = true;
+			continue;
 		}
 
 		req = &rdma_req->req;
@@ -1405,7 +1408,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				      req, conn, rdma_conn->cur_queue_depth - 1);
 			rc = spdk_nvmf_rdma_request_ack_completion(req);
 			if (rc) {
-				return -1;
+				error = true;
+				continue;
 			}
 			break;
 
@@ -1415,14 +1419,16 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			spdk_trace_record(TRACE_RDMA_WRITE_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_rdma_request_send_completion(req);
 			if (rc) {
-				return -1;
+				error = true;
+				continue;
 			}
 
 			/* Since an RDMA R/W operation completed, try to submit from the pending list. */
 			rdma_conn->cur_rdma_rw_depth--;
 			rc = spdk_nvmf_rdma_handle_pending_rdma_rw(conn);
 			if (rc < 0) {
-				return -1;
+				error = true;
+				continue;
 			}
 			count += rc;
 			break;
@@ -1433,7 +1439,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
-				return -1;
+				error = true;
+				continue;
 			}
 			count++;
 
@@ -1441,7 +1448,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			rdma_conn->cur_rdma_rw_depth--;
 			rc = spdk_nvmf_rdma_handle_pending_rdma_rw(conn);
 			if (rc < 0) {
-				return -1;
+				error = true;
+				continue;
 			}
 			count += rc;
 			break;
@@ -1449,7 +1457,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 		case IBV_WC_RECV:
 			if (wc[i].byte_len < sizeof(struct spdk_nvmf_capsule_cmd)) {
 				SPDK_ERRLOG("recv length %u less than capsule header\n", wc[i].byte_len);
-				return -1;
+				error = true;
+				continue;
 			}
 
 			rdma_conn->cur_queue_depth++;
@@ -1466,7 +1475,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				/* Data is immediately available */
 				rc = spdk_nvmf_request_exec(req);
 				if (rc < 0) {
-					return -1;
+					error = true;
+					continue;
 				}
 				count++;
 				break;
@@ -1478,7 +1488,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p needs data transfer\n", req);
 				rc = spdk_nvmf_rdma_request_transfer_data(req);
 				if (rc < 0) {
-					return -1;
+					error = true;
+					continue;
 				}
 				break;
 			case SPDK_NVMF_REQUEST_PREP_ERROR:
@@ -1489,8 +1500,13 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 
 		default:
 			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
-			return -1;
+			error = true;
+			continue;
 		}
+	}
+
+	if (error == true) {
+		return -1;
 	}
 
 	return count;
