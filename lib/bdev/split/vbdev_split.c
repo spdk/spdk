@@ -193,7 +193,7 @@ vbdev_split_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_
 {
 	struct split_disk *split_disk = (struct split_disk *)bdev;
 
-	return split_disk->base_bdev->fn_table->io_type_supported(bdev, io_type);
+	return split_disk->base_bdev->fn_table->io_type_supported(split_disk->base_bdev, io_type);
 }
 
 static struct spdk_io_channel *
@@ -201,7 +201,7 @@ vbdev_split_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {
 	struct split_disk *split_disk = (struct split_disk *)bdev;
 
-	return split_disk->base_bdev->fn_table->get_io_channel(bdev, priority);
+	return split_disk->base_bdev->fn_table->get_io_channel(split_disk->base_bdev, priority);
 }
 
 static struct spdk_bdev_fn_table vbdev_split_fn_table = {
