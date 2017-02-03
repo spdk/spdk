@@ -1094,7 +1094,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
 	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
-		SPDK_ERRLOG("get registers failed\n");
+		if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
+			/* While a device is resetting, it may be unable to service MMIO reads
+			 * temporarily. Allow for this case.
+			 */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Get registers failed while waiting for CSTS.RDY == 0\n");
+			goto init_timeout;
+		}
+		SPDK_ERRLOG("Failed to read CC and CSTS in state %d\n", ctrlr->state);
 		nvme_ctrlr_fail(ctrlr, false);
 		return -EIO;
 	}
@@ -1207,6 +1214,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		return -1;
 	}
 
+init_timeout:
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
 	    spdk_get_ticks() > ctrlr->state_timeout_tsc) {
 		SPDK_ERRLOG("Initialization timed out in state %d\n", ctrlr->state);
