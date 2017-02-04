@@ -112,7 +112,7 @@ nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 }
 
 static void
-nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_session *session)
+nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 {
 	return;
 }

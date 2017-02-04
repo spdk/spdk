@@ -51,10 +51,10 @@ nvmf_direct_ctrlr_get_data(struct spdk_nvmf_session *session)
 }
 
 static void
-nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_session *session)
+nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 {
-	spdk_nvme_ctrlr_process_admin_completions(session->subsys->dev.direct.ctrlr);
-	spdk_nvme_qpair_process_completions(session->subsys->dev.direct.io_qpair, 0);
+	spdk_nvme_ctrlr_process_admin_completions(subsystem->dev.direct.ctrlr);
+	spdk_nvme_qpair_process_completions(subsystem->dev.direct.io_qpair, 0);
 }
 
 static void

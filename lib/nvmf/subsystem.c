@@ -132,12 +132,12 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_session *session;
 
-	TAILQ_FOREACH(session, &subsystem->sessions, link) {
-		/* For NVMe subsystems, check the backing physical device for completions. */
-		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-			session->subsys->ops->poll_for_completions(session);
-		}
+	/* For NVMe subsystems, check the backing physical device for completions. */
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+		subsystem->ops->poll_for_completions(subsystem);
+	}
 
+	TAILQ_FOREACH(session, &subsystem->sessions, link) {
 		/* For each connection in the session, check for completions */
 		spdk_nvmf_session_poll(session);
 	}

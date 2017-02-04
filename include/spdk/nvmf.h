@@ -105,7 +105,7 @@ struct spdk_nvmf_ctrlr_ops {
 	/**
 	 * Poll for completions.
 	 */
-	void (*poll_for_completions)(struct spdk_nvmf_session *session);
+	void (*poll_for_completions)(struct spdk_nvmf_subsystem *subsystem);
 
 	/**
 	 * Detach the controller.
