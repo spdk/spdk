@@ -64,7 +64,7 @@ struct spdk_nvmf_probe_ctx {
 	struct nvmf_tgt_subsystem	*app_subsystem;
 	bool				any;
 	bool				found;
-	struct spdk_pci_addr		pci_addr;
+	struct spdk_nvme_transport_id	trid;
 };
 
 #define MAX_STRING_LEN 255
@@ -239,18 +239,13 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
-	struct spdk_pci_addr pci_addr;
-
-	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-		return false;
-	}
 
 	if (ctx->any && !ctx->found) {
 		ctx->found = true;
 		return true;
 	}
 
-	if (spdk_pci_addr_compare(&pci_addr, &ctx->pci_addr) == 0) {
+	if (strcmp(trid->traddr, ctx->trid.traddr) == 0) {
 		ctx->found = true;
 		return true;
 	}
@@ -445,6 +440,8 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 		const char *bdf;
 		struct spdk_nvmf_probe_ctx ctx = { 0 };
+		struct spdk_nvme_transport_id trid = {};
+		struct spdk_pci_addr pci_addr;
 
 		/* Parse NVMe section */
 		bdf = spdk_conf_section_get_val(sp, "NVMe");
@@ -455,17 +452,20 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 		ctx.app_subsystem = app_subsys;
 		ctx.found = false;
+		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 		if (strcmp(bdf, "*") == 0) {
 			ctx.any = true;
 		} else {
-			if (spdk_pci_addr_parse(&ctx.pci_addr, bdf) < 0) {
+			if (spdk_pci_addr_parse(&pci_addr, bdf) < 0) {
 				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
 				return -1;
 			}
 			ctx.any = false;
+			spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
+			ctx.trid = trid;
 		}
 
-		if (spdk_nvme_probe(NULL, &ctx, probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(&trid, &ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 		}
 
@@ -638,6 +638,8 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 		struct spdk_nvmf_probe_ctx ctx = { 0 };
+		struct spdk_nvme_transport_id trid = {};
+		struct spdk_pci_addr pci_addr = {};
 
 		if (bdf == NULL) {
 			SPDK_ERRLOG("Subsystem %s: missing NVMe directive\n", name);
@@ -649,25 +651,28 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 			goto error;
 		}
 
+		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 		ctx.app_subsystem = app_subsys;
 		ctx.found = false;
 		if (strcmp(bdf, "*") == 0) {
 			ctx.any = true;
 		} else {
-			if (spdk_pci_addr_parse(&ctx.pci_addr, bdf) < 0) {
+			if (spdk_pci_addr_parse(&pci_addr, bdf) < 0) {
 				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
 				goto error;
 			}
 			ctx.any = false;
+			spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
+			ctx.trid = trid;
 		}
 
-		if (spdk_nvme_probe(NULL, &ctx, probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(&trid, &ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 		}
 
 		if (!ctx.found) {
 			SPDK_ERRLOG("Could not find NVMe controller at PCI address %04x:%02x:%02x.%x\n",
-				    ctx.pci_addr.domain, ctx.pci_addr.bus, ctx.pci_addr.dev, ctx.pci_addr.func);
+				    pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
 			goto error;
 		}
 	} else {
