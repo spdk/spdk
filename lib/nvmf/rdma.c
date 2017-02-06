@@ -1012,6 +1012,8 @@ static int
 spdk_nvmf_rdma_fini(void)
 {
 	pthread_mutex_lock(&g_rdma.lock);
+
+	assert(TAILQ_EMPTY(&g_rdma.listen_addrs));
 	if (g_rdma.event_channel != NULL) {
 		rdma_destroy_event_channel(g_rdma.event_channel);
 	}

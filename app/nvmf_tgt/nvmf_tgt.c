@@ -75,6 +75,7 @@ subsystem_delete_event(void *arg1, void *arg2)
 	spdk_nvmf_delete_subsystem(subsystem);
 
 	if (g_subsystems_shutdown && TAILQ_EMPTY(&g_subsystems)) {
+		spdk_nvmf_tgt_fini();
 		/* Finished shutting down all subsystems - continue the shutdown process. */
 		shutdown_complete();
 	}
@@ -118,7 +119,6 @@ shutdown_subsystems(void)
 static void
 acceptor_poller_unregistered_event(void *arg1, void *arg2)
 {
-	spdk_nvmf_tgt_fini();
 	shutdown_subsystems();
 }
 
