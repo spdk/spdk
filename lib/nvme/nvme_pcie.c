@@ -124,7 +124,9 @@ struct nvme_tracker {
 
 	uint32_t			rsvd2;
 
-	uint64_t			timeout_tick;
+	/* The value of spdk_get_ticks() when the tracker was submitted to the hardware. */
+	uint64_t			submit_tick;
+
 	uint64_t			prp_sgl_bus_addr;
 
 	union {
@@ -1011,7 +1013,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
-	tr->timeout_tick = spdk_get_ticks() + qpair->ctrlr->timeout_ticks;
+	tr->submit_tick = spdk_get_ticks();
 
 	req = tr->req;
 	pqpair->tr[tr->cid].active = true;
@@ -1834,7 +1836,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 
 	t02 = spdk_get_ticks();
-	if (tr->timeout_tick <= t02) {
+	if (tr->submit_tick + ctrlr->timeout_ticks <= t02) {
 		/*
 		 * Request has timed out. This could be i/o or admin request.
 		 * Call the registered timeout function for user to take action.
