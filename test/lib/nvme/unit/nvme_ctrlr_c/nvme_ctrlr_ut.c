@@ -1309,6 +1309,20 @@ test_nvme_ctrlr_set_supported_features(void)
 	CU_ASSERT(res == true);
 }
 
+static void
+test_ctrlr_opts_set_defaults(void)
+{
+	struct spdk_nvme_ctrlr_opts opts = {};
+
+	spdk_nvme_ctrlr_opts_set_defaults(&opts);
+	CU_ASSERT_EQUAL(opts.num_io_queues, DEFAULT_MAX_IO_QUEUES);
+	CU_ASSERT_FALSE(opts.use_cmb_sqs);
+	CU_ASSERT_EQUAL(opts.arb_mechanism, SPDK_NVME_CC_AMS_RR);
+	CU_ASSERT_EQUAL(opts.keep_alive_timeout_ms, 10 * 1000);
+	CU_ASSERT_EQUAL(opts.io_queue_size, DEFAULT_IO_QUEUE_SIZE);
+	CU_ASSERT_STRING_EQUAL(opts.hostnqn, DEFAULT_HOSTNQN);
+}
+
 #if 0 /* TODO: move to PCIe-specific unit test */
 static void
 test_nvme_ctrlr_alloc_cmb(void)
@@ -1370,6 +1384,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0 AMS = VS",
 			       test_nvme_ctrlr_init_en_0_rdy_0_ams_vs) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_rr 1", test_alloc_io_qpair_rr_1) == NULL
+		|| CU_add_test(suite, "set_defaults", test_ctrlr_opts_set_defaults) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 1", test_alloc_io_qpair_wrr_1) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 2", test_alloc_io_qpair_wrr_2) == NULL
 		|| CU_add_test(suite, "test nvme_ctrlr function nvme_ctrlr_fail", test_nvme_ctrlr_fail) == NULL
