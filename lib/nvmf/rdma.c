@@ -1355,9 +1355,7 @@ spdk_nvmf_rdma_request_release(struct spdk_nvmf_request *req)
 static void
 spdk_nvmf_rdma_close_conn(struct spdk_nvmf_conn *conn)
 {
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-
-	return spdk_nvmf_rdma_conn_destroy(rdma_conn);
+	spdk_nvmf_rdma_conn_destroy(get_rdma_conn(conn));
 }
 
 /* Returns the number of times that spdk_nvmf_request_exec was called,
