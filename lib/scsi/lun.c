@@ -304,6 +304,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 	rc = spdk_scsi_lun_db_add(lun);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to add LUN %s to DB\n", lun->name);
+		spdk_bdev_unclaim(bdev);
 		free(lun);
 		return NULL;
 	}

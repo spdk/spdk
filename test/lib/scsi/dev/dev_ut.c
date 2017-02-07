@@ -298,7 +298,7 @@ dev_construct_same_lun_two_devices(void)
 	dev2 = spdk_scsi_dev_construct("Name2", lun_name_list, lun_id_list, 1);
 
 	/* Fails to construct dev and returns NULL */
-	CU_ASSERT_TRUE(dev2 != NULL); /* dev2 should be NULL, this shows it is not currently working */
+	CU_ASSERT_TRUE(dev2 == NULL);
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(dev);
@@ -316,9 +316,9 @@ dev_construct_same_lun_one_device(void)
 	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 2);
 
 	/* Fails to construct dev and returns NULL */
-	CU_ASSERT_TRUE(dev != NULL); /* dev should be NULL, this shows it is not currently working */
+	CU_ASSERT_TRUE(dev == NULL);
 
-	CU_ASSERT(!TAILQ_EMPTY(&g_lun_head)); /* lun list should be empty, as none should be created */
+	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
 }
 
 static void
