@@ -95,6 +95,7 @@ extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
 typedef struct spdk_scsi_lun _spdk_scsi_lun;
 
 _spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev);
+int spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
 void spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);

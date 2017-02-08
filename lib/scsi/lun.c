@@ -311,7 +311,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 	return lun;
 }
 
-static int
+int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_unclaim(lun->bdev);
