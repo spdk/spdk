@@ -67,7 +67,7 @@ connecting to remote subsystems, users should verify nvme-rdma driver is loaded.
 
 Discovery:
 ~~~{.sh}
-nvme discovery -t rdma -s 192.168.100.8 -s 4420
+nvme discover -t rdma -a 192.168.100.8 -s 4420
 ~~~
 
 Connect:
