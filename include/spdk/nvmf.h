@@ -134,9 +134,10 @@ struct spdk_nvmf_subsystem {
 	bool is_removed;
 	union {
 		struct {
-			struct spdk_nvme_ctrlr *ctrlr;
-			struct spdk_nvme_qpair *io_qpair;
-			struct spdk_pci_addr pci_addr;
+			struct spdk_nvme_ctrlr	*ctrlr;
+			struct spdk_nvme_qpair	*io_qpair;
+			struct spdk_pci_addr	pci_addr;
+			struct spdk_poller	*admin_poller;
 		} direct;
 
 		struct {
@@ -160,7 +161,7 @@ struct spdk_nvmf_subsystem {
 
 	TAILQ_HEAD(, spdk_nvmf_subsystem_allowed_listener)	allowed_listeners;
 
-	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
+	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
 
 struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,

@@ -39,6 +39,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
+#include "spdk/event.h"
 
 #include "spdk_internal/log.h"
 
@@ -52,9 +53,26 @@ nvmf_direct_ctrlr_get_data(struct spdk_nvmf_session *session)
 }
 
 static void
+nvmf_direct_ctrlr_poll_for_admin_completions(void *arg)
+{
+	struct spdk_nvmf_subsystem *subsystem = arg;
+
+	spdk_nvme_ctrlr_process_admin_completions(subsystem->dev.direct.ctrlr);
+}
+
+static void
 nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 {
-	spdk_nvme_ctrlr_process_admin_completions(subsystem->dev.direct.ctrlr);
+	if (subsystem->dev.direct.admin_poller == NULL) {
+		int lcore = spdk_app_get_current_core();
+
+		spdk_poller_register(&subsystem->dev.direct.admin_poller,
+				     nvmf_direct_ctrlr_poll_for_admin_completions,
+				     subsystem, lcore, 10000);
+	}
+
+	nvmf_direct_ctrlr_poll_for_admin_completions(subsystem);
+
 	spdk_nvme_qpair_process_completions(subsystem->dev.direct.io_qpair, 0);
 }
 
@@ -244,6 +262,10 @@ static void
 nvmf_direct_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 {
 	if (subsystem->dev.direct.ctrlr) {
+		if (subsystem->dev.direct.admin_poller != NULL) {
+			spdk_poller_unregister(&subsystem->dev.direct.admin_poller, NULL);
+		}
+
 		spdk_nvme_detach(subsystem->dev.direct.ctrlr);
 	}
 }
