@@ -313,18 +313,20 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Running I/O ");
 	fflush(stdout);
+	memset(buf, 0, BUFSIZ);
 	/* wait all the channels to be idle */
-	while (!get_str_from_file("/sys/kernel/debug/dmaperf/dmaperf/status", buf, BUFSIZ)) {
+	do {
+		fprintf(stdout, ". ");
+		fflush(stdout);
+		sleep(1);
+
 		if (strstr(buf, "idle") != NULL) {
 			fprintf(stdout, "\n");
 			fflush(stdout);
 			sleep(1);
 			break;
 		}
-		fprintf(stdout, ". ");
-		fflush(stdout);
-		sleep(1);
-	}
+	} while (!get_str_from_file("/sys/kernel/debug/dmaperf/dmaperf/status", buf, BUFSIZ));
 
 	/* collect each channel performance data */
 
