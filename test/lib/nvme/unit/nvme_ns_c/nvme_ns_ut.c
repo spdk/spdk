@@ -37,7 +37,7 @@
 
 #include "nvme/nvme_ns.c"
 
-#include "lib/nvme/unit/test_env.c"
+#include "lib/test_env.c"
 
 int
 nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid, void *payload,

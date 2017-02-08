@@ -37,7 +37,7 @@
 
 #include <stdbool.h>
 
-#include "lib/nvme/unit/test_env.c"
+#include "lib/test_env.c"
 
 struct spdk_trace_flag SPDK_TRACE_NVME = {
 	.name = "nvme",

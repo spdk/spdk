@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "lib/nvme/unit/test_env.c"
+#include "lib/test_env.c"
 
 bool trace_flag = false;
 #define SPDK_TRACE_NVME trace_flag

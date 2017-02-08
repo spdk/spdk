@@ -35,7 +35,7 @@
 
 #include "nvme/nvme_ns_cmd.c"
 
-#include "lib/nvme/unit/test_env.c"
+#include "lib/test_env.c"
 
 static struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,

@@ -37,7 +37,7 @@
 
 #include "nvme/nvme.c"
 
-#include "lib/nvme/unit/test_env.c"
+#include "lib/test_env.c"
 
 int
 spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
