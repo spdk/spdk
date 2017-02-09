@@ -393,11 +393,20 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 }
 
 int
-nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
-		     uint16_t sqid, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
+			  uint16_t sqid, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	int rc;
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	if (ctrlr->curr_abort_count == (ctrlr->cdata.acl + 1)) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		SPDK_WARNLOG("Warning: abort limit of %u is reached on controller %p\n", ctrlr->curr_abort_count,
+			     ctrlr);
+		return -1;
+	}
 
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
@@ -408,7 +417,10 @@ nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
 	cmd->opc = SPDK_NVME_OPC_ABORT;
 	cmd->cdw10 = (cid << 16) | sqid;
 
-	return nvme_ctrlr_submit_admin_request(ctrlr, req);
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	ctrlr->curr_abort_count++;
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	return rc;
 }
 
 int

@@ -74,10 +74,14 @@
   AcceptorPollRate 10000
 
 [Nvme]
-  # Registers the application to receive timeout callback and to reset the controller.
-  ResetControllerOnTimeout Yes
   # Timeout value.
   NvmeTimeoutValue 30
+  # Registers the application to receive a callback in the event of a command timeout.
+  # Users may specify whether the callback will attempt an abort before resetting the
+  # controller (if the abort fails) or to simply reset the controller. If more than one
+  # option is set, the least intrusive (i.e. abort) takes precedent.
+  AbortAndResetOnTimeout Yes
+  ResetControllerOnTimeout No
   # Set how often the admin queue is polled for asynchronous events
   # Units in microseconds.
   AdminPollRate 100000

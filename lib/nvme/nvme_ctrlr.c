@@ -467,7 +467,7 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 {
 	switch (state) {
 	case NVME_CTRLR_STATE_INIT:
-		return "init";
+			return "init";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		return "disable and wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
@@ -1298,6 +1298,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->timeout_cb_fn = NULL;
 	ctrlr->timeout_cb_arg = NULL;
 	ctrlr->timeout_ticks = 0;
+	ctrlr->curr_abort_count = 0;
 
 	return rc;
 }
@@ -1674,4 +1675,11 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
+}
+
+void
+spdk_decr_abort_count(struct spdk_nvme_ctrlr *ctrlr)
+{
+
+	ctrlr->curr_abort_count--;
 }

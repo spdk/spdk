@@ -187,6 +187,11 @@ struct nvme_request {
 	struct spdk_nvme_cpl		cpl;
 
 	/**
+	 * Used to determine if a request has been aborted previously.
+	 */
+	uint16_t			timeout_count;
+
+	/**
 	 * The following members should not be reordered with members
 	 *  above.  These members are only needed when splitting
 	 *  requests which is done rarely, and the driver is careful
@@ -424,6 +429,7 @@ struct spdk_nvme_ctrlr {
 	spdk_nvme_timeout_cb		timeout_cb_fn;
 	void				*timeout_cb_arg;
 	uint64_t			timeout_ticks;
+	uint16_t			curr_abort_count;
 };
 
 struct nvme_driver {
@@ -483,8 +489,6 @@ int	nvme_ctrlr_cmd_set_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 		union spdk_nvme_critical_warning_state state,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-int	nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, uint16_t cid,
-			     uint16_t sqid, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,

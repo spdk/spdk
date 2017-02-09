@@ -105,8 +105,12 @@
   # The maximum number of NVMe controllers to claim. Do not include this key to
   # claim all of them.
   NumControllers 2
-  # Registers the application to receive timeout callback and to reset the controller.
-  ResetControllerOnTimeout Yes
+  # Registers the application to receive a callback in the event of a command timeout.
+  # Users may specify whether the callback will attempt an abort before resetting the
+  # controller (if the abort fails) or to simply reset the controller. If more than one
+  # option is set, the least intrusive (i.e. abort) takes precedent.
+  AbortAndResetOnTimeout Yes
+  ResetControllerOnTimeout No
   # Timeout value.
   NvmeTimeoutValue 30
   # Set how often the admin queue is polled for asynchronous events.

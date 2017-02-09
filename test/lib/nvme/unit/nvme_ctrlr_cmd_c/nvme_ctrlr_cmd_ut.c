@@ -459,10 +459,16 @@ static void
 test_abort_cmd(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
+	ctrlr.curr_abort_count = 0;
 
 	verify_fn = verify_abort_cmd;
 
-	nvme_ctrlr_cmd_abort(&ctrlr, abort_cid, abort_sqid, NULL, NULL);
+	spdk_nvme_ctrlr_cmd_abort(&ctrlr, abort_cid, abort_sqid, NULL, NULL);
+	/**
+	 * callback function is NULL, therefore, decrement controller
+	 * curr_abort_count member by one here
+	 */
+	ctrlr.curr_abort_count--;
 }
 
 static void
