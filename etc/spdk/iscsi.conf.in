@@ -100,8 +100,14 @@
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
   NvmeRetryCount 4
-  # Registers the application to receive timeout callback and to reset the controller.
-  ResetControllerOnTimeout Yes
+  # The maximum number of NVMe controllers to claim. Do not include this key to
+  # claim all of them.
+  NumControllers 2
+  # Registers the application to receive a callback in the event of a command timeout.
+  # Users may specify whether the callback will attempt to abort before resetting the
+  # controller (if the abort fails) or to simply reset the controller. Therefore the
+  # ActionOnTimeouts parameter value should be: Reset or Abort or None
+  ActionOnTimeouts Abort
   # Timeout value.
   NvmeTimeoutValue 30
   # Set how often the admin queue is polled for asynchronous events.

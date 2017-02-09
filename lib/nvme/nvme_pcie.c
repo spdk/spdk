@@ -1847,7 +1847,24 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 		 * Request has timed out. This could be i/o or admin request.
 		 * Call the registered timeout function for user to take action.
 		 */
-		ctrlr->timeout_cb_fn(ctrlr->timeout_cb_arg, ctrlr, qpair, tr->cid);
+
+		if (nvme_qpair_is_admin_queue(qpair)) {
+			/*
+			 * An admin command has timed out. Modify timeout_count value to be
+			 * greater than 1 to cause a controller reset from timeout callback
+			 * function.
+			 */
+                        tr->req->timeout_count = 2;
+		} else {
+			tr->req->timeout_count++;
+                }
+
+		tr->submit_tick = spdk_get_ticks();
+		ctrlr->timeout_cb_fn(ctrlr,
+				     qpair,
+				     ctrlr->timeout_cb_arg,
+				     tr->req->timeout_count,
+				     tr->req->cmd.cid);
 	}
 }
 

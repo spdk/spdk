@@ -190,6 +190,11 @@ struct nvme_request {
 	struct spdk_nvme_cpl		cpl;
 
 	/**
+	 * Used to determine if a request has been aborted previously.
+	 */
+	uint16_t			timeout_count;
+
+	/**
 	 * The following members should not be reordered with members
 	 *  above.  These members are only needed when splitting
 	 *  requests which is done rarely, and the driver is careful
@@ -435,6 +440,7 @@ struct spdk_nvme_ctrlr {
 	spdk_nvme_timeout_cb		timeout_cb_fn;
 	void				*timeout_cb_arg;
 	uint64_t			timeout_ticks;
+	uint16_t			curr_abort_count;
 };
 
 struct nvme_driver {

@@ -112,7 +112,9 @@ struct nvme_probe_ctx {
 };
 
 static int g_hot_insert_nvme_controller_index = 0;
-static int g_reset_controller_on_timeout = 0;
+static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
+static int nvme_controller_index = 0;
+static int num_controllers = -1;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 static int g_nvme_hotplug_poll_timeout_us = 0;
@@ -559,16 +561,50 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
-timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
-	   struct spdk_nvme_qpair *qpair, uint16_t cid)
+blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
+			 struct spdk_nvme_qpair *qpair,
+			 void *cb_arg,
+			 bool force_reset,
+			 uint16_t cid)
 {
 	int rc;
 
-	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
+	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
 
-	rc = spdk_nvme_ctrlr_reset(ctrlr);
-	if (rc) {
-		SPDK_ERRLOG("resetting controller failed\n");
+	if (g_abort_on_timeout && timeout_count == 1) {
+
+		/*
+		 * Abort on timeout AND it is the first time timeout has
+		 * expired for this request.
+		 */
+
+		rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid, abort_cb, ctrlr);
+		if (rc) {
+			/**
+                         *  Above function can fail for one of these conditions:
+                         * 1. Memmory allocation error
+                         * 2. We reached the acl (abort count limit) limit  for abort
+                         * 3. Controller failed
+                         * All these are corner cases that may show only when there is something wrong 
+                         * in the system. 
+                         */
+			rc = spdk_nvme_ctrlr_reset(ctrlr);
+			if (rc) {
+				SPDK_ERRLOG("resetting controller failed\n");
+			}
+		}
+
+	} else if (g_reset_on_timeout) {
+
+		/**
+		 * 1. Reset on Timeout only.
+		 * 2. Abort on Timeout AND it is the 2nd time Timeout has expired.
+		 */
+
+		rc = spdk_nvme_ctrlr_reset(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("resetting controller failed\n");
+		}
 	}
 }
 
@@ -618,7 +654,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
-	if (g_reset_controller_on_timeout) {
+	if (g_reset_on_timeout) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
 				timeout_cb, NULL);
 	}
@@ -769,12 +805,25 @@ bdev_nvme_library_init(void)
 	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
 	if (val != NULL) {
 		if (!strcmp(val, "Yes")) {
-			g_reset_controller_on_timeout = 1;
+			g_reset_on_timeout = 1;
+		}
+	}
+
+	val = spdk_conf_section_get_val(sp, "AbortAndResetOnTimeout");
+	if (val != NULL) {
+		if (!strcmp(val, "Yes")) {
+			g_abort_on_timeout = 1;
+			g_reset_on_timeout = 1;
 		}
 	}
 
 	if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
 		g_timeout = 0;
+	}
+
+	if (g_reset_on_timeout && g_timeout < 1) {
+		SPDK_ERRLOG("NvmeTimeoutValue parameter is undefined\n");
+		return -1;
 	}
 
 	g_nvme_adminq_poll_timeout_us = spdk_conf_section_get_intval(sp, "AdminPollRate");

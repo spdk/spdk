@@ -393,13 +393,16 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 }
 
 int
-spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
-			  uint16_t cid, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
+                          struct spdk_nvme_qpair *qpair,
+                          uint16_t cid,
+                          spdk_nvme_cmd_cb cb_fn,
+                          void *cb_arg)
 {
-	int rc;
-	struct nvme_request *req;
-	struct spdk_nvme_cmd *cmd;
-	uint16_t sqid = qpair->id;
+        int rc;
+        struct nvme_request *req;
+        struct spdk_nvme_cmd *cmd;
+        uint16_t sqid = qpair->id;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
