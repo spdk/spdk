@@ -43,6 +43,51 @@ make CONFIG_RDMA=y <other config parameters>
 
 Once built, the binary will be in `app/nvmf_tgt`.
 
+# Prerequisites for InfiniBand/RDMA Verbs {#nvmf_prereqs_verbs}
+
+Before starting our NVMe-oF target we must load the InfiniBand and RDMA modules that allow
+userspace processes to use InfiniBand/RDMA verbs directly.
+
+~~~{.sh}
+modprobe ib_cm
+modprobe ib_core
+modprobe ib_ucm
+modprobe ib_umad
+modprobe ib_uverbs
+modprobe iw_cm
+modprobe rdma_cm
+modprobe rdma_ucm
+~~~
+
+# Prerequisites for RDMA NICs {#nvmf_prereqs_rdma_nics}
+
+Before starting our NVMe-oF target we must detect RDMA NICs and assign them IP addresses.
+
+## Detecting Mellannox RDMA NICs
+
+### Mellanox ConnectX-3 RDMA NICs
+
+~~~{.sh}
+modprobe mlx4_core
+modprobe mlx4_ib
+modprobe mlx4_en
+~~~
+
+### Mellanox ConnectX-4 RDMA NICs
+
+~~~{.sh}
+modprobe mlx5_core
+modprobe mlx5_ib
+~~~
+
+## Assigning IP addresses to RDMA NICs
+
+~~~{.sh}
+ifconfig eth1 192.168.100.8 netmask 255.255.255.0 up
+ifconfig eth2 192.168.100.9 netmask 255.255.255.0 up
+~~~
+
+
 # Configuring NVMe over Fabrics Target {#nvmf_config}
 
 A `nvmf_tgt`-specific configuration file is used to configure the NVMe over Fabrics target. This
@@ -79,3 +124,45 @@ Disconnect:
 ~~~{.sh}
 nvme disconnect -n "nqn.2016-06.io.spdk.cnode1"
 ~~~
+
+# Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
+
+SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
+to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
+functions to assign threads to specific cores.
+To ensure the SPDK NVMe-oF target has the best performance, configure the RNICs, NVMe
+devices, and the core assigned to the NVMe-oF subsystem to all be located on the same NUMA node.
+The following parameters are used to control which CPU cores SPDK executes on:
+
+1. **ReactorMask** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
+items on. The ReactorMask is located in the [Global] section of the configuration file. For example,
+to assign lcores 24,25,26 and 27 to NVMe-oF work items, set the ReactorMask to:
+~~~{.sh}
+ReactorMask 0xF000000
+~~~
+
+2. **Assign each Subsystem to a CPU core** This is accomplished by specifying the "Core" value in
+the [Subsystem] section of the configuration file. For example,
+to assign the Subsystems to lcores 25 and 26:
+~~~{.sh}
+[Subsystem1]
+NQN nqn.2016-06.io.spdk:cnode1
+Core 25
+Mode Direct
+Listen RDMA 192.168.100.8:4420
+Host nqn.2016-06.io.spdk:init
+NVMe 0000:81:00.0
+
+[Subsystem2]
+NQN nqn.2016-06.io.spdk:cnode2
+Core 26
+Mode Direct
+Listen RDMA 192.168.100.9:4420
+Host nqn.2016-06.io.spdk:init
+NVMe 0000:86:00.0
+~~~
+
+SPDK executes all code for an NVMe-oF subsystem on a single thread. Different subsystems may execute
+on different threads. SPDK gives the user maximum control to determine how many CPU cores are used
+to execute subsystems. Configuring different subsystems to execute on different CPU cores prevents
+the subsystem data from being evicted from limited CPU cache space.
