@@ -115,6 +115,13 @@ struct spdk_bdev_module_if {
 	 */
 	int (*get_ctx_size)(void);
 
+	/**
+	 * Notification that a bdev has been registered.
+	 * Virtual bdev modules may use this to inspect the newly-added bdev and automatically
+	 * create their own vbdevs.
+	 */
+	void (*bdev_registered)(struct spdk_bdev *bdev);
+
 	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
 };
 
@@ -385,12 +392,13 @@ spdk_bdev_io_from_ctx(void *ctx)
 	    spdk_bdev_module_list_add(&init_fn ## _if);                  			\
 	}
 
-#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)			\
+#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn, bdev_registered_fn)\
 	static struct spdk_bdev_module_if init_fn ## _if = {					\
 	.module_init 	= init_fn,								\
 	.module_fini	= fini_fn,								\
 	.config_text	= config_fn,								\
 	.get_ctx_size	= ctx_size_fn,                                				\
+	.bdev_registered	= bdev_registered_fn,						\
 	};  											\
 	__attribute__((constructor)) static void init_fn ## _init(void)  			\
 	{                                                           				\
