@@ -1078,6 +1078,8 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 void
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
+	struct spdk_bdev_module_if *vbdev_module;
+
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
 
@@ -1088,6 +1090,12 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
+
+	TAILQ_FOREACH(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
+		if (vbdev_module->bdev_registered) {
+			vbdev_module->bdev_registered(bdev);
+		}
+	}
 }
 
 void
