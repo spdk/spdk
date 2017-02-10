@@ -126,7 +126,7 @@ size_t spdk_strlen_pad(const void *str, size_t size, int pad);
  *
  * \return 0 if successful. -1 on error.
  */
-int spdk_parse_ip_addr(char *ip, const char **host, const char **port);
+int spdk_parse_ip_addr(char *ip, char **host, char **port);
 
 #ifdef __cplusplus
 }

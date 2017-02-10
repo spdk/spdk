@@ -384,7 +384,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	/* Parse Listen sections */
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		char *transport_name, *listen_addr;
-		const char *traddr, *trsvcid;
+		char *traddr, *trsvcid;
 		int numa_node = -1;
 
 		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);

@@ -258,7 +258,7 @@ spdk_strlen_pad(const void *str, size_t size, int pad)
 }
 
 int
-spdk_parse_ip_addr(char *ip, const char **host, const char **port)
+spdk_parse_ip_addr(char *ip, char **host, char **port)
 {
 	char *p;
 

@@ -41,8 +41,8 @@ static void
 test_parse_ip_addr(void)
 {
 	int rc;
-	const char *host;
-	const char *port;
+	char *host;
+	char *port;
 	char ip[255];
 
 	/* IPv4 */
