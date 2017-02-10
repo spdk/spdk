@@ -91,6 +91,7 @@ struct spdk_nvmf_session {
 			uint8_t fw_activation_notice : 1;
 		} bits;
 	} async_event_config;
+	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
 	const struct spdk_nvmf_transport	*transport;
 

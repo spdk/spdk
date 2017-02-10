@@ -66,6 +66,13 @@ spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 	return NULL;
 }
 
+void
+spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
+				      spdk_nvme_aer_cb aer_cb_fn,
+				      void *aer_cb_arg)
+{
+}
+
 int
 spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 			   struct spdk_nvme_qpair *qpair,

@@ -31,13 +31,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 
 #include <rte_config.h>
 #include <rte_lcore.h>
 
+#include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 
@@ -62,6 +66,7 @@ static int aer_done = 0;
 
 static int temperature_done = 0;
 static int failed = 0;
+static struct spdk_nvme_transport_id g_trid;
 
 static void set_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -183,6 +188,69 @@ static void aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	get_health_log_page(dev);
 }
 
+static void
+usage(const char *program_name)
+{
+	printf("%s [options]", program_name);
+	printf("\n");
+	printf("options:\n");
+	printf(" -r trid    remote NVMe over Fabrics target address\n");
+	printf("    Format: 'key:value [key:value] ...'\n");
+	printf("    Keys:\n");
+	printf("     trtype      Transport type (e.g. RDMA)\n");
+	printf("     adrfam      Address family (e.g. IPv4, IPv6)\n");
+	printf("     traddr      Transport address (e.g. 192.168.100.8)\n");
+	printf("     trsvcid     Transport service identifier (e.g. 4420)\n");
+	printf("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
+
+	spdk_tracelog_usage(stdout, "-t");
+
+	printf(" -v         verbose (enable warnings)\n");
+	printf(" -H         show this usage\n");
+}
+
+static int
+parse_args(int argc, char **argv)
+{
+	int op, rc;
+
+	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+
+	while ((op = getopt(argc, argv, "r:t:H")) != -1) {
+		switch (op) {
+		case 't':
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+#ifndef DEBUG
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
+				argv[0]);
+			usage(argv[0]);
+			return 0;
+#endif
+			break;
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
+			break;
+		case 'H':
+		default:
+			usage(argv[0]);
+			return 1;
+		}
+	}
+
+	optind = 1;
+
+	return 0;
+}
 
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
@@ -221,6 +289,12 @@ int main(int argc, char **argv)
 	struct dev		*dev;
 	int			i;
 	struct spdk_env_opts	opts;
+	int			rc;
+
+	rc = parse_args(argc, argv);
+	if (rc != 0) {
+		return rc;
+	}
 
 	spdk_env_opts_init(&opts);
 	opts.name = "aer";
@@ -229,7 +303,7 @@ int main(int argc, char **argv)
 
 	printf("Asynchronous Event Request test\n");
 
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}

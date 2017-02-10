@@ -532,7 +532,13 @@ nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 	}
 }
 
+static void
+nvmf_virtual_ctrlr_set_aer_callback(struct spdk_nvmf_subsystem *subsys)
+{
+}
+
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops = {
+	.set_aer_callback		= nvmf_virtual_ctrlr_set_aer_callback,
 	.ctrlr_get_data			= nvmf_virtual_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_virtual_ctrlr_process_admin_cmd,
 	.process_io_cmd			= nvmf_virtual_ctrlr_process_io_cmd,

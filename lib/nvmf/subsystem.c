@@ -311,6 +311,8 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -1;
 	}
+
+	subsystem->ops->set_aer_callback(subsystem);
 	return 0;
 }
 

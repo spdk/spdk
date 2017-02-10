@@ -125,6 +125,7 @@ fi
 
 timing_enter host
 
+run_test test/nvmf/host/aer.sh
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
 run_test test/nvmf/host/identify_kernel_nvmf.sh

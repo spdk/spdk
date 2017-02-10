@@ -177,9 +177,9 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		break;
 	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Async Event Request\n");
-		/* TODO: Just release the request as consumed. AER events will never
-		 * be triggered. */
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_RELEASE;
+		session->aer_req = req;
+
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	case SPDK_NVME_OPC_KEEP_ALIVE:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keep Alive\n");
 		/*
@@ -249,7 +249,29 @@ nvmf_direct_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 	}
 }
 
+static void
+nvmf_direct_ctrlr_complete_aer(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvmf_subsystem *subsystem = (struct spdk_nvmf_subsystem *) arg;
+	struct spdk_nvmf_session *session;
+
+	TAILQ_FOREACH(session, &subsystem->sessions, link) {
+		if (session->aer_req) {
+			nvmf_direct_ctrlr_complete_cmd(session->aer_req, cpl);
+			session->aer_req = NULL;
+		}
+	}
+}
+
+static void
+nvmf_direct_ctrlr_set_aer_callback(struct spdk_nvmf_subsystem *subsys)
+{
+	spdk_nvme_ctrlr_register_aer_callback(subsys->dev.direct.ctrlr,
+					      nvmf_direct_ctrlr_complete_aer, subsys);
+}
+
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops = {
+	.set_aer_callback		= nvmf_direct_ctrlr_set_aer_callback,
 	.ctrlr_get_data			= nvmf_direct_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_direct_ctrlr_process_admin_cmd,
 	.process_io_cmd			= nvmf_direct_ctrlr_process_io_cmd,
