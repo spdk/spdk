@@ -217,8 +217,9 @@ unregister_workers(void)
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
-	printf(" Found matching device at %d:%d:%d "
+	printf(" Found matching device at %04x:%02x:%02x.%x "
 	       "vendor:0x%04x device:0x%04x\n",
+	       spdk_pci_device_get_domain(pci_dev),
 	       spdk_pci_device_get_bus(pci_dev), spdk_pci_device_get_dev(pci_dev),
 	       spdk_pci_device_get_func(pci_dev),
 	       spdk_pci_device_get_vendor_id(pci_dev), spdk_pci_device_get_device_id(pci_dev));
