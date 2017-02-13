@@ -42,8 +42,6 @@
 
 #include "spdk_internal/log.h"
 
-extern struct spdk_iscsi_conn *g_conns_array; // TODO: move this to an internal iSCSI header
-
 static void
 spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_server_conn *conn,
 			      const struct spdk_json_val *params,

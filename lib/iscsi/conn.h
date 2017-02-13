@@ -162,6 +162,8 @@ struct spdk_iscsi_conn {
 	TAILQ_HEAD(queued_datain_tasks, spdk_iscsi_task)	queued_datain_tasks;
 };
 
+extern struct spdk_iscsi_conn *g_conns_array;
+
 int spdk_initialize_iscsi_conns(void);
 void spdk_shutdown_iscsi_conns(void);
 
