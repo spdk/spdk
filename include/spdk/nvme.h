@@ -387,10 +387,10 @@ struct spdk_nvme_qpair;
  * detected on a request.
  */
 typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
+				     struct spdk_nvme_qpair *qpair,
 				     void *cb_arg,
 				     uint16_t abort_count,
-				     uint16_t cid,
-				     uint16_t sqid);
+				     uint16_t cid);
 /**
  * \brief Register for timeout callback on a controller.
  *
@@ -1159,10 +1159,10 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
  *       by one in the abort command callback function
  */
 int spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
+			      struct spdk_nvme_qpair *qpair,
 			      uint16_t cid,
-			      uint16_t sqid,
-			      spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-
+			      spdk_nvme_cmd_cb cb_fn,
+			      void *cb_arg);
 /**
  * \brief Decrements the abort count member of the controller structure by one.
  *

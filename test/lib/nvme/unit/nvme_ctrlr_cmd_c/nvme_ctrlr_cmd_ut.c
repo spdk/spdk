@@ -459,11 +459,13 @@ static void
 test_abort_cmd(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_qpair	qpair = {};
 	ctrlr.curr_abort_count = 0;
 
 	verify_fn = verify_abort_cmd;
 
-	spdk_nvme_ctrlr_cmd_abort(&ctrlr, abort_cid, abort_sqid, NULL, NULL);
+	qpair.id = abort_cid;
+	spdk_nvme_ctrlr_cmd_abort(&ctrlr, &qpair, abort_cid, NULL, NULL);
 	/**
 	 * callback function is NULL, therefore, decrement controller
 	 * curr_abort_count member by one here

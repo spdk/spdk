@@ -510,18 +510,14 @@ abort_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 
 static void
 blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
+			 struct spdk_nvme_qpair *qpair,
 			 void *cb_arg,
 			 uint16_t timeout_count,
-			 uint16_t cid,
-			 uint16_t sqid)
+			 uint16_t cid)
 {
 	int rc;
 
-	if (cb_arg) {
-		SPDK_WARNLOG("Warning: Detected a timeout. user_data=%p ctrlr=%p \n", cb_arg, ctrlr);
-	} else {
-		SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p\n", ctrlr);
-	}
+	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
 
 	if (g_abort_on_timeout && timeout_count == 1) {
 
@@ -530,16 +526,16 @@ blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
 		 * expired for this request.
 		 */
 
-		rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, cid, sqid, abort_cb, ctrlr);
+		rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid, abort_cb, ctrlr);
 		if (rc) {
 			/**
-                         *  Above function can fail for one of these conditions:
-                         * 1. Memmory allocation error
-                         * 2. We reached the acl (abort count limit) limit  for abort
-                         * 3. Controller failed
-                         * All these are corner cases that may show only when there is something wrong 
-                         * in the system. 
-                         */
+			 *  Above function can fail for one of these conditions:
+			 * 1. Memmory allocation error
+			 * 2. We reached the acl (abort count limit) limit  for abort
+			 * 3. Controller failed
+			 * All these are corner cases that may show only when there is something wrong
+			 * in the system.
+			 */
 			rc = spdk_nvme_ctrlr_reset(ctrlr);
 			if (rc) {
 				SPDK_ERRLOG("resetting controller failed\n");
