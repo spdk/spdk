@@ -478,7 +478,7 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 {
 	switch (state) {
 	case NVME_CTRLR_STATE_INIT:
-			return "init";
+		return "init";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		return "disable and wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:

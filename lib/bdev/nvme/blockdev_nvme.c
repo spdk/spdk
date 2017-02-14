@@ -581,13 +581,13 @@ blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
 		rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid, abort_cb, ctrlr);
 		if (rc) {
 			/**
-                         *  Above function can fail for one of these conditions:
-                         * 1. Memmory allocation error
-                         * 2. We reached the acl (abort count limit) limit  for abort
-                         * 3. Controller failed
-                         * All these are corner cases that may show only when there is something wrong 
-                         * in the system. 
-                         */
+			 *  Above function can fail for one of these conditions:
+			 * 1. Memmory allocation error
+			 * 2. We reached the acl (abort count limit) limit  for abort
+			 * 3. Controller failed
+			 * All these are corner cases that may show only when there is something wrong
+			 * in the system.
+			 */
 			rc = spdk_nvme_ctrlr_reset(ctrlr);
 			if (rc) {
 				SPDK_ERRLOG("resetting controller failed\n");
