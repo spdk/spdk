@@ -740,3 +740,26 @@ spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req)
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
+
+int
+spdk_nvmf_session_set_features_async_event_configuration(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
+		      cmd->cdw11);
+	session->async_event_config.raw = cmd->cdw11;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_async_event_configuration(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
+	rsp->cdw0 = session->async_event_config.raw;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}

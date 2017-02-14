@@ -155,9 +155,7 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 			return spdk_nvmf_session_get_features_keep_alive_timer(req);
 		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
-			response->cdw0 = session->async_event_config.raw;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			return spdk_nvmf_session_get_features_async_event_configuration(req);
 		default:
 			goto passthrough;
 		}
@@ -172,10 +170,7 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 			return spdk_nvmf_session_set_features_keep_alive_timer(req);
 		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
-				      cmd->cdw11);
-			session->async_event_config.raw = cmd->cdw11;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			return spdk_nvmf_session_set_features_async_event_configuration(req);
 		default:
 			goto passthrough;
 		}
