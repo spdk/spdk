@@ -49,6 +49,7 @@ test_parse_ip_addr(void)
 	snprintf(ip, 255, "%s", "192.168.0.1");
 	rc = spdk_parse_ip_addr(ip, &host, &port);
 	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(host != NULL);
 	CU_ASSERT(strcmp(host, "192.168.0.1") == 0);
 	CU_ASSERT_EQUAL(strlen(host), 11);
 	CU_ASSERT_EQUAL(port, NULL);
@@ -57,8 +58,10 @@ test_parse_ip_addr(void)
 	snprintf(ip, 255, "%s", "123.456.789.0:5520");
 	rc = spdk_parse_ip_addr(ip, &host, &port);
 	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(host != NULL);
 	CU_ASSERT(strcmp(host, "123.456.789.0") == 0);
 	CU_ASSERT_EQUAL(strlen(host), 13);
+	SPDK_CU_ASSERT_FATAL(port != NULL);
 	CU_ASSERT(strcmp(port, "5520") == 0);
 	CU_ASSERT_EQUAL(strlen(port), 4);
 
@@ -66,6 +69,7 @@ test_parse_ip_addr(void)
 	snprintf(ip, 255, "%s", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]");
 	rc = spdk_parse_ip_addr(ip, &host, &port);
 	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(host != NULL);
 	CU_ASSERT(strcmp(host, "2001:db8:85a3:8d3:1319:8a2e:370:7348") == 0);
 	CU_ASSERT_EQUAL(strlen(host), 36);
 	CU_ASSERT_EQUAL(port, NULL);
@@ -74,8 +78,10 @@ test_parse_ip_addr(void)
 	snprintf(ip, 255, "%s", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443");
 	rc = spdk_parse_ip_addr(ip, &host, &port);
 	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(host != NULL);
 	CU_ASSERT(strcmp(host, "2001:db8:85a3:8d3:1319:8a2e:370:7348") == 0);
 	CU_ASSERT_EQUAL(strlen(host), 36);
+	SPDK_CU_ASSERT_FATAL(port != NULL);
 	CU_ASSERT(strcmp(port, "443") == 0);
 	CU_ASSERT_EQUAL(strlen(port), 3);
 
@@ -83,6 +89,7 @@ test_parse_ip_addr(void)
 	snprintf(ip, 255, "%s", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]:");
 	rc = spdk_parse_ip_addr(ip, &host, &port);
 	CU_ASSERT_EQUAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(host != NULL);
 	CU_ASSERT(strcmp(host, "2001:db8:85a3:8d3:1319:8a2e:370:7348") == 0);
 	CU_ASSERT_EQUAL(strlen(host), 36);
 	CU_ASSERT_EQUAL(port, NULL);
