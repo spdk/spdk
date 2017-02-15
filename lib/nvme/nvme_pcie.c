@@ -1860,6 +1860,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
                 }
 
 		tr->submit_tick = spdk_get_ticks();
+		tr->req->timeout_count++;
 		ctrlr->timeout_cb_fn(ctrlr,
 				     qpair,
 				     ctrlr->timeout_cb_arg,
