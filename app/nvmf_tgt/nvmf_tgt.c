@@ -332,7 +332,6 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 
 	rc = spdk_nvmf_parse_conf();
 	if (rc < 0) {
-		nvmf_tgt_delete_subsystems();
 		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
 		goto initialize_error;
 	}
@@ -357,6 +356,7 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 	return;
 
 initialize_error:
+	nvmf_tgt_delete_subsystems();
 	spdk_app_stop(rc);
 }
 
