@@ -16,6 +16,10 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter aer
 	$testdir/aer/aer
 	timing_exit aer
+
+	timing_enter reset
+	$testdir/reset/reset -q 64 -w write -s 4096 -t 2
+	timing_exit reset
 fi
 
 timing_enter identify
@@ -78,11 +82,6 @@ if [ $(uname -s) = Linux ]; then
 	wait $pid
 	timing_exit multi_process
 fi
-
-#Now test nvme reset function
-timing_enter reset
-$testdir/reset/reset -q 64 -w write -s 4096 -t 2
-timing_exit reset
 
 timing_enter sgl
 $testdir/sgl/sgl
