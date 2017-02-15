@@ -152,6 +152,7 @@ struct spdk_nvmf_rdma_listen_addr {
 	struct ibv_device_attr 			attr;
 	struct ibv_comp_channel			*comp_channel;
 	uint32_t				ref;
+	bool					is_listened;
 	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
 };
 
@@ -1063,15 +1064,47 @@ static int
 spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn);
 
 static void
+spdk_nvmf_rdma_addr_listen_init(struct spdk_nvmf_rdma_listen_addr *addr)
+{
+	int rc;
+
+	rc = rdma_listen(addr->id, 10); /* 10 = backlog */
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_listen() failed\n");
+		addr->ref--;
+		assert(addr->ref == 0);
+		TAILQ_REMOVE(&g_rdma.listen_addrs, addr, link);
+		ibv_destroy_comp_channel(addr->comp_channel);
+		rdma_destroy_id(addr->id);
+		spdk_nvmf_rdma_listen_addr_free(addr);
+		return;
+	}
+
+	addr->is_listened = true;
+
+	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
+		       addr->traddr, ntohs(rdma_get_src_port(addr->id)));
+}
+
+static void
 spdk_nvmf_rdma_acceptor_poll(void)
 {
 	struct rdma_cm_event		*event;
 	int				rc;
 	struct spdk_nvmf_rdma_conn	*rdma_conn, *tmp;
+	struct spdk_nvmf_rdma_listen_addr *addr = NULL, *addr_tmp;
 
 	if (g_rdma.event_channel == NULL) {
 		return;
 	}
+
+	pthread_mutex_lock(&g_rdma.lock);
+	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, addr_tmp) {
+		if (!addr->is_listened) {
+			spdk_nvmf_rdma_addr_listen_init(addr);
+		}
+	}
+	pthread_mutex_unlock(&g_rdma.lock);
 
 	/* Process pending connections for incoming capsules. The only capsule
 	 * this should ever find is a CONNECT request. */
@@ -1187,15 +1220,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		return -1;
 	}
 
-	rc = rdma_listen(addr->id, 10); /* 10 = backlog */
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_listen() failed\n");
-		rdma_destroy_id(addr->id);
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-
 	rc = ibv_query_device(addr->id->verbs, &addr->attr);
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
@@ -1226,12 +1250,11 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		return -1;
 	}
 
+
 	addr->ref = 1;
 	TAILQ_INSERT_TAIL(&g_rdma.listen_addrs, addr, link);
 	pthread_mutex_unlock(&g_rdma.lock);
 
-	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
-		       addr->traddr, ntohs(rdma_get_src_port(addr->id)));
 
 	return 0;
 }
