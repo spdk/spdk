@@ -58,16 +58,16 @@ FreeBSD:
 Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.
 
     1) cd /path/to/spdk
-    2) wget http://fast.dpdk.org/rel/dpdk-16.11.tar.xz
-    3) tar xf dpdk-16.11.tar.xz
+    2) wget http://fast.dpdk.org/rel/dpdk-17.02.tar.xz
+    3) tar xf dpdk-17.02.tar.xz
 
 Linux:
 
-    4) (cd dpdk-16.11 && make install T=x86_64-native-linuxapp-gcc DESTDIR=.)
+    4) (cd dpdk-17.02 && make install T=x86_64-native-linuxapp-gcc DESTDIR=.)
 
 FreeBSD:
 
-    4) (cd dpdk-16.11 && gmake install T=x86_64-native-bsdapp-clang DESTDIR=.)
+    4) (cd dpdk-17.02 && gmake install T=x86_64-native-bsdapp-clang DESTDIR=.)
 
 Build Configuration
 ===================
@@ -102,11 +102,11 @@ If you followed the instructions above for building DPDK:
 
 Linux:
 
-    make DPDK_DIR=./dpdk-16.11/x86_64-native-linuxapp-gcc
+    make DPDK_DIR=./dpdk-17.02/x86_64-native-linuxapp-gcc
 
 FreeBSD:
 
-    gmake DPDK_DIR=./dpdk-16.11/x86_64-native-bsdapp-clang
+    gmake DPDK_DIR=./dpdk-17.02/x86_64-native-bsdapp-clang
 
 Hugepages and Device Binding
 ============================
