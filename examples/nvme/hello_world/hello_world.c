@@ -269,7 +269,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	g_controllers = entry;
 
 	/*
-	 * Each controller has one of more namespaces.  An NVMe namespace is basically
+	 * Each controller has one or more namespaces.  An NVMe namespace is basically
 	 *  equivalent to a SCSI LUN.  The controller's IDENTIFY data tells us how
 	 *  many namespaces exist on the controller.  For Intel(R) P3X00 controllers,
 	 *  it will just be one namespace.
