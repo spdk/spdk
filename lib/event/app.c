@@ -281,13 +281,6 @@ spdk_app_init(struct spdk_app_opts *opts)
 		opts->shm_id = getpid();
 	}
 
-	if (opts->shm_id == -1) {
-		sp = spdk_conf_find_section(config, "Global");
-		if (sp != NULL) {
-			opts->shm_id = spdk_conf_section_get_intval(sp, "MultiprocessGroupID");
-		}
-	}
-
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
