@@ -166,7 +166,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				continue;
 			}
 
-			f->filetype = FIO_TYPE_BD;
+			f->filetype = FIO_TYPE_BLOCK;
 			fio_file_set_size_known(f);
 
 			fio_ns->next = fio_ctrlr->ns_list;
