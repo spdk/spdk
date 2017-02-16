@@ -1,5 +1,22 @@
 # Changelog
 
+## (Next Planned Release) v17.03
+
+### Event framework
+
+The overhead of the main reactor event loop was reduced by optimizing the number of
+calls to spdk_get_ticks() per iteration.
+
+### NVMe library
+
+The NVMe library will now automatically split readv/writev requests with scatter-gather
+lists that do not map to valid PRP lists when the NVMe controller does not natively
+support SGLs.
+
+The `identify` and `perf` NVMe examples were modified to add a consistent format for
+specifying remote NVMe over Fabrics devices via the `-r` option.
+This is implemented using the new `spdk_nvme_transport_id_parse()` function.
+
 ## v16.12: NVMe over Fabrics host, hotplug, and multi-process
 
 ### NVMe library
