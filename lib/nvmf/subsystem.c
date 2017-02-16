@@ -46,7 +46,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 static uint64_t g_discovery_genctr = 0;
 static struct spdk_nvmf_discovery_log_page *g_discovery_log_page = NULL;
 static size_t g_discovery_log_page_size = 0;
@@ -60,7 +59,7 @@ spdk_nvmf_subsystem_exists(const char *subnqn)
 		return false;
 	}
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
 			return true;
 		}
@@ -78,7 +77,7 @@ nvmf_find_subsystem(const char *subnqn)
 		return NULL;
 	}
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
 			return subsystem;
 		}
@@ -93,7 +92,7 @@ spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_session 	*session;
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		TAILQ_FOREACH(session, &subsystem->sessions, link) {
 			if (session->cntlid == cntlid) {
 				return subsystem;
@@ -204,7 +203,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 	}
 
-	TAILQ_INSERT_TAIL(&g_subsystems, subsystem, entries);
+	TAILQ_INSERT_TAIL(&g_nvmf_tgt.subsystems, subsystem, entries);
 	g_discovery_genctr++;
 
 	return subsystem;
@@ -244,7 +243,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		subsystem->ops->detach(subsystem);
 	}
 
-	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
+	TAILQ_REMOVE(&g_nvmf_tgt.subsystems, subsystem, entries);
 	g_discovery_genctr++;
 
 	free(subsystem);
@@ -339,7 +338,7 @@ nvmf_update_discovery_log(void)
 		return;
 	}
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			continue;
 		}

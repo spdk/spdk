@@ -165,6 +165,7 @@ nvmf_test_create_subsystem(void)
 {
 	char nqn[256];
 	struct spdk_nvmf_subsystem *subsystem;
+	TAILQ_INIT(&g_nvmf_tgt.subsystems);
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
 	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,

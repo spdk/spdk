@@ -47,11 +47,11 @@
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
 
 struct spdk_nvmf_tgt {
-	uint16_t max_queue_depth;
-	uint16_t max_queues_per_session;
-
-	uint32_t in_capsule_data_size;
-	uint32_t max_io_size;
+	uint16_t				max_queue_depth;
+	uint16_t				max_queues_per_session;
+	uint32_t				in_capsule_data_size;
+	uint32_t				max_io_size;
+	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
 };
 
 extern struct spdk_nvmf_tgt g_nvmf_tgt;
