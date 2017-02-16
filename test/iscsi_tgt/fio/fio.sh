@@ -7,7 +7,7 @@ source $rootdir/scripts/autotest_common.sh
 function running_config() {
 	# generate a config file from the running iscsi_tgt
 	#  running_config.sh will leave the file at /tmp/iscsi.conf
-	$testdir/running_config.sh
+	$testdir/running_config.sh $pid
 	sleep 1
 
 	# now start iscsi_tgt again using the generated config file
