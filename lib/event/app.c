@@ -62,13 +62,8 @@
 #define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 
-/* Add enough here to append ".pid" plus 2 digit instance ID */
-#define SPDK_APP_PIDFILE_MAX_LENGTH	40
-#define SPDK_APP_PIDFILE_PREFIX		"/var/run"
-
 struct spdk_app {
 	struct spdk_conf		*config;
-	char				pidfile[SPDK_APP_PIDFILE_MAX_LENGTH];
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
@@ -76,9 +71,6 @@ struct spdk_app {
 
 static struct spdk_app g_spdk_app;
 static struct spdk_event *g_shutdown_event = NULL;
-
-static int spdk_app_write_pidfile(void);
-static void spdk_app_remove_pidfile(void);
 
 int
 spdk_app_get_shm_id(void)
@@ -285,9 +277,6 @@ spdk_app_init(struct spdk_app_opts *opts)
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
-	snprintf(g_spdk_app.pidfile, sizeof(g_spdk_app.pidfile), "%s/%s.pid.%d",
-		 SPDK_APP_PIDFILE_PREFIX, opts->name, opts->shm_id);
-	spdk_app_write_pidfile();
 
 	/* open log files */
 	if (opts->log_facility == NULL) {
@@ -437,7 +426,6 @@ spdk_app_fini(void)
 
 	rc = spdk_subsystem_fini();
 	spdk_trace_cleanup();
-	spdk_app_remove_pidfile();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_close_log();
 
@@ -467,46 +455,4 @@ spdk_app_stop(int rc)
 {
 	spdk_reactors_stop();
 	g_spdk_app.rc = rc;
-}
-
-static int
-spdk_app_write_pidfile(void)
-{
-	FILE *fp;
-	pid_t pid;
-	struct flock lock = {
-		.l_type = F_WRLCK,
-		.l_whence = SEEK_SET,
-		.l_start = 0,
-		.l_len = 0,
-	};
-
-	fp = fopen(g_spdk_app.pidfile, "w");
-	if (fp == NULL) {
-		SPDK_ERRLOG("pidfile open error %d\n", errno);
-		return -1;
-	}
-
-	if (fcntl(fileno(fp), F_SETLK, &lock) != 0) {
-		fprintf(stderr, "Cannot create lock on file %s, probably you"
-			" should use different instance id\n", g_spdk_app.pidfile);
-		exit(EXIT_FAILURE);
-	}
-
-	pid = getpid();
-	fprintf(fp, "%d\n", (int)pid);
-	fclose(fp);
-	return 0;
-}
-
-static void
-spdk_app_remove_pidfile(void)
-{
-	int rc;
-
-	rc = remove(g_spdk_app.pidfile);
-	if (rc != 0) {
-		SPDK_ERRLOG("pidfile remove error %d\n", errno);
-		/* ignore error */
-	}
 }
