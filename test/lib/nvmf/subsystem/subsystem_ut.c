@@ -229,7 +229,7 @@ test_discovery_log(void)
 	g_nvmf_tgt.discovery_genctr = 0;
 	free(g_nvmf_tgt.discovery_log_page);
 	g_nvmf_tgt.discovery_log_page = NULL;
-	g_discovery_log_page_size = 0;
+	g_nvmf_tgt.discovery_log_page_size = 0;
 
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_create_subsystem("nqn.2016-06.io.spdk:subsystem1", SPDK_NVMF_SUBTYPE_NVME,

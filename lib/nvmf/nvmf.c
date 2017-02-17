@@ -59,8 +59,9 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	g_nvmf_tgt.in_capsule_data_size = in_capsule_data_size;
 	g_nvmf_tgt.max_io_size = max_io_size;
 	g_nvmf_tgt.discovery_genctr = 0;
-	TAILQ_INIT(&g_nvmf_tgt.subsystems);
 	g_nvmf_tgt.discovery_log_page = NULL;
+	g_nvmf_tgt.discovery_log_page_size = 0;
+	TAILQ_INIT(&g_nvmf_tgt.subsystems);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queues Per Session: %d\n", max_queues_per_sess);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);

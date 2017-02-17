@@ -54,6 +54,7 @@ struct spdk_nvmf_tgt {
 	uint64_t				discovery_genctr;
 	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
+	size_t					discovery_log_page_size;
 };
 
 extern struct spdk_nvmf_tgt g_nvmf_tgt;

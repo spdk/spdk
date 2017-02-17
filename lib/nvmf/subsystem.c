@@ -46,8 +46,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-static size_t g_discovery_log_page_size = 0;
-
 bool
 spdk_nvmf_subsystem_exists(const char *subnqn)
 {
@@ -376,7 +374,7 @@ nvmf_update_discovery_log(void)
 	free(g_nvmf_tgt.discovery_log_page);
 
 	g_nvmf_tgt.discovery_log_page = disc_log;
-	g_discovery_log_page_size = cur_size;
+	g_nvmf_tgt.discovery_log_page_size = cur_size;
 }
 
 void
@@ -391,8 +389,8 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 	}
 
 	/* Copy the valid part of the discovery log page, if any */
-	if (g_nvmf_tgt.discovery_log_page && offset < g_discovery_log_page_size) {
-		copy_len = spdk_min(g_discovery_log_page_size - offset, length);
+	if (g_nvmf_tgt.discovery_log_page && offset < g_nvmf_tgt.discovery_log_page_size) {
+		copy_len = spdk_min(g_nvmf_tgt.discovery_log_page_size - offset, length);
 		zero_len -= copy_len;
 		memcpy(buffer, (char *)g_nvmf_tgt.discovery_log_page + offset, copy_len);
 	}
