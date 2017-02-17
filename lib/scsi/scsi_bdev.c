@@ -45,7 +45,7 @@
 
 #define DEFAULT_DISK_VENDOR		"INTEL"
 #define DEFAULT_DISK_REVISION		"0001"
-#define DEFAULT_DISK_ROTATION_RATE	7200	/* 7200 rpm */
+#define DEFAULT_DISK_ROTATION_RATE	1	/* Non-rotating medium */
 #define DEFAULT_DISK_FORM_FACTOR	0x02	/* 3.5 inch */
 
 #define INQUIRY_OFFSET(field)		offsetof(struct spdk_scsi_cdb_inquiry_data, field) + \
