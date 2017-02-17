@@ -44,7 +44,7 @@ contrived to demonstrate some facet of SPDK, or aren't considered complete enoug
 to warrant tagging them as a full blown SPDK application.
 
 This is a great place to learn about how SPDK works. In particular, check out
-`examples/nvme/hello_world`.
+`examples/nvme/hello_world`. Other useful tools are included as examples, including the benchmarking tool "perf."
 
 ## Include {#dir_include}
 
