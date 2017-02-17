@@ -503,9 +503,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static void
 abort_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ctrlr *ctrlr = arg;
-	assert(ctrlr != NULL);
-	spdk_decr_abort_count(ctrlr);
+	/*
+	 * abort completion callback function. Currently, there is nothing to do
+	 * struct spdk_nvme_ctrlr *ctrlr = arg;
+	 */
 }
 
 static void

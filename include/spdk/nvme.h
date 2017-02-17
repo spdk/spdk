@@ -1143,35 +1143,22 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
- * \brief Sends an abort command to the Nvme device for the request indicated
- *  by cid and sqid
+ * \brief Sends an abort command to the NVMe device for the request indicated
+ *  by cid
  *
  * \param ctrlr controller to the Nvme device
+ * \param qpair I/O queue pair associated with the request
  * \param cid identification number of the command to be aborted.
- * \param sqid submission queue number of the command to be aborted
  * \param cb_fn a function pointer to the abort call back function
  * \param cb_arg user argument to the abort command callback function
  *
  * \return 0 if successfully submitted, Less than 0 if it fails
- *
- * Note: The user must ensure to decrement the controller member
- *       ctrlr->curr_abort_count
- *       by one in the abort command callback function
  */
 int spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
 			      struct spdk_nvme_qpair *qpair,
 			      uint16_t cid,
 			      spdk_nvme_cmd_cb cb_fn,
 			      void *cb_arg);
-/**
- * \brief Decrements the abort count member of the controller structure by one.
- *
- * \param ctrlr controller to the Nvme device
- *
- * \return None
- */
-void spdk_decr_abort_count(struct spdk_nvme_ctrlr *ctrlr);
-
 #ifdef __cplusplus
 }
 #endif

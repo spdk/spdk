@@ -405,15 +405,9 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
 	uint16_t sqid = qpair->id;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	if (ctrlr->curr_abort_count == (ctrlr->cdata.acl + 1)) {
-		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		SPDK_WARNLOG("Warning: abort limit of %u is reached on controller %p\n", ctrlr->curr_abort_count,
-			     ctrlr);
-		return -1;
-	}
-
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
 	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
 	}
 
@@ -422,7 +416,6 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->cdw10 = (cid << 16) | sqid;
 
 	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
-	ctrlr->curr_abort_count++;
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return rc;
 }
