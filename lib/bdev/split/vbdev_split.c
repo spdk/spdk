@@ -42,6 +42,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "spdk/rpc.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 
@@ -204,11 +205,24 @@ vbdev_split_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 	return split_disk->base_bdev->fn_table->get_io_channel(split_disk->base_bdev, priority);
 }
 
+static int
+vbdev_split_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct split_disk *split_disk = (struct split_disk *)bdev;
+
+	spdk_json_write_name(w, "base_bdev");
+	spdk_json_write_string(w, split_disk->base_bdev->name);
+	spdk_json_write_name(w, "offset_block");
+	spdk_json_write_uint64(w, split_disk->offset_blocks);
+	return 0;
+}
+
 static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 	.destruct		= vbdev_split_destruct,
 	.io_type_supported	= vbdev_split_io_type_supported,
 	.submit_request		= vbdev_split_submit_request,
 	.get_io_channel		= vbdev_split_get_io_channel,
+	.dump_config_json	= vbdev_split_dump_config_json,
 };
 
 static int
