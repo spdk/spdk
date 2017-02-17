@@ -1214,7 +1214,6 @@ int spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
 			      uint16_t cid,
 			      spdk_nvme_cmd_cb cb_fn,
 			      void *cb_arg);
-
 #ifdef __cplusplus
 }
 #endif

@@ -1323,7 +1323,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->timeout_cb_fn = NULL;
 	ctrlr->timeout_cb_arg = NULL;
 	ctrlr->timeout_ticks = 0;
-	ctrlr->curr_abort_count = 0;
 
 	return rc;
 }
