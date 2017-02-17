@@ -226,7 +226,7 @@ test_discovery_log(void)
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 
 	/* Reset discovery-related globals */
-	g_discovery_genctr = 0;
+	g_nvmf_tgt.discovery_genctr = 0;
 	free(g_discovery_log_page);
 	g_discovery_log_page = NULL;
 	g_discovery_log_page_size = 0;

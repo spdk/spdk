@@ -46,7 +46,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-static uint64_t g_discovery_genctr = 0;
 static struct spdk_nvmf_discovery_log_page *g_discovery_log_page = NULL;
 static size_t g_discovery_log_page_size = 0;
 
@@ -204,7 +203,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	}
 
 	TAILQ_INSERT_TAIL(&g_nvmf_tgt.subsystems, subsystem, entries);
-	g_discovery_genctr++;
+	g_nvmf_tgt.discovery_genctr++;
 
 	return subsystem;
 }
@@ -244,7 +243,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	TAILQ_REMOVE(&g_nvmf_tgt.subsystems, subsystem, entries);
-	g_discovery_genctr++;
+	g_nvmf_tgt.discovery_genctr++;
 
 	free(subsystem);
 }
@@ -269,7 +268,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 
 	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
 	subsystem->num_listen_addrs++;
-	g_discovery_genctr++;
+	g_nvmf_tgt.discovery_genctr++;
 
 	rc = transport->listen_addr_add(listen_addr);
 	if (rc < 0) {
@@ -297,7 +296,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 	subsystem->num_hosts++;
-	g_discovery_genctr++;
+	g_nvmf_tgt.discovery_genctr++;
 
 	return 0;
 }
@@ -329,7 +328,7 @@ nvmf_update_discovery_log(void)
 	size_t cur_size;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Generating log page for genctr %" PRIu64 "\n",
-		      g_discovery_genctr);
+		      g_nvmf_tgt.discovery_genctr);
 
 	cur_size = sizeof(struct spdk_nvmf_discovery_log_page);
 	disc_log = calloc(1, cur_size);
@@ -373,7 +372,7 @@ nvmf_update_discovery_log(void)
 	}
 
 	disc_log->numrec = numrec;
-	disc_log->genctr = g_discovery_genctr;
+	disc_log->genctr = g_nvmf_tgt.discovery_genctr;
 
 	free(g_discovery_log_page);
 
@@ -388,7 +387,7 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 	size_t zero_len = length;
 
 	if (g_discovery_log_page == NULL ||
-	    g_discovery_log_page->genctr != g_discovery_genctr) {
+	    g_discovery_log_page->genctr != g_nvmf_tgt.discovery_genctr) {
 		nvmf_update_discovery_log();
 	}
 
