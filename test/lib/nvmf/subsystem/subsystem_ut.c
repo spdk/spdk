@@ -227,8 +227,8 @@ test_discovery_log(void)
 
 	/* Reset discovery-related globals */
 	g_nvmf_tgt.discovery_genctr = 0;
-	free(g_discovery_log_page);
-	g_discovery_log_page = NULL;
+	free(g_nvmf_tgt.discovery_log_page);
+	g_nvmf_tgt.discovery_log_page = NULL;
 	g_discovery_log_page_size = 0;
 
 	/* Add one subsystem and verify that the discovery log contains it */

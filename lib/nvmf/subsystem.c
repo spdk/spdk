@@ -46,7 +46,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-static struct spdk_nvmf_discovery_log_page *g_discovery_log_page = NULL;
 static size_t g_discovery_log_page_size = 0;
 
 bool
@@ -374,9 +373,9 @@ nvmf_update_discovery_log(void)
 	disc_log->numrec = numrec;
 	disc_log->genctr = g_nvmf_tgt.discovery_genctr;
 
-	free(g_discovery_log_page);
+	free(g_nvmf_tgt.discovery_log_page);
 
-	g_discovery_log_page = disc_log;
+	g_nvmf_tgt.discovery_log_page = disc_log;
 	g_discovery_log_page_size = cur_size;
 }
 
@@ -386,16 +385,16 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 	size_t copy_len = 0;
 	size_t zero_len = length;
 
-	if (g_discovery_log_page == NULL ||
-	    g_discovery_log_page->genctr != g_nvmf_tgt.discovery_genctr) {
+	if (g_nvmf_tgt.discovery_log_page == NULL ||
+	    g_nvmf_tgt.discovery_log_page->genctr != g_nvmf_tgt.discovery_genctr) {
 		nvmf_update_discovery_log();
 	}
 
 	/* Copy the valid part of the discovery log page, if any */
-	if (g_discovery_log_page && offset < g_discovery_log_page_size) {
+	if (g_nvmf_tgt.discovery_log_page && offset < g_discovery_log_page_size) {
 		copy_len = spdk_min(g_discovery_log_page_size - offset, length);
 		zero_len -= copy_len;
-		memcpy(buffer, (char *)g_discovery_log_page + offset, copy_len);
+		memcpy(buffer, (char *)g_nvmf_tgt.discovery_log_page + offset, copy_len);
 	}
 
 	/* Zero out the rest of the buffer */
