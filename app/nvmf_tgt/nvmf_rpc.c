@@ -50,6 +50,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	struct spdk_nvmf_listen_addr 	*listen_addr;
 	struct spdk_nvmf_host		*host;
 	struct spdk_nvmf_subsystem	*subsystem = tgt_subsystem->subsystem;
+	struct spdk_nvmf_subsystem_allowed_listener 	*allowed_listener;
 
 	spdk_json_write_object_begin(w);
 
@@ -76,7 +77,8 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	spdk_json_write_name(w, "listen_addresses");
 	spdk_json_write_array_begin(w);
 
-	TAILQ_FOREACH(listen_addr, &subsystem->listen_addrs, link) {
+	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
+		listen_addr = allowed_listener->listen_addr;
 		spdk_json_write_object_begin(w);
 		spdk_json_write_name(w, "transport");
 		spdk_json_write_string(w, listen_addr->trname);

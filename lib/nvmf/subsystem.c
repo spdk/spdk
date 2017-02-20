@@ -199,7 +199,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	subsystem->connect_cb = connect_cb;
 	subsystem->disconnect_cb = disconnect_cb;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
-	TAILQ_INIT(&subsystem->listen_addrs);
+	TAILQ_INIT(&subsystem->allowed_listeners);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->sessions);
 
@@ -218,7 +218,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 void
 spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_listen_addr	*listen_addr, *listen_addr_tmp;
+	struct spdk_nvmf_subsystem_allowed_listener	*allowed_listener, *allowed_listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_session	*session, *session_tmp;
 
@@ -228,10 +228,11 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "subsystem is %p\n", subsystem);
 
-	TAILQ_FOREACH_SAFE(listen_addr, &subsystem->listen_addrs, link, listen_addr_tmp) {
-		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
-		spdk_nvmf_listen_addr_destroy(listen_addr);
-		subsystem->num_listen_addrs--;
+	TAILQ_FOREACH_SAFE(allowed_listener,
+			   &subsystem->allowed_listeners, link, allowed_listener_tmp) {
+		TAILQ_REMOVE(&subsystem->allowed_listeners, allowed_listener, link);
+
+		free(allowed_listener);
 	}
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
@@ -255,36 +256,82 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem);
 }
 
-int
-spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 const char *trname, const char *traddr, const char *trsvcid)
+struct spdk_nvmf_listen_addr *
+spdk_nvmf_tgt_listen(const char *trname, const char *traddr, const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
 	int rc;
 
+	TAILQ_FOREACH(listen_addr, &g_nvmf_tgt.listen_addrs, link) {
+		if ((strcmp(listen_addr->trname, trname) == 0) &&
+		    (strcmp(listen_addr->traddr, traddr) == 0) &&
+		    (strcmp(listen_addr->trsvcid, trsvcid) == 0)) {
+			return listen_addr;
+		}
+	}
+
 	transport = spdk_nvmf_transport_get(trname);
 	if (!transport) {
-		return -1;
+		return NULL;
 	}
 
 	listen_addr = spdk_nvmf_listen_addr_create(trname, traddr, trsvcid);
 	if (!listen_addr) {
-		return -1;
+		return NULL;
 	}
 
 	rc = transport->listen_addr_add(listen_addr);
 	if (rc < 0) {
 		spdk_nvmf_listen_addr_cleanup(listen_addr);
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", traddr);
+		return NULL;
+	}
+
+	TAILQ_INSERT_HEAD(&g_nvmf_tgt.listen_addrs, listen_addr, link);
+	g_nvmf_tgt.discovery_genctr++;
+
+	return listen_addr;
+}
+
+int
+spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
+				 struct spdk_nvmf_listen_addr *listen_addr)
+{
+	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
+
+	allowed_listener = calloc(1, sizeof(*allowed_listener));
+	if (!allowed_listener) {
 		return -1;
 	}
 
-	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
-	subsystem->num_listen_addrs++;
-	g_nvmf_tgt.discovery_genctr++;
+	allowed_listener->listen_addr = listen_addr;
+
+	TAILQ_INSERT_HEAD(&subsystem->allowed_listeners, allowed_listener, link);
 
 	return 0;
+}
+
+/*
+ * TODO: this is the whitelist and will be called during connection setup
+ */
+bool
+spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
+				     struct spdk_nvmf_listen_addr *listen_addr)
+{
+	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
+
+	if (TAILQ_EMPTY(&subsystem->allowed_listeners)) {
+		return true;
+	}
+
+	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
+		if (allowed_listener->listen_addr == listen_addr) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 int
@@ -324,6 +371,7 @@ nvmf_update_discovery_log(void)
 {
 	uint64_t numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
 	struct spdk_nvmf_listen_addr *listen_addr;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	const struct spdk_nvmf_transport *transport;
@@ -345,7 +393,7 @@ nvmf_update_discovery_log(void)
 			continue;
 		}
 
-		TAILQ_FOREACH(listen_addr, &subsystem->listen_addrs, link) {
+		TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
 			size_t new_size = cur_size + sizeof(*entry);
 			void *new_log_page = realloc(disc_log, new_size);
 
@@ -353,6 +401,8 @@ nvmf_update_discovery_log(void)
 				SPDK_ERRLOG("Discovery log page memory allocation error\n");
 				break;
 			}
+
+			listen_addr = allowed_listener->listen_addr;
 
 			disc_log = new_log_page;
 			cur_size = new_size;

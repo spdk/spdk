@@ -451,6 +451,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
+	struct spdk_nvmf_listen_addr *listen_addr;
 	enum spdk_nvmf_subsystem_mode mode;
 	int i;
 	uint64_t mask;
@@ -519,8 +520,10 @@ spdk_nvmf_construct_subsystem(const char *name,
 			}
 		}
 
-		spdk_nvmf_subsystem_add_listener(subsystem, addresses[i].transport, addresses[i].traddr,
-						 addresses[i].trsvcid);
+		listen_addr = spdk_nvmf_tgt_listen(addresses[i].transport,
+						   addresses[i].traddr, addresses[i].trsvcid);
+		assert(listen_addr != NULL);
+		spdk_nvmf_subsystem_add_listener(subsystem, listen_addr);
 	}
 
 	/* Parse Host sections */

@@ -62,6 +62,7 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	g_nvmf_tgt.discovery_log_page = NULL;
 	g_nvmf_tgt.discovery_log_page_size = 0;
 	TAILQ_INIT(&g_nvmf_tgt.subsystems);
+	TAILQ_INIT(&g_nvmf_tgt.listen_addrs);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queues Per Session: %d\n", max_queues_per_sess);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);
@@ -80,6 +81,15 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 int
 spdk_nvmf_tgt_fini(void)
 {
+	struct spdk_nvmf_listen_addr *listen_addr, *listen_addr_tmp;
+
+	TAILQ_FOREACH_SAFE(listen_addr, &g_nvmf_tgt.listen_addrs, link, listen_addr_tmp) {
+		TAILQ_REMOVE(&g_nvmf_tgt.listen_addrs, listen_addr, link);
+		g_nvmf_tgt.discovery_genctr++;
+
+		spdk_nvmf_listen_addr_destroy(listen_addr);
+	}
+
 	spdk_nvmf_transport_fini();
 
 	return 0;

@@ -115,6 +115,11 @@ struct spdk_nvmf_ctrlr_ops {
 	void (*detach)(struct spdk_nvmf_subsystem *subsystem);
 };
 
+struct spdk_nvmf_subsystem_allowed_listener {
+	struct spdk_nvmf_listen_addr				*listen_addr;
+	TAILQ_ENTRY(spdk_nvmf_subsystem_allowed_listener)	link;
+};
+
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of virtual controller sessions.  Any individual controller session has
@@ -149,11 +154,10 @@ struct spdk_nvmf_subsystem {
 
 	TAILQ_HEAD(, spdk_nvmf_session)		sessions;
 
-	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
-	uint32_t				num_listen_addrs;
-
 	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
 	uint32_t				num_hosts;
+
+	TAILQ_HEAD(, spdk_nvmf_subsystem_allowed_listener)	allowed_listeners;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem) entries;
 };
@@ -181,9 +185,16 @@ bool spdk_nvmf_subsystem_exists(const char *subnqn);
 
 bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
 
+struct spdk_nvmf_listen_addr *
+spdk_nvmf_tgt_listen(const char *trname, const char *traddr, const char *trsvcid);
+
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 const char *trname, const char *traddr, const char *trsvcid);
+				 struct spdk_nvmf_listen_addr *listen_addr);
+
+bool
+spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
+				     struct spdk_nvmf_listen_addr *listen_addr);
 
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
