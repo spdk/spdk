@@ -468,7 +468,6 @@ nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 	rdma_req->sg_list[1].lkey = rdma_conn->bufs_mr->lkey;
 	nvmf_trace_ibv_sge(&rdma_req->sg_list[1]);
 
-	memset(&rdma_req->wr.recv, 0, sizeof(struct ibv_recv_wr));
 	rdma_req->wr.recv.wr_id = (uintptr_t)rdma_req;
 	rdma_req->wr.recv.next = NULL;
 	rdma_req->wr.recv.sg_list = rdma_req->sg_list;
