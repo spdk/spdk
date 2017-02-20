@@ -196,3 +196,26 @@ function run_test() {
 	echo "************************************"
 	set -x
 }
+
+function print_backtrace() {
+	set +x
+	echo "========== Backtrace start: =========="
+	echo ""
+	for i in $(seq 1 $((${#FUNCNAME[@]} - 1))); do
+		local func="${FUNCNAME[$i]}"
+		local line_nr="${BASH_LINENO[$((i - 1))]}"
+		local src="${BASH_SOURCE[$i]/#$rootdir/.}"
+		echo "in $src:$line_nr -> $func()"
+		echo "     ..."
+		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr" | \
+			sed "s/^/   /g" | sed "s/^   $line_nr/=> $line_nr/g"
+		echo "     ..."
+	done
+	echo ""
+	echo "========== Backtrace end =========="
+	set -x
+	return 0
+}
+
+set -o errtrace
+trap "trap - ERR; print_backtrace >&2" ERR
