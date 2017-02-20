@@ -263,15 +263,16 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -1;
 	}
 
-	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
-	subsystem->num_listen_addrs++;
-	g_nvmf_tgt.discovery_genctr++;
-
 	rc = transport->listen_addr_add(listen_addr);
 	if (rc < 0) {
+		spdk_nvmf_listen_addr_cleanup(listen_addr);
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", traddr);
 		return -1;
 	}
+
+	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
+	subsystem->num_listen_addrs++;
+	g_nvmf_tgt.discovery_genctr++;
 
 	return 0;
 }

@@ -134,6 +134,12 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 	assert(transport != NULL);
 	transport->listen_addr_remove(addr);
 
+	spdk_nvmf_listen_addr_cleanup(addr);
+}
+
+void
+spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr)
+{
 	free(addr->trname);
 	free(addr->trsvcid);
 	free(addr->traddr);

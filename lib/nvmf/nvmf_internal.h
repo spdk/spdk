@@ -62,6 +62,7 @@ extern struct spdk_nvmf_tgt g_nvmf_tgt;
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(const char *trname, const char *traddr,
 		const char *trsvcid);
 void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
+void spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr);
 
 #define OBJECT_NVMF_IO				0x30
 

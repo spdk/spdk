@@ -91,6 +91,12 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 	free(addr);
 }
 
+void
+spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr)
+{
+	return;
+}
+
 static int
 test_transport1_listen_addr_add(struct spdk_nvmf_listen_addr *listen_addr)
 {
