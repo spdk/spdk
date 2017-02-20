@@ -54,11 +54,13 @@ struct dev {
 	char 						name[100];
 };
 
+#define ADMINQ_SIZE 128
+
 static struct dev devs[MAX_DEVS];
 static int num_devs = 0;
 
 static int aer_done = 0;
-
+static int get_queues_done = 0;
 
 #define foreach_dev(iter) \
 	for (iter = devs; iter - devs < num_devs; iter++)
@@ -110,8 +112,7 @@ get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 	printf("%s: original temperature threshold: %u Kelvin (%d Celsius)\n",
 	       dev->name, dev->orig_temp_threshold, dev->orig_temp_threshold - 273);
 
-	/* Set temperature threshold to a low value so the AER will trigger. */
-	set_temp_threshold(dev, 200);
+	temperature_done++;
 }
 
 static int
@@ -284,6 +285,39 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
+static void
+get_feature_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct dev *dev = cb_arg;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		printf("%s: get number of queues failed\n", dev->name);
+		failed = 1;
+		return;
+	}
+
+	get_queues_done++;
+}
+
+static void
+get_feature_test(struct dev *dev)
+{
+	struct spdk_nvme_cmd cmd[ADMINQ_SIZE];
+	int i;
+
+	memset(cmd, 0, sizeof(cmd));
+	for (i = 0; i < ADMINQ_SIZE; i++) {
+		cmd[i].opc = SPDK_NVME_OPC_GET_FEATURES;
+		cmd[i].cdw10 = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+		if (spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd[i], NULL, 0,
+						  get_feature_cb, dev) != 0) {
+			printf("Failed to send identify ctrlr command for dev=%p\n", dev);
+			failed = 1;
+			return;
+		}
+	}
+}
+
 int main(int argc, char **argv)
 {
 	struct dev		*dev;
@@ -317,9 +351,9 @@ int main(int argc, char **argv)
 		spdk_nvme_ctrlr_register_aer_callback(dev->ctrlr, aer_cb, dev);
 	}
 
-	printf("Setting temperature thresholds...\n");
+	printf("Getting temperature thresholds of all controllers...\n");
 	foreach_dev(dev) {
-		/* Get the original temperature threshold and set it to a low value */
+		/* Get the original temperature threshold */
 		get_temp_threshold(dev);
 	}
 
@@ -332,13 +366,41 @@ int main(int argc, char **argv)
 	if (failed) {
 		goto done;
 	}
+	temperature_done = 0;
+
+	/* Send enough admin commands to fill admin queue before triggering AER */
+	foreach_dev(dev) {
+		get_feature_test(dev);
+	}
+
+	if (failed) {
+		goto done;
+	}
 
 	printf("Waiting for all controllers to trigger AER...\n");
+	foreach_dev(dev) {
+		/* Set the temperature threshold to a low value */
+		set_temp_threshold(dev, 200);
+	}
 
-	while (!failed && aer_done < num_devs) {
+	/* Send enough admin commands to fill admin queue while waiting AER to be triggered */
+	foreach_dev(dev) {
+		get_feature_test(dev);
+	}
+
+	if (failed) {
+		goto done;
+	}
+
+	while (!failed && ((aer_done < num_devs) || (temperature_done < num_devs) ||
+			   (get_queues_done < (2 * ADMINQ_SIZE * num_devs)))) {
 		foreach_dev(dev) {
 			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
 		}
+	}
+
+	if (failed) {
+		goto done;
 	}
 
 	printf("Cleaning up...\n");

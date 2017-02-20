@@ -17,7 +17,7 @@ fi
 timing_enter aer
 
 # Start up the NVMf target in another process
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf -m 0x2 -p 1 -s 512 -t nvmf &
+$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf -m 0x2 -p 1 -s 512 &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -31,7 +31,7 @@ $rootdir/test/lib/nvme/aer/aer -r "\
         adrfam:IPv4 \
         traddr:$NVMF_FIRST_TARGET_IP \
         trsvcid:$NVMF_PORT \
-        subnqn:nqn.2014-08.org.nvmexpress.discovery" -t all
+        subnqn:nqn.2014-08.org.nvmexpress.discovery"
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
