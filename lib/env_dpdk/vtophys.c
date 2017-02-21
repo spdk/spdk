@@ -166,6 +166,11 @@ vtophys_get_paddr(uint64_t vaddr)
 	struct rte_memseg *seg;
 	uint32_t seg_idx;
 
+	paddr = vtophys_get_dpdk_paddr((void *)vaddr);
+	if (paddr != RTE_BAD_PHYS_ADDR) {
+		return paddr;
+	}
+
 	mcfg = rte_eal_get_configuration()->mem_config;
 
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
@@ -267,11 +272,11 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 	len = len >> SHIFT_2MB;
 
 	while (len > 0) {
-		void *vaddr = (void *)(vfn_2mb << SHIFT_2MB);
-		uint64_t paddr = vtophys_get_dpdk_paddr(vaddr);
+		uint64_t vaddr = vfn_2mb << SHIFT_2MB;
+		uint64_t paddr = vtophys_get_paddr(vaddr);
 
 		if (paddr == RTE_BAD_PHYS_ADDR) {
-			fprintf(stderr, "could not get phys addr for %p\n", vaddr);
+			fprintf(stderr, "could not get phys addr for 0x%" PRIx64 "\n", vaddr);
 			return;
 		}
 
