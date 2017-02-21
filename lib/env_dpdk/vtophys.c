@@ -120,7 +120,9 @@ vtophys_get_map_1gb(uint64_t vfn_2mb)
 		pthread_mutex_unlock(&vtophys_mutex);
 
 		if (!map_1gb) {
+#ifdef DEBUG
 			printf("allocation failed\n");
+#endif
 			return NULL;
 		}
 	}
@@ -176,7 +178,9 @@ vtophys_get_paddr(uint64_t vaddr)
 		}
 	}
 
+#ifdef DEBUG
 	fprintf(stderr, "could not find vaddr 0x%" PRIx64 " in DPDK mem config\n", vaddr);
+#endif
 	return SPDK_VTOPHYS_ERROR;
 }
 
@@ -189,13 +193,17 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb, uint64_t paddr)
 	uint16_t *ref_count;
 
 	if (paddr & MASK_2MB) {
+#ifdef DEBUG
 		fprintf(stderr, "invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
+#endif
 		return;
 	}
 
 	map_1gb = vtophys_get_map_1gb(vfn_2mb);
 	if (!map_1gb) {
+#ifdef DEBUG
 		fprintf(stderr, "could not get vfn_2mb %p map\n", (void *)vfn_2mb);
+#endif
 		return;
 	}
 
@@ -203,8 +211,10 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb, uint64_t paddr)
 	ref_count = &map_1gb->ref_count[idx_1gb];
 
 	if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
+#ifdef DEBUG
 		fprintf(stderr, "ref count for %p already at %d\n",
 			(void *)(vfn_2mb << SHIFT_2MB), VTOPHYS_MAX_REF_COUNT);
+#endif
 		return;
 	}
 
@@ -223,7 +233,9 @@ _spdk_vtophys_unregister_one(uint64_t vfn_2mb)
 
 	map_1gb = vtophys_get_map_1gb(vfn_2mb);
 	if (!map_1gb) {
+#ifdef DEBUG
 		fprintf(stderr, "could not get vfn_2mb %p map\n", (void *)vfn_2mb);
+#endif
 		return;
 	}
 
@@ -231,7 +243,9 @@ _spdk_vtophys_unregister_one(uint64_t vfn_2mb)
 	ref_count = &map_1gb->ref_count[idx_1gb];
 
 	if (map_2mb->paddr_2mb == SPDK_VTOPHYS_ERROR || *ref_count == 0) {
+#ifdef DEBUG
 		fprintf(stderr, "vaddr %p not registered\n", (void *)(vfn_2mb << SHIFT_2MB));
+#endif
 		return;
 	}
 
@@ -247,13 +261,17 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 	uint64_t vfn_2mb;
 
 	if ((uintptr_t)vaddr & ~MASK_128TB) {
+#ifdef DEBUG
 		printf("invalid usermode virtual address %p\n", vaddr);
+#endif
 		return;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+#ifdef DEBUG
 		fprintf(stderr, "invalid %s parameters, vaddr=%p len=%ju\n",
 			__func__, vaddr, len);
+#endif
 		return;
 	}
 
@@ -265,7 +283,9 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 		uint64_t paddr = vtophys_get_paddr(vaddr);
 
 		if (paddr == RTE_BAD_PHYS_ADDR) {
+#ifdef DEBUG
 			fprintf(stderr, "could not get phys addr for 0x%" PRIx64 "\n", vaddr);
+#endif
 			return;
 		}
 
@@ -281,13 +301,17 @@ spdk_vtophys_unregister(void *vaddr, uint64_t len)
 	uint64_t vfn_2mb;
 
 	if ((uintptr_t)vaddr & ~MASK_128TB) {
+#ifdef DEBUG
 		printf("invalid usermode virtual address %p\n", vaddr);
+#endif
 		return;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+#ifdef DEBUG
 		fprintf(stderr, "invalid %s parameters, vaddr=%p len=%ju\n",
 			__func__, vaddr, len);
+#endif
 		return;
 	}
 
@@ -331,7 +355,9 @@ spdk_vtophys(void *buf)
 
 	vaddr = (uint64_t)buf;
 	if (spdk_unlikely(vaddr & ~MASK_128TB)) {
+#ifdef DEBUG
 		printf("invalid usermode virtual address %p\n", buf);
+#endif
 		return SPDK_VTOPHYS_ERROR;
 	}
 
