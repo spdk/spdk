@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <inttypes.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -66,13 +67,13 @@
 /* Max value for a 16-bit ref count. */
 #define VTOPHYS_MAX_REF_COUNT (0xFFFF)
 
-/* Physical page frame number of a single 2MB page. */
+/* Physical address of a single 2MB page. */
 struct map_2mb {
-	uint64_t pfn_2mb;
+	uint64_t paddr_2mb;
 };
 
 /* Second-level map table indexed by bits [21..29] of the virtual address.
- * Each entry contains the 2MB physical page frame number or SPDK_VTOPHYS_ERROR for entries that haven't
+ * Each entry contains the 2MB physical address or SPDK_VTOPHYS_ERROR for entries that haven't
  * been retrieved yet.
  */
 struct map_1gb {
@@ -158,14 +159,13 @@ vtophys_get_dpdk_paddr(void *vaddr)
 }
 
 static uint64_t
-vtophys_get_pfn_2mb(uint64_t vfn_2mb)
+vtophys_get_paddr(uint64_t vaddr)
 {
-	uintptr_t vaddr, paddr;
+	uintptr_t paddr;
 	struct rte_mem_config *mcfg;
 	struct rte_memseg *seg;
 	uint32_t seg_idx;
 
-	vaddr = vfn_2mb << SHIFT_2MB;
 	mcfg = rte_eal_get_configuration()->mem_config;
 
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
@@ -178,11 +178,11 @@ vtophys_get_pfn_2mb(uint64_t vfn_2mb)
 		    vaddr < ((uintptr_t)seg->addr + seg->len)) {
 			paddr = seg->phys_addr;
 			paddr += (vaddr - (uintptr_t)seg->addr);
-			return paddr >> SHIFT_2MB;
+			return paddr;
 		}
 	}
 
-	fprintf(stderr, "could not find 2MB vfn 0x%jx in DPDK mem config\n", vfn_2mb);
+	fprintf(stderr, "could not find vaddr 0x%" PRIx64 " in DPDK mem config\n", vaddr);
 	return SPDK_VTOPHYS_ERROR;
 }
 
@@ -205,7 +205,7 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb)
 	map_2mb = &map_1gb->map[idx_1gb];
 	ref_count = &map_1gb->ref_count[idx_1gb];
 
-	if (map_2mb->pfn_2mb == SPDK_VTOPHYS_ERROR) {
+	if (map_2mb->paddr_2mb == SPDK_VTOPHYS_ERROR) {
 		vaddr = (void *)(vfn_2mb << SHIFT_2MB);
 		paddr = vtophys_get_dpdk_paddr(vaddr);
 		if (paddr == RTE_BAD_PHYS_ADDR) {
@@ -213,7 +213,7 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb)
 			return;
 		}
 
-		map_2mb->pfn_2mb = paddr >> SHIFT_2MB;
+		map_2mb->paddr_2mb = paddr & ~MASK_2MB;
 		*ref_count = 0;
 	}
 
@@ -243,14 +243,14 @@ _spdk_vtophys_unregister_one(uint64_t vfn_2mb)
 	map_2mb = &map_1gb->map[idx_1gb];
 	ref_count = &map_1gb->ref_count[idx_1gb];
 
-	if (map_2mb->pfn_2mb == SPDK_VTOPHYS_ERROR || *ref_count == 0) {
+	if (map_2mb->paddr_2mb == SPDK_VTOPHYS_ERROR || *ref_count == 0) {
 		fprintf(stderr, "vaddr %p not registered\n", (void *)(vfn_2mb << SHIFT_2MB));
 		return;
 	}
 
 	(*ref_count)--;
 	if (*ref_count == 0) {
-		map_2mb->pfn_2mb = SPDK_VTOPHYS_ERROR;
+		map_2mb->paddr_2mb = SPDK_VTOPHYS_ERROR;
 	}
 }
 
@@ -310,7 +310,7 @@ uint64_t
 spdk_vtophys(void *buf)
 {
 	struct map_2mb *map_2mb;
-	uint64_t vaddr, vfn_2mb, pfn_2mb;
+	uint64_t vaddr, vfn_2mb, paddr_2mb;
 
 	vaddr = (uint64_t)buf;
 	if (vaddr & ~MASK_128TB) {
@@ -325,14 +325,19 @@ spdk_vtophys(void *buf)
 		return SPDK_VTOPHYS_ERROR;
 	}
 
-	pfn_2mb = map_2mb->pfn_2mb;
-	if (pfn_2mb == SPDK_VTOPHYS_ERROR) {
-		pfn_2mb = vtophys_get_pfn_2mb(vfn_2mb);
-		if (pfn_2mb == SPDK_VTOPHYS_ERROR) {
+	paddr_2mb = map_2mb->paddr_2mb;
+	if (paddr_2mb == SPDK_VTOPHYS_ERROR) {
+		uint64_t paddr;
+
+		paddr = vtophys_get_paddr(vaddr);
+		if (paddr == SPDK_VTOPHYS_ERROR) {
 			return SPDK_VTOPHYS_ERROR;
 		}
-		map_2mb->pfn_2mb = pfn_2mb;
+
+		/* For now, assume all valid addressess are part of 2MB or larger pages. */
+		paddr_2mb = paddr & ~MASK_2MB;
+		map_2mb->paddr_2mb = paddr_2mb;
 	}
 
-	return (pfn_2mb << SHIFT_2MB) | ((uint64_t)buf & MASK_2MB);
+	return paddr_2mb | ((uint64_t)buf & MASK_2MB);
 }
