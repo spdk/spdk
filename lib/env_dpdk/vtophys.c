@@ -187,14 +187,17 @@ vtophys_get_paddr(uint64_t vaddr)
 }
 
 static void
-_spdk_vtophys_register_one(uint64_t vfn_2mb)
+_spdk_vtophys_register_one(uint64_t vfn_2mb, uint64_t paddr)
 {
 	struct map_1gb *map_1gb;
 	uint64_t idx_1gb = MAP_1GB_IDX(vfn_2mb);
 	struct map_2mb *map_2mb;
 	uint16_t *ref_count;
-	void *vaddr;
-	uint64_t paddr;
+
+	if (paddr & MASK_2MB) {
+		fprintf(stderr, "invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
+		return;
+	}
 
 	map_1gb = vtophys_get_map_1gb(vfn_2mb);
 	if (!map_1gb) {
@@ -205,23 +208,13 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb)
 	map_2mb = &map_1gb->map[idx_1gb];
 	ref_count = &map_1gb->ref_count[idx_1gb];
 
-	if (map_2mb->paddr_2mb == SPDK_VTOPHYS_ERROR) {
-		vaddr = (void *)(vfn_2mb << SHIFT_2MB);
-		paddr = vtophys_get_dpdk_paddr(vaddr);
-		if (paddr == RTE_BAD_PHYS_ADDR) {
-			fprintf(stderr, "could not get phys addr for %p\n", vaddr);
-			return;
-		}
-
-		map_2mb->paddr_2mb = paddr & ~MASK_2MB;
-		*ref_count = 0;
-	}
-
 	if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
 		fprintf(stderr, "ref count for %p already at %d\n",
 			(void *)(vfn_2mb << SHIFT_2MB), VTOPHYS_MAX_REF_COUNT);
 		return;
 	}
+
+	map_2mb->paddr_2mb = paddr;
 
 	(*ref_count)++;
 }
@@ -274,7 +267,15 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 	len = len >> SHIFT_2MB;
 
 	while (len > 0) {
-		_spdk_vtophys_register_one(vfn_2mb);
+		void *vaddr = (void *)(vfn_2mb << SHIFT_2MB);
+		uint64_t paddr = vtophys_get_dpdk_paddr(vaddr);
+
+		if (paddr == RTE_BAD_PHYS_ADDR) {
+			fprintf(stderr, "could not get phys addr for %p\n", vaddr);
+			return;
+		}
+
+		_spdk_vtophys_register_one(vfn_2mb, paddr);
 		vfn_2mb++;
 		len--;
 	}
