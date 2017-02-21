@@ -44,6 +44,7 @@
 #include <rte_eal_memconfig.h>
 
 #include "spdk/assert.h"
+#include "spdk/likely.h"
 
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
  * which is enough to cover 128 TB.
@@ -329,7 +330,7 @@ spdk_vtophys(void *buf)
 	uint64_t vaddr, vfn_2mb, paddr_2mb;
 
 	vaddr = (uint64_t)buf;
-	if (vaddr & ~MASK_128TB) {
+	if (spdk_unlikely(vaddr & ~MASK_128TB)) {
 		printf("invalid usermode virtual address %p\n", buf);
 		return SPDK_VTOPHYS_ERROR;
 	}
@@ -339,7 +340,7 @@ spdk_vtophys(void *buf)
 	idx_1gb = MAP_1GB_IDX(vfn_2mb);
 
 	map_1gb = vtophys_map_128tb.map[idx_128tb];
-	if (!map_1gb) {
+	if (spdk_unlikely(!map_1gb)) {
 		return SPDK_VTOPHYS_ERROR;
 	}
 
