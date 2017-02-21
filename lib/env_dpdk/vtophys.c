@@ -43,6 +43,8 @@
 #include <rte_config.h>
 #include <rte_eal_memconfig.h>
 
+#include "spdk/assert.h"
+
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
  * which is enough to cover 128 TB.
  */
@@ -344,9 +346,12 @@ spdk_vtophys(void *buf)
 	map_2mb = &map_1gb->map[idx_1gb];
 
 	paddr_2mb = map_2mb->paddr_2mb;
-	if (paddr_2mb == SPDK_VTOPHYS_ERROR) {
-		return SPDK_VTOPHYS_ERROR;
-	}
 
+	/*
+	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,
+	 * we will still bitwise-or it with the buf offset below, but the result will still be
+	 * SPDK_VTOPHYS_ERROR.
+	 */
+	SPDK_STATIC_ASSERT(SPDK_VTOPHYS_ERROR == UINT64_C(-1), "SPDK_VTOPHYS_ERROR should be all 1s");
 	return paddr_2mb | ((uint64_t)buf & MASK_2MB);
 }
