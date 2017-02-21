@@ -210,10 +210,16 @@ vbdev_split_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx 
 {
 	struct split_disk *split_disk = (struct split_disk *)bdev;
 
+	spdk_json_write_name(w, "split");
+	spdk_json_write_object_begin(w);
+
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, split_disk->base_bdev->name);
 	spdk_json_write_name(w, "offset_block");
 	spdk_json_write_uint64(w, split_disk->offset_blocks);
+
+	spdk_json_write_object_end(w);
+
 	return 0;
 }
 
