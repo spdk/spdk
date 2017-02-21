@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/env.h"
+#include "env_internal.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -309,4 +309,6 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 		fprintf(stderr, "Failed to initialize DPDK\n");
 		exit(-1);
 	}
+
+	spdk_vtophys_register_dpdk_mem();
 }

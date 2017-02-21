@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "env_internal.h"
+
 #include <inttypes.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,8 +42,6 @@
 
 #include <rte_config.h>
 #include <rte_eal_memconfig.h>
-
-#include "spdk/env.h"
 
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
  * which is enough to cover 128 TB.
@@ -312,6 +312,25 @@ spdk_vtophys_unregister(void *vaddr, uint64_t len)
 	}
 }
 
+void
+spdk_vtophys_register_dpdk_mem(void)
+{
+	struct rte_mem_config *mcfg;
+	size_t seg_idx;
+
+	mcfg = rte_eal_get_configuration()->mem_config;
+
+	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
+		struct rte_memseg *seg = &mcfg->memseg[seg_idx];
+
+		if (seg->addr == NULL) {
+			break;
+		}
+
+		spdk_vtophys_register(seg->addr, seg->len);
+	}
+}
+
 uint64_t
 spdk_vtophys(void *buf)
 {
@@ -333,16 +352,7 @@ spdk_vtophys(void *buf)
 
 	paddr_2mb = map_2mb->paddr_2mb;
 	if (paddr_2mb == SPDK_VTOPHYS_ERROR) {
-		uint64_t paddr;
-
-		paddr = vtophys_get_paddr(vaddr);
-		if (paddr == SPDK_VTOPHYS_ERROR) {
-			return SPDK_VTOPHYS_ERROR;
-		}
-
-		/* For now, assume all valid addressess are part of 2MB or larger pages. */
-		paddr_2mb = paddr & ~MASK_2MB;
-		map_2mb->paddr_2mb = paddr_2mb;
+		return SPDK_VTOPHYS_ERROR;
 	}
 
 	return paddr_2mb | ((uint64_t)buf & MASK_2MB);
