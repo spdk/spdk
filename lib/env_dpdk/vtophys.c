@@ -125,20 +125,6 @@ vtophys_get_map_1gb(uint64_t vfn_2mb)
 	return map_1gb;
 }
 
-static struct map_2mb *
-vtophys_get_map_2mb(uint64_t vfn_2mb)
-{
-	struct map_1gb *map_1gb;
-	uint64_t idx_1gb = MAP_1GB_IDX(vfn_2mb);
-
-	map_1gb = vtophys_get_map_1gb(vfn_2mb);
-	if (!map_1gb) {
-		return NULL;
-	}
-
-	return &map_1gb->map[idx_1gb];
-}
-
 static uint64_t
 vtophys_get_dpdk_paddr(void *vaddr)
 {
@@ -334,7 +320,10 @@ spdk_vtophys_register_dpdk_mem(void)
 uint64_t
 spdk_vtophys(void *buf)
 {
+	struct map_1gb *map_1gb;
 	struct map_2mb *map_2mb;
+	uint64_t idx_128tb;
+	uint64_t idx_1gb;
 	uint64_t vaddr, vfn_2mb, paddr_2mb;
 
 	vaddr = (uint64_t)buf;
@@ -344,11 +333,15 @@ spdk_vtophys(void *buf)
 	}
 
 	vfn_2mb = vaddr >> SHIFT_2MB;
+	idx_128tb = MAP_128TB_IDX(vfn_2mb);
+	idx_1gb = MAP_1GB_IDX(vfn_2mb);
 
-	map_2mb = vtophys_get_map_2mb(vfn_2mb);
-	if (!map_2mb) {
+	map_1gb = vtophys_map_128tb.map[idx_128tb];
+	if (!map_1gb) {
 		return SPDK_VTOPHYS_ERROR;
 	}
+
+	map_2mb = &map_1gb->map[idx_1gb];
 
 	paddr_2mb = map_2mb->paddr_2mb;
 	if (paddr_2mb == SPDK_VTOPHYS_ERROR) {
