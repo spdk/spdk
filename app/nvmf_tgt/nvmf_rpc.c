@@ -303,12 +303,12 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	ret = spdk_nvmf_parse_subsystem_for_rpc(req.nqn, req.mode, req.core,
-						req.listen_addresses.num_listen_address,
-						req.listen_addresses.addresses,
-						req.hosts.num_hosts, req.hosts.hosts, req.pci_address,
-						req.serial_number,
-						req.namespaces.num_names, req.namespaces.names);
+	ret = spdk_nvmf_construct_subsystem(req.nqn, req.mode, req.core,
+					    req.listen_addresses.num_listen_address,
+					    req.listen_addresses.addresses,
+					    req.hosts.num_hosts, req.hosts.hosts, req.pci_address,
+					    req.serial_number,
+					    req.namespaces.num_names, req.namespaces.names);
 	if (ret) {
 		goto invalid;
 	}

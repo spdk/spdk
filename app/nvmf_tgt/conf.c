@@ -394,11 +394,11 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		num_devs++;
 	}
 
-	return spdk_nvmf_parse_subsystem_for_rpc(nqn, mode_str, lcore,
-			num_listen_addrs, listen_addrs,
-			num_hosts, hosts,
-			bdf, sn,
-			num_devs, devs);
+	return spdk_nvmf_construct_subsystem(nqn, mode_str, lcore,
+					     num_listen_addrs, listen_addrs,
+					     num_hosts, hosts,
+					     bdf, sn,
+					     num_devs, devs);
 }
 
 static int
@@ -441,11 +441,11 @@ spdk_nvmf_parse_conf(void)
 }
 
 int
-spdk_nvmf_parse_subsystem_for_rpc(const char *name,
-				  const char *mode_str, int32_t lcore,
-				  int num_listen_addresses, struct rpc_listen_address *addresses,
-				  int num_hosts, char *hosts[], const char *bdf,
-				  const char *sn, int num_devs, char *dev_list[])
+spdk_nvmf_construct_subsystem(const char *name,
+			      const char *mode_str, int32_t lcore,
+			      int num_listen_addresses, struct rpc_listen_address *addresses,
+			      int num_hosts, char *hosts[], const char *bdf,
+			      const char *sn, int num_devs, char *dev_list[])
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
