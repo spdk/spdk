@@ -1469,19 +1469,32 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 static int
 spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 			 struct spdk_scsi_task *task,
-			 uint64_t lba, uint32_t xfer_len)
+			 uint64_t lba, uint32_t xfer_len, bool is_read)
 {
-	if (task->dxfer_dir == SPDK_SCSI_DIR_FROM_DEV) {
-		return spdk_bdev_scsi_read(bdev, task, lba, xfer_len);
-	} else if (task->dxfer_dir == SPDK_SCSI_DIR_TO_DEV) {
-		return spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
+	if (is_read) {
+		if ((task->dxfer_dir == SPDK_SCSI_DIR_FROM_DEV) ||
+		    (task->dxfer_dir == SPDK_SCSI_DIR_NONE)) {
+			return spdk_bdev_scsi_read(bdev, task, lba, xfer_len);
+		} else {
+			SPDK_ERRLOG("Incorrect data direction\n");
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_NO_SENSE,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			return SPDK_SCSI_TASK_COMPLETE;
+		}
 	} else {
-		SPDK_ERRLOG("Incorrect data direction\n");
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		return SPDK_SCSI_TASK_COMPLETE;
+		if ((task->dxfer_dir == SPDK_SCSI_DIR_TO_DEV) ||
+		    (task->dxfer_dir == SPDK_SCSI_DIR_NONE)) {
+			return spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
+		} else {
+			SPDK_ERRLOG("Incorrect data direction\n");
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_NO_SENSE,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			return SPDK_SCSI_TASK_COMPLETE;
+		}
 	}
 }
 
@@ -1577,25 +1590,28 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		if (xfer_len == 0) {
 			xfer_len = 256;
 		}
-		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len);
+		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len,
+						cdb[0] == SPDK_SBC_READ_6);
 
 	case SPDK_SBC_READ_10:
 	case SPDK_SBC_WRITE_10:
 		lba = from_be32(&cdb[2]);
 		xfer_len = from_be16(&cdb[7]);
-		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len);
+		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len,
+						cdb[0] == SPDK_SBC_READ_10);
 
 	case SPDK_SBC_READ_12:
 	case SPDK_SBC_WRITE_12:
 		lba = from_be32(&cdb[2]);
 		xfer_len = from_be32(&cdb[6]);
-		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len);
-
+		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len,
+						cdb[0] == SPDK_SBC_READ_12);
 	case SPDK_SBC_READ_16:
 	case SPDK_SBC_WRITE_16:
 		lba = from_be64(&cdb[2]);
 		xfer_len = from_be32(&cdb[10]);
-		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len);
+		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len,
+						cdb[0] == SPDK_SBC_READ_16);
 
 	case SPDK_SBC_READ_CAPACITY_10: {
 		uint8_t buffer[8];

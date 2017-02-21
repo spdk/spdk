@@ -42,6 +42,17 @@ $MAKE $MAKEFLAGS clean
 timing_enter scanbuild_make
 fail=0
 time $scanbuild $MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR $MAKECONFIG || fail=1
+if [ $fail -eq 1 ]; then
+	if [ -d $out/scan-build-tmp ]; then
+		scanoutput=$(ls -1 $out/scan-build-tmp/)
+		mv $out/scan-build-tmp/$scanoutput $out/scan-build
+		rm -rf $out/scan-build-tmp
+		chmod -R a+rX $out/scan-build
+	fi
+	exit 1
+else
+	rm -rf $out/scan-build-tmp
+fi
 timing_exit scanbuild_make
 
 # Check that header file dependencies are working correctly by
@@ -50,19 +61,14 @@ timing_exit scanbuild_make
 STAT1=`stat examples/nvme/identify/identify`
 sleep 1
 touch lib/nvme/nvme_internal.h
-$MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR $MAKECONFIG || fail=1
+$MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR $MAKECONFIG
 STAT2=`stat examples/nvme/identify/identify`
 
 if [ "$STAT1" == "$STAT2" ]; then
-	fail=1
+	echo "Header dependency check failed"
+	exit 1
 fi
 
-if [ -d $out/scan-build-tmp ]; then
-	scanoutput=$(ls -1 $out/scan-build-tmp/)
-	mv $out/scan-build-tmp/$scanoutput $out/scan-build
-	rm -rf $out/scan-build-tmp
-	chmod -R a+rX $out/scan-build
-fi
 
 timing_enter doxygen
 if hash doxygen; then
@@ -74,5 +80,3 @@ fi
 timing_exit doxygen
 
 timing_exit autobuild
-
-exit $fail

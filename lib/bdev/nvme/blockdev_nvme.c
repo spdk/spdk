@@ -77,9 +77,6 @@ struct nvme_blockdev {
 	struct spdk_nvme_ctrlr	*ctrlr;
 	struct nvme_device	*dev;
 	struct spdk_nvme_ns	*ns;
-	uint64_t		lba_start;
-	uint64_t		lba_end;
-	uint64_t		blocklen;
 };
 
 struct nvme_io_channel {
@@ -109,9 +106,7 @@ enum data_direction {
 
 static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int blockdev_index_max = 0;
-static int nvme_luns_per_ns = 1;
 static int nvme_controller_index = 0;
-static int lun_size_in_mb = 0;
 static int num_controllers = -1;
 static int g_reset_controller_on_timeout = 0;
 static int g_timeout = 0;
@@ -119,8 +114,7 @@ static int g_nvme_adminq_poll_timeout_us = 0;
 
 static TAILQ_HEAD(, nvme_device)	g_nvme_devices = TAILQ_HEAD_INITIALIZER(g_nvme_devices);;
 
-static void nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev,
-		int bdev_per_ns, int ctrlr_id);
+static void nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int ctrlr_id);
 static int nvme_library_init(void);
 static void nvme_library_fini(void);
 static int nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
@@ -537,7 +531,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	spdk_pci_addr_parse(&dev->pci_addr, trid->traddr);
 	dev->id = nvme_controller_index++;
 
-	nvme_ctrlr_initialize_blockdevs(dev, nvme_luns_per_ns, dev->id);
+	nvme_ctrlr_initialize_blockdevs(dev, dev->id);
 
 	spdk_poller_register(&dev->adminq_timer_poller, blockdev_nvme_poll_adminq, ctrlr,
 			     spdk_app_get_current_core(), g_nvme_adminq_poll_timeout_us);
@@ -616,21 +610,6 @@ nvme_library_init(void)
 		return 0;
 	}
 
-	nvme_luns_per_ns = spdk_conf_section_get_intval(sp, "NvmeLunsPerNs");
-	if (nvme_luns_per_ns < 1)
-		nvme_luns_per_ns = 1;
-
-	if (nvme_luns_per_ns > NVME_MAX_BLOCKDEVS_PER_CONTROLLER) {
-		SPDK_ERRLOG("The input value nvme_luns_per_ns(%d) exceeds the maximal "
-			    "value(%d)\n", nvme_luns_per_ns, NVME_MAX_BLOCKDEVS_PER_CONTROLLER);
-		return -1;
-	}
-
-	lun_size_in_mb = spdk_conf_section_get_intval(sp, "LunSizeInMB");
-
-	if (lun_size_in_mb < 0)
-		lun_size_in_mb = 0;
-
 	spdk_nvme_retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount");
 	if (spdk_nvme_retry_count < 0)
 		spdk_nvme_retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
@@ -697,15 +676,13 @@ nvme_library_fini(void)
 }
 
 static void
-nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int bdev_per_ns, int ctrlr_id)
+nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int ctrlr_id)
 {
 	struct nvme_blockdev	*bdev;
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_dev->ctrlr;
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	uint64_t		bdev_size, lba_offset, sectors_per_stripe;
-	int			ns_id, num_ns, bdev_idx;
-	uint64_t lun_size_in_sector;
+	int			ns_id, num_ns;
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -718,65 +695,42 @@ nvme_ctrlr_initialize_blockdevs(struct nvme_device *nvme_dev, int bdev_per_ns, i
 			continue;
 		}
 
-		bdev_size = spdk_nvme_ns_get_num_sectors(ns) / bdev_per_ns;
-
-		/*
-		 * Align each blockdev on a 1MB boundary - this helps cover Fultondale case
-		 *  where I/O that span a 128KB boundary must be split for optimal performance.
-		 *  Using a 1MB hardcoded boundary here so that we do not have to export
-		 *  stripe size information from the NVMe driver for now.
-		 */
-		sectors_per_stripe = (1 << 20) / spdk_nvme_ns_get_sector_size(ns);
-
-		lun_size_in_sector = ((uint64_t)lun_size_in_mb << 20) / spdk_nvme_ns_get_sector_size(ns);
-		if ((lun_size_in_mb > 0) && (lun_size_in_sector < bdev_size))
-			bdev_size = lun_size_in_sector;
-
-		bdev_size &= ~(sectors_per_stripe - 1);
-
-		lba_offset = 0;
-		for (bdev_idx = 0; bdev_idx < bdev_per_ns; bdev_idx++) {
-			if (blockdev_index_max >= NVME_MAX_BLOCKDEVS)
-				return;
-
-			bdev = &g_blockdev[blockdev_index_max];
-			bdev->ctrlr = ctrlr;
-			bdev->dev = nvme_dev;
-			bdev->ns = ns;
-			bdev->lba_start = lba_offset;
-			bdev->lba_end = lba_offset + bdev_size - 1;
-			lba_offset += bdev_size;
-
-			snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
-				 "Nvme%dn%dp%d", ctrlr_id, spdk_nvme_ns_get_id(ns), bdev_idx);
-			snprintf(bdev->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH,
-				 "NVMe disk");
-
-			if (cdata->oncs.dsm) {
-				/*
-				 * Enable the thin provisioning
-				 * if nvme controller supports
-				 * DataSet Management command.
-				 */
-				bdev->disk.thin_provisioning = 1;
-				bdev->disk.max_unmap_bdesc_count =
-					NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT;
-			}
-
-			bdev->disk.write_cache = 0;
-			if (cdata->vwc.present) {
-				/* Enable if the Volatile Write Cache exists */
-				bdev->disk.write_cache = 1;
-			}
-			bdev->blocklen = spdk_nvme_ns_get_sector_size(ns);
-			bdev->disk.blocklen = bdev->blocklen;
-			bdev->disk.blockcnt = bdev->lba_end - bdev->lba_start + 1;
-			bdev->disk.ctxt = bdev;
-			bdev->disk.fn_table = &nvmelib_fn_table;
-			spdk_bdev_register(&bdev->disk);
-
-			blockdev_index_max++;
+		if (blockdev_index_max >= NVME_MAX_BLOCKDEVS) {
+			return;
 		}
+
+		bdev = &g_blockdev[blockdev_index_max];
+		bdev->ctrlr = ctrlr;
+		bdev->dev = nvme_dev;
+		bdev->ns = ns;
+
+		snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
+			 "Nvme%dn%d", ctrlr_id, spdk_nvme_ns_get_id(ns));
+		snprintf(bdev->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH,
+			 "NVMe disk");
+
+		if (cdata->oncs.dsm) {
+			/*
+			 * Enable the thin provisioning
+			 * if nvme controller supports
+			 * DataSet Management command.
+			 */
+			bdev->disk.thin_provisioning = 1;
+			bdev->disk.max_unmap_bdesc_count = NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT;
+		}
+
+		bdev->disk.write_cache = 0;
+		if (cdata->vwc.present) {
+			/* Enable if the Volatile Write Cache exists */
+			bdev->disk.write_cache = 1;
+		}
+		bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
+		bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
+		bdev->disk.ctxt = bdev;
+		bdev->disk.fn_table = &nvmelib_fn_table;
+		spdk_bdev_register(&bdev->disk);
+
+		blockdev_index_max++;
 	}
 }
 
@@ -840,8 +794,7 @@ nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
 {
 	uint32_t ss = spdk_nvme_ns_get_sector_size(bdev->ns);
 	uint32_t lba_count;
-	uint64_t relative_lba = offset / bdev->blocklen;
-	uint64_t next_lba = relative_lba + bdev->lba_start;
+	uint64_t lba = offset / bdev->disk.blocklen;
 	int rc;
 
 	if (nbytes % ss) {
@@ -858,11 +811,11 @@ nvme_queue_cmd(struct nvme_blockdev *bdev, struct spdk_nvme_qpair *qpair,
 	bio->iov_offset = 0;
 
 	if (direction == BDEV_DISK_READ) {
-		rc = spdk_nvme_ns_cmd_readv(bdev->ns, qpair, next_lba,
+		rc = spdk_nvme_ns_cmd_readv(bdev->ns, qpair, lba,
 					    lba_count, queued_done, bio, 0,
 					    queued_reset_sgl, queued_next_sge);
 	} else {
-		rc = spdk_nvme_ns_cmd_writev(bdev->ns, qpair, next_lba,
+		rc = spdk_nvme_ns_cmd_writev(bdev->ns, qpair, lba,
 					     lba_count, queued_done, bio, 0,
 					     queued_reset_sgl, queued_next_sge);
 	}
@@ -888,7 +841,7 @@ blockdev_nvme_unmap(struct nvme_blockdev *nbdev, struct spdk_io_channel *ch,
 	}
 
 	for (i = 0; i < bdesc_count; i++) {
-		dsm_range[i].starting_lba = nbdev->lba_start + from_be64(&unmap_d->lba);
+		dsm_range[i].starting_lba = from_be64(&unmap_d->lba);
 		dsm_range[i].length = from_be32(&unmap_d->block_count);
 		dsm_range[i].attributes.raw = 0;
 		unmap_d++;
@@ -910,15 +863,9 @@ blockdev_nvme_get_spdk_running_config(FILE *fp)
 {
 	fprintf(fp,
 		"\n"
-		"# Users may change this to partition an NVMe namespace into multiple LUNs.\n"
-		"[Nvme]\n"
-		"  NvmeLunsPerNs %d\n",
-		nvme_luns_per_ns);
+		"[Nvme]\n");
 	if (num_controllers != -1) {
 		fprintf(fp, "  NumControllers %d\n", num_controllers);
-	}
-	if (lun_size_in_mb != 0) {
-		fprintf(fp, "  LunSizeInMB %d\n", lun_size_in_mb);
 	}
 	fprintf(fp, "  # Set how often the admin queue is polled for asynchronous events.\n"
 		"  # Units in microseconds.\n"

@@ -163,7 +163,7 @@ spdk_trace_init(const char *shm_name)
 	int trace_fd;
 	int i = 0;
 
-	strncpy(g_shm_name, shm_name, sizeof(g_shm_name));
+	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
 	trace_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (trace_fd == -1) {

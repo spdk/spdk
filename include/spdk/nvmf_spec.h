@@ -425,7 +425,8 @@ struct spdk_nvmf_rdma_request_private_data {
 	uint16_t	qid;	/* queue id */
 	uint16_t	hrqsize;	/* host receive queue size */
 	uint16_t	hsqsize;	/* host send queue size */
-	uint8_t		reserved[24];
+	uint16_t 	cntlid;		/* controller id */
+	uint8_t 	reserved[22];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_rdma_request_private_data) == 32, "Incorrect size");
 
@@ -458,6 +459,7 @@ enum spdk_nvmf_rdma_transport_errors {
 	SPDK_NVMF_RDMA_ERROR_NO_RESOURCES			= 0x6,
 	SPDK_NVMF_RDMA_ERROR_INVALID_IRD			= 0x7,
 	SPDK_NVMF_RDMA_ERROR_INVALID_ORD			= 0x8,
+	SPDK_NVMF_RDMA_ERROR_INVALID_CNTLID			= 0x9,
 };
 
 #pragma pack(pop)

@@ -612,27 +612,20 @@ run_nvme_reset_cycle(int retry_count)
 	return 0;
 }
 
-static char *ealargs[] = {
-	"reset",
-	"-c 0x1",
-	"-n 4",
-};
-
 int main(int argc, char **argv)
 {
-	int rc;
-	int i;
+	int 			rc;
+	int 			i;
+	struct spdk_env_opts	opts;
+
+	spdk_env_opts_init(&opts);
+	opts.name = "reset";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
-	}
-
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
 	}
 
 	task_pool = rte_mempool_create("task_pool", 8192,

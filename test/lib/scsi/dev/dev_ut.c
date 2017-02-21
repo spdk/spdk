@@ -41,8 +41,20 @@
 #include "port.c"
 
 static uint32_t g_task_count = 0;
-static struct spdk_scsi_lun g_lun = {};
 static struct spdk_bdev g_bdev = {};
+
+struct lun_entry {
+	TAILQ_ENTRY(lun_entry) lun_entries;
+	struct spdk_scsi_lun *lun;
+};
+TAILQ_HEAD(, lun_entry) g_lun_head;
+
+static int
+test_setup(void)
+{
+	TAILQ_INIT(&g_lun_head);
+	return 0;
+}
 
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev)
@@ -77,9 +89,19 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 _spdk_scsi_lun *
 spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 {
-	snprintf(g_lun.name, sizeof(g_lun.name), "%s", name);
-	g_lun.bdev = bdev;
-	return &g_lun;
+	struct spdk_scsi_lun *lun;
+
+	lun = calloc(1, sizeof(struct spdk_scsi_lun));
+	snprintf(lun->name, sizeof(lun->name), "%s", name);
+	lun->bdev = bdev;
+	return lun;
+}
+
+int
+spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
+{
+	free(lun);
+	return 0;
 }
 
 struct spdk_bdev *
@@ -92,12 +114,34 @@ spdk_bdev_get_by_name(const char *bdev_name)
 int
 spdk_scsi_lun_claim(struct spdk_scsi_lun *lun)
 {
+	struct lun_entry *p;
+
+	TAILQ_FOREACH(p, &g_lun_head, lun_entries) {
+		CU_ASSERT_FATAL(p->lun != NULL);
+		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0)
+			return -1;
+	}
+
+	p = calloc(1, sizeof(struct lun_entry));
+	p->lun = lun;
+
+	TAILQ_INSERT_TAIL(&g_lun_head, p, lun_entries);
 	return 0;
 }
 
 int
 spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun)
 {
+	struct lun_entry *p, *tmp;
+
+	TAILQ_FOREACH_SAFE(p, &g_lun_head, lun_entries, tmp) {
+		CU_ASSERT_FATAL(p->lun != NULL);
+		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0) {
+			TAILQ_REMOVE(&g_lun_head, p, lun_entries);
+			free(p);
+			return 0;
+		}
+	}
 	return 0;
 }
 
@@ -167,14 +211,17 @@ static void
 dev_destruct_success(void)
 {
 	struct spdk_scsi_dev dev = { 0 };
-	struct spdk_scsi_lun lun = { 0 };
+	struct spdk_scsi_lun *lun;
+
+	lun = calloc(1, sizeof(struct spdk_scsi_lun));
 
 	/* dev with a single lun */
 	dev.maxlun = 1;
-	dev.lun[0] = &lun;
+	dev.lun[0] = lun;
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(&dev);
+
 }
 
 static void
@@ -232,6 +279,46 @@ dev_construct_success(void)
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(dev);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
+}
+
+static void
+dev_construct_same_lun_two_devices(void)
+{
+	struct spdk_scsi_dev *dev, *dev2;
+	char *lun_name_list[1] = {"malloc0"};
+	int lun_id_list[1] = { 0 };
+
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1);
+
+	/* Successfully constructs and returns a dev */
+	CU_ASSERT_TRUE(dev != NULL);
+
+	dev2 = spdk_scsi_dev_construct("Name2", lun_name_list, lun_id_list, 1);
+
+	/* Fails to construct dev and returns NULL */
+	CU_ASSERT_TRUE(dev2 == NULL);
+
+	/* free the dev */
+	spdk_scsi_dev_destruct(dev);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
+}
+
+static void
+dev_construct_same_lun_one_device(void)
+{
+	struct spdk_scsi_dev *dev;
+	char *lun_name_list[2] = {"malloc0", "malloc0"};
+	int lun_id_list[2] = { 0, 1 };
+
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 2);
+
+	/* Fails to construct dev and returns NULL */
+	CU_ASSERT_TRUE(dev == NULL);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
 }
 
 static void
@@ -455,7 +542,7 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	suite = CU_add_suite("dev_suite", NULL, NULL);
+	suite = CU_add_suite("dev_suite", test_setup, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
@@ -474,6 +561,10 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "construct  - null lun",
 			       dev_construct_null_lun) == NULL
 		|| CU_add_test(suite, "construct  - success", dev_construct_success) == NULL
+		|| CU_add_test(suite, "construct  - same lun on two devices",
+			       dev_construct_same_lun_two_devices) == NULL
+		|| CU_add_test(suite, "construct  - same lun on once device",
+			       dev_construct_same_lun_one_device) == NULL
 		|| CU_add_test(suite, "dev queue task mgmt - success",
 			       dev_queue_mgmt_task_success) == NULL
 		|| CU_add_test(suite, "dev queue task - success",

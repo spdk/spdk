@@ -36,8 +36,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
-APP = event
-C_SRCS := event.c
+APP = reactor_perf
+C_SRCS := reactor_perf.c
 
 SPDK_LIB_LIST = event trace conf util log
 

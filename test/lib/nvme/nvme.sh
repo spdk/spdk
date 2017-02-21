@@ -12,26 +12,20 @@ function linux_iter_pci {
 
 timing_enter nvme
 
-timing_enter unit
-$valgrind $testdir/unit/nvme_ns_cmd_c/nvme_ns_cmd_ut
-$valgrind $testdir/unit/nvme_c/nvme_ut
-$valgrind $testdir/unit/nvme_qpair_c/nvme_qpair_ut
-$valgrind $testdir/unit/nvme_ctrlr_c/nvme_ctrlr_ut
-$valgrind $testdir/unit/nvme_ctrlr_cmd_c/nvme_ctrlr_cmd_ut
-$valgrind $testdir/unit/nvme_pcie_c/nvme_pcie_ut
-$valgrind $testdir/unit/nvme_quirks_c/nvme_quirks_ut
-timing_exit unit
-
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter aer
 	$testdir/aer/aer
 	timing_exit aer
+
+	timing_enter reset
+	$testdir/reset/reset -q 64 -w write -s 4096 -t 2
+	timing_exit reset
 fi
 
 timing_enter identify
 $rootdir/examples/nvme/identify/identify
 for bdf in $(linux_iter_pci 0108); do
-	$rootdir/examples/nvme/identify/identify -a ${bdf}
+	$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}"
 done
 timing_exit identify
 
@@ -67,32 +61,27 @@ timing_exit arbitration
 
 if [ $(uname -s) = Linux ]; then
 	timing_enter multi_process
-	$rootdir/examples/nvme/arbitration/arbitration -s 4096 -t 10 -c 0xf &
+	$rootdir/examples/nvme/arbitration/arbitration -i 0 -s 4096 -t 10 -c 0xf &
 	pid=$!
 	sleep 3
-	$rootdir/examples/nvme/perf/perf -q 1 -w randread -s 4096 -t 10 -c 0x10 &
+	$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w randread -s 4096 -t 10 -c 0x10 &
 	sleep 1
 	kill -9 $!
 	count=0
 	while [ $count -le 2 ]; do
-		$rootdir/examples/nvme/perf/perf -q 1 -w read -s 4096 -t 1 -c 0x10
+		$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w read -s 4096 -t 1 -c 0x10
 		count=$(($count + 1))
 	done
 	count=0
 	while [ $count -le 1 ]; do
 		core=$((1 << (($count + 4))))
 		printf -v hexcore "0x%x" "$core"
-		$rootdir/examples/nvme/perf/perf -q 128 -w read -s 4096 -t 1 -c $hexcore &
+		$rootdir/examples/nvme/perf/perf -i 0 -q 128 -w read -s 4096 -t 1 -c $hexcore &
 		count=$(($count + 1))
 	done
 	wait $pid
 	timing_exit multi_process
 fi
-
-#Now test nvme reset function
-timing_enter reset
-$testdir/reset/reset -q 64 -w write -s 4096 -t 2
-timing_exit reset
 
 timing_enter sgl
 $testdir/sgl/sgl

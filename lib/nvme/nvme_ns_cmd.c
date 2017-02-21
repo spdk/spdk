@@ -140,20 +140,23 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 			   uint32_t sectors_per_max_io, uint32_t sector_mask,
 			   uint16_t apptag_mask, uint16_t apptag)
 {
-	uint32_t		sector_size = ns->sector_size;
+	uint32_t		sector_size;
 	uint32_t		md_size = ns->md_size;
 	uint32_t		remaining_lba_count = lba_count;
 	struct nvme_request	*child;
 
-	if (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
-		/* for extended LBA only */
-		if ((ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) && !(io_flags & SPDK_NVME_IO_FLAGS_PRACT))
-			sector_size += ns->md_size;
+	sector_size = ns->extended_lba_size;
+
+	if ((io_flags & SPDK_NVME_IO_FLAGS_PRACT) &&
+	    (ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) &&
+	    (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) &&
+	    (md_size == 8)) {
+		sector_size -= 8;
 	}
 
 	while (remaining_lba_count > 0) {
 		lba_count = sectors_per_max_io - (lba & sector_mask);
-		lba_count = nvme_min(remaining_lba_count, lba_count);
+		lba_count = spdk_min(remaining_lba_count, lba_count);
 
 		child = _nvme_add_child_request(ns, payload, payload_offset, md_offset,
 						lba, lba_count, cb_fn, cb_arg, opc,
@@ -275,10 +278,10 @@ _nvme_ns_cmd_split_sgl_request(struct spdk_nvme_ns *ns,
 			struct nvme_request *child;
 			uint32_t child_lba_count;
 
-			if ((child_length % ns->sector_size) != 0) {
+			if ((child_length % ns->extended_lba_size) != 0) {
 				return NULL;
 			}
-			child_lba_count = child_length / ns->sector_size;
+			child_lba_count = child_length / ns->extended_lba_size;
 			/*
 			 * Note the last parameter is set to "false" - this tells the recursive
 			 *  call to _nvme_ns_cmd_rw() to not bother with checking for SGL splitting
@@ -322,14 +325,15 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, const struct nvme_payload *payload,
 		return NULL;
 	}
 
-	sector_size = ns->sector_size;
+	sector_size = ns->extended_lba_size;
 	sectors_per_max_io = ns->sectors_per_max_io;
 	sectors_per_stripe = ns->sectors_per_stripe;
 
-	if (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
-		/* for extended LBA only */
-		if ((ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) && !(io_flags & SPDK_NVME_IO_FLAGS_PRACT))
-			sector_size += ns->md_size;
+	if ((io_flags & SPDK_NVME_IO_FLAGS_PRACT) &&
+	    (ns->flags & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED) &&
+	    (ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED) &&
+	    (ns->md_size == 8)) {
+		sector_size -= 8;
 	}
 
 	req = nvme_allocate_request(payload, lba_count * sector_size, cb_fn, cb_arg);

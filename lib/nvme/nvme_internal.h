@@ -55,6 +55,7 @@
 #include "spdk/bit_array.h"
 #include "spdk/mmio.h"
 #include "spdk/pci_ids.h"
+#include "spdk/util.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
 
@@ -262,6 +263,14 @@ struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
 	uint32_t			stripe_size;
 	uint32_t			sector_size;
+
+	/*
+	 * Size of data transferred as part of each block,
+	 * including metadata if FLBAS indicates the metadata is transferred
+	 * as part of the data buffer at the end of each LBA.
+	 */
+	uint32_t			extended_lba_size;
+
 	uint32_t			md_size;
 	uint32_t			pi_type;
 	uint32_t			sectors_per_max_io;
@@ -427,25 +436,7 @@ struct nvme_driver {
 
 extern struct nvme_driver *g_spdk_nvme_driver;
 
-#define nvme_min(a,b) (((a)<(b))?(a):(b))
-
 #define nvme_delay		usleep
-
-static inline uint32_t
-nvme_u32log2(uint32_t x)
-{
-	if (x == 0) {
-		/* __builtin_clz(0) is undefined, so just bail */
-		return 0;
-	}
-	return 31u - __builtin_clz(x);
-}
-
-static inline uint32_t
-nvme_align32pow2(uint32_t x)
-{
-	return 1u << (1 + nvme_u32log2(x - 1));
-}
 
 static inline bool
 nvme_qpair_is_admin_queue(struct spdk_nvme_qpair *qpair)
@@ -535,7 +526,6 @@ void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 				  struct nvme_request *req);
-void	nvme_qpair_fail(struct spdk_nvme_qpair *qpair);
 
 int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
@@ -568,7 +558,6 @@ void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_scan(const struct spdk_nvme_transport_id *trid, void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_remove_cb remove_cb); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \
 	int nvme_ ## name ## _ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value); \
 	int nvme_ ## name ## _ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value); \

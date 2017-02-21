@@ -42,6 +42,9 @@
 extern "C" {
 #endif
 
+/** Compiler memory barrier */
+#define spdk_compiler_barrier() __asm volatile("" ::: "memory")
+
 /** Write memory barrier */
 #define spdk_wmb()	__asm volatile("sfence" ::: "memory")
 

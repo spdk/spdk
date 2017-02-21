@@ -56,3 +56,26 @@ the target requires elevated privileges (root) to run.
 ~~~{.sh}
 app/nvmf_tgt/nvmf_tgt -c /path/to/nvmf.conf
 ~~~
+
+# Configuring NVMe over Fabrics Host {#nvmf_host}
+
+Both the Linux kernel and SPDK implemented NVMe over Fabrics host. Users who want to test
+`nvmf_tgt` with kernel based host should upgrade to Linux kernel 4.8 or later, or can use
+Linux distributions Fedora or Ubuntu with Linux 4.8 kernel or later. A client tool nvme-cli
+is recommended to connect/disconect with NVMe over Fabrics target subsystems. Before
+connecting to remote subsystems, users should verify nvme-rdma driver is loaded.
+
+Discovery:
+~~~{.sh}
+nvme discover -t rdma -a 192.168.100.8 -s 4420
+~~~
+
+Connect:
+~~~{.sh}
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a 192.168.100.8 -s 4420
+~~~
+
+Disconnect:
+~~~{.sh}
+nvme disconnect -n "nqn.2016-06.io.spdk.cnode1"
+~~~

@@ -37,9 +37,6 @@
 #include <assert.h>
 #include <pthread.h>
 
-#include "rte_config.h"
-#include "rte_eal.h"
-
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -123,7 +120,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct thread_data 	*td = cb_ctx;
-	struct spdk_fio_thread	*fio_thread = td->io_ops->data;
+	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_ns	*fio_ns;
 	struct fio_file *f;
@@ -175,34 +172,26 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-static char *ealargs[] = {
-	"fio",
-	"-n 4",
-	"--proc-type=auto",
-};
-
 /* Called once at initialization. This is responsible for gathering the size of
  * each "file", which in our case are in the form
  * "05:00.0/0" (PCI bus:device.function/NVMe NSID) */
 static int spdk_fio_setup(struct thread_data *td)
 {
-	int rc;
 	struct spdk_fio_thread *fio_thread;
+	struct spdk_env_opts opts;
 
 	fio_thread = calloc(1, sizeof(*fio_thread));
 	assert(fio_thread != NULL);
 
-	td->io_ops->data = fio_thread;
+	td->io_ops_data = fio_thread;
 	fio_thread->td = td;
 
 	fio_thread->iocq = calloc(td->o.iodepth + 1, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "fio";
+	spdk_env_init(&opts);
 
 	/* Enumerate all of the controllers */
 	if (spdk_nvme_probe(NULL, td, probe_cb, attach_cb, NULL) != 0) {
@@ -236,7 +225,7 @@ static void spdk_fio_iomem_free(struct thread_data *td)
 
 static int spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)
 {
-	struct spdk_fio_thread	*fio_thread = td->io_ops->data;
+	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_request	*fio_req;
 
 	fio_req = calloc(1, sizeof(*fio_req));
@@ -276,7 +265,7 @@ static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 {
 	int rc = 1;
-	struct spdk_fio_thread	*fio_thread = td->io_ops->data;
+	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_request	*fio_req = io_u->engine_data;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_ns	*fio_ns;
@@ -328,7 +317,7 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 
 static struct io_u *spdk_fio_event(struct thread_data *td, int event)
 {
-	struct spdk_fio_thread *fio_thread = td->io_ops->data;
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	int idx = (fio_thread->getevents_start + event) % td->o.iodepth;
 
 	if (event > (int)fio_thread->getevents_count) {
@@ -341,7 +330,7 @@ static struct io_u *spdk_fio_event(struct thread_data *td, int event)
 static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			      unsigned int max, const struct timespec *t)
 {
-	struct spdk_fio_thread *fio_thread = td->io_ops->data;
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr *fio_ctrlr;
 	unsigned int count = 0;
 	struct timespec t0, t1;
@@ -390,7 +379,7 @@ static int spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
 
 static void spdk_fio_cleanup(struct thread_data *td)
 {
-	struct spdk_fio_thread	*fio_thread = td->io_ops->data;
+	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr	*fio_ctrlr, *fio_ctrlr_tmp;
 	struct spdk_fio_ns	*fio_ns, *fio_ns_tmp;
 

@@ -47,9 +47,6 @@
 #define MAX_VIRTUAL_NAMESPACE 16
 #define MAX_SN_LEN 20
 
-#define nvmf_min(a,b) (((a)<(b))?(a):(b))
-#define nvmf_max(a,b) (((a)>(b))?(a):(b))
-
 int spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
 		       uint32_t in_capsule_data_size, uint32_t max_io_size);
 
@@ -105,7 +102,7 @@ struct spdk_nvmf_ctrlr_ops {
 	/**
 	 * Poll for completions.
 	 */
-	void (*poll_for_completions)(struct spdk_nvmf_session *session);
+	void (*poll_for_completions)(struct spdk_nvmf_subsystem *subsystem);
 
 	/**
 	 * Detach the controller.
@@ -174,11 +171,11 @@ bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, con
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 char *trname, char *traddr, char *trsvcid);
+				 const char *trname, const char *traddr, const char *trsvcid);
 
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
-			     char *host_nqn);
+			     const char *host_nqn);
 
 int
 nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,

@@ -31,7 +31,7 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-BLOCKDEV_MODULES_LIST = bdev_malloc bdev_nvme nvme
+BLOCKDEV_MODULES_LIST = bdev_malloc bdev_nvme nvme vbdev_split
 
 ifeq ($(CONFIG_RDMA),y)
 BLOCKDEV_MODULES_DEPS += -libverbs -lrdmacm

@@ -54,24 +54,32 @@ DPDK_INC = -I$(DPDK_ABS_DIR)/include
 else
 DPDK_INC = -I$(DPDK_ABS_DIR)/include/dpdk
 endif
-DPDK_LIB = $(DPDK_ABS_DIR)/lib/librte_eal.a $(DPDK_ABS_DIR)/lib/librte_mempool.a \
-	   $(DPDK_ABS_DIR)/lib/librte_ring.a
+
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_eal.a))
+DPDK_LIB_EXT = .a
+else
+DPDK_LIB_EXT = .so
+endif
+
+DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
 
 # librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
 #  existence to maintain backward compatibility.
 ifneq ($(wildcard $(DPDK_ABS_DIR)/lib/librte_malloc.*),)
-DPDK_LIB += $(DPDK_ABS_DIR)/lib/librte_malloc.a
+DPDK_LIB_LIST += rte_malloc
 endif
 
-ifeq ($(OS),Linux)
-DPDK_LIB += -ldl
-endif
-ifeq ($(OS),FreeBSD)
-DPDK_LIB += -lexecinfo
-endif
+DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
 
 ENV_CFLAGS = $(DPDK_INC)
 ENV_CXXFLAGS = $(ENV_CFLAGS)
 ENV_DPDK_FILE = $(call spdk_lib_list_to_files,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--start-group -Wl,--whole-archive $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
+
+ifeq ($(OS),Linux)
+ENV_LINKER_ARGS += -ldl
+endif
+ifeq ($(OS),FreeBSD)
+ENV_LINKER_ARGS += -lexecinfo
+endif

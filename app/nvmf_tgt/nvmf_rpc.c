@@ -294,6 +294,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 	struct rpc_subsystem req = {};
 	struct spdk_json_write_ctx *w;
 	int ret;
+	req.core = -1;	/* Explicitly set the core as the uninitialized value */
 
 	if (spdk_json_decode_object(params, rpc_subsystem_decoders,
 				    sizeof(rpc_subsystem_decoders) / sizeof(*rpc_subsystem_decoders),

@@ -54,14 +54,14 @@ extern "C" {
 }
 
 static char *exe_name;
-static int g_instance_id = 0;
+static int g_shm_id = 0;
 
 static void usage(void)
 {
 	fprintf(stderr, "usage:\n");
 	fprintf(stderr, "   %s <option>\n", exe_name);
-	fprintf(stderr, "        option = '-i' to specify the instance ID,"
-		" (default: 0)\n");
+	fprintf(stderr, "        option = '-i' to specify the shared memory ID,"
+		" (required)\n");
 }
 
 static bool
@@ -90,7 +90,7 @@ print_connections(void)
 	int			fd, i;
 	char			shm_name[64];
 
-	sprintf(shm_name, "spdk_iscsi_conns.%d", g_instance_id);
+	sprintf(shm_name, "spdk_iscsi_conns.%d", g_shm_id);
 	fd = shm_open(shm_name, O_RDONLY, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "Cannot open shared memory: %s\n", shm_name);
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
 	while ((op = getopt(argc, argv, "i:")) != -1) {
 		switch (op) {
 		case 'i':
-			g_instance_id = atoi(optarg);
+			g_shm_id = atoi(optarg);
 			break;
 		default:
 			usage();
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	sprintf(spdk_trace_shm_name, "/iscsi_trace.%d", g_instance_id);
+	sprintf(spdk_trace_shm_name, "/iscsi_trace.%d", g_shm_id);
 	history_fd = shm_open(spdk_trace_shm_name, O_RDONLY, 0600);
 	if (history_fd < 0) {
 		fprintf(stderr, "Unable to open history shm %s\n", spdk_trace_shm_name);

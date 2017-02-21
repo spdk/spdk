@@ -39,7 +39,7 @@
 #include "spdk/env.h"
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = NULL;
 	if (posix_memalign(&buf, align, size)) {
@@ -47,6 +47,17 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 	}
 	if (phys_addr) {
 		*phys_addr = (uint64_t)buf;
+	}
+	return buf;
+}
+
+void *
+spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+{
+	void *buf = spdk_malloc(size, align, phys_addr);
+
+	if (buf != NULL) {
+		memset(buf, 0, size);
 	}
 	return buf;
 }
@@ -98,7 +109,7 @@ spdk_memzone_free(const char *name)
 
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
-		    size_t ele_size, size_t cache_size)
+		    size_t ele_size, size_t cache_size, int socket_id)
 {
 	static int mp = 0;
 

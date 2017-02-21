@@ -69,6 +69,12 @@ struct spdk_nvmf_transport {
 	int (*listen_addr_add)(struct spdk_nvmf_listen_addr *listen_addr);
 
 	/**
+	  * Instruct to remove listening on the address provided. This
+	  * may be called multiple times.
+	  */
+	int (*listen_addr_remove)(struct spdk_nvmf_listen_addr *listen_addr);
+
+	/**
 	 * Fill out a discovery log entry for a specific listen address.
 	 */
 	void (*listen_addr_discover)(struct spdk_nvmf_listen_addr *listen_addr,

@@ -570,26 +570,19 @@ register_controllers(void)
 	return 0;
 }
 
-static char *ealargs[] = {
-	"perf",
-	"-c 0x1",
-	"-n 4",
-};
-
 int main(int argc, char **argv)
 {
-	int rc;
+	int 			rc;
+	struct spdk_env_opts	opts;
+
+	spdk_env_opts_init(&opts);
+	opts.name = "overhead";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
-	}
-
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
 	}
 
 	g_task = spdk_zmalloc(sizeof(struct perf_task), 0, NULL);

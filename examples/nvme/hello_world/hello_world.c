@@ -36,9 +36,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <rte_config.h>
-#include <rte_eal.h>
-
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 
@@ -269,7 +266,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	g_controllers = entry;
 
 	/*
-	 * Each controller has one of more namespaces.  An NVMe namespace is basically
+	 * Each controller has one or more namespaces.  An NVMe namespace is basically
 	 *  equivalent to a SCSI LUN.  The controller's IDENTIFY data tells us how
 	 *  many namespaces exist on the controller.  For Intel(R) P3X00 controllers,
 	 *  it will just be one namespace.
@@ -304,32 +301,20 @@ cleanup(void)
 	}
 }
 
-static char *ealargs[] = {
-	"hello_world",
-	"-c 0x1",
-	"-n 4",
-	"--proc-type=auto",
-};
-
 int main(int argc, char **argv)
 {
 	int rc;
+	struct spdk_env_opts opts;
 
 	/*
-	 * By default, the SPDK NVMe driver uses DPDK for huge page-based
-	 *  memory management and NVMe request buffer pools.  Huge pages can
-	 *  be either 2MB or 1GB in size (instead of 4KB) and are pinned in
-	 *  memory.  Pinned memory is important to ensure DMA operations
-	 *  never target swapped out memory.
+	 * SPDK relies on an abstraction around the local environment
+	 * named env that handles memory allocation and PCI device operations.
+	 * This library must be initialized first.
 	 *
-	 * So first we must initialize DPDK.  "-c 0x1" indicates to only use
-	 *  core 0.
 	 */
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "hello_world";
+	spdk_env_init(&opts);
 
 	printf("Initializing NVMe Controllers\n");
 

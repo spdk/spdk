@@ -32,6 +32,7 @@
  */
 
 #include <arpa/inet.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "session.h"
@@ -46,8 +47,6 @@
 #include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
-
-static uint16_t g_next_cntlid = 1;
 
 static void
 nvmf_init_discovery_session_properties(struct spdk_nvmf_session *session)
@@ -100,7 +99,7 @@ nvmf_init_nvme_session_properties(struct spdk_nvmf_session *session)
 	session->vcdata.cntlid = session->cntlid;
 	session->vcdata.kas = 10;
 	session->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
-	session->vcdata.mdts = nvmf_u32log2(g_nvmf_tgt.max_io_size / 4096);
+	session->vcdata.mdts = spdk_u32log2(g_nvmf_tgt.max_io_size / 4096);
 	session->vcdata.sgls.keyed_sgl = 1;
 	session->vcdata.sgls.sgl_offset = 1;
 
@@ -191,6 +190,44 @@ invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp, uint8_t iattr
 	rsp->status_code_specific.invalid.ipo = ipo;
 }
 
+static uint16_t
+spdk_nvmf_session_gen_cntlid(void)
+{
+	static uint16_t cntlid = 0; /* cntlid is static, so its value is preserved */
+	struct spdk_nvmf_subsystem *subsystem;
+	uint16_t count;
+
+	count = UINT16_MAX - 1;
+	do {
+		/* cntlid is an unsigned 16-bit integer, so let it overflow
+		 * back to 0 if necessary.
+		 */
+		cntlid++;
+		if (cntlid == 0) {
+			/* 0 is not a valid cntlid because it is the reserved value in the RDMA
+			 * private data for cntlid. This is the value sent by pre-NVMe-oF 1.1
+			 * initiators.
+			 */
+			cntlid++;
+		}
+
+		/* Check if a subsystem with this cntlid currently exists. This could
+		 * happen for a very long-lived session on a target with many short-lived
+		 * sessions, where cntlid wraps around.
+		 */
+		subsystem = spdk_nvmf_find_subsystem_with_cntlid(cntlid);
+
+		count--;
+
+	} while (subsystem != NULL && count > 0);
+
+	if (count == 0) {
+		return 0;
+	}
+
+	return cntlid;
+}
+
 void
 spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			  struct spdk_nvmf_fabric_connect_cmd *cmd,
@@ -260,7 +297,13 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 
 		TAILQ_INIT(&session->connections);
 
-		session->cntlid = g_next_cntlid++;
+		session->cntlid = spdk_nvmf_session_gen_cntlid();
+		if (session->cntlid == 0) {
+			/* Unable to get a cntlid */
+			SPDK_ERRLOG("Reached max simultaneous sessions\n");
+			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			return;
+		}
 		session->kato = cmd->kato;
 		session->async_event_config.raw = 0;
 		session->num_connections = 0;
@@ -695,5 +738,28 @@ spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req)
 	rsp->cdw0 = ((nr_io_queues - 1) << 16) |
 		    (nr_io_queues - 1);
 
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_set_features_async_event_configuration(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
+		      cmd->cdw11);
+	session->async_event_config.raw = cmd->cdw11;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_session_get_features_async_event_configuration(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
+	rsp->cdw0 = session->async_event_config.raw;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

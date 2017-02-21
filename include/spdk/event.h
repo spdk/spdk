@@ -31,44 +31,12 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
-* Event framework public API.
-*
-* This is a framework for writing asynchronous, polled-mode, shared-nothing
-* server applications. The framework relies on DPDK for much of its underlying
-* architecture. The framework defines several concepts - reactors, events, pollers,
-* and subsystems - that are described in the following sections.
-*
-* The framework runs one thread per core (the user provides a core mask), where
-* each thread is a tight loop. The threads never block for any reason. These threads
-* are called reactors and their main responsibility is to process incoming events
-* from a queue.
-*
-* An event, defined by \ref spdk_event is a bundled function pointer and arguments that
-* can be sent to a different core and executed. The function pointer is executed only once,
-* and then the entire event is freed. These functions should never block and preferably
-* should execute very quickly. Events also have a pointer to a 'next' event that will be
-* executed upon completion of the given event, which allows chaining. This is
-* very much a simplified version of futures, promises, and continuations designed within
-* the constraints of the C programming language.
-*
-* The framework also defines another type of function called a poller. Pollers are also
-* functions with arguments that can be bundled and sent to a different core to be executed,
-* but they are instead executed repeatedly on that core until unregistered. The reactor
-* will handle interspersing calls to the pollers with other event processing automatically.
-* Pollers are intended to poll hardware as a replacement for interrupts and they should not
-* generally be used for any other purpose.
-*
-* The framework also defines an interface for subsystems, which are libraries of code that
-* depend on this framework. A library can register itself as a subsystem and provide
-* pointers to initialize and destroy itself which will be called at the appropriate time.
-* This is purely for sequencing initialization code in a convenient manner within the
-* framework.
-*
-* The framework itself is bundled into a higher level abstraction called an "app". Once
-* \ref spdk_app_start is called it will block the current thread until the application
-* terminates (by calling \ref spdk_app_stop).
-*/
+/**
+ * \file
+ * Event framework public API.
+ *
+ * See @ref event_components for an overview of the SPDK event framework API.
+ */
 
 #ifndef SPDK_EVENT_H
 #define SPDK_EVENT_H
@@ -107,14 +75,14 @@ struct spdk_app_opts {
 	const char *log_facility;
 	const char *tpoint_group_mask;
 
-	int instance_id;
+	int shm_id;
 
 	spdk_app_shutdown_cb	shutdown_cb;
 	spdk_sighandler_t	usr1_handler;
 
 	bool			enable_coredump;
-	uint32_t		dpdk_mem_channel;
-	uint32_t 		dpdk_master_core;
+	int			dpdk_mem_channel;
+	int	 		dpdk_master_core;
 	int			dpdk_mem_size;
 
 	/* The maximum latency allowed when passing an event
@@ -129,11 +97,6 @@ struct spdk_app_opts {
  * \brief Initialize the default value of opts
 */
 void spdk_app_opts_init(struct spdk_app_opts *opts);
-
-/**
- * \brief Initialize DPDK via opts.
-*/
-void spdk_dpdk_framework_init(struct spdk_app_opts *opts);
 
 /**
  * \brief Initialize an application to use the event framework. This must be called prior to using
@@ -171,9 +134,9 @@ void spdk_app_stop(int rc);
 int spdk_app_get_running_config(char **config_str, char *name);
 
 /**
- * \brief Return the instance id for this application.
+ * \brief Return the shared memory id for this application.
 */
-int spdk_app_get_instance_id(void);
+int spdk_app_get_shm_id(void);
 
 /**
  * \brief Convert a string containing a CPU core mask into a bitmask
@@ -205,9 +168,6 @@ struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
  * \brief Pass the given event to the associated lcore and call the function.
  */
 void spdk_event_call(struct spdk_event *event);
-
-/* TODO: This is only used by tests and should be made private */
-uint32_t spdk_event_queue_run_batch(uint32_t lcore);
 
 /**
  * \brief Register a poller on the given lcore.

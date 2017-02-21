@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = nvme_c nvme_ns_cmd_c nvme_qpair_c nvme_ctrlr_c \
-         nvme_ctrlr_cmd_c nvme_pcie_c nvme_quirks_c
+         nvme_ctrlr_cmd_c nvme_pcie_c nvme_quirks_c nvme_ns_c
 
 .PHONY: all clean $(DIRS-y)
 

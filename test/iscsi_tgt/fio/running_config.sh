@@ -2,23 +2,20 @@
 
 set -xe
 
-if [ $EUID -ne 0 ]; then
-	echo "$0 must be run as root"
-	exit 1
-fi
+pid="$1"
 
-if [ ! -f /var/run/iscsi.pid.0 ]; then
-	echo "ids is not running"
+if [[ -z "$pid" ]]; then
+	echo "usage: $0 pid"
 	exit 1
 fi
 
 # delete any existing temporary iscsi.conf files
 rm -f /tmp/iscsi.conf.*
 
-kill -USR1 `cat /var/run/iscsi.pid.0`
+kill -USR1 "$pid"
 
 if [ ! -f `ls /tmp/iscsi.conf.*` ]; then
-	echo "ids did not generate config file"
+	echo "iscsi_tgt did not generate config file"
 	exit 1
 fi
 

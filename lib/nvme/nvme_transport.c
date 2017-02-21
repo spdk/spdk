@@ -110,12 +110,6 @@ nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
-nvme_transport_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
-{
-	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_get_pci_id, (ctrlr, pci_id));
-}
-
-int
 nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_set_reg_4, (ctrlr, offset, value));

@@ -132,12 +132,12 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_session *session;
 
-	TAILQ_FOREACH(session, &subsystem->sessions, link) {
-		/* For NVMe subsystems, check the backing physical device for completions. */
-		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-			session->subsys->ops->poll_for_completions(session);
-		}
+	/* For NVMe subsystems, check the backing physical device for completions. */
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+		subsystem->ops->poll_for_completions(subsystem);
+	}
 
+	TAILQ_FOREACH(session, &subsystem->sessions, link) {
 		/* For each connection in the session, check for completions */
 		spdk_nvmf_session_poll(session);
 	}
@@ -225,10 +225,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	TAILQ_FOREACH_SAFE(listen_addr, &subsystem->listen_addrs, link, listen_addr_tmp) {
 		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr->trname);
-		free(listen_addr);
+		spdk_nvmf_listen_addr_destroy(listen_addr);
 		subsystem->num_listen_addrs--;
 	}
 
@@ -255,7 +252,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 char *trname, char *traddr, char *trsvcid)
+				 const char *trname, const char *traddr, const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
@@ -266,29 +263,8 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -1;
 	}
 
-	listen_addr = calloc(1, sizeof(*listen_addr));
+	listen_addr = spdk_nvmf_listen_addr_create(trname, traddr, trsvcid);
 	if (!listen_addr) {
-		return -1;
-	}
-
-	listen_addr->traddr = strdup(traddr);
-	if (!listen_addr->traddr) {
-		free(listen_addr);
-		return -1;
-	}
-
-	listen_addr->trsvcid = strdup(trsvcid);
-	if (!listen_addr->trsvcid) {
-		free(listen_addr->traddr);
-		free(listen_addr);
-		return -1;
-	}
-
-	listen_addr->trname = strdup(trname);
-	if (!listen_addr->trname) {
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr);
 		return -1;
 	}
 
@@ -306,7 +282,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 }
 
 int
-spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_nqn)
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *host_nqn)
 {
 	struct spdk_nvmf_host *host;
 
@@ -419,7 +395,7 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 
 	/* Copy the valid part of the discovery log page, if any */
 	if (g_discovery_log_page && offset < g_discovery_log_page_size) {
-		copy_len = nvmf_min(g_discovery_log_page_size - offset, length);
+		copy_len = spdk_min(g_discovery_log_page_size - offset, length);
 		zero_len -= copy_len;
 		memcpy(buffer, (char *)g_discovery_log_page + offset, copy_len);
 	}

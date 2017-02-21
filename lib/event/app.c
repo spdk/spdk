@@ -49,6 +49,7 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/trace.h"
@@ -56,19 +57,14 @@
 #define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
 #define SPDK_APP_DEFAULT_LOG_PRIORITY	"info"
 
-#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		2048
-#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	0
-#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	4
+#define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
+#define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
+#define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
-
-/* Add enough here to append ".pid" plus 2 digit instance ID */
-#define SPDK_APP_PIDFILE_MAX_LENGTH	40
-#define SPDK_APP_PIDFILE_PREFIX		"/var/run"
 
 struct spdk_app {
 	struct spdk_conf		*config;
-	char				pidfile[SPDK_APP_PIDFILE_MAX_LENGTH];
-	int				instance_id;
+	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
 };
@@ -76,13 +72,10 @@ struct spdk_app {
 static struct spdk_app g_spdk_app;
 static struct spdk_event *g_shutdown_event = NULL;
 
-static int spdk_app_write_pidfile(void);
-static void spdk_app_remove_pidfile(void);
-
 int
-spdk_app_get_instance_id(void)
+spdk_app_get_shm_id(void)
 {
-	return g_spdk_app.instance_id;
+	return g_spdk_app.shm_id;
 }
 
 /* Global section */
@@ -224,7 +217,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 
 	opts->log_facility = SPDK_APP_DEFAULT_LOG_FACILITY;
 	opts->enable_coredump = true;
-	opts->instance_id = -1;
+	opts->shm_id = -1;
 	opts->dpdk_mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
 	opts->dpdk_master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->dpdk_mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
@@ -243,6 +236,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	int			rc;
 	uint64_t		tpoint_group_mask;
 	char			*end;
+	struct spdk_env_opts env_opts = {};
 
 	if (opts->enable_coredump) {
 		struct rlimit core_limits;
@@ -268,24 +262,21 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 	spdk_conf_set_as_default(config);
 
-	if (opts->instance_id == -1) {
+	if (opts->shm_id == -1) {
 		sp = spdk_conf_find_section(config, "Global");
 		if (sp != NULL) {
-			opts->instance_id = spdk_conf_section_get_intval(sp, "InstanceID");
+			opts->shm_id = spdk_conf_section_get_intval(sp, "SharedMemoryID");
 		}
 	}
 
-	if (opts->instance_id < 0) {
-		opts->instance_id = 0;
+	if (opts->shm_id < 0) {
+		opts->shm_id = getpid();
 	}
 
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
-	g_spdk_app.instance_id = opts->instance_id;
+	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
-	snprintf(g_spdk_app.pidfile, sizeof(g_spdk_app.pidfile), "%s/%s.pid.%d",
-		 SPDK_APP_PIDFILE_PREFIX, opts->name, opts->instance_id);
-	spdk_app_write_pidfile();
 
 	/* open log files */
 	if (opts->log_facility == NULL) {
@@ -324,7 +315,16 @@ spdk_app_init(struct spdk_app_opts *opts)
 		}
 	}
 
-	spdk_dpdk_framework_init(opts);
+	spdk_env_opts_init(&env_opts);
+
+	env_opts.name = opts->name;
+	env_opts.core_mask = opts->reactor_mask;
+	env_opts.shm_id = opts->shm_id;
+	env_opts.dpdk_mem_channel = opts->dpdk_mem_channel;
+	env_opts.dpdk_master_core = opts->dpdk_master_core;
+	env_opts.dpdk_mem_size = opts->dpdk_mem_size;
+
+	spdk_env_init(&env_opts);
 
 	/*
 	 * If mask not specified on command line or in configuration file,
@@ -391,7 +391,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	sigaddset(&signew, SIGHUP);
 	pthread_sigmask(SIG_SETMASK, &signew, NULL);
 
-	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->instance_id);
+	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
 	spdk_trace_init(shm_name);
 
 	if (opts->tpoint_group_mask == NULL) {
@@ -426,7 +426,6 @@ spdk_app_fini(void)
 
 	rc = spdk_subsystem_fini();
 	spdk_trace_cleanup();
-	spdk_app_remove_pidfile();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_close_log();
 
@@ -456,46 +455,4 @@ spdk_app_stop(int rc)
 {
 	spdk_reactors_stop();
 	g_spdk_app.rc = rc;
-}
-
-static int
-spdk_app_write_pidfile(void)
-{
-	FILE *fp;
-	pid_t pid;
-	struct flock lock = {
-		.l_type = F_WRLCK,
-		.l_whence = SEEK_SET,
-		.l_start = 0,
-		.l_len = 0,
-	};
-
-	fp = fopen(g_spdk_app.pidfile, "w");
-	if (fp == NULL) {
-		SPDK_ERRLOG("pidfile open error %d\n", errno);
-		return -1;
-	}
-
-	if (fcntl(fileno(fp), F_SETLK, &lock) != 0) {
-		fprintf(stderr, "Cannot create lock on file %s, probably you"
-			" should use different instance id\n", g_spdk_app.pidfile);
-		exit(EXIT_FAILURE);
-	}
-
-	pid = getpid();
-	fprintf(fp, "%d\n", (int)pid);
-	fclose(fp);
-	return 0;
-}
-
-static void
-spdk_app_remove_pidfile(void)
-{
-	int rc;
-
-	rc = remove(g_spdk_app.pidfile);
-	if (rc != 0) {
-		SPDK_ERRLOG("pidfile remove error %d\n", errno);
-		/* ignore error */
-	}
 }

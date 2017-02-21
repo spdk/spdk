@@ -1,8 +1,23 @@
-Changelog
-=========
+# Changelog
 
-v16.12: NVMe over Fabrics host, hotplug, and multi-process
-----------------------------------------------------------
+## (Next Planned Release) v17.03
+
+### Event framework
+
+The overhead of the main reactor event loop was reduced by optimizing the number of
+calls to spdk_get_ticks() per iteration.
+
+### NVMe library
+
+The NVMe library will now automatically split readv/writev requests with scatter-gather
+lists that do not map to valid PRP lists when the NVMe controller does not natively
+support SGLs.
+
+The `identify` and `perf` NVMe examples were modified to add a consistent format for
+specifying remote NVMe over Fabrics devices via the `-r` option.
+This is implemented using the new `spdk_nvme_transport_id_parse()` function.
+
+## v16.12: NVMe over Fabrics host, hotplug, and multi-process
 
 ### NVMe library
 
@@ -88,8 +103,7 @@ mechanisms; it should only be enabled on systems with controlled user access
 behind a firewall. An example RPC client implemented in Python is provided in
 `scripts/rpc.py`.
 
-v16.08: iSCSI target, NVMe over Fabrics maturity
-------------------------------------------------
+## v16.08: iSCSI target, NVMe over Fabrics maturity
 
 This release adds a userspace iSCSI target. The iSCSI target is capable of exporting
 NVMe devices over a network using the iSCSI protocol. The application is located
@@ -123,8 +137,7 @@ for the NVMe driver.
     the NVMe library API; see `examples/nvme/hello_world/hello_world.c`.
   - A test for measuring software overhead was added. See `test/lib/nvme/overhead`.
 
-v16.06: NVMf userspace target
------------------------------
+## v16.06: NVMf userspace target
 
 This release adds a userspace NVMf (NVMe over Fabrics) target, conforming to the
 newly-released NVMf 1.0/NVMe 1.2.1 specification.  The NVMf target exports NVMe
@@ -175,8 +188,7 @@ user code.
   - The PCI library API was made more generic to abstract away differences
   between the underlying PCI access implementations.
 
-v1.2.0: IOAT user-space driver
-------------------------------
+## v1.2.0: IOAT user-space driver
 
 This release adds a user-space driver with support for the Intel I/O Acceleration Technology (I/OAT, also known as "Crystal Beach") DMA offload engine.
 
@@ -193,8 +205,7 @@ This release adds a user-space driver with support for the Intel I/O Acceleratio
 - Updated to support DPDK 2.2.0
 
 
-v1.0.0: NVMe user-space driver
-------------------------------
+## v1.0.0: NVMe user-space driver
 
 This is the initial open source release of the Storage Performance Development Kit (SPDK).
 

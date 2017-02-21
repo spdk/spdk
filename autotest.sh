@@ -73,6 +73,10 @@ timing_exit rbd_setup
 # Unit Tests
 #####################
 
+timing_enter unittest
+run_test ./unittest.sh
+timing_exit unittest
+
 timing_enter lib
 
 run_test test/lib/bdev/blockdev.sh
@@ -82,14 +86,8 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test test/lib/nvme/hotplug.sh intel
 	run_test test/lib/nvme/nvmemp.sh
 fi
-run_test test/lib/nvmf/nvmf.sh
 run_test test/lib/env/env.sh
 run_test test/lib/ioat/ioat.sh
-run_test test/lib/json/json.sh
-run_test test/lib/jsonrpc/jsonrpc.sh
-run_test test/lib/log/log.sh
-run_test test/lib/scsi/scsi.sh
-run_test test/lib/util/util.sh
 
 timing_exit lib
 
@@ -121,6 +119,10 @@ run_test test/nvmf/fio/fio.sh
 run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
+
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test test/nvmf/multiconnection/multiconnection.sh
+fi
 
 timing_enter host
 

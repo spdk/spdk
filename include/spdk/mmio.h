@@ -44,6 +44,8 @@ extern "C" {
 
 #include <inttypes.h>
 
+#include "spdk/barrier.h"
+
 #ifdef __x86_64__
 #define SPDK_MMIO_64BIT	1 /* Can do atomic 64-bit memory read/write (over PCIe) */
 #else
@@ -53,12 +55,14 @@ extern "C" {
 static inline uint32_t
 spdk_mmio_read_4(const volatile uint32_t *addr)
 {
+	spdk_compiler_barrier();
 	return *addr;
 }
 
 static inline void
 spdk_mmio_write_4(volatile uint32_t *addr, uint32_t val)
 {
+	spdk_compiler_barrier();
 	*addr = val;
 }
 
@@ -67,6 +71,8 @@ spdk_mmio_read_8(volatile uint64_t *addr)
 {
 	uint64_t val;
 	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
+
+	spdk_compiler_barrier();
 
 	if (SPDK_MMIO_64BIT) {
 		val = *addr;
@@ -87,6 +93,8 @@ static inline void
 spdk_mmio_write_8(volatile uint64_t *addr, uint64_t val)
 {
 	volatile uint32_t *addr32 = (volatile uint32_t *)addr;
+
+	spdk_compiler_barrier();
 
 	if (SPDK_MMIO_64BIT) {
 		*addr = val;

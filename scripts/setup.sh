@@ -129,6 +129,37 @@ function reset_linux {
 	echo "1" > "/sys/bus/pci/rescan"
 }
 
+function status_linux {
+	echo "NVMe devices"
+
+	echo -e "BDF\t\tNuma Node\tDriver name\t\tDevice name"
+	for bdf in $(linux_iter_pci 0108); do
+		driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
+		node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
+		if [ "$driver" = "nvme" ]; then
+			name="\t"`ls /sys/bus/pci/devices/$bdf/nvme`;
+		else
+			name="-";
+		fi
+		echo -e "$bdf\t$node\t\t$driver\t\t$name";
+	done
+
+	echo "I/OAT DMA"
+
+	#collect all the device_id info of ioat devices.
+	TMP=`grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}'`
+	echo -e "BDF\t\tNuma Node\tDriver Name"
+	for dev_id in $TMP; do
+		# Abuse linux_iter_pci by giving it a device ID instead of a class code
+		for bdf in $(linux_iter_pci $dev_id); do
+			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
+			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
+			echo -e "$bdf\t$node\t\t$driver"
+		done
+	done
+}
+
 function configure_freebsd {
 	TMP=`mktemp`
 
@@ -168,7 +199,7 @@ function reset_freebsd {
 username=$1
 mode=$2
 
-if [ "$username" = "reset" -o "$username" = "config" ]; then
+if [ "$username" = "reset" -o "$username" = "config" -o "$username" = "status" ]; then
 	mode="$username"
 	username=""
 fi
@@ -189,6 +220,8 @@ if [ `uname` = Linux ]; then
 		configure_linux
 	elif [ "$mode" == "reset" ]; then
 		reset_linux
+	elif [ "$mode" == "status" ]; then
+		status_linux
 	fi
 else
 	if [ "$mode" == "config" ]; then

@@ -112,7 +112,7 @@ nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 }
 
 static void
-nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_session *session)
+nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 {
 	return;
 }
@@ -127,7 +127,7 @@ nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_
 	int				sc, sct;
 
 	if (cmd->opc == SPDK_NVME_OPC_DATASET_MANAGEMENT) {
-		free(bdev_io->u.unmap.unmap_bdesc);
+		free(req->unmap_bdesc);
 	}
 
 	spdk_bdev_io_get_nvme_status(bdev_io, &sc, &sct);
@@ -196,7 +196,7 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	nsdata->nuse = bdev->blockcnt;
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
-	nsdata->lbaf[0].lbads = nvmf_u32log2(bdev->blocklen);
+	nsdata->lbaf[0].lbads = spdk_u32log2(bdev->blocklen);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -273,7 +273,6 @@ static int
 nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
-	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -287,9 +286,7 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 		return spdk_nvmf_session_get_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
-		response->cdw0 = session->async_event_config.raw;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_get_features_async_event_configuration(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_session_get_features_host_identifier(req);
 	default:
@@ -303,7 +300,6 @@ static int
 nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
-	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -314,10 +310,7 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 		return spdk_nvmf_session_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
-			      cmd->cdw11);
-		session->async_event_config.raw = cmd->cdw11;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return spdk_nvmf_session_set_features_async_event_configuration(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_session_set_features_host_identifier(req);
 	default:
@@ -482,6 +475,7 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
+		req->unmap_bdesc = unmap;
 		async = true;
 	}
 

@@ -631,27 +631,18 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	printf("Attached to %s\n", dev->name);
 }
 
-
-static const char *ealargs[] = {
-	"nvme_dp",
-	"-c 0x1",
-	"-n 4",
-};
-
 int main(int argc, char **argv)
 {
-	struct dev			*iter;
-	int				rc, i;
+	struct dev		*iter;
+	int			rc, i;
+	struct spdk_env_opts	opts;
+
+	spdk_env_opts_init(&opts);
+	opts.name = "nvme_dp";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	printf("NVMe Write/Read with End-to-End data protection test\n");
-
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
-			  (char **)(void *)(uintptr_t)ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		exit(1);
-	}
 
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "nvme_probe() failed\n");

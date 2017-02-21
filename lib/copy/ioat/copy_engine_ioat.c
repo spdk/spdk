@@ -237,7 +237,8 @@ probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 	struct ioat_probe_ctx *ctx = cb_ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(pci_dev);
 
-	SPDK_NOTICELOG(" Found matching device at %d:%d:%d vendor:0x%04x device:0x%04x\n",
+	SPDK_NOTICELOG(" Found matching device at %04x:%02x:%02x.%x vendor:0x%04x device:0x%04x\n",
+		       pci_addr.domain,
 		       pci_addr.bus,
 		       pci_addr.dev,
 		       pci_addr.func,

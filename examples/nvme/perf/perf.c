@@ -148,6 +148,7 @@ static int g_queue_depth;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
+static int g_shm_id = -1;
 
 static const char *g_core_mask;
 
@@ -661,6 +662,7 @@ static void usage(char *program_name)
 	printf("\t[-d DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
+	printf("\t[-i shared memory group ID]\n");
 }
 
 static void
@@ -854,13 +856,16 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:lm:q:r:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:M:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
 			break;
 		case 'd':
 			g_dpdk_mem = atoi(optarg);
+			break;
+		case 'i':
+			g_shm_id = atoi(optarg);
 			break;
 		case 'l':
 			g_latency_tracking_enable = true;
@@ -1188,48 +1193,30 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
-static char *ealargs[] = {
-	"perf",
-	"-c 0x1", /* This must be the second parameter. It is overwritten by index in main(). */
-	"-n 4",
-	"-m 512",  /* This can be overwritten by index in main(). */
-	"--proc-type=auto",
-};
-
 int main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker;
 	char task_pool_name[30];
 	uint32_t task_count;
+	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
 
-	ealargs[1] = spdk_sprintf_alloc("-c %s", g_core_mask ? g_core_mask : "0x1");
-	if (ealargs[1] == NULL) {
-		perror("ealargs spdk_sprintf_alloc");
-		return 1;
+	spdk_env_opts_init(&opts);
+	opts.name = "perf";
+	opts.shm_id = g_shm_id;
+	if (g_core_mask) {
+		opts.core_mask = g_core_mask;
 	}
 
-	ealargs[3] = spdk_sprintf_alloc("-m %d", g_dpdk_mem ? g_dpdk_mem : 512);
-	if (ealargs[3] == NULL) {
-		free(ealargs[1]);
-		perror("ealargs spdk_sprintf_alloc");
-		return 1;
+	if (g_dpdk_mem) {
+		opts.dpdk_mem_size = g_dpdk_mem;
 	}
-
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-
-	free(ealargs[1]);
-	free(ealargs[3]);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
+	spdk_env_init(&opts);
 
 	g_tsc_rate = spdk_get_ticks_hz();
 

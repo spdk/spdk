@@ -201,8 +201,9 @@ ioat_done(void *cb_arg)
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
-	printf(" Found matching device at %d:%d:%d "
+	printf(" Found matching device at %04x:%02x:%02x.%x "
 	       "vendor:0x%04x device:0x%04x\n",
+	       spdk_pci_device_get_domain(pci_dev),
 	       spdk_pci_device_get_bus(pci_dev), spdk_pci_device_get_dev(pci_dev),
 	       spdk_pci_device_get_func(pci_dev),
 	       spdk_pci_device_get_vendor_id(pci_dev), spdk_pci_device_get_device_id(pci_dev));
@@ -335,9 +336,10 @@ work_fn(void *arg)
 
 	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
 	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
-	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, -1);
+	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, -1,
+					   SPDK_ENV_SOCKET_ID_ANY);
 	t->task_pool = spdk_mempool_create(task_pool_name, g_user_config.queue_depth,
-					   sizeof(struct ioat_task), -1);
+					   sizeof(struct ioat_task), -1, SPDK_ENV_SOCKET_ID_ANY);
 	if (!t->data_pool || !t->task_pool) {
 		fprintf(stderr, "Could not allocate buffer pool.\n");
 		return 1;
@@ -377,21 +379,12 @@ init_src_buffer(void)
 static int
 init(void)
 {
-	char *core_mask_conf;
+	struct spdk_env_opts opts;
 
-	core_mask_conf = spdk_sprintf_alloc("-c %s", g_user_config.core_mask);
-	if (!core_mask_conf) {
-		return 1;
-	}
-
-	char *ealargs[] = {"verify", core_mask_conf, "-n 4"};
-	if (rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs) < 0) {
-		free(core_mask_conf);
-		fprintf(stderr, "Could not init eal\n");
-		return 1;
-	}
-
-	free(core_mask_conf);
+	spdk_env_opts_init(&opts);
+	opts.name = "verify";
+	opts.core_mask = g_user_config.core_mask;
+	spdk_env_init(&opts);
 
 	if (init_src_buffer() != 0) {
 		fprintf(stderr, "Could not init src buffer\n");
