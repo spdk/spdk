@@ -435,12 +435,6 @@ blockdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 	spdk_json_write_name(w, "id");
 	spdk_json_write_uint32(w, spdk_nvme_ns_get_id(ns));
 
-	spdk_json_write_name(w, "block_size");
-	spdk_json_write_uint32(w, spdk_nvme_ns_get_sector_size(ns));
-
-	spdk_json_write_name(w, "total_size");
-	spdk_json_write_uint64(w, spdk_nvme_ns_get_size(ns));
-
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
