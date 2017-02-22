@@ -766,6 +766,7 @@ INPUT                  = ../include/spdk \
                          ioat/index.md \
                          nvme/index.md \
                          nvme/async_completion.md \
+                         nvme/fabrics.md \
                          nvme/initialization.md \
                          nvme/io_submission.md \
                          nvmf/index.md \
