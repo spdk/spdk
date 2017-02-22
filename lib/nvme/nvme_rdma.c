@@ -422,6 +422,14 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 
 		rdma_req->bb_rkey = rdma_req->bb_mr->rkey;
 
+		rdma_req->send_wr.wr_id = (uint64_t)rdma_req;
+		rdma_req->send_wr.next = NULL;
+		rdma_req->send_wr.opcode = IBV_WR_SEND;
+		rdma_req->send_wr.send_flags = IBV_SEND_SIGNALED;
+		rdma_req->send_wr.sg_list = &rdma_req->send_sgl;
+		rdma_req->send_wr.num_sge = 1;
+		rdma_req->send_wr.imm_data = 0;
+
 		STAILQ_INSERT_TAIL(&rqpair->free_reqs, rdma_req, link);
 	}
 
@@ -1310,13 +1318,6 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	wr = &rdma_req->send_wr;
-	wr->wr_id = (uint64_t)rdma_req;
-	wr->next = NULL;
-	wr->opcode = IBV_WR_SEND;
-	wr->send_flags = IBV_SEND_SIGNALED;
-	wr->sg_list = &rdma_req->send_sgl;
-	wr->num_sge = 1;
-	wr->imm_data = 0;
 
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
 
