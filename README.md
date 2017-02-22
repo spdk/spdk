@@ -95,9 +95,6 @@ Building
 
 Once the prerequisites are installed, run 'make' within the SPDK directory
 to build the SPDK libraries and examples.
-
-    make DPDK_DIR=/path/to/dpdk
-
 If you followed the instructions above for building DPDK:
 
 Linux:
