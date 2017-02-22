@@ -825,6 +825,19 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 		req->xfer = spdk_nvme_opc_get_data_transfer(req->cmd->nvmf_cmd.fctype);
 	} else {
 		req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
+		if ((req->conn->type == CONN_TYPE_AQ) &&
+		    ((cmd->opc == SPDK_NVME_OPC_GET_FEATURES) ||
+		     (cmd->opc == SPDK_NVME_OPC_SET_FEATURES))) {
+			switch (cmd->cdw10 & 0xff) {
+			case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
+			case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
+			case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+				break;
+			default:
+				req->xfer = SPDK_NVME_DATA_NONE;
+				break;
+			}
+		}
 	}
 
 	if (req->xfer == SPDK_NVME_DATA_NONE) {
