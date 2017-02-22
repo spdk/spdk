@@ -1427,12 +1427,9 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 		}
 
 		rdma_req = (struct spdk_nvmf_rdma_request *)wc[i].wr_id;
-		if (rdma_req == NULL) {
-			SPDK_ERRLOG("NULL wr_id in RDMA work completion\n");
-			error = true;
-			continue;
-		}
-
+		assert(rdma_req != NULL);
+		assert(rdma_req - rdma_conn->reqs >= 0);
+		assert(rdma_req - rdma_conn->reqs < (ptrdiff_t)rdma_conn->max_queue_depth);
 		req = &rdma_req->req;
 
 		switch (wc[i].opcode) {
