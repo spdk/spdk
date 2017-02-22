@@ -386,9 +386,9 @@ struct spdk_nvme_qpair;
  * Signature for the callback function invoked when a timeout is
  * detected on a request.
  */
-typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
-				     struct spdk_nvme_qpair *qpair,
-				     void *cb_arg);
+typedef void (*spdk_nvme_timeout_cb)(void *cb_arg,
+				     struct spdk_nvme_ctrlr *ctrlr,
+				     struct spdk_nvme_qpair *qpair);
 
 /**
  * \brief Register for timeout callback on a controller.

@@ -1841,7 +1841,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 		 * Request has timed out. This could be i/o or admin request.
 		 * Call the registered timeout function for user to take action.
 		 */
-		ctrlr->timeout_cb_fn(ctrlr, qpair, ctrlr->timeout_cb_arg);
+		ctrlr->timeout_cb_fn(ctrlr->timeout_cb_arg, ctrlr, qpair);
 	}
 }
 

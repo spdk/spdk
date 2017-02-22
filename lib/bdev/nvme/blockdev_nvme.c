@@ -500,8 +500,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
-blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
-			 struct spdk_nvme_qpair *qpair, void *cb_arg)
+blockdev_nvme_timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+			 struct spdk_nvme_qpair *qpair)
 {
 	int rc;
 
