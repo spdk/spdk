@@ -794,13 +794,11 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 		return -ENOSPC;
 	}
 
-	vdev = rte_zmalloc(NULL, sizeof(*vdev), RTE_CACHE_LINE_SIZE);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
-		return -ENOMEM;
+	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
+		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname, name);
+		return -EINVAL;
 	}
 
-	snprintf(path, sizeof(path), "%s%s", dev_dirname, name);
 	/* Register vhost(cuse or user) driver to handle vhost messages. */
 	if (access(path, F_OK) != -1) {
 		if (unlink(path) != 0)
@@ -811,6 +809,12 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;
+	}
+
+	vdev = rte_zmalloc(NULL, sizeof(*vdev), RTE_CACHE_LINE_SIZE);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
+		return -ENOMEM;
 	}
 
 	spdk_vhost_ctrlrs[ctrlr_num] = vdev;
@@ -865,8 +869,8 @@ spdk_vhost_scsi_ctrlr_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, con
 		return -EINVAL;
 	}
 
-	if (scsi_dev_num > SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-		SPDK_ERRLOG("Controller %d device num too big (max %d)\n", scsi_dev_num,
+	if (scsi_dev_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("Controller %d device number too big (max %d)\n", scsi_dev_num,
 			    SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 		return -EINVAL;
 	}
@@ -874,6 +878,9 @@ spdk_vhost_scsi_ctrlr_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, con
 	if (lun_name == NULL) {
 		SPDK_ERRLOG("No lun name specified \n");
 		return -EINVAL;
+	} else if (strlen(lun_name) >= SPDK_SCSI_DEV_MAX_NAME) {
+		SPDK_ERRLOG("LUN name '%s' too long (max %d).\n", lun_name, SPDK_SCSI_DEV_MAX_NAME - 1);
+		return -1;
 	}
 
 	vdev = spdk_vhost_scsi_ctrlr_find(ctrlr_name);
@@ -895,7 +902,7 @@ spdk_vhost_scsi_ctrlr_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, con
 	/*
 	 * At this stage only one LUN per device
 	 */
-	snprintf(dev_name, sizeof(dev_name), "Dev%u", scsi_dev_num);
+	snprintf(dev_name, sizeof(dev_name), "Dev %u", scsi_dev_num);
 	lun_id_list[0] = 0;
 	lun_names_list[0] = (char *)lun_name;
 
@@ -955,9 +962,9 @@ spdk_vhost_scsi_ctrlr_get_cpumask(struct spdk_vhost_scsi_ctrlr *ctrlr)
 static int spdk_vhost_scsi_controller_construct(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_first_section(NULL);
-	int i;
+	int i, dev_num;
 	unsigned ctrlr_num = 0;
-	char *lun_name, dev_name[LUN_DEV_NAME_SIZE];
+	char *lun_name, *dev_num_str;
 	char *cpumask_str;
 	char *name;
 	uint64_t cpumask;
@@ -969,9 +976,9 @@ static int spdk_vhost_scsi_controller_construct(void)
 		}
 
 		if (sscanf(spdk_conf_section_get_name(sp), "VhostScsi%u", &ctrlr_num) != 1) {
-			SPDK_WARNLOG("Ignoring section that don't match VhostScsi controller template: %s\n",
-				     spdk_conf_section_get_name(sp));
-			continue;
+			SPDK_ERRLOG("Section '%s' has non-numeric suffix.\n",
+				    spdk_conf_section_get_name(sp));
+			return -1;
 		}
 
 		name =  spdk_conf_section_get_val(sp, "Name");
@@ -979,7 +986,7 @@ static int spdk_vhost_scsi_controller_construct(void)
 		if (cpumask_str == NULL) {
 			cpumask = spdk_app_get_core_mask();
 		} else if (spdk_vhost_parse_core_mask(cpumask_str, &cpumask)) {
-			SPDK_ERRLOG("Error parsing cpumask while creating controller\n");
+			SPDK_ERRLOG("%s: Error parsing cpumask '%s' while creating controller\n", name, cpumask_str);
 			return -1;
 		}
 
@@ -987,14 +994,24 @@ static int spdk_vhost_scsi_controller_construct(void)
 			return -1;
 		}
 
-		for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-			snprintf(dev_name, sizeof(dev_name), "Dev%d", i);
-			lun_name = spdk_conf_section_get_val(sp, dev_name);
-			if (lun_name == NULL) {
-				continue;
+		for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
+			dev_num_str = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
+			if (dev_num_str == NULL) {
+				SPDK_ERRLOG("%s: Invalid or missing Dev number\n", name);
+				return -1;
 			}
 
-			if (spdk_vhost_scsi_ctrlr_add_dev(name, i, lun_name) < 0) {
+			dev_num = (int)strtol(dev_num_str, NULL, 10);
+			lun_name = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
+			if (lun_name == NULL) {
+				SPDK_ERRLOG("%s: Invalid or missing LUN name for dev %d\n", name, dev_num);
+				return -1;
+			} else if (spdk_conf_section_get_nmval(sp, "Dev", i, 2)) {
+				SPDK_ERRLOG("%s: Only one LUN per vhost SCSI device supported\n", name);
+				return -1;
+			}
+
+			if (spdk_vhost_scsi_ctrlr_add_dev(name, dev_num, lun_name) < 0) {
 				return -1;
 			}
 		}
