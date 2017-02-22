@@ -65,6 +65,7 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		memset(nsdata, 0, sizeof(*nsdata));
 		ns->stripe_size = 0;
 		ns->sector_size = 0;
+		ns->extended_lba_size = 0;
 		ns->md_size = 0;
 		ns->pi_type = 0;
 		ns->sectors_per_max_io = 0;
@@ -74,8 +75,15 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 	}
 
 	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
+	ns->extended_lba_size = ns->sector_size;
 
-	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->sector_size;
+	ns->md_size = nsdata->lbaf[nsdata->flbas.format].ms;
+	if (nsdata->flbas.extended) {
+		ns->flags |= SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED;
+		ns->extended_lba_size += ns->md_size;
+	}
+
+	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
 	ns->sectors_per_stripe = ns->stripe_size / ns->sector_size;
 
 	ns->flags = 0x0000;
@@ -96,11 +104,6 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		ns->flags |= SPDK_NVME_NS_RESERVATION_SUPPORTED;
 	}
 
-	if (nsdata->flbas.extended) {
-		ns->flags |= SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED;
-	}
-
-	ns->md_size = nsdata->lbaf[nsdata->flbas.format].ms;
 	ns->pi_type = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
 	if (nsdata->lbaf[nsdata->flbas.format].ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;

@@ -46,7 +46,50 @@ const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
-struct spdk_nvmf_globals g_nvmf_tgt;
+struct spdk_nvmf_tgt g_nvmf_tgt;
+
+struct spdk_nvmf_listen_addr *
+spdk_nvmf_listen_addr_create(const char *trname, const char *traddr, const char *trsvcid)
+{
+	struct spdk_nvmf_listen_addr *listen_addr;
+
+	listen_addr = calloc(1, sizeof(*listen_addr));
+	if (!listen_addr) {
+		return NULL;
+	}
+
+	listen_addr->traddr = strdup(traddr);
+	if (!listen_addr->traddr) {
+		free(listen_addr);
+		return NULL;
+	}
+
+	listen_addr->trsvcid = strdup(trsvcid);
+	if (!listen_addr->trsvcid) {
+		free(listen_addr->traddr);
+		free(listen_addr);
+		return NULL;
+	}
+
+	listen_addr->trname = strdup(trname);
+	if (!listen_addr->trname) {
+		free(listen_addr->traddr);
+		free(listen_addr->trsvcid);
+		free(listen_addr);
+		return NULL;
+	}
+
+	return listen_addr;
+}
+
+void
+spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
+{
+	free(addr->trname);
+	free(addr->trsvcid);
+	free(addr->traddr);
+	free(addr);
+}
 
 static int
 test_transport1_listen_addr_add(struct spdk_nvmf_listen_addr *listen_addr)
@@ -122,6 +165,7 @@ nvmf_test_create_subsystem(void)
 {
 	char nqn[256];
 	struct spdk_nvmf_subsystem *subsystem;
+	TAILQ_INIT(&g_nvmf_tgt.subsystems);
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
 	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
@@ -182,10 +226,10 @@ test_discovery_log(void)
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 
 	/* Reset discovery-related globals */
-	g_discovery_genctr = 0;
-	free(g_discovery_log_page);
-	g_discovery_log_page = NULL;
-	g_discovery_log_page_size = 0;
+	g_nvmf_tgt.discovery_genctr = 0;
+	free(g_nvmf_tgt.discovery_log_page);
+	g_nvmf_tgt.discovery_log_page = NULL;
+	g_nvmf_tgt.discovery_log_page_size = 0;
 
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_create_subsystem("nqn.2016-06.io.spdk:subsystem1", SPDK_NVMF_SUBTYPE_NVME,

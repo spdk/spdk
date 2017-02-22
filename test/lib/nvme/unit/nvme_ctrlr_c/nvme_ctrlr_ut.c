@@ -37,7 +37,7 @@
 
 #include <stdbool.h>
 
-#include "lib/nvme/unit/test_env.c"
+#include "lib/test_env.c"
 
 struct spdk_trace_flag SPDK_TRACE_NVME = {
 	.name = "nvme",
@@ -72,16 +72,6 @@ nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return 0;
-}
-
-int
-nvme_transport_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
-{
-	if (ctrlr == NULL || pci_id == NULL) {
-		return -EINVAL;
-	}
-
 	return 0;
 }
 
@@ -209,11 +199,6 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 {
 	fake_cpl_success(cb_fn, cb_arg);
 	return 0;
-}
-
-void
-nvme_qpair_fail(struct spdk_nvme_qpair *qpair)
-{
 }
 
 int

@@ -191,6 +191,7 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 	if (event->event != evt) {
 		SPDK_ERRLOG("Received event %d from CM event channel, but expected event %d\n",
 			    event->event, evt);
+		rdma_ack_cm_event(event);
 		return NULL;
 	}
 
@@ -478,7 +479,7 @@ nvme_rdma_copy_mem(struct spdk_nvme_rdma_req *rdma_req, bool copy_from_user)
 				return -1;
 			}
 
-			len = nvme_min(remaining_transfer_len, len);
+			len = spdk_min(remaining_transfer_len, len);
 			remaining_transfer_len -= len;
 
 			if (copy_from_user) {
@@ -582,6 +583,8 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	struct ibv_device_attr 				attr;
 	int 						ret;
 	struct rdma_cm_event 				*event;
+	struct spdk_nvme_ctrlr 				*ctrlr;
+	struct nvme_rdma_ctrlr 				*rctrlr;
 
 	ret = ibv_query_device(rqpair->cm_id->verbs, &attr);
 	if (ret != 0) {
@@ -589,11 +592,19 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 		return ret;
 	}
 
-	param.responder_resources = nvme_min(rqpair->num_entries, attr.max_qp_rd_atom);
+	param.responder_resources = spdk_min(rqpair->num_entries, attr.max_qp_rd_atom);
+
+	ctrlr = rqpair->qpair.ctrlr;
+	if (!ctrlr) {
+		return -1;
+	}
+
+	rctrlr = nvme_rdma_ctrlr(ctrlr);
 
 	request_data.qid = rqpair->qpair.id;
 	request_data.hrqsize = rqpair->num_entries;
 	request_data.hsqsize = rqpair->num_entries - 1;
+	request_data.cntlid = rctrlr->cntlid;
 
 	param.private_data = &request_data;
 	param.private_data_len = sizeof(request_data);
@@ -612,6 +623,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 
 	accept_data = (struct spdk_nvmf_rdma_accept_private_data *)event->param.conn.private_data;
 	if (accept_data == NULL) {
+		rdma_ack_cm_event(event);
 		SPDK_ERRLOG("NVMe-oF target did not return accept data\n");
 		return -1;
 	}
@@ -619,7 +631,7 @@ nvme_rdma_connect(struct nvme_rdma_qpair *rqpair)
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "Requested queue depth %d. Actually got queue depth %d.\n",
 		      rqpair->num_entries, accept_data->crqsize);
 
-	rqpair->num_entries  = nvme_min(rqpair->num_entries , accept_data->crqsize);
+	rqpair->num_entries = spdk_min(rqpair->num_entries, accept_data->crqsize);
 
 	rdma_ack_cm_event(event);
 
@@ -1166,7 +1178,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	 */
 	buffer_max_entries = (sizeof(buffer) - offsetof(struct spdk_nvmf_discovery_log_page, entries[0])) /
 			     sizeof(struct spdk_nvmf_discovery_log_page_entry);
-	numrec = nvme_min(log_page->numrec, buffer_max_entries);
+	numrec = spdk_min(log_page->numrec, buffer_max_entries);
 	if (numrec != log_page->numrec) {
 		SPDK_WARNLOG("Discovery service returned %" PRIu64 " entries,"
 			     "but buffer can only hold %" PRIu64 "\n",
@@ -1236,12 +1248,6 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	free(rctrlr);
 
 	return 0;
-}
-
-int
-nvme_rdma_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
-{
-	return -1;
 }
 
 int
@@ -1362,93 +1368,85 @@ nvme_rdma_qpair_fail(struct spdk_nvme_qpair *qpair)
 	return 0;
 }
 
+#define MAX_COMPLETIONS_PER_POLL 128
+
 int
 nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
 {
-	struct nvme_rdma_qpair *rqpair;
-	struct ibv_wc wc;
-	uint32_t size;
-	int rc;
-	uint32_t io_completed = 0;
+	struct nvme_rdma_qpair 	*rqpair = nvme_rdma_qpair(qpair);
+	struct ibv_wc 		wc[MAX_COMPLETIONS_PER_POLL];
+	int			i, rc, batch_size;
+	uint32_t 		reaped;
 
-	rqpair = nvme_rdma_qpair(qpair);
-	size = rqpair->num_entries - 1U;
-	if (!max_completions || max_completions > size) {
-		max_completions = size;
+	if (max_completions == 0) {
+		max_completions = rqpair->num_entries;
+	} else {
+		max_completions = spdk_min(max_completions, rqpair->num_entries);
 	}
 
-	/* poll the send_cq */
-	while (true) {
-		rc = ibv_poll_cq(rqpair->cm_id->send_cq, 1, &wc);
-		if (rc == 0) {
-			break;
-		}
-
+	/* Consume all send completions */
+	reaped = 0;
+	do {
+		batch_size = spdk_min((max_completions - reaped),
+				      MAX_COMPLETIONS_PER_POLL);
+		rc = ibv_poll_cq(rqpair->cm_id->send_cq, batch_size, wc);
 		if (rc < 0) {
-			SPDK_ERRLOG("Poll CQ error!(%d): %s\n",
+			SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 				    errno, strerror(errno));
 			return -1;
-		}
-
-		if (wc.status) {
-			SPDK_ERRLOG("CQ completion error status %d, exiting handler\n",
-				    wc.status);
+		} else if (rc == 0) {
+			/* Ran out of completions */
 			break;
 		}
+		reaped += rc;
+	} while (reaped < max_completions);
 
-		if (wc.opcode == IBV_WC_SEND) {
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "CQ send completion\n");
-		} else {
-			SPDK_ERRLOG("Poll cq opcode type unknown!!!!! completion\n");
-			return -1;
-		}
-	}
-
-	/* poll the recv_cq */
-	while (true) {
-		rc = ibv_poll_cq(rqpair->cm_id->recv_cq, 1, &wc);
-		if (rc == 0) {
-			break;
-		}
-
+	/* Poll for recv completions */
+	reaped = 0;
+	do {
+		batch_size = spdk_min((max_completions - reaped),
+				      MAX_COMPLETIONS_PER_POLL);
+		rc = ibv_poll_cq(rqpair->cm_id->recv_cq, batch_size, wc);
 		if (rc < 0) {
-			SPDK_ERRLOG("Poll CQ error!(%d): %s\n",
+			SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 				    errno, strerror(errno));
 			return -1;
-		}
-
-		if (wc.status) {
-			SPDK_ERRLOG("CQ Completion Error For Response %lu: %d (%s)\n",
-				    wc.wr_id, wc.status, ibv_wc_status_str(wc.status));
+		} else if (rc == 0) {
+			/* Ran out of completions */
 			break;
 		}
 
-		if (wc.opcode == IBV_WC_RECV) {
-			SPDK_TRACELOG(SPDK_TRACE_DEBUG, "CQ recv completion\n");
-			if (wc.byte_len < sizeof(struct spdk_nvme_cpl)) {
-				SPDK_ERRLOG("recv length %u less than expected response size\n", wc.byte_len);
+		reaped += rc;
+		for (i = 0; i < rc; i++) {
+			if (wc[i].status) {
+				SPDK_ERRLOG("CQ error on Queue Pair %p, Response Index %lu (%d): %s\n",
+					    qpair, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 				return -1;
 			}
 
-			rc = nvme_rdma_recv(rqpair, wc.wr_id);
-			if (rc) {
-				SPDK_ERRLOG("nvme_rdma_recv processing failure\n");
+			switch (wc[i].opcode) {
+			case IBV_WC_RECV:
+				SPDK_TRACELOG(SPDK_TRACE_DEBUG, "CQ recv completion\n");
+				if (wc[i].byte_len < sizeof(struct spdk_nvme_cpl)) {
+					SPDK_ERRLOG("recv length %u less than expected response size\n", wc[i].byte_len);
+					return -1;
+				}
 
+				if (nvme_rdma_recv(rqpair, wc[i].wr_id)) {
+					SPDK_ERRLOG("nvme_rdma_recv processing failure\n");
+					return -1;
+				}
+				break;
+
+			default:
+				SPDK_ERRLOG("Received an unexpected opcode on the CQ: %d\n", wc[i].opcode);
 				return -1;
 			}
-			io_completed++;
-		} else {
-			SPDK_ERRLOG("Poll cq opcode type unknown!!!!! completion\n");
-			return -1;
 		}
+	} while (reaped < max_completions);
 
-		if (io_completed == max_completions) {
-			break;
-		}
-	}
-
-	return io_completed;
+	return reaped;
 }
 
 uint32_t

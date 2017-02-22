@@ -50,6 +50,8 @@
 #include "spdk/bdev.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
+#include "spdk/string.h"
+#include "spdk/util.h"
 
 #define MAX_LISTEN_ADDRESSES 255
 #define MAX_HOSTS 255
@@ -62,7 +64,7 @@ struct spdk_nvmf_probe_ctx {
 	struct nvmf_tgt_subsystem	*app_subsystem;
 	bool				any;
 	bool				found;
-	struct spdk_pci_addr		pci_addr;
+	struct spdk_nvme_transport_id	trid;
 };
 
 #define MAX_STRING_LEN 255
@@ -84,9 +86,10 @@ struct spdk_nvmf_probe_ctx {
 #define SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX 131072
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
+static int32_t g_last_rpc_lcore = -1;
 
 static int
-spdk_get_numa_node_value(char *path)
+spdk_get_numa_node_value(const char *path)
 {
 	FILE *fd;
 	int numa_node = -1;
@@ -106,7 +109,7 @@ spdk_get_numa_node_value(char *path)
 }
 
 static int
-spdk_get_ifaddr_numa_node(char *if_addr)
+spdk_get_ifaddr_numa_node(const char *if_addr)
 {
 	int ret;
 	struct ifaddrs *ifaddrs, *ifa;
@@ -174,15 +177,15 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	if (max_queue_depth < 0) {
 		max_queue_depth = SPDK_NVMF_CONFIG_QUEUE_DEPTH_DEFAULT;
 	}
-	max_queue_depth = nvmf_max(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MIN);
-	max_queue_depth = nvmf_min(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX);
+	max_queue_depth = spdk_max(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MIN);
+	max_queue_depth = spdk_min(max_queue_depth, SPDK_NVMF_CONFIG_QUEUE_DEPTH_MAX);
 
 	max_queues_per_sess = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
 	if (max_queues_per_sess < 0) {
 		max_queues_per_sess = SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_DEFAULT;
 	}
-	max_queues_per_sess = nvmf_max(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN);
-	max_queues_per_sess = nvmf_min(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX);
+	max_queues_per_sess = spdk_max(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN);
+	max_queues_per_sess = spdk_min(max_queues_per_sess, SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX);
 
 	in_capsule_data_size = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
 	if (in_capsule_data_size < 0) {
@@ -191,8 +194,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		SPDK_ERRLOG("InCapsuleDataSize must be a multiple of 16\n");
 		return -1;
 	}
-	in_capsule_data_size = nvmf_max(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MIN);
-	in_capsule_data_size = nvmf_min(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MAX);
+	in_capsule_data_size = spdk_max(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MIN);
+	in_capsule_data_size = spdk_min(in_capsule_data_size, SPDK_NVMF_CONFIG_IN_CAPSULE_DATA_SIZE_MAX);
 
 	max_io_size = spdk_conf_section_get_intval(sp, "MaxIOSize");
 	if (max_io_size < 0) {
@@ -201,8 +204,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		SPDK_ERRLOG("MaxIOSize must be a multiple of 4096\n");
 		return -1;
 	}
-	max_io_size = nvmf_max(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN);
-	max_io_size = nvmf_min(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX);
+	max_io_size = spdk_max(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MIN);
+	max_io_size = spdk_min(max_io_size, SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX);
 
 	acceptor_lcore = spdk_conf_section_get_intval(sp, "AcceptorCore");
 	if (acceptor_lcore < 0) {
@@ -231,125 +234,18 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	return 0;
 }
 
-static int
-spdk_nvmf_parse_addr(char *listen_addr, char **host, char **port)
-{
-	int n, len;
-	const char *p, *q;
-
-	if (listen_addr == NULL) {
-		SPDK_ERRLOG("Invalid listen addr for Fabric Interface (NULL)\n");
-		return -1;
-	}
-
-	*host = NULL;
-	*port = NULL;
-
-	if (listen_addr[0] == '[') {
-		/* IPv6 */
-		p = strchr(listen_addr + 1, ']');
-		if (p == NULL) {
-			return -1;
-		}
-		p++;
-		n = p - listen_addr;
-		*host = calloc(1, n + 1);
-		if (!*host) {
-			return -1;
-		}
-		memcpy(*host, listen_addr, n);
-		(*host)[n] = '\0';
-		if (p[0] == '\0') {
-			*port = calloc(1, PORTNUMSTRLEN);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			snprintf(*port, PORTNUMSTRLEN, "%d", SPDK_NVMF_DEFAULT_SIN_PORT);
-		} else {
-			if (p[0] != ':') {
-				free(*host);
-				return -1;
-			}
-			q = strchr(listen_addr, '@');
-			if (q == NULL) {
-				q = listen_addr + strlen(listen_addr);
-			}
-			len = q - p - 1;
-
-			*port = calloc(1, len + 1);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			memcpy(*port, p + 1, len);
-		}
-	} else {
-		/* IPv4 */
-		p = strchr(listen_addr, ':');
-		if (p == NULL) {
-			p = listen_addr + strlen(listen_addr);
-		}
-		n = p - listen_addr;
-		*host = calloc(1, n + 1);
-		if (!*host) {
-			return -1;
-		}
-		memcpy(*host, listen_addr, n);
-		(*host)[n] = '\0';
-		if (p[0] == '\0') {
-			*port = calloc(1, PORTNUMSTRLEN);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			snprintf(*port, PORTNUMSTRLEN, "%d", SPDK_NVMF_DEFAULT_SIN_PORT);
-		} else {
-			if (p[0] != ':') {
-				free(*host);
-				return -1;
-			}
-			q = strchr(listen_addr, '@');
-			if (q == NULL) {
-				q = listen_addr + strlen(listen_addr);
-			}
-
-			if (q == p) {
-				free(*host);
-				return -1;
-			}
-
-			len = q - p - 1;
-			*port = calloc(1, len + 1);
-			if (!*port) {
-				free(*host);
-				return -1;
-			}
-			memcpy(*port, p + 1, len);
-
-		}
-	}
-
-	return 0;
-}
-
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
-	struct spdk_pci_addr pci_addr;
-
-	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-		return false;
-	}
 
 	if (ctx->any && !ctx->found) {
 		ctx->found = true;
 		return true;
 	}
 
-	if (spdk_pci_addr_compare(&pci_addr, &ctx->pci_addr) == 0) {
+	if (strcmp(trid->traddr, ctx->trid.traddr) == 0) {
 		ctx->found = true;
 		return true;
 	}
@@ -363,9 +259,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct spdk_nvmf_probe_ctx *ctx = cb_ctx;
 	int rc;
-	char path[MAX_STRING_LEN];
 	int numa_node = -1;
 	struct spdk_pci_addr pci_addr;
+	struct spdk_pci_device *pci_dev;
 
 	spdk_pci_addr_parse(&pci_addr, trid->traddr);
 
@@ -374,10 +270,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		       trid->traddr,
 		       spdk_nvmf_subsystem_get_nqn(ctx->app_subsystem->subsystem));
 
-	snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/numa_node",
-		 trid->traddr);
-
-	numa_node = spdk_get_numa_node_value(path);
+	pci_dev = spdk_pci_get_device(&pci_addr);
+	if (pci_dev) {
+		numa_node = spdk_pci_device_get_socket_id(pci_dev);
+	}
 	if (numa_node >= 0) {
 		/* Running subsystem and NVMe device is on the same socket or not */
 		if (rte_lcore_to_socket_id(ctx->app_subsystem->lcore) != (unsigned)numa_node) {
@@ -437,185 +333,72 @@ static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode_str;
-	struct nvmf_tgt_subsystem *app_subsys;
-	struct spdk_nvmf_subsystem *subsystem;
-	enum spdk_nvmf_subsystem_mode mode;
 	int i, ret;
-	uint64_t mask;
-	int lcore = 0;
-	int num = spdk_conf_section_get_num(sp);
+	int lcore;
+	int num_listen_addrs;
+	struct rpc_listen_address listen_addrs[MAX_LISTEN_ADDRESSES];
+	int num_hosts;
+	char *hosts[MAX_HOSTS];
+	const char *bdf;
+	const char *sn;
+	int num_devs;
+	char *devs[MAX_VIRTUAL_NAMESPACE];
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
-	if (nqn == NULL) {
-		SPDK_ERRLOG("No NQN specified for Subsystem %d\n", num);
-		return -1;
-	}
-
-	/* Determine which core to assign to the subsystem */
-	mask = spdk_app_get_core_mask();
-	lcore = spdk_conf_section_get_intval(sp, "Core");
-	if (lcore < 0) {
-		lcore = 0;
-		for (i = 0; i < num; i++) {
-			lcore = spdk_nvmf_allocate_lcore(mask, lcore);
-			lcore++;
-		}
-	}
-	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
-
 	mode_str = spdk_conf_section_get_val(sp, "Mode");
-	if (mode_str == NULL) {
-		SPDK_ERRLOG("No Mode specified for Subsystem %d\n", num);
-		return -1;
-	}
-
-	if (strcasecmp(mode_str, "Direct") == 0) {
-		mode = NVMF_SUBSYSTEM_MODE_DIRECT;
-	} else if (strcasecmp(mode_str, "Virtual") == 0) {
-		mode = NVMF_SUBSYSTEM_MODE_VIRTUAL;
-	} else {
-		SPDK_ERRLOG("Invalid Subsystem mode: %s\n", mode_str);
-		return -1;
-	}
-
-	app_subsys = nvmf_tgt_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME, mode, lcore);
-	if (app_subsys == NULL) {
-		SPDK_ERRLOG("Subsystem createion failed\n");
-		return -1;
-	}
-	subsystem = app_subsys->subsystem;
+	lcore = spdk_conf_section_get_intval(sp, "Core");
 
 	/* Parse Listen sections */
+	num_listen_addrs = 0;
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
-		char *transport_name, *listen_addr;
-		char *traddr, *trsvcid;
-		int numa_node = -1;
+		char *listen_addr;
 
-		transport_name = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
+		listen_addrs[i].transport = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
 		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
 
-		if (!transport_name || !listen_addr) {
+		if (!listen_addrs[i].transport || !listen_addr) {
 			break;
 		}
 
-		ret = spdk_nvmf_parse_addr(listen_addr, &traddr, &trsvcid);
+		listen_addr = strdup(listen_addr);
+
+		ret = spdk_parse_ip_addr(listen_addr, &listen_addrs[i].traddr, &listen_addrs[i].trsvcid);
 		if (ret < 0) {
-			SPDK_ERRLOG("Unable to parse transport address '%s'\n", listen_addr);
+			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addr);
+			free(listen_addr);
 			continue;
 		}
 
-		numa_node = spdk_get_ifaddr_numa_node(traddr);
-		if (numa_node >= 0) {
-			if (rte_lcore_to_socket_id(app_subsys->lcore) != (unsigned)numa_node) {
-				SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core %u belonging "
-					     "to a different NUMA node than the associated NIC. "
-					     "This may result in reduced performance.\n",
-					     spdk_nvmf_subsystem_get_nqn(app_subsys->subsystem), app_subsys->lcore);
-				SPDK_WARNLOG("The NIC is on socket %u\n", numa_node);
-				SPDK_WARNLOG("The Subsystem is on socket %u\n",
-					     rte_lcore_to_socket_id(app_subsys->lcore));
-			}
-		}
-		spdk_nvmf_subsystem_add_listener(subsystem, transport_name, traddr, trsvcid);
-
-		free(traddr);
-		free(trsvcid);
+		num_listen_addrs++;
 	}
 
 	/* Parse Host sections */
+	num_hosts = 0;
 	for (i = 0; i < MAX_HOSTS; i++) {
-		char *host_nqn;
+		hosts[i] = spdk_conf_section_get_nval(sp, "Host", i);
+		if (!hosts[i]) {
+			break;
+		}
+	}
 
-		host_nqn = spdk_conf_section_get_nval(sp, "Host", i);
-		if (!host_nqn) {
+	bdf = spdk_conf_section_get_val(sp, "NVMe");
+	sn = spdk_conf_section_get_val(sp, "SN");
+
+	num_devs = 0;
+	for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
+		devs[i] = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
+		if (!devs[i]) {
 			break;
 		}
 
-		spdk_nvmf_subsystem_add_host(subsystem, host_nqn);
+		num_devs++;
 	}
 
-	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
-		const char *bdf;
-		struct spdk_nvmf_probe_ctx ctx = { 0 };
-
-		/* Parse NVMe section */
-		bdf = spdk_conf_section_get_val(sp, "NVMe");
-		if (bdf == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing NVMe directive\n", num);
-			return -1;
-		}
-
-		ctx.app_subsystem = app_subsys;
-		ctx.found = false;
-		if (strcmp(bdf, "*") == 0) {
-			ctx.any = true;
-		} else {
-			if (spdk_pci_addr_parse(&ctx.pci_addr, bdf) < 0) {
-				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
-				return -1;
-			}
-			ctx.any = false;
-		}
-
-		if (spdk_nvme_probe(NULL, &ctx, probe_cb, attach_cb, NULL)) {
-			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
-		}
-
-		if (!ctx.found) {
-			SPDK_ERRLOG("Could not find NVMe controller for Subsystem%d\n", num);
-			return -1;
-		}
-	} else {
-		struct spdk_bdev *bdev;
-		const char *namespace, *sn, *val;
-
-		sn = spdk_conf_section_get_val(sp, "SN");
-		if (sn == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing serial number\n", num);
-			return -1;
-		}
-		if (spdk_nvmf_validate_sn(sn) != 0) {
-			return -1;
-		}
-
-		namespace = spdk_conf_section_get_val(sp, "Namespace");
-		if (namespace == NULL) {
-			SPDK_ERRLOG("Subsystem %d: missing Namespace directive\n", num);
-			return -1;
-		}
-
-		spdk_nvmf_subsystem_set_sn(subsystem, sn);
-
-		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
-			val = spdk_conf_section_get_nval(sp, "Namespace", i);
-			if (val == NULL) {
-				break;
-			}
-			namespace = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
-			if (!namespace) {
-				SPDK_ERRLOG("Namespace %d: missing block device\n", i);
-				return -1;
-			}
-
-			bdev = spdk_bdev_get_by_name(namespace);
-			if (!bdev) {
-				SPDK_ERRLOG("bdev is NULL\n");
-				return -1;
-			}
-
-			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
-				return -1;
-			}
-
-			SPDK_NOTICELOG("Attaching block device %s to subsystem %p\n",
-				       bdev->name, subsystem);
-
-		}
-	}
-
-	nvmf_tgt_start_subsystem(app_subsys);
-
-	return 0;
+	return spdk_nvmf_parse_subsystem_for_rpc(nqn, mode_str, lcore,
+			num_listen_addrs, listen_addrs,
+			num_hosts, hosts,
+			bdf, sn,
+			num_devs, devs);
 }
 
 static int
@@ -659,7 +442,7 @@ spdk_nvmf_parse_conf(void)
 
 int
 spdk_nvmf_parse_subsystem_for_rpc(const char *name,
-				  const char *mode_str, uint32_t lcore,
+				  const char *mode_str, int32_t lcore,
 				  int num_listen_addresses, struct rpc_listen_address *addresses,
 				  int num_hosts, char *hosts[], const char *bdf,
 				  const char *sn, int num_devs, char *dev_list[])
@@ -685,9 +468,14 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 		return -1;
 	}
 
+	if (lcore < 0) {
+		lcore = ++g_last_rpc_lcore;
+	}
+
 	/* Determine which core to assign to the subsystem */
 	mask = spdk_app_get_core_mask();
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
+	g_last_rpc_lcore = lcore;
 
 	/* Determine the mode the subsysem will operate in */
 	if (mode_str == NULL) {
@@ -714,6 +502,21 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 	/* Parse Listen sections */
 	for (i = 0; i < num_listen_addresses; i++) {
+		int nic_numa_node = spdk_get_ifaddr_numa_node(addresses[i].traddr);
+		unsigned subsys_numa_node = rte_lcore_to_socket_id(app_subsys->lcore);
+
+		if (nic_numa_node >= 0) {
+			if (subsys_numa_node != (unsigned)nic_numa_node) {
+				SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core %d belonging "
+					     "to a different NUMA node than the associated NIC. "
+					     "This may result in reduced performance.\n",
+					     name, lcore);
+				SPDK_WARNLOG("The NIC is on socket %d\n", nic_numa_node);
+				SPDK_WARNLOG("The Subsystem is on socket %u\n",
+					     subsys_numa_node);
+			}
+		}
+
 		spdk_nvmf_subsystem_add_listener(subsystem, addresses[i].transport, addresses[i].traddr,
 						 addresses[i].trsvcid);
 	}
@@ -725,6 +528,8 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 
 	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 		struct spdk_nvmf_probe_ctx ctx = { 0 };
+		struct spdk_nvme_transport_id trid = {};
+		struct spdk_pci_addr pci_addr = {};
 
 		if (bdf == NULL) {
 			SPDK_ERRLOG("Subsystem %s: missing NVMe directive\n", name);
@@ -736,25 +541,28 @@ spdk_nvmf_parse_subsystem_for_rpc(const char *name,
 			goto error;
 		}
 
+		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 		ctx.app_subsystem = app_subsys;
 		ctx.found = false;
 		if (strcmp(bdf, "*") == 0) {
 			ctx.any = true;
 		} else {
-			if (spdk_pci_addr_parse(&ctx.pci_addr, bdf) < 0) {
+			if (spdk_pci_addr_parse(&pci_addr, bdf) < 0) {
 				SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", bdf);
 				goto error;
 			}
 			ctx.any = false;
+			spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
+			ctx.trid = trid;
 		}
 
-		if (spdk_nvme_probe(NULL, &ctx, probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(&trid, &ctx, probe_cb, attach_cb, NULL)) {
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 		}
 
 		if (!ctx.found) {
 			SPDK_ERRLOG("Could not find NVMe controller at PCI address %04x:%02x:%02x.%x\n",
-				    ctx.pci_addr.domain, ctx.pci_addr.bus, ctx.pci_addr.dev, ctx.pci_addr.func);
+				    pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
 			goto error;
 		}
 	} else {

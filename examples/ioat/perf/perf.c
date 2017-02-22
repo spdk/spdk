@@ -51,6 +51,7 @@ struct user_config {
 	int time_in_sec;
 	bool verify;
 	char *core_mask;
+	int ioat_chan_num;
 };
 
 struct ioat_device {
@@ -63,30 +64,42 @@ static struct ioat_device *g_next_device;
 
 static struct user_config g_user_config;
 
-struct thread_entry {
+struct ioat_chan_entry {
 	struct spdk_ioat_chan *chan;
+	int ioat_chan_id;
 	uint64_t xfer_completed;
 	uint64_t xfer_failed;
 	uint64_t current_queue_depth;
-	unsigned lcore_id;
 	bool is_draining;
 	struct spdk_mempool *data_pool;
 	struct spdk_mempool *task_pool;
+	struct ioat_chan_entry *next;
+};
+
+struct worker_thread {
+	struct ioat_chan_entry 	*ctx;
+	struct worker_thread	*next;
+	unsigned		lcore;
 };
 
 struct ioat_task {
-	struct thread_entry *thread_entry;
+	struct ioat_chan_entry *ioat_chan_entry;
 	void *src;
 	void *dst;
 };
 
-static void submit_single_xfer(struct thread_entry *thread_entry, struct ioat_task *ioat_task,
+static struct worker_thread *g_workers = NULL;
+static int g_num_workers = 0;
+static int g_ioat_chan_num = 0;
+
+static void submit_single_xfer(struct ioat_chan_entry *ioat_chan_entry, struct ioat_task *ioat_task,
 			       void *dst, void *src);
 
 static void
 construct_user_config(struct user_config *self)
 {
 	self->xfer_size_bytes = 4096;
+	self->ioat_chan_num = 1;
 	self->queue_depth = 256;
 	self->time_in_sec = 10;
 	self->verify = false;
@@ -97,6 +110,7 @@ static void
 dump_user_config(struct user_config *self)
 {
 	printf("User configuration:\n");
+	printf("Number of channels:    %u\n", self->ioat_chan_num);
 	printf("Transfer size:  %u bytes\n", self->xfer_size_bytes);
 	printf("Queue depth:    %u\n", self->queue_depth);
 	printf("Run time:       %u seconds\n", self->time_in_sec);
@@ -123,30 +137,89 @@ static void
 ioat_done(void *cb_arg)
 {
 	struct ioat_task *ioat_task = (struct ioat_task *)cb_arg;
-	struct thread_entry *thread_entry = ioat_task->thread_entry;
+	struct ioat_chan_entry *ioat_chan_entry = ioat_task->ioat_chan_entry;
 
 	if (g_user_config.verify && memcmp(ioat_task->src, ioat_task->dst, g_user_config.xfer_size_bytes)) {
-		thread_entry->xfer_failed++;
+		ioat_chan_entry->xfer_failed++;
 	} else {
-		thread_entry->xfer_completed++;
+		ioat_chan_entry->xfer_completed++;
 	}
 
-	thread_entry->current_queue_depth--;
+	ioat_chan_entry->current_queue_depth--;
 
-	if (thread_entry->is_draining) {
-		spdk_mempool_put(thread_entry->data_pool, ioat_task->src);
-		spdk_mempool_put(thread_entry->data_pool, ioat_task->dst);
-		spdk_mempool_put(thread_entry->task_pool, ioat_task);
+	if (ioat_chan_entry->is_draining) {
+		spdk_mempool_put(ioat_chan_entry->data_pool, ioat_task->src);
+		spdk_mempool_put(ioat_chan_entry->data_pool, ioat_task->dst);
+		spdk_mempool_put(ioat_chan_entry->task_pool, ioat_task);
 	} else {
-		submit_single_xfer(thread_entry, ioat_task, ioat_task->dst, ioat_task->src);
+		submit_single_xfer(ioat_chan_entry, ioat_task, ioat_task->dst, ioat_task->src);
+	}
+}
+
+static int
+register_workers(void)
+{
+	unsigned lcore;
+	struct worker_thread *worker;
+	struct worker_thread *prev_worker;
+
+	worker = malloc(sizeof(struct worker_thread));
+	if (worker == NULL) {
+		perror("worker_thread malloc");
+		return -1;
+	}
+
+	memset(worker, 0, sizeof(struct worker_thread));
+	worker->lcore = rte_get_master_lcore();
+
+	g_workers = worker;
+	g_num_workers = 1;
+
+	RTE_LCORE_FOREACH_SLAVE(lcore) {
+		prev_worker = worker;
+		worker = malloc(sizeof(struct worker_thread));
+		if (worker == NULL) {
+			perror("worker_thread malloc");
+			return -1;
+		}
+
+		memset(worker, 0, sizeof(struct worker_thread));
+		worker->lcore = lcore;
+		prev_worker->next = worker;
+		g_num_workers++;
+	}
+
+	return 0;
+}
+
+static void
+unregister_workers(void)
+{
+	struct worker_thread *worker = g_workers;
+	struct ioat_chan_entry *entry, *entry1;
+
+	/* Free ioat_chan_entry and worker thread */
+	while (worker) {
+		struct worker_thread *next_worker = worker->next;
+		entry = worker->ctx;
+		while (entry) {
+			entry1 = entry->next;
+			spdk_mempool_free(entry->data_pool);
+			spdk_mempool_free(entry->task_pool);
+			free(entry);
+			entry = entry1;
+		}
+		free(worker);
+		worker = next_worker;
 	}
 }
 
 static bool
 probe_cb(void *cb_ctx, struct spdk_pci_device *pci_dev)
 {
-	printf(" Found matching device at %d:%d:%d "
+	printf(" Found matching device at %04x:%02x:%02x.%x "
 	       "vendor:0x%04x device:0x%04x\n",
+	       spdk_pci_device_get_domain(pci_dev),
 	       spdk_pci_device_get_bus(pci_dev), spdk_pci_device_get_dev(pci_dev),
 	       spdk_pci_device_get_func(pci_dev),
 	       spdk_pci_device_get_vendor_id(pci_dev), spdk_pci_device_get_device_id(pci_dev));
@@ -159,6 +232,10 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 {
 	struct ioat_device *dev;
 
+	if (g_ioat_chan_num >= g_user_config.ioat_chan_num) {
+		return;
+	}
+
 	dev = spdk_zmalloc(sizeof(*dev), 0, NULL);
 	if (dev == NULL) {
 		printf("Failed to allocate device struct\n");
@@ -166,6 +243,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 	}
 
 	dev->ioat = ioat;
+	g_ioat_chan_num++;
 	TAILQ_INSERT_TAIL(&g_devices, dev, tailq);
 }
 
@@ -189,6 +267,7 @@ usage(char *program_name)
 	printf("\t[-h help message]\n");
 	printf("\t[-c core mask for distributing I/O submission/completion work]\n");
 	printf("\t[-q queue depth]\n");
+	printf("\t[-n number of channels]\n");
 	printf("\t[-s transfer size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-v verify copy result if this switch is on]\n");
@@ -200,10 +279,13 @@ parse_args(int argc, char **argv)
 	int op;
 
 	construct_user_config(&g_user_config);
-	while ((op = getopt(argc, argv, "c:hq:s:t:v")) != -1) {
+	while ((op = getopt(argc, argv, "c:hn:q:s:t:v")) != -1) {
 		switch (op) {
 		case 's':
 			g_user_config.xfer_size_bytes = atoi(optarg);
+			break;
+		case 'n':
+			g_user_config.ioat_chan_num = atoi(optarg);
 			break;
 		case 'q':
 			g_user_config.queue_depth = atoi(optarg);
@@ -226,7 +308,8 @@ parse_args(int argc, char **argv)
 		}
 	}
 	if (!g_user_config.xfer_size_bytes || !g_user_config.queue_depth ||
-	    !g_user_config.time_in_sec || !g_user_config.core_mask) {
+	    !g_user_config.time_in_sec || !g_user_config.core_mask ||
+	    !g_user_config.ioat_chan_num) {
 		usage(argv[0]);
 		return 1;
 	}
@@ -235,75 +318,79 @@ parse_args(int argc, char **argv)
 }
 
 static void
-drain_io(struct thread_entry *thread_entry)
+drain_io(struct ioat_chan_entry *ioat_chan_entry)
 {
-	while (thread_entry->current_queue_depth > 0) {
-		spdk_ioat_process_events(thread_entry->chan);
+	while (ioat_chan_entry->current_queue_depth > 0) {
+		spdk_ioat_process_events(ioat_chan_entry->chan);
 	}
 }
 
 static void
-submit_single_xfer(struct thread_entry *thread_entry, struct ioat_task *ioat_task, void *dst,
+submit_single_xfer(struct ioat_chan_entry *ioat_chan_entry, struct ioat_task *ioat_task, void *dst,
 		   void *src)
 {
-	ioat_task->thread_entry = thread_entry;
+	ioat_task->ioat_chan_entry = ioat_chan_entry;
 	ioat_task->src = src;
 	ioat_task->dst = dst;
 
-	spdk_ioat_submit_copy(thread_entry->chan, ioat_task, ioat_done, dst, src,
+	spdk_ioat_submit_copy(ioat_chan_entry->chan, ioat_task, ioat_done, dst, src,
 			      g_user_config.xfer_size_bytes);
 
-	thread_entry->current_queue_depth++;
+	ioat_chan_entry->current_queue_depth++;
 }
 
 static void
-submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
+submit_xfers(struct ioat_chan_entry *ioat_chan_entry, uint64_t queue_depth)
 {
 	while (queue_depth-- > 0) {
 		void *src = NULL, *dst = NULL;
 		struct ioat_task *ioat_task = NULL;
 
-		src = spdk_mempool_get(thread_entry->data_pool);
-		dst = spdk_mempool_get(thread_entry->data_pool);
-		ioat_task = spdk_mempool_get(thread_entry->task_pool);
+		src = spdk_mempool_get(ioat_chan_entry->data_pool);
+		dst = spdk_mempool_get(ioat_chan_entry->data_pool);
+		ioat_task = spdk_mempool_get(ioat_chan_entry->task_pool);
 
-		submit_single_xfer(thread_entry, ioat_task, dst, src);
+		submit_single_xfer(ioat_chan_entry, ioat_task, dst, src);
 	}
 }
 
 static int
 work_fn(void *arg)
 {
-	char buf_pool_name[20], task_pool_name[20];
 	uint64_t tsc_end;
-	struct thread_entry *t = (struct thread_entry *)arg;
+	struct worker_thread *worker = (struct worker_thread *)arg;
+	struct ioat_chan_entry *t = NULL;
 
-	if (!t->chan) {
-		return 0;
-	}
-
-	t->lcore_id = rte_lcore_id();
-
-	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
-	t->data_pool = spdk_mempool_create(buf_pool_name, 512, g_user_config.xfer_size_bytes, -1);
-	t->task_pool = spdk_mempool_create(task_pool_name, 512, sizeof(struct ioat_task), -1);
-	if (!t->data_pool || !t->task_pool) {
-		fprintf(stderr, "Could not allocate buffer pool.\n");
-		return 1;
-	}
+	printf("Starting thread on core %u\n", worker->lcore);
 
 	tsc_end = spdk_get_ticks() + g_user_config.time_in_sec * spdk_get_ticks_hz();
 
-	// begin to submit transfers
-	submit_xfers(t, g_user_config.queue_depth);
-	while (spdk_get_ticks() < tsc_end) {
-		spdk_ioat_process_events(t->chan);
+	t = worker->ctx;
+	while (t != NULL) {
+		// begin to submit transfers
+		submit_xfers(t, g_user_config.queue_depth);
+		t = t->next;
 	}
 
-	// begin to drain io
-	t->is_draining = true;
-	drain_io(t);
+	while (1) {
+		t = worker->ctx;
+		while (t != NULL) {
+			spdk_ioat_process_events(t->chan);
+			t = t->next;
+		}
+
+		if (spdk_get_ticks() > tsc_end) {
+			break;
+		}
+	}
+
+	t = worker->ctx;
+	while (t != NULL) {
+		// begin to drain io
+		t->is_draining = true;
+		drain_io(t);
+		t = t->next;
+	}
 
 	return 0;
 }
@@ -311,64 +398,54 @@ work_fn(void *arg)
 static int
 init(void)
 {
-	char *core_mask_conf;
+	struct spdk_env_opts opts;
 
-	core_mask_conf = spdk_sprintf_alloc("-c %s", g_user_config.core_mask);
-	if (!core_mask_conf) {
-		return 1;
-	}
-
-	char *ealargs[] = {"perf", core_mask_conf, "-n 4"};
-
-	if (rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs) < 0) {
-		free(core_mask_conf);
-		fprintf(stderr, "Could not init eal\n");
-		return 1;
-	}
-
-	free(core_mask_conf);
-
-	if (ioat_init() != 0) {
-		fprintf(stderr, "Could not init ioat\n");
-		return 1;
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "perf";
+	opts.core_mask = g_user_config.core_mask;
+	spdk_env_init(&opts);
 
 	return 0;
 }
 
 static int
-dump_result(struct thread_entry *threads, int len)
+dump_result(void)
 {
-	int i;
 	uint64_t total_completed = 0;
 	uint64_t total_failed = 0;
-	uint64_t total_xfer_per_sec, total_bw_in_MBps;
+	uint64_t total_xfer_per_sec, total_bw_in_MiBps;
+	struct worker_thread *worker = g_workers;
 
-	printf("lcore     Transfers        Bandwidth  Failed\n");
-	printf("--------------------------------------------\n");
-	for (i = 0; i < len; i++) {
-		struct thread_entry *t = &threads[i];
+	printf("Channel_ID     Lcore     Transfers     Bandwidth     Failed\n");
+	printf("-----------------------------------------------------------\n");
+	while (worker != NULL) {
+		struct ioat_chan_entry *t = worker->ctx;
+		while (t) {
+			uint64_t xfer_per_sec = t->xfer_completed / g_user_config.time_in_sec;
+			uint64_t bw_in_MiBps = (t->xfer_completed * g_user_config.xfer_size_bytes) /
+					       (g_user_config.time_in_sec * 1024 * 1024);
 
-		uint64_t xfer_per_sec = t->xfer_completed / g_user_config.time_in_sec;
-		uint64_t bw_in_MBps = (t->xfer_completed * g_user_config.xfer_size_bytes) /
-				      (g_user_config.time_in_sec * 1024 * 1024);
+			total_completed += t->xfer_completed;
+			total_failed += t->xfer_failed;
 
-		total_completed += t->xfer_completed;
-		total_failed += t->xfer_failed;
-
-		if (xfer_per_sec) {
-			printf("%5d  %10" PRIu64 "/s  %10" PRIu64 " MB/s  %6" PRIu64 "\n",
-			       t->lcore_id, xfer_per_sec, bw_in_MBps, t->xfer_failed);
+			if (xfer_per_sec) {
+				printf("%10d%10d%12" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 "\n",
+				       t->ioat_chan_id, worker->lcore, xfer_per_sec,
+				       bw_in_MiBps, t->xfer_failed);
+			}
+			t = t->next;
 		}
+		worker = worker->next;
 	}
 
 	total_xfer_per_sec = total_completed / g_user_config.time_in_sec;
-	total_bw_in_MBps = (total_completed * g_user_config.xfer_size_bytes) /
-			   (g_user_config.time_in_sec * 1024 * 1024);
+	total_bw_in_MiBps = (total_completed * g_user_config.xfer_size_bytes) /
+			    (g_user_config.time_in_sec * 1024 * 1024);
 
-	printf("============================================\n");
-	printf("Total: %10" PRIu64 "/s  %10" PRIu64 " MB/s  %6" PRIu64 "\n",
-	       total_xfer_per_sec, total_bw_in_MBps, total_failed);
+	printf("===========================================================\n");
+	printf("Total:%26" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 "\n",
+	       total_xfer_per_sec, total_bw_in_MiBps, total_failed);
+
 	return total_failed ? 1 : 0;
 }
 
@@ -378,7 +455,6 @@ get_next_chan(void)
 	struct spdk_ioat_chan *chan;
 
 	if (g_next_device == NULL) {
-		fprintf(stderr, "Not enough ioat channels found. Check that ioatdma driver is unloaded.\n");
 		return NULL;
 	}
 
@@ -389,12 +465,57 @@ get_next_chan(void)
 	return chan;
 }
 
+static int
+associate_workers_with_chan(void)
+{
+	struct spdk_ioat_chan *chan = get_next_chan();
+	struct worker_thread	*worker = g_workers;
+	struct ioat_chan_entry	*t;
+	char buf_pool_name[20], task_pool_name[20];
+	int i = 0;
+
+	while (chan != NULL) {
+		t = calloc(1, sizeof(struct ioat_chan_entry));
+		if (!t) {
+			return -1;
+		}
+
+		t->ioat_chan_id = i;
+		snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", i);
+		snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", i);
+		t->data_pool = spdk_mempool_create(buf_pool_name, 512, g_user_config.xfer_size_bytes, -1,
+						   SPDK_ENV_SOCKET_ID_ANY);
+		t->task_pool = spdk_mempool_create(task_pool_name, 512, sizeof(struct ioat_task), -1,
+						   SPDK_ENV_SOCKET_ID_ANY);
+		if (!t->data_pool || !t->task_pool) {
+			fprintf(stderr, "Could not allocate buffer pool.\n");
+			spdk_mempool_free(t->data_pool);
+			spdk_mempool_free(t->task_pool);
+			free(t);
+			return 1;
+		}
+		printf("Associating ioat_channel %d with lcore %d\n", i, worker->lcore);
+		t->chan = chan;
+		t->next = worker->ctx;
+		worker->ctx = t;
+
+		worker = worker->next;
+		if (worker == NULL) {
+			worker = g_workers;
+		}
+
+		chan = get_next_chan();
+		i++;
+	}
+
+	return 0;
+}
+
 int
 main(int argc, char **argv)
 {
-	unsigned lcore_id;
-	struct thread_entry threads[RTE_MAX_LCORE] = {};
 	int rc;
+	struct worker_thread *worker;
 
 	if (parse_args(argc, argv) != 0) {
 		return 1;
@@ -404,30 +525,62 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	dump_user_config(&g_user_config);
-
-	g_next_device = TAILQ_FIRST(&g_devices);
-	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-		threads[lcore_id].chan = get_next_chan();
-		rte_eal_remote_launch(work_fn, &threads[lcore_id], lcore_id);
-	}
-
-	threads[rte_get_master_lcore()].chan = get_next_chan();
-	if (work_fn(&threads[rte_get_master_lcore()]) != 0) {
-		rc = 1;
+	if (register_workers() != 0) {
+		rc = -1;
 		goto cleanup;
 	}
 
-	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-		if (rte_eal_wait_lcore(lcore_id) != 0) {
-			rc = 1;
-			goto cleanup;
-		}
+	if (ioat_init() != 0) {
+		rc = -1;
+		goto cleanup;
 	}
 
-	rc = dump_result(threads, RTE_MAX_LCORE);
+	if (g_ioat_chan_num == 0) {
+		printf("No channels found\n");
+		rc = 0;
+		goto cleanup;
+	}
+
+	if (g_user_config.ioat_chan_num > g_ioat_chan_num) {
+		printf("%d channels are requested, but only %d are found,"
+		       "so only test %d channels\n", g_user_config.ioat_chan_num,
+		       g_ioat_chan_num, g_ioat_chan_num);
+		g_user_config.ioat_chan_num = g_ioat_chan_num;
+	}
+
+	g_next_device = TAILQ_FIRST(&g_devices);
+	dump_user_config(&g_user_config);
+
+	if (associate_workers_with_chan() != 0) {
+		rc = -1;
+		goto cleanup;
+	}
+
+	/* Launch all of the slave workers */
+	worker = g_workers->next;
+	while (worker != NULL) {
+		rte_eal_remote_launch(work_fn, worker, worker->lcore);
+		worker = worker->next;
+	}
+
+	rc = work_fn(g_workers);
+	if (rc < 0) {
+		goto cleanup;
+	}
+
+	worker = g_workers->next;
+	while (worker != NULL) {
+		if (rte_eal_wait_lcore(worker->lcore) < 0) {
+			rc = -1;
+			goto cleanup;
+		}
+		worker = worker->next;
+	}
+
+	rc = dump_result();
 
 cleanup:
+	unregister_workers();
 	ioat_exit();
 
 	return rc;

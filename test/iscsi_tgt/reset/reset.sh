@@ -38,7 +38,7 @@ fi
 pid=$!
 echo "Process pid: $pid"
 
-trap "process_core; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
 echo "iscsi_tgt is listening. Running tests..."
@@ -63,7 +63,7 @@ $fio_py 512 1 read 60 &
 fiopid=$!
 echo "FIO pid: $fiopid"
 
-trap "iscsicleanup; process_core; killprocess $pid; killprocess $fiopid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsicleanup; killprocess $pid; killprocess $fiopid; exit 1" SIGINT SIGTERM EXIT
 
 # Do 3 resets while making sure iscsi_tgt and fio are still running
 for i in 1 2 3; do

@@ -46,11 +46,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-static TAILQ_HEAD(, spdk_nvmf_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
-static uint64_t g_discovery_genctr = 0;
-static struct spdk_nvmf_discovery_log_page *g_discovery_log_page = NULL;
-static size_t g_discovery_log_page_size = 0;
-
 bool
 spdk_nvmf_subsystem_exists(const char *subnqn)
 {
@@ -60,7 +55,7 @@ spdk_nvmf_subsystem_exists(const char *subnqn)
 		return false;
 	}
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
 			return true;
 		}
@@ -78,7 +73,7 @@ nvmf_find_subsystem(const char *subnqn)
 		return NULL;
 	}
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
 			return subsystem;
 		}
@@ -93,7 +88,7 @@ spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_session 	*session;
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		TAILQ_FOREACH(session, &subsystem->sessions, link) {
 			if (session->cntlid == cntlid) {
 				return subsystem;
@@ -132,12 +127,12 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_session *session;
 
-	TAILQ_FOREACH(session, &subsystem->sessions, link) {
-		/* For NVMe subsystems, check the backing physical device for completions. */
-		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-			session->subsys->ops->poll_for_completions(session);
-		}
+	/* For NVMe subsystems, check the backing physical device for completions. */
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+		subsystem->ops->poll_for_completions(subsystem);
+	}
 
+	TAILQ_FOREACH(session, &subsystem->sessions, link) {
 		/* For each connection in the session, check for completions */
 		spdk_nvmf_session_poll(session);
 	}
@@ -204,8 +199,8 @@ spdk_nvmf_create_subsystem(const char *nqn,
 		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 	}
 
-	TAILQ_INSERT_TAIL(&g_subsystems, subsystem, entries);
-	g_discovery_genctr++;
+	TAILQ_INSERT_TAIL(&g_nvmf_tgt.subsystems, subsystem, entries);
+	g_nvmf_tgt.discovery_genctr++;
 
 	return subsystem;
 }
@@ -225,10 +220,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	TAILQ_FOREACH_SAFE(listen_addr, &subsystem->listen_addrs, link, listen_addr_tmp) {
 		TAILQ_REMOVE(&subsystem->listen_addrs, listen_addr, link);
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr->trname);
-		free(listen_addr);
+		spdk_nvmf_listen_addr_destroy(listen_addr);
 		subsystem->num_listen_addrs--;
 	}
 
@@ -247,15 +239,15 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		subsystem->ops->detach(subsystem);
 	}
 
-	TAILQ_REMOVE(&g_subsystems, subsystem, entries);
-	g_discovery_genctr++;
+	TAILQ_REMOVE(&g_nvmf_tgt.subsystems, subsystem, entries);
+	g_nvmf_tgt.discovery_genctr++;
 
 	free(subsystem);
 }
 
 int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 char *trname, char *traddr, char *trsvcid)
+				 const char *trname, const char *traddr, const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
@@ -266,35 +258,14 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -1;
 	}
 
-	listen_addr = calloc(1, sizeof(*listen_addr));
+	listen_addr = spdk_nvmf_listen_addr_create(trname, traddr, trsvcid);
 	if (!listen_addr) {
-		return -1;
-	}
-
-	listen_addr->traddr = strdup(traddr);
-	if (!listen_addr->traddr) {
-		free(listen_addr);
-		return -1;
-	}
-
-	listen_addr->trsvcid = strdup(trsvcid);
-	if (!listen_addr->trsvcid) {
-		free(listen_addr->traddr);
-		free(listen_addr);
-		return -1;
-	}
-
-	listen_addr->trname = strdup(trname);
-	if (!listen_addr->trname) {
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr);
 		return -1;
 	}
 
 	TAILQ_INSERT_HEAD(&subsystem->listen_addrs, listen_addr, link);
 	subsystem->num_listen_addrs++;
-	g_discovery_genctr++;
+	g_nvmf_tgt.discovery_genctr++;
 
 	rc = transport->listen_addr_add(listen_addr);
 	if (rc < 0) {
@@ -306,7 +277,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 }
 
 int
-spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_nqn)
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *host_nqn)
 {
 	struct spdk_nvmf_host *host;
 
@@ -322,7 +293,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, char *host_n
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
 	subsystem->num_hosts++;
-	g_discovery_genctr++;
+	g_nvmf_tgt.discovery_genctr++;
 
 	return 0;
 }
@@ -354,7 +325,7 @@ nvmf_update_discovery_log(void)
 	size_t cur_size;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Generating log page for genctr %" PRIu64 "\n",
-		      g_discovery_genctr);
+		      g_nvmf_tgt.discovery_genctr);
 
 	cur_size = sizeof(struct spdk_nvmf_discovery_log_page);
 	disc_log = calloc(1, cur_size);
@@ -363,7 +334,7 @@ nvmf_update_discovery_log(void)
 		return;
 	}
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			continue;
 		}
@@ -398,12 +369,12 @@ nvmf_update_discovery_log(void)
 	}
 
 	disc_log->numrec = numrec;
-	disc_log->genctr = g_discovery_genctr;
+	disc_log->genctr = g_nvmf_tgt.discovery_genctr;
 
-	free(g_discovery_log_page);
+	free(g_nvmf_tgt.discovery_log_page);
 
-	g_discovery_log_page = disc_log;
-	g_discovery_log_page_size = cur_size;
+	g_nvmf_tgt.discovery_log_page = disc_log;
+	g_nvmf_tgt.discovery_log_page_size = cur_size;
 }
 
 void
@@ -412,16 +383,16 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 	size_t copy_len = 0;
 	size_t zero_len = length;
 
-	if (g_discovery_log_page == NULL ||
-	    g_discovery_log_page->genctr != g_discovery_genctr) {
+	if (g_nvmf_tgt.discovery_log_page == NULL ||
+	    g_nvmf_tgt.discovery_log_page->genctr != g_nvmf_tgt.discovery_genctr) {
 		nvmf_update_discovery_log();
 	}
 
 	/* Copy the valid part of the discovery log page, if any */
-	if (g_discovery_log_page && offset < g_discovery_log_page_size) {
-		copy_len = nvmf_min(g_discovery_log_page_size - offset, length);
+	if (g_nvmf_tgt.discovery_log_page && offset < g_nvmf_tgt.discovery_log_page_size) {
+		copy_len = spdk_min(g_nvmf_tgt.discovery_log_page_size - offset, length);
 		zero_len -= copy_len;
-		memcpy(buffer, (char *)g_discovery_log_page + offset, copy_len);
+		memcpy(buffer, (char *)g_nvmf_tgt.discovery_log_page + offset, copy_len);
 	}
 
 	/* Zero out the rest of the buffer */

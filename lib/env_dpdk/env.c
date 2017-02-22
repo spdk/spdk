@@ -82,7 +82,13 @@ spdk_free(void *buf)
 void *
 spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
 {
-	const struct rte_memzone *mz = rte_memzone_reserve(name, len, socket_id, flags);
+	const struct rte_memzone *mz;
+
+	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
+		socket_id = SOCKET_ID_ANY;
+	}
+
+	mz = rte_memzone_reserve(name, len, socket_id, flags);
 
 	if (mz != NULL) {
 		memset(mz->addr, 0, len);
@@ -124,10 +130,14 @@ spdk_memzone_dump(FILE *f)
 
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
-		    size_t ele_size, size_t cache_size)
+		    size_t ele_size, size_t cache_size, int socket_id)
 {
 	struct rte_mempool *mp;
 	size_t tmp;
+
+	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
+		socket_id = SOCKET_ID_ANY;
+	}
 
 	/* No more than half of all elements can be in cache */
 	tmp = (count / 2) / rte_lcore_count();
@@ -141,7 +151,7 @@ spdk_mempool_create(const char *name, size_t count,
 
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
 				0, NULL, NULL, NULL, NULL,
-				SOCKET_ID_ANY, 0);
+				socket_id, 0);
 
 	return (struct spdk_mempool *)mp;
 }

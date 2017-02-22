@@ -111,16 +111,6 @@ the kernel to avoid interrupts and context switching.
   BDF 0000:00:00.0
   BDF 0000:01:00.0
 
-  # SPDK supports partitioning each nvme card into multiple LUNs
-  #  through the NvmeLunsPerNs parameter. If NvmeLunsPerNs is specified,
-  #  then the size of the nvme card is split up equally only if LunSizeinMB
-  #  is not specified. For example, a 400GB NVMe namespace would be split
-  #  into 4 LUNs, each 100GB in size. These LUNs could be presented
-  #  individually (i.e. one LUN per TargetNode), or aggregated into a single
-  #  target node as in the example above. Currently, maximal value supported
-  #  by NvmeLunsPerNs is 256.
-  NvmeLunsPerNs 4
-
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
   NvmeRetryCount 4
@@ -130,11 +120,11 @@ the kernel to avoid interrupts and context switching.
 
 [TargetNodeX]
   # other TargetNode parameters go here (TargetName, Mapping, etc.)
-  # nvme with the following format: NvmeXnYpZ, where X = the controller ID,
-  # Y = the namespace ID, and Z = the partition ID
+  # nvme with the following format: NvmeXnY, where X = the controller ID
+  # and Y = the namespace ID
   # Note: NVMe namespace IDs always start at 1, not 0 - and most
   #  controllers have only 1 namespace.
-  LUN0 Nvme0n1p0
+  LUN0 Nvme0n1
 ~~~
 
 You should make a copy of the example configuration file, modify it to suit your environment, and

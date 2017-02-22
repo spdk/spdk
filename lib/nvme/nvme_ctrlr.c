@@ -346,16 +346,14 @@ nvme_ctrlr_set_supported_features(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 {
-	struct spdk_nvme_qpair *qpair;
-
+	/*
+	 * Set the flag here and leave the work failure of qpairs to
+	 * spdk_nvme_qpair_process_completions().
+	 */
 	if (hot_remove) {
 		ctrlr->is_removed = true;
 	}
 	ctrlr->is_failed = true;
-	nvme_qpair_fail(ctrlr->adminq);
-	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
-		nvme_qpair_fail(qpair);
-	}
 }
 
 static void
@@ -434,7 +432,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
 
 	/* Page size is 2 ^ (12 + mps). */
-	cc.bits.mps = nvme_u32log2(PAGE_SIZE) - 12;
+	cc.bits.mps = spdk_u32log2(PAGE_SIZE) - 12;
 
 	switch (ctrlr->opts.arb_mechanism) {
 	case SPDK_NVME_CC_AMS_RR:
@@ -487,13 +485,14 @@ static void
 nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 		     uint64_t timeout_in_ms)
 {
-	SPDK_TRACELOG(SPDK_TRACE_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
-		      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
-
 	ctrlr->state = state;
 	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "setting state to %s (no timeout)\n",
+			      nvme_ctrlr_state_string(ctrlr->state));
 		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
 	} else {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
+			      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
 		ctrlr->state_timeout_tsc = spdk_get_ticks() + (timeout_in_ms * spdk_get_ticks_hz()) / 1000;
 	}
 }
@@ -583,7 +582,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->max_xfer_size = nvme_transport_ctrlr_get_max_xfer_size(ctrlr);
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
 	if (ctrlr->cdata.mdts > 0) {
-		ctrlr->max_xfer_size = nvme_min(ctrlr->max_xfer_size,
+		ctrlr->max_xfer_size = spdk_min(ctrlr->max_xfer_size,
 						ctrlr->min_page_size * (1 << (ctrlr->cdata.mdts)));
 		SPDK_TRACELOG(SPDK_TRACE_NVME, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
 	}
@@ -632,7 +631,7 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	sq_allocated = (status.cpl.cdw0 & 0xFFFF) + 1;
 	cq_allocated = (status.cpl.cdw0 >> 16) + 1;
 
-	ctrlr->opts.num_io_queues = nvme_min(sq_allocated, cq_allocated);
+	ctrlr->opts.num_io_queues = spdk_min(sq_allocated, cq_allocated);
 
 	ctrlr->free_io_qids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
 	if (ctrlr->free_io_qids == NULL) {
@@ -852,7 +851,7 @@ nvme_ctrlr_configure_aer(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* aerl is a zero-based value, so we need to add 1 here. */
-	ctrlr->num_aers = nvme_min(NVME_MAX_ASYNC_EVENTS, (ctrlr->cdata.aerl + 1));
+	ctrlr->num_aers = spdk_min(NVME_MAX_ASYNC_EVENTS, (ctrlr->cdata.aerl + 1));
 
 	for (i = 0; i < ctrlr->num_aers; i++) {
 		aer = &ctrlr->aer[i];
@@ -1095,7 +1094,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
 	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
-		SPDK_ERRLOG("get registers failed\n");
+		if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {
+			/* While a device is resetting, it may be unable to service MMIO reads
+			 * temporarily. Allow for this case.
+			 */
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Get registers failed while waiting for CSTS.RDY == 0\n");
+			goto init_timeout;
+		}
+		SPDK_ERRLOG("Failed to read CC and CSTS in state %d\n", ctrlr->state);
 		nvme_ctrlr_fail(ctrlr, false);
 		return -EIO;
 	}
@@ -1208,6 +1214,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		return -1;
 	}
 
+init_timeout:
 	if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE &&
 	    spdk_get_ticks() > ctrlr->state_timeout_tsc) {
 		SPDK_ERRLOG("Initialization timed out in state %d\n", ctrlr->state);
@@ -1313,8 +1320,8 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 
 	ctrlr->min_page_size = 1u << (12 + ctrlr->cap.bits.mpsmin);
 
-	ctrlr->opts.io_queue_size = nvme_min(ctrlr->opts.io_queue_size, ctrlr->cap.bits.mqes + 1u);
-	ctrlr->opts.io_queue_size = nvme_min(ctrlr->opts.io_queue_size, max_io_queue_size);
+	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, ctrlr->cap.bits.mqes + 1u);
+	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, max_io_queue_size);
 }
 
 void
@@ -1629,7 +1636,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	p = payload;
 
 	while (size_remaining > 0) {
-		transfer = nvme_min(size_remaining, ctrlr->min_page_size);
+		transfer = spdk_min(size_remaining, ctrlr->min_page_size);
 		status.done = false;
 
 		res = nvme_ctrlr_cmd_fw_image_download(ctrlr, transfer, offset, p,

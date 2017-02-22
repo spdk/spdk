@@ -106,7 +106,6 @@ spdk_iscsi_config_dump_section(FILE *fp)
 	if (g_spdk_iscsi.discovery_auth_group)
 		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
 
-	/* FIXME - lookup log facility and put it in place of "local7" below */
 	fprintf(fp, ISCSI_CONFIG_TMPL,
 		g_spdk_iscsi.nodebase, g_spdk_iscsi.authfile,
 		g_spdk_iscsi.timeout, authmethod, authgroup,

@@ -26,7 +26,7 @@ fio_py="python $rootdir/scripts/fio.py"
 pid=$!
 echo "Process pid: $pid"
 
-trap "process_core; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
 echo "iscsi_tgt is listening. Running tests..."
@@ -38,7 +38,7 @@ sleep 1
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
 iscsiadm -m node --login -p $TARGET_IP:$PORT
 
-trap "iscsicleanup; process_core; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 sleep 5
 

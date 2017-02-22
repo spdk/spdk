@@ -43,6 +43,12 @@
   NumberOfLuns 8
   LunSizeInMB 64
 
+# Users must change this section to match the /dev/sdX devices to be virtual
+# NVMe devices. The devices are accessed using Linux AIO.
+[AIO]
+  AIO /dev/sdb
+  AIO /dev/sdc
+
 # Define NVMf protocol global options
 [Nvmf]
   # Set the maximum number of submission and completion queues per session.
@@ -75,6 +81,18 @@
   # Set how often the admin queue is polled for asynchronous events
   # Units in microseconds.
   AdminPollRate 100000
+
+# The Split virtual block device slices block devices into multiple smaller bdevs.
+[Split]
+  # Syntax:
+  #   Split <bdev> <count> [<size_in_megabytes>]
+
+  # Split Malloc2 into two equally-sized portions, Malloc2p0 and Malloc2p1
+  Split Malloc2 2
+
+  # Split Malloc3 into eight 1-megabyte portions, Malloc3p0 ... Malloc3p7,
+  # leaving the rest of the device inaccessible
+  Split Malloc3 8 1
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
@@ -118,3 +136,5 @@
   SN SPDK00000000000001
   Namespace Malloc0
   Namespace Malloc1
+  Namespace AIO0
+  Namespace AIO1

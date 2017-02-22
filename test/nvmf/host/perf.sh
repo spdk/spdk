@@ -30,11 +30,12 @@ waitforlisten $nvmfpid ${RPC_PORT}
 bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 $rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -s SPDK00000000000001 -n "$bdevs"
+$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode2 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -p "*"
 
 $rootdir/examples/nvme/perf/perf -q 128 -s 4096 -w randrw -M 50 -t 1 -r "trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420"
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
-
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
 
 trap - SIGINT SIGTERM EXIT
 

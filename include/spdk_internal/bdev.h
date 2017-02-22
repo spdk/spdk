@@ -157,6 +157,7 @@ struct spdk_bdev_io *spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
 		struct spdk_bdev *bdev,
 		spdk_bdev_io_completion_cb cb,
 		void *cb_arg);
+void spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev *new_bdev);
 void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
 

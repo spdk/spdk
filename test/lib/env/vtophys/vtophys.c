@@ -36,16 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rte_config.h>
-#include <rte_eal.h>
-
 #include "spdk/env.h"
-
-static const char *ealargs[] = {
-	"vtophys",
-	"-c 0x1",
-	"-n 4",
-};
 
 static int
 vtophys_negative_test(void)
@@ -122,15 +113,13 @@ vtophys_positive_test(void)
 int
 main(int argc, char **argv)
 {
-	int rc;
+	int 			rc;
+	struct spdk_env_opts	opts;
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
-			  (char **)(void *)(uintptr_t)ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "Could not init eal\n");
-		exit(1);
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "vtophys";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	rc = vtophys_negative_test();
 	if (rc < 0)

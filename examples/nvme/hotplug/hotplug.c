@@ -81,6 +81,7 @@ static int g_expected_insert_times = -1;
 static int g_expected_removal_times = -1;
 static int g_insert_times;
 static int g_removal_times;
+static int g_shm_id = -1;
 
 static void
 task_complete(struct perf_task *task);
@@ -376,7 +377,8 @@ static void usage(char *program_name)
 {
 	printf("%s options", program_name);
 	printf("\n");
-	printf("\t[-i expected hot insert times]\n");
+	printf("\t[-i shm id (optional)]\n");
+	printf("\t[-n expected hot insert times]\n");
 	printf("\t[-r expected hot removal times]\n");
 	printf("\t[-t time in seconds]\n");
 }
@@ -389,9 +391,12 @@ parse_args(int argc, char **argv)
 	/* default value*/
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "i:r:t:")) != -1) {
+	while ((op = getopt(argc, argv, "i:n:r:t:")) != -1) {
 		switch (op) {
 		case 'i':
+			g_shm_id = atoi(optarg);
+			break;
+		case 'n':
 			g_expected_insert_times = atoi(optarg);
 			break;
 		case 'r':
@@ -430,26 +435,23 @@ register_controllers(void)
 	return 0;
 }
 
-static char *ealargs[] = {
-	"hotplug",
-	"-c 0x1",
-	"-n 4",
-};
-
 int main(int argc, char **argv)
 {
 	int rc;
+	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
+	spdk_env_opts_init(&opts);
+	opts.name = "hotplug";
+	opts.core_mask = "0x1";
+	if (g_shm_id > -1) {
+		opts.shm_id = g_shm_id;
 	}
+	spdk_env_init(&opts);
 
 	task_pool = rte_mempool_create("task_pool", 8192,
 				       sizeof(struct perf_task),

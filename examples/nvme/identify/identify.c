@@ -873,9 +873,15 @@ usage(const char *program_name)
 	printf("%s [options]", program_name);
 	printf("\n");
 	printf("options:\n");
-	printf(" -a addr    address of NVMe over Fabrics discovery service\n");
-	printf(" -s service service ID for NVMe over Fabrics discovery service\n");
-	printf(" -n nqn     NQN of NVMe over Fabrics discovery service\n");
+	printf(" -r trid    remote NVMe over Fabrics target address\n");
+	printf("    Format: 'key:value [key:value] ...'\n");
+	printf("    Keys:\n");
+	printf("     trtype      Transport type (e.g. RDMA)\n");
+	printf("     adrfam      Address family (e.g. IPv4, IPv6)\n");
+	printf("     traddr      Transport address (e.g. 192.168.100.8)\n");
+	printf("     trsvcid     Transport service identifier (e.g. 4420)\n");
+	printf("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
+	printf("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
 
 	spdk_tracelog_usage(stdout, "-t");
 
@@ -892,7 +898,7 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "a:n:s:t:xH")) != -1) {
+	while ((op = getopt(argc, argv, "r:t:xH")) != -1) {
 		switch (op) {
 		case 'x':
 			g_hex_dump = true;
@@ -911,14 +917,11 @@ parse_args(int argc, char **argv)
 			return 0;
 #endif
 			break;
-		case 'a':
-			snprintf(g_trid.traddr, sizeof(g_trid.traddr), "%s", optarg);
-			break;
-		case 's':
-			snprintf(g_trid.trsvcid, sizeof(g_trid.trsvcid), "%s", optarg);
-			break;
-		case 'n':
-			snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", optarg);
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
 			break;
 		case 'H':
 		default:
@@ -926,14 +929,6 @@ parse_args(int argc, char **argv)
 			return 1;
 		}
 	}
-
-	if ((strlen(g_trid.traddr) == 0) || (strlen(g_trid.trsvcid) == 0) ||
-	    (strlen(g_trid.subnqn) == 0)) {
-		return 0;
-	}
-
-	g_trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	g_trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 
 	optind = 1;
 
@@ -955,44 +950,23 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	spdk_nvme_detach(ctrlr);
 }
 
-static const char *ealargs[] = {
-	"identify",
-	"-c 0x1",
-	"-n 4",
-	"-m 512",
-	"--proc-type=auto",
-};
-
 int main(int argc, char **argv)
 {
 	int				rc;
-	struct spdk_nvme_transport_id	*tr_id = NULL;
+	struct spdk_env_opts		opts;
+
+	spdk_env_opts_init(&opts);
+	opts.name = "identify";
+	opts.core_mask = "0x1";
+	spdk_env_init(&opts);
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
 
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]),
-			  (char **)(void *)(uintptr_t)ealargs);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		exit(1);
-	}
-
 	rc = 0;
-	if (g_trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
-		if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
-			fprintf(stderr, "spdk_nvme_probe() failed\n");
-		}
-	}
-
-	if ((g_trid.trtype == SPDK_NVME_TRANSPORT_PCIE) && (strlen(g_trid.traddr) != 0)) {
-		tr_id = &g_trid;
-	}
-
-	if (spdk_nvme_probe(tr_id, NULL, probe_cb, attach_cb, NULL) != 0) {
+	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		rc = 1;
 	}

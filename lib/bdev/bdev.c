@@ -430,6 +430,22 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	return 0;
 }
 
+void
+spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev *new_bdev)
+{
+	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+	bdev_io->bdev = new_bdev;
+
+	/*
+	 * These fields are normally set during spdk_bdev_io_init(), but since bdev is
+	 * being switched, they need to be reinitialized.
+	 */
+	bdev_io->gencnt = new_bdev->gencnt;
+	bdev_io->ctx = new_bdev->ctxt;
+
+	__submit_request(new_bdev, bdev_io);
+}
+
 static void
 spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 		  struct spdk_bdev *bdev, void *cb_arg,

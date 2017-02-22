@@ -76,10 +76,22 @@ spdk_pci_device_fini(struct rte_pci_device *device)
 void
 spdk_pci_device_detach(struct spdk_pci_device *device)
 {
+	struct rte_pci_addr	addr;
+
+	addr.domain = device->addr.domain;
+	addr.bus = device->addr.bus;
+	addr.devid = device->addr.devid;
+	addr.function = device->addr.function;
+
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 	rte_eal_device_remove(&device->device);
 #endif
-	rte_eal_pci_detach(&device->addr);
+	rte_eal_pci_detach(&addr);
+	/* This will not actually load any drivers because our
+	 * callback isn't set, but it will re-add the device
+	 * to DPDK's internal list.
+	 */
+	rte_eal_pci_probe_one(&addr);
 }
 
 int
@@ -247,6 +259,16 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 	pci_id.subdevice_id = spdk_pci_device_get_subdevice_id(pci_dev);
 
 	return pci_id;
+}
+
+int
+spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+	return pci_dev->device.numa_node;
+#else
+	return pci_dev->numa_node;
+#endif
 }
 
 int

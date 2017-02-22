@@ -87,6 +87,7 @@ struct worker_thread {
 };
 
 struct arb_context {
+	int					shm_id;
 	int					outstanding_commands;
 	int					num_namespaces;
 	int					num_workers;
@@ -119,6 +120,7 @@ static struct worker_thread *g_workers		= NULL;
 static struct feature features[256];
 
 static struct arb_context g_arbitration = {
+	.shm_id					= -1,
 	.outstanding_commands			= 0,
 	.num_workers				= 0,
 	.num_namespaces				= 0,
@@ -131,6 +133,7 @@ static struct arb_context g_arbitration = {
 	.arbitration_config			= 0,
 	.io_size_bytes				= 131072,
 	.max_completions			= 0,
+	/* Default 4 cores for urgent/high/medium/low */
 	.core_mask				= "0xf",
 	.workload_type				= "randrw",
 };
@@ -521,7 +524,8 @@ usage(char *program_name)
 	printf("\t\t(2: vendor specific mechanism)]\n");
 	printf("\t[-b enable arbitration user configuration, default: disabled]\n");
 	printf("\t\t(0 - disabled; 1 - enabled)\n");
-	printf("\t[-i subjected IOs for performance comparison]\n");
+	printf("\t[-n subjected IOs for performance comparison]\n");
+	printf("\t[-i shared memory group ID]\n");
 }
 
 static const char *
@@ -682,10 +686,13 @@ parse_args(int argc, char **argv)
 	int op				= 0;
 	bool mix_specified		= false;
 
-	while ((op = getopt(argc, argv, "c:l:m:q:s:t:w:M:a:b:i:h")) != -1) {
+	while ((op = getopt(argc, argv, "c:l:i:m:q:s:t:w:M:a:b:n:h")) != -1) {
 		switch (op) {
 		case 'c':
 			g_arbitration.core_mask = optarg;
+			break;
+		case 'i':
+			g_arbitration.shm_id = atoi(optarg);
 			break;
 		case 'l':
 			g_arbitration.latency_tracking_enable = atoi(optarg);
@@ -715,7 +722,7 @@ parse_args(int argc, char **argv)
 		case 'b':
 			g_arbitration.arbitration_config = atoi(optarg);
 			break;
-		case 'i':
+		case 'n':
 			g_arbitration.io_count = atoi(optarg);
 			break;
 		case 'h':
@@ -1074,14 +1081,6 @@ set_arb_feature(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
-
-static char *ealargs[] = {
-	"arb",
-	"-c 0xf", /* This must be the second parameter. It is overwritten by index in main(). */
-	"-n 4",
-	"--proc-type=auto",
-};
-
 int
 main(int argc, char **argv)
 {
@@ -1089,27 +1088,18 @@ main(int argc, char **argv)
 	struct worker_thread *worker;
 	char task_pool_name[30];
 	uint32_t task_count;
+	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
 
-	/* Default 4 cores for (urgent / high / medium / low) 4 kinds of queues respectively */
-	ealargs[1] = spdk_sprintf_alloc("-c %s", g_arbitration.core_mask);
-	if (ealargs[1] == NULL) {
-		perror("ealargs spdk_sprintf_alloc");
-		return 1;
-	}
-
-	rc = rte_eal_init(sizeof(ealargs) / sizeof(ealargs[0]), ealargs);
-
-	free(ealargs[1]);
-
-	if (rc < 0) {
-		fprintf(stderr, "could not initialize dpdk\n");
-		return 1;
-	}
+	spdk_env_opts_init(&opts);
+	opts.name = "arb";
+	opts.core_mask = g_arbitration.core_mask;
+	opts.shm_id = g_arbitration.shm_id;
+	spdk_env_init(&opts);
 
 	g_arbitration.tsc_rate = spdk_get_ticks_hz();
 

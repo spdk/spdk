@@ -19,6 +19,7 @@ which avoids kernel context switches and eliminates interrupt handling overhead.
 
 ## Modules {#modules}
 
+- @ref event
 - @ref nvme
 - @ref nvmf
 - @ref ioat

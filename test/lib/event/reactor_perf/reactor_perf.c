@@ -31,90 +31,70 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include <unistd.h>
 
-#include <rte_config.h>
-#include <rte_eal.h>
-#include <rte_ring.h>
-#include <rte_lcore.h>
-
-#include "spdk/env.h"
 #include "spdk/event.h"
-#include "spdk/log.h"
-
-static uint64_t g_tsc_rate;
-static uint64_t g_tsc_us_rate;
 
 static int g_time_in_sec;
-
-static __thread uint64_t __call_count = 0;
-static uint64_t call_count[RTE_MAX_LCORE];
+static int g_queue_depth;
+static struct spdk_poller *test_end_poller;
+static uint64_t g_call_count = 0;
 
 static void
-submit_new_event(void *arg1, void *arg2)
+__test_end(void *arg)
+{
+	printf("test_end\n");
+	spdk_app_stop(0);
+}
+
+static void
+__submit_next(void *arg1, void *arg2)
 {
 	struct spdk_event *event;
-	static __thread uint32_t next_lcore = RTE_MAX_LCORE;
 
-	if (next_lcore == RTE_MAX_LCORE) {
-		next_lcore = rte_get_next_lcore(rte_lcore_id(), 0, 1);
-	}
+	g_call_count++;
 
-	++__call_count;
-	event = spdk_event_allocate(next_lcore, submit_new_event, NULL, NULL);
+	event = spdk_event_allocate(spdk_app_get_current_core(),
+				    __submit_next, NULL, NULL);
 	spdk_event_call(event);
 }
 
-static int
-event_work_fn(void *arg)
+static void
+test_start(void *arg1, void *arg2)
 {
-	uint64_t tsc_end;
+	int i;
 
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+	printf("test_start\n");
 
-	submit_new_event(NULL, NULL);
-	submit_new_event(NULL, NULL);
-	submit_new_event(NULL, NULL);
-	submit_new_event(NULL, NULL);
+	/* Register a poller that will stop the test after the time has elapsed. */
+	spdk_poller_register(&test_end_poller, __test_end, NULL,
+			     spdk_app_get_current_core(),
+			     g_time_in_sec * 1000000ULL);
 
-	while (1) {
-
-		spdk_event_queue_run_batch(rte_lcore_id());
-
-		if (spdk_get_ticks() > tsc_end) {
-			break;
-		}
+	for (i = 0; i < g_queue_depth; i++) {
+		__submit_next(NULL, NULL);
 	}
-
-	call_count[rte_lcore_id()] = __call_count;
-
-	return 0;
 }
 
 static void
-usage(char *program_name)
+test_cleanup(void)
+{
+	printf("test_abort\n");
+
+	spdk_poller_unregister(&test_end_poller, NULL);
+	spdk_app_stop(0);
+}
+
+static void
+usage(const char *program_name)
 {
 	printf("%s options\n", program_name);
-	printf("\t[-m core mask for distributing I/O submission/completion work\n");
-	printf("\t\t(default: 0x1 - use core 0 only)]\n");
+	printf("\t[-d Allowed delay when passing messages between cores in microseconds]\n");
+	printf("\t[-q Queue depth (default: 1)]\n");
 	printf("\t[-t time in seconds]\n");
-}
-
-static void
-performance_dump(int io_time)
-{
-	uint32_t i;
-
-	printf("\n");
-	RTE_LCORE_FOREACH(i) {
-		printf("lcore %2d: %8ju\n", i, call_count[i] / g_time_in_sec);
-	}
-
-	fflush(stdout);
 }
 
 int
@@ -122,17 +102,21 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts;
 	int op;
-	int i;
 
 	spdk_app_opts_init(&opts);
-	opts.name = "event";
+	opts.name = "reactor_perf";
+	opts.max_delay_us = 1000;
 
 	g_time_in_sec = 0;
+	g_queue_depth = 1;
 
-	while ((op = getopt(argc, argv, "m:t:")) != -1) {
+	while ((op = getopt(argc, argv, "d:q:t:")) != -1) {
 		switch (op) {
-		case 'm':
-			opts.reactor_mask = optarg;
+		case 'd':
+			opts.max_delay_us = atoi(optarg);
+			break;
+		case 'q':
+			g_queue_depth = atoi(optarg);
 			break;
 		case 't':
 			g_time_in_sec = atoi(optarg);
@@ -148,28 +132,17 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	optind = 1;  /*reset the optind */
+	optind = 1;
+
+	opts.shutdown_cb = test_cleanup;
 
 	spdk_app_init(&opts);
 
-	g_tsc_rate = spdk_get_ticks_hz();
-	g_tsc_us_rate = g_tsc_rate / (1000 * 1000);
+	spdk_app_start(test_start, NULL, NULL);
 
-	printf("Running I/O for %d seconds...", g_time_in_sec);
-	fflush(stdout);
+	spdk_app_fini();
 
-	/* call event_work_fn on each slave lcore */
-	RTE_LCORE_FOREACH_SLAVE(i) {
-		rte_eal_remote_launch(event_work_fn, NULL, i);
-	}
+	printf("Performance: %8ju events per second\n", g_call_count / g_time_in_sec);
 
-	/* call event_work_fn on lcore0 */
-	event_work_fn(NULL);
-
-	rte_eal_mp_wait_lcore();
-
-	performance_dump(g_time_in_sec);
-
-	printf("done.\n");
 	return 0;
 }

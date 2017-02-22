@@ -124,7 +124,9 @@ struct nvme_tracker {
 
 	uint32_t			rsvd2;
 
-	uint64_t			timeout_tick;
+	/* The value of spdk_get_ticks() when the tracker was submitted to the hardware. */
+	uint64_t			submit_tick;
+
 	uint64_t			prp_sgl_bus_addr;
 
 	union {
@@ -204,20 +206,20 @@ nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
 		return;
 	}
 
-	if (g_thread_mmio_ctrlr) {
-		if (!g_thread_mmio_ctrlr->is_remapped) {
-			map_address = mmap((void *)g_thread_mmio_ctrlr->regs, g_thread_mmio_ctrlr->regs_size,
-					   PROT_READ | PROT_WRITE,
-					   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
-			if (map_address == MAP_FAILED) {
-				SPDK_ERRLOG("mmap failed\n");
-				g_signal_lock = 0;
-				return;
-			}
-			memset(map_address, 0xFF, sizeof(struct spdk_nvme_registers));
-			g_thread_mmio_ctrlr->regs = (volatile struct spdk_nvme_registers *)map_address;
-			g_thread_mmio_ctrlr->is_remapped = true;
+	assert(g_thread_mmio_ctrlr != NULL);
+
+	if (!g_thread_mmio_ctrlr->is_remapped) {
+		map_address = mmap((void *)g_thread_mmio_ctrlr->regs, g_thread_mmio_ctrlr->regs_size,
+				   PROT_READ | PROT_WRITE,
+				   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+		if (map_address == MAP_FAILED) {
+			SPDK_ERRLOG("mmap failed\n");
+			g_signal_lock = 0;
+			return;
 		}
+		memset(map_address, 0xFF, sizeof(struct spdk_nvme_registers));
+		g_thread_mmio_ctrlr->regs = (volatile struct spdk_nvme_registers *)map_address;
+		g_thread_mmio_ctrlr->is_remapped = true;
 	}
 	g_signal_lock = 0;
 	return;
@@ -291,19 +293,6 @@ nvme_pcie_qpair(struct spdk_nvme_qpair *qpair)
 {
 	assert(qpair->trtype == SPDK_NVME_TRANSPORT_PCIE);
 	return (struct nvme_pcie_qpair *)((uintptr_t)qpair - offsetof(struct nvme_pcie_qpair, qpair));
-}
-
-int
-nvme_pcie_ctrlr_get_pci_id(struct spdk_nvme_ctrlr *ctrlr, struct spdk_pci_id *pci_id)
-{
-	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
-
-	assert(ctrlr != NULL);
-	assert(pci_id != NULL);
-
-	*pci_id = spdk_pci_device_get_id(pctrlr->devhandle);
-
-	return 0;
 }
 
 static volatile void *
@@ -847,7 +836,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		 *  Note also that for a queue size of N, we can only have (N-1)
 		 *  commands outstanding, hence the "-1" here.
 		 */
-		num_trackers = nvme_min(NVME_IO_TRACKERS, pqpair->num_entries - 1);
+		num_trackers = spdk_min(NVME_IO_TRACKERS, pqpair->num_entries - 1);
 	}
 
 	assert(num_trackers != 0);
@@ -1024,7 +1013,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
-	tr->timeout_tick = spdk_get_ticks() + qpair->ctrlr->timeout_ticks;
+	tr->submit_tick = spdk_get_ticks();
 
 	req = tr->req;
 	pqpair->tr[tr->cid].active = true;
@@ -1523,11 +1512,11 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 		return -1;
 	}
-	nseg = req->payload_size >> nvme_u32log2(PAGE_SIZE);
+	nseg = req->payload_size >> spdk_u32log2(PAGE_SIZE);
 	modulo = req->payload_size & (PAGE_SIZE - 1);
 	unaligned = phys_addr & (PAGE_SIZE - 1);
 	if (modulo || unaligned) {
-		nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+		nseg += 1 + ((modulo + unaligned - 1) >> spdk_u32log2(PAGE_SIZE));
 	}
 
 	if (req->payload.md) {
@@ -1609,7 +1598,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			return -1;
 		}
 
-		length = nvme_min(remaining_transfer_len, length);
+		length = spdk_min(remaining_transfer_len, length);
 		remaining_transfer_len -= length;
 
 		sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
@@ -1691,13 +1680,13 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 		/* All SGe except first must start on a page boundary. */
 		assert((sge_count == 0) || _is_page_aligned(phys_addr));
 
-		data_transferred = nvme_min(remaining_transfer_len, length);
+		data_transferred = spdk_min(remaining_transfer_len, length);
 
-		nseg = data_transferred >> nvme_u32log2(PAGE_SIZE);
+		nseg = data_transferred >> spdk_u32log2(PAGE_SIZE);
 		modulo = data_transferred & (PAGE_SIZE - 1);
 		unaligned = phys_addr & (PAGE_SIZE - 1);
 		if (modulo || unaligned) {
-			nseg += 1 + ((modulo + unaligned - 1) >> nvme_u32log2(PAGE_SIZE));
+			nseg += 1 + ((modulo + unaligned - 1) >> spdk_u32log2(PAGE_SIZE));
 		}
 
 		if (total_nseg == 0) {
@@ -1847,7 +1836,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 
 	t02 = spdk_get_ticks();
-	if (tr->timeout_tick <= t02) {
+	if (tr->submit_tick + ctrlr->timeout_ticks <= t02) {
 		/*
 		 * Request has timed out. This could be i/o or admin request.
 		 * Call the registered timeout function for user to take action.

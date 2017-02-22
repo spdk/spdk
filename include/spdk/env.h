@@ -47,7 +47,32 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 
+#define SPDK_ENV_SOCKET_ID_ANY	(-1)
+
 struct spdk_pci_device;
+
+/**
+ * \brief Environment initialization options
+ */
+struct spdk_env_opts {
+	const char 		*name;
+	const char 		*core_mask;
+	int 			shm_id;
+	int	 		dpdk_mem_channel;
+	int	 		dpdk_master_core;
+	int			dpdk_mem_size;
+};
+
+/**
+ * \brief Initialize the default value of opts
+*/
+void spdk_env_opts_init(struct spdk_env_opts *opts);
+
+/**
+ * \brief Initialize the environment library. This must be called prior to using
+ * any other functions in this library.
+*/
+void spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
@@ -78,7 +103,7 @@ void spdk_free(void *buf);
  *   socket_id and flags.
  * Return a pointer to the allocated memory address. If the allocation
  *   cannot be done, return NULL.
- * Note: to pick any socket id, just set socket_id to -1.
+ * Note: to pick any socket id, just set socket_id to SPDK_ENV_SOCKET_ID_ANY.
  */
 void *spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags);
 
@@ -105,9 +130,11 @@ struct spdk_mempool;
  * Create a thread-safe memory pool. Cache size is the number of
  * elements in a thread-local cache. Can be 0 for no caching, or -1
  * for unspecified.
+ *
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY for any socket.
  */
 struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
-		size_t ele_size, size_t cache_size);
+		size_t ele_size, size_t cache_size, int socket_id);
 
 /**
  * Free a memory pool.
@@ -205,6 +232,15 @@ uint16_t spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev);
 uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
 
 struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
+
+/**
+ * Get the NUMA socket ID of a PCI device.
+ *
+ * \param dev PCI device to get the socket ID of.
+ *
+ * \return Socket ID (>= 0), or negative if unknown.
+ */
+int spdk_pci_device_get_socket_id(struct spdk_pci_device *dev);
 
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);

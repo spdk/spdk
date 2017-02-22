@@ -9,8 +9,6 @@ try:
 except ImportError:
     from pipes import quote
 
-SPDK_JSONRPC_PORT_BASE = 5260
-
 def print_dict(d):
     print json.dumps(d, indent=2)
 
@@ -19,7 +17,7 @@ def print_array(a):
 
 parser = argparse.ArgumentParser(description='SPDK RPC command line interface')
 parser.add_argument('-s', dest='server_addr', help='RPC server address', default='127.0.0.1')
-parser.add_argument('-p', dest='instance_id', help='RPC server instance ID', default=0, type=int)
+parser.add_argument('-p', dest='port', help='RPC port number', default=5260, type=int)
 subparsers = parser.add_subparsers(help='RPC methods')
 
 
@@ -30,10 +28,10 @@ def int_arg(arg):
 def jsonrpc_call(method, params={}):
     if args.server_addr.startswith('/'):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect("{}.{}".format(args.server_addr, args.instance_id))
+        s.connect(args.server_addr)
     else:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((args.server_addr, SPDK_JSONRPC_PORT_BASE + args.instance_id))
+        s.connect((args.server_addr, args.port))
     req = {}
     req['jsonrpc'] = '2.0'
     req['method'] = method
@@ -375,7 +373,7 @@ def construct_nvmf_subsystem(args):
     jsonrpc_call('construct_nvmf_subsystem', params)
 
 p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
-p.add_argument("-c", "--core", help='The core Nvmf target run on', type=int, default=0)
+p.add_argument("-c", "--core", help='The core Nvmf target run on', type=int, default=-1)
 p.add_argument('mode', help='Target mode: Virtual or Direct')
 p.add_argument('nqn', help='Target nqn(ASCII)')
 p.add_argument('listen', help="""comma-separated list of Listen <transport:transport_name traddr:address trsvcid:port_id> pairs enclosed

@@ -34,8 +34,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(DPDK_INC)
-C_SRCS = env.c pci.c vtophys.c
+CFLAGS += $(ENV_CFLAGS)
+C_SRCS = env.c pci.c vtophys.c init.c
 C_SRCS += pci_nvme.c pci_ioat.c
 LIBNAME = env_dpdk
 

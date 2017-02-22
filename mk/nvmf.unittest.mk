@@ -39,7 +39,7 @@ C_SRCS = $(TEST_FILE)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/nvmf
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIB_LIST = log
+SPDK_LIB_LIST = util log
 
 LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
 

@@ -100,7 +100,7 @@ insert_devices
 
 timing_enter hotplug_test
 
-ssh_vm "examples/nvme/hotplug/hotplug -t 10 -i 4 -r 8" &
+ssh_vm "examples/nvme/hotplug/hotplug -i 0 -t 10 -n 4 -r 8" &
 example_pid=$!
 
 sleep 2

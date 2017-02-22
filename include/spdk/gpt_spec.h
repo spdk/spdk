@@ -92,12 +92,13 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_gpt_guid) == 16, "size incorrect");
 
 #define SPDK_GPT_GUID(a, b, c, d, e) \
 	(struct spdk_gpt_guid){{ \
-		(uint8_t)(a), (uint8_t)((a) >> 8), (uint8_t)((a) >> 16), (uint8_t)((a >> 24)), \
-		(uint8_t)(b), (uint8_t)((b) >> 8), \
-		(uint8_t)(c), (uint8_t)((c) >> 8), \
-		(uint8_t)((d) >> 8), (uint8_t)(d), \
-		(uint8_t)((e) >> 40), (uint8_t)((e) >> 32), (uint8_t)((e) >> 24), \
-		(uint8_t)((e) >> 16), (uint8_t)((e) >> 8), (uint8_t)(e) \
+		(uint8_t)(a), (uint8_t)(((uint32_t)a) >> 8), \
+		(uint8_t)(((uint32_t)a) >> 16), (uint8_t)(((uint32_t)a >> 24)), \
+		(uint8_t)(b), (uint8_t)(((uint16_t)b) >> 8), \
+		(uint8_t)(c), (uint8_t)(((uint16_t)c) >> 8), \
+		(uint8_t)(((uint16_t)d) >> 8), (uint8_t)(d), \
+		(uint8_t)(((uint64_t)e) >> 40), (uint8_t)(((uint64_t)e) >> 32), (uint8_t)(((uint64_t)e) >> 24), \
+		(uint8_t)(((uint64_t)e) >> 16), (uint8_t)(((uint64_t)e) >> 8), (uint8_t)(e) \
 	}}
 
 #define SPDK_GPT_PART_TYPE_UNUSED		SPDK_GPT_GUID(0x00000000, 0x0000, 0x0000, 0x0000, 0x000000000000)

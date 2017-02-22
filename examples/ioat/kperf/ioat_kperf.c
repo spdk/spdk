@@ -39,6 +39,8 @@
 #include <inttypes.h>
 #include <assert.h>
 
+#define ioat_max(a,b) (((a)>(b))?(a):(b))
+
 static int
 check_modules(char *driver_name)
 {
@@ -200,7 +202,7 @@ int main(int argc, char *argv[])
 
 	if (check_modules("ioatdma")) {
 		fprintf(stderr, "Ioat driver not loaded,"
-			" run `modprove -v ioatdma` first\n");
+			" run `modprobe -v ioatdma` first\n");
 		return -1;
 	}
 	if (check_modules("dmaperf")) {
@@ -214,15 +216,9 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	rc = get_u32_from_file("/sys/module/ioatdma/parameters/ioat_ring_alloc_order",
-			       &order);
-	if (rc < 0) {
-		fprintf(stderr, "Cannot get default ioat queue depth\n");
-		return -1;
-	}
-	ring_size = 1UL << order;
+	ring_size = 1UL << 16;
 
-	while ((op = getopt(argc, argv, "h:n:q:s:t:")) != -1) {
+	while ((op = getopt(argc, argv, "hn:q:s:t:")) != -1) {
 		switch (op) {
 		case 'n':
 			threads = atoi(optarg);
@@ -317,18 +313,20 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Running I/O ");
 	fflush(stdout);
+	memset(buf, 0, BUFSIZ);
 	/* wait all the channels to be idle */
-	while (!get_str_from_file("/sys/kernel/debug/dmaperf/dmaperf/status", buf, BUFSIZ)) {
+	do {
+		fprintf(stdout, ". ");
+		fflush(stdout);
+		sleep(1);
+
 		if (strstr(buf, "idle") != NULL) {
 			fprintf(stdout, "\n");
 			fflush(stdout);
 			sleep(1);
 			break;
 		}
-		fprintf(stdout, ". ");
-		fflush(stdout);
-		sleep(1);
-	}
+	} while (!get_str_from_file("/sys/kernel/debug/dmaperf/dmaperf/status", buf, BUFSIZ));
 
 	/* collect each channel performance data */
 
@@ -337,26 +335,31 @@ int main(int argc, char *argv[])
 		sprintf(channel, "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/copied", i);
 		rc = get_u64_from_file(channel, &copied);
 		if (rc < 0) {
-			fprintf(stderr, "Cannot get channel copied bytes\n");
+			fprintf(stderr, "Cannot get channel copied data\n");
 			return -1;
 		}
 		/* time in microseconds for total data transfer length */
 		sprintf(channel, "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/elapsed_time", i);
+		/* elapsed_time is in microsecond */
 		rc = get_u64_from_file(channel, &elapsed_time);
 		if (rc < 0) {
 			fprintf(stderr, "Cannot get channel elapsed time\n");
 			return -1;
 		}
 		assert(elapsed_time != 0);
-		perf = copied / elapsed_time;
+		perf = (copied * 1000 * 1000) / (elapsed_time * 1024 * 1024);
 		total_copied += copied;
-		total_time += elapsed_time;
-		fprintf(stdout, "Channel %d Performance Data %"PRIu64" MB/s\n",
+		total_time = ioat_max(elapsed_time, total_time);
+		fprintf(stdout, "Channel %d Bandwidth %"PRIu64" MiB/s\n",
 			i, perf);
 	}
 
-	if (total_time && threads)
-		fprintf(stdout, "Total Channel Performance Data %"PRIu64" MB/s\n",
-			total_copied / total_time / threads);
+	if (total_time && threads) {
+		fprintf(stdout, "Total Channel Bandwidth: %"PRIu64" MiB/s\n",
+			total_copied / total_time);
+		fprintf(stdout, "Average Bandwidth Per Channel: %"PRIu64" MiB/s\n",
+			(total_copied * 1000 * 1000) / (total_time * threads * 1024 * 1024));
+	}
+
 	return 0;
 }

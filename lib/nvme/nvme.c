@@ -281,7 +281,7 @@ nvme_driver_init(void)
 	TAILQ_INIT(&g_spdk_nvme_driver->attached_ctrlrs);
 
 	g_spdk_nvme_driver->request_mempool = spdk_mempool_create("nvme_request", 8192,
-					      sizeof(struct nvme_request), 128);
+					      sizeof(struct nvme_request), 128, SPDK_ENV_SOCKET_ID_ANY);
 	if (g_spdk_nvme_driver->request_mempool == NULL) {
 		SPDK_ERRLOG("unable to allocate pool of requests\n");
 

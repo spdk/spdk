@@ -280,7 +280,8 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 
 	lun = spdk_lun_db_get_lun(name, 0);
 	if (lun) {
-		return lun;
+		SPDK_ERRLOG("LUN %s already created\n", lun->name);
+		return NULL;
 	}
 
 	lun = calloc(1, sizeof(*lun));
@@ -304,6 +305,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 	rc = spdk_scsi_lun_db_add(lun);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to add LUN %s to DB\n", lun->name);
+		spdk_bdev_unclaim(bdev);
 		free(lun);
 		return NULL;
 	}
@@ -311,7 +313,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 	return lun;
 }
 
-static int
+int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_unclaim(lun->bdev);

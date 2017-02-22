@@ -75,6 +75,7 @@ subsystem_delete_event(void *arg1, void *arg2)
 	spdk_nvmf_delete_subsystem(subsystem);
 
 	if (g_subsystems_shutdown && TAILQ_EMPTY(&g_subsystems)) {
+		spdk_nvmf_tgt_fini();
 		/* Finished shutting down all subsystems - continue the shutdown process. */
 		shutdown_complete();
 	}
@@ -118,7 +119,6 @@ shutdown_subsystems(void)
 static void
 acceptor_poller_unregistered_event(void *arg1, void *arg2)
 {
-	spdk_nvmf_tgt_fini();
 	shutdown_subsystems();
 }
 
@@ -305,7 +305,7 @@ usage(void)
 	printf(" -c config  - config file (default %s)\n", SPDK_NVMF_DEFAULT_CONFIG);
 	printf(" -e mask    - tracepoint group mask for spdk trace buffers (default 0x0)\n");
 	printf(" -m mask    - core mask for DPDK\n");
-	printf(" -i instance ID\n");
+	printf(" -i shared memory ID (optional)\n");
 	printf(" -l facility - use specific syslog facility (default %s)\n",
 	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
@@ -332,7 +332,6 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 
 	rc = spdk_nvmf_parse_conf();
 	if (rc < 0) {
-		nvmf_tgt_delete_subsystems();
 		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
 		goto initialize_error;
 	}
@@ -357,6 +356,7 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 	return;
 
 initialize_error:
+	nvmf_tgt_delete_subsystems();
 	spdk_app_stop(rc);
 }
 
@@ -372,9 +372,8 @@ This is the main file.
 
 \msc
 
-	c_runtime [label="C Runtime"], dpdk [label="DPDK"], nvmf [label="NVMf target"];
+	c_runtime [label="C Runtime"], nvmf [label="NVMf target"];
 	c_runtime=>nvmf [label="main()"];
-	nvmf=> [label="rte_eal_init()"];
 	nvmf=>nvmf [label="spdk_app_init()"];
 	nvmf=>nvmf [label="spdk_event_allocate()"];
 	nvmf=>nvmf [label="spdk_app_start()"];
@@ -408,7 +407,7 @@ main(int argc, char **argv)
 			opts.config_file = optarg;
 			break;
 		case 'i':
-			opts.instance_id = atoi(optarg);
+			opts.shm_id = atoi(optarg);
 			break;
 		case 'l':
 			opts.log_facility = optarg;

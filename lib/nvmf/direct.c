@@ -51,10 +51,10 @@ nvmf_direct_ctrlr_get_data(struct spdk_nvmf_session *session)
 }
 
 static void
-nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_session *session)
+nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 {
-	spdk_nvme_ctrlr_process_admin_completions(session->subsys->dev.direct.ctrlr);
-	spdk_nvme_qpair_process_completions(session->subsys->dev.direct.io_qpair, 0);
+	spdk_nvme_ctrlr_process_admin_completions(subsystem->dev.direct.ctrlr);
+	spdk_nvme_qpair_process_completions(subsystem->dev.direct.io_qpair, 0);
 }
 
 static void
@@ -154,6 +154,8 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			return spdk_nvmf_session_get_features_host_identifier(req);
 		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 			return spdk_nvmf_session_get_features_keep_alive_timer(req);
+		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+			return spdk_nvmf_session_get_features_async_event_configuration(req);
 		default:
 			goto passthrough;
 		}
@@ -167,6 +169,8 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 			return spdk_nvmf_session_set_features_host_identifier(req);
 		case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
 			return spdk_nvmf_session_set_features_keep_alive_timer(req);
+		case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+			return spdk_nvmf_session_set_features_async_event_configuration(req);
 		default:
 			goto passthrough;
 		}

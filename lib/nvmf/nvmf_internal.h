@@ -42,8 +42,26 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/assert.h"
 #include "spdk/queue.h"
+#include "spdk/util.h"
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
+
+struct spdk_nvmf_tgt {
+	uint16_t				max_queue_depth;
+	uint16_t				max_queues_per_session;
+	uint32_t				in_capsule_data_size;
+	uint32_t				max_io_size;
+	uint64_t				discovery_genctr;
+	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
+	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
+	size_t					discovery_log_page_size;
+};
+
+extern struct spdk_nvmf_tgt g_nvmf_tgt;
+
+struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(const char *trname, const char *traddr,
+		const char *trsvcid);
+void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
 
 #define OBJECT_NVMF_IO				0x30
 
@@ -57,25 +75,5 @@
 #define TRACE_NVMF_LIB_WRITE_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x6)
 #define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
 #define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
-
-struct spdk_nvmf_globals {
-	uint16_t max_queue_depth;
-	uint16_t max_queues_per_session;
-
-	uint32_t in_capsule_data_size;
-	uint32_t max_io_size;
-};
-
-static inline uint32_t
-nvmf_u32log2(uint32_t x)
-{
-	if (x == 0) {
-		/* __builtin_clz(0) is undefined, so just bail */
-		return 0;
-	}
-	return 31u - __builtin_clz(x);
-}
-
-extern struct spdk_nvmf_globals g_nvmf_tgt;
 
 #endif /* __NVMF_INTERNAL_H__ */
