@@ -247,11 +247,6 @@ nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 	int rc;
 
 	wr = &rqpair->rsp_recv_wrs[rsp_idx];
-	wr->wr_id = rsp_idx;
-	wr->next = NULL;
-	wr->sg_list = &rqpair->rsp_sgls[rsp_idx];
-	wr->num_sge = 1;
-
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
 
 	rc = ibv_post_recv(rqpair->cm_id->qp, wr, &bad_wr);
@@ -319,6 +314,11 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 		rsp_sgl->addr = (uint64_t)&rqpair->rsps[i];
 		rsp_sgl->length = sizeof(rqpair->rsps[i]);
 		rsp_sgl->lkey = rqpair->rsp_mr->lkey;
+
+		rqpair->rsp_recv_wrs[i].wr_id = i;
+		rqpair->rsp_recv_wrs[i].next = NULL;
+		rqpair->rsp_recv_wrs[i].sg_list = rsp_sgl;
+		rqpair->rsp_recv_wrs[i].num_sge = 1;
 
 		if (nvme_rdma_post_recv(rqpair, i)) {
 			SPDK_ERRLOG("Unable to post connection rx desc\n");
