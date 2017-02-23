@@ -503,11 +503,11 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 static void
 blockdev_nvme_timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
-			 struct spdk_nvme_qpair *qpair)
+			 struct spdk_nvme_qpair *qpair, uint16_t cid)
 {
 	int rc;
 
-	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
+	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
 	rc = spdk_nvme_ctrlr_reset(ctrlr);
 	if (rc) {

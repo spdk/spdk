@@ -388,7 +388,8 @@ struct spdk_nvme_qpair;
  */
 typedef void (*spdk_nvme_timeout_cb)(void *cb_arg,
 				     struct spdk_nvme_ctrlr *ctrlr,
-				     struct spdk_nvme_qpair *qpair);
+				     struct spdk_nvme_qpair *qpair,
+				     uint16_t cid);
 
 /**
  * \brief Register for timeout callback on a controller.
