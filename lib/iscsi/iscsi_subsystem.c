@@ -381,7 +381,7 @@ static void spdk_iscsi_sess_ctor(struct rte_mempool *pool, void *arg,
 	sess->tsih = index + 1;
 }
 
-#define DEFAULT_TASK_POOL_SIZE 16384
+#define DEFAULT_TASK_POOL_SIZE 32768
 
 static int
 spdk_iscsi_initialize_task_pool(void)
