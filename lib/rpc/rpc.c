@@ -261,27 +261,20 @@ spdk_rpc_initialize(void)
 	return 0;
 }
 
-static void
-spdk_rpc_finish_cleanup(void *arg1, void *arg2)
-{
-	if (g_jsonrpc_server) {
-		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
-	}
-}
-
 static int
 spdk_rpc_finish(void)
 {
-	struct spdk_event *complete;
-
 	if (g_rpc_listen_addr_unix.sun_path[0]) {
 		/* Delete the Unix socket file */
 		unlink(g_rpc_listen_addr_unix.sun_path);
 	}
 
-	complete = spdk_event_allocate(spdk_app_get_current_core(), spdk_rpc_finish_cleanup,
-				       NULL, NULL);
-	spdk_poller_unregister(&g_rpc_poller, complete);
+	spdk_poller_unregister(&g_rpc_poller, NULL);
+
+	if (g_jsonrpc_server) {
+		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
+	}
+
 	return 0;
 }
 
