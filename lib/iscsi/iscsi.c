@@ -3106,13 +3106,10 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	/* transfer data from logical unit */
 	/* (direction is view of initiator side) */
 	if (spdk_iscsi_task_is_read(primary)) {
-		if ((task->scsi.status == SPDK_SCSI_STATUS_GOOD) ||
-		    (task->scsi.sense_data_len != 0)) {
-			rc = spdk_iscsi_transfer_in(conn, task);
-			if (rc > 0) {
-				/* sent status by last DATAIN PDU */
-				return;
-			}
+		rc = spdk_iscsi_transfer_in(conn, task);
+		if (rc > 0) {
+			/* sent status by last DATAIN PDU */
+			return;
 		}
 
 		if (primary->scsi.bytes_completed != primary->scsi.transfer_len)
