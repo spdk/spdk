@@ -383,11 +383,6 @@ spdk_scsi_lun_delete(const char *lun_name)
 		spdk_scsi_dev_delete_lun(dev, lun);
 	}
 
-	/* LUNs are always created in a pair with a blockdev.
-	 * Delete the blockdev associated with this lun.
-	 */
-	spdk_bdev_unregister(lun->bdev);
-
 	/* Destroy this lun */
 	spdk_scsi_lun_destruct(lun);
 	pthread_mutex_unlock(&g_spdk_scsi.mutex);
