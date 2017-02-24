@@ -577,7 +577,7 @@ void spdk_reactors_stop(void)
 int
 spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 {
-	uint32_t i;
+	uint32_t i, j;
 	int rc;
 	struct spdk_reactor *reactor;
 	uint64_t socket_mask = 0x0;
@@ -622,8 +622,12 @@ spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 								  sizeof(struct spdk_event), -1,
 								  SPDK_ENV_SOCKET_ID_ANY);
 
-				/* TODO: in DPDK 16.04, free mempool API is avaialbe. */
 				if (g_spdk_event_mempool[i] == NULL) {
+					for (j = i - 1; j < i; j--) {
+						if (g_spdk_event_mempool[j] != NULL) {
+							spdk_mempool_free(g_spdk_event_mempool[j]);
+						}
+					}
 					SPDK_ERRLOG("spdk_event_mempool creation failed\n");
 					return -1;
 				}
@@ -647,7 +651,26 @@ spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 int
 spdk_reactors_fini(void)
 {
-	/* TODO: free rings and mempool */
+	uint32_t i;
+	uint64_t socket_mask;
+	struct spdk_reactor *reactor;
+
+	RTE_LCORE_FOREACH(i) {
+		if (((1ULL << i) & spdk_app_get_core_mask())) {
+			reactor = spdk_reactor_get(i);
+			if (reactor->events != NULL) {
+				rte_ring_free(reactor->events);
+			}
+		}
+	}
+
+	socket_mask = spdk_reactor_get_socket_mask();
+	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
+		if ((1ULL << i) & socket_mask && g_spdk_event_mempool[i] != NULL) {
+			spdk_mempool_free(g_spdk_event_mempool[i]);
+		}
+	}
+
 	return 0;
 }
 

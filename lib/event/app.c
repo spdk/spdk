@@ -426,6 +426,7 @@ spdk_app_fini(void)
 
 	rc = spdk_subsystem_fini();
 	spdk_trace_cleanup();
+	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_close_log();
 
