@@ -380,6 +380,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			break;
 		}
 	}
+	num_hosts = i;
 
 	bdf = spdk_conf_section_get_val(sp, "NVMe");
 	sn = spdk_conf_section_get_val(sp, "SN");
