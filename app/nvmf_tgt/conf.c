@@ -373,7 +373,6 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	}
 
 	/* Parse Host sections */
-	num_hosts = 0;
 	for (i = 0; i < MAX_HOSTS; i++) {
 		hosts[i] = spdk_conf_section_get_nval(sp, "Host", i);
 		if (!hosts[i]) {
