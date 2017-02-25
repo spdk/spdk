@@ -1854,10 +1854,10 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 			 * greater than 1 to cause a controller reset from timeout callback
 			 * function.
 			 */
-                        tr->req->timeout_count = 2;
+			tr->req->timeout_count = 2;
 		} else {
 			tr->req->timeout_count++;
-                }
+		}
 
 		tr->submit_tick = spdk_get_ticks();
 		ctrlr->timeout_cb_fn(ctrlr,
