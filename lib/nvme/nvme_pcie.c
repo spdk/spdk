@@ -1848,9 +1848,9 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 		 * Call the registered timeout function for user to take action.
 		 */
 
-		if (nvme_qpair_is_admin_queue(qpair)) {
+		if (tr->req->cmd.opc == SPDK_NVME_OPC_ABORT) {
 			/*
-			 * An admin command has timed out. Modify timeout_count value to be
+			 * An abort command has timed out. Modify timeout_count value to be
 			 * greater than 1 to cause a controller reset from timeout callback
 			 * function.
 			 */
