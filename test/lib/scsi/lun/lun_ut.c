@@ -443,7 +443,7 @@ lun_append_task_null_lun_task_cdb_spc_inquiry(void)
 	task->cdb[4] = 0xFF;
 	task->lun = NULL;
 
-	spdk_scsi_lun_append_task(NULL, task);
+	spdk_scsi_task_process_null_lun(task);
 
 	CU_ASSERT_EQUAL(task->status, SPDK_SCSI_STATUS_GOOD);
 
@@ -466,7 +466,7 @@ lun_append_task_null_lun_alloc_len_lt_4096(void)
 	task->cdb[4] = 0;
 	/* alloc_len is set to a minimal value of 4096
 	 * Hence, rbuf of size 4096 is allocated*/
-	spdk_scsi_lun_append_task(NULL, task);
+	spdk_scsi_task_process_null_lun(task);
 
 	CU_ASSERT_EQUAL(task->status, SPDK_SCSI_STATUS_GOOD);
 
@@ -485,7 +485,7 @@ lun_append_task_null_lun_not_supported(void)
 	task->cdb = cdb;
 	task->lun = NULL;
 
-	spdk_scsi_lun_append_task(NULL, task);
+	spdk_scsi_task_process_null_lun(task);
 
 	CU_ASSERT_EQUAL(task->status, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	/* LUN not supported; task's data transferred should be 0 */

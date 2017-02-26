@@ -2956,6 +2956,12 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.initiator_port = conn->initiator_port;
 	task->scsi.parent = NULL;
 
+	if (task->scsi.lun == NULL) {
+		spdk_scsi_task_process_null_lun(&task->scsi);
+		process_task_completion(conn, task);
+		return 0;
+	}
+
 	/* no bi-directional support */
 	if (R_bit) {
 		return spdk_iscsi_op_scsi_read(conn, task);

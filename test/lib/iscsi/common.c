@@ -60,6 +60,11 @@ spdk_get_pdu(void)
 }
 
 void
+spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
+{
+}
+
+void
 spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,
 			 struct spdk_scsi_task *task)
 {

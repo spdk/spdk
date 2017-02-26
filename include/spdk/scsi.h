@@ -293,6 +293,7 @@ void spdk_scsi_task_build_sense_data(struct spdk_scsi_task *task, int sk, int as
 				     int ascq);
 void spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc,
 			       int ascq);
+void spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task);
 
 static inline struct spdk_scsi_task *
 spdk_scsi_task_get_primary(struct spdk_scsi_task *task)

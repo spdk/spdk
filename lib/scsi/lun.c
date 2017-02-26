@@ -179,13 +179,14 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 	return rc;
 }
 
-static void
-complete_task_with_no_lun(struct spdk_scsi_task *task)
+void
+spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
 {
 	uint8_t buffer[36];
 	uint32_t allocation_len;
 	uint32_t data_len;
 
+	task->length = task->transfer_len;
 	if (task->cdb[0] == SPDK_SPC_INQUIRY) {
 		/*
 		 * SPC-4 states that INQUIRY commands to an unsupported LUN
@@ -213,17 +214,11 @@ complete_task_with_no_lun(struct spdk_scsi_task *task)
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		task->data_transferred = 0;
 	}
-	spdk_scsi_lun_complete_task(NULL, task);
 }
 
 int
 spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	if (lun == NULL) {
-		complete_task_with_no_lun(task);
-		return -1;
-	}
-
 	TAILQ_INSERT_TAIL(&lun->pending_tasks, task, scsi_link);
 	return 0;
 }
