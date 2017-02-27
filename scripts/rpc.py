@@ -338,6 +338,16 @@ def get_bdevs(args):
 p = subparsers.add_parser('get_bdevs', help='Display current blockdev list')
 p.set_defaults(func=get_bdevs)
 
+
+def delete_bdev(args):
+    params = {'name': args.bdev_name}
+    jsonrpc_call('delete_bdev', params)
+
+p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
+p.add_argument('bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
+p.set_defaults(func=delete_bdev)
+
+
 def get_nvmf_subsystems(args):
     print_dict(jsonrpc_call('get_nvmf_subsystems'))
 

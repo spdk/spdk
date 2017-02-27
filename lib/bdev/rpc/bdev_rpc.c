@@ -90,3 +90,64 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_server_conn *conn,
 	spdk_jsonrpc_end_result(conn, w);
 }
 SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs)
+
+
+struct rpc_delete_bdev {
+	char *name;
+};
+
+static void
+free_rpc_delete_bdev(struct rpc_delete_bdev *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_delete_bdev_decoders[] = {
+	{"name", offsetof(struct rpc_delete_bdev, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_delete_bdev(struct spdk_jsonrpc_server_conn *conn,
+		     const struct spdk_json_val *params,
+		     const struct spdk_json_val *id)
+{
+	struct rpc_delete_bdev req = {};
+	struct spdk_bdev *bdev;
+	struct spdk_json_write_ctx *w;
+
+	if (spdk_json_decode_object(params, rpc_delete_bdev_decoders,
+				    sizeof(rpc_delete_bdev_decoders) / sizeof(*rpc_delete_bdev_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.name == NULL) {
+		SPDK_ERRLOG("missing name param\n");
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+		goto invalid;
+	}
+
+	spdk_bdev_unregister(bdev);
+
+	free_rpc_delete_bdev(&req);
+
+	if (id == NULL) {
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(conn, id);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(conn, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_delete_bdev(&req);
+}
+SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev)
