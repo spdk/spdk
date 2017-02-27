@@ -72,15 +72,21 @@ struct spdk_nvmf_rdma_request {
 	uint8_t					*buf;
 
 	union {
-		struct ibv_recv_wr 		recv;
 		struct ibv_send_wr		send;
 	} wr;
-	struct ibv_sge 				sg_list[2];
+	struct ibv_sge				sg_list[2];
+
+	struct {
+		struct ibv_recv_wr		wr;
+		struct ibv_sge			sgl[NVMF_DEFAULT_RX_SGE];
+	} cmd;
 
 	struct {
 		struct	ibv_send_wr		wr;
 		struct	ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
 	} rsp;
+
+
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 };
@@ -326,8 +332,22 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	for (i = 0; i < max_queue_depth; i++) {
 		rdma_req = &rdma_conn->reqs[i];
 		rdma_req->buf = (void *)((uintptr_t)rdma_conn->bufs + (i * g_rdma.in_capsule_data_size));
-		rdma_req->req.cmd = &rdma_conn->cmds[i];
 		rdma_req->req.conn = &rdma_conn->conn;
+
+		/* Set up memory to receive commands */
+		rdma_req->req.cmd = &rdma_conn->cmds[i];
+
+		rdma_req->cmd.sgl[0].addr = (uintptr_t)&rdma_conn->cmds[i];
+		rdma_req->cmd.sgl[0].length = sizeof(rdma_conn->cmds[i]);
+		rdma_req->cmd.sgl[0].lkey = rdma_conn->cmds_mr->lkey;
+
+		rdma_req->cmd.sgl[1].addr = (uintptr_t)rdma_req->buf;
+		rdma_req->cmd.sgl[1].length = g_rdma.in_capsule_data_size;
+		rdma_req->cmd.sgl[1].lkey = rdma_conn->bufs_mr->lkey;
+
+		rdma_req->cmd.wr.wr_id = (uintptr_t)rdma_req;
+		rdma_req->cmd.wr.sg_list = rdma_req->cmd.sgl;
+		rdma_req->cmd.wr.num_sge = NVMF_DEFAULT_RX_SGE;
 
 		if (nvmf_post_rdma_recv(&rdma_req->req)) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
@@ -477,22 +497,10 @@ nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Request: %p Connection: %p\n", req, conn);
 
-	rdma_req->sg_list[0].addr = (uintptr_t)req->cmd;
-	rdma_req->sg_list[0].length = sizeof(*req->cmd);
-	rdma_req->sg_list[0].lkey = rdma_conn->cmds_mr->lkey;
-	nvmf_trace_ibv_sge(&rdma_req->sg_list[0]);
+	nvmf_trace_ibv_sge(&rdma_req->cmd.sgl[0]);
+	nvmf_trace_ibv_sge(&rdma_req->cmd.sgl[1]);
 
-	rdma_req->sg_list[1].addr = (uintptr_t)rdma_req->buf;
-	rdma_req->sg_list[1].length = g_rdma.in_capsule_data_size;
-	rdma_req->sg_list[1].lkey = rdma_conn->bufs_mr->lkey;
-	nvmf_trace_ibv_sge(&rdma_req->sg_list[1]);
-
-	rdma_req->wr.recv.wr_id = (uintptr_t)rdma_req;
-	rdma_req->wr.recv.next = NULL;
-	rdma_req->wr.recv.sg_list = rdma_req->sg_list;
-	rdma_req->wr.recv.num_sge = 2;
-
-	rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_req->wr.recv, &bad_wr);
+	rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_req->cmd.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma recv, rc = 0x%x\n", rc);
 	}
