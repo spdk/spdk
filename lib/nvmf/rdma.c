@@ -71,11 +71,6 @@ struct spdk_nvmf_rdma_request {
 	/* In Capsule data buffer */
 	uint8_t					*buf;
 
-	union {
-		struct ibv_send_wr		send;
-	} wr;
-	struct ibv_sge				sg_list[2];
-
 	struct {
 		struct ibv_recv_wr		wr;
 		struct ibv_sge			sgl[NVMF_DEFAULT_RX_SGE];
@@ -86,7 +81,10 @@ struct spdk_nvmf_rdma_request {
 		struct	ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
 	} rsp;
 
-
+	struct {
+		struct ibv_send_wr		wr;
+		struct ibv_sge			sgl[NVMF_DEFAULT_TX_SGE];
+	} data;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 };
@@ -368,6 +366,13 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 		rdma_req->rsp.wr.send_flags = IBV_SEND_SIGNALED;
 		rdma_req->rsp.wr.sg_list = rdma_req->rsp.sgl;
 		rdma_req->rsp.wr.num_sge = NVMF_DEFAULT_TX_SGE;
+
+		/* Set up memory for data buffers */
+		rdma_req->data.wr.wr_id = (uint64_t)rdma_req;
+		rdma_req->data.wr.next = NULL;
+		rdma_req->data.wr.send_flags = IBV_SEND_SIGNALED;
+		rdma_req->data.wr.sg_list = rdma_req->data.sgl;
+		rdma_req->data.wr.num_sge = NVMF_DEFAULT_TX_SGE;
 	}
 
 	return rdma_conn;
@@ -380,26 +385,6 @@ nvmf_trace_ibv_sge(struct ibv_sge *sg_list)
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p length 0x%x lkey 0x%x\n",
 			      (void *)sg_list->addr, sg_list->length, sg_list->lkey);
 	}
-}
-
-static inline void
-nvmf_ibv_send_wr_init(struct ibv_send_wr *wr,
-		      struct spdk_nvmf_request *req,
-		      struct ibv_sge *sg_list,
-		      enum ibv_wr_opcode opcode,
-		      int send_flags)
-{
-	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
-	assert(wr != NULL);
-	assert(sg_list != NULL);
-
-	memset(wr, 0, sizeof(*wr));
-
-	wr->wr_id = (uint64_t)rdma_req;
-	wr->opcode = opcode;
-	wr->send_flags = send_flags;
-	wr->sg_list = sg_list;
-	wr->num_sge = 1;
 }
 
 static inline void
@@ -428,22 +413,22 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
 
-	rdma_req->sg_list[0].addr = (uintptr_t)req->data;
+	rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
 	if (req->length > g_rdma.in_capsule_data_size) {
 		rdma_sess = get_rdma_sess(conn->sess);
-		rdma_req->sg_list[0].lkey = rdma_sess->buf_mr->lkey;
+		rdma_req->data.sgl[0].lkey = rdma_sess->buf_mr->lkey;
 	} else {
-		rdma_req->sg_list[0].lkey = rdma_conn->bufs_mr->lkey;
+		rdma_req->data.sgl[0].lkey = rdma_conn->bufs_mr->lkey;
 	}
-	rdma_req->sg_list[0].length = req->length;
-	nvmf_trace_ibv_sge(&rdma_req->sg_list[0]);
+	rdma_req->data.sgl[0].length = req->length;
+	nvmf_trace_ibv_sge(&rdma_req->data.sgl[0]);
 
-	nvmf_ibv_send_wr_init(&rdma_req->wr.send, req, rdma_req->sg_list, IBV_WR_RDMA_READ,
-			      IBV_SEND_SIGNALED);
-	nvmf_ibv_send_wr_set_rkey(&rdma_req->wr.send, req);
+	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
+
+	nvmf_ibv_send_wr_set_rkey(&rdma_req->data.wr, req);
 
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
-	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->wr.send, &bad_wr);
+	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma read send, rc = 0x%x\n", rc);
 	}
@@ -463,22 +448,22 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
 
-	rdma_req->sg_list[0].addr = (uintptr_t)req->data;
+	rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
 	if (req->length > g_rdma.in_capsule_data_size) {
 		rdma_sess = get_rdma_sess(conn->sess);
-		rdma_req->sg_list[0].lkey = rdma_sess->buf_mr->lkey;
+		rdma_req->data.sgl[0].lkey = rdma_sess->buf_mr->lkey;
 	} else {
-		rdma_req->sg_list[0].lkey = rdma_conn->bufs_mr->lkey;
+		rdma_req->data.sgl[0].lkey = rdma_conn->bufs_mr->lkey;
 	}
-	rdma_req->sg_list[0].length = req->length;
-	nvmf_trace_ibv_sge(&rdma_req->sg_list[0]);
+	rdma_req->data.sgl[0].length = req->length;
+	nvmf_trace_ibv_sge(&rdma_req->data.sgl[0]);
 
-	nvmf_ibv_send_wr_init(&rdma_req->wr.send, req, rdma_req->sg_list, IBV_WR_RDMA_WRITE,
-			      IBV_SEND_SIGNALED);
-	nvmf_ibv_send_wr_set_rkey(&rdma_req->wr.send, req);
+	rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
+
+	nvmf_ibv_send_wr_set_rkey(&rdma_req->data.wr, req);
 
 	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
-	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->wr.send, &bad_wr);
+	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma write send, rc = 0x%x\n", rc);
 	}
