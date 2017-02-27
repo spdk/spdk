@@ -459,10 +459,12 @@ static void
 test_abort_cmd(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_qpair	qpair = {};
 
 	verify_fn = verify_abort_cmd;
 
-	nvme_ctrlr_cmd_abort(&ctrlr, abort_cid, abort_sqid, NULL, NULL);
+	qpair.id = abort_sqid;
+	spdk_nvme_ctrlr_cmd_abort(&ctrlr, &qpair, abort_cid, NULL, NULL);
 }
 
 static void
