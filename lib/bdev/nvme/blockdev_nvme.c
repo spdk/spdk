@@ -76,7 +76,8 @@ struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_ctrlr	*nvme_ctrlr;
 	struct spdk_nvme_ns	*ns;
-	bool			allocated;
+
+	TAILQ_ENTRY(nvme_bdev)	link;
 };
 
 struct nvme_io_channel {
@@ -110,14 +111,14 @@ struct nvme_probe_ctx {
 	struct spdk_pci_addr whitelist[NVME_MAX_CONTROLLERS];
 };
 
-static struct nvme_bdev g_bdev[NVME_MAX_BLOCKDEVS];
 static int nvme_controller_index = 0;
 static int num_controllers = -1;
 static int g_reset_controller_on_timeout = 0;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 
-static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);;
+static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
+static TAILQ_HEAD(, nvme_bdev) g_nvme_bdevs = TAILQ_HEAD_INITIALIZER(g_nvme_bdevs);
 
 static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr, int ctrlr_id);
 static int bdev_nvme_library_init(void);
@@ -569,7 +570,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 {
 	struct nvme_probe_ctx	probe_ctx;
 	struct nvme_ctrlr	*nvme_ctrlr;
-	int			i;
+	struct nvme_bdev	*nvme_bdev;
 	size_t			j;
 
 	if (spdk_pci_addr_parse(&probe_ctx.whitelist[0], trid->traddr) < 0) {
@@ -595,11 +596,15 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	 * Report the new bdevs that were created in this call.
 	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
 	 */
-	for (j = 0, i = 0; i < NVME_MAX_BLOCKDEVS; i++) {
-		if (g_bdev[i].allocated) {
-			if (g_bdev[i].nvme_ctrlr == nvme_ctrlr) {
-				names[j] = g_bdev[i].disk.name;
+	j = 0;
+	TAILQ_FOREACH(nvme_bdev, &g_nvme_bdevs, link) {
+		if (nvme_bdev->nvme_ctrlr == nvme_ctrlr) {
+			if (j < *count) {
+				names[j] = nvme_bdev->disk.name;
 				j++;
+			} else {
+				assert(false);
+				break;
 			}
 		}
 	}
@@ -683,29 +688,20 @@ bdev_nvme_library_init(void)
 static void
 bdev_nvme_library_fini(void)
 {
-	struct nvme_ctrlr *dev;
+	struct nvme_ctrlr *nvme_ctrlr, *ctmp;
+	struct nvme_bdev *nvme_bdev, *btmp;
 
-	while (!TAILQ_EMPTY(&g_nvme_ctrlrs)) {
-		dev = TAILQ_FIRST(&g_nvme_ctrlrs);
-		TAILQ_REMOVE(&g_nvme_ctrlrs, dev, tailq);
-		spdk_poller_unregister(&dev->adminq_timer_poller, NULL);
-		spdk_nvme_detach(dev->ctrlr);
-		free(dev);
+	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
+		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
+		free(nvme_bdev);
 	}
-}
 
-static struct nvme_bdev *
-nvme_bdev_alloc(void)
-{
-	int i;
-
-	for (i = 0; i < NVME_MAX_BLOCKDEVS; i++) {
-		if (g_bdev[i].allocated == false) {
-			g_bdev[i].allocated = true;
-			return &g_bdev[i];
-		}
+	TAILQ_FOREACH_SAFE(nvme_ctrlr, &g_nvme_ctrlrs, tailq, ctmp) {
+		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
+		spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller, NULL);
+		spdk_nvme_detach(nvme_ctrlr->ctrlr);
+		free(nvme_ctrlr);
 	}
-	return NULL;
 }
 
 static void
@@ -728,8 +724,8 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr, int ctrlr_id)
 			continue;
 		}
 
-		bdev = nvme_bdev_alloc();
-		if (bdev == NULL) {
+		bdev = calloc(1, sizeof(*bdev));
+		if (!bdev) {
 			return;
 		}
 
@@ -761,6 +757,8 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr, int ctrlr_id)
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
 		spdk_bdev_register(&bdev->disk);
+
+		TAILQ_INSERT_TAIL(&g_nvme_bdevs, bdev, link);
 	}
 }
 

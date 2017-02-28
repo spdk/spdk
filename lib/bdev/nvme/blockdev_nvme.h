@@ -39,8 +39,6 @@
 #include "spdk/nvme.h"
 
 #define NVME_MAX_CONTROLLERS 16
-#define NVME_MAX_BLOCKDEVS_PER_CONTROLLER 256
-#define NVME_MAX_BLOCKDEVS (NVME_MAX_BLOCKDEVS_PER_CONTROLLER * NVME_MAX_CONTROLLERS)
 
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char **names, size_t *count);

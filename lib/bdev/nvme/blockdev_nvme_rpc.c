@@ -52,6 +52,8 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"pci_address", offsetof(struct rpc_construct_nvme, pci_address), spdk_json_decode_string},
 };
 
+#define NVME_MAX_BLOCKDEVS_PER_RPC 32
+
 static void
 spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 			     const struct spdk_json_val *params,
@@ -60,7 +62,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	struct rpc_construct_nvme req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvme_transport_id trid = {};
-	const char *names[NVME_MAX_BLOCKDEVS];
+	const char *names[NVME_MAX_BLOCKDEVS_PER_RPC];
 	size_t count = 0;
 	size_t i;
 
@@ -74,7 +76,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(trid.traddr, sizeof(trid.traddr), "%s", req.pci_address);
 
-	count = NVME_MAX_BLOCKDEVS;
+	count = NVME_MAX_BLOCKDEVS_PER_RPC;
 	if (spdk_bdev_nvme_create(&trid, names, &count)) {
 		goto invalid;
 	}
