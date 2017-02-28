@@ -549,27 +549,28 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 }
 
-static bool
-nvme_ctrlr_exists(struct spdk_pci_addr *addr)
+static struct nvme_ctrlr *
+nvme_ctrlr_get(struct spdk_pci_addr *addr)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
 		if (spdk_pci_addr_compare(&nvme_ctrlr->pci_addr, addr) == 0) {
-			return true;
+			return nvme_ctrlr;
 		}
 	}
 
-	return false;
+	return NULL;
 }
 
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char **names, size_t *count)
 {
-	struct nvme_probe_ctx probe_ctx;
-	int i;
-	size_t j;
+	struct nvme_probe_ctx	probe_ctx;
+	struct nvme_ctrlr	*nvme_ctrlr;
+	int			i;
+	size_t			j;
 
 	if (spdk_pci_addr_parse(&probe_ctx.whitelist[0], trid->traddr) < 0) {
 		return -1;
@@ -577,11 +578,16 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	probe_ctx.num_whitelist_controllers = 1;
 	probe_ctx.controllers_remaining = 1;
 
-	if (nvme_ctrlr_exists(&probe_ctx.whitelist[0])) {
+	if (nvme_ctrlr_get(&probe_ctx.whitelist[0]) != NULL) {
 		return -1;
 	}
 
 	if (spdk_nvme_probe(trid, &probe_ctx, probe_cb, attach_cb, NULL)) {
+		return -1;
+	}
+
+	nvme_ctrlr = nvme_ctrlr_get(&probe_ctx.whitelist[0]);
+	if (!nvme_ctrlr) {
 		return -1;
 	}
 
@@ -591,7 +597,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	 */
 	for (j = 0, i = 0; i < NVME_MAX_BLOCKDEVS; i++) {
 		if (g_bdev[i].allocated) {
-			if (spdk_pci_addr_compare(&probe_ctx.whitelist[0], &g_bdev[i].nvme_ctrlr->pci_addr) == 0) {
+			if (g_bdev[i].nvme_ctrlr == nvme_ctrlr) {
 				names[j] = g_bdev[i].disk.name;
 				j++;
 			}
