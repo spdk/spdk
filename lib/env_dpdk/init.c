@@ -285,7 +285,7 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 		exit(-1);
 	}
 
-	printf("Starting Intel(R) DPDK initialization ... \n");
+	printf("Starting %s initialization...\n", rte_version());
 	printf("[ DPDK EAL parameters: ");
 	for (i = 0; i < argcount; i++) {
 		printf("%s ", args[i]);
