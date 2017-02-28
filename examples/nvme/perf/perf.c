@@ -35,10 +35,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <rte_config.h>
-#include <rte_mempool.h>
-#include <rte_lcore.h>
+#include <inttypes.h>
+#include <stdlib.h>
+#include <errno.h>
 
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
@@ -131,7 +130,7 @@ static int g_outstanding_commands;
 
 static bool g_latency_tracking_enable = false;
 
-static struct rte_mempool *task_pool;
+static struct spdk_mempool *task_pool;
 
 static struct ctrlr_entry *g_controllers = NULL;
 static struct ns_entry *g_namespaces = NULL;
@@ -398,7 +397,7 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 }
 #endif /* HAVE_LIBAIO */
 
-static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
+static void task_ctor(struct spdk_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
 	task->buf = spdk_zmalloc(g_io_size_bytes, 0x200, NULL);
@@ -421,8 +420,8 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 	int			rc;
 	struct ns_entry		*entry = ns_ctx->entry;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
-		fprintf(stderr, "task_pool rte_mempool_get failed\n");
+	if (spdk_mempool_get2(task_pool, (void **)&task) != 0) {
+		fprintf(stderr, "task_pool spdk_mempool_get failed\n");
 		exit(1);
 	}
 
@@ -491,7 +490,7 @@ task_complete(struct perf_task *task)
 		ns_ctx->max_tsc = tsc_diff;
 	}
 
-	rte_mempool_put(task_pool, task);
+	spdk_mempool_put(task_pool, task);
 
 	/*
 	 * is_draining indicates when time has expired for the test run
@@ -998,12 +997,12 @@ register_workers(void)
 	}
 
 	memset(worker, 0, sizeof(struct worker_thread));
-	worker->lcore = rte_get_master_lcore();
+	worker->lcore = spdk_get_master_lcore();
 
 	g_workers = worker;
 	g_num_workers = 1;
 
-	RTE_LCORE_FOREACH_SLAVE(lcore) {
+	SPDK_LCORE_FOREACH_SLAVE(lcore) {
 		prev_worker = worker;
 		worker = malloc(sizeof(struct worker_thread));
 		if (worker == NULL) {
@@ -1258,10 +1257,10 @@ int main(int argc, char **argv)
 	task_count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
 	task_count *= g_queue_depth;
 
-	task_pool = rte_mempool_create(task_pool_name, task_count,
-				       sizeof(struct perf_task),
-				       0, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
+	task_pool = spdk_mempool_create_init(task_pool_name, task_count,
+					     sizeof(struct perf_task),
+					     0, task_ctor, NULL,
+					     SPDK_ENV_SOCKET_ID_ANY);
 	if (task_pool == NULL) {
 		fprintf(stderr, "could not initialize task pool\n");
 		rc = -1;
@@ -1273,7 +1272,7 @@ int main(int argc, char **argv)
 	/* Launch all of the slave workers */
 	worker = g_workers->next;
 	while (worker != NULL) {
-		rte_eal_remote_launch(work_fn, worker, worker->lcore);
+		spdk_remote_launch(work_fn, worker, worker->lcore);
 		worker = worker->next;
 	}
 
@@ -1281,7 +1280,7 @@ int main(int argc, char **argv)
 
 	worker = g_workers->next;
 	while (worker != NULL) {
-		if (rte_eal_wait_lcore(worker->lcore) < 0) {
+		if (spdk_wait_lcore(worker->lcore) < 0) {
 			rc = -1;
 		}
 		worker = worker->next;

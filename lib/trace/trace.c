@@ -30,7 +30,6 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include "spdk/env.h"
 #include "spdk/trace.h"
 
@@ -45,9 +44,6 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <errno.h>
-
-#include <rte_config.h>
-#include <rte_lcore.h>
 
 static char g_shm_name[64];
 
@@ -73,7 +69,7 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		return;
 	}
 
-	lcore = rte_lcore_id();
+	lcore = spdk_lcore_id();
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {
 		return;
 	}

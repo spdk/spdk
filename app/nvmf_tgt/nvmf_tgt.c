@@ -38,11 +38,9 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "nvmf_tgt.h"
 
+#include "spdk/env.h"
 #include "spdk/bdev.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
@@ -223,7 +221,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 	app_subsys->lcore = lcore;
 
 	SPDK_NOTICELOG("allocated subsystem %s on lcore %u on socket %u\n", name, lcore,
-		       rte_lcore_to_socket_id(lcore));
+		       spdk_lcore_to_socket_id(lcore));
 
 	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
 
@@ -324,7 +322,7 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 
 	SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,
-		       rte_lcore_to_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
+		       spdk_lcore_to_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
 
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
@@ -443,7 +441,7 @@ main(int argc, char **argv)
 	opts.shutdown_cb = spdk_nvmf_shutdown_cb;
 	spdk_app_init(&opts);
 
-	printf("Total cores available: %d\n", rte_lcore_count());
+	printf("Total cores available: %d\n", spdk_lcore_count());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(spdk_nvmf_startup, NULL, NULL);
 

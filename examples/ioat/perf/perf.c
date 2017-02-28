@@ -37,9 +37,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/ioat.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
@@ -170,12 +167,12 @@ register_workers(void)
 	}
 
 	memset(worker, 0, sizeof(struct worker_thread));
-	worker->lcore = rte_get_master_lcore();
+	worker->lcore = spdk_get_master_lcore();
 
 	g_workers = worker;
 	g_num_workers = 1;
 
-	RTE_LCORE_FOREACH_SLAVE(lcore) {
+	SPDK_LCORE_FOREACH_SLAVE(lcore) {
 		prev_worker = worker;
 		worker = malloc(sizeof(struct worker_thread));
 		if (worker == NULL) {
@@ -559,7 +556,7 @@ main(int argc, char **argv)
 	/* Launch all of the slave workers */
 	worker = g_workers->next;
 	while (worker != NULL) {
-		rte_eal_remote_launch(work_fn, worker, worker->lcore);
+		spdk_remote_launch(work_fn, worker, worker->lcore);
 		worker = worker->next;
 	}
 
@@ -570,7 +567,7 @@ main(int argc, char **argv)
 
 	worker = g_workers->next;
 	while (worker != NULL) {
-		if (rte_eal_wait_lcore(worker->lcore) < 0) {
+		if (spdk_wait_lcore(worker->lcore) < 0) {
 			rc = -1;
 			goto cleanup;
 		}

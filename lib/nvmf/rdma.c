@@ -52,8 +52,6 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
-#include "spdk/util.h"
-
 #include "spdk_internal/log.h"
 
 /*

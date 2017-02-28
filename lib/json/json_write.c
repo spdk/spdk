@@ -147,7 +147,7 @@ emit_buf_full(struct spdk_json_write_ctx *w, const void *data, size_t size)
 	}
 
 	/* Recurse to emit the rest of the data. */
-	return emit(w, data + buf_remain, size - buf_remain);
+	return emit(w, (void *)((int *)data + buf_remain), size - buf_remain);
 }
 
 static int

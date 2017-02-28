@@ -57,7 +57,7 @@
 #include "spdk/vhost.h"
 #include "task.h"
 
-static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
+static uint32_t g_num_ctrlrs[SPDK_MAX_LCORE];
 
 #define CONTROLQ_POLL_PERIOD_US (1000 * 5)
 
@@ -255,7 +255,7 @@ task_submit(struct spdk_vhost_task *task)
 	 */
 
 	task->resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
+	task->scsi.cb_event = spdk_event_allocate(spdk_lcore_id(),
 			      process_task_completion,
 			      task, NULL);
 	spdk_scsi_dev_queue_task(task->scsi_dev, &task->scsi);
@@ -265,7 +265,7 @@ static void
 mgmt_task_submit(struct spdk_vhost_task *task)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
+	task->scsi.cb_event = spdk_event_allocate(spdk_lcore_id(),
 			      process_mgmt_task_completion,
 			      task, NULL);
 	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi);
@@ -621,7 +621,7 @@ static struct spdk_event *
 vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem)
 {
 	if (sem_init(sem, 0, 0) < 0)
-		rte_panic("Failed to initialize semaphore.");
+		spdk_panic("Failed to initialize semaphore.");
 
 	return spdk_event_allocate(core, fn, arg1, sem);
 }
@@ -1047,7 +1047,7 @@ spdk_vhost_scsi_allocate_reactor(uint64_t cpumask)
 	min_ctrlrs = INT_MAX;
 	selected_core = 0;
 
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE && i < 64; i++) {
 		if (!((1ULL << i) & cpumask)) {
 			continue;
 		}

@@ -1,43 +1,45 @@
 /*-
- *   BSD LICENSE
- *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
- *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of Intel Corporation nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
- *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+*   BSD LICENSE
+*
+*   Copyright (c) Intel Corporation.
+*   All rights reserved.
+*
+*   Redistribution and use in source and binary forms, with or without
+*   modification, are permitted provided that the following conditions
+*   are met:
+*
+*     * Redistributions of source code must retain the above copyright
+*       notice, this list of conditions and the following disclaimer.
+*     * Redistributions in binary form must reproduce the above copyright
+*       notice, this list of conditions and the following disclaimer in
+*       the documentation and/or other materials provided with the
+*       distribution.
+*     * Neither the name of Intel Corporation nor the names of its
+*       contributors may be used to endorse or promote products derived
+*       from this software without specific prior written permission.
+*
+*   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+*   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+*   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+*   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+*   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+*   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+*   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+*   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+*   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+*   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #include "spdk_internal/event.h"
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -46,9 +48,6 @@
 #ifdef __FreeBSD__
 #include <pthread_np.h>
 #endif
-
-#include <rte_config.h>
-#include <rte_ring.h>
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
@@ -114,7 +113,7 @@ struct spdk_reactor {
 	 */
 	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
 
-	struct rte_ring					*events;
+	struct spdk_ring				*events;
 
 	/* Pointer to the per-socket g_spdk_event_mempool for this reactor. */
 	struct spdk_mempool				*event_mempool;
@@ -122,7 +121,7 @@ struct spdk_reactor {
 	uint64_t					max_delay_us;
 } __attribute__((aligned(64)));
 
-static struct spdk_reactor g_reactors[RTE_MAX_LCORE];
+static struct spdk_reactor g_reactors[SPDK_MAX_LCORE];
 static uint64_t	g_reactor_mask  = 0;
 static int	g_reactor_count = 0;
 
@@ -174,7 +173,7 @@ spdk_event_call(struct spdk_event *event)
 	reactor = spdk_reactor_get(event->lcore);
 
 	assert(reactor->events != NULL);
-	rc = rte_ring_mp_enqueue(reactor->events, event);
+	rc = spdk_ring_enqueue(reactor->events, event);
 	if (rc != 0) {
 		assert(false);
 	}
@@ -188,14 +187,14 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 
 #ifdef DEBUG
 	/*
-	 * rte_ring_dequeue_burst() fills events and returns how many entries it wrote,
+	 * spdk_ring_dequeue_burst() fills events and returns how many entries it wrote,
 	 * so we will never actually read uninitialized data from events, but just to be sure
 	 * (and to silence a static analyzer false positive), initialize the array to NULL pointers.
 	 */
 	memset(events, 0, sizeof(events));
 #endif
 
-	count = rte_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+	count = spdk_ring_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
 	if (count == 0) {
 		return 0;
 	}
@@ -412,7 +411,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	char	ring_name[64];
 
 	reactor->lcore = lcore;
-	reactor->socket_id = rte_lcore_to_socket_id(lcore);
+	reactor->socket_id = spdk_lcore_to_socket_id(lcore);
 	assert(reactor->socket_id < SPDK_MAX_SOCKET);
 	reactor->max_delay_us = max_delay_us;
 
@@ -421,7 +420,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 
 	snprintf(ring_name, sizeof(ring_name) - 1, "spdk_event_queue_%u", lcore);
 	reactor->events =
-		rte_ring_create(ring_name, 65536, reactor->socket_id, RING_F_SC_DEQ);
+		spdk_ring_create(ring_name, 65536, reactor->socket_id, RING_F_SC_DEQ);
 	assert(reactor->events != NULL);
 
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
@@ -430,15 +429,17 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 static void
 spdk_reactor_start(struct spdk_reactor *reactor)
 {
-	if (reactor->lcore != rte_get_master_lcore()) {
-		switch (rte_eal_get_lcore_state(reactor->lcore)) {
-		case FINISHED:
-			rte_eal_wait_lcore(reactor->lcore);
+	if (reactor->lcore != spdk_get_master_lcore()) {
+
+		switch (spdk_get_lcore_state(reactor->lcore)) {
+		case FINISHED_2:
+			spdk_wait_lcore(reactor->lcore);
 		/* drop through */
-		case WAIT:
-			rte_eal_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
+		case WAIT_0:
+			spdk_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
+
 			break;
-		case RUNNING:
+		case RUNNING_1:
 			printf("Something already running on lcore %d\n", reactor->lcore);
 			break;
 		}
@@ -456,7 +457,7 @@ spdk_app_get_core_count(void)
 uint32_t
 spdk_app_get_current_core(void)
 {
-	return rte_lcore_id();
+	return spdk_lcore_id();
 }
 
 int
@@ -470,13 +471,14 @@ spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
 	}
 
 	errno = 0;
+
 	*cpumask = strtoull(mask, &end, 16);
 	if (*end != '\0' || errno) {
 		return -1;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if ((*cpumask & (1ULL << i)) && !rte_lcore_is_enabled(i)) {
+	for (i = 0; i < SPDK_MAX_LCORE && i < 64; i++) {
+		if ((*cpumask & (1ULL << i)) && !spdk_lcore_is_enabled(i)) {
 			*cpumask &= ~(1ULL << i);
 		}
 	}
@@ -489,7 +491,7 @@ spdk_reactor_parse_mask(const char *mask)
 {
 	int i;
 	int ret = 0;
-	uint32_t master_core = rte_get_master_lcore();
+	uint32_t master_core = spdk_get_master_lcore();
 
 	if (g_reactor_state >= SPDK_REACTOR_STATE_INITIALIZED) {
 		SPDK_ERRLOG("cannot set reactor mask after application has started\n");
@@ -500,7 +502,7 @@ spdk_reactor_parse_mask(const char *mask)
 
 	if (mask == NULL) {
 		/* No mask specified so use the same mask as DPDK. */
-		RTE_LCORE_FOREACH(i) {
+		SPDK_LCORE_FOREACH(i) {
 			g_reactor_mask |= (1ULL << i);
 		}
 	} else {
@@ -533,9 +535,9 @@ spdk_reactor_get_socket_mask(void)
 	uint32_t socket_id;
 	uint64_t socket_info = 0;
 
-	RTE_LCORE_FOREACH(i) {
+	SPDK_LCORE_FOREACH(i) {
 		if (((1ULL << i) & g_reactor_mask)) {
-			socket_id = rte_lcore_to_socket_id(i);
+			socket_id = spdk_lcore_to_socket_id(i);
 			socket_info |= (1ULL << socket_id);
 		}
 	}
@@ -549,11 +551,11 @@ spdk_reactors_start(void)
 	struct spdk_reactor *reactor;
 	uint32_t i;
 
-	assert(rte_get_master_lcore() == rte_lcore_id());
+	assert(spdk_get_master_lcore() == spdk_lcore_id());
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
-	RTE_LCORE_FOREACH_SLAVE(i) {
+	SPDK_LCORE_FOREACH_SLAVE(i) {
 		if (((1ULL << i) & spdk_app_get_core_mask())) {
 			reactor = spdk_reactor_get(i);
 			spdk_reactor_start(reactor);
@@ -561,10 +563,10 @@ spdk_reactors_start(void)
 	}
 
 	/* Start the master reactor */
-	reactor = spdk_reactor_get(rte_get_master_lcore());
+	reactor = spdk_reactor_get(spdk_get_master_lcore());
 	spdk_reactor_start(reactor);
 
-	rte_eal_mp_wait_lcore();
+	spdk_mp_wait_lcore();
 
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
 }
@@ -639,7 +641,7 @@ spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 		}
 	}
 
-	RTE_LCORE_FOREACH(i) {
+	SPDK_LCORE_FOREACH(i) {
 		if (((1ULL << i) & spdk_app_get_core_mask())) {
 			reactor = spdk_reactor_get(i);
 			spdk_reactor_construct(reactor, i, max_delay_us);
@@ -659,11 +661,11 @@ spdk_reactors_fini(void)
 	uint64_t socket_mask;
 	struct spdk_reactor *reactor;
 
-	RTE_LCORE_FOREACH(i) {
+	SPDK_LCORE_FOREACH(i) {
 		if (((1ULL << i) & spdk_app_get_core_mask())) {
 			reactor = spdk_reactor_get(i);
 			if (reactor->events != NULL) {
-				rte_ring_free(reactor->events);
+				spdk_ring_free(reactor->events);
 			}
 		}
 	}
@@ -726,9 +728,9 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 		abort();
 	}
 
-	if (lcore >= RTE_MAX_LCORE) {
+	if (lcore >= SPDK_MAX_LCORE) {
 		SPDK_ERRLOG("Attempted use lcore %u larger than max lcore %u\n",
-			    lcore, RTE_MAX_LCORE - 1);
+			    lcore, SPDK_MAX_LCORE - 1);
 		abort();
 	}
 

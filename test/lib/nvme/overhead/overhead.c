@@ -39,9 +39,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/barrier.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
@@ -434,7 +431,7 @@ work_fn(void)
 {
 	uint64_t tsc_end;
 
-	printf("Starting work_fn on core %u\n", rte_lcore_id());
+	printf("Starting work_fn on core %u\n", spdk_lcore_id());
 
 	/* Allocate a queue pair for each namespace. */
 	if (init_ns_worker_ctx() != 0) {
