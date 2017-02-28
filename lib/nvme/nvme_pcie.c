@@ -638,7 +638,7 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	if (hotplug_fd < 0) {
 		hotplug_fd = spdk_uevent_connect();
 		if (hotplug_fd < 0) {
-			SPDK_ERRLOG("Failed to open uevent netlink socket\n");
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "Failed to open uevent netlink socket\n");
 		}
 	} else {
 		_nvme_pcie_hotplug_monitor(cb_ctx, probe_cb, remove_cb);
