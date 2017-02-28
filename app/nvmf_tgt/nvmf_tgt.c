@@ -69,6 +69,7 @@ subsystem_delete_event(void *arg1, void *arg2)
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 
+	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
 	free(app_subsys);
 
 	spdk_nvmf_delete_subsystem(subsystem);
@@ -111,7 +112,6 @@ shutdown_subsystems(void)
 
 	g_subsystems_shutdown = true;
 	TAILQ_FOREACH_SAFE(app_subsys, &g_subsystems, tailq, tmp) {
-		TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
 		nvmf_tgt_delete_subsystem(app_subsys);
 	}
 }
@@ -286,7 +286,6 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 
 	TAILQ_FOREACH_SAFE(tgt_subsystem, &g_subsystems, tailq, subsys_tmp) {
 		if (strcmp(tgt_subsystem->subsystem->subnqn, nqn) == 0) {
-			TAILQ_REMOVE(&g_subsystems, tgt_subsystem, tailq);
 			nvmf_tgt_delete_subsystem(tgt_subsystem);
 			return 0;
 		}
