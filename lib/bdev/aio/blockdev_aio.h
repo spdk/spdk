@@ -57,7 +57,7 @@ struct blockdev_aio_io_channel {
 
 struct file_disk {
 	struct spdk_bdev	disk;	/* this must be first element */
-	char			*file;
+	const char		*file;
 	int			fd;
 	char			disk_name[SPDK_BDEV_MAX_NAME_LENGTH];
 	uint64_t		size;
@@ -69,6 +69,6 @@ struct file_disk {
 	TAILQ_HEAD(, blockdev_aio_task) sync_completion_list;
 };
 
-struct spdk_bdev *create_aio_disk(char *fname);
+struct spdk_bdev *create_aio_disk(const char *name, const char *fname);
 
 #endif // SPDK_BLOCKDEV_AIO_H

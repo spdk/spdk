@@ -165,11 +165,14 @@ p.set_defaults(func=construct_malloc_bdev)
 
 
 def construct_aio_bdev(args):
-    params = {'fname': args.fname}
+    params = {'name': args.name,
+              'fname': args.fname}
+
     print_array(jsonrpc_call('construct_aio_bdev', params))
 
 p = subparsers.add_parser('construct_aio_bdev', help='Add a bdev with aio backend')
 p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
+p.add_argument('name', help='Block device name')
 p.set_defaults(func=construct_aio_bdev)
 
 def construct_nvme_bdev(args):

@@ -14,9 +14,4 @@
   Split Malloc2 8 1
 
 [AIO]
-  # skip these blockdevs if the /dev/ramX nodes do not exist
-  #  so that the blockdev tests can still run on systems that
-  #  do not have /dev/ramX nodes configured
-  SkipMissingFiles Yes
-  # Linux AIO backend
-  AIO /dev/ram0
+  AIO /dev/ram0 AIO0

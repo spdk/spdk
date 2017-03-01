@@ -48,8 +48,6 @@
 
 #include "spdk_internal/log.h"
 
-static int g_blockdev_count = 0;
-
 static int blockdev_aio_initialize(void);
 static void aio_free_disk(struct file_disk *fdisk);
 
@@ -341,7 +339,7 @@ static void aio_free_disk(struct file_disk *fdisk)
 }
 
 struct spdk_bdev *
-create_aio_disk(char *fname)
+create_aio_disk(const char *name, const char *fname)
 {
 	struct file_disk *fdisk;
 
@@ -360,8 +358,7 @@ create_aio_disk(char *fname)
 	fdisk->size = spdk_fd_get_size(fdisk->fd);
 
 	TAILQ_INIT(&fdisk->sync_completion_list);
-	snprintf(fdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "AIO%d",
-		 g_blockdev_count);
+	snprintf(fdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "%s", name);
 	snprintf(fdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "AIO disk");
 
 	fdisk->disk.need_aligned_buffer = 1;
@@ -371,7 +368,6 @@ create_aio_disk(char *fname)
 	fdisk->disk.ctxt = fdisk;
 
 	fdisk->disk.fn_table = &aio_fn_table;
-	g_blockdev_count++;
 
 	spdk_io_device_register(&fdisk->disk, blockdev_aio_create_cb, blockdev_aio_destroy_cb,
 				sizeof(struct blockdev_aio_io_channel));
@@ -386,38 +382,42 @@ error_return:
 
 static int blockdev_aio_initialize(void)
 {
+	size_t i;
+	struct spdk_conf_section *sp;
 	struct spdk_bdev *bdev;
-	int i;
-	const char *val = NULL;
-	char *file;
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "AIO");
-	bool skip_missing = false;
 
-	if (sp != NULL) {
-		val = spdk_conf_section_get_val(sp, "SkipMissingFiles");
-	}
-	if (val != NULL && !strcmp(val, "Yes")) {
-		skip_missing = true;
+	sp = spdk_conf_find_section(NULL, "AIO");
+	if (!sp) {
+		return 0;
 	}
 
-	if (sp != NULL) {
-		for (i = 0; ; i++) {
-			val = spdk_conf_section_get_nval(sp, "AIO", i);
-			if (val == NULL)
-				break;
-			file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
-			if (file == NULL) {
-				SPDK_ERRLOG("AIO%d: format error\n", i);
-				return -1;
-			}
+	i = 0;
+	while (true) {
+		const char *file;
+		const char *name;
 
-			bdev = create_aio_disk(file);
-
-			if (bdev == NULL && !skip_missing) {
-				return -1;
-			}
+		file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
+		if (!file) {
+			break;
 		}
+
+		name = spdk_conf_section_get_nmval(sp, "AIO", i, 1);
+		if (!name) {
+			SPDK_ERRLOG("No name provided for AIO disk with file %s\n", file);
+			i++;
+			continue;
+		}
+
+		bdev = create_aio_disk(name, file);
+		if (!bdev) {
+			SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
+			i++;
+			continue;
+		}
+
+		i++;
 	}
+
 	return 0;
 }
 

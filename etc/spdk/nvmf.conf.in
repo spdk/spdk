@@ -43,11 +43,15 @@
   NumberOfLuns 8
   LunSizeInMB 64
 
-# Users must change this section to match the /dev/sdX devices to be virtual
-# NVMe devices. The devices are accessed using Linux AIO.
+# Users must change this section to match the /dev/sdX devices to be
+# exported as iSCSI LUNs. The devices are accessed using Linux AIO.
+# The format is:
+# AIO <file name> <bdev name>
+# The file name is the backing device
+# The bdev name can be referenced from elsewhere in the configuration file.
 [AIO]
-  AIO /dev/sdb
-  AIO /dev/sdc
+  AIO /dev/sdb AIO0
+  AIO /dev/sdc AIO1
 
 # Define NVMf protocol global options
 [Nvmf]
