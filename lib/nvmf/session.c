@@ -763,3 +763,14 @@ spdk_nvmf_session_get_features_async_event_configuration(struct spdk_nvmf_reques
 	rsp->cdw0 = session->async_event_config.raw;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
+
+int
+spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Async Event Request\n");
+
+	session->aer_req = req;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}

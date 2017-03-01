@@ -176,10 +176,8 @@ nvmf_direct_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		}
 		break;
 	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Async Event Request\n");
-		session->aer_req = req;
+		return spdk_nvmf_session_async_event_request(req);
 
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	case SPDK_NVME_OPC_KEEP_ALIVE:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keep Alive\n");
 		/*

@@ -129,4 +129,6 @@ int spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *re
 int spdk_nvmf_session_set_features_async_event_configuration(struct spdk_nvmf_request *req);
 int spdk_nvmf_session_get_features_async_event_configuration(struct spdk_nvmf_request *req);
 
+int spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req);
+
 #endif

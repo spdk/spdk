@@ -174,6 +174,12 @@ spdk_nvmf_session_get_features_async_event_configuration(struct spdk_nvmf_reques
 	return -1;
 }
 
+int
+spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
 /* test suite function */
 static void
 nvmf_test_nvmf_direct_ctrlr_admin_identify_nslist(void)

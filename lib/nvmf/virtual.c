@@ -340,10 +340,7 @@ nvmf_virtual_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_SET_FEATURES:
 		return nvmf_virtual_ctrlr_set_features(req);
 	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Async Event Request\n");
-		/* TODO: Just release the request as consumed. AER events will never
-		 * be triggered. */
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_RELEASE;
+		return spdk_nvmf_session_async_event_request(req);
 	case SPDK_NVME_OPC_KEEP_ALIVE:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keep Alive\n");
 		/*
