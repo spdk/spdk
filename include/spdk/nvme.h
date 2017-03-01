@@ -214,6 +214,24 @@ int spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, c
 int spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *str);
 
 /**
+ * Compare two transport IDs.
+ *
+ * \param trid1 First transport ID to compare.
+ * \param trid2 Second transport ID to compare.
+ *
+ * \return 0 if trid1 == trid2, less than 0 if trid1 < trid2, greater than 0 if trid1 > trid2.
+ *
+ * The result of this function may be used to sort transport IDs in a consistent order; however,
+ * the comparison result is not guaranteed to be consistent across library versions.
+ *
+ * This function uses a case-insensitive comparison for string fields, but it does not otherwise
+ * normalize the transport ID. It is the caller's responsibility to provide the transport IDs in
+ * a consistent format.
+ */
+int spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
+				   const struct spdk_nvme_transport_id *trid2);
+
+/**
  * Determine whether the NVMe library can handle a specific NVMe over Fabrics transport type.
  *
  * \param trtype NVMe over Fabrics transport type to check.

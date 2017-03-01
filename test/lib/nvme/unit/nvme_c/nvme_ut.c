@@ -165,25 +165,27 @@ test_opc_data_transfer(void)
 static void
 test_trid_parse(void)
 {
-	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_transport_id trid1, trid2;
 
-	memset(&trid, 0, sizeof(trid));
-	CU_ASSERT(spdk_nvme_transport_id_parse(&trid,
+	memset(&trid1, 0, sizeof(trid1));
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
 					       "trtype:rdma\n"
 					       "adrfam:ipv4\n"
 					       "traddr:192.168.100.8\n"
 					       "trsvcid:4420\n"
 					       "subnqn:nqn.2014-08.org.nvmexpress.discovery") == 0);
-	CU_ASSERT(trid.trtype == SPDK_NVME_TRANSPORT_RDMA);
-	CU_ASSERT(trid.adrfam == SPDK_NVMF_ADRFAM_IPV4);
-	CU_ASSERT(strcmp(trid.traddr, "192.168.100.8") == 0);
-	CU_ASSERT(strcmp(trid.trsvcid, "4420") == 0);
-	CU_ASSERT(strcmp(trid.subnqn, "nqn.2014-08.org.nvmexpress.discovery") == 0);
+	CU_ASSERT(trid1.trtype == SPDK_NVME_TRANSPORT_RDMA);
+	CU_ASSERT(trid1.adrfam == SPDK_NVMF_ADRFAM_IPV4);
+	CU_ASSERT(strcmp(trid1.traddr, "192.168.100.8") == 0);
+	CU_ASSERT(strcmp(trid1.trsvcid, "4420") == 0);
+	CU_ASSERT(strcmp(trid1.subnqn, "nqn.2014-08.org.nvmexpress.discovery") == 0);
 
-	memset(&trid, 0, sizeof(trid));
-	CU_ASSERT(spdk_nvme_transport_id_parse(&trid, "trtype:PCIe traddr:0000:04:00.0") == 0);
-	CU_ASSERT(trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
-	CU_ASSERT(strcmp(trid.traddr, "0000:04:00.0") == 0);
+	memset(&trid2, 0, sizeof(trid2));
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2, "trtype:PCIe traddr:0000:04:00.0") == 0);
+	CU_ASSERT(trid2.trtype == SPDK_NVME_TRANSPORT_PCIE);
+	CU_ASSERT(strcmp(trid2.traddr, "0000:04:00.0") == 0);
+
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
 }
 
 int main(int argc, char **argv)
