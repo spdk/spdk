@@ -768,8 +768,17 @@ int
 spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Async Event Request\n");
+
+	assert(session->vcdata.aerl + 1 == 1);
+	if (session->aer_req != NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "AERL exceeded\n");
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVME_SC_ASYNC_EVENT_REQUEST_LIMIT_EXCEEDED;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	session->aer_req = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
