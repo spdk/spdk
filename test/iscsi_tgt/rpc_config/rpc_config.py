@@ -399,7 +399,7 @@ def verify_add_nvme_bdev_rpc_methods(rpc_py):
     output = check_output(["lspci", "-mm", "-nn"])
     addrs = re.findall('^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output, re.MULTILINE)
     for addr in addrs:
-        ctrlr_address = "-t pcie -a 0000:{}".format(addr)
+        ctrlr_address = "-b Nvme0 -t pcie -a 0000:{}".format(addr)
         rpc.construct_nvme_bdev(ctrlr_address)
         print "add nvme device passed first time"
         test_pass = 0

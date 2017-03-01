@@ -74,11 +74,24 @@
   AcceptorPollRate 10000
 
 [Nvme]
+  # NVMe Device Whitelist
+  # Users may specify which NVMe devices to claim by their transport id.
+  # See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.
+  # The second argument is the assigned name, which can be referenced from
+  # other sections in the configuration file. For NVMe devices, a namespace
+  # is automatically appended to each name in the format <YourName>nY, where
+  # Y is the NSID (starts at 1).
+  TransportId "trtype:PCIe traddr:0000:00:00.0" Nvme0
+  TransportId "trtype:PCIe traddr:0000:01:00.0" Nvme1
+
+  # The number of attempts per I/O when an I/O fails. Do not include
+  # this key to get the default behavior.
+  NvmeRetryCount 4
   # Registers the application to receive timeout callback and to reset the controller.
   ResetControllerOnTimeout Yes
   # Timeout value.
   NvmeTimeoutValue 30
-  # Set how often the admin queue is polled for asynchronous events
+  # Set how often the admin queue is polled for asynchronous events.
   # Units in microseconds.
   AdminPollRate 100000
 
@@ -134,6 +147,8 @@
   Listen RDMA 192.168.2.21:4420
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001
+  Namespace Nvme0n1
+  Namespace Nvme1n1
   Namespace Malloc0
   Namespace Malloc1
   Namespace AIO0

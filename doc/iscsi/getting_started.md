@@ -102,10 +102,12 @@ the kernel to avoid interrupts and context switching.
   # NVMe Device Whitelist
   # Users may specify which NVMe devices to claim by their transport id.
   # See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.
-  # The devices will be assigned names in the format NvmeXnY, where X starts at 0 and
-  # increases by 1 for each entry and Y is the namespace id, which starts at 1.
-  TransportID "trtype:PCIe traddr:0000:00:00.0"
-  TransportID "trtype:PCIe traddr:0000:01:00.0"
+  # The second argument is the assigned name, which can be referenced from
+  # other sections in the configuration file. For NVMe devices, a namespace
+  # is automatically appended to each name in the format <YourName>nY, where
+  # Y is the NSID (starts at 1).
+  TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
+  TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.

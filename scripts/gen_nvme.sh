@@ -17,6 +17,6 @@ esac
 echo "[Nvme]"
 i=0
 for bdf in $bdfs; do
-        echo "  TransportID \"trtype:PCIe traddr:$bdf\""
+        echo "  TransportID \"trtype:PCIe traddr:$bdf\" Nvme$i"
         let i=i+1
 done

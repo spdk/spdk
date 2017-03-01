@@ -42,6 +42,7 @@
 #include "spdk_internal/log.h"
 
 struct rpc_construct_nvme {
+	char *name;
 	char *trtype;
 	char *adrfam;
 	char *traddr;
@@ -52,6 +53,7 @@ struct rpc_construct_nvme {
 static void
 free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 {
+	free(req->name);
 	free(req->trtype);
 	free(req->adrfam);
 	free(req->traddr);
@@ -60,6 +62,7 @@ free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 }
 
 static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
+	{"name", offsetof(struct rpc_construct_nvme, name), spdk_json_decode_string},
 	{"trtype", offsetof(struct rpc_construct_nvme, trtype), spdk_json_decode_string},
 	{"traddr", offsetof(struct rpc_construct_nvme, traddr), spdk_json_decode_string},
 
@@ -79,7 +82,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvme_transport_id trid = {};
 	const char *names[NVME_MAX_BLOCKDEVS_PER_RPC];
-	size_t count = 0;
+	size_t count;
 	size_t i;
 	int rc;
 
@@ -120,13 +123,12 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	}
 
 	count = NVME_MAX_BLOCKDEVS_PER_RPC;
-	if (spdk_bdev_nvme_create(&trid, names, &count)) {
+	if (spdk_bdev_nvme_create(&trid, req.name, names, &count)) {
 		goto invalid;
 	}
 
-	free_rpc_construct_nvme(&req);
-
 	if (id == NULL) {
+		free_rpc_construct_nvme(&req);
 		return;
 	}
 
@@ -137,6 +139,9 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(conn, w);
+
+	free_rpc_construct_nvme(&req);
+
 	return;
 
 invalid:

@@ -63,13 +63,13 @@ struct nvme_ctrlr {
 	 */
 	struct spdk_nvme_ctrlr		*ctrlr;
 	struct spdk_nvme_transport_id	trid;
+	const char			*name;
+	int				ref;
 
 	struct spdk_poller		*adminq_timer_poller;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)	tailq;
-	int				id;
-	int				ref;
 };
 
 struct nvme_bdev {
@@ -108,10 +108,9 @@ enum data_direction {
 struct nvme_probe_ctx {
 	size_t count;
 	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
+	const char *names[NVME_MAX_CONTROLLERS];
 };
 
-static int nvme_controller_index = 0;
-static int num_controllers = -1;
 static int g_reset_controller_on_timeout = 0;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
@@ -123,7 +122,7 @@ static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 static TAILQ_HEAD(, nvme_bdev) g_nvme_bdevs = TAILQ_HEAD_INITIALIZER(g_nvme_bdevs);
 
-static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr, int ctrlr_id);
+static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
@@ -580,28 +579,44 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct nvme_ctrlr *dev;
+	struct nvme_ctrlr *nvme_ctrlr;
+	struct nvme_probe_ctx *ctx = cb_ctx;
+	const char *name = NULL;
+	size_t i;
 
-	dev = malloc(sizeof(struct nvme_ctrlr));
-	if (dev == NULL) {
-		SPDK_ERRLOG("Failed to allocate device struct\n");
+	for (i = 0; i < ctx->count; i++) {
+		if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
+			name = strdup(ctx->names[i]);
+			break;
+		}
+	}
+
+	if (!name) {
+		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
 		return;
 	}
 
-	dev->adminq_timer_poller = NULL;
-	dev->ctrlr = ctrlr;
-	dev->ref = 0;
-	dev->trid = *trid;
-	dev->id = nvme_controller_index++;
+	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
+	if (nvme_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed to allocate device struct\n");
+		free((void *)name);
+		return;
+	}
 
-	nvme_ctrlr_create_bdevs(dev, dev->id);
+	nvme_ctrlr->adminq_timer_poller = NULL;
+	nvme_ctrlr->ctrlr = ctrlr;
+	nvme_ctrlr->ref = 0;
+	nvme_ctrlr->trid = *trid;
+	nvme_ctrlr->name = name;
 
-	spdk_poller_register(&dev->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
+	nvme_ctrlr_create_bdevs(nvme_ctrlr);
+
+	spdk_poller_register(&nvme_ctrlr->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
 			     spdk_app_get_current_core(), g_nvme_adminq_poll_timeout_us);
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
-	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, dev, tailq);
+	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
 	if (g_reset_controller_on_timeout) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
@@ -661,6 +676,7 @@ blockdev_nvme_hotplug(void *arg)
 
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
+		      const char *base_name,
 		      const char **names, size_t *count)
 {
 	struct nvme_probe_ctx	probe_ctx;
@@ -675,6 +691,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	probe_ctx.count = 1;
 	probe_ctx.trids[0] = *trid;
+	probe_ctx.names[0] = base_name;
 	if (spdk_nvme_probe(trid, &probe_ctx, probe_cb, attach_cb, NULL)) {
 		SPDK_ERRLOG("Failed to probe for new devices\n");
 		return -1;
@@ -697,8 +714,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 				names[j] = nvme_bdev->disk.name;
 				j++;
 			} else {
-				assert(false);
-				break;
+				SPDK_ERRLOG("Unable to return all names of created bdevs\n");
+				return -1;
 			}
 		}
 	}
@@ -712,7 +729,8 @@ bdev_nvme_library_init(void)
 {
 	struct spdk_conf_section *sp;
 	const char *val;
-	int i, rc;
+	int rc;
+	size_t i;
 	struct nvme_probe_ctx probe_ctx = {};
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
@@ -736,6 +754,15 @@ bdev_nvme_library_init(void)
 			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
 			return -1;
 		}
+
+		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
+		if (val == NULL) {
+			SPDK_ERRLOG("No name provided for TransportID\n");
+			return -1;
+		}
+
+		probe_ctx.names[i] = val;
+
 		probe_ctx.count++;
 	}
 
@@ -787,7 +814,7 @@ bdev_nvme_library_fini(void)
 }
 
 static void
-nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr, int ctrlr_id)
+nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct nvme_bdev	*bdev;
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
@@ -816,7 +843,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr, int ctrlr_id)
 		nvme_ctrlr->ref++;
 
 		snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
-			 "Nvme%dn%d", ctrlr_id, spdk_nvme_ns_get_id(ns));
+			 "%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
 		snprintf(bdev->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH,
 			 "NVMe disk");
 
@@ -972,15 +999,7 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 static void
 bdev_nvme_get_spdk_running_config(FILE *fp)
 {
-	fprintf(fp,
-		"\n"
-		"[Nvme]\n");
-	if (num_controllers != -1) {
-		fprintf(fp, "  NumControllers %d\n", num_controllers);
-	}
-	fprintf(fp, "  # Set how often the admin queue is polled for asynchronous events.\n"
-		"  # Units in microseconds.\n"
-		"  AdminPollRate %d\n", g_nvme_adminq_poll_timeout_us);
+	/* TODO */
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)

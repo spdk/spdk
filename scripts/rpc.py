@@ -173,7 +173,8 @@ p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
 p.set_defaults(func=construct_aio_bdev)
 
 def construct_nvme_bdev(args):
-    params = {'trtype': args.trtype,
+    params = {'name': args.name,
+              'trtype': args.trtype,
               'traddr': args.traddr}
 
     if args.adrfam:
@@ -188,6 +189,7 @@ def construct_nvme_bdev(args):
     jsonrpc_call('construct_nvme_bdev', params)
 
 p = subparsers.add_parser('construct_nvme_bdev', help='Add bdev with nvme backend')
+p.add_argument('-b', '--name', help="Name of the bdev", required=True)
 p.add_argument('-t', '--trtype', help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
 p.add_argument('-a', '--traddr', help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
 p.add_argument('-f', '--adrfam', help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
