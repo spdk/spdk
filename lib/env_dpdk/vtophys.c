@@ -95,15 +95,17 @@ struct map_128tb {
 struct spdk_mem_map {
 	struct map_128tb map_128tb;
 	pthread_mutex_t mutex;
+	uint64_t default_translation;
 };
 
-static struct spdk_mem_map g_vtophys_map = {{}, PTHREAD_MUTEX_INITIALIZER};
+static struct spdk_mem_map g_vtophys_map = {{}, PTHREAD_MUTEX_INITIALIZER, SPDK_VTOPHYS_ERROR};
 
 static struct map_1gb *
 spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 {
 	struct map_1gb *map_1gb;
 	uint64_t idx_128tb = MAP_128TB_IDX(vfn_2mb);
+	size_t i;
 
 	map_1gb = map->map_128tb.map[idx_128tb];
 
@@ -115,8 +117,10 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 		if (!map_1gb) {
 			map_1gb = malloc(sizeof(struct map_1gb));
 			if (map_1gb) {
-				/* initialize all entries to all 0xFF (SPDK_VTOPHYS_ERROR) */
-				memset(map_1gb->map, 0xFF, sizeof(map_1gb->map));
+				/* initialize all entries to default translation */
+				for (i = 0; i < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); i++) {
+					map_1gb->map[i].translation_2mb = map->default_translation;
+				}
 				memset(map_1gb->ref_count, 0, sizeof(map_1gb->ref_count));
 				map->map_128tb.map[idx_128tb] = map_1gb;
 			}
@@ -211,7 +215,7 @@ spdk_mem_map_unregister(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size)
 
 	(*ref_count)--;
 	if (*ref_count == 0) {
-		map_2mb->translation_2mb = SPDK_VTOPHYS_ERROR;
+		map_2mb->translation_2mb = map->default_translation;
 	}
 }
 
@@ -228,7 +232,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 #ifdef DEBUG
 		printf("invalid usermode virtual address %p\n", (void *)vaddr);
 #endif
-		return SPDK_VTOPHYS_ERROR;
+		return map->default_translation;
 	}
 
 	vfn_2mb = vaddr >> SHIFT_2MB;
@@ -237,7 +241,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 
 	map_1gb = map->map_128tb.map[idx_128tb];
 	if (spdk_unlikely(!map_1gb)) {
-		return SPDK_VTOPHYS_ERROR;
+		return map->default_translation;
 	}
 
 	map_2mb = &map_1gb->map[idx_1gb];
