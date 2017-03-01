@@ -196,6 +196,24 @@ struct spdk_nvme_transport_id {
 int spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str);
 
 /**
+ * Parse the string representation of a transport ID tranport type.
+ *
+ * \param trtype Output transport type (allocated by caller).
+ * \param str Input string representation of transport type (e.g. "PCIe", "RDMA")
+ * \return 0 if parsing was successful and trtype is filled out, or negated errno values on failure.
+ */
+int spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str);
+
+/**
+ * Parse the string representation of a tranport ID address family.
+ *
+ * \param adrfam Output address family (allocated by caller).
+ * \param str Input string representation of address family (e.g. "IPv4", "IPv6")
+ * \return 0 if parsing was successful and adrfam is filled out, or negated errno values on failure.
+ */
+int spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *str);
+
+/**
  * Determine whether the NVMe library can handle a specific NVMe over Fabrics transport type.
  *
  * \param trtype NVMe over Fabrics transport type to check.

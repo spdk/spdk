@@ -443,9 +443,13 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	return rc;
 }
 
-static int
-parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
+int
+spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
 {
+	if (trtype == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
 	if (strcasecmp(str, "PCIe") == 0) {
 		*trtype = SPDK_NVME_TRANSPORT_PCIE;
 	} else if (strcasecmp(str, "RDMA") == 0) {
@@ -456,9 +460,13 @@ parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
 	return 0;
 }
 
-static int
-parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *str)
+int
+spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *str)
 {
+	if (adrfam == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
 	if (strcasecmp(str, "IPv4") == 0) {
 		*adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	} else if (strcasecmp(str, "IPv6") == 0) {
@@ -524,12 +532,12 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 		str += val_len;
 
 		if (strcasecmp(key, "trtype") == 0) {
-			if (parse_trtype(&trid->trtype, val) != 0) {
+			if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, val) != 0) {
 				SPDK_ERRLOG("Unknown trtype '%s'\n", val);
 				return -EINVAL;
 			}
 		} else if (strcasecmp(key, "adrfam") == 0) {
-			if (parse_adrfam(&trid->adrfam, val) != 0) {
+			if (spdk_nvme_transport_id_parse_adrfam(&trid->adrfam, val) != 0) {
 				SPDK_ERRLOG("Unknown adrfam '%s'\n", val);
 				return -EINVAL;
 			}
