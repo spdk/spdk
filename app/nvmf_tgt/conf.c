@@ -353,16 +353,18 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		char *listen_addr;
 
-		listen_addrs[i].transport = spdk_conf_section_get_nmval(sp, "Listen", i, 0);
+		listen_addrs[num_listen_addrs].transport =
+			spdk_conf_section_get_nmval(sp, "Listen", i, 0);
 		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
 
-		if (!listen_addrs[i].transport || !listen_addr) {
+		if (!listen_addrs[num_listen_addrs].transport || !listen_addr) {
 			break;
 		}
 
 		listen_addr = strdup(listen_addr);
 
-		ret = spdk_parse_ip_addr(listen_addr, &listen_addrs[i].traddr, &listen_addrs[i].trsvcid);
+		ret = spdk_parse_ip_addr(listen_addr, &listen_addrs[num_listen_addrs].traddr,
+					 &listen_addrs[num_listen_addrs].trsvcid);
 		if (ret < 0) {
 			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addr);
 			free(listen_addr);
