@@ -521,11 +521,8 @@ nvmf_post_rdma_send(struct spdk_nvmf_request *req)
  * 3) Upon getting acknowledgement of the completion, decrement the internal
  *    count of number of outstanding requests. (spdk_nvmf_rdma_request_ack_completion)
  *
- * There are two public interfaces to initiate the process of completing a request,
- * exposed as callbacks in the transport layer.
- *
- * 1) spdk_nvmf_rdma_request_complete, which attempts to do all three steps.
- * 2) spdk_nvmf_rdma_request_release, which skips straight to step 3.
+ * The public interface to initiate the process of completing a request is
+ * spdk_nvmf_rdma_request_complete(), which calls a a callback in the transport layer.
 **/
 
 static int
@@ -1383,12 +1380,6 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	return rc;
 }
 
-static int
-spdk_nvmf_rdma_request_release(struct spdk_nvmf_request *req)
-{
-	return spdk_nvmf_rdma_request_ack_completion(req);
-}
-
 static void
 spdk_nvmf_rdma_close_conn(struct spdk_nvmf_conn *conn)
 {
@@ -1561,7 +1552,6 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.session_remove_conn = spdk_nvmf_rdma_session_remove_conn,
 
 	.req_complete = spdk_nvmf_rdma_request_complete,
-	.req_release = spdk_nvmf_rdma_request_release,
 
 	.conn_fini = spdk_nvmf_rdma_close_conn,
 	.conn_poll = spdk_nvmf_rdma_poll,

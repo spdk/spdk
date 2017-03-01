@@ -39,7 +39,6 @@
 
 typedef enum _spdk_nvmf_request_exec_status {
 	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
-	SPDK_NVMF_REQUEST_EXEC_STATUS_RELEASE,
 	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
 } spdk_nvmf_request_exec_status;
 

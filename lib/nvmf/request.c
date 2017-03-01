@@ -373,13 +373,6 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	switch (status) {
 	case SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE:
 		return spdk_nvmf_request_complete(req);
-	case SPDK_NVMF_REQUEST_EXEC_STATUS_RELEASE:
-		if (req->conn->transport->req_release(req)) {
-			SPDK_ERRLOG("Transport request release error!\n");
-			return -1;
-		}
-
-		return 0;
 	case SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS:
 		return 0;
 	default:
