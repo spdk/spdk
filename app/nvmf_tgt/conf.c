@@ -396,11 +396,18 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		num_devs++;
 	}
 
-	return spdk_nvmf_construct_subsystem(nqn, mode_str, lcore,
-					     num_listen_addrs, listen_addrs,
-					     num_hosts, hosts,
-					     bdf, sn,
-					     num_devs, devs);
+	ret = spdk_nvmf_construct_subsystem(nqn, mode_str, lcore,
+					    num_listen_addrs, listen_addrs,
+					    num_hosts, hosts,
+					    bdf, sn,
+					    num_devs, devs);
+
+	for (i = 0; i < num_listen_addrs; i++) {
+		free(listen_addrs[i].traddr);
+		free(listen_addrs[i].trsvcid);
+	}
+
+	return ret;
 }
 
 static int
