@@ -98,7 +98,27 @@ struct spdk_mem_map {
 	uint64_t default_translation;
 };
 
-static struct spdk_mem_map g_vtophys_map = {{}, PTHREAD_MUTEX_INITIALIZER, SPDK_VTOPHYS_ERROR};
+static struct spdk_mem_map *g_vtophys_map;
+
+static struct spdk_mem_map *
+spdk_mem_map_alloc(uint64_t default_translation)
+{
+	struct spdk_mem_map *map;
+
+	map = calloc(1, sizeof(*map));
+	if (map == NULL) {
+		return NULL;
+	}
+
+	if (pthread_mutex_init(&map->mutex, NULL)) {
+		free(map);
+		return NULL;
+	}
+
+	map->default_translation = default_translation;
+
+	return map;
+}
 
 static struct map_1gb *
 spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
@@ -313,13 +333,13 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb, uint64_t paddr)
 		return;
 	}
 
-	spdk_mem_map_register(&g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024, paddr);
+	spdk_mem_map_register(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024, paddr);
 }
 
 static void
 _spdk_vtophys_unregister_one(uint64_t vfn_2mb)
 {
-	spdk_mem_map_unregister(&g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024);
+	spdk_mem_map_unregister(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024);
 }
 
 void
@@ -398,6 +418,12 @@ spdk_vtophys_register_dpdk_mem(void)
 	struct rte_mem_config *mcfg;
 	size_t seg_idx;
 
+	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR);
+	if (g_vtophys_map == NULL) {
+		fprintf(stderr, "vtophys map allocation failed\n");
+		abort();
+	}
+
 	mcfg = rte_eal_get_configuration()->mem_config;
 
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
@@ -418,7 +444,7 @@ spdk_vtophys(void *buf)
 
 	vaddr = (uint64_t)buf;
 
-	paddr_2mb = spdk_mem_map_translate(&g_vtophys_map, vaddr);
+	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr);
 
 	/*
 	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,
