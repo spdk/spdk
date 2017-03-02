@@ -40,6 +40,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
+#include "spdk/io_channel.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
@@ -528,8 +529,14 @@ nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 	uint32_t i;
 
 	for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
-		spdk_bdev_unclaim(subsystem->dev.virt.ns_list[i]);
+		if (subsystem->dev.virt.ns_list[i]) {
+			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
+			spdk_bdev_unclaim(subsystem->dev.virt.ns_list[i]);
+			subsystem->dev.virt.ch[i] = NULL;
+			subsystem->dev.virt.ns_list[i] = NULL;
+		}
 	}
+	subsystem->dev.virt.ns_count = 0;
 }
 
 static void

@@ -84,17 +84,7 @@ subsystem_delete_event(void *arg1, void *arg2)
 static void
 nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
-	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 	struct spdk_event *event;
-	int i;
-
-	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME &&
-	    spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
-		for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
-			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
-			subsystem->dev.virt.ch[i] = NULL;
-		}
-	}
 
 	/*
 	 * Unregister the poller - this starts a chain of events that will eventually free
