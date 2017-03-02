@@ -67,6 +67,12 @@ test_foobar(void)
 {
 }
 
+int
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;

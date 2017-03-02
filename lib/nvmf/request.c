@@ -364,10 +364,23 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			status = nvmf_process_discovery_cmd(req);
 		} else {
-			status = subsystem->ops->process_admin_cmd(req);
+			if (subsystem->is_removed) {
+				rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+				status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+			} else {
+				status = subsystem->ops->process_admin_cmd(req);
+			}
 		}
 	} else {
-		status = session->subsys->ops->process_io_cmd(req);
+		struct spdk_nvmf_subsystem *subsystem;
+
+		subsystem = session->subsys;
+		if (subsystem->is_removed) {
+			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		} else {
+			status = session->subsys->ops->process_io_cmd(req);
+		}
 	}
 
 	switch (status) {

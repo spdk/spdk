@@ -619,11 +619,31 @@ int
 spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 {
 	struct spdk_nvmf_conn	*conn, *tmp;
+	struct spdk_nvmf_subsystem 	*subsys = session->subsys;
+
+	if (subsys->is_removed && subsys->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+		if (session->aer_req) {
+			struct spdk_nvmf_request *aer = session->aer_req;
+
+			aer->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			aer->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+			aer->rsp->nvme_cpl.status.dnr = 0;
+			spdk_nvmf_request_complete(aer);
+			session->aer_req = NULL;
+		}
+	}
 
 	TAILQ_FOREACH_SAFE(conn, &session->connections, link, tmp) {
 		if (conn->transport->conn_poll(conn) < 0) {
 			SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
 			spdk_nvmf_session_disconnect(conn);
+		}
+		if (subsys->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+			if (subsys->is_removed && conn->transport->conn_is_idle(conn)) {
+				if (subsys->ops->detach) {
+					subsys->ops->detach(subsys);
+				}
+			}
 		}
 	}
 

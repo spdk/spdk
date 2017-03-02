@@ -463,6 +463,13 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 	assert(copy_len + zero_len == length);
 }
 
+static void spdk_nvmf_ctrlr_hot_remove(void *remove_ctx)
+{
+	struct spdk_nvmf_subsystem *subsystem = (struct spdk_nvmf_subsystem *)remove_ctx;
+
+	subsystem->is_removed = true;
+}
+
 int
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev)
 {
@@ -477,7 +484,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return -1;
 	}
 
-	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
+	if (!spdk_bdev_claim(bdev, spdk_nvmf_ctrlr_hot_remove, subsystem)) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s is already claimed\n",
 			    subsystem->subnqn, bdev->name);
 		return -1;

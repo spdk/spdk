@@ -131,7 +131,7 @@ struct spdk_nvmf_subsystem {
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN];
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
-
+	bool is_removed;
 	union {
 		struct {
 			struct spdk_nvme_ctrlr *ctrlr;
