@@ -351,7 +351,7 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 		}
 
 		if (rdma_req->bb) {
-			free(rdma_req->bb);
+			spdk_free(rdma_req->bb);
 		}
 	}
 
@@ -405,7 +405,7 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 		rdma_req->send_sgl.length = sizeof(*cmd);
 		rdma_req->send_sgl.lkey = rqpair->cmd_mr->lkey;
 
-		rdma_req->bb = calloc(1, NVME_RDMA_RW_BUFFER_SIZE);
+		rdma_req->bb = spdk_zmalloc(NVME_RDMA_RW_BUFFER_SIZE, 64, NULL);
 		if (!rdma_req->bb) {
 			SPDK_ERRLOG("Unable to register allocate read/write buffer\n");
 			goto fail;
@@ -692,7 +692,8 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	rctrlr = nvme_rdma_ctrlr(ctrlr);
-	nvmf_data = calloc(1, sizeof(*nvmf_data));
+
+	nvmf_data = spdk_zmalloc(sizeof(*nvmf_data), 0, NULL);
 	if (!nvmf_data) {
 		SPDK_ERRLOG("nvmf_data allocation error\n");
 		rc = -1;
@@ -741,7 +742,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
 	rctrlr->cntlid = rsp->status_code_specific.success.cntlid;
 ret:
-	free(nvmf_data);
+	spdk_free(nvmf_data);
 	return rc;
 }
 
