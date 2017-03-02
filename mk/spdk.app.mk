@@ -35,12 +35,13 @@
 #  separately and wrapped in whole-archive linker args
 SPDK_RPC_LIB_LIST = $(filter %_rpc,$(SPDK_LIB_LIST))
 
-# Currently the iscsi, net, and scsi libraries contain their respective RPC methods
+# Currently some libraries contain their respective RPC methods
 #  rather than breaking them out into separate libraries.  So we must also include
 #  these directories in the RPC library list.
 SPDK_RPC_LIB_LIST += $(filter iscsi,$(SPDK_LIB_LIST))
 SPDK_RPC_LIB_LIST += $(filter net,$(SPDK_LIB_LIST))
 SPDK_RPC_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
+SPDK_RPC_LIB_LIST += $(filter vhost,$(SPDK_LIB_LIST))
 
 SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_RPC_LIB_LIST),$(SPDK_LIB_LIST))
 

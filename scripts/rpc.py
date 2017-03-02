@@ -417,15 +417,16 @@ p = subparsers.add_parser('get_vhost_scsi_controllers', help='List vhost control
 p.set_defaults(func=get_vhost_scsi_controllers)
 
 def construct_vhost_scsi_controller(args):
-    params = {
-        'ctrlr': args.ctrlr,
-        'cpumask': args.cpu_mask
-    }
+    params = {'ctrlr': args.ctrlr}
+
+    if args.cpumask:
+        params['cpumask'] = args.cpumask
+
     jsonrpc_call('construct_vhost_scsi_controller', params)
 
 p = subparsers.add_parser('construct_vhost_scsi_controller', help='Add new vhost controller')
-p.add_argument('ctrlr', help='conntroller name')
-p.add_argument('cpumask', help='cpu mask for this controller')
+p.add_argument('ctrlr', help='controller name')
+p.add_argument('--cpumask', help='cpu mask for this controller')
 p.set_defaults(func=construct_vhost_scsi_controller)
 
 def add_vhost_scsi_lun(args):

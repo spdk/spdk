@@ -137,6 +137,10 @@ timing_exit host
 
 timing_exit nvmf
 
+timing_enter vhost
+run_test ./test/vhost/spdk_vhost.sh --integrity
+timing_exit vhost
+
 timing_enter cleanup
 rbd_cleanup
 ./scripts/setup.sh reset

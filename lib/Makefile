@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 DIRS-y += bdev conf copy cunit event json jsonrpc \
           log env_dpdk net rpc trace util nvme nvmf scsi ioat
 ifeq ($(OS),Linux)
-DIRS-y += iscsi
+DIRS-y += iscsi vhost
 endif
 
 

@@ -31,19 +31,14 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += trace
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-ifeq ($(OS),Linux)
-DIRS-y += iscsi_tgt vhost
-endif
+CFLAGS += $(ENV_CFLAGS)
 
-.PHONY: all clean $(DIRS-y)
+# These are the DPDK vhost files copied (for now) into SPDK
+C_SRCS += fd_man.c socket.c vhost_user.c virtio_net.c vhost.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+LIBNAME = rte_vhost
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -12,9 +12,13 @@ if hash astyle; then
 	echo -n "Checking coding style..."
 	rm -f astyle.log
 	touch astyle.log
-	astyle --options=.astylerc "*.c" >> astyle.log
+	# Exclude rte_vhost code imported from DPDK - we want to keep the original code
+	#  as-is to enable ongoing work to synch with a generic upstream DPDK vhost library,
+	#  rather than making diffs more complicated by a lot of changes to follow SPDK
+	#  coding standards.
+	astyle --options=.astylerc "*.c" --exclude="rte_vhost" >> astyle.log
 	astyle --options=.astylerc --exclude=test/cpp_headers "*.cpp" >> astyle.log
-	astyle --options=.astylerc "*.h" >> astyle.log
+	astyle --options=.astylerc "*.h" --exclude="rte_vhost" >> astyle.log
 	if grep -q "^Formatted" astyle.log; then
 		echo " errors detected"
 		git diff

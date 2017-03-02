@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<network>
+  <name/>
+  <bridge name="virbr123"/>
+  <forward/>
+  <ip address="192.168.122.1" netmask="255.255.255.0">
+    <dhcp>
+      <range end="192.168.122.254" start="192.168.122.2"/>
+    </dhcp>
+  </ip>
+</network>

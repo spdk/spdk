@@ -31,19 +31,16 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += trace
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-ifeq ($(OS),Linux)
-DIRS-y += iscsi_tgt vhost
-endif
+CFLAGS += -Irte_vhost
+CFLAGS += $(ENV_CFLAGS)
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = task.c vhost.c vhost_rpc.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+LIBNAME = vhost
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+DIRS-y += rte_vhost
+
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -1,0 +1,133 @@
+# SPDK vhost configuration file
+#
+# Please write all parameters using ASCII.
+# The parameter must be quoted if it includes whitespace.
+
+# Configuration syntax:
+# Leading whitespace is ignored.
+# Lines starting with '#' are comments.
+# Lines ending with '\' are concatenated with the next line.
+# Bracketed ([]) names define sections
+
+[Global]
+  # Instance ID for multi-process support
+  # Default: 0
+  #InstanceID 0
+
+  # Users can restrict work items to only run on certain cores by
+  #  specifying a ReactorMask.  Default is to allow work items to run
+  #  on core 0.
+  #ReactorMask 0xFFFF
+
+  # Tracepoint group mask for spdk trace buffers
+  # Default: 0x0 (all tracepoint groups disabled)
+  # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
+  #TpointGroupMask 0x0
+
+  # syslog facility
+   LogFacility "local7"
+
+[Rpc]
+  # Defines whether SPDK vhost will enable configuration via RPC.
+  # Default is disabled.  Note that the RPC interface is not
+  # authenticated, so users should be careful about enabling
+  # RPC in non-trusted environments.
+  Enable No
+  # Listen address for the RPC service.
+  # May be an IP address or an absolute path to a Unix socket.
+  Listen 127.0.0.1
+
+# Users may not want to use offload even it is available.
+# Users may use the whitelist to initialize specified devices, IDS
+#  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.
+[Ioat]
+  Disable Yes
+  #Whitelist 00:04.0
+  #Whitelist 00:04.1
+
+# Users must change this section to match the /dev/sdX devices to be
+#  exported as vhost scsi drives. The devices are accessed using Linux AIO.
+[AIO]
+  #AIO /dev/sdb
+  #AIO /dev/sdc
+
+# Users may change this section to create a different number or size of
+#  malloc LUNs.
+# If the system has hardware DMA engine, it will use an IOAT
+# (i.e. Crystal Beach DMA) channel to do the copy instead of memcpy.
+# Of course, users can disable offload even it is available.
+[Malloc]
+  # Number of Malloc targets
+  NumberOfLuns 3
+  # Malloc targets are 128M
+  LunSizeInMB 128
+  # Block size. Default is 512 bytes.
+  BlockSize 4096
+
+# NVMe configuration options
+[Nvme]
+  # NVMe Device Whitelist
+  # Users may specify which NVMe devices to claim by their PCI
+  # domain, bus, device, and function. The format is dddd:bb:dd.f, which is
+  # the same format displayed by lspci or in /sys/bus/pci/devices. The second
+  # argument is a "name" for the device that can be anything. The name
+  # is referenced later in the Subsystem section.
+  #
+  # Alternatively, the user can specify ClaimAllDevices. All
+  # NVMe devices will be claimed and named Nvme0, Nvme1, etc.
+  #BDF 0000:81:00.0 Nvme0
+  #BDF 0000:01:00.0 Nvme1
+  ClaimAllDevices
+
+  # The number of attempts per I/O when an I/O fails. Do not include
+  # this key to get the default behavior.
+  NvmeRetryCount 4
+  # The maximum number of NVMe controllers to claim. Do not include this key to
+  # claim all of them.
+  NumControllers 2
+  # Registers the application to receive timeout callback and to reset the controller.
+  ResetControllerOnTimeout Yes
+  # Timeout value.
+  NvmeTimeoutValue 30
+  # Set how often the admin queue is polled for asynchronous events.
+  # Units in microseconds.
+  AdminPollRate 100000
+
+# The Split virtual block device slices block devices into multiple smaller bdevs.
+[Split]
+  # Syntax:
+  #   Split <bdev> <count> [<size_in_megabytes>]
+  #
+  # Split Nvme1n1 into two equally-sized portions, Nvme1n1p0 and Nvme1n1p1
+  #Split Nvme1n1 2
+
+  # Split Malloc2 into eight 1-megabyte portions, Malloc2p0 ... Malloc2p7,
+  # leaving the rest of the device inaccessible
+  #Split Malloc2 8 1
+
+# Vhost scsi controller configuration
+# Users should change the VhostScsi section(s) below to match the desired
+# vhost configuration.
+# Name is minimum required
+[VhostScsi0]
+  # Define name for controller
+  Name vhost.0
+  # Assign devices from backend
+  # Use the first malloc device
+  Dev0 Malloc0
+  # Use the first AIO device
+  #Dev1 AIO0
+  # Use the frist Nvme device
+  #Dev2 Nvme0n1
+  # Use the third partition from second Nvme device
+  #Dev3 Nvme1n1p2
+
+  # Start the poller for this vhost controller on one of the cores in
+  #  this cpumask.  By default, it not specified, will use any core in the
+  #  SPDK process.
+  #Cpumask 0x1
+
+#[VhostScsi1]
+#  Name vhost.1
+#  Dev0 AIO1
+#  Cpumask 0x1
