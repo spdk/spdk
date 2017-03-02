@@ -109,6 +109,40 @@ vtophys_positive_test(void)
 	return rc;
 }
 
+static void
+test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
+		enum spdk_mem_map_notify_action action,
+		void *vaddr, size_t size)
+{
+	const char *action_str = "unknown";
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		action_str = "register";
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		action_str = "unregister";
+		break;
+	}
+
+	printf("%s: %s %p-%p (%zu bytes)\n", __func__, action_str, vaddr, vaddr + size - 1, size);
+}
+
+static int
+mem_map_test(void)
+{
+	struct spdk_mem_map *map;
+	uint64_t default_translation = 0xDEADBEEF0BADF00D;
+
+	map = spdk_mem_map_alloc(default_translation, test_map_notify, NULL);
+	if (map == NULL) {
+		return 1;
+	}
+
+	spdk_mem_map_free(&map);
+	return 0;
+}
+
 
 int
 main(int argc, char **argv)
@@ -126,5 +160,9 @@ main(int argc, char **argv)
 		return rc;
 
 	rc = vtophys_positive_test();
+	if (rc < 0)
+		return rc;
+
+	rc = mem_map_test();
 	return rc;
 }

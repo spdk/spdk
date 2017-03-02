@@ -181,19 +181,6 @@ void spdk_delay_us(unsigned int us);
 
 uint64_t spdk_vtophys(void *buf);
 
-/**
- * Register the specified memory region for vtophys address translation.
- * The memory region must map to pinned huge pages (2MB or greater).
- */
-void spdk_vtophys_register(void *vaddr, uint64_t len);
-
-/**
- * Unregister the specified memory region from vtophys address translation.
- * The caller must ensure all in-flight DMA operations to this memory region
- *  are completed or cancelled before calling this function.
- */
-void spdk_vtophys_unregister(void *vaddr, uint64_t len);
-
 struct spdk_pci_addr {
 	uint16_t			domain;
 	uint8_t				bus;
@@ -300,6 +287,69 @@ int spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr);
  * \return the return value of cb()
  */
 void *spdk_call_unaffinitized(void *cb(void *arg), void *arg);
+
+/**
+ * Page-granularity memory address translation table
+ */
+struct spdk_mem_map;
+
+enum spdk_mem_map_notify_action {
+	SPDK_MEM_MAP_NOTIFY_REGISTER,
+	SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+};
+
+typedef void (*spdk_mem_map_notify_cb)(void *cb_ctx, struct spdk_mem_map *map,
+				       enum spdk_mem_map_notify_action action,
+				       void *vaddr, size_t size);
+
+/**
+ * Allocate a virtual memory address translation map
+ */
+struct spdk_mem_map *spdk_mem_map_alloc(uint64_t default_translation,
+					spdk_mem_map_notify_cb notify_cb, void *cb_ctx);
+
+/**
+ * Free a memory map previously allocated by spdk_mem_map_alloc()
+ */
+void spdk_mem_map_free(struct spdk_mem_map **pmap);
+
+/**
+ * Register an address translation for a range of virtual memory.
+ *
+ * \param map Memory map
+ * \param vaddr Virtual address of the region to register - must be 2 MB aligned.
+ * \param size Size of the region - must be 2 MB in the current implementation.
+ * \param translation Translation to store in the map for this address range.
+ *
+ * \sa spdk_mem_map_clear_translation()
+ */
+void spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size,
+				  uint64_t translation);
+
+/**
+ * Unregister an address translation.
+ *
+ * \sa spdk_mem_map_set_translation()
+ */
+void spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size);
+
+/**
+ * Look up the translation of a virtual address in a memory map.
+ */
+uint64_t spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr);
+
+/**
+ * Register the specified memory region for address translation.
+ * The memory region must map to pinned huge pages (2MB or greater).
+ */
+void spdk_mem_register(void *vaddr, size_t len);
+
+/**
+ * Unregister the specified memory region from vtophys address translation.
+ * The caller must ensure all in-flight DMA operations to this memory region
+ *  are completed or cancelled before calling this function.
+ */
+void spdk_mem_unregister(void *vaddr, size_t len);
 
 #ifdef __cplusplus
 }

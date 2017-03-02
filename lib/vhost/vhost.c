@@ -662,7 +662,7 @@ add_vdev_cb(void *arg1, void *arg2)
 		vdev->region[i].len = len;
 		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
 			       start, len);
-		spdk_vtophys_register(vdev->region[i].vaddr, vdev->region[i].len);
+		spdk_mem_register(vdev->region[i].vaddr, vdev->region[i].len);
 	}
 
 	spdk_poller_register(&vdev->requestq_poller, vdev_worker, vdev, vdev->lcore, 0);
@@ -686,7 +686,7 @@ remove_vdev_cb(void *arg1, void *arg2)
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", vdev->name);
 	for (i = 0; i < vdev->nregions; i++) {
-		spdk_vtophys_unregister(vdev->region[i].vaddr, vdev->region[i].len);
+		spdk_mem_unregister(vdev->region[i].vaddr, vdev->region[i].len);
 	}
 
 	vdev->nregions = 0;

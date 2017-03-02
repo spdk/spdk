@@ -45,6 +45,7 @@
 
 #include "spdk/assert.h"
 #include "spdk/likely.h"
+#include "spdk/queue.h"
 #include "spdk/util.h"
 
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
@@ -97,12 +98,76 @@ struct spdk_mem_map {
 	struct map_128tb map_128tb;
 	pthread_mutex_t mutex;
 	uint64_t default_translation;
+	spdk_mem_map_notify_cb notify_cb;
+	void *cb_ctx;
+	TAILQ_ENTRY(spdk_mem_map) tailq;
 };
 
 static struct spdk_mem_map *g_vtophys_map;
+static TAILQ_HEAD(, spdk_mem_map) g_spdk_mem_maps = TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
+static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static struct spdk_mem_map *
-spdk_mem_map_alloc(uint64_t default_translation)
+/*
+ * Walk the currently registered memory via the main vtophys map
+ * and call the new map's notify callback for each virtually contiguous region.
+ */
+static void
+spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action action)
+{
+	size_t idx_128tb;
+	uint64_t contig_start = SPDK_VTOPHYS_ERROR;
+	uint64_t contig_end = SPDK_VTOPHYS_ERROR;
+
+#define END_RANGE()										\
+	do {											\
+		if (contig_start != SPDK_VTOPHYS_ERROR) {					\
+			/* End of of a virtually contiguous range */				\
+			map->notify_cb(map->cb_ctx, map, action,				\
+				       (void *)contig_start,					\
+				       contig_end - contig_start + 2 * 1024 * 1024);		\
+		}										\
+		contig_start = SPDK_VTOPHYS_ERROR;						\
+	} while (0)
+
+
+	if (!g_vtophys_map) {
+		return;
+	}
+
+	/* Hold the vtophys mutex so no new registrations can be added while we are looping. */
+	pthread_mutex_lock(&g_vtophys_map->mutex);
+
+	for (idx_128tb = 0;
+	     idx_128tb < sizeof(g_vtophys_map->map_128tb.map) / sizeof(g_vtophys_map->map_128tb.map[0]);
+	     idx_128tb++) {
+		const struct map_1gb *map_1gb = g_vtophys_map->map_128tb.map[idx_128tb];
+		uint64_t idx_1gb;
+
+		if (!map_1gb) {
+			END_RANGE();
+			continue;
+		}
+
+		for (idx_1gb = 0; idx_1gb < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); idx_1gb++) {
+			if (map_1gb->map[idx_1gb].translation_2mb != SPDK_VTOPHYS_ERROR) {
+				/* Rebuild the virtual address from the indexes */
+				uint64_t vaddr = (idx_128tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
+
+				if (contig_start == SPDK_VTOPHYS_ERROR) {
+					contig_start = vaddr;
+				}
+				contig_end = vaddr;
+			} else {
+				END_RANGE();
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_vtophys_map->mutex);
+}
+
+struct spdk_mem_map *
+spdk_mem_map_alloc(uint64_t default_translation, spdk_mem_map_notify_cb notify_cb, void *cb_ctx)
 {
 	struct spdk_mem_map *map;
 
@@ -117,8 +182,68 @@ spdk_mem_map_alloc(uint64_t default_translation)
 	}
 
 	map->default_translation = default_translation;
+	map->notify_cb = notify_cb;
+	map->cb_ctx = cb_ctx;
+
+	pthread_mutex_lock(&g_spdk_mem_map_mutex);
+
+	spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
+	TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
+
+	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 
 	return map;
+}
+
+void
+spdk_mem_map_free(struct spdk_mem_map **pmap)
+{
+	struct spdk_mem_map *map;
+	size_t i;
+
+	if (!pmap) {
+		return;
+	}
+
+	map = *pmap;
+
+	pthread_mutex_lock(&g_spdk_mem_map_mutex);
+	spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_UNREGISTER);
+	TAILQ_REMOVE(&g_spdk_mem_maps, map, tailq);
+	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+
+	for (i = 0; i < sizeof(map->map_128tb.map) / sizeof(map->map_128tb.map[0]); i++) {
+		free(map->map_128tb.map[i]);
+	}
+
+	pthread_mutex_destroy(&map->mutex);
+
+	free(map);
+	*pmap = NULL;
+}
+
+void
+spdk_mem_register(void *vaddr, size_t len)
+{
+	struct spdk_mem_map *map;
+
+	pthread_mutex_lock(&g_spdk_mem_map_mutex);
+	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+		map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, vaddr, len);
+	}
+	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+}
+
+void
+spdk_mem_unregister(void *vaddr, size_t len)
+{
+	struct spdk_mem_map *map;
+
+	pthread_mutex_lock(&g_spdk_mem_map_mutex);
+	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+		map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, vaddr, len);
+	}
+	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 }
 
 static struct map_1gb *
@@ -160,8 +285,9 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 	return map_1gb;
 }
 
-static void
-spdk_mem_map_register(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size, uint64_t translation)
+void
+spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size,
+			     uint64_t translation)
 {
 	uint64_t vfn_2mb;
 	struct map_1gb *map_1gb;
@@ -200,8 +326,8 @@ spdk_mem_map_register(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size, u
 	(*ref_count)++;
 }
 
-static void
-spdk_mem_map_unregister(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size)
+void
+spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size)
 {
 	uint64_t vfn_2mb;
 	struct map_1gb *map_1gb;
@@ -240,7 +366,7 @@ spdk_mem_map_unregister(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size)
 	}
 }
 
-static uint64_t
+uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 {
 	const struct map_1gb *map_1gb;
@@ -334,16 +460,16 @@ _spdk_vtophys_register_one(uint64_t vfn_2mb, uint64_t paddr)
 		return;
 	}
 
-	spdk_mem_map_register(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024, paddr);
+	spdk_mem_map_set_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024, paddr);
 }
 
 static void
 _spdk_vtophys_unregister_one(uint64_t vfn_2mb)
 {
-	spdk_mem_map_unregister(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024);
+	spdk_mem_map_clear_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024);
 }
 
-void
+static void
 spdk_vtophys_register(void *vaddr, uint64_t len)
 {
 	uint64_t vfn_2mb;
@@ -383,7 +509,7 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 	}
 }
 
-void
+static void
 spdk_vtophys_unregister(void *vaddr, uint64_t len)
 {
 	uint64_t vfn_2mb;
@@ -413,13 +539,28 @@ spdk_vtophys_unregister(void *vaddr, uint64_t len)
 	}
 }
 
+static void
+spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
+		    enum spdk_mem_map_notify_action action,
+		    void *vaddr, size_t len)
+{
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		spdk_vtophys_register(vaddr, len);
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		spdk_vtophys_unregister(vaddr, len);
+		break;
+	}
+}
+
 void
 spdk_vtophys_register_dpdk_mem(void)
 {
 	struct rte_mem_config *mcfg;
 	size_t seg_idx;
 
-	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR);
+	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
 	if (g_vtophys_map == NULL) {
 		fprintf(stderr, "vtophys map allocation failed\n");
 		abort();
