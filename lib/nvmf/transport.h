@@ -115,6 +115,11 @@ struct spdk_nvmf_transport {
 	 * Poll a connection for events.
 	 */
 	int (*conn_poll)(struct spdk_nvmf_conn *conn);
+
+	/*
+	 * True if the conn has no pending IO.
+	 */
+	bool (*conn_is_idle)(struct spdk_nvmf_conn *conn);
 };
 
 int spdk_nvmf_transport_init(void);

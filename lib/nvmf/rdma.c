@@ -1510,6 +1510,17 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 	return count;
 }
 
+static bool
+spdk_nvmf_rdma_conn_is_idle(struct spdk_nvmf_conn *conn)
+{
+	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
+
+	if (rdma_conn->cur_queue_depth == 0 && rdma_conn->cur_rdma_rw_depth == 0) {
+		return true;
+	}
+	return false;
+}
+
 const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 	.name = "rdma",
 	.transport_init = spdk_nvmf_rdma_init,
@@ -1530,7 +1541,7 @@ const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
 
 	.conn_fini = spdk_nvmf_rdma_close_conn,
 	.conn_poll = spdk_nvmf_rdma_poll,
-
+	.conn_is_idle = spdk_nvmf_rdma_conn_is_idle,
 
 };
 
