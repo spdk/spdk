@@ -227,6 +227,9 @@ struct spdk_scsi_lun {
 	/** The LUN is removed */
 	bool				removed;
 
+	/** The LUN is clamed */
+	bool claimed;
+
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
 	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
 };

@@ -64,7 +64,7 @@ spdk_rpc_get_luns(struct spdk_jsonrpc_server_conn *conn,
 
 		spdk_json_write_object_begin(w);
 		spdk_json_write_name(w, "claimed");
-		spdk_json_write_bool(w, current->claimed);
+		spdk_json_write_bool(w, lun->claimed);
 		spdk_json_write_name(w, "name");
 		spdk_json_write_string(w, lun->name);
 		spdk_json_write_object_end(w);
@@ -77,57 +77,6 @@ spdk_rpc_get_luns(struct spdk_jsonrpc_server_conn *conn,
 	spdk_jsonrpc_end_result(conn, w);
 }
 SPDK_RPC_REGISTER("get_luns", spdk_rpc_get_luns)
-
-struct rpc_delete_lun {
-	char *name;
-};
-
-static void
-free_rpc_delete_lun(struct rpc_delete_lun *r)
-{
-	free(r->name);
-}
-
-static const struct spdk_json_object_decoder rpc_delete_lun_decoders[] = {
-	{"name", offsetof(struct rpc_delete_lun, name), spdk_json_decode_string},
-};
-
-static void
-spdk_rpc_delete_lun(struct spdk_jsonrpc_server_conn *conn,
-		    const struct spdk_json_val *params,
-		    const struct spdk_json_val *id)
-{
-	struct rpc_delete_lun req = {};
-	struct spdk_json_write_ctx *w;
-
-	if (spdk_json_decode_object(params, rpc_delete_lun_decoders,
-				    SPDK_COUNTOF(rpc_delete_lun_decoders),
-				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
-		goto invalid;
-	}
-
-	if (spdk_scsi_lun_deletable(req.name)) {
-		goto invalid;
-	}
-
-	spdk_scsi_lun_delete(req.name);
-	free_rpc_delete_lun(&req);
-
-	if (id == NULL) {
-		return;
-	}
-
-	w = spdk_jsonrpc_begin_result(conn, id);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_delete_lun(&req);
-}
-SPDK_RPC_REGISTER("delete_lun", spdk_rpc_delete_lun)
 
 static void
 spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_server_conn *conn,

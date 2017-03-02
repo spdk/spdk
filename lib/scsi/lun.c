@@ -302,7 +302,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 		return NULL;
 	}
 
-	lun = spdk_lun_db_get_lun(name, 0);
+	lun = spdk_lun_db_get_lun(name);
 	if (lun) {
 		SPDK_ERRLOG("LUN %s already created\n", lun->name);
 		return NULL;
@@ -352,53 +352,39 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 int
 spdk_scsi_lun_claim(struct spdk_scsi_lun *lun)
 {
-	struct spdk_scsi_lun *tmp = spdk_lun_db_get_lun(lun->name, 1);
+	assert(spdk_lun_db_get_lun(lun->name) != NULL);
 
-	if (tmp == NULL) {
+	if (lun->claimed != false) {
 		return -1;
 	}
 
+	lun->claimed = true;
 	return 0;
 }
 
 int
 spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun)
 {
-	spdk_lun_db_put_lun(lun->name);
+	assert(spdk_lun_db_get_lun(lun->name) != NULL);
+	assert(lun->claimed == true);
+	lun->claimed = false;
 	lun->dev = NULL;
 
 	return 0;
 }
 
 int
-spdk_scsi_lun_deletable(const char *name)
-{
-	int ret = 0;
-	struct spdk_scsi_lun *lun;
-
-	pthread_mutex_lock(&g_spdk_scsi.mutex);
-	lun = spdk_lun_db_get_lun(name, 0);
-	if (lun == NULL) {
-		ret = -1;
-		goto out;
-	}
-
-out:
-	pthread_mutex_unlock(&g_spdk_scsi.mutex);
-	return ret;
-}
-
-void
 spdk_scsi_lun_delete(const char *lun_name)
 {
 	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_dev *dev;
 
 	pthread_mutex_lock(&g_spdk_scsi.mutex);
-	lun = spdk_lun_db_get_lun(lun_name, 0);
+	lun = spdk_lun_db_get_lun(lun_name);
 	if (lun == NULL) {
+		SPDK_ERRLOG("LUN '%s' not found", lun_name);
 		pthread_mutex_unlock(&g_spdk_scsi.mutex);
-		return;
+		return -1;
 	}
 
 	dev = lun->dev;
@@ -411,6 +397,7 @@ spdk_scsi_lun_delete(const char *lun_name)
 	/* Destroy this lun */
 	spdk_scsi_lun_destruct(lun);
 	pthread_mutex_unlock(&g_spdk_scsi.mutex);
+	return 0;
 }
 
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)

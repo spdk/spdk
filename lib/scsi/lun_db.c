@@ -77,7 +77,7 @@ spdk_scsi_lun_db_delete(struct spdk_scsi_lun *lun)
 }
 
 struct spdk_scsi_lun *
-spdk_lun_db_get_lun(const char *lun_name, int claim_flag)
+spdk_lun_db_get_lun(const char *lun_name)
 {
 	struct spdk_lun_db_entry *current = spdk_scsi_lun_list_head;
 
@@ -85,14 +85,6 @@ spdk_lun_db_get_lun(const char *lun_name, int claim_flag)
 		struct spdk_scsi_lun *lun = current->lun;
 
 		if (strncmp(lun_name, lun->name, sizeof(lun->name)) == 0) {
-			if (claim_flag) {
-				if (current->claimed == 1)
-					return NULL;
-				else {
-					current->claimed = 1;
-					return lun;
-				}
-			}
 			return lun;
 		}
 
@@ -100,21 +92,4 @@ spdk_lun_db_get_lun(const char *lun_name, int claim_flag)
 	}
 
 	return NULL;
-}
-
-void
-spdk_lun_db_put_lun(const char *lun_name)
-{
-	struct spdk_lun_db_entry *current = spdk_scsi_lun_list_head;
-
-	while (current != NULL) {
-		struct spdk_scsi_lun *lun = current->lun;
-
-		if (strncmp(lun_name, lun->name, sizeof(lun->name)) == 0) {
-			current->claimed = 0;
-			break;
-		}
-
-		current = current->next;
-	}
 }

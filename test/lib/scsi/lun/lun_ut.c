@@ -648,17 +648,25 @@ lun_construct_same_same_twice(void)
 }
 
 static void
-lun_deletable(void)
+lun_delete(void)
 {
 	struct spdk_scsi_lun *lun;
 	int rc;
 
 	lun = lun_construct();
-	rc = spdk_scsi_lun_deletable(lun->name);
-	CU_ASSERT_EQUAL(rc, 0);
-	lun_destruct(lun);
 
-	rc = spdk_scsi_lun_deletable("test");
+	rc = spdk_scsi_lun_delete(lun->name);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	lun = lun_construct();
+
+	rc = spdk_scsi_lun_claim(lun);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_scsi_lun_delete(lun->name);
+	CU_ASSERT_EQUAL(rc, 0);
+
+	rc = spdk_scsi_lun_delete("test");
 	CU_ASSERT_EQUAL(rc, -1);
 }
 
@@ -710,7 +718,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx) == NULL
 		|| CU_add_test(suite, "construct - success", lun_construct_success) == NULL
 		|| CU_add_test(suite, "construct - same lun twice", lun_construct_same_same_twice) == NULL
-		|| CU_add_test(suite, "deletable", lun_deletable) == NULL
+		|| CU_add_test(suite, "lun_delete", lun_delete) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

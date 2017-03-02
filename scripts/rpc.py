@@ -283,15 +283,6 @@ p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int
 p.set_defaults(func=delete_initiator_group)
 
 
-def delete_lun(args):
-    params = {'name': args.lun_name}
-    jsonrpc_call('delete_lun', params)
-
-p = subparsers.add_parser('delete_lun', help='Delete a LUN')
-p.add_argument('lun_name', help='LUN name to be deleted. Example: Malloc0.')
-p.set_defaults(func=delete_lun)
-
-
 def get_iscsi_connections(args):
     print_dict(jsonrpc_call('get_iscsi_connections'))
 

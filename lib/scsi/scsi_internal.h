@@ -83,7 +83,6 @@ enum {
 
 struct spdk_lun_db_entry {
 	struct spdk_scsi_lun *lun;
-	int claimed;
 	struct spdk_lun_db_entry *next;
 };
 
@@ -104,16 +103,14 @@ int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 int spdk_scsi_lun_claim(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun);
-int spdk_scsi_lun_deletable(const char *name);
-void spdk_scsi_lun_delete(const char *lun_name);
+int spdk_scsi_lun_delete(const char *lun_name);
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
 
 int spdk_scsi_lun_db_add(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_db_delete(struct spdk_scsi_lun *lun);
 
-struct spdk_scsi_lun *spdk_lun_db_get_lun(const char *lun_name, int claim_flag);
-void spdk_lun_db_put_lun(const char *lun_name);
+struct spdk_scsi_lun *spdk_lun_db_get_lun(const char *lun_name);
 
 struct spdk_scsi_dev *spdk_scsi_dev_get_list(void);
 
