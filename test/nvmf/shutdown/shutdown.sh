@@ -27,8 +27,8 @@ trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
 
-# Create 12 subsystems
-for i in `seq 1 12`
+# Create 10 subsystems
+for i in `seq 1 10`
 do
 	bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 	$rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode${i} "transport:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -s SPDK${i} -n "$bdevs"
