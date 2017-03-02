@@ -205,6 +205,17 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	ctrlr = qpair->ctrlr;
 
+	if (qpair->in_completion_context) {
+		/*
+		 * There are many cases where it is convenient to delete an io qpair in the context
+		 *  of that qpair's completion routine.  To handle this properly, set a flag here
+		 *  so that the completion routine will perform an actual delete after the context
+		 *  unwinds.
+		 */
+		qpair->delete_after_completion_context = 1;
+		return 0;
+	}
+
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
 	nvme_ctrlr_proc_remove_io_qpair(qpair);
@@ -947,6 +958,12 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
 		TAILQ_REMOVE(&proc->allocated_io_qpairs, qpair, per_process_tailq);
 
+		/*
+		 * The process may have been killed while some qpairs were in their
+		 *  completion context.  Clear that flag here to allow these IO
+		 *  qpairs to be deleted.
+		 */
+		qpair->in_completion_context = 0;
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 

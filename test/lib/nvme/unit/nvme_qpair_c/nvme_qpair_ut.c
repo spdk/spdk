@@ -142,6 +142,12 @@ nvme_transport_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t
 	return 0;
 }
 
+int
+spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	return 0;
+}
+
 static void
 prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_ctrlr *ctrlr)
