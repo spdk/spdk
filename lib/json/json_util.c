@@ -250,6 +250,19 @@ spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_fn d
 }
 
 int
+spdk_json_decode_bool(const struct spdk_json_val *val, void *out)
+{
+	bool *f = out;
+
+	if (val->type != SPDK_JSON_VAL_TRUE && val->type != SPDK_JSON_VAL_FALSE) {
+		return -1;
+	}
+
+	*f = val->type == SPDK_JSON_VAL_TRUE;
+	return 0;
+}
+
+int
 spdk_json_decode_int32(const struct spdk_json_val *val, void *out)
 {
 	int32_t *i = out;

@@ -146,6 +146,7 @@ int spdk_json_decode_object(const struct spdk_json_val *values,
 int spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_fn decode_func,
 			   void *out, size_t max_size, size_t *out_size, size_t stride);
 
+int spdk_json_decode_bool(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_int32(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_uint32(const struct spdk_json_val *val, void *out);
 int spdk_json_decode_string(const struct spdk_json_val *val, void *out);
