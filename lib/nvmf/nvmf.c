@@ -61,6 +61,7 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	g_nvmf_tgt.discovery_genctr = 0;
 	g_nvmf_tgt.discovery_log_page = NULL;
 	g_nvmf_tgt.discovery_log_page_size = 0;
+	g_nvmf_tgt.current_subsystem_id = 0;
 	TAILQ_INIT(&g_nvmf_tgt.subsystems);
 	TAILQ_INIT(&g_nvmf_tgt.listen_addrs);
 

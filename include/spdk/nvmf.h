@@ -126,6 +126,7 @@ struct spdk_nvmf_subsystem_allowed_listener {
  * access to all the NVMe device/namespaces maintained by the subsystem.
  */
 struct spdk_nvmf_subsystem {
+	uint32_t id;
 	uint32_t lcore;
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN];
 	enum spdk_nvmf_subsystem_mode mode;

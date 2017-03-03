@@ -193,6 +193,9 @@ spdk_nvmf_create_subsystem(const char *nqn,
 		return NULL;
 	}
 
+	g_nvmf_tgt.current_subsystem_id++;
+
+	subsystem->id = g_nvmf_tgt.current_subsystem_id;
 	subsystem->subtype = type;
 	subsystem->mode = mode;
 	subsystem->cb_ctx = cb_ctx;
