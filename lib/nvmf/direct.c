@@ -261,6 +261,12 @@ nvmf_direct_ctrlr_complete_aer(void *arg, const struct spdk_nvme_cpl *cpl)
 	}
 }
 
+static int
+nvmf_direct_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
 static void
 nvmf_direct_ctrlr_set_aer_callback(struct spdk_nvmf_subsystem *subsys)
 {
@@ -269,6 +275,7 @@ nvmf_direct_ctrlr_set_aer_callback(struct spdk_nvmf_subsystem *subsys)
 }
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops = {
+	.attach				= nvmf_direct_ctrlr_attach,
 	.set_aer_callback		= nvmf_direct_ctrlr_set_aer_callback,
 	.ctrlr_get_data			= nvmf_direct_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_direct_ctrlr_process_admin_cmd,

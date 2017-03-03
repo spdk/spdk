@@ -122,6 +122,16 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 	return false;
 }
 
+int
+spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
+{
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+		return subsystem->ops->attach(subsystem);
+	}
+
+	return 0;
+}
+
 void
 spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {

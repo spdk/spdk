@@ -100,6 +100,12 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return -1;
 }
 
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+{
+	return NULL;
+}
+
 struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     uint64_t offset, uint64_t length, spdk_bdev_io_completion_cb cb, void *cb_arg)
 {

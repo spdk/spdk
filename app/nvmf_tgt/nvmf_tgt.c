@@ -47,7 +47,6 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
-#include "spdk/io_channel.h"
 
 #define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
@@ -177,20 +176,9 @@ _nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 {
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
-	struct spdk_bdev *bdev;
-	struct spdk_io_channel *ch;
 	int lcore = spdk_app_get_current_core();
-	int i;
 
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME &&
-	    subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
-		for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
-			bdev = subsystem->dev.virt.ns_list[i];
-			ch = spdk_bdev_get_io_channel(bdev, SPDK_IO_PRIORITY_DEFAULT);
-			assert(ch != NULL);
-			subsystem->dev.virt.ch[i] = ch;
-		}
-	}
+	spdk_nvmf_subsystem_start(subsystem);
 
 	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, 0);
 }

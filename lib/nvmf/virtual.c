@@ -520,6 +520,26 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 }
 
+static int
+nvmf_virtual_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_io_channel *ch;
+	uint32_t i;
+
+	for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
+		bdev = subsystem->dev.virt.ns_list[i];
+		ch = spdk_bdev_get_io_channel(bdev, SPDK_IO_PRIORITY_DEFAULT);
+		if (ch == NULL) {
+			SPDK_ERRLOG("io_channel allocation failed\n");
+			return -1;
+		}
+		subsystem->dev.virt.ch[i] = ch;
+	}
+
+	return 0;
+}
+
 static void
 nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -542,6 +562,7 @@ nvmf_virtual_ctrlr_set_aer_callback(struct spdk_nvmf_subsystem *subsys)
 }
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops = {
+	.attach				= nvmf_virtual_ctrlr_attach,
 	.set_aer_callback		= nvmf_virtual_ctrlr_set_aer_callback,
 	.ctrlr_get_data			= nvmf_virtual_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_virtual_ctrlr_process_admin_cmd,

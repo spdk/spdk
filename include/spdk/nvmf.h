@@ -85,6 +85,11 @@ struct spdk_nvmf_host {
 
 struct spdk_nvmf_ctrlr_ops {
 	/**
+	 * Initialize the controller.
+	 */
+	int (*attach)(struct spdk_nvmf_subsystem *subsystem);
+
+	/**
 	 * Set NVMe ctrlr AER.
 	 */
 	void (*set_aer_callback)(struct spdk_nvmf_subsystem *subsys);
@@ -164,6 +169,13 @@ struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,
 		void *cb_ctx,
 		spdk_nvmf_subsystem_connect_fn connect_cb,
 		spdk_nvmf_subsystem_disconnect_fn disconnect_cb);
+
+/**
+ * Initialize the subsystem on the thread that will be used to poll it.
+ *
+ * \param subsystem Subsystem that will be polled on this core.
+ */
+int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem);
 
 void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
