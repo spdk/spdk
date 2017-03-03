@@ -465,12 +465,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 {
 	int i = 0;
 
-	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-		SPDK_ERRLOG("Subsystem %s: bdev %s is already claimed\n",
-			    subsystem->subnqn, bdev->name);
-		return -1;
-	}
-
 	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
 	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->dev.virt.ns_list[i]) {
 		i++;
@@ -479,6 +473,13 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		SPDK_ERRLOG("spdk_nvmf_subsystem_add_ns() failed\n");
 		return -1;
 	}
+
+	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
+		SPDK_ERRLOG("Subsystem %s: bdev %s is already claimed\n",
+			    subsystem->subnqn, bdev->name);
+		return -1;
+	}
+
 	subsystem->dev.virt.ns_list[i] = bdev;
 	subsystem->dev.virt.ns_count++;
 	return 0;
