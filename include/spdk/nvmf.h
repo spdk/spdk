@@ -90,11 +90,6 @@ struct spdk_nvmf_ctrlr_ops {
 	int (*attach)(struct spdk_nvmf_subsystem *subsystem);
 
 	/**
-	 * Set NVMe ctrlr AER.
-	 */
-	void (*set_aer_callback)(struct spdk_nvmf_subsystem *subsys);
-
-	/**
 	 * Get NVMe identify controller data.
 	 */
 	void (*ctrlr_get_data)(struct spdk_nvmf_session *session);

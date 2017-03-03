@@ -270,19 +270,14 @@ nvmf_direct_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
 		return -1;
 	}
 
-	return 0;
-}
+	spdk_nvme_ctrlr_register_aer_callback(subsystem->dev.direct.ctrlr,
+					      nvmf_direct_ctrlr_complete_aer, subsystem);
 
-static void
-nvmf_direct_ctrlr_set_aer_callback(struct spdk_nvmf_subsystem *subsys)
-{
-	spdk_nvme_ctrlr_register_aer_callback(subsys->dev.direct.ctrlr,
-					      nvmf_direct_ctrlr_complete_aer, subsys);
+	return 0;
 }
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops = {
 	.attach				= nvmf_direct_ctrlr_attach,
-	.set_aer_callback		= nvmf_direct_ctrlr_set_aer_callback,
 	.ctrlr_get_data			= nvmf_direct_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_direct_ctrlr_process_admin_cmd,
 	.process_io_cmd			= nvmf_direct_ctrlr_process_io_cmd,

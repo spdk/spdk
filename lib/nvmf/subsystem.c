@@ -316,7 +316,6 @@ nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 	subsystem->dev.direct.ctrlr = ctrlr;
 	subsystem->dev.direct.pci_addr = *pci_addr;
 
-	subsystem->ops->set_aer_callback(subsystem);
 	return 0;
 }
 
