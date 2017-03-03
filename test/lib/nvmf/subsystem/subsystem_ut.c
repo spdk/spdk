@@ -137,12 +137,6 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	return -1;
 }
 
-struct spdk_nvme_qpair *
-spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr, enum spdk_nvme_qprio qprio)
-{
-	return NULL;
-}
-
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
