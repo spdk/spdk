@@ -71,8 +71,8 @@ for dev in $devs; do
 done
 
 sync
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
-nvme disconnect -n "nqn.2016-06.io.spdk:cnode2"
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode2" || true
 
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2

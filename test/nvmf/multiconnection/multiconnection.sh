@@ -44,7 +44,7 @@ $testdir/../fio/nvmf_fio.py 262144 64 randwrite 10
 
 sync
 for i in `seq 1 12`; do
-	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}"
+	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}" || true
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode${i}
 done
 
