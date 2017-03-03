@@ -29,13 +29,13 @@ waitforlisten $pid ${RPC_PORT}
 
 modprobe -v nvme-rdma
 
-for i in `seq 1 12`
+for i in `seq 1 11`
 do
 	bdevs="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 	$rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode${i} "transport:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -s SPDK${i} -n "$bdevs"
 done
 
-for i in `seq 1 12`; do
+for i in `seq 1 11`; do
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 done
 
@@ -43,7 +43,7 @@ $testdir/../fio/nvmf_fio.py 262144 64 read 10
 $testdir/../fio/nvmf_fio.py 262144 64 randwrite 10
 
 sync
-for i in `seq 1 12`; do
+for i in `seq 1 11`; do
 	nvme disconnect -n "nqn.2016-06.io.spdk:cnode${i}" || true
 	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode${i}
 done
