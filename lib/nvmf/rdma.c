@@ -239,7 +239,7 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 
 static struct spdk_nvmf_rdma_conn *
 spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *channel,
-			   uint16_t max_queue_depth, uint16_t max_rw_depth)
+			   uint16_t max_queue_depth, uint16_t max_rw_depth, uint32_t subsystem_id)
 {
 	struct spdk_nvmf_rdma_conn	*rdma_conn;
 	struct spdk_nvmf_conn		*conn;
@@ -609,6 +609,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 	uint16_t			sts = 0;
 	uint16_t			max_queue_depth;
 	uint16_t			max_rw_depth;
+	uint32_t			subsystem_id = 0;
 	int 				rc;
 
 	if (event->id == NULL) {
@@ -677,7 +678,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 
 	/* Init the NVMf rdma transport connection */
 	rdma_conn = spdk_nvmf_rdma_conn_create(event->id, addr->comp_channel, max_queue_depth,
-					       max_rw_depth);
+					       max_rw_depth, subsystem_id);
 	if (rdma_conn == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
