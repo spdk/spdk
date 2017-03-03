@@ -35,6 +35,7 @@
 
 #include "spdk_internal/log.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #include "spdk/vhost.h"
 #include "task.h"
@@ -144,7 +145,7 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_server_conn *conn,
 	uint64_t cpumask;
 
 	if (spdk_json_decode_object(params, rpc_construct_vhost_ctrlr,
-				    sizeof(rpc_construct_vhost_ctrlr) / sizeof(*rpc_construct_vhost_ctrlr),
+				    SPDK_COUNTOF(rpc_construct_vhost_ctrlr),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -193,7 +194,7 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_server_conn *conn,
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_vhost_add_lun,
-				    sizeof(rpc_vhost_add_lun) / sizeof(*rpc_vhost_add_lun),
+				    SPDK_COUNTOF(rpc_vhost_add_lun),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;

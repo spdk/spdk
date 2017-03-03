@@ -47,6 +47,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #define MAX_DEVS 64
 
@@ -386,7 +387,7 @@ get_allocated_nsid(struct dev *dev)
 	}
 
 	printf("Allocated Namespace IDs:\n");
-	for (i = 0; i < sizeof(ns_list->ns_list) / sizeof(*ns_list->ns_list); i++) {
+	for (i = 0; i < SPDK_COUNTOF(ns_list->ns_list); i++) {
 		if (ns_list->ns_list[i] == 0) {
 			break;
 		}

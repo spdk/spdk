@@ -48,6 +48,8 @@ extern "C" {
 #define spdk_min(a,b) (((a)<(b))?(a):(b))
 #define spdk_max(a,b) (((a)>(b))?(a):(b))
 
+#define SPDK_COUNTOF(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 static inline uint32_t
 spdk_u32log2(uint32_t x)
 {

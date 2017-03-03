@@ -39,6 +39,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #define MAX_DEVS 64
 
@@ -261,8 +262,8 @@ static void build_io_request_9(struct io_request *req)
 	const size_t req_off[] = { 0x800,  0x0,  0x0, 0x100, 0x800, 0x800 };
 	struct sgl_element *iovs = req->iovs;
 	uint32_t i;
-	req->nseg = sizeof(req_len) / sizeof(req_len[0]);
-	assert(sizeof(req_len) / sizeof(req_len[0]) == sizeof(req_off) / sizeof(req_off[0]));
+	req->nseg = SPDK_COUNTOF(req_len);
+	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
 
 	for (i = 0; i < req->nseg; i++) {
 		iovs[i].base = spdk_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);

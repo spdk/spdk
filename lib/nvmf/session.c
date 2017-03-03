@@ -43,6 +43,7 @@
 
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -527,7 +528,7 @@ find_prop(uint32_t ofst)
 {
 	size_t i;
 
-	for (i = 0; i < sizeof(nvmf_props) / sizeof(*nvmf_props); i++) {
+	for (i = 0; i < SPDK_COUNTOF(nvmf_props); i++) {
 		const struct nvmf_prop *prop = &nvmf_props[i];
 
 		if (prop->ofst == ofst) {

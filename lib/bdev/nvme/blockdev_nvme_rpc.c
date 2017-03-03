@@ -35,6 +35,7 @@
 
 #include "blockdev_nvme.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -67,7 +68,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_server_conn *conn,
 	size_t i;
 
 	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
-				    sizeof(rpc_construct_nvme_decoders) / sizeof(*rpc_construct_nvme_decoders),
+				    SPDK_COUNTOF(rpc_construct_nvme_decoders),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;

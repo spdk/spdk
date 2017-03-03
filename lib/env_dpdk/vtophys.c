@@ -45,6 +45,7 @@
 
 #include "spdk/assert.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
  * which is enough to cover 128 TB.
@@ -138,7 +139,7 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 			map_1gb = malloc(sizeof(struct map_1gb));
 			if (map_1gb) {
 				/* initialize all entries to default translation */
-				for (i = 0; i < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); i++) {
+				for (i = 0; i < SPDK_COUNTOF(map_1gb->map); i++) {
 					map_1gb->map[i].translation_2mb = map->default_translation;
 				}
 				memset(map_1gb->ref_count, 0, sizeof(map_1gb->ref_count));

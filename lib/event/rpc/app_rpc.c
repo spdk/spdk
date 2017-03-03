@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -77,13 +78,13 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_kill_instance_decoders,
-				    sizeof(rpc_kill_instance_decoders) / sizeof(*rpc_kill_instance_decoders),
+				    SPDK_COUNTOF(rpc_kill_instance_decoders),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	sig_count = sizeof(signals) / sizeof(*signals);
+	sig_count = SPDK_COUNTOF(signals);
 	signal = atoi(req.sig_name);
 	for (i = 0 ; i < sig_count; i++) {
 		if (strcmp(req.sig_name, signals[i].signal_string) == 0 ||

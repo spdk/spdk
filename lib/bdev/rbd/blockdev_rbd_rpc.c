@@ -33,6 +33,7 @@
 
 #include "blockdev_rbd.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -65,7 +66,7 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_bdev *bdev;
 
 	if (spdk_json_decode_object(params, rpc_construct_rbd_decoders,
-				    sizeof(rpc_construct_rbd_decoders) / sizeof(*rpc_construct_rbd_decoders),
+				    SPDK_COUNTOF(rpc_construct_rbd_decoders),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;

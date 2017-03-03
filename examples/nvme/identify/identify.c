@@ -47,6 +47,7 @@
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/pci_ids.h"
+#include "spdk/util.h"
 
 static int outstanding_commands;
 
@@ -166,7 +167,7 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* Submit several GET FEATURES commands and wait for them to complete */
 	outstanding_commands = 0;
-	for (i = 0; i < sizeof(features_to_get) / sizeof(*features_to_get); i++) {
+	for (i = 0; i < SPDK_COUNTOF(features_to_get); i++) {
 		if (get_feature(ctrlr, features_to_get[i]) == 0) {
 			outstanding_commands++;
 		} else {
@@ -714,7 +715,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Intel Health Information\n");
 		printf("==================\n");
 		for (i = 0;
-		     i < sizeof(intel_smart_page.attributes) / sizeof(intel_smart_page.attributes[0]); i++) {
+		     i < SPDK_COUNTOF(intel_smart_page.attributes); i++) {
 			if (intel_smart_page.attributes[i].code == SPDK_NVME_INTEL_SMART_PROGRAM_FAIL_COUNT) {
 				printf("Program Fail Count:\n");
 				printf("  Normalized Value : %d\n",

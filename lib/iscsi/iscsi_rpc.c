@@ -39,6 +39,7 @@
 #include "iscsi/init_grp.h"
 
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -171,7 +172,7 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_initiator_group_decoders,
-				    sizeof(rpc_initiator_group_decoders) / sizeof(*rpc_initiator_group_decoders), &req)) {
+				    SPDK_COUNTOF(rpc_initiator_group_decoders), &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -259,7 +260,7 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_iscsi_init_grp *ig;
 
 	if (spdk_json_decode_object(params, rpc_delete_initiator_group_decoders,
-				    sizeof(rpc_delete_initiator_group_decoders) / sizeof(*rpc_delete_initiator_group_decoders),
+				    SPDK_COUNTOF(rpc_delete_initiator_group_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
@@ -500,7 +501,7 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_iscsi_tgt_node *target;
 
 	if (spdk_json_decode_object(params, rpc_target_node_decoders,
-				    sizeof(rpc_target_node_decoders) / sizeof(*rpc_target_node_decoders),
+				    SPDK_COUNTOF(rpc_target_node_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
@@ -580,7 +581,7 @@ spdk_rpc_delete_target_node(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_delete_target_node_decoders,
-				    sizeof(rpc_delete_target_node_decoders) / sizeof(*rpc_delete_target_node_decoders),
+				    SPDK_COUNTOF(rpc_delete_target_node_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
@@ -714,7 +715,7 @@ decode_rpc_portal(const struct spdk_json_val *val, void *out)
 	struct rpc_portal *portal = out;
 
 	return spdk_json_decode_object(val, rpc_portal_decoders,
-				       sizeof(rpc_portal_decoders) / sizeof(*rpc_portal_decoders),
+				       SPDK_COUNTOF(rpc_portal_decoders),
 				       portal);
 }
 
@@ -743,7 +744,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
 	size_t i;
 
 	if (spdk_json_decode_object(params, rpc_portal_group_decoders,
-				    sizeof(rpc_portal_group_decoders) / sizeof(*rpc_portal_group_decoders),
+				    SPDK_COUNTOF(rpc_portal_group_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
@@ -805,7 +806,7 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_iscsi_portal_grp *pg;
 
 	if (spdk_json_decode_object(params, rpc_delete_portal_group_decoders,
-				    sizeof(rpc_delete_portal_group_decoders) / sizeof(*rpc_delete_portal_group_decoders),
+				    SPDK_COUNTOF(rpc_delete_portal_group_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;

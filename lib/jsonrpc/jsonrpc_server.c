@@ -33,6 +33,8 @@
 
 #include "jsonrpc_internal.h"
 
+#include "spdk/util.h"
+
 struct jsonrpc_request {
 	const struct spdk_json_val *version;
 	const struct spdk_json_val *method;
@@ -63,7 +65,7 @@ parse_single_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val
 	struct jsonrpc_request req = {};
 
 	if (spdk_json_decode_object(values, jsonrpc_request_decoders,
-				    sizeof(jsonrpc_request_decoders) / sizeof(*jsonrpc_request_decoders),
+				    SPDK_COUNTOF(jsonrpc_request_decoders),
 				    &req)) {
 		invalid = true;
 		goto done;

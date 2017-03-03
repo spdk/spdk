@@ -38,6 +38,7 @@
 
 #include "spdk/rpc.h"
 #include "spdk/net.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -66,7 +67,7 @@ spdk_rpc_add_ip_address(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_ip_address_decoders,
-				    sizeof(rpc_ip_address_decoders) / sizeof(*rpc_ip_address_decoders),
+				    SPDK_COUNTOF(rpc_ip_address_decoders),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;
@@ -102,7 +103,7 @@ spdk_rpc_delete_ip_address(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_ip_address_decoders,
-				    sizeof(rpc_ip_address_decoders) / sizeof(*rpc_ip_address_decoders),
+				    SPDK_COUNTOF(rpc_ip_address_decoders),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;

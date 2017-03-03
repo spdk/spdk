@@ -38,6 +38,7 @@
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -96,7 +97,7 @@ nvmf_direct_ctrlr_admin_identify_nslist(struct spdk_nvme_ctrlr *ctrlr,
 		}
 
 		ns_list->ns_list[count++] = i;
-		if (count == sizeof(*ns_list) / sizeof(uint32_t)) {
+		if (count == SPDK_COUNTOF(ns_list->ns_list)) {
 			break;
 		}
 	}

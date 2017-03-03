@@ -40,6 +40,7 @@
 #include "spdk/env.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
+#include "spdk/util.h"
 
 #include "nvmf_tgt.h"
 
@@ -176,7 +177,7 @@ decode_rpc_listen_address(const struct spdk_json_val *val, void *out)
 {
 	struct rpc_listen_address *req = (struct rpc_listen_address *)out;
 	if (spdk_json_decode_object(val, rpc_listen_address_decoders,
-				    sizeof(rpc_listen_address_decoders) / sizeof(*rpc_listen_address_decoders),
+				    SPDK_COUNTOF(rpc_listen_address_decoders),
 				    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		return -1;
@@ -297,7 +298,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 	req.core = -1;	/* Explicitly set the core as the uninitialized value */
 
 	if (spdk_json_decode_object(params, rpc_subsystem_decoders,
-				    sizeof(rpc_subsystem_decoders) / sizeof(*rpc_subsystem_decoders),
+				    SPDK_COUNTOF(rpc_subsystem_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
@@ -349,7 +350,7 @@ spdk_rpc_delete_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_delete_subsystem_decoders,
-				    sizeof(rpc_delete_subsystem_decoders) / sizeof(*rpc_delete_subsystem_decoders),
+				    SPDK_COUNTOF(rpc_delete_subsystem_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;

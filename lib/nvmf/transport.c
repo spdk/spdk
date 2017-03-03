@@ -39,6 +39,7 @@
 #include "spdk/log.h"
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"
+#include "spdk/util.h"
 
 #include "nvmf_internal.h"
 
@@ -48,7 +49,7 @@ static const struct spdk_nvmf_transport *const g_transports[] = {
 #endif
 };
 
-#define NUM_TRANSPORTS (sizeof(g_transports) / sizeof(*g_transports))
+#define NUM_TRANSPORTS (SPDK_COUNTOF(g_transports))
 
 int
 spdk_nvmf_transport_init(void)

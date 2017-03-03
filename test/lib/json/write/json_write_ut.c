@@ -38,6 +38,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "spdk/util.h"
+
 static uint8_t g_buf[1000];
 static uint8_t *g_write_pos;
 
@@ -590,7 +592,7 @@ test_write_val(void)
 	struct spdk_json_val values[100];
 	char src[] = "{\"a\":[1,2,3],\"b\":{\"c\":\"d\"},\"e\":true,\"f\":false,\"g\":null}";
 
-	CU_ASSERT(spdk_json_parse(src, strlen(src), values, sizeof(values) / sizeof(*values), NULL,
+	CU_ASSERT(spdk_json_parse(src, strlen(src), values, SPDK_COUNTOF(values), NULL,
 				  SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE) == 19);
 
 	BEGIN();

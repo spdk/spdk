@@ -35,6 +35,7 @@
 #include "scsi_internal.h"
 
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 static void
 spdk_rpc_get_luns(struct spdk_jsonrpc_server_conn *conn,
@@ -100,7 +101,7 @@ spdk_rpc_delete_lun(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_delete_lun_decoders,
-				    sizeof(rpc_delete_lun_decoders) / sizeof(*rpc_delete_lun_decoders),
+				    SPDK_COUNTOF(rpc_delete_lun_decoders),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;
