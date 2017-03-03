@@ -72,7 +72,7 @@ fi
 
 timing_enter doxygen
 if hash doxygen; then
-	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS)
+	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS) &> "$out"/doxygen.log
 	mkdir -p "$out"/doc
 	mv "$rootdir"/doc/output/html "$out"/doc
 	rm -rf "$rootdir"/doc/output
