@@ -46,7 +46,10 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+#if defined(__i386__) || defined(__x86_64__)
 #include <x86intrin.h>
+#endif
 
 #include <sys/user.h>
 
