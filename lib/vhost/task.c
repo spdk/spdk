@@ -52,7 +52,7 @@ typedef TAILQ_HEAD(, spdk_vhost_task) need_iovecs_tailq_t;
 static struct rte_mempool *g_task_pool;
 static struct rte_mempool *g_iov_buffer_pool;
 
-need_iovecs_tailq_t g_need_iovecs[RTE_MAX_LCORE];
+static need_iovecs_tailq_t g_need_iovecs[RTE_MAX_LCORE];
 
 void
 spdk_vhost_task_put(struct spdk_vhost_task *task)

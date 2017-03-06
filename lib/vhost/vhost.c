@@ -98,7 +98,8 @@ struct spdk_vhost_scsi_ctrlr {
 } __rte_cache_aligned;
 
 /* This maps from the integer index passed by DPDK to the our controller representation. */
-struct spdk_vhost_scsi_ctrlr *dpdk_vid_mapping[MAX_VHOST_DEVICE]; /* MAX_VHOST_DEVICE from DPDK. */
+/* MAX_VHOST_DEVICE from DPDK. */
+static struct spdk_vhost_scsi_ctrlr *dpdk_vid_mapping[MAX_VHOST_DEVICE];
 
 /*
  * Get available requests from avail ring.
