@@ -519,7 +519,7 @@ nvmf_post_rdma_send(struct spdk_nvmf_request *req)
  * 2) Upon transfer completion, update sq_head, re-post the recv capsule,
  *    and send the completion. (spdk_nvmf_rdma_request_send_completion)
  * 3) Upon getting acknowledgement of the completion, decrement the internal
- *    count of number of outstanding requests. (spdk_nvmf_rdma_request_ack_completion)
+ *    count of number of outstanding requests.
  *
  * The public interface to initiate the process of completing a request is
  * spdk_nvmf_rdma_request_complete(), which calls a a callback in the transport layer.
@@ -598,24 +598,6 @@ spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
 	}
 
 	return rc;
-}
-
-static int
-spdk_nvmf_rdma_request_ack_completion(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_conn *conn = req->conn;
-	struct spdk_nvmf_rdma_conn *rdma_conn = get_rdma_conn(conn);
-
-	/* Advance our sq_head pointer */
-	if (conn->sq_head == conn->sq_head_max) {
-		conn->sq_head = 0;
-	} else {
-		conn->sq_head++;
-	}
-
-	rdma_conn->cur_queue_depth--;
-
-	return 0;
 }
 
 static int
@@ -1429,11 +1411,7 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_conn *conn)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA,
 				      "RDMA SEND Complete. Request: %p Connection: %p Outstanding I/O: %d\n",
 				      req, conn, rdma_conn->cur_queue_depth - 1);
-			rc = spdk_nvmf_rdma_request_ack_completion(req);
-			if (rc) {
-				error = true;
-				continue;
-			}
+			rdma_conn->cur_queue_depth--;
 			break;
 
 		case IBV_WC_RDMA_WRITE:
