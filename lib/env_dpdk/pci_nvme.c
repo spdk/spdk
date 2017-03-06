@@ -57,6 +57,7 @@ static struct spdk_pci_enum_ctx g_nvme_pci_drv = {
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 		.probe		= spdk_pci_device_init,
 		.remove		= spdk_pci_device_fini,
+		.driver.name	= "spdk_nvme",
 #else
 		.devinit	= spdk_pci_device_init,
 		.devuninit	= spdk_pci_device_fini,
@@ -67,30 +68,8 @@ static struct spdk_pci_enum_ctx g_nvme_pci_drv = {
 	.cb_fn = NULL,
 	.cb_arg = NULL,
 	.mtx = PTHREAD_MUTEX_INITIALIZER,
+	.is_registered = false,
 };
-
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
-RTE_PMD_REGISTER_PCI(spdk_nvme, g_nvme_pci_drv.driver);
-#else
-static int
-spdk_nvme_drv_register(const char *name __rte_unused, const char *params __rte_unused)
-{
-	rte_eal_pci_register(&g_nvme_pci_drv.driver);
-
-	return 0;
-}
-
-static struct rte_driver g_nvme_drv = {
-	.type = PMD_PDEV,
-	.init = spdk_nvme_drv_register,
-};
-
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 0)
-PMD_REGISTER_DRIVER(g_nvme_drv, spdk_nvme);
-#else
-PMD_REGISTER_DRIVER(g_nvme_drv);
-#endif
-#endif
 
 int
 spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb,

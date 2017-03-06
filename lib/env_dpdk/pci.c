@@ -108,6 +108,11 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 
 	pthread_mutex_lock(&ctx->mtx);
 
+	if (!ctx->is_registered) {
+		ctx->is_registered = true;
+		rte_eal_pci_register(&ctx->driver);
+	}
+
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
 
@@ -135,6 +140,11 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 		   void *enum_ctx)
 {
 	pthread_mutex_lock(&ctx->mtx);
+
+	if (!ctx->is_registered) {
+		ctx->is_registered = true;
+		rte_eal_pci_register(&ctx->driver);
+	}
 
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;

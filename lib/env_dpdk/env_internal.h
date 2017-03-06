@@ -61,6 +61,7 @@ struct spdk_pci_enum_ctx {
 	spdk_pci_enum_cb	cb_fn;
 	void 			*cb_arg;
 	pthread_mutex_t		mtx;
+	bool			is_registered;
 };
 
 int spdk_pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
