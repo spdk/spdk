@@ -14,7 +14,6 @@ param="$1"
 
 if [ $(uname -s) = Linux ]; then
 
-NRHUGE=4096 ./../../scripts/setup.sh
 echo Running SPDK vhost fio autotest...
 
 case $param in

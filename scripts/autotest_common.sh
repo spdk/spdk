@@ -7,6 +7,9 @@ MAKECONFIG='CONFIG_DEBUG=y CONFIG_WERROR=y'
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
+# Override the default NRHUGE in scripts/setup.sh
+export NRHUGE=4096
+
 case `uname` in
 	FreeBSD)
 		DPDK_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
