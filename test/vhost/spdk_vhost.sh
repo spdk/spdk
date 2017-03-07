@@ -2,6 +2,11 @@
 
 set -e
 
+if [ ! -f "/home/sys_sgsw/vhost_scsi_vm_image.qcow2" ]; then
+	echo "VM does not exist, exiting vhost tests without running"
+	exit 0
+fi
+
 WORKDIR=$(dirname $0)
 cd $WORKDIR
 
