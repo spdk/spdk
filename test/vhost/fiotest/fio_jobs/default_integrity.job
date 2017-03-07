@@ -13,6 +13,6 @@ numjobs=1
 direct=1
 rw=randwrite
 do_verify=1
-verify=meta
+verify=md5
 verify_backlog=1024
 [nvme-host]
