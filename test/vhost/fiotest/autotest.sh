@@ -218,7 +218,7 @@ for vm_num in $used_vms; do
 
 	run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
 	for disk in $SCSI_DISK; do
-		run_fio+="$disk:"
+		run_fio+="/dev/$disk:"
 	done
 	run_fio="${run_fio::-1}"
 	run_fio+=","
