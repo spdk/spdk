@@ -253,18 +253,18 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 		if (args == NULL) {
 			return -1;
 		}
-	}
 
-	/* set the base virtual address */
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x1000000000"));
-	if (args == NULL) {
-		return -1;
-	}
+		/* set the base virtual address */
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x1000000000"));
+		if (args == NULL) {
+			return -1;
+		}
 
-	/* set the process type */
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--proc-type=auto"));
-	if (args == NULL) {
-		return -1;
+		/* set the process type */
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--proc-type=auto"));
+		if (args == NULL) {
+			return -1;
+		}
 	}
 #endif
 
