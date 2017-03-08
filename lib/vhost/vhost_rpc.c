@@ -129,6 +129,13 @@ struct rpc_vhost_scsi_ctrlr {
 	char *cpumask;
 };
 
+static void
+free_rpc_vhost_scsi_ctrlr(struct rpc_vhost_scsi_ctrlr *req)
+{
+	free(req->ctrlr);
+	free(req->cpumask);
+}
+
 static const struct spdk_json_object_decoder rpc_construct_vhost_ctrlr[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_scsi_ctrlr, ctrlr), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_scsi_ctrlr, cpumask), spdk_json_decode_string, true},
@@ -163,11 +170,14 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
+	free_rpc_vhost_scsi_ctrlr(&req);
+
 	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(conn, w);
 	return;
 invalid:
+	free_rpc_vhost_scsi_ctrlr(&req);
 	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
 }
 SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_scsi_controller)
@@ -177,6 +187,13 @@ struct rpc_add_vhost_scsi_ctrlr_lun {
 	uint32_t scsi_dev_num;
 	char *lun_name;
 };
+
+static void
+free_rpc_add_vhost_scsi_ctrlr_lun(struct rpc_add_vhost_scsi_ctrlr_lun *req)
+{
+	free(req->ctrlr);
+	free(req->lun_name);
+}
 
 static const struct spdk_json_object_decoder rpc_vhost_add_lun[] = {
 	{"ctrlr", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, ctrlr), spdk_json_decode_string },
@@ -206,11 +223,14 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
+	free_rpc_add_vhost_scsi_ctrlr_lun(&req);
+
 	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(conn, w);
 	return;
 invalid:
+	free_rpc_add_vhost_scsi_ctrlr_lun(&req);
 	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
 }
 SPDK_RPC_REGISTER("add_vhost_scsi_lun", spdk_rpc_add_vhost_scsi_lun)
