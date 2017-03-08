@@ -295,35 +295,40 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	struct map_2mb *map_2mb;
 	uint16_t *ref_count;
 
-	/* For now, only 2 MB registrations are supported */
-	assert(size == 2 * 1024 * 1024);
+	/* For now, only 2 MB-aligned registrations are supported */
+	assert(size % (2 * 1024 * 1024) == 0);
 	assert((vaddr & MASK_2MB) == 0);
 
 	vfn_2mb = vaddr >> SHIFT_2MB;
 
-	map_1gb = spdk_mem_map_get_map_1gb(map, vfn_2mb);
-	if (!map_1gb) {
+	while (size) {
+		map_1gb = spdk_mem_map_get_map_1gb(map, vfn_2mb);
+		if (!map_1gb) {
 #ifdef DEBUG
-		fprintf(stderr, "could not get %p map\n", (void *)vaddr);
+			fprintf(stderr, "could not get %p map\n", (void *)vaddr);
 #endif
-		return;
-	}
+			return;
+		}
 
-	idx_1gb = MAP_1GB_IDX(vfn_2mb);
-	map_2mb = &map_1gb->map[idx_1gb];
-	ref_count = &map_1gb->ref_count[idx_1gb];
+		idx_1gb = MAP_1GB_IDX(vfn_2mb);
+		map_2mb = &map_1gb->map[idx_1gb];
+		ref_count = &map_1gb->ref_count[idx_1gb];
 
-	if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
+		if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
 #ifdef DEBUG
-		fprintf(stderr, "ref count for %p already at %d\n",
-			(void *)vaddr, VTOPHYS_MAX_REF_COUNT);
+			fprintf(stderr, "ref count for %p already at %d\n",
+				(void *)vaddr, VTOPHYS_MAX_REF_COUNT);
 #endif
-		return;
+			return;
+		}
+
+		map_2mb->translation_2mb = translation;
+
+		(*ref_count)++;
+
+		size -= 2 * 1024 * 1024;
+		vfn_2mb++;
 	}
-
-	map_2mb->translation_2mb = translation;
-
-	(*ref_count)++;
 }
 
 void
@@ -335,34 +340,39 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 	struct map_2mb *map_2mb;
 	uint16_t *ref_count;
 
-	/* For now, only 2 MB registrations are supported */
-	assert(size == 2 * 1024 * 1024);
+	/* For now, only 2 MB-aligned registrations are supported */
+	assert(size % (2 * 1024 * 1024) == 0);
 	assert((vaddr & MASK_2MB) == 0);
 
 	vfn_2mb = vaddr >> SHIFT_2MB;
 
-	map_1gb = spdk_mem_map_get_map_1gb(map, vfn_2mb);
-	if (!map_1gb) {
+	while (size) {
+		map_1gb = spdk_mem_map_get_map_1gb(map, vfn_2mb);
+		if (!map_1gb) {
 #ifdef DEBUG
-		fprintf(stderr, "could not get %p map\n", (void *)vaddr);
+			fprintf(stderr, "could not get %p map\n", (void *)vaddr);
 #endif
-		return;
-	}
+			return;
+		}
 
-	idx_1gb = MAP_1GB_IDX(vfn_2mb);
-	map_2mb = &map_1gb->map[idx_1gb];
-	ref_count = &map_1gb->ref_count[idx_1gb];
+		idx_1gb = MAP_1GB_IDX(vfn_2mb);
+		map_2mb = &map_1gb->map[idx_1gb];
+		ref_count = &map_1gb->ref_count[idx_1gb];
 
-	if (*ref_count == 0) {
+		if (*ref_count == 0) {
 #ifdef DEBUG
-		fprintf(stderr, "vaddr %p not registered\n", (void *)vaddr);
+			fprintf(stderr, "vaddr %p not registered\n", (void *)vaddr);
 #endif
-		return;
-	}
+			return;
+		}
 
-	(*ref_count)--;
-	if (*ref_count == 0) {
-		map_2mb->translation_2mb = map->default_translation;
+		(*ref_count)--;
+		if (*ref_count == 0) {
+			map_2mb->translation_2mb = map->default_translation;
+		}
+
+		size -= 2 * 1024 * 1024;
+		vfn_2mb++;
 	}
 }
 
