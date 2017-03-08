@@ -672,7 +672,7 @@ nvmf_rdma_connect(struct rdma_cm_event *event)
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Receive Queue Size: %d\n", private_data->hrqsize);
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Send Queue Size: %d\n", private_data->hsqsize);
 		max_queue_depth = spdk_min(max_queue_depth, private_data->hrqsize);
-		max_queue_depth = spdk_min(max_queue_depth, private_data->hsqsize);
+		max_queue_depth = spdk_min(max_queue_depth, private_data->hsqsize + 1);
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
