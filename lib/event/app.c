@@ -387,7 +387,12 @@ spdk_app_init(struct spdk_app_opts *opts)
 	sigaddset(&signew, SIGHUP);
 	pthread_sigmask(SIG_SETMASK, &signew, NULL);
 
-	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
+	if (opts->shm_id >= 0) {
+		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
+	} else {
+		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)getpid());
+	}
+
 	spdk_trace_init(shm_name);
 
 	if (opts->tpoint_group_mask == NULL) {

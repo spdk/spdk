@@ -94,7 +94,6 @@ struct object_stats g_stats[SPDK_TRACE_MAX_OBJECT];
 
 static char *exe_name;
 static int verbose = 1;
-static int g_shm_id = 0;
 static int g_fudge_factor = 20;
 
 static uint64_t tsc_rate;
@@ -306,7 +305,9 @@ static void usage(void)
 	fprintf(stderr, "                 '-c' to display single lcore history\n");
 	fprintf(stderr, "                 '-f' to specify number of events to ignore at\n");
 	fprintf(stderr, "                      beginning and end of trace (default: 20)\n");
-	fprintf(stderr, "                 '-i' to specify the shared memory ID, (required)\n");
+	fprintf(stderr, "                 '-i' to specify the shared memory ID\n");
+	fprintf(stderr, "                 '-p' to specify the trace PID\n");
+	fprintf(stderr, "                 (One of -i or -p must be specified)\n");
 }
 
 int main(int argc, char **argv)
@@ -319,9 +320,10 @@ int main(int argc, char **argv)
 	const char		*app_name = "ids";
 	int			op;
 	char			shm_name[64];
+	int			shm_id = -1, shm_pid = -1;
 
 	exe_name = argv[0];
-	while ((op = getopt(argc, argv, "c:f:i:qs:")) != -1) {
+	while ((op = getopt(argc, argv, "c:f:i:p:qs:")) != -1) {
 		switch (op) {
 		case 'c':
 			lcore = atoi(optarg);
@@ -336,7 +338,10 @@ int main(int argc, char **argv)
 			g_fudge_factor = atoi(optarg);
 			break;
 		case 'i':
-			g_shm_id = atoi(optarg);
+			shm_id = atoi(optarg);
+			break;
+		case 'p':
+			shm_pid = atoi(optarg);
 			break;
 		case 'q':
 			verbose = 0;
@@ -350,7 +355,11 @@ int main(int argc, char **argv)
 		}
 	}
 
-	snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, g_shm_id);
+	if (shm_id >= 0) {
+		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, shm_id);
+	} else {
+		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", app_name, shm_pid);
+	}
 	fd = shm_open(shm_name, O_RDONLY, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "Could not open shm %s.\n", shm_name);
