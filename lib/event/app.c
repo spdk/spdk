@@ -269,10 +269,6 @@ spdk_app_init(struct spdk_app_opts *opts)
 		}
 	}
 
-	if (opts->shm_id < 0) {
-		opts->shm_id = getpid();
-	}
-
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
