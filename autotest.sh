@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 
+if [[ ! -z $1 ]]; then
+	if [ -f $1 ]; then
+		source $1
+	fi
+fi
+
+# Set defaults for missing test config options
+: ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
+: ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
+: ${SPDK_TEST_NVMF=1}; export SPDK_TEST_NVMF
+: ${SPDK_TEST_VHOST=1}; export SPDK_TEST_VHOST
+: ${SPDK_TEST_BLOCKDEV=1}; export SPDK_TEST_BLOCKDEV
+: ${SPDK_TEST_IOAT=1}; export SPDK_TEST_IOAT
+: ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
+
+
 rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/scripts/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
@@ -78,20 +94,32 @@ timing_exit unittest
 
 timing_enter lib
 
-run_test test/lib/bdev/blockdev.sh
-run_test test/lib/event/event.sh
-run_test test/lib/nvme/nvme.sh
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test test/lib/nvme/hotplug.sh intel
-	run_test test/lib/nvme/nvmemp.sh
+if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	run_test test/lib/bdev/blockdev.sh
 fi
+
+if [ $SPDK_TEST_EVENT -eq 1 ]; then
+	run_test test/lib/event/event.sh
+fi
+
+if [ $SPDK_TEST_NVME -eq 1 ]; then
+	run_test test/lib/nvme/nvme.sh
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		run_test test/lib/nvme/hotplug.sh intel
+		run_test test/lib/nvme/nvmemp.sh
+	fi
+fi
+
 run_test test/lib/env/env.sh
-run_test test/lib/ioat/ioat.sh
+
+if [ $SPDK_TEST_IOAT -eq 1 ]; then
+	run_test test/lib/ioat/ioat.sh
+fi
 
 timing_exit lib
 
 
-if [ $(uname -s) = Linux ]; then
+if [ $(uname -s) = Linux ] && [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	export TARGET_IP=127.0.0.1
 	export INITIATOR_IP=127.0.0.1
 
@@ -112,35 +140,39 @@ if [ $(uname -s) = Linux ]; then
 	run_test test/lib/iscsi/iscsi.sh
 fi
 
-timing_enter nvmf
+if [ $SPDK_TEST_NVMF -eq 1 ]; then
+	timing_enter nvmf
 
-run_test test/nvmf/fio/fio.sh
-run_test test/nvmf/filesystem/filesystem.sh
-run_test test/nvmf/discovery/discovery.sh
-run_test test/nvmf/nvme_cli/nvme_cli.sh
-run_test test/nvmf/shutdown/shutdown.sh
-run_test test/nvmf/rpc/rpc.sh
+	run_test test/nvmf/fio/fio.sh
+	run_test test/nvmf/filesystem/filesystem.sh
+	run_test test/nvmf/discovery/discovery.sh
+	run_test test/nvmf/nvme_cli/nvme_cli.sh
+	run_test test/nvmf/shutdown/shutdown.sh
+	run_test test/nvmf/rpc/rpc.sh
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test test/nvmf/multiconnection/multiconnection.sh
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		run_test test/nvmf/multiconnection/multiconnection.sh
+	fi
+
+	timing_enter host
+
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		run_test test/nvmf/host/aer.sh
+	fi
+	run_test test/nvmf/host/identify.sh
+	run_test test/nvmf/host/perf.sh
+	run_test test/nvmf/host/identify_kernel_nvmf.sh
+
+	timing_exit host
+
+	timing_exit nvmf
 fi
 
-timing_enter host
-
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test test/nvmf/host/aer.sh
+if [ $SPDK_TEST_VHOST -eq 1 ]; then
+	timing_enter vhost
+	run_test ./test/vhost/spdk_vhost.sh --integrity
+	timing_exit vhost
 fi
-run_test test/nvmf/host/identify.sh
-run_test test/nvmf/host/perf.sh
-run_test test/nvmf/host/identify_kernel_nvmf.sh
-
-timing_exit host
-
-timing_exit nvmf
-
-timing_enter vhost
-run_test ./test/vhost/spdk_vhost.sh --integrity
-timing_exit vhost
 
 timing_enter cleanup
 rbd_cleanup
