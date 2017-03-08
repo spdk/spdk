@@ -208,7 +208,7 @@ function print_backtrace() {
 		echo "in $src:$line_nr -> $func()"
 		echo "     ..."
 		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr" | \
-			sed "s/^/   /g" | sed "s/^   $line_nr/=> $line_nr/g"
+			sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g"
 		echo "     ..."
 	done
 	echo ""
