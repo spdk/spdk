@@ -87,11 +87,6 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 	rte_eal_device_remove(&device->device);
 #endif
 	rte_eal_pci_detach(&addr);
-	/* This will not actually load any drivers because our
-	 * callback isn't set, but it will re-add the device
-	 * to DPDK's internal list.
-	 */
-	rte_eal_pci_probe_one(&addr);
 }
 
 int

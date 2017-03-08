@@ -644,7 +644,11 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 		_nvme_pcie_hotplug_monitor(cb_ctx, probe_cb, remove_cb);
 	}
 
-	return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
+	if (enum_ctx.has_pci_addr == false) {
+		return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
+	} else {
+		return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx, &enum_ctx.pci_addr);
+	}
 }
 
 static int
