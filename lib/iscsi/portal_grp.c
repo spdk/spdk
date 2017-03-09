@@ -65,7 +65,7 @@ spdk_iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg);
 
 /* Assumes caller allocated host and port strings on the heap */
 struct spdk_iscsi_portal *
-spdk_iscsi_portal_create(char *host, char *port, uint64_t cpumask)
+spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
 
@@ -77,8 +77,8 @@ spdk_iscsi_portal_create(char *host, char *port, uint64_t cpumask)
 		SPDK_ERRLOG("portal malloc error (%s, %s)\n", host, port);
 		return NULL;
 	}
-	p->host = host;
-	p->port = port;
+	p->host = strdup(host);
+	p->port = strdup(port);
 	p->cpumask = cpumask;
 	p->sock = -1;
 	p->group = NULL; /* set at a later time by caller */
@@ -106,7 +106,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 	const char *cpumask_str;
 	uint64_t cpumask = 0;
 
-	int n, len;
+	int n, len, rc = -1;
 	const char *p, *q;
 
 	if (portalstring == NULL) {
@@ -240,14 +240,12 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		}
 	}
 
-	return 0;
-
+	rc = 0;
 error_out:
-	if (host != NULL)
-		free(host);
-	if (port != NULL)
-		free(port);
-	return -1;
+	free(host);
+	free(port);
+
+	return rc;
 }
 
 struct spdk_iscsi_portal_grp *
@@ -316,13 +314,13 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 
 	if (num_portals > MAX_PORTAL) {
 		SPDK_ERRLOG("%d > MAX_PORTAL\n", num_portals);
-		goto error_out;
+		return -1;
 	}
 
 	pg = spdk_iscsi_portal_grp_create(tag);
 	if (!pg) {
 		SPDK_ERRLOG("portal group creation error (%d)\n", tag);
-		goto error_out;
+		return -1;
 	}
 
 	for (i = 0; i < num_portals; i++) {
@@ -336,28 +334,24 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 		sock = spdk_sock_listen(p->host, port);
 		if (sock < 0) {
 			SPDK_ERRLOG("listen error %.64s:%d\n", p->host, port);
-			spdk_iscsi_portal_destroy(p);
 			count++;
 			continue;
 		}
 		p->sock = sock;
 		spdk_iscsi_portal_grp_add_portal(pg, p);
+		portal_list[i] = NULL;
 	}
 
-	/* if listening is failed on all the ports,
-	 * then do not register the portal group. */
 	if (count == num_portals) {
+		/* if listening is failed on all the ports,
+		 * then do not register the portal group. */
 		spdk_iscsi_portal_grp_destroy(pg);
-		goto error_out;
+		return -1;
+	} else {
+		/* Add portal group to the end of the pg list */
+		spdk_iscsi_portal_grp_register(pg);
+		return num_portals - count;
 	}
-
-	/* Add portal group to the end of the pg list */
-	spdk_iscsi_portal_grp_register(pg);
-
-	return 0;
-
-error_out:
-	return -1;
 }
 
 int

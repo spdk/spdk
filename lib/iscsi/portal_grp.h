@@ -56,7 +56,7 @@ struct spdk_iscsi_portal_grp {
 
 /* SPDK iSCSI Portal Group management API */
 
-struct spdk_iscsi_portal *spdk_iscsi_portal_create(char *host, char *port,
+struct spdk_iscsi_portal *spdk_iscsi_portal_create(const char *host, const char *port,
 		uint64_t cpumask);
 void spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p);
 

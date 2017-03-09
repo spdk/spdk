@@ -742,12 +742,13 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_iscsi_portal *portal_list[MAX_PORTAL] = {};
 	struct spdk_json_write_ctx *w;
 	size_t i;
+	int rc = -1;
 
 	if (spdk_json_decode_object(params, rpc_portal_group_decoders,
 				    SPDK_COUNTOF(rpc_portal_group_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		goto out;
 	}
 
 	for (i = 0; i < req.portal_list.num_portals; i++) {
@@ -755,34 +756,32 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
 				 req.portal_list.portals[i].port, 0);
 		if (portal_list[i] == NULL) {
 			SPDK_ERRLOG("portal_list allocation failed\n");
-			goto invalid;
+			goto out;
 		}
 	}
 
-	if (spdk_iscsi_portal_grp_create_from_portal_list(req.tag, portal_list,
-			req.portal_list.num_portals)) {
+	rc = spdk_iscsi_portal_grp_create_from_portal_list(req.tag, portal_list,
+			req.portal_list.num_portals);
+
+	if (rc < 0) {
 		SPDK_ERRLOG("create_from_portal_list failed\n");
-		goto invalid;
 	}
 
-	/*
-	 * Leave the host and port strings allocated here and don't call free_rpc_portal_group(),
-	 *  because the pointers are inserted directly into the portal group list.
-	 */
-
-	if (id == NULL) {
-		return;
+out:
+	if (rc > 0) {
+		if (id != NULL) {
+			w = spdk_jsonrpc_begin_result(conn, id);
+			spdk_json_write_bool(w, true);
+			spdk_jsonrpc_end_result(conn, w);
+		}
+	} else {
+		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	for (i = 0; i < req.portal_list.num_portals; i++) {
-		spdk_iscsi_portal_destroy(portal_list[i]);
+		if (portal_list[i] != NULL) {
+			spdk_iscsi_portal_destroy(portal_list[i]);
+		}
 	}
 	free_rpc_portal_group(&req);
 }
