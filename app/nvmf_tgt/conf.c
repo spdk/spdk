@@ -337,6 +337,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int lcore;
 	int num_listen_addrs;
 	struct rpc_listen_address listen_addrs[MAX_LISTEN_ADDRESSES];
+	char *listen_addrs_str[MAX_LISTEN_ADDRESSES] = {};
 	int num_hosts;
 	char *hosts[MAX_HOSTS];
 	const char *bdf;
@@ -351,23 +352,25 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	/* Parse Listen sections */
 	num_listen_addrs = 0;
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
-		char *listen_addr;
-
 		listen_addrs[num_listen_addrs].transport =
 			spdk_conf_section_get_nmval(sp, "Listen", i, 0);
-		listen_addr = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
-
-		if (!listen_addrs[num_listen_addrs].transport || !listen_addr) {
+		if (!listen_addrs[num_listen_addrs].transport) {
 			break;
 		}
 
-		listen_addr = strdup(listen_addr);
+		listen_addrs_str[i] = spdk_conf_section_get_nmval(sp, "Listen", i, 1);
+		if (!listen_addrs_str[i]) {
+			break;
+		}
 
-		ret = spdk_parse_ip_addr(listen_addr, &listen_addrs[num_listen_addrs].traddr,
+		listen_addrs_str[i] = strdup(listen_addrs_str[i]);
+
+		ret = spdk_parse_ip_addr(listen_addrs_str[i], &listen_addrs[num_listen_addrs].traddr,
 					 &listen_addrs[num_listen_addrs].trsvcid);
 		if (ret < 0) {
-			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addr);
-			free(listen_addr);
+			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addrs_str[i]);
+			free(listen_addrs_str[i]);
+			listen_addrs_str[i] = NULL;
 			continue;
 		}
 
@@ -402,9 +405,8 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 					    bdf, sn,
 					    num_devs, devs);
 
-	for (i = 0; i < num_listen_addrs; i++) {
-		free(listen_addrs[i].traddr);
-		free(listen_addrs[i].trsvcid);
+	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
+		free(listen_addrs_str[i]);
 	}
 
 	return ret;
