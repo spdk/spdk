@@ -379,15 +379,6 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 }
 
 static inline void
-nvmf_trace_ibv_sge(struct ibv_sge *sg_list)
-{
-	if (sg_list) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "local addr %p length 0x%x lkey 0x%x\n",
-			      (void *)sg_list->addr, sg_list->length, sg_list->lkey);
-	}
-}
-
-static inline void
 nvmf_ibv_send_wr_set_rkey(struct ibv_send_wr *wr, struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
@@ -421,7 +412,6 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 		rdma_req->data.sgl[0].lkey = rdma_conn->bufs_mr->lkey;
 	}
 	rdma_req->data.sgl[0].length = req->length;
-	nvmf_trace_ibv_sge(&rdma_req->data.sgl[0]);
 
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
 
@@ -456,7 +446,6 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 		rdma_req->data.sgl[0].lkey = rdma_conn->bufs_mr->lkey;
 	}
 	rdma_req->data.sgl[0].length = req->length;
-	nvmf_trace_ibv_sge(&rdma_req->data.sgl[0]);
 
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
 
@@ -482,9 +471,6 @@ nvmf_post_rdma_recv(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Request: %p Connection: %p\n", req, conn);
 
-	nvmf_trace_ibv_sge(&rdma_req->cmd.sgl[0]);
-	nvmf_trace_ibv_sge(&rdma_req->cmd.sgl[1]);
-
 	rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_req->cmd.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Failure posting rdma recv, rc = 0x%x\n", rc);
@@ -503,8 +489,6 @@ nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 	int				rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, conn);
-
-	nvmf_trace_ibv_sge(&rdma_req->rsp.sgl[0]);
 
 	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
 	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->rsp.wr, &bad_wr);
