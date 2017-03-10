@@ -768,6 +768,7 @@ INPUT                  = ../include/spdk \
                          ioat/index.md \
                          iscsi/index.md \
                          iscsi/getting_started.md \
+                         iscsi/hotplug.md \
                          nvme/index.md \
                          nvme/async_completion.md \
                          nvme/fabrics.md \
