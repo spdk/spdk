@@ -138,6 +138,7 @@ struct spdk_nvmf_subsystem {
 			struct spdk_nvme_qpair	*io_qpair;
 			struct spdk_pci_addr	pci_addr;
 			struct spdk_poller	*admin_poller;
+			int32_t			outstanding_admin_cmd_count;
 		} direct;
 
 		struct {

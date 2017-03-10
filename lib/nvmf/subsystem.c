@@ -208,6 +208,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 
 	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 		subsystem->ops = &spdk_nvmf_direct_ctrlr_ops;
+		subsystem->dev.direct.outstanding_admin_cmd_count = 0;
 	} else {
 		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
 	}

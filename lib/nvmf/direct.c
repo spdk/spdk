@@ -63,6 +63,10 @@ nvmf_direct_ctrlr_poll_for_admin_completions(void *arg)
 static void
 nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 {
+	if (subsystem->dev.direct.outstanding_admin_cmd_count > 0) {
+		nvmf_direct_ctrlr_poll_for_admin_completions(subsystem);
+	}
+
 	if (subsystem->dev.direct.admin_poller == NULL) {
 		int lcore = spdk_app_get_current_core();
 
@@ -70,8 +74,6 @@ nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 				     nvmf_direct_ctrlr_poll_for_admin_completions,
 				     subsystem, lcore, 10000);
 	}
-
-	nvmf_direct_ctrlr_poll_for_admin_completions(subsystem);
 
 	spdk_nvme_qpair_process_completions(subsystem->dev.direct.io_qpair, 0);
 }
@@ -86,6 +88,17 @@ nvmf_direct_ctrlr_complete_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
 	req->rsp->nvme_cpl = *cmp;
 
 	spdk_nvmf_request_complete(req);
+}
+
+static void
+nvmf_direct_ctrlr_complete_admin_cmd(void *ctx, const struct spdk_nvme_cpl *cmp)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvmf_subsystem *subsystem = req->conn->sess->subsys;
+
+	subsystem->dev.direct.outstanding_admin_cmd_count--;
+
+	nvmf_direct_ctrlr_complete_cmd(ctx, cmp);
 }
 
 static int
@@ -224,13 +237,16 @@ passthrough:
 		rc = spdk_nvme_ctrlr_cmd_admin_raw(subsystem->dev.direct.ctrlr,
 						   cmd,
 						   req->data, req->length,
-						   nvmf_direct_ctrlr_complete_cmd,
+						   nvmf_direct_ctrlr_complete_admin_cmd,
 						   req);
 		if (rc) {
 			SPDK_ERRLOG("Error submitting admin opc 0x%02x\n", cmd->opc);
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
+
+		subsystem->dev.direct.outstanding_admin_cmd_count++;
+
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	}
 
