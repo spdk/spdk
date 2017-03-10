@@ -772,6 +772,7 @@ INPUT                  = ../include/spdk \
                          nvme/async_completion.md \
                          nvme/fabrics.md \
                          nvme/initialization.md \
+                         nvme/hotplug.md \
                          nvme/io_submission.md \
                          nvme/multi_process.md \
                          nvmf/index.md \

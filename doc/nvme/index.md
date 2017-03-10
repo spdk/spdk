@@ -24,3 +24,4 @@ spdk_nvme_ctrlr_process_admin_completions() | @copybrief spdk_nvme_ctrlr_process
 - @ref nvme_async_completion
 - @ref nvme_fabrics_host
 - @ref nvme_multi_process
+- @ref nvme_hotplug
