@@ -3755,7 +3755,7 @@ spdk_iscsi_handle_status_snack(struct spdk_iscsi_conn *conn,
 
 		if (!found_pdu) {
 			SPDK_ERRLOG("Unable to find StatSN: 0x%08x. For a Status"
-				    "SNACK, assuming this is a protactic SNACK "
+				    "SNACK, assuming this is a proactive SNACK "
 				    "for an untransmitted StatSN, ignoring.\n",
 				    beg_run);
 		} else {
