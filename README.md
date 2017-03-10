@@ -50,10 +50,7 @@ Ubuntu/Debian:
 
 FreeBSD:
 
-- gcc
-- gmake
-- cunit
-- openssl
+    sudo pkg install gmake cunit openssl
 
 Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.
 
