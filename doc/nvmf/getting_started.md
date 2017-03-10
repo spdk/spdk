@@ -134,14 +134,14 @@ To ensure the SPDK NVMe-oF target has the best performance, configure the RNICs,
 devices, and the core assigned to the NVMe-oF subsystem to all be located on the same NUMA node.
 The following parameters are used to control which CPU cores SPDK executes on:
 
-1. **ReactorMask** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
+**ReactorMask:** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
 items on. The ReactorMask is located in the [Global] section of the configuration file. For example,
 to assign lcores 24,25,26 and 27 to NVMe-oF work items, set the ReactorMask to:
 ~~~{.sh}
 ReactorMask 0xF000000
 ~~~
 
-2. **Assign each Subsystem to a CPU core** This is accomplished by specifying the "Core" value in
+**Assign each Subsystem to a CPU core:** This is accomplished by specifying the "Core" value in
 the [Subsystem] section of the configuration file. For example,
 to assign the Subsystems to lcores 25 and 26:
 ~~~{.sh}
@@ -161,8 +161,32 @@ Listen RDMA 192.168.100.9:4420
 Host nqn.2016-06.io.spdk:init
 NVMe 0000:86:00.0
 ~~~
-
 SPDK executes all code for an NVMe-oF subsystem on a single thread. Different subsystems may execute
 on different threads. SPDK gives the user maximum control to determine how many CPU cores are used
 to execute subsystems. Configuring different subsystems to execute on different CPU cores prevents
 the subsystem data from being evicted from limited CPU cache space.
+
+# Emulating an NVMe controller {#nvmf_config_virtual_controller}
+
+The SPDK NVMe-oF target provides the capability to emulate an NVMe controller using a virtual
+controller. Using virtual controllers allows storage software developers to run the NVMe-oF target
+on a system that does not have NVMe devices. You can configure a virtual controller in the configuration
+file as follows:
+
+**Create malloc LUNs:** See @ref bdev_getting_started for details on creating Malloc block devices.
+
+**Create a virtual controller:** Virtual mode allows any SPDK block device to be presented as an
+NVMe-oF namespace. These block devices don't need to be NVMe devices. For example, to create a
+virtual controller for malloc LUNs named Malloc0 and Malloc1:
+~~~{.sh}
+# Virtual controller
+[Subsystem2]
+  NQN nqn.2016-06.io.spdk:cnode2
+  Core 0
+  Mode Virtual
+  Listen RDMA 192.168.2.21:4420
+  Host nqn.2016-06.io.spdk:init
+  SN SPDK00000000000001
+  Namespace Malloc0
+  Namespace Malloc1
+~~~
