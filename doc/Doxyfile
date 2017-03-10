@@ -773,6 +773,7 @@ INPUT                  = ../include/spdk \
                          nvme/fabrics.md \
                          nvme/initialization.md \
                          nvme/io_submission.md \
+                         nvme/multi_process.md \
                          nvmf/index.md \
                          nvmf/getting_started.md
 
