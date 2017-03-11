@@ -74,6 +74,8 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 		return 0;
 	}
 
+	ns->flags = 0x0000;
+
 	ns->sector_size = 1 << nsdata->lbaf[nsdata->flbas.format].lbads;
 	ns->extended_lba_size = ns->sector_size;
 
@@ -85,8 +87,6 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 
 	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
 	ns->sectors_per_stripe = ns->stripe_size / ns->sector_size;
-
-	ns->flags = 0x0000;
 
 	if (ns->ctrlr->cdata.oncs.dsm) {
 		ns->flags |= SPDK_NVME_NS_DEALLOCATE_SUPPORTED;
