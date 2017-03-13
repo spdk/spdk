@@ -52,6 +52,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -351,7 +352,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 
 		rdma_req->cmd.wr.wr_id = (uintptr_t)rdma_req;
 		rdma_req->cmd.wr.sg_list = rdma_req->cmd.sgl;
-		rdma_req->cmd.wr.num_sge = NVMF_DEFAULT_RX_SGE;
+		rdma_req->cmd.wr.num_sge = SPDK_COUNTOF(rdma_req->cmd.sgl);
 
 		if (nvmf_post_rdma_recv(&rdma_req->req)) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
@@ -371,14 +372,14 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 		rdma_req->rsp.wr.opcode = IBV_WR_SEND;
 		rdma_req->rsp.wr.send_flags = IBV_SEND_SIGNALED;
 		rdma_req->rsp.wr.sg_list = rdma_req->rsp.sgl;
-		rdma_req->rsp.wr.num_sge = NVMF_DEFAULT_TX_SGE;
+		rdma_req->rsp.wr.num_sge = SPDK_COUNTOF(rdma_req->rsp.sgl);
 
 		/* Set up memory for data buffers */
 		rdma_req->data.wr.wr_id = (uint64_t)rdma_req;
 		rdma_req->data.wr.next = NULL;
 		rdma_req->data.wr.send_flags = IBV_SEND_SIGNALED;
 		rdma_req->data.wr.sg_list = rdma_req->data.sgl;
-		rdma_req->data.wr.num_sge = NVMF_DEFAULT_TX_SGE;
+		rdma_req->data.wr.num_sge = SPDK_COUNTOF(rdma_req->data.sgl);
 	}
 
 	return rdma_conn;
