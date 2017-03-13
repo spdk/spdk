@@ -257,7 +257,9 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	TAILQ_INIT(&rdma_conn->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_conn->pending_rdma_rw_queue);
 
-	rdma_conn->cq = ibv_create_cq(id->verbs, max_queue_depth * 2, rdma_conn, channel, 0);
+	/* NOTE: Add one to this value to match the math in the Linux kernel initiator.
+	 * We do not currently understand why they have added one to this value. */
+	rdma_conn->cq = ibv_create_cq(id->verbs, (max_queue_depth + 1) * 2, rdma_conn, channel, 0);
 	if (!rdma_conn->cq) {
 		SPDK_ERRLOG("Unable to create completion queue\n");
 		SPDK_ERRLOG("Completion Channel: %p Id: %p Verbs: %p\n", channel, id, id->verbs);
@@ -271,8 +273,12 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	attr.qp_type		= IBV_QPT_RC;
 	attr.send_cq		= rdma_conn->cq;
 	attr.recv_cq		= rdma_conn->cq;
-	attr.cap.max_send_wr	= max_queue_depth; /* SEND, READ, and WRITE operations */
-	attr.cap.max_recv_wr	= max_queue_depth; /* RECV operations */
+	/* NOTE: The next two values have 1 added to them to match the math in the
+	 * Linux kernel initiator. We currently do not understand why they have
+	 * added one to these values and will continue to investigate.
+	 */
+	attr.cap.max_send_wr	= max_queue_depth + 1; /* SEND, READ, and WRITE operations */
+	attr.cap.max_recv_wr	= max_queue_depth + 1; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
