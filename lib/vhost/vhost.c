@@ -36,6 +36,8 @@
 #include <stdint.h>
 #include <sys/eventfd.h>
 #include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <semaphore.h>
 
@@ -766,6 +768,7 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 	struct spdk_vhost_scsi_ctrlr *vdev;
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
+	struct stat file_stat;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("Can't add controller with no name\n");
@@ -799,10 +802,14 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 		return -EINVAL;
 	}
 
-	/* Register vhost(cuse or user) driver to handle vhost messages. */
-	if (access(path, F_OK) != -1) {
-		if (unlink(path) != 0)
+	/* Register vhost driver to handle vhost messages. */
+	if (stat(path, &file_stat) != -1) {
+		if (!S_ISSOCK(file_stat.st_mode)) {
+			SPDK_ERRLOG("Cannot remove %s: not a socket.\n", path);
+			return -EINVAL;
+		} else if (unlink(path) != 0) {
 			rte_exit(EXIT_FAILURE, "Cannot remove %s.\n", path);
+		}
 	}
 
 	if (rte_vhost_driver_register(path, 0) != 0) {
