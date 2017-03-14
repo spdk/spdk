@@ -24,6 +24,7 @@ $valgrind test/lib/jsonrpc/server/jsonrpc_server_ut
 
 $valgrind test/lib/log/log_ut
 
+$valgrind test/lib/nvmf/discovery/discovery_ut
 $valgrind test/lib/nvmf/request/request_ut
 $valgrind test/lib/nvmf/session/session_ut
 $valgrind test/lib/nvmf/subsystem/subsystem_ut
