@@ -551,6 +551,9 @@ function vm_setup()
 	echo
 	echo "chmod +r $vm_dir/*"
 	echo
+	echo "echo '=== qemu.log ==='"
+	echo "cat $vm_dir/qemu.log"
+	echo "echo '=== qemu.log ==='"
 	echo '# EOF'
 	) > $vm_dir/run.sh
 	chmod +x $vm_dir/run.sh
