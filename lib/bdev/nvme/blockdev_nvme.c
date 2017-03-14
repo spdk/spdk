@@ -414,17 +414,17 @@ bdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 		spdk_json_write_string(w, "Unknown");
 	}
 
-	if (nvme_ctrlr->trid.traddr) {
+	if (nvme_ctrlr->trid.traddr[0] != '\0') {
 		spdk_json_write_name(w, "traddr");
 		spdk_json_write_string(w, nvme_ctrlr->trid.traddr);
 	}
 
-	if (nvme_ctrlr->trid.trsvcid) {
+	if (nvme_ctrlr->trid.trsvcid[0] != '\0') {
 		spdk_json_write_name(w, "trsvcid");
 		spdk_json_write_string(w, nvme_ctrlr->trid.trsvcid);
 	}
 
-	if (nvme_ctrlr->trid.subnqn) {
+	if (nvme_ctrlr->trid.subnqn[0] != '\0') {
 		spdk_json_write_name(w, "subnqn");
 		spdk_json_write_string(w, nvme_ctrlr->trid.subnqn);
 	}
