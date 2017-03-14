@@ -153,8 +153,8 @@ nvmf_get_log_page_len(struct spdk_nvme_cmd *cmd)
 	return ((numdu << 16) + numdl + 1) * sizeof(uint32_t);
 }
 
-spdk_nvmf_request_exec_status
-spdk_nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
+static int
+nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -217,3 +217,34 @@ spdk_nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
+
+static int
+nvmf_discovery_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
+{
+	/* Discovery controllers do not support I/O queues, so this code should be unreachable. */
+	abort();
+}
+
+static void
+nvmf_discovery_ctrlr_get_data(struct spdk_nvmf_session *session)
+{
+}
+
+static void
+nvmf_discovery_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
+{
+}
+
+static int
+nvmf_discovery_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
+const struct spdk_nvmf_ctrlr_ops spdk_nvmf_discovery_ctrlr_ops = {
+	.attach				= nvmf_discovery_ctrlr_attach,
+	.ctrlr_get_data			= nvmf_discovery_ctrlr_get_data,
+	.process_admin_cmd		= nvmf_discovery_ctrlr_process_admin_cmd,
+	.process_io_cmd			= nvmf_discovery_ctrlr_process_io_cmd,
+	.detach				= nvmf_discovery_ctrlr_detach,
+};

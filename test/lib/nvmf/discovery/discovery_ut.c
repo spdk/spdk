@@ -154,7 +154,7 @@ test_process_discovery_cmd(void)
 	req.rsp  = &req_rsp;
 
 	/* no request data check */
-	ret = spdk_nvmf_process_discovery_cmd(&req);
+	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
 
@@ -163,7 +163,7 @@ test_process_discovery_cmd(void)
 	req.cmd->nvme_cmd.cdw10 = SPDK_NVME_IDENTIFY_CTRLR;
 	req.conn->sess = &req_sess;
 	req.data = &req_data;
-	ret = spdk_nvmf_process_discovery_cmd(&req);
+	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 
@@ -172,17 +172,17 @@ test_process_discovery_cmd(void)
 	req.cmd->nvme_cmd.cdw10 = SPDK_NVME_LOG_DISCOVERY;
 	req.data = &req_page;
 	req.length = req_length;
-	ret = spdk_nvmf_process_discovery_cmd(&req);
+	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
 	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	req.cmd->nvme_cmd.cdw10 = 15;
-	ret = spdk_nvmf_process_discovery_cmd(&req);
+	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
 	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 
 	/* Invalid opcode return value check */
 	req.cmd->nvme_cmd.opc = 100;
-	ret = spdk_nvmf_process_discovery_cmd(&req);
+	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_OPCODE);
 	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 }

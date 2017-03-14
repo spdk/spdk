@@ -41,6 +41,7 @@
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
+const struct spdk_nvmf_ctrlr_ops spdk_nvmf_discovery_ctrlr_ops;
 
 #include "subsystem.c"
 

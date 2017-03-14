@@ -283,30 +283,19 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Non-Fabric command sent to disabled controller\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 		status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	} else if (req->conn->type == CONN_TYPE_AQ) {
-		struct spdk_nvmf_subsystem *subsystem;
-
-		subsystem = session->subsys;
-		assert(subsystem != NULL);
-		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-			status = spdk_nvmf_process_discovery_cmd(req);
-		} else {
-			if (subsystem->is_removed) {
-				rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
-				status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-			} else {
-				status = subsystem->ops->process_admin_cmd(req);
-			}
-		}
 	} else {
 		struct spdk_nvmf_subsystem *subsystem;
 
 		subsystem = session->subsys;
+		assert(subsystem != NULL);
+
 		if (subsystem->is_removed) {
 			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
 			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		} else if (req->conn->type == CONN_TYPE_AQ) {
+			status = subsystem->ops->process_admin_cmd(req);
 		} else {
-			status = session->subsys->ops->process_io_cmd(req);
+			status = subsystem->ops->process_io_cmd(req);
 		}
 	}
 

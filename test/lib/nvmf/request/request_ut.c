@@ -135,12 +135,6 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 	return false;
 }
 
-spdk_nvmf_request_exec_status
-spdk_nvmf_process_discovery_cmd(struct spdk_nvmf_request *req)
-{
-	abort();
-}
-
 
 static void
 test_nvmf_process_fabrics_cmd(void)

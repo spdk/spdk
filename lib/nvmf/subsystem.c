@@ -125,11 +125,7 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 int
 spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 {
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		return subsystem->ops->attach(subsystem);
-	}
-
-	return 0;
+	return subsystem->ops->attach(subsystem);
 }
 
 void
@@ -137,8 +133,8 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_session *session;
 
-	/* For NVMe subsystems, check the backing physical device for completions. */
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+	/* Check the backing physical device for completions. */
+	if (subsystem->ops->poll_for_completions) {
 		subsystem->ops->poll_for_completions(subsystem);
 	}
 
@@ -206,7 +202,9 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->sessions);
 
-	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		subsystem->ops = &spdk_nvmf_discovery_ctrlr_ops;
+	} else if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
 		subsystem->ops = &spdk_nvmf_direct_ctrlr_ops;
 		subsystem->dev.direct.outstanding_admin_cmd_count = 0;
 	} else {
