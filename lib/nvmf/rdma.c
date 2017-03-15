@@ -421,26 +421,6 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 }
 
 static int
-nvmf_post_rdma_send(struct spdk_nvmf_request *req)
-{
-	struct ibv_send_wr		*bad_wr = NULL;
-	struct spdk_nvmf_conn 		*conn = req->conn;
-	struct spdk_nvmf_rdma_request 	*rdma_req = get_rdma_req(req);
-	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
-	int				rc;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, conn);
-
-	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
-	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->rsp.wr, &bad_wr);
-	if (rc) {
-		SPDK_ERRLOG("Failure posting rdma send for NVMf completion, rc = 0x%x\n", rc);
-	}
-
-	return rc;
-}
-
-static int
 request_transfer_in(struct spdk_nvmf_request *req)
 {
 	int				rc;
@@ -516,7 +496,9 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	}
 
 	/* Send the completion */
-	rc = nvmf_post_rdma_send(req);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, conn);
+	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
+	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->rsp.wr, &bad_send_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
 	}
