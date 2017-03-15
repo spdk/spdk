@@ -77,9 +77,8 @@ struct spdk_fio_thread {
 	struct spdk_fio_ctrlr	*ctrlr_list;
 
 	struct io_u		**iocq;	// io completion queue
-	unsigned int		next_completion; // index where next completion will be placed
-	unsigned int		getevents_start; // index where the next getevents call will start
-	unsigned int		getevents_count; // The number of events in the current getevents window
+	unsigned int		iocq_count;	// number of iocq entries filled by last getevents
+	unsigned int		iocq_size;	// number of iocq entries allocated
 
 };
 
@@ -186,7 +185,8 @@ static int spdk_fio_setup(struct thread_data *td)
 	td->io_ops_data = fio_thread;
 	fio_thread->td = td;
 
-	fio_thread->iocq = calloc(td->o.iodepth + 1, sizeof(struct io_u *));
+	fio_thread->iocq_size = td->o.iodepth;
+	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
 
 	spdk_env_opts_init(&opts);
@@ -256,10 +256,8 @@ static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_fio_request		*fio_req = ctx;
 	struct spdk_fio_thread		*fio_thread = fio_req->fio_thread;
 
-	fio_thread->iocq[fio_thread->next_completion] = fio_req->io;
-	if (++fio_thread->next_completion >= fio_thread->td->o.iodepth) {
-		fio_thread->next_completion = 0;
-	}
+	assert(fio_thread->iocq_count < fio_thread->iocq_size);
+	fio_thread->iocq[fio_thread->iocq_count++] = fio_req->io;
 }
 
 static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
@@ -318,13 +316,10 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 static struct io_u *spdk_fio_event(struct thread_data *td, int event)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
-	int idx = (fio_thread->getevents_start + event) % td->o.iodepth;
 
-	if (event > (int)fio_thread->getevents_count) {
-		return NULL;
-	}
-
-	return fio_thread->iocq[idx];
+	assert(event >= 0);
+	assert((unsigned)event < fio_thread->iocq_count);
+	return fio_thread->iocq[event];
 }
 
 static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
@@ -332,7 +327,6 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr *fio_ctrlr;
-	unsigned int count = 0;
 	struct timespec t0, t1;
 	uint64_t timeout = 0;
 
@@ -341,19 +335,18 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		clock_gettime(CLOCK_MONOTONIC_RAW, &t0);
 	}
 
-	fio_thread->getevents_start = (fio_thread->getevents_start + fio_thread->getevents_count) %
-				      fio_thread->td->o.iodepth;
+	fio_thread->iocq_count = 0;
 
 	for (;;) {
 		fio_ctrlr = fio_thread->ctrlr_list;
 		while (fio_ctrlr != NULL) {
-			count += spdk_nvme_qpair_process_completions(fio_ctrlr->qpair, max - count);
+			spdk_nvme_qpair_process_completions(fio_ctrlr->qpair, max - fio_thread->iocq_count);
+
+			if (fio_thread->iocq_count >= min) {
+				return fio_thread->iocq_count;
+			}
+
 			fio_ctrlr = fio_ctrlr->next;
-		}
-
-
-		if (count >= min) {
-			break;
 		}
 
 		if (t) {
@@ -366,9 +359,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 	}
 
-	fio_thread->getevents_count = count;
-
-	return count;
+	return fio_thread->iocq_count;
 }
 
 static int spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
