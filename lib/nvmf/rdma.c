@@ -437,6 +437,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
 
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
+	rdma_req->data.wr.next = NULL;
 	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to transfer data from host to target\n");
@@ -455,7 +456,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
 	struct ibv_recv_wr		*bad_recv_wr = NULL;
-	struct ibv_send_wr		*bad_send_wr = NULL;
+	struct ibv_send_wr		*send_wr, *bad_send_wr = NULL;
 
 	/* Advance our sq_head pointer */
 	if (conn->sq_head == conn->sq_head_max) {
@@ -480,25 +481,29 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	}
 	rdma_req->recv = NULL;
 
+	/* Build the response which consists of an optional
+	 * RDMA WRITE to transfer data, plus an RDMA SEND
+	 * containing the response.
+	 */
+	send_wr = &rdma_req->rsp.wr;
+
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		/* Send the write */
-		rdma_conn->cur_rdma_rw_depth++;
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
 		spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
 
+		rdma_conn->cur_rdma_rw_depth++;
 		rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
-		rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_send_wr);
-		if (rc) {
-			SPDK_ERRLOG("Unable to transfer data from target to host\n");
-			return -1;
-		}
+
+		rdma_req->data.wr.next = send_wr;
+		send_wr = &rdma_req->data.wr;
 	}
 
-	/* Send the completion */
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, conn);
 	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
-	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->rsp.wr, &bad_send_wr);
+
+	/* Send the completion */
+	rc = ibv_post_send(rdma_conn->cm_id->qp, send_wr, &bad_send_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
 	}
