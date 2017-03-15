@@ -89,6 +89,7 @@ struct spdk_nvmf_rdma_recv {
 
 struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_request		req;
+	bool					data_from_pool;
 
 	struct spdk_nvmf_rdma_recv		*recv;
 
@@ -446,7 +447,7 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
 
 	rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
-	if (req->length > g_rdma.in_capsule_data_size) {
+	if (rdma_req->data_from_pool) {
 		rdma_sess = get_rdma_sess(conn->sess);
 		rdma_req->data.sgl[0].lkey = rdma_sess->buf_mr->lkey;
 	} else {
@@ -480,7 +481,7 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
 
 	rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
-	if (req->length > g_rdma.in_capsule_data_size) {
+	if (rdma_req->data_from_pool) {
 		rdma_sess = get_rdma_sess(conn->sess);
 		rdma_req->data.sgl[0].lkey = rdma_sess->buf_mr->lkey;
 	} else {
@@ -597,7 +598,7 @@ spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_session	*rdma_sess;
 	struct spdk_nvmf_rdma_buf	*buf;
 
-	if (req->length > g_rdma.in_capsule_data_size) {
+	if (rdma_req->data_from_pool) {
 		/* Put the buffer back in the pool */
 		rdma_sess = get_rdma_sess(conn->sess);
 		buf = req->data;
@@ -605,6 +606,7 @@ spdk_nvmf_rdma_request_send_completion(struct spdk_nvmf_request *req)
 		SLIST_INSERT_HEAD(&rdma_sess->data_buf_pool, buf, link);
 		req->data = NULL;
 		req->length = 0;
+		rdma_req->data_from_pool = false;
 	}
 
 	/* Advance our sq_head pointer */
@@ -881,10 +883,22 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 
 		req->length = sgl->keyed.length;
 
-		/* TODO: In Capsule Data Size should be tracked per queue (admin, for instance, should always have 4k and no more). */
-		if (sgl->keyed.length > g_rdma.in_capsule_data_size) {
-			rdma_sess = get_rdma_sess(req->conn->sess);
+		rdma_sess = get_rdma_sess(req->conn->sess);
+		if (!rdma_sess) {
+			/* The only time a connection won't have a session
+			 * is when this is the CONNECT request.
+			 */
+			assert(cmd->opc == SPDK_NVME_OPC_FABRIC);
+			assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
+			assert(req->length <= g_rdma.in_capsule_data_size);
+
+			/* Use the in capsule data buffer, even though this isn't in capsule data. */
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request using in capsule buffer for non-capsule data\n");
+			req->data = rdma_req->recv->buf;
+			rdma_req->data_from_pool = false;
+		} else {
 			req->data = SLIST_FIRST(&rdma_sess->data_buf_pool);
+			rdma_req->data_from_pool = true;
 			if (!req->data) {
 				/* No available buffers. Queue this request up. */
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
@@ -893,10 +907,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", req);
 			SLIST_REMOVE_HEAD(&rdma_sess->data_buf_pool, link);
-		} else {
-			/* Use the in capsule data buffer, even though this isn't in capsule data */
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request using in capsule buffer for non-capsule data\n");
-			req->data = rdma_req->recv->buf;
 		}
 		if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			return SPDK_NVMF_REQUEST_PREP_PENDING_DATA;
@@ -932,6 +942,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 		}
 
 		req->data = rdma_req->recv->buf + offset;
+		rdma_req->data_from_pool = false;
 		req->length = sgl->unkeyed.length;
 		return SPDK_NVMF_REQUEST_PREP_READY;
 	}
