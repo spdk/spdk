@@ -228,9 +228,6 @@ get_rdma_sess(struct spdk_nvmf_session *sess)
 			session));
 }
 
-static int nvmf_post_rdma_recv(struct spdk_nvmf_rdma_conn *rdma_conn,
-			       struct spdk_nvmf_rdma_recv *rdma_recv);
-
 static void
 spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 {
@@ -360,6 +357,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 		      rdma_conn->bufs, max_queue_depth * g_rdma.in_capsule_data_size, rdma_conn->bufs_mr->lkey);
 
 	for (i = 0; i < max_queue_depth; i++) {
+		struct ibv_recv_wr *bad_wr = NULL;
+
 		rdma_recv = &rdma_conn->recvs[i];
 
 		/* Set up memory to receive commands */
@@ -380,7 +379,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 		rdma_recv->in_use = false;
 #endif
 
-		if (nvmf_post_rdma_recv(rdma_conn, rdma_recv)) {
+		rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_recv->wr, &bad_wr);
+		if (rc) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
 			spdk_nvmf_rdma_conn_destroy(rdma_conn);
 			return NULL;
@@ -503,23 +503,6 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_post_rdma_recv(struct spdk_nvmf_rdma_conn *rdma_conn,
-		    struct spdk_nvmf_rdma_recv *rdma_recv)
-{
-	struct ibv_recv_wr *bad_wr = NULL;
-	int rc;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_recv, rdma_conn);
-
-	rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_recv->wr, &bad_wr);
-	if (rc) {
-		SPDK_ERRLOG("Failure posting rdma recv, rc = 0x%x\n", rc);
-	}
-
-	return rc;
-}
-
-static int
 nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr		*bad_wr = NULL;
@@ -567,6 +550,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_conn		*conn = req->conn;
 	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
+	struct ibv_recv_wr		*bad_wr = NULL;
 
 	/* Advance our sq_head pointer */
 	if (conn->sq_head == conn->sq_head_max) {
@@ -582,7 +566,9 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	assert(rdma_req->recv->in_use == true);
 	rdma_req->recv->in_use = false;
 #endif
-	rc = nvmf_post_rdma_recv(rdma_conn, rdma_req->recv);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
+		      rdma_conn);
+	rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_req->recv->wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return rc;
