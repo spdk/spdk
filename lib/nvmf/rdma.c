@@ -420,20 +420,6 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	return rdma_conn;
 }
 
-static inline void
-nvmf_ibv_send_wr_set_rkey(struct ibv_send_wr *wr, struct spdk_nvmf_request *req)
-{
-	struct spdk_nvme_sgl_descriptor *sgl = &req->cmd->nvme_cmd.dptr.sgl1;
-
-	assert(sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK);
-
-	wr->wr.rdma.rkey = sgl->keyed.key;
-	wr->wr.rdma.remote_addr = sgl->address;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "rkey %x remote_addr %p\n",
-		      wr->wr.rdma.rkey, (void *)wr->wr.rdma.remote_addr);
-}
-
 static int
 nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 {
@@ -441,23 +427,11 @@ nvmf_post_rdma_read(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_conn 	*conn = req->conn;
 	struct spdk_nvmf_rdma_request 	*rdma_req = get_rdma_req(req);
 	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_session 	*rdma_sess;
 	int 			rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
 
-	rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
-	if (rdma_req->data_from_pool) {
-		rdma_sess = get_rdma_sess(conn->sess);
-		rdma_req->data.sgl[0].lkey = rdma_sess->buf_mr->lkey;
-	} else {
-		rdma_req->data.sgl[0].lkey = rdma_conn->bufs_mr->lkey;
-	}
-	rdma_req->data.sgl[0].length = req->length;
-
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
-
-	nvmf_ibv_send_wr_set_rkey(&rdma_req->data.wr, req);
 
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
 	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
@@ -475,23 +449,11 @@ nvmf_post_rdma_write(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_conn 	*conn = req->conn;
 	struct spdk_nvmf_rdma_request 	*rdma_req = get_rdma_req(req);
 	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
-	struct spdk_nvmf_rdma_session 	*rdma_sess;
 	int 			rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
 
-	rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
-	if (rdma_req->data_from_pool) {
-		rdma_sess = get_rdma_sess(conn->sess);
-		rdma_req->data.sgl[0].lkey = rdma_sess->buf_mr->lkey;
-	} else {
-		rdma_req->data.sgl[0].lkey = rdma_conn->bufs_mr->lkey;
-	}
-	rdma_req->data.sgl[0].length = req->length;
-
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
-
-	nvmf_ibv_send_wr_set_rkey(&rdma_req->data.wr, req);
 
 	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
 	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
@@ -863,6 +825,9 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 		}
 
 		req->length = sgl->keyed.length;
+		rdma_req->data.sgl[0].length = sgl->keyed.length;
+		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
+		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
 
 		rdma_sess = get_rdma_sess(req->conn->sess);
 		if (!rdma_sess) {
@@ -876,19 +841,26 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			/* Use the in capsule data buffer, even though this isn't in capsule data. */
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request using in capsule buffer for non-capsule data\n");
 			req->data = rdma_req->recv->buf;
+			rdma_req->data.sgl[0].lkey = get_rdma_conn(req->conn)->bufs_mr->lkey;
 			rdma_req->data_from_pool = false;
 		} else {
 			req->data = SLIST_FIRST(&rdma_sess->data_buf_pool);
+			rdma_req->data.sgl[0].lkey = rdma_sess->buf_mr->lkey;
 			rdma_req->data_from_pool = true;
 			if (!req->data) {
 				/* No available buffers. Queue this request up. */
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
+				/* This will get assigned when we actually obtain a buffer */
+				rdma_req->data.sgl[0].addr = (uintptr_t)NULL;
 				return SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER;
 			}
 
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", req);
 			SLIST_REMOVE_HEAD(&rdma_sess->data_buf_pool, link);
 		}
+
+		rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
+
 		if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			return SPDK_NVMF_REQUEST_PREP_PENDING_DATA;
 		} else {
@@ -953,6 +925,7 @@ spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_conn *conn)
 				break;
 			}
 			SLIST_REMOVE_HEAD(&rdma_sess->data_buf_pool, link);
+			rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
 			TAILQ_REMOVE(&rdma_conn->pending_data_buf_queue, rdma_req, link);
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 				TAILQ_INSERT_TAIL(&rdma_conn->pending_rdma_rw_queue, rdma_req, link);
