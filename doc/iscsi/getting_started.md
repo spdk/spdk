@@ -21,106 +21,19 @@ TCP ports to use as iSCSI portals; general iSCSI parameters; initiator names and
 access to iSCSI target nodes; number and types of storage backends to export over iSCSI LUNs; iSCSI
 target node mappings between portal groups, initiator groups, and LUNs.
 
-The SPDK iSCSI target supports several different types of storage backends. These backends will create
-SCSI LUNs which can be exported via iSCSI target nodes.
+Each LUN in an iSCSI target node is associated with an SPDK block device.  See @ref bdev_getting_started
+for details on configuring SPDK block devices.  The block device to LUN mappings are specified in the
+configuration file as:
 
-The storage backends can be configured in the iscsi.conf configuration file to specify the number or
-size of LUNs, block device names (for exporting in-kernel block devices), or other parameters.
-
-Currently there are 3 types of storage backends supported by the iSCSI target:
-
-## Malloc
-
-Configuration file syntax:
-~~~
-[Malloc]
-  NumberOfLuns 4
-  LunSizeInMB  64
-~~~
-
-Other TargetNode parameters go here (TargetName, Mapping, etc.):
-~~~
+~~~~
 [TargetNodeX]
   LUN0 Malloc0
-~~~
+  LUN1 Nvme0n1
+~~~~
 
 This exports a malloc'd target. The disk is a RAM disk that is a chunk of memory allocated by iscsi in
 user space. It will use offload engine to do the copy job instead of memcpy if the system has enough DMA
 channels.
-
-## Block Device
-
-AIO devices are accessed using Linux AIO. O_DIRECT is used and thus unaligned writes will be double buffered.
-This option also bypasses the Linux page cache. This mode is probably as close to a typical kernel based
-target as a user space target can get without using a user-space driver.
-
-Configuration file syntax:
-
-~~~
-[AIO]
-  #normal file or block device
-  AIO /dev/sdb
-~~~
-
-Other TargetNode parameters go here (TargetName, Mapping, etc.):
-~~~
-[TargetNodeX]
-  LUN0 AIO0
-~~~
-
-## Ceph RBD
-
-Ceph RBD devices are accessed via librbd and librados libraries to access the RADOS block device
-exported by Ceph.
-
-Configuration file syntax:
-
-~~~
-[Ceph]
-  # The format of provided rbd info should be: Ceph rbd_pool_name rbd_name size.
-  # In the following example, rbd is the name of rbd_pool; foo is the name of
-  # rbd device exported by Ceph; value 512 represents the configured block size
-  # for this rbd, the block size should be a multiple of 512.
-  Ceph rbd foo 512
-~~~
-
-Other TargetNode parameters go here (TargetName, Mapping, etc.):
-~~~
-[TargetNodeX]
-  LUN0 Ceph0
-~~~
-
-## NVMe
-
-The SPDK NVMe driver by default binds to all NVMe controllers which are not bound to the kernel-mode
-nvme driver. Users can choose to bind to fewer controllers by setting the NumControllers parameter.
-Then the NVMe backend controls NVMe controller(s) directly from userspace and completely bypasses
-the kernel to avoid interrupts and context switching.
-
-~~~
-[Nvme]
-  # NVMe Device Whitelist
-  # Users may specify which NVMe devices to claim by their transport id.
-  # See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.
-  # The second argument is the assigned name, which can be referenced from
-  # other sections in the configuration file. For NVMe devices, a namespace
-  # is automatically appended to each name in the format <YourName>nY, where
-  # Y is the NSID (starts at 1).
-  TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
-  TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
-
-  # The number of attempts per I/O when an I/O fails. Do not include
-  # this key to get the default behavior.
-  NvmeRetryCount 4
-
-[TargetNodeX]
-  # other TargetNode parameters go here (TargetName, Mapping, etc.)
-  # nvme with the following format: NvmeXnY, where X = the controller ID
-  # and Y = the namespace ID
-  # Note: NVMe namespace IDs always start at 1, not 0 - and most
-  #  controllers have only 1 namespace.
-  LUN0 Nvme0n1
-~~~
 
 You should make a copy of the example configuration file, modify it to suit your environment, and
 then run the iscsi_tgt application and pass it the configuration file using the -c option. Right now,
