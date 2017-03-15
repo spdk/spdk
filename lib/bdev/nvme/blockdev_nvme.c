@@ -821,11 +821,6 @@ bdev_nvme_library_init(void)
 		g_timeout = 0;
 	}
 
-	if (g_reset_on_timeout && g_timeout < 1) {
-		SPDK_ERRLOG("NvmeTimeoutValue parameter is undefined\n");
-		return -1;
-	}
-
 	g_nvme_adminq_poll_timeout_us = spdk_conf_section_get_intval(sp, "AdminPollRate");
 	if (g_nvme_adminq_poll_timeout_us <= 0) {
 		g_nvme_adminq_poll_timeout_us = 1000000;

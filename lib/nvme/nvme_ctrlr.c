@@ -1483,6 +1483,7 @@ void
 spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t nvme_timeout, spdk_nvme_timeout_cb cb_fn, void *cb_arg)
 {
+	nvme_timeout = nvme_timeout == 0? NVME_IO_TIMEOUT:nvme_timeout;
 	ctrlr->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
 	ctrlr->timeout_cb_fn = cb_fn;
 	ctrlr->timeout_cb_arg = cb_arg;
