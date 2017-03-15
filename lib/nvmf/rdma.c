@@ -421,50 +421,6 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 }
 
 static int
-nvmf_post_rdma_read(struct spdk_nvmf_request *req)
-{
-	struct ibv_send_wr	*bad_wr = NULL;
-	struct spdk_nvmf_conn 	*conn = req->conn;
-	struct spdk_nvmf_rdma_request 	*rdma_req = get_rdma_req(req);
-	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
-	int 			rc;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
-
-	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
-
-	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
-	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
-	if (rc) {
-		SPDK_ERRLOG("Failure posting rdma read send, rc = 0x%x\n", rc);
-	}
-
-	return rc;
-}
-
-static int
-nvmf_post_rdma_write(struct spdk_nvmf_request *req)
-{
-	struct ibv_send_wr	*bad_wr = NULL;
-	struct spdk_nvmf_conn 	*conn = req->conn;
-	struct spdk_nvmf_rdma_request 	*rdma_req = get_rdma_req(req);
-	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
-	int 			rc;
-
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
-
-	rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
-
-	spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
-	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
-	if (rc) {
-		SPDK_ERRLOG("Failure posting rdma write send, rc = 0x%x\n", rc);
-	}
-
-	return rc;
-}
-
-static int
 nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 {
 	struct ibv_send_wr		*bad_wr = NULL;
@@ -487,15 +443,21 @@ nvmf_post_rdma_send(struct spdk_nvmf_request *req)
 static int
 request_transfer_in(struct spdk_nvmf_request *req)
 {
-	int rc;
+	int				rc;
+	struct spdk_nvmf_rdma_request	*rdma_req = get_rdma_req(req);
 	struct spdk_nvmf_conn 		*conn = req->conn;
 	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
+	struct ibv_send_wr		*bad_wr = NULL;
 
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 
 	rdma_conn->cur_rdma_rw_depth++;
 
-	rc = nvmf_post_rdma_read(req);
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, conn);
+	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
+
+	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
+	rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to transfer data from host to target\n");
 		return -1;
@@ -512,7 +474,8 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_conn		*conn = req->conn;
 	struct spdk_nvmf_rdma_conn 	*rdma_conn = get_rdma_conn(conn);
 	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
-	struct ibv_recv_wr		*bad_wr = NULL;
+	struct ibv_recv_wr		*bad_recv_wr = NULL;
+	struct ibv_send_wr		*bad_send_wr = NULL;
 
 	/* Advance our sq_head pointer */
 	if (conn->sq_head == conn->sq_head_max) {
@@ -530,7 +493,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 #endif
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
 		      rdma_conn);
-	rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_req->recv->wr, &bad_wr);
+	rc = ibv_post_recv(rdma_conn->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return rc;
@@ -541,7 +504,11 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		/* Send the write */
 		rdma_conn->cur_rdma_rw_depth++;
-		rc = nvmf_post_rdma_write(req);
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, conn);
+		spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
+
+		rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
+		rc = ibv_post_send(rdma_conn->cm_id->qp, &rdma_req->data.wr, &bad_send_wr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to transfer data from target to host\n");
 			return -1;
