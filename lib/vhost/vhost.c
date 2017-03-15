@@ -881,7 +881,7 @@ destroy_device(int vid)
 
 static struct spdk_vhost_scsi_ctrlr *spdk_vhost_ctrlrs[MAX_SCSI_CTRLRS];
 
-static struct spdk_vhost_scsi_ctrlr *
+struct spdk_vhost_scsi_ctrlr *
 spdk_vhost_scsi_ctrlr_find(const char *ctrlr_name)
 {
 	unsigned i;
@@ -1006,6 +1006,57 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 }
 
 int
+spdk_vhost_scsi_ctrlr_remove(struct spdk_vhost_scsi_ctrlr *vdev)
+{
+	unsigned ctrlr_num;
+	char path[PATH_MAX];
+	int i;
+
+	if (vdev->lcore != -1) {
+		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
+		return -ENODEV;
+	}
+
+	for (ctrlr_num = 0; ctrlr_num < MAX_SCSI_CTRLRS; ctrlr_num++) {
+		if (spdk_vhost_ctrlrs[ctrlr_num] == vdev) {
+			break;
+		}
+	}
+
+	if (ctrlr_num == MAX_SCSI_CTRLRS) {
+		SPDK_ERRLOG("Trying to remove invalid controller: %s.\n", vdev->name);
+		return -ENOSPC;
+	}
+
+	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
+		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
+			    vdev->name);
+		return -EINVAL;
+	}
+
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
+		if (vdev->scsi_dev[i]) {
+			SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
+			return -EBUSY;
+		}
+	}
+
+	if (rte_vhost_driver_unregister(path) != 0) {
+		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
+			    "Check if domain socket %s still exists\n", vdev->name, path);
+		return -EIO;
+	}
+
+	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
+
+	free(vdev->name);
+	spdk_free(spdk_vhost_ctrlrs[ctrlr_num]);
+	spdk_vhost_ctrlrs[ctrlr_num] = NULL;
+
+	return 0;
+}
+
+int
 spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
 {
 	char *end;
@@ -1096,6 +1147,28 @@ spdk_vhost_scsi_ctrlr_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, con
 	spdk_scsi_dev_add_port(vdev->scsi_dev[scsi_dev_num], 0, "vhost");
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
+	return 0;
+}
+
+
+int
+spdk_vhost_scsi_ctrlr_remove_dev(struct spdk_vhost_scsi_ctrlr *vdev, unsigned scsi_dev_num)
+{
+	if (vdev->lcore != -1) {
+		SPDK_ERRLOG("Controller %s is in use and hotremove is not supported\n", vdev->name);
+		return -EBUSY;
+	}
+
+	if (vdev->scsi_dev[scsi_dev_num] == NULL) {
+		SPDK_ERRLOG("Controller %s dev %u is not occupied\n", vdev->name, scsi_dev_num);
+		return -ENODEV;
+	}
+
+	spdk_scsi_dev_destruct(vdev->scsi_dev[scsi_dev_num]);
+	vdev->scsi_dev[scsi_dev_num] = NULL;
+
+	SPDK_NOTICELOG("Controller %s: removed device 'Dev %u'\n",
+		       vdev->name, scsi_dev_num);
 	return 0;
 }
 

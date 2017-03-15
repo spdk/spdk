@@ -63,10 +63,13 @@ struct spdk_vhost_scsi_ctrlr *spdk_vhost_scsi_ctrlr_next(struct spdk_vhost_scsi_
 
 const char *spdk_vhost_scsi_ctrlr_get_name(struct spdk_vhost_scsi_ctrlr *ctrl);
 uint64_t spdk_vhost_scsi_ctrlr_get_cpumask(struct spdk_vhost_scsi_ctrlr *ctrl);
+struct spdk_vhost_scsi_ctrlr *spdk_vhost_scsi_ctrlr_find(const char *ctrlr_name);
 int spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask);
+int spdk_vhost_scsi_ctrlr_remove(struct spdk_vhost_scsi_ctrlr *vdev);
 int spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask);
 struct spdk_scsi_dev *spdk_vhost_scsi_ctrlr_get_dev(struct spdk_vhost_scsi_ctrlr *ctrl,
 		uint8_t num);
 int spdk_vhost_scsi_ctrlr_add_dev(const char *name, unsigned scsi_dev_num, const char *lun_name);
+int spdk_vhost_scsi_ctrlr_remove_dev(struct spdk_vhost_scsi_ctrlr *vdev, unsigned scsi_dev_num);
 
 #endif /* SPDK_VHOST_H */

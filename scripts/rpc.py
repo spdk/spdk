@@ -473,6 +473,14 @@ p.add_argument('ctrlr', help='controller name')
 p.add_argument('--cpumask', help='cpu mask for this controller')
 p.set_defaults(func=construct_vhost_scsi_controller)
 
+def remove_vhost_scsi_controller(args):
+    params = {'ctrlr': args.ctrlr}
+    jsonrpc_call('remove_vhost_scsi_controller', params)
+
+p = subparsers.add_parser('remove_vhost_scsi_controller', help='Remove vhost controller')
+p.add_argument('ctrlr', help='controller name')
+p.set_defaults(func=remove_vhost_scsi_controller)
+
 def add_vhost_scsi_lun(args):
     params = {
         'ctrlr': args.ctrlr,
@@ -486,6 +494,18 @@ p.add_argument('ctrlr', help='conntroller name where add lun')
 p.add_argument('scsi_dev_num', help='scsi_dev_num', type=int)
 p.add_argument('lun_name', help='lun name')
 p.set_defaults(func=add_vhost_scsi_lun)
+
+def remove_vhost_scsi_dev(args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'scsi_dev_num': args.scsi_dev_num,
+    }
+    jsonrpc_call('remove_vhost_scsi_dev', params)
+
+p = subparsers.add_parser('remove_vhost_scsi_dev', help='Remove device from vhost controller')
+p.add_argument('ctrlr', help='controller name to remove device from')
+p.add_argument('scsi_dev_num', help='scsi_dev_num', type=int)
+p.set_defaults(func=remove_vhost_scsi_dev)
 
 args = parser.parse_args()
 args.func(args)
