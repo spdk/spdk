@@ -111,6 +111,7 @@ struct nvme_probe_ctx {
 	const char *names[NVME_MAX_CONTROLLERS];
 };
 
+static int g_hot_insert_nvme_controller_index = 0;
 static int g_reset_controller_on_timeout = 0;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
@@ -580,13 +581,16 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	const char *name = NULL;
 	size_t i;
 
-	for (i = 0; i < ctx->count; i++) {
-		if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
-			name = strdup(ctx->names[i]);
-			break;
+	if (ctx) {
+		for (i = 0; i < ctx->count; i++) {
+			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
+				name = strdup(ctx->names[i]);
+				break;
+			}
 		}
+	} else {
+		name = spdk_sprintf_alloc("HotInsertNvme%d", g_hot_insert_nvme_controller_index);
 	}
-
 	if (!name) {
 		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
 		return;
