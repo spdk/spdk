@@ -28,5 +28,5 @@ before_script:
   - popd
 
 script:
-  - make CONFIG_WERROR=y
+  - make CONFIG_WERROR=y CONFIG_VHOST=n
   - ./unittest.sh
