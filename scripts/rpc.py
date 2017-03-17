@@ -236,6 +236,13 @@ p.add_argument('rbd_name', help='rbd image name')
 p.add_argument('block_size', help='rbd block size', type=int)
 p.set_defaults(func=construct_rbd_bdev)
 
+def construct_error_bdev(args):
+    params = {'base_name': args.base_name}
+    jsonrpc_call('construct_error_bdev', params)
+p = subparsers.add_parser('construct_error_bdev', help='Add bdev with error injection backend')
+p.add_argument('base_name', help='base bdev name')
+p.set_defaults(func=construct_error_bdev)
+
 def set_trace_flag(args):
     params = {'flag': args.flag}
     jsonrpc_call('set_trace_flag', params)
@@ -445,6 +452,19 @@ def delete_nvmf_subsystem(args):
 p = subparsers.add_parser('delete_nvmf_subsystem', help='Delete a nvmf subsystem')
 p.add_argument('subsystem_nqn', help='subsystem nqn to be deleted. Example: nqn.2016-06.io.spdk:cnode1.')
 p.set_defaults(func=delete_nvmf_subsystem)
+
+def bdev_inject_error(args):
+    params = {
+        'type': args.type,
+        'num': args.num,
+    }
+
+    jsonrpc_call('bdev_inject_error', params)
+
+p = subparsers.add_parser('bdev_inject_error', help='bdev inject error')
+p.add_argument('type', help="""type: 'clear' 'read' 'write' 'unmap' 'flush' 'reset' 'all'""")
+p.add_argument('-n', '--num', help='the number of commands you want to fail', type=int, default=1)
+p.set_defaults(func=bdev_inject_error)
 
 def kill_instance(args):
     params = {'sig_name': args.sig_name}

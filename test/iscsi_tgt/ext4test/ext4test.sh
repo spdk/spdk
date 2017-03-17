@@ -47,14 +47,14 @@ echo "iscsi_tgt is listening. Running tests..."
 
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+$rpc_py construct_error_bdev 'Malloc0'
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "1 0 0 0" ==> disable CHAP authentication
 if [ -z "$NO_NVME" ]; then
 $rpc_py construct_target_node Target0 Target0_alias Nvme0n1:0 1:2 64 1 0 0 0
 fi
-$rpc_py construct_target_node Target1 Target1_alias Malloc0:0 1:2 64 1 0 0 0
-
+$rpc_py construct_target_node Target1 Target1_alias EE_Malloc0:0 1:2 64 1 0 0 0
 sleep 1
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
@@ -65,8 +65,30 @@ trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; do
 
 sleep 1
 
+$rpc_py bdev_inject_error 'all' -n 1000
 
 devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+
+declare -i failcount=0
+set +e
+for dev in $devs; do
+mkfs.ext4 -F /dev/$dev
+if [ $? -eq 0 ]; then
+	echo "mkfs successful"
+else
+	echo "mkfs failed"
+	failcount+=1
+fi
+done
+set -e
+
+if [ $failcount -eq 1 ]; then
+	echo "error injection success"
+else
+	exit 1
+fi
+
+$rpc_py bdev_inject_error 'clear'
 
 for dev in $devs; do
 	mkfs.ext4 -F /dev/$dev

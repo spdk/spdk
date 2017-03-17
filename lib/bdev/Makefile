@@ -38,7 +38,7 @@ CFLAGS += $(ENV_CFLAGS) -I.
 C_SRCS = bdev.c scsi_nvme.c
 LIBNAME = bdev
 
-DIRS-y += malloc null nvme rpc split
+DIRS-y += error malloc null nvme rpc split
 
 ifeq ($(OS),Linux)
 DIRS-y += aio
