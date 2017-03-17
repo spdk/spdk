@@ -197,20 +197,16 @@ bdev_nvme_poll_adminq(void *arg)
 static int
 bdev_nvme_destruct(struct spdk_bdev *bdev)
 {
-	bool removable = true;
 	struct nvme_bdev *nvme_disk = (struct nvme_bdev *)bdev;
 	struct nvme_ctrlr *nvme_ctrlr = nvme_disk->nvme_ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_ctrlr->ref--;
 
-	if (nvme_ctrlr->ref != 0) {
-		removable = false;
-	}
-
+	TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk, link);
 	free(nvme_disk);
 
-	if (removable == true) {
+	if (nvme_ctrlr->ref == 0) {
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(nvme_ctrlr->ctrlr);
@@ -808,7 +804,6 @@ bdev_nvme_library_fini(void)
 	struct nvme_bdev *nvme_bdev, *btmp;
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
-		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
 		bdev_nvme_destruct(&nvme_bdev->disk);
 	}
 }
