@@ -2,7 +2,7 @@
 
 set -e
 
-if [ ! -f "/home/sys_sgsw/vhost_scsi_vm_image.qcow2" ]; then
+if [ ! -f "/home/sys_sgsw/vhost_vm_image.qcow2" ]; then
 	echo "VM does not exist, exiting vhost tests without running"
 	exit 0
 fi
@@ -21,18 +21,18 @@ case $param in
     -p|--performance)
 	echo Running performance suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-	--vm=0,/home/sys_sgsw/vhost_scsi_vm_image.qcow2,Nvme0n1p0 \
+	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
 	--test-type=spdk_vhost \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_performance.job \
-	--qemu-src=/home/sys_sgsw/vhost_scsi/qemu
+	--qemu-src=/home/sys_sgsw/vhost/qemu
     ;;
     -i|--integrity)
 	echo Running integrity suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-	--vm=0,/home/sys_sgsw/vhost_scsi_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
-	--qemu-src=/home/sys_sgsw/vhost_scsi/qemu
+	--qemu-src=/home/sys_sgsw/vhost/qemu
     ;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test"

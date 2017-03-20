@@ -58,7 +58,10 @@ function error()
 function qemu_build_and_install()
 {
 	mkdir -p $QEMU_BUILD_DIR
-	cd $QEMU_BUILD_DIR
+
+        cd $QEMU_SRC_DIR
+        make clean
+        cd $QEMU_BUILD_DIR
 
 	echo "INFO: Configuring QEMU from source in $QEMU_SRC_DIR"
 	if type ccache > /dev/null 2>&1; then
@@ -466,7 +469,8 @@ function vm_setup()
 	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765,hostfwd=tcp::$https_socket-:443,hostfwd=tcp::$http_socket-:80 ${eol}"
 	cmd+="-net nic ${eol}"
 
-	cmd+="-hda $os ${eol}"
+	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
+	cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
 
 	IFS=':'
 
@@ -509,7 +513,7 @@ function vm_setup()
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-scsi-pci,id=scsi_$disk,wwpn=unused,num_queues=$cpu_num,user=true,chardev=char_$disk ${eol}"
+				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
