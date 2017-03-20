@@ -240,7 +240,9 @@ vq_used_ring_enqueue(struct rte_vhost_vring *vq, uint16_t id, uint32_t len)
 	rte_compiler_barrier();
 
 	vq->used->idx = vq->last_used_idx;
-	eventfd_write(vq->callfd, (eventfd_t)1);
+	if (!(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+		eventfd_write(vq->callfd, (eventfd_t)1);
+	}
 }
 
 static bool
