@@ -272,6 +272,26 @@ static void build_io_request_9(struct io_request *req)
 	}
 }
 
+static void build_io_request_10(struct io_request *req)
+{
+	/*
+	 * Test the case where we have a valid PRP list, but the first and last
+	 * elements are not exact multiples of the logical block size.
+	 */
+	const size_t req_len[] = {  4004, 4096,  92 };
+	const size_t req_off[] = {  0x5c,  0x0, 0x0 };
+	struct sgl_element *iovs = req->iovs;
+	uint32_t i;
+	req->nseg = SPDK_COUNTOF(req_len);
+	assert(SPDK_COUNTOF(req_len) == SPDK_COUNTOF(req_off));
+
+	for (i = 0; i < req->nseg; i++) {
+		iovs[i].base = spdk_zmalloc(req_off[i] + req_len[i], 0x4000, NULL);
+		iovs[i].offset = req_off[i];
+		iovs[i].len = req_len[i];
+	}
+}
+
 typedef void (*nvme_build_io_req_fn_t)(struct io_request *req);
 
 static void
@@ -475,7 +495,8 @@ int main(int argc, char **argv)
 		    || TEST(build_io_request_6)
 		    || TEST(build_io_request_7)
 		    || TEST(build_io_request_8)
-		    || TEST(build_io_request_9)) {
+		    || TEST(build_io_request_9)
+		    || TEST(build_io_request_10)) {
 #undef TEST
 			rc = 1;
 			printf("%s: failed sgl tests\n", iter->name);

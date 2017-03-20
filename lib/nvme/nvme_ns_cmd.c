@@ -270,11 +270,17 @@ _nvme_ns_cmd_split_sgl_request(struct spdk_nvme_ns *ns,
 			}
 		}
 
+		if (start_valid && end_valid && !last_sge) {
+			continue;
+		}
+
 		/*
-		 * If one of these criteria is met, send what we have accumlated so far as a
-		 *  child request.
+		 * We need to create a split here.  Send what we have accumulated so far as a child
+		 *  request.  Checking if child_equals_parent allows us to *not* create a child request
+		 *  when no splitting is required - in that case we will fall-through and just create
+		 *  a single request with no children for the entire I/O.
 		 */
-		if (!start_valid || !end_valid || !child_equals_parent) {
+		if (!child_equals_parent) {
 			struct nvme_request *child;
 			uint32_t child_lba_count;
 
