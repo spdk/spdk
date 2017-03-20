@@ -5,6 +5,8 @@
 
 set -xe
 
+$valgrind test/lib/blob/blob_ut/blob_ut
+
 $valgrind test/lib/nvme/unit/nvme_c/nvme_ut
 $valgrind test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut
 $valgrind test/lib/nvme/unit/nvme_ctrlr_cmd_c/nvme_ctrlr_cmd_ut

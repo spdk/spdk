@@ -34,14 +34,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdev blob env event log json jsonrpc nvme nvmf scsi ioat util
-ifeq ($(OS),Linux)
-DIRS-y += iscsi
-endif
+CFLAGS += $(ENV_CFLAGS)
+C_SRCS = blobstore.c request.c
+LIBNAME = blob
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
