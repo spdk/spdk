@@ -93,7 +93,7 @@ function timing_finish() {
 
 function process_core() {
 	ret=0
-	for core in $(find . -type f -name 'core*'); do
+	for core in $(find . -type f \( -name 'core*' -o -name '*.core' \)); do
 		exe=$(eu-readelf -n "$core" | grep psargs | sed "s/.*psargs: \([^ \'\" ]*\).*/\1/")
 		echo "exe for $core is $exe"
 		if [[ ! -z "$exe" ]]; then
