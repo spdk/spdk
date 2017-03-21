@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CXXFLAGS += $(DPDK_INC)
+CXXFLAGS += $(ENV_CXXFLAGS)
 CXXFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CXX_SRCS = iscsi_top.cpp
 
