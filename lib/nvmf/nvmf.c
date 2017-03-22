@@ -71,7 +71,7 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_sess,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", max_io_size);
 
 	rc = spdk_nvmf_transport_init();
-	if (rc <= 0) {
+	if (rc < 0) {
 		SPDK_ERRLOG("Transport initialization failed\n");
 		return -1;
 	}
