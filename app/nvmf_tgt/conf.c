@@ -531,7 +531,13 @@ spdk_nvmf_construct_subsystem(const char *name,
 
 		listen_addr = spdk_nvmf_tgt_listen(addresses[i].transport,
 						   addresses[i].traddr, addresses[i].trsvcid);
-		assert(listen_addr != NULL);
+		if (listen_addr == NULL) {
+			SPDK_ERRLOG("Failed to listen on transport %s, traddr %s, trsvcid %s\n",
+				    addresses[i].transport,
+				    addresses[i].traddr,
+				    addresses[i].trsvcid);
+			goto error;
+		}
 		spdk_nvmf_subsystem_add_listener(subsystem, listen_addr);
 	}
 
