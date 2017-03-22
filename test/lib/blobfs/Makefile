@@ -31,16 +31,15 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev blob blobfs conf copy cunit event json jsonrpc \
-          log env_dpdk net rpc trace util nvme nvmf scsi ioat
-ifeq ($(OS),Linux)
-DIRS-y += iscsi
-DIRS-$(CONFIG_VHOST) += vhost
-endif
+DIRS-y = blobfs_ut cache_ut mkfs
 
+# TODO: do not check a hardcoded path here
+ifneq (,$(wildcard /usr/local/include/fuse3))
+DIRS-y += fuse
+endif
 
 .PHONY: all clean $(DIRS-y)
 

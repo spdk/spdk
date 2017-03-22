@@ -38,4 +38,6 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS = blobstore.c request.c
 LIBNAME = blob
 
+DIRS-y += bdev
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

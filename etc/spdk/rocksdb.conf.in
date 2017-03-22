@@ -1,0 +1,37 @@
+# spdk configuration file
+#
+# Please write all parameters using ASCII.
+# The parameter must be quoted if it includes whitespace.
+#
+# Configuration syntax:
+# Spaces at head of line are deleted, other spaces are as separator
+# Lines starting with '#' are comments and not evaluated.
+# Lines ending with '\' are concatenated with the next line.
+# Bracketed keys are section keys grouping the following value keys.
+# Number of section key is used as a tag number.
+#  Ex. [TargetNode1] = TargetNode section key with tag number 1
+[Global]
+  # Users can restrict work items to only run on certain cores by
+  #  specifying a WorkerMask.  Default is to allow work items to run
+  #  on all cores.
+  #WorkerMask 0xFFFF
+
+  # Event mask for ids history buffers
+  # Default: 0x0 (all events disabled)
+  # Set to 0xFFFFFFFFFFFFFFFF to enable all events.
+  #EventMask 0x0
+
+  # syslog facility
+  LogFacility "local7"
+
+[Rpc]
+  # Defines whether spdk will enable configuration via RPC.
+  # Default is disabled.  Note that the RPC interface is not
+  # authenticated, so users should be careful about enabling
+  # RPC in non-trusted environments.
+  #Enable No
+
+[Ioat]
+  Disable Yes
+
+# [Nvme] section will get appended here by scripts/gen_nvme.sh.

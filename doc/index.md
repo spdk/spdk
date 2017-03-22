@@ -25,3 +25,4 @@ which avoids kernel context switches and eliminates interrupt handling overhead.
 - @ref ioat
 - @ref iscsi
 - @ref bdev
+- @ref blobfs

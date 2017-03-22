@@ -14,6 +14,7 @@ fi
 : ${SPDK_TEST_BLOCKDEV=1}; export SPDK_TEST_BLOCKDEV
 : ${SPDK_TEST_IOAT=1}; export SPDK_TEST_IOAT
 : ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
+: ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
 
 
 rootdir=$(readlink -f $(dirname $0))
@@ -139,6 +140,10 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	timing_exit iscsi_tgt
 
 	run_test test/lib/iscsi/iscsi.sh
+fi
+
+if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+	run_test ./test/blobfs/rocksdb/rocksdb.sh
 fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then

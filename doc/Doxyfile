@@ -764,6 +764,8 @@ INPUT                  = ../include/spdk \
                          porting.md \
                          bdev/index.md \
                          bdev/getting_started.md \
+                         blobfs/index.md \
+                         blobfs/getting_started.md \
                          event/index.md \
                          ioat/index.md \
                          iscsi/index.md \
