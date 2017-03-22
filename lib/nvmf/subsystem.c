@@ -275,6 +275,7 @@ spdk_nvmf_tgt_listen(const char *trname, const char *traddr, const char *trsvcid
 
 	transport = spdk_nvmf_transport_get(trname);
 	if (!transport) {
+		SPDK_ERRLOG("Unknown transport '%s'\n", trname);
 		return NULL;
 	}
 
