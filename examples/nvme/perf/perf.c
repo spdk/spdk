@@ -650,15 +650,16 @@ static void usage(char *program_name)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
-	printf("\t[-r discover info of remote NVMe over Fabrics target]\n");
+	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
-	printf("\t  trtype      Transport type (e.g. RDMA)\n");
+	printf("\t  trtype      Transport type (e.g. PCIe, RDMA)\n");
 	printf("\t  adrfam      Address family (e.g. IPv4, IPv6)\n");
-	printf("\t  traddr      Transport address (e.g. 192.168.100.8)\n");
+	printf("\t  traddr      Transport address (e.g. 0000:04:00.0 for PCIe or 192.168.100.8 for RDMA)\n");
 	printf("\t  trsvcid     Transport service identifier (e.g. 4420)\n");
 	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
-	printf("\t Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
+	printf("\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
+	printf("\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
 	printf("\t[-d DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
@@ -970,7 +971,7 @@ parse_args(int argc, char **argv)
 
 	if (TAILQ_EMPTY(&g_trid_list)) {
 		/* If no transport IDs specified, default to enumerating all local PCIe devices */
-		add_trid("trtype:pcie");
+		add_trid("trtype:PCIe");
 	}
 
 	g_aio_optind = optind;
