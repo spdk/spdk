@@ -113,12 +113,17 @@ spdk_app_get_shm_id(void)
 static void
 spdk_app_config_dump_global_section(FILE *fp)
 {
+	const char *log_facility;
+
 	if (NULL == fp)
 		return;
 
+	log_facility = spdk_get_log_facility();
+	assert(log_facility != NULL);
+
 	fprintf(fp, GLOBAL_CONFIG_TMPL,
 		spdk_app_get_core_mask(), spdk_trace_get_tpoint_group_mask(),
-		spdk_get_log_facility());
+		log_facility);
 }
 
 int
