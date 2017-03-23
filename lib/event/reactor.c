@@ -599,6 +599,10 @@ spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 			socket_count++;
 		}
 	}
+	if (socket_count == 0) {
+		printf("No sockets occupied (internal error)\n");
+		return -1;
+	}
 
 	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
 		if ((1ULL << i) & socket_mask) {
