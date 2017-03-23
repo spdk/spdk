@@ -562,6 +562,8 @@ process_requestq(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue *vq)
 	int result;
 
 	reqs_cnt = vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	assert(reqs_cnt <= 32);
+
 	for (i = 0; i < reqs_cnt; i++) {
 		task = spdk_vhost_task_get(&vdev->task_cnt);
 
