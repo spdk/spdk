@@ -40,6 +40,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <dirent.h>
 
 #include <rte_config.h>
 #include <rte_malloc.h>
@@ -1122,6 +1123,28 @@ session_start(void *arg)
 	return NULL;
 }
 
+/**
+ * Check if /sys/kernel/iommu_groups exists and is not empty
+ */
+static bool
+has_iommu_groups(void)
+{
+	struct dirent *d;
+	int iommu_count = 0;
+	DIR *dir = opendir("/sys/kernel/iommu_groups");
+
+	if (dir == NULL) {
+		return false;
+	}
+
+	while (iommu_count < 3 && (d = readdir(dir)) != NULL) {
+		++iommu_count;
+	}
+
+	closedir(dir);
+	return iommu_count > 2; /* there will always be ./ and ../ entries */
+}
+
 void
 spdk_vhost_startup(void *arg1, void *arg2)
 {
@@ -1144,6 +1167,15 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0)
 		rte_exit(EXIT_FAILURE, "Cannot construct vhost controllers\n");
+
+	if (has_iommu_groups()) {
+		RTE_LOG(WARNING, VHOST_CONFIG,
+			"Currently VFIO driver is not supported by vhost library\n"
+			"Although guest might be able to boot and see devices, it will not be able\n"
+			"to do any IO to physical devices (Malloc with IOAT, NVMe).\n"
+			"Please use uio_pci_generic driver with vhost app/library.\n"
+			"See documentation for more information.\n");
+	}
 
 	rte_vhost_driver_callback_register(&virtio_net_device_ops);
 
