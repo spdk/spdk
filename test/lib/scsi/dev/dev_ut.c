@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "CUnit/Basic.h"
+#include "spdk_cunit.h"
 
 #include "dev.c"
 #include "port.c"
@@ -92,6 +93,8 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 	struct spdk_scsi_lun *lun;
 
 	lun = calloc(1, sizeof(struct spdk_scsi_lun));
+	SPDK_CU_ASSERT_FATAL(lun != NULL);
+
 	snprintf(lun->name, sizeof(lun->name), "%s", name);
 	lun->bdev = bdev;
 	return lun;
@@ -123,6 +126,8 @@ spdk_scsi_lun_claim(struct spdk_scsi_lun *lun)
 	}
 
 	p = calloc(1, sizeof(struct lun_entry));
+	SPDK_CU_ASSERT_FATAL(p != NULL);
+
 	p->lun = lun;
 
 	TAILQ_INSERT_TAIL(&g_lun_head, p, lun_entries);
