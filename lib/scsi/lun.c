@@ -324,7 +324,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 	TAILQ_INIT(&lun->pending_tasks);
 
 	lun->bdev = bdev;
-	strncpy(lun->name, name, sizeof(lun->name));
+	snprintf(lun->name, sizeof(lun->name), "%s", name);
 
 	rc = spdk_scsi_lun_db_add(lun);
 	if (rc < 0) {
