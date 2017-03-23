@@ -5,7 +5,7 @@ export RUN_NIGHTLY=0
 
 MAKECONFIG='CONFIG_DEBUG=y CONFIG_WERROR=y'
 
-export UBSAN_OPTIONS=halt_on_error=1
+export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
 case `uname` in
 	FreeBSD)
