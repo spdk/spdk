@@ -297,6 +297,10 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	 * correctly.
 	 */
 	dpdk_args = calloc(argcount, sizeof(char *));
+	if (dpdk_args == NULL) {
+		fprintf(stderr, "Failed to allocate dpdk_args\n");
+		exit(-1);
+	}
 	memcpy(dpdk_args, args, sizeof(char *) * argcount);
 
 	fflush(stdout);
