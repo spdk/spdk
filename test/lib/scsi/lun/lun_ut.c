@@ -635,7 +635,7 @@ lun_construct_same_same_twice(void)
 	lun = spdk_scsi_lun_construct("lun0", &bdev);
 
 	/* Successfully constructs and returns lun */
-	CU_ASSERT(lun != NULL);
+	SPDK_CU_ASSERT_FATAL(lun != NULL);
 
 	lun2 = spdk_scsi_lun_construct("lun0", &bdev2);
 
