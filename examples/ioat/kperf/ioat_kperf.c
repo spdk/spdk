@@ -332,14 +332,14 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < threads; i++) {
 		/* total data transfer length for the DMA channel in Bytes */
-		sprintf(channel, "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/copied", i);
+		snprintf(channel, sizeof(channel), "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/copied", i);
 		rc = get_u64_from_file(channel, &copied);
 		if (rc < 0) {
 			fprintf(stderr, "Cannot get channel copied data\n");
 			return -1;
 		}
 		/* time in microseconds for total data transfer length */
-		sprintf(channel, "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/elapsed_time", i);
+		snprintf(channel, sizeof(channel), "/sys/kernel/debug/dmaperf/dmaperf/thread_%u/elapsed_time", i);
 		/* elapsed_time is in microsecond */
 		rc = get_u64_from_file(channel, &elapsed_time);
 		if (rc < 0) {
