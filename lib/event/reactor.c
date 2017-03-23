@@ -722,6 +722,12 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 		abort();
 	}
 
+	if (lcore >= RTE_MAX_LCORE) {
+		SPDK_ERRLOG("Attempted use lcore %u larger than max lcore %u\n",
+			    lcore, RTE_MAX_LCORE - 1);
+		abort();
+	}
+
 	*ppoller = poller;
 	reactor = spdk_reactor_get(lcore);
 
