@@ -27,3 +27,4 @@ which avoids kernel context switches and eliminates interrupt handling overhead.
 - @ref bdev
 - @ref blob
 - @ref blobfs
+- @ref vhost

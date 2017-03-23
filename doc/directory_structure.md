@@ -15,6 +15,8 @@ The `app` top-level directory contains four applications:
     iSCSI target.
  - `app/trace`: A tool for processing trace points output from the iSCSI and
     NVMe-oF targets.
+ - `app/vhost`:  A vhost application that presents virtio controllers to
+    QEMU-based VMs and process I/O submitted to those controllers.
 
 The application binaries will be in their respective directories after compiling and all
 can be run with no arguments to print out their command line arguments. For the iSCSI
