@@ -822,6 +822,10 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 
 	for (ns_id = 1; ns_id <= num_ns; ns_id++) {
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+		if (!ns) {
+			SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Skipping invalid NS %d\n", ns_id);
+			continue;
+		}
 
 		if (!spdk_nvme_ns_is_active(ns)) {
 			SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Skipping inactive NS %d\n", ns_id);
