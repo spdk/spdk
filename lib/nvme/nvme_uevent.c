@@ -108,13 +108,13 @@ parse_event(const char *buf, struct spdk_uevent *event)
 	while (*buf) {
 		if (!strncmp(buf, "ACTION=", 7)) {
 			buf += 7;
-			strcpy(action, buf);
+			snprintf(action, sizeof(action), "%s", buf);
 		} else if (!strncmp(buf, "DEVPATH=", 8)) {
 			buf += 8;
-			strcpy(dev_path, buf);
+			snprintf(dev_path, sizeof(dev_path), "%s", buf);
 		} else if (!strncmp(buf, "SUBSYSTEM=", 10)) {
 			buf += 10;
-			strcpy(subsystem, buf);
+			snprintf(subsystem, sizeof(subsystem), "%s", buf);
 		}
 		while (*buf++)
 			;
