@@ -265,6 +265,7 @@ test_discovery_log(void)
 					 offsetof(struct spdk_nvmf_discovery_log_page, entries[0]),
 					 sizeof(*entry));
 	CU_ASSERT(entry->trtype == 42);
+	spdk_nvmf_delete_subsystem(subsystem);
 }
 
 int main(int argc, char **argv)
