@@ -133,6 +133,7 @@ struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
 	void			*buf;
 	uint64_t		submit_tsc;
+	uint64_t		phys_addr;
 #if HAVE_LIBAIO
 	struct iocb		iocb;
 #endif
@@ -165,7 +166,17 @@ static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
 static int g_time_in_sec;
+
+#define DDR_SIZE (1024UL * 1024UL * 1024UL * 12UL)
+struct fpga_addr {
+	uint64_t current_addr;
+	uint64_t start_addr_port[2];
+	unsigned current_port;
+};
+
 static uint32_t g_max_completions;
+struct fpga_addr g_fpga_addrs[3];
+static int g_current_ddr;
 static int g_dpdk_mem;
 static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
@@ -435,6 +446,17 @@ static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned 
 		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
+
+	task->phys_addr = g_fpga_addrs[g_current_ddr].current_addr + g_fpga_addrs[g_current_ddr].start_addr_port[g_fpga_addrs[g_current_ddr].current_port];
+
+	g_fpga_addrs[g_current_ddr].current_port = (g_fpga_addrs[g_current_ddr].current_port + 1) % 2;
+
+	g_fpga_addrs[g_current_ddr].current_addr = g_fpga_addrs[g_current_ddr].current_addr + 4096;
+	if (g_fpga_addrs[g_current_ddr].current_addr + 4096 > DDR_SIZE)
+		g_fpga_addrs[g_current_ddr].current_addr = 0;
+
+	g_current_ddr = (g_current_ddr + 1) % 3;
+
 	memset(task->buf, id % 8 + 1, g_io_size_bytes);
 }
 
@@ -477,7 +499,7 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		} else
 #endif
 		{
-			rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, task->buf,
+			rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, (void*)task->phys_addr,
 						   offset_in_ios * entry->io_size_blocks,
 						   entry->io_size_blocks, io_complete, task, 0);
 		}
@@ -489,7 +511,7 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 		} else
 #endif
 		{
-			rc = spdk_nvme_ns_cmd_write(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, task->buf,
+			rc = spdk_nvme_ns_cmd_write(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, (void*)task->phys_addr,
 						    offset_in_ios * entry->io_size_blocks,
 						    entry->io_size_blocks, io_complete, task, 0);
 		}
@@ -975,7 +997,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:a:b:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1020,11 +1042,31 @@ parse_args(int argc, char **argv)
 		case 'D':
 			g_disable_sq_cmb = 1;
 			break;
+		case 'a':
+			g_fpga_addrs[0].start_addr_port[0] = atoll(optarg);
+			g_fpga_addrs[0].current_addr = atoi(optarg);
+			g_fpga_addrs[0].current_port = 0;
+
+			g_fpga_addrs[1].start_addr_port[0] = atoll(optarg);
+			g_fpga_addrs[1].current_addr = atoll(optarg);
+			g_fpga_addrs[1].current_port = 0;
+
+			g_fpga_addrs[2].start_addr_port[0] = atoll(optarg);
+			g_fpga_addrs[2].current_addr = atoll(optarg);
+			g_fpga_addrs[2].current_port = 0;
+			break;
+		case 'b':
+			g_fpga_addrs[0].start_addr_port[1] = atoll(optarg);
+			g_fpga_addrs[1].start_addr_port[1] = atoll(optarg);
+			g_fpga_addrs[2].start_addr_port[1] = atoll(optarg);
+			break;
 		default:
 			usage(argv[0]);
 			return 1;
 		}
 	}
+
+	g_current_ddr = 0;
 
 	if (!g_queue_depth) {
 		usage(argv[0]);
