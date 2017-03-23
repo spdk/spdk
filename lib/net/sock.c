@@ -51,16 +51,13 @@
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
-static int get_addr_str(struct sockaddr_in *paddr, char *host, int hlen)
+static int get_addr_str(struct sockaddr_in *paddr, char *host, size_t hlen)
 {
-	char buf[64];
-
 	if (paddr == NULL || host == NULL)
 		return -1;
 
 	uint8_t *pa = (uint8_t *)&paddr->sin_addr.s_addr;
-	sprintf(buf, "%u.%u.%u.%u", pa[0], pa[1], pa[2], pa[3]);
-	strncpy(host, buf, hlen);
+	snprintf(host, hlen, "%u.%u.%u.%u", pa[0], pa[1], pa[2], pa[3]);
 
 	return 0;
 }
