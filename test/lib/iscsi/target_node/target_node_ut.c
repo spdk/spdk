@@ -80,7 +80,7 @@ config_file_fail_cases(void)
 
 	section_index = 0;
 	while (true) {
-		sprintf(section_name, "Failure%d", section_index);
+		snprintf(section_name, sizeof(section_name), "Failure%d", section_index);
 		sp = spdk_conf_find_section(config, section_name);
 		if (sp == NULL) {
 			break;

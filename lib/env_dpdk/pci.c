@@ -337,7 +337,7 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 					if (err)
 						return -1;
 				}
-				sprintf(sn, "%08x%08x", buf[1], buf[0]);
+				snprintf(sn, len, "%08x%08x", buf[1], buf[0]);
 				return 0;
 			}
 		}
@@ -404,7 +404,8 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 		.l_len = 0,
 	};
 
-	sprintf(shm_name, PCI_PRI_FMT, pci_addr->domain, pci_addr->bus, pci_addr->dev, pci_addr->func);
+	snprintf(shm_name, sizeof(shm_name), PCI_PRI_FMT, pci_addr->domain, pci_addr->bus, pci_addr->dev,
+		 pci_addr->func);
 
 	dev_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (dev_fd == -1) {
