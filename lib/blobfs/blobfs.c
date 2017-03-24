@@ -305,6 +305,7 @@ init_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 		common_fs_bs_init(fs, bs);
 	} else {
 		free(fs);
+		fs = NULL;
 	}
 
 	args->fn.fs_op_with_handle(args->arg, fs, bserrno);
