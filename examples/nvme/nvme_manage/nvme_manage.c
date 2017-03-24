@@ -786,7 +786,6 @@ update_firmware_image(void)
 		while (getchar() != '\n');
 		return;
 	}
-	path[strlen(path) - 1] = '\0';
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
