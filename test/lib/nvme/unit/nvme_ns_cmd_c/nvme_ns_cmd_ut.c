@@ -819,19 +819,21 @@ test_nvme_ns_cmd_reservation_report(void)
 	spdk_nvme_cmd_cb	cb_fn = NULL;
 	void			*cb_arg = NULL;
 	int			rc = 0;
+	uint32_t size = sizeof(struct spdk_nvme_reservation_status_data);
 
 	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
-	payload = malloc(sizeof(struct spdk_nvme_reservation_status_data));
 
-	rc = spdk_nvme_ns_cmd_reservation_report(&ns, &qpair, payload, 0x1000,
-			cb_fn, cb_arg);
+	payload = calloc(1, size);
+	SPDK_CU_ASSERT_FATAL(payload != NULL);
+
+	rc = spdk_nvme_ns_cmd_reservation_report(&ns, &qpair, payload, size, cb_fn, cb_arg);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
 	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_RESERVATION_REPORT);
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
-	CU_ASSERT(g_request->cmd.cdw10 == (0x1000 / 4));
+	CU_ASSERT(g_request->cmd.cdw10 == (size / 4));
 
 	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
