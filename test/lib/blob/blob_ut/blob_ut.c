@@ -602,7 +602,7 @@ blob_xattr(void)
 	names = NULL;
 	rc = spdk_bs_md_get_xattr_names(blob, &names);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(names != NULL);
+	SPDK_CU_ASSERT_FATAL(names != NULL);
 	CU_ASSERT(spdk_xattr_names_get_count(names) == 2);
 	CU_ASSERT(!strcmp(spdk_xattr_names_get_name(names, 0), "name") ||
 		  !strcmp(spdk_xattr_names_get_name(names, 1), "name"));
