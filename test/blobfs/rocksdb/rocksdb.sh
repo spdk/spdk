@@ -27,7 +27,7 @@ cp $rootdir/etc/spdk/rocksdb.conf.in $ROCKSDB_CONF
 $rootdir/scripts/gen_nvme.sh >> $ROCKSDB_CONF
 
 $rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
-DURATION=30 NUM_KEYS=50000000 ROCKSDB_CONF=$ROCKSDB_CONF CACHE_SIZE=1024 $testdir/run_tests.sh $DB_BENCH
+USE_PERF=0 DURATION=30 NUM_KEYS=50000000 ROCKSDB_CONF=$ROCKSDB_CONF CACHE_SIZE=1024 $testdir/run_tests.sh $DB_BENCH
 mkdir $output_dir/rocksdb
 cp $testdir/results/last/* $output_dir/rocksdb
 

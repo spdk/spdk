@@ -11,8 +11,9 @@ DB_BENCH=$(readlink -f $1)
 [ -e $DB_BENCH ] || (echo "$DB_BENCH does not exist - needs to be built" && exit 1)
 
 hash mkfs.xfs
+: ${USE_PERF:=1}
 if ! hash perf; then
-	NO_PERF=1
+	USE_PERF=0
 fi
 hash python
 [ -e /usr/include/gflags/gflags.h ] || (echo "gflags not installed." && exit 1)
@@ -133,7 +134,7 @@ run_step() {
 	fi
 
 	echo -n Start $1 test phase...
-	if [ "$NO_PERF" = "1" ]
+	if [ "$USE_PERF" = "1" ]
 	then
 		sudo /usr/bin/time taskset 0xFFF perf record $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
 	else
@@ -146,7 +147,7 @@ run_step() {
 	  cat /sys/block/nvme0n1/stat >> "$1"_blockdev_stats.txt
 	fi
 
-	if [ "$NO_PERF" = "1" ]
+	if [ "$USE_PERF" = "1" ]
 	then
 		echo -n Generating perf report for $1 test phase...
 		sudo perf report -f -n | sed '/#/d' | sed '/%/!d' | sort -r > $1.perf.txt
