@@ -275,6 +275,10 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		      base_bdev->name, split_count, split_size_bytes);
 
 	split_base = calloc(1, sizeof(*split_base));
+	if (!split_base) {
+		SPDK_ERRLOG("Cannot alloc memory for split base pointer\n");
+		return -1;
+	}
 	split_base->base_bdev = base_bdev;
 	split_base->ref = 0;
 
