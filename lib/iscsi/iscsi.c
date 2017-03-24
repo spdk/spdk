@@ -1442,9 +1442,16 @@ spdk_iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 
 	memset(conn->target_short_name, 0, MAX_TARGET_NAME);
 	target_short_name = strstr(target_name, ":");
-	if (target_short_name != NULL)
-		strncpy(conn->target_short_name, target_short_name + 1,
-			MAX_TARGET_NAME);
+	if (target_short_name != NULL) {
+		target_short_name++; /* Advance past the ':' */
+		if (strlen(target_short_name) >= MAX_TARGET_NAME) {
+			SPDK_ERRLOG("Target Short Name (%s) is more than %u characters\n",
+				    target_short_name, MAX_TARGET_NAME);
+			return rc;
+		}
+		snprintf(conn->target_short_name, MAX_TARGET_NAME, "%s",
+			 target_short_name);
+	}
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	rc = spdk_iscsi_op_login_check_target(conn, rsp_pdu, target_name,

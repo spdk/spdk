@@ -38,13 +38,13 @@ int
 spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t index,
 			 const char *name)
 {
-	if (strlen(name) > sizeof(port->name)) {
+	if (strlen(name) >= sizeof(port->name)) {
 		SPDK_ERRLOG("port name too long\n");
 		return -1;
 	}
 
 	port->id = id;
 	port->index = index;
-	strncpy(port->name, name, sizeof(port->name));
+	snprintf(port->name, sizeof(port->name), "%s", name);
 	return 0;
 }
