@@ -181,7 +181,7 @@ hello_world(void)
 		 *  0 on the namespace, and then later read it back into a separate buffer
 		 *  to demonstrate the full I/O path.
 		 */
-		sprintf(sequence.buf, "Hello world!\n");
+		snprintf(sequence.buf, 0x1000, "%s", "Hello world!\n");
 
 		/*
 		 * Write the data buffer to LBA 0 of this namespace.  "write_complete" and
