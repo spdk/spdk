@@ -258,6 +258,7 @@ static void
 register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int nsid, num_ns;
+	struct spdk_nvme_ns *ns;
 	struct ctrlr_entry *entry = calloc(1, sizeof(struct ctrlr_entry));
 	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -278,7 +279,11 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	for (nsid = 1; nsid <= num_ns; nsid++) {
-		register_ns(ctrlr, spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (ns == NULL) {
+			continue;
+		}
+		register_ns(ctrlr, ns);
 	}
 
 	if (g_arbitration.arbitration_mechanism == SPDK_NVME_CAP_AMS_WRR) {

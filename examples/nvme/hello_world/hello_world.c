@@ -249,6 +249,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	int nsid, num_ns;
 	struct ctrlr_entry *entry;
+	struct spdk_nvme_ns *ns;
 	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
 	entry = malloc(sizeof(struct ctrlr_entry));
@@ -276,7 +277,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	printf("Using controller %s with %d namespaces.\n", entry->name, num_ns);
 	for (nsid = 1; nsid <= num_ns; nsid++) {
-		register_ns(ctrlr, spdk_nvme_ctrlr_get_ns(ctrlr, nsid));
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (ns == NULL) {
+			continue;
+		}
+		register_ns(ctrlr, ns);
 	}
 }
 
