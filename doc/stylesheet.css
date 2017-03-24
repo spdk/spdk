@@ -17,6 +17,18 @@ h6 {
     font-weight: 900;
 }
 
+.row.no-gutters > [class^="col-"],
+.row.no-gutters > [class*=" col-"] {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.navbar-nav {
+    float: left;
+    margin: 0;
+    width: 100%;
+}
+
 .banner-header {
     padding-top: 50px;
     padding-bottom: 0px;
