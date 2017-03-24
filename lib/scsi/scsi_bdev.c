@@ -247,7 +247,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			len += sizeof(struct spdk_scsi_desig_desc) + 4;
 			len += sizeof(struct spdk_scsi_desig_desc) + 4;
 			len += sizeof(struct spdk_scsi_desig_desc) + 4;
-			if (sizeof(struct spdk_scsi_vpd_page) + len > task->alloc_len) {
+			if (sizeof(struct spdk_scsi_vpd_page) + len > alloc_len) {
 				spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 							  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
 							  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
@@ -362,14 +362,6 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			to_be16(&desig->desig[2], dev->id);
 			len += sizeof(struct spdk_scsi_desig_desc) + desig->len;
 
-			/* should not exceed the data_in buffer length */
-			if (sizeof(struct spdk_scsi_vpd_page) + len > alloc_len) {
-				spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-							  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
-							  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
-							  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-				return -1;
-			}
 			to_be16(vpage->alloc_len, len);
 
 			break;
