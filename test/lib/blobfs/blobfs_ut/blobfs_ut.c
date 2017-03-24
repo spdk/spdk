@@ -304,11 +304,17 @@ tree_find_buffer_ut(void)
 	struct cache_buffer *buffer;
 
 	level1_0 = calloc(1, sizeof(struct cache_tree));
+	SPDK_CU_ASSERT_FATAL(level1_0 != NULL);
 	level0_0_0 = calloc(1, sizeof(struct cache_tree));
+	SPDK_CU_ASSERT_FATAL(level0_0_0 != NULL);
 	level0_0_12 = calloc(1, sizeof(struct cache_tree));
+	SPDK_CU_ASSERT_FATAL(level0_0_12 != NULL);
 	leaf_0_0_4 = calloc(1, sizeof(struct cache_buffer));
+	SPDK_CU_ASSERT_FATAL(leaf_0_0_4 != NULL);
 	leaf_0_12_8 = calloc(1, sizeof(struct cache_buffer));
+	SPDK_CU_ASSERT_FATAL(leaf_0_12_8 != NULL);
 	leaf_9_23_15 = calloc(1, sizeof(struct cache_buffer));
+	SPDK_CU_ASSERT_FATAL(leaf_9_23_15 != NULL);
 
 	level1_0->level = 1;
 	level0_0_0->level = 0;
