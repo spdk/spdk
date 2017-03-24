@@ -76,6 +76,7 @@ send_request(fs_request_fn fn, void *arg)
 	struct ut_request *req;
 
 	req = calloc(1, sizeof(*req));
+	assert(req != NULL);
 	req->fn = fn;
 	req->arg = arg;
 	req->done = 0;
