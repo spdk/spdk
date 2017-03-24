@@ -761,7 +761,13 @@ fs_open_blob_create_cb(void *ctx, int bserrno)
 	struct spdk_filesystem *fs = args->fs;
 
 	if (file == NULL) {
+		/*
+		 * This is from an open with CREATE flag - the file
+		 *  is now created so look it up in the file list for this
+		 *  filesystem.
+		 */
 		file = fs_find_file(fs, args->op.open.name);
+		assert(file != NULL);
 		args->file = file;
 	}
 
