@@ -1902,6 +1902,7 @@ spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		cb_fn(cb_arg, -ENOMEM);
+		_spdk_blob_free(blob);
 		return;
 	}
 
