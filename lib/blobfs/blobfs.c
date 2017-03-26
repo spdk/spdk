@@ -1916,8 +1916,13 @@ check_readahead(struct spdk_file *file, uint64_t offset)
 		return;
 	}
 
-	BLOBFS_TRACE(file, "offset=%jx\n", offset);
 	args = calloc(1, sizeof(*args));
+	if (args == NULL) {
+		return;
+	}
+
+	BLOBFS_TRACE(file, "offset=%jx\n", offset);
+
 	args->file = file;
 	args->op.readahead.offset = offset;
 	args->op.readahead.cache_buffer = cache_insert_buffer(file, offset);
