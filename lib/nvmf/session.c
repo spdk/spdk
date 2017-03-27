@@ -638,13 +638,6 @@ spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 			SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
 			spdk_nvmf_session_disconnect(conn);
 		}
-		if (subsys->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-			if (subsys->is_removed && conn->transport->conn_is_idle(conn)) {
-				if (subsys->ops->detach) {
-					subsys->ops->detach(subsys);
-				}
-			}
-		}
 	}
 
 	return 0;

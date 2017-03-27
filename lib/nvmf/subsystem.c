@@ -128,6 +128,25 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->ops->attach(subsystem);
 }
 
+static bool
+nvmf_subsystem_removable(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_session *session;
+	struct spdk_nvmf_conn	*conn;
+
+	if (subsystem->is_removed) {
+		TAILQ_FOREACH(session, &subsystem->sessions, link) {
+			TAILQ_FOREACH(conn, &session->connections, link) {
+				if (!conn->transport->conn_is_idle(conn)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
 void
 spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -141,6 +160,12 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_FOREACH(session, &subsystem->sessions, link) {
 		/* For each connection in the session, check for completions */
 		spdk_nvmf_session_poll(session);
+	}
+
+	if (nvmf_subsystem_removable(subsystem)) {
+		if (subsystem->ops->detach) {
+			subsystem->ops->detach(subsystem);
+		}
 	}
 }
 
