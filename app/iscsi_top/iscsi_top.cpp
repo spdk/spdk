@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 	struct spdk_trace_history *history;
 
 	uint64_t		tasks_done, last_tasks_done[SPDK_TRACE_MAX_LCORE];
-	int			delay, history_fd, i, quit, rc;
+	int			delay, old_delay, history_fd, i, quit, rc;
 	int			tasks_done_delta, tasks_done_per_sec;
 	int			total_tasks_done_per_sec;
 	struct timeval		timeout;
@@ -207,9 +207,11 @@ int main(int argc, char **argv)
 			switch (ch) {
 			case 'd':
 				printf("Enter num seconds to delay (1-10): ");
+				old_delay = delay;
 				rc = scanf("%d", &delay);
 				if (rc != 1) {
-					break;
+					fprintf(stderr, "Illegal delay value\n");
+					delay = old_delay;
 				} else if (delay < 1 || delay > 10) {
 					delay = 1;
 				}
