@@ -1,7 +1,6 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
@@ -32,75 +31,43 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-
-#include <sys/types.h>
-
 #include "spdk/env.h"
-#include "spdk/event.h"
-#include "spdk/log.h"
-#include "spdk/net.h"
-#include "iscsi/acceptor.h"
-#include "iscsi/conn.h"
-#include "iscsi/portal_grp.h"
 
-#define ACCEPT_TIMEOUT_US 1000 /* 1ms */
+#include <rte_config.h>
+#include <rte_lcore.h>
 
-static struct spdk_poller *g_acceptor_poller;
-
-static void
-spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
+uint32_t
+spdk_env_get_core_count(void)
 {
-	int				rc, sock;
-
-	if (portal->sock < 0) {
-		return;
-	}
-
-	while (1) {
-		rc = spdk_sock_accept(portal->sock);
-		if (rc >= 0) {
-			sock = rc;
-			rc = spdk_iscsi_conn_construct(portal, sock);
-			if (rc < 0) {
-				close(sock);
-				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");
-				break;
-			}
-		} else {
-			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				SPDK_ERRLOG("accept error(%d): %s\n", errno, strerror(errno));
-			}
-			break;
-		}
-	}
+	return rte_lcore_count();
 }
 
-static void
-spdk_acceptor(void *arg)
+uint32_t
+spdk_env_get_current_core(void)
 {
-	struct spdk_iscsi_globals		*iscsi = arg;
-	struct spdk_iscsi_portal_grp	*portal_group;
-	struct spdk_iscsi_portal	*portal;
+	return rte_lcore_id();
+}
 
-	TAILQ_FOREACH(portal_group, &iscsi->pg_head, tailq) {
-		TAILQ_FOREACH(portal, &portal_group->head, tailq) {
-			spdk_iscsi_portal_accept(portal);
-		}
+uint32_t
+spdk_env_get_first_core(void)
+{
+	return rte_get_next_lcore(-1, 0, 0);
+}
+
+uint32_t
+spdk_env_get_next_core(uint32_t prev_core)
+{
+	unsigned lcore;
+
+	lcore = rte_get_next_lcore(prev_core, 0, 0);
+	if (lcore == RTE_MAX_LCORE) {
+		return UINT32_MAX;
 	}
+	return lcore;
 }
 
-void
-spdk_iscsi_acceptor_start(void)
+uint32_t
+spdk_env_get_socket_id(uint32_t core)
 {
-	spdk_poller_register(&g_acceptor_poller, spdk_acceptor, &g_spdk_iscsi, spdk_env_get_current_core(),
-			     ACCEPT_TIMEOUT_US);
-}
-
-void
-spdk_iscsi_acceptor_stop(void)
-{
-	spdk_poller_unregister(&g_acceptor_poller, NULL);
+	return rte_lcore_to_socket_id(core);
 }

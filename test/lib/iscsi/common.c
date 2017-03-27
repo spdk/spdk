@@ -2,6 +2,7 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/conn.h"
 
+#include "spdk/env.h"
 #include "spdk/event.h"
 
 #include "spdk_internal/log.h"
@@ -90,7 +91,7 @@ spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 }
 
 uint32_t
-spdk_app_get_current_core(void)
+spdk_env_get_current_core(void)
 {
 	return 0;
 }

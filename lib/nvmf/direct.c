@@ -68,7 +68,7 @@ nvmf_direct_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	if (subsystem->dev.direct.admin_poller == NULL) {
-		int lcore = spdk_app_get_current_core();
+		int lcore = spdk_env_get_current_core();
 
 		spdk_poller_register(&subsystem->dev.direct.admin_poller,
 				     nvmf_direct_ctrlr_poll_for_admin_completions,

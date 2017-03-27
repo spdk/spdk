@@ -124,7 +124,6 @@ struct spdk_reactor {
 
 static struct spdk_reactor g_reactors[RTE_MAX_LCORE];
 static uint64_t	g_reactor_mask  = 0;
-static int	g_reactor_count = 0;
 
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
@@ -412,7 +411,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	char	ring_name[64];
 
 	reactor->lcore = lcore;
-	reactor->socket_id = rte_lcore_to_socket_id(lcore);
+	reactor->socket_id = spdk_env_get_socket_id(lcore);
 	assert(reactor->socket_id < SPDK_MAX_SOCKET);
 	reactor->max_delay_us = max_delay_us;
 
@@ -450,13 +449,13 @@ spdk_reactor_start(struct spdk_reactor *reactor)
 int
 spdk_app_get_core_count(void)
 {
-	return g_reactor_count;
+	return spdk_env_get_core_count();
 }
 
 uint32_t
 spdk_app_get_current_core(void)
 {
-	return rte_lcore_id();
+	return spdk_env_get_current_core();
 }
 
 int
@@ -535,7 +534,7 @@ spdk_reactor_get_socket_mask(void)
 
 	RTE_LCORE_FOREACH(i) {
 		if (((1ULL << i) & g_reactor_mask)) {
-			socket_id = rte_lcore_to_socket_id(i);
+			socket_id = spdk_env_get_socket_id(i);
 			socket_info |= (1ULL << socket_id);
 		}
 	}
@@ -643,7 +642,6 @@ spdk_reactors_init(const char *mask, unsigned int max_delay_us)
 		if (((1ULL << i) & spdk_app_get_core_mask())) {
 			reactor = spdk_reactor_get(i);
 			spdk_reactor_construct(reactor, i, max_delay_us);
-			g_reactor_count++;
 		}
 	}
 
@@ -735,7 +733,7 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 	*ppoller = poller;
 	reactor = spdk_reactor_get(lcore);
 
-	if (lcore == spdk_app_get_current_core()) {
+	if (lcore == spdk_env_get_current_core()) {
 		/*
 		 * The poller is registered to run on the current core, so call the add function
 		 * directly.
@@ -755,7 +753,7 @@ _spdk_poller_unregister(struct spdk_reactor *reactor, struct spdk_poller *poller
 			struct spdk_event *next)
 {
 	assert(poller->lcore == reactor->lcore);
-	assert(poller->lcore == spdk_app_get_current_core());
+	assert(poller->lcore == spdk_env_get_current_core());
 
 	poller->unregister_complete_event = next;
 
@@ -807,7 +805,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 
 	lcore = poller->lcore;
 
-	if (lcore == spdk_app_get_current_core()) {
+	if (lcore == spdk_env_get_current_core()) {
 		/*
 		 * The poller is registered on the current core, so call the remove function
 		 * directly.

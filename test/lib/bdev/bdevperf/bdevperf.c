@@ -141,7 +141,7 @@ bdevperf_construct_targets(void)
 		}
 		target->bdev = bdev;
 		/* Mapping each target to lcore */
-		index = g_target_count % spdk_app_get_core_count();
+		index = g_target_count % spdk_env_get_core_count();
 		target->next = head[index];
 		target->lcore = index;
 		target->io_completed = 0;
@@ -432,7 +432,7 @@ static void usage(char *program_name)
 static void
 performance_dump(int io_time)
 {
-	int index;
+	uint32_t index;
 	unsigned lcore_id;
 	float io_per_second, mb_per_second;
 	float total_io_per_second, total_mb_per_second;
@@ -440,7 +440,7 @@ performance_dump(int io_time)
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
-	for (index = 0; index < spdk_app_get_core_count(); index++) {
+	for (index = 0; index < spdk_env_get_core_count(); index++) {
 		target = head[index];
 		if (target != NULL) {
 			lcore_id = target->lcore;
@@ -486,7 +486,7 @@ bdevperf_run(void *arg1, void *arg2)
 	/* Start a timer to dump performance numbers */
 	if (g_show_performance_real_time) {
 		spdk_poller_register(&g_perf_timer, performance_statistics_thread, NULL,
-				     spdk_app_get_current_core(), 1000000);
+				     spdk_env_get_current_core(), 1000000);
 	}
 
 	/* Send events to start all I/O */
@@ -672,7 +672,7 @@ main(int argc, char **argv)
 
 	bdevperf_construct_targets();
 
-	task_pool = rte_mempool_create("task_pool", 4096 * spdk_app_get_core_count(),
+	task_pool = rte_mempool_create("task_pool", 4096 * spdk_env_get_core_count(),
 				       sizeof(struct bdevperf_task),
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);

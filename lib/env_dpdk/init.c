@@ -160,34 +160,9 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 	return tmp;
 }
 
-static unsigned long long
-spdk_get_coremask(const char *coremask)
-{
-	unsigned long long core_mask, max_coremask = 0;
-	int num_cores_online;
-
-	num_cores_online = sysconf(_SC_NPROCESSORS_ONLN);
-	if (num_cores_online > 0) {
-		if (num_cores_online > RTE_MAX_LCORE) {
-			num_cores_online = RTE_MAX_LCORE;
-		}
-		if (num_cores_online >= 64) {
-			max_coremask = ~0ULL;
-		} else {
-			max_coremask = (1ULL << num_cores_online) - 1;
-		}
-	}
-
-	core_mask = strtoull(coremask, NULL, 16);
-	core_mask &= max_coremask;
-
-	return core_mask;
-}
-
 static int
 spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 {
-	unsigned long long core_mask;
 	int argcount = 0;
 	char **args;
 
@@ -205,12 +180,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 	}
 
 	/* set the coremask */
-	core_mask = spdk_get_coremask(opts->core_mask);
-	if (core_mask == 0) {
-		spdk_free_args(args, argcount);
-		return -1;
-	}
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("-c %llx", core_mask));
+	args = spdk_push_arg(args, &argcount, _sprintf_alloc("-c %s", opts->core_mask));
 	if (args == NULL) {
 		return -1;
 	}

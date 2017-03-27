@@ -43,6 +43,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
+#include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/io_channel.h"
 
@@ -304,7 +305,7 @@ blockdev_aio_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void *
 	}
 
 	spdk_poller_register(&ch->poller, blockdev_aio_poll, ch,
-			     spdk_app_get_current_core(), 0);
+			     spdk_env_get_current_core(), 0);
 	return 0;
 }
 

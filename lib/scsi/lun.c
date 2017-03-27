@@ -34,6 +34,7 @@
 
 #include "scsi_internal.h"
 #include "spdk/endian.h"
+#include "spdk/env.h"
 #include "spdk/io_channel.h"
 #include "spdk/event.h"
 
@@ -411,7 +412,7 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 		return -1;
 	}
 
-	lun->lcore = spdk_app_get_current_core();
+	lun->lcore = spdk_env_get_current_core();
 
 	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev, SPDK_IO_PRIORITY_DEFAULT);
 	if (lun->io_channel == NULL) {

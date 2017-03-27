@@ -151,12 +151,12 @@ uint64_t spdk_app_get_core_mask(void);
 /**
  * \brief Return the number of CPU cores utilized by this application
  */
-int spdk_app_get_core_count(void);
+int spdk_app_get_core_count(void) __attribute__((deprecated));
 
 /**
  * \brief Return the lcore of the current thread.
  */
-uint32_t spdk_app_get_current_core(void);
+uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
 
 /**
  * \brief Allocate an event to be passed to \ref spdk_event_call

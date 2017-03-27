@@ -207,7 +207,7 @@ ioat_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void *unique_c
 	ch->ioat_dev = ioat_dev;
 	ch->ioat_ch = ioat_dev->ioat;
 	spdk_poller_register(&ch->poller, ioat_poll, ch->ioat_ch,
-			     spdk_app_get_current_core(), 0);
+			     spdk_env_get_current_core(), 0);
 	return 0;
 }
 

@@ -86,7 +86,7 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 	 * Unregister the poller - this starts a chain of events that will eventually free
 	 * the subsystem's memory.
 	 */
-	event = spdk_event_allocate(spdk_app_get_current_core(), subsystem_delete_event,
+	event = spdk_event_allocate(spdk_env_get_current_core(), subsystem_delete_event,
 				    app_subsys, NULL);
 	spdk_poller_unregister(&app_subsys->poller, event);
 }
@@ -117,7 +117,7 @@ spdk_nvmf_shutdown_cb(void)
 	fprintf(stdout, "   NVMF shutdown signal\n");
 	fprintf(stdout, "=========================\n");
 
-	event = spdk_event_allocate(spdk_app_get_current_core(), acceptor_poller_unregistered_event,
+	event = spdk_event_allocate(spdk_env_get_current_core(), acceptor_poller_unregistered_event,
 				    NULL, NULL);
 	spdk_poller_unregister(&g_acceptor_poller, event);
 }
@@ -173,7 +173,7 @@ _nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 {
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
-	int lcore = spdk_app_get_current_core();
+	int lcore = spdk_env_get_current_core();
 
 	spdk_nvmf_subsystem_start(subsystem);
 
@@ -220,7 +220,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 	app_subsys->lcore = lcore;
 
 	SPDK_NOTICELOG("allocated subsystem %s on lcore %u on socket %u\n", name, lcore,
-		       rte_lcore_to_socket_id(lcore));
+		       spdk_env_get_socket_id(lcore));
 
 	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
 
@@ -295,7 +295,7 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 
 	SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,
-		       rte_lcore_to_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
+		       spdk_env_get_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
 
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);

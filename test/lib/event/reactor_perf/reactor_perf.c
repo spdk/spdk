@@ -36,6 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "spdk/env.h"
 #include "spdk/event.h"
 
 static int g_time_in_sec;
@@ -57,7 +58,7 @@ __submit_next(void *arg1, void *arg2)
 
 	g_call_count++;
 
-	event = spdk_event_allocate(spdk_app_get_current_core(),
+	event = spdk_event_allocate(spdk_env_get_current_core(),
 				    __submit_next, NULL, NULL);
 	spdk_event_call(event);
 }
@@ -71,7 +72,7 @@ test_start(void *arg1, void *arg2)
 
 	/* Register a poller that will stop the test after the time has elapsed. */
 	spdk_poller_register(&test_end_poller, __test_end, NULL,
-			     spdk_app_get_current_core(),
+			     spdk_env_get_current_core(),
 			     g_time_in_sec * 1000000ULL);
 
 	for (i = 0; i < g_queue_depth; i++) {

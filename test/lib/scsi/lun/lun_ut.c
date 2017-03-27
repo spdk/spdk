@@ -63,7 +63,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 }
 
 uint32_t
-spdk_app_get_current_core(void)
+spdk_env_get_current_core(void)
 {
 	return 0;
 }

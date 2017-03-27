@@ -276,7 +276,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 	if (numa_node >= 0) {
 		/* Running subsystem and NVMe device is on the same socket or not */
-		if (rte_lcore_to_socket_id(ctx->app_subsystem->lcore) != (unsigned)numa_node) {
+		if (spdk_env_get_socket_id(ctx->app_subsystem->lcore) != (unsigned)numa_node) {
 			SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core %u belonging "
 				     "to a different NUMA node than the associated NVMe device. "
 				     "This may result in reduced performance.\n",
@@ -284,7 +284,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				     ctx->app_subsystem->lcore);
 			SPDK_WARNLOG("The NVMe device is on socket %u\n", numa_node);
 			SPDK_WARNLOG("The Subsystem is on socket %u\n",
-				     rte_lcore_to_socket_id(ctx->app_subsystem->lcore));
+				     spdk_env_get_socket_id(ctx->app_subsystem->lcore));
 		}
 	}
 
@@ -515,7 +515,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 	/* Parse Listen sections */
 	for (i = 0; i < num_listen_addresses; i++) {
 		int nic_numa_node = spdk_get_ifaddr_numa_node(addresses[i].traddr);
-		unsigned subsys_numa_node = rte_lcore_to_socket_id(app_subsys->lcore);
+		unsigned subsys_numa_node = spdk_env_get_socket_id(app_subsys->lcore);
 
 		if (nic_numa_node >= 0) {
 			if (subsys_numa_node != (unsigned)nic_numa_node) {

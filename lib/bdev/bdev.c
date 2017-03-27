@@ -43,6 +43,7 @@
 #include <rte_mempool.h>
 #include <rte_version.h>
 
+#include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"
 
@@ -162,7 +163,7 @@ static int spdk_initialize_rbuf_pool(void)
 	 *   using spdk_event_get_active_core_count() to determine how many local caches we need
 	 *   to account for.
 	 */
-	cache_size = RBUF_SMALL_POOL_SIZE / (2 * spdk_app_get_core_count());
+	cache_size = RBUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
 	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE)
 		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
 	g_rbuf_small_pool = rte_mempool_create("rbuf_small_pool",
@@ -175,7 +176,7 @@ static int spdk_initialize_rbuf_pool(void)
 		return -1;
 	}
 
-	cache_size = RBUF_LARGE_POOL_SIZE / (2 * spdk_app_get_core_count());
+	cache_size = RBUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
 	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE)
 		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
 	g_rbuf_large_pool = rte_mempool_create("rbuf_large_pool",
@@ -844,7 +845,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		 * Defer completion via an event to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.
 		 */
-		spdk_event_call(spdk_event_allocate(spdk_app_get_current_core(),
+		spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(),
 						    bdev_io_deferred_completion,
 						    bdev_io,
 						    (void *)status));

@@ -54,6 +54,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+#include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/conf.h"
 #include "spdk/net.h"
@@ -1086,7 +1087,7 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 		task->scsi.lun = target->dev->lun[i];
 		task->scsi.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
-		task->scsi.cb_event = spdk_event_allocate(spdk_app_get_current_core(),
+		task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(),
 				      process_task_mgmt_completion, conn, task);
 		spdk_scsi_dev_queue_mgmt_task(target->dev, &task->scsi);
 	}

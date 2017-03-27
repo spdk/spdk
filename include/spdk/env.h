@@ -156,6 +156,36 @@ void spdk_mempool_put(struct spdk_mempool *mp, void *ele);
  */
 void spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
 
+/**
+ * \brief Return the number of dedicated CPU cores utilized by
+ * 	  this env abstraction
+ */
+uint32_t spdk_env_get_core_count(void);
+
+/**
+ * \brief Return the CPU core index of the current thread. This
+ *	  will only function when called from threads set up by
+ *	  this environment abstraction.
+ */
+uint32_t spdk_env_get_current_core(void);
+
+/**
+ * \brief Return the index of the first dedicated CPU core for
+ *	  this application.
+ */
+uint32_t spdk_env_get_first_core(void);
+
+/**
+ * \brief Return the index of the next dedicated CPU core for
+ *	  this application.
+ *        If there is no next core, return UINT32_MAX.
+ */
+uint32_t spdk_env_get_next_core(uint32_t prev_core);
+
+/**
+ * \brief Return the socket ID for the given core.
+ */
+uint32_t spdk_env_get_socket_id(uint32_t core);
 
 /**
  * Return true if the calling process is primary process

@@ -404,7 +404,7 @@ error_return:
 	 *  core, suspend the connection here.  This ensures any necessary libuns
 	 *  housekeeping for TCP socket to lcore associations gets cleared.
 	 */
-	conn->lcore = spdk_app_get_current_core();
+	conn->lcore = spdk_env_get_current_core();
 	spdk_net_framework_clear_socket_association(conn->sock);
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);
 	spdk_poller_register(&conn->poller, spdk_iscsi_conn_login_do_work, conn,
@@ -572,7 +572,7 @@ _spdk_iscsi_conn_free(void *arg1, void *arg2)
 	spdk_iscsi_remove_conn(conn);
 	pthread_mutex_unlock(&g_conns_mutex);
 
-	__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
+	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 }
 
 static void
@@ -588,7 +588,7 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 
 	spdk_poller_unregister(&conn->shutdown_timer, NULL);
 
-	spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_app_get_current_core());
+	spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_env_get_current_core());
 }
 
 void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
@@ -613,9 +613,9 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	if (rc < 0) {
 		/* The connection cannot be freed yet. Check back later. */
 		spdk_poller_register(&conn->shutdown_timer, _spdk_iscsi_conn_check_shutdown, conn,
-				     spdk_app_get_current_core(), 1000);
+				     spdk_env_get_current_core(), 1000);
 	} else {
-		spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_app_get_current_core());
+		spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_env_get_current_core());
 	}
 }
 
@@ -713,7 +713,7 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 		assert(conn->dev != NULL);
 		spdk_scsi_dev_free_io_channels(conn->dev);
 	}
-	__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
+	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 	spdk_net_framework_clear_socket_association(conn->sock);
 	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL);
 	spdk_poller_unregister(&conn->poller, event);
@@ -1301,7 +1301,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
-	conn->lcore = spdk_app_get_current_core();
+	conn->lcore = spdk_env_get_current_core();
 	spdk_poller_register(&conn->poller, spdk_iscsi_conn_full_feature_do_work, conn,
 			     conn->lcore, 0);
 }
@@ -1324,7 +1324,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	 */
 	if (conn->login_phase == ISCSI_FULL_FEATURE_PHASE) {
 		event = spdk_iscsi_conn_get_migrate_event(conn, &lcore);
-		__sync_fetch_and_sub(&g_num_connections[spdk_app_get_current_core()], 1);
+		__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 		__sync_fetch_and_add(&g_num_connections[lcore], 1);
 		spdk_net_framework_clear_socket_association(conn->sock);
 		spdk_poller_unregister(&conn->poller, event);
@@ -1521,7 +1521,7 @@ void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
 	conn->state = ISCSI_CONN_STATE_LOGGED_OUT;
-	spdk_poller_register(&conn->logout_timer, logout_timeout, conn, spdk_app_get_current_core(),
+	spdk_poller_register(&conn->logout_timer, logout_timeout, conn, spdk_env_get_current_core(),
 			     ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 

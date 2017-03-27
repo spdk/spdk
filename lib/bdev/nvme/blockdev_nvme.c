@@ -355,7 +355,7 @@ bdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void *uni
 	}
 
 	spdk_poller_register(&ch->poller, bdev_nvme_poll, ch->qpair,
-			     spdk_app_get_current_core(), 0);
+			     spdk_env_get_current_core(), 0);
 	return 0;
 }
 
@@ -615,7 +615,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	nvme_ctrlr_create_bdevs(nvme_ctrlr);
 
 	spdk_poller_register(&nvme_ctrlr->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
-			     spdk_app_get_current_core(), g_nvme_adminq_poll_timeout_us);
+			     spdk_env_get_current_core(), g_nvme_adminq_poll_timeout_us);
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
@@ -784,7 +784,7 @@ bdev_nvme_library_init(void)
 
 	g_nvme_hotplug_poll_core = spdk_conf_section_get_intval(sp, "HotplugPollCore");
 	if (g_nvme_hotplug_poll_core <= 0) {
-		g_nvme_hotplug_poll_core = spdk_app_get_current_core();
+		g_nvme_hotplug_poll_core = spdk_env_get_current_core();
 	}
 
 	if (spdk_nvme_probe(NULL, &probe_ctx, probe_cb, attach_cb, NULL)) {
