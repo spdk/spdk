@@ -556,6 +556,7 @@ blob_xattr(void)
 	spdk_blob_id blobid;
 	uint64_t length;
 	int rc;
+	const char *name1, *name2;
 	const void *value;
 	size_t value_len;
 	struct spdk_xattr_names *names;
@@ -604,10 +605,13 @@ blob_xattr(void)
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(names != NULL);
 	CU_ASSERT(spdk_xattr_names_get_count(names) == 2);
-	CU_ASSERT(!strcmp(spdk_xattr_names_get_name(names, 0), "name") ||
-		  !strcmp(spdk_xattr_names_get_name(names, 1), "name"));
-	CU_ASSERT(!strcmp(spdk_xattr_names_get_name(names, 0), "length") ||
-		  !strcmp(spdk_xattr_names_get_name(names, 1), "length"));
+	name1 = spdk_xattr_names_get_name(names, 0);
+	SPDK_CU_ASSERT_FATAL(name1 != NULL);
+	CU_ASSERT(!strcmp(name1, "name") || !strcmp(name1, "length"));
+	name2 = spdk_xattr_names_get_name(names, 1);
+	SPDK_CU_ASSERT_FATAL(name2 != NULL);
+	CU_ASSERT(!strcmp(name2, "name") || !strcmp(name2, "length"));
+	CU_ASSERT(strcmp(name1, name2));
 	spdk_xattr_names_free(names);
 
 	rc = spdk_blob_md_remove_xattr(blob, "name");
