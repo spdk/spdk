@@ -40,6 +40,7 @@
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
+#include "spdk/log.h"
 
 #include "config-host.h"
 #include "fio.h"
@@ -63,12 +64,13 @@ struct spdk_fio_ns {
 };
 
 struct spdk_fio_ctrlr {
-	struct spdk_nvme_ctrlr	*ctrlr;
-	struct spdk_fio_ctrlr	*next;
+	struct spdk_nvme_transport_id	tr_id;
+	struct spdk_nvme_ctrlr		*ctrlr;
+	struct spdk_fio_ctrlr		*next;
 
-	struct spdk_nvme_qpair	*qpair;
+	struct spdk_nvme_qpair		*qpair;
 
-	struct spdk_fio_ns	*ns_list;
+	struct spdk_fio_ns		*ns_list;
 };
 
 struct spdk_fio_thread {
@@ -79,6 +81,7 @@ struct spdk_fio_thread {
 	struct io_u		**iocq;	// io completion queue
 	unsigned int		iocq_count;	// number of iocq entries filled by last getevents
 	unsigned int		iocq_size;	// number of iocq entries allocated
+	struct fio_file		*current_f;   // fio_file given by user
 
 };
 
@@ -86,32 +89,7 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct fio_file		*f;
-	unsigned int		i;
-	struct thread_data 	*td = cb_ctx;
-	int rc;
-	struct spdk_pci_addr pci_addr;
-
-	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-		return false;
-	}
-
-	/* Check if we want to claim this device */
-	for_each_file(td, f, i) {
-		int domain, bus, slot, func, nsid;
-		rc = sscanf(f->file_name, "%x.%x.%x.%x/%x", &domain, &bus, &slot, &func, &nsid);
-		if (rc != 5) {
-			fprintf(stderr, "Invalid filename: %s\n", f->file_name);
-			continue;
-		}
-		if (bus == pci_addr.bus &&
-		    slot == pci_addr.dev &&
-		    func == pci_addr.func) {
-			return true;
-		}
-	}
-
-	return false;
+	return true;
 }
 
 static void
@@ -122,62 +100,98 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_ns	*fio_ns;
-	struct fio_file *f;
-	unsigned int i;
-	struct spdk_pci_addr pci_addr;
+	struct fio_file		*f = fio_thread->current_f;
+	uint32_t		ns_id;
+	bool			ctrlr_is_added = false;
+	char			*p;
 
-	spdk_pci_addr_parse(&pci_addr, trid->traddr);
-
-	/* Create an fio_ctrlr and add it to the list */
-	fio_ctrlr = calloc(1, sizeof(*fio_ctrlr));
-	fio_ctrlr->ctrlr = ctrlr;
-	fio_ctrlr->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
-	fio_ctrlr->ns_list = NULL;
-	fio_ctrlr->next = fio_thread->ctrlr_list;
-	fio_thread->ctrlr_list = fio_ctrlr;
-
-	/* Loop through all of the file names provided and grab the matching namespaces */
-	for_each_file(fio_thread->td, f, i) {
-		int domain, bus, slot, func, nsid, rc;
-		rc = sscanf(f->file_name, "%x.%x.%x.%x/%x", &domain, &bus, &slot, &func, &nsid);
-		if (rc == 5 &&
-		    bus == pci_addr.bus &&
-		    slot == pci_addr.dev &&
-		    func == pci_addr.func) {
-			fio_ns = calloc(1, sizeof(*fio_ns));
-			if (fio_ns == NULL) {
-				continue;
-			}
-			fio_ns->f = f;
-			fio_ns->ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-			if (fio_ns->ns == NULL) {
-				free(fio_ns);
-				continue;
-			}
-
-
-			f->real_file_size = spdk_nvme_ns_get_size(fio_ns->ns);
-			if (f->real_file_size <= 0) {
-				free(fio_ns);
-				continue;
-			}
-
-			f->filetype = FIO_TYPE_BLOCK;
-			fio_file_set_size_known(f);
-
-			fio_ns->next = fio_ctrlr->ns_list;
-			fio_ctrlr->ns_list = fio_ns;
-		}
+	p = strstr(f->file_name, "ns=");
+	assert(p != NULL);
+	ns_id = atoi(p + 3);
+	if (!ns_id) {
+		SPDK_ERRLOG("namespace id should be >=1, but current value=0\n");
+		return;
 	}
+
+	/* check whether this trid is already added */
+	fio_ctrlr = fio_thread->ctrlr_list;
+	while (fio_ctrlr) {
+		if (spdk_nvme_transport_id_compare(trid, &fio_ctrlr->tr_id) == 0) {
+			ctrlr_is_added = true;
+			break;
+		}
+
+		fio_ctrlr = fio_ctrlr->next;
+	}
+
+	/* it is a new ctrlr and needs to be added */
+	if (!ctrlr_is_added) {
+		/* Create an fio_ctrlr and add it to the list */
+		fio_ctrlr = calloc(1, sizeof(*fio_ctrlr));
+		if (!fio_ctrlr) {
+			SPDK_ERRLOG("Cannot allocate space for fio_ctrlr\n");
+			return;
+		}
+		fio_ctrlr->ctrlr = ctrlr;
+		fio_ctrlr->tr_id = *trid;
+		fio_ctrlr->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+		fio_ctrlr->ns_list = NULL;
+		fio_ctrlr->next = fio_thread->ctrlr_list;
+		fio_thread->ctrlr_list = fio_ctrlr;
+	}
+
+	/* check whether this name space is existing or not */
+	fio_ns = fio_ctrlr->ns_list;
+	while (fio_ns) {
+		if (spdk_nvme_ns_get_id(fio_ns->ns) == ns_id) {
+			return;
+		}
+		fio_ns = fio_ns->next;
+	}
+
+	/* create a new namespace */
+	fio_ns = calloc(1, sizeof(*fio_ns));
+	if (fio_ns == NULL) {
+		SPDK_ERRLOG("Cannot allocate space for fio_ns\n");
+		return;
+	}
+	fio_ns->f = f;
+	fio_ns->ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+	if (fio_ns->ns == NULL) {
+		SPDK_ERRLOG("Cannot get namespace by ns_id=%d\n", ns_id);
+		free(fio_ns);
+		return;
+	}
+
+	f->real_file_size = spdk_nvme_ns_get_size(fio_ns->ns);
+	if (f->real_file_size <= 0) {
+		SPDK_ERRLOG("Cannot get namespace size by ns=%p\n", fio_ns->ns);
+		free(fio_ns);
+		return;
+	}
+
+	f->filetype = FIO_TYPE_BLOCK;
+	fio_file_set_size_known(f);
+
+	fio_ns->next = fio_ctrlr->ns_list;
+	fio_ctrlr->ns_list = fio_ns;
 }
 
 /* Called once at initialization. This is responsible for gathering the size of
  * each "file", which in our case are in the form
- * "05:00.0/0" (PCI bus:device.function/NVMe NSID) */
+ * 'key=value [key=value] ... ns=value'
+ * For example, For local PCIe NVMe device  - 'trtype=PCIe traddr=0000.04.00.0 ns=1'
+ * For remote exported by NVMe-oF target, 'trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1' */
 static int spdk_fio_setup(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
 	struct spdk_env_opts opts;
+	struct fio_file *f;
+	char *p;
+	int rc;
+	struct spdk_nvme_transport_id trid;
+	char *trid_info;
+	unsigned int i;
 
 	if (!td->o.use_thread) {
 		log_err("spdk: must set thread=1 when using spdk plugin\n");
@@ -196,12 +210,56 @@ static int spdk_fio_setup(struct thread_data *td)
 
 	spdk_env_opts_init(&opts);
 	opts.name = "fio";
+	opts.dpdk_mem_size = 512;
 	spdk_env_init(&opts);
 
-	/* Enumerate all of the controllers */
-	if (spdk_nvme_probe(NULL, td, probe_cb, attach_cb, NULL) != 0) {
-		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		return 1;
+	for_each_file(td, f, i) {
+		memset(&trid, 0, sizeof(trid));
+		trid_info = NULL;
+
+		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
+		p = strstr(f->file_name, " ns=");
+		if (p == NULL) {
+			SPDK_ERRLOG("Failed to find namespace 'ns=X'\n");
+			continue;
+		}
+
+		trid_info = strndup(f->file_name, p - f->file_name);
+		if (!trid_info) {
+			SPDK_ERRLOG("Failed to allocate space for trid_info\n");
+			continue;
+		}
+
+		rc = spdk_nvme_transport_id_parse(&trid, trid_info);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to parse given str: %s\n", trid_info);
+			free(trid_info);
+			continue;
+		}
+		free(trid_info);
+
+		if (trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+			struct spdk_pci_addr pci_addr;
+			if (spdk_pci_addr_parse(&pci_addr, trid.traddr) < 0) {
+				SPDK_ERRLOG("Invaild traddr=%s\n", trid.traddr);
+				continue;
+			}
+			spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
+		} else if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
+			if (trid.subnqn[0] == '\0') {
+				snprintf(trid.subnqn, sizeof(trid.subnqn), "%s",
+					 SPDK_NVMF_DISCOVERY_NQN);
+			}
+		}
+
+		fio_thread->current_f = f;
+
+		/* Enumerate all of the controllers */
+		if (spdk_nvme_probe(&trid, td, probe_cb, attach_cb, NULL) != 0) {
+			SPDK_ERRLOG("spdk_nvme_probe() failed\n");
+			continue;
+		}
 	}
 
 	return 0;

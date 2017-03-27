@@ -34,10 +34,13 @@ To use the SPDK fio plugin with fio, simply set the following in the fio configu
 
 To select NVMe devices, you simply pass an identifier as the filename in the format
 
-    domain.bus.slot.func/namespace
+    'key=value [key=value] ... ns=value'
 
-Remember that NVMe namespaces start at 1, not 0! Also, the notation uses '.' throughout,
-not ':'. For example - 0000.04.00.0/1.
+Do not have any ':' in filename, otherwise it will be spilt into several file names. Also the
+NVMe namespaces start at 1, not 0! And it should be put on the end. For example,
+   1. For local PCIe NVMe device  - 'trtype=PCIe traddr=0000.04.00.0 ns=1'. traddr for local
+      NVMe device should use this format: domain.bus.slot.func
+   2. For devices exported by NVMe-oF target, 'trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1'
 
 Currently the SPDK fio plugin is limited to a single thread, so only one job is supported.
 fio jobs must also specify thread=1 when using the SPDK fio plugin.
