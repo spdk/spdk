@@ -167,7 +167,7 @@ int main(int argc, char **argv)
 	}
 
 	history_ptr = mmap(NULL, sizeof(*histories), PROT_READ, MAP_SHARED, history_fd, 0);
-	if (history_ptr == NULL) {
+	if (history_ptr == MAP_FAILED) {
 		fprintf(stderr, "Unable to mmap history shm\n");
 		exit(1);
 	}
