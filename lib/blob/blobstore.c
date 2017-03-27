@@ -2221,11 +2221,10 @@ spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *val
 		}
 	}
 
-	/*
-	* This is probably all going to rewritten, so do not bother checking for failed
-	*  allocations for now.
-	*/
 	xattr = calloc(1, sizeof(*xattr));
+	if (!xattr) {
+		return -1;
+	}
 	xattr->name = strdup(name);
 	xattr->value_len = value_len;
 	xattr->value = malloc(value_len);
