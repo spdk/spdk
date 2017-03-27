@@ -23,14 +23,18 @@ hash python
 ulimit -n 16384
 
 TESTDIR=$(readlink -f $(dirname $0))
-mkdir -p $TESTDIR/results/old
-# if there are any existing test results, move them into the "old" directory
-ls $TESTDIR/results/testrun_* &> /dev/null && mv $TESTDIR/results/testrun_* $TESTDIR/results/old
 
-RESULTS_DIR=$TESTDIR/results/testrun_`date +%Y%m%d_%H%M%S`
-mkdir $RESULTS_DIR
-rm -f $TESTDIR/results/last
-ln -s $RESULTS_DIR $TESTDIR/results/last
+if ls $TESTDIR/results/testrun_* &> /dev/null; then
+	mkdir -p $TESTDIR/results/old
+	mv $TESTDIR/results/testrun_* $TESTDIR/results/old
+fi
+
+if [ -z "$RESULTS_DIR" ]; then
+	RESULTS_DIR=$TESTDIR/results/testrun_`date +%Y%m%d_%H%M%S`
+	mkdir $RESULTS_DIR
+	rm -f $TESTDIR/results/last
+	ln -s $RESULTS_DIR $TESTDIR/results/last
+fi
 
 : ${CACHE_SIZE:=4096}
 : ${DURATION:=120}
