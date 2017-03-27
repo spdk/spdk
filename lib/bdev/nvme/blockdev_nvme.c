@@ -589,7 +589,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			}
 		}
 	} else {
-		name = spdk_sprintf_alloc("HotInsertNvme%d", g_hot_insert_nvme_controller_index++);
+		name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
 	}
 	if (!name) {
 		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
