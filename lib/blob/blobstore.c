@@ -231,6 +231,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			assert(xattr != NULL);
 
 			xattr->name = malloc(desc_xattr->name_length + 1);
+			assert(xattr->name);
 			strncpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
 			xattr->name[desc_xattr->name_length] = '\0';
 
