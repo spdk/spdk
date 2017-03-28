@@ -86,7 +86,7 @@ struct spdk_nvmf_probe_ctx {
 #define SPDK_NVMF_CONFIG_MAX_IO_SIZE_MAX 131072
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
-static int32_t g_last_rpc_lcore = -1;
+static int32_t g_last_core = -1;
 
 static int
 spdk_get_numa_node_value(const char *path)
@@ -481,13 +481,13 @@ spdk_nvmf_construct_subsystem(const char *name,
 	}
 
 	if (lcore < 0) {
-		lcore = ++g_last_rpc_lcore;
+		lcore = ++g_last_core;
 	}
 
 	/* Determine which core to assign to the subsystem */
 	mask = spdk_app_get_core_mask();
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
-	g_last_rpc_lcore = lcore;
+	g_last_core = lcore;
 
 	/* Determine the mode the subsysem will operate in */
 	if (mode_str == NULL) {
