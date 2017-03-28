@@ -41,6 +41,10 @@ function linux_bind_driver() {
 	fi
 }
 
+function linux_hugetlbfs_mount() {
+	mount | grep '^hugetlbfs ' | awk '{ print $3 }'
+}
+
 function configure_linux {
 	driver_name=vfio-pci
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
@@ -71,15 +75,19 @@ function configure_linux {
 
 	echo "1" > "/sys/bus/pci/rescan"
 
-	if ! mount | grep -q hugetlbfs; then
-		mkdir -p /mnt/huge
-		mount -t hugetlbfs nodev /mnt/huge
+	hugetlbfs_mount=$(linux_hugetlbfs_mount)
+
+	if [ -z "$hugetlbfs_mount" ]; then
+		hugetlbfs_mount=/mnt/huge
+		echo "Mounting hugetlbfs at $hugetlbfs_mount"
+		mkdir -p "$hugetlbfs_mount"
+		mount -t hugetlbfs nodev "$hugetlbfs_mount"
 	fi
 	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
-			chown "$username" /dev/hugepages
+			chown "$username" "$hugetlbfs_mount"
 		fi
 
 		MEMLOCK_AMNT=`ulimit -l`
