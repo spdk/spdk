@@ -1,6 +1,22 @@
 # Changelog
 
-## (Next Planned Release) v17.03
+## v17.03: Blobstore and userspace vhost-scsi target
+
+### Blobstore and BlobFS
+
+The blobstore is a persistent, power-fail safe block allocator designed to be
+used as the local storage system backing a higher-level storage service.
+See the [blobstore documentation](http://www.spdk.io/doc/blob.html) for more details.
+
+BlobFS adds basic filesystem functionality like filenames on top of the blobstore.
+This release also includes a RocksDB Env implementation using BlobFS in place of the
+kernel filesystem.
+See the [BlobFS documentation](http://www.spdk.io/doc/blobfs.html) for more details.
+
+### Userspace vhost-scsi target
+
+A userspace implementation of the QEMU vhost-scsi protocol has been added.
+The vhost target is capable of exporting SPDK bdevs to QEMU-based VMs as virtio devices.
 
 ### Event framework
 
