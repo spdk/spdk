@@ -43,6 +43,7 @@
 #include <rte_log.h>
 
 #include "rte_virtio_net.h"
+#include "vhost_user.h"
 
 /* Used to indicate that the device is running on a data core */
 #define VIRTIO_DEV_RUNNING 1
@@ -171,6 +172,9 @@ struct virtio_net {
 	uint32_t		nr_guest_pages;
 	uint32_t		max_guest_pages;
 	struct guest_page       *guest_pages;
+	int			has_new_mem_table;
+	struct VhostUserMemory	mem_table;
+	int			mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
 } __rte_cache_aligned;
 
 /**

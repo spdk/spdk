@@ -317,6 +317,8 @@ qva_to_vva(struct virtio_net *dev, uint64_t qva)
 	return 0;
 }
 
+static int vhost_setup_mem_table(struct virtio_net *dev);
+
 /*
  * The virtio device sends us the desc, used and avail ring addresses.
  * This function then converts these to our address space.
@@ -325,6 +327,12 @@ static int
 vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 {
 	struct vhost_virtqueue *vq;
+
+	if (dev->has_new_mem_table) {
+		vhost_setup_mem_table(dev);
+		dev->has_new_mem_table = 0;
+	}
+
 
 	if (dev->mem == NULL)
 		return -1;
@@ -492,7 +500,30 @@ dump_guest_pages(struct virtio_net *dev)
 static int
 vhost_user_set_mem_table(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 {
-	struct VhostUserMemory memory = pmsg->payload.memory;
+	uint32_t i;
+
+	if (dev->has_new_mem_table) {
+		/*
+		 * The previous mem table was not consumed, so close the
+		 *  file descriptors from that mem table before copying
+		 *  the new one.
+		 */
+		for (i = 0; i < dev->mem_table.nregions; i++) {
+			close(dev->mem_table_fds[i]);
+		}
+	}
+
+	memcpy(&dev->mem_table, &pmsg->payload.memory, sizeof(dev->mem_table));
+	memcpy(dev->mem_table_fds, pmsg->fds, sizeof(dev->mem_table_fds));
+	dev->has_new_mem_table = 1;
+
+	return 0;
+}
+
+static int
+vhost_setup_mem_table(struct virtio_net *dev)
+{
+	struct VhostUserMemory memory = dev->mem_table;
 	struct virtio_memory_region *reg;
 	void *mmap_addr;
 	uint64_t mmap_size;
@@ -500,12 +531,6 @@ vhost_user_set_mem_table(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	uint64_t alignment;
 	uint32_t i;
 	int fd;
-
-	/* Remove from the data plane. */
-	if (dev->flags & VIRTIO_DEV_RUNNING) {
-		dev->flags &= ~VIRTIO_DEV_RUNNING;
-		notify_ops->destroy_device(dev->vid);
-	}
 
 	if (dev->mem) {
 		free_mem_region(dev);
@@ -531,7 +556,7 @@ vhost_user_set_mem_table(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	dev->mem->nregions = memory.nregions;
 
 	for (i = 0; i < memory.nregions; i++) {
-		fd  = pmsg->fds[i];
+		fd  = dev->mem_table_fds[i];
 		reg = &dev->mem->regions[i];
 
 		reg->guest_phys_addr = memory.regions[i].guest_phys_addr;
