@@ -360,13 +360,21 @@ int main(int argc, char **argv)
 	} else {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", app_name, shm_pid);
 	}
+
 	fd = shm_open(shm_name, O_RDONLY, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "Could not open shm %s.\n", shm_name);
 		usage();
 		exit(-1);
 	}
+
 	history_ptr = mmap(NULL, sizeof(*g_histories), PROT_READ, MAP_SHARED, fd, 0);
+	if (history_ptr == MAP_FAILED) {
+		fprintf(stderr, "Could not mmap shm %s.\n", shm_name);
+		usage();
+		exit(-1);
+	}
+
 	g_histories = (struct spdk_trace_histories *)history_ptr;
 
 	tsc_rate = g_histories->tsc_rate;
