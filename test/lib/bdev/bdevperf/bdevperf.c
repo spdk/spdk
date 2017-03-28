@@ -557,11 +557,11 @@ main(int argc, char **argv)
 		usage(argv[0]);
 		exit(1);
 	}
-	if (!g_queue_depth) {
+	if (g_queue_depth <= 0) {
 		usage(argv[0]);
 		exit(1);
 	}
-	if (!g_io_size) {
+	if (g_io_size <= 0) {
 		usage(argv[0]);
 		exit(1);
 	}
@@ -569,7 +569,7 @@ main(int argc, char **argv)
 		usage(argv[0]);
 		exit(1);
 	}
-	if (!g_time_in_sec) {
+	if (g_time_in_sec <= 0) {
 		usage(argv[0]);
 		exit(1);
 	}
