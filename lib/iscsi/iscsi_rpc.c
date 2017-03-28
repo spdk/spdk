@@ -768,7 +768,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
 	}
 
 out:
-	if (rc > 0) {
+	if (rc == 0) {
 		if (id != NULL) {
 			w = spdk_jsonrpc_begin_result(conn, id);
 			spdk_json_write_bool(w, true);
@@ -776,10 +776,8 @@ out:
 		}
 	} else {
 		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	}
 
-	for (i = 0; i < req.portal_list.num_portals; i++) {
-		if (portal_list[i] != NULL) {
+		for (i = 0; i < req.portal_list.num_portals; i++) {
 			spdk_iscsi_portal_destroy(portal_list[i]);
 		}
 	}

@@ -302,12 +302,15 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
 
+/**
+ * If all portals are valid, this function will take their ownership.
+ */
 int
 spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 		struct spdk_iscsi_portal **portal_list,
 		int num_portals)
 {
-	int i = 0, count = 0, port, sock;
+	int i = 0, rc = 0, port;
 	struct spdk_iscsi_portal_grp *pg;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "add portal group (from portal list) %d\n", tag);
@@ -331,27 +334,36 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 			      i, p->host, p->port, tag);
 
 		port = (int)strtol(p->port, NULL, 0);
-		sock = spdk_sock_listen(p->host, port);
-		if (sock < 0) {
+		p->sock = spdk_sock_listen(p->host, port);
+
+		if (p->sock < 0) {
+			/* if listening failed on any port, do not register the portal group
+			 * and close any previously opened. */
 			SPDK_ERRLOG("listen error %.64s:%d\n", p->host, port);
-			count++;
-			continue;
+			rc = -1;
+
+			for (--i; i >= 0; --i) {
+				spdk_sock_close(portal_list[i]->sock);
+				portal_list[i]->sock = -1;
+			}
+
+			break;
 		}
-		p->sock = sock;
-		spdk_iscsi_portal_grp_add_portal(pg, p);
-		portal_list[i] = NULL;
 	}
 
-	if (count == num_portals) {
-		/* if listening is failed on all the ports,
-		 * then do not register the portal group. */
+	if (rc < 0) {
 		spdk_iscsi_portal_grp_destroy(pg);
-		return -1;
 	} else {
+		/* Add portals to portal group */
+		for (i = 0; i < num_portals; i++) {
+			spdk_iscsi_portal_grp_add_portal(pg, portal_list[i]);
+		}
+
 		/* Add portal group to the end of the pg list */
 		spdk_iscsi_portal_grp_register(pg);
-		return num_portals - count;
 	}
+
+	return rc;
 }
 
 int
