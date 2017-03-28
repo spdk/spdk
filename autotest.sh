@@ -90,7 +90,7 @@ timing_exit rbd_setup
 #####################
 
 timing_enter unittest
-run_test ./unittest.sh
+valgrind="$valgrind" run_test ./unittest.sh
 timing_exit unittest
 
 timing_enter lib
