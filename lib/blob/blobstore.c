@@ -249,8 +249,11 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 		}
 
 		/* Advance to the next descriptor */
-		desc = (struct spdk_blob_md_descriptor *)((uintptr_t)desc + sizeof(*desc) + desc->length);
 		cur_desc += sizeof(*desc) + desc->length;
+		if (cur_desc + sizeof(*desc) > sizeof(page->descriptors)) {
+			break;
+		}
+		desc = (struct spdk_blob_md_descriptor *)((uintptr_t)page->descriptors + cur_desc);
 	}
 }
 
