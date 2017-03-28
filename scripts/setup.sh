@@ -137,7 +137,7 @@ function reset_linux {
 	echo "1" > "/sys/bus/pci/rescan"
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
-	rm "$hugetlbfs_mount"/spdk*map_*
+	rm -f "$hugetlbfs_mount"/spdk*map_*
 }
 
 function status_linux {
