@@ -115,7 +115,6 @@ _spdk_blob_free(struct spdk_blob *blob)
 	struct spdk_xattr 	*xattr, *xattr_tmp;
 
 	assert(blob != NULL);
-	assert(blob->state == SPDK_BLOB_STATE_CLEAN);
 
 	free(blob->active.clusters);
 	free(blob->clean.clusters);
@@ -1817,7 +1816,7 @@ void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 
 	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
-		free(blob);
+		_spdk_blob_free(blob);
 		cb_fn(cb_arg, 0, -ENOMEM);
 		return;
 	}
@@ -1905,6 +1904,7 @@ spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
+		_spdk_blob_free(blob);
 		cb_fn(cb_arg, -ENOMEM);
 		_spdk_blob_free(blob);
 		return;
@@ -1966,6 +1966,7 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
+		_spdk_blob_free(blob);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
