@@ -297,9 +297,9 @@ _spdk_blob_serialize_add_page(const struct spdk_blob *blob,
 	if (*page_count == 0) {
 		assert(*pages == NULL);
 		*page_count = 1;
-		*pages = spdk_zmalloc(sizeof(struct spdk_blob_md_page),
-				      sizeof(struct spdk_blob_md_page),
-				      NULL);
+		*pages = spdk_malloc(sizeof(struct spdk_blob_md_page),
+				     sizeof(struct spdk_blob_md_page),
+				     NULL);
 	} else {
 		assert(*pages != NULL);
 		(*page_count)++;
@@ -316,6 +316,7 @@ _spdk_blob_serialize_add_page(const struct spdk_blob *blob,
 	}
 
 	page = &(*pages)[*page_count - 1];
+	memset(page, 0, sizeof(*page));
 	page->id = blob->id;
 	page->sequence_num = *page_count - 1;
 	page->next = SPDK_INVALID_MD_PAGE;
