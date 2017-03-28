@@ -263,7 +263,7 @@ spdk_trace_register_description(const char *name, const char *short_name,
 	tpoint->new_object = new_object;
 	tpoint->arg1_is_ptr = arg1_is_ptr;
 	tpoint->arg1_is_alias = arg1_is_alias;
-	strncpy(tpoint->arg1_name, arg1_name, sizeof(tpoint->arg1_name));
+	snprintf(tpoint->arg1_name, sizeof(tpoint->arg1_name), "%s", arg1_name);
 }
 
 void
