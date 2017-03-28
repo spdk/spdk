@@ -378,6 +378,11 @@ int main(int argc, char **argv)
 	g_histories = (struct spdk_trace_histories *)history_ptr;
 
 	tsc_rate = g_histories->tsc_rate;
+	if (tsc_rate == 0) {
+		fprintf(stderr, "Invalid tsc_rate %ju\n", tsc_rate);
+		usage();
+		exit(-1);
+	}
 
 	if (verbose) {
 		printf("TSC Rate: %ju\n", tsc_rate);
