@@ -17,6 +17,7 @@ See the [BlobFS documentation](http://www.spdk.io/doc/blobfs.html) for more deta
 
 A userspace implementation of the QEMU vhost-scsi protocol has been added.
 The vhost target is capable of exporting SPDK bdevs to QEMU-based VMs as virtio devices.
+See the [vhost documentation](http://www.spdk.io/doc/vhost.html) for more details.
 
 ### Event framework
 

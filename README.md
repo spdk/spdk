@@ -19,6 +19,7 @@ The development kit currently includes:
 * [I/OAT (DMA engine) driver](http://www.spdk.io/doc/ioat.html)
 * [NVMe over Fabrics target](http://www.spdk.io/doc/nvmf.html)
 * [iSCSI target](http://www.spdk.io/doc/iscsi.html)
+* [vhost target](http://www.spdk.io/doc/vhost.html)
 
 Documentation
 =============
