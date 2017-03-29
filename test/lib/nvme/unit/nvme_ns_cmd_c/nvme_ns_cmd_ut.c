@@ -1009,6 +1009,8 @@ test_nvme_ns_cmd_write_with_md(void)
 	CU_ASSERT(g_request->payload.md == metadata);
 	CU_ASSERT(g_request->payload_size == 256 * 512);
 
+	nvme_free_request(g_request);
+
 	/*
 	 * 512 byte data + 8 byte metadata
 	 * Separate metadata buffer
