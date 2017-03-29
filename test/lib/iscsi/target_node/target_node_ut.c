@@ -89,6 +89,8 @@ config_file_fail_cases(void)
 		CU_ASSERT(rc < 0);
 		section_index++;
 	}
+
+	spdk_conf_free(config);
 }
 
 int
