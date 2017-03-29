@@ -273,7 +273,9 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 
 				/* get the user app to clean up and stop I/O */
 				if (remove_cb) {
+					nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 					remove_cb(cb_ctx, ctrlr);
+					nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 				}
 			}
 		}
