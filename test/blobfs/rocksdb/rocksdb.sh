@@ -28,7 +28,7 @@ $rootdir/scripts/gen_nvme.sh >> $ROCKSDB_CONF
 
 $rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
 mkdir $output_dir/rocksdb
-RESULTS_DIR=$output_dir/rocksdb USE_PERF=0 DURATION=30 NUM_KEYS=50000000 ROCKSDB_CONF=$ROCKSDB_CONF CACHE_SIZE=1024 $testdir/run_tests.sh $DB_BENCH
+RESULTS_DIR=$output_dir/rocksdb USE_PERF=0 DURATION=30 NUM_KEYS=50000000 ROCKSDB_CONF=$ROCKSDB_CONF $testdir/run_tests.sh $DB_BENCH
 
 trap 'rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
