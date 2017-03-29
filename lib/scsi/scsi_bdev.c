@@ -1247,6 +1247,9 @@ spdk_bdev_scsi_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_sta
 	} else if (task->type == SPDK_SCSI_TASK_TYPE_MANAGE) {
 		if (status == SPDK_BDEV_IO_STATUS_SUCCESS)
 			task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
+		if (task->function == SPDK_SCSI_TASK_FUNC_LUN_RESET) {
+			spdk_scsi_lun_clear_all(task->lun);
+		}
 	}
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ && task->iovs != bdev_io->u.read.iovs) {
 		assert(task->iovcnt == bdev_io->u.read.iovcnt);
@@ -1963,6 +1966,6 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 int
 spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 {
-	return spdk_bdev_reset(bdev, SPDK_BDEV_RESET_SOFT,
+	return spdk_bdev_reset(bdev, SPDK_BDEV_RESET_HARD,
 			       spdk_bdev_scsi_task_complete, task);
 }

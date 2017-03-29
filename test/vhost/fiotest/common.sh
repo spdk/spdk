@@ -740,6 +740,7 @@ function vm_reset_scsi_devices()
 	for disk in "${@:2}"; do
 		echo "INFO: VM$1 Performing device reset on disk $disk"
 		vm_ssh $1 sg_reset /dev/$disk -vNd
+		sleep 2
 	done
 }
 

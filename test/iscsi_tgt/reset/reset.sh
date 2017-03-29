@@ -67,9 +67,11 @@ trap "iscsicleanup; killprocess $pid; killprocess $fiopid; exit 1" SIGINT SIGTER
 
 # Do 3 resets while making sure iscsi_tgt and fio are still running
 for i in 1 2 3; do
+	sleep 1
 	kill -s 0 $pid
 	kill -s 0 $fiopid
 	sg_reset -d /dev/$dev
+	sleep 1
 	kill -s 0 $pid
 	kill -s 0 $fiopid
 done
