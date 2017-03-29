@@ -138,8 +138,6 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_ISCSI -eq 1 ]; then
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
 	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
 	timing_exit iscsi_tgt
-
-	run_test test/lib/iscsi/iscsi.sh
 fi
 
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
