@@ -76,6 +76,11 @@
 
 #define MAX_TMPBUF 1024
 
+#ifdef __FreeBSD__
+#define HAVE_SRANDOMDEV 1
+#define HAVE_ARC4RANDOM 1
+#endif
+
 struct spdk_iscsi_globals g_spdk_iscsi;
 
 /* random value generation */
