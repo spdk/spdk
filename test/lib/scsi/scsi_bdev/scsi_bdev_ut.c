@@ -383,7 +383,7 @@ inquiry_evpd_test(void)
 static void
 inquiry_standard_test(void)
 {
-	struct spdk_bdev bdev;
+	struct spdk_bdev bdev = {};
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
@@ -420,7 +420,7 @@ inquiry_standard_test(void)
 static void
 _inquiry_overflow_test(uint8_t alloc_len)
 {
-	struct spdk_bdev bdev;
+	struct spdk_bdev bdev = {};
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
