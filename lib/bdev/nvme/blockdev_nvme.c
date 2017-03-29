@@ -644,27 +644,21 @@ nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_bdev *nvme_bdev, *btmp;
-	TAILQ_HEAD(, nvme_bdev) nvme_bdevs;
+	TAILQ_HEAD(, nvme_bdev) removed_bdevs;
 
-	TAILQ_INIT(&nvme_bdevs);
+	TAILQ_INIT(&removed_bdevs);
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (nvme_ctrlr->ctrlr == ctrlr) {
-			TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
-				if (nvme_bdev->nvme_ctrlr == nvme_ctrlr) {
-					TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
-					TAILQ_INSERT_TAIL(&nvme_bdevs, nvme_bdev, link);
-				}
-			}
-			break;
+	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
+		if (nvme_bdev->nvme_ctrlr->ctrlr == ctrlr) {
+			TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
+			TAILQ_INSERT_TAIL(&removed_bdevs, nvme_bdev, link);
 		}
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	TAILQ_FOREACH_SAFE(nvme_bdev, &nvme_bdevs, link, btmp) {
-		TAILQ_REMOVE(&nvme_bdevs, nvme_bdev, link);
+	TAILQ_FOREACH_SAFE(nvme_bdev, &removed_bdevs, link, btmp) {
+		TAILQ_REMOVE(&removed_bdevs, nvme_bdev, link);
 		spdk_bdev_unregister(&nvme_bdev->disk);
 	}
 }
