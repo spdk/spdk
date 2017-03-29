@@ -38,7 +38,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
-#include <semaphore.h>
 
 #include "spdk/blobfs.h"
 #include "spdk/env.h"
@@ -57,8 +56,6 @@ struct spdk_file *g_file;
 int g_fserrno;
 
 struct spdk_bs_dev g_dev;
-
-sem_t g_sem;
 
 struct ut_request {
 	fs_request_fn fn;
@@ -269,7 +266,6 @@ int main(int argc, char **argv)
 	}
 
 	init_dev(&g_dev);
-	sem_init(&g_sem, 0, 0);
 	pthread_create(&spdk_tid, NULL, spdk_thread, NULL);
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
