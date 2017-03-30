@@ -1823,13 +1823,21 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
+	/* We don't want to expose the admin queue to the user,
+	 * so when we're timing out admin commands set the
+	 * qpair to NULL.
+	 */
+	if (qpair == ctrlr->adminq) {
+		qpair = NULL;
+	}
+
 	t02 = spdk_get_ticks();
 	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
 		if (tr->timed_out) {
 			continue;
 		}
 
-		if (qpair == ctrlr->adminq &&
+		if (qpair == NULL &&
 		    tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
 			continue;
 		}

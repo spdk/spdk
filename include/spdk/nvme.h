@@ -421,6 +421,8 @@ struct spdk_nvme_qpair;
 /**
  * Signature for the callback function invoked when a timeout is
  * detected on a request.
+ * For timeouts detected on the admin queue pair, the qpair returned
+ * here will be NULL.
  */
 typedef void (*spdk_nvme_timeout_cb)(void *cb_arg,
 				     struct spdk_nvme_ctrlr *ctrlr,
@@ -592,6 +594,7 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
  *
  * \param ctrlr NVMe controller to which the command was submitted.
  * \param qpair NVMe queue pair to which the command was submitted.
+ *              For admin commands, pass NULL for the qpair.
  * \param cid Command ID of the command to abort.
  * \param cb_fn Callback function to invoke when the abort has completed.
  * \param cb_arg Argument to pass to the callback function.\

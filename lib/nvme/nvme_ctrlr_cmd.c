@@ -399,7 +399,13 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	int rc;
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
-	uint16_t sqid = qpair->id;
+	uint16_t sqid;
+
+	if (qpair) {
+		sqid = qpair->id;
+	} else {
+		sqid = ctrlr->adminq->id; /* 0 */
+	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	req = nvme_allocate_request_null(cb_fn, cb_arg);
