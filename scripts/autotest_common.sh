@@ -3,7 +3,7 @@ ulimit -c unlimited
 
 export RUN_NIGHTLY=0
 
-MAKECONFIG='CONFIG_DEBUG=y CONFIG_WERROR=y'
+config_params='--enable-debug --enable-werror'
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
@@ -12,16 +12,16 @@ export NRHUGE=4096
 
 case `uname` in
 	FreeBSD)
-		DPDK_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
+		config_params+=' --with-dpdk=/usr/local/share/dpdk/x86_64-native-bsdapp-clang'
 		MAKE=gmake
 		MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
 		;;
 	Linux)
-		DPDK_DIR=/usr/local/share/dpdk/x86_64-native-linuxapp-gcc
+		config_params+=' --with-dpdk=/usr/local/share/dpdk/x86_64-native-linuxapp-gcc'
 		MAKE=make
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
-		MAKECONFIG="$MAKECONFIG CONFIG_COVERAGE=y"
-		MAKECONFIG="$MAKECONFIG CONFIG_UBSAN=y"
+		config_params+=' --enable-coverage'
+		config_params+=' --enable-ubsan'
 		;;
 	*)
 		echo "Unknown OS in $0"
@@ -30,8 +30,18 @@ case `uname` in
 esac
 
 if [ -f /usr/include/infiniband/verbs.h ]; then
-	MAKECONFIG="$MAKECONFIG CONFIG_RDMA=y"
+	config_params+=' --with-rdma'
 fi
+
+if [ -d /usr/src/fio ]; then
+	config_params+=' --with-fio=/usr/src/fio'
+fi
+
+if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then
+	config_params+=' --with-rbd'
+fi
+
+export config_params
 
 if [ -z "$output_dir" ]; then
 	if [ -z "$rootdir" ] || [ ! -d "$rootdir/../output" ]; then

@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+
+set -e
+
+function usage()
+{
+	echo "'configure' configures SPDK to compile on supported platforms."
+	echo ""
+	echo "Usage: ./configure [OPTION]..."
+	echo ""
+	echo "Defaults for the options are specified in brackets."
+	echo ""
+	echo "General:"
+	echo " -h, --help                Display this help and exit"
+	echo " --enable-debug            Configure for debug builds"
+	echo " --enable-werror           Treat compiler warnings as errors"
+	echo " --enable-asan             Enable address sanitizer"
+	echo " --enable-ubsan            Enable undefined behavior sanitizer"
+	echo " --enable-coverage         Enable code coverage tracking"
+	echo " --with-env=path           Use an alternate environment implementation"
+	echo ""
+	echo "Specifying Dependencies:"
+	echo "--with-DEPENDENCY[=path]   Use the given dependency. Optionally, provide the"
+	echo "                           path."
+	echo "--without-DEPENDENCY       Do not link to the given dependency. This may"
+	echo "                           disable features and components."
+	echo ""
+	echo "Valid dependencies are listed below."
+	echo " dpdk                      Required unless providing an alternate env implementation."
+	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
+	echo " fio                       Required to build fio_plugin."
+	echo "                           example: /usr/src/fio"
+	echo " rbd                       [disabled]"
+	echo "                           No path required."
+	echo " rdma                      [disabled]"
+	echo "                           No path required."
+	echo ""
+}
+
+for i in "$@"; do
+	case "$i" in
+		-h|--help)
+			usage
+			exit 0
+			;;
+		--enable-debug)
+			CONFIG_DEBUG=y
+			;;
+		--disable-debug)
+			CONFIG_DEBUG=n
+			;;
+		--enable-asan)
+			CONFIG_ASAN=y
+			;;
+		--disable-asan)
+			CONFIG_ASAN=n
+			;;
+		--enable-ubsan)
+			CONFIG_UBSAN=y
+			;;
+		--disable-ubsan)
+			CONFIG_UBSAN=n
+			;;
+		--enable-coverage)
+			CONFIG_COVERAGE=y
+			;;
+		--disable-coverage)
+			CONFIG_COVERAGE=n
+			;;
+		--enable-werror)
+			CONFIG_WERROR=y
+			;;
+		--disable-werror)
+			CONFIG_WERROR=n
+			;;
+		--with-env=*)
+			CONFIG_ENV="${i#*=}"
+			;;
+		--with-rbd)
+			CONFIG_RBD=y
+			;;
+		--without-rbd)
+			CONFIG_RBD=n
+			;;
+		--with-rdma)
+			CONFIG_RDMA=y
+			;;
+		--without-rdma)
+			CONFIG_RDMA=n
+			;;
+		--with-dpdk=*)
+			CONFIG_DPDK_DIR="${i#*=}"
+			;;
+		--without-dpdk)
+			CONFIG_DPDK_DIR=
+			;;
+		--with-fio=*)
+			FIO_SOURCE_DIR="${i#*=}"
+			CONFIG_FIO_PLUGIN=y
+			;;
+		--without-fio)
+			FIO_SOURCE_DIR=
+			CONFIG_FIO_PLUGIN=n
+			;;
+		--)
+			break
+			;;
+		*)
+			echo "Unrecognized option $i"
+			usage
+			exit 1
+	esac
+done
+
+if [ -z "$CONFIG_ENV" ]; then
+	if [ -z "$CONFIG_DPDK_DIR" ]; then
+		echo "You must specify the path to dpdk using --with-dpdk=path."
+		exit 1
+	fi
+fi
+
+if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
+	if [ -z "$FIO_SOURCE_DIR" ]; then
+		echo "When fio is enabled, you must specify the fio directory using --with-fio=path"
+		exit 1
+	fi
+fi
+
+# Write the configuration file
+rm -f CONFIG.local
+if [ -n "$CONFIG_DEBUG" ]; then
+	echo "CONFIG_DEBUG?=$CONFIG_DEBUG" >> CONFIG.local
+fi
+if [ -n "$CONFIG_WERROR" ]; then
+	echo "CONFIG_WERROR?=$CONFIG_WERROR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_COVERAGE" ]; then
+	echo "CONFIG_COVERAGE?=$CONFIG_COVERAGE" >> CONFIG.local
+fi
+if [ -n "$CONFIG_ASAN" ]; then
+	echo "CONFIG_ASAN?=$CONFIG_ASAN" >> CONFIG.local
+fi
+if [ -n "$CONFIG_UBSAN" ]; then
+	echo "CONFIG_UBSAN?=$CONFIG_UBSAN" >> CONFIG.local
+fi
+if [ -n "$CONFIG_ENV" ]; then
+	echo "CONFIG_ENV?=$CONFIG_ENV" >> CONFIG.local
+fi
+if [ -n "$CONFIG_DPDK_DIR" ]; then
+	echo "CONFIG_DPDK_DIR?=$CONFIG_DPDK_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_FIO_PLUGIN" ]; then
+	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local
+fi
+if [ -n "$FIO_SOURCE_DIR" ]; then
+	echo "FIO_SOURCE_DIR?=$FIO_SOURCE_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_RDMA" ]; then
+	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
+fi
+if [ -n "$CONFIG_RBD" ]; then
+	echo "CONFIG_RBD?=$CONFIG_RBD" >> CONFIG.local
+fi
+
+echo "Type make to build."
+
+exit 0

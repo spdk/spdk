@@ -19,22 +19,33 @@ for arg in sys.argv:
 if 'DPDK_DIR' in args and 'CONFIG_DPDK_DIR' not in args:
     args['CONFIG_DPDK_DIR'] = args['DPDK_DIR']
 
-with open('CONFIG') as f:
-    for line in f:
-        line = line.strip()
-        if not comment.match(line):
-            m = assign.match(line)
-            if m:
-                var = m.group(1).strip()
-                default = m.group(3).strip()
-                val = default
-                if var in args:
-                    val = args[var]
-                if default.lower() == 'y' or default.lower() == 'n':
-                    if val.lower() == 'y':
-                        print "#define SPDK_{0} 1".format(var)
-                    else:
-                        print "#undef SPDK_{0}".format(var)
-                else:
-                    strval = val.replace('"', '\"')
-                    print "#define SPDK_{0} \"{1}\"".format(var, strval)
+defs = {}
+for config in ('CONFIG', 'CONFIG.local'):
+    try:
+        with open(config) as f:
+            for line in f:
+                line = line.strip()
+                if not comment.match(line):
+                    m = assign.match(line)
+                    if m:
+                        var = m.group(1).strip()
+                        default = m.group(3).strip()
+                        val = default
+                        if var in args:
+                            val = args[var]
+                        if default.lower() == 'y' or default.lower() == 'n':
+                            if val.lower() == 'y':
+                                defs["SPDK_{}".format(var)] = 1
+                            else:
+                                defs["SPDK_{}".format(var)] = 0
+                        else:
+                            strval = val.replace('"', '\"')
+                            defs["SPDK_{}".format(var)] = strval
+    except IOError:
+        continue
+
+for key, value in defs.items():
+    if value == 0:
+        print "#undef {}".format(key)
+    else:
+        print "#define {} {}".format(key, value)

@@ -14,15 +14,9 @@ cd $rootdir
 date -u
 git describe --tags
 
-if [ -d /usr/src/fio ]; then
-	MAKECONFIG="$MAKECONFIG CONFIG_FIO_PLUGIN=y FIO_SOURCE_DIR=/usr/src/fio"
-fi
-
-if [ -d /usr/include/rbd ] &&  [ -d /usr/include/rados ]; then
-	MAKECONFIG="$MAKECONFIG CONFIG_RBD=y"
-fi
-
 timing_enter autobuild
+
+./configure $config_params
 
 timing_enter check_format
 ./scripts/check_format.sh
@@ -41,7 +35,7 @@ $MAKE $MAKEFLAGS clean
 
 timing_enter scanbuild_make
 fail=0
-time $scanbuild $MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR $MAKECONFIG || fail=1
+time $scanbuild $MAKE $MAKEFLAGS || fail=1
 if [ $fail -eq 1 ]; then
 	if [ -d $out/scan-build-tmp ]; then
 		scanoutput=$(ls -1 $out/scan-build-tmp/)
@@ -61,7 +55,7 @@ timing_exit scanbuild_make
 STAT1=`stat examples/nvme/identify/identify`
 sleep 1
 touch lib/nvme/nvme_internal.h
-$MAKE $MAKEFLAGS DPDK_DIR=$DPDK_DIR $MAKECONFIG
+$MAKE $MAKEFLAGS
 STAT2=`stat examples/nvme/identify/identify`
 
 if [ "$STAT1" == "$STAT2" ]; then

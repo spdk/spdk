@@ -33,7 +33,8 @@ echo "tmpdir=$tmpdir"
 tar -C "$tmpdir" -xf $tarball
 (
 	cd "$tmpdir"/spdk-*
-	time $MAKE ${MAKEFLAGS} DPDK_DIR=$DPDK_DIR CONFIG_DEBUG=n CONFIG_WERROR=y
+	./configure $config_params --disable-debug --enable-werror
+	time $MAKE ${MAKEFLAGS}
 )
 rm -rf "$tmpdir"
 

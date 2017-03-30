@@ -38,7 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += lib test examples app
 
-.PHONY: all clean $(DIRS-y) config.h
+.PHONY: all clean $(DIRS-y) config.h CONFIG.local
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
@@ -50,7 +50,7 @@ examples: lib
 
 $(DIRS-y): config.h
 
-config.h: CONFIG scripts/genconfig.py
+config.h: CONFIG CONFIG.local scripts/genconfig.py
 	$(Q)python scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp

@@ -67,41 +67,55 @@ FreeBSD:
 
     4) (cd dpdk-17.02 && gmake install T=x86_64-native-bsdapp-clang DESTDIR=.)
 
-Build Configuration
-===================
-
-Optional components and other build-time configuration are controlled by the `CONFIG` file
-in the root SPDK directory.  `CONFIG` is a Makefile fragment that may be edited before building to
-control which options are enabled.
-
-Boolean (on/off) options are configured with a 'y' (yes) or 'n' (no).  For example, this line of
-`CONFIG` controls whether the optional RDMA (libibverbs) support is enabled:
-
-    CONFIG_RDMA?=n
-
-To enable RDMA, this line of CONFIG may be modified to contain 'y' instead of 'n'.
-
-Alternatively, `CONFIG` options may also be overrriden on the `make` command line:
-
-    make CONFIG_RDMA=y
-
-The options specified on the `make` command line take precedence over the default values in
-`CONFIG`.
-
 Building
 ========
 
-Once the prerequisites are installed, run 'make' within the SPDK directory
-to build the SPDK libraries and examples.
-If you followed the instructions above for building DPDK:
+Once the prerequisites are installed, building follows the common configure
+and make pattern. If you followed the instructions above for building DPDK:
 
 Linux:
 
-    make DPDK_DIR=./dpdk-17.02/x86_64-native-linuxapp-gcc
+    ./configure --with-dpdk=./dpdk-17.02/x86_64-native-linuxapp-gcc
+    make
 
 FreeBSD:
 
-    gmake DPDK_DIR=./dpdk-17.02/x86_64-native-bsdapp-clang
+    ./configure --with-dpdk=./dpdk-17.02/x86_64-native-bsdapp-clang
+    gmake
+
+Advanced Build Options
+======================
+
+Optional components and other build-time configuration are controlled by
+settings in two Makefile fragments in the root of the repository. `CONFIG`
+contains the base settings. Running the `configure` script generates a new
+file, `CONFIG.local`, that contains overrides to the base `CONFIG` file. For
+advanced configuration, there are a number of additional options to `configure`
+that may be used, or `CONFIG.local` can simply be created and edited by hand. A
+description of all possible options is located in `CONFIG`.
+
+Boolean (on/off) options are configured with a 'y' (yes) or 'n' (no). For
+example, this line of `CONFIG` controls whether the optional RDMA (libibverbs)
+support is enabled:
+
+    CONFIG_RDMA?=n
+
+To enable RDMA, this line may be added to `CONFIG.local` with a 'y' instead of
+'n'. For the majority of options this can be done using the `configure` script.
+For example:
+
+    ./configure --with-dpdk=./dpdk-17.02/x86_64-native-linuxapp-gcc --with-rdma
+
+Additionally, `CONFIG` options may also be overrriden on the `make` command
+line:
+
+    make CONFIG_RDMA=y
+
+The options specified on the `make` command line take precedence over the
+default values in `CONFIG` and `CONFIG.local`. This can be useful if you, for
+example, generate a `CONFIG.local` using the `configure` script and then have
+one or two options (i.e. debug builds) that you wish to turn on and off
+frequently.
 
 Hugepages and Device Binding
 ============================
