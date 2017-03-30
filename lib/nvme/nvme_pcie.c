@@ -119,7 +119,8 @@ struct nvme_tracker {
 	struct nvme_request		*req;
 	uint16_t			cid;
 
-	uint16_t			rsvd1: 15;
+	uint16_t			rsvd1: 14;
+	uint16_t			timed_out: 1;
 	uint16_t			active: 1;
 
 	uint32_t			rsvd2;
@@ -1020,6 +1021,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
 	tr->submit_tick = spdk_get_ticks();
+	tr->timed_out = 0;
 
 	req = tr->req;
 	pqpair->tr[tr->cid].active = true;
@@ -1778,7 +1780,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	}
 
 	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
-	TAILQ_INSERT_HEAD(&pqpair->outstanding_tr, tr, tq_list);
+	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
 	tr->req = req;
 	req->cmd.cid = tr->cid;
 
@@ -1817,36 +1819,29 @@ static void
 nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 {
 	uint64_t t02;
-	struct nvme_tracker *tr;
+	struct nvme_tracker *tr, *tmp;
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 
-	if (TAILQ_EMPTY(&pqpair->outstanding_tr)) {
-		return;
-	}
-
-	/*
-	 * qpair could be either for normal i/o or for admin command. If qpair is admin
-	 * and request is SPDK_NVME_OPC_ASYNC_EVENT_REQUEST, skip to next previous.
-	 */
-	tr = TAILQ_LAST(&pqpair->outstanding_tr, nvme_outstanding_tr_head);
-	while (tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
-		/* qpair is for admin request */
-		tr = TAILQ_PREV(tr, nvme_outstanding_tr_head, tq_list);
-		if (!tr) {
-			/*
-			 * All request were AER
-			 */
-			return;
-		}
-	}
-
 	t02 = spdk_get_ticks();
-	if (tr->submit_tick + ctrlr->timeout_ticks <= t02) {
-		/*
-		 * Request has timed out. This could be i/o or admin request.
-		 * Call the registered timeout function for user to take action.
-		 */
+	TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
+		if (tr->timed_out) {
+			continue;
+		}
+
+		if (qpair == ctrlr->adminq &&
+		    tr->req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST) {
+			continue;
+		}
+
+		if (tr->submit_tick + ctrlr->timeout_ticks > t02) {
+			/* The trackers are in order, so as soon as one has not timed out,
+			 * stop iterating.
+			 */
+			break;
+		}
+
+		tr->timed_out = 1;
 		ctrlr->timeout_cb_fn(ctrlr->timeout_cb_arg, ctrlr, qpair, tr->cid);
 	}
 }
