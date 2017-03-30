@@ -112,7 +112,7 @@ struct nvme_probe_ctx {
 };
 
 static int g_hot_insert_nvme_controller_index = 0;
-static int g_reset_controller_on_timeout = 0;
+static bool g_reset_controller_on_timeout = false;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 static int g_nvme_hotplug_poll_timeout_us = 0;
@@ -768,12 +768,8 @@ bdev_nvme_library_init(void)
 		probe_ctx.count++;
 	}
 
-	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
-	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			g_reset_controller_on_timeout = 1;
-		}
-	}
+	g_reset_controller_on_timeout =
+		spdk_conf_section_get_boolval(sp, "ResetControllerOnTimeout", false);
 
 	if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
 		g_timeout = 0;

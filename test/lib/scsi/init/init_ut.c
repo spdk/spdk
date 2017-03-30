@@ -274,6 +274,7 @@ scsi_init_ugavalid_no(void)
 static void
 scsi_init_ugavalid_unknown_value_failure(void)
 {
+	struct spdk_scsi_parameters params;
 	int rc;
 	struct spdk_conf *config;
 
@@ -282,10 +283,13 @@ scsi_init_ugavalid_unknown_value_failure(void)
 	config = spdk_config_init_scsi_params("Ugavalid", "unknown value");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
+	CU_ASSERT_EQUAL(rc, 0);
 
-	/* returns -1 since scsi_params.ugavalid is set to
-	 * 'unknown value' */
-	CU_ASSERT_TRUE(rc < 0);
+	/* Assert the scsi_params.ugavalid == DEFAULT_UGAVALID and
+	 * assert the rest of the params are set to their default values */
+	set_default_scsi_params(&params);
+	params.ugavalid = DEFAULT_UGAVALID;
+	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
 
 	spdk_conf_free(config);
 }

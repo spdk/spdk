@@ -427,6 +427,27 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 	return value;
 }
 
+bool
+spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key, bool default_val)
+{
+	const char *v;
+
+	v = spdk_conf_section_get_nval(sp, key, 0);
+	if (v == NULL) {
+		return default_val;
+	}
+
+	if (!strcasecmp(v, "Yes") || !strcasecmp(v, "Y") || !strcasecmp(v, "True")) {
+		return true;
+	}
+
+	if (!strcasecmp(v, "No") || !strcasecmp(v, "N") || !strcasecmp(v, "False")) {
+		return false;
+	}
+
+	return default_val;
+}
+
 static int
 parse_line(struct spdk_conf *cp, char *lp)
 {

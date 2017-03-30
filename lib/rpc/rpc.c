@@ -83,23 +83,13 @@ static int
 enable_rpc(void)
 {
 	struct spdk_conf_section	*sp;
-	char				*val;
 
 	sp = spdk_conf_find_section(NULL, "Rpc");
 	if (sp == NULL) {
 		return 0;
 	}
 
-	val = spdk_conf_section_get_val(sp, "Enable");
-	if (val == NULL) {
-		return 0;
-	}
-
-	if (!strcmp(val, "Yes")) {
-		return 1;
-	}
-
-	return 0;
+	return spdk_conf_section_get_boolval(sp, "Enable", false);
 }
 
 static const char *

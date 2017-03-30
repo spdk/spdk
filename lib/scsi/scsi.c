@@ -88,17 +88,7 @@ spdk_read_config_scsi_parameters(void)
 	g_spdk_scsi.scsi_params.unmap_granularity_alignment = (val == NULL) ?
 			DEFAULT_UNMAP_GRANULARITY_ALIGNMENT : strtoul(val, NULL, 10);
 
-	val = spdk_conf_section_get_val(sp, "Ugavalid");
-	if (val == NULL) {
-		g_spdk_scsi.scsi_params.ugavalid = DEFAULT_UGAVALID;
-	} else if (strcasecmp(val, "Yes") == 0) {
-		g_spdk_scsi.scsi_params.ugavalid = 1;
-	} else if (strcasecmp(val, "No") == 0) {
-		g_spdk_scsi.scsi_params.ugavalid = 0;
-	} else {
-		SPDK_ERRLOG("unknown value %s\n", val);
-		return -1;
-	}
+	g_spdk_scsi.scsi_params.ugavalid = spdk_conf_section_get_boolval(sp, "Ugavalid", DEFAULT_UGAVALID);
 
 	val = spdk_conf_section_get_val(sp, "MaxWriteSameLength");
 	g_spdk_scsi.scsi_params.max_write_same_length = (val == NULL) ?

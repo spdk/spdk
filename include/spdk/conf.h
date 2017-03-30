@@ -63,6 +63,7 @@ char *spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key,
 char *spdk_conf_section_get_nval(struct spdk_conf_section *sp, const char *key, int idx);
 char *spdk_conf_section_get_val(struct spdk_conf_section *sp, const char *key);
 int spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key);
+bool spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key, bool default_val);
 
 void spdk_conf_set_as_default(struct spdk_conf *cp);
 
