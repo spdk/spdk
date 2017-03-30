@@ -514,7 +514,8 @@ int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	struct spdk_nvme_qpair *qpair;
+	struct spdk_nvme_qpair	*qpair;
+	struct nvme_request	*req, *tmp;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
@@ -531,6 +532,13 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_resetting = true;
 
 	SPDK_NOTICELOG("resetting controller\n");
+
+	/* Free all of the queued abort requests */
+	STAILQ_FOREACH_SAFE(req, &ctrlr->queued_aborts, stailq, tmp) {
+		STAILQ_REMOVE_HEAD(&ctrlr->queued_aborts, stailq);
+		nvme_free_request(req);
+		ctrlr->outstanding_aborts--;
+	}
 
 	/* Disable all queues before disabling the controller hardware. */
 	nvme_qpair_disable(ctrlr->adminq);
@@ -1313,6 +1321,8 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_failed = false;
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
+	STAILQ_INIT(&ctrlr->queued_aborts);
+	ctrlr->outstanding_aborts = 0;
 
 	rc = nvme_robust_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 	if (rc != 0) {

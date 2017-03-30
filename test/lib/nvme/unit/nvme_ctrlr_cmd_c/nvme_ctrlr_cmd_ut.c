@@ -285,6 +285,12 @@ nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_c
 	return nvme_allocate_request_contig(buffer, payload_size, cb_fn, cb_arg);
 }
 
+void
+nvme_free_request(struct nvme_request *req)
+{
+	return;
+}
+
 int
 nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
 {
@@ -460,6 +466,8 @@ test_abort_cmd(void)
 {
 	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct spdk_nvme_qpair	qpair = {};
+
+	STAILQ_INIT(&ctrlr.queued_aborts);
 
 	verify_fn = verify_abort_cmd;
 

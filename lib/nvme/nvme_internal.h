@@ -447,6 +447,9 @@ struct spdk_nvme_ctrlr {
 	spdk_nvme_timeout_cb		timeout_cb_fn;
 	void				*timeout_cb_arg;
 	uint64_t			timeout_ticks;
+
+	STAILQ_HEAD(, nvme_request)	queued_aborts;
+	uint32_t			outstanding_aborts;
 };
 
 struct nvme_driver {
