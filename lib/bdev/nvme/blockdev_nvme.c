@@ -516,7 +516,7 @@ static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts)
 {
-	SPDK_NOTICELOG("Attaching to %s\n", trid->traddr);
+	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Attaching to %s\n", trid->traddr);
 
 	return true;
 }
@@ -529,7 +529,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	size_t i;
 	bool claim_device = false;
 
-	SPDK_NOTICELOG("Probing device %s\n", trid->traddr);
+	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Probing device %s\n", trid->traddr);
 
 	for (i = 0; i < ctx->count; i++) {
 		if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
@@ -539,7 +539,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (!claim_device) {
-		SPDK_ERRLOG("Not claiming device at %s\n", trid->traddr);
+		SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
 		return false;
 	}
 
@@ -595,6 +595,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
 		return;
 	}
+
+	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
 	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
 	if (nvme_ctrlr == NULL) {
