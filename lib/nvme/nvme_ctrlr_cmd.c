@@ -392,6 +392,38 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 	return rc;
 }
 
+static void
+spdk_nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_request	*req, *next, *tmp;
+	struct spdk_nvme_ctrlr	*ctrlr;
+	int			rc;
+
+	req = ctx;
+	ctrlr = (struct spdk_nvme_ctrlr *)req->user_buffer;
+
+	ctrlr->outstanding_aborts--;
+	STAILQ_FOREACH_SAFE(next, &ctrlr->queued_aborts, stailq, tmp) {
+		STAILQ_REMOVE_HEAD(&ctrlr->queued_aborts, stailq);
+		ctrlr->outstanding_aborts++;
+		rc = nvme_ctrlr_submit_admin_request(ctrlr, next);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to submit queued abort.\n");
+			next->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			next->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			next->cpl.status.dnr = 1;
+			next->cb_fn(next->cb_arg, &req->cpl);
+
+			nvme_free_request(next);
+		} else {
+			/* If the first abort succeeds, stop iterating. */
+			break;
+		}
+	}
+
+	req->user_cb_fn(req->user_cb_arg, cpl);
+}
+
 int
 spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 			  uint16_t cid, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
@@ -408,17 +440,29 @@ spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair 
 	}
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	req = nvme_allocate_request_null(spdk_nvme_ctrlr_cmd_abort_cpl, NULL);
 	if (req == NULL) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
 	}
+	req->cb_arg = req;
+	req->user_cb_fn = cb_fn;
+	req->user_cb_arg = cb_arg;
+	req->user_buffer = ctrlr; /* This is a hack to get to the ctrlr in the
+				   * completion handler. */
 
 	cmd = &req->cmd;
 	cmd->opc = SPDK_NVME_OPC_ABORT;
 	cmd->cdw10 = (cid << 16) | sqid;
 
-	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	if (ctrlr->outstanding_aborts >= ctrlr->cdata.acl) {
+		STAILQ_INSERT_TAIL(&ctrlr->queued_aborts, req, stailq);
+		rc = 0;
+	} else {
+		ctrlr->outstanding_aborts++;
+		rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	}
+
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return rc;
 }
