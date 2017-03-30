@@ -809,6 +809,8 @@ bdev_nvme_library_fini(void)
 {
 	struct nvme_bdev *nvme_bdev, *btmp;
 
+	spdk_poller_unregister(&g_hotplug_poller, NULL);
+
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
 		bdev_nvme_destruct(&nvme_bdev->disk);
 	}
