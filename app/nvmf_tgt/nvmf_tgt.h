@@ -38,6 +38,7 @@
 
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"
+#include "spdk/event.h"
 
 struct rpc_listen_address {
 	char *transport;
@@ -85,4 +86,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 
 int
 nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn);
+
+int
+spdk_nvmf_tgt_start(struct spdk_app_opts *opts);
 #endif
