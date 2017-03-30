@@ -99,6 +99,9 @@
   # Units in microseconds.
   AdminPollRate 100000
 
+  # Enable handling of hotplug (runtime insert and remove) events
+  HotplugEnable Yes
+
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
   # Syntax:

@@ -115,6 +115,7 @@ static int g_hot_insert_nvme_controller_index = 0;
 static bool g_reset_controller_on_timeout = false;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
+static bool g_nvme_hotplug_enabled;
 static int g_nvme_hotplug_poll_timeout_us = 0;
 static int g_nvme_hotplug_poll_core = 0;
 static struct spdk_poller *g_hotplug_poller;
@@ -780,6 +781,8 @@ bdev_nvme_library_init(void)
 		g_nvme_adminq_poll_timeout_us = 1000000;
 	}
 
+	g_nvme_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", true);
+
 	g_nvme_hotplug_poll_timeout_us = spdk_conf_section_get_intval(sp, "HotplugPollRate");
 	if (g_nvme_hotplug_poll_timeout_us <= 0 || g_nvme_hotplug_poll_timeout_us > 100000) {
 		g_nvme_hotplug_poll_timeout_us = 100000;
@@ -794,8 +797,10 @@ bdev_nvme_library_init(void)
 		return -1;
 	}
 
-	spdk_poller_register(&g_hotplug_poller, blockdev_nvme_hotplug, NULL,
-			     g_nvme_hotplug_poll_core, g_nvme_hotplug_poll_timeout_us);
+	if (g_nvme_hotplug_enabled) {
+		spdk_poller_register(&g_hotplug_poller, blockdev_nvme_hotplug, NULL,
+				     g_nvme_hotplug_poll_core, g_nvme_hotplug_poll_timeout_us);
+	}
 
 	return 0;
 }
@@ -805,7 +810,9 @@ bdev_nvme_library_fini(void)
 {
 	struct nvme_bdev *nvme_bdev, *btmp;
 
-	spdk_poller_unregister(&g_hotplug_poller, NULL);
+	if (g_nvme_hotplug_enabled) {
+		spdk_poller_unregister(&g_hotplug_poller, NULL);
+	}
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
 		bdev_nvme_destruct(&nvme_bdev->disk);
