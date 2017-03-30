@@ -111,8 +111,14 @@ struct nvme_probe_ctx {
 	const char *names[NVME_MAX_CONTROLLERS];
 };
 
+enum timeout_action {
+	TIMEOUT_ACTION_NONE = 0,
+	TIMEOUT_ACTION_RESET,
+	TIMEOUT_ACTION_ABORT,
+};
+
 static int g_hot_insert_nvme_controller_index = 0;
-static bool g_reset_controller_on_timeout = false;
+static enum timeout_action g_action_on_timeout = TIMEOUT_ACTION_NONE;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 static bool g_nvme_hotplug_enabled;
@@ -560,6 +566,21 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
+spdk_nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = ctx;
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_WARNLOG("Abort failed. Resetting controller.\n");
+		rc = spdk_nvme_ctrlr_reset(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Resetting controller failed.\n");
+		}
+	}
+}
+
+static void
 timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	   struct spdk_nvme_qpair *qpair, uint16_t cid)
 {
@@ -567,9 +588,27 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
-	rc = spdk_nvme_ctrlr_reset(ctrlr);
-	if (rc) {
-		SPDK_ERRLOG("resetting controller failed\n");
+	switch (g_action_on_timeout) {
+	case TIMEOUT_ACTION_ABORT:
+		if (qpair) {
+			rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid,
+						       spdk_nvme_abort_cpl, ctrlr);
+			if (rc == 0) {
+				return;
+			}
+
+			SPDK_ERRLOG("Unable to send abort. Resetting.\n");
+		}
+
+	/* Fallthrough */
+	case TIMEOUT_ACTION_RESET:
+		rc = spdk_nvme_ctrlr_reset(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Resetting controller failed.\n");
+		}
+		break;
+	case TIMEOUT_ACTION_NONE:
+		break;
 	}
 }
 
@@ -621,7 +660,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
-	if (g_reset_controller_on_timeout) {
+	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
 				timeout_cb, NULL);
 	}
@@ -763,11 +802,30 @@ bdev_nvme_library_init(void)
 		probe_ctx.count++;
 	}
 
-	g_reset_controller_on_timeout =
-		spdk_conf_section_get_boolval(sp, "ResetControllerOnTimeout", false);
-
 	if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
 		g_timeout = 0;
+	}
+
+	if (g_timeout > 0) {
+		val = spdk_conf_section_get_val(sp, "ActionOnTimeout");
+		if (val != NULL) {
+			if (!strcasecmp(val, "Reset")) {
+				g_action_on_timeout = TIMEOUT_ACTION_RESET;
+			} else if (!strcasecmp(val, "Abort")) {
+				g_action_on_timeout = TIMEOUT_ACTION_ABORT;
+			}
+		} else {
+			/* Handle old name for backward compatibility */
+			val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
+			if (val) {
+				SPDK_WARNLOG("ResetControllerOnTimeout was renamed to ActionOnTimeout\n");
+				SPDK_WARNLOG("Please update your configuration file\n");
+
+				if (spdk_conf_section_get_boolval(sp, "ResetControllerOnTimeout", false)) {
+					g_action_on_timeout = TIMEOUT_ACTION_RESET;
+				}
+			}
+		}
 	}
 
 	g_nvme_adminq_poll_timeout_us = spdk_conf_section_get_intval(sp, "AdminPollRate");
