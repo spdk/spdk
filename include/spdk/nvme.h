@@ -425,7 +425,7 @@ struct spdk_nvme_qpair;
 typedef void (*spdk_nvme_timeout_cb)(struct spdk_nvme_ctrlr *ctrlr,
 				     struct spdk_nvme_qpair *qpair,
 				     void *cb_arg,
-				     uint16_t abort_count,
+				     bool force_reset,
 				     uint16_t cid);
 /**
  * \brief Register for timeout callback on a controller.
@@ -1198,10 +1198,11 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
- * \brief Sends an abort command to the NVMe device for the request indicated
- *  by cid
+ * \brief Sends an abort command to the NVMe device for the request indicated by cid.
+ *  The application must poll the admin completion queue to obtain the execution
+ *  status or result of the Abort  command.
  *
- * \param ctrlr controller to the Nvme device
+ * \param ctrlr controller to the NVMe device
  * \param qpair I/O queue pair associated with the request
  * \param cid identification number of the command to be aborted.
  * \param cb_fn a function pointer to the abort call back function

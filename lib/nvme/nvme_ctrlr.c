@@ -478,7 +478,7 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 {
 	switch (state) {
 	case NVME_CTRLR_STATE_INIT:
-		return "init";
+			return "init";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		return "disable and wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
@@ -1483,7 +1483,7 @@ void
 spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t nvme_timeout, spdk_nvme_timeout_cb cb_fn, void *cb_arg)
 {
-	nvme_timeout = nvme_timeout == 0? NVME_IO_TIMEOUT:nvme_timeout;
+	nvme_timeout = nvme_timeout == 0 ? NVME_IO_TIMEOUT : nvme_timeout;
 	ctrlr->timeout_ticks = nvme_timeout * spdk_get_ticks_hz();
 	ctrlr->timeout_cb_fn = cb_fn;
 	ctrlr->timeout_cb_arg = cb_arg;

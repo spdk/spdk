@@ -461,7 +461,7 @@ test_abort_cmd(void)
 	struct spdk_nvme_ctrlr	ctrlr = {};
 	struct spdk_nvme_qpair	qpair = {};
 
-        verify_fn = verify_abort_cmd;
+	verify_fn = verify_abort_cmd;
 
 	qpair.id = abort_sqid;
 	spdk_nvme_ctrlr_cmd_abort(&ctrlr, &qpair, abort_cid, NULL, NULL);

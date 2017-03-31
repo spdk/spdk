@@ -393,10 +393,10 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 }
 
 int
-spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr, 
+spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
 			  struct spdk_nvme_qpair *qpair,
 			  uint16_t cid,
-			  spdk_nvme_cmd_cb cb_fn, 
+			  spdk_nvme_cmd_cb cb_fn,
 			  void *cb_arg)
 {
 	int rc;

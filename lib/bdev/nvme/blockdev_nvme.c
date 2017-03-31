@@ -111,10 +111,14 @@ struct nvme_probe_ctx {
 	const char *names[NVME_MAX_CONTROLLERS];
 };
 
+#define RESET_ON_TIMEOUT 0X01
+#define ABORT_ON_TIMEOUT 0X02
+#define NONE_REGISTERED_TIMEOUT 0X03
 static int g_hot_insert_nvme_controller_index = 0;
 static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
 static int nvme_controller_index = 0;
 static int num_controllers = -1;
+static int g_action_on_timeout = NONE_REGISTERED_TIMEOUT;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 static int g_nvme_hotplug_poll_timeout_us = 0;
@@ -571,19 +575,18 @@ blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
 
-	if (g_abort_on_timeout && timeout_count == 1) {
+	if (g_action_on_timeout == ABORT_ON_TIMEOUT && !force_reset) {
 
 		/*
-		 * Abort on timeout AND it is the first time timeout has
-		 * expired for this request.
+		 * Abort on timeout AND it is the first time timeout has expired for this request.
 		 */
 
-		rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid, abort_cb, ctrlr);
+		rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid, NULL, NULL);
 		if (rc) {
 			/**
 			 *  Above function can fail for one of these conditions:
-			 * 1. Memmory allocation error
-			 * 2. We reached the acl (abort count limit) limit  for abort
+			 * 1. Memory allocation error
+			 * 2. We reached the acl (abort count limit) limit for abort
 			 * 3. Controller failed
 			 * All these are corner cases that may show only when there is something wrong
 			 * in the system.
@@ -594,11 +597,11 @@ blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
 			}
 		}
 
-	} else if (g_reset_on_timeout) {
+	} else if ((g_action_on_timeout == RESET_ON_TIMEOUT) || force_reset) {
 
 		/**
-		 * 1. Reset on Timeout only.
-		 * 2. Abort on Timeout AND it is the 2nd time Timeout has expired.
+		 * 1. Reset on Timeout.
+		 * 2. Admin command timed out or I/O command timed out twice.
 		 */
 
 		rc = spdk_nvme_ctrlr_reset(ctrlr);
@@ -654,7 +657,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
-	if (g_reset_on_timeout) {
+	if (g_action_on_timeout == RESET_ON_TIMEOUT || g_action_on_timeout == ABORT_ON_TIMEOUT) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
 				timeout_cb, NULL);
 	}
@@ -802,18 +805,17 @@ bdev_nvme_library_init(void)
 		probe_ctx.count++;
 	}
 
-	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
+	val = spdk_conf_section_get_val(sp, "ActionOnTimeouts");
 	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			g_reset_on_timeout = 1;
-		}
-	}
-
-	val = spdk_conf_section_get_val(sp, "AbortAndResetOnTimeout");
-	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			g_abort_on_timeout = 1;
-			g_reset_on_timeout = 1;
+		if (!strcmp(val, "Abort")) {
+			g_action_on_timeout = ABORT_ON_TIMEOUT;
+		} else if (!strcmp(val, "Reset")) {
+			g_action_on_timeout = RESET_ON_TIMEOUT;
+		} else if (!strcmp(val, "None")) {
+			g_action_on_timeout = NONE_REGISTERED_TIMEOUT;
+		} else {
+			SPDK_ERRLOG("Invalid format for ActionOnTimeouts: %s\n", val);
+			return -1;
 		}
 	}
 

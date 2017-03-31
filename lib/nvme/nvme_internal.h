@@ -98,7 +98,7 @@
 #define NVME_MAX_AER_LOG_SIZE		(4096)
 
 /*
- * Admin and i/o commands default timeout in seconds
+ * Admin and I/O commands default timeout in seconds
  */
 #define NVME_IO_TIMEOUT			30
 

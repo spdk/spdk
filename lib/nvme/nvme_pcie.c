@@ -1820,6 +1820,7 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	struct nvme_tracker *tr;
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	bool force_reset;
 
 	if (TAILQ_EMPTY(&pqpair->outstanding_tr)) {
 		return;
@@ -1844,26 +1845,25 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	t02 = spdk_get_ticks();
 	if (tr->submit_tick + ctrlr->timeout_ticks <= t02) {
 		/*
-		 * Request has timed out. This could be i/o or admin request.
+		 * Request has timed out. This could be I/O or admin request.
 		 * Call the registered timeout function for user to take action.
 		 */
 
-		if (tr->req->cmd.opc == SPDK_NVME_OPC_ABORT) {
+		if (nvme_qpair_is_admin_queue(qpair)) {
 			/*
-			 * An abort command has timed out. Modify timeout_count value to be
-			 * greater than 1 to cause a controller reset from timeout callback
-			 * function.
+			 * Admin command has timed out. Reset controller.
 			 */
-			tr->req->timeout_count = 2;
+			force_reset = true;
 		} else {
 			tr->req->timeout_count++;
+			force_reset = tr->req->timeout_count > 1 ? true : false;
 		}
 
 		tr->submit_tick = spdk_get_ticks();
 		ctrlr->timeout_cb_fn(ctrlr,
 				     qpair,
 				     ctrlr->timeout_cb_arg,
-				     tr->req->timeout_count,
+				     force_reset,
 				     tr->req->cmd.cid);
 	}
 }
