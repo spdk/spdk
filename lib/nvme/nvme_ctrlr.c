@@ -483,8 +483,10 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 		return "disable and wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		return "disable and wait for CSTS.RDY = 0";
+	case NVME_CTRLR_STATE_ENABLE:
+		return "enable controller by writing CC.EN = 1";
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
-		return "enable and wait for CSTS.RDY = 1";
+		return "wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_READY:
 		return "ready";
 	}
@@ -1167,21 +1169,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		} else {
 			if (csts.bits.rdy == 1) {
 				SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 1 - waiting for shutdown to complete\n");
-				/*
-				 * Controller is in the process of shutting down.
-				 * We need to wait for RDY to become 0.
-				 */
-				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
-				return 0;
 			}
 
-			/*
-			 * Controller is currently disabled. We can jump straight to enabling it.
-			 */
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0 - enabling controller\n");
-			rc = nvme_ctrlr_enable(ctrlr);
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
-			return rc;
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
+			return 0;
 		}
 		break;
 
@@ -1203,14 +1194,23 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		if (csts.bits.rdy == 0) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0 - enabling controller\n");
-			/* CC.EN = 0 && CSTS.RDY = 0, so we can enable the controller now. */
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 1\n");
-			rc = nvme_ctrlr_enable(ctrlr);
-			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
-			return rc;
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0\n");
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
+
+			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_ENABLE) {
+				SPDK_TRACELOG(SPDK_TRACE_NVME, "Applying quirk: Delay 100us before enabling.\n");
+				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + spdk_get_ticks_hz() / 10000;
+			}
+
+			return 0;
 		}
 		break;
+
+	case NVME_CTRLR_STATE_ENABLE:
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 1\n");
+		rc = nvme_ctrlr_enable(ctrlr);
+		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
+		return rc;
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {

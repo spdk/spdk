@@ -89,6 +89,13 @@
  */
 #define NVME_INTEL_QUIRK_STRIPING 0x8
 
+/*
+ * A small delay is required before re-enabling a controller.
+ * The delay required is often vanishingly small, such that
+ * many drivers do not ever encounter the problem.
+ */
+#define NVME_QUIRK_DELAY_BEFORE_ENABLE 0x10
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
@@ -308,6 +315,11 @@ enum nvme_ctrlr_state {
 	 * Waiting for CSTS.RDY to transition from 1 to 0 so that CC.EN may be set to 1.
 	 */
 	NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0,
+
+	/**
+	 * Enable the controller by writing CC.EN to 1
+	 */
+	NVME_CTRLR_STATE_ENABLE,
 
 	/**
 	 * Waiting for CSTS.RDY to transition from 0 to 1 after enabling the controller.
