@@ -783,6 +783,7 @@ WARN_LOGFILE           =
 INPUT                  = ../include/spdk \
                          index.md \
                          directory_structure.md \
+                         memory.md \
                          porting.md \
                          blob.md \
                          blobfs.md \
