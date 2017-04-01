@@ -115,9 +115,6 @@ struct nvme_probe_ctx {
 #define ABORT_ON_TIMEOUT 0X02
 #define NONE_REGISTERED_TIMEOUT 0X03
 static int g_hot_insert_nvme_controller_index = 0;
-static struct nvme_blockdev g_blockdev[NVME_MAX_BLOCKDEVS];
-static int nvme_controller_index = 0;
-static int num_controllers = -1;
 static int g_action_on_timeout = NONE_REGISTERED_TIMEOUT;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
@@ -659,7 +656,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	if (g_action_on_timeout == RESET_ON_TIMEOUT || g_action_on_timeout == ABORT_ON_TIMEOUT) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
-				timeout_cb, NULL);
+				blockdev_nvme_timeout_cb, NULL);
 	}
 }
 
