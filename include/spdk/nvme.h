@@ -588,25 +588,6 @@ int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
- * \brief Abort a specific previously-submitted NVMe command.
- *
- * \param ctrlr NVMe controller to which the command was submitted.
- * \param qpair NVMe queue pair to which the command was submitted.
- * \param cid Command ID of the command to abort.
- * \param cb_fn Callback function to invoke when the abort has completed.
- * \param cb_arg Argument to pass to the callback function.\
- *
- * \return 0 if successfully submitted, negated errno value otherwise.
- *
- * \sa spdk_nvme_ctrlr_register_timeout_callback()
- */
-int spdk_nvme_ctrlr_cmd_abort(struct spdk_nvme_ctrlr *ctrlr,
-			      struct spdk_nvme_qpair *qpair,
-			      uint16_t cid,
-			      spdk_nvme_cmd_cb cb_fn,
-			      void *cb_arg);
-
-/**
  * \brief Set specific feature for the given NVMe controller.
  *
  * \param ctrlr NVMe controller to manipulate.
