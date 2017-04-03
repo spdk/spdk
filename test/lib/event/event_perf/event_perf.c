@@ -110,7 +110,7 @@ performance_dump(int io_time)
 	uint32_t i;
 
 	printf("\n");
-	RTE_LCORE_FOREACH(i) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		printf("lcore %2d: %8ju\n", i, call_count[i] / g_time_in_sec);
 	}
 
@@ -122,7 +122,7 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts;
 	int op;
-	int i;
+	uint32_t i, current_core;
 
 	spdk_app_opts_init(&opts);
 	opts.name = "event_perf";
@@ -159,8 +159,11 @@ main(int argc, char **argv)
 	fflush(stdout);
 
 	/* call event_work_fn on each slave lcore */
-	RTE_LCORE_FOREACH_SLAVE(i) {
-		rte_eal_remote_launch(event_work_fn, NULL, i);
+	current_core = spdk_env_get_current_core();
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i != current_core) {
+			rte_eal_remote_launch(event_work_fn, NULL, i);
+		}
 	}
 
 	/* call event_work_fn on lcore0 */

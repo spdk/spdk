@@ -182,6 +182,11 @@ uint32_t spdk_env_get_first_core(void);
  */
 uint32_t spdk_env_get_next_core(uint32_t prev_core);
 
+#define SPDK_ENV_FOREACH_CORE(i)		\
+	for (i = spdk_env_get_first_core();	\
+	     i < UINT32_MAX;			\
+	     i = spdk_env_get_next_core(i))
+
 /**
  * \brief Return the socket ID for the given core.
  */

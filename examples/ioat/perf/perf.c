@@ -160,20 +160,20 @@ ioat_done(void *cb_arg)
 static int
 register_workers(void)
 {
-	unsigned lcore;
+	uint32_t i;
 	struct worker_thread *worker;
 
 	g_workers = NULL;
 	g_num_workers = 0;
 
-	RTE_LCORE_FOREACH(lcore) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		worker = calloc(1, sizeof(*worker));
 		if (worker == NULL) {
 			fprintf(stderr, "Unable to allocate worker\n");
 			return -1;
 		}
 
-		worker->lcore = lcore;
+		worker->lcore = i;
 		worker->next = g_workers;
 		g_workers = worker;
 		g_num_workers++;

@@ -438,7 +438,7 @@ get_next_chan(void)
 int
 main(int argc, char **argv)
 {
-	unsigned lcore_id;
+	uint32_t i, current_core;
 	struct thread_entry threads[RTE_MAX_LCORE] = {};
 	int rc;
 
@@ -453,21 +453,27 @@ main(int argc, char **argv)
 	dump_user_config(&g_user_config);
 
 	g_next_device = TAILQ_FIRST(&g_devices);
-	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-		threads[lcore_id].chan = get_next_chan();
-		rte_eal_remote_launch(work_fn, &threads[lcore_id], lcore_id);
+
+	current_core = spdk_env_get_current_core();
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i != current_core) {
+			threads[i].chan = get_next_chan();
+			rte_eal_remote_launch(work_fn, &threads[i], i);
+		}
 	}
 
-	threads[rte_get_master_lcore()].chan = get_next_chan();
-	if (work_fn(&threads[rte_get_master_lcore()]) != 0) {
+	threads[current_core].chan = get_next_chan();
+	if (work_fn(&threads[current_core]) != 0) {
 		rc = 1;
 		goto cleanup;
 	}
 
-	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-		if (rte_eal_wait_lcore(lcore_id) != 0) {
-			rc = 1;
-			goto cleanup;
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i != current_core) {
+			if (rte_eal_wait_lcore(i) != 0) {
+				rc = 1;
+				goto cleanup;
+			}
 		}
 	}
 

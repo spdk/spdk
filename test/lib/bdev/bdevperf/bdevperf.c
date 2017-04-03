@@ -476,7 +476,7 @@ performance_statistics_thread(void *arg)
 static void
 bdevperf_run(void *arg1, void *arg2)
 {
-	int i;
+	uint32_t i;
 	struct io_target *target;
 	struct spdk_event *event;
 
@@ -490,14 +490,12 @@ bdevperf_run(void *arg1, void *arg2)
 	}
 
 	/* Send events to start all I/O */
-	RTE_LCORE_FOREACH(i) {
-		if (spdk_app_get_core_mask() & (1ULL << i)) {
-			target = head[i];
-			if (target != NULL) {
-				event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
-							    target, NULL);
-				spdk_event_call(event);
-			}
+	SPDK_ENV_FOREACH_CORE(i) {
+		target = head[i];
+		if (target != NULL) {
+			event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
+						    target, NULL);
+			spdk_event_call(event);
 		}
 	}
 }

@@ -485,11 +485,11 @@ spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
 uint64_t
 spdk_app_get_core_mask(void)
 {
-	unsigned lcore;
+	uint32_t i;
 	uint64_t mask = 0;
 
-	RTE_LCORE_FOREACH(lcore) {
-		mask |= 1ULL << lcore;
+	SPDK_ENV_FOREACH_CORE(i) {
+		mask |= 1ULL << i;
 	}
 
 	return mask;
@@ -499,11 +499,11 @@ spdk_app_get_core_mask(void)
 static uint64_t
 spdk_reactor_get_socket_mask(void)
 {
-	int i;
+	uint32_t i;
 	uint32_t socket_id;
 	uint64_t socket_info = 0;
 
-	RTE_LCORE_FOREACH(i) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		socket_id = spdk_env_get_socket_id(i);
 		socket_info |= (1ULL << socket_id);
 	}
@@ -515,19 +515,22 @@ void
 spdk_reactors_start(void)
 {
 	struct spdk_reactor *reactor;
-	uint32_t i;
+	uint32_t i, current_core;
 
 	assert(rte_get_master_lcore() == rte_lcore_id());
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
-	RTE_LCORE_FOREACH_SLAVE(i) {
-		reactor = spdk_reactor_get(i);
-		spdk_reactor_start(reactor);
+	current_core = spdk_env_get_current_core();
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i != current_core) {
+			reactor = spdk_reactor_get(i);
+			spdk_reactor_start(reactor);
+		}
 	}
 
 	/* Start the master reactor */
-	reactor = spdk_reactor_get(rte_get_master_lcore());
+	reactor = spdk_reactor_get(current_core);
 	spdk_reactor_start(reactor);
 
 	rte_eal_mp_wait_lcore();
@@ -597,7 +600,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 		}
 	}
 
-	RTE_LCORE_FOREACH(i) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
 		spdk_reactor_construct(reactor, i, max_delay_us);
 	}
@@ -614,7 +617,7 @@ spdk_reactors_fini(void)
 	uint64_t socket_mask;
 	struct spdk_reactor *reactor;
 
-	RTE_LCORE_FOREACH(i) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
 		if (reactor->events != NULL) {
 			rte_ring_free(reactor->events);
