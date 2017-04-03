@@ -434,7 +434,7 @@ work_fn(void)
 {
 	uint64_t tsc_end;
 
-	printf("Starting work_fn on core %u\n", rte_lcore_id());
+	printf("Starting work_fn\n");
 
 	/* Allocate a queue pair for each namespace. */
 	if (init_ns_worker_ctx() != 0) {
