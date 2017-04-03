@@ -800,6 +800,7 @@ INPUT                  = ../include/spdk \
                          nvme.md \
                          nvme-cli.md \
                          nvmf.md \
+                         ssd_internals.md \
                          userspace.md \
                          vagrant.md \
                          vhost.md \

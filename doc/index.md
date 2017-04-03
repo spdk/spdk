@@ -13,6 +13,7 @@
 - @ref userspace
 - @ref memory
 - @ref concurrency
+- @ref ssd_internals
 - @ref porting
 
 # User Guides {#user_guides}
