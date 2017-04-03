@@ -48,6 +48,7 @@
 #endif
 
 #include <rte_config.h>
+#include <rte_version.h>
 #include <rte_ring.h>
 
 #include "spdk/log.h"
@@ -192,8 +193,11 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 	 */
 	memset(events, 0, sizeof(events));
 #endif
-
+#if RTE_VERSION < RTE_VERSION_NUM(17,5,0,0)
 	count = rte_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+#else
+	count = rte_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE, NULL);
+#endif
 	if (count == 0) {
 		return 0;
 	}
