@@ -430,18 +430,18 @@ cleanup(void)
 	struct worker_thread *next_worker	= NULL;
 	struct arb_task *task			= NULL;
 
-	do {
+	while (entry) {
 		next_entry = entry->next;
 		free(entry);
 		entry = next_entry;
-	} while (entry);
+	};
 
-	do {
+	while (worker) {
 		next_worker = worker->next;
 		free(worker->ns_ctx);
 		free(worker);
 		worker = next_worker;
-	} while (worker);
+	};
 
 	if (rte_mempool_get(task_pool, (void **)&task) == 0) {
 		spdk_free(task->buf);
@@ -827,38 +827,27 @@ register_workers(void)
 {
 	unsigned lcore;
 	struct worker_thread *worker;
-	struct worker_thread *prev_worker;
 	enum spdk_nvme_qprio qprio = SPDK_NVME_QPRIO_URGENT;
 
-	worker = malloc(sizeof(struct worker_thread));
-	if (worker == NULL) {
-		perror("worker_thread malloc");
-		return 1;
-	}
+	g_workers = NULL;
+	g_arbitration.num_workers = 0;
 
-	memset(worker, 0, sizeof(struct worker_thread));
-	worker->lcore = rte_get_master_lcore();
-
-	g_workers = worker;
-	worker->qprio = qprio;
-	g_arbitration.num_workers = 1;
-
-	RTE_LCORE_FOREACH_SLAVE(lcore) {
-		prev_worker = worker;
-		worker = malloc(sizeof(struct worker_thread));
+	RTE_LCORE_FOREACH(lcore) {
+		worker = calloc(1, sizeof(*worker));
 		if (worker == NULL) {
-			perror("worker_thread malloc");
-			return 1;
+			fprintf(stderr, "Unable to allocate worker\n");
+			return -1;
 		}
 
-		memset(worker, 0, sizeof(struct worker_thread));
 		worker->lcore = lcore;
-		prev_worker->next = worker;
+		worker->next = g_workers;
+		g_workers = worker;
 		g_arbitration.num_workers++;
 
 		if (g_arbitration.arbitration_mechanism == SPDK_NVME_CAP_AMS_WRR) {
 			qprio++;
 		}
+
 		worker->qprio = qprio % SPDK_NVME_QPRIO_MAX;
 	}
 
@@ -1090,7 +1079,8 @@ int
 main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker;
+	struct worker_thread *worker, *master_worker;
+	unsigned master_core;
 	char task_pool_name[30];
 	uint32_t task_count;
 	struct spdk_env_opts opts;
@@ -1145,21 +1135,23 @@ main(int argc, char **argv)
 	printf("Initialization complete. Launching workers.\n");
 
 	/* Launch all of the slave workers */
-	worker = g_workers->next;
+	master_core = rte_get_master_lcore();
+	master_worker = NULL;
+	worker = g_workers;
 	while (worker != NULL) {
-		rte_eal_remote_launch(work_fn, worker, worker->lcore);
-		worker = worker->next;
-	}
-
-	rc = work_fn(g_workers);
-
-	worker = g_workers->next;
-	while (worker != NULL) {
-		if (rte_eal_wait_lcore(worker->lcore) < 0) {
-			rc = 1;
+		if (worker->lcore != master_core) {
+			rte_eal_remote_launch(work_fn, worker, worker->lcore);
+		} else {
+			assert(master_worker == NULL);
+			master_worker = worker;
 		}
 		worker = worker->next;
 	}
+
+	assert(master_worker != NULL);
+	rc = work_fn(master_worker);
+
+	rte_eal_mp_wait_lcore();
 
 	print_stats();
 

@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -161,31 +162,20 @@ register_workers(void)
 {
 	unsigned lcore;
 	struct worker_thread *worker;
-	struct worker_thread *prev_worker;
 
-	worker = malloc(sizeof(struct worker_thread));
-	if (worker == NULL) {
-		perror("worker_thread malloc");
-		return -1;
-	}
+	g_workers = NULL;
+	g_num_workers = 0;
 
-	memset(worker, 0, sizeof(struct worker_thread));
-	worker->lcore = rte_get_master_lcore();
-
-	g_workers = worker;
-	g_num_workers = 1;
-
-	RTE_LCORE_FOREACH_SLAVE(lcore) {
-		prev_worker = worker;
-		worker = malloc(sizeof(struct worker_thread));
+	RTE_LCORE_FOREACH(lcore) {
+		worker = calloc(1, sizeof(*worker));
 		if (worker == NULL) {
-			perror("worker_thread malloc");
+			fprintf(stderr, "Unable to allocate worker\n");
 			return -1;
 		}
 
-		memset(worker, 0, sizeof(struct worker_thread));
 		worker->lcore = lcore;
-		prev_worker->next = worker;
+		worker->next = g_workers;
+		g_workers = worker;
 		g_num_workers++;
 	}
 
@@ -515,7 +505,8 @@ int
 main(int argc, char **argv)
 {
 	int rc;
-	struct worker_thread *worker;
+	struct worker_thread *worker, *master_worker;
+	unsigned master_core;
 
 	if (parse_args(argc, argv) != 0) {
 		return 1;
@@ -557,25 +548,26 @@ main(int argc, char **argv)
 	}
 
 	/* Launch all of the slave workers */
-	worker = g_workers->next;
+	master_core = rte_get_master_lcore();
+	master_worker = NULL;
+	worker = g_workers;
 	while (worker != NULL) {
-		rte_eal_remote_launch(work_fn, worker, worker->lcore);
+		if (worker->lcore != master_core) {
+			rte_eal_remote_launch(work_fn, worker, worker->lcore);
+		} else {
+			assert(master_worker == NULL);
+			master_worker = worker;
+		}
 		worker = worker->next;
 	}
 
-	rc = work_fn(g_workers);
+	assert(master_worker != NULL);
+	rc = work_fn(master_worker);
 	if (rc < 0) {
 		goto cleanup;
 	}
 
-	worker = g_workers->next;
-	while (worker != NULL) {
-		if (rte_eal_wait_lcore(worker->lcore) < 0) {
-			rc = -1;
-			goto cleanup;
-		}
-		worker = worker->next;
-	}
+	rte_eal_mp_wait_lcore();
 
 	rc = dump_result();
 
