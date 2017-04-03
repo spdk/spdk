@@ -239,7 +239,8 @@ static void verify_fw_image_download(struct nvme_request *req)
 }
 
 struct nvme_request *
-nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
+nvme_allocate_request(struct spdk_nvme_qpair *qpair,
+		      const struct nvme_payload *payload, uint32_t payload_size,
 		      spdk_nvme_cmd_cb cb_fn,
 		      void *cb_arg)
 {
@@ -252,15 +253,15 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
-
+	req->qpair = qpair;
 	req->pid = getpid();
 
 	return req;
 }
 
 struct nvme_request *
-nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
-			     void *cb_arg)
+nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair, void *buffer, uint32_t payload_size,
+			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_payload payload;
 
@@ -268,21 +269,21 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_
 	payload.u.contig = buffer;
 	payload.md = NULL;
 
-	return nvme_allocate_request(&payload, payload_size, cb_fn, cb_arg);
+	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
 }
 
 struct nvme_request *
-nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
+	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
 }
 
 struct nvme_request *
-nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
-				void *cb_arg, bool host_to_controller)
+nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair, void *buffer, uint32_t payload_size,
+				spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller)
 {
 	/* For the unit test, we don't actually need to copy the buffer */
-	return nvme_allocate_request_contig(buffer, payload_size, cb_fn, cb_arg);
+	return nvme_allocate_request_contig(qpair, buffer, payload_size, cb_fn, cb_arg);
 }
 
 void

@@ -835,7 +835,7 @@ nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_request *req;
 
 	aer->ctrlr = ctrlr;
-	req = nvme_allocate_request_null(nvme_ctrlr_async_event_cb, aer);
+	req = nvme_allocate_request_null(ctrlr->adminq, nvme_ctrlr_async_event_cb, aer);
 	aer->req = req;
 	if (req == NULL) {
 		return -1;
@@ -1402,7 +1402,7 @@ nvme_ctrlr_keep_alive(struct spdk_nvme_ctrlr *ctrlr)
 		return;
 	}
 
-	req = nvme_allocate_request_null(nvme_keep_alive_completion, NULL);
+	req = nvme_allocate_request_null(ctrlr->adminq, nvme_keep_alive_completion, NULL);
 	if (req == NULL) {
 		return;
 	}

@@ -186,6 +186,8 @@ struct nvme_request {
 	void				*cb_arg;
 	STAILQ_ENTRY(nvme_request)	stailq;
 
+	struct spdk_nvme_qpair		*qpair;
+
 	/**
 	 * The active admin request can be moved to a per process pending
 	 *  list based on the saved pid to tell which process it belongs
@@ -555,12 +557,16 @@ int	nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 			  struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_destruct(struct spdk_nvme_ns *ns);
 
-struct nvme_request *nvme_allocate_request(const struct nvme_payload *payload,
+struct nvme_request *nvme_allocate_request(struct spdk_nvme_qpair *qpair,
+		const struct nvme_payload *payload,
 		uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-struct nvme_request *nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-struct nvme_request *nvme_allocate_request_contig(void *buffer, uint32_t payload_size,
+struct nvme_request *nvme_allocate_request_null(struct spdk_nvme_qpair *qpair,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
-struct nvme_request *nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size,
+struct nvme_request *nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
+		void *buffer, uint32_t payload_size,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
+		void *buffer, uint32_t payload_size,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 void	nvme_free_request(struct nvme_request *req);
 void	nvme_request_remove_child(struct nvme_request *parent, struct nvme_request *child);

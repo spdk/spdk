@@ -240,7 +240,7 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 struct nvme_request *
-nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	abort();
 }

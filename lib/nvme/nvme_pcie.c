@@ -1261,7 +1261,7 @@ nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 
-	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -1292,7 +1292,7 @@ nvme_pcie_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 
-	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -1319,7 +1319,7 @@ nvme_pcie_ctrlr_cmd_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 
-	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
 	if (req == NULL) {
 		return -ENOMEM;
 	}
@@ -1338,7 +1338,7 @@ nvme_pcie_ctrlr_cmd_delete_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	struct nvme_request *req;
 	struct spdk_nvme_cmd *cmd;
 
-	req = nvme_allocate_request_null(cb_fn, cb_arg);
+	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
 	if (req == NULL) {
 		return -ENOMEM;
 	}

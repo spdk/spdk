@@ -48,7 +48,8 @@ struct nvme_driver _g_nvme_driver = {
 };
 
 struct nvme_request *
-nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
+nvme_allocate_request(struct spdk_nvme_qpair *qpair,
+		      const struct nvme_payload *payload, uint32_t payload_size,
 		      spdk_nvme_cmd_cb cb_fn,
 		      void *cb_arg)
 {
@@ -73,27 +74,28 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
 	req->payload_size = payload_size;
+	req->qpair = qpair;
 	req->pid = getpid();
 
 	return req;
 }
 
 struct nvme_request *
-nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
-			     void *cb_arg)
+nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair, void *buffer, uint32_t payload_size,
+			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_payload payload;
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
 	payload.u.contig = buffer;
 
-	return nvme_allocate_request(&payload, payload_size, cb_fn, cb_arg);
+	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
 }
 
 struct nvme_request *
-nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
+	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
 }
 
 void
@@ -185,7 +187,7 @@ test3(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 
-	req = nvme_allocate_request_null(expected_success_callback, NULL);
+	req = nvme_allocate_request_null(&qpair, expected_success_callback, NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
@@ -205,7 +207,8 @@ test_ctrlr_failed(void)
 
 	prepare_submit_request_test(&qpair, &ctrlr);
 
-	req = nvme_allocate_request_contig(payload, sizeof(payload), expected_failure_callback, NULL);
+	req = nvme_allocate_request_contig(&qpair, payload, sizeof(payload), expected_failure_callback,
+					   NULL);
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 
 	/* Set the controller to failed.

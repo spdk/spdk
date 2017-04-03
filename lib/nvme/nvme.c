@@ -71,7 +71,8 @@ nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 }
 
 struct nvme_request *
-nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
+nvme_allocate_request(struct spdk_nvme_qpair *qpair,
+		      const struct nvme_payload *payload, uint32_t payload_size,
 		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_request *req = NULL;
@@ -94,14 +95,16 @@ nvme_allocate_request(const struct nvme_payload *payload, uint32_t payload_size,
 	req->cb_arg = cb_arg;
 	req->payload = *payload;
 	req->payload_size = payload_size;
+	req->qpair = qpair;
 	req->pid = getpid();
 
 	return req;
 }
 
 struct nvme_request *
-nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
-			     void *cb_arg)
+nvme_allocate_request_contig(struct spdk_nvme_qpair *qpair,
+			     void *buffer, uint32_t payload_size,
+			     spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	struct nvme_payload payload;
 
@@ -109,13 +112,13 @@ nvme_allocate_request_contig(void *buffer, uint32_t payload_size, spdk_nvme_cmd_
 	payload.u.contig = buffer;
 	payload.md = NULL;
 
-	return nvme_allocate_request(&payload, payload_size, cb_fn, cb_arg);
+	return nvme_allocate_request(qpair, &payload, payload_size, cb_fn, cb_arg);
 }
 
 struct nvme_request *
-nvme_allocate_request_null(spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	return nvme_allocate_request_contig(NULL, 0, cb_fn, cb_arg);
+	return nvme_allocate_request_contig(qpair, NULL, 0, cb_fn, cb_arg);
 }
 
 static void
@@ -148,7 +151,8 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
  * where the overhead of a copy is not a problem.
  */
 struct nvme_request *
-nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
+nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
+				void *buffer, uint32_t payload_size, spdk_nvme_cmd_cb cb_fn,
 				void *cb_arg, bool host_to_controller)
 {
 	struct nvme_request *req;
@@ -166,7 +170,8 @@ nvme_allocate_request_user_copy(void *buffer, uint32_t payload_size, spdk_nvme_c
 		}
 	}
 
-	req = nvme_allocate_request_contig(contig_buffer, payload_size, nvme_user_copy_cmd_complete, NULL);
+	req = nvme_allocate_request_contig(qpair, contig_buffer, payload_size, nvme_user_copy_cmd_complete,
+					   NULL);
 	if (!req) {
 		spdk_free(contig_buffer);
 		return NULL;
