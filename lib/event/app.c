@@ -332,7 +332,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
 	 *  reactor.
 	 */
-	if (spdk_reactors_init(opts->reactor_mask, opts->max_delay_us)) {
+	if (spdk_reactors_init(opts->max_delay_us)) {
 		fprintf(stderr, "Invalid reactor mask.\n");
 		spdk_conf_free(g_spdk_app.config);
 		exit(EXIT_FAILURE);
