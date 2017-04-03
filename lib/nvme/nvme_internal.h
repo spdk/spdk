@@ -98,6 +98,11 @@
 #define NVME_MAX_AER_LOG_SIZE		(4096)
 
 /*
+ * Admin and I/O commands default timeout in seconds
+ */
+#define NVME_IO_TIMEOUT			30
+
+/*
  * NVME_MAX_IO_QUEUES in nvme_spec.h defines the 64K spec-limit, but this
  *  define specifies the maximum number of queues this driver will actually
  *  try to configure, if available.
@@ -188,6 +193,11 @@ struct nvme_request {
 	 */
 	pid_t				pid;
 	struct spdk_nvme_cpl		cpl;
+
+	/**
+	 * Used to determine if a request has been aborted previously.
+	 */
+	uint16_t			timeout_count;
 
 	/**
 	 * The following members should not be reordered with members

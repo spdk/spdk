@@ -111,8 +111,11 @@ struct nvme_probe_ctx {
 	const char *names[NVME_MAX_CONTROLLERS];
 };
 
+#define RESET_ON_TIMEOUT 0X01
+#define ABORT_ON_TIMEOUT 0X02
+#define NONE_REGISTERED_TIMEOUT 0X03
 static int g_hot_insert_nvme_controller_index = 0;
-static int g_reset_controller_on_timeout = 0;
+static int g_action_on_timeout = NONE_REGISTERED_TIMEOUT;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 static int g_nvme_hotplug_poll_timeout_us = 0;
@@ -559,16 +562,49 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
-timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
-	   struct spdk_nvme_qpair *qpair, uint16_t cid)
+blockdev_nvme_timeout_cb(struct spdk_nvme_ctrlr *ctrlr,
+			 struct spdk_nvme_qpair *qpair,
+			 void *cb_arg,
+			 bool force_reset,
+			 uint16_t cid)
 {
 	int rc;
 
-	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
+	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p\n", ctrlr, qpair);
 
-	rc = spdk_nvme_ctrlr_reset(ctrlr);
-	if (rc) {
-		SPDK_ERRLOG("resetting controller failed\n");
+	if (g_action_on_timeout == ABORT_ON_TIMEOUT && !force_reset) {
+
+		/*
+		 * Abort on timeout AND it is the first time timeout has expired for this request.
+		 */
+
+		rc = spdk_nvme_ctrlr_cmd_abort(ctrlr, qpair, cid, NULL, NULL);
+		if (rc) {
+			/**
+			 *  Above function can fail for one of these conditions:
+			 * 1. Memory allocation error
+			 * 2. We reached the acl (abort count limit) limit for abort
+			 * 3. Controller failed
+			 * All these are corner cases that may show only when there is something wrong
+			 * in the system.
+			 */
+			rc = spdk_nvme_ctrlr_reset(ctrlr);
+			if (rc) {
+				SPDK_ERRLOG("resetting controller failed\n");
+			}
+		}
+
+	} else if ((g_action_on_timeout == RESET_ON_TIMEOUT) || force_reset) {
+
+		/**
+		 * 1. Reset on Timeout.
+		 * 2. Admin command timed out or I/O command timed out twice.
+		 */
+
+		rc = spdk_nvme_ctrlr_reset(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("resetting controller failed\n");
+		}
 	}
 }
 
@@ -618,9 +654,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
-	if (g_reset_controller_on_timeout) {
+	if (g_action_on_timeout == RESET_ON_TIMEOUT || g_action_on_timeout == ABORT_ON_TIMEOUT) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
-				timeout_cb, NULL);
+				blockdev_nvme_timeout_cb, NULL);
 	}
 }
 
@@ -766,10 +802,17 @@ bdev_nvme_library_init(void)
 		probe_ctx.count++;
 	}
 
-	val = spdk_conf_section_get_val(sp, "ResetControllerOnTimeout");
+	val = spdk_conf_section_get_val(sp, "ActionOnTimeouts");
 	if (val != NULL) {
-		if (!strcmp(val, "Yes")) {
-			g_reset_controller_on_timeout = 1;
+		if (!strcmp(val, "Abort")) {
+			g_action_on_timeout = ABORT_ON_TIMEOUT;
+		} else if (!strcmp(val, "Reset")) {
+			g_action_on_timeout = RESET_ON_TIMEOUT;
+		} else if (!strcmp(val, "None")) {
+			g_action_on_timeout = NONE_REGISTERED_TIMEOUT;
+		} else {
+			SPDK_ERRLOG("Invalid format for ActionOnTimeouts: %s\n", val);
+			return -1;
 		}
 	}
 
