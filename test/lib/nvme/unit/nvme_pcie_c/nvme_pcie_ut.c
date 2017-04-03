@@ -47,7 +47,6 @@ struct spdk_trace_flag SPDK_TRACE_NVME = {
 
 static struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
-	.request_mempool = NULL,
 };
 struct nvme_driver *g_spdk_nvme_driver = &_g_nvme_driver;
 
@@ -92,7 +91,8 @@ spdk_pci_device_get_id(struct spdk_pci_device *dev)
 int
 nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		struct spdk_nvme_ctrlr *ctrlr,
-		enum spdk_nvme_qprio qprio)
+		enum spdk_nvme_qprio qprio,
+		uint32_t num_requests)
 {
 	abort();
 }
@@ -347,7 +347,7 @@ ut_insert_cq_entry(struct spdk_nvme_qpair *qpair, uint32_t slot)
 	struct nvme_tracker 	*tr;
 	struct spdk_nvme_cpl	*cpl;
 
-	req = spdk_mempool_get(_g_nvme_driver.request_mempool);
+	req = calloc(1, sizeof(*req));
 	SPDK_CU_ASSERT_FATAL(req != NULL);
 	memset(req, 0, sizeof(*req));
 

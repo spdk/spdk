@@ -75,12 +75,14 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		      const struct nvme_payload *payload, uint32_t payload_size,
 		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	struct nvme_request *req = NULL;
+	struct nvme_request *req;
 
-	req = spdk_mempool_get(g_spdk_nvme_driver->request_mempool);
+	req = STAILQ_FIRST(&qpair->free_req);
 	if (req == NULL) {
 		return req;
 	}
+
+	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
 
 	/*
 	 * Only memset up to (but not including) the children
@@ -190,8 +192,9 @@ nvme_free_request(struct nvme_request *req)
 {
 	assert(req != NULL);
 	assert(req->num_children == 0);
+	assert(req->qpair != NULL);
 
-	spdk_mempool_put(g_spdk_nvme_driver->request_mempool, req);
+	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
 }
 
 int
@@ -284,19 +287,6 @@ nvme_driver_init(void)
 
 	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
 	TAILQ_INIT(&g_spdk_nvme_driver->attached_ctrlrs);
-
-	g_spdk_nvme_driver->request_mempool = spdk_mempool_create("nvme_request", 8192,
-					      sizeof(struct nvme_request), 128, SPDK_ENV_SOCKET_ID_ANY);
-	if (g_spdk_nvme_driver->request_mempool == NULL) {
-		SPDK_ERRLOG("unable to allocate pool of requests\n");
-
-		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-		pthread_mutex_destroy(&g_spdk_nvme_driver->lock);
-
-		spdk_memzone_free(SPDK_NVME_DRIVER_NAME);
-
-		return -1;
-	}
 
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 

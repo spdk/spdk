@@ -107,6 +107,17 @@ struct spdk_nvme_ctrlr_opts {
 	 * Unused for local PCIe-attached NVMe devices.
 	 */
 	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+
+	/**
+	 * The number of requests to allocate for each NVMe I/O queue.
+	 *
+	 * This should be at least as large as io_queue_size.
+	 *
+	 * A single I/O may allocate more than one request, since splitting may be necessary to
+	 * conform to the device's maximum transfer size, PRP list compatibility requirements,
+	 * or driver-assisted striping.
+	 */
+	uint32_t io_queue_requests;
 };
 
 /**

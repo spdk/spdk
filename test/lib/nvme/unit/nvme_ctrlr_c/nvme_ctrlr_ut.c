@@ -48,7 +48,6 @@ struct spdk_trace_flag SPDK_TRACE_NVME = {
 
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
-	.request_mempool = NULL,
 };
 
 uint64_t g_ut_tsc = 0;
@@ -156,7 +155,8 @@ nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 
 int nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		    struct spdk_nvme_ctrlr *ctrlr,
-		    enum spdk_nvme_qprio qprio)
+		    enum spdk_nvme_qprio qprio,
+		    uint32_t num_requests)
 {
 	qpair->id = id;
 	qpair->qprio = qprio;
@@ -210,7 +210,7 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 	 * Free the request here so it does not leak.
 	 * For the purposes of this unit test, we don't need to bother emulating request submission.
 	 */
-	spdk_mempool_put(_g_nvme_driver.request_mempool, req);
+	free(req);
 
 	return 0;
 }
@@ -334,7 +334,7 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		      void *cb_arg)
 {
 	struct nvme_request *req = NULL;
-	req = spdk_mempool_get(_g_nvme_driver.request_mempool);
+	req = calloc(1, sizeof(*req));
 
 	if (req != NULL) {
 		memset(req, 0, offsetof(struct nvme_request, children));
@@ -372,7 +372,7 @@ nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn
 void
 nvme_free_request(struct nvme_request *req)
 {
-	spdk_mempool_put(_g_nvme_driver.request_mempool, req);
+	free(req);
 }
 
 static void

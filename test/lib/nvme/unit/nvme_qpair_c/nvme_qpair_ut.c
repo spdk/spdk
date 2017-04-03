@@ -44,7 +44,6 @@ bool trace_flag = false;
 
 struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
-	.request_mempool = NULL,
 };
 
 struct nvme_request *
@@ -53,13 +52,14 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 		      spdk_nvme_cmd_cb cb_fn,
 		      void *cb_arg)
 {
-	struct nvme_request *req = NULL;
+	struct nvme_request *req;
 
-	req = spdk_mempool_get(_g_nvme_driver.request_mempool);
-
+	req = STAILQ_FIRST(&qpair->free_req);
 	if (req == NULL) {
-		return req;
+		return NULL;
 	}
+
+	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
 
 	/*
 	 * Only memset up to (but not including) the children
@@ -101,7 +101,9 @@ nvme_allocate_request_null(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn
 void
 nvme_free_request(struct nvme_request *req)
 {
-	spdk_mempool_put(_g_nvme_driver.request_mempool, req);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	SPDK_CU_ASSERT_FATAL(req->qpair != NULL);
+	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
 }
 
 void
@@ -158,12 +160,13 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 	ctrlr->free_io_qids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_procs);
-	nvme_qpair_init(qpair, 1, ctrlr, 0);
+	nvme_qpair_init(qpair, 1, ctrlr, 0, 32);
 }
 
 static void
 cleanup_submit_request_test(struct spdk_nvme_qpair *qpair)
 {
+	free(qpair->req_buf);
 }
 
 static void

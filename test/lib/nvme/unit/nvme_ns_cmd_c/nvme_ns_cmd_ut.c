@@ -39,7 +39,6 @@
 
 static struct nvme_driver _g_nvme_driver = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
-	.request_mempool = NULL,
 };
 
 static struct nvme_request *g_request = NULL;
@@ -194,6 +193,9 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 		 uint32_t sector_size, uint32_t md_size, uint32_t max_xfer_size,
 		 uint32_t stripe_size, bool extended_lba)
 {
+	uint32_t num_requests = 32;
+	uint32_t i;
+
 	ctrlr->max_xfer_size = max_xfer_size;
 	/*
 	 * Clear the flags field - we especially want to make sure the SGL_SUPPORTED flag is not set
@@ -214,8 +216,22 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	ns->sectors_per_stripe = ns->stripe_size / ns->extended_lba_size;
 
 	memset(qpair, 0, sizeof(*qpair));
+	qpair->req_buf = calloc(num_requests, sizeof(struct nvme_request));
+	SPDK_CU_ASSERT_FATAL(qpair->req_buf != NULL);
+
+	for (i = 0; i < num_requests; i++) {
+		struct nvme_request *req = qpair->req_buf + i * sizeof(struct nvme_request);
+
+		STAILQ_INSERT_HEAD(&qpair->free_req, req, stailq);
+	}
 
 	g_request = NULL;
+}
+
+static void
+cleanup_after_test(struct spdk_nvme_qpair *qpair)
+{
+	free(qpair->req_buf);
 }
 
 static void
@@ -254,6 +270,7 @@ split_test(void)
 
 	free(payload);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -308,6 +325,7 @@ split_test2(void)
 
 	free(payload);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -364,6 +382,7 @@ split_test3(void)
 
 	free(payload);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -441,6 +460,7 @@ split_test4(void)
 
 	free(payload);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -496,6 +516,7 @@ test_cmd_child_request(void)
 
 	free(payload);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -517,6 +538,7 @@ test_nvme_ns_cmd_flush(void)
 	CU_ASSERT(g_request->cmd.nsid == ns.id);
 
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -543,6 +565,7 @@ test_nvme_ns_cmd_write_zeroes(void)
 	CU_ASSERT_EQUAL(cmd_lba_count, 2);
 
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -592,6 +615,7 @@ test_nvme_ns_cmd_dataset_management(void)
 	rc = spdk_nvme_ns_cmd_dataset_management(&ns, &qpair, SPDK_NVME_DSM_ATTR_DEALLOCATE,
 			NULL, 0, cb_fn, cb_arg);
 	CU_ASSERT(rc != 0);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -626,6 +650,7 @@ test_nvme_ns_cmd_readv(void)
 
 	free(cb_arg);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -660,6 +685,7 @@ test_nvme_ns_cmd_writev(void)
 
 	free(cb_arg);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -695,7 +721,7 @@ test_io_flags(void)
 	nvme_free_request(g_request);
 
 	free(payload);
-
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -733,6 +759,7 @@ test_nvme_ns_cmd_reservation_register(void)
 	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -770,6 +797,7 @@ test_nvme_ns_cmd_reservation_release(void)
 	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -807,6 +835,7 @@ test_nvme_ns_cmd_reservation_acquire(void)
 	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -838,6 +867,7 @@ test_nvme_ns_cmd_reservation_report(void)
 	spdk_free(g_request->payload.u.contig);
 	nvme_free_request(g_request);
 	free(payload);
+	cleanup_after_test(&qpair);
 }
 
 static void
@@ -881,6 +911,7 @@ test_nvme_ns_cmd_write_with_md(void)
 	CU_ASSERT(g_request->payload_size == 256 * 512);
 
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 
 	/*
 	 * 512 byte data + 128 byte metadata
@@ -915,6 +946,7 @@ test_nvme_ns_cmd_write_with_md(void)
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 
 	/*
 	 * 512 byte data + 8 byte metadata
@@ -950,6 +982,7 @@ test_nvme_ns_cmd_write_with_md(void)
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 
 	/*
 	 * 512 byte data + 8 byte metadata
@@ -988,6 +1021,7 @@ test_nvme_ns_cmd_write_with_md(void)
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 
 	/*
 	 * 512 byte data + 8 byte metadata
@@ -1010,6 +1044,7 @@ test_nvme_ns_cmd_write_with_md(void)
 	CU_ASSERT(g_request->payload_size == 256 * 512);
 
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 
 	/*
 	 * 512 byte data + 8 byte metadata
@@ -1046,6 +1081,7 @@ test_nvme_ns_cmd_write_with_md(void)
 
 	nvme_request_free_children(g_request);
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
 
 	free(buffer);
 	free(metadata);

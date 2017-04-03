@@ -112,6 +112,9 @@
 #define DEFAULT_MAX_IO_QUEUES		(1024)
 #define DEFAULT_IO_QUEUE_SIZE		(256)
 
+#define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
+#define DEFAULT_IO_QUEUE_REQUESTS	(512)
+
 #define DEFAULT_HOSTNQN			"nqn.2016-06.io.spdk:host"
 
 enum nvme_payload_type {
@@ -254,6 +257,7 @@ struct nvme_async_event_request {
 };
 
 struct spdk_nvme_qpair {
+	STAILQ_HEAD(, nvme_request)	free_req;
 	STAILQ_HEAD(, nvme_request)	queued_req;
 
 	enum spdk_nvme_transport_type	trtype;
@@ -277,6 +281,8 @@ struct spdk_nvme_qpair {
 
 	/* List entry for spdk_nvme_ctrlr_process::allocated_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)	per_process_tailq;
+
+	void				*req_buf;
 };
 
 struct spdk_nvme_ns {
@@ -458,7 +464,6 @@ struct nvme_driver {
 	pthread_mutex_t			lock;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
-	struct spdk_mempool		*request_mempool;
 	bool				initialized;
 };
 
@@ -547,7 +552,8 @@ int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_regist
 void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap);
 int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 			struct spdk_nvme_ctrlr *ctrlr,
-			enum spdk_nvme_qprio qprio);
+			enum spdk_nvme_qprio qprio,
+			uint32_t num_requests);
 void	nvme_qpair_enable(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_disable(struct spdk_nvme_qpair *qpair);
 int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
