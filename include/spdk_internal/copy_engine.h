@@ -82,7 +82,7 @@ void spdk_copy_engine_register(struct spdk_copy_engine *copy_engine);
 void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module);
 
 #define SPDK_COPY_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)				\
-	static struct spdk_copy_module_if init_fn ## _if = {						\
+	struct spdk_copy_module_if init_fn ## _if = {						\
 	.module_init 	= init_fn,									\
 	.module_fini	= fini_fn,									\
 	.config_text	= config_fn,									\

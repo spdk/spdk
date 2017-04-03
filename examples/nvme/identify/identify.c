@@ -38,9 +38,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"

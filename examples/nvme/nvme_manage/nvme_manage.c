@@ -42,9 +42,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/util.h"

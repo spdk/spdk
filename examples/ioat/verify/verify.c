@@ -37,9 +37,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/ioat.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
@@ -332,10 +329,10 @@ work_fn(void *arg)
 		return 0;
 	}
 
-	t->lcore_id = rte_lcore_id();
+	t->lcore_id = spdk_lcore_id();
 
-	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
+	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", spdk_lcore_id());
+	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", spdk_lcore_id());
 	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, -1,
 					   SPDK_ENV_SOCKET_ID_ANY);
 	t->task_pool = spdk_mempool_create(task_pool_name, g_user_config.queue_depth,
@@ -439,7 +436,7 @@ int
 main(int argc, char **argv)
 {
 	unsigned lcore_id;
-	struct thread_entry threads[RTE_MAX_LCORE] = {};
+	struct thread_entry threads[SPDK_MAX_LCORE] = {};
 	int rc;
 
 	if (parse_args(argc, argv) != 0) {
@@ -453,25 +450,25 @@ main(int argc, char **argv)
 	dump_user_config(&g_user_config);
 
 	g_next_device = TAILQ_FIRST(&g_devices);
-	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+	SPDK_LCORE_FOREACH_SLAVE(lcore_id) {
 		threads[lcore_id].chan = get_next_chan();
-		rte_eal_remote_launch(work_fn, &threads[lcore_id], lcore_id);
+		spdk_remote_launch(work_fn, &threads[lcore_id], lcore_id);
 	}
 
-	threads[rte_get_master_lcore()].chan = get_next_chan();
-	if (work_fn(&threads[rte_get_master_lcore()]) != 0) {
+	threads[spdk_get_master_lcore()].chan = get_next_chan();
+	if (work_fn(&threads[spdk_get_master_lcore()]) != 0) {
 		rc = 1;
 		goto cleanup;
 	}
 
-	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-		if (rte_eal_wait_lcore(lcore_id) != 0) {
+	SPDK_LCORE_FOREACH_SLAVE(lcore_id) {
+		if (spdk_wait_lcore(lcore_id) != 0) {
 			rc = 1;
 			goto cleanup;
 		}
 	}
 
-	rc = dump_result(threads, RTE_MAX_LCORE);
+	rc = dump_result(threads, SPDK_MAX_LCORE);
 
 cleanup:
 	spdk_free(g_src);

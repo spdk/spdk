@@ -35,6 +35,8 @@
 #include <stdbool.h>
 #include <linux/virtio_net.h>
 
+#include "spdk/env.h"
+
 #include <rte_mbuf.h>
 #include <rte_memcpy.h>
 #include <rte_ether.h>
@@ -95,7 +97,7 @@ static inline void __attribute__((always_inline))
 do_flush_shadow_used_ring(struct virtio_net *dev, struct vhost_virtqueue *vq,
 			  uint16_t to, uint16_t from, uint16_t size)
 {
-	rte_memcpy(&vq->used->ring[to],
+	spdk_memcpy(&vq->used->ring[to],
 			&vq->shadow_used_ring[from],
 			size * sizeof(struct vring_used_elem));
 	vhost_log_used_vring(dev, vq,
@@ -246,7 +248,7 @@ copy_mbuf_to_desc(struct virtio_net *dev, struct vring_desc *descs,
 		}
 
 		cpy_len = RTE_MIN(desc_avail, mbuf_avail);
-		rte_memcpy((void *)((uintptr_t)(desc_addr + desc_offset)),
+		spdk_memcpy((void *)((uintptr_t)(desc_addr + desc_offset)),
 			rte_pktmbuf_mtod_offset(m, void *, mbuf_offset),
 			cpy_len);
 		vhost_log_write(dev, desc->addr + desc_offset, cpy_len);
@@ -522,7 +524,7 @@ copy_mbuf_to_desc_mergeable(struct virtio_net *dev, struct rte_mbuf *m,
 		}
 
 		cpy_len = RTE_MIN(desc_avail, mbuf_avail);
-		rte_memcpy((void *)((uintptr_t)(desc_addr + desc_offset)),
+		spdk_memcpy((void *)((uintptr_t)(desc_addr + desc_offset)),
 			rte_pktmbuf_mtod_offset(m, void *, mbuf_offset),
 			cpy_len);
 		vhost_log_write(dev, buf_vec[vec_idx].buf_addr + desc_offset,
@@ -860,7 +862,7 @@ copy_desc_to_mbuf(struct virtio_net *dev, struct vring_desc *descs,
 			 */
 			mbuf_avail = cpy_len;
 		} else {
-			rte_memcpy(rte_pktmbuf_mtod_offset(cur, void *,
+			spdk_memcpy(rte_pktmbuf_mtod_offset(cur, void *,
 							   mbuf_offset),
 				(void *)((uintptr_t)(desc_addr + desc_offset)),
 				cpy_len);

@@ -37,9 +37,6 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 

@@ -39,9 +39,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-
-#include <rte_config.h>
-#include <rte_mempool.h>
+#include <inttypes.h>
+#include <stdlib.h>
 
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
@@ -68,7 +67,7 @@ struct perf_task {
 	void			*buf;
 };
 
-static struct rte_mempool *task_pool;
+static struct spdk_mempool *task_pool;
 
 static TAILQ_HEAD(, dev_ctx) g_devs = TAILQ_HEAD_INITIALIZER(g_devs);
 
@@ -151,12 +150,12 @@ unregister_dev(struct dev_ctx *dev)
 	free(dev);
 }
 
-static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
+static void task_ctor(struct spdk_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
 	task->buf = spdk_zmalloc(g_io_size_bytes, 0x200, NULL);
 	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf rte_malloc failed\n");
+		fprintf(stderr, "task->buf spdk_zmalloc failed\n");
 		exit(1);
 	}
 	memset(task->buf, id % 8, g_io_size_bytes);
@@ -171,8 +170,8 @@ submit_single_io(struct dev_ctx *dev)
 	uint64_t		offset_in_ios;
 	int			rc;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
-		fprintf(stderr, "task_pool rte_mempool_get failed\n");
+	if (spdk_mempool_get2(task_pool, (void **)&task) != 0) {
+		fprintf(stderr, "task_pool spdk_mempool_get failed\n");
 		exit(1);
 	}
 
@@ -189,7 +188,7 @@ submit_single_io(struct dev_ctx *dev)
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
-		rte_mempool_put(task_pool, task);
+		spdk_mempool_put(task_pool, task);
 	} else {
 		dev->current_queue_depth++;
 	}
@@ -204,7 +203,7 @@ task_complete(struct perf_task *task)
 	dev->current_queue_depth--;
 	dev->io_completed++;
 
-	rte_mempool_put(task_pool, task);
+	spdk_mempool_put(task_pool, task);
 
 	/*
 	 * is_draining indicates when time has expired for the test run
@@ -453,10 +452,10 @@ int main(int argc, char **argv)
 	}
 	spdk_env_init(&opts);
 
-	task_pool = rte_mempool_create("task_pool", 8192,
-				       sizeof(struct perf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
+	task_pool = spdk_mempool_create_init("task_pool", 8192,
+					     sizeof(struct perf_task),
+					     64, task_ctor, NULL,
+					     SPDK_ENV_SOCKET_ID_ANY);
 
 	g_tsc_rate = spdk_get_ticks_hz();
 

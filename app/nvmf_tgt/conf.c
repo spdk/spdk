@@ -40,11 +40,8 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
+#include "spdk/env.h"
 #include "nvmf_tgt.h"
-
 #include "spdk/conf.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
@@ -144,7 +141,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 
 	app_subsys = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
 					       NVMF_SUBSYSTEM_MODE_DIRECT,
-					       rte_get_master_lcore());
+					       spdk_get_master_lcore());
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		return -1;
@@ -209,7 +206,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 
 	acceptor_lcore = spdk_conf_section_get_intval(sp, "AcceptorCore");
 	if (acceptor_lcore < 0) {
-		acceptor_lcore = rte_lcore_id();
+		acceptor_lcore = spdk_lcore_id();
 	}
 	g_spdk_nvmf_tgt_conf.acceptor_lcore = acceptor_lcore;
 
@@ -276,7 +273,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 	if (numa_node >= 0) {
 		/* Running subsystem and NVMe device is on the same socket or not */
-		if (rte_lcore_to_socket_id(ctx->app_subsystem->lcore) != (unsigned)numa_node) {
+		if (spdk_lcore_to_socket_id(ctx->app_subsystem->lcore) != (unsigned)numa_node) {
 			SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core %u belonging "
 				     "to a different NUMA node than the associated NVMe device. "
 				     "This may result in reduced performance.\n",
@@ -284,7 +281,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				     ctx->app_subsystem->lcore);
 			SPDK_WARNLOG("The NVMe device is on socket %u\n", numa_node);
 			SPDK_WARNLOG("The Subsystem is on socket %u\n",
-				     rte_lcore_to_socket_id(ctx->app_subsystem->lcore));
+				     spdk_lcore_to_socket_id(ctx->app_subsystem->lcore));
 		}
 	}
 
@@ -515,7 +512,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 	/* Parse Listen sections */
 	for (i = 0; i < num_listen_addresses; i++) {
 		int nic_numa_node = spdk_get_ifaddr_numa_node(addresses[i].traddr);
-		unsigned subsys_numa_node = rte_lcore_to_socket_id(app_subsys->lcore);
+		unsigned subsys_numa_node = spdk_lcore_to_socket_id(app_subsys->lcore);
 
 		if (nic_numa_node >= 0) {
 			if (subsys_numa_node != (unsigned)nic_numa_node) {

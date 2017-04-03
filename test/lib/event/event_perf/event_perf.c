@@ -37,10 +37,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <rte_config.h>
-#include <rte_ring.h>
-#include <rte_lcore.h>
-
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk_internal/event.h"
@@ -52,16 +48,16 @@ static uint64_t g_tsc_us_rate;
 static int g_time_in_sec;
 
 static __thread uint64_t __call_count = 0;
-static uint64_t call_count[RTE_MAX_LCORE];
+static uint64_t call_count[SPDK_MAX_LCORE];
 
 static void
 submit_new_event(void *arg1, void *arg2)
 {
 	struct spdk_event *event;
-	static __thread uint32_t next_lcore = RTE_MAX_LCORE;
+	static __thread uint32_t next_lcore = SPDK_MAX_LCORE;
 
-	if (next_lcore == RTE_MAX_LCORE) {
-		next_lcore = rte_get_next_lcore(rte_lcore_id(), 0, 1);
+	if (next_lcore == SPDK_MAX_LCORE) {
+		next_lcore = spdk_get_next_lcore(spdk_lcore_id(), 0, 1);
 	}
 
 	++__call_count;
@@ -83,14 +79,14 @@ event_work_fn(void *arg)
 
 	while (1) {
 
-		spdk_event_queue_run_batch(rte_lcore_id());
+		spdk_event_queue_run_batch(spdk_lcore_id());
 
 		if (spdk_get_ticks() > tsc_end) {
 			break;
 		}
 	}
 
-	call_count[rte_lcore_id()] = __call_count;
+	call_count[spdk_lcore_id()] = __call_count;
 
 	return 0;
 }
@@ -110,7 +106,7 @@ performance_dump(int io_time)
 	uint32_t i;
 
 	printf("\n");
-	RTE_LCORE_FOREACH(i) {
+	SPDK_LCORE_FOREACH(i) {
 		printf("lcore %2d: %8ju\n", i, call_count[i] / g_time_in_sec);
 	}
 
@@ -159,14 +155,14 @@ main(int argc, char **argv)
 	fflush(stdout);
 
 	/* call event_work_fn on each slave lcore */
-	RTE_LCORE_FOREACH_SLAVE(i) {
-		rte_eal_remote_launch(event_work_fn, NULL, i);
+	SPDK_LCORE_FOREACH_SLAVE(i) {
+		spdk_remote_launch(event_work_fn, NULL, i);
 	}
 
 	/* call event_work_fn on lcore0 */
 	event_work_fn(NULL);
 
-	rte_eal_mp_wait_lcore();
+	spdk_mp_wait_lcore();
 
 	performance_dump(g_time_in_sec);
 

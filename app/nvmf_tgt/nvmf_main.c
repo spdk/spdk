@@ -33,78 +33,84 @@
 
 #include <inttypes.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include "spdk/env.h"
+#include "nvmf_tgt.h"
 #include "spdk/event.h"
-#include "iscsi/iscsi.h"
 #include "spdk/log.h"
-#include "spdk/net.h"
+
+#define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
+#define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
+
+/*! \file
+
+This is the main file.
+
+*/
+
+/*!
+
+\brief This is the main function for the NVMf target application.
+
+\msc
+
+	c_runtime [label="C Runtime"], nvmf [label="NVMf target"];
+	c_runtime=>nvmf [label="main()"];
+	nvmf=>nvmf [label="spdk_app_init()"];
+	nvmf=>nvmf [label="spdk_event_allocate()"];
+	nvmf=>nvmf [label="spdk_app_start()"];
+	nvmf=>nvmf [label="spdk_app_fini()"];
+	c_runtime<<nvmf;
+
+\endmsc
+
+*/
 
 static void
-spdk_sigusr1(int signo __attribute__((__unused__)))
+usage(void)
 {
-	char *config_str = NULL;
-	if (spdk_app_get_running_config(&config_str, "iscsi.conf") < 0)
-		fprintf(stderr, "Error getting config\n");
-	else {
-		fprintf(stdout, "============================\n");
-		fprintf(stdout, " iSCSI target running config\n");
-		fprintf(stdout, "=============================\n");
-		fprintf(stdout, "%s", config_str);
-	}
-	free(config_str);
-}
-
-static void
-usage(char *executable_name)
-{
-	struct spdk_app_opts opts;
+        struct spdk_app_opts opts;
 
 	spdk_app_opts_init(&opts);
 
-	printf("%s [options]\n", executable_name);
+	printf("nvmf [options]\n");
 	printf("options:\n");
-	printf(" -c config  config file (default %s)\n", SPDK_ISCSI_DEFAULT_CONFIG);
-	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
-	printf(" -m mask    core mask for DPDK\n");
+	printf(" -c config  - config file (default %s)\n", SPDK_NVMF_DEFAULT_CONFIG);
+	printf(" -e mask    - tracepoint group mask for spdk trace buffers (default 0x0)\n");
+	printf(" -m mask    - core mask for DPDK\n");
 	printf(" -i shared memory ID (optional)\n");
-	printf(" -l facility use specific syslog facility (default %s)\n",
+	printf(" -l facility - use specific syslog facility (default %s)\n",
 	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
+
 	spdk_tracelog_usage(stdout, "-t");
-	printf(" -H         show this usage\n");
-	printf(" -b         run iscsi target background, the default is foreground\n");
-	printf(" -d         disable coredump file enabling\n");
-	printf(" -q         disable notice level logging to stderr\n");
+
+	printf(" -v         - verbose (enable warnings)\n");
+	printf(" -H         - show this usage\n");
+	printf(" -d         - disable coredump file enabling\n");
 }
 
-static void
-spdk_startup(void *arg1, void *arg2)
-{
-	if (getenv("MEMZONE_DUMP") != NULL) {
-		spdk_memzone_dump(stdout);
-		fflush(stdout);
-	}
-}
 
 int
 main(int argc, char **argv)
 {
 	int ch;
-	int rc, app_rc;
-	int daemon_mode = 0;
+	int rc;
 	struct spdk_app_opts opts = {};
 
-	/* default value in opts structure */
+	/* default value in opts */
 	spdk_app_opts_init(&opts);
+	opts.name = "nvmf";
+	opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
+	opts.max_delay_us = 1000; /* 1 ms */
 
-	opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
-	opts.name = "iscsi";
-
-	while ((ch = getopt(argc, argv, "bc:de:i:l:m:n:p:qs:t:H")) != -1) {
+	while ((ch = getopt(argc, argv, "c:de:i:l:m:n:p:qs:t:DH")) != -1) {
 		switch (ch) {
 		case 'd':
 			opts.enable_coredump = false;
@@ -122,21 +128,15 @@ main(int argc, char **argv)
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
-				usage(argv[0]);
+				usage();
 				exit(EXIT_FAILURE);
 			}
 #ifndef DEBUG
-			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
 				argv[0]);
-			usage(argv[0]);
+			usage();
 			exit(EXIT_FAILURE);
 #endif
-			break;
-		case 'e':
-			opts.tpoint_group_mask = optarg;
-			break;
-		case 'q':
-			spdk_g_notice_stderr_flag = 0;
 			break;
 		case 'm':
 			opts.reactor_mask = optarg;
@@ -150,20 +150,17 @@ main(int argc, char **argv)
 		case 's':
 			opts.dpdk_mem_size = atoi(optarg);
 			break;
-		case 'b':
-			daemon_mode = 1;
+		case 'e':
+			opts.tpoint_group_mask = optarg;
 			break;
+		case 'q':
+			spdk_g_notice_stderr_flag = 0;
+			break;
+		case 'D':
 		case 'H':
 		default:
-			usage(argv[0]);
+			usage();
 			exit(EXIT_SUCCESS);
-		}
-	}
-
-	if (daemon_mode) {
-		if (daemon(1, 0) < 0) {
-			SPDK_ERRLOG("Start iscsi target daemon faild.\n");
-			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -177,18 +174,7 @@ main(int argc, char **argv)
 		sleep(10);
 	}
 
-	optind = 1; /* reset the optind */
+	rc = spdk_nvmf_tgt_start(&opts);
 
-	opts.shutdown_cb = spdk_iscsi_shutdown;
-	opts.usr1_handler = spdk_sigusr1;
-	spdk_app_init(&opts);
-
-	printf("Total cores available: %d\n", spdk_lcore_count());
-	printf("Using net framework %s\n", spdk_net_framework_get_name());
-	/* Blocks until the application is exiting */
-	app_rc = spdk_app_start(spdk_startup, NULL, NULL);
-
-	rc = spdk_app_fini();
-
-	return app_rc ? app_rc : rc;
+	return rc;
 }
