@@ -768,16 +768,23 @@ bdev_nvme_library_init(void)
 	int rc;
 	size_t i;
 	struct nvme_probe_ctx probe_ctx = {};
+	int retry_count;
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {
 		return 0;
 	}
 
-	spdk_nvme_retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount");
-	if (spdk_nvme_retry_count < 0) {
-		spdk_nvme_retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
+	if ((retry_count = spdk_conf_section_get_intval(sp, "RetryCount")) < 0) {
+		if ((retry_count = spdk_conf_section_get_intval(sp, "NvmeRetryCount")) < 0) {
+			retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
+		} else {
+			SPDK_WARNLOG("NvmeRetryCount was renamed to RetryCount\n");
+			SPDK_WARNLOG("Please update your configuration file");
+		}
 	}
+
+	spdk_nvme_retry_count = retry_count;
 
 	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
@@ -802,8 +809,14 @@ bdev_nvme_library_init(void)
 		probe_ctx.count++;
 	}
 
-	if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
-		g_timeout = 0;
+	if ((g_timeout = spdk_conf_section_get_intval(sp, "Timeout")) < 0) {
+		/* Check old name for backward compatibility */
+		if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
+			g_timeout = 0;
+		} else {
+			SPDK_WARNLOG("NvmeTimeoutValue was renamed to Timeout\n");
+			SPDK_WARNLOG("Please update your configuration file\n");
+		}
 	}
 
 	if (g_timeout > 0) {
