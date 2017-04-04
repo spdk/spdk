@@ -179,6 +179,11 @@ static int spdk_fio_setup(struct thread_data *td)
 	struct spdk_fio_thread *fio_thread;
 	struct spdk_env_opts opts;
 
+	if (!td->o.use_thread) {
+		log_err("spdk: must set thread=1 when using spdk plugin\n");
+		return 1;
+	}
+
 	fio_thread = calloc(1, sizeof(*fio_thread));
 	assert(fio_thread != NULL);
 
