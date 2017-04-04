@@ -3,7 +3,7 @@
 set -e
 
 testdir=$(readlink -f $(dirname $0))
-rootdir="$testdir/../../.."
+rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 
 function linux_iter_pci {

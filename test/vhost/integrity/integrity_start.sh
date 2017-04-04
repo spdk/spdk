@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 basedir=$(readlink -f $(dirname $0))
-rootdir=$basedir/../../..
-testdir=$rootdir/..
+rootdir=$(readlink -f $basedir/../../..)
+testdir=$(readlink -f $rootdir/..)
 qemu_src_dir="$testdir/qemu"
 qemu_build_dir="$testdir/qemu/build"
 qemu_install_dir="$testdir/root"

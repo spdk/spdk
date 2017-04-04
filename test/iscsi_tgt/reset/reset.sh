@@ -3,7 +3,7 @@
 set -xe
 
 testdir=$(readlink -f $(dirname $0))
-rootdir=$testdir/../../..
+rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 
 if [ -z "$TARGET_IP" ]; then
