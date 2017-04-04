@@ -44,6 +44,7 @@
 #include <rte_version.h>
 
 #include "spdk/env.h"
+#include "spdk/io_channel.h"
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"
 
@@ -70,6 +71,13 @@ static TAILQ_HEAD(, spdk_bdev_module_if) spdk_vbdev_module_list =
 
 static TAILQ_HEAD(, spdk_bdev) spdk_bdev_list =
 	TAILQ_HEAD_INITIALIZER(spdk_bdev_list);
+
+struct spdk_bdev_channel {
+	struct spdk_bdev	*bdev;
+
+	/* The channel for the underlying device */
+	struct spdk_io_channel	*channel;
+};
 
 struct spdk_bdev *spdk_bdev_first(void)
 {
@@ -511,10 +519,31 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	return 0;
 }
 
+static int
+spdk_bdev_channel_create(void *io_device, uint32_t priority, void *ctx_buf,
+			 void *unique_ctx)
+{
+	struct spdk_bdev		*bdev = io_device;
+	struct spdk_bdev_channel	*ch = ctx_buf;
+
+	ch->bdev = io_device;
+	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt, priority);
+
+	return 0;
+}
+
+static void
+spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_channel	*ch = ctx_buf;
+
+	spdk_put_io_channel(ch->channel);
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {
-	return bdev->fn_table->get_io_channel(bdev->ctxt, priority);
+	return spdk_get_io_channel(bdev, priority, false, NULL);
 }
 
 static int
@@ -545,6 +574,7 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
@@ -558,7 +588,7 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = ch;
+	bdev_io->ch = channel->channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iov.iov_base = buf;
 	bdev_io->u.read.iov.iov_len = nbytes;
@@ -585,6 +615,7 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
@@ -598,7 +629,7 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = ch;
+	bdev_io->ch = channel->channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iovs = iov;
 	bdev_io->u.read.iovcnt = iovcnt;
@@ -622,6 +653,7 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
@@ -635,7 +667,7 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = ch;
+	bdev_io->ch = channel->channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iov.iov_base = buf;
 	bdev_io->u.write.iov.iov_len = nbytes;
@@ -661,6 +693,7 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
@@ -674,7 +707,7 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = ch;
+	bdev_io->ch = channel->channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iovs = iov;
 	bdev_io->u.write.iovcnt = iovcnt;
@@ -698,6 +731,7 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
@@ -718,7 +752,7 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = ch;
+	bdev_io->ch = channel->channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
 	bdev_io->u.unmap.unmap_bdesc = unmap_d;
 	bdev_io->u.unmap.bdesc_count = bdesc_count;
@@ -739,6 +773,7 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
@@ -748,7 +783,7 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = ch;
+	bdev_io->ch = channel->channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
 	bdev_io->u.flush.offset = offset;
 	bdev_io->u.flush.length = length;
@@ -928,6 +963,9 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
 
+	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
+				sizeof(struct spdk_bdev_channel));
+
 	pthread_mutex_init(&bdev->mutex, NULL);
 	bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
@@ -958,6 +996,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	pthread_mutex_unlock(&bdev->mutex);
 
 	pthread_mutex_destroy(&bdev->mutex);
+
+	spdk_io_device_unregister(bdev);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
