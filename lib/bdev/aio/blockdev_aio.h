@@ -56,7 +56,7 @@ struct blockdev_aio_io_channel {
 };
 
 struct file_disk {
-	struct spdk_bdev	disk;	/* this must be first element */
+	struct spdk_bdev	disk;
 	const char		*file;
 	int			fd;
 	char			disk_name[SPDK_BDEV_MAX_NAME_LENGTH];

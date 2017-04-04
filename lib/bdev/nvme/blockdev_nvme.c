@@ -197,9 +197,9 @@ bdev_nvme_poll_adminq(void *arg)
 }
 
 static int
-bdev_nvme_destruct(struct spdk_bdev *bdev)
+bdev_nvme_destruct(void *ctx)
 {
-	struct nvme_bdev *nvme_disk = (struct nvme_bdev *)bdev;
+	struct nvme_bdev *nvme_disk = ctx;
 	struct nvme_ctrlr *nvme_ctrlr = nvme_disk->nvme_ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
@@ -321,9 +321,9 @@ bdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 }
 
 static bool
-bdev_nvme_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
-	struct nvme_bdev *nbdev = (struct nvme_bdev *)bdev;
+	struct nvme_bdev *nbdev = ctx;
 	const struct spdk_nvme_ctrlr_data *cdata;
 
 	switch (io_type) {
@@ -369,17 +369,17 @@ bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static struct spdk_io_channel *
-bdev_nvme_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+bdev_nvme_get_io_channel(void *ctx, uint32_t priority)
 {
-	struct nvme_bdev *nvme_bdev = (struct nvme_bdev *)bdev;
+	struct nvme_bdev *nvme_bdev = ctx;
 
 	return spdk_get_io_channel(nvme_bdev->nvme_ctrlr->ctrlr, priority, false, NULL);
 }
 
 static int
-bdev_nvme_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+bdev_nvme_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 {
-	struct nvme_bdev *nvme_bdev = (struct nvme_bdev *)bdev;
+	struct nvme_bdev *nvme_bdev = ctx;
 	struct nvme_ctrlr *nvme_ctrlr = nvme_bdev->nvme_ctrlr;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	struct spdk_nvme_ns *ns;

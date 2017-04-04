@@ -181,34 +181,34 @@ vbdev_split_free(struct split_disk *split_disk)
 }
 
 static int
-vbdev_split_destruct(struct spdk_bdev *bdev)
+vbdev_split_destruct(void *ctx)
 {
-	struct split_disk *split_disk = (struct split_disk *)bdev;
+	struct split_disk *split_disk = ctx;
 
 	vbdev_split_free(split_disk);
 	return 0;
 }
 
 static bool
-vbdev_split_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+vbdev_split_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
-	struct split_disk *split_disk = (struct split_disk *)bdev;
+	struct split_disk *split_disk = ctx;
 
 	return split_disk->base_bdev->fn_table->io_type_supported(split_disk->base_bdev, io_type);
 }
 
 static struct spdk_io_channel *
-vbdev_split_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+vbdev_split_get_io_channel(void *ctx, uint32_t priority)
 {
-	struct split_disk *split_disk = (struct split_disk *)bdev;
+	struct split_disk *split_disk = ctx;
 
 	return split_disk->base_bdev->fn_table->get_io_channel(split_disk->base_bdev, priority);
 }
 
 static int
-vbdev_split_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+vbdev_split_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 {
-	struct split_disk *split_disk = (struct split_disk *)bdev;
+	struct split_disk *split_disk = ctx;
 
 	spdk_json_write_name(w, "split");
 	spdk_json_write_object_begin(w);

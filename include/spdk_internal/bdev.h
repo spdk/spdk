@@ -129,16 +129,16 @@ struct spdk_bdev_module_if {
  */
 struct spdk_bdev_fn_table {
 	/** Destroy the backend block device object */
-	int (*destruct)(struct spdk_bdev *bdev);
+	int (*destruct)(void *ctx);
 
 	/** Process the IO. */
 	void (*submit_request)(struct spdk_bdev_io *);
 
 	/** Check if the block device supports a specific I/O type. */
-	bool (*io_type_supported)(struct spdk_bdev *bdev, enum spdk_bdev_io_type);
+	bool (*io_type_supported)(void *ctx, enum spdk_bdev_io_type);
 
 	/** Get an I/O channel for the specific bdev for the calling thread. */
-	struct spdk_io_channel *(*get_io_channel)(struct spdk_bdev *bdev, uint32_t priority);
+	struct spdk_io_channel *(*get_io_channel)(void *ctx, uint32_t priority);
 
 	/**
 	 * Output driver-specific configuration to a JSON stream. Optional - may be NULL.
@@ -147,7 +147,7 @@ struct spdk_bdev_fn_table {
 	 * driver should write a name (based on the driver name) followed by a JSON value
 	 * (most likely another nested object).
 	 */
-	int (*dump_config_json)(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
 void spdk_bdev_register(struct spdk_bdev *bdev);

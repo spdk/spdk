@@ -49,7 +49,7 @@
 #define MALLOC_MAX_UNMAP_BDESC	1
 
 struct malloc_disk {
-	struct spdk_bdev	disk;	/* this must be the first element */
+	struct spdk_bdev	disk;
 	void 			*malloc_buf;
 	struct malloc_disk	*next;
 };
@@ -126,9 +126,9 @@ blockdev_malloc_delete_from_list(struct malloc_disk *malloc_disk)
 }
 
 static int
-blockdev_malloc_destruct(struct spdk_bdev *bdev)
+blockdev_malloc_destruct(void *ctx)
 {
-	struct malloc_disk *malloc_disk = (struct malloc_disk *)bdev;
+	struct malloc_disk *malloc_disk = ctx;
 	blockdev_malloc_delete_from_list(malloc_disk);
 	spdk_free(malloc_disk->malloc_buf);
 	spdk_free(malloc_disk);
@@ -336,7 +336,7 @@ static void blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 }
 
 static bool
-blockdev_malloc_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+blockdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -352,7 +352,7 @@ blockdev_malloc_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type
 }
 
 static struct spdk_io_channel *
-blockdev_malloc_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+blockdev_malloc_get_io_channel(void *ctx, uint32_t priority)
 {
 	return spdk_copy_engine_get_io_channel(priority);
 }

@@ -160,9 +160,9 @@ blockdev_aio_flush(struct file_disk *fdisk, struct blockdev_aio_task *aio_task,
 }
 
 static int
-blockdev_aio_destruct(struct spdk_bdev *bdev)
+blockdev_aio_destruct(void *ctx)
 {
-	struct file_disk *fdisk = (struct file_disk *)bdev;
+	struct file_disk *fdisk = ctx;
 	int rc = 0;
 
 	rc = blockdev_aio_close(fdisk);
@@ -281,7 +281,7 @@ static void blockdev_aio_submit_request(struct spdk_bdev_io *bdev_io)
 }
 
 static bool
-blockdev_aio_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+blockdev_aio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -320,9 +320,11 @@ blockdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static struct spdk_io_channel *
-blockdev_aio_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+blockdev_aio_get_io_channel(void *ctx, uint32_t priority)
 {
-	return spdk_get_io_channel(bdev, priority, false, NULL);
+	struct file_disk *fdisk = ctx;
+
+	return spdk_get_io_channel(&fdisk->disk, priority, false, NULL);
 }
 
 static const struct spdk_bdev_fn_table aio_fn_table = {
