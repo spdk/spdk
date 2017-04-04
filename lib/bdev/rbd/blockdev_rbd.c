@@ -412,7 +412,7 @@ blockdev_rbd_create_cb(void *io_device, uint32_t priority,
 	struct blockdev_rbd_io_channel *ch = ctx_buf;
 	int ret;
 
-	ch->disk = (struct blockdev_rbd *)io_device;
+	ch->disk = (struct blockdev_rbd *)((uintptr_t)io_device - offsetof(struct blockdev_rbd, info));
 	ch->image = NULL;
 	ch->io_ctx = NULL;
 	ch->pfd.fd = -1;
@@ -473,7 +473,7 @@ blockdev_rbd_get_io_channel(void *ctx, uint32_t priority)
 {
 	struct blockdev_rbd *rbd_bdev = ctx;
 
-	return spdk_get_io_channel(rbd_bdev, priority, false, NULL);
+	return spdk_get_io_channel(&rbd_bdev->info, priority, false, NULL);
 }
 
 static const struct spdk_bdev_fn_table rbd_fn_table = {
@@ -544,7 +544,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
 	TAILQ_INSERT_TAIL(&g_rbds, rbd, tailq);
 
-	spdk_io_device_register(&rbd->disk, blockdev_rbd_create_cb,
+	spdk_io_device_register(&rbd->info, blockdev_rbd_create_cb,
 				blockdev_rbd_destroy_cb,
 				sizeof(struct blockdev_rbd_io_channel));
 	spdk_bdev_register(&rbd->disk);

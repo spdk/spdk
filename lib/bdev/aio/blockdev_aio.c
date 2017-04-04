@@ -324,7 +324,7 @@ blockdev_aio_get_io_channel(void *ctx, uint32_t priority)
 {
 	struct file_disk *fdisk = ctx;
 
-	return spdk_get_io_channel(&fdisk->disk, priority, false, NULL);
+	return spdk_get_io_channel(&fdisk->fd, priority, false, NULL);
 }
 
 static const struct spdk_bdev_fn_table aio_fn_table = {
@@ -372,7 +372,7 @@ create_aio_disk(const char *name, const char *fname)
 
 	fdisk->disk.fn_table = &aio_fn_table;
 
-	spdk_io_device_register(&fdisk->disk, blockdev_aio_create_cb, blockdev_aio_destroy_cb,
+	spdk_io_device_register(&fdisk->fd, blockdev_aio_create_cb, blockdev_aio_destroy_cb,
 				sizeof(struct blockdev_aio_io_channel));
 	spdk_bdev_register(&fdisk->disk);
 	return &fdisk->disk;
