@@ -149,11 +149,6 @@ assigned to vm.
 
 # Known bugs and limitations {#vhost_bugs}
 
-## VFIO driver is not supported
-Currently, VFIO driver is not supported by vhost library. Please use UIO
-driver if running SPDK vhost app. Otherwise any IO to physical device
-(eg. IOAT or NVMe) will fail. Support for vhost with VFIO is in progress.
-
 ## Hot plug is not supported
 Hot plug is not supported in vhost yet. Event queue path doesn't handle that
 case. While hot plug will be just ignored, hot removal might cause segmentation

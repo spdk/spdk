@@ -57,6 +57,7 @@
 
 #include "spdk/vhost.h"
 #include "task.h"
+#include "vhost_iommu.h"
 
 static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 
@@ -72,6 +73,9 @@ static char dev_dirname[PATH_MAX] = "";
 struct spdk_vaddr_region {
 	void		*vaddr;
 	uint64_t	len;
+
+	uint64_t	host_user_addr;
+	uint64_t	host_user_size;
 };
 
 /*
@@ -647,6 +651,8 @@ add_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_ctrlr *vdev = arg1;
 	struct virtio_memory_region *region;
+	struct spdk_vaddr_region *vregion;
+	uint64_t start, end, len;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -658,16 +664,20 @@ add_vdev_cb(void *arg1, void *arg2)
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
 	vdev->nregions = vdev->dev->mem->nregions;
 	for (i = 0; i < vdev->nregions; i++) {
-		uint64_t start, end, len;
 		region = &vdev->dev->mem->regions[i];
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
-		vdev->region[i].vaddr = (void *)start;
-		vdev->region[i].len = len;
-		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
-			       start, len);
-		spdk_mem_register(vdev->region[i].vaddr, vdev->region[i].len);
+		vregion = &vdev->region[i];
+		vregion->vaddr = (void *)start;
+		vregion->len = len;
+		vregion->host_user_addr = region->host_user_addr;
+		vregion->host_user_size = region->size;
+
+		SPDK_NOTICELOG("Registering VM memory for vtophys translation - %p len:0x%jx\n",
+			       vdev->region[i].vaddr, vdev->region[i].len);
+		spdk_mem_register(vregion->vaddr, vregion->len);
+		spdk_iommu_mem_register(vregion->host_user_addr, vregion->host_user_size);
 	}
 
 	spdk_poller_register(&vdev->requestq_poller, vdev_worker, vdev, vdev->lcore, 0);
@@ -680,6 +690,7 @@ static void
 remove_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_ctrlr *vdev = arg1;
+	struct spdk_vaddr_region *reg;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -691,7 +702,9 @@ remove_vdev_cb(void *arg1, void *arg2)
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", vdev->name);
 	for (i = 0; i < vdev->nregions; i++) {
-		spdk_mem_unregister(vdev->region[i].vaddr, vdev->region[i].len);
+		reg = &vdev->region[i];
+		spdk_iommu_mem_unregister(reg->host_user_addr, reg->host_user_size);
+		spdk_mem_unregister(reg->vaddr, reg->len);
 	}
 
 	vdev->nregions = 0;
@@ -1123,28 +1136,6 @@ session_start(void *arg)
 	return NULL;
 }
 
-/**
- * Check if /sys/kernel/iommu_groups exists and is not empty
- */
-static bool
-has_iommu_groups(void)
-{
-	struct dirent *d;
-	int iommu_count = 0;
-	DIR *dir = opendir("/sys/kernel/iommu_groups");
-
-	if (dir == NULL) {
-		return false;
-	}
-
-	while (iommu_count < 3 && (d = readdir(dir)) != NULL) {
-		++iommu_count;
-	}
-
-	closedir(dir);
-	return iommu_count > 2; /* there will always be ./ and ../ entries */
-}
-
 void
 spdk_vhost_startup(void *arg1, void *arg2)
 {
@@ -1167,15 +1158,6 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0)
 		rte_exit(EXIT_FAILURE, "Cannot construct vhost controllers\n");
-
-	if (has_iommu_groups()) {
-		RTE_LOG(WARNING, VHOST_CONFIG,
-			"Currently VFIO driver is not supported by vhost library\n"
-			"Although guest might be able to boot and see devices, it will not be able\n"
-			"to do any IO to physical devices (Malloc with IOAT, NVMe).\n"
-			"Please use uio_pci_generic driver with vhost app/library.\n"
-			"See documentation for more information.\n");
-	}
 
 	rte_vhost_driver_callback_register(&virtio_net_device_ops);
 
