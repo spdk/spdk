@@ -141,6 +141,7 @@ static int g_num_workers = 0;
 
 static uint64_t g_tsc_rate;
 
+static uint32_t g_io_align = 0x200;
 static uint32_t g_io_size_bytes;
 static int g_rw_percentage;
 static int g_is_random;
@@ -336,6 +337,14 @@ register_aio_file(const char *path)
 		return -1;
 	}
 
+	/*
+	 * TODO: This should really calculate the LCM of the current g_io_align and blklen.
+	 * For now, it's fairly safe to just assume all block sizes are powers of 2.
+	 */
+	if (g_io_align < blklen) {
+		g_io_align = blklen;
+	}
+
 	entry = malloc(sizeof(struct ns_entry));
 	if (entry == NULL) {
 		close(fd);
@@ -401,7 +410,7 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
-	task->buf = spdk_zmalloc(g_io_size_bytes, 0x200, NULL);
+	task->buf = spdk_zmalloc(g_io_size_bytes, g_io_align, NULL);
 	if (task->buf == NULL) {
 		fprintf(stderr, "task->buf spdk_zmalloc failed\n");
 		exit(1);
