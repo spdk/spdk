@@ -114,6 +114,13 @@ typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
 		bool success,
 		void *cb_arg);
 
+struct spdk_bdev_io_stat {
+	uint64_t bytes_read;
+	uint64_t num_read_ops;
+	uint64_t bytes_written;
+	uint64_t num_write_ops;
+};
+
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 void spdk_bdev_unregister(struct spdk_bdev *bdev);
 
@@ -231,6 +238,8 @@ struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_chan
 struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     uint64_t offset, uint64_t length,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			   struct spdk_bdev_io_stat *stat);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		    enum spdk_bdev_reset_type, spdk_bdev_io_completion_cb cb, void *cb_arg);

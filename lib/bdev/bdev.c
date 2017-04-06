@@ -87,6 +87,8 @@ struct spdk_bdev_channel {
 
 	/* Channel for the bdev manager */
 	struct spdk_io_channel *mgmt_channel;
+
+	struct spdk_bdev_io_stat stat;
 };
 
 struct spdk_bdev *
@@ -538,6 +540,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
+	memset(&ch->stat, 0, sizeof(ch->stat));
 
 	return 0;
 }
@@ -788,7 +791,6 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->u.write.len = len;
 	bdev_io->u.write.offset = offset;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
-
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
@@ -902,6 +904,17 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	return rc;
 }
 
+void
+spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		      struct spdk_bdev_io_stat *stat)
+{
+
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	*stat = channel->stat;
+	memset(&channel->stat, 0, sizeof(channel->stat));
+}
+
 int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
@@ -987,6 +1000,21 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	}
 
 	bdev_io->status = status;
+
+	if (bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		switch (bdev_io->type) {
+		case SPDK_BDEV_IO_TYPE_READ:
+			bdev_io->ch->stat.bytes_read += bdev_io->u.read.len;
+			bdev_io->ch->stat.num_read_ops++;
+			break;
+		case SPDK_BDEV_IO_TYPE_WRITE:
+			bdev_io->ch->stat.bytes_written += bdev_io->u.write.len;
+			bdev_io->ch->stat.num_write_ops++;
+			break;
+		default:
+			break;
+		}
+	}
 
 	assert(bdev_io->cb != NULL);
 	bdev_io->cb(bdev_io, status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
