@@ -31,7 +31,7 @@ fi
 
 if [ -z "$RESULTS_DIR" ]; then
 	RESULTS_DIR=$TESTDIR/results/testrun_`date +%Y%m%d_%H%M%S`
-	mkdir $RESULTS_DIR
+	mkdir -p $RESULTS_DIR
 	rm -f $TESTDIR/results/last
 	ln -s $RESULTS_DIR $TESTDIR/results/last
 fi
