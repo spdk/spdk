@@ -794,7 +794,7 @@ mode_sense_page_init(uint8_t *buf, int len, int page, int subpage)
 static int
 spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			       uint8_t *cdb, int pc, int page, int subpage,
-			       uint8_t *data)
+			       uint8_t *data, struct spdk_scsi_task *task)
 {
 	uint8_t *cp = data;
 	int len = 0;
@@ -804,12 +804,17 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 	if (pc == 0x00) {
 		/* Current values */
 	} else if (pc == 0x01) {
-		/* Changeable values not supported */
-		return -1;
+		/* Changeable values */
+		/* As we currently do not support changeable values,
+		   all parameters are reported as zero. */
 	} else if (pc == 0x02) {
 		/* Default values */
 	} else {
 		/* Saved values not supported */
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_SAVING_PARAMETERS_NOT_SUPPORTED,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return -1;
 	}
 
@@ -870,11 +875,11 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		plen = 0x12 + 2;
 		mode_sense_page_init(cp, plen, page, subpage);
 
-		if (cp && bdev->write_cache)
+		if (cp && bdev->write_cache && pc != 0x01)
 			cp[2] |= 0x4; /* WCE */
 
 		/* Read Cache Disable (RCD) = 1 */
-		if (cp)
+		if (cp && pc != 0x01)
 			cp[2] |= 0x1;
 
 		len += plen;
@@ -906,11 +911,11 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			len += spdk_bdev_scsi_mode_sense_page(bdev,
 							      cdb, pc, page,
 							      0x00,
-							      cp ? &cp[len] : NULL);
+							      cp ? &cp[len] : NULL, task);
 			len += spdk_bdev_scsi_mode_sense_page(bdev,
 							      cdb, pc, page,
 							      0x01,
-							      cp ? &cp[len] : NULL);
+							      cp ? &cp[len] : NULL, task);
 			break;
 		default:
 			/* 0x02-0x3e: Reserved */
@@ -1027,7 +1032,7 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			for (i = 0x00; i < 0x3e; i ++) {
 				len += spdk_bdev_scsi_mode_sense_page(
 					       bdev, cdb, pc, i, 0x00,
-					       cp ? &cp[len] : NULL);
+					       cp ? &cp[len] : NULL, task);
 			}
 			break;
 		case 0xff:
@@ -1035,12 +1040,12 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 			for (i = 0x00; i < 0x3e; i ++) {
 				len += spdk_bdev_scsi_mode_sense_page(
 					       bdev, cdb, pc, i, 0x00,
-					       cp ? &cp[len] : NULL);
+					       cp ? &cp[len] : NULL, task);
 			}
 			for (i = 0x00; i < 0x3e; i ++) {
 				len += spdk_bdev_scsi_mode_sense_page(
 					       bdev, cdb, pc, i, 0xff,
-					       cp ? &cp[len] : NULL);
+					       cp ? &cp[len] : NULL, task);
 			}
 			break;
 		default:
@@ -1055,7 +1060,7 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 static int
 spdk_bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
 			  uint8_t *cdb, int dbd, int llbaa, int pc,
-			  int page, int subpage, uint8_t *data)
+			  int page, int subpage, uint8_t *data, struct spdk_scsi_task *task)
 {
 	uint8_t *hdr, *bdesc, *pages;
 	int hlen;
@@ -1079,7 +1084,7 @@ spdk_bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
 	pages = data ? &data[hlen + blen] : NULL;
 	plen = spdk_bdev_scsi_mode_sense_page(bdev, cdb, pc, page,
 					      subpage,
-					      pages);
+					      pages, task);
 	if (plen < 0) {
 		return -1;
 	}
@@ -1831,7 +1836,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		}
 
 		dbd = !!(cdb[1] & 0x8);
-		pc = (cdb[2] & 0xc) >> 6;
+		pc = (cdb[2] & 0xc0) >> 6;
 		page = cdb[2] & 0x3f;
 		subpage = cdb[3];
 
@@ -1839,7 +1844,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		rc = spdk_bdev_scsi_mode_sense(bdev, md,
 					       cdb, dbd, llba, pc,
 					       page, subpage,
-					       NULL);
+					       NULL, task);
 		if (rc < 0) {
 			break;
 		}
@@ -1852,7 +1857,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		rc = spdk_bdev_scsi_mode_sense(bdev, md,
 					       cdb, dbd, llba, pc,
 					       page, subpage,
-					       data);
+					       data, task);
 		if (rc < 0) {
 			/* INVALID FIELD IN CDB */
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
