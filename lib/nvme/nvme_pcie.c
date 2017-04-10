@@ -40,6 +40,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 
+#include "spdk/likely.h"
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
 
@@ -1021,8 +1022,10 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
-	tr->submit_tick = spdk_get_ticks();
 	tr->timed_out = 0;
+	if (spdk_unlikely(qpair->ctrlr->timeout_cb_fn != NULL)) {
+		tr->submit_tick = spdk_get_ticks();
+	}
 
 	req = tr->req;
 	pqpair->tr[tr->cid].active = true;
@@ -1865,7 +1868,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	uint32_t		 num_completions = 0;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 
-	if (!nvme_pcie_qpair_check_enabled(qpair)) {
+	if (spdk_unlikely(!nvme_pcie_qpair_check_enabled(qpair))) {
 		/*
 		 * qpair is not enabled, likely because a controller reset is
 		 *  is in progress.  Ignore the interrupt - any I/O that was
@@ -1875,7 +1878,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return 0;
 	}
 
-	if (nvme_qpair_is_admin_queue(qpair)) {
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
@@ -1905,7 +1908,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			assert(0);
 		}
 
-		if (++pqpair->cq_head == pqpair->num_entries) {
+		if (spdk_unlikely(++pqpair->cq_head == pqpair->num_entries)) {
 			pqpair->cq_head = 0;
 			pqpair->phase = !pqpair->phase;
 		}
@@ -1921,17 +1924,16 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		g_thread_mmio_ctrlr = NULL;
 	}
 
-	if (qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
-		if (qpair->ctrlr->timeout_cb_fn) {
-			/*
-			 * User registered for timeout callback
-			 */
-			nvme_pcie_qpair_check_timeout(qpair);
-		}
+	if (spdk_unlikely(qpair->ctrlr->timeout_cb_fn != NULL) &&
+	    qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
+		/*
+		 * User registered for timeout callback
+		 */
+		nvme_pcie_qpair_check_timeout(qpair);
 	}
 
 	/* Before returning, complete any pending admin request. */
-	if (nvme_qpair_is_admin_queue(qpair)) {
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_pcie_qpair_complete_pending_admin_request(qpair);
 
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
