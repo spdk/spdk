@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) NetApp, Inc.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -164,6 +165,11 @@ void spdk_mempool_put(struct spdk_mempool *mp, void *ele);
  * Put multiple elements back into the memory pool.
  */
 void spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
+
+/**
+ * Return the number of entries in the mempool.
+ */
+size_t spdk_mempool_count(const struct spdk_mempool *pool);
 
 /**
  * \brief Return the number of dedicated CPU cores utilized by

@@ -197,6 +197,16 @@ spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t coun
 	rte_mempool_put_bulk((struct rte_mempool *)mp, ele_arr, count);
 }
 
+size_t
+spdk_mempool_count(const struct spdk_mempool *pool)
+{
+#if RTE_VERSION < RTE_VERSION_NUM(16, 7, 0, 1)
+	return rte_mempool_count((struct rte_mempool *)pool);
+#else
+	return rte_mempool_avail_count((struct rte_mempool *)pool);
+#endif
+}
+
 bool
 spdk_process_is_primary(void)
 {
