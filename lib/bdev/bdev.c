@@ -39,9 +39,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <rte_mempool.h>
-#include <rte_version.h>
-
 #include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"
@@ -54,9 +51,9 @@
 #define RBUF_SMALL_POOL_SIZE	8192
 #define RBUF_LARGE_POOL_SIZE	1024
 
-static struct rte_mempool *spdk_bdev_g_io_pool = NULL;
-static struct rte_mempool *g_rbuf_small_pool = NULL;
-static struct rte_mempool *g_rbuf_large_pool = NULL;
+static struct spdk_mempool *spdk_bdev_g_io_pool = NULL;
+static struct spdk_mempool *g_rbuf_small_pool = NULL;
+static struct spdk_mempool *g_rbuf_large_pool = NULL;
 
 typedef TAILQ_HEAD(, spdk_bdev_io) need_rbuf_tailq_t;
 static need_rbuf_tailq_t g_need_rbuf_small[SPDK_MAX_LCORE];
@@ -125,7 +122,7 @@ spdk_bdev_io_set_rbuf(struct spdk_bdev_io *bdev_io, void *buf)
 static void
 spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 {
-	struct rte_mempool *pool;
+	struct spdk_mempool *pool;
 	struct spdk_bdev_io *tmp;
 	void *buf;
 	need_rbuf_tailq_t *tailq;
@@ -145,7 +142,7 @@ spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 	}
 
 	if (TAILQ_EMPTY(tailq)) {
-		rte_mempool_put(pool, buf);
+		spdk_mempool_put(pool, buf);
 	} else {
 		tmp = TAILQ_FIRST(tailq);
 		TAILQ_REMOVE(tailq, tmp, rbuf_link);
@@ -163,26 +160,26 @@ static int spdk_initialize_rbuf_pool(void)
 	 *   to account for.
 	 */
 	cache_size = RBUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
-	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE)
-		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
-	g_rbuf_small_pool = rte_mempool_create("rbuf_small_pool",
-					       RBUF_SMALL_POOL_SIZE,
-					       SPDK_BDEV_SMALL_RBUF_MAX_SIZE + 512,
-					       cache_size, 0, NULL, NULL, NULL, NULL,
-					       SOCKET_ID_ANY, 0);
+	if (cache_size > SPDK_MEMPOOL_CACHE_MAX_SIZE)
+		cache_size = SPDK_MEMPOOL_CACHE_MAX_SIZE;
+	g_rbuf_small_pool = spdk_mempool_create("rbuf_small_pool",
+						RBUF_SMALL_POOL_SIZE,
+						SPDK_BDEV_SMALL_RBUF_MAX_SIZE + 512,
+						cache_size,
+						SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_rbuf_small_pool) {
 		SPDK_ERRLOG("create rbuf small pool failed\n");
 		return -1;
 	}
 
 	cache_size = RBUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
-	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE)
-		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
-	g_rbuf_large_pool = rte_mempool_create("rbuf_large_pool",
-					       RBUF_LARGE_POOL_SIZE,
-					       SPDK_BDEV_LARGE_RBUF_MAX_SIZE + 512,
-					       cache_size, 0, NULL, NULL, NULL, NULL,
-					       SOCKET_ID_ANY, 0);
+	if (cache_size > SPDK_MEMPOOL_CACHE_MAX_SIZE)
+		cache_size = SPDK_MEMPOOL_CACHE_MAX_SIZE;
+	g_rbuf_large_pool = spdk_mempool_create("rbuf_large_pool",
+						RBUF_LARGE_POOL_SIZE,
+						SPDK_BDEV_LARGE_RBUF_MAX_SIZE + 512,
+						cache_size,
+						SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_rbuf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
 		return -1;
@@ -276,13 +273,12 @@ spdk_bdev_initialize(void)
 		return -1;
 	}
 
-	spdk_bdev_g_io_pool = rte_mempool_create("blockdev_io",
+	spdk_bdev_g_io_pool = spdk_mempool_create("blockdev_io",
 			      SPDK_BDEV_IO_POOL_SIZE,
 			      sizeof(struct spdk_bdev_io) +
 			      spdk_bdev_module_get_max_ctx_size(),
-			      64, 0,
-			      NULL, NULL, NULL, NULL,
-			      SOCKET_ID_ANY, 0);
+			      64,
+			      SPDK_ENV_SOCKET_ID_ANY);
 
 	if (spdk_bdev_g_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool");
@@ -297,23 +293,12 @@ spdk_bdev_initialize(void)
 	return spdk_initialize_rbuf_pool();
 }
 
-/*
- * Wrapper to provide rte_mempool_avail_count() on older DPDK versions.
- * Drop this if the minimum DPDK version is raised to at least 16.07.
- */
-#if RTE_VERSION < RTE_VERSION_NUM(16, 7, 0, 1)
-static unsigned rte_mempool_avail_count(const struct rte_mempool *pool)
-{
-	return rte_mempool_count(pool);
-}
-#endif
-
 static int
-spdk_bdev_check_pool(struct rte_mempool *pool, uint32_t count)
+spdk_bdev_check_pool(struct spdk_mempool *pool, uint32_t count)
 {
-	if (rte_mempool_avail_count(pool) != count) {
-		SPDK_ERRLOG("rte_mempool_avail_count(%s) == %d, should be %d\n",
-			    pool->name, rte_mempool_avail_count(pool), count);
+	if (spdk_mempool_avail_count(pool) != count) {
+		SPDK_ERRLOG("spdk_mempool_avail_count(%p) == %d, should be %d\n",
+			    pool, spdk_mempool_avail_count(pool), count);
 		return -1;
 	} else {
 		return 0;
@@ -336,10 +321,9 @@ spdk_bdev_finish(void)
 struct spdk_bdev_io *spdk_bdev_get_io(void)
 {
 	struct spdk_bdev_io *bdev_io;
-	int rc;
 
-	rc = rte_mempool_get(spdk_bdev_g_io_pool, (void **)&bdev_io);
-	if (rc < 0 || !bdev_io) {
+	bdev_io = spdk_mempool_get(spdk_bdev_g_io_pool);
+	if (!bdev_io) {
 		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
 		abort();
 	}
@@ -360,16 +344,15 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 		spdk_bdev_io_put_rbuf(bdev_io);
 	}
 
-	rte_mempool_put(spdk_bdev_g_io_pool, bdev_io);
+	spdk_mempool_put(spdk_bdev_g_io_pool, (void *)bdev_io);
 }
 
 static void
 _spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io)
 {
 	uint64_t len = bdev_io->u.read.len;
-	struct rte_mempool *pool;
+	struct spdk_mempool *pool;
 	need_rbuf_tailq_t *tailq;
-	int rc;
 	void *buf = NULL;
 
 	if (len <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
@@ -380,8 +363,9 @@ _spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io)
 		tailq = &g_need_rbuf_large[spdk_lcore_id()];
 	}
 
-	rc = rte_mempool_get(pool, (void **)&buf);
-	if (rc < 0 || !buf) {
+	buf = spdk_mempool_get(pool);
+
+	if (!buf) {
 		TAILQ_INSERT_TAIL(tailq, bdev_io, rbuf_link);
 	} else {
 		spdk_bdev_io_set_rbuf(bdev_io, buf);
