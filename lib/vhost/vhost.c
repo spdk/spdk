@@ -75,6 +75,7 @@ static char dev_dirname[PATH_MAX] = "";
 #define SPDK_VHOST_SCSI_FEATURES	((1ULL << VIRTIO_F_VERSION_1) | \
 					(1ULL << VHOST_F_LOG_ALL) | \
 					(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
+					(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) | \
 					(1ULL << VIRTIO_SCSI_F_INOUT) | \
 					(1ULL << VIRTIO_SCSI_F_HOTPLUG) | \
 					(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
@@ -224,11 +225,23 @@ vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_t reqs_len)
 	return count;
 }
 
+static bool
+vq_should_notify(struct spdk_vhost_dev *dev, struct rte_vhost_vring *vq)
+{
+	if ((dev->negotiated_features & (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY)) &&
+	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
+		return 1;
+	}
+
+	return !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
+}
+
 /*
  * Enqueue id and len to used ring.
  */
 static void
-vq_used_ring_enqueue(struct rte_vhost_vring *vq, uint16_t id, uint32_t len)
+vq_used_ring_enqueue(struct spdk_vhost_dev *dev, struct rte_vhost_vring *vq, uint16_t id,
+		     uint32_t len)
 {
 	struct vring_used *used = vq->used;
 	uint16_t size_mask = vq->size - 1;
@@ -246,7 +259,7 @@ vq_used_ring_enqueue(struct rte_vhost_vring *vq, uint16_t id, uint32_t len)
 	rte_compiler_barrier();
 
 	vq->used->idx = vq->last_used_idx;
-	if (!(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+	if (vq_should_notify(dev, vq)) {
 		eventfd_write(vq->callfd, (eventfd_t)1);
 	}
 }
@@ -280,7 +293,7 @@ submit_completion(struct spdk_vhost_task *task)
 	struct iovec *iovs = NULL;
 	int result;
 
-	vq_used_ring_enqueue(task->vq, task->req_idx, task->scsi.data_transferred);
+	vq_used_ring_enqueue(task->vdev->dev, task->vq, task->req_idx, task->scsi.data_transferred);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
 
 	if (task->scsi.iovs != &task->scsi.iov) {
@@ -373,7 +386,7 @@ mgmt_task_submit(struct spdk_vhost_task *task)
 static void
 invalid_request(struct spdk_vhost_task *task)
 {
-	vq_used_ring_enqueue(task->vq, task->req_idx, 0);
+	vq_used_ring_enqueue(task->vdev->dev, task->vq, task->req_idx, 0);
 	spdk_vhost_task_put(task);
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST, "Invalid request (status=%" PRIu8")\n",
@@ -487,7 +500,7 @@ process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring 
 		break;
 	}
 
-	vq_used_ring_enqueue(controlq, req_idx, 0);
+	vq_used_ring_enqueue(vdev->dev, controlq, req_idx, 0);
 	spdk_vhost_task_put(task);
 }
 
