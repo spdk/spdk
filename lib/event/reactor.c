@@ -431,13 +431,13 @@ static void
 spdk_reactor_start(struct spdk_reactor *reactor)
 {
 	if (reactor->lcore != spdk_get_master_lcore()) {
-        switch (spdk_get_lcore_state(reactor->lcore)) {
+		switch (spdk_get_lcore_state(reactor->lcore)) {
 		case FINISHED:
 			spdk_wait_lcore(reactor->lcore);
 		/* drop through */
 		case WAIT:
 			spdk_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
-            break;
+			break;
 		case RUNNING:
 			printf("Something already running on lcore %d\n", reactor->lcore);
 			break;
