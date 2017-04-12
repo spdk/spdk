@@ -163,6 +163,43 @@ spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 }
 
 static void
+test_spdk_nvmf_tgt_listen(void)
+{
+	struct spdk_nvmf_listen_addr *listen_addr;
+
+	/* Invalid trname */
+	const char *trname  = "test_invalid_trname";
+	const char *traddr  = "192.168.100.1";
+	const char *trsvcid = "4420";
+	CU_ASSERT(spdk_nvmf_tgt_listen(trname, traddr, trsvcid) == NULL);
+
+	/* Listen addr is not create and create valid listen addr */
+	trname  = "test_transport1";
+	traddr  = "192.168.3.11";
+	trsvcid = "3320";
+	listen_addr = spdk_nvmf_tgt_listen(trname, traddr, trsvcid);
+	SPDK_CU_ASSERT_FATAL(listen_addr != NULL);
+	CU_ASSERT(listen_addr->traddr != NULL);
+	CU_ASSERT(listen_addr->trsvcid != NULL);
+	spdk_nvmf_listen_addr_destroy(listen_addr);
+
+}
+
+static void
+test_spdk_nvmf_subsystem_add_ns(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {
+		.mode = NVMF_SUBSYSTEM_MODE_VIRTUAL,
+		.dev.virt.ns_count = 0,
+		.dev.virt.ns_list = {},
+	};
+	struct spdk_bdev bdev = {};
+	spdk_nvmf_subsystem_add_ns(&subsystem, &bdev);
+	CU_ASSERT(subsystem.dev.virt.ns_count == 1);
+	CU_ASSERT_PTR_EQUAL(subsystem.dev.virt.ns_list[0], &bdev);
+}
+
+static void
 nvmf_test_create_subsystem(void)
 {
 	char nqn[256];
@@ -221,6 +258,8 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "create_subsystem", nvmf_test_create_subsystem) == NULL ||
+		CU_add_test(suite, "nvmf_tgt_listen", test_spdk_nvmf_tgt_listen) == NULL ||
+		CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns) == NULL ||
 		CU_add_test(suite, "find_subsystem", nvmf_test_find_subsystem) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
