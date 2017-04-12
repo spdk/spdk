@@ -89,7 +89,7 @@ for i in "$@"; do
 			CONFIG_RDMA=n
 			;;
 		--with-dpdk=*)
-			CONFIG_DPDK_DIR="${i#*=}"
+			CONFIG_DPDK_DIR=$(readlink -f ${i#*=})
 			;;
 		--without-dpdk)
 			CONFIG_DPDK_DIR=
