@@ -553,6 +553,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oncs.reservations ? "Supported" : "Not Supported");
 	printf("Volatile Write Cache:        %s\n",
 	       cdata->vwc.present ? "Present" : "Not Present");
+	printf("Atomic Write Unit (Normal):  %d\n", cdata->awun + 1);
+	printf("Atomic Write Unit (PFail):   %d\n", cdata->awupf + 1);
 	printf("Scatter-Gather List\n");
 	printf("  SGL Command Set:           %s\n",
 	       cdata->sgls.supported ? "Supported" : "Not Supported");
