@@ -164,6 +164,8 @@ if [ -n "$CONFIG_RBD" ]; then
 	echo "CONFIG_RBD?=$CONFIG_RBD" >> CONFIG.local
 fi
 
+python scripts/genconfig.py > config.h
+
 echo "done."
 echo "Type 'make' to build."
 
