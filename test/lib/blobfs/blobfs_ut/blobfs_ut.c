@@ -368,6 +368,60 @@ tree_find_buffer_ut(void)
 	free(root);
 }
 
+static void
+channel_ops(void)
+{
+	struct spdk_filesystem *fs;
+	struct spdk_bs_dev dev;
+	struct spdk_io_channel *channel;
+
+	init_dev(&dev);
+	spdk_allocate_thread();
+
+	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
+	CU_ASSERT(g_fserrno == 0);
+	fs = g_fs;
+
+	channel =  spdk_fs_alloc_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT);
+	CU_ASSERT(channel != NULL);
+
+	spdk_fs_free_io_channel(channel);
+
+	spdk_fs_unload(fs, fs_op_complete, NULL);
+	CU_ASSERT(g_fserrno == 0);
+	g_fs = NULL;
+
+	spdk_free_thread();
+}
+
+static void
+channel_ops_sync(void)
+{
+	struct spdk_filesystem *fs;
+	struct spdk_bs_dev dev;
+	struct spdk_io_channel *channel;
+
+	init_dev(&dev);
+	spdk_allocate_thread();
+
+	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
+	CU_ASSERT(g_fserrno == 0);
+	fs = g_fs;
+
+	channel =  spdk_fs_alloc_io_channel_sync(fs, SPDK_IO_PRIORITY_DEFAULT);
+	CU_ASSERT(channel != NULL);
+
+	spdk_fs_free_io_channel(channel);
+
+	spdk_fs_unload(fs, fs_op_complete, NULL);
+	CU_ASSERT(g_fserrno == 0);
+	g_fs = NULL;
+
+	spdk_free_thread();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -388,7 +442,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "fs_open", fs_open) == NULL ||
 		CU_add_test(suite, "fs_truncate", fs_truncate) == NULL ||
 		CU_add_test(suite, "fs_rename", fs_rename) == NULL ||
-		CU_add_test(suite, "tree_find_buffer", tree_find_buffer_ut) == NULL
+		CU_add_test(suite, "tree_find_buffer", tree_find_buffer_ut) == NULL ||
+		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
+		CU_add_test(suite, "channel_ops_sync", channel_ops_sync) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
