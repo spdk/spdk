@@ -58,27 +58,28 @@ struct spdk_fio_request {
 	struct spdk_fio_thread	*fio_thread;
 };
 
-struct spdk_fio_ns {
-	struct fio_file		*f;
-
-	struct spdk_nvme_ns	*ns;
-	struct spdk_fio_ns	*next;
-};
-
 struct spdk_fio_ctrlr {
 	struct spdk_nvme_transport_id	tr_id;
+	struct spdk_nvme_ctrlr_opts	opts;
 	struct spdk_nvme_ctrlr		*ctrlr;
 	struct spdk_fio_ctrlr		*next;
+};
 
-	struct spdk_nvme_qpair		*qpair;
+struct spdk_fio_ctrlr  *ctrlr_g;
+int td_count;
+pthread_mutex_t mutex;
 
-	struct spdk_fio_ns		*ns_list;
+struct spdk_fio_qpair {
+	struct fio_file		*f;
+	struct spdk_nvme_qpair	*qpair;
+	struct spdk_nvme_ns	*ns;
+	struct spdk_fio_qpair 	*next;
 };
 
 struct spdk_fio_thread {
 	struct thread_data	*td;
 
-	struct spdk_fio_ctrlr	*ctrlr_list;
+	struct spdk_fio_qpair	*fio_qpair;
 
 	struct io_u		**iocq;	// io completion queue
 	unsigned int		iocq_count;	// number of iocq entries filled by last getevents
@@ -94,6 +95,21 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	return true;
 }
 
+static struct spdk_fio_ctrlr *
+get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_fio_ctrlr	*fio_ctrlr = ctrlr_g;
+	while (fio_ctrlr) {
+		if (spdk_nvme_transport_id_compare(trid, &fio_ctrlr->tr_id) == 0) {
+			return fio_ctrlr;
+		}
+
+		fio_ctrlr = fio_ctrlr->next;
+	}
+
+	return NULL;
+}
+
 static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
@@ -101,10 +117,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct thread_data 	*td = cb_ctx;
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
-	struct spdk_fio_ns	*fio_ns;
+	struct spdk_fio_qpair	*fio_qpair;
+	struct spdk_nvme_ns	*ns;
 	struct fio_file		*f = fio_thread->current_f;
 	uint32_t		ns_id;
-	bool			ctrlr_is_added = false;
 	char			*p;
 
 	p = strstr(f->file_name, "ns=");
@@ -115,68 +131,56 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	/* check whether this trid is already added */
-	fio_ctrlr = fio_thread->ctrlr_list;
-	while (fio_ctrlr) {
-		if (spdk_nvme_transport_id_compare(trid, &fio_ctrlr->tr_id) == 0) {
-			ctrlr_is_added = true;
-			break;
-		}
-
-		fio_ctrlr = fio_ctrlr->next;
-	}
-
+	fio_ctrlr = get_fio_ctrlr(trid);
 	/* it is a new ctrlr and needs to be added */
-	if (!ctrlr_is_added) {
+	if (!fio_ctrlr) {
 		/* Create an fio_ctrlr and add it to the list */
 		fio_ctrlr = calloc(1, sizeof(*fio_ctrlr));
 		if (!fio_ctrlr) {
 			SPDK_ERRLOG("Cannot allocate space for fio_ctrlr\n");
 			return;
 		}
+		fio_ctrlr->opts = *opts;
 		fio_ctrlr->ctrlr = ctrlr;
 		fio_ctrlr->tr_id = *trid;
-		fio_ctrlr->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
-		fio_ctrlr->ns_list = NULL;
-		fio_ctrlr->next = fio_thread->ctrlr_list;
-		fio_thread->ctrlr_list = fio_ctrlr;
+		fio_ctrlr->next = ctrlr_g;
+		ctrlr_g = fio_ctrlr;
 	}
 
-	/* check whether this name space is existing or not */
-	fio_ns = fio_ctrlr->ns_list;
-	while (fio_ns) {
-		if (spdk_nvme_ns_get_id(fio_ns->ns) == ns_id) {
+	ns = spdk_nvme_ctrlr_get_ns(fio_ctrlr->ctrlr, ns_id);
+	if (ns == NULL) {
+		SPDK_ERRLOG("Cannot get namespace by ns_id=%d\n", ns_id);
+		return;
+	}
+
+	fio_qpair = fio_thread->fio_qpair;
+	while (fio_qpair != NULL) {
+		if (fio_qpair->f == f) {
 			return;
 		}
-		fio_ns = fio_ns->next;
+		fio_qpair = fio_qpair->next;
 	}
 
-	/* create a new namespace */
-	fio_ns = calloc(1, sizeof(*fio_ns));
-	if (fio_ns == NULL) {
-		SPDK_ERRLOG("Cannot allocate space for fio_ns\n");
+	/* create a new qpair */
+	fio_qpair = calloc(1, sizeof(*fio_qpair));
+	if (!fio_qpair) {
+		SPDK_ERRLOG("Cannot allocate space for fio_qpair\n");
 		return;
 	}
-	fio_ns->f = f;
-	fio_ns->ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
-	if (fio_ns->ns == NULL) {
-		SPDK_ERRLOG("Cannot get namespace by ns_id=%d\n", ns_id);
-		free(fio_ns);
-		return;
-	}
+	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, 0);
+	fio_qpair->ns = ns;
+	fio_qpair->f = f;
+	fio_qpair->next = fio_thread->fio_qpair;
+	fio_thread->fio_qpair = fio_qpair;
 
-	f->real_file_size = spdk_nvme_ns_get_size(fio_ns->ns);
+	f->real_file_size = spdk_nvme_ns_get_size(fio_qpair->ns);
 	if (f->real_file_size <= 0) {
-		SPDK_ERRLOG("Cannot get namespace size by ns=%p\n", fio_ns->ns);
-		free(fio_ns);
+		SPDK_ERRLOG("Cannot get namespace size by ns=%p\n", ns);
 		return;
 	}
 
 	f->filetype = FIO_TYPE_BLOCK;
 	fio_file_set_size_known(f);
-
-	fio_ns->next = fio_ctrlr->ns_list;
-	fio_ctrlr->ns_list = fio_ns;
 }
 
 static void
@@ -209,6 +213,7 @@ static int spdk_fio_setup(struct thread_data *td)
 	char *p;
 	int rc;
 	struct spdk_nvme_transport_id trid;
+	struct spdk_fio_ctrlr *fio_ctrlr;
 	char *trid_info;
 	unsigned int i;
 
@@ -234,6 +239,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		spdk_env_init(&opts);
 		spdk_env_initialized = true;
 		cpu_core_unaffinitized();
+		pthread_mutex_init(&mutex, NULL);
 	}
 
 	for_each_file(td, f, i) {
@@ -278,12 +284,19 @@ static int spdk_fio_setup(struct thread_data *td)
 
 		fio_thread->current_f = f;
 
-		/* Enumerate all of the controllers */
-		if (spdk_nvme_probe(&trid, td, probe_cb, attach_cb, NULL) != 0) {
-			SPDK_ERRLOG("spdk_nvme_probe() failed\n");
-			continue;
+		fio_ctrlr = get_fio_ctrlr(&trid);
+		if (fio_ctrlr) {
+			attach_cb(td, &trid, fio_ctrlr->ctrlr, &fio_ctrlr->opts);
+		} else {
+			/* Enumerate all of the controllers */
+			if (spdk_nvme_probe(&trid, td, probe_cb, attach_cb, NULL) != 0) {
+				SPDK_ERRLOG("spdk_nvme_probe() failed\n");
+				continue;
+			}
 		}
 	}
+
+	td_count++;
 
 	return 0;
 }
@@ -351,42 +364,33 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	int rc = 1;
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
 	struct spdk_fio_request	*fio_req = io_u->engine_data;
-	struct spdk_fio_ctrlr	*fio_ctrlr;
-	struct spdk_fio_ns	*fio_ns;
-	bool found_ns = false;
+	struct spdk_fio_qpair	*fio_qpair;
+	struct spdk_nvme_ns	*ns = NULL;
 
 	/* Find the namespace that corresponds to the file in the io_u */
-	fio_ctrlr = fio_thread->ctrlr_list;
-	while (fio_ctrlr != NULL) {
-		fio_ns = fio_ctrlr->ns_list;
-		while (fio_ns != NULL) {
-			if (fio_ns->f == io_u->file) {
-				found_ns = true;
-				break;
-			}
-			fio_ns = fio_ns->next;
-		}
-		if (found_ns) {
+	fio_qpair = fio_thread->fio_qpair;
+	while (fio_qpair != NULL) {
+		if (fio_qpair->f == io_u->file) {
+			ns = fio_qpair->ns;
 			break;
 		}
-		fio_ctrlr = fio_ctrlr->next;
+		fio_qpair = fio_qpair->next;
 	}
-	if (fio_ctrlr == NULL || fio_ns == NULL) {
+	if (fio_qpair == NULL || ns == NULL) {
 		return FIO_Q_COMPLETED;
 	}
-	assert(found_ns == true);
 
-	uint32_t block_size = spdk_nvme_ns_get_sector_size(fio_ns->ns);
+	uint32_t block_size = spdk_nvme_ns_get_sector_size(ns);
 	uint64_t lba = io_u->offset / block_size;
 	uint32_t lba_count = io_u->xfer_buflen / block_size;
 
 	switch (io_u->ddir) {
 	case DDIR_READ:
-		rc = spdk_nvme_ns_cmd_read(fio_ns->ns, fio_ctrlr->qpair, io_u->buf, lba, lba_count,
+		rc = spdk_nvme_ns_cmd_read(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
 					   spdk_fio_completion_cb, fio_req, 0);
 		break;
 	case DDIR_WRITE:
-		rc = spdk_nvme_ns_cmd_write(fio_ns->ns, fio_ctrlr->qpair, io_u->buf, lba, lba_count,
+		rc = spdk_nvme_ns_cmd_write(ns, fio_qpair->qpair, io_u->buf, lba, lba_count,
 					    spdk_fio_completion_cb, fio_req, 0);
 		break;
 	default:
@@ -412,7 +416,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			      unsigned int max, const struct timespec *t)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
-	struct spdk_fio_ctrlr *fio_ctrlr;
+	struct spdk_fio_qpair *fio_qpair;
 	struct timespec t0, t1;
 	uint64_t timeout = 0;
 
@@ -424,15 +428,15 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 	fio_thread->iocq_count = 0;
 
 	for (;;) {
-		fio_ctrlr = fio_thread->ctrlr_list;
-		while (fio_ctrlr != NULL) {
-			spdk_nvme_qpair_process_completions(fio_ctrlr->qpair, max - fio_thread->iocq_count);
+		fio_qpair = fio_thread->fio_qpair;
+		while (fio_qpair != NULL) {
+			spdk_nvme_qpair_process_completions(fio_qpair->qpair, max - fio_thread->iocq_count);
 
 			if (fio_thread->iocq_count >= min) {
 				return fio_thread->iocq_count;
 			}
 
-			fio_ctrlr = fio_ctrlr->next;
+			fio_qpair = fio_qpair->next;
 		}
 
 		if (t) {
@@ -457,25 +461,31 @@ static int spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
 static void spdk_fio_cleanup(struct thread_data *td)
 {
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
-	struct spdk_fio_ctrlr	*fio_ctrlr, *fio_ctrlr_tmp;
-	struct spdk_fio_ns	*fio_ns, *fio_ns_tmp;
+	struct spdk_fio_qpair	*fio_qpair, *fio_qpair_tmp;
 
-	fio_ctrlr = fio_thread->ctrlr_list;
-	while (fio_ctrlr != NULL) {
-		fio_ns = fio_ctrlr->ns_list;
-		while (fio_ns != NULL) {
-			fio_ns_tmp = fio_ns->next;
-			free(fio_ns);
-			fio_ns = fio_ns_tmp;
-		}
-		spdk_nvme_ctrlr_free_io_qpair(fio_ctrlr->qpair);
-		spdk_nvme_detach(fio_ctrlr->ctrlr);
-		fio_ctrlr_tmp = fio_ctrlr->next;
-		free(fio_ctrlr);
-		fio_ctrlr = fio_ctrlr_tmp;
+	fio_qpair = fio_thread->fio_qpair;
+	while (fio_qpair != NULL) {
+		spdk_nvme_ctrlr_free_io_qpair(fio_qpair->qpair);
+		fio_qpair_tmp = fio_qpair->next;
+		free(fio_qpair);
+		fio_qpair = fio_qpair_tmp;
 	}
 
 	free(fio_thread);
+
+	pthread_mutex_lock(&mutex);
+	td_count--;
+	if (td_count == 0) {
+		struct spdk_fio_ctrlr	*fio_ctrlr, *fio_ctrlr_tmp;
+		fio_ctrlr = ctrlr_g;
+		while (fio_ctrlr != NULL) {
+			spdk_nvme_detach(fio_ctrlr->ctrlr);
+			fio_ctrlr_tmp = fio_ctrlr->next;
+			free(fio_ctrlr);
+			fio_ctrlr = fio_ctrlr_tmp;
+		}
+	}
+	pthread_mutex_unlock(&mutex);
 }
 
 /* FIO imports this structure using dlsym */
