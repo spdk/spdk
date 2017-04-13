@@ -18,6 +18,7 @@ def print_array(a):
 parser = argparse.ArgumentParser(description='SPDK RPC command line interface')
 parser.add_argument('-s', dest='server_addr', help='RPC server address', default='127.0.0.1')
 parser.add_argument('-p', dest='port', help='RPC port number', default=5260, type=int)
+parser.add_argument('-v', dest='verbose', help='Verbose mode', action='store_true')
 subparsers = parser.add_subparsers(help='RPC methods')
 
 
@@ -39,6 +40,11 @@ def jsonrpc_call(method, params={}):
     if (params):
         req['params'] = params
     reqstr = json.dumps(req)
+
+    if args.verbose:
+        print("request:")
+        print(json.dumps(req, indent=2))
+
     s.sendall(reqstr)
     buf = ''
     closed = False
@@ -69,6 +75,10 @@ def jsonrpc_call(method, params={}):
         print "response:"
         print_dict(response['error'])
         exit(1)
+
+    if args.verbose:
+        print("response:")
+        print(json.dumps(response, indent=2))
 
     return response['result']
 
