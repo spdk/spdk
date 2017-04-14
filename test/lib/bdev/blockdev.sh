@@ -28,9 +28,10 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 128 -w read -s 196608 -t 5
 	timing_exit perf
 
-	timing_enter reset
-	$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -s 4096 -t 60
-	timing_exit reset
+	# Temporarily disabled - infinite loop
+	#timing_enter reset
+	#$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -s 4096 -t 60
+	#timing_exit reset
 
 	timing_enter unmap
 	$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 1 -w unmap -s 4096 -t 60
