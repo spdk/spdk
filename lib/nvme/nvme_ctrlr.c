@@ -1207,12 +1207,11 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		if (csts.bits.rdy == 0) {
 			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
-
-			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_ENABLE) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "Applying quirk: Delay 100us before enabling.\n");
-				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + spdk_get_ticks_hz() / 10000;
-			}
-
+			/*
+			 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
+			 *  set to 1 if it is too soon after CSTS.RDY is reported as 0.
+			 */
+			spdk_delay_us(100);
 			return 0;
 		}
 		break;

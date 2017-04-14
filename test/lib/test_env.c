@@ -157,6 +157,11 @@ uint64_t spdk_get_ticks_hz(void)
 	return 1000000;
 }
 
+void spdk_delay_us(unsigned int us)
+{
+	ut_tsc += us;
+}
+
 int
 spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
 {

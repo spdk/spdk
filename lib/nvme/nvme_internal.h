@@ -89,13 +89,6 @@
  */
 #define NVME_INTEL_QUIRK_STRIPING 0x8
 
-/*
- * A small delay is required before re-enabling a controller.
- * The delay required is often vanishingly small, such that
- * many drivers do not ever encounter the problem.
- */
-#define NVME_QUIRK_DELAY_BEFORE_ENABLE 0x10
-
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
