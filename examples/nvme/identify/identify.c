@@ -676,6 +676,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		       features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].result,
 		       features[SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD].result - 273);
 		printf("Available Spare:             %u%%\n", health_page.available_spare);
+		printf("Available Spare Threshold:   %u%%\n", health_page.available_spare_threshold);
 		printf("Life Percentage Used:        %u%%\n", health_page.percentage_used);
 		printf("Data Units Read:             ");
 		print_uint128_dec(health_page.data_units_read);
@@ -707,6 +708,15 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("Lifetime Error Log Entries:  ");
 		print_uint128_dec(health_page.num_error_info_log_entries);
 		printf("\n");
+		printf("Warning Temperature Time:    %u minutes\n", health_page.warning_temp_time);
+		printf("Critical Temperature Time:   %u minutes\n", health_page.critical_temp_time);
+		for (i = 0; i < 8; i++) {
+			if (health_page.temp_sensor[i] != 0) {
+				printf("Temperature Sensor %d:        %u Kelvin (%u Celsius)\n",
+				       i + 1, health_page.temp_sensor[i],
+				       health_page.temp_sensor[i] - 273);
+			}
+		}
 		printf("\n");
 	}
 

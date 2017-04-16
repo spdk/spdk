@@ -1409,8 +1409,12 @@ struct __attribute__((packed)) spdk_nvme_health_information_page {
 	uint64_t		unsafe_shutdowns[2];
 	uint64_t		media_errors[2];
 	uint64_t		num_error_info_log_entries[2];
+	/* Controller temperature related. */
+	uint32_t		warning_temp_time;
+	uint32_t		critical_temp_time;
+	uint16_t		temp_sensor[8];
 
-	uint8_t			reserved2[320];
+	uint8_t			reserved2[296];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_health_information_page) == 512, "Incorrect size");
 
