@@ -69,7 +69,7 @@ if [ $(uname -s) = Linux ]; then
 	kill -9 $!
 	count=0
 	while [ $count -le 2 ]; do
-		$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w read -s 4096 -t 1 -c 0x10
+		$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w read -s 4096 -t 1 -c 0xf
 		count=$(($count + 1))
 	done
 	count=0
@@ -77,6 +77,7 @@ if [ $(uname -s) = Linux ]; then
 		core=$((1 << (($count + 4))))
 		printf -v hexcore "0x%x" "$core"
 		$rootdir/examples/nvme/perf/perf -i 0 -q 128 -w read -s 4096 -t 1 -c $hexcore &
+		$rootdir/examples/nvme/identify/identify -i 0 &
 		count=$(($count + 1))
 	done
 	wait $pid

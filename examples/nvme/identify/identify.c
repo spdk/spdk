@@ -67,6 +67,8 @@ static struct spdk_nvme_intel_marketing_description_page intel_md_page;
 
 static bool g_hex_dump = false;
 
+static int g_shm_id = -1;
+
 static struct spdk_nvme_transport_id g_trid;
 
 static void
@@ -885,6 +887,7 @@ usage(const char *program_name)
 
 	spdk_tracelog_usage(stdout, "-t");
 
+	printf(" -i         shared memory group ID\n");
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -v         verbose (enable warnings)\n");
 	printf(" -H         show this usage\n");
@@ -898,8 +901,11 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "r:t:xH")) != -1) {
+	while ((op = getopt(argc, argv, "i:r:t:xH")) != -1) {
 		switch (op) {
+		case 'i':
+			g_shm_id = atoi(optarg);
+			break;
 		case 'x':
 			g_hex_dump = true;
 			break;
@@ -955,15 +961,16 @@ int main(int argc, char **argv)
 	int				rc;
 	struct spdk_env_opts		opts;
 
-	spdk_env_opts_init(&opts);
-	opts.name = "identify";
-	opts.core_mask = "0x1";
-	spdk_env_init(&opts);
-
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
 		return rc;
 	}
+
+	spdk_env_opts_init(&opts);
+	opts.name = "identify";
+	opts.core_mask = "0x1";
+	opts.shm_id = g_shm_id;
+	spdk_env_init(&opts);
 
 	rc = 0;
 	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
