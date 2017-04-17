@@ -331,7 +331,7 @@ spdk_ring_mp_enqueue(struct spdk_ring *r, void *obj)
 unsigned
 spdk_ring_sc_dequeue_burst(struct spdk_ring *r, void **obj_table, unsigned n)
 {
-	return spdk_ring_sc_dequeue_burst(r, obj_table, n);
+	return rte_ring_sc_dequeue_burst((struct rte_ring *)r, obj_table, n);
 }
 unsigned
 spdk_lcore_to_socket_id(unsigned lcore_id)
@@ -347,7 +347,7 @@ spdk_ring_create(const char *name, unsigned count,
 
 enum spdk_lcore_state_t
 spdk_eal_get_lcore_state(unsigned lcore_id) {
-	return rte_eal_get_lcore_state(lcore_id);
+	return (enum spdk_lcore_state_t)rte_eal_get_lcore_state(lcore_id);
 }
 
 int
@@ -370,7 +370,7 @@ spdk_ring_free(struct spdk_ring *r)
 spdk_phys_addr_t
 spdk_mempool_virt2phy(__spdk_unused const struct spdk_mempool *mp, const void *elt)
 {
-	return rte_mempool_virt2phy((__rte_unused const struct rte_mempool *)mp, elt);
+	return rte_mempool_virt2phy((const struct rte_mempool *)mp, elt);
 }
 
 unsigned
