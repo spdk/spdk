@@ -47,9 +47,57 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 
+#undef SPDK_ENV_SOCKET_ID_ANY
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
+#undef SPDK_MEMPOOL_CACHE_MAX_SIZE
+#define SPDK_MEMPOOL_CACHE_MAX_SIZE 512
+#define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
+#undef SPDK_MAX_LCORE
+#define SPDK_MAX_LCORE 128
+/**
+ * Macro to browse all running lcores.
+ */
+#define SPDK_LCORE_FOREACH(i)                                          \
+        for (i = spdk_get_next_lcore(-1, 0, 0);                         \
+             i<SPDK_MAX_LCORE;                                         \
+             i = spdk_get_next_lcore(i, 0, 0))
+
+/**
+ * Macro to browse all running lcores except the master lcore.
+ */
+#define SPDK_LCORE_FOREACH_SLAVE(i)                                     \
+        for (i = spdk_get_next_lcore(-1, 1, 0);                          \
+             i<SPDK_MAX_LCORE;                                          \
+             i = spdk_get_next_lcore(i, 1, 0))
+
+#define RING_F_SP_ENQ 0x0001 /**< The default enqueue is "single-producer". */
+#define RING_F_SC_DEQ 0x0002 /**< The default dequeue is "single-consumer". */
+#define SPDK_RING_QUOT_EXCEED (1 << 31)  /**< Quota exceed for burst ops */
+#define SPDK_RING_SZ_MASK  (unsigned)(0x0fffffff) /**< Ring size mask */
+#define __spdk_unused __attribute__((__unused__))
+#if !defined(SPDK_MIN)
+#define SPDK_MIN(a,b) RTE_MIN(a,b)
+#endif
+#define SPDK_DIM(r)   RTE_DIM(r)
+#define spdk_vhost_driver_register(a, b) rte_vhost_driver_register(a,b)
+#define SPDK_LOG_ERR 4U  /**< Error conditions.                 */
+#define spdk_panic(...) spdk_panic_(__func__, __VA_ARGS__, "dummy")
+#define spdk_panic_(function, format, ...) __spdk_panic(function, format "%.0s", __VA_ARGS__)
+#define SPDK_LOG(l, t, ...)	\
+		rte_log(RTE_LOG_ ## l,	\
+                 RTE_LOGTYPE_ ## t, # t ": " __VA_ARGS__)
+
+typedef uint64_t spdk_phys_addr_t; /**< Physical address definition. */
 
 struct spdk_pci_device;
+struct spdk_ring;
+struct virtio_net_device_ops;
+struct spdk_mbuf;
+enum spdk_lcore_state_t {
+	SPDK_WAIT,       /**< waiting a new command */
+	SPDK_RUNNING,    /**< executing command */
+	SPDK_FINISHED,   /**< command executed */
+};
 
 /**
  * \brief Environment initialization options
@@ -73,6 +121,7 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
  * any other functions in this library.
 */
 void spdk_env_init(const struct spdk_env_opts *opts);
+void *spdk_malloc_type(const char *type, size_t size, size_t align);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
@@ -84,8 +133,10 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr);
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment. The buffer will be zeroed.
  */
-void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_zmalloc(const char *type, size_t size, unsigned align);
 
+void *
+spdk_zmalloc_phy(size_t size, size_t align, uint64_t *phys_addr);
 /**
  * Resize the allocated and pinned memory buffer with the given
  *   new size and alignment. Existing contents are preserved.
@@ -133,8 +184,9 @@ struct spdk_mempool;
  *
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY for any socket.
  */
-struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
-		size_t ele_size, size_t cache_size, int socket_id);
+struct spdk_mempool *
+spdk_mempool_create(const char *name, size_t n, size_t elt_size,
+		    size_t cache_size, int socket_id);
 
 /**
  * Free a memory pool.
@@ -144,7 +196,7 @@ void spdk_mempool_free(struct spdk_mempool *mp);
 /**
  * Get an element from a memory pool. If no elements remain, return NULL.
  */
-void *spdk_mempool_get(struct spdk_mempool *mp);
+int spdk_mempool_get(struct spdk_mempool *mp, void **obj_p);
 
 /**
  * Put an element back into the memory pool.
@@ -386,8 +438,74 @@ void spdk_mem_register(void *vaddr, size_t len);
  */
 void spdk_mem_unregister(void *vaddr, size_t len);
 
+
+
+unsigned
+spdk_lcore_id(void);
+unsigned
+spdk_mempool_avail_count(struct spdk_mempool *pool);
+char *
+spdk_mempool_name(struct spdk_mempool *pool);
+
+unsigned
+spdk_get_master_lcore(void);
+unsigned
+spdk_get_next_lcore(unsigned i, int skip_master, int wrap);
+int
+spdk_eal_remote_launch(int (*f)(void *), void *arg, unsigned slave_id);
+int
+spdk_eal_wait_lcore(unsigned slave_id);
+void *
+spdk_memcpy(void *dest, const void *src, size_t n);
+int
+spdk_ring_mp_enqueue(struct spdk_ring *r, void *obj);
+unsigned
+spdk_ring_sc_dequeue_burst(struct spdk_ring *r, void **obj_table, unsigned n);
+unsigned
+spdk_lcore_to_socket_id(unsigned lcore_id);
+struct spdk_ring *
+spdk_ring_create(const char *name, unsigned count,
+		 int socket_id, unsigned flags);
+enum spdk_lcore_state_t
+spdk_eal_get_lcore_state(unsigned lcore_id);
+int
+spdk_lcore_is_enabled(unsigned lcore_id);
+void
+spdk_eal_mp_wait_lcore(void);
+void
+spdk_ring_free(struct spdk_ring *r);
+spdk_phys_addr_t
+spdk_mempool_virt2phy(__spdk_unused const struct spdk_mempool *mp, const void *elt);
+unsigned
+spdk_socket_id(void);
+typedef void (spdk_mempool_ctor_t)(struct spdk_mempool *, void *);
+typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
+				     void *opaque, void *obj, unsigned obj_idx);
+typedef spdk_mempool_obj_cb_t spdk_mempool_obj_ctor_t;
+struct spdk_mempool *
+spdk_mempool_create_full(const char *name, unsigned n, unsigned elt_size,
+			 unsigned cache_size, unsigned private_data_size,
+			 spdk_mempool_ctor_t *mp_init, void *mp_init_arg,
+			 spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg,
+			 int socket_id, unsigned flags);
+void
+spdk_exit(int exit_code, const char *format, ...);
+unsigned
+spdk_lcore_count(void);
+int
+spdk_vhost_driver_session_start(void);
+int
+spdk_vhost_driver_unregister(const char *path);
+int
+spdk_vhost_enable_guest_notification(int vid, uint16_t queue_id, int enable);
+int
+spdk_vhost_driver_callback_register(struct virtio_net_device_ops const *const ops);
+void
+spdk_set_log_level(int a);
+void
+__spdk_panic(const char *function, const char *format, ...);
+
 #ifdef __cplusplus
 }
 #endif
-
 #endif

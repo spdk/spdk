@@ -166,7 +166,7 @@ static enum spdk_bdev_io_status g_completion_status;
 static void
 initialize_buffer(char **buf, int pattern, int size)
 {
-	*buf = spdk_zmalloc(size, 0x1000, NULL);
+	*buf = spdk_zmalloc_phy(size, 0x1000, NULL);
 	memset(*buf, pattern, size);
 }
 

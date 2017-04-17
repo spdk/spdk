@@ -37,9 +37,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/ioat.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
@@ -308,8 +305,8 @@ submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
 {
 	while (queue_depth-- > 0) {
 		struct ioat_task *ioat_task = NULL;
-		ioat_task = spdk_mempool_get(thread_entry->task_pool);
-		ioat_task->buffer = spdk_mempool_get(thread_entry->data_pool);
+		spdk_mempool_get(thread_entry->task_pool, (void *)&ioat_task);
+		spdk_mempool_get(thread_entry->data_pool, (void *)ioat_task->buffer);
 
 		ioat_task->type = IOAT_COPY_TYPE;
 		if (spdk_ioat_get_dma_capabilities(thread_entry->chan) & SPDK_IOAT_ENGINE_FILL_SUPPORTED) {
@@ -332,10 +329,10 @@ work_fn(void *arg)
 		return 0;
 	}
 
-	t->lcore_id = rte_lcore_id();
+	t->lcore_id = spdk_lcore_id();
 
-	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
+	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", spdk_lcore_id());
+	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", spdk_lcore_id());
 	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, -1,
 					   SPDK_ENV_SOCKET_ID_ANY);
 	t->task_pool = spdk_mempool_create(task_pool_name, g_user_config.queue_depth,
@@ -363,7 +360,7 @@ init_src_buffer(void)
 {
 	int i;
 
-	g_src = spdk_zmalloc(SRC_BUFFER_SIZE, 512, NULL);
+	g_src = spdk_zmalloc_phy(SRC_BUFFER_SIZE, 512, NULL);
 	if (g_src == NULL) {
 		fprintf(stderr, "Allocate src buffer failed\n");
 		return -1;
@@ -439,7 +436,7 @@ int
 main(int argc, char **argv)
 {
 	uint32_t i, current_core;
-	struct thread_entry threads[RTE_MAX_LCORE] = {};
+	struct thread_entry threads[SPDK_MAX_LCORE] = {};
 	int rc;
 
 	if (parse_args(argc, argv) != 0) {
@@ -458,7 +455,7 @@ main(int argc, char **argv)
 	SPDK_ENV_FOREACH_CORE(i) {
 		if (i != current_core) {
 			threads[i].chan = get_next_chan();
-			rte_eal_remote_launch(work_fn, &threads[i], i);
+			spdk_eal_remote_launch(work_fn, &threads[i], i);
 		}
 	}
 
@@ -470,14 +467,14 @@ main(int argc, char **argv)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		if (i != current_core) {
-			if (rte_eal_wait_lcore(i) != 0) {
+			if (spdk_eal_wait_lcore(i) != 0) {
 				rc = 1;
 				goto cleanup;
 			}
 		}
 	}
 
-	rc = dump_result(threads, RTE_MAX_LCORE);
+	rc = dump_result(threads, SPDK_MAX_LCORE);
 
 cleanup:
 	spdk_free(g_src);

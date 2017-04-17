@@ -33,9 +33,6 @@
 
 #include <assert.h>
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
 #include "spdk_internal/log.h"
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
@@ -49,10 +46,10 @@
 
 typedef TAILQ_HEAD(, spdk_vhost_task) need_iovecs_tailq_t;
 
-static struct rte_mempool *g_task_pool;
-static struct rte_mempool *g_iov_buffer_pool;
+static struct spdk_mempool *g_task_pool;
+static struct spdk_mempool *g_iov_buffer_pool;
 
-static need_iovecs_tailq_t g_need_iovecs[RTE_MAX_LCORE];
+static need_iovecs_tailq_t g_need_iovecs[SPDK_MAX_LCORE];
 
 void
 spdk_vhost_task_put(struct spdk_vhost_task *task)
@@ -67,7 +64,7 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
 
-	rte_mempool_put(g_task_pool, task);
+	spdk_mempool_put(g_task_pool, task);
 }
 
 struct spdk_vhost_task *
@@ -76,10 +73,10 @@ spdk_vhost_task_get(uint32_t *owner_task_ctr)
 	struct spdk_vhost_task *task;
 	int rc;
 
-	rc = rte_mempool_get(g_task_pool, (void **)&task);
+	rc = spdk_mempool_get(g_task_pool, (void **)&task);
 	if ((rc < 0) || !task) {
 		SPDK_ERRLOG("Unable to get task\n");
-		rte_panic("no memory\n");
+		spdk_panic("no memory\n");
 	}
 
 	memset(task, 0, sizeof(*task));
@@ -92,7 +89,7 @@ spdk_vhost_task_get(uint32_t *owner_task_ctr)
 void
 spdk_vhost_enqueue_task(struct spdk_vhost_task *task)
 {
-	need_iovecs_tailq_t *tailq = &g_need_iovecs[rte_lcore_id()];
+	need_iovecs_tailq_t *tailq = &g_need_iovecs[spdk_lcore_id()];
 
 	TAILQ_INSERT_TAIL(tailq, task, iovecs_link);
 }
@@ -100,7 +97,7 @@ spdk_vhost_enqueue_task(struct spdk_vhost_task *task)
 struct spdk_vhost_task *
 spdk_vhost_dequeue_task(void)
 {
-	need_iovecs_tailq_t *tailq = &g_need_iovecs[rte_lcore_id()];
+	need_iovecs_tailq_t *tailq = &g_need_iovecs[spdk_lcore_id()];
 	struct spdk_vhost_task *task;
 
 	if (TAILQ_EMPTY(tailq))
@@ -117,35 +114,35 @@ spdk_vhost_iovec_alloc(void)
 {
 	struct iovec *iov = NULL;
 
-	rte_mempool_get(g_iov_buffer_pool, (void **)&iov);
+	spdk_mempool_get(g_iov_buffer_pool, (void **)&iov);
 	return iov;
 }
 
 void
 spdk_vhost_iovec_free(struct iovec *iov)
 {
-	rte_mempool_put(g_iov_buffer_pool, iov);
+	spdk_mempool_put(g_iov_buffer_pool, iov);
 }
 
 static int
 spdk_vhost_subsystem_init(void)
 {
-	g_task_pool = rte_mempool_create("vhost task pool", 16384, sizeof(struct spdk_vhost_task),
-					 128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
+	g_task_pool = spdk_mempool_create("vhost task pool", 16384, sizeof(struct spdk_vhost_task),
+					  128, SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
 		return -1;
 	}
 
-	g_iov_buffer_pool = rte_mempool_create("vhost iov buffer pool", 2048,
-					       VHOST_SCSI_IOVS_LEN * sizeof(struct iovec),
-					       128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
+	g_iov_buffer_pool = spdk_mempool_create("vhost iov buffer pool", 2048,
+						VHOST_SCSI_IOVS_LEN * sizeof(struct iovec),
+						128, SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_iov_buffer_pool) {
 		SPDK_ERRLOG("create iov buffer pool failed\n");
 		return -1;
 	}
 
-	for (int i = 0; i < RTE_MAX_LCORE; i++) {
+	for (int i = 0; i < SPDK_MAX_LCORE; i++) {
 		TAILQ_INIT(&g_need_iovecs[i]);
 	}
 

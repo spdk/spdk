@@ -55,7 +55,7 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_zmalloc_phy(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = calloc(size, 1);
 	if (phys_addr)

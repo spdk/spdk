@@ -561,7 +561,7 @@ nvme_pcie_ctrlr_construct_admin_qpair(struct spdk_nvme_ctrlr *ctrlr)
 	struct nvme_pcie_qpair *pqpair;
 	int rc;
 
-	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL);
+	pqpair = spdk_zmalloc_phy(sizeof(*pqpair), 64, NULL);
 	if (pqpair == NULL) {
 		return -ENOMEM;
 	}
@@ -677,7 +677,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	int rc;
 	struct spdk_pci_id pci_id;
 
-	pctrlr = spdk_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
+	pctrlr = spdk_zmalloc_phy(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
 	if (pctrlr == NULL) {
 		SPDK_ERRLOG("could not allocate ctrlr\n");
 		return NULL;
@@ -861,18 +861,18 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		}
 	}
 	if (pqpair->sq_in_cmb == false) {
-		pqpair->cmd = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					   0x1000,
-					   &pqpair->cmd_bus_addr);
+		pqpair->cmd = spdk_zmalloc_phy(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
+					       0x1000,
+					       &pqpair->cmd_bus_addr);
 		if (pqpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
 			return -ENOMEM;
 		}
 	}
 
-	pqpair->cpl = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				   0x1000,
-				   &pqpair->cpl_bus_addr);
+	pqpair->cpl = spdk_zmalloc_phy(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
+				       0x1000,
+				       &pqpair->cpl_bus_addr);
 	if (pqpair->cpl == NULL) {
 		SPDK_ERRLOG("alloc qpair_cpl failed\n");
 		return -ENOMEM;
@@ -888,7 +888,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	 *   This ensures the PRP list embedded in the nvme_tracker object will not span a
 	 *   4KB boundary, while allowing access to trackers in tr[] via normal array indexing.
 	 */
-	pqpair->tr = spdk_zmalloc(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
+	pqpair->tr = spdk_zmalloc_phy(num_trackers * sizeof(*tr), sizeof(*tr), &phys_addr);
 	if (pqpair->tr == NULL) {
 		SPDK_ERRLOG("nvme_tr failed\n");
 		return -ENOMEM;
@@ -1410,7 +1410,7 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 
 	assert(ctrlr != NULL);
 
-	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL);
+	pqpair = spdk_zmalloc_phy(sizeof(*pqpair), 64, NULL);
 	if (pqpair == NULL) {
 		return NULL;
 	}

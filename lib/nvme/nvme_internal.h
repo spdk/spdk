@@ -61,10 +61,10 @@
 #include "spdk/util.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/nvmf_spec.h"
+#include "spdk/barrier.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
-
 /*
  * Some Intel devices support vendor-unique read latency log page even
  * though the log page directory says otherwise.

@@ -44,9 +44,6 @@
 #include <sys/ioctl.h>
 #include <sys/epoll.h>
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
@@ -71,7 +68,7 @@ static int64_t g_conn_idle_interval_in_tsc = -1;
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
 #define SPDK_MAX_POLLERS_PER_CORE	4096
 static int g_connections_per_lcore = DEFAULT_CONNECTIONS_PER_LCORE;
-static uint32_t g_num_connections[RTE_MAX_LCORE];
+static uint32_t g_num_connections[SPDK_MAX_LCORE];
 
 struct spdk_iscsi_conn *g_conns_array;
 static char g_shm_name[64];
@@ -273,7 +270,7 @@ int spdk_initialize_iscsi_conns(void)
 		g_conns_array[i].id = i;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE; i++) {
 		g_num_connections[i] = 0;
 	}
 
@@ -286,7 +283,7 @@ int spdk_initialize_iscsi_conns(void)
 	}
 
 	spdk_poller_register(&g_idle_conn_poller, spdk_iscsi_conn_idle_do_work, NULL,
-			     rte_get_master_lcore(), 0);
+			     spdk_get_master_lcore(), 0);
 
 	return 0;
 }
@@ -745,7 +742,7 @@ void spdk_shutdown_iscsi_conns(void)
 
 	pthread_mutex_unlock(&g_conns_mutex);
 	spdk_poller_register(&g_shutdown_timer, spdk_iscsi_conn_check_shutdown, NULL,
-			     rte_get_master_lcore(), 1000);
+			     spdk_get_master_lcore(), 1000);
 }
 
 int
@@ -1232,7 +1229,7 @@ static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
 	    conn->pending_task_cnt == 0) {
 
 		spdk_trace_record(TRACE_ISCSI_CONN_IDLE, conn->id, 0, 0, 0);
-		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, rte_get_master_lcore());
+		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, spdk_get_master_lcore());
 	}
 }
 
@@ -1446,8 +1443,8 @@ static uint32_t
 spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 {
 	uint32_t i, selected_core;
-	enum rte_lcore_state_t state;
-	uint32_t master_lcore = rte_get_master_lcore();
+	enum spdk_lcore_state_t state;
+	uint32_t master_lcore = spdk_get_master_lcore();
 	int32_t num_pollers, min_pollers;
 
 	cpumask &= spdk_app_get_core_mask();
@@ -1459,7 +1456,7 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 	selected_core = 0;
 
 	/* we use u64 as CPU core mask */
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE && i < 64; i++) {
 		if (!((1ULL << i) & cpumask)) {
 			continue;
 		}
@@ -1469,24 +1466,24 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 		 * So we always treat the reactor on master core as RUNNING.
 		 */
 		if (i == master_lcore) {
-			state = RUNNING;
+			state = SPDK_RUNNING;
 		} else {
-			state = rte_eal_get_lcore_state(i);
+			state = spdk_eal_get_lcore_state(i);
 		}
-		if (state == FINISHED) {
-			rte_eal_wait_lcore(i);
+		if (state == SPDK_FINISHED) {
+			spdk_eal_wait_lcore(i);
 		}
 
 		switch (state) {
-		case WAIT:
-		case FINISHED:
+		case SPDK_WAIT:
+		case SPDK_FINISHED:
 			/* Idle cores have 0 pollers. */
 			if (0 < min_pollers) {
 				selected_core = i;
 				min_pollers = 0;
 			}
 			break;
-		case RUNNING:
+		case SPDK_RUNNING:
 			/* This lcore is running. Check how many pollers it already has. */
 			num_pollers = g_num_connections[i];
 

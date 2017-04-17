@@ -34,6 +34,7 @@
 #include <stdbool.h>
 
 #include "spdk_cunit.h"
+#include "spdk/env.h"
 
 #include "lib/test_env.c"
 

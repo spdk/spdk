@@ -35,7 +35,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
 #include "spdk/env.h"
 
 void *
@@ -52,7 +51,7 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_zmalloc_phy(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = spdk_malloc(size, align, phys_addr);
 
@@ -122,16 +121,18 @@ spdk_mempool_free(struct spdk_mempool *mp)
 
 }
 
-void *
-spdk_mempool_get(struct spdk_mempool *mp)
+int
+spdk_mempool_get(struct spdk_mempool *mp, void **obj_p)
 {
-	void *buf;
+	int ret;
 
-	if (posix_memalign(&buf, 64, 0x1000)) {
-		buf = NULL;
+	if (posix_memalign(obj_p, 64, 0x1000)) {
+		ret = -1;
+	} else {
+		ret = 0;
 	}
 
-	return buf;
+	return ret;
 }
 
 void

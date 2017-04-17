@@ -44,7 +44,6 @@ LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 LIBS += -lcunit -lcrypto
 ISCSI_OBJS = iscsi crc32c md5 param
 OBJS += $(ISCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/iscsi/%.o)
-
 APP = pdu
 C_SRCS = pdu.c
 

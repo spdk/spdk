@@ -162,7 +162,7 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 	uint64_t phys_addr;
 
 	if (buffer && payload_size) {
-		contig_buffer = spdk_zmalloc(payload_size, 4096, &phys_addr);
+		contig_buffer = spdk_zmalloc_phy(payload_size, 4096, &phys_addr);
 		if (!contig_buffer) {
 			return NULL;
 		}
