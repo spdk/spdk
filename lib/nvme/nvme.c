@@ -494,8 +494,11 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 
 		sep = strchr(str, ':');
 		if (!sep) {
-			SPDK_ERRLOG("Key without : separator\n");
-			return -EINVAL;
+			sep = strchr(str, '=');
+			if (!sep) {
+				SPDK_ERRLOG("Key without ':' or '=' separator\n");
+				return -EINVAL;
+			}
 		}
 
 		key_len = sep - str;
