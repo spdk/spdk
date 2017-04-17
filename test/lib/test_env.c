@@ -171,13 +171,16 @@ spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
 		return -EINVAL;
 	}
 
-	if (sscanf(bdf, "%x:%x:%x.%x", &domain, &bus, &dev, &func) == 4) {
+	if ((sscanf(bdf, "%x:%x:%x.%x", &domain, &bus, &dev, &func) == 4) ||
+	    (sscanf(bdf, "%x.%x.%x.%x", &domain, &bus, &dev, &func) == 4)) {
 		/* Matched a full address - all variables are initialized */
 	} else if (sscanf(bdf, "%x:%x:%x", &domain, &bus, &dev) == 3) {
 		func = 0;
-	} else if (sscanf(bdf, "%x:%x.%x", &bus, &dev, &func) == 3) {
+	} else if ((sscanf(bdf, "%x:%x.%x", &bus, &dev, &func) == 3) ||
+		   (sscanf(bdf, "%x.%x.%x", &bus, &dev, &func) == 3)) {
 		domain = 0;
-	} else if (sscanf(bdf, "%x:%x", &bus, &dev) == 2) {
+	} else if ((sscanf(bdf, "%x:%x", &bus, &dev) == 2) ||
+		   (sscanf(bdf, "%x.%x", &bus, &dev) == 2)) {
 		domain = 0;
 		func = 0;
 	} else {

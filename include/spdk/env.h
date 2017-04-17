@@ -291,7 +291,8 @@ int spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_
  * Convert a string representation of a PCI address into a struct spdk_pci_addr.
  *
  * \param addr PCI adddress output on success
- * \param bdf PCI address in domain:bus:device.function format
+ * \param bdf PCI address in domain:bus:device.function format or
+ *	domain.bus.device.function format
  *
  * \return 0 on success, or a negated errno value on failure.
  */

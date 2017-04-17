@@ -166,7 +166,7 @@ struct spdk_nvme_transport_id {
 	 * Transport address of the NVMe-oF endpoint. For transports which use IP
 	 * addressing (e.g. RDMA), this should be an IP address. For PCIe, this
 	 * can either be a zero length string (the whole bus) or a PCI address
-	 * in the format DDDD:BB:DD.FF
+	 * in the format DDDD:BB:DD.FF or DDDD.BB.DD.FF
 	 */
 	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 
