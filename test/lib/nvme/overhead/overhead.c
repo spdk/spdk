@@ -39,9 +39,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/barrier.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"

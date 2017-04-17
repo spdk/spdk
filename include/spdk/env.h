@@ -31,6 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ *   Copyright (c) 1992-2017 NetApp, Inc.
+ *   All rights reserved.
+ */
+
 /** \file
  * Encapsulated third-party dependencies
  */
@@ -126,6 +131,8 @@ void spdk_memzone_dump(FILE *f);
 
 struct spdk_mempool;
 
+#define SPDK_MEMPOOL_CACHE_MAX_SIZE 512
+
 /**
  * Create a thread-safe memory pool. Cache size is the number of
  * elements in a thread-local cache. Can be 0 for no caching, or -1
@@ -155,6 +162,11 @@ void spdk_mempool_put(struct spdk_mempool *mp, void *ele);
  * Put multiple elements back into the memory pool.
  */
 void spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
+
+/**
+ * Return the number of entries in the mempool.
+ */
+unsigned spdk_mempool_avail_count(const struct spdk_mempool *pool);
 
 /**
  * \brief Return the number of dedicated CPU cores utilized by
@@ -322,6 +334,546 @@ int spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr);
  * \return the return value of cb()
  */
 void *spdk_call_unaffinitized(void *cb(void *arg), void *arg);
+
+struct spdk_ring;
+
+#define RING_F_SP_ENQ 0x0001 /**< The default enqueue is "single-producer". */
+#define RING_F_SC_DEQ 0x0002 /**< The default dequeue is "single-consumer". */
+
+/**
+ * Enqueue several objects on the ring (multi-producers safe).
+ *
+ * This function uses a "compare and set" instruction to move the
+ * producer index atomically.
+ *
+ * \param sr
+ *   A pointer to the spdk_ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects).
+ * \param n
+ *   The number of objects to add in the ring from the obj_table.
+ * \return
+ *   - 0: Success; objects enqueue.
+ *   - -EDQUOT: Quota exceeded. The objects have been enqueued, but the
+ *     high water mark is exceeded.
+ *   - -ENOBUFS: Not enough room in the ring to enqueue, no object is enqueued.
+ */
+int
+spdk_ring_mp_enqueue_bulk(struct spdk_ring *sr, void *const *obj_table,
+			  unsigned n);
+/**
+ * Enqueue several objects on a spdk ring (NOT multi-producers safe).
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects).
+ * \param n
+ *   The number of objects to add in the ring from the obj_table.
+ * \return
+ *   - 0: Success; objects enqueued.
+ *   - -EDQUOT: Quota exceeded. The objects have been enqueued, but the
+ *     high water mark is exceeded.
+ *   - -ENOBUFS: Not enough room in the ring to enqueue; no object is enqueued.
+ */
+int
+spdk_ring_sp_enqueue_bulk(struct spdk_ring *sr, void *const *obj_table,
+			  unsigned n);
+
+/**
+ * Enqueue several objects on a spdk ring.
+ *
+ * This function calls the multi-producer or the single-producer
+ * version depending on the default behavior that was specified at
+ * ring creation time (see flags).
+ *
+ * \param sr
+ *   A pointer to the spdk ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects).
+ * \param n
+ *   The number of objects to add in the ring from the obj_table.
+ * \return
+ *   - 0: Success; objects enqueued.
+ *   - -EDQUOT: Quota exceeded. The objects have been enqueued, but the
+ *     high water mark is exceeded.
+ *   - -ENOBUFS: Not enough room in the ring to enqueue; no object is enqueued.
+ */
+int
+spdk_ring_enqueue_bulk(struct spdk_ring *sr, void *const *obj_table,
+		       unsigned n);
+/**
+ * Enqueue one object on a spdk ring (multi-producers safe).
+ *
+ * This function uses a "compare and set" instruction to move the
+ * producer index atomically.
+ *
+ * \param sr
+ *   A pointer to the spdk ring structure.
+ * \param obj
+ *   A pointer to the object to be added.
+ * \return
+ *   - 0: Success; objects enqueued.
+ *   - -EDQUOT: Quota exceeded. The objects have been enqueued, but the
+ *     high water mark is exceeded.
+ *   - -ENOBUFS: Not enough room in the ring to enqueue; no object is enqueued.
+ */
+int
+spdk_ring_mp_enqueue(struct spdk_ring *sr, void *obj);
+
+/**
+ * Enqueue one object on a spdk ring (NOT multi-producers safe).
+ *
+ * \param sr
+ *   A pointer to the spdk ring structure.
+ * \param obj
+ *   A pointer to the object to be added.
+ * \return
+ *   - 0: Success; objects enqueued.
+ *   - -EDQUOT: Quota exceeded. The objects have been enqueued, but the
+ *     high water mark is exceeded.
+ *   - -ENOBUFS: Not enough room in the ring to enqueue; no object is enqueued.
+ */
+int
+spdk_ring_sp_enqueue(struct spdk_ring *sr, void *obj);
+
+/**
+ * Enqueue one object on a spdk ring.
+ *
+ * This function calls the multi-producer or the single-producer
+ * version, depending on the default behaviour that was specified at
+ * ring creation time (see flags).
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj
+ *   A pointer to the object to be added.
+ * \return
+ *   - 0: Success; objects enqueued.
+ *   - -EDQUOT: Quota exceeded. The objects have been enqueued, but the
+ *     high water mark is exceeded.
+ *   - -ENOBUFS: Not enough room in the ring to enqueue; no object is enqueued.
+ */
+int
+spdk_ring_enqueue(struct spdk_ring *sr, void *obj);
+
+/**
+ * Dequeue several objects from a spdk  ring (multi-consumers safe).
+ *
+ * This function uses a "compare and set" instruction to move the
+ * consumer index atomically.
+ *
+ * \param sr
+ *   A pointer to the spdk ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects) that will be filled.
+ * \param n
+ *   The number of objects to dequeue from the ring to the obj_table.
+ * \return
+ *   - 0: Success; objects dequeued.
+ *   - -ENOENT: Not enough entries in the ring to dequeue; no object is
+ *     dequeued.
+ */
+int
+spdk_ring_mc_dequeue_bulk(struct spdk_ring *sr, void **obj_table, unsigned n);
+
+/**
+ * Dequeue several objects from a spdk ring (NOT multi-consumers safe).
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects) that will be filled.
+ * \param n
+ *   The number of objects to dequeue from the ring to the obj_table,
+ *   must be strictly positive.
+ * \return
+ *   - 0: Success; objects dequeued.
+ *   - -ENOENT: Not enough entries in the ring to dequeue; no object is
+ *     dequeued.
+ */
+int
+spdk_ring_sc_dequeue_bulk(struct spdk_ring *sr, void **obj_table, unsigned n);
+
+/**
+ * Dequeue several objects from a spdk ring.
+ *
+ * This function calls the multi-consumers or the single-consumer
+ * version, depending on the default behaviour that was specified at
+ * ring creation time (see flags).
+ *
+ * \param sr
+ *   A pointer to the ring spdk structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects) that will be filled.
+ * \param n
+ *   The number of objects to dequeue from the ring to the obj_table.
+ * \return
+ *   - 0: Success; objects dequeued.
+ *   - -ENOENT: Not enough entries in the ring to dequeue, no object is
+ *     dequeued.
+ */
+int
+spdk_ring_dequeue_bulk(struct spdk_ring *sr, void **obj_table, unsigned n);
+
+/**
+ * Dequeue one object from a spdk ring (multi-consumers safe).
+ *
+ * This function uses a "compare and set" instruction to move the
+ * consumer index atomically.
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_p
+ *   A pointer to a void * pointer (object) that will be filled.
+ * \return
+ *   - 0: Success; objects dequeued.
+ *   - -ENOENT: Not enough entries in the ring to dequeue; no object is
+ *     dequeued.
+ */
+int
+spdk_ring_mc_dequeue(struct spdk_ring *sr, void **obj_p);
+/**
+ * Dequeue one object from a spdk ring (NOT multi-consumers safe).
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_p
+ *   A pointer to a void * pointer (object) that will be filled.
+ * \return
+ *   - 0: Success; objects dequeued.
+ *   - -ENOENT: Not enough entries in the ring to dequeue, no object is
+ *     dequeued.
+ */
+int
+spdk_ring_sc_dequeue(struct spdk_ring *sr, void **obj_p);
+
+/**
+ * Dequeue one object from a spdk ring.
+ *
+ * This function calls the multi-consumers or the single-consumer
+ * version depending on the default behaviour that was specified at
+ * ring creation time (see flags).
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_p
+ *   A pointer to a void * pointer (object) that will be filled.
+ * \return
+ *   - 0: Success, objects dequeued.
+ *   - -ENOENT: Not enough entries in the ring to dequeue, no object is
+ *     dequeued.
+ */
+int
+spdk_ring_dequeue(struct spdk_ring *sr, void **obj_p);
+
+/**
+ * Test if a spdk ring is full.
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \return
+ *   - 1: The ring is full.
+ *   - 0: The ring is not full.
+ */
+int
+spdk_ring_full(const struct spdk_ring *sr);
+
+/**
+ * Test if a spdk ring is empty.
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \return
+ *   - 1: The ring is empty.
+ *   - 0: The ring is not empty.
+ */
+int
+spdk_ring_empty(const struct spdk_ring *sr);
+
+/**
+ * Return the number of entries in a spdk ring.
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \return
+ *   The number of entries in the ring.
+ */
+unsigned
+spdk_ring_count(const struct spdk_ring *sr);
+
+/**
+ * Return the number of free entries in a spdk ring.
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \return
+ *   The number of free entries in the ring.
+ */
+unsigned
+spdk_ring_free_count(const struct spdk_ring *sr);
+
+/**
+ * Enqueue several objects on the ring (multi-producers safe).
+ *
+ * This function uses a "compare and set" instruction to move the
+ * producer index atomically.
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects).
+ * \param n
+ *   The number of objects to add in the ring from the obj_table.
+ * \return
+ *   - n: Actual number of objects enqueued.
+ */
+unsigned
+spdk_ring_mp_enqueue_burst(struct spdk_ring *sr, void *const *obj_table,
+			   unsigned n);
+
+/**
+ * Enqueue several objects on a spdk ring (NOT multi-producers safe).
+ *
+ * \param sr
+ *   A pointer to the spdk ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects).
+ * \param n
+ *   The number of objects to add in the ring from the obj_table.
+ * \return
+ *   - n: Actual number of objects enqueued.
+ */
+unsigned
+spdk_ring_sp_enqueue_burst(struct spdk_ring *sr, void *const *obj_table,
+			   unsigned n);
+/**
+ * Enqueue several objects on a spdk ring.
+ *
+ * This function calls the multi-producer or the single-producer
+ * version depending on the default behavior that was specified at
+ * ring creation time (see flags).
+ *
+ * \param sr
+ *   A pointer to the spdk ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects).
+ * \param n
+ *   The number of objects to add in the ring from the obj_table.
+ * \return
+ *   - n: Actual number of objects enqueued.
+ */
+unsigned
+spdk_ring_enqueue_burst(struct spdk_ring *sr, void *const *obj_table,
+			unsigned n);
+/**
+ * Dequeue several objects from a spdk ring (multi-consumers safe). When the request
+ * objects are more than the available objects, only dequeue the actual number
+ * of objects
+ *
+ * This function uses a "compare and set" instruction to move the
+ * consumer index atomically.
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects) that will be filled.
+ * \param n
+ *   The number of objects to dequeue from the ring to the obj_table.
+ * \return
+ *   - n: Actual number of objects dequeued, 0 if ring is empty
+ */
+unsigned
+spdk_ring_mc_dequeue_burst(struct spdk_ring *sr, void **obj_table, unsigned n);
+
+/**
+ * Dequeue several objects from a spdk ring (NOT multi-consumers safe).When the
+ * request objects are more than the available objects, only dequeue the
+ * actual number of objects
+ *
+ * \param sr
+ *   A pointer to the ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects) that will be filled.
+ * \param n
+ *   The number of objects to dequeue from the ring to the obj_table.
+ * \return
+ *   - n: Actual number of objects dequeued, 0 if ring is empty
+ */
+unsigned
+spdk_ring_sc_dequeue_burst(struct spdk_ring *sr, void **obj_table, unsigned n);
+
+/**
+ * Dequeue multiple objects from a spdk ring up to a maximum number.
+ *
+ * This function calls the multi-consumers or the single-consumer
+ * version, depending on the default behaviour that was specified at
+ * ring creation time (see flags).
+ *
+ * \param sr
+ *   A pointer to the spdk ring structure.
+ * \param obj_table
+ *   A pointer to a table of void * pointers (objects) that will be filled.
+ * \param n
+ *   The number of objects to dequeue from the ring to the obj_table.
+ * \return
+ *   - Number of objects dequeued
+ */
+unsigned
+spdk_ring_dequeue_burst(struct spdk_ring *sr, void **obj_table, unsigned n);
+
+/**
+ * return the size of memory occupied by a ring
+ */
+ssize_t spdk_ring_get_memsize(unsigned count);
+
+/**
+ * Create a ring
+ */
+struct spdk_ring *
+spdk_ring_create(const char *name, unsigned count, int socket_id, unsigned flags);
+
+/**
+ * free the ring
+ */
+void spdk_ring_free(struct spdk_ring *sr);
+
+/**
+ * Change the high water mark. If *count* is 0, water marking is
+ * disabled
+ */
+int spdk_ring_set_water_mark(struct spdk_ring *sr, unsigned count);
+
+/**
+ * dump the status of the ring on the console
+ */
+void spdk_ring_dump(FILE *f, const struct spdk_ring *sr);
+
+/**
+ * dump the status of all rings on the console
+ */
+void spdk_ring_list_dump(FILE *f);
+
+/**
+ * search a ring from its name
+ */
+struct spdk_ring *spdk_ring_lookup(const char *name);
+
+#define SPDK_MAX_LCORE 128
+
+/**
+ * Return the ID of the execution unit we are running on.
+ * \return
+ *  Logical core ID (in EAL thread) or LCORE_ID_ANY (in non-EAL thread)
+ */
+unsigned
+spdk_lcore_id(void);
+
+/**
+ * Get the id of the master lcore
+ *
+ * \return
+ *   the id of the master lcore
+ */
+unsigned
+spdk_get_master_lcore(void);
+
+/**
+ * Get the ID of the physical socket of the specified lcore
+ *
+ * \param lcore_id
+ *   the targeted lcore, which MUST be between 0 and RTE_MAX_LCORE-1.
+ * \return
+ *   the ID of lcoreid's physical socket
+ */
+unsigned
+spdk_lcore_to_socket_id(unsigned lcore_id);
+
+
+/**
+ * Test if an lcore is enabled.
+ *
+ * \param lcore_id
+ *   The identifier of the lcore, which MUST be between 0 and
+ *   RTE_MAX_LCORE-1.
+ * \return
+ *   True if the given lcore is enabled; false otherwise.
+ */
+int
+spdk_lcore_is_enabled(unsigned lcore_id);
+
+/**
+ * Return the number of execution units (lcores) on the system.
+ *
+ * \return
+ *   the number of execution units (lcores) on the system.
+ */
+unsigned
+spdk_lcore_count(void);
+
+/**
+ * Get the next enabled lcore ID.
+ *
+ * \param i
+ *   The current lcore (reference).
+ * \param skip_master
+ *   If true, do not return the ID of the master lcore.
+ * \param wrap
+ *   If true, go back to 0 when SPDK_MAX_LCORE is reached; otherwise,
+ *   return SPDK_MAX_LCORE.
+ * \return
+ *   The next lcore_id or SPDK_MAX_LCORE if not found.
+ */
+unsigned
+spdk_get_next_lcore(unsigned i, int skip_master, int wrap);
+
+/**
+ * Macro to browse all running lcores.
+ */
+#define SPDK_LCORE_FOREACH(i)						\
+	for (i = spdk_get_next_lcore(-1, 0, 0);				\
+	     i<SPDK_MAX_LCORE;						\
+	     i = spdk_get_next_lcore(i, 0, 0))
+
+/**
+ * Macro to browse all running lcores except the master lcore.
+ */
+#define SPDK_LCORE_FOREACH_SLAVE(i)					\
+	for (i = spdk_get_next_lcore(-1, 1, 0);				\
+	     i<SPDK_MAX_LCORE;						\
+	     i = spdk_get_next_lcore(i, 1, 0))
+
+/**
+ * Wait until a lcore finished its job.
+ */
+int
+spdk_wait_lcore(unsigned slave_id);
+
+/**
+ * Wait until on all the lcores.
+ */
+void
+spdk_mp_wait_lcore(void);
+
+/**
+ * Get the current state of the lcore.
+ */
+int
+spdk_get_lcore_state(unsigned lcore_id);
+
+/**
+ * Send a message to a slave lcore identified by slave_id to call a
+ * function f with argument arg. Once the execution is done, the
+ * remote lcore switch in FINISHED state.
+ */
+int
+spdk_remote_launch(int (*f)(void *), void *arg, unsigned slave_id);
+
+/**
+ * Memcpy
+ */
+void
+spdk_memcpy(void *dst, const void *src, int len);
 
 /**
  * Page-granularity memory address translation table
