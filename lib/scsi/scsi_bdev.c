@@ -222,12 +222,13 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			hlen = 4;
 
 			/* PRODUCT SERIAL NUMBER */
-			len = strlen(bdev->name);
+			len = strlen(bdev->name) + 1;
 			if (len > MAX_SERIAL_STRING) {
 				len = MAX_SERIAL_STRING;
 			}
 
-			spdk_strcpy_pad(vpage->params, bdev->name, len, ' ');
+			memcpy(vpage->params, bdev->name, len - 1);
+			vpage->params[len - 1] = 0;
 
 			/* PAGE LENGTH */
 			to_be16(vpage->alloc_len, len);
