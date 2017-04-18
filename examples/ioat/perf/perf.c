@@ -38,9 +38,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/ioat.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
@@ -226,7 +223,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 		return;
 	}
 
-	dev = spdk_zmalloc(sizeof(*dev), 0, NULL);
+	dev = spdk_zmalloc_phy(sizeof(*dev), 0, NULL);
 	if (dev == NULL) {
 		printf("Failed to allocate device struct\n");
 		return;
@@ -336,9 +333,9 @@ submit_xfers(struct ioat_chan_entry *ioat_chan_entry, uint64_t queue_depth)
 		void *src = NULL, *dst = NULL;
 		struct ioat_task *ioat_task = NULL;
 
-		src = spdk_mempool_get(ioat_chan_entry->data_pool);
-		dst = spdk_mempool_get(ioat_chan_entry->data_pool);
-		ioat_task = spdk_mempool_get(ioat_chan_entry->task_pool);
+		spdk_mempool_get(ioat_chan_entry->data_pool, &src);
+		spdk_mempool_get(ioat_chan_entry->data_pool, &dst);
+		spdk_mempool_get(ioat_chan_entry->task_pool, (void *)&ioat_task);
 
 		submit_single_xfer(ioat_chan_entry, ioat_task, dst, src);
 	}
@@ -548,12 +545,12 @@ main(int argc, char **argv)
 	}
 
 	/* Launch all of the slave workers */
-	master_core = rte_get_master_lcore();
+	master_core = spdk_get_master_lcore();
 	master_worker = NULL;
 	worker = g_workers;
 	while (worker != NULL) {
 		if (worker->lcore != master_core) {
-			rte_eal_remote_launch(work_fn, worker, worker->lcore);
+			spdk_eal_remote_launch(work_fn, worker, worker->lcore);
 		} else {
 			assert(master_worker == NULL);
 			master_worker = worker;
@@ -567,7 +564,7 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	rte_eal_mp_wait_lcore();
+	spdk_eal_mp_wait_lcore();
 
 	rc = dump_result();
 

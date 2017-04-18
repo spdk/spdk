@@ -580,7 +580,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 
 	rctrlr = nvme_rdma_ctrlr(ctrlr);
 
-	nvmf_data = spdk_zmalloc(sizeof(*nvmf_data), 0, NULL);
+	nvmf_data = spdk_zmalloc_phy(sizeof(*nvmf_data), 0, NULL);
 	if (!nvmf_data) {
 		SPDK_ERRLOG("nvmf_data allocation error\n");
 		rc = -1;

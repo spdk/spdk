@@ -404,8 +404,8 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		ioat->max_xfer_size = 1U << xfercap;
 	}
 
-	ioat->comp_update = spdk_zmalloc(sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
-					 &comp_update_bus_addr);
+	ioat->comp_update = spdk_zmalloc_phy(sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
+					     &comp_update_bus_addr);
 	if (ioat->comp_update == NULL) {
 		return -1;
 	}
@@ -419,8 +419,8 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		return -1;
 	}
 
-	ioat->hw_ring = spdk_zmalloc(num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
-				     &ioat->hw_ring_phys_addr);
+	ioat->hw_ring = spdk_zmalloc_phy(num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
+					 &ioat->hw_ring_phys_addr);
 	if (!ioat->hw_ring) {
 		return -1;
 	}

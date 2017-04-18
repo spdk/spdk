@@ -32,17 +32,16 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
 #include "spdk/log.h"
 #include "iscsi/task.h"
+#include "spdk/env.h"
+#include <stdlib.h>
 
 static void
 spdk_iscsi_task_free(struct spdk_scsi_task *task)
 {
 	spdk_iscsi_task_disassociate_pdu((struct spdk_iscsi_task *)task);
-	rte_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
+	spdk_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
 }
 
 struct spdk_iscsi_task *
@@ -51,7 +50,7 @@ spdk_iscsi_task_get(uint32_t *owner_task_ctr, struct spdk_iscsi_task *parent)
 	struct spdk_iscsi_task *task;
 	int rc;
 
-	rc = rte_mempool_get(g_spdk_iscsi.task_pool, (void **)&task);
+	rc = spdk_mempool_get(g_spdk_iscsi.task_pool, (void **)&task);
 	if ((rc < 0) || !task) {
 		SPDK_ERRLOG("Unable to get task\n");
 		abort();

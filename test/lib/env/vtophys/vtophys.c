@@ -86,7 +86,7 @@ vtophys_positive_test(void)
 	int rc = 0;
 
 	for (i = 0; i < 31; i++) {
-		p = spdk_zmalloc(size, 512, NULL);
+		p = spdk_zmalloc_phy(size, 512, NULL);
 		if (p == NULL)
 			continue;
 

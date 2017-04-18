@@ -36,6 +36,13 @@
 
 #define spdk_pci_device rte_pci_device
 
+#define _spdk_memconfig rte_memconfig
+#define _spdk_lcore_id  rte_lcore_id
+#define _spdk_mempool_put  rte_mempool_put
+#define _spdk_mempool_create rte_mempool_create
+#define _spdk_get_master_lcore rte_get_master_lcore
+#define _SPDK_MAX_LCORE RTE_MAX_LCORE
+
 #include "spdk/env.h"
 
 #include <stdio.h>

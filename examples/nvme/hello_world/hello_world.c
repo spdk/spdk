@@ -128,7 +128,7 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 *  the data back from the NVMe namespace.
 	 */
 	spdk_free(sequence->buf);
-	sequence->buf = spdk_zmalloc(0x1000, 0x1000, NULL);
+	sequence->buf = spdk_zmalloc_phy(0x1000, 0x1000, NULL);
 
 	rc = spdk_nvme_ns_cmd_read(ns_entry->ns, ns_entry->qpair, sequence->buf,
 				   0, /* LBA start */
@@ -172,7 +172,7 @@ hello_world(void)
 		 * will be pinned, which is required for data buffers used for SPDK NVMe
 		 * I/O operations.
 		 */
-		sequence.buf = spdk_zmalloc(0x1000, 0x1000, NULL);
+		sequence.buf = spdk_zmalloc_phy(0x1000, 0x1000, NULL);
 		sequence.is_completed = 0;
 		sequence.ns_entry = ns_entry;
 

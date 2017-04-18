@@ -1247,8 +1247,8 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_free(ctx->mask);
 
 	/* Read the used clusters mask */
-	ctx->mask = spdk_zmalloc(ctx->super->used_cluster_mask_len * sizeof(struct spdk_blob_md_page),
-				 0x1000, NULL);
+	ctx->mask = spdk_zmalloc_phy(ctx->super->used_cluster_mask_len * sizeof(struct spdk_blob_md_page),
+				     0x1000, NULL);
 	if (!ctx->mask) {
 		spdk_free(ctx->super);
 		_spdk_bs_free(ctx->bs);
@@ -1307,8 +1307,9 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	ctx->bs->md_len = ctx->super->md_len;
 
 	/* Read the used pages mask */
-	ctx->mask = spdk_zmalloc(ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page), 0x1000,
-				 NULL);
+	ctx->mask = spdk_zmalloc_phy(ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page),
+				     0x1000,
+				     NULL);
 	if (!ctx->mask) {
 		spdk_free(ctx->super);
 		_spdk_bs_free(ctx->bs);
@@ -1352,7 +1353,7 @@ spdk_bs_load(struct spdk_bs_dev *dev,
 	ctx->bs = bs;
 
 	/* Allocate memory for the super block */
-	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_zmalloc_phy(sizeof(*ctx->super), 0x1000, NULL);
 	if (!ctx->super) {
 		free(ctx);
 		_spdk_bs_free(bs);
@@ -1466,7 +1467,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->bs = bs;
 
 	/* Allocate memory for the super block */
-	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_zmalloc_phy(sizeof(*ctx->super), 0x1000, NULL);
 	if (!ctx->super) {
 		free(ctx);
 		_spdk_bs_free(bs);
@@ -1583,8 +1584,8 @@ _spdk_bs_unload_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 	spdk_free(ctx->mask);
 
 	/* Write out the used clusters mask */
-	ctx->mask = spdk_zmalloc(ctx->super->used_cluster_mask_len * sizeof(struct spdk_blob_md_page),
-				 0x1000, NULL);
+	ctx->mask = spdk_zmalloc_phy(ctx->super->used_cluster_mask_len * sizeof(struct spdk_blob_md_page),
+				     0x1000, NULL);
 	if (!ctx->mask) {
 		spdk_free(ctx->super);
 		free(ctx);
@@ -1620,8 +1621,8 @@ _spdk_bs_unload_read_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 	uint64_t			lba, lba_count;
 
 	/* Write out the used page mask */
-	ctx->mask = spdk_zmalloc(ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page),
-				 0x1000, NULL);
+	ctx->mask = spdk_zmalloc_phy(ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page),
+				     0x1000, NULL);
 	if (!ctx->mask) {
 		spdk_free(ctx->super);
 		free(ctx);
@@ -1666,7 +1667,7 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 
 	ctx->bs = bs;
 
-	ctx->super = spdk_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	ctx->super = spdk_zmalloc_phy(sizeof(*ctx->super), 0x1000, NULL);
 	if (!ctx->super) {
 		free(ctx);
 		cb_fn(cb_arg, -ENOMEM);

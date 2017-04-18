@@ -35,9 +35,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "iscsi/iscsi.h"
@@ -186,7 +183,7 @@ main(int argc, char **argv)
 	opts.usr1_handler = spdk_sigusr1;
 	spdk_app_init(&opts);
 
-	printf("Total cores available: %d\n", rte_lcore_count());
+	printf("Total cores available: %d\n", spdk_lcore_count());
 	printf("Using net framework %s\n", spdk_net_framework_get_name());
 	/* Blocks until the application is exiting */
 	app_rc = spdk_app_start(spdk_startup, NULL, NULL);

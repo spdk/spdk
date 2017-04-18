@@ -1712,7 +1712,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
 		data_len = SPDK_MAX(4096, alloc_len);
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_zmalloc_phy(data_len, 0, NULL);
 		assert(data != NULL);
 		rc = spdk_bdev_scsi_inquiry(bdev, task, cdb, data, data_len);
 		data_len = SPDK_MIN(rc, data_len);
@@ -1736,7 +1736,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		}
 
 		data_len = SPDK_MAX(4096, alloc_len);
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_zmalloc_phy(data_len, 0, NULL);
 		assert(data != NULL);
 		rc = spdk_bdev_scsi_report_luns(task->lun, sel, data, data_len);
 		data_len = rc;
@@ -1844,7 +1844,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		}
 
 		data_len = rc;
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_zmalloc_phy(data_len, 0, NULL);
 		assert(data != NULL);
 
 		/* First call with no buffer to discover needed buffer size */
@@ -1886,7 +1886,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
 
 		data_len = task->sense_data_len;
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_zmalloc_phy(data_len, 0, NULL);
 		assert(data != NULL);
 		memcpy(data, task->sense_data, data_len);
 		break;

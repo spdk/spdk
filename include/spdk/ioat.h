@@ -160,5 +160,4 @@ uint32_t spdk_ioat_get_dma_capabilities(struct spdk_ioat_chan *chan);
 #ifdef __cplusplus
 }
 #endif
-
 #endif

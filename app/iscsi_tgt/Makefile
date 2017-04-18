@@ -50,7 +50,8 @@ SPDK_LIB_LIST = jsonrpc json rpc bdev_rpc bdev iscsi scsi net copy trace conf
 SPDK_LIB_LIST += util log log_rpc event app_rpc
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
-	$(COPY_MODULES_LINKER_ARGS)
+	$(COPY_MODULES_LINKER_ARGS) \
+	$(BLOCKDEV_MODULES_DEPS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) -lcrypto
 LIBS += $(ENV_LINKER_ARGS)
 

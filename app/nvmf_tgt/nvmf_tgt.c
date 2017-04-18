@@ -38,15 +38,13 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "nvmf_tgt.h"
 
 #include "spdk/bdev.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/env.h"
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
@@ -317,7 +315,7 @@ spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
 	opts->shutdown_cb = spdk_nvmf_shutdown_cb;
 	spdk_app_init(opts);
 
-	printf("Total cores available: %d\n", rte_lcore_count());
+	printf("Total cores available: %d\n", spdk_lcore_count());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(spdk_nvmf_startup, NULL, NULL);
 

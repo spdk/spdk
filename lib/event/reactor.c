@@ -38,6 +38,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -46,9 +48,6 @@
 #ifdef __FreeBSD__
 #include <pthread_np.h>
 #endif
-
-#include <rte_config.h>
-#include <rte_ring.h>
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
@@ -114,7 +113,7 @@ struct spdk_reactor {
 	 */
 	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
 
-	struct rte_ring					*events;
+	struct spdk_ring				*events;
 
 	/* Pointer to the per-socket g_spdk_event_mempool for this reactor. */
 	struct spdk_mempool				*event_mempool;
@@ -122,7 +121,7 @@ struct spdk_reactor {
 	uint64_t					max_delay_us;
 } __attribute__((aligned(64)));
 
-static struct spdk_reactor g_reactors[RTE_MAX_LCORE];
+static struct spdk_reactor g_reactors[SPDK_MAX_LCORE];
 
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
@@ -149,8 +148,7 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 	struct spdk_event *event = NULL;
 	struct spdk_reactor *reactor = spdk_reactor_get(lcore);
 
-	event = spdk_mempool_get(reactor->event_mempool);
-	if (event == NULL) {
+	if (spdk_mempool_get(reactor->event_mempool, (void *)&event) < 0) {
 		assert(false);
 		return NULL;
 	}
@@ -172,7 +170,7 @@ spdk_event_call(struct spdk_event *event)
 	reactor = spdk_reactor_get(event->lcore);
 
 	assert(reactor->events != NULL);
-	rc = rte_ring_mp_enqueue(reactor->events, event);
+	rc = spdk_ring_mp_enqueue(reactor->events, event);
 	if (rc != 0) {
 		assert(false);
 	}
@@ -186,14 +184,14 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 
 #ifdef DEBUG
 	/*
-	 * rte_ring_dequeue_burst() fills events and returns how many entries it wrote,
+	 * spdk_ring_dequeue_burst() fills events and returns how many entries it wrote,
 	 * so we will never actually read uninitialized data from events, but just to be sure
 	 * (and to silence a static analyzer false positive), initialize the array to NULL pointers.
 	 */
 	memset(events, 0, sizeof(events));
 #endif
 
-	count = rte_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
+	count = spdk_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
 	if (count == 0) {
 		return 0;
 	}
@@ -419,7 +417,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 
 	snprintf(ring_name, sizeof(ring_name) - 1, "spdk_event_queue_%u", lcore);
 	reactor->events =
-		rte_ring_create(ring_name, 65536, reactor->socket_id, RING_F_SC_DEQ);
+		spdk_ring_create(ring_name, 65536, reactor->socket_id, RING_F_SC_DEQ);
 	assert(reactor->events != NULL);
 
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
@@ -428,15 +426,15 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 static void
 spdk_reactor_start(struct spdk_reactor *reactor)
 {
-	if (reactor->lcore != rte_get_master_lcore()) {
-		switch (rte_eal_get_lcore_state(reactor->lcore)) {
-		case FINISHED:
-			rte_eal_wait_lcore(reactor->lcore);
+	if (reactor->lcore != spdk_get_master_lcore()) {
+		switch (spdk_eal_get_lcore_state(reactor->lcore)) {
+		case SPDK_FINISHED:
+			spdk_eal_wait_lcore(reactor->lcore);
 		/* drop through */
-		case WAIT:
-			rte_eal_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
+		case SPDK_WAIT:
+			spdk_eal_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
 			break;
-		case RUNNING:
+		case SPDK_RUNNING:
 			printf("Something already running on lcore %d\n", reactor->lcore);
 			break;
 		}
@@ -473,8 +471,8 @@ spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
 		return -1;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if ((*cpumask & (1ULL << i)) && !rte_lcore_is_enabled(i)) {
+	for (i = 0; i < SPDK_MAX_LCORE && i < 64; i++) {
+		if ((*cpumask & (1ULL << i)) && !spdk_lcore_is_enabled(i)) {
 			*cpumask &= ~(1ULL << i);
 		}
 	}
@@ -517,7 +515,7 @@ spdk_reactors_start(void)
 	struct spdk_reactor *reactor;
 	uint32_t i, current_core;
 
-	assert(rte_get_master_lcore() == rte_lcore_id());
+	assert(spdk_get_master_lcore() == spdk_lcore_id());
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
@@ -533,7 +531,7 @@ spdk_reactors_start(void)
 	reactor = spdk_reactor_get(current_core);
 	spdk_reactor_start(reactor);
 
-	rte_eal_mp_wait_lcore();
+	spdk_eal_mp_wait_lcore();
 
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
 }
@@ -620,7 +618,7 @@ spdk_reactors_fini(void)
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
 		if (reactor->events != NULL) {
-			rte_ring_free(reactor->events);
+			spdk_ring_free(reactor->events);
 		}
 	}
 
@@ -682,9 +680,9 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 		abort();
 	}
 
-	if (lcore >= RTE_MAX_LCORE) {
+	if (lcore >= SPDK_MAX_LCORE) {
 		SPDK_ERRLOG("Attempted use lcore %u larger than max lcore %u\n",
-			    lcore, RTE_MAX_LCORE - 1);
+			    lcore, SPDK_MAX_LCORE - 1);
 		abort();
 	}
 

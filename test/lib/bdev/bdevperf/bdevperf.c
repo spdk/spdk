@@ -38,10 +38,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-#include <rte_lcore.h>
-
 #include "spdk/bdev.h"
 #include "spdk/copy_engine.h"
 #include "spdk/endian.h"
@@ -91,7 +87,7 @@ struct io_target {
 	struct spdk_poller	*reset_timer;
 };
 
-struct io_target *head[RTE_MAX_LCORE];
+struct io_target *head[SPDK_MAX_LCORE];
 static int g_target_count = 0;
 
 /*
@@ -107,7 +103,7 @@ blockdev_heads_init(void)
 {
 	int i;
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE; i++) {
 		head[i] = NULL;
 	}
 }
@@ -183,7 +179,7 @@ end_run(void *arg1, void *arg2)
 	}
 }
 
-struct rte_mempool *task_pool;
+struct spdk_mempool *task_pool;
 
 static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *cb_arg)
@@ -212,7 +208,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 	target->io_completed++;
 
 	bdev_io->caller_ctx = NULL;
-	rte_mempool_put(task_pool, task);
+	spdk_mempool_put(task_pool, task);
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -225,7 +221,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 	if (!target->is_draining) {
 		bdevperf_submit_single(target);
 	} else if (target->current_queue_depth == 0) {
-		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, target, NULL);
+		complete = spdk_event_allocate(spdk_get_master_lcore(), end_run, target, NULL);
 		spdk_event_call(complete);
 	}
 }
@@ -277,11 +273,11 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_s
 }
 
 static void
-task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
+task_ctor(struct spdk_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct bdevperf_task *task = __task;
 
-	task->buf = spdk_zmalloc(g_io_size, g_min_alignment, NULL);
+	task->buf = spdk_zmalloc_phy(g_io_size, g_min_alignment, NULL);
 }
 
 static __thread unsigned int seed = 0;
@@ -298,7 +294,7 @@ bdevperf_submit_single(struct io_target *target)
 	bdev = target->bdev;
 	ch = target->ch;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
+	if (spdk_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
 		printf("Task pool allocation failed\n");
 		abort();
 	}
@@ -371,7 +367,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *cb
 		g_run_failed = true;
 	}
 
-	rte_mempool_put(task_pool, task);
+	spdk_mempool_put(task_pool, task);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target, target->lcore,
 			     10 * 1000000);
@@ -386,7 +382,7 @@ reset_target(void *arg)
 	spdk_poller_unregister(&target->reset_timer, NULL);
 
 	/* Do reset. */
-	rte_mempool_get(task_pool, (void **)&task);
+	spdk_mempool_get(task_pool, (void **)&task);
 	task->target = target;
 	spdk_bdev_reset(target->bdev, SPDK_BDEV_RESET_SOFT,
 			reset_cb, task);
@@ -662,7 +658,7 @@ main(int argc, char **argv)
 
 	optind = 1;  /*reset the optind */
 
-	rte_set_log_level(RTE_LOG_ERR);
+	spdk_set_log_level(SPDK_LOG_ERR);
 
 	blockdev_heads_init();
 
@@ -670,10 +666,10 @@ main(int argc, char **argv)
 
 	bdevperf_construct_targets();
 
-	task_pool = rte_mempool_create("task_pool", 4096 * spdk_env_get_core_count(),
-				       sizeof(struct bdevperf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
+	task_pool = spdk_mempool_create_full("task_pool", 4096 * spdk_env_get_core_count(),
+					     sizeof(struct bdevperf_task),
+					     64, 0, NULL, NULL, task_ctor, NULL,
+					     SPDK_ENV_SOCKET_ID_ANY, 0);
 
 	spdk_app_start(bdevperf_run, NULL, NULL);
 

@@ -1419,7 +1419,7 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 	struct spdk_file *file;
 	void *buf;
 
-	buf = spdk_mempool_get(g_cache_pool);
+	spdk_mempool_get(g_cache_pool, &buf);
 	if (buf != NULL) {
 		return buf;
 	}
@@ -1437,7 +1437,7 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
+		spdk_mempool_get(g_cache_pool, &buf);
 		if (buf != NULL) {
 			return buf;
 		}
@@ -1454,7 +1454,7 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
+		spdk_mempool_get(g_cache_pool, &buf);
 		if (buf != NULL) {
 			return buf;
 		}
@@ -1471,7 +1471,7 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 	pthread_spin_unlock(&g_caches_lock);
 	if (file != NULL) {
 		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
+		spdk_mempool_get(g_cache_pool, &buf);
 		if (buf != NULL) {
 			return buf;
 		}

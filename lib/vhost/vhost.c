@@ -42,9 +42,6 @@
 #include <semaphore.h>
 #include <dirent.h>
 
-#include <rte_config.h>
-#include <rte_malloc.h>
-#include <rte_virtio_net.h>
 #include <vhost.h>
 #include <vhost_user.h>
 
@@ -56,9 +53,10 @@
 #include "spdk/scsi_spec.h"
 
 #include "spdk/vhost.h"
+#include "spdk/barrier.h"
 #include "task.h"
 
-static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
+static uint32_t g_num_ctrlrs[SPDK_MAX_LCORE];
 
 #define CONTROLQ_POLL_PERIOD_US (1000 * 5)
 
@@ -98,7 +96,7 @@ struct spdk_vhost_scsi_ctrlr {
 	int32_t lcore;
 
 	uint64_t cpumask;
-} __rte_cache_aligned;
+} __spdk_cache_aligned;
 
 /* This maps from the integer index passed by DPDK to the our controller representation. */
 /* MAX_VHOST_DEVICE from DPDK. */
@@ -113,7 +111,7 @@ vq_avail_ring_get(struct vhost_virtqueue *vq, uint16_t *reqs, uint16_t reqs_len)
 	struct vring_avail *avail = vq->avail;
 	uint16_t size_mask = vq->size - 1;
 	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
-	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
+	uint16_t count = SPDK_MIN((avail_idx - last_idx) & size_mask, reqs_len);
 	uint16_t i;
 
 	vq->last_avail_idx += count;
@@ -147,7 +145,7 @@ vq_used_ring_enqueue(struct vhost_virtqueue *vq, uint16_t id, uint32_t len)
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
 
-	rte_compiler_barrier();
+	spdk_compiler_barrier();
 
 	vq->used->idx = vq->last_used_idx;
 	eventfd_write(vq->callfd, (eventfd_t)1);
@@ -256,7 +254,7 @@ task_submit(struct spdk_vhost_task *task)
 	 */
 
 	task->resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
+	task->scsi.cb_event = spdk_event_allocate(spdk_lcore_id(),
 			      process_task_completion,
 			      task, NULL);
 	spdk_scsi_dev_queue_task(task->scsi_dev, &task->scsi);
@@ -266,7 +264,7 @@ static void
 mgmt_task_submit(struct spdk_vhost_task *task)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
+	task->scsi.cb_event = spdk_event_allocate(spdk_lcore_id(),
 			      process_mgmt_task_completion,
 			      task, NULL);
 	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi);
@@ -548,7 +546,7 @@ process_controlq(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue *vq)
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
-	reqs_cnt = vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	reqs_cnt = vq_avail_ring_get(vq, reqs, SPDK_DIM(reqs));
 	for (i = 0; i < reqs_cnt; i++) {
 		process_ctrl_request(vdev, vq, reqs[i]);
 	}
@@ -562,7 +560,7 @@ process_requestq(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue *vq)
 	struct spdk_vhost_task *task;
 	int result;
 
-	reqs_cnt = vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	reqs_cnt = vq_avail_ring_get(vq, reqs, SPDK_DIM(reqs));
 	assert(reqs_cnt <= 32);
 
 	for (i = 0; i < reqs_cnt; i++) {
@@ -622,7 +620,7 @@ static struct spdk_event *
 vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem)
 {
 	if (sem_init(sem, 0, 0) < 0)
-		rte_panic("Failed to initialize semaphore.");
+		spdk_panic("Failed to initialize semaphore.");
 
 	return spdk_event_allocate(core, fn, arg1, sem);
 }
@@ -710,12 +708,12 @@ destroy_device(int vid)
 	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&vdev->requestq_poller, event);
 	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
+		spdk_panic("%s: failed to unregister request queue poller.\n", vdev->name);
 
 	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&vdev->controlq_poller, event);
 	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
+		spdk_panic("%s: failed to unregister control queue poller.\n", vdev->name);
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {
@@ -723,13 +721,13 @@ destroy_device(int vid)
 	}
 
 	if (vdev->task_cnt > 0) {
-		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
+		spdk_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
 
 	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, vdev, &done_sem);
 	spdk_event_call(event);
 	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister poller.\n", vdev->name);
+		spdk_panic("%s: failed to unregister poller.\n", vdev->name);
 
 	g_num_ctrlrs[vdev->lcore]--;
 	vdev->lcore = -1;
@@ -811,17 +809,17 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 			SPDK_ERRLOG("Cannot remove %s: not a socket.\n", path);
 			return -EINVAL;
 		} else if (unlink(path) != 0) {
-			rte_exit(EXIT_FAILURE, "Cannot remove %s.\n", path);
+			spdk_exit(EXIT_FAILURE, "Cannot remove %s.\n", path);
 		}
 	}
 
-	if (rte_vhost_driver_register(path, 0) != 0) {
+	if (spdk_vhost_driver_register(path, 0) != 0) {
 		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;
 	}
 
-	vdev = rte_zmalloc(NULL, sizeof(*vdev), RTE_CACHE_LINE_SIZE);
+	vdev = spdk_zmalloc(NULL, sizeof(*vdev), SPDK_CACHE_LINE_SIZE);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
 		return -ENOMEM;
@@ -1048,7 +1046,7 @@ spdk_vhost_scsi_allocate_reactor(uint64_t cpumask)
 	min_ctrlrs = INT_MAX;
 	selected_core = 0;
 
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE && i < 64; i++) {
 		if (!((1ULL << i) & cpumask)) {
 			continue;
 		}
@@ -1092,7 +1090,7 @@ new_device(int vid)
 
 	/* Disable notifications. */
 	for (i = 0; i < dev->num_queues; i++) {
-		rte_vhost_enable_guest_notification(vid, i, 0);
+		spdk_vhost_enable_guest_notification(vid, i, 0);
 	}
 
 	dev->flags |= VIRTIO_DEV_RUNNING;
@@ -1103,7 +1101,7 @@ new_device(int vid)
 	event = vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
 	spdk_event_call(event);
 	if (vhost_sem_timedwait(&added, 1))
-		rte_panic("Failed to register new device '%s'\n", vdev->name);
+		spdk_panic("Failed to register new device '%s'\n", vdev->name);
 	return 0;
 }
 
@@ -1119,7 +1117,7 @@ static const struct virtio_net_device_ops virtio_net_device_ops = {
 static void *
 session_start(void *arg)
 {
-	rte_vhost_driver_session_start();
+	spdk_vhost_driver_session_start();
 	return NULL;
 }
 
@@ -1155,7 +1153,7 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	if (basename && strlen(basename) > 0) {
 		ret = snprintf(dev_dirname, sizeof(dev_dirname) - 2, "%s", basename);
 		if ((size_t)ret >= sizeof(dev_dirname) - 2) {
-			rte_exit(EXIT_FAILURE, "Char dev dir path length %d is too long\n", ret);
+			spdk_exit(EXIT_FAILURE, "Char dev dir path length %d is too long\n", ret);
 		}
 
 		if (dev_dirname[ret - 1] != '/') {
@@ -1166,21 +1164,21 @@ spdk_vhost_startup(void *arg1, void *arg2)
 
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0)
-		rte_exit(EXIT_FAILURE, "Cannot construct vhost controllers\n");
+		spdk_exit(EXIT_FAILURE, "Cannot construct vhost controllers\n");
 
 	if (has_iommu_groups()) {
-		RTE_LOG(WARNING, VHOST_CONFIG,
-			"Currently VFIO driver is not supported by vhost library\n"
-			"Although guest might be able to boot and see devices, it will not be able\n"
-			"to do any IO to physical devices (Malloc with IOAT, NVMe).\n"
-			"Please use uio_pci_generic driver with vhost app/library.\n"
-			"See documentation for more information.\n");
+		SPDK_LOG(WARNING, VHOST_CONFIG,
+			 "Currently VFIO driver is not supported by vhost library\n"
+			 "Although guest might be able to boot and see devices, it will not be able\n"
+			 "to do any IO to physical devices (Malloc with IOAT, NVMe).\n"
+			 "Please use uio_pci_generic driver with vhost app/library.\n"
+			 "See documentation for more information.\n");
 	}
 
 	rte_vhost_driver_callback_register(&virtio_net_device_ops);
 
 	if (pthread_create(&tid, NULL, &session_start, NULL) < 0)
-		rte_panic("Failed to start session poller thread (%d): %s", errno, strerror(errno));
+		spdk_panic("Failed to start session poller thread (%d): %s", errno, strerror(errno));
 	pthread_detach(tid);
 }
 
@@ -1195,7 +1193,7 @@ session_shutdown(void *arg)
 		if (vdev == NULL) {
 			continue;
 		}
-		rte_vhost_driver_unregister(vdev->name);
+		spdk_vhost_driver_unregister(vdev->name);
 	}
 
 	SPDK_NOTICELOG("Exiting\n");
@@ -1211,7 +1209,7 @@ spdk_vhost_shutdown_cb(void)
 {
 	pthread_t tid;
 	if (pthread_create(&tid, NULL, &session_shutdown, NULL) < 0)
-		rte_panic("Failed to start session shutdown thread (%d): %s", errno, strerror(errno));
+		spdk_panic("Failed to start session shutdown thread (%d): %s", errno, strerror(errno));
 	pthread_detach(tid);
 }
 

@@ -321,12 +321,12 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 
 	rdma_conn->reqs = calloc(max_queue_depth, sizeof(*rdma_conn->reqs));
 	rdma_conn->recvs = calloc(max_queue_depth, sizeof(*rdma_conn->recvs));
-	rdma_conn->cmds = spdk_zmalloc(max_queue_depth * sizeof(*rdma_conn->cmds),
-				       0x1000, NULL);
-	rdma_conn->cpls = spdk_zmalloc(max_queue_depth * sizeof(*rdma_conn->cpls),
-				       0x1000, NULL);
-	rdma_conn->bufs = spdk_zmalloc(max_queue_depth * g_rdma.in_capsule_data_size,
-				       0x1000, NULL);
+	rdma_conn->cmds = spdk_zmalloc_phy(max_queue_depth * sizeof(*rdma_conn->cmds),
+					   0x1000, NULL);
+	rdma_conn->cpls = spdk_zmalloc_phy(max_queue_depth * sizeof(*rdma_conn->cpls),
+					   0x1000, NULL);
+	rdma_conn->bufs = spdk_zmalloc_phy(max_queue_depth * g_rdma.in_capsule_data_size,
+					   0x1000, NULL);
 	if (!rdma_conn->reqs || !rdma_conn->recvs || !rdma_conn->cmds ||
 	    !rdma_conn->cpls || !rdma_conn->bufs) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
@@ -1226,8 +1226,8 @@ spdk_nvmf_rdma_session_init(void)
 	/* TODO: Make the number of elements in this pool configurable. For now, one full queue
 	 *       worth seems reasonable.
 	 */
-	rdma_sess->buf = spdk_zmalloc(g_rdma.max_queue_depth * g_rdma.max_io_size,
-				      0x20000, NULL);
+	rdma_sess->buf = spdk_zmalloc_phy(g_rdma.max_queue_depth * g_rdma.max_io_size,
+					  0x20000, NULL);
 	if (!rdma_sess->buf) {
 		SPDK_ERRLOG("Large buffer pool allocation failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);

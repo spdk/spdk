@@ -61,7 +61,7 @@ else
 DPDK_LIB_EXT = .so
 endif
 
-DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
+DPDK_LIB_LIST = rte_eal rte_mempool rte_ring rte_vhost
 
 # librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
 #  existence to maintain backward compatibility.
