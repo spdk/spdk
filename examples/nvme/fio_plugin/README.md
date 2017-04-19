@@ -1,9 +1,9 @@
 Compiling
 ----------
 
-First, clone the fio source repository from http://github.com/axboe/fio
+First, clone the fio source repository from https://github.com/axboe/fio
 
-    git clone http://github.com/axboe/fio
+    git clone https://github.com/axboe/fio
 
 Then check out the fio 2.18 tag
 
