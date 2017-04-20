@@ -50,6 +50,8 @@
 
 #define MAX_LCORE_COUNT		63
 
+bool spdk_env_initialized;
+
 struct spdk_fio_request {
 	struct io_u		*io;
 
@@ -208,10 +210,13 @@ static int spdk_fio_setup(struct thread_data *td)
 	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
 
-	spdk_env_opts_init(&opts);
-	opts.name = "fio";
-	opts.dpdk_mem_size = 512;
-	spdk_env_init(&opts);
+	if (!spdk_env_initialized) {
+		spdk_env_opts_init(&opts);
+		opts.name = "fio";
+		opts.dpdk_mem_size = 512;
+		spdk_env_init(&opts);
+		spdk_env_initialized = true;
+	}
 
 	for_each_file(td, f, i) {
 		memset(&trid, 0, sizeof(trid));
