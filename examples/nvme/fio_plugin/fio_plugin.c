@@ -179,6 +179,23 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	fio_ctrlr->ns_list = fio_ns;
 }
 
+static void
+cpu_core_unaffinitized(void)
+{
+	cpu_set_t mask;
+	int i;
+	int num = sysconf(_SC_NPROCESSORS_CONF);
+
+	CPU_ZERO(&mask);
+	for (i = 0; i < num; i++) {
+		CPU_SET(i, &mask);
+	}
+
+	if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) < 0) {
+		SPDK_ERRLOG("set thread affinity failed\n");
+	}
+}
+
 /* Called once at initialization. This is responsible for gathering the size of
  * each "file", which in our case are in the form
  * 'key=value [key=value] ... ns=value'
@@ -216,6 +233,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		opts.dpdk_mem_size = 512;
 		spdk_env_init(&opts);
 		spdk_env_initialized = true;
+		cpu_core_unaffinitized();
 	}
 
 	for_each_file(td, f, i) {
