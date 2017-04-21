@@ -2060,3 +2060,29 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 
 	return spdk_nvme_ctrlr_reset(ctrlr);
 }
+
+void *
+spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
+{
+	void *buf;
+
+	if (size == 0) {
+		return NULL;
+	}
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	buf = nvme_transport_ctrlr_alloc_cmb_io_buffer(ctrlr, size);
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return buf;
+}
+
+void
+spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
+{
+	if (buf && size) {
+		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+		nvme_transport_ctrlr_free_cmb_io_buffer(ctrlr, buf, size);
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	}
+}

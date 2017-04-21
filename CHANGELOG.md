@@ -7,6 +7,10 @@
 The Rpc configuration file section, which was deprecated in v18.01, has been removed.
 Users should switch to the `-r` command-line parameter instead.
 
+### NVMe Driver
+
+EXPERIMENTAL: Adds support for WDS and RDS capable CMBs in NVMe controllers. This support is
+experimental pending a functional allocator to free and reallocate CMB buffers.
 
 ## v18.01: Blobstore Thin Provisioning
 
