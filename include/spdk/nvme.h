@@ -917,6 +917,25 @@ int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload
 				    struct spdk_nvme_status *completion_status);
 
 /**
+ * \brief Allocate an I/O buffer from the controller memory buffer.
+ *
+ * \param ctrlr Controller from which to allocate memory buffer.
+ * \param size Size of buffer to allocate in bytes.
+ *
+ * \return Pointer to controller memory buffer allocation, or NULL if allocation was not possible.
+ */
+void *spdk_nvme_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size);
+
+/**
+ * \brief Free a controller memory I/O buffer.
+ *
+ * \param ctrlr Controller from which the buffer was allocated.
+ * \param buf Buffer previously allocated by spdk_nvme_ctrlr_alloc_cmb_io_buffer().
+ * \param size Size of buf in bytes.
+ */
+void spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size);
+
+/**
  * \brief Get the identify namespace data as defined by the NVMe specification.
  *
  * This function is thread safe and can be called at any point while the controller is attached to

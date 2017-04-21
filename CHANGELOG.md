@@ -49,6 +49,8 @@ a non-zero return value instead of relying on them to fail without return.
 SPDK now supports hotplug for vfio-attached devices. But there is one thing keep in mind:
 Only physical removal events are supported; removing devices via the sysfs `remove` file will not work.
 
+SPDK now supports WDS and RDS capable CMBs in NVMe controllers.
+
 ### NVMe-oF Target
 
 Subsystems are no longer tied explicitly to CPU cores. Instead, connections are handed out to the available
