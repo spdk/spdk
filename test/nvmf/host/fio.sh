@@ -14,6 +14,11 @@ if ! rdma_nic_available; then
         exit 0
 fi
 
+if [ ! -d /usr/src/fio ]; then
+	echo "FIO not available"
+	exit 0
+fi
+
 timing_enter fio
 
 # Start up the NVMf target in another process
@@ -26,9 +31,8 @@ waitforlisten $nvmfpid ${RPC_PORT}
 
 $rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -p "*"
 
-if [ -d /usr/src/fio ]; then
-	/usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1"
-fi
+/usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1"
+
 sync
 
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
