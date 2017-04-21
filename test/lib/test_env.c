@@ -179,6 +179,16 @@ spdk_mempool_count(const struct spdk_mempool *mp)
 	return 1024;
 }
 
+void
+spdk_mem_register(void *vaddr, size_t len)
+{
+}
+
+void
+spdk_mem_unregister(void *vaddr, size_t len)
+{
+}
+
 bool
 spdk_process_is_primary(void)
 {
