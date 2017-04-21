@@ -92,6 +92,8 @@ struct nvme_pcie_ctrlr {
 	void *cmb_mem_register_addr;
 	size_t cmb_mem_register_size;
 
+	bool cmb_io_data_supported;
+
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
 	uint32_t doorbell_stride_u32;
 
@@ -468,6 +470,10 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
 	}
 
+	if (cmbsz.bits.rds || cmbsz.bits.wds) {
+		pctrlr->cmb_io_data_supported = true;
+	}
+
 	/* HACK: register the 2MB-aligned memory region containing the BAR */
 	mem_register_start = ((uintptr_t)pctrlr->cmb_bar_virt_addr & (0x200000 - 1));
 	mem_register_end = ((uintptr_t)pctrlr->cmb_bar_virt_addr + pctrlr->cmb_size + 0x200000 - 1);
@@ -521,6 +527,40 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 	*offset = round_offset;
 	pctrlr->cmb_current_offset = round_offset + length;
 
+	return 0;
+}
+
+void *
+nvme_pcie_ctrlr_alloc_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, size_t size)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	uint64_t offset;
+
+	if (pctrlr->cmb_bar_virt_addr == NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "CMB not available\n");
+		return NULL;
+	}
+
+	if (!pctrlr->cmb_io_data_supported) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "CMB doesn't support I/O data\n");
+		return NULL;
+	}
+
+	if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, size, 4, &offset) != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "%zu-byte CMB allocation failed\n", size);
+		return NULL;
+	}
+
+	return pctrlr->cmb_bar_virt_addr + offset;
+}
+
+int
+nvme_pcie_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, size_t size)
+{
+	/*
+	 * Do nothing for now.
+	 * TODO: Track free space so buffers may be reused.
+	 */
 	return 0;
 }
 
