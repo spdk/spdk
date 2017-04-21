@@ -88,6 +88,9 @@ struct nvme_pcie_ctrlr {
 	/* Current offset of controller memory buffer */
 	uint64_t cmb_current_offset;
 
+	void *cmb_mem_register_addr;
+	size_t cmb_mem_register_size;
+
 	/** stride in uint32_t units between doorbell registers (1 = 4 bytes, 2 = 8 bytes, ...) */
 	uint32_t doorbell_stride_u32;
 
@@ -442,6 +445,7 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	union spdk_nvme_cmbsz_register cmbsz;
 	union spdk_nvme_cmbloc_register cmbloc;
 	uint64_t size, unit_size, offset, bar_size, bar_phys_addr;
+	uint64_t mem_register_start, mem_register_end;
 
 	if (nvme_pcie_ctrlr_get_cmbsz(pctrlr, &cmbsz) ||
 	    nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
@@ -489,6 +493,30 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
 	}
 
+	/* If only SQS is supported use legacy mapping */
+	if (cmbsz.bits.sqs && !(cmbsz.bits.wds || cmbsz.bits.rds)) {
+		return;
+	}
+
+	/* If CMB is less than 4MiB in size then abort CMB mapping */
+	if (pctrlr->cmb_size < (1ULL << 22)) {
+		goto exit;
+	}
+
+	mem_register_start = (((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + 0x200000) & ~(0x200000 - 1));
+	mem_register_end = ((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + pctrlr->cmb_size);
+	mem_register_end &= ~(uint64_t)(0x200000 - 1);
+	pctrlr->cmb_mem_register_addr = (void *)mem_register_start;
+	pctrlr->cmb_mem_register_size = mem_register_end - mem_register_start;
+
+	rc = spdk_mem_register(pctrlr->cmb_mem_register_addr, pctrlr->cmb_mem_register_size);
+	if (rc) {
+		SPDK_ERRLOG("spdk_mem_register() failed\n");
+		goto exit;
+	}
+	pctrlr->cmb_current_offset = mem_register_start - ((uint64_t)pctrlr->cmb_bar_virt_addr + offset);
+
+
 	return;
 exit:
 	pctrlr->cmb_bar_virt_addr = NULL;
@@ -504,6 +532,10 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 	void *addr = pctrlr->cmb_bar_virt_addr;
 
 	if (addr) {
+		if (pctrlr->cmb_mem_register_addr) {
+			spdk_mem_unregister(pctrlr->cmb_mem_register_addr, pctrlr->cmb_mem_register_size);
+		}
+
 		if (nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
 			SPDK_ERRLOG("get_cmbloc() failed\n");
 			return -EIO;
