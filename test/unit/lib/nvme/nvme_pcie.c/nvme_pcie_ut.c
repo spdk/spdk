@@ -39,6 +39,9 @@
 
 #include "nvme/nvme_pcie.c"
 
+DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
+DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
+
 struct spdk_trace_flag SPDK_LOG_NVME = {
 	.name = "nvme",
 	.enabled = false,
