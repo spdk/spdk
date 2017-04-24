@@ -42,9 +42,9 @@ timing_enter reserve
 $rootdir/examples/nvme/reserve/reserve
 timing_exit reserve
 
-timing_enter hello_world
-$rootdir/examples/nvme/hello_world/hello_world
-timing_exit
+#timing_enter hello_world
+#$rootdir/examples/nvme/hello_world/hello_world
+#timing_exit
 
 timing_enter sgl
 $testdir/sgl/sgl

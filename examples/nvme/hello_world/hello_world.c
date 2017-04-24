@@ -124,7 +124,7 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 *  the write I/O and allocate a new zeroed buffer for reading
 	 *  the data back from the NVMe namespace.
 	 */
-	spdk_dma_free(sequence->buf);
+	spdk_nvme_ctrlr_free_cmb_io_buffer(ns_entry->ctrlr, sequence->buf, 0x1000);
 	sequence->buf = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
 
 	rc = spdk_nvme_ns_cmd_read(ns_entry->ns, ns_entry->qpair, sequence->buf,
@@ -169,7 +169,11 @@ hello_world(void)
 		 * will be pinned, which is required for data buffers used for SPDK NVMe
 		 * I/O operations.
 		 */
-		sequence.buf = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+		sequence.buf = spdk_nvme_ctrlr_alloc_cmb_io_buffer(ns_entry->ctrlr, 0x1000);
+		if (sequence.buf == NULL) {
+			printf("ERROR: write buffer allocation failed\n");
+			return;
+		}
 		sequence.is_completed = 0;
 		sequence.ns_entry = ns_entry;
 
