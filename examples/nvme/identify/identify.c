@@ -64,6 +64,12 @@ static bool g_hex_dump = false;
 
 static int g_shm_id = -1;
 
+static int g_dpdk_mem = 64;
+
+static int g_master_core = 0;
+
+static char g_core_mask[16] = "0x1";
+
 static struct spdk_nvme_transport_id g_trid;
 
 static void
@@ -893,6 +899,8 @@ usage(const char *program_name)
 	spdk_tracelog_usage(stdout, "-t");
 
 	printf(" -i         shared memory group ID\n");
+	printf(" -p         core to run this application\n");
+	printf(" -d         DPDK huge memory size in MB\n");
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -v         verbose (enable warnings)\n");
 	printf(" -H         show this usage\n");
@@ -906,13 +914,27 @@ parse_args(int argc, char **argv)
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
-	while ((op = getopt(argc, argv, "i:r:t:xH")) != -1) {
+	while ((op = getopt(argc, argv, "d:i:p:r:t:xH")) != -1) {
 		switch (op) {
+		case 'd':
+			g_dpdk_mem = atoi(optarg);
+			break;
 		case 'i':
 			g_shm_id = atoi(optarg);
 			break;
-		case 'x':
-			g_hex_dump = true;
+		case 'p':
+			g_master_core = atoi(optarg);
+			if (g_master_core < 0) {
+				fprintf(stderr, "Invalid core number\n");
+				return 1;
+			}
+			snprintf(g_core_mask, sizeof(g_core_mask), "0x%llx", 1ULL << g_master_core);
+			break;
+		case 'r':
+			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
+				fprintf(stderr, "Error parsing transport address\n");
+				return 1;
+			}
 			break;
 		case 't':
 			rc = spdk_log_set_trace_flag(optarg);
@@ -928,11 +950,8 @@ parse_args(int argc, char **argv)
 			return 0;
 #endif
 			break;
-		case 'r':
-			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
-				fprintf(stderr, "Error parsing transport address\n");
-				return 1;
-			}
+		case 'x':
+			g_hex_dump = true;
 			break;
 		case 'H':
 		default:
@@ -973,8 +992,11 @@ int main(int argc, char **argv)
 
 	spdk_env_opts_init(&opts);
 	opts.name = "identify";
-	opts.core_mask = "0x1";
 	opts.shm_id = g_shm_id;
+	opts.dpdk_mem_size = g_dpdk_mem;
+	opts.dpdk_mem_channel = 1;
+	opts.dpdk_master_core = g_master_core;
+	opts.core_mask = g_core_mask;
 	spdk_env_init(&opts);
 
 	rc = 0;
