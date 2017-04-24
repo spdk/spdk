@@ -413,6 +413,11 @@ spdk_app_init(struct spdk_app_opts *opts)
 		if (*end != '\0' || errno) {
 			SPDK_ERRLOG("invalid tpoint mask %s\n", opts->tpoint_group_mask);
 		} else {
+			SPDK_NOTICELOG("Tracepoint Group Mask %s specified.\n", opts->tpoint_group_mask);
+			SPDK_NOTICELOG("Use 'spdk_trace -s %s %s %d' to capture a snapshot of events at runtime.\n",
+				       opts->name,
+				       opts->shm_id >= 0 ? "-i" : "-p",
+				       opts->shm_id >= 0 ? opts->shm_id : getpid());
 			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
 		}
 	}
