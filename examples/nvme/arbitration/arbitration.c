@@ -566,7 +566,7 @@ print_configuration(char *program_name)
 	       g_arbitration.core_mask,
 	       g_arbitration.max_completions,
 	       g_arbitration.arbitration_mechanism,
-	       g_arbitration.arbitration_config ,
+	       g_arbitration.arbitration_config,
 	       g_arbitration.io_count);
 }
 

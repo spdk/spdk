@@ -258,7 +258,7 @@ mode_sense_6_test(void)
 	unsigned char dev_specific_param = 0;
 	unsigned char blk_descriptor_len = 0;
 
-	memset(&bdev, 0 , sizeof(struct spdk_bdev));
+	memset(&bdev, 0, sizeof(struct spdk_bdev));
 	spdk_init_task(&task);
 	memset(cdb, 0, sizeof(cdb));
 
@@ -307,7 +307,7 @@ mode_sense_10_test(void)
 	unsigned char dev_specific_param = 0;
 	unsigned short blk_descriptor_len = 0;
 
-	memset(&bdev, 0 , sizeof(struct spdk_bdev));
+	memset(&bdev, 0, sizeof(struct spdk_bdev));
 	spdk_init_task(&task);
 	memset(cdb, 0, sizeof(cdb));
 	cdb[0] = 0x5A;
