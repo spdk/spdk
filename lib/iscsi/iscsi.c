@@ -2151,13 +2151,13 @@ spdk_iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 	rsp_pdu->data_segment_len = rc;
 	SPDK_TRACEDUMP(SPDK_TRACE_DEBUG, "Negotiated Params", rsp_pdu->data, rc);
 
-	/* handle the CSG bit case*/
+	/* handle the CSG bit case */
 	rc = spdk_iscsi_op_login_rsp_handle_csg_bit(conn, rsp_pdu, params,
 			alloc_len);
 	if (rc < 0)
 		return rc;
 
-	/*handle the T bit case*/
+	/* handle the T bit case */
 	if (ISCSI_BHS_LOGIN_GET_TBIT(rsph->flags))
 		rc = spdk_iscsi_op_login_rsp_handle_t_bit(conn, rsp_pdu);
 
@@ -2188,7 +2188,7 @@ spdk_iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return rc;
 	}
 
-	/*For other values, we need to directly return*/
+	/* For other values, we need to directly return */
 	if (rc < 0) {
 		spdk_put_pdu(rsp_pdu);
 		return rc;
@@ -2994,7 +2994,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			return SPDK_ISCSI_CONNECTION_FATAL;
 		}
 
-		/* check the ImmediateData and also pdu->data_segment_len*/
+		/* check the ImmediateData and also pdu->data_segment_len */
 		if ((!conn->sess->ImmediateData && (pdu->data_segment_len > 0)) ||
 		    (pdu->data_segment_len > conn->sess->FirstBurstLength)) {
 			spdk_iscsi_task_put(task);
@@ -3625,7 +3625,7 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 	spdk_del_connection_queued_task(&conn->queued_r2t_tasks, lun);
 }
 
-/* This function is used to hanlde the r2t snack*/
+/* This function is used to handle the r2t snack */
 static int
 spdk_iscsi_handle_r2t_snack(struct spdk_iscsi_conn *conn,
 			    struct spdk_iscsi_task *task,
@@ -3667,7 +3667,7 @@ spdk_iscsi_handle_r2t_snack(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-/* This function is used to recover the data in packet*/
+/* This function is used to recover the data in packet */
 static int
 spdk_iscsi_handle_recovery_datain(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task,
@@ -3722,7 +3722,7 @@ spdk_iscsi_handle_recovery_datain(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-/* This function is used to handle the status snack*/
+/* This function is used to handle the status snack */
 static int
 spdk_iscsi_handle_status_snack(struct spdk_iscsi_conn *conn,
 			       struct spdk_iscsi_pdu *pdu)
@@ -3779,7 +3779,7 @@ spdk_iscsi_handle_status_snack(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-/*This function is used to handle the data ack snack*/
+/* This function is used to handle the data ack snack */
 static int
 spdk_iscsi_handle_data_ack(struct spdk_iscsi_conn *conn,
 			   struct spdk_iscsi_pdu *pdu)
@@ -3931,7 +3931,7 @@ spdk_iscsi_send_r2t_recovery(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-/*This function is used to handle the snack request from the initiator*/
+/* This function is used to handle the snack request from the initiator */
 static int
 spdk_iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -4009,7 +4009,7 @@ spdk_iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return rc;
 }
 
-/*This fucntion is used to refree the pdu when it is acknowledged*/
+/* This fucntion is used to refree the pdu when it is acknowledged */
 static void
 spdk_remove_acked_pdu(struct spdk_iscsi_conn *conn,
 		      uint32_t ExpStatSN)
@@ -4173,7 +4173,7 @@ spdk_iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 	to_be32(&rsph->r2t_sn, *R2TSN);
 	*R2TSN += 1;
 
-	task->r2t_datasn = 0; /*next expected datasn to ack*/
+	task->r2t_datasn = 0; /* next expected datasn to ack */
 
 	to_be32(&rsph->buffer_offset, (uint32_t)offset);
 	to_be32(&rsph->desired_xfer_len, (uint32_t)len);

@@ -497,7 +497,7 @@ parse_args(int argc, char **argv)
 {
 	int op;
 
-	/* default value*/
+	/* default value */
 	g_io_size_bytes = 0;
 	g_time_in_sec = 0;
 

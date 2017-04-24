@@ -36,6 +36,20 @@ else
 	echo "You do not have astyle installed so your code style is not being checked!"
 fi
 
+echo -n "Checking comment style..."
+
+git grep -e '/[*][^ *-]' -- '*.[ch]' > comment.log || true
+git grep -e '[^ ][*]/' -- '*.[ch]' >> comment.log || true
+
+if [ -s comment.log ]; then
+	echo " Incorrect comment formatting detected"
+	cat comment.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f comment.log
+
 echo -n "Checking blank lines at end of file..."
 
 if ! git grep -I -l -e . -z | \

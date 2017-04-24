@@ -330,7 +330,7 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 	while (1) {
 		if ((header & 0x0000ffff) == PCI_EXT_CAP_ID_SN) {
 			if (pos) {
-				/*skip the header*/
+				/* skip the header */
 				pos += 4;
 				for (i = 0; i < 2; i++) {
 					err = spdk_pci_device_cfg_read32(dev, &buf[i], pos + 4 * i);
@@ -342,7 +342,7 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 			}
 		}
 		pos = (header >> 20) & 0xffc;
-		/*0 if no other items exist*/
+		/* 0 if no other items exist */
 		if (pos < PCI_CFG_SIZE)
 			return -1;
 		err = spdk_pci_device_cfg_read32(dev, &header, pos);

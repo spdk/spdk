@@ -318,7 +318,7 @@ print_uint128_dec(uint64_t *v)
 	}
 }
 
-/* The len should be <= 8.*/
+/* The len should be <= 8. */
 static void
 print_uint_var_dec(uint8_t *array, unsigned int len)
 {

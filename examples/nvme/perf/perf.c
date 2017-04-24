@@ -862,7 +862,7 @@ parse_args(int argc, char **argv)
 	int op;
 	bool mix_specified = false;
 
-	/* default value*/
+	/* default value */
 	g_queue_depth = 0;
 	g_io_size_bytes = 0;
 	workload_type = NULL;

@@ -281,7 +281,7 @@ static void spdk_scsi_lun_hot_remove(void *remove_ctx)
 			     lun->lcore, 0);
 }
 
-/*!
+/**
 
 \brief Constructs a new spdk_scsi_lun object based on the provided parameters.
 

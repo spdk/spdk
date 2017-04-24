@@ -590,10 +590,10 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 }
 
 /**
-* spdk_iscsi_construct_data_from_param:
-* 	To construct the data which will be returned to the initiator
-* 	return: length of the negotiated data, -1 inidicates error;
-*/
+ * spdk_iscsi_construct_data_from_param:
+ * To construct the data which will be returned to the initiator
+ * return: length of the negotiated data, -1 inidicates error;
+ */
 static int
 spdk_iscsi_construct_data_from_param(struct iscsi_param *param, char *new_val,
 				     char *data, int alloc_len, int total)
@@ -619,10 +619,10 @@ spdk_iscsi_construct_data_from_param(struct iscsi_param *param, char *new_val,
 }
 
 /**
-* To negotiate param with
-* 	type = ISPT_LIST
-	return: the negotiated value of the key
-*/
+ * To negotiate param with
+ * type = ISPT_LIST
+ * return: the negotiated value of the key
+ */
 static char *spdk_iscsi_negotiate_param_list(int *add_param_value,
 		struct iscsi_param *param,
 		char *valid_list, char *in_val,
@@ -668,10 +668,10 @@ static char *spdk_iscsi_negotiate_param_list(int *add_param_value,
 }
 
 /**
-* To negotiate param with
-* 	type = ISPT_NUMERICAL_MIN/MAX, ISPT_NUMERICAL_DECLARATIVE
-	return: the negotiated value of the key
-*/
+ * To negotiate param with
+ * type = ISPT_NUMERICAL_MIN/MAX, ISPT_NUMERICAL_DECLARATIVE
+ * return: the negotiated value of the key
+ */
 static char *spdk_iscsi_negotiate_param_numerical(int *add_param_value,
 		struct iscsi_param *param,
 		char *valid_list, char *in_val,
@@ -723,10 +723,10 @@ static char *spdk_iscsi_negotiate_param_numerical(int *add_param_value,
 }
 
 /**
-* To negotiate param with
-* 	type = ISPT_BOOLEAN_OR, ISPT_BOOLEAN_AND
-	return: the negotiated value of the key
-*/
+ * To negotiate param with
+ * type = ISPT_BOOLEAN_OR, ISPT_BOOLEAN_AND
+ * return: the negotiated value of the key
+ */
 static char *spdk_iscsi_negotiate_param_boolean(int *add_param_value,
 		struct iscsi_param *param,
 		char *in_val, char *cur_val,
@@ -759,7 +759,7 @@ static char *spdk_iscsi_negotiate_param_boolean(int *add_param_value,
 /**
  * The entry function to handle each type of the param
  * return value: the new negotiated value
-*/
+ */
 static char *
 spdk_iscsi_negotiate_param_all(int *add_param_value, struct iscsi_param *param,
 			       char *valid_list, char *in_val, char *cur_val)
@@ -811,7 +811,7 @@ spdk_iscsi_negotiate_param_all(int *add_param_value, struct iscsi_param *param,
 /**
  * This function is used to judge whether the param is in session's params or
  * connection's params
-*/
+ */
 static int
 spdk_iscsi_negotiate_param_init(struct spdk_iscsi_conn *conn,
 				struct iscsi_param **cur_param_p,
@@ -928,13 +928,13 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 	}
 
 	/* To adjust the location of FirstBurstLength location and put it to
-	*  the end, then we can always firstly determine the MaxBurstLength
-	*/
+	 *  the end, then we can always firstly determine the MaxBurstLength
+	 */
 	param = spdk_iscsi_param_find(params, "MaxBurstLength");
 	if (param != NULL) {
 		param = spdk_iscsi_param_find(params, "FirstBurstLength");
 
-		/*check the existence of FirstBurstLength*/
+		/* check the existence of FirstBurstLength */
 		if (param != NULL) {
 			FirstBurstLength_flag = true;
 			if (param->next != NULL) {

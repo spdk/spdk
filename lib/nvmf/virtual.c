@@ -345,13 +345,13 @@ nvmf_virtual_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_KEEP_ALIVE:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keep Alive\n");
 		/*
-		  To handle keep alive just clear or reset the
-		  session based keep alive duration counter.
-		  When added, a separate timer based process
-		  will monitor if the time since last recorded
-		  keep alive has exceeded the max duration and
-		  take appropriate action.
-		*/
+		 * To handle keep alive just clear or reset the
+		 * session based keep alive duration counter.
+		 * When added, a separate timer based process
+		 * will monitor if the time since last recorded
+		 * keep alive has exceeded the max duration and
+		 * take appropriate action.
+		 */
 		//session->keep_alive_timestamp = ;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 

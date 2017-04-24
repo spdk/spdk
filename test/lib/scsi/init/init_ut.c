@@ -141,7 +141,7 @@ scsi_init_set_max_unmap_lba_count_config_param(void)
 	struct spdk_conf *config;
 	int rc;
 
-	/* set scsi_params.max_unmap_lba_count = 65536 of Scsi section*/
+	/* set scsi_params.max_unmap_lba_count = 65536 of Scsi section */
 	config = spdk_config_init_scsi_params("MaxUnmapLbaCount", "65536");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
@@ -164,7 +164,7 @@ scsi_init_set_max_unmap_block_descriptor_count_config_param(void)
 	int rc;
 
 	/* set scsi_params.max_unmap_block_descriptor_count = 1
-	 * of Scsi section*/
+	 * of Scsi section */
 	config = spdk_config_init_scsi_params("MaxUnmapBlockDescriptorCount", "1");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
@@ -187,7 +187,7 @@ scsi_init_set_optimal_unmap_granularity_config_param(void)
 	int rc;
 
 	/* set scsi_params.optimal_unmap_granularity = 0
-	 * of Scsi section*/
+	 * of Scsi section */
 	config = spdk_config_init_scsi_params("OptimalUnmapGranularity", "0");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
@@ -210,7 +210,7 @@ scsi_init_set_unmap_granularity_alignment_config_param(void)
 	int rc;
 
 	/* set scsi_params.unmap_granularity_alignment = 0
-	 * of Scsi section*/
+	 * of Scsi section */
 	config = spdk_config_init_scsi_params("UnmapGranularityAlignment", "0");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
@@ -233,7 +233,7 @@ scsi_init_ugavalid_yes(void)
 	int rc;
 
 	/* set scsi_params.ugavalid = Yes
-	 * of Scsi section*/
+	 * of Scsi section */
 	config = spdk_config_init_scsi_params("Ugavalid", "Yes");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
@@ -256,7 +256,7 @@ scsi_init_ugavalid_no(void)
 	int rc;
 
 	/* set scsi_params.ugavalid = No
-	 * of Scsi section*/
+	 * of Scsi section */
 	config = spdk_config_init_scsi_params("Ugavalid", "No");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
@@ -279,7 +279,7 @@ scsi_init_ugavalid_unknown_value_failure(void)
 	struct spdk_conf *config;
 
 	/* set scsi_params.ugavalid = unknown value
-	 * of Scsi section*/
+	 * of Scsi section */
 	config = spdk_config_init_scsi_params("Ugavalid", "unknown value");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();
@@ -302,7 +302,7 @@ scsi_init_max_write_same_length(void)
 	int rc;
 
 	/* set scsi_params.max_write_same_length = 512
-	 * of Scsi section*/
+	 * of Scsi section */
 	config = spdk_config_init_scsi_params("MaxWriteSameLength", "512");
 	spdk_conf_set_as_default(config);
 	rc = spdk_scsi_subsystem_init();

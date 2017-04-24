@@ -289,10 +289,10 @@ struct spdk_bdev_io {
 	 */
 	bool in_submit_request;
 
-	/** Used in virtual device (e.g., RAID), indicates its parent spdk_bdev_io **/
+	/** Used in virtual device (e.g., RAID), indicates its parent spdk_bdev_io */
 	struct spdk_bdev_io *parent;
 
-	/** Used in virtual device (e.g., RAID) for storing multiple child device I/Os **/
+	/** Used in virtual device (e.g., RAID) for storing multiple child device I/Os */
 	TAILQ_HEAD(child_io, spdk_bdev_io) child_io;
 
 	/** Member used for linking child I/Os together. */

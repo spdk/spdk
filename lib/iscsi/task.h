@@ -68,7 +68,7 @@ struct spdk_iscsi_task {
 	 */
 	uint32_t next_r2t_offset;
 	uint32_t R2TSN;
-	uint32_t r2t_datasn; /* record next datasn for a r2tsn*/
+	uint32_t r2t_datasn; /* record next datasn for a r2tsn */
 	uint32_t acked_r2tsn; /* next r2tsn to be acked */
 	uint32_t datain_datasn;
 	uint32_t acked_data_sn; /* next expected datain datasn */

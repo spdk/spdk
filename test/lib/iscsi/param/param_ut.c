@@ -116,7 +116,7 @@ burst_length_param_negotation(int FirstBurstLength, int MaxBurstLength,
 	rc = spdk_iscsi_conn_params_init(&conn.params);
 	CU_ASSERT(rc == 0);
 
-	/* construct the data*/
+	/* construct the data */
 	len = snprintf(data + total, 8192 - total, "%s=%d",
 		       "FirstBurstLength", FirstBurstLength);
 	total += len + 1;
@@ -249,7 +249,7 @@ parse_valid_test(void)
 	CU_ASSERT(rc == 0);
 	free(data);
 
-	/* partial parameter: value is partial*/
+	/* partial parameter: value is partial */
 	PARSE("C=AAA\0D=B", true, &partial_parameter);
 	SPDK_CU_ASSERT_FATAL(partial_parameter != NULL);
 	CU_ASSERT_STRING_EQUAL(partial_parameter, "D=B");
@@ -262,7 +262,7 @@ parse_valid_test(void)
 	EXPECT_VAL("E", "UUUU");
 	CU_ASSERT_PTR_NULL(partial_parameter);
 
-	/* partial parameter: key is partial*/
+	/* partial parameter: key is partial */
 	PARSE("IAMAFAK", true, &partial_parameter);
 	CU_ASSERT_STRING_EQUAL(partial_parameter, "IAMAFAK");
 	CU_ASSERT(rc == 0);
@@ -327,7 +327,7 @@ parse_invalid_test(void)
 	CU_ASSERT(rc != 0);
 	EXPECT_NULL("CHAP_C");
 
-	/* Test simple value, length of value bigger than 255*/
+	/* Test simple value, length of value bigger than 255 */
 	len = strlen("A=") + ISCSI_TEXT_MAX_SIMPLE_VAL_LEN + 1 /* max simple value len + 1 */ +
 	      1 /* null terminators */;
 	data = malloc(len);
@@ -341,8 +341,8 @@ parse_invalid_test(void)
 	EXPECT_NULL("A");
 
 	/* key length bigger than 63 */
-	len = ISCSI_TEXT_MAX_KEY_LEN + 1 /*max key length + 1*/ + 1 /* = */ + 1 /* A */ +
-	      1/* null terminators */;
+	len = ISCSI_TEXT_MAX_KEY_LEN + 1 /* max key length + 1 */ + 1 /* = */ + 1 /* A */ +
+	      1 /* null terminators */;
 	data = malloc(len);
 	SPDK_CU_ASSERT_FATAL(data != NULL);
 	memset(data, 'A', len);

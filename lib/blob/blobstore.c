@@ -1176,7 +1176,7 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	/* The length of the mask (in bits) must not be greater than the length of the buffer (converted to bits) */
 	assert(ctx->mask->length <= (ctx->super->used_cluster_mask_len * sizeof(
 					     struct spdk_blob_md_page) * 8));
-	/* The length of the mask must be exactly equal to the total number of clusters*/
+	/* The length of the mask must be exactly equal to the total number of clusters */
 	assert(ctx->mask->length == ctx->bs->total_clusters);
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);

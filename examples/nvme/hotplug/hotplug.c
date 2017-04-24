@@ -388,7 +388,7 @@ parse_args(int argc, char **argv)
 {
 	int op;
 
-	/* default value*/
+	/* default value */
 	g_time_in_sec = 0;
 
 	while ((op = getopt(argc, argv, "i:n:r:t:")) != -1) {

@@ -383,7 +383,7 @@ dev_stop_success(void)
 
 	task_mgmt = spdk_get_task(NULL);
 
-	/* Enqueue the tasks into dev->task_mgmt_submit_queue*/
+	/* Enqueue the tasks into dev->task_mgmt_submit_queue */
 	spdk_scsi_dev_queue_mgmt_task(&dev, task_mgmt);
 
 	spdk_scsi_task_put(task);

@@ -287,7 +287,7 @@ copy_engine_ioat_init(void)
 			return 0;
 		}
 
-		/*Init the whitelist*/
+		/* Init the whitelist */
 		for (i = 0; i < IOAT_MAX_CHANNELS; i++) {
 			pci_bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
 			if (!pci_bdf)

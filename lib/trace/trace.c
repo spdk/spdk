@@ -215,7 +215,7 @@ spdk_trace_register_owner(uint8_t type, char id_prefix)
 
 	/* 'owner' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
-	*/
+	 */
 	owner = &g_trace_histories->owner[type];
 	assert(owner->type == 0);
 
@@ -232,7 +232,7 @@ spdk_trace_register_object(uint8_t type, char id_prefix)
 
 	/* 'object' has 256 entries and since 'type' is a uint8_t, it
 	 * can't overrun the array.
-	*/
+	 */
 	object = &g_trace_histories->object[type];
 	assert(object->type == 0);
 

@@ -415,7 +415,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 			/* MLUS(7) MODE PAGE POLICY(1-0) */
 			/* MLUS own copy */
-			/* Shared MODE PAGE policy*/
+			/* Shared MODE PAGE policy */
 			pdesc->policy = 0;
 			/* Reserved */
 			pdesc->reserved = 0;

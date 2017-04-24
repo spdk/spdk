@@ -152,7 +152,7 @@ struct spdk_iscsi_conn {
 
 	uint32_t StatSN;
 	uint32_t exp_statsn;
-	uint32_t ttt; /* target transfer tag*/
+	uint32_t ttt; /* target transfer tag */
 	char *partial_text_parameter;
 
 	STAILQ_ENTRY(spdk_iscsi_conn) link;

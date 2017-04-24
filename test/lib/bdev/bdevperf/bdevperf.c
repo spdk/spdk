@@ -509,7 +509,7 @@ main(int argc, char **argv)
 	int op;
 	bool mix_specified;
 
-	/* default value*/
+	/* default value */
 	config_file = NULL;
 	g_queue_depth = 0;
 	g_io_size = 0;
@@ -660,7 +660,7 @@ main(int argc, char **argv)
 		g_zcopy = false;
 	}
 
-	optind = 1;  /*reset the optind */
+	optind = 1;  /* reset the optind */
 
 	rte_set_log_level(RTE_LOG_ERR);
 

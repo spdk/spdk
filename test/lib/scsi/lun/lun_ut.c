@@ -281,7 +281,7 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 
 	spdk_scsi_lun_execute_tasks(lun);
 
-	/*task should now be on the tasks list */
+	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
 
 	rc = spdk_scsi_lun_task_mgmt_execute(mgmt_task);
@@ -353,7 +353,7 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 
 	spdk_scsi_lun_execute_tasks(lun);
 
-	/*task should now be on the tasks list */
+	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
 
 	rc = spdk_scsi_lun_task_mgmt_execute(mgmt_task);
@@ -483,7 +483,7 @@ lun_append_task_null_lun_alloc_len_lt_4096(void)
 	task->cdb[3] = 0;
 	task->cdb[4] = 0;
 	/* alloc_len is set to a minimal value of 4096
-	 * Hence, rbuf of size 4096 is allocated*/
+	 * Hence, rbuf of size 4096 is allocated */
 	spdk_scsi_task_process_null_lun(task);
 
 	CU_ASSERT_EQUAL(task->status, SPDK_SCSI_STATUS_GOOD);

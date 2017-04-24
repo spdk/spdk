@@ -1266,7 +1266,7 @@ test_nvme_ctrlr_construct_intel_support_log_page_list(void)
 	res = spdk_nvme_ctrlr_is_log_page_supported(&ctrlr, SPDK_NVME_INTEL_LOG_SMART);
 	CU_ASSERT(res == false);
 
-	/* set valid vendor id, device id and sub device id*/
+	/* set valid vendor id, device id and sub device id */
 	ctrlr.cdata.vid = SPDK_PCI_VID_INTEL;
 	payload.temperature_statistics_log_len = 0;
 	pci_id.vendor_id = SPDK_PCI_VID_INTEL;

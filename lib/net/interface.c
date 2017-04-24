@@ -388,7 +388,7 @@ static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t crea
 
 	/* setup the service header (struct rtmsg). */
 	req.r.ifa_family = AF_INET;
-	req.r.ifa_prefixlen = 32; /*hardcoded*/
+	req.r.ifa_prefixlen = 32; /* hardcoded */
 	req.r.ifa_flags = IFA_F_PERMANENT | IFA_F_SECONDARY;
 	req.r.ifa_index = ifc_idx;
 	req.r.ifa_scope = 0;
