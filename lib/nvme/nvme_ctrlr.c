@@ -1359,9 +1359,9 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	while (!TAILQ_EMPTY(&ctrlr->active_io_qpairs)) {
-		struct spdk_nvme_qpair *qpair = TAILQ_FIRST(&ctrlr->active_io_qpairs);
+	struct spdk_nvme_qpair *qpair, *tmp;
 
+	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
