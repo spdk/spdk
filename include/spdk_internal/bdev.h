@@ -51,38 +51,37 @@
 #include "spdk/scsi_spec.h"
 
 /** \page block_backend_modules Block Device Backend Modules
-
-To implement a backend block device driver, a number of functions
-dictated by struct spdk_bdev_fn_table must be provided.
-
-The module should register itself using SPDK_BDEV_MODULE_REGISTER or
-SPDK_VBDEV_MODULE_REGISTER to define the parameters for the module.
-
-Use SPDK_BDEV_MODULE_REGISTER for all block backends that are real disks.
-Any virtual backends such as RAID, partitioning, etc. should use
-SPDK_VBDEV_MODULE_REGISTER.
-
-<hr>
-
-In the module initialization code, the config file sections can be parsed to
-acquire custom configuration parameters. For example, if the config file has
-a section such as below:
-<blockquote><pre>
-[MyBE]
-  MyParam 1234
-</pre></blockquote>
-
-The value can be extracted as the example below:
-<blockquote><pre>
-struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "MyBe");
-int my_param = spdk_conf_section_get_intval(sp, "MyParam");
-</pre></blockquote>
-
-The backend initialization routine also need to create "disks". A virtual
-representation of each LUN must be constructed. Mainly a struct spdk_bdev
-must be passed to the bdev database via spdk_bdev_register().
-
-*/
+ *
+ * To implement a backend block device driver, a number of functions
+ * dictated by struct spdk_bdev_fn_table must be provided.
+ *
+ * The module should register itself using SPDK_BDEV_MODULE_REGISTER or
+ * SPDK_VBDEV_MODULE_REGISTER to define the parameters for the module.
+ *
+ * Use SPDK_BDEV_MODULE_REGISTER for all block backends that are real disks.
+ * Any virtual backends such as RAID, partitioning, etc. should use
+ * SPDK_VBDEV_MODULE_REGISTER.
+ *
+ * <hr>
+ *
+ * In the module initialization code, the config file sections can be parsed to
+ * acquire custom configuration parameters. For example, if the config file has
+ * a section such as below:
+ * <blockquote><pre>
+ * [MyBE]
+ * MyParam 1234
+ * </pre></blockquote>
+ *
+ * The value can be extracted as the example below:
+ * <blockquote><pre>
+ * struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "MyBe");
+ * int my_param = spdk_conf_section_get_intval(sp, "MyParam");
+ * </pre></blockquote>
+ *
+ * The backend initialization routine also need to create "disks". A virtual
+ * representation of each LUN must be constructed. Mainly a struct spdk_bdev
+ * must be passed to the bdev database via spdk_bdev_register().
+ */
 
 /** Block device module */
 struct spdk_bdev_module_if {

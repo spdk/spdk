@@ -91,7 +91,7 @@ spdk_iscsi_find_init_grp(int tag);
 
 /* This typedef exists to work around an astyle 2.05 bug.
  * Remove it when astyle is fixed.
-*/
+ */
 typedef struct spdk_iscsi_tgt_node _spdk_iscsi_tgt_node;
 
 _spdk_iscsi_tgt_node *

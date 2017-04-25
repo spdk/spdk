@@ -92,7 +92,7 @@ spdk_uevent_connect(void)
  *       action: "add" or "remove"
  *       subsystem: "uio"
  *       dev_path: "/devices/pci0000:80/0000:80:01.0/0000:81:00.0/uio/uio0"
-*/
+ */
 static int
 parse_event(const char *buf, struct spdk_uevent *event)
 {

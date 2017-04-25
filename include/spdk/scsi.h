@@ -184,16 +184,14 @@ struct spdk_scsi_dev {
 };
 
 /**
-
-\brief Represents a SCSI LUN.
-
-LUN modules will implement the function pointers specifically for the LUN
-type.  For example, NVMe LUNs will implement scsi_execute to translate
-the SCSI task to an NVMe command and post it to the NVMe controller.
-malloc LUNs will implement scsi_execute to translate the SCSI task and
-copy the task's data into or out of the allocated memory buffer.
-
-*/
+ * \brief Represents a SCSI LUN.
+ *
+ * LUN modules will implement the function pointers specifically for the LUN
+ * type.  For example, NVMe LUNs will implement scsi_execute to translate
+ * the SCSI task to an NVMe command and post it to the NVMe controller.
+ * malloc LUNs will implement scsi_execute to translate the SCSI task and
+ * copy the task's data into or out of the allocated memory buffer.
+ */
 struct spdk_scsi_lun {
 	/** LUN id for this logical unit. */
 	int id;
@@ -244,21 +242,19 @@ int spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev);
 void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
 
 /**
-
-\brief Constructs a SCSI device object using the given parameters.
-
-\param name Name for the SCSI device.
-\param queue_depth Queue depth for the SCSI device.  This queue depth is
-		   a combined queue depth for all LUNs in the device.
-\param lun_list List of LUN objects for the SCSI device.  Caller is
-		responsible for managing the memory containing this list.
-\param lun_id_list List of LUN IDs for the LUN in this SCSI device.  Caller is
-		   responsible for managing the memory containing this list.
-		   lun_id_list[x] is the LUN ID for lun_list[x].
-\param num_luns Number of entries in lun_list and lun_id_list.
-\return The constructed spdk_scsi_dev object.
-
-*/
+ * \brief Constructs a SCSI device object using the given parameters.
+ *
+ * \param name Name for the SCSI device.
+ * \param queue_depth Queue depth for the SCSI device.  This queue depth is
+ * 		      a combined queue depth for all LUNs in the device.
+ * \param lun_list List of LUN objects for the SCSI device.  Caller is
+ * 		   responsible for managing the memory containing this list.
+ * \param lun_id_list List of LUN IDs for the LUN in this SCSI device.  Caller is
+ *		      responsible for managing the memory containing this list.
+ *		      lun_id_list[x] is the LUN ID for lun_list[x].
+ * \param num_luns Number of entries in lun_list and lun_id_list.
+ * \return The constructed spdk_scsi_dev object.
+ */
 struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		char *lun_name_list[],
 		int *lun_id_list,

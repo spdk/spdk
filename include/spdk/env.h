@@ -65,13 +65,13 @@ struct spdk_env_opts {
 
 /**
  * \brief Initialize the default value of opts
-*/
+ */
 void spdk_env_opts_init(struct spdk_env_opts *opts);
 
 /**
  * \brief Initialize the environment library. This must be called prior to using
  * any other functions in this library.
-*/
+ */
 void spdk_env_init(const struct spdk_env_opts *opts);
 
 /**

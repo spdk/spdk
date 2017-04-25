@@ -132,10 +132,6 @@ static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
 
 static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 
-/** \file
-
-*/
-
 static struct spdk_reactor *
 spdk_reactor_get(uint32_t lcore)
 {
@@ -221,12 +217,11 @@ spdk_event_queue_run_batch(uint32_t lcore)
 }
 
 /**
-
-\brief Set current reactor thread name to "reactor <cpu #>".
-
-This makes the reactor threads distinguishable in top and gdb.
-
-*/
+ *
+ * \brief Set current reactor thread name to "reactor <cpu #>".
+ *
+ * This makes the reactor threads distinguishable in top and gdb.
+ */
 static void set_reactor_thread_name(uint32_t lcore)
 {
 	char thread_name[16];
@@ -277,26 +272,26 @@ _spdk_poller_unregister_complete(struct spdk_poller *poller)
 }
 
 /**
-
-\brief This is the main function of the reactor thread.
-
-\code
-
-while (1)
-	if (events to run)
-		dequeue and run a batch of events
-
-	if (active pollers)
-		run the first poller in the list and move it to the back
-
-	if (first timer poller has expired)
-		run the first timer poller and reinsert it in the timer list
-
-	if (idle for at least SPDK_REACTOR_SPIN_TIME_US)
-		sleep until next timer poller is scheduled to expire
-\endcode
-
-*/
+ *
+ * \brief This is the main function of the reactor thread.
+ *
+ * \code
+ *
+ * while (1)
+ *	if (events to run)
+ *		dequeue and run a batch of events
+ *
+ *	if (active pollers)
+ *		run the first poller in the list and move it to the back
+ *
+ *	if (first timer poller has expired)
+ *		run the first timer poller and reinsert it in the timer list
+ *
+ *	if (idle for at least SPDK_REACTOR_SPIN_TIME_US)
+ *		sleep until next timer poller is scheduled to expire
+ * \endcode
+ *
+ */
 static int
 _spdk_reactor_run(void *arg)
 {

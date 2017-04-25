@@ -128,7 +128,7 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 /* Note: You can call spdk_pci_enumerate from more than one thread
  *       simultaneously safely, but you cannot call spdk_pci_enumerate
  *       and rte_eal_pci_probe simultaneously.
-*/
+ */
 int
 spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 		   spdk_pci_enum_cb enum_cb,

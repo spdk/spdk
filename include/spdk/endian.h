@@ -32,9 +32,9 @@
  */
 
 /**
-* \file
-* Endian conversion functions
-*/
+ * \file
+ * Endian conversion functions
+ */
 
 #ifndef SPDK_ENDIAN_H
 #define SPDK_ENDIAN_H

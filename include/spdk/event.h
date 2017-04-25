@@ -95,24 +95,24 @@ struct spdk_app_opts {
 
 /**
  * \brief Initialize the default value of opts
-*/
+ */
 void spdk_app_opts_init(struct spdk_app_opts *opts);
 
 /**
  * \brief Initialize an application to use the event framework. This must be called prior to using
  * any other functions in this library.
-*/
+ */
 void spdk_app_init(struct spdk_app_opts *opts);
 
 /**
  * \brief Perform final shutdown operations on an application using the event framework.
-*/
+ */
 int spdk_app_fini(void);
 
 /**
  * \brief Start the framework. Once started, the framework will call start_fn on the master
  * core with the arguments provided. This call will block until \ref spdk_app_stop is called.
-*/
+ */
 int spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2);
 
 /**
@@ -125,17 +125,17 @@ void spdk_app_start_shutdown(void);
 /**
  * \brief Stop the framework. This does not wait for all threads to exit. Instead, it kicks off
  * the shutdown process and returns. Once the shutdown process is complete, \ref spdk_app_start will return.
-*/
+ */
 void spdk_app_stop(int rc);
 
 /**
  * \brief Generate a configuration file that corresponds to the current running state.
-*/
+ */
 int spdk_app_get_running_config(char **config_str, char *name);
 
 /**
  * \brief Return the shared memory id for this application.
-*/
+ */
 int spdk_app_get_shm_id(void);
 
 /**

@@ -134,7 +134,7 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 
 /* This typedef exists to work around an astyle 2.05 bug.
  * Remove it when astyle is fixed.
-*/
+ */
 typedef struct spdk_scsi_dev _spdk_scsi_dev;
 
 _spdk_scsi_dev *

@@ -32,9 +32,9 @@
  */
 
 /**
-* \file
-* GUID Partition Table (GPT) specification definitions
-*/
+ * \file
+ * GUID Partition Table (GPT) specification definitions
+ */
 
 #ifndef SPDK_GPT_SPEC_H
 #define SPDK_GPT_SPEC_H

@@ -292,21 +292,19 @@ int spdk_initialize_iscsi_conns(void)
 }
 
 /**
-
-\brief Create an iSCSI connection from the given parameters and schedule it
-       on a reactor.
-
-\code
-
-# identify reactor where the new connections work item will be scheduled
-reactor = spdk_iscsi_conn_allocate_reactor()
-allocate spdk_iscsi_conn object
-initialize spdk_iscsi_conn object
-schedule iSCSI connection work item on reactor
-
-\endcode
-
-*/
+ * \brief Create an iSCSI connection from the given parameters and schedule it
+ *        on a reactor.
+ *
+ * \code
+ *
+ * # identify reactor where the new connections work item will be scheduled
+ * reactor = spdk_iscsi_conn_allocate_reactor()
+ * allocate spdk_iscsi_conn object
+ * initialize spdk_iscsi_conn object
+ * schedule iSCSI connection work item on reactor
+ *
+ * \endcode
+ */
 int
 spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 			  int sock)
@@ -811,20 +809,17 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 }
 
 /**
-
- \brief Reads data for the specified iSCSI connection from its TCP socket.
-
- The TCP socket is marked as non-blocking, so this function may not read
- all data requested.
-
- Returns SPDK_ISCSI_CONNECTION_FATAL if the recv() operation indicates a fatal
- error with the TCP connection (including if the TCP connection was closed
- unexpectedly.
-
- Otherwise returns the number of bytes successfully read.
-
-*/
-
+ * \brief Reads data for the specified iSCSI connection from its TCP socket.
+ *
+ * The TCP socket is marked as non-blocking, so this function may not read
+ * all data requested.
+ *
+ * Returns SPDK_ISCSI_CONNECTION_FATAL if the recv() operation indicates a fatal
+ * error with the TCP connection (including if the TCP connection was closed
+ * unexpectedly.
+ *
+ * Otherwise returns the number of bytes successfully read.
+ */
 int
 spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 			  void *buf)
@@ -1016,24 +1011,22 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 }
 
 /**
-
- \brief Makes one attempt to flush response PDUs back to the initiator.
-
- Builds a list of iovecs for response PDUs that must be sent back to the
- initiator and passes it to writev().
-
- Since the socket is non-blocking, writev() may not be able to flush all
- of the iovecs, and may even partially flush one of the iovecs.  In this
- case, the partially flushed PDU will remain on the write_pdu_list with
- an offset pointing to the next byte to be flushed.
-
- Returns 0 if no exceptional error encountered.  This includes cases where
- there are no PDUs to flush or not all PDUs could be flushed.
-
- Returns -1 if an exception error occurred indicating the TCP connection
- should be closed.
-
-*/
+ * \brief Makes one attempt to flush response PDUs back to the initiator.
+ *
+ * Builds a list of iovecs for response PDUs that must be sent back to the
+ * initiator and passes it to writev().
+ *
+ * Since the socket is non-blocking, writev() may not be able to flush all
+ * of the iovecs, and may even partially flush one of the iovecs.  In this
+ * case, the partially flushed PDU will remain on the write_pdu_list with
+ * an offset pointing to the next byte to be flushed.
+ *
+ * Returns 0 if no exceptional error encountered.  This includes cases where
+ * there are no PDUs to flush or not all PDUs could be flushed.
+ *
+ * Returns -1 if an exception error occurred indicating the TCP connection
+ * should be closed.
+ */
 static int
 spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 {
@@ -1140,26 +1133,24 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 }
 
 /**
-
- \brief Flushes response PDUs back to the initiator.
-
- This function may return without all PDUs having flushed to the
- underlying TCP socket buffer - for example, in the case where the
- socket buffer is already full.
-
- During normal RUNNING connection state, if not all PDUs are flushed,
- then subsequent calls to this routine will eventually flush
- remaining PDUs.
-
- During other connection states (EXITING or LOGGED_OUT), this
- function will spin until all PDUs have successfully been flushed.
-
- Returns 0 for success.
-
- Returns -1 for an exceptional error indicating the TCP connection
- should be closed.
-
-*/
+ * \brief Flushes response PDUs back to the initiator.
+ *
+ * This function may return without all PDUs having flushed to the
+ * underlying TCP socket buffer - for example, in the case where the
+ * socket buffer is already full.
+ *
+ * During normal RUNNING connection state, if not all PDUs are flushed,
+ * then subsequent calls to this routine will eventually flush
+ * remaining PDUs.
+ *
+ * During other connection states (EXITING or LOGGED_OUT), this
+ * function will spin until all PDUs have successfully been flushed.
+ *
+ * Returns 0 for success.
+ *
+ * Returns -1 for an exceptional error indicating the TCP connection
+ * should be closed.
+ */
 static int
 spdk_iscsi_conn_flush_pdus(struct spdk_iscsi_conn *conn)
 {
@@ -1351,23 +1342,21 @@ spdk_iscsi_conn_full_feature_do_work(void *arg)
 }
 
 /**
-
-\brief This is the main routine for the iSCSI 'idle' connection
-work item.
-
-This function handles processing of connecitons whose state have
-been determined as 'idle' for lack of activity.  These connections
-no longer reside in the reactor's poller ring, instead they have
-been staged into an idle list.  This function utilizes the use of
-epoll as a non-blocking means to test for new socket connection
-events that indicate the connection should be moved back into the
-active ring.
-
-While in the idle list, this function must scan these connections
-to process required timer based actions that must be maintained
-even though the connection is considered 'idle'.
-
-*/
+ * \brief This is the main routine for the iSCSI 'idle' connection
+ * work item.
+ *
+ * This function handles processing of connecitons whose state have
+ * been determined as 'idle' for lack of activity.  These connections
+ * no longer reside in the reactor's poller ring, instead they have
+ * been staged into an idle list.  This function utilizes the use of
+ * epoll as a non-blocking means to test for new socket connection
+ * events that indicate the connection should be moved back into the
+ * active ring.
+ *
+ * While in the idle list, this function must scan these connections
+ * to process required timer based actions that must be maintained
+ * even though the connection is considered 'idle'.
+ */
 void spdk_iscsi_conn_idle_do_work(void *arg)
 {
 	uint64_t	tsc;

@@ -282,16 +282,14 @@ static void spdk_scsi_lun_hot_remove(void *remove_ctx)
 }
 
 /**
-
-\brief Constructs a new spdk_scsi_lun object based on the provided parameters.
-
-\param name Name for the SCSI LUN.
-\param blockdev  Blockdev associated with this LUN
-
-\return NULL if blockdev == NULL
-\return pointer to the new spdk_scsi_lun object otherwise
-
-*/
+ * \brief Constructs a new spdk_scsi_lun object based on the provided parameters.
+ *
+ * \param name Name for the SCSI LUN.
+ * \param blockdev  Blockdev associated with this LUN
+ *
+ * \return NULL if blockdev == NULL
+ * \return pointer to the new spdk_scsi_lun object otherwise
+ */
 _spdk_scsi_lun *
 spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 {

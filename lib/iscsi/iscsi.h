@@ -96,7 +96,7 @@
 /*
  * SPDK iSCSI target will only send a maximum of SPDK_BDEV_LARGE_RBUF_MAX_SIZE data segments, even if the
  * connection can support more.
-*/
+ */
 #define SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH SPDK_BDEV_LARGE_RBUF_MAX_SIZE
 
 /*
