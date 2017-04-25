@@ -40,12 +40,12 @@
 #include "ioat/ioat.c"
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_aligned_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	return calloc(1, size);
 }
 
-void spdk_free(void *buf)
+void spdk_aligned_free(void *buf)
 {
 	free(buf);
 }
