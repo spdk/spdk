@@ -188,6 +188,112 @@ test_trid_parse(void)
 	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
 }
 
+static void
+test_spdk_nvme_transport_id_parse_trtype(void)
+{
+
+	enum spdk_nvme_transport_type *trtype;
+	enum spdk_nvme_transport_type sct;
+	char *str;
+
+	trtype = NULL;
+	str = "unit_test";
+
+	/* test function returned value when trtype is NULL but str not NULL */
+	CU_ASSERT(spdk_nvme_transport_id_parse_trtype(trtype, str) == (-EINVAL));
+
+	/* test function returned value when str is NULL but trtype not NULL */
+	trtype = &sct;
+	str = NULL;
+	CU_ASSERT(spdk_nvme_transport_id_parse_trtype(trtype, str) == (-EINVAL));
+
+	/* test function returned value when str and strtype not NULL, but str value
+	 * not "PCIe" or "RDMA" */
+	str = "unit_test";
+	CU_ASSERT(spdk_nvme_transport_id_parse_trtype(trtype, str) == (-ENOENT));
+
+	/* test trtype value when use function "strcasecmp" to compare str and "PCIe"，not case-sensitive */
+	str = "PCIe";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_PCIE);
+
+	str = "pciE";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_PCIE);
+
+	/* test trtype value when use function "strcasecmp" to compare str and "RDMA"，not case-sensitive */
+	str = "RDMA";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_RDMA);
+
+	str = "rdma";
+	spdk_nvme_transport_id_parse_trtype(trtype, str);
+	CU_ASSERT((*trtype) == SPDK_NVME_TRANSPORT_RDMA);
+
+}
+
+static void
+test_spdk_nvme_transport_id_parse_adrfam(void)
+{
+
+	enum spdk_nvmf_adrfam *adrfam;
+	enum spdk_nvmf_adrfam sct;
+	char *str;
+
+	adrfam = NULL;
+	str = "unit_test";
+
+	/* test function returned value when adrfam is NULL but str not NULL */
+	CU_ASSERT(spdk_nvme_transport_id_parse_adrfam(adrfam, str) == (-EINVAL));
+
+	/* test function returned value when str is NULL but adrfam not NULL */
+	adrfam = &sct;
+	str = NULL;
+	CU_ASSERT(spdk_nvme_transport_id_parse_adrfam(adrfam, str) == (-EINVAL));
+
+	/* test function returned value when str and adrfam not NULL, but str value
+	 * not "IPv4" or "IPv6" or "IB" or "FC" */
+	str = "unit_test";
+	CU_ASSERT(spdk_nvme_transport_id_parse_adrfam(adrfam, str) == (-ENOENT));
+
+	/* test adrfam value when use function "strcasecmp" to compare str and "IPv4"，not case-sensitive */
+	str = "IPv4";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_IPV4);
+
+	str = "ipV4";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_IPV4);
+
+	/* test adrfam value when use function "strcasecmp" to compare str and "IPv6"，not case-sensitive */
+	str = "IPv6";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_IPV6);
+
+	str = "ipV6";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_IPV6);
+
+	/* test adrfam value when use function "strcasecmp" to compare str and "IB"，not case-sensitive */
+	str = "IB";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_IB);
+
+	str = "ib";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_IB);
+
+	/* test adrfam value when use function "strcasecmp" to compare str and "FC"，not case-sensitive */
+	str = "FC";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_FC);
+
+	str = "fc";
+	spdk_nvme_transport_id_parse_adrfam(adrfam, str);
+	CU_ASSERT((*adrfam) == SPDK_NVMF_ADRFAM_FC);
+
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -205,6 +311,10 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test_opc_data_transfer", test_opc_data_transfer) == NULL ||
+		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_trtype",
+			    test_spdk_nvme_transport_id_parse_trtype) == NULL ||
+		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_adrfam",
+			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
 		CU_add_test(suite, "test_trid_parse", test_trid_parse) == NULL
 	) {
 		CU_cleanup_registry();
