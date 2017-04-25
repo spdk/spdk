@@ -8,7 +8,7 @@ function linux_iter_pci {
 	# Argument is the class code
 	# TODO: More specifically match against only class codes in the grep
 	# step.
-	lspci -mm -n | grep $1 | tr -d '"' | awk -F " " '{print "0000:"$1}'
+	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
 }
 
 function linux_bind_driver() {
