@@ -315,7 +315,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 {
 	int rc = 0;
 	uint32_t len, lba_count;
-	uint32_t i, j, nseg;
+	uint32_t i, j, nseg, remainder;
 	char *buf;
 
 	struct io_request *req;
@@ -331,6 +331,10 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	nsdata = spdk_nvme_ns_get_data(ns);
 	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns)) {
 		fprintf(stderr, "Empty nsdata or wrong sector size\n");
+		return 0;
+	}
+
+	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
 		return 0;
 	}
 
@@ -351,7 +355,8 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	}
 
 	lba_count = len / spdk_nvme_ns_get_sector_size(ns);
-	if (!lba_count || (BASE_LBA_START + lba_count > (uint32_t)nsdata->nsze)) {
+	remainder = len % spdk_nvme_ns_get_sector_size(ns);
+	if (!lba_count || remainder || (BASE_LBA_START + lba_count > (uint32_t)nsdata->nsze)) {
 		fprintf(stderr, "%s: %s Invalid IO length parameter\n", dev->name, test_name);
 		free_req(req);
 		return 0;
