@@ -35,17 +35,17 @@ for config in ('CONFIG', 'CONFIG.local'):
                             val = args[var]
                         if default.lower() == 'y' or default.lower() == 'n':
                             if val.lower() == 'y':
-                                defs["SPDK_{}".format(var)] = 1
+                                defs["SPDK_{0}".format(var)] = 1
                             else:
-                                defs["SPDK_{}".format(var)] = 0
+                                defs["SPDK_{0}".format(var)] = 0
                         else:
                             strval = val.replace('"', '\"')
-                            defs["SPDK_{}".format(var)] = strval
+                            defs["SPDK_{0}".format(var)] = strval
     except IOError:
         continue
 
 for key, value in defs.items():
     if value == 0:
-        print "#undef {}".format(key)
+        print "#undef {0}".format(key)
     else:
-        print "#define {} {}".format(key, value)
+        print "#define {0} {1}".format(key, value)
