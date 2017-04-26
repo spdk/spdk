@@ -15,8 +15,6 @@ used_vms=""
 disk_split=""
 x=""
 
-max_sectors_kb=4
-
 function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -48,7 +46,6 @@ function usage()
 	echo "                          system. Use this option if only some of the disks should be used for testing."
 	echo "                          Example: --disk-split=4,1-3 will result in VM 1 using it's first disk (ex. /dev/sda)"
 	echo "                          and VM 2 using it's disks 1-3 (ex. /dev/sdb, /dev/sdc, /dev/sdd)"
-	echo "    --max-sectors=NUM     Set max_sectors_kb for test disk to NUM (default: $max_sectors_kb)"
 	exit 0
 }
 
@@ -70,7 +67,6 @@ while getopts 'xh-:' optchar; do
 			force-build) force_build=true ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
 			disk-split=*) disk_split="${OPTARG#*=}" ;;
-			max-sectors=*) max_sectors_kb="${OPTARG#*=}" ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -208,12 +204,6 @@ for vm_num in $used_vms; do
 	vm_check_scsi_location $vm_num
 
 	SCSI_DISK="${SCSI_DISK::-1}"
-	for DISK in $SCSI_DISK; do
-		echo "INFO: VM$vm_num Setting max_sectors_kb=$max_sectors_kb on disk $DISK"
-		echo ""
-		vm_ssh $vm_num "echo $max_sectors_kb > /sys/block/$DISK/queue/max_sectors_kb"
-	done
-
 	vm_reset_scsi_devices $vm_num $SCSI_DISK
 
 	run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
