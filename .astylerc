@@ -22,5 +22,4 @@ lineend=linux # LF line endings
 
 # General options
 suffix=none
-recursive
 formatted
