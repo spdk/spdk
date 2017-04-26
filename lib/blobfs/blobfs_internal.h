@@ -34,46 +34,7 @@
 #ifndef SPDK_BLOBFS_INTERNAL_H
 #define SPDK_BLOBFS_INTERNAL_H
 
-struct cache_tree;
-
-struct cache_buffer {
-	uint8_t			*buf;
-	struct cache_buffer	*next;
-	uint64_t		offset;
-	uint32_t		buf_size;
-	uint32_t		bytes_filled;
-	uint32_t		bytes_flushed;
-	bool			in_progress;
-};
-
-#define CACHE_BUFFER_SIZE (256 * 1024)
-#define CACHE_BUFFER_SHIFT (18)
-#define NEXT_CACHE_BUFFER_OFFSET(offset)	\
-	(((offset + CACHE_BUFFER_SIZE) >> CACHE_BUFFER_SHIFT) << CACHE_BUFFER_SHIFT)
-
-#define CACHE_TREE_WIDTH 64
-#define CACHE_TREE_SHIFT 6
-#define CACHE_TREE_LEVEL_SHIFT(level)	(CACHE_BUFFER_SHIFT + (level) * CACHE_TREE_SHIFT)
-#define CACHE_TREE_LEVEL_SIZE(level)	(1ULL << CACHE_TREE_LEVEL_SHIFT(level))
-#define CACHE_TREE_LEVEL_MASK(level)	(CACHE_TREE_LEVEL_SIZE(level) - 1)
-#define CACHE_TREE_INDEX(level, offset)	((offset >> CACHE_TREE_LEVEL_SHIFT(level)) & (CACHE_TREE_WIDTH - 1))
-
-struct cache_tree {
-	uint8_t			level;
-	uint64_t		present_mask;
-	union {
-		struct cache_buffer	*buffer[CACHE_TREE_WIDTH];
-		struct cache_tree	*tree[CACHE_TREE_WIDTH];
-	} u;
-};
-
-void spdk_cache_buffer_free(struct cache_buffer *cache_buffer);
-
-struct cache_tree *spdk_tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer);
-void spdk_tree_free_buffers(struct cache_tree *tree);
-struct cache_buffer *spdk_tree_find_buffer(struct cache_tree *tree, uint64_t offset);
-struct cache_buffer *spdk_tree_find_filled_buffer(struct cache_tree *tree, uint64_t offset);
-void spdk_tree_remove_buffer(struct cache_tree *tree, struct cache_buffer *buffer);
+#include "tree.h"
 
 void spdk_fs_file_stat_async(struct spdk_filesystem *fs, const char *name,
 			     spdk_file_stat_op_complete cb_fn, void *cb_arg);
