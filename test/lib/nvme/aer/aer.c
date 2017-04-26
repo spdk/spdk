@@ -308,7 +308,7 @@ get_feature_test(struct dev *dev)
 		cmd[i].cdw10 = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
 		if (spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd[i], NULL, 0,
 						  get_feature_cb, dev) != 0) {
-			printf("Failed to send identify ctrlr command for dev=%p\n", dev);
+			printf("Failed to send Get Features command for dev=%p\n", dev);
 			failed = 1;
 			return;
 		}
