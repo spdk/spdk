@@ -38,9 +38,7 @@ INSTALL_DIR="$TEST_DIR/root"
 
 mkdir -p $TEST_DIR
 
-###
-# Building functions
-###
+. $BASE_DIR/autotest.config
 
 function error()
 {
@@ -131,12 +129,15 @@ function spdk_vhost_run()
 		return 1
 	fi
 
+	if [[ -z "$vhost_reactor_mask" ]] || [[ -z "$vhost_master_core" ]]; then
+		error "Parameters vhost_reactor_mask or vhost_master_core not found in autotest.config file"
+		return 1
+	fi
+
 	cp $vhost_conf_template $vhost_conf_file
 	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$vhost_app -m $(cat $BASE_DIR/autotest.config|grep vhost_reactor_mask|awk -F'=' '{print $2}') \
-	-p $(cat $BASE_DIR/autotest.config|grep vhost_master_core|awk -F'=' '{print $2}') \
-	-c $vhost_conf_file"
+	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
 
 	echo "INFO: Loging to:   $vhost_log_file"
 	echo "INFO: Config file: $vhost_conf_file"
@@ -433,11 +434,21 @@ function vm_setup()
 		error "file not found: $os"
 		return 1
 	fi
+
 	# WARNING:
 	# each cmd+= must contain ' ${eol}' at the end
 	#
 	local eol="\\\\\n  "
-	local task_mask=$(cat $BASE_DIR/autotest.config|grep qemu_mask|awk -F'=' '{print $2}'|sed "$(($vm_num+1))q;d")
+	local qemu_mask_param="VM_${vm_num}_qemu_mask"
+	local qemu_numa_node_param="VM_${vm_num}_qemu_numa_node"
+
+	if [[ -z "${!qemu_mask_param}" ]] || [[ -z "${!qemu_numa_node_param}" ]]; then
+		error "Parameters ${qemu_mask_param} or ${qemu_numa_node_param} not found in autotest.config file"
+		return 1
+	fi
+
+	local task_mask=${!qemu_mask_param}
+
 	echo "INFO: TASK MASK: $task_mask"
 	local cmd="taskset -a $task_mask $INSTALL_DIR/bin/qemu-system-x86_64 ${eol}"
 
@@ -458,7 +469,7 @@ function vm_setup()
 	done
 
 	#-cpu host
-	local node_num=$(cat $BASE_DIR/autotest.config|grep qemu_numa_node|awk -F'=' '{print $2}'|sed "$(($vm_num+1))q;d")
+	local node_num=${!qemu_numa_node_param}
 	echo "INFO: NUMA NODE: $node_num"
 	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
 	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"

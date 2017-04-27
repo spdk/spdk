@@ -155,11 +155,9 @@ for vm_conf in ${vms[@]}; do
 		echo "INFO: Adding device via RPC ..."
 		echo ""
 
-		eval $(grep "^vhost_reactor_mask=" $BASE_DIR/autotest.config)
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
-				$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]} \
-				--cpumask $vhost_reactor_mask
+				$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
 				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 			done
 		done <<< "${conf[2]}"
@@ -197,7 +195,10 @@ DISK=""
 
 for vm_num in $used_vms; do
 	vm_dir=$VM_BASE_DIR/$vm_num
-	host_name="VM-$vm_num-$(cat $BASE_DIR/autotest.config|grep qemu_mask|awk -F'=' '{print $2}'|sed "$(($vm_num+1))q;d")"
+
+	qemu_mask_param="VM_${vm_num}_qemu_mask"
+
+	host_name="VM-$vm_num-${!qemu_mask_param}"
 	echo "INFO: Setting up hostname: $host_name"
 	vm_ssh $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $readonly $vm_num
