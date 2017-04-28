@@ -13,7 +13,7 @@
 3. Build RocksDB.  Note that currently only the db_bench benchmarking tool is integrated with BlobFS.
    (Note: add "DEBUG_LEVEL=0" for a release build.)
 
-	make db_bench DPDK_DIR=path/to/dpdk/x86_64-native-linuxapp-gcc SPDK_DIR=path/to/spdk
+	make db_bench SPDK_DIR=path/to/spdk
 
 4. Copy etc/spdk/rocksdb.conf.in to /usr/local/etc/spdk/rocksdb.conf.
 
