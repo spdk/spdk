@@ -67,8 +67,14 @@ fi
 timing_enter doxygen
 if hash doxygen; then
 	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS) &> "$out"/doxygen.log
+	if hash pdflatex; then
+		(cd "$rootdir"/doc/output/latex && $MAKE $MAKEFLAGS) &>> "$out"/doxygen.log
+	fi
 	mkdir -p "$out"/doc
 	mv "$rootdir"/doc/output/html "$out"/doc
+	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
+		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc.pdf
+	fi
 	rm -rf "$rootdir"/doc/output
 fi
 timing_exit doxygen
