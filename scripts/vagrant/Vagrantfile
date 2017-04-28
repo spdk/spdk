@@ -1,0 +1,70 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+
+  # Pick the right distro and bootstrap, default is ubuntu1604
+  distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "ubuntu1604")
+  if distro == 'centos7'
+    config.vm.box = "puppetlabs/centos-7.2-64-nocm"
+    config.ssh.insert_key = false
+  else
+    config.vm.box = "puppetlabs/ubuntu-16.04-64-nocm"
+  end
+  config.vm.box_check_update = false
+
+  config.vm.provision :shell, :path => File.join(File.dirname(__FILE__),"update.sh")
+  config.vm.provision :shell, :path => File.join(File.dirname(__FILE__),"build.sh")
+  config.vm.provision :shell, inline: "/spdk/scripts/setup.sh", run: "always"
+
+  # Copy in the .gitconfig if it exists
+  if File.file?(File.expand_path("~/.gitconfig"))
+    config.vm.provision  "file", source: "~/.gitconfig", destination: ".gitconfig"
+  end
+
+  # vagrant-cachier caches apt/yum etc to speed subsequent
+  # vagrant up
+  # to enable, run
+  # vagrant plugin install vagrant-cachier
+  #
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
+
+  config.vm.network "private_network", type: "dhcp"
+
+  # use http proxy if avaiable
+  if ENV['http_proxy'] && Vagrant.has_plugin?("vagrant-proxyconf")
+   config.proxy.http     = ENV['http_proxy']
+   config.proxy.https    = ENV['https_proxy']
+   config.proxy.no_proxy = "localhost,127.0.0.1"
+  end
+
+  vmcpu=(ENV['SPDK_VAGRANT_VMCPU'] || 2)
+  vmram=(ENV['SPDK_VAGRANT_VMRAM'] || 4096)
+
+  config.ssh.forward_agent = true
+  config.ssh.forward_x11 = true
+
+  config.vm.provider "virtualbox" do |vb|
+      vb.customize ["modifyvm", :id, "--ioapic", "on"]
+      vb.memory = "#{vmram}"
+      vb.cpus = "#{vmcpu}"
+
+      # rsync the vpp directory if provision hasn't happened yet
+      unless File.exist? (".vagrant/machines/default/virtualbox/action_provision")
+        config.vm.synced_folder "../../", "/spdk", type: "rsync", rsync__auto: false
+      end
+
+      nvme_disk = 'nvme.vdi'
+      unless File.exist? (nvme_disk)
+        vb.customize ["createhd", "--filename", nvme_disk, "--variant", "Fixed", "--size", "1024"]
+        vb.customize ["storagectl", :id, "--name", "nvme", "--add", "pcie", "--controller", "NVMe", "--portcount", "1", "--bootable", "off"]
+        vb.customize ["storageattach", :id, "--storagectl", "nvme", "--type", "hdd", "--medium", nvme_disk, "--port", "0"]
+      end
+
+      #support for the SSE4.x instruction is required in some versions of VB.
+      vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+      vb.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+  end
+end

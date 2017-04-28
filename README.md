@@ -84,6 +84,29 @@ FreeBSD:
     ./configure --with-dpdk=./dpdk/x86_64-native-bsdapp-clang
     gmake
 
+Vagrant
+=======
+
+A [Vagrant](https://www.vagrantup.com/downloads.html) setup is also provided
+to create a Linux VM with a virtual NVMe controller to get up and running
+quickly.  Currently this has only been tested on MacOS with the
+[VirtualBox](https://www.virtualbox.org/wiki/Downloads) provider.  The
+[VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads) must
+also be installed for NVMe support.
+
+Download DPDK as a subdirectory in the SPDK repository as described above.
+You do *not* need to build DPDK - the Vagrant scripts will do this for you.
+If you are behind a corporate firewall, set http_proxy and https_proxy in
+your environment before running the following steps.
+
+    1) vagrant up
+    2) vagrant ssh
+    3) cd /spdk
+    4) sudo examples/nvme/hello_world/hello_world
+
+Additional details on the Vagrant setup can be found in
+[scripts/vagrant/README.md](scripts/vagrant/README.md).
+
 Advanced Build Options
 ======================
 
