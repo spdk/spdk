@@ -784,27 +784,15 @@ INPUT                  = ../include/spdk \
                          index.md \
                          directory_structure.md \
                          porting.md \
-                         bdev/index.md \
-                         bdev/getting_started.md \
-                         blob/index.md \
-                         blobfs/index.md \
-                         blobfs/getting_started.md \
-                         event/index.md \
-                         ioat/index.md \
-                         iscsi/index.md \
-                         iscsi/getting_started.md \
-                         iscsi/hotplug.md \
-                         nvme/index.md \
-                         nvme/async_completion.md \
-                         nvme/fabrics.md \
-                         nvme/initialization.md \
-                         nvme/hotplug.md \
-                         nvme/io_submission.md \
-                         nvme/multi_process.md \
-                         nvmf/index.md \
-                         nvmf/getting_started.md \
-                         vhost/index.md \
-                         vhost/getting_started.md
+                         blob.md \
+                         blobfs.md \
+                         bdev.md \
+                         event.md \
+                         ioat.md \
+                         iscsi.md \
+                         nvme.md \
+                         nvmf.md \
+                         vhost.md
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

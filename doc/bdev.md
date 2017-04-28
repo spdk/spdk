@@ -1,3 +1,5 @@
+# Block Device Abstraction Layer {#bdev}
+
 # SPDK bdev Getting Started Guide {#bdev_getting_started}
 
 Block storage in SPDK applications is provided by the SPDK bdev layer.  SPDK bdev consists of:

@@ -1,3 +1,8 @@
+# NVMe over Fabrics Target {#nvmf}
+
+@sa @ref nvme_fabrics_host
+
+
 # Getting Started Guide {#nvmf_getting_started}
 
 The NVMe over Fabrics target is a user space application that presents block devices over the
@@ -18,7 +23,7 @@ machine, the kernel will need to be a release candidate until the code is actual
 system running the SPDK target, however, you can run any modern flavor of Linux as required by your
 NIC vendor's OFED distribution.
 
-# Prerequisites {#nvmf_prereqs}
+## Prerequisites {#nvmf_prereqs}
 
 This guide starts by assuming that you can already build the standard SPDK distribution on your
 platform. By default, the NVMe over Fabrics target is not built. To build nvmf_tgt there are some
@@ -43,7 +48,7 @@ make CONFIG_RDMA=y <other config parameters>
 
 Once built, the binary will be in `app/nvmf_tgt`.
 
-# Prerequisites for InfiniBand/RDMA Verbs {#nvmf_prereqs_verbs}
+## Prerequisites for InfiniBand/RDMA Verbs {#nvmf_prereqs_verbs}
 
 Before starting our NVMe-oF target we must load the InfiniBand and RDMA modules that allow
 userspace processes to use InfiniBand/RDMA verbs directly.
@@ -59,11 +64,9 @@ modprobe rdma_cm
 modprobe rdma_ucm
 ~~~
 
-# Prerequisites for RDMA NICs {#nvmf_prereqs_rdma_nics}
+## Prerequisites for RDMA NICs {#nvmf_prereqs_rdma_nics}
 
 Before starting our NVMe-oF target we must detect RDMA NICs and assign them IP addresses.
-
-## Detecting Mellannox RDMA NICs
 
 ### Mellanox ConnectX-3 RDMA NICs
 
@@ -80,7 +83,7 @@ modprobe mlx5_core
 modprobe mlx5_ib
 ~~~
 
-## Assigning IP addresses to RDMA NICs
+### Assigning IP addresses to RDMA NICs
 
 ~~~{.sh}
 ifconfig eth1 192.168.100.8 netmask 255.255.255.0 up
@@ -88,7 +91,7 @@ ifconfig eth2 192.168.100.9 netmask 255.255.255.0 up
 ~~~
 
 
-# Configuring NVMe over Fabrics Target {#nvmf_config}
+## Configuring NVMe over Fabrics Target {#nvmf_config}
 
 A `nvmf_tgt`-specific configuration file is used to configure the NVMe over Fabrics target. This
 file's primary purpose is to define subsystems. A fully documented example configuration file is
@@ -102,7 +105,7 @@ the target requires elevated privileges (root) to run.
 app/nvmf_tgt/nvmf_tgt -c /path/to/nvmf.conf
 ~~~
 
-# Configuring NVMe over Fabrics Host {#nvmf_host}
+## Configuring NVMe over Fabrics Host {#nvmf_host}
 
 Both the Linux kernel and SPDK implemented NVMe over Fabrics host. Users who want to test
 `nvmf_tgt` with kernel based host should upgrade to Linux kernel 4.8 or later, or can use
@@ -125,7 +128,7 @@ Disconnect:
 nvme disconnect -n "nqn.2016-06.io.spdk.cnode1"
 ~~~
 
-# Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
+## Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
 
 SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
 to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
@@ -166,7 +169,7 @@ on different threads. SPDK gives the user maximum control to determine how many 
 to execute subsystems. Configuring different subsystems to execute on different CPU cores prevents
 the subsystem data from being evicted from limited CPU cache space.
 
-# Emulating an NVMe controller {#nvmf_config_virtual_controller}
+## Emulating an NVMe controller {#nvmf_config_virtual_controller}
 
 The SPDK NVMe-oF target provides the capability to emulate an NVMe controller using a virtual
 controller. Using virtual controllers allows storage software developers to run the NVMe-oF target

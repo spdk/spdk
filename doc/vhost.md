@@ -1,3 +1,5 @@
+# vhost {#vhost}
+
 # vhost Getting Started Guide {#vhost_getting_started}
 
 The Storage Performance Development Kit vhost application is named "vhost".

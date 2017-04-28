@@ -1,3 +1,5 @@
+# BlobFS (Blobstore Filesystem) {#blobfs}
+
 # BlobFS Getting Started Guide {#blobfs_getting_started}
 
 # RocksDB Integration {#blobfs_rocksdb}

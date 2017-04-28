@@ -1,9 +1,11 @@
+# iSCSI Target {#iscsi}
+
 # Getting Started Guide {#iscsi_getting_started}
 
 The Intel(R) Storage Performance Development Kit iSCSI target application is named `iscsi_tgt`.
 This following section describes how to run iscsi from your cloned package.
 
-# Prerequisites {#iscsi_prereqs}
+## Prerequisites {#iscsi_prereqs}
 
 This guide starts by assuming that you can already build the standard SPDK distribution on your
 platform. The SPDK iSCSI target has been known to work on several Linux distributions, namely
@@ -11,7 +13,7 @@ Ubuntu 14.04, 15.04, and 15.10, Fedora 21, 22, and 23, and CentOS 7.
 
 Once built, the binary will be in `app/iscsi_tgt`.
 
-# Configuring iSCSI Target {#iscsi_config}
+## Configuring iSCSI Target {#iscsi_config}
 
 A `iscsi_tgt` specific configuration file is used to configure the iSCSI target. A fully documented
 example configuration file is located at `etc/spdk/iscsi.conf.in`.
@@ -43,7 +45,7 @@ the target requires elevated privileges (root) to run.
 app/iscsi_tgt/iscsi_tgt -c /path/to/iscsi.conf
 ~~~
 
-# Configuring iSCSI Initiator {#iscsi_initiator}
+## Configuring iSCSI Initiator {#iscsi_initiator}
 
 The Linux initiator is open-iscsi.
 
@@ -58,7 +60,7 @@ Ubuntu:
 apt-get install -y open-iscsi
 ~~~
 
-## Setup
+### Setup
 
 Edit /etc/iscsi/iscsid.conf
 ~~~
@@ -146,3 +148,26 @@ Increase requests for block queue
 ~~~
 echo "1024" > /sys/block/sdc/queue/nr_requests
 ~~~
+
+
+# iSCSI Hotplug {#iscsi_hotplug}
+
+At the iSCSI level, we provide the following support for Hotplug:
+
+1. bdev/nvme:
+At the bdev/nvme level, we start one hotplug monitor which will call
+spdk_nvme_probe() periodically to get the hotplug events. We provide the
+private attach_cb and remove_cb for spdk_nvme_probe(). For the attach_cb,
+we will create the block device base on the NVMe device attached, and for the
+remove_cb, we will unregister the block device, which will also notify the
+upper level stack (for iSCSI target, the upper level stack is scsi/lun) to
+handle the hot-remove event.
+
+2. scsi/lun:
+When the LUN receive the hot-remove notification from block device layer,
+the LUN will be marked as removed, and all the IOs after this point will
+return with check condition status. Then the LUN starts one poller which will
+wait for all the commands which have already been submitted to block device to
+return back; after all the commands return back, the LUN will be deleted.
+
+@sa spdk_nvme_probe
