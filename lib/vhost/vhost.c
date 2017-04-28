@@ -54,6 +54,7 @@
 #include "spdk/conf.h"
 #include "spdk/event.h"
 #include "spdk/scsi_spec.h"
+#include "spdk/likely.h"
 
 #include "spdk/vhost.h"
 #include "task.h"
@@ -119,6 +120,10 @@ vq_avail_ring_get(struct vhost_virtqueue *vq, uint16_t *reqs, uint16_t reqs_len)
 	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
 	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
 	uint16_t i;
+
+	if (spdk_likely(count == 0)) {
+		return 0;
+	}
 
 	vq->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
