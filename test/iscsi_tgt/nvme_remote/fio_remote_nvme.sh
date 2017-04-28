@@ -45,7 +45,7 @@ echo "NVMf subsystem created."
 $rootdir/app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf -m 0x1 -p 0 -s 512 &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
-trap "killprocess $iscsipid; exit 1" SIGINT SIGTERM EXIT
+trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 # The configuration file for the iSCSI target told it to use port 5261 for RPC
 waitforlisten $iscsipid 5261
 echo "iSCSI target has started."
@@ -60,7 +60,7 @@ sleep 1
 echo "Logging in to iSCSI target."
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
-trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 sleep 1
 
 echo "Running FIO"
