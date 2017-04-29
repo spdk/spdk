@@ -815,7 +815,7 @@ unsigned spdk_get_master_lcore(void);
  * Get the ID of the physical socket of the specified lcore
  *
  * \param lcore_id
- *   the targeted lcore, which MUST be between 0 and RTE_MAX_LCORE-1.
+ *   the targeted lcore, which MUST be between 0 and SPDK_MAX_LCORE-1.
  * \return
  *   the ID of lcoreid's physical socket
  */
