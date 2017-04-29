@@ -35,7 +35,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 
-static spdk_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
+static spdk_mutex_t g_devlist_mutex = SPDK_MUTEX_INITIALIZER;
 
 struct io_device {
 	void			*io_device_ctx;
@@ -199,7 +199,7 @@ spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *uniqu
 
 	ch->io_device = io_device;
 	ch->destroy_cb = dev->destroy_cb;
-	ch->thread_id = pthread_self();
+	ch->thread_id = spdk_thread_self();
 	ch->priority = priority;
 	ch->ref = 1;
 	TAILQ_INSERT_TAIL(spdk_get_thread_io_channel(), ch, tailq);
