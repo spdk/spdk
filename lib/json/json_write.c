@@ -278,8 +278,8 @@ write_hex_4(void *dest, uint16_t val)
 static int
 write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
 {
-	const uint8_t *p = val;
-	const uint8_t *end = val + len;
+	const uint8_t *p = (const uint8_t *)val;
+	const uint8_t *end = (const uint8_t *)val + len;
 	static const uint8_t escapes[] = {
 		['\b'] = 'b',
 		['\f'] = 'f',

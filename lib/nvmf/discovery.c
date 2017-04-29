@@ -95,7 +95,7 @@ nvmf_update_discovery_log(void)
 			entry->cntlid = 0xffff;
 			entry->asqsz = g_nvmf_tgt.max_queue_depth;
 			entry->subtype = subsystem->subtype;
-			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
+			snprintf((char *)entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
 			transport = spdk_nvmf_transport_get(listen_addr->trname);
 			assert(transport != NULL);

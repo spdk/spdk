@@ -206,14 +206,7 @@ static void set_reactor_thread_name(uint32_t lcore)
 	char thread_name[16];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", lcore);
-
-#if defined(__linux__)
-	prctl(PR_SET_NAME, thread_name, 0, 0, 0);
-#elif defined(__FreeBSD__)
-	pthread_set_name_np(pthread_self(), thread_name);
-#else
-#error missing platform support for thread name
-#endif
+	spdk_thread_set_name(spdk_thread_self(), thread_name);
 }
 
 static void
@@ -365,7 +358,7 @@ _spdk_reactor_run(void *arg)
 				}
 
 				if (sleep_us > 0) {
-					usleep(sleep_us);
+					spdk_usleep(sleep_us);
 				}
 
 				/* After sleeping, always poll for timers */

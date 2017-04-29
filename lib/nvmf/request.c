@@ -160,14 +160,14 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	subsystem = nvmf_find_subsystem(data->subnqn);
+	subsystem = nvmf_find_subsystem((const char *)data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
 		INVALID_CONNECT_DATA(subnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (!spdk_nvmf_subsystem_host_allowed(subsystem, data->hostnqn)) {
+	if (!spdk_nvmf_subsystem_host_allowed(subsystem, (const char *)data->hostnqn)) {
 		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", data->subnqn, data->hostnqn);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;

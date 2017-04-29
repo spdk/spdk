@@ -108,7 +108,7 @@ nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 	session->vcdata.nn = subsys->dev.virt.ns_count;
 	session->vcdata.vwc.present = 1;
 	session->vcdata.sgls.supported = 1;
-	strncpy(session->vcdata.subnqn, session->subsys->subnqn, sizeof(session->vcdata.subnqn));
+	strncpy((char *)session->vcdata.subnqn, session->subsys->subnqn, sizeof(session->vcdata.subnqn));
 	nvmf_virtual_set_dsm(session);
 }
 

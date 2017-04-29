@@ -96,7 +96,6 @@ int
 spdk_json_number_to_double(const struct spdk_json_val *val, double *num)
 {
 	char buf[32];
-	char *end;
 
 	if (val->type != SPDK_JSON_VAL_NUMBER || val->len >= sizeof(buf)) {
 		*num = 0.0;
@@ -106,12 +105,17 @@ spdk_json_number_to_double(const struct spdk_json_val *val, double *num)
 	memcpy(buf, val->start, val->len);
 	buf[val->len] = '\0';
 
+#ifdef __SSE__
+	char *end;
 	errno = 0;
 	/* TODO: strtod() uses locale for decimal point (. is not guaranteed) */
 	*num = strtod(buf, &end);
 	if (*end != '\0' || errno != 0) {
 		return -1;
 	}
+#else
+	assert("__SSE__ not defined" != NULL);
+#endif
 
 	return 0;
 }
