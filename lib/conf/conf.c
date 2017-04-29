@@ -37,34 +37,6 @@
 #include "spdk/string.h"
 #include "spdk/log.h"
 
-struct spdk_conf_value {
-	struct spdk_conf_value *next;
-	char *value;
-};
-
-struct spdk_conf_item {
-	struct spdk_conf_item *next;
-	char *key;
-	struct spdk_conf_value *val;
-};
-
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
-struct spdk_conf {
-	char *file;
-	struct spdk_conf_section *current_section;
-	struct spdk_conf_section *section;
-};
-
-#define CF_DELIM " \t"
-
-#define LIB_MAX_TMPBUF 1024
-
 static struct spdk_conf *default_config = NULL;
 
 struct spdk_conf *
@@ -189,24 +161,23 @@ spdk_conf_free(struct spdk_conf *cp)
 	spdk_free(cp);
 }
 
-static struct spdk_conf_section *
+struct spdk_conf_section *
 allocate_cf_section(void)
 {
 	return spdk_calloc(1, sizeof(struct spdk_conf_section));
 }
 
-static struct spdk_conf_item *
+struct spdk_conf_item *
 allocate_cf_item(void)
 {
 	return spdk_calloc(1, sizeof(struct spdk_conf_item));
 }
 
-static struct spdk_conf_value *
+struct spdk_conf_value *
 allocate_cf_value(void)
 {
 	return spdk_calloc(1, sizeof(struct spdk_conf_value));
 }
-
 
 #define CHECK_CP_OR_USE_DEFAULT(cp) (((cp) == NULL) && (default_config != NULL)) ? default_config : (cp)
 
@@ -255,7 +226,7 @@ spdk_conf_next_section(struct spdk_conf_section *sp)
 	return sp->next;
 }
 
-static void
+void
 append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp)
 {
 	struct spdk_conf_section *last;
@@ -276,7 +247,7 @@ append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp)
 	last->next = sp;
 }
 
-static struct spdk_conf_item *
+struct spdk_conf_item *
 find_cf_nitem(struct spdk_conf_section *sp, const char *key, int idx)
 {
 	struct spdk_conf_item *ip;
@@ -300,7 +271,7 @@ find_cf_nitem(struct spdk_conf_section *sp, const char *key, int idx)
 	return NULL;
 }
 
-static void
+void
 append_cf_item(struct spdk_conf_section *sp, struct spdk_conf_item *ip)
 {
 	struct spdk_conf_item *last;
@@ -319,7 +290,7 @@ append_cf_item(struct spdk_conf_section *sp, struct spdk_conf_item *ip)
 	last->next = ip;
 }
 
-static void
+void
 append_cf_value(struct spdk_conf_item *ip, struct spdk_conf_value *vp)
 {
 	struct spdk_conf_value *last;
@@ -441,237 +412,6 @@ spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key, boo
 	}
 
 	return default_val;
-}
-
-static int
-parse_line(struct spdk_conf *cp, char *lp)
-{
-	struct spdk_conf_section *sp;
-	struct spdk_conf_item *ip;
-	struct spdk_conf_value *vp;
-	char *arg;
-	char *key;
-	char *val;
-	char *p;
-	int num;
-
-	arg = spdk_str_trim(lp);
-	if (arg == NULL) {
-		SPDK_ERRLOG("no section\n");
-		return -1;
-	}
-
-	if (arg[0] == '[') {
-		/* section */
-		arg++;
-		key = spdk_strsepq(&arg, "]");
-		if (key == NULL || arg != NULL) {
-			SPDK_ERRLOG("broken section\n");
-			return -1;
-		}
-		/* determine section number */
-		for (p = key; *p != '\0' && !isdigit((int) *p); p++)
-			;
-		if (*p != '\0') {
-			num = (int)strtol(p, NULL, 10);
-		} else {
-			num = 0;
-		}
-
-		sp = spdk_conf_find_section(cp, key);
-		if (sp == NULL) {
-			sp = allocate_cf_section();
-			append_cf_section(cp, sp);
-		}
-		cp->current_section = sp;
-		sp->name = spdk_strdup(key);
-		if (sp->name == NULL) {
-			SPDK_ERRLOG("spdk_strdup sp->name");
-			return -1;
-		}
-
-		sp->num = num;
-	} else {
-		/* parameters */
-		sp = cp->current_section;
-		if (sp == NULL) {
-			SPDK_ERRLOG("unknown section\n");
-			return -1;
-		}
-		key = spdk_strsepq(&arg, CF_DELIM);
-		if (key == NULL) {
-			SPDK_ERRLOG("broken key\n");
-			return -1;
-		}
-
-		ip = allocate_cf_item();
-		if (ip == NULL) {
-			SPDK_ERRLOG("cannot allocate cf item\n");
-			return -1;
-		}
-		append_cf_item(sp, ip);
-		ip->key = spdk_strdup(key);
-		if (ip->key == NULL) {
-			SPDK_ERRLOG("spdk_strdup ip->key");
-			return -1;
-		}
-		ip->val = NULL;
-		if (arg != NULL) {
-			/* key has value(s) */
-			while (arg != NULL) {
-				val = spdk_strsepq(&arg, CF_DELIM);
-				vp = allocate_cf_value();
-				if (vp == NULL) {
-					SPDK_ERRLOG("cannot allocate cf value\n");
-					return -1;
-				}
-				append_cf_value(ip, vp);
-				vp->value = spdk_strdup(val);
-				if (vp->value == NULL) {
-					SPDK_ERRLOG("spdk_strdup vp->value");
-					return -1;
-				}
-			}
-		}
-	}
-
-	return 0;
-}
-
-static char *
-fgets_line(FILE *fp)
-{
-	char *dst, *dst2, *p;
-	size_t total, len;
-
-	dst = p = spdk_malloc(LIB_MAX_TMPBUF);
-	if (!dst) {
-		return NULL;
-	}
-
-	dst[0] = '\0';
-	total = 0;
-
-	while (spdk_fgets(p, LIB_MAX_TMPBUF, fp) != NULL) {
-		len = strlen(p);
-		total += len;
-		if (len + 1 < LIB_MAX_TMPBUF || dst[total - 1] == '\n') {
-			dst2 = spdk_realloc(dst, total + 1);
-			if (!dst2) {
-				spdk_free(dst);
-				return NULL;
-			} else {
-				return dst2;
-			}
-		}
-
-		dst2 = spdk_realloc(dst, total + LIB_MAX_TMPBUF);
-		if (!dst2) {
-			spdk_free(dst);
-			return NULL;
-		} else {
-			dst = dst2;
-		}
-
-		p = dst + total;
-	}
-
-	if (spdk_feof(fp) && total != 0) {
-		dst2 = spdk_realloc(dst, total + 2);
-		if (!dst2) {
-			spdk_free(dst);
-			return NULL;
-		} else {
-			dst = dst2;
-		}
-
-		dst[total] = '\n';
-		dst[total + 1] = '\0';
-		return dst;
-	}
-
-	spdk_free(dst);
-
-	return NULL;
-}
-
-int
-spdk_conf_read(struct spdk_conf *cp, const char *file)
-{
-	FILE *fp;
-	char *lp, *p;
-	char *lp2, *q;
-	int line;
-	int n, n2;
-
-	if (file == NULL || file[0] == '\0') {
-		return -1;
-	}
-
-	fp = spdk_fopen(file, "r");
-	if (fp == NULL) {
-		SPDK_ERRLOG("open error: %s\n", file);
-		return -1;
-	}
-
-	cp->file = spdk_strdup(file);
-	if (cp->file == NULL) {
-		SPDK_ERRLOG("spdk_strdup cp->file");
-		spdk_fclose(fp);
-		return -1;
-	}
-
-	line = 1;
-	while ((lp = fgets_line(fp)) != NULL) {
-		/* skip spaces */
-		for (p = lp; *p != '\0' && isspace((int) *p); p++)
-			;
-		/* skip comment, empty line */
-		if (p[0] == '#' || p[0] == '\0') {
-			goto next_line;
-		}
-
-		/* concatenate line end with '\' */
-		n = strlen(p);
-		while (n > 2 && p[n - 1] == '\n' && p[n - 2] == '\\') {
-			n -= 2;
-			lp2 = fgets_line(fp);
-			if (lp2 == NULL) {
-				break;
-			}
-
-			line++;
-			n2 = strlen(lp2);
-
-			q = spdk_malloc(n + n2 + 1);
-			if (!q) {
-				spdk_free(lp2);
-				spdk_free(lp);
-				SPDK_ERRLOG("spdk_malloc failed at line %d of %s\n", line, cp->file);
-				spdk_fclose(fp);
-				return -1;
-			}
-
-			memcpy(q, p, n);
-			memcpy(q + n, lp2, n2);
-			q[n + n2] = '\0';
-			spdk_free(lp2);
-			spdk_free(lp);
-			p = lp = q;
-			n += n2;
-		}
-
-		/* parse one line */
-		if (parse_line(cp, p) < 0) {
-			SPDK_ERRLOG("parse error at line %d of %s\n", line, cp->file);
-		}
-next_line:
-		line++;
-		spdk_free(lp);
-	}
-
-	spdk_fclose(fp);
-	return 0;
 }
 
 void

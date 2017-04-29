@@ -121,14 +121,14 @@ spdk_app_get_running_config(char **config_str, char *name)
 	*config_str = spdk_malloc(length + 1);
 	if (!*config_str) {
 		perror("config_str");
-		spdk_fclose(fp);
+		fclose(fp);
 		return -1;
 	}
 	fseek(fp, 0, SEEK_SET);
 	ret = fread(*config_str, sizeof(char), length, fp);
 	if (ret < length)
 		SPDK_ERRLOG("%s: warning - short read\n", __func__);
-	spdk_fclose(fp);
+	fclose(fp);
 	(*config_str)[length] = '\0';
 
 	return 0;

@@ -127,37 +127,6 @@ void *spdk_strdup(const char *s)
 	return strdup(s);
 }
 
-static inline
-FILE *spdk_fopen(const char *filename, const char *modes)
-{
-	return fopen(filename, modes);
-}
-
-static inline
-char *spdk_fgets(char *s, int n, FILE *stream)
-{
-	return fgets(s, n, stream);
-}
-
-static inline
-int spdk_fflush(FILE *stream)
-{
-	return fflush(stream);
-}
-
-static inline
-int spdk_feof(FILE *stream)
-{
-	return feof(stream);
-}
-
-static inline
-int spdk_fclose(FILE *stream)
-{
-	return fclose(stream);
-}
-
-
 /* Destroy a mutex.  */
 static inline
 int spdk_mutex_destroy(spdk_mutex_t *__mutex)
