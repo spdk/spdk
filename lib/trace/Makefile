@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
-C_SRCS = trace.c
+C_SRCS = trace.c trace_shm.c
 LIBNAME = trace
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

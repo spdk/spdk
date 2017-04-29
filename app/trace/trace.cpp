@@ -50,6 +50,7 @@
 
 extern "C" {
 #include "spdk/trace.h"
+#include "spdk_internal/trace_shm.h"
 }
 
 static struct spdk_trace_histories *g_histories;
