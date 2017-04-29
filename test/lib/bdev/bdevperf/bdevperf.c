@@ -662,8 +662,6 @@ main(int argc, char **argv)
 
 	optind = 1;  /* reset the optind */
 
-	rte_set_log_level(RTE_LOG_ERR);
-
 	blockdev_heads_init();
 
 	bdevtest_init(config_file, core_mask);
