@@ -51,9 +51,13 @@
 #include <stdbool.h>
 
 #include <rte_config.h>
-#include <rte_eal.h>
-#include <rte_pci.h>
 #include <rte_version.h>
+#include <rte_eal.h>
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 0)
+#include <rte_bus.h>
+extern struct rte_pci_bus rte_pci_bus;
+#endif
+#include <rte_pci.h>
 #include <rte_dev.h>
 
 struct spdk_pci_enum_ctx {
