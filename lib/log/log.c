@@ -119,12 +119,12 @@ spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag)
 	struct spdk_trace_flag *iter;
 
 	if (name == NULL || flag == NULL) {
-		fprintf(stderr, "missing spdk_trace_flag parameters\n");
+		SPDK_ERRLOG("missing spdk_trace_flag parameters\n");
 		abort();
 	}
 
 	if (get_trace_flag(name)) {
-		fprintf(stderr, "duplicate spdk_trace_flag '%s'\n", name);
+		SPDK_ERRLOG("duplicate spdk_trace_flag '%s'\n", name);
 		abort();
 	}
 

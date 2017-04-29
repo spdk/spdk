@@ -137,12 +137,12 @@ spdk_app_get_running_config(char **config_str, char *name)
 	/* Create temporary file to hold config */
 	fd = mkstemp(config_template);
 	if (fd == -1) {
-		fprintf(stderr, "mkstemp failed\n");
+		SPDK_ERRLOG("mkstemp failed\n");
 		return -1;
 	}
 	fp = fdopen(fd, "wb+");
 	if (NULL == fp) {
-		fprintf(stderr, "error opening tmpfile fd = %d\n", fd);
+		SPDK_ERRLOG("error opening tmpfile fd = %d\n", fd);
 		return -1;
 	}
 
@@ -163,7 +163,7 @@ spdk_app_get_running_config(char **config_str, char *name)
 	fseek(fp, 0, SEEK_SET);
 	ret = fread(*config_str, sizeof(char), length, fp);
 	if (ret < length)
-		fprintf(stderr, "%s: warning - short read\n", __func__);
+		SPDK_ERRLOG("%s: warning - short read\n", __func__);
 	fclose(fp);
 	(*config_str)[length] = '\0';
 
@@ -255,12 +255,12 @@ spdk_app_init(struct spdk_app_opts *opts)
 	if (opts->config_file) {
 		rc = spdk_conf_read(config, opts->config_file);
 		if (rc != 0) {
-			fprintf(stderr, "Could not read config file %s\n", opts->config_file);
+			SPDK_ERRLOG("Could not read config file %s\n", opts->config_file);
 			spdk_conf_free(config);
 			exit(EXIT_FAILURE);
 		}
 		if (spdk_conf_first_section(config) == NULL) {
-			fprintf(stderr, "Invalid config file %s\n", opts->config_file);
+			SPDK_ERRLOG("Invalid config file %s\n", opts->config_file);
 			spdk_conf_free(config);
 			exit(EXIT_FAILURE);
 		}
@@ -283,21 +283,21 @@ spdk_app_init(struct spdk_app_opts *opts)
 	if (opts->log_facility == NULL) {
 		opts->log_facility = spdk_app_get_log_facility(g_spdk_app.config);
 		if (opts->log_facility == NULL) {
-			fprintf(stderr, "NULL logfacility\n");
+			SPDK_ERRLOG("NULL logfacility\n");
 			spdk_conf_free(g_spdk_app.config);
 			exit(EXIT_FAILURE);
 		}
 	}
 	rc = spdk_set_log_facility(opts->log_facility);
 	if (rc < 0) {
-		fprintf(stderr, "log facility error\n");
+		SPDK_ERRLOG("log facility error\n");
 		spdk_conf_free(g_spdk_app.config);
 		exit(EXIT_FAILURE);
 	}
 
 	rc = spdk_set_log_priority(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	if (rc < 0) {
-		fprintf(stderr, "log priority error\n");
+		SPDK_ERRLOG("log priority error\n");
 		spdk_conf_free(g_spdk_app.config);
 		exit(EXIT_FAILURE);
 	}
@@ -333,7 +333,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	 *  reactor.
 	 */
 	if (spdk_reactors_init(opts->max_delay_us)) {
-		fprintf(stderr, "Invalid reactor mask.\n");
+		SPDK_ERRLOG("Invalid reactor mask.\n");
 		spdk_conf_free(g_spdk_app.config);
 		exit(EXIT_FAILURE);
 	}

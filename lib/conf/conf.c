@@ -41,6 +41,7 @@
 #include <unistd.h>
 
 #include "spdk/string.h"
+#include "spdk/log.h"
 
 struct spdk_conf_value {
 	struct spdk_conf_value *next;
@@ -267,7 +268,7 @@ append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp)
 
 	cp = CHECK_CP_OR_USE_DEFAULT(cp);
 	if (cp == NULL) {
-		fprintf(stderr, "%s: cp == NULL\n", __func__);
+		SPDK_ERRLOG("%s: cp == NULL\n", __func__);
 		return;
 	}
 
@@ -462,7 +463,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 
 	arg = spdk_str_trim(lp);
 	if (arg == NULL) {
-		fprintf(stderr, "no section\n");
+		SPDK_ERRLOG("no section\n");
 		return -1;
 	}
 
@@ -471,7 +472,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 		arg++;
 		key = spdk_strsepq(&arg, "]");
 		if (key == NULL || arg != NULL) {
-			fprintf(stderr, "broken section\n");
+			SPDK_ERRLOG("broken section\n");
 			return -1;
 		}
 		/* determine section number */
@@ -500,18 +501,18 @@ parse_line(struct spdk_conf *cp, char *lp)
 		/* parameters */
 		sp = cp->current_section;
 		if (sp == NULL) {
-			fprintf(stderr, "unknown section\n");
+			SPDK_ERRLOG("unknown section\n");
 			return -1;
 		}
 		key = spdk_strsepq(&arg, CF_DELIM);
 		if (key == NULL) {
-			fprintf(stderr, "broken key\n");
+			SPDK_ERRLOG("broken key\n");
 			return -1;
 		}
 
 		ip = allocate_cf_item();
 		if (ip == NULL) {
-			fprintf(stderr, "cannot allocate cf item\n");
+			SPDK_ERRLOG("cannot allocate cf item\n");
 			return -1;
 		}
 		append_cf_item(sp, ip);
@@ -527,8 +528,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 				val = spdk_strsepq(&arg, CF_DELIM);
 				vp = allocate_cf_value();
 				if (vp == NULL) {
-					fprintf(stderr,
-						"cannot allocate cf value\n");
+					SPDK_ERRLOG("cannot allocate cf value\n");
 					return -1;
 				}
 				append_cf_value(ip, vp);
@@ -616,7 +616,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 
 	fp = fopen(file, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "open error: %s\n", file);
+		SPDK_ERRLOG("open error: %s\n", file);
 		return -1;
 	}
 
@@ -653,7 +653,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 			if (!q) {
 				free(lp2);
 				free(lp);
-				fprintf(stderr, "malloc failed at line %d of %s\n", line, cp->file);
+				SPDK_ERRLOG("malloc failed at line %d of %s\n", line, cp->file);
 				fclose(fp);
 				return -1;
 			}
@@ -669,7 +669,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 
 		/* parse one line */
 		if (parse_line(cp, p) < 0) {
-			fprintf(stderr, "parse error at line %d of %s\n", line, cp->file);
+			SPDK_ERRLOG("parse error at line %d of %s\n", line, cp->file);
 		}
 next_line:
 		line++;
