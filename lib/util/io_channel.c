@@ -41,7 +41,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 
-static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
+static spdk_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
 	void			*io_device_ctx;
@@ -54,7 +54,7 @@ struct io_device {
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
 struct spdk_io_channel {
-	pthread_t			thread_id;
+	spdk_thread_t			thread_id;
 	void				*io_device;
 	uint32_t			ref;
 	uint32_t			priority;
@@ -69,11 +69,11 @@ struct spdk_io_channel {
 	 */
 };
 
-pthread_key_t g_io_channel_key = (pthread_key_t) - 1;
+spdk_thread_key_t g_io_channel_key = (spdk_thread_key_t) - 1;
 
 __attribute__((constructor)) static void init_lcore_id_key(void)
 {
-	pthread_key_create(&g_io_channel_key, NULL);
+	spdk_thread_key_create(&g_io_channel_key, NULL);
 }
 
 TAILQ_HEAD(spdk_thread_io_channel, spdk_io_channel) ;
@@ -81,10 +81,10 @@ TAILQ_HEAD(spdk_thread_io_channel, spdk_io_channel) ;
 static struct spdk_thread_io_channel *
 spdk_get_thread_io_channel(void)
 {
-	struct spdk_thread_io_channel *io_channel = pthread_getspecific(g_io_channel_key);
+	struct spdk_thread_io_channel *io_channel = spdk_thread_getspecific(g_io_channel_key);
 	if (io_channel == NULL) {
 		io_channel = spdk_calloc(1, sizeof(struct spdk_thread_io_channel));
-		pthread_setspecific(g_io_channel_key, io_channel);
+		spdk_thread_setspecific(g_io_channel_key, io_channel);
 	}
 	return io_channel;
 }
@@ -118,17 +118,17 @@ spdk_io_device_register(void *io_device, io_channel_create_cb_t create_cb,
 	dev->destroy_cb = destroy_cb;
 	dev->ctx_size = ctx_size;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	spdk_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device_ctx == io_device) {
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
 			spdk_free(dev);
-			pthread_mutex_unlock(&g_devlist_mutex);
+			spdk_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
 	}
 	TAILQ_INSERT_TAIL(&g_io_devices, dev, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
+	spdk_mutex_unlock(&g_devlist_mutex);
 }
 
 void
@@ -136,17 +136,17 @@ spdk_io_device_unregister(void *io_device)
 {
 	struct io_device *dev;
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	spdk_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device_ctx == io_device) {
 			TAILQ_REMOVE(&g_io_devices, dev, tailq);
 			spdk_free(dev);
-			pthread_mutex_unlock(&g_devlist_mutex);
+			spdk_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
 	}
 	SPDK_ERRLOG("io_device %p not found\n", io_device);
-	pthread_mutex_unlock(&g_devlist_mutex);
+	spdk_mutex_unlock(&g_devlist_mutex);
 }
 
 struct spdk_io_channel *
@@ -166,7 +166,7 @@ spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *uniqu
 		return NULL;
 	}
 
-	pthread_mutex_lock(&g_devlist_mutex);
+	spdk_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device_ctx == io_device) {
 			break;
@@ -174,10 +174,10 @@ spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *uniqu
 	}
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not find io_device %p\n", io_device);
-		pthread_mutex_unlock(&g_devlist_mutex);
+		spdk_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
-	pthread_mutex_unlock(&g_devlist_mutex);
+	spdk_mutex_unlock(&g_devlist_mutex);
 
 	if (unique == false) {
 		TAILQ_FOREACH(ch, spdk_get_thread_io_channel(), tailq) {

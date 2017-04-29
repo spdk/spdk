@@ -726,3 +726,32 @@ spdk_ring_lookup(const char *name)
 {
 	return (struct spdk_ring *)rte_ring_lookup(name);
 }
+
+int spdk_mutex_init(spdk_mutex_t *__mutex, int __flags)
+{
+	int rc = 0;
+	pthread_mutexattr_t attr;
+	if (__flags != 0) {
+		if (pthread_mutexattr_init(&attr)) {
+			return -1;
+		}
+		if (rc == 0 && (__flags & SPDK_MUTEX_RECURSIVE)) {
+			rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+		}
+#ifndef __FreeBSD__
+		if (rc == 0 && (__flags & SPDK_MUTEX_ROBUST)) {
+			rc = pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
+		}
+		if (rc == 0 && (__flags & SPDK_MUTEX_SHARED)) {
+			rc = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+		}
+#endif
+		if (rc == 0) {
+			rc = pthread_mutex_init(__mutex, &attr);
+		}
+		pthread_mutexattr_destroy(&attr);
+	} else {
+		rc = pthread_mutex_init(__mutex, NULL);
+	}
+	return rc ;
+}

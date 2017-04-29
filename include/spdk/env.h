@@ -973,6 +973,69 @@ void spdk_abort(void) __attribute__((__noreturn__));
  */
 void spdk_exit(int status) __attribute__((__noreturn__));
 
+enum spdk_mutex_flags {
+	SPDK_MUTEX_RECURSIVE = 1 << 0,
+	SPDK_MUTEX_ROBUST = 1 << 1,
+	SPDK_MUTEX_SHARED = 1 << 2
+};
+int spdk_mutex_init(spdk_mutex_t *__mutex, int __flags);
+
+/* Destroy a mutex.  */
+int spdk_mutex_destroy(spdk_mutex_t *__mutex);
+
+/* Try locking a mutex.  */
+int spdk_mutex_trylock(spdk_mutex_t *__mutex);
+
+/* Lock a mutex.  */
+int spdk_mutex_lock(spdk_mutex_t *__mutex);
+
+/* Unlock a mutex.  */
+int spdk_mutex_unlock(spdk_mutex_t *__mutex);
+
+/* Mark state protected by robust mutex as consistent  */
+int spdk_mutex_consistent(spdk_mutex_t *__mutex);
+
+/**
+ * returns the ID of the calling thread
+ */
+spdk_thread_t spdk_thread_self(void);
+
+/**
+ * Set the thread name
+ */
+void spdk_thread_set_name(spdk_thread_t tid, const char *name);
+
+/*
+ * Create a thread specific key
+ */
+int spdk_thread_key_create(spdk_thread_key_t *key, void (*destructor)(void *));
+
+/*
+ * Return the value currently bound to the specified key
+ */
+void *spdk_thread_getspecific(spdk_thread_key_t key);
+
+/*
+ * Associate a thread-specific value with a key obtained via a previous call to spdk_thread_key_create()
+ */
+int spdk_thread_setspecific(spdk_thread_key_t key, const void *value);
+
+/*
+ * Examine and change mask of blocked signals
+ */
+int spdk_thread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
+
+/**
+ * sleeps some number of microseconds.  The default is 1
+ */
+int spdk_usleep(int usec);
+
+/**
+ * returns the process ID of the calling process.
+ */
+spdk_pid_t spdk_getpid(void);
+
+
 #ifdef __cplusplus
 }
 #endif

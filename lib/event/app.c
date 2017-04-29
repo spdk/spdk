@@ -339,7 +339,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 
 	/* setup signal handler thread */
-	pthread_sigmask(SIG_SETMASK, NULL, &signew);
+	spdk_thread_sigmask(SIG_SETMASK, NULL, &signew);
 
 	memset(&sigact, 0, sizeof(sigact));
 	sigact.sa_handler = SIG_IGN;
@@ -390,7 +390,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 
 	sigaddset(&signew, SIGQUIT);
 	sigaddset(&signew, SIGHUP);
-	pthread_sigmask(SIG_SETMASK, &signew, NULL);
+	spdk_thread_sigmask(SIG_SETMASK, &signew, NULL);
 
 	if (opts->shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);

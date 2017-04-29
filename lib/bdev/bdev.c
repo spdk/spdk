@@ -911,7 +911,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
 
-	pthread_mutex_init(&bdev->mutex, NULL);
+	spdk_mutex_init(&bdev->mutex, 0);
 	bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);
@@ -924,12 +924,12 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Removing bdev %s from list\n", bdev->name);
 
-	pthread_mutex_lock(&bdev->mutex);
+	spdk_mutex_lock(&bdev->mutex);
 	assert(bdev->status == SPDK_BDEV_STATUS_CLAIMED || bdev->status == SPDK_BDEV_STATUS_UNCLAIMED);
 	if (bdev->status == SPDK_BDEV_STATUS_CLAIMED) {
 		if (bdev->remove_cb) {
 			bdev->status = SPDK_BDEV_STATUS_REMOVING;
-			pthread_mutex_unlock(&bdev->mutex);
+			spdk_mutex_unlock(&bdev->mutex);
 			bdev->remove_cb(bdev->remove_ctx);
 			return;
 		} else {
@@ -938,9 +938,9 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	}
 
 	TAILQ_REMOVE(&spdk_bdev_list, bdev, link);
-	pthread_mutex_unlock(&bdev->mutex);
+	spdk_mutex_unlock(&bdev->mutex);
 
-	pthread_mutex_destroy(&bdev->mutex);
+	spdk_mutex_destroy(&bdev->mutex);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
@@ -954,7 +954,7 @@ spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 {
 	bool success;
 
-	pthread_mutex_lock(&bdev->mutex);
+	spdk_mutex_lock(&bdev->mutex);
 
 	if (bdev->status != SPDK_BDEV_STATUS_CLAIMED) {
 		/* Take ownership of bdev. */
@@ -967,7 +967,7 @@ spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 		success = false;
 	}
 
-	pthread_mutex_unlock(&bdev->mutex);
+	spdk_mutex_unlock(&bdev->mutex);
 
 	return success;
 }
@@ -977,7 +977,7 @@ spdk_bdev_unclaim(struct spdk_bdev *bdev)
 {
 	bool do_unregister = false;
 
-	pthread_mutex_lock(&bdev->mutex);
+	spdk_mutex_lock(&bdev->mutex);
 	assert(bdev->status == SPDK_BDEV_STATUS_CLAIMED || bdev->status == SPDK_BDEV_STATUS_REMOVING);
 	if (bdev->status == SPDK_BDEV_STATUS_REMOVING) {
 		do_unregister = true;
@@ -985,7 +985,7 @@ spdk_bdev_unclaim(struct spdk_bdev *bdev)
 	bdev->remove_cb = NULL;
 	bdev->remove_ctx = NULL;
 	bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
-	pthread_mutex_unlock(&bdev->mutex);
+	spdk_mutex_unlock(&bdev->mutex);
 
 	if (do_unregister == true) {
 		spdk_bdev_unregister(bdev);

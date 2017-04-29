@@ -45,6 +45,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
@@ -112,7 +113,7 @@ struct spdk_bdev {
 	uint32_t gencnt;
 
 	/** Mutex protecting claimed */
-	pthread_mutex_t mutex;
+	spdk_mutex_t mutex;
 
 	/** The bdev status */
 	enum spdk_bdev_status status;
