@@ -34,7 +34,7 @@
 #ifndef SPDK_NVMF_TRANSPORT_H
 #define SPDK_NVMF_TRANSPORT_H
 
-#include <stdint.h>
+#include "spdk/env.h"
 
 #include "spdk/nvmf.h"
 

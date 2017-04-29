@@ -36,18 +36,6 @@
 
 #include "spdk/env.h"
 #include "spdk/json.h"
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-
 #include "spdk/likely.h"
 #include "spdk/string.h"
 

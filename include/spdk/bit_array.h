@@ -42,9 +42,7 @@
 extern "C" {
 #endif
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "spdk/env.h"
 
 /**
  * Variable-length bit array.

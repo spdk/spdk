@@ -39,7 +39,7 @@
 #ifndef SPDK_CONF_H
 #define SPDK_CONF_H
 
-#include <stdbool.h>
+#include "spdk/env.h"
 
 struct spdk_conf_value;
 struct spdk_conf_item;

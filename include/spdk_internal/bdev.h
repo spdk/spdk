@@ -39,12 +39,6 @@
 #ifndef SPDK_INTERNAL_BDEV_H
 #define SPDK_INTERNAL_BDEV_H
 
-#include <inttypes.h>
-#include <unistd.h>
-#include <stddef.h>  /* for offsetof */
-#include <sys/uio.h> /* for struct iovec */
-#include <stdbool.h>
-
 #include "spdk/bdev.h"
 #include "spdk/event.h"
 #include "spdk/queue.h"

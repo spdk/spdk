@@ -42,8 +42,7 @@
 extern "C" {
 #endif
 
-#include <stdarg.h>
-#include <stddef.h>
+#include "spdk/env.h"
 
 /**
  * sprintf with automatic buffer allocation.

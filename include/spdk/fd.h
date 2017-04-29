@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
+#include "spdk/env.h"
 
 uint64_t spdk_fd_get_size(int fd);
 uint32_t spdk_fd_get_blocklen(int fd);

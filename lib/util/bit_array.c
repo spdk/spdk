@@ -33,15 +33,6 @@
 
 #include "spdk/bit_array.h"
 #include "spdk/env.h"
-
-#include <assert.h>
-#include <errno.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "spdk/likely.h"
 #include "spdk/util.h"
 

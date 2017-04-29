@@ -31,12 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdbool.h>
-#include <pthread.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
 #include "spdk/log.h"

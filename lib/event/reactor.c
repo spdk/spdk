@@ -31,30 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/env.h"
 #include "spdk_internal/event.h"
-
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-
-#ifdef __linux__
-#include <sys/prctl.h>
-#endif
-
-#ifdef __FreeBSD__
-#include <pthread_np.h>
-#endif
-
-#include <rte_config.h>
-#include <rte_launch.h>
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
-#include "spdk/env.h"
 
 #define SPDK_MAX_SOCKET		64
 

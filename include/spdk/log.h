@@ -39,10 +39,7 @@
 #ifndef SPDK_LOG_H
 #define SPDK_LOG_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdio.h>
+#include "spdk/env.h"
 
 /*
  * Default: 1 - noticelog messages will print to stderr and syslog.

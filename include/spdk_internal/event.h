@@ -34,8 +34,6 @@
 #ifndef SPDK_INTERNAL_EVENT_H
 #define SPDK_INTERNAL_EVENT_H
 
-#include <stdio.h>
-
 #include "spdk/event.h"
 
 struct spdk_event {

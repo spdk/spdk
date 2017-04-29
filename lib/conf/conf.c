@@ -34,13 +34,6 @@
 
 #include "spdk/env.h"
 #include "spdk/conf.h"
-
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include "spdk/string.h"
 #include "spdk/log.h"
 

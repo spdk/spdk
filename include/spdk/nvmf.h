@@ -38,8 +38,6 @@
 #ifndef SPDK_NVMF_H
 #define SPDK_NVMF_H
 
-#include <stdint.h>
-
 #include "spdk/env.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"

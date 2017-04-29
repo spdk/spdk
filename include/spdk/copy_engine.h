@@ -38,8 +38,7 @@
 #ifndef SPDK_COPY_ENGINE_H
 #define SPDK_COPY_ENGINE_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "spdk/env.h"
 
 typedef void (*spdk_copy_completion_cb)(void *ref, int status);
 

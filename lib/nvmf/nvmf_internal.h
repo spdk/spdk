@@ -34,11 +34,7 @@
 #ifndef __NVMF_INTERNAL_H__
 #define __NVMF_INTERNAL_H__
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
+#include "spdk/env.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/assert.h"
 #include "spdk/queue.h"

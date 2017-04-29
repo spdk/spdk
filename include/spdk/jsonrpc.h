@@ -39,16 +39,8 @@
 #ifndef SPDK_JSONRPC_H_
 #define SPDK_JSONRPC_H_
 
+#include "spdk/env.h"
 #include "spdk/json.h"
-
-#include <stdlib.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 
 #define SPDK_JSONRPC_ERROR_PARSE_ERROR		-32700
 #define SPDK_JSONRPC_ERROR_INVALID_REQUEST	-32600

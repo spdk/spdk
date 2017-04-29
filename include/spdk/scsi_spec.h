@@ -39,7 +39,7 @@
 #ifndef SPDK_SCSI_SPEC_H
 #define SPDK_SCSI_SPEC_H
 
-#include <stdint.h>
+#include "spdk/env.h"
 
 #include "spdk/assert.h"
 

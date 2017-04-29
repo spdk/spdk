@@ -34,8 +34,7 @@
 #ifndef NVMF_SESSION_H
 #define NVMF_SESSION_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "spdk/env.h"
 
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"

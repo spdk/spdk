@@ -34,15 +34,6 @@
 #include "spdk/env.h"
 #include "spdk_internal/log.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <syslog.h>
-#include <ctype.h>
-#include <errno.h>
-
 struct spdk_trace_flag_head g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
 struct spdk_log_env g_log_env;
 

@@ -34,8 +34,7 @@
 #ifndef SPDK_NVMF_SPEC_H
 #define SPDK_NVMF_SPEC_H
 
-#include <stdint.h>
-
+#include "spdk/env.h"
 #include "spdk/assert.h"
 #include "spdk/nvme_spec.h"
 

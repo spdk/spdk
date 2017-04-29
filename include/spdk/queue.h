@@ -38,8 +38,7 @@
 extern "C" {
 #endif
 
-#include <sys/cdefs.h>
-#include <sys/queue.h>
+#include "spdk/env.h"
 
 /*
  * The SPDK NVMe driver was originally ported from FreeBSD, which makes

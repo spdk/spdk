@@ -32,11 +32,6 @@
  */
 
 #include "spdk_internal/copy_engine.h"
-
-#include <assert.h>
-#include <stdio.h>
-#include <errno.h>
-
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"

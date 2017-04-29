@@ -34,16 +34,33 @@
 #ifndef SPDK_ENV_SYSTEM_H
 #define SPDK_ENV_SYSTEM_H
 
-#include <sys/prctl.h>
+#include <arpa/inet.h>
+#include <assert.h>
 #include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stddef.h>  /* for offsetof */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/cdefs.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/prctl.h>
+#include <sys/queue.h>
+#include <sys/resource.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/uio.h> /* for struct iovec */
 #include <unistd.h>
 
 #ifdef __FreeBSD__
@@ -53,6 +70,13 @@
 #if defined(__i386__) || defined(__x86_64__)
 #include <x86intrin.h>
 #endif
+
+#include <rte_config.h>
+#include <rte_lcore.h>
+#include <rte_memcpy.h>
+#include <rte_mempool.h>
+#include <rte_ring.h>
+#include <rte_version.h>
 
 typedef pthread_mutex_t spdk_mutex_t;
 typedef pthread_t spdk_thread_t;

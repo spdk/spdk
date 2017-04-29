@@ -33,12 +33,6 @@
  */
 
 #include "spdk/bdev.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
 #include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"

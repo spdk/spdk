@@ -42,8 +42,6 @@
 extern "C" {
 #endif
 
-#include <assert.h>
-
 #ifdef static_assert
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
 #else

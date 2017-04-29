@@ -34,7 +34,7 @@
 #ifndef SPDK_RPC_CONFIG_H_
 #define SPDK_RPC_CONFIG_H_
 
-#include <stdint.h>
+#include "spdk/env.h"
 
 #include "spdk/jsonrpc.h"
 

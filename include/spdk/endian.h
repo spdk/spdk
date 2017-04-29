@@ -43,7 +43,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
+#include "spdk/env.h"
 
 static inline uint16_t
 from_be16(const void *ptr)

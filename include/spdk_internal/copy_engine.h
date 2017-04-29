@@ -34,9 +34,6 @@
 #ifndef SPDK_INTERNAL_COPY_ENGINE_H
 #define SPDK_INTERNAL_COPY_ENGINE_H
 
-#include <stdio.h>
-#include <stdint.h>
-
 #include "spdk/copy_engine.h"
 #include "spdk/queue.h"
 

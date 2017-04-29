@@ -34,19 +34,6 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log_syslog.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
-#include <signal.h>
-
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"

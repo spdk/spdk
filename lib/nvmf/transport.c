@@ -33,9 +33,7 @@
 
 #include "transport.h"
 
-#include <stdlib.h>
-#include <strings.h>
-
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"

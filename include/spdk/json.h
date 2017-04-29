@@ -39,11 +39,7 @@
 #ifndef SPDK_JSON_H_
 #define SPDK_JSON_H_
 
-#include <stdlib.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <unistd.h>
+#include "spdk/env.h"
 
 enum spdk_json_val_type {
 	SPDK_JSON_VAL_INVALID,

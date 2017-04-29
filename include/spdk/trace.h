@@ -39,8 +39,7 @@
 #ifndef _SPDK_TRACE_H_
 #define _SPDK_TRACE_H_
 
-#include <inttypes.h>
-#include <limits.h>
+#include "spdk/env.h"
 
 #ifdef __cplusplus
 extern "C" {

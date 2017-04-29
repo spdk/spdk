@@ -41,11 +41,7 @@
 #ifndef SPDK_EVENT_H
 #define SPDK_EVENT_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
+#include "spdk/env.h"
 #include "spdk/queue.h"
 
 typedef void (*spdk_event_fn)(void *arg1, void *arg2);
