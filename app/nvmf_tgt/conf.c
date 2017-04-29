@@ -141,7 +141,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 
 	app_subsys = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
 					       NVMF_SUBSYSTEM_MODE_DIRECT,
-					       spdk_get_master_lcore());
+					       spdk_env_get_master_lcore());
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		return -1;
@@ -206,7 +206,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 
 	acceptor_lcore = spdk_conf_section_get_intval(sp, "AcceptorCore");
 	if (acceptor_lcore < 0) {
-		acceptor_lcore = spdk_lcore_id();
+		acceptor_lcore = spdk_env_get_current_core();
 	}
 	g_spdk_nvmf_tgt_conf.acceptor_lcore = acceptor_lcore;
 

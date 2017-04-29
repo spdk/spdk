@@ -226,6 +226,8 @@ void spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t
  */
 unsigned spdk_mempool_avail_count(const struct spdk_mempool *pool);
 
+#define SPDK_MAX_LCORE 128
+
 /**
  * \brief Return the number of dedicated CPU cores utilized by
  * 	  this env abstraction
@@ -258,9 +260,60 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
 	     i = spdk_env_get_next_core(i))
 
 /**
+ * Wait until a lcore finished its job.
+ */
+int spdk_env_wait_lcore(unsigned slave_id);
+
+/**
+ * Wait until on all the lcores.
+ */
+void spdk_env_mp_wait_lcore(void);
+
+/**
  * \brief Return the socket ID for the given core.
  */
 uint32_t spdk_env_get_socket_id(uint32_t core);
+
+/**
+ * Get the id of the master lcore
+ *
+ * \return
+ *   the id of the master lcore
+ */
+unsigned spdk_env_get_master_lcore(void);
+
+/**
+ * Test if an lcore is enabled.
+ *
+ * \param lcore_id
+ *   The identifier of the lcore, which MUST be between 0 and
+ *   RTE_MAX_LCORE-1.
+ * \return
+ *   True if the given lcore is enabled; false otherwise.
+ */
+int spdk_env_lcore_is_enabled(unsigned lcore_id);
+
+/**
+ * State of an lcore.
+ */
+enum spdk_env_lcore_state_t {
+	SPDK_LCORE_STATE_WAIT,       /**< waiting a new command */
+	SPDK_LCORE_STATE_RUNNING,    /**< executing command */
+	SPDK_LCORE_STATE_FINISHED,   /**< command executed */
+};
+
+/**
+ * Get the current state of the lcore.
+ */
+enum spdk_env_lcore_state_t spdk_env_get_lcore_state(unsigned lcore_id);
+
+/**
+ * Send a message to a slave lcore identified by slave_id to call a
+ * function f with argument arg. Once the execution is done, the
+ * remote lcore switch in FINISHED state.
+ */
+int
+spdk_env_remote_launch(int (*f)(void *), void *arg, unsigned slave_id);
 
 /**
  * Return true if the calling process is primary process
@@ -793,115 +846,6 @@ void spdk_ring_list_dump(FILE *f);
  * search a ring from its name
  */
 struct spdk_ring *spdk_ring_lookup(const char *name);
-
-#define SPDK_MAX_LCORE 128
-
-/**
- * Return the ID of the execution unit we are running on.
- * \return
- *  Logical core ID (in EAL thread) or LCORE_ID_ANY (in non-EAL thread)
- */
-unsigned spdk_lcore_id(void);
-
-/**
- * Get the id of the master lcore
- *
- * \return
- *   the id of the master lcore
- */
-unsigned spdk_get_master_lcore(void);
-
-/**
- * Get the ID of the physical socket of the specified lcore
- *
- * \param lcore_id
- *   the targeted lcore, which MUST be between 0 and SPDK_MAX_LCORE-1.
- * \return
- *   the ID of lcoreid's physical socket
- */
-unsigned spdk_lcore_to_socket_id(unsigned lcore_id);
-
-
-/**
- * Test if an lcore is enabled.
- *
- * \param lcore_id
- *   The identifier of the lcore, which MUST be between 0 and
- *   RTE_MAX_LCORE-1.
- * \return
- *   True if the given lcore is enabled; false otherwise.
- */
-int spdk_lcore_is_enabled(unsigned lcore_id);
-
-/**
- * Return the number of execution units (lcores) on the system.
- *
- * \return
- *   the number of execution units (lcores) on the system.
- */
-unsigned spdk_lcore_count(void);
-
-/**
- * Get the next enabled lcore ID.
- *
- * \param i
- *   The current lcore (reference).
- * \param skip_master
- *   If true, do not return the ID of the master lcore.
- * \param wrap
- *   If true, go back to 0 when SPDK_MAX_LCORE is reached; otherwise,
- *   return SPDK_MAX_LCORE.
- * \return
- *   The next lcore_id or SPDK_MAX_LCORE if not found.
- */
-unsigned spdk_get_next_lcore(unsigned i, int skip_master, int wrap);
-
-/**
- * Macro to browse all running lcores.
- */
-#define SPDK_LCORE_FOREACH(i)						\
-	for (i = spdk_get_next_lcore(-1, 0, 0);				\
-	     i<SPDK_MAX_LCORE;						\
-	     i = spdk_get_next_lcore(i, 0, 0))
-
-/**
- * Macro to browse all running lcores except the master lcore.
- */
-#define SPDK_LCORE_FOREACH_SLAVE(i)					\
-	for (i = spdk_get_next_lcore(-1, 1, 0);				\
-	     i<SPDK_MAX_LCORE;						\
-	     i = spdk_get_next_lcore(i, 1, 0))
-
-/**
- * Wait until a lcore finished its job.
- */
-int spdk_wait_lcore(unsigned slave_id);
-
-/**
- * Wait until on all the lcores.
- */
-void spdk_mp_wait_lcore(void);
-
-/**
- * State of an lcore.
- */
-enum spdk_lcore_state_t {
-	SPDK_LCORE_STATE_WAIT,       /**< waiting a new command */
-	SPDK_LCORE_STATE_RUNNING,    /**< executing command */
-	SPDK_LCORE_STATE_FINISHED,   /**< command executed */
-};
-
-/**
- * Get the current state of the lcore.
- */
-enum spdk_lcore_state_t spdk_get_lcore_state(unsigned lcore_id);
-
-/**
- * Send a message to a slave lcore identified by slave_id to call a
- * function f with argument arg. Once the execution is done, the
- * remote lcore switch in FINISHED state.
- */
-int spdk_remote_launch(int (*f)(void *), void *arg, unsigned slave_id);
 
 /**
  * Memcpy

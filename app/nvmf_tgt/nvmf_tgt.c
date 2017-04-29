@@ -315,7 +315,7 @@ spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
 	opts->shutdown_cb = spdk_nvmf_shutdown_cb;
 	spdk_app_init(opts);
 
-	printf("Total cores available: %d\n", spdk_lcore_count());
+	printf("Total cores available: %d\n", spdk_env_get_core_count());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(spdk_nvmf_startup, NULL, NULL);
 

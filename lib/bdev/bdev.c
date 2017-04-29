@@ -129,10 +129,10 @@ spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 
 	if (length <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
 		pool = g_rbuf_small_pool;
-		tailq = &g_need_rbuf_small[spdk_lcore_id()];
+		tailq = &g_need_rbuf_small[spdk_env_get_current_core()];
 	} else {
 		pool = g_rbuf_large_pool;
-		tailq = &g_need_rbuf_large[spdk_lcore_id()];
+		tailq = &g_need_rbuf_large[spdk_env_get_current_core()];
 	}
 
 	if (TAILQ_EMPTY(tailq)) {
@@ -351,10 +351,10 @@ _spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io)
 
 	if (len <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
 		pool = g_rbuf_small_pool;
-		tailq = &g_need_rbuf_small[spdk_lcore_id()];
+		tailq = &g_need_rbuf_small[spdk_env_get_current_core()];
 	} else {
 		pool = g_rbuf_large_pool;
-		tailq = &g_need_rbuf_large[spdk_lcore_id()];
+		tailq = &g_need_rbuf_large[spdk_env_get_current_core()];
 	}
 
 	buf = spdk_mempool_get(pool);
@@ -372,16 +372,16 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_small[spdk_lcore_id()], rbuf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_small[spdk_env_get_current_core()], rbuf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_rbuf_small[spdk_lcore_id()], bdev_io, rbuf_link);
+			TAILQ_REMOVE(&g_need_rbuf_small[spdk_env_get_current_core()], bdev_io, rbuf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_large[spdk_lcore_id()], rbuf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_large[spdk_env_get_current_core()], rbuf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_rbuf_large[spdk_lcore_id()], bdev_io, rbuf_link);
+			TAILQ_REMOVE(&g_need_rbuf_large[spdk_env_get_current_core()], bdev_io, rbuf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}

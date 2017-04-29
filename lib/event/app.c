@@ -245,7 +245,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 
 	if (opts->shutdown_cb != NULL) {
-		g_shutdown_event = spdk_event_allocate(spdk_lcore_id(), __shutdown_event_cb,
+		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(), __shutdown_event_cb,
 						       NULL, NULL);
 
 		sigact.sa_handler = __shutdown_signal;
@@ -344,7 +344,7 @@ spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 
 	g_spdk_app.rc = 0;
 
-	event = spdk_event_allocate(spdk_get_master_lcore(), start_fn,
+	event = spdk_event_allocate(spdk_env_get_master_lcore(), start_fn,
 				    arg1, arg2);
 	/* Queues up the event, but can't run it until the reactors start */
 	spdk_event_call(event);

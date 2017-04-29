@@ -79,7 +79,7 @@ enum spdk_reactor_state {
 
 struct spdk_reactor {
 	/* Logical core number for this reactor. */
-	uint32_t					lcore;
+	unsigned					lcore;
 
 	/* Socket ID for this reactor. */
 	uint32_t					socket_id;
@@ -399,13 +399,13 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 static void
 spdk_reactor_start(struct spdk_reactor *reactor)
 {
-	if (reactor->lcore != spdk_get_master_lcore()) {
-		switch (spdk_get_lcore_state(reactor->lcore)) {
+	if (reactor->lcore != spdk_env_get_master_lcore()) {
+		switch (spdk_env_get_lcore_state(reactor->lcore)) {
 		case SPDK_LCORE_STATE_FINISHED:
-			spdk_wait_lcore(reactor->lcore);
+			spdk_env_wait_lcore(reactor->lcore);
 		/* drop through */
 		case SPDK_LCORE_STATE_WAIT:
-			spdk_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
+			spdk_env_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
 			break;
 		case SPDK_LCORE_STATE_RUNNING:
 			printf("Something already running on lcore %d\n", reactor->lcore);
@@ -445,7 +445,7 @@ spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
 	}
 
 	for (i = 0; i < SPDK_MAX_LCORE && i < 64; i++) {
-		if ((*cpumask & (1ULL << i)) && !spdk_lcore_is_enabled(i)) {
+		if ((*cpumask & (1ULL << i)) && !spdk_env_lcore_is_enabled(i)) {
 			*cpumask &= ~(1ULL << i);
 		}
 	}
@@ -488,7 +488,7 @@ spdk_reactors_start(void)
 	struct spdk_reactor *reactor;
 	uint32_t i, current_core;
 
-	assert(spdk_get_master_lcore() == spdk_lcore_id());
+	assert(spdk_env_get_master_lcore() == spdk_env_get_current_core());
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
@@ -504,7 +504,7 @@ spdk_reactors_start(void)
 	reactor = spdk_reactor_get(current_core);
 	spdk_reactor_start(reactor);
 
-	spdk_mp_wait_lcore();
+	spdk_env_mp_wait_lcore();
 
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
 }
