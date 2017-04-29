@@ -31,17 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-
-#include "spdk/env.h"
 #include "nvmf_tgt.h"
+#include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/log.h"
 #include "spdk/bdev.h"
@@ -64,8 +55,6 @@ struct spdk_nvmf_probe_ctx {
 	struct spdk_nvme_transport_id	trid;
 };
 
-#define MAX_STRING_LEN 255
-
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_DEFAULT 4
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MIN 2
 #define SPDK_NVMF_CONFIG_QUEUES_PER_SESSION_MAX 1024
@@ -84,55 +73,6 @@ struct spdk_nvmf_probe_ctx {
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 static int32_t g_last_core = -1;
-
-static int
-spdk_get_numa_node_value(const char *path)
-{
-	FILE *fd;
-	int numa_node = -1;
-	char buf[MAX_STRING_LEN];
-
-	fd = fopen(path, "r");
-	if (!fd) {
-		return -1;
-	}
-
-	if (fgets(buf, sizeof(buf), fd) != NULL) {
-		numa_node = strtoul(buf, NULL, 10);
-	}
-	fclose(fd);
-
-	return numa_node;
-}
-
-static int
-spdk_get_ifaddr_numa_node(const char *if_addr)
-{
-	int ret;
-	struct ifaddrs *ifaddrs, *ifa;
-	struct sockaddr_in addr, addr_in;
-	char path[MAX_STRING_LEN];
-	int numa_node = -1;
-
-	addr_in.sin_addr.s_addr = inet_addr(if_addr);
-
-	ret = getifaddrs(&ifaddrs);
-	if (ret < 0)
-		return -1;
-
-	for (ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
-		addr = *(struct sockaddr_in *)ifa->ifa_addr;
-		if ((uint32_t)addr_in.sin_addr.s_addr != (uint32_t)addr.sin_addr.s_addr) {
-			continue;
-		}
-		snprintf(path, MAX_STRING_LEN, "/sys/class/net/%s/device/numa_node", ifa->ifa_name);
-		numa_node = spdk_get_numa_node_value(path);
-		break;
-	}
-	freeifaddrs(ifaddrs);
-
-	return numa_node;
-}
 
 static int
 spdk_add_nvmf_discovery_subsystem(void)
@@ -231,6 +171,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	return 0;
 }
 
+#ifndef SPDK_NO_NVMF_DIRECT
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -290,6 +231,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}
 }
+#endif
 
 static int
 spdk_nvmf_validate_sn(const char *sn)
@@ -360,13 +302,13 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			break;
 		}
 
-		listen_addrs_str[i] = strdup(listen_addrs_str[i]);
+		listen_addrs_str[i] = spdk_strdup(listen_addrs_str[i]);
 
 		ret = spdk_parse_ip_addr(listen_addrs_str[i], &listen_addrs[num_listen_addrs].traddr,
 					 &listen_addrs[num_listen_addrs].trsvcid);
 		if (ret < 0) {
 			SPDK_ERRLOG("Unable to parse listen address '%s'\n", listen_addrs_str[i]);
-			free(listen_addrs_str[i]);
+			spdk_free(listen_addrs_str[i]);
 			listen_addrs_str[i] = NULL;
 			continue;
 		}
@@ -403,7 +345,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 					    num_devs, devs);
 
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
-		free(listen_addrs_str[i]);
+		spdk_free(listen_addrs_str[i]);
 	}
 
 	return ret;
@@ -544,6 +486,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 	}
 
 	if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
+#ifndef SPDK_NO_NVMF_DIRECT
 		struct spdk_nvmf_probe_ctx ctx = { 0 };
 		struct spdk_nvme_transport_id trid = {};
 		struct spdk_pci_addr pci_addr = {};
@@ -582,6 +525,9 @@ spdk_nvmf_construct_subsystem(const char *name,
 				    pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
 			goto error;
 		}
+#else
+		SPDK_ERRLOG("DIRECT controllers not supported\n");
+#endif
 	} else {
 		struct spdk_bdev *bdev;
 		const char *namespace;

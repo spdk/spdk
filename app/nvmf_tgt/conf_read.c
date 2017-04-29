@@ -31,62 +31,72 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMF_TGT_H
-#define NVMF_TGT_H
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
 
 #include "spdk/env.h"
+#include "nvmf_tgt.h"
+#include "spdk/conf.h"
+#include "spdk/log.h"
+#include "spdk/bdev.h"
+#include "spdk/nvme.h"
 #include "spdk/nvmf.h"
-#include "spdk/queue.h"
-#include "spdk/event.h"
+#include "spdk/string.h"
+#include "spdk/util.h"
 
-struct rpc_listen_address {
-	char *transport;
-	char *traddr;
-	char *trsvcid;
-};
+#define MAX_STRING_LEN 255
 
-struct spdk_nvmf_tgt_conf {
-	uint32_t acceptor_lcore;
-	uint32_t acceptor_poll_rate;
-};
+static int
+spdk_get_numa_node_value(const char *path)
+{
+	FILE *fd;
+	int numa_node = -1;
+	char buf[MAX_STRING_LEN];
 
-struct nvmf_tgt_subsystem {
-	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_poller *poller;
+	fd = fopen(path, "r");
+	if (!fd) {
+		return -1;
+	}
 
-	TAILQ_ENTRY(nvmf_tgt_subsystem) tailq;
+	if (fgets(buf, sizeof(buf), fd) != NULL) {
+		numa_node = strtoul(buf, NULL, 10);
+	}
+	fclose(fd);
 
-	uint32_t lcore;
-};
-
-extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
-
-struct nvmf_tgt_subsystem *
-nvmf_tgt_subsystem_first(void);
-
-struct nvmf_tgt_subsystem *
-nvmf_tgt_subsystem_next(struct nvmf_tgt_subsystem *subsystem);
-
-int spdk_nvmf_parse_conf(void);
-int spdk_get_ifaddr_numa_node(const char *if_addr);
-
-void nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *subsystem);
-
-struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(const char *name,
-		enum spdk_nvmf_subtype subtype,
-		enum spdk_nvmf_subsystem_mode mode,
-		uint32_t lcore);
+	return numa_node;
+}
 
 int
-spdk_nvmf_construct_subsystem(const char *name,
-			      const char *mode, int32_t lcore,
-			      int num_listen_addresses, struct rpc_listen_address *addresses,
-			      int num_hosts, char *hosts[], const char *bdf,
-			      const char *sn, int num_devs, char *dev_list[]);
+spdk_get_ifaddr_numa_node(const char *if_addr)
+{
+	int ret;
+	struct ifaddrs *ifaddrs, *ifa;
+	struct sockaddr_in addr, addr_in;
+	char path[MAX_STRING_LEN];
+	int numa_node = -1;
 
-int
-nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn);
+	addr_in.sin_addr.s_addr = inet_addr(if_addr);
 
-int spdk_nvmf_tgt_start(struct spdk_app_opts *opts);
+	ret = getifaddrs(&ifaddrs);
+	if (ret < 0)
+		return -1;
 
-#endif
+	for (ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
+		addr = *(struct sockaddr_in *)ifa->ifa_addr;
+		if ((uint32_t)addr_in.sin_addr.s_addr != (uint32_t)addr.sin_addr.s_addr) {
+			continue;
+		}
+		snprintf(path, MAX_STRING_LEN, "/sys/class/net/%s/device/numa_node", ifa->ifa_name);
+		numa_node = spdk_get_numa_node_value(path);
+		break;
+	}
+	freeifaddrs(ifaddrs);
+
+	return numa_node;
+}

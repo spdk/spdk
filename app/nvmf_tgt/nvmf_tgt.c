@@ -31,13 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-
 #include "nvmf_tgt.h"
 
 #include "spdk/env.h"
@@ -64,7 +57,7 @@ subsystem_delete_event(void *arg1, void *arg2)
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 
 	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
-	free(app_subsys);
+	spdk_free(app_subsys);
 
 	spdk_nvmf_delete_subsystem(subsystem);
 
@@ -111,9 +104,9 @@ spdk_nvmf_shutdown_cb(void)
 {
 	struct spdk_event *event;
 
-	fprintf(stdout, "\n=========================\n");
-	fprintf(stdout, "   NVMF shutdown signal\n");
-	fprintf(stdout, "=========================\n");
+	SPDK_NOTICELOG("\n=========================\n");
+	SPDK_NOTICELOG("   NVMF shutdown signal\n");
+	SPDK_NOTICELOG("=========================\n");
 
 	event = spdk_event_allocate(spdk_env_get_current_core(), acceptor_poller_unregistered_event,
 				    NULL, NULL);
@@ -200,7 +193,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 		return NULL;
 	}
 
-	app_subsys = calloc(1, sizeof(*app_subsys));
+	app_subsys = spdk_calloc(1, sizeof(*app_subsys));
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem allocation failed\n");
 		return NULL;
@@ -210,7 +203,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 					       disconnect_cb);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
-		free(app_subsys);
+		spdk_free(app_subsys);
 		return NULL;
 	}
 
@@ -236,7 +229,7 @@ nvmf_tgt_delete_subsystems(void)
 		TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
 		subsystem = app_subsys->subsystem;
 		spdk_nvmf_delete_subsystem(subsystem);
-		free(app_subsys);
+		spdk_free(app_subsys);
 	}
 }
 
@@ -295,10 +288,12 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 	SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,
 		       spdk_env_get_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
 
+#ifdef stdout
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
 		fflush(stdout);
 	}
+#endif
 
 	return;
 
