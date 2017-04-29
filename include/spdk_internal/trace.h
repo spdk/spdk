@@ -39,8 +39,7 @@
 #ifndef _SPDK_INTERNAL_TRACE_H_
 #define _SPDK_INTERNAL_TRACE_H_
 
-#include <inttypes.h>
-#include <limits.h>
+#include <spdk/env.h>
 
 typedef void (*spdk_trace_init_fn)(const char *shm_name);
 typedef void (*spdk_trace_cleanup_fn)(void);

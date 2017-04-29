@@ -34,21 +34,7 @@
 #include "spdk/env.h"
 #include "spdk/trace.h"
 #include "spdk_internal/trace.h"
-
-#include <assert.h>
-#include <stdint.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <errno.h>
-
-#include <rte_config.h>
-#include <rte_lcore.h>
+#include "spdk/log.h"
 
 struct spdk_trace_masks g_trace_masks;
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
@@ -68,7 +54,7 @@ uint64_t
 spdk_trace_get_tpoint_mask(uint32_t group_id)
 {
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
-		fprintf(stderr, "%s: invalid group ID %d\n", __func__, group_id);
+		SPDK_ERRLOG("%s: invalid group ID %d\n", __func__, group_id);
 		return 0ULL;
 	}
 
@@ -79,7 +65,7 @@ void
 spdk_trace_set_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
-		fprintf(stderr, "%s: invalid group ID %d\n", __func__, group_id);
+		SPDK_ERRLOG("%s: invalid group ID %d\n", __func__, group_id);
 		return;
 	}
 
@@ -90,7 +76,7 @@ void
 spdk_trace_clear_tpoints(uint32_t group_id, uint64_t tpoint_mask)
 {
 	if (group_id >= SPDK_TRACE_MAX_GROUP_ID) {
-		fprintf(stderr, "%s: invalid group ID %d\n", __func__, group_id);
+		SPDK_ERRLOG("%s: invalid group ID %d\n", __func__, group_id);
 		return;
 	}
 
@@ -172,4 +158,9 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 {
 	reg_fn->next = g_reg_fn_head;
 	g_reg_fn_head = reg_fn;
+}
+
+void spdk_trace_configure_env(struct spdk_trace_env *env)
+{
+	g_trace_env = *env;
 }
