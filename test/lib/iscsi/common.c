@@ -6,6 +6,7 @@
 #include "spdk/event.h"
 
 #include "spdk_internal/log.h"
+#include "log/log_syslog.c"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
 

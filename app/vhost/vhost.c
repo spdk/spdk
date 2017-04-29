@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include "spdk/log.h"
+#include "spdk_internal/log_syslog.h"
 #include "spdk/conf.h"
 #include "spdk/event.h"
 

@@ -37,6 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/nvmf
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
 SPDK_LIB_LIST = util log

@@ -32,6 +32,7 @@
 
 #include "spdk_cunit.h"
 
+#include "log/log_syslog.c"
 #include "scsi_nvme.c"
 
 static int

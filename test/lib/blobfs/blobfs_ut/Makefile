@@ -38,7 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 APP = blobfs_ut
 
 C_SRCS := blobfs_ut.c
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/blobfs -I$(SPDK_ROOT_DIR)/lib/blob
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/blobfs -I$(SPDK_ROOT_DIR)/lib/blob -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
 SPDK_LIB_LIST = blob log util

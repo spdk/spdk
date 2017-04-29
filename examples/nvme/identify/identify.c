@@ -39,6 +39,7 @@
 #include <string.h>
 
 #include "spdk/log.h"
+#include "spdk_internal/log_syslog.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/nvme_intel.h"

@@ -38,6 +38,7 @@
 
 #include "spdk_cunit.h"
 
+#include "log/log_syslog.c"
 #include "discovery.c"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)

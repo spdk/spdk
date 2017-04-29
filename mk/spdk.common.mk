@@ -129,12 +129,12 @@ DEPFLAGS = -MMD -MP -MF $*.d.tmp
 COMPILE_C=\
 	$(Q)echo "  CC $S/$@"; \
 	$(CC) -o $@ $(DEPFLAGS) $(CFLAGS) -c $< && \
-	mv -f $*.d.tmp $*.d
+	mv -f $*.d.tmp $*.d;touch -c $@
 
 COMPILE_CXX=\
 	$(Q)echo "  CXX $S/$@"; \
 	$(CXX) -o $@ $(DEPFLAGS) $(CXXFLAGS) -c $< && \
-	mv -f $*.d.tmp $*.d
+	mv -f $*.d.tmp $*.d;touch -c $@
 
 # Link $(OBJS) and $(LIBS) into $@ (app)
 LINK_C=\

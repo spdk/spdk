@@ -47,6 +47,7 @@ struct spdk_trace_flag {
 	const char *name;
 	bool enabled;
 };
+extern TAILQ_HEAD(spdk_trace_flag_head, spdk_trace_flag) g_trace_flags;
 
 void spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag);
 
@@ -85,5 +86,37 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 #define SPDK_TRACELOG(...) do { } while (0)
 #define SPDK_TRACEDUMP(...) do { } while (0)
 #endif
+
+enum spdk_log_priority {
+	SPDK_LOG_NOTICE,	/* normal but significant condition */
+	SPDK_LOG_WARN,		/* warning conditions */
+	SPDK_LOG_INFO,		/* informational */
+	SPDK_LOG_ERR,		/* error */
+	SPDK_LOG_TRACE		/* debug-level messages */
+};
+
+typedef void (*spdk_open_log_fn)(void);
+typedef void (*spdk_close_log_fn)(void);
+typedef void (*spdk_log_fn)(enum spdk_log_priority sev, const char *flag, const char *file,
+			    const int line, const char *func, const char *format, va_list ap);
+typedef void (*spdk_trace_dump_fn)(const char *label, const uint8_t *buf, size_t len);
+
+struct spdk_log_env {
+	spdk_open_log_fn open_log;
+	spdk_close_log_fn close_log;
+	spdk_log_fn log_fn;
+	spdk_trace_dump_fn trace_dump;
+};
+
+extern struct spdk_log_env g_log_env;
+void spdk_log_configure_env(spdk_open_log_fn open_fn, spdk_close_log_fn close_fn,
+			    spdk_log_fn init_fn, spdk_trace_dump_fn cleanup_fn);
+
+#define SPDK_LOG_MODULE_REGISTER(open_fn, close_fn, init_fn, cleanup_fn)			\
+	__attribute__((constructor)) static void open_fn ## _init(void)  			\
+	{                                                           				\
+	    spdk_log_configure_env(open_fn, close_fn, init_fn, cleanup_fn);					\
+	}
+
 
 #endif /* SPDK_INTERNAL_LOG_H */

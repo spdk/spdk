@@ -43,6 +43,7 @@ const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_discovery_ctrlr_ops;
 
+#include "log/log_syslog.c"
 #include "subsystem.c"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)

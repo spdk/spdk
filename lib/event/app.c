@@ -32,6 +32,7 @@
  */
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/log_syslog.h"
 
 #include <assert.h>
 #include <stdio.h>
