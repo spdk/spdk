@@ -194,7 +194,7 @@ struct spdk_nvmf_rdma_listen_addr {
 struct spdk_nvmf_rdma {
 	struct rdma_event_channel	*event_channel;
 
-	pthread_mutex_t 		lock;
+	spdk_mutex_t 		lock;
 
 	uint16_t 			max_queue_depth;
 	uint32_t 			max_io_size;
@@ -204,7 +204,7 @@ struct spdk_nvmf_rdma {
 };
 
 static struct spdk_nvmf_rdma g_rdma = {
-	.lock = PTHREAD_MUTEX_INITIALIZER,
+	.lock = SPDK_MUTEX_INITIALIZER,
 	.listen_addrs = TAILQ_HEAD_INITIALIZER(g_rdma.listen_addrs),
 };
 
@@ -923,7 +923,7 @@ spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 
 	SPDK_NOTICELOG("*** RDMA Transport Init ***\n");
 
-	pthread_mutex_lock(&g_rdma.lock);
+	spdk_mutex_lock(&g_rdma.lock);
 	g_rdma.max_queue_depth = max_queue_depth;
 	g_rdma.max_io_size = max_io_size;
 	g_rdma.in_capsule_data_size = in_capsule_data_size;
@@ -931,18 +931,18 @@ spdk_nvmf_rdma_init(uint16_t max_queue_depth, uint32_t max_io_size,
 	g_rdma.event_channel = rdma_create_event_channel();
 	if (g_rdma.event_channel == NULL) {
 		SPDK_ERRLOG("rdma_create_event_channel() failed, %s\n", strerror(errno));
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
 	rc = fcntl(g_rdma.event_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
 		SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
-	pthread_mutex_unlock(&g_rdma.lock);
+	spdk_mutex_unlock(&g_rdma.lock);
 	return 0;
 }
 
@@ -960,13 +960,13 @@ spdk_nvmf_rdma_listen_addr_free(struct spdk_nvmf_rdma_listen_addr *addr)
 static int
 spdk_nvmf_rdma_fini(void)
 {
-	pthread_mutex_lock(&g_rdma.lock);
+	spdk_mutex_lock(&g_rdma.lock);
 
 	assert(TAILQ_EMPTY(&g_rdma.listen_addrs));
 	if (g_rdma.event_channel != NULL) {
 		rdma_destroy_event_channel(g_rdma.event_channel);
 	}
-	pthread_mutex_unlock(&g_rdma.lock);
+	spdk_mutex_unlock(&g_rdma.lock);
 
 	return 0;
 }
@@ -976,7 +976,7 @@ spdk_nvmf_rdma_listen_remove(struct spdk_nvmf_listen_addr *listen_addr)
 {
 	struct spdk_nvmf_rdma_listen_addr *addr, *tmp;
 
-	pthread_mutex_lock(&g_rdma.lock);
+	spdk_mutex_lock(&g_rdma.lock);
 	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, tmp) {
 		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
 		    (!strcasecmp(addr->trsvcid, listen_addr->trsvcid))) {
@@ -992,7 +992,7 @@ spdk_nvmf_rdma_listen_remove(struct spdk_nvmf_listen_addr *listen_addr)
 		}
 	}
 
-	pthread_mutex_unlock(&g_rdma.lock);
+	spdk_mutex_unlock(&g_rdma.lock);
 	return 0;
 }
 
@@ -1034,13 +1034,13 @@ spdk_nvmf_rdma_acceptor_poll(void)
 		return;
 	}
 
-	pthread_mutex_lock(&g_rdma.lock);
+	spdk_mutex_lock(&g_rdma.lock);
 	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, addr_tmp) {
 		if (!addr->is_listened) {
 			spdk_nvmf_rdma_addr_listen_init(addr);
 		}
 	}
-	pthread_mutex_unlock(&g_rdma.lock);
+	spdk_mutex_unlock(&g_rdma.lock);
 
 	/* Process pending connections for incoming capsules. The only capsule
 	 * this should ever find is a CONNECT request. */
@@ -1103,35 +1103,35 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	struct sockaddr_in saddr;
 	int rc;
 
-	pthread_mutex_lock(&g_rdma.lock);
+	spdk_mutex_lock(&g_rdma.lock);
 	assert(g_rdma.event_channel != NULL);
 	TAILQ_FOREACH(addr, &g_rdma.listen_addrs, link) {
 		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
 		    (!strcasecmp(addr->trsvcid, listen_addr->trsvcid))) {
 			addr->ref++;
 			/* Already listening at this address */
-			pthread_mutex_unlock(&g_rdma.lock);
+			spdk_mutex_unlock(&g_rdma.lock);
 			return 0;
 		}
 	}
 
 	addr = spdk_calloc(1, sizeof(*addr));
 	if (!addr) {
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
 	addr->traddr = spdk_strdup(listen_addr->traddr);
 	if (!addr->traddr) {
 		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
 	addr->trsvcid = spdk_strdup(listen_addr->trsvcid);
 	if (!addr->trsvcid) {
 		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
@@ -1139,7 +1139,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_create_id() failed\n");
 		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
@@ -1152,7 +1152,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		SPDK_ERRLOG("rdma_bind_addr() failed\n");
 		rdma_destroy_id(addr->id);
 		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
@@ -1161,7 +1161,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
 		rdma_destroy_id(addr->id);
 		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
@@ -1170,7 +1170,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		SPDK_ERRLOG("Failed to create completion channel\n");
 		rdma_destroy_id(addr->id);
 		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "For listen id %p with context %p, created completion channel %p\n",
@@ -1182,14 +1182,14 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		rdma_destroy_id(addr->id);
 		ibv_destroy_comp_channel(addr->comp_channel);
 		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
+		spdk_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
 
 	addr->ref = 1;
 	TAILQ_INSERT_TAIL(&g_rdma.listen_addrs, addr, link);
-	pthread_mutex_unlock(&g_rdma.lock);
+	spdk_mutex_unlock(&g_rdma.lock);
 
 
 	return 0;
