@@ -486,7 +486,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 		cp->current_section = sp;
 		sp->name = spdk_strdup(key);
 		if (sp->name == NULL) {
-			perror("spdk_strdup sp->name");
+			SPDK_ERRLOG("spdk_strdup sp->name");
 			return -1;
 		}
 
@@ -512,7 +512,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 		append_cf_item(sp, ip);
 		ip->key = spdk_strdup(key);
 		if (ip->key == NULL) {
-			perror("spdk_strdup ip->key");
+			SPDK_ERRLOG("spdk_strdup ip->key");
 			return -1;
 		}
 		ip->val = NULL;
@@ -528,7 +528,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 				append_cf_value(ip, vp);
 				vp->value = spdk_strdup(val);
 				if (vp->value == NULL) {
-					perror("spdk_strdup vp->value");
+					SPDK_ERRLOG("spdk_strdup vp->value");
 					return -1;
 				}
 			}
@@ -552,7 +552,7 @@ fgets_line(FILE *fp)
 	dst[0] = '\0';
 	total = 0;
 
-	while (fgets(p, LIB_MAX_TMPBUF, fp) != NULL) {
+	while (spdk_fgets(p, LIB_MAX_TMPBUF, fp) != NULL) {
 		len = strlen(p);
 		total += len;
 		if (len + 1 < LIB_MAX_TMPBUF || dst[total - 1] == '\n') {
@@ -576,7 +576,7 @@ fgets_line(FILE *fp)
 		p = dst + total;
 	}
 
-	if (feof(fp) && total != 0) {
+	if (spdk_feof(fp) && total != 0) {
 		dst2 = spdk_realloc(dst, total + 2);
 		if (!dst2) {
 			spdk_free(dst);
@@ -608,7 +608,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 		return -1;
 	}
 
-	fp = fopen(file, "r");
+	fp = spdk_fopen(file, "r");
 	if (fp == NULL) {
 		SPDK_ERRLOG("open error: %s\n", file);
 		return -1;
@@ -616,8 +616,8 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 
 	cp->file = spdk_strdup(file);
 	if (cp->file == NULL) {
-		perror("spdk_strdup cp->file");
-		fclose(fp);
+		SPDK_ERRLOG("spdk_strdup cp->file");
+		spdk_fclose(fp);
 		return -1;
 	}
 
@@ -648,7 +648,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 				spdk_free(lp2);
 				spdk_free(lp);
 				SPDK_ERRLOG("spdk_malloc failed at line %d of %s\n", line, cp->file);
-				fclose(fp);
+				spdk_fclose(fp);
 				return -1;
 			}
 
@@ -670,7 +670,7 @@ next_line:
 		spdk_free(lp);
 	}
 
-	fclose(fp);
+	spdk_fclose(fp);
 	return 0;
 }
 
