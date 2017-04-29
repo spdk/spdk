@@ -297,12 +297,14 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	spdk_log_set_print_level(opts->print_level);
 
+#ifndef SPDK_NO_RLIMIT
 	if (opts->enable_coredump) {
 		struct rlimit core_limits;
 
 		core_limits.rlim_cur = core_limits.rlim_max = RLIM_INFINITY;
 		setrlimit(RLIMIT_CORE, &core_limits);
 	}
+#endif
 
 	config = spdk_conf_allocate();
 	assert(config != NULL);
