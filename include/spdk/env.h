@@ -161,6 +161,8 @@ void spdk_memzone_dump(FILE *f);
 
 struct spdk_mempool;
 
+#define SPDK_MEMPOOL_CACHE_MAX_SIZE 512
+
 /**
  * Create a thread-safe memory pool. Cache size is the number of
  * elements in a thread-local cache. Can be 0 for no caching, or -1
@@ -190,6 +192,11 @@ void spdk_mempool_put(struct spdk_mempool *mp, void *ele);
  * Put multiple elements back into the memory pool.
  */
 void spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count);
+
+/**
+ * Return the number of entries in the mempool.
+ */
+unsigned spdk_mempool_avail_count(const struct spdk_mempool *pool);
 
 /**
  * \brief Return the number of dedicated CPU cores utilized by

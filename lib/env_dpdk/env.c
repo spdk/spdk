@@ -55,6 +55,8 @@
  */
 
 SPDK_STATIC_ASSERT(SPDK_MAX_LCORE == RTE_MAX_LCORE, "SPDK_MAX_LCORE != RTE_MAX_LCORE");
+SPDK_STATIC_ASSERT(SPDK_MEMPOOL_CACHE_MAX_SIZE == RTE_MEMPOOL_CACHE_MAX_SIZE,
+		   "SPDK_MEMPOOL_CACHE_MAX_SIZE != RTE_MEMPOOL_CACHE_MAX_SIZE");
 
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
@@ -197,6 +199,16 @@ void
 spdk_mempool_put_bulk(struct spdk_mempool *mp, void *const *ele_arr, size_t count)
 {
 	rte_mempool_put_bulk((struct rte_mempool *)mp, ele_arr, count);
+}
+
+unsigned
+spdk_mempool_avail_count(const struct spdk_mempool *pool)
+{
+#if RTE_VERSION < RTE_VERSION_NUM(16, 7, 0, 1)
+	return rte_mempool_count((struct rte_mempool *)pool);
+#else
+	return rte_mempool_avail_count((struct rte_mempool *)pool);
+#endif
 }
 
 bool
