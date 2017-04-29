@@ -867,6 +867,12 @@ int spdk_get_lcore_state(unsigned lcore_id);
 int spdk_remote_launch(int (*f)(void *), void *arg, unsigned slave_id);
 
 /**
+ * Memcpy
+ */
+void
+spdk_memcpy(void *dst, const void *src, int len);
+
+/**
  * Page-granularity memory address translation table
  */
 struct spdk_mem_map;

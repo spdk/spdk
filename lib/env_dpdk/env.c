@@ -357,6 +357,15 @@ spdk_remote_launch(int (*f)(void *), void *arg, unsigned slave_id)
 	return rte_eal_remote_launch(f, arg, slave_id);
 }
 
+/**
+ * Memcpy
+ */
+void
+spdk_memcpy(void *dst, const void *src, int len)
+{
+	rte_memcpy(dst, src, len);
+}
+
 extern struct rte_tailq_elem rte_ring_tailq;
 
 /**
