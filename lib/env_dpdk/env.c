@@ -38,6 +38,7 @@
 
 
 #include "spdk/env.h"
+#include "spdk/assert.h"
 #include <string.h>
 #include <unistd.h>
 
@@ -47,6 +48,13 @@
 #include <rte_mempool.h>
 #include <rte_memzone.h>
 #include <rte_version.h>
+#include <rte_lcore.h>
+
+/*
+ * Insure the definitions in spdk/env.h are equivelant to the DPDK definitions.
+ */
+
+SPDK_STATIC_ASSERT(SPDK_MAX_LCORE == RTE_MAX_LCORE, "SPDK_MAX_LCORE != RTE_MAX_LCORE");
 
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
@@ -241,6 +249,100 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 	rte_thread_set_affinity(&orig_cpuset);
 
 	return ret;
+}
+
+/**
+ * Return the ID of the execution unit we are running on.
+ */
+unsigned
+spdk_lcore_id(void)
+{
+	return rte_lcore_id();
+}
+
+/**
+ * Get the id of the master lcore
+ */
+unsigned
+spdk_get_master_lcore(void)
+{
+	return rte_get_master_lcore();
+}
+
+/**
+ * Get the ID of the physical socket of the specified lcore
+ */
+unsigned
+spdk_lcore_to_socket_id(unsigned lcore_id)
+{
+	return rte_lcore_to_socket_id(lcore_id);
+}
+
+/**
+ * Test if an lcore is enabled.
+ */
+int
+spdk_lcore_is_enabled(unsigned lcore_id)
+{
+	return rte_lcore_is_enabled(lcore_id);
+}
+
+/**
+ * Return the number of execution units (lcores) on the system.
+ */
+unsigned
+spdk_lcore_count(void)
+{
+	return rte_lcore_count();
+}
+
+/**
+ * Get the next enabled lcore ID.
+ */
+unsigned
+spdk_get_next_lcore(unsigned i, int skip_master, int wrap)
+{
+	return rte_get_next_lcore(i, skip_master, wrap);
+}
+
+
+/**
+ * Wait for all  lcores to finish processing their jobs.
+ */
+void
+spdk_mp_wait_lcore(void)
+{
+	rte_eal_mp_wait_lcore();
+}
+
+/**
+ * Return the state of the lcore identified by slave_id.
+ */
+int
+spdk_get_lcore_state(unsigned lcore_id)
+{
+	return (int) rte_eal_get_lcore_state(lcore_id);
+}
+
+
+/**
+ * Wait until a lcore finished its job.
+ */
+int
+spdk_wait_lcore(unsigned slave_id)
+{
+	return rte_eal_wait_lcore(slave_id);
+}
+
+/**
+ * Send a message to a slave lcore identified by slave_id to call a
+ * function f with argument arg. Once the execution is done, the
+ * remote lcore switch in FINISHED state.
+ */
+int
+spdk_remote_launch(int (*f)(void *), void *arg, unsigned slave_id)
+{
+	return rte_eal_remote_launch(f, arg, slave_id);
 }
 
 extern struct rte_tailq_elem rte_ring_tailq;

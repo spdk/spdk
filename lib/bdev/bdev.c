@@ -39,7 +39,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <rte_config.h>
 #include <rte_mempool.h>
 #include <rte_version.h>
 
@@ -60,8 +59,8 @@ static struct rte_mempool *g_rbuf_small_pool = NULL;
 static struct rte_mempool *g_rbuf_large_pool = NULL;
 
 typedef TAILQ_HEAD(, spdk_bdev_io) need_rbuf_tailq_t;
-static need_rbuf_tailq_t g_need_rbuf_small[RTE_MAX_LCORE];
-static need_rbuf_tailq_t g_need_rbuf_large[RTE_MAX_LCORE];
+static need_rbuf_tailq_t g_need_rbuf_small[SPDK_MAX_LCORE];
+static need_rbuf_tailq_t g_need_rbuf_large[SPDK_MAX_LCORE];
 
 static TAILQ_HEAD(, spdk_bdev_module_if) spdk_bdev_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_bdev_module_list);
@@ -139,10 +138,10 @@ spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 
 	if (length <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
 		pool = g_rbuf_small_pool;
-		tailq = &g_need_rbuf_small[rte_lcore_id()];
+		tailq = &g_need_rbuf_small[spdk_lcore_id()];
 	} else {
 		pool = g_rbuf_large_pool;
-		tailq = &g_need_rbuf_large[rte_lcore_id()];
+		tailq = &g_need_rbuf_large[spdk_lcore_id()];
 	}
 
 	if (TAILQ_EMPTY(tailq)) {
@@ -290,7 +289,7 @@ spdk_bdev_initialize(void)
 		return -1;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE; i++) {
 		TAILQ_INIT(&g_need_rbuf_small[i]);
 		TAILQ_INIT(&g_need_rbuf_large[i]);
 	}
@@ -375,10 +374,10 @@ _spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io)
 
 	if (len <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
 		pool = g_rbuf_small_pool;
-		tailq = &g_need_rbuf_small[rte_lcore_id()];
+		tailq = &g_need_rbuf_small[spdk_lcore_id()];
 	} else {
 		pool = g_rbuf_large_pool;
-		tailq = &g_need_rbuf_large[rte_lcore_id()];
+		tailq = &g_need_rbuf_large[spdk_lcore_id()];
 	}
 
 	rc = rte_mempool_get(pool, (void **)&buf);
@@ -395,16 +394,16 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_small[rte_lcore_id()], rbuf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_small[spdk_lcore_id()], rbuf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_rbuf_small[rte_lcore_id()], bdev_io, rbuf_link);
+			TAILQ_REMOVE(&g_need_rbuf_small[spdk_lcore_id()], bdev_io, rbuf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_large[rte_lcore_id()], rbuf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_large[spdk_lcore_id()], rbuf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_rbuf_large[rte_lcore_id()], bdev_io, rbuf_link);
+			TAILQ_REMOVE(&g_need_rbuf_large[spdk_lcore_id()], bdev_io, rbuf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
