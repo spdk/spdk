@@ -89,4 +89,16 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn);
 
 int spdk_nvmf_tgt_start(struct spdk_app_opts *opts);
 
+/**
+ * \brief Register a poller on the given lcore.
+ */
+void nvmf_tgt_poller_register(spdk_poller_fn fn,
+			      void *arg,
+			      uint32_t lcore,
+			      uint64_t period_microseconds);
+
+/* This function can only be used before the pollers are started. */
+void nvmf_tgt_delete_subsystems(void);
+void spdk_nvmf_shutdown_cb(void);
+
 #endif

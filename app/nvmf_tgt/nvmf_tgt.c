@@ -99,7 +99,7 @@ acceptor_poller_unregistered_event(void *arg1, void *arg2)
 	shutdown_subsystems();
 }
 
-static void
+void
 spdk_nvmf_shutdown_cb(void)
 {
 	struct spdk_event *event;
@@ -219,7 +219,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 }
 
 /* This function can only be used before the pollers are started. */
-static void
+void
 nvmf_tgt_delete_subsystems(void)
 {
 	struct nvmf_tgt_subsystem *app_subsys, *tmp;
@@ -259,6 +259,16 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 	return -1;
 }
 
+void nvmf_tgt_poller_register(spdk_poller_fn fn,
+			      void *arg,
+			      uint32_t lcore,
+			      uint64_t period_microseconds)
+{
+
+	spdk_poller_register(&g_acceptor_poller, fn, arg,
+			     lcore, period_microseconds);
+}
+
 static void
 acceptor_poll(void *arg)
 {
@@ -281,9 +291,9 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 		goto initialize_error;
 	}
 
-	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
-			     g_spdk_nvmf_tgt_conf.acceptor_lcore,
-			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
+	nvmf_tgt_poller_register(acceptor_poll, NULL,
+				 g_spdk_nvmf_tgt_conf.acceptor_lcore,
+				 g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 
 	SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,
 		       spdk_env_get_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
