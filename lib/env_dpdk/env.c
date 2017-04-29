@@ -330,10 +330,24 @@ spdk_mp_wait_lcore(void)
 /**
  * Return the state of the lcore identified by slave_id.
  */
-int
-spdk_get_lcore_state(unsigned lcore_id)
-{
-	return (int) rte_eal_get_lcore_state(lcore_id);
+enum spdk_lcore_state_t
+spdk_get_lcore_state(unsigned lcore_id) {
+	enum spdk_lcore_state_t ret = SPDK_LCORE_STATE_FINISHED;
+	switch (rte_eal_get_lcore_state(lcore_id))
+	{
+	case WAIT:
+		ret = SPDK_LCORE_STATE_WAIT;
+		break;
+	case RUNNING:
+		ret = SPDK_LCORE_STATE_RUNNING;
+		break;
+	case FINISHED:
+		ret = SPDK_LCORE_STATE_FINISHED;
+		break;
+	default:
+		break;
+	}
+	return ret;
 }
 
 

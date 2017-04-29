@@ -883,9 +883,18 @@ int spdk_wait_lcore(unsigned slave_id);
 void spdk_mp_wait_lcore(void);
 
 /**
+ * State of an lcore.
+ */
+enum spdk_lcore_state_t {
+	SPDK_LCORE_STATE_WAIT,       /**< waiting a new command */
+	SPDK_LCORE_STATE_RUNNING,    /**< executing command */
+	SPDK_LCORE_STATE_FINISHED,   /**< command executed */
+};
+
+/**
  * Get the current state of the lcore.
  */
-int spdk_get_lcore_state(unsigned lcore_id);
+enum spdk_lcore_state_t spdk_get_lcore_state(unsigned lcore_id);
 
 /**
  * Send a message to a slave lcore identified by slave_id to call a
