@@ -107,29 +107,29 @@ spdk_nvmf_listen_addr_create(const char *trname, const char *traddr, const char 
 		return NULL;
 	}
 
-	listen_addr = calloc(1, sizeof(*listen_addr));
+	listen_addr = spdk_calloc(1, sizeof(*listen_addr));
 	if (!listen_addr) {
 		return NULL;
 	}
 
-	listen_addr->traddr = strdup(traddr);
+	listen_addr->traddr = spdk_strdup(traddr);
 	if (!listen_addr->traddr) {
-		free(listen_addr);
+		spdk_free(listen_addr);
 		return NULL;
 	}
 
-	listen_addr->trsvcid = strdup(trsvcid);
+	listen_addr->trsvcid = spdk_strdup(trsvcid);
 	if (!listen_addr->trsvcid) {
-		free(listen_addr->traddr);
-		free(listen_addr);
+		spdk_free(listen_addr->traddr);
+		spdk_free(listen_addr);
 		return NULL;
 	}
 
-	listen_addr->trname = strdup(trname);
+	listen_addr->trname = spdk_strdup(trname);
 	if (!listen_addr->trname) {
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr);
+		spdk_free(listen_addr->traddr);
+		spdk_free(listen_addr->trsvcid);
+		spdk_free(listen_addr);
 		return NULL;
 	}
 
@@ -151,10 +151,10 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 void
 spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr)
 {
-	free(addr->trname);
-	free(addr->trsvcid);
-	free(addr->traddr);
-	free(addr);
+	spdk_free(addr->trname);
+	spdk_free(addr->trsvcid);
+	spdk_free(addr->traddr);
+	spdk_free(addr);
 }
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace)

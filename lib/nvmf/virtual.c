@@ -129,7 +129,7 @@ nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_
 	int				sc, sct;
 
 	if (cmd->opc == SPDK_NVME_OPC_DATASET_MANAGEMENT) {
-		free(req->unmap_bdesc);
+		spdk_free(req->unmap_bdesc);
 	}
 
 	spdk_bdev_io_get_nvme_status(bdev_io, &sc, &sct);
@@ -458,7 +458,7 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	attribute = cmd->cdw11 & 0x00000007;
 	if (attribute & SPDK_NVME_DSM_ATTR_DEALLOCATE) {
 		struct spdk_nvme_dsm_range *dsm_range = (struct spdk_nvme_dsm_range *)req->data;
-		unmap = calloc(nr, sizeof(*unmap));
+		unmap = spdk_calloc(nr, sizeof(*unmap));
 		if (unmap == NULL) {
 			SPDK_ERRLOG("memory allocation failure\n");
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -470,7 +470,7 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			to_be32(&unmap[i].block_count, dsm_range[i].length);
 		}
 		if (spdk_bdev_unmap(bdev, ch, unmap, nr, nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
-			free(unmap);
+			spdk_free(unmap);
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}

@@ -316,7 +316,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		if (conn->transport->session_add_conn(session, conn)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			conn->transport->session_fini(session);
-			free(session);
+			spdk_free(session);
 			return;
 		}
 

@@ -34,6 +34,7 @@
 #ifndef SPDK_JSON_INTERNAL_H_
 #define SPDK_JSON_INTERNAL_H_
 
+#include "spdk/env.h"
 #include "spdk/json.h"
 
 #include <stdarg.h>

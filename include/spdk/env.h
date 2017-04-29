@@ -77,10 +77,7 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <env_system.h>
 
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
 
@@ -108,6 +105,37 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
  * any other functions in this library.
  */
 void spdk_env_init(const struct spdk_env_opts *opts);
+
+/**
+ * \brief Allocates size bytes and returns a pointer to the allocated memory.
+ * The memory is not cleared.  If size is 0, then malloc() returns NULL
+ */
+void *spdk_malloc(size_t size);
+
+/**
+ * \brief Changes the size of the memory block pointed to by ptr to size bytes.
+ * The contents will be unchanged to the minimum of the old and new sizes
+ */
+void *spdk_realloc(void *buf, size_t size);
+
+/**
+ * \brief Allocates memory for an array of nmemb elements of size bytes each and
+ * returns a pointer to the allocated memory.  The memory is set to zero.
+ */
+void *spdk_calloc(size_t nmemb, size_t size);
+
+/**
+ * \brief Frees the memory space pointed to by ptr, which must have been returned
+ * by a previous call to spdk_malloc(), spdk_calloc() or spdk_realloc()
+ */
+void spdk_free(void *ptr);
+
+/**
+ * \brief Returns a pointer to a new string which is a duplicate of the string s.
+ * Memory for the new string is obtained with spdk_malloc, and can be freed
+ * with spdk_free
+ */
+void *spdk_strdup(const char *s);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
@@ -934,6 +962,16 @@ void spdk_mem_register(void *vaddr, size_t len);
  *  are completed or cancelled before calling this function.
  */
 void spdk_mem_unregister(void *vaddr, size_t len);
+
+/**
+ * Signal abnormal termination of process
+ */
+void spdk_abort(void) __attribute__((__noreturn__));
+
+/**
+ * Termination the process
+ */
+void spdk_exit(int status) __attribute__((__noreturn__));
 
 #ifdef __cplusplus
 }

@@ -266,7 +266,7 @@ _spdk_poller_unregister_complete(struct spdk_poller *poller)
 		spdk_event_call(poller->unregister_complete_event);
 	}
 
-	free(poller);
+	spdk_free(poller);
 }
 
 /**
@@ -576,7 +576,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 				 * Instead of failing the operation directly, try to create
 				 * the mempool on any available sockets in the case that
 				 * memory is not evenly installed on all sockets. If still
-				 * fails, free all allocated memory and exits.
+				 * fails, spdk_free all allocated memory and exits.
 				 */
 				g_spdk_event_mempool[i] = spdk_mempool_create(
 								  mempool_name,
@@ -657,10 +657,10 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 	struct spdk_poller *poller;
 	struct spdk_reactor *reactor;
 
-	poller = calloc(1, sizeof(*poller));
+	poller = spdk_calloc(1, sizeof(*poller));
 	if (poller == NULL) {
 		SPDK_ERRLOG("Poller memory allocation failed\n");
-		abort();
+		spdk_abort();
 	}
 
 	poller->lcore = lcore;
@@ -676,13 +676,13 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 
 	if (*ppoller != NULL) {
 		SPDK_ERRLOG("Attempted reuse of poller pointer\n");
-		abort();
+		spdk_abort();
 	}
 
 	if (lcore >= RTE_MAX_LCORE) {
 		SPDK_ERRLOG("Attempted use lcore %u larger than max lcore %u\n",
 			    lcore, RTE_MAX_LCORE - 1);
-		abort();
+		spdk_abort();
 	}
 
 	*ppoller = poller;
@@ -715,11 +715,11 @@ _spdk_poller_unregister(struct spdk_reactor *reactor, struct spdk_poller *poller
 	if (poller->state == SPDK_POLLER_STATE_RUNNING) {
 		/*
 		 * We are being called from the poller_fn, so set the state to unregistered
-		 * and let the reactor loop free the poller.
+		 * and let the reactor loop spdk_free the poller.
 		 */
 		poller->state = SPDK_POLLER_STATE_UNREGISTERED;
 	} else {
-		/* Poller is not running currently, so just free it. */
+		/* Poller is not running currently, so just spdk_free it. */
 		if (poller->period_ticks) {
 			TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
 		} else {

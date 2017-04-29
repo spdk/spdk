@@ -171,14 +171,14 @@ size_t spdk_json_val_len(const struct spdk_json_val *val);
 bool spdk_json_strequal(const struct spdk_json_val *val, const char *str);
 
 /**
- * Equivalent of strdup() for JSON string values.
+ * Equivalent of spdk_strdup() for JSON string values.
  *
  * If val is not representable as a C string (contains embedded '\0' characters),
  * returns NULL.
  *
- * Caller is responsible for passing the result to free() when it is no longer needed.
+ * Caller is responsible for passing the result to spdk_free() when it is no longer needed.
  */
-char *spdk_json_strdup(const struct spdk_json_val *val);
+char *spdk_json_spdk_strdup(const struct spdk_json_val *val);
 
 int spdk_json_number_to_double(const struct spdk_json_val *val, double *num);
 int spdk_json_number_to_int32(const struct spdk_json_val *val, int32_t *num);

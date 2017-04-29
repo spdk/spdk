@@ -34,6 +34,7 @@
 #ifndef __NVME_INTERNAL_H__
 #define __NVME_INTERNAL_H__
 
+#include "spdk/env.h"
 #include "spdk/nvme.h"
 
 #include <errno.h>

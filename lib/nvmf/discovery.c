@@ -67,7 +67,7 @@ nvmf_update_discovery_log(void)
 		      g_nvmf_tgt.discovery_genctr);
 
 	cur_size = sizeof(struct spdk_nvmf_discovery_log_page);
-	disc_log = calloc(1, cur_size);
+	disc_log = spdk_calloc(1, cur_size);
 	if (disc_log == NULL) {
 		SPDK_ERRLOG("Discovery log page memory allocation error\n");
 		return;
@@ -80,7 +80,7 @@ nvmf_update_discovery_log(void)
 
 		TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
 			size_t new_size = cur_size + sizeof(*entry);
-			void *new_log_page = realloc(disc_log, new_size);
+			void *new_log_page = spdk_realloc(disc_log, new_size);
 
 			if (new_log_page == NULL) {
 				SPDK_ERRLOG("Discovery log page memory allocation error\n");
@@ -112,7 +112,7 @@ nvmf_update_discovery_log(void)
 	disc_log->numrec = numrec;
 	disc_log->genctr = g_nvmf_tgt.discovery_genctr;
 
-	free(g_nvmf_tgt.discovery_log_page);
+	spdk_free(g_nvmf_tgt.discovery_log_page);
 
 	g_nvmf_tgt.discovery_log_page = disc_log;
 	g_nvmf_tgt.discovery_log_page_size = cur_size;
@@ -222,7 +222,7 @@ static int
 nvmf_discovery_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	/* Discovery controllers do not support I/O queues, so this code should be unreachable. */
-	abort();
+	spdk_abort();
 }
 
 static void

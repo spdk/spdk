@@ -49,7 +49,7 @@ extern "C" {
  * sprintf with automatic buffer allocation.
  *
  * The return value is the formatted string,
- * which should be passed to free() when no longer needed,
+ * which should be passed to spdk_free() when no longer needed,
  * or NULL on failure.
  */
 char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 1, 2)));
@@ -58,7 +58,7 @@ char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 
  * vsprintf with automatic buffer allocation.
  *
  * The return value is the formatted string,
- * which should be passed to free() when no longer needed,
+ * which should be passed to spdk_free() when no longer needed,
  * or NULL on failure.
  */
 char *spdk_vsprintf_alloc(const char *format, va_list args);

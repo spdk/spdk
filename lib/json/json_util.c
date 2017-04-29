@@ -65,7 +65,7 @@ spdk_json_strequal(const struct spdk_json_val *val, const char *str)
 }
 
 char *
-spdk_json_strdup(const struct spdk_json_val *val)
+spdk_json_spdk_strdup(const struct spdk_json_val *val)
 {
 	size_t len;
 	char *s;
@@ -81,7 +81,7 @@ spdk_json_strdup(const struct spdk_json_val *val)
 		return NULL;
 	}
 
-	s = malloc(len + 1);
+	s = spdk_malloc(len + 1);
 	if (s == NULL) {
 		return s;
 	}
@@ -167,7 +167,7 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 		return -1;
 	}
 
-	seen = calloc(sizeof(bool), num_decoders);
+	seen = spdk_calloc(sizeof(bool), num_decoders);
 	if (seen == NULL) {
 		return -1;
 	}
@@ -213,7 +213,7 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 		}
 	}
 
-	free(seen);
+	spdk_free(seen);
 	return invalid ? -1 : 0;
 }
 
@@ -284,10 +284,10 @@ spdk_json_decode_string(const struct spdk_json_val *val, void *out)
 	char **s = out;
 
 	if (*s) {
-		free(*s);
+		spdk_free(*s);
 	}
 
-	*s = spdk_json_strdup(val);
+	*s = spdk_json_spdk_strdup(val);
 
 	if (*s) {
 		return 0;

@@ -39,6 +39,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "spdk/env.h"
 #include "spdk/string.h"
 
 char *
@@ -54,7 +55,7 @@ spdk_vsprintf_alloc(const char *format, va_list args)
 
 	/* Limit maximum buffer size to something reasonable so we don't loop forever. */
 	while (bufsize <= 1024 * 1024) {
-		buf = malloc(bufsize);
+		buf = spdk_malloc(bufsize);
 		if (buf == NULL) {
 			return NULL;
 		}
@@ -75,10 +76,10 @@ spdk_vsprintf_alloc(const char *format, va_list args)
 		 * vsnprintf() should return the required space, but some libc versions do not
 		 * implement this correctly, so just double the buffer size and try again.
 		 *
-		 * We don't need the data in buf, so rather than realloc(), use free() and malloc()
+		 * We don't need the data in buf, so rather than spdk_realloc(), use spdk_free() and spdk_malloc()
 		 * again to avoid a copy.
 		 */
-		free(buf);
+		spdk_free(buf);
 		bufsize *= 2;
 	}
 

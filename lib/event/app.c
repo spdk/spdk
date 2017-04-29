@@ -154,7 +154,7 @@ spdk_app_get_running_config(char **config_str, char *name)
 
 	length = ftell(fp);
 
-	*config_str = malloc(length + 1);
+	*config_str = spdk_malloc(length + 1);
 	if (!*config_str) {
 		perror("config_str");
 		fclose(fp);
@@ -257,12 +257,12 @@ spdk_app_init(struct spdk_app_opts *opts)
 		if (rc != 0) {
 			SPDK_ERRLOG("Could not read config file %s\n", opts->config_file);
 			spdk_conf_free(config);
-			exit(EXIT_FAILURE);
+			spdk_exit(EXIT_FAILURE);
 		}
 		if (spdk_conf_first_section(config) == NULL) {
 			SPDK_ERRLOG("Invalid config file %s\n", opts->config_file);
 			spdk_conf_free(config);
-			exit(EXIT_FAILURE);
+			spdk_exit(EXIT_FAILURE);
 		}
 	}
 	spdk_conf_set_as_default(config);
@@ -285,21 +285,21 @@ spdk_app_init(struct spdk_app_opts *opts)
 		if (opts->log_facility == NULL) {
 			SPDK_ERRLOG("NULL logfacility\n");
 			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
+			spdk_exit(EXIT_FAILURE);
 		}
 	}
 	rc = spdk_set_log_facility(opts->log_facility);
 	if (rc < 0) {
 		SPDK_ERRLOG("log facility error\n");
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		spdk_exit(EXIT_FAILURE);
 	}
 
 	rc = spdk_set_log_priority(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	if (rc < 0) {
 		SPDK_ERRLOG("log priority error\n");
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		spdk_exit(EXIT_FAILURE);
 	}
 	spdk_open_log();
 
@@ -335,7 +335,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	if (spdk_reactors_init(opts->max_delay_us)) {
 		SPDK_ERRLOG("Invalid reactor mask.\n");
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		spdk_exit(EXIT_FAILURE);
 	}
 
 	/* setup signal handler thread */
@@ -348,7 +348,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	if (rc < 0) {
 		SPDK_ERRLOG("sigaction(SIGPIPE) failed\n");
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		spdk_exit(EXIT_FAILURE);
 	}
 
 	if (opts->shutdown_cb != NULL) {
@@ -361,7 +361,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 		if (rc < 0) {
 			SPDK_ERRLOG("sigaction(SIGINT) failed\n");
 			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
+			spdk_exit(EXIT_FAILURE);
 		}
 		sigaddset(&signew, SIGINT);
 
@@ -371,7 +371,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 		if (rc < 0) {
 			SPDK_ERRLOG("sigaction(SIGTERM) failed\n");
 			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
+			spdk_exit(EXIT_FAILURE);
 		}
 		sigaddset(&signew, SIGTERM);
 	}
@@ -383,7 +383,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 		if (rc < 0) {
 			SPDK_ERRLOG("sigaction(SIGUSR1) failed\n");
 			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
+			spdk_exit(EXIT_FAILURE);
 		}
 		sigaddset(&signew, SIGUSR1);
 	}
@@ -426,7 +426,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_subsystem_init() failed\n");
 		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
+		spdk_exit(EXIT_FAILURE);
 	}
 }
 

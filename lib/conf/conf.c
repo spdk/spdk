@@ -32,6 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/env.h"
 #include "spdk/conf.h"
 
 #include <ctype.h>
@@ -76,7 +77,7 @@ static struct spdk_conf *default_config = NULL;
 struct spdk_conf *
 spdk_conf_allocate(void)
 {
-	return calloc(1, sizeof(struct spdk_conf));
+	return spdk_calloc(1, sizeof(struct spdk_conf));
 }
 
 static void
@@ -87,10 +88,10 @@ free_conf_value(struct spdk_conf_value *vp)
 	}
 
 	if (vp->value) {
-		free(vp->value);
+		spdk_free(vp->value);
 	}
 
-	free(vp);
+	spdk_free(vp);
 }
 
 static void
@@ -121,10 +122,10 @@ free_conf_item(struct spdk_conf_item *ip)
 	}
 
 	if (ip->key != NULL) {
-		free(ip->key);
+		spdk_free(ip->key);
 	}
 
-	free(ip);
+	spdk_free(ip);
 }
 
 static void
@@ -155,10 +156,10 @@ free_conf_section(struct spdk_conf_section *sp)
 	}
 
 	if (sp->name) {
-		free(sp->name);
+		spdk_free(sp->name);
 	}
 
-	free(sp);
+	spdk_free(sp);
 }
 
 static void
@@ -189,28 +190,28 @@ spdk_conf_free(struct spdk_conf *cp)
 	}
 
 	if (cp->file != NULL) {
-		free(cp->file);
+		spdk_free(cp->file);
 	}
 
-	free(cp);
+	spdk_free(cp);
 }
 
 static struct spdk_conf_section *
 allocate_cf_section(void)
 {
-	return calloc(1, sizeof(struct spdk_conf_section));
+	return spdk_calloc(1, sizeof(struct spdk_conf_section));
 }
 
 static struct spdk_conf_item *
 allocate_cf_item(void)
 {
-	return calloc(1, sizeof(struct spdk_conf_item));
+	return spdk_calloc(1, sizeof(struct spdk_conf_item));
 }
 
 static struct spdk_conf_value *
 allocate_cf_value(void)
 {
-	return calloc(1, sizeof(struct spdk_conf_value));
+	return spdk_calloc(1, sizeof(struct spdk_conf_value));
 }
 
 
@@ -490,9 +491,9 @@ parse_line(struct spdk_conf *cp, char *lp)
 			append_cf_section(cp, sp);
 		}
 		cp->current_section = sp;
-		sp->name = strdup(key);
+		sp->name = spdk_strdup(key);
 		if (sp->name == NULL) {
-			perror("strdup sp->name");
+			perror("spdk_strdup sp->name");
 			return -1;
 		}
 
@@ -516,9 +517,9 @@ parse_line(struct spdk_conf *cp, char *lp)
 			return -1;
 		}
 		append_cf_item(sp, ip);
-		ip->key = strdup(key);
+		ip->key = spdk_strdup(key);
 		if (ip->key == NULL) {
-			perror("strdup ip->key");
+			perror("spdk_strdup ip->key");
 			return -1;
 		}
 		ip->val = NULL;
@@ -532,9 +533,9 @@ parse_line(struct spdk_conf *cp, char *lp)
 					return -1;
 				}
 				append_cf_value(ip, vp);
-				vp->value = strdup(val);
+				vp->value = spdk_strdup(val);
 				if (vp->value == NULL) {
-					perror("strdup vp->value");
+					perror("spdk_strdup vp->value");
 					return -1;
 				}
 			}
@@ -550,7 +551,7 @@ fgets_line(FILE *fp)
 	char *dst, *dst2, *p;
 	size_t total, len;
 
-	dst = p = malloc(LIB_MAX_TMPBUF);
+	dst = p = spdk_malloc(LIB_MAX_TMPBUF);
 	if (!dst) {
 		return NULL;
 	}
@@ -562,18 +563,18 @@ fgets_line(FILE *fp)
 		len = strlen(p);
 		total += len;
 		if (len + 1 < LIB_MAX_TMPBUF || dst[total - 1] == '\n') {
-			dst2 = realloc(dst, total + 1);
+			dst2 = spdk_realloc(dst, total + 1);
 			if (!dst2) {
-				free(dst);
+				spdk_free(dst);
 				return NULL;
 			} else {
 				return dst2;
 			}
 		}
 
-		dst2 = realloc(dst, total + LIB_MAX_TMPBUF);
+		dst2 = spdk_realloc(dst, total + LIB_MAX_TMPBUF);
 		if (!dst2) {
-			free(dst);
+			spdk_free(dst);
 			return NULL;
 		} else {
 			dst = dst2;
@@ -583,9 +584,9 @@ fgets_line(FILE *fp)
 	}
 
 	if (feof(fp) && total != 0) {
-		dst2 = realloc(dst, total + 2);
+		dst2 = spdk_realloc(dst, total + 2);
 		if (!dst2) {
-			free(dst);
+			spdk_free(dst);
 			return NULL;
 		} else {
 			dst = dst2;
@@ -596,7 +597,7 @@ fgets_line(FILE *fp)
 		return dst;
 	}
 
-	free(dst);
+	spdk_free(dst);
 
 	return NULL;
 }
@@ -620,9 +621,9 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 		return -1;
 	}
 
-	cp->file = strdup(file);
+	cp->file = spdk_strdup(file);
 	if (cp->file == NULL) {
-		perror("strdup cp->file");
+		perror("spdk_strdup cp->file");
 		fclose(fp);
 		return -1;
 	}
@@ -649,11 +650,11 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 			line++;
 			n2 = strlen(lp2);
 
-			q = malloc(n + n2 + 1);
+			q = spdk_malloc(n + n2 + 1);
 			if (!q) {
-				free(lp2);
-				free(lp);
-				SPDK_ERRLOG("malloc failed at line %d of %s\n", line, cp->file);
+				spdk_free(lp2);
+				spdk_free(lp);
+				SPDK_ERRLOG("spdk_malloc failed at line %d of %s\n", line, cp->file);
 				fclose(fp);
 				return -1;
 			}
@@ -661,8 +662,8 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 			memcpy(q, p, n);
 			memcpy(q + n, lp2, n2);
 			q[n + n2] = '\0';
-			free(lp2);
-			free(lp);
+			spdk_free(lp2);
+			spdk_free(lp);
 			p = lp = q;
 			n += n2;
 		}
@@ -673,7 +674,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 		}
 next_line:
 		line++;
-		free(lp);
+		spdk_free(lp);
 	}
 
 	fclose(fp);

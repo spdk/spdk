@@ -77,7 +77,7 @@ endif
 
 DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
 
-ENV_CFLAGS = $(DPDK_INC)
+ENV_CFLAGS = $(DPDK_INC) -I$(SPDK_ROOT_DIR)/lib/env_dpdk
 ENV_CXXFLAGS = $(ENV_CFLAGS)
 ENV_DPDK_FILE = $(call spdk_lib_list_to_files,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)

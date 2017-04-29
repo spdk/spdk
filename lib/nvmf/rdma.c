@@ -256,8 +256,8 @@ spdk_nvmf_rdma_conn_destroy(struct spdk_nvmf_rdma_conn *rdma_conn)
 	spdk_dma_free(rdma_conn->cmds);
 	spdk_dma_free(rdma_conn->cpls);
 	spdk_dma_free(rdma_conn->bufs);
-	free(rdma_conn->reqs);
-	free(rdma_conn);
+	spdk_free(rdma_conn->reqs);
+	spdk_free(rdma_conn);
 }
 
 static struct spdk_nvmf_rdma_conn *
@@ -271,7 +271,7 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 
-	rdma_conn = calloc(1, sizeof(struct spdk_nvmf_rdma_conn));
+	rdma_conn = spdk_calloc(1, sizeof(struct spdk_nvmf_rdma_conn));
 	if (rdma_conn == NULL) {
 		SPDK_ERRLOG("Could not allocate new connection.\n");
 		return NULL;
@@ -319,8 +319,8 @@ spdk_nvmf_rdma_conn_create(struct rdma_cm_id *id, struct ibv_comp_channel *chann
 
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", conn);
 
-	rdma_conn->reqs = calloc(max_queue_depth, sizeof(*rdma_conn->reqs));
-	rdma_conn->recvs = calloc(max_queue_depth, sizeof(*rdma_conn->recvs));
+	rdma_conn->reqs = spdk_calloc(max_queue_depth, sizeof(*rdma_conn->reqs));
+	rdma_conn->recvs = spdk_calloc(max_queue_depth, sizeof(*rdma_conn->recvs));
 	rdma_conn->cmds = spdk_dma_zmalloc(max_queue_depth * sizeof(*rdma_conn->cmds),
 					   0x1000, NULL);
 	rdma_conn->cpls = spdk_dma_zmalloc(max_queue_depth * sizeof(*rdma_conn->cpls),
@@ -953,9 +953,9 @@ spdk_nvmf_rdma_listen_addr_free(struct spdk_nvmf_rdma_listen_addr *addr)
 		return;
 	}
 
-	free(addr->traddr);
-	free(addr->trsvcid);
-	free(addr);
+	spdk_free(addr->traddr);
+	spdk_free(addr->trsvcid);
+	spdk_free(addr);
 }
 static int
 spdk_nvmf_rdma_fini(void)
@@ -1115,20 +1115,20 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		}
 	}
 
-	addr = calloc(1, sizeof(*addr));
+	addr = spdk_calloc(1, sizeof(*addr));
 	if (!addr) {
 		pthread_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
-	addr->traddr = strdup(listen_addr->traddr);
+	addr->traddr = spdk_strdup(listen_addr->traddr);
 	if (!addr->traddr) {
 		spdk_nvmf_rdma_listen_addr_free(addr);
 		pthread_mutex_unlock(&g_rdma.lock);
 		return -1;
 	}
 
-	addr->trsvcid = strdup(listen_addr->trsvcid);
+	addr->trsvcid = spdk_strdup(listen_addr->trsvcid);
 	if (!addr->trsvcid) {
 		spdk_nvmf_rdma_listen_addr_free(addr);
 		pthread_mutex_unlock(&g_rdma.lock);
@@ -1218,7 +1218,7 @@ spdk_nvmf_rdma_session_init(void)
 	int				i;
 	struct spdk_nvmf_rdma_buf	*buf;
 
-	rdma_sess = calloc(1, sizeof(*rdma_sess));
+	rdma_sess = spdk_calloc(1, sizeof(*rdma_sess));
 	if (!rdma_sess) {
 		return NULL;
 	}
@@ -1231,7 +1231,7 @@ spdk_nvmf_rdma_session_init(void)
 	if (!rdma_sess->buf) {
 		SPDK_ERRLOG("Large buffer pool allocation failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);
-		free(rdma_sess);
+		spdk_free(rdma_sess);
 		return NULL;
 	}
 
@@ -1257,7 +1257,7 @@ spdk_nvmf_rdma_session_fini(struct spdk_nvmf_session *session)
 
 	ibv_dereg_mr(rdma_sess->buf_mr);
 	spdk_dma_free(rdma_sess->buf);
-	free(rdma_sess);
+	spdk_free(rdma_sess);
 }
 
 static int
@@ -1286,7 +1286,7 @@ spdk_nvmf_rdma_session_add_conn(struct spdk_nvmf_session *session,
 		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
 			    g_rdma.max_queue_depth, g_rdma.max_io_size);
 		spdk_dma_free(rdma_sess->buf);
-		free(rdma_sess);
+		spdk_free(rdma_sess);
 		return -1;
 	}
 

@@ -209,7 +209,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 		return NULL;
 	}
 
-	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
+	subsystem = spdk_calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
 		return NULL;
 	}
@@ -259,13 +259,13 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 			   &subsystem->allowed_listeners, link, allowed_listener_tmp) {
 		TAILQ_REMOVE(&subsystem->allowed_listeners, allowed_listener, link);
 
-		free(allowed_listener);
+		spdk_free(allowed_listener);
 	}
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
 		TAILQ_REMOVE(&subsystem->hosts, host, link);
-		free(host->nqn);
-		free(host);
+		spdk_free(host->nqn);
+		spdk_free(host);
 		subsystem->num_hosts--;
 	}
 
@@ -280,7 +280,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_REMOVE(&g_nvmf_tgt.subsystems, subsystem, entries);
 	g_nvmf_tgt.discovery_genctr++;
 
-	free(subsystem);
+	spdk_free(subsystem);
 }
 
 struct spdk_nvmf_listen_addr *
@@ -328,7 +328,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
 
-	allowed_listener = calloc(1, sizeof(*allowed_listener));
+	allowed_listener = spdk_calloc(1, sizeof(*allowed_listener));
 	if (!allowed_listener) {
 		return -1;
 	}
@@ -367,13 +367,13 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 {
 	struct spdk_nvmf_host *host;
 
-	host = calloc(1, sizeof(*host));
+	host = spdk_calloc(1, sizeof(*host));
 	if (!host) {
 		return -1;
 	}
-	host->nqn = strdup(host_nqn);
+	host->nqn = spdk_strdup(host_nqn);
 	if (!host->nqn) {
-		free(host);
+		spdk_free(host);
 		return -1;
 	}
 

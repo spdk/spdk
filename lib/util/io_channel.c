@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "spdk/env.h"
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 
@@ -82,7 +83,7 @@ spdk_get_thread_io_channel(void)
 {
 	struct spdk_thread_io_channel *io_channel = pthread_getspecific(g_io_channel_key);
 	if (io_channel == NULL) {
-		io_channel = calloc(1, sizeof(struct spdk_thread_io_channel));
+		io_channel = spdk_calloc(1, sizeof(struct spdk_thread_io_channel));
 		pthread_setspecific(g_io_channel_key, io_channel);
 	}
 	return io_channel;
@@ -106,7 +107,7 @@ spdk_io_device_register(void *io_device, io_channel_create_cb_t create_cb,
 {
 	struct io_device *dev, *tmp;
 
-	dev = calloc(1, sizeof(struct io_device));
+	dev = spdk_calloc(1, sizeof(struct io_device));
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not allocate io_device\n");
 		return;
@@ -121,7 +122,7 @@ spdk_io_device_register(void *io_device, io_channel_create_cb_t create_cb,
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device_ctx == io_device) {
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
-			free(dev);
+			spdk_free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
@@ -139,7 +140,7 @@ spdk_io_device_unregister(void *io_device)
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device_ctx == io_device) {
 			TAILQ_REMOVE(&g_io_devices, dev, tailq);
-			free(dev);
+			spdk_free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
@@ -191,14 +192,14 @@ spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *uniqu
 		}
 	}
 
-	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
+	ch = spdk_calloc(1, sizeof(*ch) + dev->ctx_size);
 	if (ch == NULL) {
-		SPDK_ERRLOG("could not calloc spdk_io_channel\n");
+		SPDK_ERRLOG("could not spdk_calloc spdk_io_channel\n");
 		return NULL;
 	}
 	rc = dev->create_cb(io_device, priority, (uint8_t *)ch + sizeof(*ch), unique_ctx);
 	if (rc == -1) {
-		free(ch);
+		spdk_free(ch);
 		return NULL;
 	}
 
@@ -224,7 +225,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 	if (ch->ref == 0) {
 		TAILQ_REMOVE(spdk_get_thread_io_channel(), ch, tailq);
 		ch->destroy_cb(ch->io_device, (uint8_t *)ch + sizeof(*ch));
-		free(ch);
+		spdk_free(ch);
 	}
 }
 

@@ -325,7 +325,7 @@ struct spdk_bdev_io *spdk_bdev_get_io(void)
 	bdev_io = spdk_mempool_get(spdk_bdev_g_io_pool);
 	if (!bdev_io) {
 		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
-		abort();
+		spdk_abort();
 	}
 
 	memset(bdev_io, 0, sizeof(*bdev_io));
@@ -791,14 +791,14 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	TAILQ_FOREACH_SAFE(child_io, &bdev_io->child_io, link, tmp) {
 		/*
 		 * Make sure no references to the parent I/O remain, since it is being
-		 * returned to the free pool.
+		 * returned to the spdk_free pool.
 		 */
 		child_io->parent = NULL;
 		TAILQ_REMOVE(&bdev_io->child_io, child_io, link);
 
 		/*
 		 * Child I/O may have an rbuf that needs to be returned to a pool
-		 *  on a different core, so free it through the request submission
+		 *  on a different core, so spdk_free it through the request submission
 		 *  process rather than calling put_io directly here.
 		 */
 		spdk_bdev_free_io(child_io);
@@ -846,7 +846,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	} else {
 		/*
 		 * Check the gencnt, to see if this I/O was issued before the most
-		 * recent reset. If the gencnt is not equal, then just free the I/O
+		 * recent reset. If the gencnt is not equal, then just spdk_free the I/O
 		 * without calling the callback, since the caller will have already
 		 * freed its context for this I/O.
 		 */

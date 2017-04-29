@@ -31,6 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/env.h"
 #include "spdk_internal/log.h"
 
 #include <stdarg.h>
@@ -120,12 +121,12 @@ spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag)
 
 	if (name == NULL || flag == NULL) {
 		SPDK_ERRLOG("missing spdk_trace_flag parameters\n");
-		abort();
+		spdk_abort();
 	}
 
 	if (get_trace_flag(name)) {
 		SPDK_ERRLOG("duplicate spdk_trace_flag '%s'\n", name);
-		abort();
+		spdk_abort();
 	}
 
 	TAILQ_FOREACH(iter, &g_trace_flags, tailq) {

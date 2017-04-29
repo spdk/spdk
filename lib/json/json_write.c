@@ -74,7 +74,7 @@ spdk_json_write_begin(spdk_json_write_cb write_cb, void *cb_ctx, uint32_t flags)
 {
 	struct spdk_json_write_ctx *w;
 
-	w = calloc(1, sizeof(*w));
+	w = spdk_calloc(1, sizeof(*w));
 	if (w == NULL) {
 		return w;
 	}
@@ -108,7 +108,7 @@ spdk_json_write_end(struct spdk_json_write_ctx *w)
 		failed = true;
 	}
 
-	free(w);
+	spdk_free(w);
 
 	return failed ? -1 : 0;
 }
@@ -384,7 +384,7 @@ spdk_json_write_string_fmt(struct spdk_json_write_ctx *w, const char *fmt, ...)
 	}
 
 	rc = spdk_json_write_string(w, s);
-	free(s);
+	spdk_free(s);
 	return rc;
 }
 
