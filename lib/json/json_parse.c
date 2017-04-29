@@ -439,7 +439,7 @@ ssize_t
 spdk_json_parse(void *json, size_t size, struct spdk_json_val *values, size_t num_values,
 		void **end, uint32_t flags)
 {
-	uint8_t *json_end = json + size;
+	uint8_t *json_end = (uint8_t *)json + size;
 	enum spdk_json_val_type containers[SPDK_JSON_MAX_NESTING_DEPTH];
 	size_t con_value[SPDK_JSON_MAX_NESTING_DEPTH];
 	enum spdk_json_val_type con_type = SPDK_JSON_VAL_INVALID;
