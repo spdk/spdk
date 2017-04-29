@@ -192,6 +192,10 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
+	if (ctrlr->quirks & NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC) {
+		spdk_delay_us(100);
+	}
+
 	return qpair;
 }
 

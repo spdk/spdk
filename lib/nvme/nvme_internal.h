@@ -89,6 +89,12 @@
  */
 #define NVME_INTEL_QUIRK_STRIPING 0x8
 
+/*
+ * The controller needs a delay after allocating an I/O queue pair
+ * before it is ready to accept I/O commands.
+ */
+#define NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC 0x10
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)

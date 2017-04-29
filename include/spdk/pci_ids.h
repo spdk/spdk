@@ -47,6 +47,7 @@ extern "C" {
 #define SPDK_PCI_ANY_ID			0xffff
 #define SPDK_PCI_VID_INTEL		0x8086
 #define SPDK_PCI_VID_MEMBLAZE		0x1c5f
+#define SPDK_PCI_VID_VIRTUALBOX		0x80ee
 
 /**
  * PCI class code for NVMe devices.
