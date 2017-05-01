@@ -715,7 +715,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,
 		      const char **names, size_t *count)
 {
-	struct nvme_probe_ctx	probe_ctx;
+	struct nvme_probe_ctx	*probe_ctx;
 	struct nvme_ctrlr	*nvme_ctrlr;
 	struct nvme_bdev	*nvme_bdev;
 	size_t			j;
@@ -725,17 +725,25 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	probe_ctx.count = 1;
-	probe_ctx.trids[0] = *trid;
-	probe_ctx.names[0] = base_name;
-	if (spdk_nvme_probe(trid, &probe_ctx, probe_cb, attach_cb, NULL)) {
+	probe_ctx = calloc(1, sizeof(*probe_ctx));
+	if (probe_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate probe_ctx\n");
+		return -1;
+	}
+
+	probe_ctx->count = 1;
+	probe_ctx->trids[0] = *trid;
+	probe_ctx->names[0] = base_name;
+	if (spdk_nvme_probe(trid, probe_ctx, probe_cb, attach_cb, NULL)) {
 		SPDK_ERRLOG("Failed to probe for new devices\n");
+		free(probe_ctx);
 		return -1;
 	}
 
 	nvme_ctrlr = nvme_ctrlr_get(trid);
 	if (!nvme_ctrlr) {
 		SPDK_ERRLOG("Failed to find new NVMe controller\n");
+		free(probe_ctx);
 		return -1;
 	}
 
@@ -751,12 +759,14 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 				j++;
 			} else {
 				SPDK_ERRLOG("Unable to return all names of created bdevs\n");
+				free(probe_ctx);
 				return -1;
 			}
 		}
 	}
 	*count = j;
 
+	free(probe_ctx);
 	return 0;
 }
 
@@ -767,12 +777,18 @@ bdev_nvme_library_init(void)
 	const char *val;
 	int rc;
 	size_t i;
-	struct nvme_probe_ctx probe_ctx = {};
+	struct nvme_probe_ctx *probe_ctx;
 	int retry_count;
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {
 		return 0;
+	}
+
+	probe_ctx = calloc(1, sizeof(*probe_ctx));
+	if (probe_ctx == NULL) {
+		SPDK_ERRLOG("Failed to allocate probe_ctx\n");
+		return -1;
 	}
 
 	if ((retry_count = spdk_conf_section_get_intval(sp, "RetryCount")) < 0) {
@@ -792,21 +808,23 @@ bdev_nvme_library_init(void)
 			break;
 		}
 
-		rc = spdk_nvme_transport_id_parse(&probe_ctx.trids[i], val);
+		rc = spdk_nvme_transport_id_parse(&probe_ctx->trids[i], val);
 		if (rc < 0) {
 			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
+			free(probe_ctx);
 			return -1;
 		}
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
 		if (val == NULL) {
 			SPDK_ERRLOG("No name provided for TransportID\n");
+			free(probe_ctx);
 			return -1;
 		}
 
-		probe_ctx.names[i] = val;
+		probe_ctx->names[i] = val;
 
-		probe_ctx.count++;
+		probe_ctx->count++;
 	}
 
 	if ((g_timeout = spdk_conf_section_get_intval(sp, "Timeout")) < 0) {
@@ -858,7 +876,8 @@ bdev_nvme_library_init(void)
 		g_nvme_hotplug_poll_core = spdk_env_get_current_core();
 	}
 
-	if (spdk_nvme_probe(NULL, &probe_ctx, probe_cb, attach_cb, NULL)) {
+	if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
+		free(probe_ctx);
 		return -1;
 	}
 
@@ -867,6 +886,7 @@ bdev_nvme_library_init(void)
 				     g_nvme_hotplug_poll_core, g_nvme_hotplug_poll_timeout_us);
 	}
 
+	free(probe_ctx);
 	return 0;
 }
 
