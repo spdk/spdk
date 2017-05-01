@@ -58,14 +58,15 @@ Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.
     1) cd /path/to/spdk
     2) wget http://fast.dpdk.org/rel/dpdk-17.02.tar.xz
     3) tar xf dpdk-17.02.tar.xz
+    4) mv dpdk-17.02 dpdk
 
 Linux:
 
-    4) (cd dpdk-17.02 && make install T=x86_64-native-linuxapp-gcc DESTDIR=.)
+    4) (cd dpdk && make install T=x86_64-native-linuxapp-gcc DESTDIR=.)
 
 FreeBSD:
 
-    4) (cd dpdk-17.02 && gmake install T=x86_64-native-bsdapp-clang DESTDIR=.)
+    4) (cd dpdk && gmake install T=x86_64-native-bsdapp-clang DESTDIR=.)
 
 Building
 ========
@@ -75,12 +76,12 @@ and make pattern. If you followed the instructions above for building DPDK:
 
 Linux:
 
-    ./configure --with-dpdk=./dpdk-17.02/x86_64-native-linuxapp-gcc
+    ./configure --with-dpdk=./dpdk/x86_64-native-linuxapp-gcc
     make
 
 FreeBSD:
 
-    ./configure --with-dpdk=./dpdk-17.02/x86_64-native-bsdapp-clang
+    ./configure --with-dpdk=./dpdk/x86_64-native-bsdapp-clang
     gmake
 
 Advanced Build Options
@@ -104,7 +105,7 @@ To enable RDMA, this line may be added to `CONFIG.local` with a 'y' instead of
 'n'. For the majority of options this can be done using the `configure` script.
 For example:
 
-    ./configure --with-dpdk=./dpdk-17.02/x86_64-native-linuxapp-gcc --with-rdma
+    ./configure --with-dpdk=./dpdk/x86_64-native-linuxapp-gcc --with-rdma
 
 Additionally, `CONFIG` options may also be overrriden on the `make` command
 line:
