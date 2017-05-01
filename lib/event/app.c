@@ -310,7 +310,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 			SPDK_NOTICELOG("Use 'spdk_trace -s %s %s %d' to capture a snapshot of events at runtime.\n",
 				       opts->name,
 				       opts->shm_id >= 0 ? "-i" : "-p",
-				       opts->shm_id >= 0 ? opts->shm_id : getpid());
+				       opts->shm_id >= 0 ? opts->shm_id : (int)spdk_getpid());
 			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
 		}
 	}
