@@ -1528,7 +1528,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 	} else {
 		desc = spdk_scsi_task_alloc_data(task, bdesc_data_len - 8);
 		memcpy(desc, &data[8], bdesc_data_len - 8);
-		spdk_free(data);
+		spdk_aligned_free(data);
 	}
 
 	if (bdesc_count > bdev->max_unmap_bdesc_count) {
@@ -1718,7 +1718,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
 		data_len = SPDK_MAX(4096, alloc_len);
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_aligned_zmalloc(data_len, 0, NULL);
 		assert(data != NULL);
 		rc = spdk_bdev_scsi_inquiry(bdev, task, cdb, data, data_len);
 		data_len = SPDK_MIN(rc, data_len);
@@ -1742,7 +1742,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		}
 
 		data_len = SPDK_MAX(4096, alloc_len);
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_aligned_zmalloc(data_len, 0, NULL);
 		assert(data != NULL);
 		rc = spdk_bdev_scsi_report_luns(task->lun, sel, data, data_len);
 		data_len = rc;
@@ -1850,7 +1850,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		}
 
 		data_len = rc;
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_aligned_zmalloc(data_len, 0, NULL);
 		assert(data != NULL);
 
 		/* First call with no buffer to discover needed buffer size */
@@ -1892,7 +1892,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
 
 		data_len = task->sense_data_len;
-		data = spdk_zmalloc(data_len, 0, NULL);
+		data = spdk_aligned_zmalloc(data_len, 0, NULL);
 		assert(data != NULL);
 		memcpy(data, task->sense_data, data_len);
 		break;
@@ -1941,7 +1941,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	}
 
 	if (data)
-		spdk_free(data);
+		spdk_aligned_free(data);
 
 	return SPDK_SCSI_TASK_COMPLETE;
 }
