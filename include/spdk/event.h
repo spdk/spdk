@@ -41,10 +41,7 @@
 #ifndef SPDK_EVENT_H
 #define SPDK_EVENT_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
 

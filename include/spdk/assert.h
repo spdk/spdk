@@ -38,11 +38,11 @@
 #ifndef SPDK_ASSERT_H
 #define SPDK_ASSERT_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <assert.h>
 
 #ifdef static_assert
 #define SPDK_STATIC_ASSERT(cond, msg) static_assert(cond, msg)

@@ -38,12 +38,11 @@
 #ifndef SPDK_UTIL_H
 #define SPDK_UTIL_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stddef.h>
-#include <stdint.h>
 
 #define spdk_min(a,b) (((a)<(b))?(a):(b))
 #define spdk_max(a,b) (((a)>(b))?(a):(b))

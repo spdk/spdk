@@ -38,12 +38,11 @@
 #ifndef SPDK_STRING_H
 #define SPDK_STRING_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdarg.h>
-#include <stddef.h>
 
 /**
  * sprintf with automatic buffer allocation.

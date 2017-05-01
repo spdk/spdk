@@ -38,14 +38,11 @@
 #ifndef SPDK_ENV_H
 #define SPDK_ENV_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
 
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
 

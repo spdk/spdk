@@ -38,13 +38,11 @@
 #ifndef SPDK_BIT_ARRAY_H
 #define SPDK_BIT_ARRAY_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
 
 /**
  * Variable-length bit array.
