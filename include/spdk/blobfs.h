@@ -38,9 +38,7 @@
 #ifndef SPDK_FS_H
 #define SPDK_FS_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include <semaphore.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/blob.h"
 

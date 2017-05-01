@@ -38,11 +38,11 @@
 #ifndef SPDK_PCI_IDS
 #define SPDK_PCI_IDS
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 #define SPDK_PCI_ANY_ID			0xffff
 #define SPDK_PCI_VID_INTEL		0x8086

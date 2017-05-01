@@ -39,11 +39,11 @@
 #ifndef SPDK_IOAT_SPEC_H
 #define SPDK_IOAT_SPEC_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <inttypes.h>
 
 #include "spdk/assert.h"
 

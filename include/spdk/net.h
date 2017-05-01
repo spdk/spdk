@@ -38,11 +38,7 @@
 #ifndef SPDK_NET_H
 #define SPDK_NET_H
 
-#include <stddef.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <sys/uio.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
 

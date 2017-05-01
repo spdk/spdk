@@ -39,6 +39,8 @@
 #ifndef SPDK_VHOST_H
 #define SPDK_VHOST_H
 
+#include "spdk/stdinc.h"
+
 #include "spdk/event.h"
 
 #define SPDK_VHOST_SCSI_CTRLR_MAX_DEVS 8

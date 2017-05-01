@@ -66,8 +66,7 @@
 #ifndef SPDK_BLOB_H
 #define SPDK_BLOB_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1

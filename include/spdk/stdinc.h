@@ -32,15 +32,42 @@
  */
 
 /** \file
- * Likely/unlikely branch prediction macros
+ * Standard C headers
+ *
+ * This file is intended to be included first by all other SPDK files.
  */
 
-#ifndef SPDK_LIKELY_H
-#define SPDK_LIKELY_H
+#ifndef SPDK_STDINC_H
+#define SPDK_STDINC_H
 
-#include "spdk/stdinc.h"
-
-#define spdk_unlikely(cond)	__builtin_expect((cond), 0)
-#define spdk_likely(cond)	__builtin_expect(!!(cond), 1)
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/* Standard C */
+#include <assert.h>
+#include <errno.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* POSIX */
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* SPDK_STDINC_H */
