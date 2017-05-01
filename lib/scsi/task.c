@@ -35,6 +35,7 @@
 #include "scsi_internal.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
@@ -162,7 +163,7 @@ spdk_scsi_task_scatter_data(struct spdk_scsi_task *task, const void *src, size_t
 	pos = src;
 
 	for (i = 0; i < task->iovcnt; i++) {
-		len = SPDK_MIN(iovs[i].iov_len, buf_left);
+		len = spdk_min(iovs[i].iov_len, buf_left);
 		buf_left -= len;
 		memcpy(iovs[i].iov_base, pos, len);
 		pos += len;

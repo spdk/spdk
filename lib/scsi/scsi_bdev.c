@@ -38,6 +38,7 @@
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 #define SPDK_WORK_BLOCK_SIZE		(1ULL * 1024ULL * 1024ULL)
 #define SPDK_WORK_ATS_BLOCK_SIZE	(1ULL * 1024ULL * 1024ULL)
@@ -1618,7 +1619,7 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		}
 		to_be32(&buffer[4], bdev->blocklen);
 
-		len = SPDK_MIN(task->length, sizeof(buffer));
+		len = spdk_min(task->length, sizeof(buffer));
 		if (spdk_scsi_task_scatter_data(task, buffer, len) < 0)
 			break;
 
@@ -1643,7 +1644,7 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 				buffer[14] |= 1 << 7;
 			}
 
-			len = SPDK_MIN(from_be32(&cdb[10]), sizeof(buffer));
+			len = spdk_min(from_be32(&cdb[10]), sizeof(buffer));
 			if (spdk_scsi_task_scatter_data(task, buffer, len) < 0)
 				break;
 
@@ -1717,11 +1718,11 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
-		data_len = SPDK_MAX(4096, alloc_len);
+		data_len = spdk_max(4096, alloc_len);
 		data = spdk_zmalloc(data_len, 0, NULL);
 		assert(data != NULL);
 		rc = spdk_bdev_scsi_inquiry(bdev, task, cdb, data, data_len);
-		data_len = SPDK_MIN(rc, data_len);
+		data_len = spdk_min(rc, data_len);
 		if (rc < 0) {
 			break;
 		}
@@ -1741,7 +1742,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 			break;
 		}
 
-		data_len = SPDK_MAX(4096, alloc_len);
+		data_len = spdk_max(4096, alloc_len);
 		data = spdk_zmalloc(data_len, 0, NULL);
 		assert(data != NULL);
 		rc = spdk_bdev_scsi_report_luns(task->lun, sel, data, data_len);
@@ -1931,8 +1932,8 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 
 	if (rc >= 0 && data_len > 0) {
 		assert(alloc_len >= 0);
-		spdk_scsi_task_scatter_data(task, data, SPDK_MIN(alloc_len, data_len));
-		rc = SPDK_MIN(data_len, alloc_len);
+		spdk_scsi_task_scatter_data(task, data, spdk_min(alloc_len, data_len));
+		rc = spdk_min(data_len, alloc_len);
 	}
 
 	if (rc >= 0) {

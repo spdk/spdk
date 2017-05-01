@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
 #include "spdk/event.h"
+#include "spdk/util.h"
 
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
@@ -204,7 +205,7 @@ spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
 		buffer[4] = data_len - 5;
 
 		allocation_len = from_be16(&task->cdb[3]);
-		if (spdk_scsi_task_scatter_data(task, buffer, SPDK_MIN(allocation_len, data_len)) >= 0) {
+		if (spdk_scsi_task_scatter_data(task, buffer, spdk_min(allocation_len, data_len)) >= 0) {
 			task->data_transferred = data_len;
 			task->status = SPDK_SCSI_STATUS_GOOD;
 		}
