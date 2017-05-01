@@ -46,9 +46,6 @@
 #include <fcntl.h>
 #include <signal.h>
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"
@@ -243,12 +240,14 @@ spdk_app_init(struct spdk_app_opts *opts)
 	char			*end;
 	struct spdk_env_opts env_opts = {};
 
+#ifndef SPDK_NO_RLIMIT
 	if (opts->enable_coredump) {
 		struct rlimit core_limits;
 
 		core_limits.rlim_cur = core_limits.rlim_max = RLIM_INFINITY;
 		setrlimit(RLIMIT_CORE, &core_limits);
 	}
+#endif
 
 	config = spdk_conf_allocate();
 	assert(config != NULL);
@@ -352,7 +351,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 
 	if (opts->shutdown_cb != NULL) {
-		g_shutdown_event = spdk_event_allocate(rte_lcore_id(), __shutdown_event_cb,
+		g_shutdown_event = spdk_event_allocate(spdk_lcore_id(), __shutdown_event_cb,
 						       NULL, NULL);
 
 		sigact.sa_handler = __shutdown_signal;
@@ -451,7 +450,7 @@ spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 
 	g_spdk_app.rc = 0;
 
-	event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
+	event = spdk_event_allocate(spdk_get_master_lcore(), start_fn,
 				    arg1, arg2);
 	/* Queues up the event, but can't run it until the reactors start */
 	spdk_event_call(event);
