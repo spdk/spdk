@@ -50,6 +50,9 @@
 #include <rte_config.h>
 #include <rte_eal.h>
 
+#include "spdk_internal/trace_shm.h"
+#include "spdk_internal/log_syslog.h"
+
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
 #define SPDK_ENV_DPDK_DEFAULT_MEM_SIZE		-1
@@ -285,4 +288,10 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	}
 
 	spdk_vtophys_register_dpdk_mem();
+
+	spdk_set_log_facility("user");
+
+	char            shm_name[64];
+	snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", opts->name, (int)spdk_getpid());
+	spdk_trace_shm_init(shm_name);
 }
