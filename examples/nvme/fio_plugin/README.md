@@ -42,8 +42,8 @@ NVMe namespaces start at 1, not 0! And it should be put on the end. For example,
       NVMe device should use this format: domain.bus.slot.func
    2. For devices exported by NVMe-oF target, 'trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1'
 
-Currently the SPDK fio plugin is limited to thread usage model, so fio jobs must also specify thread=1
-when using the SPDK fio plugin.
+Currently the SPDK fio plugin is limited to a single thread, so only one job is supported.
+fio jobs must also specify thread=1 when using the SPDK fio plugin.
 
 When testing random workloads, it is recommended to set norandommap=1.  fio's random map
 processing consumes extra CPU cycles which will degrade performance over time with
