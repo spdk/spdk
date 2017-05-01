@@ -192,45 +192,10 @@ struct spdk_scsi_dev {
  * malloc LUNs will implement scsi_execute to translate the SCSI task and
  * copy the task's data into or out of the allocated memory buffer.
  */
-struct spdk_scsi_lun {
-	/** LUN id for this logical unit. */
-	int id;
+struct spdk_scsi_lun;
 
-	/** Pointer to the SCSI device containing this LUN. */
-	struct spdk_scsi_dev *dev;
-
-	/** The blockdev associated with this LUN. */
-	struct spdk_bdev *bdev;
-
-	/** I/O channel for the blockdev associated with this LUN. */
-	struct spdk_io_channel *io_channel;
-
-	/** Thread ID for the thread that allocated the I/O channel for this
-	 *   LUN.  All I/O to this LUN must be performed from this thread.
-	 */
-	pthread_t thread_id;
-
-	/**  The reference number for this LUN, thus we can correctly free the io_channel */
-	uint32_t ref;
-
-	/** Name for this LUN. */
-	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
-
-	/** Poller to release the resource of the lun when it is hot removed */
-	struct spdk_poller *hotplug_poller;
-
-	/** The core hotplug_poller is assigned */
-	uint32_t			lcore;
-
-	/** The LUN is removed */
-	bool				removed;
-
-	/** The LUN is clamed */
-	bool claimed;
-
-	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
-	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
-};
+int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
+const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
 
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);

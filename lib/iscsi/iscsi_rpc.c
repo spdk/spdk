@@ -349,9 +349,9 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_server_conn *conn,
 			if (tgtnode->dev->lun[i]) {
 				spdk_json_write_object_begin(w);
 				spdk_json_write_name(w, "name");
-				spdk_json_write_string(w, tgtnode->dev->lun[i]->name);
+				spdk_json_write_string(w, spdk_scsi_lun_get_name(tgtnode->dev->lun[i]));
 				spdk_json_write_name(w, "id");
-				spdk_json_write_int32(w, tgtnode->dev->lun[i]->id);
+				spdk_json_write_int32(w, spdk_scsi_lun_get_id(tgtnode->dev->lun[i]));
 				spdk_json_write_object_end(w);
 			}
 		}

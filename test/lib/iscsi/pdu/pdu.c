@@ -43,6 +43,7 @@
 #include "../common.c"
 #include "iscsi/acceptor.h"
 #include "iscsi/portal_grp.h"
+#include "scsi/scsi_internal.h"
 
 struct spdk_iscsi_tgt_node *
 spdk_iscsi_find_tgt_node(const char *target_name)
@@ -80,6 +81,12 @@ spdk_iscsi_portal_grp_close_all(void)
 void
 spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
+}
+
+int
+spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
+{
+	return lun->id;
 }
 
 static void

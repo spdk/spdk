@@ -81,6 +81,46 @@ enum {
 	SPDK_SCSI_TASK_PENDING,
 };
 
+struct spdk_scsi_lun {
+	/** LUN id for this logical unit. */
+	int id;
+
+	/** Pointer to the SCSI device containing this LUN. */
+	struct spdk_scsi_dev *dev;
+
+	/** The blockdev associated with this LUN. */
+	struct spdk_bdev *bdev;
+
+	/** I/O channel for the blockdev associated with this LUN. */
+	struct spdk_io_channel *io_channel;
+
+	/** Thread ID for the thread that allocated the I/O channel for this
+	 *   LUN.  All I/O to this LUN must be performed from this thread.
+	 */
+	pthread_t thread_id;
+
+	/**  The reference number for this LUN, thus we can correctly free the io_channel */
+	uint32_t ref;
+
+	/** Name for this LUN. */
+	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
+
+	/** Poller to release the resource of the lun when it is hot removed */
+	struct spdk_poller *hotplug_poller;
+
+	/** The core hotplug_poller is assigned */
+	uint32_t			lcore;
+
+	/** The LUN is removed */
+	bool				removed;
+
+	/** The LUN is clamed */
+	bool claimed;
+
+	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
+	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
+};
+
 struct spdk_lun_db_entry {
 	struct spdk_scsi_lun *lun;
 	struct spdk_lun_db_entry *next;

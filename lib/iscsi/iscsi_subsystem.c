@@ -289,8 +289,8 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 			if (NULL == dev->lun[l]) continue;
 
 			fprintf(fp, TARGET_NODE_LUN_TMPL,
-				dev->lun[l]->id,
-				dev->lun[l]->name);
+				spdk_scsi_lun_get_id(dev->lun[l]),
+				spdk_scsi_lun_get_name(dev->lun[l]));
 		}
 
 		fprintf(fp, TARGET_NODE_QD_TMPL,

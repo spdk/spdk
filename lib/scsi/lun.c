@@ -431,3 +431,15 @@ void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 		}
 	}
 }
+
+int
+spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
+{
+	return lun->id;
+}
+
+const char *
+spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun)
+{
+	return lun->name;
+}

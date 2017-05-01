@@ -60,10 +60,10 @@ json_scsi_dev_write(struct spdk_json_write_ctx *ctx, struct spdk_scsi_dev *dev)
 		spdk_json_write_object_begin(ctx);
 
 		spdk_json_write_name(ctx, "id");
-		spdk_json_write_int32(ctx, (int32_t)dev->lun[l]->id);
+		spdk_json_write_int32(ctx, spdk_scsi_lun_get_id(dev->lun[l]));
 
 		spdk_json_write_name(ctx, "name");
-		spdk_json_write_string(ctx, dev->lun[l]->name);
+		spdk_json_write_string(ctx, spdk_scsi_lun_get_name(dev->lun[l]));
 
 		spdk_json_write_object_end(ctx);
 	}
