@@ -69,7 +69,7 @@ spdk_subsystem_find(struct spdk_subsystem_list *list, const char *name)
 static void
 subsystem_sort(void)
 {
-	bool depends_on, depends_on_sorted;
+	bool depends_on = false, depends_on_sorted = false;
 	struct spdk_subsystem *subsystem, *subsystem_tmp;
 	struct spdk_subsystem_depend *subsystem_dep;
 
