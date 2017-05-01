@@ -856,7 +856,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
 					      0x1000, &offset) == 0) {
-			pqpair->cmd = pctrlr->cmb_bar_virt_addr + offset;
+			pqpair->cmd = (struct spdk_nvme_cmd *)((uint8_t *)pctrlr->cmb_bar_virt_addr + offset);
 			pqpair->cmd_bus_addr = pctrlr->cmb_bar_phys_addr + offset;
 			pqpair->sq_in_cmb = true;
 		}
@@ -1517,7 +1517,7 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	void *seg_addr;
 	uint32_t nseg, cur_nseg, modulo, unaligned;
 	void *md_payload;
-	void *payload = req->payload.u.contig + req->payload_offset;
+	void *payload = (uint8_t *)req->payload.u.contig + req->payload_offset;
 
 	phys_addr = spdk_vtophys(payload);
 	if (phys_addr == SPDK_VTOPHYS_ERROR) {
@@ -1532,7 +1532,7 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	}
 
 	if (req->payload.md) {
-		md_payload = req->payload.md + req->md_offset;
+		md_payload = (uint8_t *)req->payload.md + req->md_offset;
 		tr->req->cmd.mptr = spdk_vtophys(md_payload);
 		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
@@ -1543,13 +1543,13 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	tr->req->cmd.psdt = SPDK_NVME_PSDT_PRP;
 	tr->req->cmd.dptr.prp.prp1 = phys_addr;
 	if (nseg == 2) {
-		seg_addr = payload + PAGE_SIZE - unaligned;
+		seg_addr = (uint8_t *)payload + PAGE_SIZE - unaligned;
 		tr->req->cmd.dptr.prp.prp2 = spdk_vtophys(seg_addr);
 	} else if (nseg > 2) {
 		cur_nseg = 1;
 		tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
 		while (cur_nseg < nseg) {
-			seg_addr = payload + cur_nseg * PAGE_SIZE - unaligned;
+			seg_addr = (uint8_t *)payload + cur_nseg * PAGE_SIZE - unaligned;
 			phys_addr = spdk_vtophys(seg_addr);
 			if (phys_addr == SPDK_VTOPHYS_ERROR) {
 				nvme_pcie_fail_request_bad_vtophys(qpair, tr);

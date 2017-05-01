@@ -1690,7 +1690,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 			SPDK_ERRLOG("spdk_nvme_ctrlr_fw_image_download failed!\n");
 			return -ENXIO;
 		}
-		p += transfer;
+		p = (uint8_t *)p + transfer;
 		offset += transfer;
 		size_remaining -= transfer;
 	}

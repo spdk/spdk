@@ -809,7 +809,7 @@ nvme_rdma_build_null_request(struct nvme_request *req)
 static int
 nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_request *req)
 {
-	void *payload = req->payload.u.contig + req->payload_offset;
+	void *payload = (uint8_t *)req->payload.u.contig + req->payload_offset;
 	struct ibv_mr *mr;
 
 	assert(req->payload_size != 0);
