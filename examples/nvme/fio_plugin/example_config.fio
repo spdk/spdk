@@ -6,10 +6,10 @@ direct=1
 verify=0
 time_based=1
 ramp_time=0
-runtime=1
-
-[test]
+runtime=2
 iodepth=128
 rw=randrw
 bs=4k
+
+[test]
 numjobs=1
