@@ -20,6 +20,7 @@ timing_enter rocksdb
 timing_enter db_bench_build
 
 pushd $DB_BENCH_DIR
+git clean -x -f -d
 $MAKE db_bench $MAKEFLAGS $MAKECONFIG DEBUG_LEVEL=0 SPDK_DIR=$rootdir
 popd
 
