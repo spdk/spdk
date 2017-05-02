@@ -4,7 +4,9 @@ set -e
 
 rootdir=$(readlink -f $(dirname $0))
 
+conf=~/autorun-spdk.conf
+
 # Runs agent scripts
-$rootdir/autobuild.sh
-sudo $rootdir/autotest.sh ~/autorun-spdk.conf
-$rootdir/autopackage.sh
+$rootdir/autobuild.sh "$conf"
+sudo $rootdir/autotest.sh "$conf"
+$rootdir/autopackage.sh "$conf"

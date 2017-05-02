@@ -3,6 +3,22 @@ ulimit -c unlimited
 
 export RUN_NIGHTLY=0
 
+if [[ ! -z $1 ]]; then
+	if [ -f $1 ]; then
+		source $1
+	fi
+fi
+
+# Set defaults for missing test config options
+: ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
+: ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
+: ${SPDK_TEST_NVMF=1}; export SPDK_TEST_NVMF
+: ${SPDK_TEST_VHOST=1}; export SPDK_TEST_VHOST
+: ${SPDK_TEST_BLOCKDEV=1}; export SPDK_TEST_BLOCKDEV
+: ${SPDK_TEST_IOAT=1}; export SPDK_TEST_IOAT
+: ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
+: ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
+
 config_params='--enable-debug --enable-werror'
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'

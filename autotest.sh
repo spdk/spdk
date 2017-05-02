@@ -1,22 +1,5 @@
 #!/usr/bin/env bash
 
-if [[ ! -z $1 ]]; then
-	if [ -f $1 ]; then
-		source $1
-	fi
-fi
-
-# Set defaults for missing test config options
-: ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
-: ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
-: ${SPDK_TEST_NVMF=1}; export SPDK_TEST_NVMF
-: ${SPDK_TEST_VHOST=1}; export SPDK_TEST_VHOST
-: ${SPDK_TEST_BLOCKDEV=1}; export SPDK_TEST_BLOCKDEV
-: ${SPDK_TEST_IOAT=1}; export SPDK_TEST_IOAT
-: ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
-: ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
-
-
 rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/scripts/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
