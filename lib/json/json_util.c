@@ -283,9 +283,7 @@ spdk_json_decode_string(const struct spdk_json_val *val, void *out)
 {
 	char **s = out;
 
-	if (*s) {
-		free(*s);
-	}
+	free(*s);
 
 	*s = spdk_json_strdup(val);
 
