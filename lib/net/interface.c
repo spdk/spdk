@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/log.h"
 #include "spdk/net.h"
@@ -40,19 +40,9 @@
 
 #ifdef __linux__ /* Interface management is Linux-specific */
 
-#include <stdio.h>
-#include <string.h>
-#include <netinet/in.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <net/if.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <errno.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-#include <assert.h>
 
 
 static TAILQ_HEAD(, spdk_interface) g_interface_head;

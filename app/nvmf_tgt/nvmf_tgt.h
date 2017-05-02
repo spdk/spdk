@@ -34,7 +34,7 @@
 #ifndef NVMF_TGT_H
 #define NVMF_TGT_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"

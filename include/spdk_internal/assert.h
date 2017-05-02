@@ -34,13 +34,13 @@
 #ifndef SPDK_INTERNAL_ASSERT_H
 #define SPDK_INTERNAL_ASSERT_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "spdk/assert.h"
-
-#include <stdlib.h>
 
 #if !defined(DEBUG) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 #define SPDK_UNREACHABLE() __builtin_unreachable()

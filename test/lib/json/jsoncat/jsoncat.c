@@ -33,9 +33,7 @@
 
 /* Simple JSON "cat" utility */
 
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/json.h"
 

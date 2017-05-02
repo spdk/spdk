@@ -35,11 +35,7 @@
 #ifndef SPDK_ISCSI_H
 #define SPDK_ISCSI_H
 
-#include <stdint.h>
-#include <pthread.h>
-#include <sys/mman.h>
-#include <sys/uio.h>
-#include <stdbool.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
 #include "spdk/iscsi_spec.h"

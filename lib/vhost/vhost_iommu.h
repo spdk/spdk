@@ -34,7 +34,7 @@
 #ifndef SPDK_VHOST_IOMMU_H
 #define SPDK_VHOST_IOMMU_H
 
-#include <inttypes.h>
+#include "spdk/stdinc.h"
 
 /**
  * Register given memory block in currently used IOMMU. If no IOMMU is used this

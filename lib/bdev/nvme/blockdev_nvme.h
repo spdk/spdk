@@ -34,7 +34,7 @@
 #ifndef SPDK_BLOCKDEV_NVME_H
 #define SPDK_BLOCKDEV_NVME_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
 

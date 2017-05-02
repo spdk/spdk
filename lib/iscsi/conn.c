@@ -32,24 +32,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-#include <sys/types.h>
-#include "spdk/queue.h"
-#include <sys/ioctl.h>
-#include <sys/epoll.h>
+#include "spdk/stdinc.h"
 
 #include <rte_config.h>
 #include <rte_mempool.h>
 
+#include <sys/epoll.h>
+
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/queue.h"
 #include "spdk/trace.h"
 #include "spdk/net.h"
 

@@ -31,13 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/fd.h"
+#include "spdk/stdinc.h"
 
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdint.h>
+#include "spdk/fd.h"
 
 #ifdef __linux__
 #include <linux/fs.h>

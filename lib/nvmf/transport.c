@@ -31,10 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "transport.h"
+#include "spdk/stdinc.h"
 
-#include <stdlib.h>
-#include <strings.h>
+#include "transport.h"
 
 #include "spdk/log.h"
 #include "spdk/nvmf.h"

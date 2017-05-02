@@ -31,11 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/copy_engine.h"
+#include "spdk/stdinc.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <errno.h>
+#include "spdk_internal/copy_engine.h"
 
 #include <rte_config.h>
 #include <rte_memcpy.h>

@@ -32,23 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
-#include <inttypes.h>
-
-#include <assert.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <poll.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <fcntl.h>
-#include <time.h>
+#include "spdk/stdinc.h"
 
 #include <rte_config.h>
 #include <rte_mempool.h>
@@ -166,7 +150,6 @@ spdk_make_digest_word(uint8_t *buf, size_t len, uint32_t crc32c)
 #endif
 
 #ifndef HAVE_SRANDOMDEV
-#include <time.h>
 static void
 srandomdev(void)
 {

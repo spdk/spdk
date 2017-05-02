@@ -31,13 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/event.h"
+#include "spdk/stdinc.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
+#include "spdk_internal/event.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>

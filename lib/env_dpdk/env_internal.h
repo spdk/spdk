@@ -34,21 +34,11 @@
 #ifndef SPDK_ENV_INTERNAL_H
 #define SPDK_ENV_INTERNAL_H
 
+#include "spdk/stdinc.h"
+
 #define spdk_pci_device rte_pci_device
 
 #include "spdk/env.h"
-
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <pthread.h>
-#include <stdbool.h>
 
 #include <rte_config.h>
 #include <rte_version.h>

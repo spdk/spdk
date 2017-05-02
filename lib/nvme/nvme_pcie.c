@@ -35,10 +35,7 @@
  * NVMe over PCIe transport
  */
 
-#include <sys/mman.h>
-#include <signal.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/likely.h"
 #include "nvme_internal.h"
