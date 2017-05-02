@@ -65,7 +65,7 @@ fi
 
 
 timing_enter doxygen
-if hash doxygen; then
+if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
 	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS) &> "$out"/doxygen.log
 	if hash pdflatex; then
 		(cd "$rootdir"/doc/output/latex && $MAKE $MAKEFLAGS) &>> "$out"/doxygen.log

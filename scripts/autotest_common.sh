@@ -10,6 +10,7 @@ if [[ ! -z $1 ]]; then
 fi
 
 # Set defaults for missing test config options
+: ${SPDK_BUILD_DOC=1}; export SPDK_BUILD_DOC
 : ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
 : ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
 : ${SPDK_TEST_NVMF=1}; export SPDK_TEST_NVMF
