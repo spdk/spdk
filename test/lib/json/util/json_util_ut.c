@@ -104,6 +104,29 @@ test_num_to_int32(void)
 	NUM_INT32_FAIL("12341e-1");
 }
 
+static void
+test_decode_bool(void)
+{
+	struct spdk_json_val v;
+	bool b;
+
+	/* valid bool (true) */
+	v.type = SPDK_JSON_VAL_TRUE;
+	b = false;
+	CU_ASSERT(spdk_json_decode_bool(&v, &b) == 0);
+	CU_ASSERT(b == true);
+
+	/* valid bool (false) */
+	v.type = SPDK_JSON_VAL_FALSE;
+	b = true;
+	CU_ASSERT(spdk_json_decode_bool(&v, &b) == 0);
+	CU_ASSERT(b == false);
+
+	/* incorrect type */
+	v.type = SPDK_JSON_VAL_NULL;
+	CU_ASSERT(spdk_json_decode_bool(&v, &b) != 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -121,7 +144,8 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "strequal", test_strequal) == NULL ||
-		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL) {
+		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
+		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
