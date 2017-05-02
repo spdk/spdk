@@ -89,6 +89,16 @@ spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 	return lun->id;
 }
 
+struct spdk_scsi_lun *
+spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
+{
+	if (lun_id < 0 || lun_id > dev->maxlun) {
+		return NULL;
+	}
+
+	return dev->lun[lun_id];
+}
+
 static void
 maxburstlength_test(void)
 {

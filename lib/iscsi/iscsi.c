@@ -2961,11 +2961,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	spdk_iscsi_task_associate_pdu(task, pdu);
 	lun_i = spdk_islun2lun(lun);
 	dev = conn->dev;
-	if (lun_i < dev->maxlun && lun_i < SPDK_SCSI_DEV_MAX_LUN) {
-		task->scsi.lun = dev->lun[lun_i];
-	} else {
-		task->scsi.lun = NULL;
-	}
+	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 
 	if ((R_bit != 0) && (W_bit != 0)) {
 		SPDK_ERRLOG("Bidirectional CDB is not supported\n");
@@ -3283,9 +3279,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
 	task->scsi.id = task_tag;
-	if (lun_i < dev->maxlun && lun_i < SPDK_SCSI_DEV_MAX_LUN) {
-		task->scsi.lun = dev->lun[lun_i];
-	}
+	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 
 	switch (function) {
 	/* abort task identified by Referenced Task Tag field */

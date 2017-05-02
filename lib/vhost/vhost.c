@@ -303,7 +303,11 @@ get_scsi_lun(struct spdk_scsi_dev *scsi_dev, const __u8 *lun)
 	uint16_t lun_id = (((uint16_t)lun[2] << 8) | lun[3]) & 0x3FFF;
 
 	/* For now only one LUN per controller is allowed so no need to search LUN IDs */
-	return likely(scsi_dev != NULL && lun_id < scsi_dev->maxlun) ? scsi_dev->lun[lun_id] : NULL;
+	if (likely(scsi_dev != NULL)) {
+		return spdk_scsi_dev_get_lun(scsi_dev, lun_id);
+	}
+
+	return NULL;
 }
 
 static void

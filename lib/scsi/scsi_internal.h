@@ -62,6 +62,19 @@ enum {
 	SPDK_SCSI_TASK_PENDING,
 };
 
+struct spdk_scsi_dev {
+	int			id;
+	int			is_allocated;
+
+	char			name[SPDK_SCSI_DEV_MAX_NAME];
+
+	int			maxlun;
+	struct spdk_scsi_lun	*lun[SPDK_SCSI_DEV_MAX_LUN];
+
+	int			num_ports;
+	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
+};
+
 struct spdk_scsi_lun {
 	/** LUN id for this logical unit. */
 	int id;

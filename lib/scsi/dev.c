@@ -304,3 +304,31 @@ spdk_scsi_dev_allocate_io_channels(struct spdk_scsi_dev *dev)
 
 	return 0;
 }
+
+const char *
+spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev)
+{
+	return dev->name;
+}
+
+int
+spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev)
+{
+	return dev->id;
+}
+
+int
+spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev)
+{
+	return dev->maxlun;
+}
+
+struct spdk_scsi_lun *
+spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
+{
+	if (lun_id < 0 || lun_id > dev->maxlun) {
+		return NULL;
+	}
+
+	return dev->lun[lun_id];
+}

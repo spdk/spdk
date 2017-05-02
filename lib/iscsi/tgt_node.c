@@ -1067,11 +1067,14 @@ int
 spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 				 struct spdk_iscsi_tgt_node *target)
 {
-	int i;
+	int i, maxlun;
 	struct spdk_iscsi_task *task;
 
-	for (i = 0; i < target->dev->maxlun; i++) {
-		if (!target->dev->lun[i])
+	maxlun = spdk_scsi_dev_get_max_lun(target->dev);
+	for (i = 0; i < maxlun; i++) {
+		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
+
+		if (!lun)
 			continue;
 
 		/* we create a fake management task per LUN to cleanup */
@@ -1084,7 +1087,7 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 		task->scsi.type = SPDK_SCSI_TASK_TYPE_MANAGE;
 		task->scsi.target_port = conn->target_port;
 		task->scsi.initiator_port = conn->initiator_port;
-		task->scsi.lun = target->dev->lun[i];
+		task->scsi.lun = lun;
 		task->scsi.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
 		task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(),

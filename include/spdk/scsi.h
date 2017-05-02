@@ -170,18 +170,7 @@ struct spdk_scsi_port {
 	char			name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
 };
 
-struct spdk_scsi_dev {
-	int			id;
-	int			is_allocated;
-
-	char			name[SPDK_SCSI_DEV_MAX_NAME];
-
-	int			maxlun;
-	struct spdk_scsi_lun	*lun[SPDK_SCSI_DEV_MAX_LUN];
-
-	int			num_ports;
-	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
-};
+struct spdk_scsi_dev;
 
 /**
  * \brief Represents a SCSI LUN.
@@ -197,6 +186,10 @@ struct spdk_scsi_lun;
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
 const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
 
+const char *spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev);
+int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
+int spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev);
+struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id);
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);
 void spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);

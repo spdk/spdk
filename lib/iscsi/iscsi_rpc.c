@@ -299,7 +299,7 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	struct spdk_json_write_ctx *w;
 	size_t tgt_idx;
-	int i;
+	int i, maxlun;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -345,13 +345,16 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_server_conn *conn,
 
 		spdk_json_write_name(w, "luns");
 		spdk_json_write_array_begin(w);
-		for (i = 0; i < tgtnode->dev->maxlun; i++) {
-			if (tgtnode->dev->lun[i]) {
+		maxlun = spdk_scsi_dev_get_max_lun(tgtnode->dev);
+		for (i = 0; i < maxlun; i++) {
+			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(tgtnode->dev, i);
+
+			if (lun) {
 				spdk_json_write_object_begin(w);
 				spdk_json_write_name(w, "name");
-				spdk_json_write_string(w, spdk_scsi_lun_get_name(tgtnode->dev->lun[i]));
+				spdk_json_write_string(w, spdk_scsi_lun_get_name(lun));
 				spdk_json_write_name(w, "id");
-				spdk_json_write_int32(w, spdk_scsi_lun_get_id(tgtnode->dev->lun[i]));
+				spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
 				spdk_json_write_object_end(w);
 			}
 		}

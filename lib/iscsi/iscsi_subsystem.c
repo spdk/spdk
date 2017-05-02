@@ -234,6 +234,7 @@ static void
 spdk_iscsi_config_dump_target_nodes(FILE *fp)
 {
 	int t = 0, l = 0, m = 0;
+	int maxlun;
 	struct spdk_scsi_dev *dev = NULL;
 	struct spdk_iscsi_tgt_node *target = NULL;
 
@@ -250,7 +251,7 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 		if (NULL == dev) continue;
 
 		idx = target->num;
-		fprintf(fp, TARGET_NODE_TMPL, idx, idx, target->name, dev->name);
+		fprintf(fp, TARGET_NODE_TMPL, idx, idx, target->name, spdk_scsi_dev_get_name(dev));
 
 		for (m = 0; m < target->maxmap; m++) {
 			if (NULL == target->map[m].pg) continue;
@@ -285,12 +286,17 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 		fprintf(fp, TARGET_NODE_AUTH_TMPL,
 			authmethod, authgroup, usedigest);
 
-		for (l = 0; l < dev->maxlun; l++) {
-			if (NULL == dev->lun[l]) continue;
+		maxlun = spdk_scsi_dev_get_max_lun(dev);
+		for (l = 0; l < maxlun; l++) {
+			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
+
+			if (!lun) {
+				continue;
+			}
 
 			fprintf(fp, TARGET_NODE_LUN_TMPL,
-				spdk_scsi_lun_get_id(dev->lun[l]),
-				spdk_scsi_lun_get_name(dev->lun[l]));
+				spdk_scsi_lun_get_id(lun),
+				spdk_scsi_lun_get_name(lun));
 		}
 
 		fprintf(fp, TARGET_NODE_QD_TMPL,
