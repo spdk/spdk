@@ -31,16 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include <linux/virtio_ring.h>
 #include <linux/virtio_scsi.h>
-#include <stdint.h>
-#include <sys/eventfd.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <semaphore.h>
-#include <dirent.h>
 
 #include <rte_config.h>
 #include <rte_malloc.h>

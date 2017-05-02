@@ -34,7 +34,7 @@
 #ifndef SPDK_BS_REQUEST_H
 #define SPDK_BS_REQUEST_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/blob.h"
 

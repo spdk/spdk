@@ -35,7 +35,7 @@
 #ifndef SPDK_MD5_H
 #define SPDK_MD5_H
 
-#include <stddef.h>
+#include "spdk/stdinc.h"
 
 #include <openssl/md5.h>
 

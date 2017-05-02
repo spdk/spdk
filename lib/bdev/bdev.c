@@ -32,12 +32,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/bdev.h"
+#include "spdk/stdinc.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include "spdk/bdev.h"
 
 #include <rte_config.h>
 #include <rte_mempool.h>

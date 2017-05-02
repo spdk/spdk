@@ -31,9 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include "spdk/stdinc.h"
 
 #include <rte_config.h>
 #include <rte_lcore.h>

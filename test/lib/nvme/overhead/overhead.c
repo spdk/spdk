@@ -31,13 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/barrier.h"
 #include "spdk/fd.h"
@@ -48,8 +42,6 @@
 
 #if HAVE_LIBAIO
 #include <libaio.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #endif
 
 struct ctrlr_entry {

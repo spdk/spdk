@@ -35,9 +35,7 @@
 #ifndef SPDK_CRC32C_H
 #define SPDK_CRC32C_H
 
-#include <stdint.h>
-#include <stddef.h>
-#include <sys/uio.h>
+#include "spdk/stdinc.h"
 
 #define SPDK_CRC32C_INITIAL    0xffffffffUL
 #define	SPDK_CRC32C_XOR        0xffffffffUL

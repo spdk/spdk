@@ -31,20 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk/env.h"
 #include "spdk/trace.h"
-
-#include <assert.h>
-#include <stdint.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <errno.h>
 
 #include <rte_config.h>
 #include <rte_lcore.h>

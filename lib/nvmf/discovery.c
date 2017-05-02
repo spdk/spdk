@@ -35,8 +35,7 @@
  * NVMe over Fabrics discovery service
  */
 
-#include <ctype.h>
-#include <assert.h>
+#include "spdk/stdinc.h"
 
 #include "nvmf_internal.h"
 #include "session.h"

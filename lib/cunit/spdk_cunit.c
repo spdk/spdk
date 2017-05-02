@@ -31,9 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_cunit.h"
+#include "spdk/stdinc.h"
 
-#include <stdio.h>
+#include "spdk_cunit.h"
 
 static int
 spdk_cunit_get_test_result(CU_pTest test)

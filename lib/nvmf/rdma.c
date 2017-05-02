@@ -31,15 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <errno.h>
+#include "spdk/stdinc.h"
+
 #include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdint.h>
 
 #include "nvmf_internal.h"
 #include "request.h"

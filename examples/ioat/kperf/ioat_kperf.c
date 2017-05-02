@@ -31,13 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <dirent.h>
-#include <inttypes.h>
-#include <assert.h>
+#include "spdk/stdinc.h"
 
 #define ioat_max(a,b) (((a)>(b))?(a):(b))
 

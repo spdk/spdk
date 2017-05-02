@@ -31,12 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include <sys/types.h>
-#include <signal.h>
-#include <stdint.h>
-#include <string.h>
-#include <unistd.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/rpc.h"
 #include "spdk/util.h"

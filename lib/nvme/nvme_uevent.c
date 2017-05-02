@@ -31,22 +31,15 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk/log.h"
 #include "spdk/event.h"
+
 #include "nvme_uevent.h"
 
 #ifdef __linux__
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <linux/netlink.h>
 
 #define SPDK_UEVENT_MSG_LEN 4096

@@ -31,10 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"

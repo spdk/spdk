@@ -34,24 +34,13 @@
 #ifndef __NVME_INTERNAL_H__
 #define __NVME_INTERNAL_H__
 
-#include "spdk/nvme.h"
+#include "spdk/stdinc.h"
 
-#include <errno.h>
-#include <pthread.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
+#include "spdk/nvme.h"
 
 #if defined(__i386__) || defined(__x86_64__)
 #include <x86intrin.h>
 #endif
-
-#include <sys/user.h>
 
 #include "spdk/queue.h"
 #include "spdk/barrier.h"

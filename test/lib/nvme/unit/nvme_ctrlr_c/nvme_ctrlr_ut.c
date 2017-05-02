@@ -31,11 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk_cunit.h"
 
 #include "spdk_internal/log.h"
-
-#include <stdbool.h>
 
 #include "lib/test_env.c"
 

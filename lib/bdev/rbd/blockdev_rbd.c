@@ -31,20 +31,13 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "blockdev_rbd.h"
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <pthread.h>
-#include <malloc.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-#include <poll.h>
-#include <sys/eventfd.h>
 #include <rbd/librbd.h>
 #include <rados/librados.h>
+#include <sys/eventfd.h>
 
 #include "spdk/conf.h"
 #include "spdk/env.h"

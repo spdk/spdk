@@ -34,18 +34,9 @@
 #ifndef SPDK_JSONRPC_INTERNAL_H_
 #define SPDK_JSONRPC_INTERNAL_H_
 
+#include "spdk/stdinc.h"
+
 #include "spdk/jsonrpc.h"
-
-#include <assert.h>
-#include <errno.h>
-#include <poll.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
-#include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
 
 #include "spdk_internal/log.h"
 

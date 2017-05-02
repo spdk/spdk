@@ -31,11 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
-#include <pthread.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"

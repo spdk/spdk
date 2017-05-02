@@ -31,20 +31,15 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <errno.h>
-#include <assert.h>
+#include "spdk/stdinc.h"
 
-#include <sys/ioctl.h>
 #include <linux/vfio.h>
 
-#include <spdk/env.h>
-#include <spdk/util.h>
+#include "spdk/env.h"
+#include "spdk/util.h"
+
 #include "spdk_internal/log.h"
+
 #include "vhost_iommu.h"
 
 static struct {

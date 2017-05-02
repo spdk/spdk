@@ -31,11 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CUnit/Basic.h"
+#include "spdk/stdinc.h"
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdlib.h>
+#include "CUnit/Basic.h"
 
 #include "ioat/ioat.c"
 

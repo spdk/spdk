@@ -35,8 +35,7 @@
 #ifndef SPDK_ISCSI_TGT_NODE_H_
 #define SPDK_ISCSI_TGT_NODE_H_
 
-#include <pthread.h>
-#include <time.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/scsi.h"
 
