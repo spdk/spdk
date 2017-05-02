@@ -73,7 +73,7 @@ if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
 	mkdir -p "$out"/doc
 	mv "$rootdir"/doc/output/html "$out"/doc
 	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
-		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc.pdf
+		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc/spdk.pdf
 	fi
 	rm -rf "$rootdir"/doc/output
 fi
