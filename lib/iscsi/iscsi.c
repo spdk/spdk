@@ -224,6 +224,17 @@ spdk_gen_random(uint8_t *buf, size_t len)
 #endif /* USE_RANDOM */
 }
 
+static uint64_t
+spdk_iscsi_get_isid(const uint8_t isid[6])
+{
+	return (uint64_t)isid[0] << 40 |
+	       (uint64_t)isid[1] << 32 |
+	       (uint64_t)isid[2] << 24 |
+	       (uint64_t)isid[3] << 16 |
+	       (uint64_t)isid[4] << 8 |
+	       (uint64_t)isid[5];
+}
+
 static int
 spdk_bin2hex(char *buf, size_t len, const uint8_t *data, size_t data_len)
 {
@@ -1345,7 +1356,7 @@ spdk_iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
 	/* check existing session */
 	SPDK_TRACELOG(SPDK_TRACE_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
-		      (uint64_t)rsph->isid, from_be16(&rsph->tsih), cid);
+		      spdk_iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
 	if (rsph->tsih != 0) {
 		/* multiple connections */
 		rc = spdk_append_iscsi_sess(conn, initiator_port_name,
@@ -1353,7 +1364,7 @@ spdk_iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 		if (rc < 0) {
 			SPDK_ERRLOG("isid=%"PRIx64", tsih=%u, cid=%u:"
 				    "spdk_append_iscsi_sess() failed\n",
-				    (uint64_t)rsph->isid, from_be16(&rsph->tsih),
+				    spdk_iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih),
 				    cid);
 			/* Can't include in session */
 			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
@@ -1558,7 +1569,7 @@ spdk_iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
 	snprintf(conn->initiator_name, sizeof(conn->initiator_name),
 		 "%s", val);
 	snprintf(initiator_port_name, name_length,
-		 "%s,i,0x%12.12" PRIx64, val, (uint64_t)rsph->isid);
+		 "%s,i,0x%12.12" PRIx64, val, spdk_iscsi_get_isid(rsph->isid));
 	spdk_strlwr(conn->initiator_name);
 	spdk_strlwr(initiator_port_name);
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Initiator name: %s\n",
@@ -1603,9 +1614,9 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 		/* initialize parameters */
 		conn->StatSN = from_be32(&rsph->stat_sn);
 		spdk_scsi_port_construct(&conn->sess->initiator_port,
-					 (uint64_t)rsph->isid, 0,
+					 spdk_iscsi_get_isid(rsph->isid), 0,
 					 initiator_port_name);
-		conn->sess->isid = (uint64_t)rsph->isid;
+		conn->sess->isid = spdk_iscsi_get_isid(rsph->isid);
 		conn->sess->target = target;
 
 		/* Discovery sessions will not have a target. */
