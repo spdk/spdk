@@ -1158,7 +1158,7 @@ spdk_iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_login_rsp *rsph;
 	int rc;
 
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	rsph->version_max = ISCSI_VERSION;
 	rsph->version_act = ISCSI_VERSION;
 	DSET24(rsph->data_segment_len, rsp_pdu->data_segment_len);
@@ -1353,7 +1353,7 @@ spdk_iscsi_op_login_check_session(struct spdk_iscsi_conn *conn,
 	int rc = 0;
 	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	/* check existing session */
 	SPDK_TRACELOG(SPDK_TRACE_ISCSI, "isid=%"PRIx64", tsih=%u, cid=%u\n",
 		      spdk_iscsi_get_isid(rsph->isid), from_be16(&rsph->tsih), cid);
@@ -1396,7 +1396,7 @@ spdk_iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 	int rc;
 	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	*target = spdk_iscsi_find_tgt_node(target_name);
 	if (*target == NULL) {
 		SPDK_WARNLOG("target %s not found\n", target_name);
@@ -1445,7 +1445,7 @@ spdk_iscsi_op_login_session_normal(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_login_rsp *rsph;
 	int rc = 0;
 
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	target_name = spdk_iscsi_param_get_val(params, "TargetName");
 
 	if (target_name == NULL) {
@@ -1510,7 +1510,7 @@ spdk_iscsi_op_login_session_type(struct spdk_iscsi_conn *conn,
 	const char *session_type_str;
 	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	session_type_str = spdk_iscsi_param_get_val(params, "SessionType");
 	if (session_type_str == NULL) {
 		if (rsph->tsih != 0)
@@ -1555,7 +1555,7 @@ spdk_iscsi_op_login_initialize_port(struct spdk_iscsi_conn *conn,
 {
 	const char *val;
 	struct iscsi_bhs_login_rsp *rsph;
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	/* Initiator Name and Port */
 	val = spdk_iscsi_param_get_val(params, "InitiatorName");
@@ -1596,7 +1596,7 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 	int rc = 0;
 	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	conn->authenticated = 0;
 	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
 	conn->cid = cid;
@@ -1734,7 +1734,7 @@ spdk_iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_login_rsp *rsph;
 	struct spdk_iscsi_tgt_node *target = NULL;
 	int rc = 0;
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	conn->target = NULL;
 	conn->dev = NULL;
@@ -1942,7 +1942,7 @@ spdk_iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 	const char *auth_method;
 	int rc;
 	struct iscsi_bhs_login_rsp *rsph;
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	switch (ISCSI_BHS_LOGIN_GET_CSG(rsph->flags)) {
 	case ISCSI_SECURITY_NEGOTIATION_PHASE:
@@ -2040,7 +2040,7 @@ spdk_iscsi_op_login_notify_session_info(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_portal *portal = conn->portal;
 	struct iscsi_bhs_login_rsp *rsph;
 
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		/* normal session */
 		SPDK_NOTICELOG("Login from %s (%s) on %s tgt_node%d"
@@ -2091,7 +2091,7 @@ spdk_iscsi_op_login_rsp_handle_t_bit(struct spdk_iscsi_conn *conn,
 {
 	int rc;
 	struct iscsi_bhs_login_rsp *rsph;
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	switch (ISCSI_BHS_LOGIN_GET_NSG(rsph->flags)) {
 	case ISCSI_SECURITY_NEGOTIATION_PHASE:
@@ -2143,7 +2143,7 @@ spdk_iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 {
 	int rc = 0;
 	struct iscsi_bhs_login_rsp *rsph;
-	rsph = (struct iscsi_bhs_login_rsp *) & (rsp_pdu->bhs);
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 
 	/* negotiate parameters */
 	rc = spdk_iscsi_negotiate_params(conn, params, rsp_pdu->data, alloc_len,
