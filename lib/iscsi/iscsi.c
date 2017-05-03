@@ -1613,9 +1613,8 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 
 		/* initialize parameters */
 		conn->StatSN = from_be32(&rsph->stat_sn);
-		spdk_scsi_port_construct(&conn->sess->initiator_port,
-					 spdk_iscsi_get_isid(rsph->isid), 0,
-					 initiator_port_name);
+		conn->sess->initiator_port = spdk_scsi_port_create(spdk_iscsi_get_isid(rsph->isid), 0,
+					     initiator_port_name);
 		conn->sess->isid = spdk_iscsi_get_isid(rsph->isid);
 		conn->sess->target = target;
 
@@ -1633,7 +1632,7 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 		conn->sess->MaxCmdSN = rsp_pdu->cmd_sn + conn->sess->queue_depth - 1;
 	}
 
-	conn->initiator_port = &conn->sess->initiator_port;
+	conn->initiator_port = conn->sess->initiator_port;
 
 	return 0;
 }
@@ -4437,6 +4436,7 @@ void spdk_free_sess(struct spdk_iscsi_sess *sess)
 	sess->session_type = SESSION_TYPE_INVALID;
 	spdk_iscsi_param_free(sess->params);
 	free(sess->conns);
+	spdk_scsi_port_free(&sess->initiator_port);
 	rte_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
 }
 
@@ -4632,7 +4632,7 @@ spdk_append_iscsi_sess(struct spdk_iscsi_conn *conn,
 		return -1;
 	}
 	if ((conn->portal->group->tag != sess->tag) ||
-	    (strcasecmp(initiator_port_name, sess->initiator_port.name) != 0) ||
+	    (strcasecmp(initiator_port_name, spdk_scsi_port_get_name(sess->initiator_port)) != 0) ||
 	    (conn->target != sess->target)) {
 		/* no match */
 		SPDK_ERRLOG("no MCS session for init port name=%s, tsih=%d, cid=%d\n",

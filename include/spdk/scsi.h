@@ -163,12 +163,7 @@ struct spdk_scsi_task {
 	TAILQ_HEAD(subtask_list, spdk_scsi_task) subtask_list;
 };
 
-struct spdk_scsi_port {
-	struct spdk_scsi_dev	*dev;
-	uint64_t		id;
-	uint16_t		index;
-	char			name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
-};
+struct spdk_scsi_port;
 
 struct spdk_scsi_dev;
 
@@ -221,8 +216,9 @@ struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun);
 
 
-int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,
-			     uint16_t index, const char *name);
+struct spdk_scsi_port *spdk_scsi_port_create(uint64_t id, uint16_t index, const char *name);
+void spdk_scsi_port_free(struct spdk_scsi_port **pport);
+const char *spdk_scsi_port_get_name(const struct spdk_scsi_port *port);
 
 
 void spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,

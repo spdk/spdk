@@ -42,7 +42,9 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 LIBS += -lcunit -lcrypto
+SCSI_OBJS = port
 ISCSI_OBJS = iscsi crc32c md5 param
+OBJS += $(SCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/scsi/%.o)
 OBJS += $(ISCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/iscsi/%.o)
 
 APP = pdu

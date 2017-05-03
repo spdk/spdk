@@ -62,6 +62,13 @@ enum {
 	SPDK_SCSI_TASK_PENDING,
 };
 
+struct spdk_scsi_port {
+	struct spdk_scsi_dev	*dev;
+	uint64_t		id;
+	uint16_t		index;
+	char			name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
+};
+
 struct spdk_scsi_dev {
 	int			id;
 	int			is_allocated;
@@ -147,6 +154,9 @@ int spdk_scsi_lun_db_delete(struct spdk_scsi_lun *lun);
 struct spdk_scsi_lun *spdk_lun_db_get_lun(const char *lun_name);
 
 struct spdk_scsi_dev *spdk_scsi_dev_get_list(void);
+
+int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,
+			     uint16_t index, const char *name);
 
 int spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
 int spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task);

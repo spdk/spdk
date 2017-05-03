@@ -232,7 +232,7 @@ struct spdk_iscsi_sess {
 	uint32_t connections;
 	struct spdk_iscsi_conn **conns;
 
-	struct spdk_scsi_port initiator_port;
+	struct spdk_scsi_port *initiator_port;
 	int tag;
 
 	uint64_t isid;

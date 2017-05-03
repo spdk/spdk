@@ -7,6 +7,8 @@
 
 #include "spdk_internal/log.h"
 
+#include "scsi/scsi_internal.h"
+
 SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
 
 struct spdk_iscsi_task *
@@ -75,13 +77,6 @@ struct spdk_scsi_port *
 spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id)
 {
 	return NULL;
-}
-
-int
-spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t index,
-			 const char *name)
-{
-	return 0;
 }
 
 void

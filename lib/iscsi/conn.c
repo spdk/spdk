@@ -772,7 +772,7 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 			continue;
 
 		xconn_match =
-			drop_all ? xconn->initiator_name : xconn->initiator_port->name;
+			drop_all ? xconn->initiator_name : spdk_scsi_port_get_name(xconn->initiator_port);
 
 		if (!strcasecmp(conn_match, xconn_match) &&
 		    conn->target == xconn->target) {
@@ -1206,8 +1206,8 @@ spdk_iscsi_conn_handle_incoming_pdus(struct spdk_iscsi_conn *conn)
 		spdk_put_pdu(pdu);
 		if (rc != 0) {
 			SPDK_ERRLOG("spdk_iscsi_execute() fatal error on %s(%s)\n",
-				    conn->target_port != NULL ? conn->target_port->name : "NULL",
-				    conn->initiator_port != NULL ? conn->initiator_port->name : "NULL");
+				    conn->target_port != NULL ? spdk_scsi_port_get_name(conn->target_port) : "NULL",
+				    conn->initiator_port != NULL ? spdk_scsi_port_get_name(conn->initiator_port) : "NULL");
 			return rc;
 		}
 	}

@@ -34,6 +34,39 @@
 
 #include "scsi_internal.h"
 
+struct spdk_scsi_port *
+spdk_scsi_port_create(uint64_t id, uint16_t index, const char *name)
+{
+	struct spdk_scsi_port *port;
+
+	port = calloc(1, sizeof(struct spdk_scsi_port));
+
+	if (!port) {
+		return NULL;
+	}
+
+	if (spdk_scsi_port_construct(port, id, index, name) != 0) {
+		spdk_scsi_port_free(&port);
+		return NULL;
+	}
+
+	return port;
+}
+
+void
+spdk_scsi_port_free(struct spdk_scsi_port **pport)
+{
+	struct spdk_scsi_port *port;
+
+	if (!pport) {
+		return;
+	}
+
+	port = *pport;
+	*pport = NULL;
+	free(port);
+}
+
 int
 spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t index,
 			 const char *name)
@@ -47,4 +80,10 @@ spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t inde
 	port->index = index;
 	snprintf(port->name, sizeof(port->name), "%s", name);
 	return 0;
+}
+
+const char *
+spdk_scsi_port_get_name(const struct spdk_scsi_port *port)
+{
+	return port->name;
 }
