@@ -46,6 +46,8 @@ struct spdk_iscsi_task {
 
 	uint32_t desired_data_transfer_length;
 
+	uint32_t data_out_cnt;
+
 	/*
 	 * Tracks the current offset of large read io.
 	 */
