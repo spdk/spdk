@@ -2784,7 +2784,7 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 					case SPDK_SCSI_STATUS_INTERMEDIATE_CONDITION_MET:
 						/* The last pdu in all data-in pdus */
 						if ((offset + len) == transfer_len &&
-						    (primary->scsi.bytes_completed ==
+						    (primary->bytes_completed ==
 						     primary->scsi.transfer_len)) {
 							datain_flag |= ISCSI_DATAIN_STATUS;
 							sent_status = 1;
@@ -3137,7 +3137,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			return;
 		}
 
-		if (primary->scsi.bytes_completed != primary->scsi.transfer_len)
+		if (primary->bytes_completed != primary->scsi.transfer_len)
 			return;
 	}
 

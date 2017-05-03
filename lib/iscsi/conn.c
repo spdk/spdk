@@ -872,9 +872,9 @@ process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
 
 	while (!TAILQ_EMPTY(&primary->subtask_list)) {
 		tmp = TAILQ_FIRST(&primary->subtask_list);
-		if (tmp->scsi.offset == primary->scsi.bytes_completed) {
+		if (tmp->scsi.offset == primary->bytes_completed) {
 			TAILQ_REMOVE(&primary->subtask_list, tmp, subtask_link);
-			primary->scsi.bytes_completed += tmp->scsi.length;
+			primary->bytes_completed += tmp->scsi.length;
 			spdk_iscsi_task_response(conn, tmp);
 			spdk_iscsi_task_put(tmp);
 		} else {
@@ -892,7 +892,7 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	bool flag = false;
 
 	if ((task != primary) &&
-	    (task->scsi.offset != primary->scsi.bytes_completed)) {
+	    (task->scsi.offset != primary->bytes_completed)) {
 		TAILQ_FOREACH(tmp, &primary->subtask_list, link) {
 			if (task->scsi.offset < tmp->scsi.offset) {
 				TAILQ_INSERT_BEFORE(tmp, task, subtask_link);
@@ -906,7 +906,7 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 		return;
 	}
 
-	primary->scsi.bytes_completed += task->scsi.length;
+	primary->bytes_completed += task->scsi.length;
 	spdk_iscsi_task_response(conn, task);
 
 	if ((task != primary) ||
@@ -931,7 +931,7 @@ void process_task_completion(void *arg1, void *arg2)
 	if (spdk_iscsi_task_is_read(primary)) {
 		process_read_task_completion(conn, task, primary);
 	} else {
-		primary->scsi.bytes_completed += task->scsi.length;
+		primary->bytes_completed += task->scsi.length;
 		if ((task != primary) &&
 		    (task->scsi.status != SPDK_SCSI_STATUS_GOOD)) {
 			memcpy(primary->scsi.sense_data, task->scsi.sense_data,
@@ -940,7 +940,7 @@ void process_task_completion(void *arg1, void *arg2)
 			primary->scsi.status = task->scsi.status;
 		}
 
-		if (primary->scsi.bytes_completed == primary->scsi.transfer_len) {
+		if (primary->bytes_completed == primary->scsi.transfer_len) {
 			spdk_del_transfer_task(conn, primary->tag);
 			spdk_iscsi_task_response(conn, primary);
 			/*

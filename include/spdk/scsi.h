@@ -109,8 +109,6 @@ struct spdk_scsi_task {
 	uint32_t ref;
 	uint32_t transfer_len;
 	uint32_t dxfer_dir;
-	/* Only valid for Read/Write */
-	uint32_t bytes_completed;
 	uint32_t length;
 
 	/**
