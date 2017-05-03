@@ -74,6 +74,8 @@ struct spdk_iscsi_task {
 	uint32_t acked_data_sn; /* next expected datain datasn */
 	uint32_t ttt;
 
+	uint32_t tag;
+
 	TAILQ_ENTRY(spdk_iscsi_task) link;
 
 	TAILQ_HEAD(subtask_list, spdk_iscsi_task) subtask_list;

@@ -102,7 +102,6 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 		task->cdb = parent->cdb;
 		task->target_port = parent->target_port;
 		task->initiator_port = parent->initiator_port;
-		task->id = parent->id;
 	}
 }
 

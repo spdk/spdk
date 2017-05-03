@@ -271,9 +271,6 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	task->lun = lun;
 	task->cdb = cdb;
 
-	/* Set the task's id and abort_id to the same value */
-	mgmt_task->abort_id = task->id;
-
 	spdk_scsi_lun_append_task(lun, task);
 
 	/* task should now be on the pending_task list */

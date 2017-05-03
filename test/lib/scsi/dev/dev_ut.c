@@ -41,7 +41,6 @@
 #include "dev.c"
 #include "port.c"
 
-static uint32_t g_task_count = 0;
 static struct spdk_bdev g_bdev = {};
 
 struct lun_entry {
@@ -72,18 +71,12 @@ spdk_get_task(uint32_t *owner_task_ctr)
 		return NULL;
 	}
 
-	task->id = g_task_count;
-
-	g_task_count++;
-
 	return task;
 }
 
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
-	g_task_count--;
-
 	free(task);
 }
 

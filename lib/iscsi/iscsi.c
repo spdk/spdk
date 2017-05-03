@@ -2601,7 +2601,7 @@ spdk_get_scsi_task_from_itt(struct spdk_iscsi_conn *conn,
 	TAILQ_FOREACH(pdu, &conn->snack_pdu_list, tailq) {
 		if (pdu->bhs.opcode == opcode &&
 		    pdu->task != NULL &&
-		    pdu->task->scsi.id == task_tag) {
+		    pdu->task->tag == task_tag) {
 			task = pdu->task;
 			break;
 		}
@@ -2630,7 +2630,7 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	rsp_pdu->data = task->scsi.iovs[0].iov_base + offset;
 	rsp_pdu->data_from_mempool = true;
 
-	task_tag = task->scsi.id;
+	task_tag = task->tag;
 	transfer_tag = 0xffffffffU;
 
 	F_bit = datain_flag & ISCSI_FLAG_FINAL;
@@ -2969,7 +2969,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	task->scsi.cdb = cdb;
-	task->scsi.id = task_tag;
+	task->tag = task_tag;
 	task->scsi.transfer_len = transfer_len;
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
@@ -3126,7 +3126,7 @@ void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 	primary = spdk_iscsi_task_get_primary(task);
 
 	transfer_len = primary->scsi.transfer_len;
-	task_tag = task->scsi.id;
+	task_tag = task->tag;
 
 	/* transfer data from logical unit */
 	/* (direction is view of initiator side) */
@@ -3277,7 +3277,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	spdk_iscsi_task_associate_pdu(task, pdu);
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
-	task->scsi.id = task_tag;
+	task->tag = task_tag;
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 
 	switch (function) {
@@ -3542,7 +3542,7 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 	int i;
 
 	for (i = 0; i < conn->pending_r2t; i++) {
-		if (conn->outstanding_r2t_tasks[i]->scsi.id == task_tag) {
+		if (conn->outstanding_r2t_tasks[i]->tag == task_tag) {
 			task = conn->outstanding_r2t_tasks[i];
 			conn->outstanding_r2t_tasks[i] = NULL;
 			conn->data_out_cnt -= task->scsi.data_out_cnt;
@@ -4068,9 +4068,9 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
-	if (task->scsi.id != task_tag) {
+	if (task->tag != task_tag) {
 		SPDK_ERRLOG("The r2t task tag is %u, and the dataout task tag is %u\n",
-			    task->scsi.id, task_tag);
+			    task->tag, task_tag);
 		goto reject_return;
 	}
 
@@ -4167,7 +4167,7 @@ spdk_iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 	rsph->opcode = ISCSI_OP_R2T;
 	rsph->flags |= 0x80; /* bit 0 is default to 1 */
 	to_be64(&rsph->lun, spdk_scsi_lun_get_id(task->scsi.lun));
-	to_be32(&rsph->itt, task->scsi.id);
+	to_be32(&rsph->itt, task->tag);
 	to_be32(&rsph->ttt, transfer_tag);
 
 	to_be32(&rsph->stat_sn, conn->StatSN);

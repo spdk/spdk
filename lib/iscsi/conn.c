@@ -941,7 +941,7 @@ void process_task_completion(void *arg1, void *arg2)
 		}
 
 		if (primary->scsi.bytes_completed == primary->scsi.transfer_len) {
-			spdk_del_transfer_task(conn, primary->scsi.id);
+			spdk_del_transfer_task(conn, primary->tag);
 			spdk_iscsi_task_response(conn, primary);
 			/*
 			 * Check if this is the last task completed for an iSCSI write

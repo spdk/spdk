@@ -60,6 +60,9 @@ spdk_iscsi_task_get(uint32_t *owner_task_ctr, struct spdk_iscsi_task *parent)
 	memset(task, 0, sizeof(*task));
 	spdk_scsi_task_construct((struct spdk_scsi_task *)task, owner_task_ctr,
 				 (struct spdk_scsi_task *)parent);
+	if (parent) {
+		task->tag = parent->tag;
+	}
 	task->scsi.free_fn = spdk_iscsi_task_free;
 
 	return task;

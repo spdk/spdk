@@ -107,7 +107,6 @@ struct spdk_scsi_task {
 	struct spdk_event 		*cb_event;
 
 	uint32_t ref;
-	uint32_t id;
 	uint32_t transfer_len;
 	uint32_t data_out_cnt;
 	uint32_t dxfer_dir;

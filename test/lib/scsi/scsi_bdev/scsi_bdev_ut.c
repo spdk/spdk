@@ -103,7 +103,6 @@ static void
 spdk_init_task(struct spdk_scsi_task *task)
 {
 	memset(task, 0, sizeof(*task));
-	task->id = 1;
 	task->iovs = &task->iov;
 	task->iovcnt = 1;
 }
