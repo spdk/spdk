@@ -868,15 +868,15 @@ static void
 process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
 				    struct spdk_iscsi_task *primary)
 {
-	struct spdk_scsi_task *tmp;
+	struct spdk_iscsi_task *tmp;
 
-	while (!TAILQ_EMPTY(&primary->scsi.subtask_list)) {
-		tmp = TAILQ_FIRST(&primary->scsi.subtask_list);
-		if (tmp->offset == primary->scsi.bytes_completed) {
-			TAILQ_REMOVE(&primary->scsi.subtask_list, tmp, scsi_link);
-			primary->scsi.bytes_completed += tmp->length;
-			spdk_iscsi_task_response(conn, (struct spdk_iscsi_task *)tmp);
-			spdk_iscsi_task_put((struct spdk_iscsi_task *)tmp);
+	while (!TAILQ_EMPTY(&primary->subtask_list)) {
+		tmp = TAILQ_FIRST(&primary->subtask_list);
+		if (tmp->scsi.offset == primary->scsi.bytes_completed) {
+			TAILQ_REMOVE(&primary->subtask_list, tmp, subtask_link);
+			primary->scsi.bytes_completed += tmp->scsi.length;
+			spdk_iscsi_task_response(conn, tmp);
+			spdk_iscsi_task_put(tmp);
 		} else {
 			break;
 		}
@@ -888,20 +888,20 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_task *task,
 			     struct spdk_iscsi_task *primary)
 {
-	struct spdk_scsi_task *tmp;
+	struct spdk_iscsi_task *tmp;
 	bool flag = false;
 
 	if ((task != primary) &&
 	    (task->scsi.offset != primary->scsi.bytes_completed)) {
-		TAILQ_FOREACH(tmp, &primary->scsi.subtask_list, scsi_link) {
-			if (task->scsi.offset < tmp->offset) {
-				TAILQ_INSERT_BEFORE(tmp, &task->scsi, scsi_link);
+		TAILQ_FOREACH(tmp, &primary->subtask_list, link) {
+			if (task->scsi.offset < tmp->scsi.offset) {
+				TAILQ_INSERT_BEFORE(tmp, task, subtask_link);
 				flag = true;
 				break;
 			}
 		}
 		if (!flag) {
-			TAILQ_INSERT_TAIL(&primary->scsi.subtask_list, &task->scsi, scsi_link);
+			TAILQ_INSERT_TAIL(&primary->subtask_list, task, subtask_link);
 		}
 		return;
 	}

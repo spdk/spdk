@@ -75,6 +75,9 @@ struct spdk_iscsi_task {
 	uint32_t ttt;
 
 	TAILQ_ENTRY(spdk_iscsi_task) link;
+
+	TAILQ_HEAD(subtask_list, spdk_iscsi_task) subtask_list;
+	TAILQ_ENTRY(spdk_iscsi_task) subtask_link;
 };
 
 static inline void

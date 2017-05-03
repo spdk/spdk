@@ -2901,7 +2901,7 @@ static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 {
 	int32_t remaining_size = 0;
 
-	TAILQ_INIT(&task->scsi.subtask_list);
+	TAILQ_INIT(&task->subtask_list);
 	task->scsi.dxfer_dir = SPDK_SCSI_DIR_FROM_DEV;
 	task->scsi.parent = NULL;
 	task->scsi.offset = 0;

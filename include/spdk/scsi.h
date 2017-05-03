@@ -160,7 +160,6 @@ struct spdk_scsi_task {
 	uint32_t *owner_task_ctr;
 
 	uint32_t abort_id;
-	TAILQ_HEAD(subtask_list, spdk_scsi_task) subtask_list;
 };
 
 struct spdk_scsi_port;
