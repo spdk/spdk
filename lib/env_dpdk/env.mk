@@ -63,6 +63,12 @@ endif
 
 DPDK_LIB_LIST = rte_eal rte_mempool rte_ring
 
+# librte_mempool_ring was new added from DPDK 17.05. Link this library used for
+#   ring based mempool management API.
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_mempool_ring.*))
+DPDK_LIB_LIST += rte_mempool_ring
+endif
+
 # librte_malloc was removed after DPDK 2.1.  Link this library conditionally based on its
 #  existence to maintain backward compatibility.
 ifneq ($(wildcard $(DPDK_ABS_DIR)/lib/librte_malloc.*),)
