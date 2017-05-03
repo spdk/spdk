@@ -428,7 +428,7 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	suite = CU_add_suite("blobfs", NULL, NULL);
+	suite = CU_add_suite("blobfs_async_ut", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();

@@ -35,9 +35,9 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-APP = cache_ut
+APP = blobfs_sync_ut
 
-C_SRCS := cache_ut.c
+C_SRCS := blobfs_sync_ut.c
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/blobfs -I$(SPDK_ROOT_DIR)/lib/blob
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 

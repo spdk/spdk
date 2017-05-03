@@ -7,9 +7,9 @@ set -xe
 
 $valgrind test/lib/blob/blob_ut/blob_ut
 
-$valgrind test/lib/blobfs/blobfs_ut/blobfs_ut
-# cache_ut hangs when run under valgrind, so don't use $valgrind
-test/lib/blobfs/cache_ut/cache_ut
+$valgrind test/lib/blobfs/blobfs_async_ut/blobfs_async_ut
+# blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
+test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
 
 $valgrind test/lib/nvme/unit/nvme_c/nvme_ut
 $valgrind test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut
