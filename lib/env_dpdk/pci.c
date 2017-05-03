@@ -84,7 +84,9 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 	addr.function = device->addr.function;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+#if RTE_VERSION < RTE_VERSION_NUM(17, 05, 0, 0)
 	rte_eal_device_remove(&device->device);
+#endif
 #endif
 	rte_eal_pci_detach(&addr);
 }
