@@ -178,7 +178,7 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
-	req->contig = spdk_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
+	req->contig = spdk_dma_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
 	if (!req->contig)
 		return 0;
 
@@ -214,7 +214,7 @@ static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *r
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	/* No additional metadata buffer provided */
-	req->contig = spdk_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
+	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
 	if (!req->contig)
 		return 0;
 
@@ -261,7 +261,7 @@ static uint32_t dp_without_pract_extended_lba_test(struct spdk_nvme_ns *ns, stru
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
-	req->contig = spdk_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
+	req->contig = spdk_dma_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
 	if (!req->contig)
 		return 0;
 
@@ -295,7 +295,7 @@ static uint32_t dp_without_flags_extended_lba_test(struct spdk_nvme_ns *ns, stru
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
-	req->contig = spdk_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
+	req->contig = spdk_dma_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
 	if (!req->contig)
 		return 0;
 
@@ -329,13 +329,13 @@ static uint32_t dp_without_pract_separate_meta_test(struct spdk_nvme_ns *ns, str
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
-	req->contig = spdk_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
+	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
 	if (!req->contig)
 		return 0;
 
-	req->metadata = spdk_zmalloc(md_size * req->lba_count, 0x1000, NULL);
+	req->metadata = spdk_dma_zmalloc(md_size * req->lba_count, 0x1000, NULL);
 	if (!req->metadata) {
-		spdk_free(req->contig);
+		spdk_dma_free(req->contig);
 		return 0;
 	}
 
@@ -372,13 +372,13 @@ static uint32_t dp_without_pract_separate_meta_apptag_test(struct spdk_nvme_ns *
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
-	req->contig = spdk_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
+	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
 	if (!req->contig)
 		return 0;
 
-	req->metadata = spdk_zmalloc(md_size * req->lba_count, 0x1000, NULL);
+	req->metadata = spdk_dma_zmalloc(md_size * req->lba_count, 0x1000, NULL);
 	if (!req->metadata) {
-		spdk_free(req->contig);
+		spdk_dma_free(req->contig);
 		return 0;
 	}
 
@@ -413,13 +413,13 @@ static uint32_t dp_without_flags_separate_meta_test(struct spdk_nvme_ns *ns, str
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
-	req->contig = spdk_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
+	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
 	if (!req->contig)
 		return 0;
 
-	req->metadata = spdk_zmalloc(md_size * req->lba_count, 0x1000, NULL);
+	req->metadata = spdk_dma_zmalloc(md_size * req->lba_count, 0x1000, NULL);
 	if (!req->metadata) {
-		spdk_free(req->contig);
+		spdk_dma_free(req->contig);
 		return 0;
 	}
 
@@ -441,12 +441,12 @@ free_req(struct io_request *req)
 	}
 
 	if (req->contig)
-		spdk_free(req->contig);
+		spdk_dma_free(req->contig);
 
 	if (req->metadata)
-		spdk_free(req->metadata);
+		spdk_dma_free(req->metadata);
 
-	spdk_free(req);
+	spdk_dma_free(req);
 }
 
 static int
@@ -503,7 +503,7 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 		return 0;
 	}
 
-	req = spdk_zmalloc(sizeof(*req), 0, NULL);
+	req = spdk_dma_zmalloc(sizeof(*req), 0, NULL);
 	if (!req) {
 		fprintf(stderr, "Allocate request failed\n");
 		return 0;

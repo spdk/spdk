@@ -130,7 +130,7 @@ ioat_exit(void)
 		if (dev->ioat) {
 			spdk_ioat_detach(dev->ioat);
 		}
-		spdk_free(dev);
+		spdk_dma_free(dev);
 	}
 }
 
@@ -226,7 +226,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 		return;
 	}
 
-	dev = spdk_zmalloc(sizeof(*dev), 0, NULL);
+	dev = spdk_dma_zmalloc(sizeof(*dev), 0, NULL);
 	if (dev == NULL) {
 		printf("Failed to allocate device struct\n");
 		return;
