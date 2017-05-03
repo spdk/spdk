@@ -51,3 +51,13 @@ test/lib/iscsi/pdu/pdu
 $valgrind test/lib/util/bit_array/bit_array_ut
 $valgrind test/lib/util/io_channel/io_channel_ut
 $valgrind test/lib/util/string/string_ut
+
+set +x
+
+echo
+echo
+echo "====================="
+echo "All unit tests passed"
+echo "====================="
+echo
+echo
