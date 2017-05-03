@@ -11,8 +11,9 @@ VM Configuration
 
 This vagrant environment creates a VM based on environment variables found in ./env.sh
 To use, edit env.sh then
-  source ./env.sh
-  vagrant up
+
+    source ./env.sh
+    vagrant up
 
 By default, the VM created is/has:
 - Ubuntu 16.04
