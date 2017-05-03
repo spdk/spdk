@@ -4063,7 +4063,7 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 		goto reject_return;
 	}
 
-	if (pdu->data_segment_len > task->scsi.desired_data_transfer_length) {
+	if (pdu->data_segment_len > task->desired_data_transfer_length) {
 		SPDK_ERRLOG("the dataout pdu data length is larger than the value sent by R2T PDU");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -4181,7 +4181,7 @@ spdk_iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 
 	to_be32(&rsph->buffer_offset, (uint32_t)offset);
 	to_be32(&rsph->desired_xfer_len, (uint32_t)len);
-	task->scsi.desired_data_transfer_length = (size_t)len;
+	task->desired_data_transfer_length = (size_t)len;
 
 	/* we need to hold onto this task/cmd because until the PDU has been
 	 * written out */

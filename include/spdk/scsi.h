@@ -110,7 +110,6 @@ struct spdk_scsi_task {
 	uint32_t transfer_len;
 	uint32_t data_out_cnt;
 	uint32_t dxfer_dir;
-	uint32_t desired_data_transfer_length;
 	/* Only valid for Read/Write */
 	uint32_t bytes_completed;
 	uint32_t length;
