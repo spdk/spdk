@@ -1105,6 +1105,39 @@ spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb)
 	}
 }
 
+void
+spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp)
+{
+	struct iovec *iovs;
+	int iovcnt;
+
+	if (bdev_io == NULL) {
+		return;
+	}
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		iovs = bdev_io->u.read.iovs;
+		iovcnt = bdev_io->u.read.iovcnt;
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		iovs = bdev_io->u.write.iovs;
+		iovcnt = bdev_io->u.write.iovcnt;
+		break;
+	default:
+		iovs = NULL;
+		iovcnt = 0;
+		break;
+	}
+
+	if (iovp) {
+		*iovp = iovs;
+	}
+	if (iovcntp) {
+		*iovcntp = iovcnt;
+	}
+}
+
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 {
 	TAILQ_INSERT_TAIL(&spdk_bdev_module_list, bdev_module, tailq);

@@ -1225,6 +1225,8 @@ spdk_bdev_scsi_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_sta
 			     void *cb_arg)
 {
 	struct spdk_scsi_task		*task = cb_arg;
+	struct iovec			*iovs;
+	int				iovcnt;
 
 	if (task->type == SPDK_SCSI_TASK_TYPE_CMD) {
 		int sc, sk, asc, ascq;
@@ -1235,9 +1237,12 @@ spdk_bdev_scsi_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_sta
 		if (status == SPDK_BDEV_IO_STATUS_SUCCESS)
 			task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
 	}
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ && task->iovs != bdev_io->u.read.iovs) {
-		assert(task->iovcnt == bdev_io->u.read.iovcnt);
-		memcpy(task->iovs, bdev_io->u.read.iovs, sizeof(task->iovs[0]) * task->iovcnt);
+
+	spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
+	if (task->dxfer_dir == SPDK_SCSI_DIR_FROM_DEV && task->iovs != iovs) {
+		assert(iovs != NULL);
+		assert(task->iovcnt == iovcnt);
+		memcpy(task->iovs, iovs, sizeof(task->iovs[0]) * task->iovcnt);
 	}
 
 	spdk_scsi_lun_complete_task(task->lun, task);

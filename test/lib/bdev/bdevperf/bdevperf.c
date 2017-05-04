@@ -191,6 +191,8 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
 	struct spdk_event 	*complete;
+	struct iovec		*iovs;
+	int			iovcnt;
 
 	target = task->target;
 
@@ -200,8 +202,10 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 			g_run_failed = true;
 		}
 	} else if (g_verify || g_reset || g_unmap) {
-		assert(bdev_io->u.read.iovcnt == 1);
-		if (memcmp(task->buf, bdev_io->u.read.iov.iov_base, g_io_size) != 0) {
+		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
+		assert(iovcnt == 1);
+		assert(iovs != NULL);
+		if (memcmp(task->buf, iovs[0].iov_base, g_io_size) != 0) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset);
 			target->is_draining = true;
 			g_run_failed = true;

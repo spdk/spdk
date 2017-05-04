@@ -389,4 +389,13 @@ void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, 
 void spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 				  int *sc, int *sk, int *asc, int *ascq);
 
+/**
+ * Get the iovec describing the data buffer of a bdev_io.
+ *
+ * \param bdev_io I/O to describe with iovec.
+ * \param iovp Pointer to be filled with iovec.
+ * \param iovcntp Pointer to be filled with number of iovec entries.
+ */
+void spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp);
+
 #endif /* SPDK_BDEV_H_ */
