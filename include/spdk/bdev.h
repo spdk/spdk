@@ -59,6 +59,7 @@ typedef void (*spdk_bdev_remove_cb_t)(void *remove_ctx);
 
 struct spdk_bdev_io;
 struct spdk_bdev_fn_table;
+struct spdk_io_channel;
 struct spdk_json_write_ctx;
 
 /** Blockdev status */
