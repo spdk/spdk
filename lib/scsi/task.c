@@ -55,10 +55,6 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 		}
 
 		if (bdev_io) {
-			/* due to lun reset, the bdev_io status could be pending */
-			if (bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING) {
-				bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
-			}
 			spdk_bdev_free_io(bdev_io);
 		}
 
