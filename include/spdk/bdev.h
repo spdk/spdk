@@ -168,7 +168,6 @@ enum spdk_bdev_reset_type {
 typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
 		enum spdk_bdev_io_status status,
 		void *cb_arg);
-typedef void (*spdk_bdev_io_get_rbuf_cb)(struct spdk_bdev_io *bdev_io);
 
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 void spdk_bdev_unregister(struct spdk_bdev *bdev);

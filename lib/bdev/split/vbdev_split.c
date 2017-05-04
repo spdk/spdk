@@ -110,7 +110,7 @@ split_reset(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
 }
 
 static void
-vbdev_split_submit_request(struct spdk_bdev_io *bdev_io)
+vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct split_disk *split_disk = bdev_io->ctx;
 

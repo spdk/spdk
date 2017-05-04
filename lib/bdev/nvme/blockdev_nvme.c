@@ -255,12 +255,12 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		uint16_t bdesc_count);
 
 static void
-bdev_nvme_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
+bdev_nvme_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	int ret;
 
 	ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->ctx,
-			      bdev_io->ch,
+			      ch,
 			      (struct nvme_bdev_io *)bdev_io->driver_ctx,
 			      bdev_io->u.read.iovs,
 			      bdev_io->u.read.iovcnt,
@@ -273,7 +273,7 @@ bdev_nvme_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 }
 
 static int
-_bdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
+_bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -282,7 +282,7 @@ _bdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return bdev_nvme_writev((struct nvme_bdev *)bdev_io->ctx,
-					bdev_io->ch,
+					ch,
 					(struct nvme_bdev_io *)bdev_io->driver_ctx,
 					bdev_io->u.write.iovs,
 					bdev_io->u.write.iovcnt,
@@ -291,7 +291,7 @@ _bdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->ctx,
-				       bdev_io->ch,
+				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.unmap.unmap_bdesc,
 				       bdev_io->u.unmap.bdesc_count);
@@ -313,9 +313,9 @@ _bdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_nvme_submit_request(struct spdk_bdev_io *bdev_io)
+bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_bdev_nvme_submit_request(bdev_io) < 0) {
+	if (_bdev_nvme_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }

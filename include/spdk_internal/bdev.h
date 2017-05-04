@@ -127,7 +127,7 @@ struct spdk_bdev_fn_table {
 	int (*destruct)(void *ctx);
 
 	/** Process the IO. */
-	void (*submit_request)(struct spdk_bdev_io *);
+	void (*submit_request)(struct spdk_io_channel *ch, struct spdk_bdev_io *);
 
 	/** Check if the block device supports a specific I/O type. */
 	bool (*io_type_supported)(void *ctx, enum spdk_bdev_io_type);
@@ -145,6 +145,8 @@ struct spdk_bdev_fn_table {
 	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
+typedef void (*spdk_bdev_io_get_rbuf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+
 struct spdk_bdev_io {
 	/** Pointer to scratch area reserved for use by the driver consuming this spdk_bdev_io. */
 	void *ctx;
@@ -152,8 +154,8 @@ struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
 
-	/** The I/O channel to submit this I/O on. */
-	struct spdk_io_channel *ch;
+	/** The bdev I/O channel that this was submitted on. */
+	struct spdk_bdev_channel *ch;
 
 	/** Generation value for each I/O. */
 	uint32_t gencnt;

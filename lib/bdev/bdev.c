@@ -126,7 +126,7 @@ spdk_bdev_io_set_rbuf(struct spdk_bdev_io *bdev_io, void *buf)
 	bdev_io->u.read.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
 	bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
 	bdev_io->u.read.put_rbuf = true;
-	bdev_io->get_rbuf_cb(bdev_io);
+	bdev_io->get_rbuf_cb(bdev_io->ch->channel, bdev_io);
 }
 
 static void
@@ -419,12 +419,19 @@ spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
 static void
 __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_io_channel *ch;
+
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		spdk_bdev_cleanup_pending_rbuf_io(bdev);
+		ch = NULL;
+	} else {
+		ch = bdev_io->ch->channel;
 	}
+
 	bdev_io->in_submit_request = true;
-	bdev->fn_table->submit_request(bdev_io);
+	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
 }
 
@@ -586,7 +593,7 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = channel->channel;
+	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iov.iov_base = buf;
 	bdev_io->u.read.iov.iov_len = nbytes;
@@ -627,7 +634,7 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = channel->channel;
+	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iovs = iov;
 	bdev_io->u.read.iovcnt = iovcnt;
@@ -665,7 +672,7 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = channel->channel;
+	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iov.iov_base = buf;
 	bdev_io->u.write.iov.iov_len = nbytes;
@@ -705,7 +712,7 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = channel->channel;
+	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iovs = iov;
 	bdev_io->u.write.iovcnt = iovcnt;
@@ -750,7 +757,7 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = channel->channel;
+	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
 	bdev_io->u.unmap.unmap_bdesc = unmap_d;
 	bdev_io->u.unmap.bdesc_count = bdesc_count;
@@ -781,7 +788,7 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
-	bdev_io->ch = channel->channel;
+	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
 	bdev_io->u.flush.offset = offset;
 	bdev_io->u.flush.length = length;
@@ -1098,7 +1105,7 @@ spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb)
 		bdev_io->get_rbuf_cb = cb;
 		_spdk_bdev_io_get_rbuf(bdev_io);
 	} else {
-		cb(bdev_io);
+		cb(bdev_io->ch->channel, bdev_io);
 	}
 }
 

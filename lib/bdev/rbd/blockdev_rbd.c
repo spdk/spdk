@@ -252,12 +252,12 @@ blockdev_rbd_destruct(void *ctx)
 	return 0;
 }
 
-static void blockdev_rbd_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
+static void blockdev_rbd_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	int ret;
 
 	ret = blockdev_rbd_readv(bdev_io->ctx,
-				 bdev_io->ch,
+				 ch,
 				 (struct blockdev_rbd_io *)bdev_io->driver_ctx,
 				 bdev_io->u.read.iovs,
 				 bdev_io->u.read.iovcnt,
@@ -269,7 +269,7 @@ static void blockdev_rbd_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static int _blockdev_rbd_submit_request(struct spdk_bdev_io *bdev_io)
+static int _blockdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -278,7 +278,7 @@ static int _blockdev_rbd_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		return blockdev_rbd_writev((struct blockdev_rbd *)bdev_io->ctx,
-					   bdev_io->ch,
+					   ch,
 					   (struct blockdev_rbd_io *)bdev_io->driver_ctx,
 					   bdev_io->u.write.iovs,
 					   bdev_io->u.write.iovcnt,
@@ -286,7 +286,7 @@ static int _blockdev_rbd_submit_request(struct spdk_bdev_io *bdev_io)
 					   bdev_io->u.write.offset);
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return blockdev_rbd_flush((struct blockdev_rbd *)bdev_io->ctx,
-					  bdev_io->ch,
+					  ch,
 					  (struct blockdev_rbd_io *)bdev_io->driver_ctx,
 					  bdev_io->u.flush.offset,
 					  bdev_io->u.flush.length);
@@ -296,9 +296,9 @@ static int _blockdev_rbd_submit_request(struct spdk_bdev_io *bdev_io)
 	return 0;
 }
 
-static void blockdev_rbd_submit_request(struct spdk_bdev_io *bdev_io)
+static void blockdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_blockdev_rbd_submit_request(bdev_io) < 0) {
+	if (_blockdev_rbd_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }

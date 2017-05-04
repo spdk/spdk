@@ -224,10 +224,10 @@ blockdev_aio_reset(struct file_disk *fdisk, struct blockdev_aio_task *aio_task)
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
-static void blockdev_aio_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
+static void blockdev_aio_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	blockdev_aio_readv((struct file_disk *)bdev_io->ctx,
-			   bdev_io->ch,
+			   ch,
 			   (struct blockdev_aio_task *)bdev_io->driver_ctx,
 			   bdev_io->u.read.iovs,
 			   bdev_io->u.read.iovcnt,
@@ -235,7 +235,7 @@ static void blockdev_aio_get_rbuf_cb(struct spdk_bdev_io *bdev_io)
 			   bdev_io->u.read.offset);
 }
 
-static int _blockdev_aio_submit_request(struct spdk_bdev_io *bdev_io)
+static int _blockdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -244,7 +244,7 @@ static int _blockdev_aio_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		blockdev_aio_writev((struct file_disk *)bdev_io->ctx,
-				    bdev_io->ch,
+				    ch,
 				    (struct blockdev_aio_task *)bdev_io->driver_ctx,
 				    bdev_io->u.write.iovs,
 				    bdev_io->u.write.iovcnt,
@@ -267,9 +267,9 @@ static int _blockdev_aio_submit_request(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static void blockdev_aio_submit_request(struct spdk_bdev_io *bdev_io)
+static void blockdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_blockdev_aio_submit_request(bdev_io) < 0) {
+	if (_blockdev_aio_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }

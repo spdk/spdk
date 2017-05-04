@@ -270,7 +270,7 @@ blockdev_malloc_reset(struct malloc_disk *mdisk, struct malloc_task *task)
 	return 0;
 }
 
-static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
+static int _blockdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -287,7 +287,7 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 		}
 
 		blockdev_malloc_readv((struct malloc_disk *)bdev_io->ctx,
-				      bdev_io->ch,
+				      ch,
 				      (struct malloc_task *)bdev_io->driver_ctx,
 				      bdev_io->u.read.iovs,
 				      bdev_io->u.read.iovcnt,
@@ -297,7 +297,7 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		blockdev_malloc_writev((struct malloc_disk *)bdev_io->ctx,
-				       bdev_io->ch,
+				       ch,
 				       (struct malloc_task *)bdev_io->driver_ctx,
 				       bdev_io->u.write.iovs,
 				       bdev_io->u.write.iovcnt,
@@ -317,7 +317,7 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return blockdev_malloc_unmap((struct malloc_disk *)bdev_io->ctx,
-					     bdev_io->ch,
+					     ch,
 					     (struct malloc_task *)bdev_io->driver_ctx,
 					     bdev_io->u.unmap.unmap_bdesc,
 					     bdev_io->u.unmap.bdesc_count);
@@ -327,9 +327,9 @@ static int _blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
 	return 0;
 }
 
-static void blockdev_malloc_submit_request(struct spdk_bdev_io *bdev_io)
+static void blockdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_blockdev_malloc_submit_request(bdev_io) < 0) {
+	if (_blockdev_malloc_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
