@@ -42,9 +42,21 @@
 
 #include "vhost_iommu.h"
 
+struct vfio_map {
+	uint64_t iova;
+	uint64_t size;
+	size_t ref;
+};
+
 static struct {
 	int need_init;
 	int container_fd;
+
+
+	pthread_mutex_t map_lock;
+	struct vfio_map *maps;
+	size_t maps_count;
+	size_t maps_max_count;
 } vfio_cfg = { 1, -1 };
 
 /* Internal DPDK function forward declaration */
@@ -96,6 +108,7 @@ vfio_cfg_init(void)
 		return -1;
 	}
 
+	pthread_mutex_init(&vfio_cfg.map_lock, NULL);
 	return 0;
 }
 
@@ -146,16 +159,70 @@ vfio_pci_memory_region_unmap(int vfio_container_fd, uint64_t phys_addr, uint64_t
 static int
 vfio_pci_memory_region_op(uint64_t vaddr, uint64_t phys_addr, uint64_t size, int op)
 {
+	int ret = 0;
+	size_t idx;
+	struct vfio_map *map = vfio_cfg.maps;
+	bool found = false;
 
 	if (vfio_cfg.container_fd == -1) {
 		return 0;
 	}
 
-	if (op == VFIO_IOMMU_MAP_DMA) {
-		return vfio_pci_memory_region_map(vfio_cfg.container_fd, vaddr, phys_addr, size);
-	} else {
-		return vfio_pci_memory_region_unmap(vfio_cfg.container_fd, phys_addr, size);
+	for (idx = 0; idx < vfio_cfg.maps_count; idx++, map++) {
+		assert(map->ref);
+		if (map->iova == phys_addr && map->size == size) {
+			found = true;
+			break;
+		}
 	}
+
+	if (op == VFIO_IOMMU_MAP_DMA) {
+		if (found) {
+			map->ref++;
+			return 0;
+		}
+
+		ret = vfio_pci_memory_region_map(vfio_cfg.container_fd, vaddr, phys_addr, size);
+		if (ret) {
+			return ret;
+		}
+
+		if (vfio_cfg.maps_count == vfio_cfg.maps_max_count) {
+			vfio_cfg.maps_max_count += 128;
+			vfio_cfg.maps = realloc(vfio_cfg.maps, vfio_cfg.maps_max_count * sizeof(vfio_cfg.maps[0]));
+			map = &vfio_cfg.maps[idx];
+		}
+
+		vfio_cfg.maps_count++;
+		map->iova = phys_addr;
+		map->size = size;
+		map->ref = 1;
+	} else {
+		if (!found) {
+			SPDK_ERRLOG("Region vaddr=%p phys_addr=%p len=%#"PRIx64" not VFIO DMA mapped\n",
+				    (void *)vaddr, (void *)phys_addr, size);
+			return -1;
+		}
+
+		map->ref--;
+		if (!map->ref) {
+			vfio_cfg.maps_count--;
+			if (vfio_cfg.maps_count != idx) {
+				memmove(map, map + 1, (vfio_cfg.maps_count - idx) * sizeof(map[0]));
+			}
+
+			if (vfio_cfg.maps_count == 0) {
+				free(vfio_cfg.maps);
+				vfio_cfg.maps = NULL;
+				vfio_cfg.maps_count = 0;
+				vfio_cfg.maps_max_count = 0;
+			}
+
+			ret = vfio_pci_memory_region_unmap(vfio_cfg.container_fd, phys_addr, size);
+		}
+	}
+
+	return ret;
 }
 
 
@@ -176,6 +243,8 @@ spdk_vfio_mem_op(uint64_t addr, uint64_t len, int dma_op)
 	if (vfio_cfg.container_fd == -1) {
 		return 0;
 	}
+
+	pthread_mutex_lock(&vfio_cfg.map_lock);
 
 	vaddr = addr;
 	while (len > 0) {
@@ -213,6 +282,7 @@ spdk_vfio_mem_op(uint64_t addr, uint64_t len, int dma_op)
 		spdk_vfio_mem_op(addr, vaddr - addr, VFIO_IOMMU_UNMAP_DMA);
 	}
 
+	pthread_mutex_unlock(&vfio_cfg.map_lock);
 	return ret;
 }
 
