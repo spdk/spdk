@@ -63,6 +63,18 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void *
+spdk_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+{
+	return spdk_malloc(size, align, phys_addr);
+}
+
+void *
+spdk_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+{
+	return spdk_zmalloc(size, align, phys_addr);
+}
+
+void *
 spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 {
 	return realloc(buf, size);

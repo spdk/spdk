@@ -82,9 +82,21 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
+ *   given size, alignment and socket id.
+ */
+void *spdk_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
+
+/**
+ * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment. The buffer will be zeroed.
  */
 void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
+
+/**
+ * Allocate a pinned, physically contiguous memory buffer with the
+ *   given size, alignment and socket id. The buffer will be zeroed.
+ */
+void *spdk_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
 
 /**
  * Resize the allocated and pinned memory buffer with the given
