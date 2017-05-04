@@ -149,6 +149,141 @@ struct spdk_bdev_fn_table {
 	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
+struct spdk_bdev_io {
+	/** Pointer to scratch area reserved for use by the driver consuming this spdk_bdev_io. */
+	void *ctx;
+
+	/** The block device that this I/O belongs to. */
+	struct spdk_bdev *bdev;
+
+	/** The I/O channel to submit this I/O on. */
+	struct spdk_io_channel *ch;
+
+	/** Generation value for each I/O. */
+	uint32_t gencnt;
+
+	/** Enumerated value representing the I/O type. */
+	enum spdk_bdev_io_type type;
+
+	union {
+		struct {
+
+			/** The unaligned rbuf originally allocated. */
+			void *buf_unaligned;
+
+			/** For basic read case, use our own iovec element. */
+			struct iovec iov;
+
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
+			/** For SG buffer cases, total size of data to be transferred. */
+			size_t len;
+
+			/** Starting offset (in bytes) of the blockdev for this I/O. */
+			uint64_t offset;
+
+			/** Indicate whether the blockdev layer to put rbuf or not. */
+			bool put_rbuf;
+		} read;
+		struct {
+			/** For basic write case, use our own iovec element */
+			struct iovec iov;
+
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
+			/** For SG buffer cases, total size of data to be transferred. */
+			size_t len;
+
+			/** Starting offset (in bytes) of the blockdev for this I/O. */
+			uint64_t offset;
+		} write;
+		struct {
+			/** Represents the unmap block descriptors. */
+			struct spdk_scsi_unmap_bdesc *unmap_bdesc;
+
+			/** Count of unmap block descriptors. */
+			uint16_t bdesc_count;
+		} unmap;
+		struct {
+			/** Represents starting offset in bytes of the range to be flushed. */
+			uint64_t offset;
+
+			/** Represents the number of bytes to be flushed, starting at offset. */
+			uint64_t length;
+		} flush;
+		struct {
+			enum spdk_bdev_reset_type type;
+		} reset;
+	} u;
+
+	/** Error information from a device */
+	union {
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
+		struct {
+			/** NVMe status code type */
+			int sct;
+			/** NVMe status code */
+			int sc;
+		} nvme;
+		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
+		struct {
+			/** SCSI status code */
+			enum spdk_scsi_status sc;
+			/** SCSI sense key */
+			enum spdk_scsi_sense sk;
+			/** SCSI additional sense code */
+			uint8_t asc;
+			/** SCSI additional sense code qualifier */
+			uint8_t ascq;
+		} scsi;
+	} error;
+
+	/** User function that will be called when this completes */
+	spdk_bdev_io_completion_cb cb;
+
+	/** Context that will be passed to the completion callback */
+	void *caller_ctx;
+
+	/** Callback for when rbuf is allocated */
+	spdk_bdev_io_get_rbuf_cb get_rbuf_cb;
+
+	/** Status for the IO */
+	enum spdk_bdev_io_status status;
+
+	/**
+	 * Set to true while the bdev module submit_request function is in progress.
+	 *
+	 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
+	 * or if completion must be deferred via an event.
+	 */
+	bool in_submit_request;
+
+	/** Used in virtual device (e.g., RAID), indicates its parent spdk_bdev_io */
+	struct spdk_bdev_io *parent;
+
+	/** Used in virtual device (e.g., RAID) for storing multiple child device I/Os */
+	TAILQ_HEAD(child_io, spdk_bdev_io) child_io;
+
+	/** Member used for linking child I/Os together. */
+	TAILQ_ENTRY(spdk_bdev_io) link;
+
+	/** Entry to the list need_buf of struct spdk_bdev. */
+	TAILQ_ENTRY(spdk_bdev_io) rbuf_link;
+
+	/** Per I/O context for use by the blockdev module */
+	uint8_t driver_ctx[0];
+
+	/* No members may be added after driver_ctx! */
+};
+
 void spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb);
 struct spdk_bdev_io *spdk_bdev_get_io(void);
