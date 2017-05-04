@@ -215,7 +215,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 	target->current_queue_depth--;
 	target->io_completed++;
 
-	bdev_io->caller_ctx = NULL;
 	rte_mempool_put(task_pool, task);
 
 	spdk_bdev_free_io(bdev_io);
