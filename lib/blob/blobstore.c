@@ -221,6 +221,10 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 			desc_xattr = (struct spdk_blob_md_descriptor_xattr *)desc;
 
+			assert(desc_xattr->length == sizeof(desc_xattr->name_length) +
+			       sizeof(desc_xattr->value_length) +
+			       desc_xattr->name_length + desc_xattr->value_length);
+
 			xattr = calloc(1, sizeof(*xattr));
 			assert(xattr != NULL);
 
