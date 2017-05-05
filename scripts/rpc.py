@@ -174,6 +174,18 @@ p.add_argument('block_size', help='Block size for this bdev', type=int)
 p.set_defaults(func=construct_malloc_bdev)
 
 
+def construct_null_bdev(args):
+    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    params = {'name': args.name, 'num_blocks': num_blocks, 'block_size': args.block_size}
+    print_array(jsonrpc_call('construct_null_bdev', params))
+
+p = subparsers.add_parser('construct_null_bdev', help='Add a bdev with null backend')
+p.add_argument('name', help='Block device name')
+p.add_argument('total_size', help='Size of null bdev in MB (int > 0)', type=int)
+p.add_argument('block_size', help='Block size for this bdev', type=int)
+p.set_defaults(func=construct_null_bdev)
+
+
 def construct_aio_bdev(args):
     params = {'name': args.name,
               'fname': args.fname}
