@@ -123,7 +123,7 @@ bdevperf_construct_targets(void)
 			continue;
 		}
 
-		if (g_unmap && !bdev->thin_provisioning) {
+		if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 			printf("Skipping %s because it does not support unmap\n", bdev->name);
 			bdev = spdk_bdev_next(bdev);
 			continue;

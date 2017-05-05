@@ -942,7 +942,6 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 			 * if nvme controller supports
 			 * DataSet Management command.
 			 */
-			bdev->disk.thin_provisioning = 1;
 			bdev->disk.max_unmap_bdesc_count = NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT;
 		}
 

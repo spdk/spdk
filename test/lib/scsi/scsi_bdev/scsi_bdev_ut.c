@@ -68,6 +68,13 @@ spdk_free(void *buf)
 	free(buf);
 }
 
+bool
+spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
+{
+	abort();
+	return false;
+}
+
 int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {

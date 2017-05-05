@@ -403,7 +403,6 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
 	mdisk->disk.blockcnt = num_blocks;
-	mdisk->disk.thin_provisioning = 1;
 	mdisk->disk.max_unmap_bdesc_count = MALLOC_MAX_UNMAP_BDESC;
 
 	mdisk->disk.ctxt = mdisk;

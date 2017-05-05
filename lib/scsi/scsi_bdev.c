@@ -215,7 +215,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* SBC Block Device Characteristics */
 			vpage->params[8] = 0xb1;
 			len = 9;
-			if (bdev->thin_provisioning) {
+			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 				/* SBC Thin Provisioning */
 				vpage->params[9] = 0xb2;
 				len++;
@@ -539,7 +539,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 			len = 20 - hlen;
 
-			if (bdev->thin_provisioning) {
+			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 				/*
 				 * MAXIMUM UNMAP LBA COUNT: indicates the
 				 * maximum  number of LBAs that may be
@@ -620,7 +620,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		}
 
 		case SPDK_SPC_VPD_BLOCK_THIN_PROVISION: {
-			if (!bdev->thin_provisioning) {
+			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 				SPDK_ERRLOG("unsupported INQUIRY VPD page 0x%x\n", pc);
 				goto inq_error;
 			}
@@ -1622,7 +1622,7 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 			 * The position of TPE bit is the 7th bit in 14th byte
 			 * in READ CAPACITY (16) parameter data.
 			 */
-			if (bdev->thin_provisioning) {
+			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 				buffer[14] |= 1 << 7;
 			}
 

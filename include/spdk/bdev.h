@@ -102,9 +102,6 @@ struct spdk_bdev {
 	 */
 	int need_aligned_buffer;
 
-	/** thin provisioning, not used at the moment */
-	int thin_provisioning;
-
 	/** function table for all LUN ops */
 	const struct spdk_bdev_fn_table *fn_table;
 
