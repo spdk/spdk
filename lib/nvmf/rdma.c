@@ -53,6 +53,7 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
+#include "spdk/likely.h"
 
 #include "spdk_internal/log.h"
 
@@ -895,11 +896,11 @@ spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_conn *conn)
 
 	/* Try to initiate RDMA Reads or Writes on requests that have data buffers */
 	while (rdma_conn->cur_rdma_rw_depth < rdma_conn->max_rw_depth) {
-		if (TAILQ_EMPTY(&rdma_conn->pending_rdma_rw_queue)) {
+		rdma_req = TAILQ_FIRST(&rdma_conn->pending_rdma_rw_queue);
+		if (spdk_unlikely(!rdma_req)) {
 			break;
 		}
 
-		rdma_req = TAILQ_FIRST(&rdma_conn->pending_rdma_rw_queue);
 		TAILQ_REMOVE(&rdma_conn->pending_rdma_rw_queue, rdma_req, link);
 
 		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Submitting previously queued for RDMA R/W request %p\n", rdma_req);
