@@ -600,9 +600,9 @@ main(int argc, char **argv)
 	    !strcmp(workload_type, "reset") ||
 	    !strcmp(workload_type, "unmap")) {
 		g_rw_percentage = 50;
-		if (g_io_size > SPDK_BDEV_LARGE_RBUF_MAX_SIZE) {
+		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
-				SPDK_BDEV_LARGE_RBUF_MAX_SIZE, g_io_size);
+				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
 			exit(1);
 		}
 		if (core_mask) {
@@ -652,9 +652,9 @@ main(int argc, char **argv)
 		g_is_random = 1;
 	}
 
-	if (g_io_size > SPDK_BDEV_LARGE_RBUF_MAX_SIZE) {
+	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
 		fprintf(stdout, "I/O size of %d is greather than zero copy threshold (%d).\n",
-			g_io_size, SPDK_BDEV_LARGE_RBUF_MAX_SIZE);
+			g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
 		fprintf(stdout, "Zero copy mechanism will not be used.\n");
 		g_zcopy = false;
 	}

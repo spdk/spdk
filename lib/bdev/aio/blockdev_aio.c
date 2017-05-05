@@ -224,7 +224,7 @@ blockdev_aio_reset(struct file_disk *fdisk, struct blockdev_aio_task *aio_task)
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
-static void blockdev_aio_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void blockdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	blockdev_aio_readv((struct file_disk *)bdev_io->bdev->ctxt,
 			   ch,
@@ -239,7 +239,7 @@ static int _blockdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_rbuf(bdev_io, blockdev_aio_get_rbuf_cb);
+		spdk_bdev_io_get_buf(bdev_io, blockdev_aio_get_buf_cb);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:

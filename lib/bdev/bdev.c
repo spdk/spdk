@@ -51,16 +51,16 @@
 #include "spdk_internal/log.h"
 
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
-#define RBUF_SMALL_POOL_SIZE	8192
-#define RBUF_LARGE_POOL_SIZE	1024
+#define BUF_SMALL_POOL_SIZE	8192
+#define BUF_LARGE_POOL_SIZE	1024
 
 static struct rte_mempool *spdk_bdev_g_io_pool = NULL;
-static struct rte_mempool *g_rbuf_small_pool = NULL;
-static struct rte_mempool *g_rbuf_large_pool = NULL;
+static struct rte_mempool *g_buf_small_pool = NULL;
+static struct rte_mempool *g_buf_large_pool = NULL;
 
-typedef TAILQ_HEAD(, spdk_bdev_io) need_rbuf_tailq_t;
-static need_rbuf_tailq_t g_need_rbuf_small[RTE_MAX_LCORE];
-static need_rbuf_tailq_t g_need_rbuf_large[RTE_MAX_LCORE];
+typedef TAILQ_HEAD(, spdk_bdev_io) need_buf_tailq_t;
+static need_buf_tailq_t g_need_buf_small[RTE_MAX_LCORE];
+static need_buf_tailq_t g_need_buf_large[RTE_MAX_LCORE];
 
 static TAILQ_HEAD(, spdk_bdev_module_if) spdk_bdev_module_list =
 	TAILQ_HEAD_INITIALIZER(spdk_bdev_module_list);
@@ -116,26 +116,26 @@ struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name)
 }
 
 static void
-spdk_bdev_io_set_rbuf(struct spdk_bdev_io *bdev_io, void *buf)
+spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf)
 {
-	assert(bdev_io->get_rbuf_cb != NULL);
+	assert(bdev_io->get_buf_cb != NULL);
 	assert(buf != NULL);
 	assert(bdev_io->u.read.iovs != NULL);
 
 	bdev_io->u.read.buf_unaligned = buf;
 	bdev_io->u.read.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
 	bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
-	bdev_io->u.read.put_rbuf = true;
-	bdev_io->get_rbuf_cb(bdev_io->ch->channel, bdev_io);
+	bdev_io->u.read.put_buf = true;
+	bdev_io->get_buf_cb(bdev_io->ch->channel, bdev_io);
 }
 
 static void
-spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
+spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 {
 	struct rte_mempool *pool;
 	struct spdk_bdev_io *tmp;
 	void *buf;
-	need_rbuf_tailq_t *tailq;
+	need_buf_tailq_t *tailq;
 	uint64_t length;
 
 	assert(bdev_io->u.read.iovcnt == 1);
@@ -143,24 +143,24 @@ spdk_bdev_io_put_rbuf(struct spdk_bdev_io *bdev_io)
 	length = bdev_io->u.read.len;
 	buf = bdev_io->u.read.buf_unaligned;
 
-	if (length <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
-		pool = g_rbuf_small_pool;
-		tailq = &g_need_rbuf_small[rte_lcore_id()];
+	if (length <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
+		pool = g_buf_small_pool;
+		tailq = &g_need_buf_small[rte_lcore_id()];
 	} else {
-		pool = g_rbuf_large_pool;
-		tailq = &g_need_rbuf_large[rte_lcore_id()];
+		pool = g_buf_large_pool;
+		tailq = &g_need_buf_large[rte_lcore_id()];
 	}
 
 	if (TAILQ_EMPTY(tailq)) {
 		rte_mempool_put(pool, buf);
 	} else {
 		tmp = TAILQ_FIRST(tailq);
-		TAILQ_REMOVE(tailq, tmp, rbuf_link);
-		spdk_bdev_io_set_rbuf(tmp, buf);
+		TAILQ_REMOVE(tailq, tmp, buf_link);
+		spdk_bdev_io_set_buf(tmp, buf);
 	}
 }
 
-static int spdk_initialize_rbuf_pool(void)
+static int spdk_initialize_buf_pool(void)
 {
 	int cache_size;
 
@@ -169,29 +169,29 @@ static int spdk_initialize_rbuf_pool(void)
 	 *   using spdk_event_get_active_core_count() to determine how many local caches we need
 	 *   to account for.
 	 */
-	cache_size = RBUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
+	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
 	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE)
 		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
-	g_rbuf_small_pool = rte_mempool_create("rbuf_small_pool",
-					       RBUF_SMALL_POOL_SIZE,
-					       SPDK_BDEV_SMALL_RBUF_MAX_SIZE + 512,
-					       cache_size, 0, NULL, NULL, NULL, NULL,
-					       SOCKET_ID_ANY, 0);
-	if (!g_rbuf_small_pool) {
-		SPDK_ERRLOG("create rbuf small pool failed\n");
+	g_buf_small_pool = rte_mempool_create("buf_small_pool",
+					      BUF_SMALL_POOL_SIZE,
+					      SPDK_BDEV_SMALL_BUF_MAX_SIZE + 512,
+					      cache_size, 0, NULL, NULL, NULL, NULL,
+					      SOCKET_ID_ANY, 0);
+	if (!g_buf_small_pool) {
+		SPDK_ERRLOG("create buf small pool failed\n");
 		return -1;
 	}
 
-	cache_size = RBUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
+	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
 	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE)
 		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
-	g_rbuf_large_pool = rte_mempool_create("rbuf_large_pool",
-					       RBUF_LARGE_POOL_SIZE,
-					       SPDK_BDEV_LARGE_RBUF_MAX_SIZE + 512,
-					       cache_size, 0, NULL, NULL, NULL, NULL,
-					       SOCKET_ID_ANY, 0);
-	if (!g_rbuf_large_pool) {
-		SPDK_ERRLOG("create rbuf large pool failed\n");
+	g_buf_large_pool = rte_mempool_create("buf_large_pool",
+					      BUF_LARGE_POOL_SIZE,
+					      SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512,
+					      cache_size, 0, NULL, NULL, NULL, NULL,
+					      SOCKET_ID_ANY, 0);
+	if (!g_buf_large_pool) {
+		SPDK_ERRLOG("create buf large pool failed\n");
 		return -1;
 	}
 
@@ -297,11 +297,11 @@ spdk_bdev_initialize(void)
 	}
 
 	for (i = 0; i < RTE_MAX_LCORE; i++) {
-		TAILQ_INIT(&g_need_rbuf_small[i]);
-		TAILQ_INIT(&g_need_rbuf_large[i]);
+		TAILQ_INIT(&g_need_buf_small[i]);
+		TAILQ_INIT(&g_need_buf_large[i]);
 	}
 
-	return spdk_initialize_rbuf_pool();
+	return spdk_initialize_buf_pool();
 }
 
 /*
@@ -334,8 +334,8 @@ spdk_bdev_finish(void)
 
 	spdk_bdev_module_finish();
 
-	rc += spdk_bdev_check_pool(g_rbuf_small_pool, RBUF_SMALL_POOL_SIZE);
-	rc += spdk_bdev_check_pool(g_rbuf_large_pool, RBUF_LARGE_POOL_SIZE);
+	rc += spdk_bdev_check_pool(g_buf_small_pool, BUF_SMALL_POOL_SIZE);
+	rc += spdk_bdev_check_pool(g_buf_large_pool, BUF_LARGE_POOL_SIZE);
 
 	return (rc != 0);
 }
@@ -363,54 +363,54 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 		return;
 	}
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ && bdev_io->u.read.put_rbuf) {
-		spdk_bdev_io_put_rbuf(bdev_io);
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ && bdev_io->u.read.put_buf) {
+		spdk_bdev_io_put_buf(bdev_io);
 	}
 
 	rte_mempool_put(spdk_bdev_g_io_pool, bdev_io);
 }
 
 static void
-_spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io)
+_spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io)
 {
 	uint64_t len = bdev_io->u.read.len;
 	struct rte_mempool *pool;
-	need_rbuf_tailq_t *tailq;
+	need_buf_tailq_t *tailq;
 	int rc;
 	void *buf = NULL;
 
-	if (len <= SPDK_BDEV_SMALL_RBUF_MAX_SIZE) {
-		pool = g_rbuf_small_pool;
-		tailq = &g_need_rbuf_small[rte_lcore_id()];
+	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
+		pool = g_buf_small_pool;
+		tailq = &g_need_buf_small[rte_lcore_id()];
 	} else {
-		pool = g_rbuf_large_pool;
-		tailq = &g_need_rbuf_large[rte_lcore_id()];
+		pool = g_buf_large_pool;
+		tailq = &g_need_buf_large[rte_lcore_id()];
 	}
 
 	rc = rte_mempool_get(pool, (void **)&buf);
 	if (rc < 0 || !buf) {
-		TAILQ_INSERT_TAIL(tailq, bdev_io, rbuf_link);
+		TAILQ_INSERT_TAIL(tailq, bdev_io, buf_link);
 	} else {
-		spdk_bdev_io_set_rbuf(bdev_io, buf);
+		spdk_bdev_io_set_buf(bdev_io, buf);
 	}
 }
 
 
 static void
-spdk_bdev_cleanup_pending_rbuf_io(struct spdk_bdev *bdev)
+spdk_bdev_cleanup_pending_buf_io(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_small[rte_lcore_id()], rbuf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_need_buf_small[rte_lcore_id()], buf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_rbuf_small[rte_lcore_id()], bdev_io, rbuf_link);
+			TAILQ_REMOVE(&g_need_buf_small[rte_lcore_id()], bdev_io, buf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_rbuf_large[rte_lcore_id()], rbuf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_need_buf_large[rte_lcore_id()], buf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_rbuf_large[rte_lcore_id()], bdev_io, rbuf_link);
+			TAILQ_REMOVE(&g_need_buf_large[rte_lcore_id()], bdev_io, buf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
@@ -424,7 +424,7 @@ __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		spdk_bdev_cleanup_pending_rbuf_io(bdev);
+		spdk_bdev_cleanup_pending_buf_io(bdev);
 		ch = NULL;
 	} else {
 		ch = bdev_io->ch->channel;
@@ -496,9 +496,9 @@ spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
 	child->type = parent->type;
 	memcpy(&child->u, &parent->u, sizeof(child->u));
 	if (child->type == SPDK_BDEV_IO_TYPE_READ) {
-		child->u.read.put_rbuf = false;
+		child->u.read.put_buf = false;
 	}
-	child->get_rbuf_cb = NULL;
+	child->get_buf_cb = NULL;
 	child->parent = parent;
 
 	TAILQ_INSERT_TAIL(&parent->child_io, child, link);
@@ -599,7 +599,7 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->u.read.iovcnt = 1;
 	bdev_io->u.read.len = nbytes;
 	bdev_io->u.read.offset = offset;
-	bdev_io->u.read.put_rbuf = false;
+	bdev_io->u.read.put_buf = false;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -638,7 +638,7 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->u.read.iovcnt = iovcnt;
 	bdev_io->u.read.len = nbytes;
 	bdev_io->u.read.offset = offset;
-	bdev_io->u.read.put_rbuf = false;
+	bdev_io->u.read.put_buf = false;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -853,7 +853,7 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		TAILQ_REMOVE(&bdev_io->child_io, child_io, link);
 
 		/*
-		 * Child I/O may have an rbuf that needs to be returned to a pool
+		 * Child I/O may have a buf that needs to be returned to a pool
 		 *  on a different core, so free it through the request submission
 		 *  process rather than calling put_io directly here.
 		 */
@@ -1094,14 +1094,14 @@ spdk_bdev_unclaim(struct spdk_bdev *bdev)
 }
 
 void
-spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb)
+spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
 {
 	assert(cb != NULL);
 	assert(bdev_io->u.read.iovs != NULL);
 
 	if (bdev_io->u.read.iovs[0].iov_base == NULL) {
-		bdev_io->get_rbuf_cb = cb;
-		_spdk_bdev_io_get_rbuf(bdev_io);
+		bdev_io->get_buf_cb = cb;
+		_spdk_bdev_io_get_buf(bdev_io);
 	} else {
 		cb(bdev_io->ch->channel, bdev_io);
 	}

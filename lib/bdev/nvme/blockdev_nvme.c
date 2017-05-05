@@ -255,7 +255,7 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		uint16_t bdesc_count);
 
 static void
-bdev_nvme_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	int ret;
 
@@ -277,7 +277,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_rbuf(bdev_io, bdev_nvme_get_rbuf_cb);
+		spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:

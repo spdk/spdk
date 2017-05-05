@@ -45,8 +45,8 @@
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 
-#define SPDK_BDEV_SMALL_RBUF_MAX_SIZE 8192
-#define SPDK_BDEV_LARGE_RBUF_MAX_SIZE (64 * 1024)
+#define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
+#define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
 
 #define SPDK_BDEV_MAX_NAME_LENGTH		16
 #define SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH	50

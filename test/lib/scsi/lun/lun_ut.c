@@ -477,7 +477,7 @@ lun_append_task_null_lun_alloc_len_lt_4096(void)
 	task->cdb[3] = 0;
 	task->cdb[4] = 0;
 	/* alloc_len is set to a minimal value of 4096
-	 * Hence, rbuf of size 4096 is allocated */
+	 * Hence, buf of size 4096 is allocated */
 	spdk_scsi_task_process_null_lun(task);
 
 	CU_ASSERT_EQUAL(task->status, SPDK_SCSI_STATUS_GOOD);

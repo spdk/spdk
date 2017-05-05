@@ -145,7 +145,7 @@ struct spdk_bdev_fn_table {
 	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
-typedef void (*spdk_bdev_io_get_rbuf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
@@ -163,7 +163,7 @@ struct spdk_bdev_io {
 	union {
 		struct {
 
-			/** The unaligned rbuf originally allocated. */
+			/** The unaligned buf originally allocated. */
 			void *buf_unaligned;
 
 			/** For basic read case, use our own iovec element. */
@@ -181,8 +181,8 @@ struct spdk_bdev_io {
 			/** Starting offset (in bytes) of the blockdev for this I/O. */
 			uint64_t offset;
 
-			/** Indicate whether the blockdev layer to put rbuf or not. */
-			bool put_rbuf;
+			/** Indicate whether the blockdev layer to put buf or not. */
+			bool put_buf;
 		} read;
 		struct {
 			/** For basic write case, use our own iovec element */
@@ -247,8 +247,8 @@ struct spdk_bdev_io {
 	/** Context that will be passed to the completion callback */
 	void *caller_ctx;
 
-	/** Callback for when rbuf is allocated */
-	spdk_bdev_io_get_rbuf_cb get_rbuf_cb;
+	/** Callback for when buf is allocated */
+	spdk_bdev_io_get_buf_cb get_buf_cb;
 
 	/** Status for the IO */
 	enum spdk_bdev_io_status status;
@@ -271,7 +271,7 @@ struct spdk_bdev_io {
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
 	/** Entry to the list need_buf of struct spdk_bdev. */
-	TAILQ_ENTRY(spdk_bdev_io) rbuf_link;
+	TAILQ_ENTRY(spdk_bdev_io) buf_link;
 
 	/** Per I/O context for use by the blockdev module */
 	uint8_t driver_ctx[0];
@@ -280,7 +280,7 @@ struct spdk_bdev_io {
 };
 
 void spdk_bdev_register(struct spdk_bdev *bdev);
-void spdk_bdev_io_get_rbuf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_rbuf_cb cb);
+void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb);
 struct spdk_bdev_io *spdk_bdev_get_io(void);
 struct spdk_bdev_io *spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
 		struct spdk_bdev *bdev,

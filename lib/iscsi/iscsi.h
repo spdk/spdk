@@ -90,10 +90,10 @@
 #define SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH  65536
 
 /*
- * SPDK iSCSI target will only send a maximum of SPDK_BDEV_LARGE_RBUF_MAX_SIZE data segments, even if the
+ * SPDK iSCSI target will only send a maximum of SPDK_BDEV_LARGE_BUF_MAX_SIZE data segments, even if the
  * connection can support more.
  */
-#define SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH SPDK_BDEV_LARGE_RBUF_MAX_SIZE
+#define SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH SPDK_BDEV_LARGE_BUF_MAX_SIZE
 
 /*
  * Defines maximum number of data out buffers each connection can have in
@@ -104,7 +104,7 @@
 /*
  * Defines maximum number of data in buffers each connection can have in
  *  use at any given time. So this limit does not affect I/O smaller than
- *  SPDK_BDEV_SMALL_RBUF_MAX_SIZE.
+ *  SPDK_BDEV_SMALL_BUF_MAX_SIZE.
  */
 #define MAX_LARGE_DATAIN_PER_CONNECTION 64
 

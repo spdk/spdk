@@ -252,7 +252,7 @@ blockdev_rbd_destruct(void *ctx)
 	return 0;
 }
 
-static void blockdev_rbd_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void blockdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	int ret;
 
@@ -273,7 +273,7 @@ static int _blockdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_rbuf(bdev_io, blockdev_rbd_get_rbuf_cb);
+		spdk_bdev_io_get_buf(bdev_io, blockdev_rbd_get_buf_cb);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
