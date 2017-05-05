@@ -259,7 +259,7 @@ bdev_nvme_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	int ret;
 
-	ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->ctx,
+	ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->bdev->ctxt,
 			      ch,
 			      (struct nvme_bdev_io *)bdev_io->driver_ctx,
 			      bdev_io->u.read.iovs,
@@ -281,7 +281,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return bdev_nvme_writev((struct nvme_bdev *)bdev_io->ctx,
+		return bdev_nvme_writev((struct nvme_bdev *)bdev_io->bdev->ctxt,
 					ch,
 					(struct nvme_bdev_io *)bdev_io->driver_ctx,
 					bdev_io->u.write.iovs,
@@ -290,18 +290,18 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					bdev_io->u.write.offset);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->ctx,
+		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.unmap.unmap_bdesc,
 				       bdev_io->u.unmap.bdesc_count);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_nvme_reset((struct nvme_bdev *)bdev_io->ctx,
+		return bdev_nvme_reset((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return bdev_nvme_flush((struct nvme_bdev *)bdev_io->ctx,
+		return bdev_nvme_flush((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.flush.offset,
 				       bdev_io->u.flush.length);

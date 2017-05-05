@@ -256,7 +256,7 @@ static void blockdev_rbd_get_rbuf_cb(struct spdk_io_channel *ch, struct spdk_bde
 {
 	int ret;
 
-	ret = blockdev_rbd_readv(bdev_io->ctx,
+	ret = blockdev_rbd_readv(bdev_io->bdev->ctxt,
 				 ch,
 				 (struct blockdev_rbd_io *)bdev_io->driver_ctx,
 				 bdev_io->u.read.iovs,
@@ -277,7 +277,7 @@ static int _blockdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return blockdev_rbd_writev((struct blockdev_rbd *)bdev_io->ctx,
+		return blockdev_rbd_writev((struct blockdev_rbd *)bdev_io->bdev->ctxt,
 					   ch,
 					   (struct blockdev_rbd_io *)bdev_io->driver_ctx,
 					   bdev_io->u.write.iovs,
@@ -285,7 +285,7 @@ static int _blockdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_
 					   bdev_io->u.write.len,
 					   bdev_io->u.write.offset);
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return blockdev_rbd_flush((struct blockdev_rbd *)bdev_io->ctx,
+		return blockdev_rbd_flush((struct blockdev_rbd *)bdev_io->bdev->ctxt,
 					  ch,
 					  (struct blockdev_rbd_io *)bdev_io->driver_ctx,
 					  bdev_io->u.flush.offset,

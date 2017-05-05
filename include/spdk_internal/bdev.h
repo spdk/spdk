@@ -148,9 +148,6 @@ struct spdk_bdev_fn_table {
 typedef void (*spdk_bdev_io_get_rbuf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 
 struct spdk_bdev_io {
-	/** Pointer to scratch area reserved for use by the driver consuming this spdk_bdev_io. */
-	void *ctx;
-
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
 

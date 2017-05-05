@@ -455,7 +455,6 @@ spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev *new_bdev)
 	 * being switched, they need to be reinitialized.
 	 */
 	bdev_io->gencnt = new_bdev->gencnt;
-	bdev_io->ctx = new_bdev->ctxt;
 
 	__submit_request(new_bdev, bdev_io);
 }
@@ -466,7 +465,6 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 		  spdk_bdev_io_completion_cb cb)
 {
 	bdev_io->bdev = bdev;
-	bdev_io->ctx = bdev->ctxt;
 	bdev_io->caller_ctx = cb_arg;
 	bdev_io->cb = cb;
 	bdev_io->gencnt = bdev->gencnt;

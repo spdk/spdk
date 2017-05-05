@@ -277,7 +277,7 @@ static int _blockdev_malloc_submit_request(struct spdk_io_channel *ch, struct sp
 		if (bdev_io->u.read.iovs[0].iov_base == NULL) {
 			assert(bdev_io->u.read.iovcnt == 1);
 			bdev_io->u.read.iovs[0].iov_base =
-				((struct malloc_disk *)bdev_io->ctx)->malloc_buf +
+				((struct malloc_disk *)bdev_io->bdev->ctxt)->malloc_buf +
 				bdev_io->u.read.offset;
 			bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
 			bdev_io->u.read.put_rbuf = false;
@@ -286,7 +286,7 @@ static int _blockdev_malloc_submit_request(struct spdk_io_channel *ch, struct sp
 			return 0;
 		}
 
-		blockdev_malloc_readv((struct malloc_disk *)bdev_io->ctx,
+		blockdev_malloc_readv((struct malloc_disk *)bdev_io->bdev->ctxt,
 				      ch,
 				      (struct malloc_task *)bdev_io->driver_ctx,
 				      bdev_io->u.read.iovs,
@@ -296,7 +296,7 @@ static int _blockdev_malloc_submit_request(struct spdk_io_channel *ch, struct sp
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		blockdev_malloc_writev((struct malloc_disk *)bdev_io->ctx,
+		blockdev_malloc_writev((struct malloc_disk *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct malloc_task *)bdev_io->driver_ctx,
 				       bdev_io->u.write.iovs,
@@ -306,17 +306,17 @@ static int _blockdev_malloc_submit_request(struct spdk_io_channel *ch, struct sp
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return blockdev_malloc_reset((struct malloc_disk *)bdev_io->ctx,
+		return blockdev_malloc_reset((struct malloc_disk *)bdev_io->bdev->ctxt,
 					     (struct malloc_task *)bdev_io->driver_ctx);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return blockdev_malloc_flush((struct malloc_disk *)bdev_io->ctx,
+		return blockdev_malloc_flush((struct malloc_disk *)bdev_io->bdev->ctxt,
 					     (struct malloc_task *)bdev_io->driver_ctx,
 					     bdev_io->u.flush.offset,
 					     bdev_io->u.flush.length);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		return blockdev_malloc_unmap((struct malloc_disk *)bdev_io->ctx,
+		return blockdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
 					     ch,
 					     (struct malloc_task *)bdev_io->driver_ctx,
 					     bdev_io->u.unmap.unmap_bdesc,
