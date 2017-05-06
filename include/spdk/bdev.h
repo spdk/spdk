@@ -128,8 +128,7 @@ struct spdk_bdev {
 
 /** Blockdev I/O type */
 enum spdk_bdev_io_type {
-	SPDK_BDEV_IO_TYPE_INVALID,
-	SPDK_BDEV_IO_TYPE_READ,
+	SPDK_BDEV_IO_TYPE_READ = 1,
 	SPDK_BDEV_IO_TYPE_WRITE,
 	SPDK_BDEV_IO_TYPE_UNMAP,
 	SPDK_BDEV_IO_TYPE_FLUSH,
