@@ -36,11 +36,7 @@
 #include <linux/virtio_ring.h>
 #include <linux/virtio_scsi.h>
 
-#include <rte_config.h>
-#include <rte_malloc.h>
-#include <rte_virtio_net.h>
-#include <vhost.h>
-#include <vhost_user.h>
+#include <rte_vhost.h>
 
 #include "spdk_internal/log.h"
 #include "spdk/env.h"
@@ -65,24 +61,110 @@ static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
-struct spdk_vaddr_region {
-	void		*vaddr;
-	uint64_t	len;
+#define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
-	uint64_t	host_user_addr;
-	uint64_t	host_user_size;
+#define MAX_VHOST_DEVICE	1024
+#define VHOST_USER_F_PROTOCOL_FEATURES	30
+
+/* Features supported by SPDK VHOST lib. */
+#define SPDK_VHOST_SCSI_FEATURES	((1ULL << VIRTIO_F_VERSION_1) | \
+					(1ULL << VHOST_F_LOG_ALL) | \
+					(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
+					(1ULL << VIRTIO_SCSI_F_INOUT) | \
+					(1ULL << VIRTIO_SCSI_F_HOTPLUG) | \
+					(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
+					(1ULL << VIRTIO_SCSI_F_T10_PI ))
+
+/* Features that are specified in VIRTIO SCSI but currently not supported:
+ * - Live migration not supported yet
+ * - Hotplug/hotremove
+ * - LUN params change
+ * - T10 PI
+ */
+#define SPDK_VHOST_SCSI_DISABLED_FEATURES	((1ULL << VHOST_F_LOG_ALL) | \
+						(1ULL << VIRTIO_SCSI_F_HOTPLUG) | \
+						(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
+						(1ULL << VIRTIO_SCSI_F_T10_PI ))
+
+struct spdk_vhost_dev {
+	struct rte_vhost_memory *mem;
+	int vid;
+	uint16_t num_queues;
+	struct rte_vhost_vring virtqueue[0] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 };
 
-/*
- * Device linked list structure for data path.
- */
+static void
+spdk_vhost_dev_free(struct spdk_vhost_dev *dev)
+{
+	free(dev->mem);
+	spdk_free(dev);
+}
+
+static void
+spdk_vhost_dev_destruct(struct spdk_vhost_dev *dev)
+{
+	struct rte_vhost_vring *q;
+	uint16_t i;
+
+	for (i = 0; i < dev->num_queues; i++) {
+		q = &dev->virtqueue[i];
+		rte_vhost_set_vhost_vring_last_idx(dev->vid, i, q->last_avail_idx, q->last_used_idx);
+	}
+
+	spdk_vhost_dev_free(dev);
+}
+
+static struct spdk_vhost_dev *
+spdk_vhost_dev_create(int vid)
+{
+	uint16_t num_queues = rte_vhost_get_vring_num(vid);
+	size_t size = sizeof(struct spdk_vhost_dev) + num_queues * sizeof(struct rte_vhost_vring);
+	struct spdk_vhost_dev *dev = spdk_zmalloc(size, SPDK_CACHE_LINE_SIZE, NULL);
+	uint16_t i;
+
+	if (dev == NULL) {
+		SPDK_ERRLOG("vhost device %d: Failed to allocate new vhost device with %"PRIu16" queues\n", vid,
+			    num_queues);
+		return NULL;
+	}
+
+	for (i = 0; i < num_queues; i++) {
+		if (rte_vhost_get_vhost_vring(vid, i, &dev->virtqueue[i])) {
+			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
+			goto err;
+		}
+
+		/* Disable notifications. */
+		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
+			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
+			goto err;
+		}
+
+	}
+
+	dev->vid = vid;
+	dev->num_queues = num_queues;
+
+	if (rte_vhost_get_mem_table(vid, &dev->mem) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
+		goto err;
+	}
+	return dev;
+
+err:
+	spdk_vhost_dev_free(dev);
+	return NULL;
+}
+
+static uint64_t
+gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
+{
+	return rte_vhost_gpa_to_vva(vdev->mem, addr);
+}
+
 struct spdk_vhost_scsi_ctrlr {
 	char *name;
-	/**< Pointer to device created by vhost lib. */
-	struct virtio_net      *dev;
-
-	struct spdk_vaddr_region	region[VHOST_MEMORY_MAX_NREGIONS];
-	uint32_t			nregions;
+	struct spdk_vhost_dev *dev;
 
 	/**< TODO make this an array of spdk_scsi_devs.  The vhost scsi
 	 *   request will tell us which scsi_dev to use.
@@ -107,7 +189,7 @@ static struct spdk_vhost_scsi_ctrlr *dpdk_vid_mapping[MAX_VHOST_DEVICE];
  * Get available requests from avail ring.
  */
 static uint16_t
-vq_avail_ring_get(struct vhost_virtqueue *vq, uint16_t *reqs, uint16_t reqs_len)
+vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_t reqs_len)
 {
 	struct vring_avail *avail = vq->avail;
 	uint16_t size_mask = vq->size - 1;
@@ -135,7 +217,7 @@ vq_avail_ring_get(struct vhost_virtqueue *vq, uint16_t *reqs, uint16_t reqs_len)
  * Enqueue id and len to used ring.
  */
 static void
-vq_used_ring_enqueue(struct vhost_virtqueue *vq, uint16_t id, uint32_t len)
+vq_used_ring_enqueue(struct rte_vhost_vring *vq, uint16_t id, uint32_t len)
 {
 	struct vring_used *used = vq->used;
 	uint16_t size_mask = vq->size - 1;
@@ -310,7 +392,7 @@ get_scsi_lun(struct spdk_scsi_dev *scsi_dev, const __u8 *lun)
 }
 
 static void
-process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue *controlq,
+process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring *controlq,
 		     uint16_t req_idx)
 {
 	struct spdk_vhost_task *task;
@@ -323,9 +405,9 @@ process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue 
 	ctrl_req = (void *)gpa_to_vva(vdev->dev, desc->addr);
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_QUEUE,
-		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; enabled %d; kickfd %d; size %d\n",
+		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
 		      req_idx, desc, (void *)desc->addr, desc->len, desc->flags, controlq->last_used_idx,
-		      controlq->enabled, controlq->kickfd, controlq->size);
+		      controlq->kickfd, controlq->size);
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_QUEUE, "Request desriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
@@ -393,8 +475,8 @@ static int
 task_data_setup(struct spdk_vhost_task *task,
 		struct virtio_scsi_cmd_req **req)
 {
-	struct vhost_virtqueue *vq = task->vq;
-	struct virtio_net *dev = task->vdev->dev;
+	struct rte_vhost_vring *vq = task->vq;
+	struct spdk_vhost_dev *dev = task->vdev->dev;
 	struct vring_desc *desc =  &task->vq->desc[task->req_idx];
 	struct iovec *iovs = task->scsi.iovs;
 	uint16_t iovcnt = 0, iovcnt_max = task->scsi.iovcnt;
@@ -550,7 +632,7 @@ process_request(struct spdk_vhost_task *task)
 }
 
 static void
-process_controlq(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue *vq)
+process_controlq(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring *vq)
 {
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -562,7 +644,7 @@ process_controlq(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue *vq)
 }
 
 static void
-process_requestq(struct spdk_vhost_scsi_ctrlr *vdev, struct vhost_virtqueue *vq)
+process_requestq(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring *vq)
 {
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -600,7 +682,7 @@ vdev_controlq_worker(void *arg)
 {
 	struct spdk_vhost_scsi_ctrlr *vdev = arg;
 
-	process_controlq(vdev, vdev->dev->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	process_controlq(vdev, &vdev->dev->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 }
 
 static void
@@ -610,7 +692,7 @@ vdev_worker(void *arg)
 	uint32_t q_idx;
 
 	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < vdev->dev->num_queues; q_idx++) {
-		process_requestq(vdev, vdev->dev->virtqueue[q_idx]);
+		process_requestq(vdev, &vdev->dev->virtqueue[q_idx]);
 	}
 }
 
@@ -653,9 +735,7 @@ static void
 add_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_ctrlr *vdev = arg1;
-	struct virtio_memory_region *region;
-	struct spdk_vaddr_region *vregion;
-	uint64_t start, end, len;
+	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -665,22 +745,18 @@ add_vdev_cb(void *arg1, void *arg2)
 		spdk_scsi_dev_allocate_io_channels(vdev->scsi_dev[i]);
 	}
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
-	vdev->nregions = vdev->dev->mem->nregions;
-	for (i = 0; i < vdev->nregions; i++) {
+
+	for (i = 0; i < vdev->dev->mem->nregions; i++) {
+		uint64_t start, end, len;
 		region = &vdev->dev->mem->regions[i];
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
-		vregion = &vdev->region[i];
-		vregion->vaddr = (void *)start;
-		vregion->len = len;
-		vregion->host_user_addr = region->host_user_addr;
-		vregion->host_user_size = region->size;
+		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
+			       start, len);
+		spdk_mem_register((void *)start, len);
+		spdk_iommu_mem_register(region->host_user_addr, region->size);
 
-		SPDK_NOTICELOG("Registering VM memory for vtophys translation - %p len:0x%jx\n",
-			       vdev->region[i].vaddr, vdev->region[i].len);
-		spdk_mem_register(vregion->vaddr, vregion->len);
-		spdk_iommu_mem_register(vregion->host_user_addr, vregion->host_user_size);
 	}
 
 	spdk_poller_register(&vdev->requestq_poller, vdev_worker, vdev, vdev->lcore, 0);
@@ -693,7 +769,7 @@ static void
 remove_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_ctrlr *vdev = arg1;
-	struct spdk_vaddr_region *reg;
+	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -704,13 +780,15 @@ remove_vdev_cb(void *arg1, void *arg2)
 	}
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", vdev->name);
-	for (i = 0; i < vdev->nregions; i++) {
-		reg = &vdev->region[i];
-		spdk_iommu_mem_unregister(reg->host_user_addr, reg->host_user_size);
-		spdk_mem_unregister(reg->vaddr, reg->len);
+	for (i = 0; i < vdev->dev->mem->nregions; i++) {
+		uint64_t start, end, len;
+		region = &vdev->dev->mem->regions[i];
+		start = FLOOR_2MB(region->mmap_addr);
+		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+		len = end - start;
+		spdk_iommu_mem_unregister(region->host_user_addr, region->size);
+		spdk_mem_unregister((void *)start, len);
 	}
-
-	vdev->nregions = 0;
 
 	sem_post((sem_t *)arg2);
 }
@@ -718,10 +796,13 @@ remove_vdev_cb(void *arg1, void *arg2)
 static void
 destroy_device(int vid)
 {
-	struct spdk_vhost_scsi_ctrlr *vdev = dpdk_vid_mapping[vid];
+	struct spdk_vhost_scsi_ctrlr *vdev;
 	struct spdk_event *event;
 	sem_t done_sem;
 	uint32_t i;
+
+	assert(vid < MAX_VHOST_DEVICE);
+	vdev = dpdk_vid_mapping[vid];
 
 	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&vdev->requestq_poller, event);
@@ -749,6 +830,8 @@ destroy_device(int vid)
 
 	g_num_ctrlrs[vdev->lcore]--;
 	vdev->lcore = -1;
+
+	spdk_vhost_dev_destruct(vdev->dev);
 	vdev->dev = NULL;
 	dpdk_vid_mapping[vid] = NULL;
 }
@@ -780,6 +863,18 @@ spdk_vhost_scsi_ctrlr_find(const char *ctrlr_name)
 
 	return NULL;
 }
+
+
+static int new_device(int vid);
+static void destroy_device(int vid);
+/*
+ * These callback allow devices to be added to the data core when configuration
+ * has been fully complete.
+ */
+static const struct vhost_device_ops spdk_vhost_scsi_device_ops = {
+	.new_device =  new_device,
+	.destroy_device = destroy_device,
+};
 
 int
 spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
@@ -836,17 +931,36 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;
 	}
+	if (rte_vhost_driver_set_features(path, SPDK_VHOST_SCSI_FEATURES) ||
+	    rte_vhost_driver_disable_features(path, SPDK_VHOST_SCSI_DISABLED_FEATURES)) {
+		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
+		return -EINVAL;
+	}
 
-	vdev = rte_zmalloc(NULL, sizeof(*vdev), RTE_CACHE_LINE_SIZE);
+	if (rte_vhost_driver_callback_register(path, &spdk_vhost_scsi_device_ops) != 0) {
+		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
+		return -ENOENT;
+	}
+
+	vdev = spdk_zmalloc(sizeof(*vdev), RTE_CACHE_LINE_SIZE, NULL);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
 		return -ENOMEM;
 	}
 
-	spdk_vhost_ctrlrs[ctrlr_num] = vdev;
 	vdev->name =  strdup(name);
 	vdev->cpumask = cpumask;
 	vdev->lcore = -1;
+
+	if (rte_vhost_driver_start(path) != 0) {
+		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", name, errno,
+			    strerror(errno));
+		free(vdev->name);
+		spdk_free(vdev);
+		return -EIO;
+	}
+
+	spdk_vhost_ctrlrs[ctrlr_num] = vdev;
 	SPDK_NOTICELOG("Controller %s: new controller added\n", name);
 	return 0;
 }
@@ -1086,34 +1200,37 @@ spdk_vhost_scsi_allocate_reactor(uint64_t cpumask)
 static int
 new_device(int vid)
 {
-	struct virtio_net *dev = vhost_devices[vid];
 	struct spdk_vhost_scsi_ctrlr *vdev = NULL;
 	struct spdk_event *event;
-	sem_t added;
-	uint32_t i;
 
-	vdev = spdk_vhost_scsi_ctrlr_find(dev->ifname);
+	char ifname[PATH_MAX];
+	sem_t added;
+
+	assert(vid < MAX_VHOST_DEVICE);
+
+	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
+		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
+		return -1;
+	}
+
+	vdev = spdk_vhost_scsi_ctrlr_find(ifname);
 	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller %s not found.\n", dev->ifname);
+		SPDK_ERRLOG("Controller %s not found.\n", ifname);
 		return -1;
 	}
 
 	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s already connected.\n", dev->ifname);
+		SPDK_ERRLOG("Controller %s already connected.\n", ifname);
+		return -1;
+	}
+
+	assert(vdev->dev == NULL);
+	vdev->dev = spdk_vhost_dev_create(vid);
+	if (vdev->dev == NULL) {
 		return -1;
 	}
 
 	dpdk_vid_mapping[vid] = vdev;
-	vdev->dev = dev;
-
-	/* Disable notifications. */
-	for (i = 0; i < dev->num_queues; i++) {
-		rte_vhost_enable_guest_notification(vid, i, 0);
-	}
-
-	dev->flags |= VIRTIO_DEV_RUNNING;
-	vdev->dev = dev;
-
 	vdev->lcore = spdk_vhost_scsi_allocate_reactor(vdev->cpumask);
 
 	event = vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
@@ -1123,27 +1240,10 @@ new_device(int vid)
 	return 0;
 }
 
-/*
- * These callback allow devices to be added to the data core when configuration
- * has been fully complete.
- */
-static const struct virtio_net_device_ops virtio_net_device_ops = {
-	.new_device =  new_device,
-	.destroy_device = destroy_device,
-};
-
-static void *
-session_start(void *arg)
-{
-	rte_vhost_driver_session_start();
-	return NULL;
-}
-
 void
 spdk_vhost_startup(void *arg1, void *arg2)
 {
 	int ret;
-	pthread_t tid;
 	const char *basename = arg1;
 
 	if (basename && strlen(basename) > 0) {
@@ -1161,12 +1261,6 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0)
 		rte_exit(EXIT_FAILURE, "Cannot construct vhost controllers\n");
-
-	rte_vhost_driver_callback_register(&virtio_net_device_ops);
-
-	if (pthread_create(&tid, NULL, &session_start, NULL) < 0)
-		rte_panic("Failed to start session poller thread (%d): %s", errno, strerror(errno));
-	pthread_detach(tid);
 }
 
 static void *

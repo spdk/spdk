@@ -52,7 +52,7 @@ struct spdk_vhost_task {
 
 	int req_idx;
 
-	struct vhost_virtqueue *vq;
+	struct rte_vhost_vring *vq;
 
 	TAILQ_ENTRY(spdk_vhost_task) iovecs_link;
 };

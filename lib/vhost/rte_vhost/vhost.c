@@ -45,33 +45,11 @@
 #include <rte_string_fns.h>
 #include <rte_memory.h>
 #include <rte_malloc.h>
+#include <rte_vhost.h>
 
 #include "vhost.h"
 
-#define VHOST_USER_F_PROTOCOL_FEATURES	30
-
-/* Features supported by this lib. */
-#define VHOST_SUPPORTED_FEATURES ((1ULL << VIRTIO_NET_F_MRG_RXBUF) | \
-				(1ULL << VIRTIO_NET_F_CTRL_VQ) | \
-				(1ULL << VIRTIO_NET_F_CTRL_RX) | \
-				(1ULL << VIRTIO_NET_F_GUEST_ANNOUNCE) | \
-				(VHOST_SUPPORTS_MQ)            | \
-				(1ULL << VIRTIO_F_VERSION_1)   | \
-				(1ULL << VHOST_F_LOG_ALL)      | \
-				(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
-				(1ULL << VIRTIO_NET_F_HOST_TSO4) | \
-				(1ULL << VIRTIO_NET_F_HOST_TSO6) | \
-				(1ULL << VIRTIO_NET_F_CSUM)    | \
-				(1ULL << VIRTIO_NET_F_GUEST_CSUM) | \
-				(1ULL << VIRTIO_NET_F_GUEST_TSO4) | \
-				(1ULL << VIRTIO_NET_F_GUEST_TSO6))
-
-uint64_t VHOST_FEATURES = VHOST_SUPPORTED_FEATURES;
-
 struct virtio_net *vhost_devices[MAX_VHOST_DEVICE];
-
-/* device ops to add/remove device to/from data core. */
-struct virtio_net_device_ops const *notify_ops;
 
 struct virtio_net *
 get_device(int vid)
@@ -106,10 +84,8 @@ cleanup_device(struct virtio_net *dev, int destroy)
 
 	vhost_backend_cleanup(dev);
 
-	for (i = 0; i < dev->virt_qp_nb; i++) {
-		cleanup_vq(dev->virtqueue[i * VIRTIO_QNUM + VIRTIO_RXQ], destroy);
-		cleanup_vq(dev->virtqueue[i * VIRTIO_QNUM + VIRTIO_TXQ], destroy);
-	}
+	for (i = 0; i < dev->nr_vring; i++)
+		cleanup_vq(dev->virtqueue[i], destroy);
 }
 
 /*
@@ -119,24 +95,21 @@ static void
 free_device(struct virtio_net *dev)
 {
 	uint32_t i;
-	struct vhost_virtqueue *rxq, *txq;
+	struct vhost_virtqueue *vq;
 
-	for (i = 0; i < dev->virt_qp_nb; i++) {
-		rxq = dev->virtqueue[i * VIRTIO_QNUM + VIRTIO_RXQ];
-		txq = dev->virtqueue[i * VIRTIO_QNUM + VIRTIO_TXQ];
+	for (i = 0; i < dev->nr_vring; i++) {
+		vq = dev->virtqueue[i];
 
-		rte_free(rxq->shadow_used_ring);
-		rte_free(txq->shadow_used_ring);
+		rte_free(vq->shadow_used_ring);
 
-		/* rxq and txq are allocated together as queue-pair */
-		rte_free(rxq);
+		rte_free(vq);
 	}
 
 	rte_free(dev);
 }
 
 static void
-init_vring_queue(struct vhost_virtqueue *vq, int qp_idx)
+init_vring_queue(struct vhost_virtqueue *vq)
 {
 	memset(vq, 0, sizeof(struct vhost_virtqueue));
 
@@ -146,69 +119,48 @@ init_vring_queue(struct vhost_virtqueue *vq, int qp_idx)
 	/* Backends are set to -1 indicating an inactive device. */
 	vq->backend = -1;
 
-	/* always set the default vq pair to enabled */
-	if (qp_idx == 0)
-		vq->enabled = 1;
+	/*
+	 * always set the vq to enabled; this is to keep compatibility
+	 * with the old QEMU, whereas there is no SET_VRING_ENABLE message.
+	 */
+	vq->enabled = 1;
 
 	TAILQ_INIT(&vq->zmbuf_list);
 }
 
 static void
-init_vring_queue_pair(struct virtio_net *dev, uint32_t qp_idx)
-{
-	uint32_t base_idx = qp_idx * VIRTIO_QNUM;
-
-	init_vring_queue(dev->virtqueue[base_idx + VIRTIO_RXQ], qp_idx);
-	init_vring_queue(dev->virtqueue[base_idx + VIRTIO_TXQ], qp_idx);
-}
-
-static void
-reset_vring_queue(struct vhost_virtqueue *vq, int qp_idx)
+reset_vring_queue(struct vhost_virtqueue *vq)
 {
 	int callfd;
 
 	callfd = vq->callfd;
-	init_vring_queue(vq, qp_idx);
+	init_vring_queue(vq);
 	vq->callfd = callfd;
 }
 
-static void
-reset_vring_queue_pair(struct virtio_net *dev, uint32_t qp_idx)
-{
-	uint32_t base_idx = qp_idx * VIRTIO_QNUM;
-
-	reset_vring_queue(dev->virtqueue[base_idx + VIRTIO_RXQ], qp_idx);
-	reset_vring_queue(dev->virtqueue[base_idx + VIRTIO_TXQ], qp_idx);
-}
-
 int
-alloc_vring_queue_pair(struct virtio_net *dev, uint32_t qp_idx)
+alloc_vring_queue(struct virtio_net *dev, uint32_t vring_idx)
 {
-	struct vhost_virtqueue *virtqueue = NULL;
-	uint32_t virt_rx_q_idx = qp_idx * VIRTIO_QNUM + VIRTIO_RXQ;
-	uint32_t virt_tx_q_idx = qp_idx * VIRTIO_QNUM + VIRTIO_TXQ;
+	struct vhost_virtqueue *vq;
 
-	virtqueue = rte_malloc(NULL,
-			       sizeof(struct vhost_virtqueue) * VIRTIO_QNUM, 0);
-	if (virtqueue == NULL) {
+	vq = rte_malloc(NULL, sizeof(struct vhost_virtqueue), 0);
+	if (vq == NULL) {
 		RTE_LOG(ERR, VHOST_CONFIG,
-			"Failed to allocate memory for virt qp:%d.\n", qp_idx);
+			"Failed to allocate memory for vring:%u.\n", vring_idx);
 		return -1;
 	}
 
-	dev->virtqueue[virt_rx_q_idx] = virtqueue;
-	dev->virtqueue[virt_tx_q_idx] = virtqueue + VIRTIO_TXQ;
+	dev->virtqueue[vring_idx] = vq;
+	init_vring_queue(vq);
 
-	init_vring_queue_pair(dev, qp_idx);
-
-	dev->virt_qp_nb += 1;
+	dev->nr_vring += 1;
 
 	return 0;
 }
 
 /*
  * Reset some variables in device structure, while keeping few
- * others untouched, such as vid, ifname, virt_qp_nb: they
+ * others untouched, such as vid, ifname, nr_vring: they
  * should be same unless the device is removed.
  */
 void
@@ -220,8 +172,8 @@ reset_device(struct virtio_net *dev)
 	dev->protocol_features = 0;
 	dev->flags = 0;
 
-	for (i = 0; i < dev->virt_qp_nb; i++)
-		reset_vring_queue_pair(dev, i);
+	for (i = 0; i < dev->nr_vring; i++)
+		reset_vring_queue(dev->virtqueue[i]);
 }
 
 /*
@@ -248,6 +200,7 @@ vhost_new_device(void)
 	if (i == MAX_VHOST_DEVICE) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"Failed to find a free slot for new device.\n");
+		rte_free(dev);
 		return -1;
 	}
 
@@ -271,7 +224,7 @@ vhost_destroy_device(int vid)
 
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
 		dev->flags &= ~VIRTIO_DEV_RUNNING;
-		notify_ops->destroy_device(vid);
+		dev->notify_ops->destroy_device(vid);
 	}
 
 	cleanup_device(dev, 1);
@@ -309,6 +262,25 @@ vhost_enable_dequeue_zero_copy(int vid)
 }
 
 int
+rte_vhost_get_mtu(int vid, uint16_t *mtu)
+{
+	struct virtio_net *dev = get_device(vid);
+
+	if (!dev)
+		return -ENODEV;
+
+	if (!(dev->flags & VIRTIO_DEV_READY))
+		return -EAGAIN;
+
+	if (!(dev->features & VIRTIO_NET_F_MTU))
+		return -ENOTSUP;
+
+	*mtu = dev->mtu;
+
+	return 0;
+}
+
+int
 rte_vhost_get_numa_node(int vid)
 {
 #ifdef RTE_LIBRTE_VHOST_NUMA
@@ -342,7 +314,18 @@ rte_vhost_get_queue_num(int vid)
 	if (dev == NULL)
 		return 0;
 
-	return dev->virt_qp_nb;
+	return dev->nr_vring / 2;
+}
+
+uint16_t
+rte_vhost_get_vring_num(int vid)
+{
+	struct virtio_net *dev = get_device(vid);
+
+	if (dev == NULL)
+		return 0;
+
+	return dev->nr_vring;
 }
 
 int
@@ -357,6 +340,75 @@ rte_vhost_get_ifname(int vid, char *buf, size_t len)
 
 	strncpy(buf, dev->ifname, len);
 	buf[len - 1] = '\0';
+
+	return 0;
+}
+
+int
+rte_vhost_get_negotiated_features(int vid, uint64_t *features)
+{
+	struct virtio_net *dev;
+
+	dev = get_device(vid);
+	if (!dev)
+		return -1;
+
+	*features = dev->features;
+	return 0;
+}
+
+int
+rte_vhost_get_mem_table(int vid, struct rte_vhost_memory **mem)
+{
+	struct virtio_net *dev;
+	struct rte_vhost_memory *m;
+	size_t size;
+
+	dev = get_device(vid);
+	if (!dev)
+		return -1;
+
+	size = dev->mem->nregions * sizeof(struct rte_vhost_mem_region);
+	m = malloc(sizeof(struct rte_vhost_memory) + size);
+	if (!m)
+		return -1;
+
+	m->nregions = dev->mem->nregions;
+	memcpy(m->regions, dev->mem->regions, size);
+	*mem = m;
+
+	return 0;
+}
+
+int
+rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
+			  struct rte_vhost_vring *vring)
+{
+	struct virtio_net *dev;
+	struct vhost_virtqueue *vq;
+
+	dev = get_device(vid);
+	if (!dev)
+		return -1;
+
+	if (vring_idx >= VHOST_MAX_VRING)
+		return -1;
+
+	vq = dev->virtqueue[vring_idx];
+	if (!vq)
+		return -1;
+
+	vring->desc  = vq->desc;
+	vring->avail = vq->avail;
+	vring->used  = vq->used;
+	vring->log_guest_addr  = vq->log_guest_addr;
+
+	vring->callfd  = vq->callfd;
+	vring->kickfd  = vq->kickfd;
+	vring->size    = vq->size;
+
+	vring->last_avail_idx = vq->last_avail_idx;
+	vring->last_used_idx = vq->last_used_idx;
 
 	return 0;
 }
@@ -396,33 +448,56 @@ rte_vhost_enable_guest_notification(int vid, uint16_t queue_id, int enable)
 	return 0;
 }
 
-uint64_t rte_vhost_feature_get(void)
+void
+rte_vhost_log_write(int vid, uint64_t addr, uint64_t len)
 {
-	return VHOST_FEATURES;
+	struct virtio_net *dev = get_device(vid);
+
+	if (dev == NULL)
+		return;
+
+	vhost_log_write(dev, addr, len);
 }
 
-int rte_vhost_feature_disable(uint64_t feature_mask)
+void
+rte_vhost_log_used_vring(int vid, uint16_t vring_idx,
+			 uint64_t offset, uint64_t len)
 {
-	VHOST_FEATURES = VHOST_FEATURES & ~feature_mask;
-	return 0;
+	struct virtio_net *dev;
+	struct vhost_virtqueue *vq;
+
+	dev = get_device(vid);
+	if (dev == NULL)
+		return;
+
+	if (vring_idx >= VHOST_MAX_VRING)
+		return;
+	vq = dev->virtqueue[vring_idx];
+	if (!vq)
+		return;
+
+	vhost_log_used_vring(dev, vq, offset, len);
 }
 
-int rte_vhost_feature_enable(uint64_t feature_mask)
-{
-	if ((feature_mask & VHOST_SUPPORTED_FEATURES) == feature_mask) {
-		VHOST_FEATURES = VHOST_FEATURES | feature_mask;
-		return 0;
-	}
-	return -1;
-}
-
-/*
- * Register ops so that we can add/remove device to data core.
- */
 int
-rte_vhost_driver_callback_register(struct virtio_net_device_ops const * const ops)
-{
-	notify_ops = ops;
+rte_vhost_set_vhost_vring_last_idx(int vid, uint16_t vring_idx,
+			      uint16_t last_avail_idx, uint16_t last_used_idx) {
+	struct virtio_net *dev;
+	struct vhost_virtqueue *vq;
+
+	dev = get_device(vid);
+	if (!dev)
+		return -1;
+
+	if (vring_idx >= VHOST_MAX_VRING)
+		return -1;
+
+	vq = dev->virtqueue[vring_idx];
+	if (!vq)
+		return -1;
+
+	vq->last_avail_idx = last_avail_idx;
+	vq->last_used_idx = last_used_idx;
 
 	return 0;
 }

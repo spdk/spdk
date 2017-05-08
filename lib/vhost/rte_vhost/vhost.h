@@ -39,14 +39,20 @@
 #include <sys/queue.h>
 #include <unistd.h>
 #include <linux/vhost.h>
+#include <linux/virtio_net.h>
+#include <sys/socket.h>
+#include <linux/if.h>
 
 #include <rte_log.h>
+#include <rte_ether.h>
 
-#include "rte_virtio_net.h"
+#include "rte_vhost.h"
 #include "vhost_user.h"
 
 /* Used to indicate that the device is running on a data core */
 #define VIRTIO_DEV_RUNNING 1
+/* Used to indicate that the device is ready to operate */
+#define VIRTIO_DEV_READY 2
 
 /* Backend value set by guest. */
 #define VIRTIO_DEV_STOPPED -1
@@ -111,24 +117,20 @@ struct vhost_virtqueue {
 	uint16_t                shadow_used_idx;
 } __rte_cache_aligned;
 
-/* Old kernels have no such macro defined */
+/* Old kernels have no such macros defined */
 #ifndef VIRTIO_NET_F_GUEST_ANNOUNCE
  #define VIRTIO_NET_F_GUEST_ANNOUNCE 21
 #endif
 
+#ifndef VIRTIO_NET_F_MQ
+ #define VIRTIO_NET_F_MQ		22
+#endif
 
-/*
- * Make an extra wrapper for VIRTIO_NET_F_MQ and
- * VIRTIO_NET_CTRL_MQ_VQ_PAIRS_MAX as they are
- * introduced since kernel v3.8. This makes our
- * code buildable for older kernel.
- */
-#ifdef VIRTIO_NET_F_MQ
- #define VHOST_MAX_QUEUE_PAIRS	VIRTIO_NET_CTRL_MQ_VQ_PAIRS_MAX
- #define VHOST_SUPPORTS_MQ	(1ULL << VIRTIO_NET_F_MQ)
-#else
- #define VHOST_MAX_QUEUE_PAIRS	1
- #define VHOST_SUPPORTS_MQ	0
+#define VHOST_MAX_VRING			0x100
+#define VHOST_MAX_QUEUE_PAIRS		0x80
+
+#ifndef VIRTIO_NET_F_MTU
+ #define VIRTIO_NET_F_MTU 3
 #endif
 
 /*
@@ -137,6 +139,27 @@ struct vhost_virtqueue {
 #ifndef VIRTIO_F_VERSION_1
  #define VIRTIO_F_VERSION_1 32
 #endif
+
+#define VHOST_USER_F_PROTOCOL_FEATURES	30
+
+/* Features supported by this builtin vhost-user net driver. */
+#define VIRTIO_NET_SUPPORTED_FEATURES ((1ULL << VIRTIO_NET_F_MRG_RXBUF) | \
+				(1ULL << VIRTIO_NET_F_CTRL_VQ) | \
+				(1ULL << VIRTIO_NET_F_CTRL_RX) | \
+				(1ULL << VIRTIO_NET_F_GUEST_ANNOUNCE) | \
+				(1ULL << VIRTIO_NET_F_MQ)      | \
+				(1ULL << VIRTIO_F_VERSION_1)   | \
+				(1ULL << VHOST_F_LOG_ALL)      | \
+				(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
+				(1ULL << VIRTIO_NET_F_HOST_TSO4) | \
+				(1ULL << VIRTIO_NET_F_HOST_TSO6) | \
+				(1ULL << VIRTIO_NET_F_CSUM)    | \
+				(1ULL << VIRTIO_NET_F_GUEST_CSUM) | \
+				(1ULL << VIRTIO_NET_F_GUEST_TSO4) | \
+				(1ULL << VIRTIO_NET_F_GUEST_TSO6) | \
+				(1ULL << VIRTIO_RING_F_INDIRECT_DESC) | \
+				(1ULL << VIRTIO_NET_F_MTU))
+
 
 struct guest_page {
 	uint64_t guest_phys_addr;
@@ -150,7 +173,7 @@ struct guest_page {
  */
 struct virtio_net {
 	/* Frontend (QEMU) memory and memory region information */
-	struct virtio_memory	*mem;
+	struct rte_vhost_memory	*mem;
 	uint64_t		features;
 	uint64_t		protocol_features;
 	int			vid;
@@ -158,8 +181,7 @@ struct virtio_net {
 	uint16_t		vhost_hlen;
 	/* to tell if we need broadcast rarp packet */
 	rte_atomic16_t		broadcast_rarp;
-	uint32_t		virt_qp_nb;
-	uint32_t		num_queues;
+	uint32_t		nr_vring;
 	int			dequeue_zero_copy;
 	struct vhost_virtqueue	*virtqueue[VHOST_MAX_QUEUE_PAIRS * 2];
 #define IF_NAME_SZ (PATH_MAX > IFNAMSIZ ? PATH_MAX : IFNAMSIZ)
@@ -168,38 +190,55 @@ struct virtio_net {
 	uint64_t		log_base;
 	uint64_t		log_addr;
 	struct ether_addr	mac;
+	uint16_t		mtu;
+
+	struct vhost_device_ops const *notify_ops;
 
 	uint32_t		nr_guest_pages;
 	uint32_t		max_guest_pages;
 	struct guest_page       *guest_pages;
-	int			has_new_mem_table;
-	struct VhostUserMemory	mem_table;
-	int			mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
+	int                     has_new_mem_table;
+	struct VhostUserMemory  mem_table;
+	int                     mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
 } __rte_cache_aligned;
 
-/**
- * Information relating to memory regions including offsets to
- * addresses in QEMUs memory file.
- */
-struct virtio_memory_region {
-	uint64_t guest_phys_addr;
-	uint64_t guest_user_addr;
-	uint64_t host_user_addr;
-	uint64_t size;
-	void	 *mmap_addr;
-	uint64_t mmap_size;
-	int fd;
-};
 
+#define VHOST_LOG_PAGE	4096
 
-/**
- * Memory structure includes region and mapping information.
- */
-struct virtio_memory {
-	uint32_t nregions;
-	struct virtio_memory_region regions[0];
-};
+static inline void __attribute__((always_inline))
+vhost_log_page(uint8_t *log_base, uint64_t page)
+{
+	log_base[page / 8] |= 1 << (page % 8);
+}
 
+static inline void __attribute__((always_inline))
+vhost_log_write(struct virtio_net *dev, uint64_t addr, uint64_t len)
+{
+	uint64_t page;
+
+	if (likely(((dev->features & (1ULL << VHOST_F_LOG_ALL)) == 0) ||
+		   !dev->log_base || !len))
+		return;
+
+	if (unlikely(dev->log_size <= ((addr + len - 1) / VHOST_LOG_PAGE / 8)))
+		return;
+
+	/* To make sure guest memory updates are committed before logging */
+	rte_smp_wmb();
+
+	page = addr / VHOST_LOG_PAGE;
+	while (page * VHOST_LOG_PAGE < addr + len) {
+		vhost_log_page((uint8_t *)(uintptr_t)dev->log_base, page);
+		page += 1;
+	}
+}
+
+static inline void __attribute__((always_inline))
+vhost_log_used_vring(struct virtio_net *dev, struct vhost_virtqueue *vq,
+		     uint64_t offset, uint64_t len)
+{
+	vhost_log_write(dev, vq->log_guest_addr + offset, len);
+}
 
 /* Macros for printing using RTE_LOG */
 #define RTE_LOGTYPE_VHOST_CONFIG RTE_LOGTYPE_USER1
@@ -236,25 +275,6 @@ extern uint64_t VHOST_FEATURES;
 #define MAX_VHOST_DEVICE	1024
 extern struct virtio_net *vhost_devices[MAX_VHOST_DEVICE];
 
-/* Convert guest physical Address to host virtual address */
-static inline uint64_t __attribute__((always_inline))
-gpa_to_vva(struct virtio_net *dev, uint64_t gpa)
-{
-	struct virtio_memory_region *reg;
-	uint32_t i;
-
-	for (i = 0; i < dev->mem->nregions; i++) {
-		reg = &dev->mem->regions[i];
-		if (gpa >= reg->guest_phys_addr &&
-		    gpa <  reg->guest_phys_addr + reg->size) {
-			return gpa - reg->guest_phys_addr +
-			       reg->host_user_addr;
-		}
-	}
-
-	return 0;
-}
-
 /* Convert guest physical address to host physical address */
 static inline phys_addr_t __attribute__((always_inline))
 gpa_to_hpa(struct virtio_net *dev, uint64_t gpa, uint64_t size)
@@ -275,7 +295,6 @@ gpa_to_hpa(struct virtio_net *dev, uint64_t gpa, uint64_t size)
 	return 0;
 }
 
-extern struct virtio_net_device_ops const *notify_ops;
 struct virtio_net *get_device(int vid);
 
 int vhost_new_device(void);
@@ -283,10 +302,12 @@ void cleanup_device(struct virtio_net *dev, int destroy);
 void reset_device(struct virtio_net *dev);
 void vhost_destroy_device(int);
 
-int alloc_vring_queue_pair(struct virtio_net *dev, uint32_t qp_idx);
+int alloc_vring_queue(struct virtio_net *dev, uint32_t vring_idx);
 
 void vhost_set_ifname(int, const char *if_name, unsigned int if_len);
 void vhost_enable_dequeue_zero_copy(int vid);
+
+struct vhost_device_ops const *vhost_driver_callback_get(const char *path);
 
 /*
  * Backend-specific cleanup.

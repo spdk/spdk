@@ -37,7 +37,7 @@
 #include <stdint.h>
 #include <linux/vhost.h>
 
-#include "rte_virtio_net.h"
+#include "rte_vhost.h"
 
 /* refer to hw/virtio/vhost-user.c */
 
@@ -46,10 +46,14 @@
 #define VHOST_USER_PROTOCOL_F_MQ	0
 #define VHOST_USER_PROTOCOL_F_LOG_SHMFD	1
 #define VHOST_USER_PROTOCOL_F_RARP	2
+#define VHOST_USER_PROTOCOL_F_REPLY_ACK	3
+#define VHOST_USER_PROTOCOL_F_NET_MTU 4
 
 #define VHOST_USER_PROTOCOL_FEATURES	((1ULL << VHOST_USER_PROTOCOL_F_MQ) | \
 					 (1ULL << VHOST_USER_PROTOCOL_F_LOG_SHMFD) |\
-					 (1ULL << VHOST_USER_PROTOCOL_F_RARP))
+					 (1ULL << VHOST_USER_PROTOCOL_F_RARP) | \
+					 (1ULL << VHOST_USER_PROTOCOL_F_REPLY_ACK) | \
+					 (1ULL << VHOST_USER_PROTOCOL_F_NET_MTU))
 
 typedef enum VhostUserRequest {
 	VHOST_USER_NONE = 0,
@@ -72,6 +76,7 @@ typedef enum VhostUserRequest {
 	VHOST_USER_GET_QUEUE_NUM = 17,
 	VHOST_USER_SET_VRING_ENABLE = 18,
 	VHOST_USER_SEND_RARP = 19,
+	VHOST_USER_NET_SET_MTU = 20,
 	VHOST_USER_MAX
 } VhostUserRequest;
 
@@ -98,6 +103,7 @@ typedef struct VhostUserMsg {
 
 #define VHOST_USER_VERSION_MASK     0x3
 #define VHOST_USER_REPLY_MASK       (0x1 << 2)
+#define VHOST_USER_NEED_REPLY		(0x1 << 3)
 	uint32_t flags;
 	uint32_t size; /* the following payload size */
 	union {
