@@ -29,12 +29,18 @@ export NRHUGE=4096
 
 case `uname` in
 	FreeBSD)
-		config_params+=' --with-dpdk=/usr/local/share/dpdk/x86_64-native-bsdapp-clang'
+		DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
+		if [ -d $DPDK_FREEBSD_DIR ]; then
+			WITH_DPDK_DIR=$DPDK_FREEBSD_DIR
+		fi
 		MAKE=gmake
 		MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
 		;;
 	Linux)
-		config_params+=' --with-dpdk=/usr/local/share/dpdk/x86_64-native-linuxapp-gcc'
+		DPDK_LINUX_DIR=/usr/local/share/dpdk/x86_64-native-linuxapp-gcc
+		if [ -d $DPDK_LINUX_DIR ]; then
+			WITH_DPDK_DIR=$DPDK_LINUX_DIR
+		fi
 		MAKE=make
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		config_params+=' --enable-coverage'
@@ -45,6 +51,13 @@ case `uname` in
 		exit 1
 		;;
 esac
+
+# By default, --with-dpdk is not set meaning the SPDK build will use the DPDK submodule.
+# If a DPDK installation is found in a well-known location though, WITH_DPDK_DIR will be
+# set which will override the default and use that DPDK installation instead.
+if [ ! -z "$WITH_DPDK_DIR" ]; then
+	config_params+=" --with-dpdk=$WITH_DPDK_DIR"
+fi
 
 if [ -f /usr/include/infiniband/verbs.h ]; then
 	config_params+=' --with-rdma'

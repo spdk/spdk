@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SPDK_DIR=/spdk
-DPDK_DIR=$SPDK_DIR/dpdk
 
 SUDOCMD="sudo -H -u vagrant"
 echo 0:$0
@@ -41,11 +40,8 @@ elif [ -f /etc/redhat-release ]; then
     yum install -y gcc gcc-c++ CUnit-devel libaio-devel openssl-devel
 fi
 
-cd $DPDK_DIR
-$SUDOCMD make -j2 install T=x86_64-native-linuxapp-gcc DESTDIR=.
-
 cd $SPDK_DIR
-$SUDOCMD ./configure --with-dpdk=$DPDK_DIR/x86_64-native-linuxapp-gcc --enable-debug
+$SUDOCMD ./configure --enable-debug
 $SUDOCMD make -j2
 # Bind virtual NVMe controller to uio_pci_generic
 sudo scripts/setup.sh

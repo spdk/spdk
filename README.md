@@ -53,20 +53,13 @@ FreeBSD:
 
     sudo pkg install gmake cunit openssl
 
-Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.
+Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.  The SPDK
+repository includes a suitable version of DPDK as a submodule.  Newer versions
+of git will automatically fetch the DPDK submodule.  Older versions of git may
+require:
 
-    1) cd /path/to/spdk
-    2) wget http://fast.dpdk.org/rel/dpdk-17.02.tar.xz
-    3) tar xf dpdk-17.02.tar.xz
-    4) mv dpdk-17.02 dpdk
-
-Linux:
-
-    4) (cd dpdk && make install T=x86_64-native-linuxapp-gcc DESTDIR=.)
-
-FreeBSD:
-
-    4) (cd dpdk && gmake install T=x86_64-native-bsdapp-clang DESTDIR=.)
+    1) git submodule init
+    2) git submodule update
 
 Building
 ========
@@ -94,8 +87,6 @@ quickly.  Currently this has only been tested on MacOS with the
 [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads) must
 also be installed for NVMe support.
 
-Download DPDK as a subdirectory in the SPDK repository as described above.
-You do *not* need to build DPDK - the Vagrant scripts will do this for you.
 If you are behind a corporate firewall, set http_proxy and https_proxy in
 your environment before running the following steps.
 
@@ -134,6 +125,20 @@ Additionally, `CONFIG` options may also be overrriden on the `make` command
 line:
 
     make CONFIG_RDMA=y
+
+Users may wish to use a version of DPDK different from the submodule included
+in the SPDK repository.  To specify an alternate DPDK installation, run
+configure with the --with-dpdk option.  For example:
+
+Linux:
+
+    ./configure --with-dpdk=/path/to/dpdk/x86_64-native-linuxapp-gcc
+    make
+
+FreeBSD:
+
+    ./configure --with-dpdk=/path/to/dpdk/x86_64-native-bsdapp-clang
+    gmake
 
 The options specified on the `make` command line take precedence over the
 default values in `CONFIG` and `CONFIG.local`. This can be useful if you, for

@@ -20,20 +20,31 @@ if [ `git status --porcelain | wc -l` -ne 0 ]; then
 	exit 1
 fi
 
-pv=spdk-$(date +%Y_%m_%d)
+spdk_pv=spdk-$(date +%Y_%m_%d)
+spdk_tarball=${spdk_pv}.tar
+dpdk_pv=dpdk-$(date +%Y_%m_%d)
+dpdk_tarball=${dpdk_pv}.tar
 
-find . -iname "spdk-*.tar.gz" -delete
-git archive HEAD -9 --prefix=${pv}/ -o ${pv}.tar.gz
-
-tarball=$(ls -1 spdk-*.tar.gz)
+find . -iname "spdk-*.tar* dpdk-*.tar*" -delete
+git archive HEAD --prefix=${spdk_pv}/ -o ${spdk_tarball}
 
 # Build from packaged source
 tmpdir=$(mktemp -d)
 echo "tmpdir=$tmpdir"
-tar -C "$tmpdir" -xf $tarball
+tar -C "$tmpdir" -xf $spdk_tarball
+
+if [ -z "$WITH_DPDK_DIR" ]; then
+	cd dpdk
+	git archive HEAD --prefix=dpdk/ -o ../${dpdk_tarball}
+	cd ..
+	tar -C "$tmpdir/${spdk_pv}" -xf $dpdk_tarball
+fi
+
 (
 	cd "$tmpdir"/spdk-*
-	./configure $config_params --disable-debug --enable-werror
+	# use $config_params to get the right dependency options, but disable coverage and ubsan
+	#  explicitly since they are not needed for this build
+	./configure $config_params --disable-debug --enable-werror --disable-coverage --disable-ubsan
 	time $MAKE ${MAKEFLAGS}
 )
 rm -rf "$tmpdir"

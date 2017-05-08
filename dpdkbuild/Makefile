@@ -31,40 +31,42 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-S :=
-
-SPDK_ROOT_DIR := $(CURDIR)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += lib test examples app
+.PHONY: all clean
 
-.PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk
+DPDK_CONFIG := spdk
 
-ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
-DPDKBUILD = dpdkbuild
-DIRS-y += dpdkbuild
+ifeq ($(OS),Linux)
+DPDK_CONFIG := $(DPDK_CONFIG)-linuxapp
+else
+ifeq ($(OS),FreeBSD)
+DPDK_CONFIG := $(DPDK_CONFIG)-bsdapp
+endif
 endif
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
-	$(Q)rm -f mk/cc.mk
-	$(Q)rm -f config.h
+ifeq ($(CC_TYPE),clang)
+DPDK_CONFIG := $(DPDK_CONFIG)-clang
+else
+DPDK_CONFIG := $(DPDK_CONFIG)-gcc
+endif
 
-lib: $(DPDKBUILD)
-app: lib
-test: lib
-examples: lib
+NPROC = $(shell nproc)
 
-$(DIRS-y): mk/cc.mk config.h
+ifeq ($(CONFIG_FIO_PLUGIN),y)
+DPDK_CFLAGS = -fPIC
+endif
 
-mk/cc.mk:
-	$(Q)scripts/detect_cc.sh --cc=$(CC) --cxx=$(CXX) --lto=$(CONFIG_LTO) > $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
+ifeq ($(CONFIG_DEBUG),y)
+DPDK_CFLAGS += -O0
+endif
 
-config.h: CONFIG CONFIG.local scripts/genconfig.py
-	$(Q)python scripts/genconfig.py $(MAKEFLAGS) > $@.tmp; \
-	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
-	rm -f $@.tmp
+$(SPDK_ROOT_DIR)/dpdk/build:
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all: $(SPDK_ROOT_DIR)/dpdk/build
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk/build EXTRA_CFLAGS="$(DPDK_CFLAGS)" MAKEFLAGS="T=$(DPDK_CONFIG) -j$(NPROC)"
+
+clean:
+	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build

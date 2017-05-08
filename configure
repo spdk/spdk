@@ -27,7 +27,7 @@ function usage()
 	echo "                           disable features and components."
 	echo ""
 	echo "Valid dependencies are listed below."
-	echo " dpdk                      Required unless providing an alternate env implementation."
+	echo " dpdk                      Optional.  Uses dpdk submodule in spdk tree if not specified."
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
 	echo " fio                       Required to build fio_plugin."
 	echo "                           example: /usr/src/fio"
@@ -121,8 +121,7 @@ done
 
 if [ -z "$CONFIG_ENV" ]; then
 	if [ -z "$CONFIG_DPDK_DIR" ]; then
-		echo "You must specify the path to dpdk using --with-dpdk=path."
-		exit 1
+		CONFIG_DPDK_DIR=$(readlink -f $(dirname $0))/dpdk/build
 	fi
 fi
 
