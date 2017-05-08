@@ -399,6 +399,12 @@ static int
 vhost_user_set_vring_base(struct virtio_net *dev,
 			  struct vhost_vring_state *state)
 {
+	/* Remove from the data plane. */
+	if (dev->flags & VIRTIO_DEV_RUNNING) {
+		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		dev->notify_ops->destroy_device(dev->vid);
+	}
+
 	dev->virtqueue[state->index]->last_used_idx  = state->num;
 	dev->virtqueue[state->index]->last_avail_idx = state->num;
 
@@ -635,6 +641,12 @@ vhost_user_set_vring_call(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	struct vhost_vring_file file;
 	struct vhost_virtqueue *vq;
 
+	/* Remove from the data plane. */
+	if (dev->flags & VIRTIO_DEV_RUNNING) {
+		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		dev->notify_ops->destroy_device(dev->vid);
+	}
+
 	file.index = pmsg->payload.u64 & VHOST_USER_VRING_IDX_MASK;
 	if (pmsg->payload.u64 & VHOST_USER_VRING_NOFD_MASK)
 		file.fd = VIRTIO_INVALID_EVENTFD;
@@ -655,6 +667,12 @@ vhost_user_set_vring_kick(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 {
 	struct vhost_vring_file file;
 	struct vhost_virtqueue *vq;
+
+	/* Remove from the data plane. */
+	if (dev->flags & VIRTIO_DEV_RUNNING) {
+		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		dev->notify_ops->destroy_device(dev->vid);
+	}
 
 	file.index = pmsg->payload.u64 & VHOST_USER_VRING_IDX_MASK;
 	if (pmsg->payload.u64 & VHOST_USER_VRING_NOFD_MASK)
