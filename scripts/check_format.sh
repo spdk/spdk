@@ -38,7 +38,7 @@ fi
 echo -n "Checking comment style..."
 
 git grep --line-number -e '/[*][^ *-]' -- '*.[ch]' > comment.log || true
-git grep --line-number -e '[^ ][*]/' -- '*.[ch]' >> comment.log || true
+git grep --line-number -e '[^ ][*]/' -- '*.[ch]' ':!lib/vhost/rte_vhost*/*' >> comment.log || true
 git grep --line-number -e '^[*]' -- '*.[ch]' >> comment.log || true
 
 if [ -s comment.log ]; then
