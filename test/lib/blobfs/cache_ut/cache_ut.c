@@ -167,6 +167,38 @@ cache_write(void)
 }
 
 static void
+cache_write_null_buffer(void)
+{
+	uint64_t length;
+	int rc;
+	struct spdk_io_channel *channel;
+
+	ut_send_request(_fs_init, NULL);
+
+	spdk_allocate_thread();
+	channel = spdk_fs_alloc_io_channel_sync(g_fs, SPDK_IO_PRIORITY_DEFAULT);
+
+	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	length = 0;
+	spdk_file_truncate(g_file, channel, length);
+
+	rc = spdk_file_write(g_file, channel, NULL, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	spdk_file_close(g_file, channel);
+	rc = spdk_fs_delete_file(g_fs, channel, "testfile");
+	CU_ASSERT(rc == 0);
+
+	spdk_fs_free_io_channel(channel);
+	spdk_free_thread();
+
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
 cache_append_no_cache(void)
 {
 	int rc;
@@ -254,6 +286,7 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "write", cache_write) == NULL ||
+		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
 		CU_add_test(suite, "append_no_cache", cache_append_no_cache) == NULL
 	) {
 		CU_cleanup_registry();
