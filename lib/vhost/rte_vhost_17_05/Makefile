@@ -38,7 +38,7 @@ CFLAGS += -I.
 CFLAGS += $(ENV_CFLAGS)
 
 # These are the DPDK vhost files copied (for now) into SPDK
-C_SRCS += fd_man.c socket.c vhost_user.c virtio_net.c vhost.c
+C_SRCS += fd_man.c socket.c vhost_user.c vhost.c
 
 LIBNAME = rte_vhost
 

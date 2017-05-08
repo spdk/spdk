@@ -44,7 +44,7 @@ typedef void (*fd_cb)(int fd, void *dat, int *remove);
 struct fdentry {
 	int fd;		/* -1 indicates this entry is empty */
 	fd_cb rcb;	/* callback when this fd is readable. */
-	fd_cb wcb;	/* callback when this fd is writeable.*/
+	fd_cb wcb;	/* callback when this fd is writeable. */
 	void *dat;	/* fd context */
 	int busy;	/* whether this entry is being used in cb. */
 };
