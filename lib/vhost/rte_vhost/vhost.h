@@ -207,8 +207,8 @@ struct virtio_memory {
 
 #ifdef RTE_LIBRTE_VHOST_DEBUG
 #define VHOST_MAX_PRINT_BUFF 6072
-#define LOG_LEVEL RTE_LOG_DEBUG
-#define LOG_DEBUG(log_type, fmt, args...) RTE_LOG(DEBUG, log_type, fmt, ##args)
+#define VHOST_LOG_LEVEL RTE_LOG_DEBUG
+#define VHOST_LOG_DEBUG(log_type, fmt, args...) RTE_LOG(DEBUG, log_type, fmt, ##args)
 #define PRINT_PACKET(device, addr, size, header) do { \
 	char *pkt_addr = (char *)(addr); \
 	unsigned int index; \
@@ -224,11 +224,11 @@ struct virtio_memory {
 	} \
 	snprintf(packet + strnlen(packet, VHOST_MAX_PRINT_BUFF), VHOST_MAX_PRINT_BUFF - strnlen(packet, VHOST_MAX_PRINT_BUFF), "\n"); \
 	\
-	LOG_DEBUG(VHOST_DATA, "%s", packet); \
+	VHOST_LOG_DEBUG(VHOST_DATA, "%s", packet); \
 } while (0)
 #else
-#define LOG_LEVEL RTE_LOG_INFO
-#define LOG_DEBUG(log_type, fmt, args...) do {} while (0)
+#define VHOST_LOG_LEVEL RTE_LOG_INFO
+#define VHOST_LOG_DEBUG(log_type, fmt, args...) do {} while (0)
 #define PRINT_PACKET(device, addr, size, header) do {} while (0)
 #endif
 
