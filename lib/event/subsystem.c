@@ -32,6 +32,7 @@
  */
 
 #include "spdk_internal/event.h"
+#include "spdk/log.h"
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -118,12 +119,12 @@ spdk_subsystem_init(void)
 	/* Verify that all dependency name and depends_on subsystems are registered */
 	TAILQ_FOREACH(dep, &g_depends, tailq) {
 		if (!spdk_subsystem_find(&g_subsystems, dep->name)) {
-			fprintf(stderr, "subsystem %s is missing\n", dep->name);
+			SPDK_ERRLOG("subsystem %s is missing\n", dep->name);
 			return -1;
 		}
 		if (!spdk_subsystem_find(&g_subsystems, dep->depends_on)) {
-			fprintf(stderr, "subsystem %s dependency %s is missing\n",
-				dep->name, dep->depends_on);
+			SPDK_ERRLOG("subsystem %s dependency %s is missing\n",
+				    dep->name, dep->depends_on);
 			return -1;
 		}
 	}
