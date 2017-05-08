@@ -25,6 +25,8 @@ out=$PWD
 cd $src
 
 if hash lcov; then
+	# setup output dir for unittest.sh
+	export UT_COVERAGE=$out/ut_coverage
 	export LCOV_OPTS="
 		--rc lcov_branch_coverage=1
 		--rc lcov_function_coverage=1
@@ -180,6 +182,6 @@ if hash lcov; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info
 	$LCOV -q -a cov_base.info -a cov_test.info -o $out/cov_total.info
-	find . -name "*.gcda" -delete
+	git clean -f "*.gcda"
 	rm -f cov_base.info cov_test.info
 fi

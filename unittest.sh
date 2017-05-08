@@ -5,6 +5,31 @@
 
 set -xe
 
+# setup local unit test coverage if cov is available
+if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' config.h; then
+	cov_avail="yes"
+else
+	cov_avail="no"
+fi
+if [ "$cov_avail" = "yes" ]; then
+	# set unit test output dir if not specified in env var
+	if [ -z ${UT_COVERAGE+x} ]; then
+		UT_COVERAGE="ut_coverage"
+	fi
+	mkdir -p $UT_COVERAGE
+	export LCOV_OPTS="
+		--rc lcov_branch_coverage=1
+		--rc lcov_function_coverage=1
+		--rc genhtml_branch_coverage=1
+		--rc genhtml_function_coverage=1
+		--rc genhtml_legend=1
+		--rc geninfo_all_blocks=1
+		"
+	export LCOV="lcov $LCOV_OPTS --no-external"
+	# zero out coverage data
+	$LCOV -q -c -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
+fi
+
 $valgrind test/lib/blob/blob_ut/blob_ut
 
 $valgrind test/lib/blobfs/blobfs_async_ut/blobfs_async_ut
@@ -52,6 +77,16 @@ $valgrind test/lib/util/bit_array/bit_array_ut
 $valgrind test/lib/util/io_channel/io_channel_ut
 $valgrind test/lib/util/string/string_ut
 
+# local unit test coverage
+if [ "$cov_avail" = "yes" ]; then
+	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
+	$LCOV -q -a $UT_COVERAGE/ut_cov_base.info -a $UT_COVERAGE/ut_cov_test.info -o $UT_COVERAGE/ut_cov_total.info
+	$LCOV -q -a $UT_COVERAGE/ut_cov_total.info -o $UT_COVERAGE/ut_cov_unit.info
+	rm -f $UT_COVERAGE/ut_cov_base.info $UT_COVERAGE/ut_cov_test.info
+	genhtml $UT_COVERAGE/ut_cov_unit.info --output-directory $UT_COVERAGE
+	git clean -f "*.gcda"
+fi
+
 set +x
 
 echo
@@ -59,5 +94,10 @@ echo
 echo "====================="
 echo "All unit tests passed"
 echo "====================="
+if [ "$cov_avail" = "yes" ]; then
+	echo "Note: coverage report is here: ./$UT_COVERAGE"
+else
+	echo "WARN: lcov not installed or SPDK built without coverage!"
+fi
 echo
 echo

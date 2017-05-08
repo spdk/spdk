@@ -12,6 +12,8 @@
 *.pyc
 *.so
 *.swp
+*.DS_Store
+ut_coverage/
 tags
 cscope.out
 dpdk-*
