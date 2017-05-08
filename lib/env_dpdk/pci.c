@@ -172,7 +172,7 @@ spdk_pci_get_device(struct spdk_pci_addr *pci_addr)
 	addr.devid = pci_addr->dev;
 	addr.function = pci_addr->func;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 0)
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 2)
 	FOREACH_DEVICE_ON_PCIBUS(dev) {
 #else
 	TAILQ_FOREACH(dev, &pci_device_list, next) {
