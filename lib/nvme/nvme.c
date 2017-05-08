@@ -40,6 +40,9 @@ struct nvme_driver	*g_spdk_nvme_driver;
 
 int32_t			spdk_nvme_retry_count;
 
+/* gross timeout of 180 seconds in milliseconds */
+static int g_nvme_driver_timeout_ms = 3 * 60 * 1000;
+
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -255,9 +258,18 @@ nvme_driver_init(void)
 
 		/* The unique named memzone already reserved by the primary process. */
 		if (g_spdk_nvme_driver != NULL) {
+			int ms_waited = 0;
+
 			/* Wait the nvme driver to get initialized. */
-			while (g_spdk_nvme_driver->initialized == false) {
-				nvme_delay(1000);
+			while ((g_spdk_nvme_driver->initialized == false) &&
+			       (ms_waited < g_nvme_driver_timeout_ms)) {
+				ms_waited++;
+				nvme_delay(1000); /* delay 1ms */
+			}
+			if (g_spdk_nvme_driver->initialized == false) {
+				SPDK_ERRLOG("timeout waiting for primary process to init\n");
+
+				return -1;
 			}
 		} else {
 			SPDK_ERRLOG("primary process is not started yet\n");
