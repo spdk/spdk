@@ -42,12 +42,11 @@
 #ifndef SPDK_NVME_INTEL_H
 #define SPDK_NVME_INTEL_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
-#include <stddef.h>
 
 #include "spdk/assert.h"
 

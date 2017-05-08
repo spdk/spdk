@@ -33,13 +33,7 @@
 
 #include "blockdev_aio.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
 #include "spdk/conf.h"

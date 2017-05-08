@@ -38,12 +38,11 @@
 #ifndef SPDK_IOAT_H
 #define SPDK_IOAT_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <inttypes.h>
-#include <stdbool.h>
 
 #include "spdk/env.h"
 

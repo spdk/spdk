@@ -35,17 +35,11 @@
  * NVMe over RDMA transport
  */
 
-#include <arpa/inet.h>
-#include <fcntl.h>
+#include "spdk/stdinc.h"
+
 #include <infiniband/verbs.h>
 #include <rdma/rdma_cma.h>
 #include <rdma/rdma_verbs.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
 
 #include "spdk/assert.h"
 #include "spdk/log.h"

@@ -31,13 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk_cunit.h"
 
 #include "jsonrpc_server.c"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define MAX_PARAMS	100
 #define MAX_REQS	100

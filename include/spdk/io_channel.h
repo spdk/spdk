@@ -38,8 +38,7 @@
 #ifndef SPDK_IO_CHANNEL_H_
 #define SPDK_IO_CHANNEL_H_
 
-#include <inttypes.h>
-#include <stdbool.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
 

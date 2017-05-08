@@ -31,10 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <errno.h>
-#include <pthread.h>
+#include "spdk/stdinc.h"
 
 #include "spdk_internal/copy_engine.h"
 

@@ -32,21 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <inttypes.h>
-#include <stdint.h>
-#include <string.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <poll.h>
-#include <pthread.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <signal.h>
-
-#include <sys/types.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/conf.h"
 #include "spdk/net.h"

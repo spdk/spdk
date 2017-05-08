@@ -31,12 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk_cunit.h"
 
 #include "json_write.c"
-
-#include <stdio.h>
-#include <string.h>
 
 #include "spdk/util.h"
 

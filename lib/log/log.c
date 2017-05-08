@@ -31,16 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/log.h"
+#include "spdk/stdinc.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <syslog.h>
-#include <ctype.h>
-#include <errno.h>
+#include "spdk_internal/log.h"
 
 static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
 

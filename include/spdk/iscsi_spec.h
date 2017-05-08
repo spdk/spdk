@@ -40,7 +40,7 @@
 #ifndef SPDK_ISCSI_SPEC_H
 #define SPDK_ISCSI_SPEC_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/assert.h"
 

@@ -31,16 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ctype.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"

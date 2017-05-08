@@ -32,15 +32,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "blockdev_nvme.h"
-
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/param.h>
-
-#include <pthread.h>
 
 #include "spdk/conf.h"
 #include "spdk/endian.h"

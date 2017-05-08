@@ -38,6 +38,8 @@
 #ifndef SPDK_BARRIER_H
 #define SPDK_BARRIER_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

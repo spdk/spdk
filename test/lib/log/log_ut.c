@@ -31,10 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
+#include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
 #include "spdk/log.h"

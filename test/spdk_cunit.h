@@ -34,7 +34,8 @@
 #ifndef SPDK_CUNIT_H
 #define SPDK_CUNIT_H
 
-#include <stdlib.h>
+#include "spdk/stdinc.h"
+
 #include <CUnit/Basic.h>
 
 /*

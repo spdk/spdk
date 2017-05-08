@@ -34,7 +34,8 @@
 #ifndef SPDK_BLOCKDEV_AIO_H
 #define SPDK_BLOCKDEV_AIO_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
+
 #include <libaio.h>
 
 #include "spdk/queue.h"

@@ -35,19 +35,7 @@
 #ifndef SPDK_SCSI_INTERNAL_H
 #define SPDK_SCSI_INTERNAL_H
 
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/uio.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
 #include "spdk/scsi.h"

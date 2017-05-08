@@ -34,15 +34,10 @@
 #ifndef __IOAT_INTERNAL_H__
 #define __IOAT_INTERNAL_H__
 
+#include "spdk/stdinc.h"
+
 #include "spdk/ioat.h"
 #include "spdk/ioat_spec.h"
-
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-
 #include "spdk/queue.h"
 #include "spdk/mmio.h"
 

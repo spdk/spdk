@@ -31,11 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include "spdk/stdinc.h"
 
-#include <spdk/endian.h>
+#include "spdk/endian.h"
 #include "spdk/scsi.h"
 
 #include "CUnit/Basic.h"

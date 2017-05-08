@@ -32,10 +32,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
-#include <stddef.h>
 #include <openssl/md5.h>
 
 #include "iscsi/md5.h"

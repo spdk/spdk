@@ -34,7 +34,7 @@
 #ifndef SPDK_INTERNAL_EVENT_H
 #define SPDK_INTERNAL_EVENT_H
 
-#include <stdio.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/event.h"
 

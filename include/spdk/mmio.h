@@ -38,11 +38,11 @@
 #ifndef SPDK_MMIO_H
 #define SPDK_MMIO_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <inttypes.h>
 
 #include "spdk/barrier.h"
 

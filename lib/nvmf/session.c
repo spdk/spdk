@@ -31,9 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <arpa/inet.h>
-#include <stdint.h>
-#include <string.h>
+#include "spdk/stdinc.h"
 
 #include "session.h"
 #include "nvmf_internal.h"

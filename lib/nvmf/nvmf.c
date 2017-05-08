@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <arpa/inet.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/conf.h"
 #include "spdk/nvmf.h"

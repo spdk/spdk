@@ -32,27 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdint.h>
-
-#include <ctype.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-#include <pthread.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"

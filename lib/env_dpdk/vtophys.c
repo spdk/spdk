@@ -31,14 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "env_internal.h"
+#include "spdk/stdinc.h"
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <pthread.h>
+#include "env_internal.h"
 
 #include <rte_config.h>
 #include <rte_eal_memconfig.h>

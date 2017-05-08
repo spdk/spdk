@@ -31,13 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/blobfs.h"
 #include "spdk/env.h"

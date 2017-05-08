@@ -32,14 +32,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk/conf.h"
-
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include "spdk/string.h"
 
 struct spdk_conf_value {

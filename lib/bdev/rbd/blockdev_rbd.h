@@ -34,7 +34,7 @@
 #ifndef SPDK_BLOCKDEV_RBD_H
 #define SPDK_BLOCKDEV_RBD_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
 

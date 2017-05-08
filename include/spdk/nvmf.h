@@ -38,7 +38,7 @@
 #ifndef SPDK_NVMF_H
 #define SPDK_NVMF_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/env.h"
 #include "spdk/nvmf_spec.h"

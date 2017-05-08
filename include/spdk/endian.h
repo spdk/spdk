@@ -39,11 +39,11 @@
 #ifndef SPDK_ENDIAN_H
 #define SPDK_ENDIAN_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 static inline uint16_t
 from_be16(const void *ptr)

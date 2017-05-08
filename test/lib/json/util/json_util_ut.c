@@ -31,12 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk_cunit.h"
 
 #include "json_util.c"
-
-#include <stdio.h>
-#include <string.h>
 
 #define NUM_SETUP(x) \
 	snprintf(buf, sizeof(buf), "%s", x); \

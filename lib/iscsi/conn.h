@@ -35,8 +35,7 @@
 #ifndef SPDK_ISCSI_CONN_H
 #define SPDK_ISCSI_CONN_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 #include "iscsi/iscsi.h"
 #include "spdk/queue.h"

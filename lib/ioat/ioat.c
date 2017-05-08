@@ -31,14 +31,14 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "ioat_internal.h"
 
 #include "spdk/env.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
-
-#include <pthread.h>
 
 struct ioat_driver {
 	pthread_mutex_t			lock;

@@ -31,12 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/stdinc.h"
+
 #include "spdk_cunit.h"
 
 #include "json_parse.c"
-
-#include <stdio.h>
-#include <string.h>
 
 static uint8_t g_buf[1000];
 static void *g_end;

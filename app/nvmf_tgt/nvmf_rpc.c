@@ -31,8 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
 #include "spdk/log.h"

@@ -35,7 +35,7 @@
 #ifndef SPDK_ISCSI_PARAM_H
 #define SPDK_ISCSI_PARAM_H
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
 
 enum iscsi_param_type {
 	ISPT_INVALID = -1,

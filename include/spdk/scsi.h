@@ -39,10 +39,7 @@
 #ifndef SPDK_SCSI_H
 #define SPDK_SCSI_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <pthread.h>
-#include <sys/uio.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
 #include "spdk/event.h"

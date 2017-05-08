@@ -32,11 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-
-#include <sys/types.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"

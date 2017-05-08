@@ -36,11 +36,7 @@
  * bdev and slices it into multiple smaller bdevs.
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <pthread.h>
+#include "spdk/stdinc.h"
 
 #include "spdk/rpc.h"
 #include "spdk/conf.h"

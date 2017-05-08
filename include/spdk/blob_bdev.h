@@ -38,6 +38,8 @@
 #ifndef SPDK_BLOB_BDEV_H
 #define SPDK_BLOB_BDEV_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

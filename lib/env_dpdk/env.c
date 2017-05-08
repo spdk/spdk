@@ -31,10 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/env.h"
+#include "spdk/stdinc.h"
 
-#include <string.h>
-#include <unistd.h>
+#include "spdk/env.h"
 
 #include <rte_config.h>
 #include <rte_cycles.h>

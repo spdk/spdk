@@ -32,13 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <inttypes.h>
-#include <stdint.h>
-
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/uio.h>
+#include "spdk/stdinc.h"
 
 #include "iscsi/iscsi.h"
 #include "iscsi/crc32c.h"

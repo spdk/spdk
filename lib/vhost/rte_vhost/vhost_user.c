@@ -164,7 +164,7 @@ vhost_user_set_features(struct virtio_net *dev, uint64_t features)
 	} else {
 		dev->vhost_hlen = sizeof(struct virtio_net_hdr);
 	}
-	LOG_DEBUG(VHOST_CONFIG,
+	VHOST_LOG_DEBUG(VHOST_CONFIG,
 		"(%d) mergeable RX buffers %s, virtio 1 %s\n",
 		dev->vid,
 		(dev->features & (1 << VIRTIO_NET_F_MRG_RXBUF)) ? "on" : "off",
@@ -382,13 +382,13 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 
 	vq->log_guest_addr = msg->payload.addr.log_guest_addr;
 
-	LOG_DEBUG(VHOST_CONFIG, "(%d) mapped address desc: %p\n",
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "(%d) mapped address desc: %p\n",
 			dev->vid, vq->desc);
-	LOG_DEBUG(VHOST_CONFIG, "(%d) mapped address avail: %p\n",
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "(%d) mapped address avail: %p\n",
 			dev->vid, vq->avail);
-	LOG_DEBUG(VHOST_CONFIG, "(%d) mapped address used: %p\n",
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "(%d) mapped address used: %p\n",
 			dev->vid, vq->used);
-	LOG_DEBUG(VHOST_CONFIG, "(%d) log_guest_addr: %" PRIx64 "\n",
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "(%d) log_guest_addr: %" PRIx64 "\n",
 			dev->vid, vq->log_guest_addr);
 
 	return 0;

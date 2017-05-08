@@ -38,13 +38,11 @@
 #ifndef SPDK_NVME_H
 #define SPDK_NVME_H
 
+#include "spdk/stdinc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #include "spdk/env.h"
 #include "spdk/nvme_spec.h"
