@@ -72,6 +72,7 @@ extern "C" {
 #include <syslog.h>
 #include <termios.h>
 #include <unistd.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>

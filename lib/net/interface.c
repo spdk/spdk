@@ -42,8 +42,6 @@
 
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
-#include <net/if.h>
-
 
 static TAILQ_HEAD(, spdk_interface) g_interface_head;
 

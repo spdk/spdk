@@ -62,6 +62,17 @@ else
 fi
 rm -f eofnl.log
 
+echo -n "Checking for POSIX includes..."
+git grep -I -i -f scripts/posix.txt -- './*' ':!include/spdk/stdinc.h' ':!lib/vhost/rte_vhost/**' ':!scripts/posix.txt' > scripts/posix.log || true
+if [ -s scripts/posix.log ]; then
+	echo "POSIX includes detected. Please include spdk/stdinc.h instead."
+	cat scripts/posix.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f scripts/posix.log
+
 if hash pep8; then
 	echo -n "Checking Python style..."
 
