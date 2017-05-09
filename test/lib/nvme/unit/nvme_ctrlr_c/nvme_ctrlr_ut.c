@@ -54,6 +54,10 @@ struct spdk_nvme_registers g_ut_nvme_regs = {};
 
 __thread int    nvme_thread_ioq_index = -1;
 
+uint32_t set_size = 1;
+
+int set_status_cpl = -1;
+
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts,
 		void *devhandle)
@@ -303,6 +307,23 @@ int
 nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_fw_commit *fw_commit,
 			 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	struct nvme_completion_poll_status *status;
+	struct spdk_nvme_cpl status_cpl = {};
+	struct spdk_nvme_status cpl_status = {};
+
+	status = cb_arg;
+	CU_ASSERT(fw_commit->ca == SPDK_NVME_FW_COMMIT_REPLACE_IMG);
+	CU_ASSERT(status->done == false);
+	if (fw_commit->fs == 0) {
+		return -1;
+	}
+	status->done = true;
+	status->cpl = status_cpl;
+	status->cpl.status = cpl_status;
+	status->cpl.status.sc = 1;
+	if (ctrlr->is_resetting == true) {
+		status->cpl.status.sc = 0;
+	}
 	return 0;
 }
 
@@ -311,6 +332,25 @@ nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 				 uint32_t size, uint32_t offset, void *payload,
 				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
+	struct nvme_completion_poll_status *status;
+	struct spdk_nvme_cpl status_cpl = {};
+	struct spdk_nvme_status cpl_status = {};
+	status = cb_arg;
+
+	if ((size != 0 && payload == NULL) || (size == 0 && payload != NULL)) {
+		return -1;
+	}
+	if (set_size > 0) {
+		CU_ASSERT(status->done == false);
+	}
+	CU_ASSERT(offset == 0);
+	status->done = true;
+	status->cpl = status_cpl;
+	status->cpl.status = cpl_status;
+	status->cpl.status.sc = 0;
+	if (set_status_cpl == 1) {
+		status->cpl.status.sc = 1;
+	}
 	return 0;
 }
 
@@ -1353,6 +1393,70 @@ test_nvme_ctrlr_alloc_cmb(void)
 }
 #endif
 
+static void
+test_spdk_nvme_ctrlr_update_firmware(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	void *payload = NULL;
+	int point_payload = 1;
+	int slot = 0;
+	int ret = 0;
+
+	/* Set invalid size check function return value */
+	set_size = 5;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	CU_ASSERT(ret == -1);
+
+	/* When payload is NULL but set_size < min_page_size */
+	set_size = 4;
+	ctrlr.min_page_size = 5;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	CU_ASSERT(ret == -1);
+
+	/* When payload not NULL but min_page_size is 0 */
+	set_size = 4;
+	ctrlr.min_page_size = 0;
+	payload = &point_payload;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	CU_ASSERT(ret == -1);
+
+	/* Check firmware image download when payload not NULL and min_page_size not 0 , status.cpl value is 1 */
+	set_status_cpl = 1;
+	set_size = 4;
+	ctrlr.min_page_size = 5;
+	payload = &point_payload;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	CU_ASSERT(ret == -ENXIO);
+
+	/* Check firmware image download and set status.cpl value is 0 */
+	set_status_cpl = 0;
+	set_size = 4;
+	ctrlr.min_page_size = 5;
+	payload = &point_payload;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	CU_ASSERT(ret == -1);
+
+	/* Check firmware commit */
+	ctrlr.is_resetting = false;
+	set_status_cpl = 0;
+	slot = 1;
+	set_size = 4;
+	ctrlr.min_page_size = 5;
+	payload = &point_payload;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	CU_ASSERT(ret == -ENXIO);
+
+	/* Set size check firmware download and firmware commit */
+	ctrlr.is_resetting = true;
+	set_status_cpl = 0;
+	slot = 1;
+	set_size = 4;
+	ctrlr.min_page_size = 5;
+	payload = &point_payload;
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	CU_ASSERT(ret == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1387,6 +1491,8 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "set_defaults", test_ctrlr_opts_set_defaults) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 1", test_alloc_io_qpair_wrr_1) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 2", test_alloc_io_qpair_wrr_2) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function update_firmware",
+			       test_spdk_nvme_ctrlr_update_firmware) == NULL
 		|| CU_add_test(suite, "test nvme_ctrlr function nvme_ctrlr_fail", test_nvme_ctrlr_fail) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_construct_intel_support_log_page_list",
 			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL
