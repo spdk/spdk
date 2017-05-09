@@ -35,9 +35,7 @@
 
 #include "spdk_internal/copy_engine.h"
 
-#include <rte_config.h>
-#include <rte_memcpy.h>
-
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
 
@@ -110,7 +108,8 @@ mem_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, 
 {
 	struct spdk_copy_task *copy_req;
 
-	rte_memcpy(dst, src, (size_t)nbytes);
+	memcpy(dst, src, (size_t)nbytes);
+
 	copy_req = (struct spdk_copy_task *)((uintptr_t)cb_arg -
 					     offsetof(struct spdk_copy_task, offload_ctx));
 	cb(copy_req, 0);
