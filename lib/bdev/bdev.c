@@ -75,7 +75,8 @@ struct spdk_bdev_channel {
 	struct spdk_io_channel	*channel;
 };
 
-struct spdk_bdev *spdk_bdev_first(void)
+struct spdk_bdev *
+spdk_bdev_first(void)
 {
 	struct spdk_bdev *bdev;
 
@@ -87,7 +88,8 @@ struct spdk_bdev *spdk_bdev_first(void)
 	return bdev;
 }
 
-struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev)
+struct spdk_bdev *
+spdk_bdev_next(struct spdk_bdev *prev)
 {
 	struct spdk_bdev *bdev;
 
@@ -99,7 +101,8 @@ struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev)
 	return bdev;
 }
 
-struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name)
+struct spdk_bdev *
+spdk_bdev_get_by_name(const char *bdev_name)
 {
 	struct spdk_bdev *bdev = spdk_bdev_first();
 
@@ -157,7 +160,8 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-static int spdk_initialize_buf_pool(void)
+static int
+spdk_initialize_buf_pool(void)
 {
 	int cache_size;
 
@@ -321,7 +325,8 @@ spdk_bdev_finish(void)
 	return (rc != 0);
 }
 
-struct spdk_bdev_io *spdk_bdev_get_io(void)
+struct spdk_bdev_io *
+spdk_bdev_get_io(void)
 {
 	struct spdk_bdev_io *bdev_io;
 
@@ -1116,12 +1121,14 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 	}
 }
 
-void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
+void
+spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 {
 	TAILQ_INSERT_TAIL(&spdk_bdev_module_list, bdev_module, tailq);
 }
 
-void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
+void
+spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
 	TAILQ_INSERT_TAIL(&spdk_vbdev_module_list, vbdev_module, tailq);
 }
