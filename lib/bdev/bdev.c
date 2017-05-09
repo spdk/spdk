@@ -76,11 +76,17 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 };
 
+struct spdk_bdev_mgmt_channel {
+};
+
 struct spdk_bdev_channel {
 	struct spdk_bdev	*bdev;
 
 	/* The channel for the underlying device */
 	struct spdk_io_channel	*channel;
+
+	/* Channel for the bdev manager */
+	struct spdk_io_channel *mgmt_channel;
 };
 
 struct spdk_bdev *
@@ -242,6 +248,17 @@ spdk_bdev_config_text(FILE *fp)
 }
 
 static int
+spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
+{
+}
+
+static int
 spdk_bdev_initialize(void)
 {
 	int i, cache_size;
@@ -305,6 +322,10 @@ spdk_bdev_initialize(void)
 		}
 	}
 
+	spdk_io_device_register(&g_bdev_mgr, spdk_bdev_mgmt_channel_create,
+				spdk_bdev_mgmt_channel_destroy,
+				sizeof(struct spdk_bdev_mgmt_channel));
+
 	return 0;
 }
 
@@ -348,6 +369,8 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+
+	spdk_io_device_unregister(&g_bdev_mgr);
 
 	return 0;
 }
@@ -514,6 +537,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
+	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
 
 	return 0;
 }
@@ -524,6 +548,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	struct spdk_bdev_channel	*ch = ctx_buf;
 
 	spdk_put_io_channel(ch->channel);
+	spdk_put_io_channel(ch->mgmt_channel);
 }
 
 struct spdk_io_channel *
