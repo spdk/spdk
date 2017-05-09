@@ -52,21 +52,28 @@
 #define BUF_SMALL_POOL_SIZE	8192
 #define BUF_LARGE_POOL_SIZE	1024
 
-static struct spdk_mempool *spdk_bdev_g_io_pool = NULL;
-static struct spdk_mempool *g_buf_small_pool = NULL;
-static struct spdk_mempool *g_buf_large_pool = NULL;
-
 typedef TAILQ_HEAD(, spdk_bdev_io) need_buf_tailq_t;
-static need_buf_tailq_t g_need_buf_small[RTE_MAX_LCORE];
-static need_buf_tailq_t g_need_buf_large[RTE_MAX_LCORE];
 
-static TAILQ_HEAD(, spdk_bdev_module_if) spdk_bdev_module_list =
-	TAILQ_HEAD_INITIALIZER(spdk_bdev_module_list);
-static TAILQ_HEAD(, spdk_bdev_module_if) spdk_vbdev_module_list =
-	TAILQ_HEAD_INITIALIZER(spdk_vbdev_module_list);
+struct spdk_bdev_mgr {
+	struct spdk_mempool *bdev_io_pool;
 
-static TAILQ_HEAD(, spdk_bdev) spdk_bdev_list =
-	TAILQ_HEAD_INITIALIZER(spdk_bdev_list);
+	struct spdk_mempool *buf_small_pool;
+	struct spdk_mempool *buf_large_pool;
+
+	need_buf_tailq_t need_buf_small[RTE_MAX_LCORE];
+	need_buf_tailq_t need_buf_large[RTE_MAX_LCORE];
+
+	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
+	TAILQ_HEAD(, spdk_bdev_module_if) vbdev_modules;
+
+	TAILQ_HEAD(, spdk_bdev) bdevs;
+};
+
+static struct spdk_bdev_mgr g_bdev_mgr = {
+	.bdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdev_modules),
+	.vbdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.vbdev_modules),
+	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
+};
 
 struct spdk_bdev_channel {
 	struct spdk_bdev	*bdev;
@@ -80,7 +87,7 @@ spdk_bdev_first(void)
 {
 	struct spdk_bdev *bdev;
 
-	bdev = TAILQ_FIRST(&spdk_bdev_list);
+	bdev = TAILQ_FIRST(&g_bdev_mgr.bdevs);
 	if (bdev) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Starting bdev iteration at %s\n", bdev->name);
 	}
@@ -144,11 +151,11 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	buf = bdev_io->buf;
 
 	if (length <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
-		pool = g_buf_small_pool;
-		tailq = &g_need_buf_small[rte_lcore_id()];
+		pool = g_bdev_mgr.buf_small_pool;
+		tailq = &g_bdev_mgr.need_buf_small[rte_lcore_id()];
 	} else {
-		pool = g_buf_large_pool;
-		tailq = &g_need_buf_large[rte_lcore_id()];
+		pool = g_bdev_mgr.buf_large_pool;
+		tailq = &g_bdev_mgr.need_buf_large[rte_lcore_id()];
 	}
 
 	if (TAILQ_EMPTY(tailq)) {
@@ -171,23 +178,23 @@ spdk_initialize_buf_pool(void)
 	 *   to account for.
 	 */
 	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
-	g_buf_small_pool = spdk_mempool_create("buf_small_pool",
-					       BUF_SMALL_POOL_SIZE,
-					       SPDK_BDEV_SMALL_BUF_MAX_SIZE + 512,
-					       cache_size,
-					       SPDK_ENV_SOCKET_ID_ANY);
-	if (!g_buf_small_pool) {
+	g_bdev_mgr.buf_small_pool = spdk_mempool_create("buf_small_pool",
+				    BUF_SMALL_POOL_SIZE,
+				    SPDK_BDEV_SMALL_BUF_MAX_SIZE + 512,
+				    cache_size,
+				    SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_bdev_mgr.buf_small_pool) {
 		SPDK_ERRLOG("create rbuf small pool failed\n");
 		return -1;
 	}
 
 	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
-	g_buf_large_pool = spdk_mempool_create("buf_large_pool",
-					       BUF_LARGE_POOL_SIZE,
-					       SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512,
-					       cache_size,
-					       SPDK_ENV_SOCKET_ID_ANY);
-	if (!g_buf_large_pool) {
+	g_bdev_mgr.buf_large_pool = spdk_mempool_create("buf_large_pool",
+				    BUF_LARGE_POOL_SIZE,
+				    SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512,
+				    cache_size,
+				    SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_bdev_mgr.buf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
 		return -1;
 	}
@@ -201,13 +208,13 @@ spdk_bdev_module_get_max_ctx_size(void)
 	struct spdk_bdev_module_if *bdev_module;
 	int max_bdev_module_size = 0;
 
-	TAILQ_FOREACH(bdev_module, &spdk_bdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->get_ctx_size && bdev_module->get_ctx_size() > max_bdev_module_size) {
 			max_bdev_module_size = bdev_module->get_ctx_size();
 		}
 	}
 
-	TAILQ_FOREACH(bdev_module, &spdk_vbdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
 		if (bdev_module->get_ctx_size && bdev_module->get_ctx_size() > max_bdev_module_size) {
 			max_bdev_module_size = bdev_module->get_ctx_size();
 		}
@@ -222,12 +229,12 @@ spdk_bdev_module_initialize(void)
 	struct spdk_bdev_module_if *bdev_module;
 	int rc = 0;
 
-	TAILQ_FOREACH(bdev_module, &spdk_bdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		rc = bdev_module->module_init();
 		if (rc)
 			return rc;
 	}
-	TAILQ_FOREACH(bdev_module, &spdk_vbdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
 		rc = bdev_module->module_init();
 		if (rc)
 			return rc;
@@ -240,13 +247,13 @@ spdk_bdev_module_finish(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
 
-	TAILQ_FOREACH(bdev_module, &spdk_vbdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
 		if (bdev_module->module_fini) {
 			bdev_module->module_fini();
 		}
 	}
 
-	TAILQ_FOREACH(bdev_module, &spdk_bdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->module_fini) {
 			bdev_module->module_fini();
 		}
@@ -258,12 +265,12 @@ spdk_bdev_config_text(FILE *fp)
 {
 	struct spdk_bdev_module_if *bdev_module;
 
-	TAILQ_FOREACH(bdev_module, &spdk_bdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->config_text) {
 			bdev_module->config_text(fp);
 		}
 	}
-	TAILQ_FOREACH(bdev_module, &spdk_vbdev_module_list, tailq) {
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
 		if (bdev_module->config_text) {
 			bdev_module->config_text(fp);
 		}
@@ -280,21 +287,21 @@ spdk_bdev_initialize(void)
 		return -1;
 	}
 
-	spdk_bdev_g_io_pool = spdk_mempool_create("blockdev_io",
-			      SPDK_BDEV_IO_POOL_SIZE,
-			      sizeof(struct spdk_bdev_io) +
-			      spdk_bdev_module_get_max_ctx_size(),
-			      64,
-			      SPDK_ENV_SOCKET_ID_ANY);
+	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
+				  SPDK_BDEV_IO_POOL_SIZE,
+				  sizeof(struct spdk_bdev_io) +
+				  spdk_bdev_module_get_max_ctx_size(),
+				  64,
+				  SPDK_ENV_SOCKET_ID_ANY);
 
-	if (spdk_bdev_g_io_pool == NULL) {
+	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool");
 		return -1;
 	}
 
 	for (i = 0; i < RTE_MAX_LCORE; i++) {
-		TAILQ_INIT(&g_need_buf_small[i]);
-		TAILQ_INIT(&g_need_buf_large[i]);
+		TAILQ_INIT(&g_bdev_mgr.need_buf_small[i]);
+		TAILQ_INIT(&g_bdev_mgr.need_buf_large[i]);
 	}
 
 	return spdk_initialize_buf_pool();
@@ -319,8 +326,8 @@ spdk_bdev_finish(void)
 
 	spdk_bdev_module_finish();
 
-	rc += spdk_bdev_check_pool(g_buf_small_pool, BUF_SMALL_POOL_SIZE);
-	rc += spdk_bdev_check_pool(g_buf_large_pool, BUF_LARGE_POOL_SIZE);
+	rc += spdk_bdev_check_pool(g_bdev_mgr.buf_small_pool, BUF_SMALL_POOL_SIZE);
+	rc += spdk_bdev_check_pool(g_bdev_mgr.buf_large_pool, BUF_LARGE_POOL_SIZE);
 
 	return (rc != 0);
 }
@@ -330,7 +337,7 @@ spdk_bdev_get_io(void)
 {
 	struct spdk_bdev_io *bdev_io;
 
-	bdev_io = spdk_mempool_get(spdk_bdev_g_io_pool);
+	bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
 	if (!bdev_io) {
 		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
 		abort();
@@ -352,7 +359,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 		spdk_bdev_io_put_buf(bdev_io);
 	}
 
-	spdk_mempool_put(spdk_bdev_g_io_pool, (void *)bdev_io);
+	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
 }
 
 static void
@@ -364,11 +371,11 @@ _spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io)
 	void *buf = NULL;
 
 	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
-		pool = g_buf_small_pool;
-		tailq = &g_need_buf_small[rte_lcore_id()];
+		pool = g_bdev_mgr.buf_small_pool;
+		tailq = &g_bdev_mgr.need_buf_small[rte_lcore_id()];
 	} else {
-		pool = g_buf_large_pool;
-		tailq = &g_need_buf_large[rte_lcore_id()];
+		pool = g_bdev_mgr.buf_large_pool;
+		tailq = &g_bdev_mgr.need_buf_large[rte_lcore_id()];
 	}
 
 	buf = spdk_mempool_get(pool);
@@ -386,16 +393,16 @@ spdk_bdev_cleanup_pending_buf_io(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_buf_small[rte_lcore_id()], buf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_small[rte_lcore_id()], buf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_buf_small[rte_lcore_id()], bdev_io, buf_link);
+			TAILQ_REMOVE(&g_bdev_mgr.need_buf_small[rte_lcore_id()], bdev_io, buf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_need_buf_large[rte_lcore_id()], buf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_large[rte_lcore_id()], buf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_need_buf_large[rte_lcore_id()], bdev_io, buf_link);
+			TAILQ_REMOVE(&g_bdev_mgr.need_buf_large[rte_lcore_id()], bdev_io, buf_link);
 			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
 		}
 	}
@@ -1005,7 +1012,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	pthread_mutex_init(&bdev->mutex, NULL);
 	bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
-	TAILQ_INSERT_TAIL(&spdk_bdev_list, bdev, link);
+	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 }
 
 void
@@ -1028,7 +1035,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 		}
 	}
 
-	TAILQ_REMOVE(&spdk_bdev_list, bdev, link);
+	TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, link);
 	pthread_mutex_unlock(&bdev->mutex);
 
 	pthread_mutex_destroy(&bdev->mutex);
@@ -1135,13 +1142,13 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 void
 spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 {
-	TAILQ_INSERT_TAIL(&spdk_bdev_module_list, bdev_module, tailq);
+	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
 }
 
 void
 spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
-	TAILQ_INSERT_TAIL(&spdk_vbdev_module_list, vbdev_module, tailq);
+	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
 }
 SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_initialize, spdk_bdev_finish, spdk_bdev_config_text)
 SPDK_SUBSYSTEM_DEPEND(bdev, copy)
