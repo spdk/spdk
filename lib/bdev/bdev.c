@@ -532,6 +532,17 @@ spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 	return spdk_get_io_channel(bdev, priority, false, NULL);
 }
 
+size_t
+spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
+{
+	/* TODO: push this logic down to the bdev modules */
+	if (bdev->need_aligned_buffer) {
+		return bdev->blocklen;
+	}
+
+	return 1;
+}
+
 static int
 spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
 {

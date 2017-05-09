@@ -199,6 +199,14 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
 
 int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
+/**
+ * Get minimum I/O buffer address alignment for a bdev.
+ *
+ * \param bdev Block device to query.
+ * \return Required alignment of I/O buffers in bytes.
+ */
+size_t spdk_bdev_get_buf_align(const struct spdk_bdev *bdev);
+
 struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				    void *buf, uint64_t offset, uint64_t nbytes,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);

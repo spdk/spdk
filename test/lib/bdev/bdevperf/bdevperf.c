@@ -44,6 +44,7 @@
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
+#include "spdk/util.h"
 #include "spdk/io_channel.h"
 
 struct bdevperf_task {
@@ -96,7 +97,7 @@ static int g_target_count = 0;
  *  require alignment based on block length - for example,
  *  AIO blockdevs.
  */
-static uint32_t g_min_alignment = 8;
+static size_t g_min_alignment = 8;
 
 static void
 blockdev_heads_init(void)
@@ -114,6 +115,7 @@ bdevperf_construct_targets(void)
 	int index = 0;
 	struct spdk_bdev *bdev;
 	struct io_target *target;
+	size_t align;
 
 	bdev = spdk_bdev_first();
 	while (bdev != NULL) {
@@ -145,9 +147,12 @@ bdevperf_construct_targets(void)
 		target->offset_in_ios = 0;
 		target->size_in_ios = (bdev->blockcnt * bdev->blocklen) /
 				      g_io_size;
-		if (bdev->need_aligned_buffer && g_min_alignment < bdev->blocklen) {
-			g_min_alignment = bdev->blocklen;
-		}
+		align = spdk_bdev_get_buf_align(bdev);
+		/*
+		 * TODO: This should actually use the LCM of align and g_min_alignment, but
+		 * it is fairly safe to assume all alignments are powers of two for now.
+		 */
+		g_min_alignment = spdk_max(g_min_alignment, align);
 
 		target->is_draining = false;
 		target->run_timer = NULL;
