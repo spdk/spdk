@@ -7,7 +7,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 
 function ssh_vm() {
-	sshpass -p "$password" ssh -o PubkeyAuthentication=no -p 10022 root@localhost "$@"
+	sshpass -p "$password" ssh -o PubkeyAuthentication=no -o StrictHostKeyChecking=no -p 10022 root@localhost "$@"
 }
 
 function monitor_cmd() {
