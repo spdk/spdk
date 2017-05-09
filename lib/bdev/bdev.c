@@ -40,6 +40,7 @@
 #include <rte_lcore.h>
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
+#include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/scsi_spec.h"
@@ -164,6 +165,41 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 		tmp = TAILQ_FIRST(tailq);
 		TAILQ_REMOVE(tailq, tmp, buf_link);
 		spdk_bdev_io_set_buf(tmp, buf);
+	}
+}
+
+void
+spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
+{
+	uint64_t len = bdev_io->u.read.len;
+	struct spdk_mempool *pool;
+	need_buf_tailq_t *tailq;
+	void *buf = NULL;
+
+	assert(cb != NULL);
+	assert(bdev_io->u.read.iovs != NULL);
+
+	if (spdk_unlikely(bdev_io->u.read.iovs[0].iov_base != NULL)) {
+		/* Buffer already present */
+		cb(bdev_io->ch->channel, bdev_io);
+		return;
+	}
+
+	bdev_io->get_buf_cb = cb;
+	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
+		pool = g_bdev_mgr.buf_small_pool;
+		tailq = &g_bdev_mgr.need_buf_small[rte_lcore_id()];
+	} else {
+		pool = g_bdev_mgr.buf_large_pool;
+		tailq = &g_bdev_mgr.need_buf_large[rte_lcore_id()];
+	}
+
+	buf = spdk_mempool_get(pool);
+
+	if (!buf) {
+		TAILQ_INSERT_TAIL(tailq, bdev_io, buf_link);
+	} else {
+		spdk_bdev_io_set_buf(bdev_io, buf);
 	}
 }
 
@@ -345,32 +381,6 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 
 	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
 }
-
-static void
-_spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io)
-{
-	uint64_t len = bdev_io->u.read.len;
-	struct spdk_mempool *pool;
-	need_buf_tailq_t *tailq;
-	void *buf = NULL;
-
-	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
-		pool = g_bdev_mgr.buf_small_pool;
-		tailq = &g_bdev_mgr.need_buf_small[rte_lcore_id()];
-	} else {
-		pool = g_bdev_mgr.buf_large_pool;
-		tailq = &g_bdev_mgr.need_buf_large[rte_lcore_id()];
-	}
-
-	buf = spdk_mempool_get(pool);
-
-	if (!buf) {
-		TAILQ_INSERT_TAIL(tailq, bdev_io, buf_link);
-	} else {
-		spdk_bdev_io_set_buf(bdev_io, buf);
-	}
-}
-
 
 static void
 spdk_bdev_cleanup_pending_buf_io(struct spdk_bdev *bdev)
@@ -1073,20 +1083,6 @@ spdk_bdev_unclaim(struct spdk_bdev *bdev)
 
 	if (do_unregister == true) {
 		spdk_bdev_unregister(bdev);
-	}
-}
-
-void
-spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
-{
-	assert(cb != NULL);
-	assert(bdev_io->u.read.iovs != NULL);
-
-	if (bdev_io->u.read.iovs[0].iov_base == NULL) {
-		bdev_io->get_buf_cb = cb;
-		_spdk_bdev_io_get_buf(bdev_io);
-	} else {
-		cb(bdev_io->ch->channel, bdev_io);
 	}
 }
 
