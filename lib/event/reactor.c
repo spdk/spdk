@@ -44,8 +44,8 @@
 #endif
 
 #include <rte_config.h>
-#include <rte_version.h>
-#include <rte_ring.h>
+#include <rte_launch.h>
+#include <rte_lcore.h>
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
@@ -111,7 +111,7 @@ struct spdk_reactor {
 	 */
 	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
 
-	struct rte_ring					*events;
+	struct spdk_ring				*events;
 
 	/* Pointer to the per-socket g_spdk_event_mempool for this reactor. */
 	struct spdk_mempool				*event_mempool;
@@ -165,8 +165,8 @@ spdk_event_call(struct spdk_event *event)
 	reactor = spdk_reactor_get(event->lcore);
 
 	assert(reactor->events != NULL);
-	rc = rte_ring_mp_enqueue(reactor->events, event);
-	if (rc != 0) {
+	rc = spdk_ring_enqueue(reactor->events, (void **)&event, 1);
+	if (rc != 1) {
 		assert(false);
 	}
 }
@@ -179,17 +179,14 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 
 #ifdef DEBUG
 	/*
-	 * rte_ring_dequeue_burst() fills events and returns how many entries it wrote,
+	 * spdk_ring_dequeue() fills events and returns how many entries it wrote,
 	 * so we will never actually read uninitialized data from events, but just to be sure
 	 * (and to silence a static analyzer false positive), initialize the array to NULL pointers.
 	 */
 	memset(events, 0, sizeof(events));
 #endif
-#if RTE_VERSION < RTE_VERSION_NUM(17,5,0,0)
-	count = rte_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
-#else
-	count = rte_ring_sc_dequeue_burst(reactor->events, events, SPDK_EVENT_BATCH_SIZE, NULL);
-#endif
+
+	count = spdk_ring_dequeue(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
 	if (count == 0) {
 		return 0;
 	}
@@ -402,8 +399,6 @@ _spdk_reactor_run(void *arg)
 static void
 spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t max_delay_us)
 {
-	char	ring_name[64];
-
 	reactor->lcore = lcore;
 	reactor->socket_id = spdk_env_get_socket_id(lcore);
 	assert(reactor->socket_id < SPDK_MAX_SOCKET);
@@ -412,9 +407,9 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	TAILQ_INIT(&reactor->active_pollers);
 	TAILQ_INIT(&reactor->timer_pollers);
 
-	snprintf(ring_name, sizeof(ring_name) - 1, "spdk_event_queue_%u", lcore);
-	reactor->events =
-		rte_ring_create(ring_name, 65536, reactor->socket_id, RING_F_SC_DEQ);
+	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536,
+					   sizeof(struct event *),
+					   reactor->socket_id);
 	assert(reactor->events != NULL);
 
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
@@ -615,7 +610,7 @@ spdk_reactors_fini(void)
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
 		if (reactor->events != NULL) {
-			rte_ring_free(reactor->events);
+			spdk_ring_free(reactor->events);
 		}
 	}
 

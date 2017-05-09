@@ -227,6 +227,37 @@ uint64_t spdk_get_ticks_hz(void);
  */
 void spdk_delay_us(unsigned int us);
 
+struct spdk_ring;
+
+enum spdk_ring_type {
+	SPDK_RING_TYPE_MP_SC,		/* Multi-producer, single-consumer */
+};
+
+/**
+ * Create a ring
+ */
+struct spdk_ring *spdk_ring_create(enum spdk_ring_type type, size_t count,
+				   size_t ele_size, int socket_id);
+
+/**
+ * Free the ring
+ */
+void spdk_ring_free(struct spdk_ring *ring);
+
+/**
+ * Queue the array of objects (with length count) on the ring.
+ *
+ * Return the number of objects enqueued.
+ */
+size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count);
+
+/**
+ * Dequeue count objects from the ring into the array objs.
+ *
+ * Return the number of objects dequeued.
+ */
+size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
+
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
 uint64_t spdk_vtophys(void *buf);
