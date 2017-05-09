@@ -157,15 +157,14 @@ struct spdk_bdev_io {
 	/** Generation value for each I/O. */
 	uint32_t gencnt;
 
+	/** bdev allocated memory associated with this request */
+	void *buf;
+
 	/** Enumerated value representing the I/O type. */
 	enum spdk_bdev_io_type type;
 
 	union {
 		struct {
-
-			/** The unaligned buf originally allocated. */
-			void *buf_unaligned;
-
 			/** For basic read case, use our own iovec element. */
 			struct iovec iov;
 
@@ -175,14 +174,11 @@ struct spdk_bdev_io {
 			/** For SG buffer cases, number of iovecs in iovec array. */
 			int iovcnt;
 
-			/** For SG buffer cases, total size of data to be transferred. */
+			/** Total size of data to be transferred. */
 			size_t len;
 
 			/** Starting offset (in bytes) of the blockdev for this I/O. */
 			uint64_t offset;
-
-			/** Indicate whether the blockdev layer to put buf or not. */
-			bool put_buf;
 		} read;
 		struct {
 			/** For basic write case, use our own iovec element */
@@ -194,7 +190,7 @@ struct spdk_bdev_io {
 			/** For SG buffer cases, number of iovecs in iovec array. */
 			int iovcnt;
 
-			/** For SG buffer cases, total size of data to be transferred. */
+			/** Total size of data to be transferred. */
 			size_t len;
 
 			/** Starting offset (in bytes) of the blockdev for this I/O. */

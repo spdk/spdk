@@ -280,7 +280,6 @@ static int _blockdev_malloc_submit_request(struct spdk_io_channel *ch, struct sp
 				((struct malloc_disk *)bdev_io->bdev->ctxt)->malloc_buf +
 				bdev_io->u.read.offset;
 			bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
-			bdev_io->u.read.put_buf = false;
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bdev_io->driver_ctx),
 					      SPDK_BDEV_IO_STATUS_SUCCESS);
 			return 0;

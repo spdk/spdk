@@ -120,10 +120,9 @@ spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf)
 	assert(buf != NULL);
 	assert(bdev_io->u.read.iovs != NULL);
 
-	bdev_io->u.read.buf_unaligned = buf;
+	bdev_io->buf = buf;
 	bdev_io->u.read.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
 	bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
-	bdev_io->u.read.put_buf = true;
 	bdev_io->get_buf_cb(bdev_io->ch->channel, bdev_io);
 }
 
@@ -139,7 +138,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->u.read.iovcnt == 1);
 
 	length = bdev_io->u.read.len;
-	buf = bdev_io->u.read.buf_unaligned;
+	buf = bdev_io->buf;
 
 	if (length <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_buf_small_pool;
@@ -344,7 +343,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 		return;
 	}
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ && bdev_io->u.read.put_buf) {
+	if (bdev_io->buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
 	}
 
@@ -476,9 +475,7 @@ spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
 
 	child->type = parent->type;
 	memcpy(&child->u, &parent->u, sizeof(child->u));
-	if (child->type == SPDK_BDEV_IO_TYPE_READ) {
-		child->u.read.put_buf = false;
-	}
+	child->buf = NULL;
 	child->get_buf_cb = NULL;
 	child->parent = parent;
 
@@ -580,7 +577,6 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->u.read.iovcnt = 1;
 	bdev_io->u.read.len = nbytes;
 	bdev_io->u.read.offset = offset;
-	bdev_io->u.read.put_buf = false;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -619,7 +615,6 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->u.read.iovcnt = iovcnt;
 	bdev_io->u.read.len = nbytes;
 	bdev_io->u.read.offset = offset;
-	bdev_io->u.read.put_buf = false;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
