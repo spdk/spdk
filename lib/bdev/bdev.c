@@ -168,41 +168,6 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 }
 
 static int
-spdk_initialize_buf_pool(void)
-{
-	int cache_size;
-
-	/**
-	 * Ensure no more than half of the total buffers end up local caches, by
-	 *   using spdk_event_get_active_core_count() to determine how many local caches we need
-	 *   to account for.
-	 */
-	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
-	g_bdev_mgr.buf_small_pool = spdk_mempool_create("buf_small_pool",
-				    BUF_SMALL_POOL_SIZE,
-				    SPDK_BDEV_SMALL_BUF_MAX_SIZE + 512,
-				    cache_size,
-				    SPDK_ENV_SOCKET_ID_ANY);
-	if (!g_bdev_mgr.buf_small_pool) {
-		SPDK_ERRLOG("create rbuf small pool failed\n");
-		return -1;
-	}
-
-	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
-	g_bdev_mgr.buf_large_pool = spdk_mempool_create("buf_large_pool",
-				    BUF_LARGE_POOL_SIZE,
-				    SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512,
-				    cache_size,
-				    SPDK_ENV_SOCKET_ID_ANY);
-	if (!g_bdev_mgr.buf_large_pool) {
-		SPDK_ERRLOG("create rbuf large pool failed\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 spdk_bdev_module_get_max_ctx_size(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
@@ -221,25 +186,6 @@ spdk_bdev_module_get_max_ctx_size(void)
 	}
 
 	return max_bdev_module_size;
-}
-
-static int
-spdk_bdev_module_initialize(void)
-{
-	struct spdk_bdev_module_if *bdev_module;
-	int rc = 0;
-
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
-		rc = bdev_module->module_init();
-		if (rc)
-			return rc;
-	}
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		rc = bdev_module->module_init();
-		if (rc)
-			return rc;
-	}
-	return rc;
 }
 
 static void
@@ -280,12 +226,9 @@ spdk_bdev_config_text(FILE *fp)
 static int
 spdk_bdev_initialize(void)
 {
-	int i;
-
-	if (spdk_bdev_module_initialize()) {
-		SPDK_ERRLOG("bdev module initialize failed");
-		return -1;
-	}
+	int i, cache_size;
+	struct spdk_bdev_module_if *bdev_module;
+	int rc = 0;
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
 				  SPDK_BDEV_IO_POOL_SIZE,
@@ -304,7 +247,47 @@ spdk_bdev_initialize(void)
 		TAILQ_INIT(&g_bdev_mgr.need_buf_large[i]);
 	}
 
-	return spdk_initialize_buf_pool();
+	/**
+	 * Ensure no more than half of the total buffers end up local caches, by
+	 *   using spdk_env_get_core_count() to determine how many local caches we need
+	 *   to account for.
+	 */
+	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
+	g_bdev_mgr.buf_small_pool = spdk_mempool_create("buf_small_pool",
+				    BUF_SMALL_POOL_SIZE,
+				    SPDK_BDEV_SMALL_BUF_MAX_SIZE + 512,
+				    cache_size,
+				    SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_bdev_mgr.buf_small_pool) {
+		SPDK_ERRLOG("create rbuf small pool failed\n");
+		return -1;
+	}
+
+	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
+	g_bdev_mgr.buf_large_pool = spdk_mempool_create("buf_large_pool",
+				    BUF_LARGE_POOL_SIZE,
+				    SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512,
+				    cache_size,
+				    SPDK_ENV_SOCKET_ID_ANY);
+	if (!g_bdev_mgr.buf_large_pool) {
+		SPDK_ERRLOG("create rbuf large pool failed\n");
+		return -1;
+	}
+
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+		rc = bdev_module->module_init();
+		if (rc) {
+			return rc;
+		}
+	}
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
+		rc = bdev_module->module_init();
+		if (rc) {
+			return rc;
+		}
+	}
+
+	return 0;
 }
 
 static int
