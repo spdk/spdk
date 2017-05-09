@@ -88,8 +88,8 @@ fi
 
 if [ $SPDK_TEST_NVME -eq 1 ]; then
 	run_test test/lib/nvme/nvme.sh
+	run_test test/lib/nvme/hotplug.sh intel
 	if [ $RUN_NIGHTLY -eq 1 ]; then
-		run_test test/lib/nvme/hotplug.sh intel
 		run_test test/lib/nvme/nvmemp.sh
 	fi
 fi
