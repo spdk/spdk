@@ -64,6 +64,11 @@ static char dev_dirname[PATH_MAX] = "";
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
 #define MAX_VHOST_DEVICE	1024
+
+#ifndef VIRTIO_F_VERSION_1
+#define VIRTIO_F_VERSION_1 32
+#endif
+
 #define VHOST_USER_F_PROTOCOL_FEATURES	30
 
 /* Features supported by SPDK VHOST lib. */
