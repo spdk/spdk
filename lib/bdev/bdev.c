@@ -189,24 +189,6 @@ spdk_bdev_module_get_max_ctx_size(void)
 }
 
 static void
-spdk_bdev_module_finish(void)
-{
-	struct spdk_bdev_module_if *bdev_module;
-
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		if (bdev_module->module_fini) {
-			bdev_module->module_fini();
-		}
-	}
-
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
-		if (bdev_module->module_fini) {
-			bdev_module->module_fini();
-		}
-	}
-}
-
-static void
 spdk_bdev_config_text(FILE *fp)
 {
 	struct spdk_bdev_module_if *bdev_module;
@@ -291,28 +273,47 @@ spdk_bdev_initialize(void)
 }
 
 static int
-spdk_bdev_check_pool(struct spdk_mempool *pool, uint32_t count)
-{
-	if (spdk_mempool_count(pool) != count) {
-		SPDK_ERRLOG("spdk_mempool_count(%p) == %zu, should be %u\n",
-			    pool, spdk_mempool_count(pool), count);
-		return -1;
-	} else {
-		return 0;
-	}
-}
-
-static int
 spdk_bdev_finish(void)
 {
-	int rc = 0;
+	struct spdk_bdev_module_if *bdev_module;
 
-	spdk_bdev_module_finish();
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
+		if (bdev_module->module_fini) {
+			bdev_module->module_fini();
+		}
+	}
 
-	rc += spdk_bdev_check_pool(g_bdev_mgr.buf_small_pool, BUF_SMALL_POOL_SIZE);
-	rc += spdk_bdev_check_pool(g_bdev_mgr.buf_large_pool, BUF_LARGE_POOL_SIZE);
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+		if (bdev_module->module_fini) {
+			bdev_module->module_fini();
+		}
+	}
 
-	return (rc != 0);
+	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
+		SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
+			    spdk_mempool_count(g_bdev_mgr.bdev_io_pool),
+			    SPDK_BDEV_IO_POOL_SIZE);
+	}
+
+	if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
+		SPDK_ERRLOG("Small buffer pool count is %zu but should be %u\n",
+			    spdk_mempool_count(g_bdev_mgr.buf_small_pool),
+			    BUF_SMALL_POOL_SIZE);
+		assert(false);
+	}
+
+	if (spdk_mempool_count(g_bdev_mgr.buf_large_pool) != BUF_LARGE_POOL_SIZE) {
+		SPDK_ERRLOG("Large buffer pool count is %zu but should be %u\n",
+			    spdk_mempool_count(g_bdev_mgr.buf_large_pool),
+			    BUF_LARGE_POOL_SIZE);
+		assert(false);
+	}
+
+	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
+	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
+	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+
+	return 0;
 }
 
 struct spdk_bdev_io *
