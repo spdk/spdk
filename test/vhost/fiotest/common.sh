@@ -167,11 +167,21 @@ function spdk_vhost_kill()
 	echo "INFO: killing vhost (PID $vhost_pid) app"
 
 	if /bin/kill -INT $vhost_pid >/dev/null; then
-		echo "INFO: vhost app killed - waiting to exit"
-		while /bin/kill -0 $vhost_pid; do
-			echo "."
-			sleep 1
+		echo "INFO: sent SIGINT to vhost app - waiting 60 seconds to exit"
+		for ((i=0; i<60; i++)); do
+			if /bin/kill -0 $vhost_pid; then
+				echo "."
+				sleep 1
+			else
+				break
+			fi
 		done
+		if /bin/kill -0 $vhost_pid; then
+			echo "ERROR: vhost was NOT killed - sending SIGKILL"
+			/bin/kill -KILL $vhost_pid
+			rm $vhost_pid_file
+			return 1
+		fi
 	elif /bin/kill -0 $vhost_pid; then
 		error "vhost NOT killed - you need to kill it manually"
 		return 1
