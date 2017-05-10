@@ -7,7 +7,7 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 
 function linux_iter_pci {
-	lspci -mm -n | grep $1 | tr -d '"' | awk -F " " '{print "0000:"$1}'
+	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
 }
 
 timing_enter nvme
