@@ -44,8 +44,6 @@
 
 #define NVME_IO_ALIGN		4096
 
-#define MAX_LCORE_COUNT		63
-
 bool spdk_env_initialized;
 
 struct spdk_fio_request {
