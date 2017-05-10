@@ -78,3 +78,4 @@ fi
 echo "CC=$CC"
 echo "CXX=$CXX"
 echo "CCAR=$CCAR"
+echo "CC_TYPE=$CC_TYPE"
