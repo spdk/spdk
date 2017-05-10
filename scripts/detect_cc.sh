@@ -4,7 +4,7 @@ set -e
 
 function err()
 {
-        echo "$@" >&2
+	echo "$@" >&2
 }
 
 function usage()
@@ -19,7 +19,7 @@ function usage()
 	err " -h, --help                Display this help and exit"
 	err " --cc=path                 C compiler to use"
 	err " --cxx=path                C++ compiler to use"
-        err " --lto=[y|n]               Attempt to configure for LTO"
+	err " --lto=[y|n]               Attempt to configure for LTO"
 
 }
 
@@ -57,22 +57,22 @@ CXX_TYPE=$($CXX -v 2>&1 | grep version | awk '{print $1}')
 LD_TYPE=$(ld -v 2>&1 | awk '{print $2}')
 
 if [ "$CC_TYPE" != "$CXX_TYPE" ]; then
-        err "C compiler is $CC_TYPE but C++ compiler is $CXX_TYPE"
-        err "This may result in errors"
-        exit 1
+	err "C compiler is $CC_TYPE but C++ compiler is $CXX_TYPE"
+	err "This may result in errors"
+	exit 1
 fi
 
 CCAR="ar"
 if [ "$LTO" = "y" ]; then
-        if [ "$CC_TYPE" = "clang" ]; then
-                if [ "$LD_TYPE" != "gold" ]; then
-                        err "Using LTO with clang requires the gold linker."
-                        exit 1
-                fi
-                CCAR="llvm-ar"
-        else
-                CCAR="gcc-ar"
-        fi
+	if [ "$CC_TYPE" = "clang" ]; then
+		if [ "$LD_TYPE" != "gold" ]; then
+			err "Using LTO with clang requires the gold linker."
+			exit 1
+		fi
+		 CCAR="llvm-ar"
+	else
+		CCAR="gcc-ar"
+	fi
 fi
 
 echo "CC=$CC"
