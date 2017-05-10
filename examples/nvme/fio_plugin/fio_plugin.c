@@ -239,7 +239,6 @@ static int spdk_fio_setup(struct thread_data *td)
 
 	for_each_file(td, f, i) {
 		memset(&trid, 0, sizeof(trid));
-		trid_info = NULL;
 
 		trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
