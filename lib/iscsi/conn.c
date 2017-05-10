@@ -886,7 +886,7 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 
 	if ((task != primary) &&
 	    (task->scsi.offset != primary->bytes_completed)) {
-		TAILQ_FOREACH(tmp, &primary->subtask_list, link) {
+		TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
 			if (task->scsi.offset < tmp->scsi.offset) {
 				TAILQ_INSERT_BEFORE(tmp, task, subtask_link);
 				flag = true;
