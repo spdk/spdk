@@ -44,7 +44,7 @@
 
 #define NVME_IO_ALIGN		4096
 
-bool spdk_env_initialized;
+static bool spdk_env_initialized;
 
 struct spdk_fio_request {
 	struct io_u		*io;
@@ -59,9 +59,9 @@ struct spdk_fio_ctrlr {
 	struct spdk_fio_ctrlr		*next;
 };
 
-struct spdk_fio_ctrlr  *ctrlr_g;
-int td_count;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static struct spdk_fio_ctrlr *ctrlr_g;
+static int td_count;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct spdk_fio_qpair {
 	struct fio_file		*f;
