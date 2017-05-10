@@ -61,7 +61,7 @@ struct spdk_fio_ctrlr {
 
 struct spdk_fio_ctrlr  *ctrlr_g;
 int td_count;
-pthread_mutex_t mutex;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct spdk_fio_qpair {
 	struct fio_file		*f;
@@ -216,6 +216,8 @@ static int spdk_fio_setup(struct thread_data *td)
 		return 1;
 	}
 
+	pthread_mutex_lock(&mutex);
+
 	fio_thread = calloc(1, sizeof(*fio_thread));
 	assert(fio_thread != NULL);
 
@@ -233,7 +235,6 @@ static int spdk_fio_setup(struct thread_data *td)
 		spdk_env_init(&opts);
 		spdk_env_initialized = true;
 		cpu_core_unaffinitized();
-		pthread_mutex_init(&mutex, NULL);
 	}
 
 	for_each_file(td, f, i) {
@@ -291,6 +292,8 @@ static int spdk_fio_setup(struct thread_data *td)
 	}
 
 	td_count++;
+
+	pthread_mutex_unlock(&mutex);
 
 	return 0;
 }
