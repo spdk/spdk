@@ -36,8 +36,6 @@
 
 #include "spdk/bdev.h"
 
-#include <rte_config.h>
-#include <rte_lcore.h>
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
 #include "spdk/likely.h"
@@ -61,9 +59,6 @@ struct spdk_bdev_mgr {
 	struct spdk_mempool *buf_small_pool;
 	struct spdk_mempool *buf_large_pool;
 
-	need_buf_tailq_t need_buf_small[RTE_MAX_LCORE];
-	need_buf_tailq_t need_buf_large[RTE_MAX_LCORE];
-
 	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
 	TAILQ_HEAD(, spdk_bdev_module_if) vbdev_modules;
 
@@ -77,6 +72,8 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 };
 
 struct spdk_bdev_mgmt_channel {
+	need_buf_tailq_t need_buf_small;
+	need_buf_tailq_t need_buf_large;
 };
 
 struct spdk_bdev_channel {
@@ -151,18 +148,21 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	void *buf;
 	need_buf_tailq_t *tailq;
 	uint64_t length;
+	struct spdk_bdev_mgmt_channel *ch;
 
 	assert(bdev_io->u.read.iovcnt == 1);
 
 	length = bdev_io->u.read.len;
 	buf = bdev_io->buf;
 
+	ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
+
 	if (length <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
-		tailq = &g_bdev_mgr.need_buf_small[rte_lcore_id()];
+		tailq = &ch->need_buf_small;
 	} else {
 		pool = g_bdev_mgr.buf_large_pool;
-		tailq = &g_bdev_mgr.need_buf_large[rte_lcore_id()];
+		tailq = &ch->need_buf_large;
 	}
 
 	if (TAILQ_EMPTY(tailq)) {
@@ -181,6 +181,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
 	struct spdk_mempool *pool;
 	need_buf_tailq_t *tailq;
 	void *buf = NULL;
+	struct spdk_bdev_mgmt_channel *ch;
 
 	assert(cb != NULL);
 	assert(bdev_io->u.read.iovs != NULL);
@@ -191,13 +192,15 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
 		return;
 	}
 
+	ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
+
 	bdev_io->get_buf_cb = cb;
 	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		pool = g_bdev_mgr.buf_small_pool;
-		tailq = &g_bdev_mgr.need_buf_small[rte_lcore_id()];
+		tailq = &ch->need_buf_small;
 	} else {
 		pool = g_bdev_mgr.buf_large_pool;
-		tailq = &g_bdev_mgr.need_buf_large[rte_lcore_id()];
+		tailq = &ch->need_buf_large;
 	}
 
 	buf = spdk_mempool_get(pool);
@@ -250,18 +253,28 @@ spdk_bdev_config_text(FILE *fp)
 static int
 spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
+	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
+
+	TAILQ_INIT(&ch->need_buf_small);
+	TAILQ_INIT(&ch->need_buf_large);
+
 	return 0;
 }
 
 static void
 spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
+	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
+
+	if (!TAILQ_EMPTY(&ch->need_buf_small) || !TAILQ_EMPTY(&ch->need_buf_large)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
+	}
 }
 
 static int
 spdk_bdev_initialize(void)
 {
-	int i, cache_size;
+	int cache_size;
 	struct spdk_bdev_module_if *bdev_module;
 	int rc = 0;
 
@@ -275,11 +288,6 @@ spdk_bdev_initialize(void)
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool");
 		return -1;
-	}
-
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
-		TAILQ_INIT(&g_bdev_mgr.need_buf_small[i]);
-		TAILQ_INIT(&g_bdev_mgr.need_buf_large[i]);
 	}
 
 	/**
@@ -522,20 +530,20 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
 	struct spdk_bdev_io		*bdev_io, *tmp;
-	uint32_t			core;
+	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 
-	core = spdk_env_get_current_core();
+	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_small[core], buf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &mgmt_channel->need_buf_small, buf_link, tmp) {
 		if (bdev_io->ch == ch) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_small[core], bdev_io, buf_link);
+			TAILQ_REMOVE(&mgmt_channel->need_buf_small, bdev_io, buf_link);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_large[core], buf_link, tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &mgmt_channel->need_buf_large, buf_link, tmp) {
 		if (bdev_io->ch == ch) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_large[core], bdev_io, buf_link);
+			TAILQ_REMOVE(&mgmt_channel->need_buf_large, bdev_io, buf_link);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -868,19 +876,20 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 	struct spdk_bdev_io *bio = ctx;
 	struct spdk_bdev *bdev = bio->bdev;
 	struct spdk_bdev_io *bdev_io, *tmp;
+	struct spdk_bdev_mgmt_channel *mgmt_channel;
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_small[spdk_env_get_current_core()], buf_link,
-			   tmp) {
+	mgmt_channel = spdk_io_channel_get_ctx(ch);
+
+	TAILQ_FOREACH_SAFE(bdev_io, &mgmt_channel->need_buf_small, buf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_small[spdk_env_get_current_core()], bdev_io, buf_link);
+			TAILQ_REMOVE(&mgmt_channel->need_buf_small, bdev_io, buf_link);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_large[spdk_env_get_current_core()], buf_link,
-			   tmp) {
+	TAILQ_FOREACH_SAFE(bdev_io, &mgmt_channel->need_buf_large, buf_link, tmp) {
 		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_large[spdk_env_get_current_core()], bdev_io, buf_link);
+			TAILQ_REMOVE(&mgmt_channel->need_buf_large, bdev_io, buf_link);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
