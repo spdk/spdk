@@ -382,7 +382,7 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 }
 
 int
-spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
+spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 		      uint64_t lba,
 		      uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
 		      uint32_t io_flags)
@@ -391,7 +391,7 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 	struct nvme_payload payload;
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	payload.u.contig = buffer;
+	payload.u.contig = payload;
 	payload.md = NULL;
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
@@ -405,7 +405,7 @@ spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, vo
 }
 
 int
-spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
+spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
 			      void *metadata,
 			      uint64_t lba,
 			      uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
@@ -415,7 +415,7 @@ spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct nvme_payload payload;
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	payload.u.contig = buffer;
+	payload.u.contig = payload;
 	payload.md = metadata;
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_READ,
@@ -458,7 +458,7 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 int
 spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-		       void *buffer, uint64_t lba,
+		       void *payload, uint64_t lba,
 		       uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
 		       uint32_t io_flags)
 {
@@ -466,7 +466,7 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_payload payload;
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	payload.u.contig = buffer;
+	payload.u.contig = payload;
 	payload.md = NULL;
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
@@ -480,7 +480,7 @@ spdk_nvme_ns_cmd_write(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 int
 spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-			       void *buffer, void *metadata, uint64_t lba,
+			       void *payload, void *metadata, uint64_t lba,
 			       uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
 			       uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
 {
@@ -488,7 +488,7 @@ spdk_nvme_ns_cmd_write_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *
 	struct nvme_payload payload;
 
 	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
-	payload.u.contig = buffer;
+	payload.u.contig = payload;
 	payload.md = metadata;
 
 	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg, SPDK_NVME_OPC_WRITE,
