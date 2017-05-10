@@ -210,7 +210,7 @@ vbdev_split_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, split_disk->base_bdev->name);
+	spdk_json_write_string(w, spdk_bdev_get_name(split_disk->base_bdev));
 	spdk_json_write_name(w, "offset_blocks");
 	spdk_json_write_uint64(w, split_disk->offset_blocks);
 
@@ -238,7 +238,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	struct split_base *split_base;
 
 	if (!spdk_bdev_claim(base_bdev, NULL, NULL)) {
-		SPDK_ERRLOG("Split bdev %s is already claimed\n", base_bdev->name);
+		SPDK_ERRLOG("Split bdev %s is already claimed\n", spdk_bdev_get_name(base_bdev));
 		return -1;
 	}
 
@@ -268,7 +268,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 
 	SPDK_TRACELOG(SPDK_TRACE_VBDEV_SPLIT, "base_bdev: %s split_count: %" PRIu64
 		      " split_size_bytes: %" PRIu64 "\n",
-		      base_bdev->name, split_count, split_size_bytes);
+		      spdk_bdev_get_name(base_bdev), split_count, split_size_bytes);
 
 	split_base = calloc(1, sizeof(*split_base));
 	if (!split_base) {
@@ -297,7 +297,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		d->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
 
 		/* Append partition number to the base bdev's name, e.g. Malloc0 -> Malloc0p0 */
-		snprintf(d->disk.name, sizeof(d->disk.name), "%sp%" PRIu64, base_bdev->name, i);
+		snprintf(d->disk.name, sizeof(d->disk.name), "%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i);
 		snprintf(d->disk.product_name, sizeof(d->disk.product_name), "Split Disk");
 		d->base_bdev = base_bdev;
 		d->offset_bytes = offset_bytes;
@@ -308,7 +308,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 
 		SPDK_TRACELOG(SPDK_TRACE_VBDEV_SPLIT, "Split vbdev %s: base bdev: %s offset_bytes: "
 			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
-			      d->disk.name, base_bdev->name, d->offset_bytes, d->offset_blocks);
+			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_bytes, d->offset_blocks);
 
 		vbdev_split_base_get_ref(split_base, d);
 

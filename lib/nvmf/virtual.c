@@ -71,7 +71,7 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_session *session)
 		if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF,
 				      "Subsystem%d Namespace %s does not support unmap - not enabling DSM\n",
-				      i, bdev->name);
+				      i, spdk_bdev_get_name(bdev));
 			return;
 		}
 	}

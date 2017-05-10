@@ -115,7 +115,7 @@ bdevio_construct_targets(void)
 		}
 
 		printf("  %s: %" PRIu64 " blocks of %" PRIu32 " bytes (%" PRIu64 " MiB)\n",
-		       bdev->name,
+		       spdk_bdev_get_name(bdev),
 		       bdev->blockcnt, bdev->blocklen,
 		       (bdev->blockcnt * bdev->blocklen + 1024 * 1024 - 1) / (1024 * 1024));
 

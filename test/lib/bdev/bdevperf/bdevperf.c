@@ -126,7 +126,7 @@ bdevperf_construct_targets(void)
 		}
 
 		if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-			printf("Skipping %s because it does not support unmap\n", bdev->name);
+			printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
 			bdev = spdk_bdev_next(bdev);
 			continue;
 		}
@@ -370,7 +370,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *cb
 	struct io_target	*target = task->target;
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
-		printf("Reset blockdev=%s failed\n", target->bdev->name);
+		printf("Reset blockdev=%s failed\n", spdk_bdev_get_name(target->bdev));
 		target->is_draining = true;
 		g_run_failed = true;
 	}
@@ -456,7 +456,7 @@ performance_dump(int io_time)
 			mb_per_second = io_per_second * g_io_size /
 					(1024 * 1024);
 			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
-			       target->bdev->name, io_per_second,
+			       spdk_bdev_get_name(target->bdev), io_per_second,
 			       mb_per_second);
 			total_io_per_second += io_per_second;
 			total_mb_per_second += mb_per_second;

@@ -82,6 +82,18 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	return -1;
 }
 
+const char *
+spdk_bdev_get_name(const struct spdk_bdev *bdev)
+{
+	return "test";
+}
+
+const char *
+spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
+{
+	return "test product";
+}
+
 void
 spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 {

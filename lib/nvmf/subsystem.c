@@ -416,7 +416,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	if (!spdk_bdev_claim(bdev, spdk_nvmf_ctrlr_hot_remove, subsystem)) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s is already claimed\n",
-			    subsystem->subnqn, bdev->name);
+			    subsystem->subnqn, spdk_bdev_get_name(bdev));
 		return -1;
 	}
 

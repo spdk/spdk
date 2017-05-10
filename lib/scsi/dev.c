@@ -179,7 +179,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 			goto error;
 		}
 
-		lun = spdk_scsi_lun_construct(bdev->name, bdev);
+		lun = spdk_scsi_lun_construct(spdk_bdev_get_name(bdev), bdev);
 		if (lun == NULL) {
 			goto error;
 		}

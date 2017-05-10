@@ -60,10 +60,10 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_server_conn *conn,
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, bdev->name);
+		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
 
 		spdk_json_write_name(w, "product_name");
-		spdk_json_write_string(w, bdev->product_name);
+		spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
 
 		spdk_json_write_name(w, "block_size");
 		spdk_json_write_uint32(w, bdev->blocklen);

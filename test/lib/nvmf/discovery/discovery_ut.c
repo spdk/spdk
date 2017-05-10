@@ -93,6 +93,12 @@ spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 	return true;
 }
 
+const char *
+spdk_bdev_get_name(const struct spdk_bdev *bdev)
+{
+	return "test";
+}
+
 static int
 test_transport1_listen_addr_add(struct spdk_nvmf_listen_addr *listen_addr)
 {

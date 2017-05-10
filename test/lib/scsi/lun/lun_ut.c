@@ -135,6 +135,12 @@ spdk_bdev_unclaim(struct spdk_bdev *bdev)
 {
 }
 
+const char *
+spdk_bdev_get_name(const struct spdk_bdev *bdev)
+{
+	return "test";
+}
+
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 				   struct spdk_scsi_task *task)
 {

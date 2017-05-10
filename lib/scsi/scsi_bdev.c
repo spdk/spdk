@@ -70,7 +70,7 @@ spdk_hex2bin(char ch)
 }
 
 static void
-spdk_bdev_scsi_set_local_naa(char *name, uint8_t *buf)
+spdk_bdev_scsi_set_local_naa(const char *name, uint8_t *buf)
 {
 	int i, value, count = 0;
 	uint64_t naa, local_value;
@@ -225,23 +225,28 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			to_be16(vpage->alloc_len, len);
 			break;
 
-		case SPDK_SPC_VPD_UNIT_SERIAL_NUMBER:
+		case SPDK_SPC_VPD_UNIT_SERIAL_NUMBER: {
+			const char *name = spdk_bdev_get_name(bdev);
+
 			hlen = 4;
 
 			/* PRODUCT SERIAL NUMBER */
-			len = strlen(bdev->name) + 1;
+			len = strlen(name) + 1;
 			if (len > MAX_SERIAL_STRING) {
 				len = MAX_SERIAL_STRING;
 			}
 
-			memcpy(vpage->params, bdev->name, len - 1);
+			memcpy(vpage->params, name, len - 1);
 			vpage->params[len - 1] = 0;
 
 			/* PAGE LENGTH */
 			to_be16(vpage->alloc_len, len);
 			break;
+		}
 
 		case SPDK_SPC_VPD_DEVICE_IDENTIFICATION: {
+			const char *name = spdk_bdev_get_name(bdev);
+			const char *product_name = spdk_bdev_get_product_name(bdev);
 			uint8_t *buf = vpage->params;
 			struct spdk_scsi_desig_desc *desig;
 
@@ -275,7 +280,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->piv = 1;
 			desig->reserved1 = 0;
 			desig->len = 8;
-			spdk_bdev_scsi_set_local_naa(bdev->name, desig->desig);
+			spdk_bdev_scsi_set_local_naa(name, desig->desig);
 			len = sizeof(struct spdk_scsi_desig_desc) + 8;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;
@@ -291,8 +296,8 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->reserved1 = 0;
 			desig->len = 8 + 16 + MAX_SERIAL_STRING;
 			spdk_strcpy_pad(desig->desig, DEFAULT_DISK_VENDOR, 8, ' ');
-			spdk_strcpy_pad(&desig->desig[8], bdev->product_name, 16, ' ');
-			spdk_strcpy_pad(&desig->desig[24], bdev->name, MAX_SERIAL_STRING, ' ');
+			spdk_strcpy_pad(&desig->desig[8], product_name, 16, ' ');
+			spdk_strcpy_pad(&desig->desig[24], name, MAX_SERIAL_STRING, ' ');
 			len += sizeof(struct spdk_scsi_desig_desc) + 8 + 16 + MAX_SERIAL_STRING;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;
@@ -700,7 +705,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		spdk_strcpy_pad(inqdata->t10_vendor_id, DEFAULT_DISK_VENDOR, 8, ' ');
 
 		/* PRODUCT IDENTIFICATION */
-		spdk_strcpy_pad(inqdata->product_id, bdev->product_name, 16, ' ');
+		spdk_strcpy_pad(inqdata->product_id, spdk_bdev_get_product_name(bdev), 16, ' ');
 
 		/* PRODUCT REVISION LEVEL */
 		spdk_strcpy_pad(inqdata->product_rev, DEFAULT_DISK_REVISION, 4, ' ');

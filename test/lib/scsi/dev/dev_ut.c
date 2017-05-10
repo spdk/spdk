@@ -59,6 +59,12 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
 }
 
+const char *
+spdk_bdev_get_name(const struct spdk_bdev *bdev)
+{
+	return "test";
+}
+
 static struct spdk_scsi_task *
 spdk_get_task(uint32_t *owner_task_ctr)
 {

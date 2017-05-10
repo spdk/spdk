@@ -533,6 +533,18 @@ spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 	return spdk_get_io_channel(bdev, priority, false, NULL);
 }
 
+const char *
+spdk_bdev_get_name(const struct spdk_bdev *bdev)
+{
+	return bdev->name;
+}
+
+const char *
+spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
+{
+	return bdev->product_name;
+}
+
 size_t
 spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 {

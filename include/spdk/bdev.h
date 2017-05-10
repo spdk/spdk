@@ -200,6 +200,22 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
 int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
+ * Get block device name.
+ *
+ * \param bdev Block device to query.
+ * \return Name of bdev as a null-terminated string.
+ */
+const char *spdk_bdev_get_name(const struct spdk_bdev *bdev);
+
+/**
+ * Get block device product name.
+ *
+ * \param bdev Block device to query.
+ * \return Product name of bdev as a null-terminated string.
+ */
+const char *spdk_bdev_get_product_name(const struct spdk_bdev *bdev);
+
+/**
  * Get minimum I/O buffer address alignment for a bdev.
  *
  * \param bdev Block device to query.

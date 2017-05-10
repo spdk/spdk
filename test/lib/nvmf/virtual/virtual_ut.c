@@ -97,6 +97,12 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return -1;
 }
 
+const char *
+spdk_bdev_get_name(const struct spdk_bdev *bdev)
+{
+	return "test";
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {
