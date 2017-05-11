@@ -546,6 +546,24 @@ static void
 spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
+	struct spdk_bdev_io		*bdev_io, *tmp;
+	uint32_t			core;
+
+	core = spdk_env_get_current_core();
+
+	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_small[core], buf_link, tmp) {
+		if (bdev_io->ch == ch) {
+			TAILQ_REMOVE(&g_bdev_mgr.need_buf_small[core], bdev_io, buf_link);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+
+	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_large[core], buf_link, tmp) {
+		if (bdev_io->ch == ch) {
+			TAILQ_REMOVE(&g_bdev_mgr.need_buf_large[core], bdev_io, buf_link);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
 
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
