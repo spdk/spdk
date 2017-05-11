@@ -656,11 +656,10 @@ static void
 __blockdev_reset(void *arg1, void *arg2)
 {
 	struct bdevio_request *req = arg1;
-	enum spdk_bdev_reset_type *reset_type = arg2;
 	struct io_target *target = req->target;
 	int rc;
 
-	rc = spdk_bdev_reset(target->bdev, target->ch, *reset_type, quick_test_complete, NULL);
+	rc = spdk_bdev_reset(target->bdev, target->ch, quick_test_complete, NULL);
 	if (rc < 0) {
 		g_completion_success = false;
 		wake_ut_thread();
@@ -668,7 +667,7 @@ __blockdev_reset(void *arg1, void *arg2)
 }
 
 static void
-blockdev_reset(struct io_target *target, enum spdk_bdev_reset_type reset_type)
+blockdev_reset(struct io_target *target)
 {
 	struct bdevio_request req;
 
@@ -676,7 +675,7 @@ blockdev_reset(struct io_target *target, enum spdk_bdev_reset_type reset_type)
 
 	g_completion_success = false;
 
-	execute_spdk_function(__blockdev_reset, &req, &reset_type);
+	execute_spdk_function(__blockdev_reset, &req, NULL);
 }
 
 static void
@@ -686,10 +685,7 @@ blockdev_test_reset(void)
 
 	target = g_io_targets;
 	while (target != NULL) {
-		blockdev_reset(target, SPDK_BDEV_RESET_HARD);
-		CU_ASSERT_EQUAL(g_completion_success, true);
-
-		blockdev_reset(target, SPDK_BDEV_RESET_SOFT);
+		blockdev_reset(target);
 		CU_ASSERT_EQUAL(g_completion_success, true);
 
 		target = target->next;

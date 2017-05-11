@@ -225,7 +225,6 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 int
 spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-		enum spdk_bdev_reset_type reset_type,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return 0;

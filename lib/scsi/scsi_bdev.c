@@ -1953,6 +1953,6 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 int
 spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 {
-	return spdk_bdev_reset(bdev, task->ch, SPDK_BDEV_RESET_SOFT,
+	return spdk_bdev_reset(bdev, task->ch,
 			       spdk_bdev_scsi_task_complete_mgmt, task);
 }
