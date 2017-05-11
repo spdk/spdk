@@ -104,9 +104,7 @@ split_reset(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
 	 * since the spdk_bdev_io_complete() path that normally updates it will not execute
 	 * after we resubmit the I/O to the base_bdev.
 	 */
-	if (bdev_io->u.reset.type == SPDK_BDEV_RESET_HARD) {
-		split_disk->disk.gencnt++;
-	}
+	split_disk->disk.gencnt++;
 }
 
 static void
