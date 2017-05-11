@@ -188,9 +188,6 @@ struct spdk_bdev {
 	/** Represents maximum unmap block descriptor count */
 	uint32_t max_unmap_bdesc_count;
 
-	/** generation value used by block device reset */
-	uint32_t gencnt;
-
 	/** Mutex protecting claimed */
 	pthread_mutex_t mutex;
 
@@ -223,9 +220,6 @@ struct spdk_bdev_io {
 
 	/** Entry to the list need_buf of struct spdk_bdev. */
 	TAILQ_ENTRY(spdk_bdev_io) buf_link;
-
-	/** Generation value for each I/O. */
-	uint32_t gencnt;
 
 	/** Enumerated value representing the I/O type. */
 	enum spdk_bdev_io_type type;
@@ -277,9 +271,6 @@ struct spdk_bdev_io {
 			/** Represents the number of bytes to be flushed, starting at offset. */
 			uint64_t length;
 		} flush;
-		struct {
-			enum spdk_bdev_reset_type type;
-		} reset;
 	} u;
 
 	/** Status for the IO */

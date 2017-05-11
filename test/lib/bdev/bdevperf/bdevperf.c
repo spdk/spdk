@@ -394,7 +394,7 @@ reset_target(void *arg)
 	/* Do reset. */
 	rte_mempool_get(task_pool, (void **)&task);
 	task->target = target;
-	spdk_bdev_reset(target->bdev, target->ch, SPDK_BDEV_RESET_SOFT,
+	spdk_bdev_reset(target->bdev, target->ch,
 			reset_cb, task);
 }
 

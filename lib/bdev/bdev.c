@@ -459,12 +459,6 @@ spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev *new_bdev)
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 	bdev_io->bdev = new_bdev;
 
-	/*
-	 * These fields are normally set during spdk_bdev_io_init(), but since bdev is
-	 * being switched, they need to be reinitialized.
-	 */
-	bdev_io->gencnt = new_bdev->gencnt;
-
 	__submit_request(new_bdev, bdev_io);
 }
 
@@ -476,7 +470,6 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->bdev = bdev;
 	bdev_io->caller_ctx = cb_arg;
 	bdev_io->cb = cb;
-	bdev_io->gencnt = bdev->gencnt;
 	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->in_submit_request = false;
 	TAILQ_INIT(&bdev_io->child_io);
@@ -874,7 +867,6 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 int
 spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-		enum spdk_bdev_reset_type reset_type,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
@@ -890,7 +882,6 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
-	bdev_io->u.reset.type = reset_type;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -963,27 +954,6 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 						    bdev_io,
 						    (void *)status));
 		return;
-	}
-
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		/* Successful reset */
-		if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-			/* Increase the blockdev generation if it is a hard reset */
-			if (bdev_io->u.reset.type == SPDK_BDEV_RESET_HARD) {
-				bdev_io->bdev->gencnt++;
-			}
-		}
-	} else {
-		/*
-		 * Check the gencnt, to see if this I/O was issued before the most
-		 * recent reset. If the gencnt is not equal, then just free the I/O
-		 * without calling the callback, since the caller will have already
-		 * freed its context for this I/O.
-		 */
-		if (bdev_io->bdev->gencnt != bdev_io->gencnt) {
-			spdk_bdev_put_io(bdev_io);
-			return;
-		}
 	}
 
 	bdev_io->status = status;
@@ -1078,9 +1048,6 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 void
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
-	/* initialize the reset generation value to zero */
-	bdev->gencnt = 0;
-
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
 
