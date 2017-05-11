@@ -285,9 +285,6 @@ struct spdk_bdev_io {
 			/** Represents the number of bytes to be flushed, starting at offset. */
 			uint64_t length;
 		} flush;
-		struct {
-			enum spdk_bdev_reset_type type;
-		} reset;
 	} u;
 
 	/** Status for the IO */

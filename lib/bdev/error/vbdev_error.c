@@ -78,9 +78,7 @@ vbdev_error_reset(struct vbdev_error_disk *error_disk, struct spdk_bdev_io *bdev
 	 * since the spdk_bdev_io_complete() path that normally updates it will not execute
 	 * after we resubmit the I/O to the base_bdev.
 	 */
-	if (bdev_io->u.reset.type == SPDK_BDEV_RESET_HARD) {
-		error_disk->disk.gencnt++;
-	}
+	error_disk->disk.gencnt++;
 }
 
 static void
