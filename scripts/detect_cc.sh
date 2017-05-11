@@ -59,7 +59,6 @@ LD_TYPE=$(ld -v 2>&1 | awk '{print $2}')
 if [ "$CC_TYPE" != "$CXX_TYPE" ]; then
 	err "C compiler is $CC_TYPE but C++ compiler is $CXX_TYPE"
 	err "This may result in errors"
-	exit 1
 fi
 
 CCAR="ar"
