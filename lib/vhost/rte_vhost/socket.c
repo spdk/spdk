@@ -277,6 +277,8 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 
 	ret = vhost_user_msg_handler(conn->vid, connfd);
 	if (ret < 0) {
+		pthread_mutex_lock(&vhost_user.mutex);
+
 		close(connfd);
 		*remove = 1;
 		vhost_destroy_device(conn->vid);
@@ -291,6 +293,8 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 			create_unix_socket(vsocket);
 			vhost_user_start_client(vsocket);
 		}
+
+		pthread_mutex_unlock(&vhost_user.mutex);
 	}
 }
 
