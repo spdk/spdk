@@ -629,6 +629,52 @@ lba_range_test(void)
 	spdk_put_task(&task);
 }
 
+static void
+xfer_len_test(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_scsi_task task;
+	uint8_t cdb[16];
+	int rc;
+
+	spdk_init_task(&task);
+	task.cdb = cdb;
+
+	memset(cdb, 0, sizeof(cdb));
+	cdb[0] = 0x88; /* READ (16) */
+
+	/* Test block device size of 512 MiB */
+	g_test_bdev_num_blocks = 512 * 1024 * 1024;
+
+	/* 1 block */
+	to_be64(&cdb[2], 0); /* LBA */
+	to_be32(&cdb[10], 1); /* transfer length */
+	task.transfer_len = 1 * 512;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+
+	/* max transfer length (as reported in block limits VPD page) */
+	to_be64(&cdb[2], 0); /* LBA */
+	to_be32(&cdb[10], SPDK_WORK_BLOCK_SIZE / 512); /* transfer length */
+	task.transfer_len = SPDK_WORK_BLOCK_SIZE;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+
+	/* max transfer length plus one block (invalid) */
+	to_be64(&cdb[2], 0); /* LBA */
+	to_be32(&cdb[10], SPDK_WORK_BLOCK_SIZE / 512 + 1); /* transfer length */
+	task.transfer_len = SPDK_WORK_BLOCK_SIZE + 512;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT((task.sense_data[2] & 0xf) == SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
+	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB);
+
+	spdk_put_task(&task);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -655,6 +701,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "inquiry overflow test", inquiry_overflow_test) == NULL
 		|| CU_add_test(suite, "task complete test", task_complete_test) == NULL
 		|| CU_add_test(suite, "LBA range test", lba_range_test) == NULL
+		|| CU_add_test(suite, "transfer length test", xfer_len_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

@@ -1460,6 +1460,8 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 			 struct spdk_scsi_task *task,
 			 uint64_t lba, uint32_t xfer_len, bool is_read)
 {
+	uint32_t max_xfer_len;
+
 	if (task->dxfer_dir != SPDK_SCSI_DIR_NONE &&
 	    task->dxfer_dir != (is_read ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV)) {
 		SPDK_ERRLOG("Incorrect data direction\n");
@@ -1473,6 +1475,18 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 	if (spdk_bdev_scsi_read_write_lba_check(task->parent, task, lba,
 						xfer_len, spdk_bdev_get_num_blocks(bdev)) < 0) {
 		/* spdk_bdev_scsi_read_write_lba_check() already set the correct sense code */
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	/* Transfer Length is limited to the Block Limits VPD page Maximum Transfer Length */
+	max_xfer_len = SPDK_WORK_BLOCK_SIZE / spdk_bdev_get_block_size(bdev);
+	if (xfer_len > max_xfer_len) {
+		SPDK_ERRLOG("xfer_len %" PRIu32 " > maximum transfer length %" PRIu32 "\n",
+			    xfer_len, max_xfer_len);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
