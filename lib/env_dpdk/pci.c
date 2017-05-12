@@ -47,7 +47,9 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	struct spdk_pci_enum_ctx *ctx = (struct spdk_pci_enum_ctx *)driver;
 
 	if (!ctx->cb_fn) {
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+		rte_pci_unmap_device(device);
+#elif RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 		rte_eal_pci_unmap_device(device);
 #endif
 
@@ -88,7 +90,12 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 	rte_eal_device_remove(&device->device);
 #endif
 #endif
+
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	rte_pci_detach(&addr);
+#else
 	rte_eal_pci_detach(&addr);
+#endif
 }
 
 int
@@ -107,13 +114,21 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 
 	if (!ctx->is_registered) {
 		ctx->is_registered = true;
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+		rte_pci_register(&ctx->driver);
+#else
 		rte_eal_pci_register(&ctx->driver);
+#endif
 	}
 
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
 
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	if (rte_pci_probe_one(&addr) != 0) {
+#else
 	if (rte_eal_pci_probe_one(&addr) != 0) {
+#endif
 		ctx->cb_arg = NULL;
 		ctx->cb_fn = NULL;
 		pthread_mutex_unlock(&ctx->mtx);
@@ -140,13 +155,22 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 
 	if (!ctx->is_registered) {
 		ctx->is_registered = true;
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+		rte_pci_register(&ctx->driver);
+#else
 		rte_eal_pci_register(&ctx->driver);
+#endif
 	}
 
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
 
+
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	if (rte_pci_probe() != 0) {
+#else
 	if (rte_eal_pci_probe() != 0) {
+#endif
 		ctx->cb_arg = NULL;
 		ctx->cb_fn = NULL;
 		pthread_mutex_unlock(&ctx->mtx);
@@ -285,37 +309,61 @@ spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
 int
 spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	return rte_pci_read_config(dev, value, 1, offset) == 1 ? 0 : -1;
+#else
 	return rte_eal_pci_read_config(dev, value, 1, offset) == 1 ? 0 : -1;
+#endif
 }
 
 int
 spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	return rte_pci_write_config(dev, &value, 1, offset) == 1 ? 0 : -1;
+#else
 	return rte_eal_pci_write_config(dev, &value, 1, offset) == 1 ? 0 : -1;
+#endif
 }
 
 int
 spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	return rte_pci_read_config(dev, value, 2, offset) == 2 ? 0 : -1;
+#else
 	return rte_eal_pci_read_config(dev, value, 2, offset) == 2 ? 0 : -1;
+#endif
 }
 
 int
 spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	return rte_pci_write_config(dev, &value, 2, offset) == 2 ? 0 : -1;
+#else
 	return rte_eal_pci_write_config(dev, &value, 2, offset) == 2 ? 0 : -1;
+#endif
 }
 
 int
 spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	return rte_pci_read_config(dev, value, 4, offset) == 4 ? 0 : -1;
+#else
 	return rte_eal_pci_read_config(dev, value, 4, offset) == 4 ? 0 : -1;
+#endif
 }
 
 int
 spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	return rte_pci_write_config(dev, &value, 4, offset) == 4 ? 0 : -1;
+#else
 	return rte_eal_pci_write_config(dev, &value, 4, offset) == 4 ? 0 : -1;
+#endif
 }
 
 int
