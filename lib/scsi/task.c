@@ -73,8 +73,12 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 
 void
 spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
+			 void (*free_fn)(struct spdk_scsi_task *task),
 			 struct spdk_scsi_task *parent)
 {
+	assert(free_fn != NULL);
+	task->free_fn = free_fn;
+
 	task->ref++;
 
 	assert(owner_task_ctr != NULL);

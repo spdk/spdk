@@ -213,6 +213,7 @@ const char *spdk_scsi_port_get_name(const struct spdk_scsi_port *port);
 
 
 void spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
+			      void (*free_fn)(struct spdk_scsi_task *task),
 			      struct spdk_scsi_task *parent);
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
 

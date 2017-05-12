@@ -86,8 +86,7 @@ spdk_get_task(uint32_t *owner_task_ctr)
 		return NULL;
 	}
 
-	spdk_scsi_task_construct(task, &g_task_count, NULL);
-	task->free_fn = spdk_lun_ut_free_task;
+	spdk_scsi_task_construct(task, &g_task_count, spdk_lun_ut_free_task, NULL);
 
 	return task;
 }

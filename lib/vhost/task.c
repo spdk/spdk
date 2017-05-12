@@ -83,8 +83,7 @@ spdk_vhost_task_get(uint32_t *owner_task_ctr)
 	}
 
 	memset(task, 0, sizeof(*task));
-	spdk_scsi_task_construct(&task->scsi, owner_task_ctr, NULL);
-	task->scsi.free_fn = spdk_vhost_task_free_cb;
+	spdk_scsi_task_construct(&task->scsi, owner_task_ctr, spdk_vhost_task_free_cb, NULL);
 
 	return task;
 }
