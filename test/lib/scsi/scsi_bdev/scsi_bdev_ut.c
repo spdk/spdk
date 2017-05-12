@@ -42,6 +42,9 @@ SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
 
+static uint64_t g_test_bdev_num_blocks;
+static struct spdk_bdev_io g_test_bdev_io;
+
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
@@ -97,7 +100,7 @@ spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 {
-	return 0;
+	return g_test_bdev_num_blocks;
 }
 
 const char *
@@ -188,7 +191,7 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return &g_test_bdev_io;
 }
 
 struct spdk_bdev_io *
@@ -570,6 +573,60 @@ task_complete_test(void)
 	spdk_put_task(&task);
 }
 
+static void
+lba_range_test(void)
+{
+	struct spdk_bdev bdev;
+	struct spdk_scsi_task task;
+	uint8_t cdb[16];
+	int rc;
+
+	spdk_init_task(&task);
+	task.cdb = cdb;
+
+	memset(cdb, 0, sizeof(cdb));
+	cdb[0] = 0x88; /* READ (16) */
+
+	/* Test block device size of 4 blocks */
+	g_test_bdev_num_blocks = 4;
+
+	/* LBA = 0, length = 1 (in range) */
+	to_be64(&cdb[2], 0); /* LBA */
+	to_be32(&cdb[10], 1); /* transfer length */
+	task.transfer_len = 1 * 512;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+
+	/* LBA = 4, length = 1 (LBA out of range) */
+	to_be64(&cdb[2], 4); /* LBA */
+	to_be32(&cdb[10], 1); /* transfer length */
+	task.transfer_len = 1 * 512;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
+
+	/* LBA = 0, length = 4 (in range, max valid size) */
+	to_be64(&cdb[2], 0); /* LBA */
+	to_be32(&cdb[10], 4); /* transfer length */
+	task.transfer_len = 4 * 512;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_PENDING);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+
+	/* LBA = 0, length = 5 (LBA in range, length beyond end of bdev) */
+	to_be64(&cdb[2], 0); /* LBA */
+	to_be32(&cdb[10], 5); /* transfer length */
+	task.transfer_len = 5 * 512;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
+
+	spdk_put_task(&task);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -595,6 +652,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "inquiry standard test", inquiry_standard_test) == NULL
 		|| CU_add_test(suite, "inquiry overflow test", inquiry_overflow_test) == NULL
 		|| CU_add_test(suite, "task complete test", task_complete_test) == NULL
+		|| CU_add_test(suite, "LBA range test", lba_range_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
