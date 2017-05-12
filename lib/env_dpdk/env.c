@@ -287,15 +287,15 @@ spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
 	int rc;
 #if RTE_VERSION < RTE_VERSION_NUM(17, 5, 0, 0)
 	rc = rte_ring_mp_enqueue_bulk((struct rte_ring *)ring, objs, count);
-#else
-	rc = rte_ring_mp_enqueue_bulk((struct rte_ring *)ring, objs, count, NULL);
-#endif
-
 	if (rc == 0) {
 		return count;
 	}
 
 	return 0;
+#else
+	rc = rte_ring_mp_enqueue_bulk((struct rte_ring *)ring, objs, count, NULL);
+	return rc;
+#endif
 }
 
 size_t
