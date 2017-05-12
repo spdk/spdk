@@ -1256,15 +1256,16 @@ spdk_bdev_scsi_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_sta
 static int
 spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *primary,
 				    struct spdk_scsi_task *task,
-				    uint64_t lba, uint64_t cmd_lba_count,
-				    uint64_t maxlba)
+				    uint64_t lba, uint64_t cmd_num_blocks,
+				    uint64_t bdev_num_blocks)
 {
 	if (!primary) {
 		/*
 		 * Indicates this task is a primary task, we check whether the LBA and
 		 * range is valid. If such info of primary is valid, all subtasks' are valid.
 		 */
-		if (lba >= maxlba || cmd_lba_count > maxlba || lba > (maxlba - cmd_lba_count)) {
+		if (lba >= bdev_num_blocks || cmd_num_blocks > bdev_num_blocks ||
+		    lba > (bdev_num_blocks - cmd_num_blocks)) {
 			SPDK_TRACELOG(SPDK_TRACE_SCSI, "end of media\n");
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
@@ -1294,17 +1295,17 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		    struct spdk_scsi_task *task, uint64_t lba,
 		    uint32_t len)
 {
-	uint64_t maxlba;
+	uint64_t bdev_num_blocks;
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
 	int rc;
 
-	maxlba = spdk_bdev_get_num_blocks(bdev);
+	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	blen = spdk_bdev_get_block_size(bdev);
 
 	rc = spdk_bdev_scsi_read_write_lba_check(task->parent, task, lba,
-			task->transfer_len / blen, maxlba);
+			task->transfer_len / blen, bdev_num_blocks);
 	if (rc < 0) {
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
@@ -1314,8 +1315,8 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 	nbytes = task->length;
 
 	SPDK_TRACELOG(SPDK_TRACE_SCSI,
-		      "Read: max=%"PRIu64", lba=%"PRIu64", len=%"PRIu64"\n",
-		      maxlba, lba, (uint64_t)task->length / blen);
+		      "Read: lba=%"PRIu64", len=%"PRIu64"\n",
+		      lba, (uint64_t)task->length / blen);
 
 	task->blockdev_io = spdk_bdev_readv(bdev, task->ch, task->iovs,
 					    task->iovcnt, offset, nbytes,
@@ -1339,7 +1340,7 @@ static int
 spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 		     struct spdk_scsi_task *task, uint64_t lba, uint32_t len)
 {
-	uint64_t maxlba;
+	uint64_t bdev_num_blocks;
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
@@ -1355,8 +1356,8 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	maxlba = spdk_bdev_get_num_blocks(bdev);
-	rc = spdk_bdev_scsi_read_write_lba_check(primary, task, lba, len, maxlba);
+	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
+	rc = spdk_bdev_scsi_read_write_lba_check(primary, task, lba, len, bdev_num_blocks);
 	if (rc < 0) {
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
@@ -1366,8 +1367,8 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	nbytes = ((uint64_t)len) * blen;
 
 	SPDK_TRACELOG(SPDK_TRACE_SCSI,
-		      "Write: max=%"PRIu64", lba=%"PRIu64", len=%u\n",
-		      maxlba, lba, len);
+		      "Write: lba=%"PRIu64", len=%u\n",
+		      lba, len);
 
 	if (nbytes > task->transfer_len) {
 		SPDK_ERRLOG("nbytes(%zu) > transfer_len(%u)\n",
@@ -1409,25 +1410,24 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 
 static int
 spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
-		    uint64_t lba, uint32_t len)
+		    uint64_t lba, uint32_t num_blocks)
 {
-	uint64_t maxlba;
-	uint64_t llen;
+	uint64_t bdev_num_blocks;
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
 
-	if (len == 0) {
+	if (num_blocks == 0) {
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	maxlba = spdk_bdev_get_num_blocks(bdev);
-	llen = len;
+	bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	blen = spdk_bdev_get_block_size(bdev);
 	offset = lba * blen;
-	nbytes = llen * blen;
+	nbytes = num_blocks * blen;
 
-	if (lba >= maxlba || llen > maxlba || lba > (maxlba - llen)) {
+	if (lba >= bdev_num_blocks || num_blocks > bdev_num_blocks ||
+	    lba > (bdev_num_blocks - num_blocks)) {
 		SPDK_ERRLOG("end of media\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
