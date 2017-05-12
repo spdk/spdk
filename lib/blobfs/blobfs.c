@@ -283,9 +283,9 @@ common_fs_bs_init(struct spdk_filesystem *fs, struct spdk_blob_store *bs)
 {
 	fs->bs = bs;
 	fs->bs_opts.cluster_sz = spdk_bs_get_cluster_size(bs);
-	fs->md_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT, 512);
+	fs->md_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT);
 	fs->md_fs_channel->send_request = __send_request_direct;
-	fs->sync_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT, 512);
+	fs->sync_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT);
 	fs->sync_fs_channel->send_request = __send_request_direct;
 }
 
@@ -1368,7 +1368,7 @@ spdk_fs_alloc_io_channel(struct spdk_filesystem *fs, uint32_t priority)
 
 	io_channel = spdk_get_io_channel(fs, priority, true, (void *)&max_ops);
 	fs_channel = spdk_io_channel_get_ctx(io_channel);
-	fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT, 512);
+	fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT);
 	fs_channel->send_request = __send_request_direct;
 
 	return io_channel;

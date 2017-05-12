@@ -46,7 +46,7 @@
 
 #define SPDK_BLOB_OPTS_CLUSTER_SZ (1024 * 1024)
 #define SPDK_BLOB_OPTS_NUM_MD_PAGES UINT32_MAX
-#define SPDK_BLOB_OPTS_MAX_MD_OPS 32
+#define SPDK_BLOB_OPTS_MAX_MD_OPS 512
 
 struct spdk_xattr {
 	/* TODO: reorder for best packing */

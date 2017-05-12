@@ -226,7 +226,7 @@ void spdk_bs_md_sync_blob(struct spdk_blob *blob,
 void spdk_bs_md_close_blob(struct spdk_blob **blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs,
-		uint32_t priority, uint32_t max_ops);
+		uint32_t priority);
 
 void spdk_bs_free_io_channel(struct spdk_io_channel *channel);
 
