@@ -1457,30 +1457,20 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 			 struct spdk_scsi_task *task,
 			 uint64_t lba, uint32_t xfer_len, bool is_read)
 {
+	if (task->dxfer_dir != SPDK_SCSI_DIR_NONE &&
+	    task->dxfer_dir != (is_read ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV)) {
+		SPDK_ERRLOG("Incorrect data direction\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
 	if (is_read) {
-		if ((task->dxfer_dir == SPDK_SCSI_DIR_FROM_DEV) ||
-		    (task->dxfer_dir == SPDK_SCSI_DIR_NONE)) {
-			return spdk_bdev_scsi_read(bdev, task, lba, xfer_len);
-		} else {
-			SPDK_ERRLOG("Incorrect data direction\n");
-			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-						  SPDK_SCSI_SENSE_NO_SENSE,
-						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-			return SPDK_SCSI_TASK_COMPLETE;
-		}
+		return spdk_bdev_scsi_read(bdev, task, lba, xfer_len);
 	} else {
-		if ((task->dxfer_dir == SPDK_SCSI_DIR_TO_DEV) ||
-		    (task->dxfer_dir == SPDK_SCSI_DIR_NONE)) {
-			return spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
-		} else {
-			SPDK_ERRLOG("Incorrect data direction\n");
-			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-						  SPDK_SCSI_SENSE_NO_SENSE,
-						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-			return SPDK_SCSI_TASK_COMPLETE;
-		}
+		return spdk_bdev_scsi_write(bdev, task, lba, xfer_len);
 	}
 }
 
