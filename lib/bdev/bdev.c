@@ -545,6 +545,18 @@ spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 	return bdev->product_name;
 }
 
+uint32_t
+spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
+{
+	return bdev->blocklen;
+}
+
+uint64_t
+spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
+{
+	return bdev->blockcnt;
+}
+
 size_t
 spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 {

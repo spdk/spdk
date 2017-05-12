@@ -148,8 +148,8 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 	}
 
 	b->bdev = bdev;
-	b->bs_dev.blockcnt = bdev->blockcnt;
-	b->bs_dev.blocklen = bdev->blocklen;
+	b->bs_dev.blockcnt = spdk_bdev_get_num_blocks(bdev);
+	b->bs_dev.blocklen = spdk_bdev_get_block_size(bdev);
 	b->bs_dev.create_channel = bdev_blob_create_channel;
 	b->bs_dev.destroy_channel = bdev_blob_destroy_channel;
 	b->bs_dev.destroy = bdev_blob_destroy;

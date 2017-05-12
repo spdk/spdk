@@ -183,6 +183,7 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	    struct spdk_nvme_ns_data *nsdata)
 {
 	struct spdk_bdev *bdev;
+	uint64_t num_blocks;
 
 	if (cmd->nsid > subsystem->dev.virt.ns_count || cmd->nsid == 0) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
@@ -192,12 +193,14 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 
 	bdev = subsystem->dev.virt.ns_list[cmd->nsid - 1];
 
-	nsdata->nsze = bdev->blockcnt;
-	nsdata->ncap = bdev->blockcnt;
-	nsdata->nuse = bdev->blockcnt;
+	num_blocks = spdk_bdev_get_num_blocks(bdev);
+
+	nsdata->nsze = num_blocks;
+	nsdata->ncap = num_blocks;
+	nsdata->nuse = num_blocks;
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
-	nsdata->lbaf[0].lbads = spdk_u32log2(bdev->blocklen);
+	nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -377,14 +380,15 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	uint64_t io_bytes;
 	uint64_t offset;
 	uint64_t llen;
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	struct nvme_read_cdw12 *cdw12 = (struct nvme_read_cdw12 *)&cmd->cdw12;
 
-	blockcnt = bdev->blockcnt;
+	blockcnt = spdk_bdev_get_num_blocks(bdev);
 	lba_address = cmd->cdw11;
 	lba_address = (lba_address << 32) + cmd->cdw10;
-	offset = lba_address * bdev->blocklen;
+	offset = lba_address * block_size;
 	llen = cdw12->nlb + 1;
 
 	if (lba_address >= blockcnt || llen > blockcnt || lba_address > (blockcnt - llen)) {
@@ -393,7 +397,7 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	io_bytes = llen * bdev->blocklen;
+	io_bytes = llen * block_size;
 	if (io_bytes > req->length) {
 		SPDK_ERRLOG("Read/Write NLB > SGL length\n");
 		response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
@@ -427,7 +431,7 @@ nvmf_virtual_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	uint64_t nbytes;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
-	nbytes = bdev->blockcnt * bdev->blocklen;
+	nbytes = spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev);
 	if (spdk_bdev_flush(bdev, ch, 0, nbytes, nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

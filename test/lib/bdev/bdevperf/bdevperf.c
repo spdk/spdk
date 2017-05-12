@@ -145,7 +145,7 @@ bdevperf_construct_targets(void)
 		target->io_completed = 0;
 		target->current_queue_depth = 0;
 		target->offset_in_ios = 0;
-		target->size_in_ios = (bdev->blockcnt * bdev->blocklen) /
+		target->size_in_ios = (spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev)) /
 				      g_io_size;
 		align = spdk_bdev_get_buf_align(bdev);
 		/*
@@ -263,9 +263,11 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_s
 	target = task->target;
 
 	if (g_unmap) {
+		uint32_t block_size = spdk_bdev_get_block_size(target->bdev);
+
 		/* Unmap the data */
-		to_be64(&task->bdesc.lba, task->offset / target->bdev->blocklen);
-		to_be32(&task->bdesc.block_count, g_io_size / target->bdev->blocklen);
+		to_be64(&task->bdesc.lba, task->offset / block_size);
+		to_be32(&task->bdesc.block_count, g_io_size / block_size);
 
 		spdk_bdev_unmap(target->bdev, target->ch, &task->bdesc, 1, bdevperf_unmap_complete,
 				task);

@@ -108,6 +108,8 @@ bdevio_construct_targets(void)
 
 	bdev = spdk_bdev_first();
 	while (bdev != NULL) {
+		uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
+		uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
 		if (!spdk_bdev_claim(bdev, NULL, NULL)) {
 			bdev = spdk_bdev_next(bdev);
@@ -116,8 +118,8 @@ bdevio_construct_targets(void)
 
 		printf("  %s: %" PRIu64 " blocks of %" PRIu32 " bytes (%" PRIu64 " MiB)\n",
 		       spdk_bdev_get_name(bdev),
-		       bdev->blockcnt, bdev->blocklen,
-		       (bdev->blockcnt * bdev->blocklen + 1024 * 1024 - 1) / (1024 * 1024));
+		       num_blocks, block_size,
+		       (num_blocks * block_size + 1024 * 1024 - 1) / (1024 * 1024));
 
 		target = malloc(sizeof(struct io_target));
 		if (target == NULL) {
@@ -299,7 +301,7 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 
 	target = g_io_targets;
 	while (target != NULL) {
-		if (data_length < target->bdev->blocklen) {
+		if (data_length < spdk_bdev_get_block_size(target->bdev)) {
 			target = target->next;
 			continue;
 		}
@@ -527,27 +529,30 @@ blockdev_write_read_offset_plus_nbytes_equals_bdev_size(void)
 	char	*tx_buf = NULL;
 	char	*rx_buf = NULL;
 	uint64_t offset;
+	uint32_t block_size;
 	int rc;
 
 	target = g_io_targets;
 	while (target != NULL) {
 		bdev = target->bdev;
 
+		block_size = spdk_bdev_get_block_size(bdev);
+
 		/* The start offset has been set to a marginal value
 		 * such that offset + nbytes == Total size of
 		 * blockdev. */
-		offset = ((bdev->blockcnt - 1) * bdev->blocklen);
+		offset = ((spdk_bdev_get_num_blocks(bdev) - 1) * block_size);
 
-		initialize_buffer(&tx_buf, 0xA3, bdev->blocklen);
-		initialize_buffer(&rx_buf, 0, bdev->blocklen);
+		initialize_buffer(&tx_buf, 0xA3, block_size);
+		initialize_buffer(&rx_buf, 0, block_size);
 
-		blockdev_write(target, tx_buf, offset, bdev->blocklen, 0);
+		blockdev_write(target, tx_buf, offset, block_size, 0);
 		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
 
-		blockdev_read(target, rx_buf, offset, bdev->blocklen, 0);
+		blockdev_read(target, rx_buf, offset, block_size, 0);
 		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
 
-		rc = blockdev_write_read_data_match(rx_buf, tx_buf, bdev->blocklen);
+		rc = blockdev_write_read_data_match(rx_buf, tx_buf, block_size);
 		/* Assert the write by comparing it with values read
 		 * from each blockdev */
 		CU_ASSERT_EQUAL(rc, 0);
@@ -579,7 +584,7 @@ blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 		/* The start offset has been set to a valid value
 		 * but offset + nbytes is greater than the Total size
 		 * of the blockdev. The test should fail. */
-		offset = ((bdev->blockcnt * bdev->blocklen) - 1024);
+		offset = ((spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev)) - 1024);
 
 		initialize_buffer(&tx_buf, pattern, data_length);
 		initialize_buffer(&rx_buf, 0, data_length);

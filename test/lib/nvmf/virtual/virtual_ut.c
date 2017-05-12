@@ -103,6 +103,20 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return "test";
 }
 
+uint32_t
+spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
+{
+	abort();
+	return 0;
+}
+
+uint64_t
+spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
+{
+	abort();
+	return 0;
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
 {

@@ -66,10 +66,10 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_server_conn *conn,
 		spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
 
 		spdk_json_write_name(w, "block_size");
-		spdk_json_write_uint32(w, bdev->blocklen);
+		spdk_json_write_uint32(w, spdk_bdev_get_block_size(bdev));
 
 		spdk_json_write_name(w, "num_blocks");
-		spdk_json_write_uint64(w, bdev->blockcnt);
+		spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
 
 		spdk_json_write_name(w, "claimed");
 		if (bdev->status == SPDK_BDEV_STATUS_CLAIMED) {

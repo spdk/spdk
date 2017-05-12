@@ -506,8 +506,9 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		}
 
 		case SPDK_SPC_VPD_BLOCK_LIMITS: {
-			/* PAGE LENGTH */
+			uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
+			/* PAGE LENGTH */
 			memset(&data[4], 0, 60);
 
 			hlen = 4;
@@ -516,7 +517,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* support zero length in WRITE SAME */
 
 			/* MAXIMUM COMPARE AND WRITE LENGTH */
-			blocks = SPDK_WORK_ATS_BLOCK_SIZE / bdev->blocklen;
+			blocks = SPDK_WORK_ATS_BLOCK_SIZE / block_size;
 
 			if (blocks > 0xff)
 				blocks = 0xff;
@@ -524,8 +525,8 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			data[5] = (uint8_t)blocks;
 
 			/* force align to 4KB */
-			if (bdev->blocklen < 4096) {
-				optimal_blocks = 4096 / bdev->blocklen;
+			if (block_size < 4096) {
+				optimal_blocks = 4096 / block_size;
 			} else {
 				optimal_blocks = 1;
 			}
@@ -533,7 +534,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* OPTIMAL TRANSFER LENGTH GRANULARITY */
 			to_be16(&data[6], optimal_blocks);
 
-			blocks = SPDK_WORK_BLOCK_SIZE / bdev->blocklen;
+			blocks = SPDK_WORK_BLOCK_SIZE / block_size;
 
 			/* MAXIMUM TRANSFER LENGTH */
 			to_be32(&data[8], blocks);
@@ -1074,6 +1075,8 @@ spdk_bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
 			  uint8_t *cdb, int dbd, int llbaa, int pc,
 			  int page, int subpage, uint8_t *data, struct spdk_scsi_task *task)
 {
+	uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 	uint8_t *hdr, *bdesc, *pages;
 	int hlen;
 	int blen;
@@ -1123,20 +1126,20 @@ spdk_bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
 	bdesc = &data[hlen];
 	if (blen == 16) {
 		/* Number of Blocks */
-		to_be64(&bdesc[0], bdev->blockcnt);
+		to_be64(&bdesc[0], num_blocks);
 		/* Reserved */
 		memset(&bdesc[8], 0, 4);
 		/* Block Length */
-		to_be32(&bdesc[12], bdev->blocklen);
+		to_be32(&bdesc[12], block_size);
 	} else if (blen == 8) {
 		/* Number of Blocks */
-		if (bdev->blockcnt > 0xffffffffULL)
+		if (num_blocks > 0xffffffffULL)
 			memset(&bdesc[0], 0xff, 4);
 		else
-			to_be32(&bdesc[0], bdev->blockcnt);
+			to_be32(&bdesc[0], num_blocks);
 
 		/* Block Length */
-		to_be32(&bdesc[4], bdev->blocklen);
+		to_be32(&bdesc[4], block_size);
 	}
 
 	return total;
@@ -1297,8 +1300,8 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 	uint64_t nbytes;
 	int rc;
 
-	maxlba = bdev->blockcnt;
-	blen = bdev->blocklen;
+	maxlba = spdk_bdev_get_num_blocks(bdev);
+	blen = spdk_bdev_get_block_size(bdev);
 
 	rc = spdk_bdev_scsi_read_write_lba_check(task->parent, task, lba,
 			task->transfer_len / blen, maxlba);
@@ -1352,13 +1355,13 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	maxlba = bdev->blockcnt;
+	maxlba = spdk_bdev_get_num_blocks(bdev);
 	rc = spdk_bdev_scsi_read_write_lba_check(primary, task, lba, len, maxlba);
 	if (rc < 0) {
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	blen = bdev->blocklen;
+	blen = spdk_bdev_get_block_size(bdev);
 	offset = lba * blen;
 	nbytes = ((uint64_t)len) * blen;
 
@@ -1418,9 +1421,9 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	maxlba = bdev->blockcnt;
+	maxlba = spdk_bdev_get_num_blocks(bdev);
 	llen = len;
-	blen = bdev->blocklen;
+	blen = spdk_bdev_get_block_size(bdev);
 	offset = lba * blen;
 	nbytes = llen * blen;
 
@@ -1597,14 +1600,15 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 						cdb[0] == SPDK_SBC_READ_16);
 
 	case SPDK_SBC_READ_CAPACITY_10: {
+		uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
 		uint8_t buffer[8];
 
-		if (bdev->blockcnt - 1 > 0xffffffffULL) {
+		if (num_blocks - 1 > 0xffffffffULL) {
 			memset(buffer, 0xff, 4);
 		} else {
-			to_be32(buffer, bdev->blockcnt - 1);
+			to_be32(buffer, num_blocks - 1);
 		}
-		to_be32(&buffer[4], bdev->blocklen);
+		to_be32(&buffer[4], spdk_bdev_get_block_size(bdev));
 
 		len = spdk_min(task->length, sizeof(buffer));
 		if (spdk_scsi_task_scatter_data(task, buffer, len) < 0)
@@ -1620,8 +1624,8 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		case SPDK_SBC_SAI_READ_CAPACITY_16: {
 			uint8_t buffer[32] = {0};
 
-			to_be64(&buffer[0], bdev->blockcnt - 1);
-			to_be32(&buffer[8], bdev->blocklen);
+			to_be64(&buffer[0], spdk_bdev_get_num_blocks(bdev) - 1);
+			to_be32(&buffer[8], spdk_bdev_get_block_size(bdev));
 			/*
 			 * Set the TPE bit to 1 to indicate thin provisioning.
 			 * The position of TPE bit is the 7th bit in 14th byte
@@ -1656,7 +1660,7 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		}
 
 		if (len == 0) {
-			len = bdev->blockcnt - lba;
+			len = spdk_bdev_get_num_blocks(bdev) - lba;
 		}
 
 		return spdk_bdev_scsi_sync(bdev, task, lba, len);

@@ -216,6 +216,24 @@ const char *spdk_bdev_get_name(const struct spdk_bdev *bdev);
 const char *spdk_bdev_get_product_name(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device logical block size.
+ *
+ * \param bdev Block device to query.
+ * \return Size of logical block for this bdev in bytes.
+ */
+uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
+
+/**
+ * Get size of block device in logical blocks.
+ *
+ * \param bdev Block device to query.
+ * \return Size of bdev in logical blocks.
+ *
+ * Logical blocks are numbered from 0 to spdk_bdev_get_num_blocks(bdev) - 1, inclusive.
+ */
+uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
+
+/**
  * Get minimum I/O buffer address alignment for a bdev.
  *
  * \param bdev Block device to query.
