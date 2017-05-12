@@ -557,6 +557,12 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 	return bdev->blockcnt;
 }
 
+uint32_t
+spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev)
+{
+	return bdev->max_unmap_bdesc_count;
+}
+
 size_t
 spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 {

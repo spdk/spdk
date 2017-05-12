@@ -546,6 +546,8 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			len = 20 - hlen;
 
 			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+				uint32_t max_unmap_desc;
+
 				/*
 				 * MAXIMUM UNMAP LBA COUNT: indicates the
 				 * maximum  number of LBAs that may be
@@ -560,11 +562,9 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * in the parameter data transferred to the
 				 * device server for an UNMAP command.
 				 */
-				if (bdev->max_unmap_bdesc_count <
-				    g_spdk_scsi.scsi_params.max_unmap_block_descriptor_count)
-					to_be32(&data[24], bdev->max_unmap_bdesc_count);
-				else
-					to_be32(&data[24], g_spdk_scsi.scsi_params.max_unmap_block_descriptor_count);
+				max_unmap_desc = spdk_min(spdk_bdev_get_max_unmap_descriptors(bdev),
+							  g_spdk_scsi.scsi_params.max_unmap_block_descriptor_count);
+				to_be32(&data[24], max_unmap_desc);
 
 				/*
 				 * OPTIMAL UNMAP GRANULARITY: indicates the

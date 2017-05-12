@@ -234,6 +234,14 @@ uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 
 /**
+ * Get maximum number of descriptors per unmap request.
+ *
+ * \param bdev Block device to query.
+ * \return Maximum number of unmap descriptors per request.
+ */
+uint32_t spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev);
+
+/**
  * Get minimum I/O buffer address alignment for a bdev.
  *
  * \param bdev Block device to query.

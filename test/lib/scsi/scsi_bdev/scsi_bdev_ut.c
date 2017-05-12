@@ -106,6 +106,12 @@ spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 	return "test product";
 }
 
+uint32_t
+spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev)
+{
+	return 1;
+}
+
 void
 spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 {
