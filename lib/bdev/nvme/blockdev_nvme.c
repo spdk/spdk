@@ -131,6 +131,8 @@ static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *q
 			       struct nvme_bdev_io *bio,
 			       int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
 			       uint64_t offset);
+static int bdev_nvme_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
+			      void *cmd, void *buf, uint16_t nbytes);
 
 static int
 bdev_nvme_get_ctx_size(void)
@@ -295,6 +297,12 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.flush.offset,
 				       bdev_io->u.flush.length);
+	case SPDK_BDEV_IO_TYPE_PASSTHRU:
+		return bdev_nvme_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					  (struct nvme_bdev_io *)bdev_io->driver_ctx,
+					  bdev_io->u.passthru.cmd,
+					  bdev_io->u.passthru.buf,
+					  bdev_io->u.passthru.nbytes);
 
 	default:
 		return -EINVAL;
@@ -321,6 +329,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_PASSTHRU:
 		return true;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -963,6 +972,36 @@ bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
+bdev_nvme_passthru_completion(void *arg1, void *arg2)
+{
+	struct spdk_bdev_io *bdev_io = arg1;
+	enum spdk_bdev_io_status status = (enum spdk_bdev_io_status)arg2;
+
+	spdk_bdev_io_complete(bdev_io, status);
+}
+
+static void
+bdev_nvme_passthru_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	int sct = cpl->status.sct;
+	int sc = cpl->status.sc;
+
+	if (sct == SPDK_NVME_SCT_GENERIC && sc == SPDK_NVME_SC_SUCCESS) {
+		bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	} else {
+		bdev_io->error.nvme.sct = sct;
+		bdev_io->error.nvme.sc = sc;
+		bdev_io->status = SPDK_BDEV_IO_STATUS_NVME_ERROR;
+	}
+
+	spdk_event_call(spdk_event_allocate(bdev_io->u.passthru.p_lcore,
+					    (spdk_event_fn)bdev_nvme_passthru_completion, bdev_io,
+					    (void *)bdev_io->status));
+
+}
+
+static void
 bdev_nvme_queued_reset_sgl(void *ref, uint32_t sgl_offset)
 {
 	struct nvme_bdev_io *bio = ref;
@@ -1073,6 +1112,16 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			bdev_nvme_queued_done, bio);
 
 	return rc;
+}
+
+static int
+bdev_nvme_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
+		   void *cmd, void *buf, uint16_t nbytes)
+{
+	struct spdk_nvme_cmd *nvme_passthru_cmd = cmd;
+
+	return spdk_nvme_ctrlr_cmd_admin_raw(nbdev->nvme_ctrlr->ctrlr, nvme_passthru_cmd,
+					     buf, (uint32_t)nbytes, bdev_nvme_passthru_done, bio);
 }
 
 static void

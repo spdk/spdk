@@ -288,6 +288,12 @@ struct spdk_bdev_io {
 		struct {
 			enum spdk_bdev_reset_type type;
 		} reset;
+		struct {
+			void *cmd;
+			void *buf;
+			uint16_t nbytes;
+			uint32_t p_lcore;
+		} passthru;
 	} u;
 
 	/** Status for the IO */

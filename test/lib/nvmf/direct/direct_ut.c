@@ -120,7 +120,7 @@ spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 union spdk_nvme_vs_register
-	spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr)
+spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_vs_register vs;
 	vs.raw = 0;

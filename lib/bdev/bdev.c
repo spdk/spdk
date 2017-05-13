@@ -473,6 +473,8 @@ __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		spdk_bdev_cleanup_pending_buf_io(bdev);
 		ch = NULL;
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_PASSTHRU) {
+		ch = NULL;
 	} else {
 		ch = bdev_io->ch->channel;
 	}
@@ -939,6 +941,38 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	return rc;
 }
+
+struct spdk_bdev_io *
+spdk_bdev_passthru(struct spdk_bdev *bdev, void *cmd, void *buf, uint16_t nbytes,
+		   spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io *bdev_io;
+	int rc;
+	uint32_t p_lcore = spdk_env_get_current_core();
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("spdk_bdev_io memory allocation failed during passthru\n");
+		return NULL;
+	}
+
+	bdev_io->type = SPDK_BDEV_IO_TYPE_PASSTHRU;
+	bdev_io->u.passthru.cmd = cmd;
+	bdev_io->u.passthru.buf = buf;
+	bdev_io->u.passthru.nbytes = nbytes;
+	bdev_io->u.passthru.p_lcore = p_lcore;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		return NULL;
+	}
+
+	return bdev_io;
+}
+
 
 int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
