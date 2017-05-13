@@ -128,7 +128,7 @@ int spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
-int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task);
+int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 int spdk_scsi_lun_claim(struct spdk_scsi_lun *lun);

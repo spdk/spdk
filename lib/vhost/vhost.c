@@ -374,13 +374,13 @@ task_submit(struct spdk_vhost_task *task)
 }
 
 static void
-mgmt_task_submit(struct spdk_vhost_task *task)
+mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
 	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
 			      process_mgmt_task_completion,
 			      task, NULL);
-	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi);
+	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, func);
 }
 
 static void
@@ -475,10 +475,9 @@ process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring 
 		case VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET:
 			/* Handle LUN reset */
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_QUEUE, "LUN reset\n");
-			task->scsi.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 			task->scsi.lun = get_scsi_lun(task->scsi_dev, ctrl_req->lun);
 
-			mgmt_task_submit(task);
+			mgmt_task_submit(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 			return;
 		default:
 			task->tmf_resp->response = VIRTIO_SCSI_S_ABORTED;

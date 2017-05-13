@@ -1067,11 +1067,10 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 		task->scsi.target_port = conn->target_port;
 		task->scsi.initiator_port = conn->initiator_port;
 		task->scsi.lun = lun;
-		task->scsi.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
 		task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(),
 				      process_task_mgmt_completion, conn, task);
-		spdk_scsi_dev_queue_mgmt_task(target->dev, &task->scsi);
+		spdk_scsi_dev_queue_mgmt_task(target->dev, &task->scsi, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 	}
 
 	return 0;

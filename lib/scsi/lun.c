@@ -134,7 +134,8 @@ spdk_scsi_lun_reset(struct spdk_scsi_task *mtask, struct spdk_scsi_lun *lun)
 }
 
 int
-spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
+spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
+				enum spdk_scsi_task_func func)
 {
 	int rc;
 
@@ -142,7 +143,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 		return -1;
 	}
 
-	switch (task->function) {
+	switch (func) {
 	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
 		rc = spdk_scsi_lun_abort_task(task, task->lun,
 					      task->initiator_port,

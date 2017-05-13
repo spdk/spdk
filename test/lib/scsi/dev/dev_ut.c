@@ -153,7 +153,7 @@ spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun)
 }
 
 int
-spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
+spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func)
 {
 	return 0;
 }
@@ -343,7 +343,7 @@ dev_queue_mgmt_task_success(void)
 
 	task = spdk_get_task(NULL);
 
-	spdk_scsi_dev_queue_mgmt_task(dev, task);
+	spdk_scsi_dev_queue_mgmt_task(dev, task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 
 	spdk_scsi_task_put(task);
 
@@ -386,7 +386,7 @@ dev_stop_success(void)
 	task_mgmt = spdk_get_task(NULL);
 
 	/* Enqueue the tasks into dev->task_mgmt_submit_queue */
-	spdk_scsi_dev_queue_mgmt_task(&dev, task_mgmt);
+	spdk_scsi_dev_queue_mgmt_task(&dev, task_mgmt, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 
 	spdk_scsi_task_put(task);
 	spdk_scsi_task_put(task_mgmt);

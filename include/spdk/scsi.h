@@ -167,7 +167,8 @@ int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev);
 struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id);
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
-void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);
+void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task,
+				   enum spdk_scsi_task_func func);
 void spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);
 int spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name);
 struct spdk_scsi_port *spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id);
