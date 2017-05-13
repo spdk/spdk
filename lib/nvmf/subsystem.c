@@ -366,6 +366,10 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 {
 	struct spdk_nvmf_host *host;
 
+	if (!spdk_nvmf_valid_nqn(host_nqn)) {
+		return -1;
+	}
+
 	host = calloc(1, sizeof(*host));
 	if (!host) {
 		return -1;
