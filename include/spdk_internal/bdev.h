@@ -285,6 +285,16 @@ struct spdk_bdev_io {
 			/** Represents the number of bytes to be flushed, starting at offset. */
 			uint64_t length;
 		} flush;
+		struct {
+			/* The NVMe command to execute */
+			struct spdk_nvme_cmd cmd;
+
+			/* The data buffer to transfer */
+			void *buf;
+
+			/* The number of bytes to transfer */
+			size_t nbytes;
+		} nvme_passthru;
 	} u;
 
 	/** Status for the IO */
