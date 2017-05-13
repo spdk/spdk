@@ -398,6 +398,20 @@ get_scsi_lun(struct spdk_scsi_dev *scsi_dev, const __u8 *lun)
 	return NULL;
 }
 
+void
+spdk_vhost_scsi_ctrlr_task_ref(struct spdk_vhost_scsi_ctrlr *vdev)
+{
+	assert(vdev->task_cnt < INT_MAX);
+	vdev->task_cnt++;
+}
+
+void
+spdk_vhost_scsi_ctrlr_task_unref(struct spdk_vhost_scsi_ctrlr *vdev)
+{
+	assert(vdev->task_cnt > 0);
+	vdev->task_cnt--;
+}
+
 static void
 process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring *controlq,
 		     uint16_t req_idx)
@@ -418,7 +432,7 @@ process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring 
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_QUEUE, "Request desriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
-	task = spdk_vhost_task_get(&vdev->task_cnt);
+	task = spdk_vhost_task_get(vdev);
 	task->vq = controlq;
 	task->vdev = vdev;
 	task->req_idx = req_idx;
@@ -662,7 +676,7 @@ process_requestq(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring *vq)
 	assert(reqs_cnt <= 32);
 
 	for (i = 0; i < reqs_cnt; i++) {
-		task = spdk_vhost_task_get(&vdev->task_cnt);
+		task = spdk_vhost_task_get(vdev);
 
 		SPDK_TRACELOG(SPDK_TRACE_VHOST, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);

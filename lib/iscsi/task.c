@@ -36,17 +36,22 @@
 #include <rte_mempool.h>
 
 #include "spdk/log.h"
+#include "iscsi/conn.h"
 #include "iscsi/task.h"
 
 static void
-spdk_iscsi_task_free(struct spdk_scsi_task *task)
+spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
 {
-	spdk_iscsi_task_disassociate_pdu((struct spdk_iscsi_task *)task);
+	struct spdk_iscsi_task *task = (struct spdk_iscsi_task *)scsi_task;
+
+	spdk_iscsi_task_disassociate_pdu(task);
 	rte_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
+	assert(task->conn->pending_task_cnt > 0);
+	task->conn->pending_task_cnt--;
 }
 
 struct spdk_iscsi_task *
-spdk_iscsi_task_get(uint32_t *owner_task_ctr, struct spdk_iscsi_task *parent)
+spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent)
 {
 	struct spdk_iscsi_task *task;
 	int rc;
@@ -58,7 +63,10 @@ spdk_iscsi_task_get(uint32_t *owner_task_ctr, struct spdk_iscsi_task *parent)
 	}
 
 	memset(task, 0, sizeof(*task));
-	spdk_scsi_task_construct((struct spdk_scsi_task *)task, owner_task_ctr,
+	task->conn = conn;
+	assert(conn->pending_task_cnt < UINT32_MAX);
+	conn->pending_task_cnt++;
+	spdk_scsi_task_construct((struct spdk_scsi_task *)task,
 				 spdk_iscsi_task_free,
 				 (struct spdk_scsi_task *)parent);
 	if (parent) {

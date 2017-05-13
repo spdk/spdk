@@ -74,6 +74,8 @@ static void
 spdk_lun_ut_free_task(struct spdk_scsi_task *task)
 {
 	free(task);
+	SPDK_CU_ASSERT_FATAL(g_task_count > 0);
+	g_task_count--;
 }
 
 static struct spdk_scsi_task *
@@ -86,7 +88,8 @@ spdk_get_task(uint32_t *owner_task_ctr)
 		return NULL;
 	}
 
-	spdk_scsi_task_construct(task, &g_task_count, spdk_lun_ut_free_task, NULL);
+	spdk_scsi_task_construct(task, spdk_lun_ut_free_task, NULL);
+	g_task_count++;
 
 	return task;
 }

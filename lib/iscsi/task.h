@@ -41,6 +41,7 @@
 struct spdk_iscsi_task {
 	struct spdk_scsi_task	scsi;
 
+	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_pdu *pdu;
 	uint32_t outstanding_r2t;
 
@@ -153,7 +154,7 @@ spdk_iscsi_task_get_cmdsn(struct spdk_iscsi_task *task)
 	return spdk_iscsi_task_get_pdu(task)->cmd_sn;
 }
 
-struct spdk_iscsi_task *spdk_iscsi_task_get(uint32_t *owner_task_ctr,
+struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 		struct spdk_iscsi_task *parent);
 
 static inline struct spdk_iscsi_task *

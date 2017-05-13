@@ -59,20 +59,13 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 		}
 
 		spdk_scsi_task_free_data(task);
-		assert(task->owner_task_ctr != NULL);
-
-		if (*(task->owner_task_ctr) > 0) {
-			*(task->owner_task_ctr) -= 1;
-		} else {
-			SPDK_ERRLOG("task counter already 0\n");
-		}
 
 		task->free_fn(task);
 	}
 }
 
 void
-spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
+spdk_scsi_task_construct(struct spdk_scsi_task *task,
 			 void (*free_fn)(struct spdk_scsi_task *task),
 			 struct spdk_scsi_task *parent)
 {
@@ -80,10 +73,6 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
 	task->free_fn = free_fn;
 
 	task->ref++;
-
-	assert(owner_task_ctr != NULL);
-	task->owner_task_ctr = owner_task_ctr;
-	*owner_task_ctr += 1;
 
 	/*
 	 * Pre-fill the iov_buffers to point to the embedded iov

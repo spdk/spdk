@@ -141,16 +141,6 @@ struct spdk_scsi_task {
 
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
 
-	/*
-	 * Pointer to scsi task owner's outstanding
-	 * task counter. Inc/Dec by get/put task functions.
-	 * Note: in the future, we could consider replacing this
-	 * with an owner-provided task management fuction that
-	 * could perform protocol specific task mangement
-	 * operations (such as tracking outstanding tasks).
-	 */
-	uint32_t *owner_task_ctr;
-
 	uint32_t abort_id;
 };
 
@@ -212,7 +202,7 @@ void spdk_scsi_port_free(struct spdk_scsi_port **pport);
 const char *spdk_scsi_port_get_name(const struct spdk_scsi_port *port);
 
 
-void spdk_scsi_task_construct(struct spdk_scsi_task *task, uint32_t *owner_task_ctr,
+void spdk_scsi_task_construct(struct spdk_scsi_task *task,
 			      void (*free_fn)(struct spdk_scsi_task *task),
 			      struct spdk_scsi_task *parent);
 void spdk_scsi_task_put(struct spdk_scsi_task *task);

@@ -61,7 +61,10 @@ void spdk_vhost_enqueue_task(struct spdk_vhost_task *task);
 struct spdk_vhost_task *spdk_vhost_dequeue_task(void);
 
 void spdk_vhost_task_put(struct spdk_vhost_task *task);
-struct spdk_vhost_task *spdk_vhost_task_get(uint32_t *owner_task_ctr);
+struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_ctrlr *vdev);
+
+void spdk_vhost_scsi_ctrlr_task_ref(struct spdk_vhost_scsi_ctrlr *vdev);
+void spdk_vhost_scsi_ctrlr_task_unref(struct spdk_vhost_scsi_ctrlr *vdev);
 
 void spdk_vhost_iovec_free(struct iovec *iov);
 struct iovec *spdk_vhost_iovec_alloc(void);
