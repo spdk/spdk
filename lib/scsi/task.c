@@ -84,7 +84,6 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task,
 	if (parent != NULL) {
 		parent->ref++;
 		task->parent = parent;
-		task->type = parent->type;
 		task->dxfer_dir = parent->dxfer_dir;
 		task->transfer_len = parent->transfer_len;
 		task->lun = parent->lun;

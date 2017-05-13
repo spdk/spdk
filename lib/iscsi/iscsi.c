@@ -3256,7 +3256,6 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
-	task->scsi.type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	spdk_iscsi_task_associate_pdu(task, pdu);
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;

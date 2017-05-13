@@ -1235,22 +1235,28 @@ spdk_bdev_scsi_mode_select_page(struct spdk_bdev *bdev,
 }
 
 static void
-spdk_bdev_scsi_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
-			     void *cb_arg)
+spdk_bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+				 void *cb_arg)
 {
-	struct spdk_scsi_task		*task = cb_arg;
+	struct spdk_scsi_task *task = cb_arg;
+	int sc, sk, asc, ascq;
 
-	if (task->type == SPDK_SCSI_TASK_TYPE_CMD) {
-		int sc, sk, asc, ascq;
+	spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
+	spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
+	spdk_scsi_lun_complete_task(task->lun, task);
+}
 
-		spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
-		spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
-	} else if (task->type == SPDK_SCSI_TASK_TYPE_MANAGE) {
-		if (status == SPDK_BDEV_IO_STATUS_SUCCESS)
-			task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
+static void
+spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+				  void *cb_arg)
+{
+	struct spdk_scsi_task *task = cb_arg;
+
+	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
 	}
 
-	spdk_scsi_lun_complete_task(task->lun, task);
+	spdk_scsi_lun_complete_mgmt_task(task->lun, task);
 }
 
 static int
@@ -1311,7 +1317,7 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 
 	task->blockdev_io = spdk_bdev_readv(bdev, task->ch, task->iovs,
 					    task->iovcnt, offset, nbytes,
-					    spdk_bdev_scsi_task_complete, task);
+					    spdk_bdev_scsi_task_complete_cmd, task);
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
@@ -1366,7 +1372,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	offset += task->offset;
 	task->blockdev_io = spdk_bdev_writev(bdev, task->ch, task->iovs,
 					     task->iovcnt, offset, task->length,
-					     spdk_bdev_scsi_task_complete,
+					     spdk_bdev_scsi_task_complete_cmd,
 					     task);
 
 	if (!task->blockdev_io) {
@@ -1420,7 +1426,7 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	}
 
 	task->blockdev_io = spdk_bdev_flush(bdev, task->ch, offset, nbytes,
-					    spdk_bdev_scsi_task_complete, task);
+					    spdk_bdev_scsi_task_complete_cmd, task);
 
 	if (!task->blockdev_io) {
 		SPDK_ERRLOG("spdk_bdev_flush() failed\n");
@@ -1521,7 +1527,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 	}
 
 	task->blockdev_io = spdk_bdev_unmap(bdev, task->ch, desc,
-					    bdesc_count, spdk_bdev_scsi_task_complete,
+					    bdesc_count, spdk_bdev_scsi_task_complete_cmd,
 					    task);
 
 	if (!task->blockdev_io) {
@@ -1942,5 +1948,5 @@ int
 spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 {
 	return spdk_bdev_reset(bdev, SPDK_BDEV_RESET_SOFT,
-			       spdk_bdev_scsi_task_complete, task);
+			       spdk_bdev_scsi_task_complete_mgmt, task);
 }

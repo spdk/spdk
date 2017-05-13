@@ -1064,7 +1064,6 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 			return -1;
 		}
 
-		task->scsi.type = SPDK_SCSI_TASK_TYPE_MANAGE;
 		task->scsi.target_port = conn->target_port;
 		task->scsi.initiator_port = conn->initiator_port;
 		task->scsi.lun = lun;

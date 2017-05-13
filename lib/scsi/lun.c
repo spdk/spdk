@@ -43,11 +43,15 @@ void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	if (lun) {
-		if (task->type == SPDK_SCSI_TASK_TYPE_CMD) {
-			TAILQ_REMOVE(&lun->tasks, task, scsi_link);
-		}
+		TAILQ_REMOVE(&lun->tasks, task, scsi_link);
 		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
 	}
+	spdk_event_call(task->cb_event);
+}
+
+void
+spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+{
 	spdk_event_call(task->cb_event);
 }
 
@@ -121,7 +125,7 @@ spdk_scsi_lun_reset(struct spdk_scsi_task *mtask, struct spdk_scsi_lun *lun)
 	if (!lun) {
 		/* LUN does not exist */
 		mtask->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
-		spdk_scsi_lun_complete_task(NULL, mtask);
+		spdk_scsi_lun_complete_mgmt_task(NULL, mtask);
 		return -1;
 	}
 
@@ -177,7 +181,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 		break;
 	}
 
-	spdk_scsi_lun_complete_task(task->lun, task);
+	spdk_scsi_lun_complete_mgmt_task(task->lun, task);
 
 	return rc;
 }

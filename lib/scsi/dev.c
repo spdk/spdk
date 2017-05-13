@@ -205,6 +205,7 @@ spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 {
 	assert(task != NULL);
 
+	task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	spdk_scsi_lun_task_mgmt_execute(task);
 }
 
@@ -214,6 +215,7 @@ spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,
 {
 	assert(task != NULL);
 
+	task->type = SPDK_SCSI_TASK_TYPE_CMD;
 	if (spdk_scsi_lun_append_task(task->lun, task) == 0) {
 		/* ready to execute, disk is valid for LUN access */
 		spdk_scsi_lun_execute_tasks(task->lun);

@@ -271,7 +271,6 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
-	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_ABORT_TASK;
 	mgmt_task->lun = lun;
 	mgmt_task->initiator_port = &initiator_port;
@@ -342,7 +341,6 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
-	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET;
 	mgmt_task->lun = lun;
 	mgmt_task->initiator_port = &initiator_port;
@@ -384,7 +382,6 @@ lun_task_mgmt_execute_lun_reset_failure(void)
 	int rc;
 
 	mgmt_task = spdk_get_task(NULL);
-	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->lun = NULL;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
@@ -410,7 +407,6 @@ lun_task_mgmt_execute_lun_reset(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
-	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	mgmt_task->lun = lun;
 	mgmt_task->function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
@@ -438,7 +434,6 @@ lun_task_mgmt_execute_invalid_case(void)
 	lun->dev = &dev;
 
 	mgmt_task = spdk_get_task(NULL);
-	mgmt_task->type = SPDK_SCSI_TASK_TYPE_MANAGE;
 	/* Pass an invalid value to the switch statement */
 	mgmt_task->function = 5;
 

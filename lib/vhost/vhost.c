@@ -475,7 +475,6 @@ process_ctrl_request(struct spdk_vhost_scsi_ctrlr *vdev, struct rte_vhost_vring 
 		case VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET:
 			/* Handle LUN reset */
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_QUEUE, "LUN reset\n");
-			task->scsi.type = SPDK_SCSI_TASK_TYPE_MANAGE;
 			task->scsi.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 			task->scsi.lun = get_scsi_lun(task->scsi_dev, ctrl_req->lun);
 
