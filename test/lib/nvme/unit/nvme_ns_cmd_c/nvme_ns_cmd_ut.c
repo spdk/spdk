@@ -1087,6 +1087,50 @@ test_nvme_ns_cmd_write_with_md(void)
 	free(metadata);
 }
 
+static void
+test_nvme_ns_cmd_read_with_md(void)
+{
+	struct spdk_nvme_ns             ns;
+	struct spdk_nvme_ctrlr          ctrlr;
+	struct spdk_nvme_qpair          qpair;
+	int                             rc = 0;
+	char				*buffer = NULL;
+	char				*metadata = NULL;
+	uint32_t			block_size, md_size;
+
+	block_size = 512;
+	md_size = 128;
+
+	buffer = malloc(block_size * 256);
+	SPDK_CU_ASSERT_FATAL(buffer != NULL);
+	metadata = malloc(md_size * 256);
+	SPDK_CU_ASSERT_FATAL(metadata != NULL);
+
+	/*
+	 * 512 byte data + 128 byte metadata
+	 * Separate metadata buffer
+	 * Max data transfer size 128 KB
+	 * No stripe size
+	 *
+	 * 256 blocks * 512 bytes per block = single 128 KB I/O (no splitting required)
+	 */
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 128, 128 * 1024, 0, false);
+
+	rc = spdk_nvme_ns_cmd_read_with_md(&ns, &qpair, buffer, metadata, 0x1000, 256, NULL, NULL, 0, 0,
+					   0);
+
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	SPDK_CU_ASSERT_FATAL(g_request->num_children == 0);
+
+	CU_ASSERT(g_request->payload.md == metadata);
+	CU_ASSERT(g_request->payload_size == 256 * 512);
+
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+	free(buffer);
+	free(metadata);
+}
 
 int main(int argc, char **argv)
 {
@@ -1122,6 +1166,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "nvme_ns_cmd_reservation_report", test_nvme_ns_cmd_reservation_report) == NULL
 		|| CU_add_test(suite, "test_cmd_child_request", test_cmd_child_request) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_readv", test_nvme_ns_cmd_readv) == NULL
+		|| CU_add_test(suite, "nvme_ns_cmd_read_with_md", test_nvme_ns_cmd_read_with_md) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_writev", test_nvme_ns_cmd_writev) == NULL
 		|| CU_add_test(suite, "nvme_ns_cmd_write_with_md", test_nvme_ns_cmd_write_with_md) == NULL
 	) {
