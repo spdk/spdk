@@ -63,18 +63,28 @@ struct spdk_io_channel {
 	 */
 };
 
-static __thread TAILQ_HEAD(, spdk_io_channel) g_io_channels;
+struct spdk_thread {
+	TAILQ_HEAD(, spdk_io_channel) io_channels;
+};
+
+static __thread struct spdk_thread g_thread;
 
 void
 spdk_allocate_thread(void)
 {
-	TAILQ_INIT(&g_io_channels);
+	TAILQ_INIT(&g_thread.io_channels);
 }
 
 void
 spdk_free_thread(void)
 {
-	assert(TAILQ_EMPTY(&g_io_channels));
+	assert(TAILQ_EMPTY(&g_thread.io_channels));
+}
+
+const struct spdk_thread *
+spdk_get_thread(void)
+{
+	return &g_thread;
 }
 
 void
@@ -145,7 +155,7 @@ spdk_get_io_channel(void *io_device)
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	TAILQ_FOREACH(ch, &g_io_channels, tailq) {
+	TAILQ_FOREACH(ch, &g_thread.io_channels, tailq) {
 		if (ch->io_device == io_device) {
 			ch->ref++;
 			/*
@@ -171,7 +181,7 @@ spdk_get_io_channel(void *io_device)
 	ch->destroy_cb = dev->destroy_cb;
 	ch->thread_id = pthread_self();
 	ch->ref = 1;
-	TAILQ_INSERT_TAIL(&g_io_channels, ch, tailq);
+	TAILQ_INSERT_TAIL(&g_thread.io_channels, ch, tailq);
 	return ch;
 }
 
@@ -186,7 +196,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 	ch->ref--;
 
 	if (ch->ref == 0) {
-		TAILQ_REMOVE(&g_io_channels, ch, tailq);
+		TAILQ_REMOVE(&g_thread.io_channels, ch, tailq);
 		ch->destroy_cb(ch->io_device, (uint8_t *)ch + sizeof(*ch));
 		free(ch);
 	}
