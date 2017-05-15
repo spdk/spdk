@@ -95,6 +95,7 @@ struct spdk_vhost_dev {
 	struct rte_vhost_memory *mem;
 	int vid;
 	uint16_t num_queues;
+	uint64_t negotiated_features;
 	struct rte_vhost_vring virtqueue[0] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 };
 
@@ -149,6 +150,11 @@ spdk_vhost_dev_create(int vid)
 
 	dev->vid = vid;
 	dev->num_queues = num_queues;
+
+	if (rte_vhost_get_negotiated_features(vid, &dev->negotiated_features) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
+		goto err;
+	}
 
 	if (rte_vhost_get_mem_table(vid, &dev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
