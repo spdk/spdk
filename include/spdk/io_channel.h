@@ -42,6 +42,7 @@
 
 #include "spdk/queue.h"
 
+struct spdk_thread;
 struct spdk_io_channel;
 
 typedef int (*io_channel_create_cb_t)(void *io_device, void *ctx_buf);
@@ -50,7 +51,7 @@ typedef void (*io_channel_destroy_cb_t)(void *io_device, void *ctx_buf);
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
  */
-void spdk_allocate_thread(void);
+struct spdk_thread *spdk_allocate_thread(void);
 
 /**
  * \brief Releases any resources related to the calling thread for I/O channel allocation.
@@ -59,6 +60,11 @@ void spdk_allocate_thread(void);
  *  spdk_put_io_channel() prior to calling this function.
  */
 void spdk_free_thread(void);
+
+/**
+ * \brief Get a handle to the current thread.
+ */
+struct spdk_thread *spdk_get_thread(void);
 
 /**
  * \brief Register the opaque io_device context as an I/O device.
