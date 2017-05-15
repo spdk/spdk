@@ -49,6 +49,8 @@ extern "C" {
 
 #define SPDK_COUNTOF(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+#define SPDK_CONTAINEROF(ptr, type, member) ((type *)((uintptr_t)ptr - offsetof(type, member)))
+
 static inline uint32_t
 spdk_u32log2(uint32_t x)
 {
