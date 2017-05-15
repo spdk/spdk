@@ -42,7 +42,7 @@
 static void
 spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
 {
-	struct spdk_iscsi_task *task = (struct spdk_iscsi_task *)scsi_task;
+	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
 	spdk_iscsi_task_disassociate_pdu(task);
 	rte_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
@@ -66,9 +66,9 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 	task->conn = conn;
 	assert(conn->pending_task_cnt < UINT32_MAX);
 	conn->pending_task_cnt++;
-	spdk_scsi_task_construct((struct spdk_scsi_task *)task,
+	spdk_scsi_task_construct(&task->scsi,
 				 spdk_iscsi_task_free,
-				 (struct spdk_scsi_task *)parent);
+				 parent ? &parent->scsi : NULL);
 	if (parent) {
 		task->tag = parent->tag;
 	}
