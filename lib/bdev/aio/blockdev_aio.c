@@ -290,7 +290,7 @@ blockdev_aio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static int
-blockdev_aio_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void *unique_ctx)
+blockdev_aio_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
 {
 	struct blockdev_aio_io_channel *ch = ctx_buf;
 
@@ -318,7 +318,7 @@ blockdev_aio_get_io_channel(void *ctx, uint32_t priority)
 {
 	struct file_disk *fdisk = ctx;
 
-	return spdk_get_io_channel(&fdisk->fd, priority, false, NULL);
+	return spdk_get_io_channel(&fdisk->fd, priority);
 }
 
 static const struct spdk_bdev_fn_table aio_fn_table = {

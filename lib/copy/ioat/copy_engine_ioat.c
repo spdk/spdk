@@ -191,7 +191,7 @@ static struct spdk_copy_engine ioat_copy_engine = {
 };
 
 static int
-ioat_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void *unique_ctx)
+ioat_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
 {
 	struct ioat_io_channel *ch = ctx_buf;
 	struct ioat_device *ioat_dev;
@@ -220,7 +220,7 @@ ioat_destroy_cb(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 ioat_get_io_channel(uint32_t priority)
 {
-	return spdk_get_io_channel(&ioat_copy_engine, priority, false, NULL);
+	return spdk_get_io_channel(&ioat_copy_engine, priority);
 }
 
 struct ioat_probe_ctx {
