@@ -101,8 +101,6 @@ struct spdk_filesystem {
 	struct spdk_bs_opts	bs_opts;
 	struct spdk_bs_dev	*bdev;
 	fs_send_request_fn	send_request;
-	struct spdk_io_channel	*md_io_channel;
-	struct spdk_fs_channel	*md_fs_channel;
 
 	struct {
 		uint32_t		max_ops;
@@ -111,7 +109,13 @@ struct spdk_filesystem {
 	} sync_target;
 
 	struct {
-		uint32_t	max_ops;
+		uint32_t		max_ops;
+		struct spdk_io_channel	*md_io_channel;
+		struct spdk_fs_channel	*md_fs_channel;
+	} md_target;
+
+	struct {
+		uint32_t		max_ops;
 	} io_target;
 };
 
@@ -270,7 +274,12 @@ _spdk_fs_channel_create(struct spdk_filesystem *fs, struct spdk_fs_channel *chan
 static int
 _spdk_fs_md_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void *unique_ctx)
 {
-	return _spdk_fs_channel_create(io_device, ctx_buf, 512);
+	struct spdk_filesystem		*fs;
+	struct spdk_fs_channel		*channel = ctx_buf;
+
+	fs = SPDK_CONTAINEROF(io_device, struct spdk_filesystem, md_target);
+
+	return _spdk_fs_channel_create(fs, channel, fs->md_target.max_ops);
 }
 
 static int
@@ -317,8 +326,9 @@ common_fs_bs_init(struct spdk_filesystem *fs, struct spdk_blob_store *bs)
 {
 	fs->bs = bs;
 	fs->bs_opts.cluster_sz = spdk_bs_get_cluster_size(bs);
-	fs->md_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT);
-	fs->md_fs_channel->send_request = __send_request_direct;
+	fs->md_target.md_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs,
+			SPDK_IO_PRIORITY_DEFAULT);
+	fs->md_target.md_fs_channel->send_request = __send_request_direct;
 	fs->sync_target.sync_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs,
 			SPDK_IO_PRIORITY_DEFAULT);
 	fs->sync_target.sync_fs_channel->send_request = __send_request_direct;
@@ -355,11 +365,13 @@ fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 	fs->bdev = dev;
 	fs->send_request = send_request_fn;
 	TAILQ_INIT(&fs->files);
-	spdk_io_device_register(fs, _spdk_fs_md_channel_create, _spdk_fs_channel_destroy,
-				sizeof(struct spdk_fs_channel));
 
-	fs->md_io_channel = spdk_get_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT, true, NULL);
-	fs->md_fs_channel = spdk_io_channel_get_ctx(fs->md_io_channel);
+	fs->md_target.max_ops = 512;
+	spdk_io_device_register(&fs->md_target, _spdk_fs_md_channel_create, _spdk_fs_channel_destroy,
+				sizeof(struct spdk_fs_channel));
+	fs->md_target.md_io_channel = spdk_get_io_channel(&fs->md_target, SPDK_IO_PRIORITY_DEFAULT, false,
+				      NULL);
+	fs->md_target.md_fs_channel = spdk_io_channel_get_ctx(fs->md_target.md_io_channel);
 
 	fs->sync_target.max_ops = 512;
 	spdk_io_device_register(&fs->sync_target, _spdk_fs_sync_channel_create, _spdk_fs_channel_destroy,
@@ -391,7 +403,7 @@ spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		return;
 	}
 
-	req = alloc_fs_request(fs->md_fs_channel);
+	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
@@ -511,7 +523,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		return;
 	}
 
-	req = alloc_fs_request(fs->md_fs_channel);
+	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
@@ -534,9 +546,11 @@ unload_cb(void *ctx, int bserrno)
 
 	args->fn.fs_op(args->arg, bserrno);
 	free(req);
+
 	spdk_io_device_unregister(&fs->io_target);
 	spdk_io_device_unregister(&fs->sync_target);
-	spdk_io_device_unregister(fs);
+	spdk_io_device_unregister(&fs->md_target);
+
 	free(fs);
 }
 
@@ -561,7 +575,7 @@ spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_a
 	args->arg = cb_arg;
 	args->fs = fs;
 
-	spdk_fs_free_io_channel(fs->md_io_channel);
+	spdk_fs_free_io_channel(fs->md_target.md_io_channel);
 	spdk_fs_free_io_channel(fs->sync_target.sync_io_channel);
 	spdk_bs_unload(fs->bs, unload_cb, req);
 }
@@ -713,7 +727,7 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 		return;
 	}
 
-	req = alloc_fs_request(fs->md_fs_channel);
+	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -845,7 +859,7 @@ spdk_fs_open_file_async(struct spdk_filesystem *fs, const char *name, uint32_t f
 		return;
 	}
 
-	req = alloc_fs_request(fs->md_fs_channel);
+	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
@@ -983,7 +997,7 @@ spdk_fs_rename_file_async(struct spdk_filesystem *fs,
 		return;
 	}
 
-	req = alloc_fs_request(fs->md_fs_channel);
+	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -1092,7 +1106,7 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 		return;
 	}
 
-	req = alloc_fs_request(fs->md_fs_channel);
+	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -1224,7 +1238,7 @@ spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
 		return;
 	}
 
-	req = alloc_fs_request(file->fs->md_fs_channel);
+	req = alloc_fs_request(file->fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -2179,7 +2193,7 @@ spdk_file_close_async(struct spdk_file *file, spdk_file_op_complete cb_fn, void 
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 
-	req = alloc_fs_request(file->fs->md_fs_channel);
+	req = alloc_fs_request(file->fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -2190,7 +2204,7 @@ spdk_file_close_async(struct spdk_file *file, spdk_file_op_complete cb_fn, void 
 	args->fn.file_op = cb_fn;
 	args->arg = cb_arg;
 
-	spdk_file_sync_async(file, file->fs->md_io_channel, __file_close_async__sync_done, req);
+	spdk_file_sync_async(file, file->fs->md_target.md_io_channel, __file_close_async__sync_done, req);
 }
 
 static void
