@@ -46,7 +46,8 @@
 
 #define SPDK_BLOB_OPTS_CLUSTER_SZ (1024 * 1024)
 #define SPDK_BLOB_OPTS_NUM_MD_PAGES UINT32_MAX
-#define SPDK_BLOB_OPTS_MAX_MD_OPS 512
+#define SPDK_BLOB_OPTS_MAX_MD_OPS 32
+#define SPDK_BLOB_OPTS_MAX_CHANNEL_OPS 512
 
 struct spdk_xattr {
 	/* TODO: reorder for best packing */
@@ -145,6 +146,7 @@ struct spdk_blob_store {
 	uint32_t			pages_per_cluster;
 
 	uint32_t			max_md_ops;
+	uint32_t			max_channel_ops;
 
 	spdk_blob_id			super_blob;
 

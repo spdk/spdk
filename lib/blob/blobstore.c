@@ -1057,7 +1057,8 @@ _spdk_bs_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void 
 	struct spdk_bs_channel	*channel = ctx_buf;
 	uint32_t			i;
 
-	channel->req_mem = calloc(bs->max_md_ops, sizeof(struct spdk_bs_request_set));
+	channel->req_mem = calloc(spdk_max(bs->max_channel_ops, bs->max_md_ops),
+				  sizeof(struct spdk_bs_request_set));
 	if (!channel->req_mem) {
 		free(channel);
 		return -1;
@@ -1065,7 +1066,7 @@ _spdk_bs_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void 
 
 	TAILQ_INIT(&channel->reqs);
 
-	for (i = 0; i < bs->max_md_ops; i++) {
+	for (i = 0; i < spdk_max(bs->max_channel_ops, bs->max_md_ops); i++) {
 		TAILQ_INSERT_TAIL(&channel->reqs, &channel->req_mem[i], link);
 	}
 
@@ -1111,6 +1112,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->cluster_sz = SPDK_BLOB_OPTS_CLUSTER_SZ;
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
+	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
 }
 
 static struct spdk_blob_store *
@@ -1141,6 +1143,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	}
 
 	bs->max_md_ops = opts->max_md_ops;
+	bs->max_channel_ops = opts->max_channel_ops;
 	bs->super_blob = SPDK_BLOBID_INVALID;
 
 	/* The metadata is assumed to be at least 1 page */
