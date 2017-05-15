@@ -399,8 +399,7 @@ blockdev_rbd_handle(void *arg)
 }
 
 static int
-blockdev_rbd_create_cb(void *io_device, uint32_t priority,
-		       void *ctx_buf, void *unique_ctx)
+blockdev_rbd_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
 {
 	struct blockdev_rbd_io_channel *ch = ctx_buf;
 	int ret;
@@ -466,7 +465,7 @@ blockdev_rbd_get_io_channel(void *ctx, uint32_t priority)
 {
 	struct blockdev_rbd *rbd_bdev = ctx;
 
-	return spdk_get_io_channel(&rbd_bdev->info, priority, false, NULL);
+	return spdk_get_io_channel(&rbd_bdev->info, priority);
 }
 
 static const struct spdk_bdev_fn_table rbd_fn_table = {

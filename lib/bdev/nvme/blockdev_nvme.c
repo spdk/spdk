@@ -343,7 +343,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static int
-bdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf, void *unique_ctx)
+bdev_nvme_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
 {
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
@@ -373,7 +373,7 @@ bdev_nvme_get_io_channel(void *ctx, uint32_t priority)
 {
 	struct nvme_bdev *nvme_bdev = ctx;
 
-	return spdk_get_io_channel(nvme_bdev->nvme_ctrlr->ctrlr, priority, false, NULL);
+	return spdk_get_io_channel(nvme_bdev->nvme_ctrlr->ctrlr, priority);
 }
 
 static int

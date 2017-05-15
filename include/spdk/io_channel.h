@@ -46,8 +46,7 @@
 
 struct spdk_io_channel;
 
-typedef int (*io_channel_create_cb_t)(void *io_device, uint32_t priority, void *ctx_buf,
-				      void *unique_ctx);
+typedef int (*io_channel_create_cb_t)(void *io_device, uint32_t priority, void *ctx_buf);
 typedef void (*io_channel_destroy_cb_t)(void *io_device, void *ctx_buf);
 
 /**
@@ -97,15 +96,8 @@ void spdk_io_device_unregister(void *io_device);
  * The priority parameter allows callers to create different I/O channels to the same
  *  I/O device with varying priorities.  Currently this value must be set to
  *  SPDK_IO_PRIORITY_DEFAULT.
- *
- * The unique parameter allows callers to specify that an existing channel should not
- *  be used to satisfy this request, even if the io_device and priority fields match.
- *
- * The unique_ctx parameter allows callers to pass channel-specific context to the create_cb
- *  handler for unique channels.  This value must be NULL for shared channels.
  */
-struct spdk_io_channel *spdk_get_io_channel(void *io_device, uint32_t priority, bool unique,
-		void *unique_ctx);
+struct spdk_io_channel *spdk_get_io_channel(void *io_device, uint32_t priority);
 
 /**
  * \brief Releases a reference to an I/O channel.

@@ -127,7 +127,7 @@ spdk_io_device_unregister(void *io_device)
 }
 
 struct spdk_io_channel *
-spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *unique_ctx)
+spdk_get_io_channel(void *io_device, uint32_t priority)
 {
 	struct spdk_io_channel *ch;
 	struct io_device *dev;
@@ -135,11 +135,6 @@ spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *uniqu
 
 	if (priority != SPDK_IO_PRIORITY_DEFAULT) {
 		SPDK_ERRLOG("priority must be set to SPDK_IO_PRIORITY_DEFAULT\n");
-		return NULL;
-	}
-
-	if (unique == false && unique_ctx != NULL) {
-		SPDK_ERRLOG("non-NULL unique_ctx passed for shared channel\n");
 		return NULL;
 	}
 
@@ -156,16 +151,14 @@ spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *uniqu
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	if (unique == false) {
-		TAILQ_FOREACH(ch, &g_io_channels, tailq) {
-			if (ch->io_device == io_device && ch->priority == priority) {
-				ch->ref++;
-				/*
-				 * An I/O channel already exists for this device on this
-				 *  thread, so return it.
-				 */
-				return ch;
-			}
+	TAILQ_FOREACH(ch, &g_io_channels, tailq) {
+		if (ch->io_device == io_device && ch->priority == priority) {
+			ch->ref++;
+			/*
+			 * An I/O channel already exists for this device on this
+			 *  thread, so return it.
+			 */
+			return ch;
 		}
 	}
 
@@ -174,7 +167,7 @@ spdk_get_io_channel(void *io_device, uint32_t priority, bool unique, void *uniqu
 		SPDK_ERRLOG("could not calloc spdk_io_channel\n");
 		return NULL;
 	}
-	rc = dev->create_cb(io_device, priority, (uint8_t *)ch + sizeof(*ch), unique_ctx);
+	rc = dev->create_cb(io_device, priority, (uint8_t *)ch + sizeof(*ch));
 	if (rc == -1) {
 		free(ch);
 		return NULL;
