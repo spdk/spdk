@@ -81,6 +81,40 @@ struct ns_entry {
 	char			name[1024];
 };
 
+/*
+ * Latency tracking is done with ranges of bucket arrays.  The bucket
+ * for any given I/O is determined solely by the TSC delta - any
+ * translation to microseconds is only done after the test is finished
+ * and statistics are printed.
+ *
+ * Each range has a number of buckets determined by NUM_BUCKETS_PER_RANGE
+ * which is 128.  The buckets in ranges 0 and 1 each map to one specific
+ * TSC delta.  The buckets in subsequent ranges each map to twice as many
+ * TSC deltas as buckets in the range before it:
+ *
+ * Range 0:  1 TSC each - 128 buckets cover 0 to 127 (2^7-1)
+ * Range 1:  1 TSC each - 128 buckets cover 128 to 255 (2^8-1)
+ * Range 2:  2 TSC each - 128 buckets cover 256 to 511 (2^9-1)
+ * Range 3:  4 TSC each - 128 buckets cover 512 to 1023 (2^10-1)
+ * Range 4:  8 TSC each - 128 buckets cover 1024 to 2047 (2^11-1)
+ * Range 5: 16 TSC each - 128 buckets cover 2048 to 4095 (2^12-1)
+ * ...
+ * Range 55: 2^54 TSC each - 128 buckets cover 2^61 to 2^62-1
+ * Range 56: 2^55 TSC each - 128 buckets cover 2^62 to 2^63-1
+ * Range 57: 2^56 TSC each - 128 buckets cover 2^63 to 2^64-1
+ *
+ * On a 2.3GHz processor, this strategy results in 50ns buckets in the
+ * 7-14us range (sweet spot for Intel Optane SSD latency testing).
+ *
+ * Buckets can be made more granular by increasing BUCKET_SHIFT.  This
+ * comes at the cost of additional storage per namespace context to
+ * store the bucket data.
+ */
+#define BUCKET_SHIFT 7
+#define NUM_BUCKETS_PER_RANGE (1ULL << BUCKET_SHIFT)
+#define BUCKET_MASK (NUM_BUCKETS_PER_RANGE - 1)
+#define NUM_BUCKET_RANGES (64 - BUCKET_SHIFT + 1)
+
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
 	uint64_t		io_completed;
@@ -105,6 +139,8 @@ struct ns_worker_ctx {
 	} u;
 
 	struct ns_worker_ctx	*next;
+
+	uint64_t		bucket[NUM_BUCKET_RANGES][NUM_BUCKETS_PER_RANGE];
 };
 
 struct perf_task {
@@ -124,7 +160,8 @@ struct worker_thread {
 
 static int g_outstanding_commands;
 
-static bool g_latency_tracking_enable = false;
+static bool g_latency_ssd_tracking_enable = false;
+static int g_latency_sw_tracking_level = 0;
 
 static struct rte_mempool *task_pool;
 
@@ -159,6 +196,63 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 static void
 task_complete(struct perf_task *task);
+
+static uint32_t
+get_bucket_range(uint64_t tsc)
+{
+	uint32_t clz, range;
+
+	assert(tsc != 0);
+
+	clz = __builtin_clzll(tsc);
+
+	if (clz <= NUM_BUCKET_RANGES) {
+		range = NUM_BUCKET_RANGES - clz;
+	} else {
+		range = 0;
+	}
+
+	return range;
+}
+
+static uint32_t
+get_bucket_index(uint64_t tsc, uint32_t range)
+{
+	uint32_t shift;
+
+	if (range == 0) {
+		shift = 0;
+	} else {
+		shift = range - 1;
+	}
+
+	return (tsc >> shift) & BUCKET_MASK;
+}
+
+static double
+get_us_from_bucket(uint32_t range, uint32_t index)
+{
+	uint64_t tsc;
+
+	index += 1;
+	if (range > 0) {
+		tsc = 1ULL << (range + BUCKET_SHIFT - 1);
+		tsc += (uint64_t)index << (range - 1);
+	} else {
+		tsc = index;
+	}
+
+	return (double)tsc * 1000 * 1000 / g_tsc_rate;
+}
+
+static void
+track_latency(struct ns_worker_ctx *ns_ctx, uint64_t tsc)
+{
+	uint32_t range = get_bucket_range(tsc);
+	uint32_t index = get_bucket_index(tsc, range);
+
+	ns_ctx->bucket[range][index]++;
+}
 
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
@@ -277,7 +371,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	entry->next = g_controllers;
 	g_controllers = entry;
 
-	if (g_latency_tracking_enable &&
+	if (g_latency_ssd_tracking_enable &&
 	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 		set_latency_tracking_feature(ctrlr, true);
 
@@ -494,7 +588,9 @@ task_complete(struct perf_task *task)
 	if (ns_ctx->max_tsc < tsc_diff) {
 		ns_ctx->max_tsc = tsc_diff;
 	}
-
+	if (g_latency_sw_tracking_level > 0) {
+		track_latency(ns_ctx, tsc_diff);
+	}
 	rte_mempool_put(task_pool, task);
 
 	/*
@@ -655,7 +751,8 @@ static void usage(char *program_name)
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
-	printf("\t[-l enable latency tracking, default: disabled]\n");
+	printf("\t[-L enable latency tracking via sw, default: disabled]\n");
+	printf("\t[-l enable latency tracking via ssd (if supported), default: disabled]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
@@ -731,6 +828,41 @@ print_performance(void)
 	       sum_ave_latency / ns_count, sum_min_latency / ns_count,
 	       sum_max_latency / ns_count);
 	printf("\n");
+
+	if (g_latency_sw_tracking_level == 0) {
+		return;
+	}
+	worker = g_workers;
+	while (worker) {
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx) {
+			uint64_t i, j, so_far = 0;
+			float so_far_pct = 0;
+			double last_bucket, bucket = 0;
+
+			printf("Latency data for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
+			printf("=========================================================================\n");
+			printf("       Range in us     Cumulative    IO count\n");
+
+			for (i = 0; i < NUM_BUCKET_RANGES; i++) {
+				for (j = 0; j < NUM_BUCKETS_PER_RANGE; j++) {
+					so_far += ns_ctx->bucket[i][j];
+					so_far_pct = (float)so_far * 100 / total_io_completed;
+					last_bucket = bucket;
+					bucket = get_us_from_bucket(i, j);
+					if (ns_ctx->bucket[i][j] == 0) {
+						continue;
+					}
+					printf("%9.3f - %9.3f: %9.4f%%  (%9ju)\n",
+					       last_bucket, bucket, so_far_pct, ns_ctx->bucket[i][j]);
+				}
+			}
+			printf("\n");
+			ns_ctx = ns_ctx->next;
+		}
+		worker = worker->next;
+	}
+
 }
 
 static void
@@ -804,7 +936,7 @@ static void
 print_stats(void)
 {
 	print_performance();
-	if (g_latency_tracking_enable) {
+	if (g_latency_ssd_tracking_enable) {
 		if (g_rw_percentage != 0) {
 			print_latency_statistics("Read", SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
 		}
@@ -866,7 +998,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:M:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:LM:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -878,7 +1010,7 @@ parse_args(int argc, char **argv)
 			g_shm_id = atoi(optarg);
 			break;
 		case 'l':
-			g_latency_tracking_enable = true;
+			g_latency_ssd_tracking_enable = true;
 			break;
 		case 'm':
 			g_max_completions = atoi(optarg);
@@ -900,6 +1032,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'w':
 			workload_type = optarg;
+			break;
+		case 'L':
+			g_latency_sw_tracking_level++;
 			break;
 		case 'M':
 			g_rw_percentage = atoi(optarg);
@@ -1126,7 +1261,7 @@ unregister_controllers(void)
 	while (entry) {
 		struct ctrlr_entry *next = entry->next;
 		spdk_free(entry->latency_page);
-		if (g_latency_tracking_enable &&
+		if (g_latency_ssd_tracking_enable &&
 		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 			set_latency_tracking_feature(entry->ctrlr, false);
 		spdk_nvme_detach(entry->ctrlr);
