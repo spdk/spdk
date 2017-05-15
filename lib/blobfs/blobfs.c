@@ -240,7 +240,7 @@ _spdk_fs_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void 
 {
 	struct spdk_filesystem		*fs = io_device;
 	struct spdk_fs_channel		*channel = ctx_buf;
-	uint32_t			max_ops = *(uint32_t *)unique_ctx;
+	uint32_t			max_ops = 512;
 	uint32_t			i;
 
 	channel->req_mem = calloc(max_ops, sizeof(struct spdk_fs_request));
@@ -310,7 +310,6 @@ static struct spdk_filesystem *
 fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 {
 	struct spdk_filesystem *fs;
-	uint32_t max_ops = 512;
 
 	fs = calloc(1, sizeof(*fs));
 	if (fs == NULL) {
@@ -323,10 +322,10 @@ fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 	spdk_io_device_register(fs, _spdk_fs_channel_create, _spdk_fs_channel_destroy,
 				sizeof(struct spdk_fs_channel));
 
-	fs->md_io_channel = spdk_get_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT, true, (void *)&max_ops);
+	fs->md_io_channel = spdk_get_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT, true, NULL);
 	fs->md_fs_channel = spdk_io_channel_get_ctx(fs->md_io_channel);
 
-	fs->sync_io_channel = spdk_get_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT, true, (void *)&max_ops);
+	fs->sync_io_channel = spdk_get_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT, true, NULL);
 	fs->sync_fs_channel = spdk_io_channel_get_ctx(fs->sync_io_channel);
 
 	__initialize_cache();
@@ -1363,9 +1362,8 @@ spdk_fs_alloc_io_channel(struct spdk_filesystem *fs, uint32_t priority)
 {
 	struct spdk_io_channel *io_channel;
 	struct spdk_fs_channel *fs_channel;
-	uint32_t max_ops = 512;
 
-	io_channel = spdk_get_io_channel(fs, priority, true, (void *)&max_ops);
+	io_channel = spdk_get_io_channel(fs, priority, true, NULL);
 	fs_channel = spdk_io_channel_get_ctx(io_channel);
 	fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT);
 	fs_channel->send_request = __send_request_direct;
@@ -1378,9 +1376,8 @@ spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs, uint32_t priority)
 {
 	struct spdk_io_channel *io_channel;
 	struct spdk_fs_channel *fs_channel;
-	uint32_t max_ops = 16;
 
-	io_channel = spdk_get_io_channel(fs, priority, true, (void *)&max_ops);
+	io_channel = spdk_get_io_channel(fs, priority, true, NULL);
 	fs_channel = spdk_io_channel_get_ctx(io_channel);
 	fs_channel->send_request = fs->send_request;
 
