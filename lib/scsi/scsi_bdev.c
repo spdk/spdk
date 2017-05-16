@@ -1481,7 +1481,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 
 	uint8_t *data;
 	struct spdk_scsi_unmap_bdesc *desc;
-	uint32_t bdesc_count;
+	uint32_t bdesc_count, max_unmap_bdesc_count;
 	int bdesc_data_len;
 	int data_len;
 
@@ -1512,9 +1512,10 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		spdk_free(data);
 	}
 
-	if (bdesc_count > bdev->max_unmap_bdesc_count) {
+	max_unmap_bdesc_count = spdk_bdev_get_max_unmap_descriptors(bdev);
+	if (bdesc_count > max_unmap_bdesc_count) {
 		SPDK_ERRLOG("Error - supported unmap block descriptor count limit"
-			    " is %u\n", bdev->max_unmap_bdesc_count);
+			    " is %u\n", max_unmap_bdesc_count);
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
