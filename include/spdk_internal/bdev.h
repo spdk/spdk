@@ -154,11 +154,17 @@ struct spdk_bdev_io {
 	/** The bdev I/O channel that this was submitted on. */
 	struct spdk_bdev_channel *ch;
 
-	/** Generation value for each I/O. */
-	uint32_t gencnt;
-
 	/** bdev allocated memory associated with this request */
 	void *buf;
+
+	/** Callback for when buf is allocated */
+	spdk_bdev_io_get_buf_cb get_buf_cb;
+
+	/** Entry to the list need_buf of struct spdk_bdev. */
+	TAILQ_ENTRY(spdk_bdev_io) buf_link;
+
+	/** Generation value for each I/O. */
+	uint32_t gencnt;
 
 	/** Enumerated value representing the I/O type. */
 	enum spdk_bdev_io_type type;
@@ -215,6 +221,9 @@ struct spdk_bdev_io {
 		} reset;
 	} u;
 
+	/** Status for the IO */
+	enum spdk_bdev_io_status status;
+
 	/** Error information from a device */
 	union {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
@@ -243,12 +252,6 @@ struct spdk_bdev_io {
 	/** Context that will be passed to the completion callback */
 	void *caller_ctx;
 
-	/** Callback for when buf is allocated */
-	spdk_bdev_io_get_buf_cb get_buf_cb;
-
-	/** Status for the IO */
-	enum spdk_bdev_io_status status;
-
 	/**
 	 * Set to true while the bdev module submit_request function is in progress.
 	 *
@@ -265,9 +268,6 @@ struct spdk_bdev_io {
 
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
-
-	/** Entry to the list need_buf of struct spdk_bdev. */
-	TAILQ_ENTRY(spdk_bdev_io) buf_link;
 
 	/** Per I/O context for use by the blockdev module */
 	uint8_t driver_ctx[0];
