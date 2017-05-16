@@ -115,6 +115,12 @@ spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev)
 	return 1;
 }
 
+bool
+spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
+{
+	return false;
+}
+
 void
 spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 {

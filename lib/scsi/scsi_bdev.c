@@ -888,7 +888,7 @@ spdk_bdev_scsi_mode_sense_page(struct spdk_bdev *bdev,
 		plen = 0x12 + 2;
 		mode_sense_page_init(cp, plen, page, subpage);
 
-		if (cp && bdev->write_cache && pc != 0x01)
+		if (cp && spdk_bdev_has_write_cache(bdev) && pc != 0x01)
 			cp[2] |= 0x4; /* WCE */
 
 		/* Read Cache Disable (RCD) = 1 */

@@ -574,6 +574,12 @@ spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 	return 1;
 }
 
+bool
+spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
+{
+	return bdev->write_cache;
+}
+
 static int
 spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
 {

@@ -249,6 +249,17 @@ uint32_t spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev);
  */
 size_t spdk_bdev_get_buf_align(const struct spdk_bdev *bdev);
 
+/**
+ * Query whether block device has an enabled write cache.
+ *
+ * \param bdev Block device to query.
+ * \return true if block device has a volatile write cache enabled.
+ *
+ * If this function returns true, written data may not be persistent until a flush command
+ * is issued.
+ */
+bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
+
 struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				    void *buf, uint64_t offset, uint64_t nbytes,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg);
