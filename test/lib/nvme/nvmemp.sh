@@ -19,10 +19,12 @@ if [ $(uname -s) = Linux ]; then
 	timing_enter mp_fault_test
 	timing_enter mp_fault_test_1
 	$rootdir/examples/nvme/arbitration/arbitration -i 0 -s 4096 -t 5 -c 0xf &
+	pid=$!
 	sleep 3
-	$rootdir/examples/nvme/perf/perf -i 0 -q 128 -w read -s 4096 -t 3 -c 0x10
+	$rootdir/examples/nvme/perf/perf -i 0 -q 128 -w read -s 4096 -t 5 -c 0x10 &
 	sleep 1
-	kill -9 $!
+	kill -9 $pid
+	wait $!
 	timing_exit mp_fault_test_1
 
 	timing_enter mp_fault_test_2

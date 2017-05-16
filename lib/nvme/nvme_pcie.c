@@ -775,6 +775,7 @@ int
 nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	struct spdk_pci_device *devhandle = nvme_ctrlr_proc_get_devhandle(ctrlr);
 
 	if (ctrlr->adminq) {
 		nvme_pcie_qpair_destroy(ctrlr->adminq);
@@ -783,7 +784,11 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_free_processes(ctrlr);
 
 	nvme_pcie_ctrlr_free_bars(pctrlr);
-	spdk_pci_device_detach(pctrlr->devhandle);
+
+	if (devhandle) {
+		spdk_pci_device_detach(devhandle);
+	}
+
 	spdk_free(pctrlr);
 
 	return 0;

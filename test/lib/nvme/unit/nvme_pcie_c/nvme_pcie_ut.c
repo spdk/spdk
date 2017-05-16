@@ -176,6 +176,12 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 	abort();
 }
 
+struct spdk_pci_device *
+nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
+{
+	abort();
+}
+
 int
 nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 		 spdk_nvme_probe_cb probe_cb, void *cb_ctx)

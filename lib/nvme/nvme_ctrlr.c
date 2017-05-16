@@ -1107,6 +1107,30 @@ nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 /**
+ *  Get the PCI device handle which is only visible to its associated process.
+ */
+struct spdk_pci_device *
+nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_process	*active_proc;
+	pid_t				pid = getpid();
+	struct spdk_pci_device		*devhandle = NULL;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+
+	TAILQ_FOREACH(active_proc, &ctrlr->active_procs, tailq) {
+		if (active_proc->pid == pid) {
+			devhandle = active_proc->devhandle;
+			break;
+		}
+	}
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	return devhandle;
+}
+
+/**
  * This function will be called repeatedly during initialization until the controller is ready.
  */
 int
