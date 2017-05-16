@@ -72,9 +72,10 @@ bdev_blob_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *p
 {
 	struct spdk_bdev *bdev = __get_bdev(dev);
 	struct spdk_bdev_io *bdev_io;
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
-	bdev_io = spdk_bdev_read(bdev, channel, payload, lba * bdev->blocklen,
-				 lba_count * bdev->blocklen, bdev_blob_io_complete, cb_args);
+	bdev_io = spdk_bdev_read(bdev, channel, payload, lba * block_size,
+				 lba_count * block_size, bdev_blob_io_complete, cb_args);
 	if (bdev_io == NULL) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
 	}
@@ -86,9 +87,10 @@ bdev_blob_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *
 {
 	struct spdk_bdev *bdev = __get_bdev(dev);
 	struct spdk_bdev_io *bdev_io;
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
-	bdev_io = spdk_bdev_write(bdev, channel, payload, lba * bdev->blocklen,
-				  lba_count * bdev->blocklen, bdev_blob_io_complete, cb_args);
+	bdev_io = spdk_bdev_write(bdev, channel, payload, lba * block_size,
+				  lba_count * block_size, bdev_blob_io_complete, cb_args);
 	if (bdev_io == NULL) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
 	}
