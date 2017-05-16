@@ -69,7 +69,7 @@ spdk_vbdev_inject_error(uint32_t io_type_mask, uint32_t error_num)
 }
 
 static void
-vbdev_error_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+vbdev_error_task_complete(struct spdk_bdev_io *bdev_io, bool success,
 			  void *cb_arg)
 {
 	struct spdk_bdev_io *bdevio = (struct spdk_bdev_io *)cb_arg;

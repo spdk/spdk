@@ -943,7 +943,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io->status = status;
 
 	assert(bdev_io->cb != NULL);
-	bdev_io->cb(bdev_io, status, bdev_io->caller_ctx);
+	bdev_io->cb(bdev_io, status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
 }
 
 void

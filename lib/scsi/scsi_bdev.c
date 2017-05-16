@@ -1235,7 +1235,7 @@ spdk_bdev_scsi_mode_select_page(struct spdk_bdev *bdev,
 }
 
 static void
-spdk_bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+spdk_bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 				 void *cb_arg)
 {
 	struct spdk_scsi_task *task = cb_arg;
@@ -1247,12 +1247,12 @@ spdk_bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io
 }
 
 static void
-spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, bool success,
 				  void *cb_arg)
 {
 	struct spdk_scsi_task *task = cb_arg;
 
-	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (success) {
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
 	}
 

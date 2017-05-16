@@ -52,12 +52,12 @@ __get_bdev(struct spdk_bs_dev *dev)
 }
 
 static void
-bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *arg)
+bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
 	struct spdk_bs_dev_cb_args *cb_args = arg;
 	int bserrno;
 
-	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (success) {
 		bserrno = 0;
 	} else {
 		bserrno = -EIO;
