@@ -119,7 +119,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 				spdk_json_write_name(w, "nsid");
 				spdk_json_write_int32(w, i + 1);
 				spdk_json_write_name(w, "name");
-				spdk_json_write_string(w, subsystem->dev.virt.ns_list[i]->name);
+				spdk_json_write_string(w, spdk_bdev_get_name(subsystem->dev.virt.ns_list[i]));
 				spdk_json_write_object_end(w);
 			}
 			spdk_json_write_array_end(w);
