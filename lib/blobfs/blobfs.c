@@ -1622,6 +1622,13 @@ __file_flush_done(void *arg, int bserrno)
 		}
 	}
 
+	/*
+	 * Assert that there is no cached data that extends past the end of the underlying
+	 *  blob.
+	 */
+	assert(next == NULL || next->offset < __file_get_blob_size(file) ||
+	       next->bytes_filled == 0);
+
 	if (sync_req != NULL) {
 		BLOBFS_TRACE(file, "set xattr length 0x%jx\n", file->length_flushed);
 		spdk_blob_md_set_xattr(file->blob, "length", &file->length_flushed,
@@ -1633,13 +1640,6 @@ __file_flush_done(void *arg, int bserrno)
 		pthread_spin_unlock(&file->lock);
 		__file_cache_finish_sync(file);
 	}
-
-	/*
-	 * Assert that there is no cached data that extends past the end of the underlying
-	 *  blob.
-	 */
-	assert(next == NULL || next->offset < __file_get_blob_size(file) ||
-	       next->bytes_filled == 0);
 
 	__file_flush(args);
 }
