@@ -148,6 +148,15 @@ struct spdk_bdev_fn_table {
 	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
+/** Blockdev I/O completion status */
+enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_SCSI_ERROR = -3,
+	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
+	SPDK_BDEV_IO_STATUS_FAILED = -1,
+	SPDK_BDEV_IO_STATUS_PENDING = 0,
+	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
+};
+
 struct spdk_bdev {
 	/** User context passed in by the backend */
 	void *ctxt;

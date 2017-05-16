@@ -160,7 +160,7 @@ bdevio_cleanup_targets(void)
 	}
 }
 
-static enum spdk_bdev_io_status g_completion_status;
+static bool g_completion_success;
 
 static void
 initialize_buffer(char **buf, int pattern, int size)
@@ -170,9 +170,9 @@ initialize_buffer(char **buf, int pattern, int size)
 }
 
 static void
-quick_test_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status, void *arg)
+quick_test_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
-	g_completion_status = status;
+	g_completion_success = success;
 	spdk_bdev_free_io(bdev_io);
 	wake_ut_thread();
 }
@@ -193,7 +193,7 @@ __blockdev_write(void *arg1, void *arg2)
 	}
 
 	if (!bdev_io) {
-		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+		g_completion_success = false;
 		wake_ut_thread();
 	}
 }
@@ -234,7 +234,7 @@ blockdev_write(struct io_target *target, char *tx_buf,
 	req.offset = offset;
 	sgl_chop_buffer(&req, iov_len);
 
-	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_completion_success = false;
 
 	execute_spdk_function(__blockdev_write, &req, NULL);
 }
@@ -255,7 +255,7 @@ __blockdev_read(void *arg1, void *arg2)
 	}
 
 	if (!bdev_io) {
-		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+		g_completion_success = false;
 		wake_ut_thread();
 	}
 }
@@ -273,7 +273,7 @@ blockdev_read(struct io_target *target, char *rx_buf,
 	req.iovcnt = 0;
 	sgl_chop_buffer(&req, iov_len);
 
-	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_completion_success = false;
 
 	execute_spdk_function(__blockdev_read, &req, NULL);
 }
@@ -312,20 +312,20 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 		blockdev_write(target, tx_buf, offset, data_length, iov_len);
 
 		if (expected_rc == 0) {
-			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+			CU_ASSERT_EQUAL(g_completion_success, true);
 		} else {
-			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
+			CU_ASSERT_EQUAL(g_completion_success, false);
 		}
 
 		blockdev_read(target, rx_buf, offset, data_length, iov_len);
 
 		if (expected_rc == 0) {
-			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+			CU_ASSERT_EQUAL(g_completion_success, true);
 		} else {
-			CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
+			CU_ASSERT_EQUAL(g_completion_success, false);
 		}
 
-		if (g_completion_status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		if (g_completion_success) {
 			rc = blockdev_write_read_data_match(rx_buf, tx_buf, data_length);
 			/* Assert the write by comparing it with values read
 			 * from each blockdev */
@@ -547,10 +547,10 @@ blockdev_write_read_offset_plus_nbytes_equals_bdev_size(void)
 		initialize_buffer(&rx_buf, 0, block_size);
 
 		blockdev_write(target, tx_buf, offset, block_size, 0);
-		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT_EQUAL(g_completion_success, true);
 
 		blockdev_read(target, rx_buf, offset, block_size, 0);
-		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT_EQUAL(g_completion_success, true);
 
 		rc = blockdev_write_read_data_match(rx_buf, tx_buf, block_size);
 		/* Assert the write by comparing it with values read
@@ -590,10 +590,10 @@ blockdev_write_read_offset_plus_nbytes_gt_bdev_size(void)
 		initialize_buffer(&rx_buf, 0, data_length);
 
 		blockdev_write(target, tx_buf, offset, data_length, 0);
-		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
+		CU_ASSERT_EQUAL(g_completion_success, false);
 
 		blockdev_read(target, rx_buf, offset, data_length, 0);
-		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_FAILED);
+		CU_ASSERT_EQUAL(g_completion_success, false);
 
 		target = target->next;
 	}
@@ -662,7 +662,7 @@ __blockdev_reset(void *arg1, void *arg2)
 
 	rc = spdk_bdev_reset(target->bdev, *reset_type, quick_test_complete, NULL);
 	if (rc < 0) {
-		g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+		g_completion_success = false;
 		wake_ut_thread();
 	}
 }
@@ -674,7 +674,7 @@ blockdev_reset(struct io_target *target, enum spdk_bdev_reset_type reset_type)
 
 	req.target = target;
 
-	g_completion_status = SPDK_BDEV_IO_STATUS_FAILED;
+	g_completion_success = false;
 
 	execute_spdk_function(__blockdev_reset, &req, &reset_type);
 }
@@ -687,10 +687,10 @@ blockdev_test_reset(void)
 	target = g_io_targets;
 	while (target != NULL) {
 		blockdev_reset(target, SPDK_BDEV_RESET_HARD);
-		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT_EQUAL(g_completion_success, true);
 
 		blockdev_reset(target, SPDK_BDEV_RESET_SOFT);
-		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
+		CU_ASSERT_EQUAL(g_completion_success, true);
 
 		target = target->next;
 	}

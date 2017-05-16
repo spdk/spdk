@@ -119,7 +119,7 @@ nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 }
 
 static void
-nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
+nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 				void *cb_arg)
 {
 	struct spdk_nvmf_request 	*req = cb_arg;

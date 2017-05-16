@@ -84,15 +84,6 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_RESET,
 };
 
-/** Blockdev I/O completion status */
-enum spdk_bdev_io_status {
-	SPDK_BDEV_IO_STATUS_SCSI_ERROR = -3,
-	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
-	SPDK_BDEV_IO_STATUS_FAILED = -1,
-	SPDK_BDEV_IO_STATUS_PENDING = 0,
-	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
-};
-
 /** Blockdev reset operation type */
 enum spdk_bdev_reset_type {
 	/**
@@ -110,8 +101,17 @@ enum spdk_bdev_reset_type {
 	SPDK_BDEV_RESET_SOFT,
 };
 
+/**
+ * Block device completion callback
+ *
+ * \param bdev_io Block device I/O that has completed.
+ * \param success true if I/O completed successfully or false if it failed; additional error
+ *                information may be retrieved from bdev_io by calling
+ *                spdk_bdev_io_get_nvme_status() or spdk_bdev_io_get_scsi_status().
+ * \param cb_arg Callback argument specified when bdev_io was submitted.
+ */
 typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
-		enum spdk_bdev_io_status status,
+		bool success,
 		void *cb_arg);
 
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
