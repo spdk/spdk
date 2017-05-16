@@ -686,15 +686,11 @@ blockdev_test_reset(void)
 
 	target = g_io_targets;
 	while (target != NULL) {
-		target->bdev->gencnt = 0;
 		blockdev_reset(target, SPDK_BDEV_RESET_HARD);
 		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
-		CU_ASSERT_EQUAL(target->bdev->gencnt, 1);
 
-		target->bdev->gencnt = 0;
 		blockdev_reset(target, SPDK_BDEV_RESET_SOFT);
 		CU_ASSERT_EQUAL(g_completion_status, SPDK_BDEV_IO_STATUS_SUCCESS);
-		CU_ASSERT_EQUAL(target->bdev->gencnt, 0);
 
 		target = target->next;
 	}
