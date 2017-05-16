@@ -212,6 +212,34 @@ cache_write_null_buffer(void)
 }
 
 static void
+fs_create_sync(void)
+{
+	int rc;
+	struct spdk_io_channel *channel;
+
+	ut_send_request(_fs_init, NULL);
+
+	spdk_allocate_thread();
+	channel = spdk_fs_alloc_io_channel_sync(g_fs, SPDK_IO_PRIORITY_DEFAULT);
+	CU_ASSERT(channel != NULL);
+
+	rc = spdk_fs_create_file(g_fs, channel, "testfile");
+	CU_ASSERT(rc == 0);
+
+	/* Create should fail, because the file already exists. */
+	rc = spdk_fs_create_file(g_fs, channel, "testfile");
+	CU_ASSERT(rc != 0);
+
+	rc = spdk_fs_delete_file(g_fs, channel, "testfile");
+	CU_ASSERT(rc == 0);
+
+	spdk_fs_free_io_channel(channel);
+	spdk_free_thread();
+
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
 cache_append_no_cache(void)
 {
 	int rc;
@@ -300,6 +328,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "write", cache_write) == NULL ||
 		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
+		CU_add_test(suite, "create_sync", fs_create_sync) == NULL ||
 		CU_add_test(suite, "append_no_cache", cache_append_no_cache) == NULL
 	) {
 		CU_cleanup_registry();
