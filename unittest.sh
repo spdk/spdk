@@ -72,7 +72,7 @@ $valgrind test/lib/iscsi/param/param_ut
 $valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/target_node.conf
 $valgrind test/lib/iscsi/pdu/pdu
 
-$valgrind test/lib/util/bit_array/bit_array_ut
+$valgrind test/unit/lib/util/bit_array.c/bit_array_ut
 $valgrind test/lib/util/io_channel/io_channel_ut
 $valgrind test/lib/util/string/string_ut
 

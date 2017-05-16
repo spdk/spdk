@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 # These directories contain tests.
-TESTDIRS = app cpp_headers lib
+TESTDIRS = app cpp_headers lib unit
 
 DIRS-y = $(TESTDIRS)
 

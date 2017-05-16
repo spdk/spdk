@@ -31,14 +31,22 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = io_channel string
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/util
+APP = bit_array_ut
+C_SRCS := bit_array_ut.c
 
-.PHONY: all clean $(DIRS-y)
+LIBS += -lcunit
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+all : $(APP)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
