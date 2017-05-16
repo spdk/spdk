@@ -31,10 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/bdev.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
+#include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
 #include "blockdev_null.h"

@@ -31,9 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/bdev.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
+
+#include "spdk_internal/bdev.h"
 
 static void
 spdk_rpc_get_bdevs(struct spdk_jsonrpc_server_conn *conn,

@@ -79,6 +79,9 @@
  * must be passed to the bdev database via spdk_bdev_register().
  */
 
+#define SPDK_BDEV_MAX_NAME_LENGTH		16
+#define SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH	50
+
 /** Block device module */
 struct spdk_bdev_module_if {
 	/**
@@ -143,6 +146,55 @@ struct spdk_bdev_fn_table {
 	 * (most likely another nested object).
 	 */
 	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
+};
+
+struct spdk_bdev {
+	/** User context passed in by the backend */
+	void *ctxt;
+
+	/** Unique name for this block device. */
+	char name[SPDK_BDEV_MAX_NAME_LENGTH];
+
+	/** Unique product name for this kind of block device. */
+	char product_name[SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH];
+
+	/** Size in bytes of a logical block for the backend */
+	uint32_t blocklen;
+
+	/** Number of blocks */
+	uint64_t blockcnt;
+
+	/** write cache enabled, not used at the moment */
+	int write_cache;
+
+	/**
+	 * This is used to make sure buffers are sector aligned.
+	 * This causes double buffering on writes.
+	 */
+	int need_aligned_buffer;
+
+	/** function table for all LUN ops */
+	const struct spdk_bdev_fn_table *fn_table;
+
+	/** Represents maximum unmap block descriptor count */
+	uint32_t max_unmap_bdesc_count;
+
+	/** generation value used by block device reset */
+	uint32_t gencnt;
+
+	/** Mutex protecting claimed */
+	pthread_mutex_t mutex;
+
+	/** The bdev status */
+	enum spdk_bdev_status status;
+
+	/** Remove callback function pointer to upper level stack */
+	spdk_bdev_remove_cb_t remove_cb;
+
+	/** Callback context for hot remove the device */
+	void *remove_ctx;
+
+	TAILQ_ENTRY(spdk_bdev) link;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);

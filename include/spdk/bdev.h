@@ -42,14 +42,10 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
-#include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 
 #define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
 #define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
-
-#define SPDK_BDEV_MAX_NAME_LENGTH		16
-#define SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH	50
 
 typedef void (*spdk_bdev_remove_cb_t)(void *remove_ctx);
 
@@ -77,54 +73,7 @@ enum spdk_bdev_status {
  *
  * This is a virtual representation of a block device that is exported by the backend.
  */
-struct spdk_bdev {
-	/** User context passed in by the backend */
-	void *ctxt;
-
-	/** Unique name for this block device. */
-	char name[SPDK_BDEV_MAX_NAME_LENGTH];
-
-	/** Unique product name for this kind of block device. */
-	char product_name[SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH];
-
-	/** Size in bytes of a logical block for the backend */
-	uint32_t blocklen;
-
-	/** Number of blocks */
-	uint64_t blockcnt;
-
-	/** write cache enabled, not used at the moment */
-	int write_cache;
-
-	/**
-	 * This is used to make sure buffers are sector aligned.
-	 * This causes double buffering on writes.
-	 */
-	int need_aligned_buffer;
-
-	/** function table for all LUN ops */
-	const struct spdk_bdev_fn_table *fn_table;
-
-	/** Represents maximum unmap block descriptor count */
-	uint32_t max_unmap_bdesc_count;
-
-	/** generation value used by block device reset */
-	uint32_t gencnt;
-
-	/** Mutex protecting claimed */
-	pthread_mutex_t mutex;
-
-	/** The bdev status */
-	enum spdk_bdev_status status;
-
-	/** Remove callback function pointer to upper level stack */
-	spdk_bdev_remove_cb_t remove_cb;
-
-	/** Callback context for hot remove the device */
-	void *remove_ctx;
-
-	TAILQ_ENTRY(spdk_bdev) link;
-};
+struct spdk_bdev;
 
 /** Blockdev I/O type */
 enum spdk_bdev_io_type {

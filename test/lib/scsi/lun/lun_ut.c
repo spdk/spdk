@@ -39,6 +39,11 @@
 #include "lun.c"
 #include "lun_db.c"
 
+/* Unit test bdev mockup */
+struct spdk_bdev {
+	int x;
+};
+
 SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;

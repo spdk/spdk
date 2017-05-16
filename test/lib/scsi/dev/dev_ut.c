@@ -39,6 +39,11 @@
 #include "dev.c"
 #include "port.c"
 
+/* Unit test bdev mockup */
+struct spdk_bdev {
+	char name[100];
+};
+
 static struct spdk_bdev g_bdev = {};
 
 struct lun_entry {
