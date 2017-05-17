@@ -163,7 +163,6 @@ spdk_nvme_ns_get_flags(struct spdk_nvme_ns *ns)
 
 enum spdk_nvme_pi_type
 spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns) {
-
 	return ns->pi_type;
 }
 

@@ -289,11 +289,12 @@ struct spdk_bdev_io {
 			enum spdk_bdev_reset_type type;
 		} reset;
 		struct {
-			void *cmd;
+			struct spdk_nvme_cmd cmd;
 			void *buf;
-			uint16_t nbytes;
+			size_t nbytes;
 			uint32_t p_lcore;
-		} passthru;
+			struct spdk_nvme_cpl cpl;
+		} nvme_admin_passthru;
 	} u;
 
 	/** Status for the IO */
