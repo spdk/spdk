@@ -136,4 +136,17 @@ void spdk_put_io_channel(struct spdk_io_channel *ch);
  */
 void *spdk_io_channel_get_ctx(struct spdk_io_channel *ch);
 
+/**
+ * \brief Send a message to all channels for an io_device. The messages
+ * may be sent asynchronously - i.e. spdk_io_device_send_all
+ * may return prior to `fn` being called for each channel.
+ * Note that `fn` may be invoked concurrently on different threads,
+ * so access to `ctx` must be coordinated.
+ *
+ * @param io_device All I/O channels for this device will receive the message.
+ * @param fn The function to call on each thread.
+ * @param ctx This context will be passed to fn when called.
+ */
+void spdk_io_device_send_all(void *io_device, thread_fn_t fn, void *ctx);
+
 #endif /* SPDK_IO_CHANNEL_H_ */
