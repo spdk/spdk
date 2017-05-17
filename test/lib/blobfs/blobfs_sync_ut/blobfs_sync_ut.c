@@ -51,6 +51,12 @@ int g_fserrno;
 
 struct spdk_bs_dev g_dev;
 
+static void
+_fs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
 struct ut_request {
 	fs_request_fn fn;
 	void *arg;
@@ -137,7 +143,7 @@ cache_write(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread();
+	spdk_allocate_thread(_fs_send_msg, NULL);
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -175,7 +181,7 @@ cache_write_null_buffer(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread();
+	spdk_allocate_thread(_fs_send_msg, NULL);
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -207,7 +213,7 @@ cache_append_no_cache(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread();
+	spdk_allocate_thread(_fs_send_msg, NULL);
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -249,7 +255,7 @@ spdk_thread(void *arg)
 {
 	struct ut_request *req;
 	int phase = 0;
-	spdk_allocate_thread();
+	spdk_allocate_thread(_fs_send_msg, NULL);
 
 	while (1) {
 		spdk_mb();
