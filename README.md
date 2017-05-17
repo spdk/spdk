@@ -54,27 +54,24 @@ FreeBSD:
     sudo pkg install gmake cunit openssl
 
 Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.  The SPDK
-repository includes a suitable version of DPDK as a submodule.  Newer versions
-of git will automatically fetch the DPDK submodule.  Older versions of git may
-require:
+repository includes a suitable version of DPDK as a submodule:
 
-    1) git submodule init
-    2) git submodule update
+    git submodule update --init
 
 Building
 ========
 
 Once the prerequisites are installed, building follows the common configure
-and make pattern. If you followed the instructions above for building DPDK:
+and make pattern (note: this will build the DPDK submodule as well).
 
 Linux:
 
-    ./configure --with-dpdk=./dpdk/x86_64-native-linuxapp-gcc
+    ./configure
     make
 
 FreeBSD:
 
-    ./configure --with-dpdk=./dpdk/x86_64-native-bsdapp-clang
+    ./configure
     gmake
 
 Vagrant
