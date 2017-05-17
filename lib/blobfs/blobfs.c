@@ -101,10 +101,14 @@ struct spdk_filesystem {
 	struct spdk_bs_opts	bs_opts;
 	struct spdk_bs_dev	*bdev;
 	fs_send_request_fn	send_request;
-	struct spdk_io_channel	*sync_io_channel;
-	struct spdk_fs_channel	*sync_fs_channel;
 	struct spdk_io_channel	*md_io_channel;
 	struct spdk_fs_channel	*md_fs_channel;
+
+	struct {
+		uint32_t		max_ops;
+		struct spdk_io_channel	*sync_io_channel;
+		struct spdk_fs_channel	*sync_fs_channel;
+	} sync_target;
 
 	struct {
 		uint32_t	max_ops;
@@ -270,6 +274,17 @@ _spdk_fs_md_channel_create(void *io_device, uint32_t priority, void *ctx_buf, vo
 }
 
 static int
+_spdk_fs_sync_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void *unique_ctx)
+{
+	struct spdk_filesystem		*fs;
+	struct spdk_fs_channel		*channel = ctx_buf;
+
+	fs = SPDK_CONTAINEROF(io_device, struct spdk_filesystem, sync_target);
+
+	return _spdk_fs_channel_create(fs, channel, fs->sync_target.max_ops);
+}
+
+static int
 _spdk_fs_io_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void *unique_ctx)
 {
 	struct spdk_filesystem		*fs;
@@ -304,8 +319,9 @@ common_fs_bs_init(struct spdk_filesystem *fs, struct spdk_blob_store *bs)
 	fs->bs_opts.cluster_sz = spdk_bs_get_cluster_size(bs);
 	fs->md_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT);
 	fs->md_fs_channel->send_request = __send_request_direct;
-	fs->sync_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs, SPDK_IO_PRIORITY_DEFAULT);
-	fs->sync_fs_channel->send_request = __send_request_direct;
+	fs->sync_target.sync_fs_channel->bs_channel = spdk_bs_alloc_io_channel(fs->bs,
+			SPDK_IO_PRIORITY_DEFAULT);
+	fs->sync_target.sync_fs_channel->send_request = __send_request_direct;
 }
 
 static void
@@ -345,8 +361,12 @@ fs_alloc(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn)
 	fs->md_io_channel = spdk_get_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT, true, NULL);
 	fs->md_fs_channel = spdk_io_channel_get_ctx(fs->md_io_channel);
 
-	fs->sync_io_channel = spdk_get_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT, true, NULL);
-	fs->sync_fs_channel = spdk_io_channel_get_ctx(fs->sync_io_channel);
+	fs->sync_target.max_ops = 512;
+	spdk_io_device_register(&fs->sync_target, _spdk_fs_sync_channel_create, _spdk_fs_channel_destroy,
+				sizeof(struct spdk_fs_channel));
+	fs->sync_target.sync_io_channel = spdk_get_io_channel(&fs->sync_target, SPDK_IO_PRIORITY_DEFAULT,
+					  false, NULL);
+	fs->sync_target.sync_fs_channel = spdk_io_channel_get_ctx(fs->sync_target.sync_io_channel);
 
 	fs->io_target.max_ops = 512;
 	spdk_io_device_register(&fs->io_target, _spdk_fs_io_channel_create, _spdk_fs_channel_destroy,
@@ -515,6 +535,7 @@ unload_cb(void *ctx, int bserrno)
 	args->fn.fs_op(args->arg, bserrno);
 	free(req);
 	spdk_io_device_unregister(&fs->io_target);
+	spdk_io_device_unregister(&fs->sync_target);
 	spdk_io_device_unregister(fs);
 	free(fs);
 }
@@ -541,7 +562,7 @@ spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_a
 	args->fs = fs;
 
 	spdk_fs_free_io_channel(fs->md_io_channel);
-	spdk_fs_free_io_channel(fs->sync_io_channel);
+	spdk_fs_free_io_channel(fs->sync_target.sync_io_channel);
 	spdk_bs_unload(fs->bs, unload_cb, req);
 }
 
@@ -1703,7 +1724,7 @@ __file_flush(void *_args)
 	BLOBFS_TRACE(file, "offset=%jx length=%jx page start=%jx num=%jx\n",
 		     offset, length, start_page, num_pages);
 	pthread_spin_unlock(&file->lock);
-	spdk_bs_io_write_blob(file->blob, file->fs->sync_fs_channel->bs_channel,
+	spdk_bs_io_write_blob(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
 			      next->buf + (start_page * page_size) - next->offset,
 			      start_page, num_pages,
 			      __file_flush_done, args);
@@ -1744,11 +1765,11 @@ __rw_from_file(void *_args)
 	struct spdk_file *file = args->file;
 
 	if (args->op.rw.is_read) {
-		spdk_file_read_async(file, file->fs->sync_io_channel, args->op.rw.user_buf,
+		spdk_file_read_async(file, file->fs->sync_target.sync_io_channel, args->op.rw.user_buf,
 				     args->op.rw.offset, args->op.rw.length,
 				     __rw_from_file_done, args);
 	} else {
-		spdk_file_write_async(file, file->fs->sync_io_channel, args->op.rw.user_buf,
+		spdk_file_write_async(file, file->fs->sync_target.sync_io_channel, args->op.rw.user_buf,
 				      args->op.rw.offset, args->op.rw.length,
 				      __rw_from_file_done, args);
 	}
@@ -1910,7 +1931,7 @@ __readahead(void *_args)
 
 	BLOBFS_TRACE(file, "offset=%jx length=%jx page start=%jx num=%jx\n",
 		     offset, length, start_page, num_pages);
-	spdk_bs_io_read_blob(file->blob, file->fs->sync_fs_channel->bs_channel,
+	spdk_bs_io_read_blob(file->blob, file->fs->sync_target.sync_fs_channel->bs_channel,
 			     args->op.readahead.cache_buffer->buf,
 			     start_page, num_pages,
 			     __readahead_done, args);
