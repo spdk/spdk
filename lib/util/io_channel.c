@@ -64,14 +64,18 @@ struct spdk_io_channel {
 };
 
 struct spdk_thread {
+	thread_pass_msg_t fn;
+	void *thread_ctx;
 	TAILQ_HEAD(, spdk_io_channel) io_channels;
 };
 
 static __thread struct spdk_thread g_thread;
 
 void
-spdk_allocate_thread(void)
+spdk_allocate_thread(thread_pass_msg_t fn, void *thread_ctx)
 {
+	g_thread.fn = fn;
+	g_thread.thread_ctx = thread_ctx;
 	TAILQ_INIT(&g_thread.io_channels);
 }
 
@@ -85,6 +89,12 @@ const struct spdk_thread *
 spdk_get_thread(void)
 {
 	return &g_thread;
+}
+
+void
+spdk_thread_send_msg(const struct spdk_thread *thread, thread_fn_t fn, void *ctx)
+{
+	thread->fn(fn, ctx, thread->thread_ctx);
 }
 
 void

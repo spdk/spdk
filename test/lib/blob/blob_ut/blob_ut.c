@@ -49,6 +49,12 @@ struct spdk_xattr_names *g_names;
 int g_done;
 
 static void
+_bs_send_msg(thread_fn_t fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
+static void
 bs_op_complete(void *cb_arg, int bserrno)
 {
 	g_bserrno = bserrno;
@@ -963,7 +969,7 @@ int main(int argc, char **argv)
 	}
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
-	spdk_allocate_thread();
+	spdk_allocate_thread(_bs_send_msg, NULL);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
