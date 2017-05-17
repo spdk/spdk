@@ -1,5 +1,42 @@
 # Changelog
 
+## (Upcoming release) v17.07
+
+### Build System
+
+A `configure` script has been added to simplify the build configuration process.
+The existing CONFIG file and `make CONFIG_...` options are also still supported.
+Run `./configure --help` for information about available configuration options.
+
+A DPDK submodule has been added to make building SPDK easier.  If no `--with-dpdk`
+option is specified to configure, the SPDK build system will automatically build a
+known-good configuration of DPDK with the minimal options enabled.  See the Building
+section of README.md for more information.
+
+A [Vagrant](https://www.vagrantup.com/) setup has been added to make it easier to
+develop and use SPDK on systems without suitable NVMe hardware.  See the Vagrant
+section of README.md for more information.
+
+### NVMe driver
+
+The NVMe driver has been updated to support recent Intel SSDs, including the Intel®
+Optane™ SSD DC P4800X series.
+
+A workaround has been added for devices that failed to recognize register writes
+during controller reset.
+
+The NVMe driver now allocates request tracking objects on a per-queue basis.  The
+number of requests allowed on an I/O queue may be set during `spdk_nvme_probe()` by
+modifying `io_queue_requests` in the opts structure.
+
+The SPDK NVMe `fio_plugin` has been updated to support multiple threads (`numjobs`).
+
+### Environment Abstraction Layer
+
+The environment abstraction layer has been updated to include several new functions
+in order to wrap additional DPDK functionality. See `include/spdk/env.h` for the
+current set of functions.
+
 ## v17.03: Blobstore and userspace vhost-scsi target
 
 ### Blobstore and BlobFS
