@@ -264,6 +264,27 @@ _spdk_poller_unregister_complete(struct spdk_poller *poller)
 	free(poller);
 }
 
+static void
+_spdk_reactor_msg_passed(void *arg1, void *arg2)
+{
+	thread_fn_t fn = arg1;
+
+	fn(arg2);
+}
+
+static void
+_spdk_reactor_send_msg(thread_fn_t fn, void *ctx, void *thread_ctx)
+{
+	uint32_t core;
+	struct spdk_event *event;
+
+	core = *(uint32_t *)thread_ctx;
+
+	event = spdk_event_allocate(core, _spdk_reactor_msg_passed, fn, ctx);
+
+	spdk_event_call(event);
+}
+
 /**
  *
  * \brief This is the main function of the reactor thread.
@@ -296,7 +317,7 @@ _spdk_reactor_run(void *arg)
 	uint32_t		sleep_us;
 	uint32_t 		timer_poll_count;
 
-	spdk_allocate_thread();
+	spdk_allocate_thread(_spdk_reactor_send_msg, &reactor->lcore);
 	set_reactor_thread_name(reactor->lcore);
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);

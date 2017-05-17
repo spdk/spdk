@@ -45,13 +45,23 @@
 struct spdk_thread;
 struct spdk_io_channel;
 
+typedef void (*thread_fn_t)(void *ctx);
+typedef void (*thread_pass_msg_t)(thread_fn_t fn, void *ctx,
+				  void *thread_ctx);
+
 typedef int (*io_channel_create_cb_t)(void *io_device, void *ctx_buf);
 typedef void (*io_channel_destroy_cb_t)(void *io_device, void *ctx_buf);
 
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
+ *
+ * @param fn A function that may be called from any thread and is
+ *          passed a function pointer (thread_fn_t) that must be
+ *          called on the same thread that spdk_allocate_thread
+ *          was called from.
+ * @param thread_ctx Context that will be passed to fn.
  */
-void spdk_allocate_thread(void);
+void spdk_allocate_thread(thread_pass_msg_t fn, void *thread_ctx);
 
 /**
  * \brief Releases any resources related to the calling thread for I/O channel allocation.
@@ -62,9 +72,21 @@ void spdk_allocate_thread(void);
 void spdk_free_thread(void);
 
 /**
- * \brief Get a handle to the current thread.
+ * \brief Get a handle to the current thread. This handle may be passed
+ * to other threads and used as the target of spdk_thread_send_msg().
  */
 const struct spdk_thread *spdk_get_thread(void);
+
+/**
+ * \brief Send a message to the given thread. The message
+ * may be sent asynchronously - i.e. spdk_thread_send_msg
+ * may return prior to `fn` being called.
+ *
+ *@param thread The target thread.
+ *@param fn This function will be called on the given thread.
+ *@param ctx This context will be passed to fn when called.
+ */
+void spdk_thread_send_msg(const struct spdk_thread *thread, thread_fn_t fn, void *ctx);
 
 /**
  * \brief Register the opaque io_device context as an I/O device.
