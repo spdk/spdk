@@ -68,11 +68,11 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
 
 	rte_mempool_put(g_task_pool, task);
-	spdk_vhost_scsi_ctrlr_task_unref(task->vdev);
+	spdk_vhost_dev_task_unref((struct spdk_vhost_dev *) task->vdev);
 }
 
 struct spdk_vhost_task *
-spdk_vhost_task_get(struct spdk_vhost_scsi_ctrlr *vdev)
+spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev)
 {
 	struct spdk_vhost_task *task;
 	int rc;
@@ -85,7 +85,7 @@ spdk_vhost_task_get(struct spdk_vhost_scsi_ctrlr *vdev)
 
 	memset(task, 0, sizeof(*task));
 	task->vdev = vdev;
-	spdk_vhost_scsi_ctrlr_task_ref(task->vdev);
+	spdk_vhost_dev_task_ref((struct spdk_vhost_dev *) task->vdev);
 	spdk_scsi_task_construct(&task->scsi, spdk_vhost_task_free_cb, NULL);
 
 	return task;

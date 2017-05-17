@@ -39,6 +39,8 @@
 /* Allocated iovec buffer len */
 #define VHOST_SCSI_IOVS_LEN		128
 
+struct spdk_vhost_dev;
+
 struct spdk_vhost_task {
 	struct spdk_scsi_task	scsi;
 
@@ -47,7 +49,7 @@ struct spdk_vhost_task {
 		struct virtio_scsi_ctrl_tmf_resp *tmf_resp;
 	};
 
-	struct spdk_vhost_scsi_ctrlr *vdev;
+	struct spdk_vhost_scsi_dev *vdev;
 	struct spdk_scsi_dev *scsi_dev;
 
 	int req_idx;
@@ -61,10 +63,10 @@ void spdk_vhost_enqueue_task(struct spdk_vhost_task *task);
 struct spdk_vhost_task *spdk_vhost_dequeue_task(void);
 
 void spdk_vhost_task_put(struct spdk_vhost_task *task);
-struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_ctrlr *vdev);
+struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev);
 
-void spdk_vhost_scsi_ctrlr_task_ref(struct spdk_vhost_scsi_ctrlr *vdev);
-void spdk_vhost_scsi_ctrlr_task_unref(struct spdk_vhost_scsi_ctrlr *vdev);
+void spdk_vhost_dev_task_ref(struct spdk_vhost_dev *vdev);
+void spdk_vhost_dev_task_unref(struct spdk_vhost_dev *vdev);
 
 void spdk_vhost_iovec_free(struct iovec *iov);
 struct iovec *spdk_vhost_iovec_alloc(void);
