@@ -24,18 +24,10 @@ before_script:
       export PATH=$PWD/bin:$PATH;
       popd;
     fi
-  - wget http://fast.dpdk.org/rel/dpdk-17.02.tar.xz
-  - tar xf dpdk-17.02.tar.xz
-  - pushd dpdk-17.02
-  - make config T=x86_64-native-linuxapp-$CC
-  - sed -i s/CONFIG_RTE_EAL_IGB_UIO=y/CONFIG_RTE_EAL_IGB_UIO=n/ build/.config
-  - sed -i s/CONFIG_RTE_KNI_KMOD=y/CONFIG_RTE_KNI_KMOD=n/ build/.config
-  - make
-  - make install DESTDIR=.
-  - export DPDK_DIR=$PWD/usr/local/share/dpdk/x86_64-native-linuxapp-$CC
-  - popd
+  - git submodule update --init
 
 script:
   - ./scripts/check_format.sh
-  - make CONFIG_WERROR=y
+  - ./configure --enable-werror
+  - make
   - ./unittest.sh
