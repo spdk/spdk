@@ -38,9 +38,15 @@
 #include "util/io_channel.c"
 
 static void
+_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	fn(ctx);
+}
+
+static void
 thread_alloc(void)
 {
-	spdk_allocate_thread();
+	spdk_allocate_thread(_send_msg, NULL);
 	spdk_free_thread();
 }
 
@@ -100,7 +106,7 @@ channel(void)
 	struct spdk_io_channel *ch1, *ch2;
 	void *ctx;
 
-	spdk_allocate_thread();
+	spdk_allocate_thread(_send_msg, NULL);
 	spdk_io_device_register(&device1, create_cb_1, destroy_cb_1, sizeof(ctx1));
 	spdk_io_device_register(&device2, create_cb_2, destroy_cb_2, sizeof(ctx2));
 	spdk_io_device_register(&device3, create_cb_null, NULL, 0);
