@@ -1047,7 +1047,7 @@ bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 	}
 
 	if (rc != 0) {
-		SPDK_ERRLOG("IO failed\n");
+		SPDK_ERRLOG("%s failed: rc = %d\n", direction == BDEV_DISK_READ ? "readv" : "writev", rc);
 	}
 	return rc;
 }
