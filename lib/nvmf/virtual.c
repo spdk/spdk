@@ -533,7 +533,7 @@ nvmf_virtual_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
 
 	for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
 		bdev = subsystem->dev.virt.ns_list[i];
-		ch = spdk_bdev_get_io_channel(bdev, SPDK_IO_PRIORITY_DEFAULT);
+		ch = spdk_bdev_get_io_channel(bdev);
 		if (ch == NULL) {
 			SPDK_ERRLOG("io_channel allocation failed\n");
 			return -1;

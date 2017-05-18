@@ -384,7 +384,7 @@ channel_ops(void)
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
 
-	channel =  spdk_fs_alloc_io_channel(fs, SPDK_IO_PRIORITY_DEFAULT);
+	channel =  spdk_fs_alloc_io_channel(fs);
 	CU_ASSERT(channel != NULL);
 
 	spdk_fs_free_io_channel(channel);
@@ -412,7 +412,7 @@ channel_ops_sync(void)
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
 
-	channel =  spdk_fs_alloc_io_channel_sync(fs, SPDK_IO_PRIORITY_DEFAULT);
+	channel =  spdk_fs_alloc_io_channel_sync(fs);
 	CU_ASSERT(channel != NULL);
 
 	spdk_fs_free_io_channel(channel);
