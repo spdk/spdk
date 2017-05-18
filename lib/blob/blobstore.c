@@ -1060,7 +1060,6 @@ _spdk_bs_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void 
 	channel->req_mem = calloc(spdk_max(bs->max_channel_ops, bs->max_md_ops),
 				  sizeof(struct spdk_bs_request_set));
 	if (!channel->req_mem) {
-		free(channel);
 		return -1;
 	}
 

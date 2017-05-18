@@ -245,7 +245,6 @@ _spdk_fs_channel_create(void *io_device, uint32_t priority, void *ctx_buf, void 
 
 	channel->req_mem = calloc(max_ops, sizeof(struct spdk_fs_request));
 	if (!channel->req_mem) {
-		free(channel);
 		return -1;
 	}
 
