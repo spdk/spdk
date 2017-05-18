@@ -49,7 +49,7 @@ struct spdk_copy_engine {
 			uint64_t nbytes, spdk_copy_completion_cb cb);
 	int64_t	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 			uint64_t nbytes, spdk_copy_completion_cb cb);
-	struct spdk_io_channel *(*get_io_channel)(uint32_t priority);
+	struct spdk_io_channel *(*get_io_channel)(void);
 };
 
 struct spdk_copy_module_if {

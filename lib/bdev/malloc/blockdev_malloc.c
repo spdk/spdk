@@ -350,9 +350,9 @@ blockdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static struct spdk_io_channel *
-blockdev_malloc_get_io_channel(void *ctx, uint32_t priority)
+blockdev_malloc_get_io_channel(void *ctx)
 {
-	return spdk_copy_engine_get_io_channel(priority);
+	return spdk_copy_engine_get_io_channel();
 }
 
 static const struct spdk_bdev_fn_table malloc_fn_table = {
