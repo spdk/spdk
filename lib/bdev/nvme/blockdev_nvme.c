@@ -92,6 +92,15 @@ struct nvme_bdev_io {
 
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
+
+	/** Save for admin passthru completion. */
+	struct spdk_nvme_cpl cpl;
+
+	/** Core for admin passthru completion event. */
+	uint32_t p_lcore;
+
+	/** Event pointer for admin passthru completion. */
+	struct spdk_event *admin_passthru_completion_event;
 };
 
 enum data_direction {
@@ -976,22 +985,21 @@ static void
 bdev_nvme_admin_passthru_completion(void *arg1, void *arg2)
 {
 	struct spdk_bdev_io *bdev_io = arg1;
+	struct nvme_bdev_io *bio = arg2;
 
 	spdk_bdev_io_complete_nvme_status(bdev_io,
-					  bdev_io->u.nvme_admin_passthru.cpl.status.sct,
-					  bdev_io->u.nvme_admin_passthru.cpl.status.sc);
+					  bio->cpl.status.sct, bio->cpl.status.sc);
 }
 
 static void
 bdev_nvme_admin_passthru_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
 
-	memcpy(&bdev_io->u.nvme_admin_passthru.cpl, cpl, sizeof(*cpl));
-
-	spdk_event_call(spdk_event_allocate(bdev_io->u.nvme_admin_passthru.p_lcore,
-					    bdev_nvme_admin_passthru_completion, bdev_io, NULL));
-}
+	bio->cpl.status.sc = cpl->status.sc;
+	bio->cpl.status.sct = cpl->status.sct;
+	spdk_event_call(bio->admin_passthru_completion_event);
+};
 
 static void
 bdev_nvme_queued_reset_sgl(void *ref, uint32_t sgl_offset)
@@ -1110,6 +1118,18 @@ static int
 bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+
+	bio->p_lcore = spdk_env_get_current_core();
+	bio->admin_passthru_completion_event =
+		spdk_event_allocate(bio->p_lcore, bdev_nvme_admin_passthru_completion,
+				    bdev_io, bio);
+
+	if (bio->admin_passthru_completion_event == NULL) {
+		SPDK_ERRLOG("memory allocation for bio->admin_passthru_completion_event failed.\n");
+		return -1;
+	}
+
 	return spdk_nvme_ctrlr_cmd_admin_raw(nbdev->nvme_ctrlr->ctrlr, cmd, buf,
 					     (uint32_t)nbytes, bdev_nvme_admin_passthru_done, bio);
 }

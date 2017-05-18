@@ -234,7 +234,7 @@ struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_chan
 				     uint64_t offset, uint64_t length,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_bdev_io *spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
-		struct spdk_nvme_cmd *cmd, void *buf,
+		const struct spdk_nvme_cmd *cmd, void *buf,
 		size_t nbytes,
 		spdk_bdev_io_completion_cb cb,
 		void *cb_arg);

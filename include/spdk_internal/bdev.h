@@ -292,8 +292,6 @@ struct spdk_bdev_io {
 			struct spdk_nvme_cmd cmd;
 			void *buf;
 			size_t nbytes;
-			uint32_t p_lcore;
-			struct spdk_nvme_cpl cpl;
 		} nvme_admin_passthru;
 	} u;
 

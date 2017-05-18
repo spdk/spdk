@@ -943,13 +943,12 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 }
 
 struct spdk_bdev_io *
-spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
+spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev, const struct spdk_nvme_cmd *cmd,
 			      void *buf, size_t nbytes, spdk_bdev_io_completion_cb cb,
 			      void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
 	int rc;
-	uint32_t p_lcore = spdk_env_get_current_core();
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
@@ -958,10 +957,9 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev, struct spdk_nvme_cmd *cmd,
 	}
 
 	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_ADMIN;
-	memcpy(&bdev_io->u.nvme_admin_passthru.cmd, cmd, sizeof(struct spdk_nvme_cmd));
+	bdev_io->u.nvme_admin_passthru.cmd = *cmd;
 	bdev_io->u.nvme_admin_passthru.buf = buf;
 	bdev_io->u.nvme_admin_passthru.nbytes = nbytes;
-	bdev_io->u.nvme_admin_passthru.p_lcore = p_lcore;
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
