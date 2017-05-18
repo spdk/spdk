@@ -368,7 +368,7 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 
 	lun->lcore = spdk_env_get_current_core();
 
-	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev, SPDK_IO_PRIORITY_DEFAULT);
+	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev);
 	if (lun->io_channel == NULL) {
 		return -1;
 	}
