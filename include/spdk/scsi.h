@@ -73,11 +73,6 @@ enum spdk_scsi_task_func {
 	SPDK_SCSI_TASK_FUNC_LUN_RESET,
 };
 
-enum spdk_scsi_task_type {
-	SPDK_SCSI_TASK_TYPE_CMD = 0,
-	SPDK_SCSI_TASK_TYPE_MANAGE,
-};
-
 /*
  * SAM does not define the value for these service responses.  Each transport
  *  (i.e. SAS, FC, iSCSI) will map these value to transport-specific codes,
@@ -93,10 +88,7 @@ enum spdk_scsi_task_mgmt_resp {
 };
 
 struct spdk_scsi_task {
-	uint8_t				type;
 	uint8_t				status;
-	uint8_t				function; /* task mgmt function */
-	uint8_t				response; /* task mgmt response */
 	struct spdk_scsi_lun		*lun;
 	struct spdk_io_channel		*ch;
 	struct spdk_scsi_port		*target_port;
@@ -144,6 +136,56 @@ struct spdk_scsi_task {
 	uint32_t abort_id;
 };
 
+/** SCSI management task */
+struct spdk_scsi_mgmt_task {
+	uint8_t				function; /* task mgmt function */
+	uint8_t				response; /* task mgmt response */
+	struct spdk_scsi_lun		*lun;
+	struct spdk_io_channel		*ch;
+	struct spdk_scsi_port		*target_port;
+	struct spdk_scsi_port		*initiator_port;
+	struct spdk_event 		*cb_event;
+
+	uint32_t ref;
+	uint32_t transfer_len;
+	uint32_t dxfer_dir;
+	uint32_t length;
+
+	/**
+	 * Amount of data actually transferred.  Can be less than requested
+	 *  transfer_len - i.e. SCSI INQUIRY.
+	 */
+	uint32_t data_transferred;
+
+	uint64_t offset;
+	struct spdk_scsi_task *parent;
+
+	void (*free_fn)(struct spdk_scsi_task *);
+
+	/**
+	 * \internal
+	 * Size of internal buffer or zero when iov.iov_base is not internally managed.
+	 */
+	uint32_t alloc_len;
+	/**
+	 * \internal
+	 * iov is internal buffer. Use iovs to access elements of IO.
+	 */
+	struct iovec iov;
+	struct iovec *iovs;
+	uint16_t iovcnt;
+
+	uint8_t sense_data[32];
+	size_t sense_data_len;
+
+	void *blockdev_io;
+
+	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
+
+	uint32_t abort_id;
+};
+
+
 struct spdk_scsi_port;
 
 struct spdk_scsi_dev;
@@ -167,7 +209,7 @@ int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev);
 struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id);
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
-void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task,
+void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_mgmt_task *mtask,
 				   enum spdk_scsi_task_func func);
 void spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);
 int spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name);

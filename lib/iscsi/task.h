@@ -40,6 +40,7 @@
 
 struct spdk_iscsi_task {
 	struct spdk_scsi_task	scsi;
+	struct spdk_scsi_mgmt_task	scsi_mgmt;
 
 	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_pdu *pdu;
