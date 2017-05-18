@@ -309,7 +309,7 @@ channel_ops(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	channel = spdk_bs_alloc_io_channel(bs, SPDK_IO_PRIORITY_DEFAULT);
+	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
 	spdk_bs_free_io_channel(channel);
@@ -340,7 +340,7 @@ blob_write(void)
 
 	pages_per_cluster = spdk_bs_get_cluster_size(bs) / spdk_bs_get_page_size(bs);
 
-	channel = spdk_bs_alloc_io_channel(bs, SPDK_IO_PRIORITY_DEFAULT);
+	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
 	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
@@ -406,7 +406,7 @@ blob_read(void)
 
 	pages_per_cluster = spdk_bs_get_cluster_size(bs) / spdk_bs_get_page_size(bs);
 
-	channel = spdk_bs_alloc_io_channel(bs, SPDK_IO_PRIORITY_DEFAULT);
+	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
 	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
@@ -470,7 +470,7 @@ blob_rw_verify(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	channel = spdk_bs_alloc_io_channel(bs, SPDK_IO_PRIORITY_DEFAULT);
+	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
 	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
