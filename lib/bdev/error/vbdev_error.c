@@ -154,12 +154,11 @@ vbdev_error_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static struct spdk_io_channel *
-vbdev_error_get_io_channel(void *ctx, uint32_t priority)
+vbdev_error_get_io_channel(void *ctx)
 {
 	struct vbdev_error_disk *error_disk = ctx;
 
-	return error_disk->base_bdev->fn_table->get_io_channel(error_disk->base_bdev,
-			priority);
+	return error_disk->base_bdev->fn_table->get_io_channel(error_disk->base_bdev);
 }
 
 static int

@@ -130,7 +130,7 @@ mem_copy_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 	return nbytes;
 }
 
-static struct spdk_io_channel *mem_get_io_channel(uint32_t priority);
+static struct spdk_io_channel *mem_get_io_channel(void);
 
 static struct spdk_copy_engine memcpy_copy_engine = {
 	.copy		= mem_copy_submit,
@@ -139,7 +139,7 @@ static struct spdk_copy_engine memcpy_copy_engine = {
 };
 
 static int
-memcpy_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+memcpy_create_cb(void *io_device, void *ctx_buf)
 {
 	return 0;
 }
@@ -149,9 +149,9 @@ memcpy_destroy_cb(void *io_device, void *ctx_buf)
 {
 }
 
-static struct spdk_io_channel *mem_get_io_channel(uint32_t priority)
+static struct spdk_io_channel *mem_get_io_channel(void)
 {
-	return spdk_get_io_channel(&memcpy_copy_engine, priority);
+	return spdk_get_io_channel(&memcpy_copy_engine);
 }
 
 static size_t
@@ -175,19 +175,19 @@ void spdk_copy_module_list_add(struct spdk_copy_module_if *copy_module)
 }
 
 static int
-copy_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+copy_create_cb(void *io_device, void *ctx_buf)
 {
 	struct copy_io_channel	*copy_ch = ctx_buf;
 
 	if (hw_copy_engine != NULL) {
-		copy_ch->ch = hw_copy_engine->get_io_channel(priority);
+		copy_ch->ch = hw_copy_engine->get_io_channel();
 		if (copy_ch->ch != NULL) {
 			copy_ch->engine = hw_copy_engine;
 			return 0;
 		}
 	}
 
-	copy_ch->ch = mem_copy_engine->get_io_channel(priority);
+	copy_ch->ch = mem_copy_engine->get_io_channel();
 	assert(copy_ch->ch != NULL);
 	copy_ch->engine = mem_copy_engine;
 	return 0;
@@ -202,9 +202,9 @@ copy_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 struct spdk_io_channel *
-spdk_copy_engine_get_io_channel(uint32_t priority)
+spdk_copy_engine_get_io_channel(void)
 {
-	return spdk_get_io_channel(&spdk_copy_module_list, priority);
+	return spdk_get_io_channel(&spdk_copy_module_list);
 }
 
 static int
