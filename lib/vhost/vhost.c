@@ -64,7 +64,7 @@ static char dev_dirname[PATH_MAX] = "";
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
 #define MAX_VHOST_VRINGS	256
-#define MAX_VHOST_DEVICE	1024
+#define MAX_VHOST_DEVICES	15
 
 #ifndef VIRTIO_F_VERSION_1
 #define VIRTIO_F_VERSION_1 32
@@ -106,6 +106,24 @@ struct spdk_vhost_dev {
 	uint64_t negotiated_features;
 	struct rte_vhost_vring virtqueue[MAX_VHOST_VRINGS] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 };
+
+static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
+
+static struct spdk_vhost_dev *
+spdk_vhost_dev_find_by_vid(int vid)
+{
+	unsigned i;
+	struct spdk_vhost_dev *vdev;
+
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		vdev = g_spdk_vhost_devices[i];
+		if (vdev && vdev->vid == vid) {
+			return vdev;
+		}
+	}
+
+	return NULL;
+}
 
 static void
 spdk_vhost_dev_destruct(struct spdk_vhost_dev *vdev)
@@ -176,10 +194,6 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *controlq_poller;
 } __rte_cache_aligned;
-
-/* This maps from the integer index passed by DPDK to the our controller representation. */
-/* MAX_VHOST_DEVICE from DPDK. */
-static struct spdk_vhost_dev *dpdk_vid_mapping[MAX_VHOST_DEVICE];
 
 /*
  * Get available requests from avail ring.
@@ -825,8 +839,10 @@ destroy_device(int vid)
 	sem_t done_sem;
 	uint32_t i;
 
-	assert(vid < MAX_VHOST_DEVICE);
-	vdev = dpdk_vid_mapping[vid];
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
+	}
 	svdev = (struct spdk_vhost_scsi_dev *) vdev;
 
 	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
@@ -856,14 +872,8 @@ destroy_device(int vid)
 	g_num_ctrlrs[vdev->lcore]--;
 	vdev->lcore = -1;
 
-	spdk_vhost_dev_destruct(&svdev->vdev);
-	dpdk_vid_mapping[vid] = NULL;
+	spdk_vhost_dev_destruct(vdev);
 }
-
-#define LUN_DEV_NAME_SIZE 8
-#define MAX_SCSI_CTRLRS 15
-
-static struct spdk_vhost_dev *spdk_vhost_ctrlrs[MAX_SCSI_CTRLRS];
 
 struct spdk_vhost_dev *
 spdk_vhost_dev_find(const char *ctrlr_name)
@@ -875,19 +885,18 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 		ctrlr_name += dev_dirname_len;
 	}
 
-	for (i = 0; i < MAX_SCSI_CTRLRS; i++) {
-		if (spdk_vhost_ctrlrs[i] == NULL) {
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		if (g_spdk_vhost_devices[i] == NULL) {
 			continue;
 		}
 
-		if (strcmp(spdk_vhost_ctrlrs[i]->name, ctrlr_name) == 0) {
-			return spdk_vhost_ctrlrs[i];
+		if (strcmp(g_spdk_vhost_devices[i]->name, ctrlr_name) == 0) {
+			return g_spdk_vhost_devices[i];
 		}
 	}
 
 	return NULL;
 }
-
 
 static int new_device(int vid);
 static void destroy_device(int vid);
@@ -925,14 +934,14 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -EEXIST;
 	}
 
-	for (ctrlr_num = 0; ctrlr_num < MAX_SCSI_CTRLRS; ctrlr_num++) {
-		if (spdk_vhost_ctrlrs[ctrlr_num] == NULL) {
+	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
+		if (g_spdk_vhost_devices[ctrlr_num] == NULL) {
 			break;
 		}
 	}
 
-	if (ctrlr_num == MAX_SCSI_CTRLRS) {
-		SPDK_ERRLOG("Max scsi controllers reached (%d).\n", MAX_SCSI_CTRLRS);
+	if (ctrlr_num == MAX_VHOST_DEVICES) {
+		SPDK_ERRLOG("Max scsi controllers reached (%d).\n", MAX_VHOST_DEVICES);
 		return -ENOSPC;
 	}
 
@@ -986,7 +995,7 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -EIO;
 	}
 
-	spdk_vhost_ctrlrs[ctrlr_num] = vdev;
+	g_spdk_vhost_devices[ctrlr_num] = vdev;
 	SPDK_NOTICELOG("Controller %s: new controller added\n", name);
 	return 0;
 }
@@ -1005,13 +1014,13 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 		return -ENODEV;
 	}
 
-	for (ctrlr_num = 0; ctrlr_num < MAX_SCSI_CTRLRS; ctrlr_num++) {
-		if (spdk_vhost_ctrlrs[ctrlr_num] == vdev) {
+	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
+		if (g_spdk_vhost_devices[ctrlr_num] == vdev) {
 			break;
 		}
 	}
 
-	if (ctrlr_num == MAX_SCSI_CTRLRS) {
+	if (ctrlr_num == MAX_VHOST_DEVICES) {
 		SPDK_ERRLOG("Trying to remove invalid controller: %s.\n", vdev->name);
 		return -ENOSPC;
 	}
@@ -1043,7 +1052,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 	 */
 	free(vdev->name);
 	spdk_free(svdev);
-	spdk_vhost_ctrlrs[ctrlr_num] = NULL;
+	g_spdk_vhost_devices[ctrlr_num] = NULL;
 
 	return 0;
 }
@@ -1174,8 +1183,8 @@ spdk_vhost_dev_next(struct spdk_vhost_dev *prev)
 	int i = 0;
 
 	if (prev != NULL) {
-		for (; i < MAX_SCSI_CTRLRS; i++) {
-			if (spdk_vhost_ctrlrs[i] == prev) {
+		for (; i < MAX_VHOST_DEVICES; i++) {
+			if (g_spdk_vhost_devices[i] == prev) {
 				break;
 			}
 		}
@@ -1183,12 +1192,12 @@ spdk_vhost_dev_next(struct spdk_vhost_dev *prev)
 		i++;
 	}
 
-	for (; i < MAX_SCSI_CTRLRS; i++) {
-		if (spdk_vhost_ctrlrs[i] == NULL) {
+	for (; i < MAX_VHOST_DEVICES; i++) {
+		if (g_spdk_vhost_devices[i] == NULL) {
 			continue;
 		}
 
-		return spdk_vhost_ctrlrs[i];
+		return g_spdk_vhost_devices[i];
 	}
 
 	return NULL;
@@ -1315,8 +1324,6 @@ new_device(int vid)
 	char ifname[PATH_MAX];
 	sem_t added;
 
-	assert(vid < MAX_VHOST_DEVICE);
-
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
 		return -1;
@@ -1338,7 +1345,6 @@ new_device(int vid)
 		return -1;
 	}
 
-	dpdk_vid_mapping[vid] = vdev;
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 
 	event = vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
@@ -1377,8 +1383,8 @@ session_shutdown(void *arg)
 	struct spdk_vhost_dev *vdev = NULL;
 	int i;
 
-	for (i = 0; i < MAX_SCSI_CTRLRS; i++) {
-		vdev = spdk_vhost_ctrlrs[i];
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		vdev = g_spdk_vhost_devices[i];
 		if (vdev == NULL) {
 			continue;
 		}
