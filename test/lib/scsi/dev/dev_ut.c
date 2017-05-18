@@ -153,7 +153,7 @@ spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun)
 }
 
 int
-spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func)
+spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_mgmt_task *mtask, enum spdk_scsi_task_func func)
 {
 	return 0;
 }
@@ -334,18 +334,14 @@ dev_queue_mgmt_task_success(void)
 	struct spdk_scsi_dev *dev;
 	char *lun_name_list[1] = {"malloc0"};
 	int lun_id_list[1] = { 0 };
-	struct spdk_scsi_task *task;
+	struct spdk_scsi_mgmt_task mtask = {0};
 
 	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1);
 
 	/* Successfully constructs and returns a dev */
 	CU_ASSERT_TRUE(dev != NULL);
 
-	task = spdk_get_task(NULL);
-
-	spdk_scsi_dev_queue_mgmt_task(dev, task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
-
-	spdk_scsi_task_put(task);
+	spdk_scsi_dev_queue_mgmt_task(dev, &mtask, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 
 	spdk_scsi_dev_destruct(dev);
 }
@@ -377,19 +373,16 @@ dev_stop_success(void)
 {
 	struct spdk_scsi_dev dev = { 0 };
 	struct spdk_scsi_task *task;
-	struct spdk_scsi_task *task_mgmt;
+	struct spdk_scsi_mgmt_task task_mgmt = {0};
 
 	task = spdk_get_task(NULL);
 
 	spdk_scsi_dev_queue_task(&dev, task);
 
-	task_mgmt = spdk_get_task(NULL);
-
 	/* Enqueue the tasks into dev->task_mgmt_submit_queue */
-	spdk_scsi_dev_queue_mgmt_task(&dev, task_mgmt, SPDK_SCSI_TASK_FUNC_LUN_RESET);
+	spdk_scsi_dev_queue_mgmt_task(&dev, &task_mgmt, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 
 	spdk_scsi_task_put(task);
-	spdk_scsi_task_put(task_mgmt);
 }
 
 static void

@@ -73,11 +73,6 @@ enum spdk_scsi_task_func {
 	SPDK_SCSI_TASK_FUNC_LUN_RESET,
 };
 
-enum spdk_scsi_task_type {
-	SPDK_SCSI_TASK_TYPE_CMD = 0,
-	SPDK_SCSI_TASK_TYPE_MANAGE,
-};
-
 /*
  * SAM does not define the value for these service responses.  Each transport
  *  (i.e. SAS, FC, iSCSI) will map these value to transport-specific codes,
@@ -93,10 +88,7 @@ enum spdk_scsi_task_mgmt_resp {
 };
 
 struct spdk_scsi_task {
-	uint8_t				type;
 	uint8_t				status;
-	uint8_t				function; /* task mgmt function */
-	uint8_t				response; /* task mgmt response */
 	struct spdk_scsi_lun		*lun;
 	struct spdk_io_channel		*ch;
 	struct spdk_scsi_port		*target_port;
@@ -140,9 +132,21 @@ struct spdk_scsi_task {
 	void *blockdev_io;
 
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
+};
+
+/** SCSI management task */
+struct spdk_scsi_mgmt_task {
+	uint8_t				function; /* task mgmt function */
+	uint8_t				response; /* task mgmt response */
+	struct spdk_scsi_lun		*lun;
+	struct spdk_io_channel		*ch;
+	struct spdk_scsi_port		*target_port;
+	struct spdk_scsi_port		*initiator_port;
+	struct spdk_event 		*cb_event;
 
 	uint32_t abort_id;
 };
+
 
 struct spdk_scsi_port;
 
@@ -167,7 +171,7 @@ int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev);
 struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id);
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
-void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task,
+void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_mgmt_task *mtask,
 				   enum spdk_scsi_task_func func);
 void spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);
 int spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name);

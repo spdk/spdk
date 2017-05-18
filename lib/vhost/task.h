@@ -41,6 +41,7 @@
 
 struct spdk_vhost_task {
 	struct spdk_scsi_task	scsi;
+	struct spdk_scsi_mgmt_task scsi_mgmt;
 
 	union {
 		struct virtio_scsi_cmd_resp *resp;

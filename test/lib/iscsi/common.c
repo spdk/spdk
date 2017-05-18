@@ -81,7 +81,7 @@ spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id)
 
 void
 spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
-			      struct spdk_scsi_task *task,
+			      struct spdk_scsi_mgmt_task *mtask,
 			      enum spdk_scsi_task_func func)
 {
 }

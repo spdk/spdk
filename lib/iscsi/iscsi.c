@@ -2839,9 +2839,9 @@ static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
 				       struct spdk_iscsi_task *task,
 				       enum spdk_scsi_task_func func)
 {
-	task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(), process_task_mgmt_completion,
-			      conn, task);
-	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi, func);
+	task->scsi_mgmt.cb_event = spdk_event_allocate(spdk_env_get_current_core(),
+				   process_task_mgmt_completion, conn, task);
+	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi_mgmt, func);
 }
 
 int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
@@ -3057,7 +3057,7 @@ spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 	rsph = (struct iscsi_bhs_task_resp *)&rsp_pdu->bhs;
 	rsph->opcode = ISCSI_OP_TASK_RSP;
 	rsph->flags |= 0x80; /* bit 0 default to 1 */
-	switch (task->scsi.response) {
+	switch (task->scsi_mgmt.response) {
 	case SPDK_SCSI_TASK_MGMT_RESP_COMPLETE:
 		rsph->response = ISCSI_TASK_FUNC_RESP_COMPLETE;
 		break;
@@ -3258,17 +3258,17 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	spdk_iscsi_task_associate_pdu(task, pdu);
-	task->scsi.target_port = conn->target_port;
-	task->scsi.initiator_port = conn->initiator_port;
+	task->scsi_mgmt.target_port = conn->target_port;
+	task->scsi_mgmt.initiator_port = conn->initiator_port;
 	task->tag = task_tag;
-	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
+	task->scsi_mgmt.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 
 	switch (function) {
 	/* abort task identified by Referenced Task Tag field */
 	case ISCSI_TASK_FUNC_ABORT_TASK:
 		SPDK_NOTICELOG("ABORT_TASK\n");
 
-		task->scsi.abort_id = ref_task_tag;
+		task->scsi_mgmt.abort_id = ref_task_tag;
 
 		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
 		spdk_del_transfer_task(conn, ref_task_tag);
@@ -3285,12 +3285,12 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_SUCCESS;
 
 	case ISCSI_TASK_FUNC_CLEAR_TASK_SET:
-		task->scsi.response = 5; /* not supported. */
+		task->scsi_mgmt.response = 5; /* not supported. */
 		SPDK_NOTICELOG("CLEAR_TASK_SET (Unsupported)\n");
 		break;
 
 	case ISCSI_TASK_FUNC_CLEAR_ACA:
-		task->scsi.response = 5; /* not supported. */
+		task->scsi_mgmt.response = 5; /* not supported. */
 		SPDK_NOTICELOG("CLEAR_ACA (Unsupported)\n");
 		break;
 
@@ -3298,7 +3298,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		SPDK_NOTICELOG("LOGICAL_UNIT_RESET\n");
 
 		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
-		spdk_clear_all_transfer_task(conn, task->scsi.lun);
+		spdk_clear_all_transfer_task(conn, task->scsi_mgmt.lun);
 		return SPDK_SUCCESS;
 
 	case ISCSI_TASK_FUNC_TARGET_WARM_RESET:
@@ -3310,7 +3310,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		if (rc < 0)
 			SPDK_ERRLOG("tgt_node reset failed\n");
 #else
-		task->scsi.response = 5; /* not supported */
+		task->scsi_mgmt.response = 5; /* not supported */
 #endif
 		break;
 
@@ -3326,18 +3326,18 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 		conn->state = ISCSI_CONN_STATE_EXITING;
 #else
-		task->scsi.response = 5; /* not supported */
+		task->scsi_mgmt.response = 5; /* not supported */
 #endif
 		break;
 
 	case ISCSI_TASK_FUNC_TASK_REASSIGN:
 		SPDK_NOTICELOG("TASK_REASSIGN (Unsupported)\n");
-		task->scsi.response = 5; /* not supported */
+		task->scsi_mgmt.response = 5; /* not supported */
 		break;
 
 	default:
 		SPDK_ERRLOG("unsupported function %d\n", function);
-		task->scsi.response = 255; /* Function rejected. */
+		task->scsi_mgmt.response = 255; /* Function rejected. */
 		break;
 	}
 
