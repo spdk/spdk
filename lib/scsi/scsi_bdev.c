@@ -1250,13 +1250,13 @@ static void
 spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
 				  void *cb_arg)
 {
-	struct spdk_scsi_task *task = cb_arg;
+	struct spdk_scsi_mgmt_task *mtask = cb_arg;
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-		task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
+		mtask->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
 	}
 
-	spdk_scsi_lun_complete_mgmt_task(task->lun, task);
+	spdk_scsi_lun_complete_mgmt_task(mtask->lun, mtask);
 }
 
 static int
@@ -1945,8 +1945,8 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 }
 
 int
-spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
+spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_mgmt_task *mtask)
 {
 	return spdk_bdev_reset(bdev, SPDK_BDEV_RESET_SOFT,
-			       spdk_bdev_scsi_task_complete_mgmt, task);
+			       spdk_bdev_scsi_task_complete_mgmt, mtask);
 }

@@ -377,10 +377,9 @@ static void
 mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
-			      process_mgmt_task_completion,
-			      task, NULL);
-	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, func);
+	task->scsi_mgmt.cb_event = spdk_event_allocate(rte_lcore_id(),
+				   process_mgmt_task_completion, task, NULL);
+	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi_mgmt, func);
 }
 
 static void
