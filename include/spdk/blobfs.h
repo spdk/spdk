@@ -71,7 +71,7 @@ void spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
 void spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_arg);
 
-struct spdk_io_channel *spdk_fs_alloc_io_channel(struct spdk_filesystem *fs, uint32_t priority);
+struct spdk_io_channel *spdk_fs_alloc_io_channel(struct spdk_filesystem *fs);
 
 /*
  * Allocates an I/O channel suitable for using the synchronous blobfs API.  These channels do
@@ -79,8 +79,7 @@ struct spdk_io_channel *spdk_fs_alloc_io_channel(struct spdk_filesystem *fs, uin
  *  primitives used to block until any necessary I/O operations are completed on a separate
  *  polling thread.
  */
-struct spdk_io_channel *spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs,
-		uint32_t priority);
+struct spdk_io_channel *spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs);
 
 void spdk_fs_free_io_channel(struct spdk_io_channel *channel);
 

@@ -86,19 +86,6 @@ by simply failing requests with an appropriate error code when the queue is
 full. This allows the blobstore to easily stick to its commitment to never
 block, but may require the user to provide their own queueing layer.
 
-The NVMe specification has added support for specifying priorities on the
-hardware queues. With a traditional filesystem and storage stack, however,
-there is no reasonable way to map an I/O from an arbitrary thread to a
-particular hardware queue to be processed with the priority requested. The
-blobstore solves this by allowing the user to create channels with priorities,
-which map directly to priorities on NVMe hardware queues. The user can then
-choose the priority for an I/O by sending it on the appropriate channel. This
-is incredibly useful for many databases where data intake operations need to
-run with a much higher priority than background scrub and compaction operations
-in order to stay within quality of service requirements. Note that many NVMe
-devices today do not yet support queue priorities, so the blobstore considers
-this feature optional.
-
 ## The Basics
 
 The blobstore defines a hierarchy of three units of disk space. The smallest are
