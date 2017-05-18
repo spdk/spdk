@@ -218,9 +218,9 @@ nvmf_test_create_subsystem(void)
 
 	/* Longest valid name */
 	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
-	memset(nqn + strlen(nqn), 'a', 222 - strlen(nqn));
-	nqn[222] = '\0';
-	CU_ASSERT(strlen(nqn) == 222);
+	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
+	nqn[223] = '\0';
+	CU_ASSERT(strlen(nqn) == 223);
 	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
 					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
@@ -229,9 +229,9 @@ nvmf_test_create_subsystem(void)
 
 	/* Name that is one byte longer than allowed */
 	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
-	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
-	nqn[223] = '\0';
-	CU_ASSERT(strlen(nqn) == 223);
+	memset(nqn + strlen(nqn), 'a', 224 - strlen(nqn));
+	nqn[224] = '\0';
+	CU_ASSERT(strlen(nqn) == 224);
 	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
 					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	CU_ASSERT(subsystem == NULL);

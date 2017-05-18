@@ -174,8 +174,8 @@ spdk_nvmf_valid_nqn(const char *nqn)
 	size_t len;
 
 	len = strlen(nqn);
-	if (len >= SPDK_NVMF_NQN_MAX_LEN) {
-		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", nqn, len, SPDK_NVMF_NQN_MAX_LEN - 1);
+	if (len > SPDK_NVMF_NQN_MAX_LEN) {
+		SPDK_ERRLOG("Invalid NQN \"%s\": length %zu > max %d\n", nqn, len, SPDK_NVMF_NQN_MAX_LEN);
 		return false;
 	}
 

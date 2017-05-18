@@ -1109,7 +1109,7 @@ nvme_rdma_discovery_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 	trid.adrfam = entry->adrfam;
 
 	/* Ensure that subnqn is null terminated. */
-	end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
+	end = memchr(entry->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
 	if (!end) {
 		SPDK_ERRLOG("Discovery entry SUBNQN is not null terminated\n");
 		return;

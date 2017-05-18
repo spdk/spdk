@@ -146,14 +146,14 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	}
 
 	/* Ensure that subnqn and hostnqn are null terminated */
-	end = memchr(data->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
+	end = memchr(data->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
 	if (!end) {
 		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
 		INVALID_CONNECT_DATA(subnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	end = memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN);
+	end = memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
 	if (!end) {
 		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
 		INVALID_CONNECT_DATA(hostnqn);
