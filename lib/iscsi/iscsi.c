@@ -3285,12 +3285,12 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		return SPDK_SUCCESS;
 
 	case ISCSI_TASK_FUNC_CLEAR_TASK_SET:
-		task->scsi_mgmt.response = 5; /* not supported. */
+		task->scsi_mgmt.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
 		SPDK_NOTICELOG("CLEAR_TASK_SET (Unsupported)\n");
 		break;
 
 	case ISCSI_TASK_FUNC_CLEAR_ACA:
-		task->scsi_mgmt.response = 5; /* not supported. */
+		task->scsi_mgmt.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
 		SPDK_NOTICELOG("CLEAR_ACA (Unsupported)\n");
 		break;
 
@@ -3310,7 +3310,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		if (rc < 0)
 			SPDK_ERRLOG("tgt_node reset failed\n");
 #else
-		task->scsi_mgmt.response = 5; /* not supported */
+		task->scsi_mgmt.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
 #endif
 		break;
 
@@ -3326,18 +3326,18 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 		conn->state = ISCSI_CONN_STATE_EXITING;
 #else
-		task->scsi_mgmt.response = 5; /* not supported */
+		task->scsi_mgmt.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
 #endif
 		break;
 
 	case ISCSI_TASK_FUNC_TASK_REASSIGN:
 		SPDK_NOTICELOG("TASK_REASSIGN (Unsupported)\n");
-		task->scsi_mgmt.response = 5; /* not supported */
+		task->scsi_mgmt.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
 		break;
 
 	default:
 		SPDK_ERRLOG("unsupported function %d\n", function);
-		task->scsi_mgmt.response = 255; /* Function rejected. */
+		task->scsi_mgmt.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT;
 		break;
 	}
 
