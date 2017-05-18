@@ -94,7 +94,7 @@ __get_io_channel(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
 
-	target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
+	target->ch = spdk_bdev_get_io_channel(target->bdev);
 	wake_ut_thread();
 }
 

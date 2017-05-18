@@ -194,11 +194,11 @@ vbdev_split_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static struct spdk_io_channel *
-vbdev_split_get_io_channel(void *ctx, uint32_t priority)
+vbdev_split_get_io_channel(void *ctx)
 {
 	struct split_disk *split_disk = ctx;
 
-	return split_disk->base_bdev->fn_table->get_io_channel(split_disk->base_bdev, priority);
+	return split_disk->base_bdev->fn_table->get_io_channel(split_disk->base_bdev);
 }
 
 static int

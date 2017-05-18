@@ -118,7 +118,7 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 }
 
 struct spdk_io_channel *
-spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+spdk_bdev_get_io_channel(struct spdk_bdev *bdev)
 {
 	return NULL;
 }
