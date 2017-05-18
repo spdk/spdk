@@ -107,6 +107,12 @@ struct spdk_vhost_dev {
 	struct rte_vhost_vring virtqueue[MAX_VHOST_VRINGS] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 };
 
+struct spdk_vhost_dev_backend {
+	uint64_t virtio_features;
+	uint64_t disabled_features;
+	const struct vhost_device_ops ops;
+};
+
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
 static struct spdk_vhost_dev *
@@ -900,37 +906,32 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 
 static int new_device(int vid);
 static void destroy_device(int vid);
-/*
- * These callback allow devices to be added to the data core when configuration
- * has been fully complete.
- */
-static const struct vhost_device_ops spdk_vhost_scsi_device_ops = {
-	.new_device =  new_device,
-	.destroy_device = destroy_device,
+
+const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
+	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
+	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
+	.ops = {
+		.new_device =  new_device,
+		.destroy_device = destroy_device,
+	}
 };
 
-int
-spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
+
+static int
+spdk_vhost_dev_register(struct spdk_vhost_dev *vdev,
+			const struct spdk_vhost_dev_backend *backend)
 {
-	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_dev *vdev;
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
 
-	if (name == NULL) {
-		SPDK_ERRLOG("Can't add controller with no name\n");
+	if (vdev->name == NULL) {
+		SPDK_ERRLOG("Can't register controller with no name\n");
 		return -EINVAL;
 	}
 
-	if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
-		SPDK_ERRLOG("cpumask 0x%jx not a subset of app mask 0x%jx\n",
-			    cpumask, spdk_app_get_core_mask());
-		return -EINVAL;
-	}
-
-	if (spdk_vhost_dev_find(name)) {
-		SPDK_ERRLOG("vhost scsi controller %s already exists.\n", name);
+	if (spdk_vhost_dev_find(vdev->name)) {
+		SPDK_ERRLOG("vhost controller %s already exists.\n", vdev->name);
 		return -EEXIST;
 	}
 
@@ -941,12 +942,13 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	}
 
 	if (ctrlr_num == MAX_VHOST_DEVICES) {
-		SPDK_ERRLOG("Max scsi controllers reached (%d).\n", MAX_VHOST_DEVICES);
+		SPDK_ERRLOG("Max controllers reached (%d).\n", MAX_VHOST_DEVICES);
 		return -ENOSPC;
 	}
 
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname, name);
+	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
+		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
+			    vdev->name);
 		return -EINVAL;
 	}
 
@@ -961,19 +963,48 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	}
 
 	if (rte_vhost_driver_register(path, 0) != 0) {
-		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
+		SPDK_ERRLOG("Could not register controller %s with vhost library\n", vdev->name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;
 	}
-	if (rte_vhost_driver_set_features(path, SPDK_VHOST_SCSI_FEATURES) ||
-	    rte_vhost_driver_disable_features(path, SPDK_VHOST_SCSI_DISABLED_FEATURES)) {
-		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
+	if (rte_vhost_driver_set_features(path, backend->virtio_features) ||
+	    rte_vhost_driver_disable_features(path, backend->disabled_features)) {
+		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", vdev->name);
 		return -EINVAL;
 	}
 
-	if (rte_vhost_driver_callback_register(path, &spdk_vhost_scsi_device_ops) != 0) {
-		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
+	if (rte_vhost_driver_callback_register(path, &backend->ops) != 0) {
+		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", vdev->name);
 		return -ENOENT;
+	}
+
+	if (rte_vhost_driver_start(path) != 0) {
+		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", vdev->name, errno,
+			    strerror(errno));
+		return -EIO;
+	}
+
+	g_spdk_vhost_devices[ctrlr_num] = vdev;
+	SPDK_NOTICELOG("Controller %s: new controller added\n", vdev->name);
+	return 0;
+}
+
+int
+spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
+{
+	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_vhost_dev *vdev;
+	int rc;
+
+	if (name == NULL) {
+		SPDK_ERRLOG("Can't add controller with no name\n");
+		return -EINVAL;
+	}
+
+	if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
+		SPDK_ERRLOG("cpumask 0x%jx not a subset of app mask 0x%jx\n",
+			    cpumask, spdk_app_get_core_mask());
+		return -EINVAL;
 	}
 
 	svdev = spdk_zmalloc(sizeof(*svdev), SPDK_CACHE_LINE_SIZE, NULL);
@@ -987,17 +1018,13 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	vdev->cpumask = cpumask;
 	vdev->lcore = -1;
 
-	if (rte_vhost_driver_start(path) != 0) {
-		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", name, errno,
-			    strerror(errno));
+	rc = spdk_vhost_dev_register(vdev, &spdk_vhost_scsi_device_backend);
+	if (rc < 0) {
 		free(vdev->name);
 		spdk_free(svdev);
-		return -EIO;
 	}
 
-	g_spdk_vhost_devices[ctrlr_num] = vdev;
-	SPDK_NOTICELOG("Controller %s: new controller added\n", name);
-	return 0;
+	return rc;
 }
 
 int
