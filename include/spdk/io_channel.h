@@ -42,11 +42,9 @@
 
 #include "spdk/queue.h"
 
-#define SPDK_IO_PRIORITY_DEFAULT	100
-
 struct spdk_io_channel;
 
-typedef int (*io_channel_create_cb_t)(void *io_device, uint32_t priority, void *ctx_buf);
+typedef int (*io_channel_create_cb_t)(void *io_device, void *ctx_buf);
 typedef void (*io_channel_destroy_cb_t)(void *io_device, void *ctx_buf);
 
 /**
@@ -92,12 +90,8 @@ void spdk_io_device_unregister(void *io_device);
  *  function pointer specified in spdk_io_device_register().  If an I/O channel already
  *  exists for the given io_device on the calling thread, its reference is returned rather
  *  than creating a new I/O channel.
- *
- * The priority parameter allows callers to create different I/O channels to the same
- *  I/O device with varying priorities.  Currently this value must be set to
- *  SPDK_IO_PRIORITY_DEFAULT.
  */
-struct spdk_io_channel *spdk_get_io_channel(void *io_device, uint32_t priority);
+struct spdk_io_channel *spdk_get_io_channel(void *io_device);
 
 /**
  * \brief Releases a reference to an I/O channel.
