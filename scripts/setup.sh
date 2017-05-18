@@ -88,6 +88,7 @@ function configure_linux {
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
 			chown "$username" "$hugetlbfs_mount"
+			chmod g+w "$hugetlbfs_mount"
 		fi
 
 		MEMLOCK_AMNT=`ulimit -l`
