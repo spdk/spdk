@@ -1077,7 +1077,7 @@ _spdk_bs_channel_create(struct spdk_blob_store *bs, struct spdk_bs_channel *chan
 }
 
 static int
-_spdk_bs_md_channel_create(void *io_device, uint32_t priority, void *ctx_buf)
+_spdk_bs_md_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_blob_store		*bs;
 	struct spdk_bs_channel		*channel = ctx_buf;
@@ -1088,7 +1088,7 @@ _spdk_bs_md_channel_create(void *io_device, uint32_t priority, void *ctx_buf)
 }
 
 static int
-_spdk_bs_io_channel_create(void *io_device, uint32_t priority, void *ctx_buf)
+_spdk_bs_io_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_blob_store		*bs;
 	struct spdk_bs_channel		*channel = ctx_buf;
@@ -1761,7 +1761,7 @@ spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 
 int spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 {
-	bs->md_target.md_channel = spdk_get_io_channel(&bs->md_target, SPDK_IO_PRIORITY_DEFAULT);
+	bs->md_target.md_channel = spdk_get_io_channel(&bs->md_target);
 
 	return 0;
 }
@@ -2101,10 +2101,9 @@ void spdk_bs_md_close_blob(struct spdk_blob **b,
 
 /* END spdk_bs_md_close_blob */
 
-struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs,
-		uint32_t priority)
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
-	return spdk_get_io_channel(&bs->io_target, priority);
+	return spdk_get_io_channel(&bs->io_target);
 }
 
 void spdk_bs_free_io_channel(struct spdk_io_channel *channel)

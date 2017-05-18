@@ -226,8 +226,7 @@ void spdk_bs_md_sync_blob(struct spdk_blob *blob,
 /* Close a blob. This will automatically sync. */
 void spdk_bs_md_close_blob(struct spdk_blob **blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
-struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs,
-		uint32_t priority);
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs);
 
 void spdk_bs_free_io_channel(struct spdk_io_channel *channel);
 

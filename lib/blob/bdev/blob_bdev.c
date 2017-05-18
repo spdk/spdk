@@ -122,7 +122,7 @@ bdev_blob_create_channel(struct spdk_bs_dev *dev)
 {
 	struct spdk_bdev *bdev = __get_bdev(dev);
 
-	return spdk_bdev_get_io_channel(bdev, SPDK_IO_PRIORITY_DEFAULT);
+	return spdk_bdev_get_io_channel(bdev);
 }
 
 static void

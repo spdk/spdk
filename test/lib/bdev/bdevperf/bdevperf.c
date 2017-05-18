@@ -406,7 +406,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
 	while (target != NULL) {
-		target->ch = spdk_bdev_get_io_channel(target->bdev, SPDK_IO_PRIORITY_DEFAULT);
+		target->ch = spdk_bdev_get_io_channel(target->bdev);
 
 		/* Start a timer to stop this I/O chain when the run is over */
 		spdk_poller_register(&target->run_timer, end_target, target, target->lcore,
