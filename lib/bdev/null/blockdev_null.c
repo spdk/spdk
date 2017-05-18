@@ -108,9 +108,9 @@ blockdev_null_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static struct spdk_io_channel *
-blockdev_null_get_io_channel(void *ctx, uint32_t priority)
+blockdev_null_get_io_channel(void *ctx)
 {
-	return spdk_get_io_channel(&g_null_bdev_head, priority);
+	return spdk_get_io_channel(&g_null_bdev_head);
 }
 
 static const struct spdk_bdev_fn_table null_fn_table = {
@@ -160,7 +160,7 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 }
 
 static int
-null_bdev_create_cb(void *io_device, uint32_t priority, void *ctx_buf)
+null_bdev_create_cb(void *io_device, void *ctx_buf)
 {
 	return 0;
 }

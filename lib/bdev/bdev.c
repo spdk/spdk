@@ -507,13 +507,13 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 }
 
 static int
-spdk_bdev_channel_create(void *io_device, uint32_t priority, void *ctx_buf)
+spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev		*bdev = io_device;
 	struct spdk_bdev_channel	*ch = ctx_buf;
 
 	ch->bdev = io_device;
-	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt, priority);
+	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 
 	return 0;
 }
@@ -527,9 +527,9 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 }
 
 struct spdk_io_channel *
-spdk_bdev_get_io_channel(struct spdk_bdev *bdev, uint32_t priority)
+spdk_bdev_get_io_channel(struct spdk_bdev *bdev)
 {
-	return spdk_get_io_channel(bdev, priority);
+	return spdk_get_io_channel(bdev);
 }
 
 const char *
