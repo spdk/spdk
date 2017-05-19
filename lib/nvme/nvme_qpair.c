@@ -386,6 +386,8 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 		return -ENOMEM;
 	}
 
+	qpair->free_req_cnt = num_requests;
+	qpair->min_free_req_cnt = num_requests;
 	for (i = 0; i < num_requests; i++) {
 		struct nvme_request *req = qpair->req_buf + i * req_size_padded;
 

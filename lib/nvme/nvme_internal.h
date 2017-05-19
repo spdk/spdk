@@ -271,6 +271,8 @@ struct spdk_nvme_qpair {
 	TAILQ_ENTRY(spdk_nvme_qpair)	per_process_tailq;
 
 	void				*req_buf;
+	uint32_t			free_req_cnt;
+	uint32_t			min_free_req_cnt;
 };
 
 struct spdk_nvme_ns {

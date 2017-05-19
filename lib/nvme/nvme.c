@@ -86,6 +86,11 @@ nvme_allocate_request(struct spdk_nvme_qpair *qpair,
 	}
 
 	STAILQ_REMOVE_HEAD(&qpair->free_req, stailq);
+	qpair->free_req_cnt--;
+	if (qpair->free_req_cnt < qpair->min_free_req_cnt) {
+		qpair->min_free_req_cnt = qpair->free_req_cnt;
+		printf("min_free_req = %d\n", qpair->free_req_cnt);
+	}
 
 	/*
 	 * Only memset up to (but not including) the children
@@ -197,6 +202,7 @@ nvme_free_request(struct nvme_request *req)
 	assert(req->num_children == 0);
 	assert(req->qpair != NULL);
 
+	req->qpair->free_req_cnt++;
 	STAILQ_INSERT_HEAD(&req->qpair->free_req, req, stailq);
 }
 
