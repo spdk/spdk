@@ -93,7 +93,7 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
-	/** Save for admin passthru completion. */
+	/** Saved status for admin passthru completion event. */
 	struct spdk_nvme_cpl cpl;
 
 	/** Core for admin passthru completion event. */
@@ -996,8 +996,7 @@ bdev_nvme_admin_passthru_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct nvme_bdev_io *bio = ref;
 
-	bio->cpl.status.sc = cpl->status.sc;
-	bio->cpl.status.sct = cpl->status.sct;
+	bio->cpl = *cpl;
 	spdk_event_call(bio->admin_passthru_completion_event);
 };
 
