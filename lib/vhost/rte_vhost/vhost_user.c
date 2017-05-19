@@ -110,6 +110,12 @@ void
 vhost_backend_cleanup(struct virtio_net *dev)
 {
 	if (dev->mem) {
+		if (dev->has_new_mem_table) {
+			for (i = 0; i < dev->mem->nregions; i++) {
+				close(dev->mem_table_fds[i]);
+			}
+			dev->has_new_mem_table = 0;
+		}
 		free_mem_region(dev);
 		rte_free(dev->mem);
 		dev->mem = NULL;
