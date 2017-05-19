@@ -52,8 +52,8 @@
  *  the contents of the submission and completion queues, it will show a longer
  *  history of data.
  */
-#define NVME_IO_ENTRIES		(256)
-#define NVME_IO_TRACKERS	(128)
+#define NVME_IO_ENTRIES		(512)
+#define NVME_IO_TRACKERS	(256)
 
 /*
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
