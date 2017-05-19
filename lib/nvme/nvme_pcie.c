@@ -46,14 +46,11 @@
 
 /*
  * NVME_IO_ENTRIES defines the size of an I/O qpair's submission and completion
- *  queues, while NVME_IO_TRACKERS defines the maximum number of I/O that we
- *  will allow outstanding on an I/O qpair at any time.  The only advantage in
- *  having IO_ENTRIES > IO_TRACKERS is for debugging purposes - when dumping
- *  the contents of the submission and completion queues, it will show a longer
- *  history of data.
+ *  queues, this value will be used to negotiate with user specified size and
+ *  hardware allowed size to determine the maximum number of outstanding IOs on
+ *  an I/O qpair at any time.
  */
-#define NVME_IO_ENTRIES		(256)
-#define NVME_IO_TRACKERS	(128)
+#define NVME_IO_ENTRIES		(512)
 
 /*
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
@@ -843,11 +840,10 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 		num_trackers = NVME_ADMIN_TRACKERS;
 	} else {
 		/*
-		 * No need to have more trackers than entries in the submit queue.
-		 *  Note also that for a queue size of N, we can only have (N-1)
+		 *  Note that for a queue size of N, we can only have (N-1)
 		 *  commands outstanding, hence the "-1" here.
 		 */
-		num_trackers = spdk_min(NVME_IO_TRACKERS, pqpair->num_entries - 1);
+		num_trackers = pqpair->num_entries - 1;
 	}
 
 	assert(num_trackers != 0);
