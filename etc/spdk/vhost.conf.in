@@ -48,8 +48,8 @@
 # Users must change this section to match the /dev/sdX devices to be
 #  exported as vhost scsi drives. The devices are accessed using Linux AIO.
 [AIO]
-  #AIO /dev/sdb
-  #AIO /dev/sdc
+  #AIO /dev/sdb AIO0
+  #AIO /dev/sdc AIO1
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
