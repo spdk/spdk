@@ -142,42 +142,32 @@ SPDK_BDEV_MODULE_REGISTER(bdev_nvme_library_init, bdev_nvme_library_fini,
 			  bdev_nvme_get_spdk_running_config,
 			  bdev_nvme_get_ctx_size)
 
-static int64_t
+static int
 bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		struct nvme_bdev_io *bio,
 		struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	int64_t rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "read %lu bytes with offset %#lx\n",
 		      nbytes, offset);
 
-	rc = bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_READ,
-				 iov, iovcnt, nbytes, offset);
-	if (rc < 0)
-		return -1;
-
-	return nbytes;
+	return bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_READ,
+				   iov, iovcnt, nbytes, offset);
 }
 
-static int64_t
+static int
 bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		 struct nvme_bdev_io *bio,
 		 struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	int64_t rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "write %lu bytes with offset %#lx\n",
 		      len, offset);
 
-	rc = bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_WRITE,
-				 iov, iovcnt, len, offset);
-	if (rc < 0)
-		return -1;
-
-	return len;
+	return bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_WRITE,
+				   iov, iovcnt, len, offset);
 }
 
 static void
@@ -307,7 +297,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 				       bdev_io->u.flush.length);
 
 	default:
-		return -1;
+		return -EINVAL;
 	}
 	return 0;
 }
@@ -1025,7 +1015,7 @@ bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 
 	if (nbytes % ss) {
 		SPDK_ERRLOG("Unaligned IO request length\n");
-		return -1;
+		return -EINVAL;
 	}
 
 
@@ -1063,7 +1053,7 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	struct spdk_nvme_dsm_range dsm_range[NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT];
 
 	if (bdesc_count > NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT) {
-		return -1;
+		return -EINVAL;
 	}
 
 	for (i = 0; i < bdesc_count; i++) {
@@ -1078,10 +1068,7 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			dsm_range, bdesc_count,
 			bdev_nvme_queued_done, bio);
 
-	if (rc != 0)
-		return -1;
-
-	return 0;
+	return rc;
 }
 
 static void
