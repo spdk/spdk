@@ -73,7 +73,7 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size, uint64_
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return 0;
+	return 1;
 }
 
 const struct spdk_nvme_ctrlr_data *
@@ -107,7 +107,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 bool
 spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
 {
-	return false;
+	return true;
 }
 
 int
@@ -202,10 +202,43 @@ spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req)
 	return -1;
 }
 
+struct spdk_nvme_ctrlr {
+
+	uint32_t			num_ns;
+};
+
 /* test suite function */
 static void
 nvmf_test_nvmf_direct_ctrlr_admin_identify_nslist(void)
 {
+	int ret;
+	union nvmf_h2c_msg cmd = {};
+	struct spdk_nvme_ns_list ns_list = {};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvmf_request *req;
+
+	ctrlr = (struct spdk_nvme_ctrlr *)malloc(sizeof(struct spdk_nvme_ctrlr));
+	req = (struct spdk_nvmf_request *)malloc(sizeof(struct spdk_nvmf_request));
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->length = 1;
+	req->data = &ns_list;
+	req->cmd = &cmd;
+	req->cmd->nvme_cmd.nsid = 0xfffffffeUL;
+	ret = nvmf_direct_ctrlr_admin_identify_nslist(ctrlr, req);
+	CU_ASSERT(ret == -1);
+
+	req->cmd->nvme_cmd.nsid = 0xfffffffdUL;
+	ret = nvmf_direct_ctrlr_admin_identify_nslist(ctrlr, req);
+	CU_ASSERT(ret == 0);
+
+	req->cmd->nvme_cmd.nsid = 0;
+	ctrlr->num_ns = 0xffffffffUL;
+	ret = nvmf_direct_ctrlr_admin_identify_nslist(ctrlr, req);
+	CU_ASSERT(ret == 0);
+	CU_ASSERT(ns_list.ns_list[0] == 1);
+	free(ctrlr);
+	free(req);
 }
 
 int main(int argc, char **argv)
