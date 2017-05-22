@@ -70,6 +70,7 @@ $rpc_py bdev_inject_error 'all' -n 1000
 devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 declare -i failcount=0
+
 set +e
 for dev in $devs; do
 mkfs.ext4 -F /dev/$dev
@@ -78,6 +79,7 @@ if [ $? -eq 0 ]; then
 else
 	echo "mkfs failed"
 	failcount+=1
+	failed_dev=$dev
 fi
 done
 set -e
@@ -91,7 +93,9 @@ fi
 $rpc_py bdev_inject_error 'clear'
 
 for dev in $devs; do
-	mkfs.ext4 -F /dev/$dev
+	if [ "$dev" == "$failed_dev" ]; then
+		mkfs.ext4 -F /dev/$dev
+	fi
 	mkdir -p /mnt/${dev}dir
 	mount -o sync /dev/$dev /mnt/${dev}dir
 
