@@ -66,6 +66,9 @@ struct spdk_nvmf_request {
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 	struct spdk_scsi_unmap_bdesc	*unmap_bdesc;
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	uint64_t time[6];
+#endif
 };
 
 int
