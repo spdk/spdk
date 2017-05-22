@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "241a7285_0210cc17",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-22T15:35:20Z",
+      "side": 1,
+      "message": "This should be left in vhost.c file.",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 1
+      },
+      "revId": "9d18f0b80c09241e1b126a6b9c0709c56675f1bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f0e98c9a_acd8bbee",
         "filename": "lib/vhost/vhost_scsi.h",
         "patchSetId": 1
