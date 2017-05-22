@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b62bf6e1_e82f843c",
+        "filename": "lib/vhost/vhost_iommu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T16:59:05Z",
+      "side": 1,
+      "message": "vfio_cfg_init() initializes vfio_cfg.map_lock, and now spdk_iommu_mem_register() can call this function before the mutex is initialized.\n\nWe can change the vfio_cfg initializer to use PTHREAD_MUTEX_INITIALIZER and drop the pthread_mutex_init() call to avoid this problem.",
+      "revId": "b81c79d2d444f0bdb91505faccce8b3d28ecdca0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
