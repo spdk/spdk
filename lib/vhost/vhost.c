@@ -835,6 +835,12 @@ remove_vdev_cb(void *arg1, void *arg2)
 }
 
 static void
+spdk_vhost_free_reactor(uint32_t lcore)
+{
+	g_num_ctrlrs[lcore]--;
+}
+
+static void
 destroy_device(int vid)
 {
 	struct spdk_vhost_scsi_dev *vdev;
@@ -873,7 +879,7 @@ destroy_device(int vid)
 	if (vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister poller.\n", dev->name);
 
-	g_num_ctrlrs[dev->lcore]--;
+	spdk_vhost_free_reactor(dev->lcore);
 	dev->lcore = -1;
 
 	spdk_vhost_dev_destruct(dev);
