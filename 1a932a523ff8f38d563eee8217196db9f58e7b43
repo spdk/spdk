@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c47149d0_0e067769",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T16:49:12Z",
+      "side": 1,
+      "message": "indebtify -\u003e identify",
+      "range": {
+        "startLine": 7,
+        "startChar": 54,
+        "endLine": 7,
+        "endChar": 63
+      },
+      "revId": "1a932a523ff8f38d563eee8217196db9f58e7b43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32151983_ea834433",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T16:49:12Z",
+      "side": 1,
+      "message": "This is testing the NVMe-oF target; it should not need to include the NVMe library internal header.  If direct.c needs NVMe library functions or structures, we should mock them up in this file.",
+      "revId": "1a932a523ff8f38d563eee8217196db9f58e7b43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c6fb800_77b41262",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T16:49:12Z",
+      "side": 1,
+      "message": "Add a blank line between variables and code.",
+      "revId": "1a932a523ff8f38d563eee8217196db9f58e7b43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84bbb67d_80c6cffb",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T16:49:12Z",
+      "side": 1,
+      "message": "We can just make these structures on the stack (otherwise you will need to add malloc() failure checks with SPDK_CU_ASSERT_FATAL() for each allocation).",
+      "revId": "1a932a523ff8f38d563eee8217196db9f58e7b43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "341b87ac_0f1c69bb",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T16:49:12Z",
+      "side": 1,
+      "message": "Unnecessary paretheses and pointer dereferences - I think it would be simpler if you write this as:\n\n  cmd.nsid \u003d 0xfffffffeUL;",
+      "revId": "1a932a523ff8f38d563eee8217196db9f58e7b43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
