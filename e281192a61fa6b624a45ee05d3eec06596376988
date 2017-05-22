@@ -1,0 +1,344 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63218eb8_4e91859a",
+        "filename": "include/spdk/cmn_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Is there any reason these things can\u0027t go in spdk/util.h?",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08c2cf29_73218d42",
+        "filename": "include/spdk/cmn_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Anything defined in SPDK public headers needs a spdk_ or SPDK_ prefix.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "642bbb69_518f6ee0",
+        "filename": "include/spdk/cmn_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "All DPDK abstractions should be declared in env.h and implemented in lib/env_dpdk.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e03ce5f_d5efc217",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "SPDK headers should include each other with #include \"spdk/...\" (not \u003c\u003e)",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22978c45_7d902443",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "All names in public headers need SPDK_/spdk_ prefixes (applies to all names in this file).",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7b7a26c_ed419cf3",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "We typically don\u0027t typedef structs (just write struct explicitly when declaring variables).",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16bc3006_0eb32510",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "I\u0027m not clear on what these new JSON API functions are trying to do.\n\nIf you do need to add new JSON APIs, please do that in a separate patch with explanation.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09b12fd7_094d28a4",
+        "filename": "lib/json/json_write.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "I don\u0027t understand what this is trying to do - can you explain why this needs to be a JSON API function?",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "324b5094_c724ef02",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Does this have anything to do with the histogram changes? If not, it should be split into a separate patch explaining what you are trying to accomplish.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c12c35f_9fdbaefe",
+        "filename": "lib/util/cmn_utils.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Don\u0027t include DPDK headers directly (use env.h).",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3e7c262_c3204d2a",
+        "filename": "lib/util/cmn_utils.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "This should be implementable in the same way as spdk_u32log2() with a __builtin_clz().",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f66db409_551fae02",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Use #include \"\" for SPDK headers.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7114ba01_1a271fed",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "If these are not accessed outside this file, they should be static.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "732a315e_981ffc8c",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "This seems like it should be written as several JSON number values in a JSON array rather than a \"|\"-delimited string.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45506a62_a1a4a491",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "This formatting/table-printing code should be in the RPC client that requests the histogram, not in the SPDK app.  The SPDK app should just produce JSON containing the raw numbers.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb2f0af2_20cab424",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "yes/no should use true/false JSON values.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8152c813_1406e12b",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "rpc.py is not the only RPC client - the SPDK app RPC implementation shouldn\u0027t mention rpc.py.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5fd0a38_63c64145",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Please use braces even for single-line statements.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41a56a47_3fb14eef",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Fix label spacing:\n\n  invalid : -\u003e invalid:",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b076ddb_dfad2661",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:05:37Z",
+      "side": 1,
+      "message": "Please remove or uncomment this code.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
