@@ -37,6 +37,7 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
+#include "vhost_scsi.h"
 #include "spdk/vhost.h"
 #include "task.h"
 
