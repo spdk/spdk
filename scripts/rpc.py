@@ -527,5 +527,149 @@ p.add_argument('ctrlr', help='controller name to remove device from')
 p.add_argument('scsi_dev_num', help='scsi_dev_num', type=int)
 p.set_defaults(func=remove_vhost_scsi_dev)
 
+def hist_help(args):
+    print(jsonrpc_call('hist_help'))
+
+p = subparsers.add_parser('hist_help', help='histogram help')
+p.set_defaults(func=hist_help)
+
+def hist_show(args):
+    params = {
+        'hist_id': args.hist_id,
+        'level': args.level
+    }
+    print(jsonrpc_call('hist_show', params))
+
+p = subparsers.add_parser('hist_show', help='histogram show')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.add_argument('level', help='show levels', type=int)
+p.set_defaults(func=hist_show)
+
+def hist_enable(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print(jsonrpc_call('hist_enable', params))
+
+p = subparsers.add_parser('hist_enable', help='histogram enable')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_enable)
+
+def hist_list_ids(args):
+    print(jsonrpc_call('hist_list_ids'))
+
+p = subparsers.add_parser('hist_list_ids', help='show details of all existing histogram')
+p.set_defaults(func=hist_list_ids)
+
+def hist_disable(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print(jsonrpc_call('hist_disable', params))
+
+p = subparsers.add_parser('hist_disable', help='histogram disable')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_disable)
+
+def hist_clear(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print(jsonrpc_call('hist_clear', params))
+
+p = subparsers.add_parser('hist_clear', help='clear histogram')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_clear)
+
+def hist_clear_all(args):
+    print(jsonrpc_call('hist_clear_all'))
+
+p = subparsers.add_parser('hist_clear_all', help='clear all the existing histogram')
+p.set_defaults(func=hist_clear_all)
+
+def hist_show_all(args):
+    params = {
+        'level': args.level
+    }
+    print(jsonrpc_call('hist_show_all', params))
+
+p = subparsers.add_parser('hist_show_all', help='Show info of all histograms')
+p.add_argument('level', help='Level', type=int)
+p.set_defaults(func=hist_show_all)
+
+'''
+def hist_delete(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print(jsonrpc_call('hist_delete', params))
+
+p = subparsers.add_parser('hist_delete', help='delete histogram')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_delete)
+
+
+def hist_register(args):
+    params = {
+        'category': args.category,
+        'name': args.name,
+        'unitName': args.unitName,
+        'hist_id': args.hist_id,
+        'enable': args.enable
+    }
+    print(jsonrpc_call('hist_register', params))
+
+p = subparsers.add_parser('hist_register', help='Register a histogram')
+p.add_argument('category', help='category of histogram')
+p.add_argument('name', help='name of histogram')
+p.add_argument('unitName', help='unit name of histogram')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.add_argument('enable', help='enable or disable histogram', type=int)
+p.set_defaults(func=hist_register)
+
+
+def hist_new(args):
+    params = {
+        'enable' : args.enable,
+        'name' : args.name,
+        'class_name' : args.class_name,
+        'unit_name' : args.unit_name,
+        'buckets' : args.buckets,
+        'bucket_min' : args.bucket_min,
+        'bucket_size' : args.bucket_size,
+        'scale' : args.scale
+    }
+    print (jsonrpc_call('hist_new', params))
+
+p = subparsers.add_parser('hist_new', help='Create new histogram')
+p.add_argument('enable', help='enable of disable histogram', type=int)
+p.add_argument('name', help='Name of a histogram')
+p.add_argument('class_name', help='class of histogram')
+p.add_argument('unit_name', help='unit name of histogram')
+p.add_argument('buckets', help='number of buckets', type=int)
+p.add_argument('bucket_min', help='Min bucket', type=int)
+p.add_argument('bucket_size', help='Min bucket Size', type=int)
+p.add_argument('scale', help='scale', type=int)
+p.set_defaults(func=hist_new)
+'''
+
+def perfstat_show(args):
+    print(jsonrpc_call('perfstat_show'))
+
+p = subparsers.add_parser('perfstat_show', help='show performance stats')
+p.set_defaults(func=perfstat_show)
+
+def perfstat_disable(args):
+    print(jsonrpc_call('perfstat_disable'))
+
+p = subparsers.add_parser('perfstat_disable', help='Disable performance stats')
+p.set_defaults(func=perfstat_disable)
+
+def perfstat_enable(args):
+    print(jsonrpc_call('perfstat_enable'))
+
+p = subparsers.add_parser('perfstat_enable', help='Enable performance stat')
+p.set_defaults(func=perfstat_enable)
+
 args = parser.parse_args()
 args.func(args)

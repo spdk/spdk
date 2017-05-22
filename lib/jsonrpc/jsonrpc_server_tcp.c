@@ -163,14 +163,38 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 	return -1;
 }
 
+static int
+spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
+{
+	ssize_t rc;
+
+	rc = send(conn->sockfd, conn->send_buf, conn->send_len, 0);
+	if (rc < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+
+		SPDK_TRACELOG(SPDK_TRACE_RPC, "send() failed: %s\n", strerror(errno));
+		return -1;
+	}
+
+	if (rc == 0) {
+		SPDK_TRACELOG(SPDK_TRACE_RPC, "remote closed connection\n");
+		return -1;
+	}
+
+	conn->send_len -= rc;
+
+	return 0;
+}
+
 int
 spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 {
 	struct spdk_jsonrpc_server_conn *conn = cb_ctx;
 
 	if (SPDK_JSONRPC_SEND_BUF_SIZE - conn->send_len < size) {
-		SPDK_ERRLOG("Not enough space in send buf\n");
-		return -1;
+		spdk_jsonrpc_server_conn_send(conn);
 	}
 
 	memcpy(conn->send_buf + conn->send_len, data, size);
@@ -261,31 +285,6 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 		memmove(conn->recv_buf, conn->recv_buf + rc, conn->recv_len - rc);
 		conn->recv_len -= rc;
 	}
-
-	return 0;
-}
-
-static int
-spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
-{
-	ssize_t rc;
-
-	rc = send(conn->sockfd, conn->send_buf, conn->send_len, 0);
-	if (rc < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
-		}
-
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "send() failed: %s\n", strerror(errno));
-		return -1;
-	}
-
-	if (rc == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "remote closed connection\n");
-		return -1;
-	}
-
-	conn->send_len -= rc;
 
 	return 0;
 }
