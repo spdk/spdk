@@ -187,6 +187,7 @@ spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_server_conn *conn,
 	conn->server->handle_request(conn, method, params, id);
 }
 
+
 void
 spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_server_conn *conn, int error,
 				 const struct spdk_json_val *method, const struct spdk_json_val *params,
