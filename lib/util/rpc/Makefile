@@ -31,12 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS)
-C_SRCS = bit_array.c fd.c io_channel.c string.c histogram.c
-LIBNAME = util
+C_SRCS = histogram_rpc.c
+LIBNAME = histogram_rpc
 
-DIRS-y = rpc
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
