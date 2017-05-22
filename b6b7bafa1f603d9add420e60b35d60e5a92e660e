@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ddbc8a62_1c21865e",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T19:04:24Z",
+      "side": 1,
+      "message": "The second sentence sounds like it relates to the first here. It does, but the workaround applies to a much wider set of devices than the P4800X, including some non-Intel SSDs that we\u0027ve encountered in the GitHub issues.",
+      "revId": "b6b7bafa1f603d9add420e60b35d60e5a92e660e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
