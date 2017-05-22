@@ -244,8 +244,6 @@ spdk_vfio_mem_op(uint64_t addr, uint64_t len, int dma_op)
 		return 0;
 	}
 
-	pthread_mutex_lock(&vfio_cfg.map_lock);
-
 	vaddr = addr;
 	while (len > 0) {
 		vlen = spdk_min(len_2mb - (vaddr & MASK_2MB), len);
@@ -282,18 +280,27 @@ spdk_vfio_mem_op(uint64_t addr, uint64_t len, int dma_op)
 		spdk_vfio_mem_op(addr, vaddr - addr, VFIO_IOMMU_UNMAP_DMA);
 	}
 
-	pthread_mutex_unlock(&vfio_cfg.map_lock);
 	return ret;
 }
 
 int spdk_iommu_mem_register(uint64_t addr, uint64_t len)
 {
-	return spdk_vfio_mem_op(addr, len, VFIO_IOMMU_MAP_DMA);
+	int ret;
+
+	pthread_mutex_lock(&vfio_cfg.map_lock);
+	ret = spdk_vfio_mem_op(addr, len, VFIO_IOMMU_MAP_DMA);
+	pthread_mutex_unlock(&vfio_cfg.map_lock);
+	return ret;
 }
 
 int spdk_iommu_mem_unregister(uint64_t addr, uint64_t len)
 {
-	return spdk_vfio_mem_op(addr, len, VFIO_IOMMU_UNMAP_DMA);
+	int ret;
+
+	pthread_mutex_lock(&vfio_cfg.map_lock);
+	ret = spdk_vfio_mem_op(addr, len, VFIO_IOMMU_MAP_DMA);
+	pthread_mutex_unlock(&vfio_cfg.map_lock);
+	return ret;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_vfio", SPDK_TRACE_VHOST_VFIO)
