@@ -57,7 +57,7 @@ static struct {
 	struct vfio_map *maps;
 	size_t maps_count;
 	size_t maps_max_count;
-} vfio_cfg = { 1, -1 };
+} vfio_cfg = { 1, -1, PTHREAD_MUTEX_INITIALIZER };
 
 /* Internal DPDK function forward declaration */
 int pci_vfio_is_enabled(void);
@@ -108,7 +108,6 @@ vfio_cfg_init(void)
 		return -1;
 	}
 
-	pthread_mutex_init(&vfio_cfg.map_lock, NULL);
 	return 0;
 }
 
@@ -244,8 +243,6 @@ spdk_vfio_mem_op(uint64_t addr, uint64_t len, int dma_op)
 		return 0;
 	}
 
-	pthread_mutex_lock(&vfio_cfg.map_lock);
-
 	vaddr = addr;
 	while (len > 0) {
 		vlen = spdk_min(len_2mb - (vaddr & MASK_2MB), len);
@@ -282,18 +279,27 @@ spdk_vfio_mem_op(uint64_t addr, uint64_t len, int dma_op)
 		spdk_vfio_mem_op(addr, vaddr - addr, VFIO_IOMMU_UNMAP_DMA);
 	}
 
-	pthread_mutex_unlock(&vfio_cfg.map_lock);
 	return ret;
 }
 
 int spdk_iommu_mem_register(uint64_t addr, uint64_t len)
 {
-	return spdk_vfio_mem_op(addr, len, VFIO_IOMMU_MAP_DMA);
+	int ret;
+
+	pthread_mutex_lock(&vfio_cfg.map_lock);
+	ret = spdk_vfio_mem_op(addr, len, VFIO_IOMMU_MAP_DMA);
+	pthread_mutex_unlock(&vfio_cfg.map_lock);
+	return ret;
 }
 
 int spdk_iommu_mem_unregister(uint64_t addr, uint64_t len)
 {
-	return spdk_vfio_mem_op(addr, len, VFIO_IOMMU_UNMAP_DMA);
+	int ret;
+
+	pthread_mutex_lock(&vfio_cfg.map_lock);
+	ret = spdk_vfio_mem_op(addr, len, VFIO_IOMMU_MAP_DMA);
+	pthread_mutex_unlock(&vfio_cfg.map_lock);
+	return ret;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_vfio", SPDK_TRACE_VHOST_VFIO)
