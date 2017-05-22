@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16eb201a_b9342cd4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-22T14:30:40Z",
+      "side": 1,
+      "message": "Is this a type?",
+      "range": {
+        "startLine": 66,
+        "startChar": 28,
+        "endLine": 67,
+        "endChar": 8
+      },
+      "revId": "d51ab003bfcb234f3ce0846fcc95c788bee43138",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
