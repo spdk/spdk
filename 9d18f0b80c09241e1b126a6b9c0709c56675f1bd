@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0e98c9a_acd8bbee",
+        "filename": "lib/vhost/vhost_scsi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-22T14:39:58Z",
+      "side": 1,
+      "message": "Why this is needed here and not in .c file?",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 27
+      },
+      "revId": "9d18f0b80c09241e1b126a6b9c0709c56675f1bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f4e2bf0_10f9abf3",
+        "filename": "lib/vhost/vhost_scsi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-22T14:39:58Z",
+      "side": 1,
+      "message": "Can we put those definitions in vhost_internal.h ?",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 92
+      },
+      "revId": "9d18f0b80c09241e1b126a6b9c0709c56675f1bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
