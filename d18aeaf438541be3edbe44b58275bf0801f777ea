@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7cb7a36_3dd0db92",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-05-22T15:41:30Z",
+      "side": 1,
+      "message": "Additional space needed before each line to make the comment line up.",
+      "range": {
+        "startLine": 89,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 3
+      },
+      "revId": "d18aeaf438541be3edbe44b58275bf0801f777ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
