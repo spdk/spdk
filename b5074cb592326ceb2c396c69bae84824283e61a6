@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a17c5140_f37fda3a",
+        "filename": "test/lib/util/histogram/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:08:47Z",
+      "side": 1,
+      "message": "Histogram unit tests shouldn\u0027t be including json.unittest.mk.  If the histogram code needs to link to JSON functionality, it should just add json to SPDK_LIBS.",
+      "revId": "b5074cb592326ceb2c396c69bae84824283e61a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
