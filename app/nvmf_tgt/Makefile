@@ -43,7 +43,7 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS := conf.c nvmf_main.c nvmf_tgt.c nvmf_rpc.c
 
 SPDK_LIB_LIST = nvmf event log trace conf util bdev copy rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc histogram_rpc
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
