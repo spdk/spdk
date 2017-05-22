@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e8c9120_d9b47b27",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-22T06:33:13Z",
+      "side": 1,
+      "message": "What about moving this line to line 121 considering it is only for the long name case.",
+      "range": {
+        "startLine": 112,
+        "startChar": 1,
+        "endLine": 112,
+        "endChar": 37
+      },
+      "revId": "79ea387d7af44d374eb0b6e1308d72a903cbb650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59743b30_86ec8a63",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-22T06:33:13Z",
+      "side": 1,
+      "message": "shall we set the \"g_fserrno \u003d 1;\" before calling the unload function?",
+      "revId": "79ea387d7af44d374eb0b6e1308d72a903cbb650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d30292c_cb9e35d0",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-22T06:33:13Z",
+      "side": 1,
+      "message": "same as previous comment.",
+      "range": {
+        "startLine": 231,
+        "startChar": 1,
+        "endLine": 231,
+        "endChar": 19
+      },
+      "revId": "79ea387d7af44d374eb0b6e1308d72a903cbb650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
