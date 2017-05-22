@@ -89,6 +89,12 @@ struct spdk_bdev_channel {
 	struct spdk_io_channel *mgmt_channel;
 
 	struct spdk_bdev_io_stat stat;
+
+	/*
+	 * Count of I/O submitted to bdev module and waiting for completion.
+	 * Incremented before submit_request() is called on an spdk_bdev_io.
+	 */
+	uint64_t		io_outstanding;
 };
 
 struct spdk_bdev *
@@ -462,6 +468,7 @@ __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 
 	ch = bdev_io->ch->channel;
 
+	bdev_io->ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
@@ -488,6 +495,12 @@ spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev *new_bdev)
 	 */
 	bdev_io->gencnt = new_bdev->gencnt;
 
+	/*
+	 * This bdev_io was already submitted so decrement io_outstanding to ensure it
+	 *  does not get double-counted.
+	 */
+	assert(bdev_io->ch->io_outstanding > 0);
+	bdev_io->ch->io_outstanding--;
 	__submit_request(new_bdev, bdev_io);
 }
 
@@ -562,6 +575,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
 	memset(&ch->stat, 0, sizeof(ch->stat));
+	ch->io_outstanding = 0;
 
 	return 0;
 }
@@ -590,6 +604,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, ch);
 
+	assert(ch->io_outstanding == 0);
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
 }
@@ -1092,6 +1107,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		return;
 	}
 
+	assert(bdev_io->ch->io_outstanding > 0);
+	bdev_io->ch->io_outstanding--;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		/* Successful reset */
 		if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
