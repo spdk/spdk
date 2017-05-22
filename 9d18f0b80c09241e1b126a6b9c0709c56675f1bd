@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "fda17ce5_6224349a",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-05-22T15:14:07Z",
+      "side": 1,
+      "message": "I don\u0027t think this is needed here.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 27
+      },
+      "revId": "9d18f0b80c09241e1b126a6b9c0709c56675f1bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f0e98c9a_acd8bbee",
         "filename": "lib/vhost/vhost_scsi.h",
         "patchSetId": 1
