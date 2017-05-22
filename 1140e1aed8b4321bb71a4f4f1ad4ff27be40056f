@@ -33,6 +33,24 @@
       "revId": "1140e1aed8b4321bb71a4f4f1ad4ff27be40056f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7724bf6e_28369208",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-22T15:48:35Z",
+      "side": 1,
+      "message": "After looking at one of your later patches, maybe use \"vdev\" for spdk_vhost_dev and \"svdev\" for spdk_vhost_scsI_dev structures.  Fewer characters than my suggestion above.",
+      "parentUuid": "f7ea4c66_a45b181f",
+      "revId": "1140e1aed8b4321bb71a4f4f1ad4ff27be40056f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
