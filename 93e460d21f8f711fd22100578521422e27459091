@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edc41851_8730fc11",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-22T06:37:10Z",
+      "side": 1,
+      "message": "add a check for the Non-NULL channel here?",
+      "range": {
+        "startLine": 210,
+        "startChar": 1,
+        "endLine": 210,
+        "endChar": 21
+      },
+      "revId": "93e460d21f8f711fd22100578521422e27459091",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
