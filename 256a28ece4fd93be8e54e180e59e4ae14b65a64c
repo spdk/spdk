@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a0219f3_008857fb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1069,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-22T15:47:25Z",
+      "side": 1,
+      "message": "Regarding my earlier comment (dev v. vdev) - maybe we use vdev to denote an spdk_vhost_dev, and svdev for an spdk_vhost_scsi_dev?  Then bvdev could be for an upcoming spdk_vhost_blk_dev.",
+      "revId": "256a28ece4fd93be8e54e180e59e4ae14b65a64c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
