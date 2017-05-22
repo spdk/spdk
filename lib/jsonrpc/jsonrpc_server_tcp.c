@@ -187,6 +187,31 @@ spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_server_conn *conn,
 	conn->server->handle_request(conn, method, params, id);
 }
 
+static int
+spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
+{
+	ssize_t rc;
+
+	rc = send(conn->sockfd, conn->send_buf, conn->send_len, 0);
+	if (rc < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+
+		SPDK_TRACELOG(SPDK_TRACE_RPC, "send() failed: %s\n", strerror(errno));
+		return -1;
+	}
+
+	if (rc == 0) {
+		SPDK_TRACELOG(SPDK_TRACE_RPC, "remote closed connection\n");
+		return -1;
+	}
+
+	conn->send_len -= rc;
+
+	return 0;
+}
+
 void
 spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_server_conn *conn, int error,
 				 const struct spdk_json_val *method, const struct spdk_json_val *params,
@@ -261,31 +286,6 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 		memmove(conn->recv_buf, conn->recv_buf + rc, conn->recv_len - rc);
 		conn->recv_len -= rc;
 	}
-
-	return 0;
-}
-
-static int
-spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
-{
-	ssize_t rc;
-
-	rc = send(conn->sockfd, conn->send_buf, conn->send_len, 0);
-	if (rc < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
-		}
-
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "send() failed: %s\n", strerror(errno));
-		return -1;
-	}
-
-	if (rc == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "remote closed connection\n");
-		return -1;
-	}
-
-	conn->send_len -= rc;
 
 	return 0;
 }

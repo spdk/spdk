@@ -39,6 +39,7 @@
 #define SPDK_UTIL_H
 
 #include "spdk/stdinc.h"
+#include "spdk/env.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,6 +49,14 @@ extern "C" {
 #define spdk_max(a,b) (((a)>(b))?(a):(b))
 
 #define SPDK_COUNTOF(arr) (sizeof(arr) / sizeof((arr)[0]))
+#define SPDK_SEC_TO_NANOSEC         1000000000UL
+
+static inline uint64_t
+spdk_ticks_to_nsec(uint64_t ticks)
+{
+	return (ticks * SPDK_SEC_TO_NANOSEC) / spdk_get_ticks_hz();
+}
+
 
 #define SPDK_CONTAINEROF(ptr, type, member) ((type *)((uintptr_t)ptr - offsetof(type, member)))
 
@@ -59,6 +68,12 @@ spdk_u32log2(uint32_t x)
 		return 0;
 	}
 	return 31u - __builtin_clz(x);
+}
+
+static inline uint32_t
+spdk_floor_log2(uint64_t val)
+{
+	return val == 0 ? 0 : 63 ^ __builtin_clzll(val);
 }
 
 static inline uint32_t
