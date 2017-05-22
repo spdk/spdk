@@ -70,14 +70,18 @@ $rpc_py bdev_inject_error 'all' -n 1000
 devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 declare -i failcount=0
+
 set +e
 for dev in $devs; do
-mkfs.ext4 -F /dev/$dev
-if [ $? -eq 0 ]; then
-	echo "mkfs successful"
-else
-	echo "mkfs failed"
-	failcount+=1
+capacity=`lsblk /dev/$dev | sed -n 2p | awk '{print $4}'`
+if [ "$capacity" == "512M" ]; then
+	mkfs.ext4 -F /dev/$dev
+	if [ $? -eq 0 ]; then
+		echo "mkfs successful"
+	else
+		echo "mkfs failed"
+		failcount+=1
+	fi
 fi
 done
 set -e
