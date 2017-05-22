@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "770c6c48_6f819f26",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-22T15:30:24Z",
+      "side": 1,
+      "message": "Most of the changes here can be put into a separate patch.  Just change it to:\n\nstatic int\nspdk_vhost_dev_create(struct spdk_vhost_dev *dev);\n\nDo the spdk_zmalloc() in the caller to spdk_vhost_dev_create().",
+      "revId": "1140e1aed8b4321bb71a4f4f1ad4ff27be40056f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7ea4c66_a45b181f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-22T15:30:24Z",
+      "side": 1,
+      "message": "(Just picking one place to make this comment)\n\nWe need to rethink how we use \"vdev\" and \"dev\".  In some places \"vdev\" seems to mean the base dev (i.e. spdk_vhost_dev), but in others (spdk_vhost_dev_task_ref/unref), we use vdev for the spdk_vhost_scsi_dev structure.\n\nNames like \"base_dev\" or \"scsi_dev\" would make this a lot more clear when reading the code, and make it a lot more consistent.",
+      "revId": "1140e1aed8b4321bb71a4f4f1ad4ff27be40056f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
