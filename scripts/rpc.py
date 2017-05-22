@@ -529,5 +529,90 @@ p.add_argument('ctrlr', help='controller name to remove device from')
 p.add_argument('scsi_dev_num', help='scsi_dev_num', type=int)
 p.set_defaults(func=remove_vhost_scsi_dev)
 
+def hist_help(args):
+    histhelp = {
+        "hist_help": "List histogram commands",
+        "hist_list_ids": "List the histogram ids with status",
+        "hist_enable id": "Enable histogram with id as input",
+        "hist_disable id": "Disable histogram with id as input",
+        "hist_clear id": "Clear histogram with id as input",
+        "hist_clear_all": "Clear all histograms",
+        "hist_get_stats id": "Dump histogram data in json with id as input"
+    }
+    print_dict(histhelp)
+
+p = subparsers.add_parser('hist_help', help='histogram help')
+p.set_defaults(func=hist_help)
+
+def hist_enable(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print(jsonrpc_call('hist_enable', params))
+
+p = subparsers.add_parser('hist_enable', help='histogram enable')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_enable)
+
+def hist_get_stats(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print_dict(jsonrpc_call('hist_get_stats', params))
+
+p = subparsers.add_parser('hist_get_stats', help='histogram get_stats')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_get_stats)
+
+def hist_list_ids(args):
+    print_dict(jsonrpc_call('hist_list_ids'))
+
+p = subparsers.add_parser('hist_list_ids', help='show details of all existing histogram')
+p.set_defaults(func=hist_list_ids)
+
+def hist_disable(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print(jsonrpc_call('hist_disable', params))
+
+p = subparsers.add_parser('hist_disable', help='histogram disable')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_disable)
+
+def hist_clear(args):
+    params = {
+        'hist_id': args.hist_id
+    }
+    print(jsonrpc_call('hist_clear', params))
+
+p = subparsers.add_parser('hist_clear', help='clear histogram')
+p.add_argument('hist_id', help='Histogram ID', type=int)
+p.set_defaults(func=hist_clear)
+
+def hist_clear_all(args):
+    print(jsonrpc_call('hist_clear_all'))
+
+p = subparsers.add_parser('hist_clear_all', help='clear all the existing histogram')
+p.set_defaults(func=hist_clear_all)
+
+def perfstat_show(args):
+    print(jsonrpc_call('perfstat_show'))
+
+p = subparsers.add_parser('perfstat_show', help='show performance stats')
+p.set_defaults(func=perfstat_show)
+
+def perfstat_disable(args):
+    print(jsonrpc_call('perfstat_disable'))
+
+p = subparsers.add_parser('perfstat_disable', help='Disable performance stats')
+p.set_defaults(func=perfstat_disable)
+
+def perfstat_enable(args):
+    print(jsonrpc_call('perfstat_enable'))
+
+p = subparsers.add_parser('perfstat_enable', help='Enable performance stat')
+p.set_defaults(func=perfstat_enable)
+
 args = parser.parse_args()
 args.func(args)
