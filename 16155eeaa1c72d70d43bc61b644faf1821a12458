@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bfaabf1_b4951571",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-22T14:57:11Z",
+      "side": 1,
+      "message": "Maybe instead of a loop, just test the error injection on the first device?  I think that will be less confusing than adding this failed_dev variable.",
+      "revId": "16155eeaa1c72d70d43bc61b644faf1821a12458",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
