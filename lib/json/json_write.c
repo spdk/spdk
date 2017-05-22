@@ -240,6 +240,17 @@ spdk_json_write_uint32(struct spdk_json_write_ctx *w, uint32_t val)
 }
 
 int
+spdk_json_write_uint32_asis(struct spdk_json_write_ctx *w, uint32_t val)
+{
+	char buf[32];
+	int count;
+
+	count = snprintf(buf, sizeof(buf), "%" PRIu32, val);
+	if (count <= 0 || (size_t)count >= sizeof(buf)) return fail(w);
+	return emit(w, buf, count);
+}
+
+int
 spdk_json_write_int64(struct spdk_json_write_ctx *w, int64_t val)
 {
 	char buf[32];
@@ -276,7 +287,8 @@ write_hex_4(void *dest, uint16_t val)
 }
 
 static int
-write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
+write_string_or_name_common(struct spdk_json_write_ctx *w, const char *val, size_t len,
+			    bool addquote)
 {
 	const uint8_t *p = val;
 	const uint8_t *end = val + len;
@@ -293,8 +305,8 @@ write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
 		 *  (it is valid unescaped).
 		 */
 	};
-
-	if (emit(w, "\"", 1)) return fail(w);
+	if (addquote)
+		if (emit(w, "\"", 1)) return fail(w);
 
 	while (p != end) {
 		int codepoint_len;
@@ -351,8 +363,15 @@ write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
 		if (emit(w, out, out_len)) return fail(w);
 		p += codepoint_len;
 	}
+	if (addquote)
+		return emit(w, "\"", 1);
+	return 0;
+}
 
-	return emit(w, "\"", 1);
+static int
+write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
+{
+	return write_string_or_name_common(w, val, len, true);
 }
 
 int
@@ -366,6 +385,18 @@ int
 spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 {
 	return spdk_json_write_string_raw(w, val, strlen(val));
+}
+
+int
+spdk_json_write_quote(struct spdk_json_write_ctx *w)
+{
+	return emit(w, "\"", 1);
+}
+
+int
+spdk_json_write_string_asis(struct spdk_json_write_ctx *w, const char *val)
+{
+	return write_string_or_name_common(w, val, strlen(val), false);
 }
 
 int
