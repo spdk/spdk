@@ -1027,15 +1027,12 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	return rc;
 }
 
-int
-spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
+static int
+spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_dev *vdev;
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
-	int i;
 
-	vdev = &svdev->vdev;
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
 		return -ENODEV;
@@ -1058,6 +1055,25 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 		return -EINVAL;
 	}
 
+	if (rte_vhost_driver_unregister(path) != 0) {
+		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
+			    "Check if domain socket %s still exists\n", vdev->name, path);
+		return -EIO;
+	}
+
+	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
+
+	g_spdk_vhost_devices[ctrlr_num] = NULL;
+	return 0;
+}
+
+int
+spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_vhost_dev *vdev;
+	int i;
+
+	vdev = &svdev->vdev;
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev[i]) {
 			SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
@@ -1065,9 +1081,8 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 		}
 	}
 
-	if (rte_vhost_driver_unregister(path) != 0) {
-		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
-			    "Check if domain socket %s still exists\n", vdev->name, path);
+	if (spdk_vhost_dev_unregister(vdev) != 0) {
+		SPDK_ERRLOG("Could not unregister scsi controller %s with vhost library\n", vdev->name);
 		return -EIO;
 	}
 
@@ -1079,7 +1094,6 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 	 */
 	free(vdev->name);
 	spdk_free(svdev);
-	g_spdk_vhost_devices[ctrlr_num] = NULL;
 
 	return 0;
 }
