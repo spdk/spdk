@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "19f58622_ededef17",
+        "filename": "include/spdk/cmn_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T23:32:33Z",
+      "side": 1,
+      "message": "spdk_timestamp_ticks and spdk_ticks_to_nsec already exist in include/spdk/env.h as\n\nspdk_get_ticks()\nspdk_get_ticks_hz()",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e03ce5f_d5efc217",
         "filename": "include/spdk/histogram.h",
         "patchSetId": 1
@@ -64,6 +81,23 @@
       "writtenOn": "2017-05-22T23:05:37Z",
       "side": 1,
       "message": "SPDK headers should include each other with #include \"spdk/...\" (not \u003c\u003e)",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5550142_ebbde575",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T23:32:33Z",
+      "side": 1,
+      "message": "This is probably a good candidate for an enum",
       "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -98,6 +132,57 @@
       "writtenOn": "2017-05-22T23:05:37Z",
       "side": 1,
       "message": "We typically don\u0027t typedef structs (just write struct explicitly when declaring variables).",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "633a1d44_b05e714e",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T23:32:33Z",
+      "side": 1,
+      "message": "C99 supports flexible array members, which makes your math on allocation a lot easier.\n\nuint64_t bucket[];\n\nThat is effectively 0 size, so you can do sizeof(struct histogram_stats) + (count * sizeof(uint64_t))",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ee729de_980e3bfd",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T23:32:33Z",
+      "side": 1,
+      "message": "Instead of \u0027buckets\u0027, \u0027num_buckets\u0027, or \u0027bucket_count\u0027 are better names.\n\nbucket_size is also the size of only the smallest bucket in the cases where the scale is not linear. That should be documented.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f87e8bd_646933da",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T23:32:33Z",
+      "side": 1,
+      "message": "Printing the histogram sounds like a great job for a higher level language and a terrible job for C. If you take Daniel\u0027s suggestion and funnel the raw data over JSON RPC, you can delete all formatting/printing code here and reimplement it somewhere easy, like in Python.\n\nIf you wanted to get extra fancy, Python has all sorts of great plotting library wrappers like matplotlib that will draw a really nice histogram. You just have to feed it an array of the bins.",
       "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -172,6 +257,23 @@
     },
     {
       "key": {
+        "uuid": "07d2ba42_2806f248",
+        "filename": "lib/util/cmn_utils.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T23:32:33Z",
+      "side": 1,
+      "message": "Do you really need a separate function to multiply by 100 and divide?\n\nWhy are you casting the return to a uint32_t and losing precision? The inputs are 64 bit integers.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3e7c262_c3204d2a",
         "filename": "lib/util/cmn_utils.c",
         "patchSetId": 1
@@ -217,6 +319,23 @@
       "writtenOn": "2017-05-22T23:05:37Z",
       "side": 1,
       "message": "If these are not accessed outside this file, they should be static.",
+      "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "511901e1_ae663bf9",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T23:32:33Z",
+      "side": 1,
+      "message": "You don\u0027t need to cast a void * to a type - it will automatically do that. This change impacts a lot of lines of code.",
       "revId": "e281192a61fa6b624a45ee05d3eec06596376988",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
