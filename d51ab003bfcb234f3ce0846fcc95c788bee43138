@@ -22,6 +22,30 @@
       "revId": "d51ab003bfcb234f3ce0846fcc95c788bee43138",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7d8aeb9_446334ec",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-22T15:33:45Z",
+      "side": 1,
+      "message": "Change this to MAX_VHOST_CTRLRS here, instead of changing it to MAX_SCSI_CTRLRS in this patch and then to MAX_VHOST_CTRLRS in the next patch.\n\nThe rest of this patch looks good to me.",
+      "parentUuid": "16eb201a_b9342cd4",
+      "range": {
+        "startLine": 66,
+        "startChar": 28,
+        "endLine": 67,
+        "endChar": 8
+      },
+      "revId": "d51ab003bfcb234f3ce0846fcc95c788bee43138",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
