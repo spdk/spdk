@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "066beb65_5911b625",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-22T23:11:08Z",
+      "side": 1,
+      "message": "These global variables should be static.\nPlease also use lowercase_with_underscores rather than camelCase naming and prefix global variables with g_.",
+      "revId": "a62a237ab559eb2b55902645c5493e4dfc209d62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
