@@ -22,6 +22,30 @@
       "revId": "c4152c40156e925c44a0f3af966a8a93b8b7852a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "991913d6_a69bed08",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-22T19:01:30Z",
+      "side": 1,
+      "message": "Making this larger requires more memory to be allocated, but it\u0027s a fairly trivial amount. What we should probably do is use the minimum of user specified size and hardware allowed size.",
+      "parentUuid": "1ab3a43b_ee17a087",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 30
+      },
+      "revId": "c4152c40156e925c44a0f3af966a8a93b8b7852a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
