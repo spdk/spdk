@@ -51,9 +51,6 @@ $rpc_py construct_error_bdev 'Malloc0'
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "1 0 0 0" ==> disable CHAP authentication
-if [ -z "$NO_NVME" ]; then
-$rpc_py construct_target_node Target0 Target0_alias Nvme0n1:0 1:2 64 1 0 0 0
-fi
 $rpc_py construct_target_node Target1 Target1_alias EE_Malloc0:0 1:2 64 1 0 0 0
 sleep 1
 
@@ -67,28 +64,29 @@ sleep 1
 
 $rpc_py bdev_inject_error 'all' -n 1000
 
-devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
+dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
-declare -i failcount=0
 set +e
-for dev in $devs; do
 mkfs.ext4 -F /dev/$dev
 if [ $? -eq 0 ]; then
 	echo "mkfs successful"
+	exit 1
 else
 	echo "mkfs failed"
-	failcount+=1
 fi
-done
 set -e
 
-if [ $failcount -eq 1 ]; then
-	echo "error injection success"
-else
-	exit 1
+$rpc_py bdev_inject_error 'clear'
+
+iscsiadm -m node --logout
+if [ -z "$NO_NVME" ]; then
+$rpc_py construct_target_node Target0 Target0_alias Nvme0n1:0 1:2 64 1 0 0 0
 fi
 
-$rpc_py bdev_inject_error 'clear'
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+iscsiadm -m node --login -p $TARGET_IP:$PORT
+
+devs=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 for dev in $devs; do
 	mkfs.ext4 -F /dev/$dev
