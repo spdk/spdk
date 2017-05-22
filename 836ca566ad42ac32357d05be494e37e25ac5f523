@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60897ade_58907d18",
+        "filename": "test/lib/nvme/unit/nvme_ns_cmd_c/nvme_ns_cmd_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-22T06:17:00Z",
+      "side": 1,
+      "message": "\"()\" not needed here",
+      "range": {
+        "startLine": 1104,
+        "startChar": 17,
+        "endLine": 1104,
+        "endChar": 18
+      },
+      "revId": "836ca566ad42ac32357d05be494e37e25ac5f523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
