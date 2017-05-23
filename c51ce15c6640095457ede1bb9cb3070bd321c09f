@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df2a1422_7e972d5b",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-23T17:41:58Z",
+      "side": 1,
+      "message": "Fix comment spacing (add space between /* and \"invalid\").",
+      "revId": "c51ce15c6640095457ede1bb9cb3070bd321c09f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a848469_b6bb9a80",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-23T17:41:58Z",
+      "side": 1,
+      "message": "It would be good to add a few test cases with negative exponents too (e.g. \"21400e-2\" \u003d\u003d 214).",
+      "revId": "c51ce15c6640095457ede1bb9cb3070bd321c09f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4870239d_c890dfde",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-23T17:41:58Z",
+      "side": 1,
+      "message": "Tabs should be used for indentation (run scripts/check_format.sh).",
+      "revId": "c51ce15c6640095457ede1bb9cb3070bd321c09f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
