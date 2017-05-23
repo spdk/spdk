@@ -16,6 +16,23 @@
       "revId": "e40fac1a9907fc2eab9f0f1746493e3c64266e83",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea320c43_af7534a2",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T15:42:34Z",
+      "side": 1,
+      "message": "I think we need to change where spdk_subsystem_init() is called.  Right now it is called at the end of spdk_app_init().  There is some code (for example, bdevperf) that expects the subsystems and bdevs to be initialized once spdk_app_init() returns.\n\nSo I think we should modify your patch here to call spdk_subsystem_init() in spdk_app_start() instead of spdk_app_init().  You will also need to create a patch to modify bdevperf to call bdevperf_construct_targets() from bdevperf_run instead of main(), so that we guarantee it is called after all subsystems and bdevs have been initialized.\n\nWe may also want to consider removing spdk_app_init() completely, and merge its functionality with spdk_app_start().  But we can look at that later.",
+      "revId": "e40fac1a9907fc2eab9f0f1746493e3c64266e83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
