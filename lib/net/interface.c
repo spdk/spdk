@@ -464,7 +464,7 @@ void *spdk_interface_get_list(void)
 static int
 spdk_interface_init(void)
 {
-	return 0;
+	return spdk_subsystem_init_next();
 }
 
 static int
