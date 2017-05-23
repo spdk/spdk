@@ -776,7 +776,7 @@ bdev_nvme_library_init(void)
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {
-		return 0;
+		return spdk_bdev_module_init_next();
 	}
 
 	probe_ctx = calloc(1, sizeof(*probe_ctx));
@@ -881,7 +881,8 @@ bdev_nvme_library_init(void)
 	}
 
 	free(probe_ctx);
-	return 0;
+
+	return spdk_bdev_module_init_next();
 }
 
 static void

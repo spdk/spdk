@@ -245,7 +245,7 @@ vbdev_error_init(void)
 
 	sp = spdk_conf_find_section(NULL, "BdevError");
 	if (sp == NULL) {
-		return 0;
+		return spdk_vbdev_module_init_next();
 	}
 
 	for (i = 0; ; i++) {
@@ -269,7 +269,8 @@ vbdev_error_init(void)
 			return -1;
 		}
 	}
-	return 0;
+
+	return spdk_vbdev_module_init_next();
 }
 
 static void

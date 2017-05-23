@@ -385,7 +385,7 @@ static int blockdev_aio_initialize(void)
 
 	sp = spdk_conf_find_section(NULL, "AIO");
 	if (!sp) {
-		return 0;
+		return spdk_bdev_module_init_next();
 	}
 
 	i = 0;
@@ -415,7 +415,7 @@ static int blockdev_aio_initialize(void)
 		i++;
 	}
 
-	return 0;
+	return spdk_bdev_module_init_next();
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("aio", SPDK_TRACE_AIO)

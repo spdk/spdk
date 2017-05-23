@@ -343,7 +343,7 @@ vbdev_split_init(void)
 
 	sp = spdk_conf_find_section(NULL, "Split");
 	if (sp == NULL) {
-		return 0;
+		return spdk_vbdev_module_init_next();
 	}
 
 	for (i = 0; ; i++) {
@@ -391,7 +391,7 @@ vbdev_split_init(void)
 		}
 	}
 
-	return 0;
+	return spdk_vbdev_module_init_next();
 }
 
 static void
