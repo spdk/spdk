@@ -51,6 +51,24 @@
       "revId": "b23bc69cfa1c378bc51c54ed4a658da2edf8ebfa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c155f93_69e4eb20",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-23T20:51:48Z",
+      "side": 0,
+      "message": "yeah that makes sense.  seemed like 2 searpate things to me though (1) get code \u0026 build (2) run the demo.  and part (2) is separate either way and includes setup.sh. No matter though, let me see if I can figure out why it wasn\u0027t running.",
+      "parentUuid": "054d09a5_6da14a5e",
+      "revId": "b23bc69cfa1c378bc51c54ed4a658da2edf8ebfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

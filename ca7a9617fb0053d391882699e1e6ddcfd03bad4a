@@ -68,6 +68,24 @@
       "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27fae07f_2e657654",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-23T20:51:48Z",
+      "side": 1,
+      "message": "I love it, you just validated the need to have all the output here in the readme :) I guess I need to see what\u0027s happening",
+      "parentUuid": "0fb1519b_50cf6536",
+      "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
