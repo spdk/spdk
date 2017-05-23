@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68bd11d5_dfee2423",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T15:32:06Z",
+      "side": 1,
+      "message": "After seeing your patch, I think we need to make some additional modifications.\n\nThe spdk_subsystem init functions should return void now.  They should pass their return code as a parameter to spdk_subsystem_init_next() instead.  So spdk_subsystem_init_next() should return void as well, but take an int parameter.\n\nThe rest of the patch looks pretty good.",
+      "revId": "e40fac1a9907fc2eab9f0f1746493e3c64266e83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
