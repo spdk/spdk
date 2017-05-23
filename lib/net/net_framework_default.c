@@ -42,9 +42,9 @@ const char *spdk_net_framework_get_name(void)
 }
 
 __attribute__((weak))
-int spdk_net_framework_start(void)
+void spdk_net_framework_start(void)
 {
-	return 0;
+	spdk_subsystem_init_next(0);
 }
 
 __attribute__((weak))

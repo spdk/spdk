@@ -39,6 +39,13 @@
 
 static struct spdk_subsystem g_ut_subsystems[8];
 static struct spdk_subsystem_depend g_ut_subsystem_deps[8];
+static int global_rc;
+
+void
+spdk_app_stop(int rc)
+{
+	global_rc = rc;
+}
 
 static void
 set_up_subsystem(struct spdk_subsystem *subsystem, const char *name)
@@ -79,6 +86,7 @@ subsystem_sort_test_depends_on_single(void)
 	int i;
 	char subsystem_name[16];
 
+	global_rc = -1;
 	spdk_subsystem_init();
 
 	i = 4;
@@ -122,6 +130,7 @@ subsystem_sort_test_depends_on_multiple(void)
 		spdk_add_subsystem_depend(&g_ut_subsystem_deps[i]);
 	}
 
+	global_rc = -1;
 	spdk_subsystem_init();
 
 	subsystem = TAILQ_FIRST(&g_subsystems);
@@ -180,7 +189,9 @@ subsystem_sort_test_missing_dependency(void)
 	set_up_depends(&g_ut_subsystem_deps[0], "A", "B");
 	spdk_add_subsystem_depend(&g_ut_subsystem_deps[0]);
 
-	CU_ASSERT(spdk_subsystem_init() != 0);
+	global_rc = -1;
+	spdk_subsystem_init();
+	CU_ASSERT(global_rc != 0);
 
 	/*
 	 * Dependency from C to A is defined, but C is missing
@@ -193,7 +204,9 @@ subsystem_sort_test_missing_dependency(void)
 	set_up_depends(&g_ut_subsystem_deps[0], "C", "A");
 	spdk_add_subsystem_depend(&g_ut_subsystem_deps[0]);
 
-	CU_ASSERT(spdk_subsystem_init() != 0);
+	global_rc = -1;
+	spdk_subsystem_init();
+	CU_ASSERT(global_rc != 0);
 
 }
 

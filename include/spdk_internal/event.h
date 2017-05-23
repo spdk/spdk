@@ -55,7 +55,8 @@ uint32_t spdk_event_queue_run_batch(uint32_t lcore);
 
 struct spdk_subsystem {
 	const char *name;
-	int (*init)(void);
+	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
+	void (*init)(void);
 	int (*fini)(void);
 	void (*config)(FILE *fp);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
@@ -71,8 +72,9 @@ struct spdk_subsystem_depend {
 void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
-int spdk_subsystem_init(void);
+void spdk_subsystem_init(void);
 int spdk_subsystem_fini(void);
+void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_config(FILE *fp);
 
 /**

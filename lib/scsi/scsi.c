@@ -97,24 +97,25 @@ spdk_read_config_scsi_parameters(void)
 	return 0;
 }
 
-static int
+static void
 spdk_scsi_subsystem_init(void)
 {
-	int rc;
+	int rc = 0;
 
 	rc = pthread_mutex_init(&g_spdk_scsi.mutex, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("mutex_init() failed\n");
-		return -1;
+		goto end;
 	}
 
 	rc = spdk_read_config_scsi_parameters();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_scsi_parameters() failed\n");
-		return -1;
+		rc = -1;
 	}
 
-	return rc;
+end:
+	spdk_subsystem_init_next(rc);
 }
 
 static int
