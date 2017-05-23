@@ -49,7 +49,7 @@ struct io_device {
 static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_devices);
 
 struct spdk_io_channel {
-	pthread_t			thread_id;
+	struct spdk_thread		*thread;
 	void				*io_device;
 	uint32_t			ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
@@ -64,32 +64,100 @@ struct spdk_io_channel {
 };
 
 struct spdk_thread {
+	pthread_t thread_id;
 	spdk_thread_pass_msg fn;
 	void *thread_ctx;
 	TAILQ_HEAD(, spdk_io_channel) io_channels;
+	TAILQ_ENTRY(spdk_thread) tailq;
 };
 
-static __thread struct spdk_thread g_thread;
+static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
+
+static struct spdk_thread *
+_get_thread(void)
+{
+	pthread_t thread_id;
+	struct spdk_thread *thread;
+
+	thread_id = pthread_self();
+
+	thread = NULL;
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		if (thread->thread_id == thread_id) {
+			return thread;
+		}
+	}
+
+	return NULL;
+}
 
 struct spdk_thread *
 spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx)
 {
-	g_thread.fn = fn;
-	g_thread.thread_ctx = thread_ctx;
-	TAILQ_INIT(&g_thread.io_channels);
-	return &g_thread;
+	struct spdk_thread *thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+
+	thread = _get_thread();
+	if (thread) {
+		SPDK_ERRLOG("Double allocated SPDK thread\n");
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return NULL;
+	}
+
+	thread = calloc(1, sizeof(*thread));
+	if (!thread) {
+		SPDK_ERRLOG("Unable to allocate memory for thread\n");
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return NULL;
+	}
+
+	thread->thread_id = pthread_self();
+	thread->fn = fn;
+	thread->thread_ctx = thread_ctx;
+	TAILQ_INIT(&thread->io_channels);
+	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return thread;
 }
 
 void
 spdk_free_thread(void)
 {
-	assert(TAILQ_EMPTY(&g_thread.io_channels));
+	struct spdk_thread *thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
+	}
+
+	TAILQ_REMOVE(&g_threads, thread, tailq);
+	free(thread);
+
+	pthread_mutex_unlock(&g_devlist_mutex);
 }
 
 struct spdk_thread *
 spdk_get_thread(void)
 {
-	return &g_thread;
+	struct spdk_thread *thread;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+	}
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return thread;
 }
 
 void
@@ -150,6 +218,7 @@ struct spdk_io_channel *
 spdk_get_io_channel(void *io_device)
 {
 	struct spdk_io_channel *ch;
+	struct spdk_thread *thread;
 	struct io_device *dev;
 	int rc;
 
@@ -164,9 +233,17 @@ spdk_get_io_channel(void *io_device)
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
+
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return NULL;
+	}
+
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	TAILQ_FOREACH(ch, &g_thread.io_channels, tailq) {
+	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 		if (ch->io_device == io_device) {
 			ch->ref++;
 			/*
@@ -190,9 +267,9 @@ spdk_get_io_channel(void *io_device)
 
 	ch->io_device = io_device;
 	ch->destroy_cb = dev->destroy_cb;
-	ch->thread_id = pthread_self();
+	ch->thread = thread;
 	ch->ref = 1;
-	TAILQ_INSERT_TAIL(&g_thread.io_channels, ch, tailq);
+	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 	return ch;
 }
 
@@ -207,7 +284,7 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 	ch->ref--;
 
 	if (ch->ref == 0) {
-		TAILQ_REMOVE(&g_thread.io_channels, ch, tailq);
+		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
 		ch->destroy_cb(ch->io_device, (uint8_t *)ch + sizeof(*ch));
 		free(ch);
 	}
