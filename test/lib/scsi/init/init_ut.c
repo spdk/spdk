@@ -65,6 +65,12 @@ spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend)
 {
 }
 
+int
+spdk_subsystem_init_next(void)
+{
+	return 0;
+}
+
 static struct spdk_conf *
 spdk_config_init_scsi_params(char *key, char *value)
 {
