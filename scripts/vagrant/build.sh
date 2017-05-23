@@ -42,6 +42,5 @@ fi
 
 cd $SPDK_DIR
 $SUDOCMD ./configure --enable-debug
+$SUDOCMD make clean
 $SUDOCMD make -j2
-# Bind virtual NVMe controller to uio_pci_generic
-sudo scripts/setup.sh
