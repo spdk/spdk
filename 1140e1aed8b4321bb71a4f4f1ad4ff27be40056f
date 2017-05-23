@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fd5def09_9a8dcce3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-23T12:58:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "770c6c48_6f819f26",
+      "revId": "1140e1aed8b4321bb71a4f4f1ad4ff27be40056f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7ea4c66_a45b181f",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 1
@@ -48,6 +66,24 @@
       "side": 1,
       "message": "After looking at one of your later patches, maybe use \"vdev\" for spdk_vhost_dev and \"svdev\" for spdk_vhost_scsI_dev structures.  Fewer characters than my suggestion above.",
       "parentUuid": "f7ea4c66_a45b181f",
+      "revId": "1140e1aed8b4321bb71a4f4f1ad4ff27be40056f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a39685d8_32de54c8",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-23T12:58:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7724bf6e_28369208",
       "revId": "1140e1aed8b4321bb71a4f4f1ad4ff27be40056f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
