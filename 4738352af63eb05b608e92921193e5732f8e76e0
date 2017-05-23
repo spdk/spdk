@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af300f56_18426131",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T19:16:33Z",
+      "side": 1,
+      "message": "Overall the flow looks good here.  But I suggest modifying these echo statements to make it clear what is happening.  Maybe \"mkfs successful - expected failure\".  And then \"mkfs failed as expected\".\n\nAlso probably add an echo \"Test error injection\" before all of this.",
+      "revId": "4738352af63eb05b608e92921193e5732f8e76e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
