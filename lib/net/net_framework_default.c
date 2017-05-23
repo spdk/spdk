@@ -44,6 +44,7 @@ const char *spdk_net_framework_get_name(void)
 __attribute__((weak))
 int spdk_net_framework_start(void)
 {
+	spdk_subsystem_init_next(0);
 	return 0;
 }
 
