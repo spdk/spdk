@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b559a5e0_108a8be3",
+        "filename": "dpdk",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T19:09:52Z",
+      "side": 1,
+      "message": "This is reverting the DPDK submodule back to an earlier commit.\n\nMost likely you fetched and rebased from master, but didn\u0027t run git submodule update.",
+      "revId": "a4c3b065ba74184e594dbd7bcaf0c4256590fe7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0de369b_1911ecaf",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T19:09:52Z",
+      "side": 1,
+      "message": "Did you intend to add all of this debug output?  It\u0027s not clear what the intention is for this section.",
+      "revId": "a4c3b065ba74184e594dbd7bcaf0c4256590fe7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
