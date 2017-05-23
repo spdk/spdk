@@ -49,8 +49,8 @@ typedef void (*spdk_thread_fn)(void *ctx);
 typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 				     void *thread_ctx);
 
-typedef int (*io_channel_create_cb_t)(void *io_device, void *ctx_buf);
-typedef void (*io_channel_destroy_cb_t)(void *io_device, void *ctx_buf);
+typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
+typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
@@ -98,8 +98,8 @@ void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, v
  *  is the size of the context buffer allocated to store references to allocated I/O
  *  channel resources.
  */
-void spdk_io_device_register(void *io_device, io_channel_create_cb_t create_cb,
-			     io_channel_destroy_cb_t destroy_cb, uint32_t ctx_size);
+void spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
+			     spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size);
 
 /**
  * \brief Unregister the opaque io_device context as an I/O device.
