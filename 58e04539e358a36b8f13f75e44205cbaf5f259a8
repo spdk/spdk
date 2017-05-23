@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a401d7df_a10e1341",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 906,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "vdev \u003d\u003e svdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f58d7433_7b2ecdd7",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 907,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "dev \u003d\u003e vdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7b0caac_cee98ab2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "SPDK comments should have /* */ format instead of //.  See comment starting at line 894 for example of SPDK multi-line comment format.",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aed36264_1211b2bb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1073,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "ctrlr \u003d\u003e svdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4be58315_45f34fe8",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1083,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "vdev \u003d\u003e svdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "721d533c_ff7f8e2a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "dev \u003d\u003e vdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "477a0f7c_30873b47",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "vdev \u003d\u003e svdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8badaaef_c8246c6d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1149,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "dev \u003d\u003e vdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2b58cdf_28082e29",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "ctrlr \u003d\u003e vdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49e7f023_86af4266",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "ctrlr \u003d\u003e vdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f73d9e0_d602b0e1",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:33:28Z",
+      "side": 1,
+      "message": "ctrlr \u003d\u003e vdev",
+      "revId": "58e04539e358a36b8f13f75e44205cbaf5f259a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
