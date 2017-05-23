@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa22e707_da228596",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:42:56Z",
+      "side": 1,
+      "message": "Should the name have \"ctrlrs\" in it, if the type is spdk_vhost_dev?\n\nAlso wondering if MAX_VHOST_CTRLRS should stay as MAX_VHOST_DEVICE.",
+      "revId": "f1baf017f4cf7fedf92dc4539c5bca845c2a1acb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8db6998_fb66dace",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T18:42:56Z",
+      "side": 1,
+      "message": "ctrlr \u003d\u003e vdev",
+      "revId": "f1baf017f4cf7fedf92dc4539c5bca845c2a1acb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
