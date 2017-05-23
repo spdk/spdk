@@ -598,7 +598,7 @@ blockdev_rbd_library_init(void)
 		}
 	}
 
-	return 0;
+	return spdk_bdev_module_init_next();
 cleanup:
 	blockdev_rbd_library_fini();
 	return -1;
