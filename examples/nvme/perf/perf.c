@@ -116,6 +116,22 @@ struct ns_entry {
 #define BUCKET_MASK (NUM_BUCKETS_PER_RANGE - 1)
 #define NUM_BUCKET_RANGES (BUCKET_LSB + 1)
 
+static double g_latency_cutoffs[] = {
+	0.01,
+	0.10,
+	0.25,
+	0.50,
+	0.75,
+	0.90,
+	0.95,
+	0.99,
+	0.999,
+	0.9999,
+	0.99999,
+	0.999999,
+	-1,
+};
+
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
 	uint64_t		io_completed;
@@ -753,6 +769,7 @@ static void usage(char *program_name)
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
 	printf("\t[-L enable latency tracking via sw, default: disabled]\n");
+	printf("\t\t-L for latency summary, -LL for detailed histogram\n");
 	printf("\t[-l enable latency tracking via ssd (if supported), default: disabled]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
@@ -833,6 +850,42 @@ print_performance(void)
 	if (g_latency_sw_tracking_level == 0) {
 		return;
 	}
+
+	worker = g_workers;
+	while (worker) {
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx) {
+			uint64_t i, j, so_far = 0;
+			double so_far_pct = 0, bucket = 0;
+			double *cutoff = g_latency_cutoffs;
+
+			printf("Summary latency data for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
+			printf("=================================================================================\n");
+
+			for (i = 0; i < NUM_BUCKET_RANGES; i++) {
+				for (j = 0; j < NUM_BUCKETS_PER_RANGE; j++) {
+					so_far += ns_ctx->bucket[i][j];
+					so_far_pct = (double)so_far / total_io_completed;
+					bucket = get_us_from_bucket(i, j);
+					if (ns_ctx->bucket[i][j] == 0) {
+						continue;
+					}
+					while (so_far_pct >= *cutoff && *cutoff > 0) {
+						printf("%8.4f%% : %9.3fus\n", *cutoff * 100, bucket);
+						cutoff++;
+					}
+				}
+			}
+			printf("\n");
+			ns_ctx = ns_ctx->next;
+		}
+		worker = worker->next;
+	}
+
+	if (g_latency_sw_tracking_level == 1) {
+		return;
+	}
+
 	worker = g_workers;
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
@@ -841,8 +894,8 @@ print_performance(void)
 			float so_far_pct = 0;
 			double last_bucket, bucket = 0;
 
-			printf("Latency data for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
-			printf("=========================================================================\n");
+			printf("Latency histogram for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
+			printf("==============================================================================\n");
 			printf("       Range in us     Cumulative    IO count\n");
 
 			for (i = 0; i < NUM_BUCKET_RANGES; i++) {
