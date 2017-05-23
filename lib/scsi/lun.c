@@ -143,6 +143,8 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 		return -1;
 	}
 
+	task->ch = task->lun->io_channel;
+
 	switch (func) {
 	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
 		rc = spdk_scsi_lun_abort_task(task, task->lun,
