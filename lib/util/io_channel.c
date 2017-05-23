@@ -295,3 +295,89 @@ spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
 {
 	return (uint8_t *)ch + sizeof(*ch);
 }
+
+struct call_channel {
+	void *io_device;
+	spdk_channel_msg fn;
+	void *ctx;
+
+	struct spdk_thread *cur_thread;
+	struct spdk_io_channel *cur_ch;
+
+	struct spdk_thread *orig_thread;
+	spdk_channel_for_each_cpl cpl;
+};
+
+static void
+_call_channel(void *ctx)
+{
+	struct call_channel *ch_ctx = ctx;
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
+
+	thread = ch_ctx->cur_thread;
+	ch = ch_ctx->cur_ch;
+
+	ch_ctx->fn(ch_ctx->io_device, ch, ch_ctx->ctx);
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	thread = TAILQ_NEXT(thread, tailq);
+	while (thread) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->io_device == ch_ctx->io_device) {
+				ch_ctx->cur_thread = thread;
+				ch_ctx->cur_ch = ch;
+				pthread_mutex_unlock(&g_devlist_mutex);
+				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
+				return;
+			}
+		}
+		thread = TAILQ_NEXT(thread, tailq);
+	}
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx);
+	free(ch_ctx);
+}
+
+void
+spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
+		      spdk_channel_for_each_cpl cpl)
+{
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
+	struct call_channel *ch_ctx;
+
+	ch_ctx = calloc(1, sizeof(*ch_ctx));
+	if (!ch_ctx) {
+		SPDK_ERRLOG("Unable to allocate context\n");
+		return;
+	}
+
+	ch_ctx->io_device = io_device;
+	ch_ctx->fn = fn;
+	ch_ctx->ctx = ctx;
+	ch_ctx->cpl = cpl;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	ch_ctx->orig_thread = _get_thread();
+
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->io_device == io_device) {
+				ch_ctx->cur_thread = thread;
+				ch_ctx->cur_ch = ch;
+				pthread_mutex_unlock(&g_devlist_mutex);
+				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
+				return;
+			}
+		}
+	}
+
+	free(ch_ctx);
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	cpl(io_device, ctx);
+}
