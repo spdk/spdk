@@ -265,7 +265,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		if (trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 			struct spdk_pci_addr pci_addr;
 			if (spdk_pci_addr_parse(&pci_addr, trid.traddr) < 0) {
-				SPDK_ERRLOG("Invaild traddr=%s\n", trid.traddr);
+				SPDK_ERRLOG("Invalid traddr=%s\n", trid.traddr);
 				continue;
 			}
 			spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
