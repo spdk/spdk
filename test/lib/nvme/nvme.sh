@@ -30,7 +30,7 @@ done
 timing_exit identify
 
 timing_enter perf
-$rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 1 -L
+$rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 1 -LL
 timing_exit perf
 
 timing_enter reserve
