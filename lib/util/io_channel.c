@@ -295,3 +295,70 @@ spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
 {
 	return (uint8_t *)ch + sizeof(*ch);
 }
+
+struct call_channel {
+	void *io_device;
+	spdk_channel_msg fn;
+	void *ctx;
+
+	struct spdk_thread *orig_thread;
+	uint32_t cpl_remaining;
+};
+
+static void
+_call_cpl(void *ctx)
+{
+	struct call_channel *ch_ctx = ctx;
+
+	ch_ctx->cpl_remaining--;
+
+	if (ch_ctx->cpl_remaining == 0) {
+		free(ch_ctx);
+	}
+}
+
+static void
+_call_channel(void *ctx)
+{
+	struct call_channel *ch_ctx = ctx;
+	struct spdk_io_channel *ch;
+
+	ch = spdk_get_io_channel(ch_ctx->io_device);
+	ch_ctx->fn(ch_ctx->io_device, ch, ch_ctx->ctx);
+	spdk_put_io_channel(ch);
+
+	spdk_thread_send_msg(ch_ctx->orig_thread, _call_cpl, ch_ctx);
+}
+
+void
+spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx)
+{
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
+	struct call_channel *ch_ctx;
+
+	ch_ctx = calloc(1, sizeof(*ch_ctx));
+	if (!ch_ctx) {
+		SPDK_ERRLOG("Unable to allocate context\n");
+		return;
+	}
+
+	ch_ctx->io_device = io_device;
+	ch_ctx->fn = fn;
+	ch_ctx->ctx = ctx;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	ch_ctx->orig_thread = _get_thread();
+	ch_ctx->cpl_remaining = 0;
+
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->io_device == io_device) {
+				ch_ctx->cpl_remaining++;
+				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+}
