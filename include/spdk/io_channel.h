@@ -54,6 +54,7 @@ typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
 typedef void (*spdk_channel_msg)(void *io_device, struct spdk_io_channel *ch,
 				 void *ctx);
+typedef void (*spdk_channel_for_each_cpl)(void *io_device, void *ctx);
 
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
@@ -143,7 +144,11 @@ void *spdk_io_channel_get_ctx(struct spdk_io_channel *ch);
  * \brief Call 'fn' on each channel associated with io_device. This happens
  * asynchronously, so fn may be called after spdk_for_each_channel returns.
  * 'fn' will be called on the correct thread for each channel.
+ *
+ * Once 'fn' has been called on each channel, 'cpl' will be called
+ * on the thread that spdk_for_each_channel was initially called from.
  */
-void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx);
+void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
+			   spdk_channel_for_each_cpl cpl);
 
 #endif /* SPDK_IO_CHANNEL_H_ */

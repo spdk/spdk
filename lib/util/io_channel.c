@@ -303,6 +303,7 @@ struct call_channel {
 
 	struct spdk_thread *orig_thread;
 	uint32_t cpl_remaining;
+	spdk_channel_for_each_cpl cpl;
 };
 
 static void
@@ -313,6 +314,7 @@ _call_cpl(void *ctx)
 	ch_ctx->cpl_remaining--;
 
 	if (ch_ctx->cpl_remaining == 0) {
+		ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx);
 		free(ch_ctx);
 	}
 }
@@ -331,7 +333,8 @@ _call_channel(void *ctx)
 }
 
 void
-spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx)
+spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
+		      spdk_channel_for_each_cpl cpl)
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
@@ -346,6 +349,7 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx)
 	ch_ctx->io_device = io_device;
 	ch_ctx->fn = fn;
 	ch_ctx->ctx = ctx;
+	ch_ctx->cpl = cpl;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	ch_ctx->orig_thread = _get_thread();
