@@ -241,7 +241,7 @@ spdk_bdev_config_text(FILE *fp)
 	}
 }
 
-static int
+static void
 spdk_bdev_initialize(void)
 {
 	int i, cache_size;
@@ -257,7 +257,8 @@ spdk_bdev_initialize(void)
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	for (i = 0; i < RTE_MAX_LCORE; i++) {
@@ -278,7 +279,8 @@ spdk_bdev_initialize(void)
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_small_pool) {
 		SPDK_ERRLOG("create rbuf small pool failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
@@ -289,23 +291,27 @@ spdk_bdev_initialize(void)
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		rc = bdev_module->module_init();
 		if (rc) {
-			return rc;
+			rc = -1;
+			goto end;
 		}
 	}
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
 		rc = bdev_module->module_init();
 		if (rc) {
-			return rc;
+			rc = -1;
+			goto end;
 		}
 	}
 
-	return 0;
+end:
+	spdk_subsystem_init_next(rc);
 }
 
 static int
