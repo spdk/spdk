@@ -45,7 +45,7 @@
 #define IDLE_INTERVAL_TIME_IN_US 5000
 
 const char *spdk_net_framework_get_name(void);
-int spdk_net_framework_start(void);
+void spdk_net_framework_start(void);
 void spdk_net_framework_clear_socket_association(int sock);
 int spdk_net_framework_fini(void);
 int spdk_net_framework_idle_time(void);
