@@ -63,6 +63,7 @@ static char dev_dirname[PATH_MAX] = "";
 
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
+#define MAX_VHOST_VRINGS	256
 #define MAX_VHOST_DEVICE	1024
 
 #ifndef VIRTIO_F_VERSION_1
@@ -97,7 +98,7 @@ struct spdk_vhost_dev {
 	int vid;
 	uint16_t num_queues;
 	uint64_t negotiated_features;
-	struct rte_vhost_vring virtqueue[0] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
+	struct rte_vhost_vring virtqueue[MAX_VHOST_VRINGS] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 };
 
 static void
@@ -117,55 +118,48 @@ spdk_vhost_dev_destruct(struct spdk_vhost_dev *dev)
 		q = &dev->virtqueue[i];
 		rte_vhost_set_vhost_vring_last_idx(dev->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
-
-	spdk_vhost_dev_free(dev);
 }
 
-static struct spdk_vhost_dev *
-spdk_vhost_dev_create(int vid)
+static int
+spdk_vhost_dev_construct(struct spdk_vhost_dev *dev)
 {
+	int vid = dev->vid;
 	uint16_t num_queues = rte_vhost_get_vring_num(vid);
-	size_t size = sizeof(struct spdk_vhost_dev) + num_queues * sizeof(struct rte_vhost_vring);
-	struct spdk_vhost_dev *dev = spdk_zmalloc(size, SPDK_CACHE_LINE_SIZE, NULL);
 	uint16_t i;
 
-	if (dev == NULL) {
-		SPDK_ERRLOG("vhost device %d: Failed to allocate new vhost device with %"PRIu16" queues\n", vid,
-			    num_queues);
-		return NULL;
+	if (num_queues > MAX_VHOST_VRINGS) {
+		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
+			    MAX_VHOST_VRINGS);
+		return -1;
 	}
 
 	for (i = 0; i < num_queues; i++) {
 		if (rte_vhost_get_vhost_vring(vid, i, &dev->virtqueue[i])) {
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
-			goto err;
+			return -1;
 		}
 
 		/* Disable notifications. */
 		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
 			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
-			goto err;
+			return -1;
 		}
 
 	}
 
-	dev->vid = vid;
 	dev->num_queues = num_queues;
 
 	if (rte_vhost_get_negotiated_features(vid, &dev->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		goto err;
+		return -1;
 	}
 
 	if (rte_vhost_get_mem_table(vid, &dev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
-		goto err;
+		return -1;
 	}
-	return dev;
 
-err:
-	spdk_vhost_dev_free(dev);
-	return NULL;
+	return 0;
 }
 
 static uint64_t
@@ -870,6 +864,7 @@ destroy_device(int vid)
 	vdev->lcore = -1;
 
 	spdk_vhost_dev_destruct(vdev->dev);
+	spdk_vhost_dev_free(vdev->dev);
 	vdev->dev = NULL;
 	dpdk_vid_mapping[vid] = NULL;
 }
@@ -1313,6 +1308,7 @@ new_device(int vid)
 {
 	struct spdk_vhost_scsi_ctrlr *vdev = NULL;
 	struct spdk_event *event;
+	struct spdk_vhost_dev *dev;
 
 	char ifname[PATH_MAX];
 	sem_t added;
@@ -1335,12 +1331,19 @@ new_device(int vid)
 		return -1;
 	}
 
-	assert(vdev->dev == NULL);
-	vdev->dev = spdk_vhost_dev_create(vid);
-	if (vdev->dev == NULL) {
+	dev = spdk_zmalloc(sizeof(*dev), SPDK_CACHE_LINE_SIZE, NULL);
+	if (dev == NULL) {
+		SPDK_ERRLOG("vhost device %d: Failed to allocate enough memory\n", vid);
+		return -1;
+	}
+	dev->vid = vid;
+
+	if (spdk_vhost_dev_construct(dev) != 0) {
+		spdk_free(dev);
 		return -1;
 	}
 
+	vdev->dev = dev;
 	dpdk_vid_mapping[vid] = vdev;
 	vdev->lcore = spdk_vhost_scsi_allocate_reactor(vdev->cpumask);
 
