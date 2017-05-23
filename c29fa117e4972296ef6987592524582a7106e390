@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b2f4aa0_7658c5b4",
+        "filename": "test/lib/nvme/unit/nvme_ns_cmd_c/nvme_ns_cmd_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T02:48:38Z",
+      "side": 1,
+      "message": "I would suggest using the exact same comment as the write_with_md function above.  It adds some more detail.",
+      "revId": "c29fa117e4972296ef6987592524582a7106e390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa7ae789_3267c392",
+        "filename": "test/lib/nvme/unit/nvme_ns_cmd_c/nvme_ns_cmd_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1167,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T02:48:38Z",
+      "side": 1,
+      "message": "Put this after write_with_md, to match the order the functions are defined above.",
+      "revId": "c29fa117e4972296ef6987592524582a7106e390",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
