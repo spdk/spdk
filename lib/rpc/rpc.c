@@ -225,7 +225,7 @@ spdk_rpc_setup(void *arg)
 			     RPC_SELECT_INTERVAL);
 }
 
-static int
+static void
 spdk_rpc_initialize(void)
 {
 	/*
@@ -235,7 +235,8 @@ spdk_rpc_initialize(void)
 	 *  or RPC commands.
 	 */
 	spdk_poller_register(&g_rpc_poller, spdk_rpc_setup, NULL, spdk_env_get_current_core(), 0);
-	return 0;
+
+	spdk_subsystem_init_next(0);
 }
 
 static int

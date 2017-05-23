@@ -963,33 +963,37 @@ spdk_iscsi_setup(void *arg1, void *arg2)
 	spdk_iscsi_acceptor_start();
 }
 
-static int
+static void
 spdk_iscsi_subsystem_init(void)
 {
-	int rc;
+	int rc = 0;
 
 	rc = spdk_iscsi_app_read_parameters();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_app_read_parameters() failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	rc = spdk_iscsi_initialize_all_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	rc = spdk_iscsi_init_tgt_nodes();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_init_tgt_nodes() failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	rc = spdk_initialize_iscsi_conns();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	/*
@@ -997,7 +1001,8 @@ spdk_iscsi_subsystem_init(void)
 	 */
 	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_iscsi_setup, NULL, NULL));
 
-	return 0;
+end:
+	spdk_subsystem_init_next(rc);
 }
 
 static int
