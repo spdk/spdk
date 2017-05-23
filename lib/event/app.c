@@ -410,13 +410,6 @@ spdk_app_init(struct spdk_app_opts *opts)
 			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
 		}
 	}
-
-	rc = spdk_subsystem_init();
-	if (rc < 0) {
-		SPDK_ERRLOG("spdk_subsystem_init() failed\n");
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
 }
 
 int
@@ -439,6 +432,13 @@ spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 	struct spdk_event *event;
 
 	g_spdk_app.rc = 0;
+
+	spdk_subsystem_init();
+
+	/* Early return if there is error */
+	if (g_spdk_app.rc) {
+		return g_spdk_app.rc;
+	}
 
 	event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
 				    arg1, arg2);
