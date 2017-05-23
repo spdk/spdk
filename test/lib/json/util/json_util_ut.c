@@ -126,6 +126,160 @@ test_decode_bool(void)
 	CU_ASSERT(spdk_json_decode_bool(&v, &b) != 0);
 }
 
+static void
+test_decode_int32(void)
+{
+	struct spdk_json_val v;
+	int32_t i;
+
+	/* correct type and valid value */
+	v.type = SPDK_JSON_VAL_NUMBER;
+	v.start = "33";
+	v.len = 2;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
+	CU_ASSERT(i == 33)
+
+	/* correct type and invalid value (float) */
+	v.start = "32.45";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+
+	/* incorrect type */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = "String";
+	v.len = 6;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+
+	/* incorrect type */
+	v.type = SPDK_JSON_VAL_TRUE;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+
+	/* edge case (integer max) */
+	v.type = SPDK_JSON_VAL_NUMBER;
+	v.start = "2147483647";
+	v.len = 10;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
+	CU_ASSERT(i == 2147483647);
+
+	/* invalid value (overflow) */
+	v.start = "2147483648";
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+
+	/* edge case (integer min) */
+	v.type = SPDK_JSON_VAL_NUMBER;
+	v.start = "-2147483648";
+	v.len = 11;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
+	CU_ASSERT(i == -2147483648);
+
+	/* invalid value (overflow) */
+	v.start = "-2147483649";
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+
+	/* valid exponent */
+	v.start = "4e3";
+	v.len = 3;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
+	CU_ASSERT(i == 4000);
+
+	/*invalid exponent (overflow) */
+	v.start = "-2e32";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+
+	/* valid exponent with decimal */
+	v.start = "2.13e2";
+	v.len = 6;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) == 0);
+	CU_ASSERT(i == 213)
+
+	/* invalid exponent with decimal */
+	v.start = "2.134e2";
+	v.len = 7;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_int32(&v, &i) != 0);
+}
+
+static void
+test_decode_uint32(void)
+{
+    struct spdk_json_val v;
+    uint32_t i;
+
+	/* incorrect type */
+    v.type = SPDK_JSON_VAL_STRING;
+    v.start = "String";
+    v.len = 6;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) != 0);
+
+	/* invalid value (float) */
+    v.type = SPDK_JSON_VAL_NUMBER;
+    v.start = "123.45";
+    v.len = 6;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) != 0);
+
+    /* edge case (0) */
+    v.start = "0";
+    v.len = 1;
+    i = 456;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
+    CU_ASSERT(i == 0);
+
+    /* invalid value (negative) */
+    v.start = "-1";
+    v.len = 2;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) != 0);
+
+    /* edge case (maximum) */
+	v.start = "4294967295";
+    v.len = 10;
+    i = 0;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
+    CU_ASSERT(i == 4294967295);
+
+    /* invalid value (overflow) */
+	v.start = "4294967296";
+    v.len = 10;
+    i = 0;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) != 0);
+
+    /* valid exponent */
+	v.start = "42E2";
+    v.len = 4;
+    i = 0;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
+    CU_ASSERT(i == 4200);
+
+	/* invalid exponent (overflow) */
+	v.start = "42e32";
+    v.len = 5;
+    i = 0;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) != 0);
+
+    /* invalid exponent (decimal) */
+	v.start = "42.323E2";
+    v.len = 8;
+    i = 0;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) != 0);
+
+    /* valid exponent with decimal */
+	v.start = "42.32E2";
+    v.len = 7;
+    i = 0;
+    CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
+    CU_ASSERT(i == 4232);
+
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -144,7 +298,9 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "strequal", test_strequal) == NULL ||
 		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
-		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL) {
+		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
+		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
+		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
