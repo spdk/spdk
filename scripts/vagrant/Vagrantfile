@@ -15,7 +15,6 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision :shell, :path => File.join(File.dirname(__FILE__),"update.sh")
   config.vm.provision :shell, :path => File.join(File.dirname(__FILE__),"build.sh")
-  config.vm.provision :shell, inline: "/spdk/scripts/setup.sh", run: "always"
 
   # Copy in the .gitconfig if it exists
   if File.file?(File.expand_path("~/.gitconfig"))

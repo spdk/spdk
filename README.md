@@ -79,20 +79,12 @@ Vagrant
 
 A [Vagrant](https://www.vagrantup.com/downloads.html) setup is also provided
 to create a Linux VM with a virtual NVMe controller to get up and running
-quickly.  Currently this has only been tested on MacOS with the
-[VirtualBox](https://www.virtualbox.org/wiki/Downloads) provider.  The
+quickly.  Currently this has only been tested on MacOS and Ubuntu 16.04.2 LTS
+with the [VirtualBox](https://www.virtualbox.org/wiki/Downloads) provider.  The
 [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads) must
-also be installed for NVMe support.
+also be installed in order to get the required NVMe support.
 
-If you are behind a corporate firewall, set http_proxy and https_proxy in
-your environment before running the following steps.
-
-    1) vagrant up
-    2) vagrant ssh
-    3) cd /spdk
-    4) sudo examples/nvme/hello_world/hello_world
-
-Additional details on the Vagrant setup can be found in
+Details on the Vagrant setup can be found in
 [scripts/vagrant/README.md](scripts/vagrant/README.md).
 
 Advanced Build Options
