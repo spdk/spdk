@@ -104,6 +104,26 @@ test_num_to_int32(void)
 }
 
 static void
+test_decode_array(void)
+{
+    struct spdk_json_val *values = calloc(4, sizeof(struct spdk_json_val));
+    uint32_t *myInt = calloc(2, sizeof(int));
+    int (*decoder)(const struct spdk_json_val *, void *);
+    int *out_size;
+    decoder = &spdk_json_decode_uint32;
+    values[1].type = SPDK_JSON_VAL_ARRAY_BEGIN;
+    values[1].len = 2;
+    values[2].type = SPDK_JSON_VAL_NUMBER;
+    values[2].len = 4;
+    values[2].start = "1234";
+    values[3].type = SPDK_JSON_VAL_NUMBER;
+    values[3].len = 4;
+    values[3].start = "5678";
+    values[4].type = SPDK_JSON_VAL_ARRAY_END;
+    CU_ASSERT(spdk_json_decode_array(values, decoder, myInt, 2, out_size, 4) == 0);
+}
+
+static void
 test_decode_bool(void)
 {
 	struct spdk_json_val v;
@@ -335,6 +355,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "strequal", test_strequal) == NULL ||
 		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
+		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
 		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
 		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
 		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL) {
