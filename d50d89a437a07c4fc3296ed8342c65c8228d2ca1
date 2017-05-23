@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cd71201_88290afc",
+        "filename": "test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-23T02:35:00Z",
+      "side": 1,
+      "message": "For the below \"size equals 0\" case, why not check it here for the invalid input? Then proper error code can set (cpl.status)? Insteading of always set the cpl.status.sc \u003d 1",
+      "range": {
+        "startLine": 323,
+        "startChar": 14,
+        "endLine": 323,
+        "endChar": 18
+      },
+      "revId": "d50d89a437a07c4fc3296ed8342c65c8228d2ca1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72ff6ad3_2993c416",
+        "filename": "test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1415,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-23T02:35:00Z",
+      "side": 1,
+      "message": "shall we consider a normal case that size is valid, ctlr.min_page_size is valid, ctlr is not in resetting or failed condition, and the firmware is successfully update, download and ctrlr is reset?",
+      "range": {
+        "startLine": 1415,
+        "startChar": 0,
+        "endLine": 1415,
+        "endChar": 1
+      },
+      "revId": "d50d89a437a07c4fc3296ed8342c65c8228d2ca1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
