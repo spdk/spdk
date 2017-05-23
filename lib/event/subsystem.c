@@ -41,6 +41,7 @@ static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 	TAILQ_HEAD_INITIALIZER(g_subsystems);
 static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
 	TAILQ_HEAD_INITIALIZER(g_depends);
+static struct spdk_subsystem *g_next_subsystem;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -109,10 +110,29 @@ subsystem_sort(void)
 }
 
 int
+spdk_subsystem_init_next(void)
+{
+
+	if (!g_next_subsystem) {
+		g_next_subsystem = TAILQ_FIRST(&g_subsystems);
+	} else {
+		g_next_subsystem = TAILQ_NEXT(g_next_subsystem, tailq);
+	}
+
+	if (!g_next_subsystem) {
+		return 0;
+	}
+
+	if (g_next_subsystem->init) {
+		return g_next_subsystem->init();
+	} else {
+		return spdk_subsystem_init_next();
+	}
+}
+
+int
 spdk_subsystem_init(void)
 {
-	int rc = 0;
-	struct spdk_subsystem *subsystem;
 	struct spdk_subsystem_depend *dep;
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
@@ -130,14 +150,7 @@ spdk_subsystem_init(void)
 
 	subsystem_sort();
 
-	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
-		if (subsystem->init) {
-			rc = subsystem->init();
-			if (rc)
-				return rc;
-		}
-	}
-	return rc;
+	return spdk_subsystem_init_next();
 }
 
 int
