@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd0fea8f_6df9f168",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-23T16:39:24Z",
+      "side": 1,
+      "message": "These should have spdk_ prefixes (also drop the _t since that suffix is reserved for POSIX).",
+      "revId": "3fd62086d750481339b374f94586051e3aba95e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
