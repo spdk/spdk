@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae1da824_a4c65e1a",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T15:44:35Z",
+      "side": 1,
+      "message": "Similar to the subsystem patch - the init functions should now return void, and pass their return code via a spdk_[v]bdev_module_init_next() parameter.",
+      "revId": "6280d83c3d5611ad289540f3c44088695dc29d61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
