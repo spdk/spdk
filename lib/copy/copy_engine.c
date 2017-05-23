@@ -237,7 +237,7 @@ spdk_copy_engine_module_finish(void)
 	}
 }
 
-static int
+static void
 spdk_copy_engine_initialize(void)
 {
 	spdk_copy_engine_module_initialize();
@@ -247,7 +247,8 @@ spdk_copy_engine_initialize(void)
 	 */
 	spdk_io_device_register(&spdk_copy_module_list, copy_create_cb, copy_destroy_cb,
 				sizeof(struct copy_io_channel));
-	return 0;
+
+	spdk_subsystem_init_next(0);
 }
 
 static int
