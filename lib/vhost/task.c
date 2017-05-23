@@ -151,7 +151,7 @@ spdk_vhost_subsystem_init(void)
 		TAILQ_INIT(&g_need_iovecs[i]);
 	}
 
-	return 0;
+	return spdk_subsystem_init_next();
 }
 
 static int
