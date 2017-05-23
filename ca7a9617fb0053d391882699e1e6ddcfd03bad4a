@@ -33,6 +33,24 @@
       "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "124da95b_e5bceff3",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-23T20:19:25Z",
+      "side": 1,
+      "message": "Yeah I dunno, I thought about it but there\u0027s not much there and I did snip out the non-SPDK (mostly) irrelevant stuff.  My thinking is that it\u0027s not a ton of stuff and if you\u0027re firing up vagrant for the intended purpose you\u0027d probably rather hit pg-down a few times as opposed to running into a problem and having no clue whether the output you are seeing is expected or not. This may get outdatedbut I think it still serves the purpose of what a good \"vagrant up\" and hello_world execution should look like",
+      "parentUuid": "6822e4e4_49ec67e9",
+      "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
