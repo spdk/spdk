@@ -40,8 +40,8 @@ static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
 	void			*io_device_ctx;
-	io_channel_create_cb_t	create_cb;
-	io_channel_destroy_cb_t	destroy_cb;
+	spdk_io_channel_create_cb create_cb;
+	spdk_io_channel_destroy_cb destroy_cb;
 	uint32_t		ctx_size;
 	TAILQ_ENTRY(io_device)	tailq;
 };
@@ -53,7 +53,7 @@ struct spdk_io_channel {
 	void				*io_device;
 	uint32_t			ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
-	io_channel_destroy_cb_t		destroy_cb;
+	spdk_io_channel_destroy_cb	destroy_cb;
 
 	/*
 	 * Modules will allocate extra memory off the end of this structure
@@ -99,8 +99,8 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *
 }
 
 void
-spdk_io_device_register(void *io_device, io_channel_create_cb_t create_cb,
-			io_channel_destroy_cb_t destroy_cb, uint32_t ctx_size)
+spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
+			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size)
 {
 	struct io_device *dev, *tmp;
 
