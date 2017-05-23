@@ -89,86 +89,35 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 	}
 }
 
-static int
-spdk_scsi_lun_abort_all(struct spdk_scsi_task *mtask,
-			struct spdk_scsi_lun *lun,
-			struct spdk_scsi_port *initiator_port)
-{
-	if (!lun) {
-		mtask->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
-		return -1;
-	}
-
-	mtask->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
-	return -1;
-}
-
-static int
-spdk_scsi_lun_abort_task(struct spdk_scsi_task *mtask,
-			 struct spdk_scsi_lun *lun,
-			 struct spdk_scsi_port *initiator_port,
-			 uint32_t task_tag)
-{
-	if (!lun) {
-		/* LUN does not exist */
-		mtask->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
-		return -1;
-	}
-
-	mtask->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
-	return -1;
-}
-
-static int
-spdk_scsi_lun_reset(struct spdk_scsi_task *mtask, struct spdk_scsi_lun *lun)
-{
-	if (!lun) {
-		/* LUN does not exist */
-		mtask->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
-		spdk_scsi_lun_complete_mgmt_task(NULL, mtask);
-		return -1;
-	}
-
-	spdk_bdev_scsi_reset(lun->bdev, mtask);
-	return 0;
-}
-
 int
 spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 				enum spdk_scsi_task_func func)
 {
-	int rc;
-
 	if (!task) {
+		return -1;
+	}
+
+	if (!task->lun) {
+		/* LUN does not exist */
+		task->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
+		spdk_scsi_lun_complete_mgmt_task(NULL, task);
 		return -1;
 	}
 
 	switch (func) {
 	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
-		rc = spdk_scsi_lun_abort_task(task, task->lun,
-					      task->initiator_port,
-					      task->abort_id);
-		if (rc < 0) {
-			SPDK_ERRLOG("ABORT_TASK failed\n");
-		}
-
+		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
+		SPDK_ERRLOG("ABORT_TASK failed\n");
 		break;
 
 	case SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET:
-		rc = spdk_scsi_lun_abort_all(task, task->lun,
-					     task->initiator_port);
-		if (rc < 0) {
-			SPDK_ERRLOG("ABORT_TASK_SET failed\n");
-		}
-
+		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
+		SPDK_ERRLOG("ABORT_TASK_SET failed\n");
 		break;
 
 	case SPDK_SCSI_TASK_FUNC_LUN_RESET:
-		rc = spdk_scsi_lun_reset(task, task->lun);
-		if (rc < 0) {
-			SPDK_ERRLOG("LUN_RESET failed\n");
-		}
-		return rc;
+		spdk_bdev_scsi_reset(task->lun->bdev, task);
+		return 0;
 
 	default:
 		SPDK_ERRLOG("Unknown Task Management Function!\n");
@@ -178,13 +127,12 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 		 * the task as being unsupported.
 		 */
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
-		rc = -1;
 		break;
 	}
 
 	spdk_scsi_lun_complete_mgmt_task(task->lun, task);
 
-	return rc;
+	return -1;
 }
 
 void
