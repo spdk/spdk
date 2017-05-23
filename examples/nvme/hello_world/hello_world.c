@@ -334,6 +334,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	if (g_controllers == NULL) {
+		fprintf(stderr, "no NVMe controllers found\n");
+		cleanup();
+		return 1;
+	}
+
 	printf("Initialization complete.\n");
 	hello_world();
 	cleanup();
