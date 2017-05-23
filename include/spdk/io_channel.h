@@ -52,6 +52,9 @@ typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
 typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
+typedef void (*spdk_channel_msg)(void *io_device, struct spdk_io_channel *ch,
+				 void *ctx);
+
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
  *
@@ -135,5 +138,12 @@ void spdk_put_io_channel(struct spdk_io_channel *ch);
  * \brief Returns the context buffer associated with an I/O channel.
  */
 void *spdk_io_channel_get_ctx(struct spdk_io_channel *ch);
+
+/**
+ * \brief Call 'fn' on each channel associated with io_device. This happens
+ * asynchronously, so fn may be called after spdk_for_each_channel returns.
+ * 'fn' will be called on the correct thread for each channel.
+ */
+void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx);
 
 #endif /* SPDK_IO_CHANNEL_H_ */
