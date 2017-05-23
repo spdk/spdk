@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00c3b583_855e7493",
+        "filename": "dpdk",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-23T20:02:21Z",
+      "side": 1,
+      "message": "Did you intend to change the dpdk submodule?",
+      "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6822e4e4_49ec67e9",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-23T20:02:21Z",
+      "side": 1,
+      "message": "I think we can probably trim most of this output (at least the SPDK build process)...",
+      "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
