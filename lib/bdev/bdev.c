@@ -305,7 +305,7 @@ spdk_bdev_initialize(void)
 		}
 	}
 
-	return 0;
+	return spdk_subsystem_init_next();
 }
 
 static int
