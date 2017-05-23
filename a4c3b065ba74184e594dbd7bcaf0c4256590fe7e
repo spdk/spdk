@@ -33,6 +33,24 @@
       "revId": "a4c3b065ba74184e594dbd7bcaf0c4256590fe7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a485e09b_41663411",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-23T19:17:45Z",
+      "side": 1,
+      "message": "yes, I will add a sentence explaining that this is the complete expected output of starting up the VM adn running hello world",
+      "parentUuid": "e0de369b_1911ecaf",
+      "revId": "a4c3b065ba74184e594dbd7bcaf0c4256590fe7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

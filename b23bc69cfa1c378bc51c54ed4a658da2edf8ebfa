@@ -16,6 +16,24 @@
       "revId": "b23bc69cfa1c378bc51c54ed4a658da2edf8ebfa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98ecbd66_b5d6e8a2",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-23T19:17:45Z",
+      "side": 0,
+      "message": "it didn\u0027t appear to be running at all, or not working.  I removed them both and in the example call it explicitly since we tell people to do that anyways.",
+      "parentUuid": "6dc2419a_3e5ab152",
+      "revId": "b23bc69cfa1c378bc51c54ed4a658da2edf8ebfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
