@@ -34,6 +34,23 @@
       "revId": "b23bc69cfa1c378bc51c54ed4a658da2edf8ebfa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "054d09a5_6da14a5e",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T20:47:23Z",
+      "side": 0,
+      "message": "But if we aren\u0027t going to automatically run setup.sh, then I don\u0027t think we should automatically build spdk.\n\nMy intention was for the Vagrant script to make it really easy to get up and running and avoid the extra steps.  After you play around with the Vagrant setup, then you go back and check the README for running setup.sh, configure and make.",
+      "revId": "b23bc69cfa1c378bc51c54ed4a658da2edf8ebfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
