@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ba57b4c_4b80580e",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T02:40:41Z",
+      "side": 1,
+      "message": "This seems error prone - depending on a specific string.  Can we instead just pick the first dev in $devs?\n\ndev\u003d$(echo $devs | cut -d \u0027 \u0027 -f 1)",
+      "revId": "ef7eb1794d289d7ba50564bc951aedbfa6cc8e90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
