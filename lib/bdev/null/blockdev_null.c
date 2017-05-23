@@ -195,7 +195,7 @@ blockdev_null_initialize(void)
 	spdk_io_device_register(&g_null_bdev_head, null_bdev_create_cb, null_bdev_destroy_cb, 0);
 
 	if (sp == NULL) {
-		return 0;
+		return spdk_bdev_module_init_next();
 	}
 
 	i = 0;
@@ -246,7 +246,8 @@ blockdev_null_initialize(void)
 
 		i++;
 	}
-	return 0;
+
+	return spdk_bdev_module_init_next();
 }
 
 static void
