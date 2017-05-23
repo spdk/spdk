@@ -420,6 +420,8 @@ spdk_interface_init(void)
 	TAILQ_INIT(&g_interface_head);
 	spdk_prepare_ifc_list();
 	spdk_get_ifc_ipv4();
+
+	spdk_subsystem_init_next(0);
 	return 0;
 }
 
@@ -464,6 +466,7 @@ void *spdk_interface_get_list(void)
 static int
 spdk_interface_init(void)
 {
+	spdk_subsystem_init_next(0);
 	return 0;
 }
 

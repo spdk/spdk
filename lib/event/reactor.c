@@ -509,6 +509,10 @@ spdk_reactors_start(void)
 
 	assert(rte_get_master_lcore() == rte_lcore_id());
 
+	if (g_reactor_state != SPDK_REACTOR_STATE_INITIALIZED) {
+		return;
+	}
+
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
 	current_core = spdk_env_get_current_core();

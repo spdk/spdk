@@ -132,11 +132,14 @@ spdk_vhost_iovec_free(struct iovec *iov)
 static int
 spdk_vhost_subsystem_init(void)
 {
+	int rc = -1;
+
 	g_task_pool = rte_mempool_create("vhost task pool", 16384, sizeof(struct spdk_vhost_task),
 					 128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
 	if (!g_task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	g_iov_buffer_pool = rte_mempool_create("vhost iov buffer pool", 2048,
@@ -144,14 +147,17 @@ spdk_vhost_subsystem_init(void)
 					       128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
 	if (!g_iov_buffer_pool) {
 		SPDK_ERRLOG("create iov buffer pool failed\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	for (int i = 0; i < RTE_MAX_LCORE; i++) {
 		TAILQ_INIT(&g_need_iovecs[i]);
 	}
 
-	return 0;
+end:
+	spdk_subsystem_init_next(rc);
+	return rc;
 }
 
 static int
