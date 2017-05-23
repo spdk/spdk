@@ -70,10 +70,10 @@ spdk_hex2bin(char ch)
 }
 
 static void
-spdk_bdev_scsi_set_local_naa(const char *name, uint8_t *buf)
+spdk_bdev_scsi_set_naa_ieee_extended(const char *name, uint8_t *buf)
 {
 	int i, value, count = 0;
-	uint64_t naa, local_value;
+	uint64_t local_value;
 
 	for (i = 0; (i < 16) && (name[i] != '\0'); i++) {
 		value = spdk_hex2bin(name[i]);
@@ -83,10 +83,16 @@ spdk_bdev_scsi_set_local_naa(const char *name, uint8_t *buf)
 			buf[count] = value;
 		}
 	}
-	/* NAA locally assigned filed */
-	naa = 0x3;
+
 	local_value = *(uint64_t *)buf;
-	local_value = (naa << 60) | (local_value >> 4);
+	/*
+	 * see spc3r23 7.6.3.6.2,
+	 *  NAA IEEE Extended identifer format
+	 */
+	local_value &= 0x0fff000000ffffffull;
+	/* NAA 02, and 00 03 47 for IEEE Intel */
+	local_value |= 0x2000000347000000ull;
+
 	to_be64((void *)buf, local_value);
 }
 
@@ -280,7 +286,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->piv = 1;
 			desig->reserved1 = 0;
 			desig->len = 8;
-			spdk_bdev_scsi_set_local_naa(name, desig->desig);
+			spdk_bdev_scsi_set_naa_ieee_extended(name, desig->desig);
 			len = sizeof(struct spdk_scsi_desig_desc) + 8;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;
