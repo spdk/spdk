@@ -881,7 +881,8 @@ bdev_nvme_library_init(void)
 	}
 
 	free(probe_ctx);
-	return 0;
+
+	return spdk_bdev_module_init_next();
 }
 
 static void
