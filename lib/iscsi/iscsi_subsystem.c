@@ -983,7 +983,7 @@ spdk_iscsi_subsystem_init(void)
 	 */
 	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_iscsi_setup, NULL, NULL));
 
-	return 0;
+	return spdk_subsystem_init_next();
 }
 
 static int

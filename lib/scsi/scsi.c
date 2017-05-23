@@ -114,7 +114,7 @@ spdk_scsi_subsystem_init(void)
 		return -1;
 	}
 
-	return rc;
+	return spdk_subsystem_init_next();
 }
 
 static int
