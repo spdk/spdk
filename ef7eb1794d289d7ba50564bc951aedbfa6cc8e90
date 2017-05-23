@@ -16,6 +16,24 @@
       "revId": "ef7eb1794d289d7ba50564bc951aedbfa6cc8e90",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71d4de8b_af0f1cc7",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-05-23T03:37:47Z",
+      "side": 1,
+      "message": "we can not make sure the first dev is the error injection dev? for example, if we have nvme device in system, the first device could be one nvme bdev, not error injection dev",
+      "parentUuid": "4ba57b4c_4b80580e",
+      "revId": "ef7eb1794d289d7ba50564bc951aedbfa6cc8e90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
