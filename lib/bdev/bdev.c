@@ -830,10 +830,12 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 }
 
 int
-spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
+spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		enum spdk_bdev_reset_type reset_type,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
@@ -843,6 +845,7 @@ spdk_bdev_reset(struct spdk_bdev *bdev, enum spdk_bdev_reset_type reset_type,
 		return -1;
 	}
 
+	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	bdev_io->u.reset.type = reset_type;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);

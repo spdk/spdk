@@ -660,7 +660,7 @@ __blockdev_reset(void *arg1, void *arg2)
 	struct io_target *target = req->target;
 	int rc;
 
-	rc = spdk_bdev_reset(target->bdev, *reset_type, quick_test_complete, NULL);
+	rc = spdk_bdev_reset(target->bdev, target->ch, *reset_type, quick_test_complete, NULL);
 	if (rc < 0) {
 		g_completion_success = false;
 		wake_ut_thread();
