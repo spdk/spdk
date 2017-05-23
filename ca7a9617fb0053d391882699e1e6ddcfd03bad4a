@@ -51,6 +51,23 @@
       "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fb1519b_50cf6536",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-23T20:45:39Z",
+      "side": 1,
+      "message": "One problem here is setup.sh did not find the NVMe device, so hello_world did not really do anything (it didn\u0027t find any devices).",
+      "revId": "ca7a9617fb0053d391882699e1e6ddcfd03bad4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
