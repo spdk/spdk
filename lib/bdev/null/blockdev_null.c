@@ -246,7 +246,8 @@ blockdev_null_initialize(void)
 
 		i++;
 	}
-	return 0;
+
+	return spdk_bdev_module_init_next();
 }
 
 static void
