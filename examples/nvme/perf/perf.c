@@ -111,9 +111,10 @@ struct ns_entry {
  * store the bucket data.
  */
 #define BUCKET_SHIFT 7
+#define BUCKET_LSB (64 - BUCKET_SHIFT)
 #define NUM_BUCKETS_PER_RANGE (1ULL << BUCKET_SHIFT)
 #define BUCKET_MASK (NUM_BUCKETS_PER_RANGE - 1)
-#define NUM_BUCKET_RANGES (64 - BUCKET_SHIFT + 1)
+#define NUM_BUCKET_RANGES (BUCKET_LSB + 1)
 
 struct ns_worker_ctx {
 	struct ns_entry		*entry;
@@ -206,8 +207,8 @@ get_bucket_range(uint64_t tsc)
 
 	clz = __builtin_clzll(tsc);
 
-	if (clz <= NUM_BUCKET_RANGES) {
-		range = NUM_BUCKET_RANGES - clz;
+	if (clz <= BUCKET_LSB) {
+		range = BUCKET_LSB - clz;
 	} else {
 		range = 0;
 	}
