@@ -235,6 +235,8 @@ spdk_rpc_initialize(void)
 	 *  or RPC commands.
 	 */
 	spdk_poller_register(&g_rpc_poller, spdk_rpc_setup, NULL, spdk_env_get_current_core(), 0);
+
+	spdk_subsystem_init_next(0);
 	return 0;
 }
 
