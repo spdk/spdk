@@ -74,6 +74,7 @@ fs_init(void)
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
 
+	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 
@@ -156,6 +157,7 @@ fs_open(void)
 	CU_ASSERT(g_fserrno == 0);
 	CU_ASSERT(TAILQ_EMPTY(&fs->files));
 
+	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 
@@ -207,6 +209,7 @@ fs_truncate(void)
 	CU_ASSERT(g_fserrno == 0);
 	CU_ASSERT(TAILQ_EMPTY(&fs->files));
 
+	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 
@@ -282,6 +285,7 @@ fs_rename(void)
 	CU_ASSERT(g_fserrno == 0);
 	CU_ASSERT(TAILQ_EMPTY(&fs->files));
 
+	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 
@@ -385,6 +389,7 @@ channel_ops(void)
 
 	spdk_fs_free_io_channel(channel);
 
+	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 	g_fs = NULL;
@@ -412,6 +417,7 @@ channel_ops_sync(void)
 
 	spdk_fs_free_io_channel(channel);
 
+	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 	g_fs = NULL;
