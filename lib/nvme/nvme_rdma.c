@@ -785,7 +785,7 @@ nvme_rdma_build_null_request(struct nvme_request *req)
 {
 	struct spdk_nvme_sgl_descriptor *nvme_sgl;
 
-	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 
 	nvme_sgl = &req->cmd.dptr.sgl1;
 	nvme_sgl->keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
@@ -814,7 +814,7 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 		return -1;
 	}
 
-	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
 	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
@@ -857,7 +857,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 		return -1;
 	}
 
-	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
 	req->cmd.dptr.sgl1.keyed.length = length;
