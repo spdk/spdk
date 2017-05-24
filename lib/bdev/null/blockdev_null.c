@@ -175,7 +175,7 @@ blockdev_null_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Null");
 	uint64_t size_in_mb, num_blocks;
-	int block_size, i;
+	int block_size, i, rc = 0;
 	struct spdk_bdev *bdev;
 	const char *name, *val;
 
@@ -194,59 +194,61 @@ blockdev_null_initialize(void)
 	 */
 	spdk_io_device_register(&g_null_bdev_head, null_bdev_create_cb, null_bdev_destroy_cb, 0);
 
-	if (sp == NULL) {
-		return 0;
-	}
+	if (sp != NULL) {
+		i = 0;
+		while (true) {
+			val = spdk_conf_section_get_nval(sp, "Dev", i);
+			if (val == NULL) {
+				break;
+			}
 
-	i = 0;
-	while (true) {
-		val = spdk_conf_section_get_nval(sp, "Dev", i);
-		if (val == NULL) {
-			break;
-		}
-
-		name = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
-		if (name == NULL) {
-			SPDK_ERRLOG("Null entry %d: Name must be provided\n", i);
-			continue;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
-		if (val == NULL) {
-			SPDK_ERRLOG("Null entry %d: Size in MB must be provided\n", i);
-			continue;
-		}
-
-		errno = 0;
-		size_in_mb = strtoull(val, NULL, 10);
-		if (errno) {
-			SPDK_ERRLOG("Null entry %d: Invalid size in MB %s\n", i, val);
-			continue;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "Dev", i, 2);
-		if (val == NULL) {
-			block_size = 512;
-		} else {
-			errno = 0;
-			block_size = (int)strtol(val, NULL, 10);
-			if (errno) {
-				SPDK_ERRLOG("Null entry %d: Invalid block size %s\n", i, val);
+			name = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
+			if (name == NULL) {
+				SPDK_ERRLOG("Null entry %d: Name must be provided\n", i);
 				continue;
 			}
+
+			val = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
+			if (val == NULL) {
+				SPDK_ERRLOG("Null entry %d: Size in MB must be provided\n", i);
+				continue;
+			}
+
+			errno = 0;
+			size_in_mb = strtoull(val, NULL, 10);
+			if (errno) {
+				SPDK_ERRLOG("Null entry %d: Invalid size in MB %s\n", i, val);
+				continue;
+			}
+
+			val = spdk_conf_section_get_nmval(sp, "Dev", i, 2);
+			if (val == NULL) {
+				block_size = 512;
+			} else {
+				errno = 0;
+				block_size = (int)strtol(val, NULL, 10);
+				if (errno) {
+					SPDK_ERRLOG("Null entry %d: Invalid block size %s\n", i, val);
+					continue;
+				}
+			}
+
+			num_blocks = size_in_mb * (1024 * 1024) / block_size;
+
+			bdev = create_null_bdev(name, num_blocks, block_size);
+			if (bdev == NULL) {
+				SPDK_ERRLOG("Could not create null bdev\n");
+				rc = EINVAL;
+				goto end;
+			}
+
+			i++;
 		}
-
-		num_blocks = size_in_mb * (1024 * 1024) / block_size;
-
-		bdev = create_null_bdev(name, num_blocks, block_size);
-		if (bdev == NULL) {
-			SPDK_ERRLOG("Could not create null bdev\n");
-			return EINVAL;
-		}
-
-		i++;
 	}
-	return 0;
+
+end:
+	spdk_bdev_module_init_next(rc);
+	return rc;
 }
 
 static void
