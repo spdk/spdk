@@ -769,20 +769,21 @@ bdev_nvme_library_init(void)
 {
 	struct spdk_conf_section *sp;
 	const char *val;
-	int rc;
+	int rc = 0;
 	size_t i;
-	struct nvme_probe_ctx *probe_ctx;
+	struct nvme_probe_ctx *probe_ctx = NULL;
 	int retry_count;
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {
-		return 0;
+		goto end;
 	}
 
 	probe_ctx = calloc(1, sizeof(*probe_ctx));
 	if (probe_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate probe_ctx\n");
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	if ((retry_count = spdk_conf_section_get_intval(sp, "RetryCount")) < 0) {
@@ -805,15 +806,15 @@ bdev_nvme_library_init(void)
 		rc = spdk_nvme_transport_id_parse(&probe_ctx->trids[i], val);
 		if (rc < 0) {
 			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
-			free(probe_ctx);
-			return -1;
+			rc = -1;
+			goto end;
 		}
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
 		if (val == NULL) {
 			SPDK_ERRLOG("No name provided for TransportID\n");
-			free(probe_ctx);
-			return -1;
+			rc = -1;
+			goto end;
 		}
 
 		probe_ctx->names[i] = val;
@@ -871,8 +872,8 @@ bdev_nvme_library_init(void)
 	}
 
 	if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
-		free(probe_ctx);
-		return -1;
+		rc = -1;
+		goto end;
 	}
 
 	if (g_nvme_hotplug_enabled) {
@@ -880,8 +881,11 @@ bdev_nvme_library_init(void)
 				     g_nvme_hotplug_poll_core, g_nvme_hotplug_poll_timeout_us);
 	}
 
+end:
 	free(probe_ctx);
-	return 0;
+	spdk_bdev_module_init_next(rc);
+	return rc;
+
 }
 
 static void

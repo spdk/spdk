@@ -76,6 +76,9 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 };
 
+static struct spdk_bdev_module_if *g_next_bdev_module;
+static struct spdk_bdev_module_if *g_next_vbdev_module;
+
 struct spdk_bdev_channel {
 	struct spdk_bdev	*bdev;
 
@@ -241,12 +244,52 @@ spdk_bdev_config_text(FILE *fp)
 	}
 }
 
+void
+spdk_bdev_module_init_next(int rc)
+{
+	if (rc) {
+		spdk_subsystem_init_next(rc);
+		return;
+	}
+
+	if (!g_next_bdev_module) {
+		g_next_bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
+	} else {
+		g_next_bdev_module = TAILQ_NEXT(g_next_bdev_module, tailq);
+	}
+
+	if (g_next_bdev_module) {
+		g_next_bdev_module->module_init();
+	} else {
+		spdk_vbdev_module_init_next(0);
+	}
+}
+
+void
+spdk_vbdev_module_init_next(int rc)
+{
+	if (rc) {
+		spdk_subsystem_init_next(rc);
+		return;
+	}
+
+	if (!g_next_vbdev_module) {
+		g_next_vbdev_module = TAILQ_FIRST(&g_bdev_mgr.vbdev_modules);
+	} else {
+		g_next_vbdev_module = TAILQ_NEXT(g_next_vbdev_module, tailq);
+	}
+
+	if (g_next_vbdev_module) {
+		g_next_vbdev_module->module_init();
+	} else {
+		spdk_subsystem_init_next(0);
+	}
+}
+
 static int
 spdk_bdev_initialize(void)
 {
-	int i, cache_size;
-	struct spdk_bdev_module_if *bdev_module;
-	int rc = 0;
+	int i, cache_size, rc = 0;
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
 				  SPDK_BDEV_IO_POOL_SIZE,
@@ -292,26 +335,10 @@ spdk_bdev_initialize(void)
 	if (!g_bdev_mgr.buf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
 		rc = -1;
-		goto end;
-	}
-
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
-		rc = bdev_module->module_init();
-		if (rc) {
-			rc = -1;
-			goto end;
-		}
-	}
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		rc = bdev_module->module_init();
-		if (rc) {
-			rc = -1;
-			goto end;
-		}
 	}
 
 end:
-	spdk_subsystem_init_next(rc);
+	spdk_bdev_module_init_next(rc);
 	return rc;
 }
 
