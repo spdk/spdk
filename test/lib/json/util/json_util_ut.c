@@ -386,6 +386,53 @@ test_decode_uint32(void)
 	CU_ASSERT(i == 4)
 }
 
+static void
+test_decode_string(void)
+{
+	struct spdk_json_val v;
+	char *value = NULL;
+
+	/* Passing Test: Standard */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = "HELLO";
+	v.len = 5;
+	CU_ASSERT(spdk_json_decode_string(&v, &value) == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(memcmp(value, v.start, 6) == 0);
+
+	/* Edge Test: Empty String */
+	v.start = "";
+	v.len = 0;
+	CU_ASSERT(spdk_json_decode_string(&v, &value) == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(memcmp(value, v.start, 1) == 0);
+
+	/*
+	 * Failing Test: Null Terminator In String
+	 * It is valid for a json string to contain \u0000 and the parser will accept it.
+	 * However, a null terminated C string cannot contain '\0' and should be rejected
+	 * if that character is found before the end of the string.
+	 */
+	v.start = "HELO";
+	v.len = 5;
+	CU_ASSERT(spdk_json_decode_string(&v, &value) != 0);
+
+	/* Failing Test: Wrong Type */
+	v.start = "45673";
+	v.type = SPDK_JSON_VAL_NUMBER;
+	CU_ASSERT(spdk_json_decode_string(&v, &value) != 0);
+
+	/* Passing Test: Special Characters */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = "HE\bLL\tO\\WORLD";
+	v.len = 13;
+	CU_ASSERT(spdk_json_decode_string(&v, &value) == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(memcmp(value, v.start, 14) == 0);
+
+	free(value);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -407,7 +454,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
 		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
 		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
-		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL) {
+		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL ||
+		CU_add_test(suite, "decode_string", test_decode_string) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
