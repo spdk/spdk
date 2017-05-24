@@ -468,7 +468,8 @@ spdk_iscsi_check_pool(struct rte_mempool *pool, uint32_t count)
 	}
 }
 
-static int spdk_iscsi_check_pools(void)
+static int
+spdk_iscsi_check_pools(void)
 {
 	int rc = 0;
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
@@ -477,12 +478,25 @@ static int spdk_iscsi_check_pools(void)
 	rc += spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
 	rc += spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
 	rc += spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
+	/* TODO: check the task_pool on exit */
 
 	if (rc == 0) {
 		return 0;
 	} else {
 		return -1;
 	}
+}
+
+static void
+spdk_iscsi_free_pools(void)
+{
+	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
+
+	rte_mempool_free(iscsi->pdu_pool);
+	rte_mempool_free(iscsi->session_pool);
+	rte_mempool_free(iscsi->pdu_immediate_data_pool);
+	rte_mempool_free(iscsi->pdu_data_out_pool);
+	rte_mempool_free(iscsi->task_pool);
 }
 
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
@@ -992,6 +1006,7 @@ spdk_iscsi_subsystem_fini(void)
 	int rc;
 
 	rc = spdk_iscsi_check_pools();
+	spdk_iscsi_free_pools();
 
 	spdk_iscsi_shutdown_tgt_nodes();
 	spdk_iscsi_init_grp_array_destroy();
