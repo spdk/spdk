@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d5477cb_f2aeefcf",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-24T15:20:52Z",
+      "side": 0,
+      "message": "I was thinking this could be used to take advantage of the newer DPDK versions that allow placing the entries directly in the ring (rather than just pointers).\n\nHowever, since this isn\u0027t supported with older DPDK, we can\u0027t actually use this feature anyway, so I agree we can just remove this parameter. (Also, since this interface was just added in the current SPDK version, likely nobody external is depending on it yet.)",
+      "revId": "918d3395dae0e8ead69daefa8f352244374fa3e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
