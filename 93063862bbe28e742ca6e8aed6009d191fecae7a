@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb82bffb_48f26625",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-24T16:44:46Z",
+      "side": 1,
+      "message": "I think there are more functions here that could move to the new vhost_internal.h file.  But we can do that in a future patch.  This is a great start.",
+      "revId": "93063862bbe28e742ca6e8aed6009d191fecae7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
