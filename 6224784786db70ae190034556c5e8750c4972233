@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47d1e53c_36d1a25d",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-24T23:11:12Z",
+      "side": 1,
+      "message": "This statement is true, but I think it would be even clearer if you follow up with another sentence, something like: \"However, the embedded \\0 character can\u0027t be represented in a null-terminated C string, so spdk_json_decode_string() should not allow it.\"",
+      "revId": "6224784786db70ae190034556c5e8750c4972233",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
