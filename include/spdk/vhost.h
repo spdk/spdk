@@ -64,4 +64,10 @@ const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *ctrl);
 uint64_t spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *ctrl);
 int spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask);
 
+int spdk_vhost_blk_construct(const char *name, uint64_t cpumask);
+int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev);
+struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
+int spdk_vhost_blk_add_dev(const char *ctrlr_name, const char *bdev_name);
+int spdk_vhost_blk_remove_dev(struct spdk_vhost_dev *ctrlr);
+
 #endif /* SPDK_VHOST_H */
