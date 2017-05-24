@@ -598,7 +598,7 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -EINVAL;
 	}
 
-	svdev = spdk_dma_zmalloc(sizeof(*svdev), SPDK_CACHE_LINE_SIZE, NULL);
+	svdev = spdk_dma_zmalloc(sizeof(*vdev), SPDK_CACHE_LINE_SIZE, NULL);
 	if (svdev == NULL) {
 		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
 		return -ENOMEM;
