@@ -69,16 +69,6 @@ spdk_vbdev_inject_error(uint32_t io_type_mask, uint32_t error_num)
 }
 
 static void
-vbdev_error_task_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status,
-			  void *cb_arg)
-{
-	struct spdk_bdev_io *bdevio = (struct spdk_bdev_io *)cb_arg;
-	struct spdk_bdev_io *parent = bdevio->parent;
-
-	spdk_bdev_io_complete(parent, SPDK_BDEV_IO_STATUS_FAILED);
-}
-
-static void
 vbdev_error_reset(struct vbdev_error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 {
 	/*
@@ -98,7 +88,6 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 {
 	struct vbdev_error_disk *error_disk = bdev_io->bdev->ctxt;
 	uint32_t io_type_mask;
-	struct spdk_bdev_io *child;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -128,9 +117,7 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
 	} else {
 		g_error_num--;
-		child = spdk_bdev_get_child_io(bdev_io, &error_disk->disk, vbdev_error_task_complete, NULL);
-		child->ch = bdev_io->ch;
-		spdk_bdev_io_resubmit(child, error_disk->base_bdev);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 	pthread_mutex_unlock(&g_vbdev_error_mutex);
 }
