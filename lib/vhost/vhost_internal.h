@@ -55,6 +55,7 @@
 
 enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_SCSI,
+	SPDK_VHOST_DEV_T_BLK,
 };
 
 struct spdk_vhost_dev {
@@ -128,5 +129,6 @@ void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn,
 				 unsigned timeout_sec, const char *errmsg);
 void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event, const char *errmsg);
 
+int spdk_vhost_blk_controller_construct(void);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
