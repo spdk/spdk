@@ -3,6 +3,7 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/iscsi_tgt/common.sh
 
 function running_config() {
 	# generate a config file from the running iscsi_tgt
@@ -15,7 +16,7 @@ function running_config() {
 	#  config file matched the running configuration
 	killprocess $pid
 	trap "iscsicleanup; exit 1" SIGINT SIGTERM EXIT
-	./app/iscsi_tgt/iscsi_tgt -c /tmp/iscsi.conf &
+	$ISCSI_APP -c /tmp/iscsi.conf &
 	pid=$!
 	echo "Process pid: $pid"
 	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
@@ -53,7 +54,7 @@ MALLOC_BLOCK_SIZE=4096
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
-./app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf &
+$ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 
