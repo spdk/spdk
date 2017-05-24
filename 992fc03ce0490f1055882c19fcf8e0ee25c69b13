@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97b730fe_274f3e4e",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-24T21:47:30Z",
+      "side": 1,
+      "message": "Where is the change that adds this struct?\n\nI have changes that turn pthread_t into spdk_thread_t\n\ntypedef pthread_t spdk_thread_t;\n\nOK I downloaded this patch set and I see that struct spdk_thread is defined only in io_channel.c.  I was hoping this would move to env.c/h.  Or to the stdinc.h abstraction.  Is that next?",
+      "revId": "992fc03ce0490f1055882c19fcf8e0ee25c69b13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
