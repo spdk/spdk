@@ -31,21 +31,27 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y += trace
-DIRS-y += nvmf_tgt
-DIRS-y += iscsi_top
-DIRS-y += stub
-ifeq ($(OS),Linux)
-DIRS-y += iscsi_tgt
-DIRS-$(CONFIG_VHOST) += vhost
-endif
+APP = stub
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += $(ENV_CFLAGS)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+C_SRCS := stub.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIB_LIST = nvme util log trace
+
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += $(ENV_LINKER_ARGS)
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
