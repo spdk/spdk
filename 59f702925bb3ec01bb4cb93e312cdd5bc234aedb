@@ -16,6 +16,24 @@
       "revId": "59f702925bb3ec01bb4cb93e312cdd5bc234aedb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d10a647c_9daf8cb0",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1334,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-24T07:44:45Z",
+      "side": 1,
+      "message": "I forgot to assign vdev-\u003edev \u003d dev; fixed, thanks",
+      "parentUuid": "6c7d7e82_5c9e4241",
+      "revId": "59f702925bb3ec01bb4cb93e312cdd5bc234aedb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
