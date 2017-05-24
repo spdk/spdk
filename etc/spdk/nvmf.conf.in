@@ -117,6 +117,15 @@
   # leaving the rest of the device inaccessible
   Split Malloc3 8 1
 
+# The Gpt virtual block device slices block devices into multiple smaller bdevs.
+# according to the gpt table info in the device
+[Gpt]
+  # Syntax:
+  #   Split <bdev>
+
+  # Split Nvme0n1 into Nvme0n1p0, NVMe0n1p ...
+  Split Nvme0n1
+
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Core may be set or not. If set, the specified subsystem will run on
