@@ -6,16 +6,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
-
-if [ -z "$TARGET_IP" ]; then
-	echo "TARGET_IP not defined in environment"
-	exit 1
-fi
-
-if [ -z "$INITIATOR_IP" ]; then
-	echo "INITIATOR_IP not defined in environment"
-	exit 1
-fi
+source $rootdir/test/iscsi_tgt/common.sh
 
 if ! rdma_nic_available; then
 	echo "no NIC for nvmf test"
@@ -42,7 +33,7 @@ $rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode1 'transport:R
 echo "NVMf subsystem created."
 
 # Start the iSCSI target
-$rootdir/app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf -m 0x1 -p 0 -s 512 &
+$ISCSI_APP -c $testdir/iscsi.conf -m 0x1 -p 0 -s 512 &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT

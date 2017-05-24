@@ -2,21 +2,13 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/iscsi_tgt/common.sh
 
 if [ ! -d /usr/local/calsoft ]; then
 	echo "skipping calsoft tests"
 	exit 0
 fi
 
-if [ -z "$TARGET_IP" ]; then
-	echo "TARGET_IP not defined in environment"
-	exit 1
-fi
-
-if [ -z "$INITIATOR_IP" ]; then
-	echo "INITIATOR_IP not defined in environment"
-	exit 1
-fi
 timing_enter calsoft
 
 # iSCSI target configuration
@@ -36,7 +28,7 @@ mkdir -p /usr/local/etc
 cp $testdir/its.conf /usr/local/etc/
 cp $testdir/auth.conf /usr/local/etc/
 
-./app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf &
+$ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 
