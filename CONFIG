@@ -49,6 +49,9 @@ CONFIG_ASAN?=n
 # Build with Undefined Behavior Sanitizer enabled
 CONFIG_UBSAN?=n
 
+# Build with Thread Sanitizer enabled
+CONFIG_TSAN?=n
+
 # Directory that contains the desired SPDK environment library.
 # By default, this is implemented using DPDK.
 CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk

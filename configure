@@ -62,6 +62,12 @@ for i in "$@"; do
 		--disable-ubsan)
 			CONFIG_UBSAN=n
 			;;
+		--enable-tsan)
+			CONFIG_TSAN=y
+			;;
+		--disable-tsan)
+			CONFIG_TSAN=n
+			;;
 		--enable-coverage)
 			CONFIG_COVERAGE=y
 			;;
@@ -132,6 +138,11 @@ if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
 	fi
 fi
 
+if [ "$CONFIG_ASAN" = "y" -a "$CONFIG_TSAN" == "y" ]; then
+	echo "ERROR: ASAN and TSAN cannot be enabled at the same time."
+	exit 1
+fi
+
 echo -n "Creating CONFIG.local..."
 
 # Write the configuration file
@@ -153,6 +164,9 @@ if [ -n "$CONFIG_ASAN" ]; then
 fi
 if [ -n "$CONFIG_UBSAN" ]; then
 	echo "CONFIG_UBSAN?=$CONFIG_UBSAN" >> CONFIG.local
+fi
+if [ -n "$CONFIG_TSAN" ]; then
+	echo "CONFIG_TSAN?=$CONFIG_TSAN" >> CONFIG.local
 fi
 if [ -n "$CONFIG_ENV" ]; then
 	echo "CONFIG_ENV?=$CONFIG_ENV" >> CONFIG.local
