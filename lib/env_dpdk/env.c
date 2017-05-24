@@ -260,21 +260,21 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 }
 
 struct spdk_ring *
-spdk_ring_create(enum spdk_ring_type type, size_t count, size_t ele_size, int socket_id)
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
 {
 	char ring_name[64];
 	static uint32_t ring_num = 0;
 	unsigned flags = 0;
 
 	switch (type) {
-		case SPDK_RING_TYPE_MP_SC:
-			flags = RING_F_SC_DEQ;
-			break;
-		case SPDK_RING_TYPE_SP_SC:
-			flags = RING_F_SP_ENQ | RING_F_SC_DEQ;
-			break;
-		default:
-			return NULL;
+	case SPDK_RING_TYPE_SP_SC:
+		flags = RING_F_SP_ENQ | RING_F_SC_DEQ;
+		break;
+	case SPDK_RING_TYPE_MP_SC:
+		flags = RING_F_SC_DEQ;
+		break;
+	default:
+		return NULL;
 	}
 
 	snprintf(ring_name, sizeof(ring_name), "spdk_ring_%u",
