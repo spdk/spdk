@@ -595,6 +595,12 @@ spdk_vhost_startup(void *arg1, void *arg2)
 		SPDK_ERRLOG("Cannot construct vhost controllers\n");
 		abort();
 	}
+
+	ret = spdk_vhost_blk_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
+		abort();
+	}
 }
 
 static void *
