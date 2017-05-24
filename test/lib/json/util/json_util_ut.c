@@ -104,6 +104,75 @@ test_num_to_int32(void)
 }
 
 static void
+test_decode_array(void)
+{
+	struct spdk_json_val values[4];
+	uint32_t my_int[2];
+	char *my_string[2] = {NULL, NULL};
+	size_t out_size;
+
+	/* passing integer test */
+	values[0].type = SPDK_JSON_VAL_ARRAY_BEGIN;
+	values[0].len = 2;
+	values[1].type = SPDK_JSON_VAL_NUMBER;
+	values[1].len = 4;
+	values[1].start = "1234";
+	values[2].type = SPDK_JSON_VAL_NUMBER;
+	values[2].len = 4;
+	values[2].start = "5678";
+	values[3].type = SPDK_JSON_VAL_ARRAY_END;
+	CU_ASSERT(spdk_json_decode_array(values, spdk_json_decode_uint32, my_int, 2, &out_size,
+					 sizeof(uint32_t)) == 0);
+	CU_ASSERT(my_int[0] == 1234);
+	CU_ASSERT(my_int[1] == 5678);
+	CU_ASSERT(out_size == 2);
+
+	/* array length exceeds max */
+	values[0].len = 3;
+	CU_ASSERT(spdk_json_decode_array(values, spdk_json_decode_uint32, my_int, 2, &out_size,
+					 sizeof(uint32_t)) != 0);
+
+	/* mixed types */
+	values[0].len = 2;
+	values[2].type = SPDK_JSON_VAL_STRING;
+	values[2].len = 5;
+	values[2].start = "HELLO";
+	CU_ASSERT(spdk_json_decode_array(values, spdk_json_decode_uint32, my_int, 2, &out_size,
+					 sizeof(uint32_t)) != 0);
+
+	/* no array start */
+	values[0].type = SPDK_JSON_VAL_NUMBER;
+	values[2].type = SPDK_JSON_VAL_NUMBER;
+	values[2].len = 4;
+	values[2].start = "5678";
+	CU_ASSERT(spdk_json_decode_array(values, spdk_json_decode_uint32, my_int, 2, &out_size,
+					 sizeof(uint32_t)) != 0);
+
+	/* mismatched array type and parser */
+	values[0].type = SPDK_JSON_VAL_ARRAY_BEGIN;
+	values[1].type = SPDK_JSON_VAL_STRING;
+	values[1].len = 5;
+	values[1].start = "HELLO";
+	values[2].type = SPDK_JSON_VAL_STRING;
+	values[2].len = 5;
+	values[2].start = "WORLD";
+	CU_ASSERT(spdk_json_decode_array(values, spdk_json_decode_uint32, my_int, 2, &out_size,
+					 sizeof(uint32_t)) != 0);
+
+	/* passing String example */
+	CU_ASSERT(spdk_json_decode_array(values, spdk_json_decode_string, my_string, 2, &out_size,
+					 sizeof(char *)) == 0);
+	SPDK_CU_ASSERT_FATAL(my_string[0] != NULL);
+	SPDK_CU_ASSERT_FATAL(my_string[1] != NULL);
+	CU_ASSERT(memcmp(my_string[0], "HELLO", 6) == 0);
+	CU_ASSERT(memcmp(my_string[1], "WORLD", 6) == 0);
+	CU_ASSERT(out_size == 2);
+
+	free(my_string[0]);
+	free(my_string[1]);
+}
+
+static void
 test_decode_bool(void)
 {
 	struct spdk_json_val v;
@@ -335,6 +404,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "strequal", test_strequal) == NULL ||
 		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
+		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
 		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
 		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
 		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL) {
