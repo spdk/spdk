@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+
 #include "spdk_internal/log.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
@@ -94,6 +95,10 @@ spdk_rpc_get_vhost_scsi_controllers(struct spdk_jsonrpc_server_conn *conn,
 	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
+		if (vdev->type != SPDK_VHOST_DEV_T_SCSI) {
+			continue;
+		}
+
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_name(w, "ctrlr");
