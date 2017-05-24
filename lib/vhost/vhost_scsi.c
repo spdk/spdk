@@ -81,12 +81,6 @@
 #define VIRTIO_SCSI_EVENTQ   1
 #define VIRTIO_SCSI_REQUESTQ   2
 
-static uint64_t
-gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
-{
-	return rte_vhost_gpa_to_vva(vdev->mem, addr);
-}
-
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 
@@ -94,6 +88,24 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *controlq_poller;
 } __rte_cache_aligned;
+
+static int new_device(int vid);
+static void destroy_device(int vid);
+
+const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
+	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
+	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
+	.ops = {
+		.new_device =  new_device,
+		.destroy_device = destroy_device,
+	}
+};
+
+static uint64_t
+gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
+{
+	return rte_vhost_gpa_to_vva(vdev->mem, addr);
+}
 
 /*
  * Get available requests from avail ring.
@@ -717,63 +729,6 @@ remove_vdev_cb(void *arg1, void *arg2)
 	sem_post((sem_t *)arg2);
 }
 
-static void
-destroy_device(int vid)
-{
-	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_dev *vdev;
-	struct spdk_event *event;
-	sem_t done_sem;
-	uint32_t i;
-
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
-	}
-	svdev = (struct spdk_vhost_scsi_dev *) vdev;
-
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
-	spdk_poller_unregister(&svdev->requestq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
-
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
-	spdk_poller_unregister(&svdev->controlq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
-
-	/* Wait for all tasks to finish */
-	for (i = 1000; i && vdev->task_cnt > 0; i--) {
-		usleep(1000);
-	}
-
-	if (vdev->task_cnt > 0) {
-		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
-	}
-
-	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, svdev, &done_sem);
-	spdk_event_call(event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister poller.\n", vdev->name);
-
-	spdk_vhost_free_reactor(vdev->lcore);
-	vdev->lcore = -1;
-
-	spdk_vhost_dev_destruct(vdev);
-}
-
-static int new_device(int vid);
-static void destroy_device(int vid);
-
-const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
-	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
-	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
-	.ops = {
-		.new_device =  new_device,
-		.destroy_device = destroy_device,
-	}
-};
-
 int
 spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 {
@@ -1046,6 +1001,51 @@ new_device(int vid)
 	if (vhost_sem_timedwait(&added, 1))
 		rte_panic("Failed to register new device '%s'\n", vdev->name);
 	return 0;
+}
+
+static void
+destroy_device(int vid)
+{
+	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_vhost_dev *vdev;
+	struct spdk_event *event;
+	sem_t done_sem;
+	uint32_t i;
+
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
+	}
+	svdev = (struct spdk_vhost_scsi_dev *) vdev;
+
+	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	spdk_poller_unregister(&svdev->requestq_poller, event);
+	if (vhost_sem_timedwait(&done_sem, 1))
+		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
+
+	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	spdk_poller_unregister(&svdev->controlq_poller, event);
+	if (vhost_sem_timedwait(&done_sem, 1))
+		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
+
+	/* Wait for all tasks to finish */
+	for (i = 1000; i && vdev->task_cnt > 0; i--) {
+		usleep(1000);
+	}
+
+	if (vdev->task_cnt > 0) {
+		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
+	}
+
+	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, svdev, &done_sem);
+	spdk_event_call(event);
+	if (vhost_sem_timedwait(&done_sem, 1))
+		rte_panic("%s: failed to unregister poller.\n", vdev->name);
+
+	spdk_vhost_free_reactor(vdev->lcore);
+	vdev->lcore = -1;
+
+	spdk_vhost_dev_destruct(vdev);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost", SPDK_TRACE_VHOST)
