@@ -31,17 +31,31 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-# These directories contain tests.
-TESTDIRS = app cpp_headers lib
+APP = stub
 
-DIRS-y = $(TESTDIRS)
+CFLAGS += $(ENV_CFLAGS)
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := stub.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = nvme util log trace
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += $(ENV_LINKER_ARGS)
+
+ifeq ($(CONFIG_RDMA),y)
+LIBS += -libverbs -lrdmacm
+endif
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
