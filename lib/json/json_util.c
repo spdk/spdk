@@ -228,7 +228,7 @@ spdk_json_decode_array(const struct spdk_json_val *values, spdk_json_decode_fn d
 		return -1;
 	}
 
-	if (values->len >= max_size) {
+	if (values->len > max_size) {
 		return -1;
 	}
 
