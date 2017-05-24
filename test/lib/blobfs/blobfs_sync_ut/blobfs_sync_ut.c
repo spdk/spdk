@@ -58,8 +58,8 @@ struct ut_request {
 	int from_ut;
 };
 
-volatile struct ut_request *g_req = NULL;
-volatile int g_phase = 0;
+static struct ut_request *g_req = NULL;
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void
 send_request(fs_request_fn fn, void *arg)
@@ -72,10 +72,10 @@ send_request(fs_request_fn fn, void *arg)
 	req->arg = arg;
 	req->done = 0;
 	req->from_ut = 0;
+
+	pthread_mutex_lock(&g_mutex);
 	g_req = req;
-	spdk_mb();
-	g_phase = !g_phase;
-	spdk_mb();
+	pthread_mutex_unlock(&g_mutex);
 }
 
 static void
@@ -87,12 +87,19 @@ ut_send_request(fs_request_fn fn, void *arg)
 	req.arg = arg;
 	req.done = 0;
 	req.from_ut = 1;
+
+	pthread_mutex_lock(&g_mutex);
 	g_req = &req;
-	spdk_mb();
-	g_phase = !g_phase;
-	spdk_mb();
-	while (req.done == 0)
-		;
+	pthread_mutex_unlock(&g_mutex);
+
+	while (1) {
+		pthread_mutex_lock(&g_mutex);
+		if (req.done == 1) {
+			pthread_mutex_unlock(&g_mutex);
+			break;
+		}
+		pthread_mutex_unlock(&g_mutex);
+	}
 }
 
 static void
@@ -248,21 +255,21 @@ static void *
 spdk_thread(void *arg)
 {
 	struct ut_request *req;
-	int phase = 0;
+
 	spdk_allocate_thread();
 
 	while (1) {
-		spdk_mb();
-		if (phase != g_phase) {
-			req = (void *)g_req;
+		pthread_mutex_lock(&g_mutex);
+		if (g_req != NULL) {
+			req = g_req;
 			req->fn(req->arg);
 			req->done = 1;
-			spdk_mb();
 			if (!req->from_ut) {
 				free(req);
 			}
-			phase = !phase;
+			g_req = NULL;
 		}
+		pthread_mutex_unlock(&g_mutex);
 	}
 
 	return NULL;
