@@ -74,9 +74,11 @@ timing_exit rbd_setup
 # Unit Tests
 #####################
 
-timing_enter unittest
-valgrind="$valgrind" run_test ./unittest.sh
-timing_exit unittest
+if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
+	timing_enter unittest
+	valgrind="$valgrind" run_test ./unittest.sh
+	timing_exit unittest
+fi
 
 timing_enter lib
 
