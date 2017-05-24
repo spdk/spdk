@@ -51,6 +51,7 @@
 
 enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_SCSI,
+	SPDK_VHOST_DEV_T_BLK,
 };
 
 struct spdk_vhost_dev {
@@ -75,7 +76,6 @@ struct spdk_vhost_dev_backend {
 	uint64_t disabled_features;
 	const struct vhost_device_ops ops;
 };
-
 
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
@@ -129,5 +129,6 @@ struct spdk_vhost_timed_event *spdk_vhost_timed_event_alloc(int32_t lcore, spdk_
 void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn, void *arg, unsigned timeout_sec);
 void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event);
 
+int spdk_vhost_blk_controller_construct(void);
 
 #endif /* SPDK_VHOST_INTERNAL_H */

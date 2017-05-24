@@ -132,3 +132,13 @@
 #  Name vhost.1
 #  Dev0 AIO1
 #  Cpumask 0x1
+
+#[VhostBlk0]
+  # Define name for controller
+  #Name vhost.2
+  # Use the first AIO device
+  #Dev Malloc2p0
+  # Start the poller for this vhost controller on one of the cores in
+  #  this cpumask.  By default, it not specified, will use any core in the
+  #  SPDK process.
+  #Cpumask 0x1
