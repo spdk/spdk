@@ -309,9 +309,11 @@ _spdk_reactor_run(void *arg)
 	while (1) {
 		bool took_action = false;
 
-		event_count = _spdk_event_queue_run_batch(reactor);
-		if (event_count > 0) {
-			took_action = true;
+		if (spdk_subsystem_init_status()) {
+			event_count = _spdk_event_queue_run_batch(reactor);
+			if (event_count > 0) {
+				took_action = true;
+			}
 		}
 
 		poller = TAILQ_FIRST(&reactor->active_pollers);
