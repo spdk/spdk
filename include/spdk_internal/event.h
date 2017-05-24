@@ -75,6 +75,7 @@ void spdk_subsystem_init(void);
 int spdk_subsystem_fini(void);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_config(FILE *fp);
+bool spdk_subsystem_init_status(void);
 
 /**
  * \brief Register a new subsystem
