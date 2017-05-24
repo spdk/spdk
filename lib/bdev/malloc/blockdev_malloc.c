@@ -449,6 +449,8 @@ static int blockdev_malloc_initialize(void)
 			}
 		}
 	}
+
+	spdk_bdev_module_init_next(0);
 	return 0;
 }
 

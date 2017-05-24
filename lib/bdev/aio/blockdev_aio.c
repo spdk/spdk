@@ -385,36 +385,35 @@ static int blockdev_aio_initialize(void)
 
 	sp = spdk_conf_find_section(NULL, "AIO");
 	if (!sp) {
-		return 0;
+		i = 0;
+		while (true) {
+			const char *file;
+			const char *name;
+
+			file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
+			if (!file) {
+				break;
+			}
+
+			name = spdk_conf_section_get_nmval(sp, "AIO", i, 1);
+			if (!name) {
+				SPDK_ERRLOG("No name provided for AIO disk with file %s\n", file);
+				i++;
+				continue;
+			}
+
+			bdev = create_aio_disk(name, file);
+			if (!bdev) {
+				SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
+				i++;
+				continue;
+			}
+
+			i++;
+		}
 	}
 
-	i = 0;
-	while (true) {
-		const char *file;
-		const char *name;
-
-		file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
-		if (!file) {
-			break;
-		}
-
-		name = spdk_conf_section_get_nmval(sp, "AIO", i, 1);
-		if (!name) {
-			SPDK_ERRLOG("No name provided for AIO disk with file %s\n", file);
-			i++;
-			continue;
-		}
-
-		bdev = create_aio_disk(name, file);
-		if (!bdev) {
-			SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
-			i++;
-			continue;
-		}
-
-		i++;
-	}
-
+	spdk_bdev_module_init_next(0);
 	return 0;
 }
 
