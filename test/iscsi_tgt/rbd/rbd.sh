@@ -3,6 +3,7 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/iscsi_tgt/common.sh
 
 if [ -z $CEPH_DIR ]; then
 	echo "Ceph directory not defined; skipping RBD tests"
@@ -12,16 +13,6 @@ fi
 if [ ! -d $CEPH_DIR ]; then
 	echo "Ceph directory not detected on this system; skipping RBD tests"
 	exit 0
-fi
-
-if [ -z "$TARGET_IP" ]; then
-	echo "TARGET_IP not defined in environment"
-	exit 1
-fi
-
-if [ -z "$INITIATOR_IP" ]; then
-	echo "INITIATOR_IP not defined in environment"
-	exit 1
 fi
 
 timing_enter rbd
@@ -36,7 +27,7 @@ NETMASK=$INITIATOR_IP/32
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
-$rootdir/app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf &
+$ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT

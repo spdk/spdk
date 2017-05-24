@@ -3,16 +3,7 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
-
-if [ -z "$TARGET_IP" ]; then
-	echo "TARGET_IP not defined in environment"
-	exit 1
-fi
-
-if [ -z "$INITIATOR_IP" ]; then
-	echo "INITIATOR_IP not defined in environment"
-	exit 1
-fi
+source $rootdir/test/iscsi_tgt/common.sh
 
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
@@ -45,13 +36,12 @@ timing_enter ip_migration
 # iSCSI target configuration
 
 echo "Running ip migration tests"
-exe=./app/iscsi_tgt/iscsi_tgt
 for ((i=0; i<2; i++))
 do
 	cp $testdir/iscsi.conf $testdir/iscsi.conf.$i
 	port=$(($RPC_PORT + $i))
 	echo "Listen 127.0.0.1:$port" >> $testdir/iscsi.conf.$i
-	$exe -c $testdir/iscsi.conf.$i -s 1000 -i $i &
+	$ISCSI_APP -c $testdir/iscsi.conf.$i -s 1000 -i $i &
 	pid=$!
 	echo "Process pid: $pid"
 

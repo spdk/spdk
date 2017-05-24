@@ -3,16 +3,7 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
-
-if [ -z "$TARGET_IP" ]; then
-	echo "TARGET_IP not defined in environment"
-	exit 1
-fi
-
-if [ -z "$INITIATOR_IP" ]; then
-	echo "INITIATOR_IP not defined in environment"
-	exit 1
-fi
+source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter rpc_config
 
@@ -29,7 +20,7 @@ rpc_py=$rootdir/scripts/rpc.py
 rpc_config_py="python $testdir/rpc_config.py"
 
 
-./app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf &
+$ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
 echo "Process pid: $pid"
 

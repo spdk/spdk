@@ -3,23 +3,10 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/iscsi_tgt/common.sh
 
 if [ ! -z $1 ]; then
 	DPDK_DIR=$(readlink -f $1)
-fi
-
-if [ -z "$TARGET_IP" ]; then
-	TARGET_IP=127.0.0.1
-	echo "TARGET_IP not defined - using 127.0.0.1"
-fi
-
-if [ -z "$INITIATOR_IP" ]; then
-	INITIATOR_IP=127.0.0.1
-	echo "INITIATOR_IP not defined - using 127.0.0.1"
-fi
-
-if [ -z "$ISCSI_APP" ]; then
-	ISCSI_APP=./app/iscsi_tgt/iscsi_tgt
 fi
 
 timing_enter ext4test
