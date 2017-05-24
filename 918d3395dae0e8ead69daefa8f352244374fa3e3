@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a69d595a_6308ebb8",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-24T15:58:57Z",
+      "side": 1,
+      "message": "Adding a new enum value at the beginning will change the numbering of the other values, so normally this wouldn\u0027t be a good idea.  However, in this particular case, the API is new for this release of SPDK, and it is unlikely that anyone else is depending on this new code yet, so we can allow it this time.",
+      "revId": "918d3395dae0e8ead69daefa8f352244374fa3e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
