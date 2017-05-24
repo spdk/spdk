@@ -115,6 +115,11 @@ COMMON_CFLAGS += -fsanitize=undefined
 LDFLAGS += -fsanitize=undefined
 endif
 
+ifeq ($(CONFIG_TSAN),y)
+COMMON_CFLAGS += -fsanitize=thread
+LDFLAGS += -fsanitize=thread
+endif
+
 COMMON_CFLAGS += -pthread
 LDFLAGS += -pthread
 
