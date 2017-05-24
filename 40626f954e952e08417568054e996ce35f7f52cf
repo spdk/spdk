@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f2ea2aa_21af951d",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-24T15:46:23Z",
+      "side": 1,
+      "message": "Does this work if we are using the DPDK submodule for the main build? I don\u0027t think we have any of the test pool systems set up to use the submodule yet.",
+      "revId": "40626f954e952e08417568054e996ce35f7f52cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
