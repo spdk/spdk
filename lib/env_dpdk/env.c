@@ -264,15 +264,23 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, size_t ele_size, int so
 {
 	char ring_name[64];
 	static uint32_t ring_num = 0;
+	unsigned flags = 0;
 
-	if (type != SPDK_RING_TYPE_MP_SC) {
+	switch (type) {
+	case SPDK_RING_TYPE_SP_SC:
+		flags = RING_F_SP_ENQ | RING_F_SC_DEQ;
+		break;
+	case SPDK_RING_TYPE_MP_SC:
+		flags = RING_F_SC_DEQ;
+		break;
+	default:
 		return NULL;
 	}
 
 	snprintf(ring_name, sizeof(ring_name), "spdk_ring_%u",
 		 __sync_fetch_and_add(&ring_num, 1));
 
-	return (struct spdk_ring *)rte_ring_create(ring_name, count, socket_id, RING_F_SC_DEQ);
+	return (struct spdk_ring *)rte_ring_create(ring_name, count, socket_id, flags);
 }
 
 void
