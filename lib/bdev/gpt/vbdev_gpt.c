@@ -1,0 +1,481 @@
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright (c) Intel Corporation.
+ *   All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of Intel Corporation nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * This is a virtual block device that takes a single bdev and slices it into multiple smaller
+ * bdevs according to the gpt info in the bdev.
+ */
+
+#include "spdk/stdinc.h"
+
+#include "spdk/rpc.h"
+#include "spdk/conf.h"
+#include "spdk/endian.h"
+#include "spdk/io_channel.h"
+#include "spdk/env.h"
+
+#include "spdk_internal/bdev.h"
+#include "spdk_internal/log.h"
+#include "spdk_internal/gpt.h"
+
+/* Base block device gpt context */
+struct spdk_gpt_bdev {
+	struct spdk_bdev *bdev;
+	struct spdk_gpt gpt;
+	struct spdk_io_channel *ch;
+	uint32_t ref;
+};
+
+/* Context for each gpt virtual bdev */
+struct gpt_disk {
+	struct spdk_bdev	disk;
+	struct spdk_bdev	*base_bdev;
+	struct spdk_gpt_bdev	*gpt_base;
+	uint64_t		offset_blocks;
+	uint64_t		offset_bytes;
+	TAILQ_ENTRY(gpt_disk)	tailq;
+};
+
+static TAILQ_HEAD(, gpt_disk) g_gpt_disks = TAILQ_HEAD_INITIALIZER(g_gpt_disks);
+static TAILQ_HEAD(, spdk_bdev) g_bdevs = TAILQ_HEAD_INITIALIZER(g_bdevs);
+
+static int g_gpt_base_num;
+
+static void
+spdk_gpt_bdev_free(struct spdk_gpt_bdev *gpt_bdev)
+{
+	if (!gpt_bdev) {
+		return;
+	}
+
+	if (gpt_bdev->ch) {
+		spdk_put_io_channel(gpt_bdev->ch);
+	}
+
+	spdk_dma_free(gpt_bdev->gpt.buf);
+	free(gpt_bdev);
+}
+
+static struct spdk_gpt_bdev *
+spdk_gpt_bdev_init(struct spdk_bdev *bdev)
+{
+	struct spdk_gpt_bdev *gpt_bdev;
+	struct spdk_gpt *gpt;
+
+	gpt_bdev = calloc(1, sizeof(*gpt_bdev));
+	if (!gpt_bdev) {
+		SPDK_ERRLOG("Cannot alloc memory for gpt_bdev pointer\n");
+		return NULL;
+	}
+
+	gpt_bdev->bdev = bdev;
+	gpt_bdev->ref = 0;
+
+	gpt = &gpt_bdev->gpt;
+	gpt->buf = spdk_dma_zmalloc(SPDK_GPT_BUFFER_SIZE, 0x1000, NULL);
+	if (!gpt->buf) {
+		spdk_gpt_bdev_free(gpt_bdev);
+		SPDK_ERRLOG("Cannot alloc buf\n");
+		return NULL;
+	}
+
+	gpt->sector_size = bdev->blocklen;
+	gpt->total_sectors = bdev->blockcnt;
+	gpt->lba_start = 0;
+	gpt->lba_end = gpt->total_sectors - 1;
+
+	gpt_bdev->ch = spdk_bdev_get_io_channel(bdev);
+	if (!gpt_bdev->ch) {
+		SPDK_ERRLOG("Cannot allocate ch\n");
+		spdk_gpt_bdev_free(gpt_bdev);
+		return NULL;
+	}
+
+	return gpt_bdev;
+
+}
+
+static void
+gpt_read(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
+{
+	bdev_io->u.read.offset += gpt_disk->offset_bytes;
+}
+
+static void
+gpt_write(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
+{
+	bdev_io->u.write.offset += gpt_disk->offset_bytes;
+}
+
+static void
+gpt_unmap(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
+{
+	uint16_t i;
+	uint64_t lba;
+
+	for (i = 0; i < bdev_io->u.unmap.bdesc_count; i++) {
+		lba = from_be64(&bdev_io->u.unmap.unmap_bdesc[i].lba);
+		lba += gpt_disk->offset_blocks;
+		to_be64(&bdev_io->u.unmap.unmap_bdesc[i].lba, lba);
+	}
+}
+
+static void
+gpt_flush(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
+{
+	bdev_io->u.flush.offset += gpt_disk->offset_bytes;
+}
+
+static void
+gpt_reset(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
+{
+	/*
+	 * No offset to modify for reset - pass the I/O through unmodified.
+	 *
+	 * However, we do need to increment the generation count for the gpt bdev,
+	 * since the spdk_bdev_io_complete() path that normally updates it will not execute
+	 * after we resubmit the I/O to the base_bdev.
+	 */
+	if (bdev_io->u.reset.type == SPDK_BDEV_RESET_HARD) {
+		gpt_disk->disk.gencnt++;
+	}
+}
+
+static void
+vbdev_gpt_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct gpt_disk *gpt_disk = bdev_io->bdev->ctxt;
+
+	/* Modify the I/O to adjust for the offset within the base bdev. */
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		gpt_read(gpt_disk, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		gpt_write(gpt_disk, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		gpt_unmap(gpt_disk, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		gpt_flush(gpt_disk, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_RESET:
+		gpt_reset(gpt_disk, bdev_io);
+		break;
+	default:
+		SPDK_ERRLOG("gpt: unknown I/O type %d\n", bdev_io->type);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	/* Submit the modified I/O to the underlying bdev. */
+	spdk_bdev_io_resubmit(bdev_io, gpt_disk->base_bdev);
+}
+
+static void
+vbdev_gpt_base_get_ref(struct spdk_gpt_bdev *gpt_base, struct gpt_disk *gpt_disk)
+{
+	__sync_fetch_and_add(&gpt_base->ref, 1);
+	gpt_disk->gpt_base = gpt_base;
+}
+
+static void
+vbdev_gpt_base_put_ref(struct spdk_gpt_bdev *gpt_bdev)
+{
+	if (__sync_sub_and_fetch(&gpt_bdev->ref, 1) == 0) {
+		spdk_bdev_unclaim(gpt_bdev->bdev);
+		spdk_gpt_bdev_free(gpt_bdev);
+	}
+}
+
+static void
+vbdev_gpt_free(struct gpt_disk *gpt_disk)
+{
+	struct spdk_gpt_bdev *gpt_base;
+
+	if (!gpt_disk) {
+		return;
+	}
+
+	gpt_base = gpt_disk->gpt_base;
+
+	TAILQ_REMOVE(&g_gpt_disks, gpt_disk, tailq);
+	free(gpt_disk);
+
+	if (gpt_base) {
+		vbdev_gpt_base_put_ref(gpt_base);
+	}
+}
+
+static int
+vbdev_gpt_destruct(void *ctx)
+{
+	struct gpt_disk *gpt_disk = ctx;
+
+	vbdev_gpt_free(gpt_disk);
+	return 0;
+}
+
+static bool
+vbdev_gpt_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+{
+	struct gpt_disk *gpt_disk = ctx;
+
+	return gpt_disk->base_bdev->fn_table->io_type_supported(gpt_disk->base_bdev, io_type);
+}
+
+static struct spdk_io_channel *
+vbdev_gpt_get_io_channel(void *ctx)
+{
+	struct gpt_disk *gpt_disk = ctx;
+
+	return gpt_disk->base_bdev->fn_table->get_io_channel(gpt_disk->base_bdev);
+}
+
+static int
+vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct gpt_disk *gpt_disk = ctx;
+
+	spdk_json_write_name(w, "gpt");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "base_bdev");
+	spdk_json_write_string(w, spdk_bdev_get_name(gpt_disk->base_bdev));
+	spdk_json_write_name(w, "offset_blocks");
+	spdk_json_write_uint64(w, gpt_disk->offset_blocks);
+
+	spdk_json_write_object_end(w);
+
+	return 0;
+}
+
+static struct spdk_bdev_fn_table vbdev_gpt_fn_table = {
+	.destruct		= vbdev_gpt_destruct,
+	.io_type_supported	= vbdev_gpt_io_type_supported,
+	.submit_request		= vbdev_gpt_submit_request,
+	.get_io_channel		= vbdev_gpt_get_io_channel,
+	.dump_config_json	= vbdev_gpt_dump_config_json,
+};
+
+static int
+_vbdev_gpt_create(struct spdk_gpt_bdev *gpt_bdev)
+{
+	uint32_t num_partition_entries;
+	uint64_t i, head_lba_start, head_lba_end;
+	struct spdk_gpt_partition_entry *p;
+	struct gpt_disk *d;
+	struct spdk_bdev *base_bdev = gpt_bdev->bdev;
+	struct spdk_gpt *gpt;
+	int rc;
+
+	rc = spdk_gpt_parse(&gpt_bdev->gpt);
+	if (rc) {
+		SPDK_ERRLOG("Failed to parse by gpt\n");
+		return -1;
+	}
+
+	gpt = &gpt_bdev->gpt;
+	num_partition_entries = from_le32(&gpt->head->num_partition_entries);
+	head_lba_start = from_le64(&gpt->head->first_usable_lba);
+	head_lba_end = from_le64(&gpt->head->last_usable_lba);
+
+	for (i = 0; i < num_partition_entries; i++) {
+		p = &gpt->partitions[i];
+		uint64_t lba_start = from_le64(&p->starting_lba);
+		uint64_t lba_end = from_le64(&p->ending_lba);
+
+		if (SPDK_EQUAL_GPT_UUID(&gpt->partitions[i].unique_partition_guid.raw,
+					&SPDK_GPT_PARTITION_TYPE_UNUSED.raw) ||
+		    lba_start == 0) {
+			continue;
+		}
+		if (lba_start < head_lba_start || lba_end > head_lba_end) {
+			continue;
+		}
+
+		d = calloc(1, sizeof(*d));
+		if (!d) {
+			SPDK_ERRLOG("Memory allocation failure\n");
+			return -1;
+		}
+
+		/* Copy properties of the base bdev */
+		d->disk.blocklen = base_bdev->blocklen;
+		d->disk.write_cache = base_bdev->write_cache;
+		d->disk.need_aligned_buffer = base_bdev->need_aligned_buffer;
+		d->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
+
+		/* index start at 1 instead of 0 to match the existing style */
+		snprintf(d->disk.name, sizeof(d->disk.name), "%sp%" PRIu64, spdk_bdev_get_name(base_bdev), (i + 1));
+		snprintf(d->disk.product_name, sizeof(d->disk.product_name), "GPT Disk");
+		d->base_bdev = base_bdev;
+		d->offset_bytes = lba_start * gpt->sector_size;
+		d->offset_blocks = lba_start;
+		d->disk.blockcnt = lba_end - lba_start;
+		d->disk.ctxt = d;
+		d->disk.fn_table = &vbdev_gpt_fn_table;
+
+		SPDK_TRACELOG(SPDK_TRACE_VBDEV_GPT, "gpt vbdev %s: base bdev: %s offset_bytes: "
+			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
+			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_bytes, d->offset_blocks);
+
+		vbdev_gpt_base_get_ref(gpt_bdev, d);
+
+		spdk_bdev_register(&d->disk);
+
+		TAILQ_INSERT_TAIL(&g_gpt_disks, d, tailq);
+	}
+
+	return 0;
+}
+
+static void
+spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+{
+	struct spdk_gpt_bdev *gpt_bdev = (struct spdk_gpt_bdev *)arg;
+	static int bdev_init_num = 0;
+	int rc;
+
+	bdev_init_num++;
+	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		SPDK_ERRLOG("gpt bdev io error status=%d\n", status);
+		goto end;
+	}
+
+	rc = _vbdev_gpt_create(gpt_bdev);
+	/* If any split for gpt_bdev fails,  we need to set the gpt module initialization to fail */
+	if (rc) {
+		SPDK_TRACELOG(SPDK_TRACE_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
+			      spdk_bdev_get_name(gpt_bdev->bdev));
+	}
+
+end:
+	spdk_bdev_free_io(bdev_io);
+	if (gpt_bdev->ref == 0) {
+		spdk_bdev_unclaim(gpt_bdev->bdev);
+		/* If no gpt_disk instances were created, free the base context */
+		spdk_gpt_bdev_free(gpt_bdev);
+	}
+
+	/* Call next vbdev module init after the last gpt creation */
+	if (bdev_init_num == g_gpt_base_num) {
+		spdk_vbdev_module_init_next(0);
+	}
+}
+
+static int
+vbdev_gpt_create(struct spdk_bdev *bdev)
+{
+	struct spdk_gpt_bdev *gpt_bdev;
+	struct spdk_bdev_io *bdev_io;
+
+	gpt_bdev = spdk_gpt_bdev_init(bdev);
+	if (!gpt_bdev) {
+		SPDK_ERRLOG("Cannot allocated gpt_bdev\n");
+		return -1;
+	}
+
+	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
+		SPDK_ERRLOG("GPT: bdev %s is already claimed\n",
+			    spdk_bdev_get_name(bdev));
+		spdk_gpt_bdev_free(gpt_bdev);
+		return -1;
+	}
+
+	bdev_io = spdk_bdev_read(gpt_bdev->bdev, gpt_bdev->ch, gpt_bdev->gpt.buf, 0, SPDK_GPT_BUFFER_SIZE,
+				 spdk_gpt_bdev_complete, gpt_bdev);
+	if (!bdev_io) {
+		spdk_gpt_bdev_free(gpt_bdev);
+		SPDK_ERRLOG("Failed to send bdev_io command\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+vbdev_gpt_init(void)
+{
+	struct spdk_bdev *base_bdev, *tmp;
+	int rc = 0;
+	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Gpt");
+
+	if (!sp) {
+		goto end;
+	}
+
+	if (spdk_conf_section_get_boolval(sp, "Disable", false)) {
+		/* Disable Gpt probe */
+		goto end;
+	}
+
+	TAILQ_FOREACH_SAFE(base_bdev, &g_bdevs, link, tmp) {
+		rc = vbdev_gpt_create(base_bdev);
+		if (rc) {
+			rc = -1;
+			SPDK_ERRLOG("Failed to read info from bdev %s\n",
+				    spdk_bdev_get_name(base_bdev));
+			spdk_bdev_unclaim(base_bdev);
+			goto end;
+		}
+		g_gpt_base_num++;
+
+	}
+
+end:
+	/* if no gpt bdev num is counted, just call vbdev_module_init_next */
+	if (!g_gpt_base_num) {
+		spdk_vbdev_module_init_next(rc);
+	}
+}
+
+static void
+vbdev_gpt_fini(void)
+{
+	struct gpt_disk *gpt_disk, *tmp;
+
+	TAILQ_FOREACH_SAFE(gpt_disk, &g_gpt_disks, tailq, tmp) {
+		vbdev_gpt_free(gpt_disk);
+	}
+}
+
+static void
+vbdev_gpt_register(struct spdk_bdev *bdev)
+{
+	TAILQ_INSERT_TAIL(&g_bdevs, bdev, link);
+}
+
+SPDK_VBDEV_MODULE_REGISTER(vbdev_gpt_init, vbdev_gpt_fini, NULL, NULL, vbdev_gpt_register)
+SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_gpt", SPDK_TRACE_VBDEV_GPT)
