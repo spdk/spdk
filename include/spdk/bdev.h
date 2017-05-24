@@ -234,10 +234,9 @@ struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_chan
 				     uint64_t offset, uint64_t length,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 struct spdk_bdev_io *spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
-		const struct spdk_nvme_cmd *cmd, void *buf,
-		size_t nbytes,
-		spdk_bdev_io_completion_cb cb,
-		void *cb_arg);
+		struct spdk_io_channel *ch,
+		const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		    enum spdk_bdev_reset_type, spdk_bdev_io_completion_cb cb, void *cb_arg);

@@ -96,9 +96,6 @@ struct nvme_bdev_io {
 	/** Saved status for admin passthru completion event. */
 	struct spdk_nvme_cpl cpl;
 
-	/** Core for admin passthru completion event. */
-	uint32_t p_lcore;
-
 	/** Event pointer for admin passthru completion. */
 	struct spdk_event *admin_passthru_completion_event;
 };
@@ -1119,9 +1116,8 @@ bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
-	bio->p_lcore = spdk_env_get_current_core();
 	bio->admin_passthru_completion_event =
-		spdk_event_allocate(bio->p_lcore, bdev_nvme_admin_passthru_completion,
+		spdk_event_allocate(spdk_env_get_current_core(), bdev_nvme_admin_passthru_completion,
 				    bdev_io, bio);
 
 	if (bio->admin_passthru_completion_event == NULL) {
