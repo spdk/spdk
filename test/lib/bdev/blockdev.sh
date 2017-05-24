@@ -11,7 +11,7 @@ testdir=$(readlink -f $(dirname $0))
 timing_enter blockdev
 
 cp $testdir/bdev.conf.in $testdir/bdev.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
+$rootdir/scripts/gen_nvme.sh Gpt >> $testdir/bdev.conf
 
 timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
