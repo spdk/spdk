@@ -477,6 +477,13 @@ static int spdk_iscsi_check_pools(void)
 	rc += spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
 	rc += spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
 	rc += spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
+	/* TODO: check the task_pool on exit */
+
+	rte_mempool_free(iscsi->pdu_pool);
+	rte_mempool_free(iscsi->session_pool);
+	rte_mempool_free(iscsi->pdu_immediate_data_pool);
+	rte_mempool_free(iscsi->pdu_data_out_pool);
+	rte_mempool_free(iscsi->task_pool);
 
 	if (rc == 0) {
 		return 0;
