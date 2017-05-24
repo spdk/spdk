@@ -40,7 +40,6 @@
 #include "spdk/scsi.h"
 #include "spdk/conf.h"
 #include "spdk/event.h"
-#include "spdk/likely.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -107,92 +106,6 @@ gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 	return rte_vhost_gpa_to_vva(vdev->mem, addr);
 }
 
-/*
- * Get available requests from avail ring.
- */
-static uint16_t
-vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_t reqs_len)
-{
-	struct vring_avail *avail = vq->avail;
-	uint16_t size_mask = vq->size - 1;
-	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
-	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
-	uint16_t i;
-
-	if (spdk_likely(count == 0)) {
-		return 0;
-	}
-
-	vq->last_avail_idx += count;
-	for (i = 0; i < count; i++) {
-		reqs[i] = vq->avail->ring[(last_idx + i) & size_mask];
-	}
-
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING,
-		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
-		      last_idx, avail_idx, count);
-
-	return count;
-}
-
-static bool
-vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq)
-{
-	if ((vdev->negotiated_features & (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY)) &&
-	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
-		return 1;
-	}
-
-	return !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
-}
-
-/*
- * Enqueue id and len to used ring.
- */
-static void
-vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t id,
-		     uint32_t len)
-{
-	struct vring_used *used = vq->used;
-	uint16_t size_mask = vq->size - 1;
-	uint16_t last_idx = vq->last_used_idx;
-
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      last_idx, id, len);
-
-	vq->last_used_idx++;
-	last_idx &= size_mask;
-
-	used->ring[last_idx].id = id;
-	used->ring[last_idx].len = len;
-
-	rte_compiler_barrier();
-
-	vq->used->idx = vq->last_used_idx;
-	if (vq_should_notify(vdev, vq)) {
-		eventfd_write(vq->callfd, (eventfd_t)1);
-	}
-}
-
-static bool
-vring_desc_has_next(struct vring_desc *cur_desc)
-{
-	return !!(cur_desc->flags & VRING_DESC_F_NEXT);
-}
-
-static struct vring_desc *
-vring_desc_get_next(struct vring_desc *vq_desc, struct vring_desc *cur_desc)
-{
-	assert(vring_desc_has_next(cur_desc));
-	return &vq_desc[cur_desc->next];
-}
-
-static bool
-vring_desc_is_wr(struct vring_desc *cur_desc)
-{
-	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
-}
-
 static void task_submit(struct spdk_vhost_task *task);
 static int process_request(struct spdk_vhost_task *task);
 static void invalid_request(struct spdk_vhost_task *task);
@@ -203,7 +116,8 @@ submit_completion(struct spdk_vhost_task *task)
 	struct iovec *iovs = NULL;
 	int result;
 
-	vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, task->scsi.data_transferred);
+	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx,
+					task->scsi.data_transferred);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
 
 	if (task->scsi.iovs != &task->scsi.iov) {
@@ -296,7 +210,7 @@ mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
 static void
 invalid_request(struct spdk_vhost_task *task)
 {
-	vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
+	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_task_put(task);
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST, "Invalid request (status=%" PRIu8")\n",
@@ -337,7 +251,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
 
-	desc = &controlq->desc[req_idx];
+	desc = spdk_vhost_vq_get_desc(controlq, req_idx);
 	ctrl_req = (void *)gpa_to_vva(&svdev->vdev, desc->addr);
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_QUEUE,
@@ -357,8 +271,8 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 	switch (ctrl_req->type) {
 	case VIRTIO_SCSI_T_TMF:
 		/* Get the response buffer */
-		assert(vring_desc_has_next(desc));
-		desc = vring_desc_get_next(controlq->desc, desc);
+		assert(spdk_vhost_vring_desc_has_next(desc));
+		desc = spdk_vhost_vring_desc_get_next(controlq->desc, desc);
 		task->tmf_resp = (void *)gpa_to_vva(&svdev->vdev, desc->addr);
 
 		/* Check if we are processing a valid request */
@@ -384,7 +298,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		break;
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
-		desc = vring_desc_get_next(controlq->desc, desc);
+		desc = spdk_vhost_vring_desc_get_next(controlq->desc, desc);
 		an_resp = (void *)gpa_to_vva(&svdev->vdev, desc->addr);
 		an_resp->response = VIRTIO_SCSI_S_ABORTED;
 		break;
@@ -394,7 +308,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		break;
 	}
 
-	vq_used_ring_enqueue(&svdev->vdev, controlq, req_idx, 0);
+	spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, controlq, req_idx, 0);
 	spdk_vhost_task_put(task);
 }
 
@@ -411,7 +325,7 @@ task_data_setup(struct spdk_vhost_task *task,
 {
 	struct rte_vhost_vring *vq = task->vq;
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
-	struct vring_desc *desc =  &task->vq->desc[task->req_idx];
+	struct vring_desc *desc =  spdk_vhost_vq_get_desc(task->vq, task->req_idx);
 	struct iovec *iovs = task->scsi.iovs;
 	uint16_t iovcnt = 0, iovcnt_max = task->scsi.iovcnt;
 	uint32_t len = 0;
@@ -419,7 +333,7 @@ task_data_setup(struct spdk_vhost_task *task,
 	assert(iovcnt_max == 1 || iovcnt_max == VHOST_SCSI_IOVS_LEN);
 
 	/* Sanity check. First descriptor must be readable and must have next one. */
-	if (unlikely(vring_desc_is_wr(desc) || !vring_desc_has_next(desc))) {
+	if (unlikely(spdk_vhost_vring_desc_is_wr(desc) || !spdk_vhost_vring_desc_has_next(desc))) {
 		SPDK_WARNLOG("Invalid first (request) descriptor.\n");
 		task->resp = NULL;
 		goto abort_task;
@@ -427,15 +341,16 @@ task_data_setup(struct spdk_vhost_task *task,
 
 	*req = (void *)gpa_to_vva(vdev, desc->addr);
 
-	desc = vring_desc_get_next(vq->desc, desc);
-	task->scsi.dxfer_dir = vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV;
+	desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+	task->scsi.dxfer_dir = spdk_vhost_vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV :
+			       SPDK_SCSI_DIR_TO_DEV;
 
 	if (task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV) {
 		/*
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
 		task->resp = (void *)gpa_to_vva(vdev, desc->addr);
-		if (!vring_desc_has_next(desc)) {
+		if (!spdk_vhost_vring_desc_has_next(desc)) {
 			/*
 			 * TEST UNIT READY command and some others might not contain any payload and this is not an error.
 			 */
@@ -449,8 +364,8 @@ task_data_setup(struct spdk_vhost_task *task,
 			return 0;
 		}
 
-		desc = vring_desc_get_next(vq->desc, desc);
-		if (iovcnt_max != VHOST_SCSI_IOVS_LEN && vring_desc_has_next(desc)) {
+		desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+		if (iovcnt_max != VHOST_SCSI_IOVS_LEN && spdk_vhost_vring_desc_has_next(desc)) {
 			iovs = spdk_vhost_iovec_alloc();
 			if (iovs == NULL) {
 				return 1;
@@ -466,11 +381,11 @@ task_data_setup(struct spdk_vhost_task *task,
 			len += desc->len;
 			iovcnt++;
 
-			if (!vring_desc_has_next(desc))
+			if (!spdk_vhost_vring_desc_has_next(desc))
 				break;
 
-			desc = vring_desc_get_next(vq->desc, desc);
-			if (unlikely(!vring_desc_is_wr(desc))) {
+			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+			if (unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
 				SPDK_WARNLOG("FROM DEV cmd: descriptor nr %" PRIu16" in payload chain is read only.\n", iovcnt);
 				task->resp = NULL;
 				goto abort_task;
@@ -483,9 +398,9 @@ task_data_setup(struct spdk_vhost_task *task,
 		 * No need to check descriptor WR flag as this is done while setting scsi.dxfer_dir.
 		 */
 
-		if (iovcnt_max != VHOST_SCSI_IOVS_LEN && vring_desc_has_next(desc)) {
+		if (iovcnt_max != VHOST_SCSI_IOVS_LEN && spdk_vhost_vring_desc_has_next(desc)) {
 			/* If next descriptor is not for response, allocate iovs. */
-			if (!vring_desc_is_wr(vring_desc_get_next(vq->desc, desc))) {
+			if (!spdk_vhost_vring_desc_is_wr(spdk_vhost_vring_desc_get_next(vq->desc, desc))) {
 				iovs = spdk_vhost_iovec_alloc();
 
 				if (iovs == NULL) {
@@ -497,23 +412,23 @@ task_data_setup(struct spdk_vhost_task *task,
 		}
 
 		/* Process descriptors up to response. */
-		while (!vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
+		while (!spdk_vhost_vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
 			iovs[iovcnt].iov_base = (void *)gpa_to_vva(vdev, desc->addr);
 			iovs[iovcnt].iov_len = desc->len;
 			len += desc->len;
 			iovcnt++;
 
-			if (!vring_desc_has_next(desc)) {
+			if (!spdk_vhost_vring_desc_has_next(desc)) {
 				SPDK_WARNLOG("TO_DEV cmd: no response descriptor.\n");
 				task->resp = NULL;
 				goto abort_task;
 			}
 
-			desc = vring_desc_get_next(vq->desc, desc);
+			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
 		}
 
 		task->resp = (void *)gpa_to_vva(vdev, desc->addr);
-		if (vring_desc_has_next(desc)) {
+		if (spdk_vhost_vring_desc_has_next(desc)) {
 			SPDK_WARNLOG("TO_DEV cmd: ignoring unexpected descriptors after response descriptor.\n");
 		}
 	}
@@ -571,7 +486,7 @@ process_controlq(struct spdk_vhost_scsi_dev *vdev, struct rte_vhost_vring *vq)
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
-	reqs_cnt = vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
 	for (i = 0; i < reqs_cnt; i++) {
 		process_ctrl_request(vdev, vq, reqs[i]);
 	}
@@ -585,7 +500,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	struct spdk_vhost_task *task;
 	int result;
 
-	reqs_cnt = vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
 	assert(reqs_cnt <= 32);
 
 	for (i = 0; i < reqs_cnt; i++) {
@@ -1049,6 +964,5 @@ destroy_device(int vid)
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost", SPDK_TRACE_VHOST)
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_queue", SPDK_TRACE_VHOST_QUEUE)
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_data", SPDK_TRACE_VHOST_DATA)

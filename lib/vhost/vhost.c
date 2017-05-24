@@ -34,11 +34,12 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
-#include "task.h"
+#include "spdk/likely.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 #include "vhost_scsi.h"
+#include "task.h"
 
 static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 
@@ -48,6 +49,100 @@ static char dev_dirname[PATH_MAX] = "";
 #define MAX_VHOST_DEVICES	15
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
+
+/*
+ * Get available requests from avail ring.
+ */
+uint16_t
+spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_t reqs_len)
+{
+	struct vring_avail *avail = vq->avail;
+	uint16_t size_mask = vq->size - 1;
+	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
+	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
+	uint16_t i;
+
+	if (spdk_likely(count == 0)) {
+		return 0;
+	}
+
+	vq->last_avail_idx += count;
+	for (i = 0; i < count; i++) {
+		reqs[i] = vq->avail->ring[(last_idx + i) & size_mask];
+	}
+
+	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING,
+		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
+		      last_idx, avail_idx, count);
+
+	return count;
+}
+
+bool
+spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq)
+{
+	if ((vdev->negotiated_features & (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY)) &&
+	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
+		return 1;
+	}
+
+	return !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
+}
+
+struct vring_desc *
+spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx)
+{
+	assert(req_idx < vq->size);
+	return &vq->desc[req_idx];
+}
+
+/*
+ * Enqueue id and len to used ring.
+ */
+void
+spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
+				uint16_t id,
+				uint32_t len)
+{
+	struct vring_used *used = vq->used;
+	uint16_t size_mask = vq->size - 1;
+	uint16_t last_idx = vq->last_used_idx;
+
+	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
+		      last_idx, id, len);
+
+	vq->last_used_idx++;
+	last_idx &= size_mask;
+
+	used->ring[last_idx].id = id;
+	used->ring[last_idx].len = len;
+
+	rte_compiler_barrier();
+
+	vq->used->idx = vq->last_used_idx;
+	if (spdk_vhost_vq_should_notify(vdev, vq)) {
+		eventfd_write(vq->callfd, (eventfd_t)1);
+	}
+}
+
+bool
+spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_NEXT);
+}
+
+struct vring_desc *
+spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc, struct vring_desc *cur_desc)
+{
+	assert(spdk_vhost_vring_desc_has_next(cur_desc));
+	return &vq_desc[cur_desc->next];
+}
+
+bool
+spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
+}
 
 struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
@@ -422,3 +517,5 @@ spdk_vhost_shutdown_cb(void)
 		rte_panic("Failed to start session shutdown thread (%d): %s", errno, strerror(errno));
 	pthread_detach(tid);
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
