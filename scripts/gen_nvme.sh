@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+dir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $dir/..)
 
 set -e
 
@@ -20,3 +22,24 @@ for bdf in $bdfs; do
         echo "  TransportID \"trtype:PCIe traddr:$bdf\" Nvme$i"
         let i=i+1
 done
+
+if [ $(uname -s) = Linux ]; then
+	# Split each NVMe device into Gpt format.
+	if [ "$1" ] && [ $1 =  "Gpt" ]; then
+
+		# skip the output
+		$rootdir/scripts/setup.sh reset >> /dev/null
+		sleep 5
+
+		echo ""
+		echo "[Gpt]"
+		for ((j=0; j<$i; j++ ))
+		do
+			echo " Split Nvme"$j"n1"
+			parted -s /dev/nvme"$j"n1 mklabel gpt mkpart primary '0%' '100%'
+		done
+
+		# skip the output
+		$rootdir/scripts/setup.sh >> /dev/null
+	fi
+fi
