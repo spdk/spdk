@@ -68,6 +68,8 @@ struct spdk_scsi_dev {
 
 	int			num_ports;
 	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
+
+	uint8_t 		protocol_id;
 };
 
 struct spdk_scsi_lun {

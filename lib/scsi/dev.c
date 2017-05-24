@@ -138,7 +138,8 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 typedef struct spdk_scsi_dev _spdk_scsi_dev;
 
 _spdk_scsi_dev *
-spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_list, int num_luns)
+spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_list, int num_luns,
+			uint8_t protocol_id)
 {
 	struct spdk_scsi_dev *dev;
 	struct spdk_bdev *bdev;
@@ -172,6 +173,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 
 	dev->num_ports = 0;
 	dev->maxlun = 0;
+	dev->protocol_id = protocol_id;
 
 	for (i = 0; i < num_luns; i++) {
 		bdev = spdk_bdev_get_by_name(lun_name_list[i]);

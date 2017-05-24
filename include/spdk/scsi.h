@@ -193,7 +193,8 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
 struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		char *lun_name_list[],
 		int *lun_id_list,
-		int num_luns);
+		int num_luns,
+		uint8_t protocol_id);
 
 void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun);
 
