@@ -486,6 +486,8 @@ bdevperf_run(void *arg1, void *arg2)
 	struct io_target *target;
 	struct spdk_event *event;
 
+	bdevperf_construct_targets();
+
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
 
@@ -671,8 +673,6 @@ main(int argc, char **argv)
 	blockdev_heads_init();
 
 	bdevtest_init(config_file, core_mask);
-
-	bdevperf_construct_targets();
 
 	task_pool = rte_mempool_create("task_pool", 4096 * spdk_env_get_core_count(),
 				       sizeof(struct bdevperf_task),
