@@ -42,6 +42,7 @@ static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
 	TAILQ_HEAD_INITIALIZER(g_depends);
 static struct spdk_subsystem *g_next_subsystem;
+static bool spdk_subsystem_status;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -109,6 +110,11 @@ subsystem_sort(void)
 	}
 }
 
+bool spdk_subsystem_init_status(void)
+{
+	return spdk_subsystem_status;
+}
+
 void
 spdk_subsystem_init_next(int rc)
 {
@@ -124,6 +130,7 @@ spdk_subsystem_init_next(int rc)
 	}
 
 	if (!g_next_subsystem) {
+		spdk_subsystem_status = true;
 		return;
 	}
 

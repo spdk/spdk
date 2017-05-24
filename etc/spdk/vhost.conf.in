@@ -106,6 +106,15 @@
   # leaving the rest of the device inaccessible
   #Split Malloc2 8 1
 
+# The Gpt virtual block device slices block devices into multiple smaller bdevs.
+# according to the gpt table info in the device
+[Gpt]
+  # Syntax:
+  #   Split <bdev>
+
+  # Split Nvme0n1 into Nvme0n1p0, NVMe0n1p ...
+  Split Nvme0n1
+
 # Vhost scsi controller configuration
 # Users should change the VhostScsi section(s) below to match the desired
 # vhost configuration.
