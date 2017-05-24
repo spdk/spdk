@@ -701,6 +701,8 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		return NULL;
 	}
 
+	spdk_scsi_dev_set_protocol_id(target->dev, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI);
+
 	num_unique_portal_groups = 0;
 	for (i = 0; i < num_maps; i++) {
 		map = spdk_iscsi_tgt_node_add_map(target, pg_tag_list[i],

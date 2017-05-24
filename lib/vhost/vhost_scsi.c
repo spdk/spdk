@@ -866,6 +866,8 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -EINVAL;
 	}
 
+	spdk_scsi_dev_set_protocol_id(svdev->scsi_dev[scsi_dev_num], SPDK_SPC_PROTOCOL_IDENTIFIER_SAS);
+
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);

@@ -253,6 +253,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		case SPDK_SPC_VPD_DEVICE_IDENTIFICATION: {
 			const char *name = spdk_bdev_get_name(bdev);
 			const char *product_name = spdk_bdev_get_product_name(bdev);
+			uint8_t protocol_id = dev->protocol_id;
 			uint8_t *buf = vpage->params;
 			struct spdk_scsi_desig_desc *desig;
 
@@ -279,7 +280,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* NAA designator */
 			desig = (struct spdk_scsi_desig_desc *)buf;
 			desig->code_set = SPDK_SPC_VPD_CODE_SET_BINARY;
-			desig->protocol_id = SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+			desig->protocol_id = protocol_id;
 			desig->type = SPDK_SPC_VPD_IDENTIFIER_TYPE_NAA;
 			desig->association = SPDK_SPC_VPD_ASSOCIATION_LOGICAL_UNIT;
 			desig->reserved0 = 0;
@@ -294,7 +295,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* T10 Vendor ID designator */
 			desig = (struct spdk_scsi_desig_desc *)buf;
 			desig->code_set = SPDK_SPC_VPD_CODE_SET_ASCII;
-			desig->protocol_id = SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+			desig->protocol_id = protocol_id;
 			desig->type = SPDK_SPC_VPD_IDENTIFIER_TYPE_T10_VENDOR_ID;
 			desig->association = SPDK_SPC_VPD_ASSOCIATION_LOGICAL_UNIT;
 			desig->reserved0 = 0;
@@ -311,7 +312,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* SCSI Device Name designator */
 			desig = (struct spdk_scsi_desig_desc *)buf;
 			desig->code_set = SPDK_SPC_VPD_CODE_SET_UTF8;
-			desig->protocol_id = SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+			desig->protocol_id = protocol_id;
 			desig->type = SPDK_SPC_VPD_IDENTIFIER_TYPE_SCSI_NAME;
 			desig->association = SPDK_SPC_VPD_ASSOCIATION_TARGET_DEVICE;
 			desig->reserved0 = 0;
@@ -325,7 +326,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* SCSI Port Name designator */
 			desig = (struct spdk_scsi_desig_desc *)buf;
 			desig->code_set = SPDK_SPC_VPD_CODE_SET_UTF8;
-			desig->protocol_id = SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+			desig->protocol_id = protocol_id;
 			desig->type = SPDK_SPC_VPD_IDENTIFIER_TYPE_SCSI_NAME;
 			desig->association = SPDK_SPC_VPD_ASSOCIATION_TARGET_PORT;
 			desig->reserved0 = 0;
@@ -339,7 +340,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* Relative Target Port designator */
 			desig = (struct spdk_scsi_desig_desc *)buf;
 			desig->code_set = SPDK_SPC_VPD_CODE_SET_BINARY;
-			desig->protocol_id = SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+			desig->protocol_id = protocol_id;
 			desig->type = SPDK_SPC_VPD_IDENTIFIER_TYPE_RELATIVE_TARGET_PORT;
 			desig->association = SPDK_SPC_VPD_ASSOCIATION_TARGET_PORT;
 			desig->reserved0 = 0;
@@ -355,7 +356,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* Target port group designator */
 			desig = (struct spdk_scsi_desig_desc *)buf;
 			desig->code_set = SPDK_SPC_VPD_CODE_SET_BINARY;
-			desig->protocol_id = SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+			desig->protocol_id = protocol_id;
 			desig->type = SPDK_SPC_VPD_IDENTIFIER_TYPE_TARGET_PORT_GROUP;
 			desig->association = SPDK_SPC_VPD_ASSOCIATION_TARGET_PORT;
 			desig->reserved0 = 0;
@@ -370,7 +371,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			/* Logical unit group designator */
 			desig = (struct spdk_scsi_desig_desc *)buf;
 			desig->code_set = SPDK_SPC_VPD_CODE_SET_BINARY;
-			desig->protocol_id = SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+			desig->protocol_id = protocol_id;
 			desig->type = SPDK_SPC_VPD_IDENTIFIER_TYPE_LOGICAL_UNIT_GROUP;
 			desig->association = SPDK_SPC_VPD_ASSOCIATION_LOGICAL_UNIT;
 			desig->reserved0 = 0;

@@ -79,6 +79,13 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	return dev->lun[lun_id];
 }
 
+void
+spdk_scsi_dev_set_protocol_id(struct spdk_scsi_dev *dev, uint8_t protocol_id)
+{
+	dev->protocol_id = protocol_id;
+	return;
+}
+
 static void
 config_file_fail_cases(void)
 {
