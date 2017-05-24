@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06f78bed_cd21319c",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-24T21:12:40Z",
+      "side": 1,
+      "message": "Minor whitespace nit: remove space between values and [4];",
+      "revId": "5c8cdbd9f93d3a0ded49245e5e3830195a0f5017",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e9f9388_2f2b1c31",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-24T21:12:40Z",
+      "side": 1,
+      "message": "Remove one of these blank lines.",
+      "revId": "5c8cdbd9f93d3a0ded49245e5e3830195a0f5017",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
