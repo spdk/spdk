@@ -69,6 +69,29 @@ struct spdk_vhost_dev_backend {
 uint32_t spdk_vhost_allocate_reactor(uint64_t cpumask);
 void spdk_vhost_free_reactor(uint32_t lcore);
 
+/*
+ * Get available requests from avail ring.
+ */
+uint16_t spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs,
+				      uint16_t reqs_len);
+bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq);
+
+/*
+ * Get first descriptor of given request
+ */
+struct vring_desc *
+spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx);
+
+/*
+ * Enqueue id and len to used ring.
+ */
+void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
+				     uint16_t id, uint32_t len);
+bool spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc);
+struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc,
+		struct vring_desc *cur_desc);
+bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
+
 struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *dev);
 int spdk_vhost_dev_register(struct spdk_vhost_dev *dev,
