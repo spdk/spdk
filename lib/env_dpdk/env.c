@@ -260,7 +260,7 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 }
 
 struct spdk_ring *
-spdk_ring_create(enum spdk_ring_type type, size_t count, size_t ele_size, int socket_id)
+spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
 {
 	char ring_name[64];
 	static uint32_t ring_num = 0;
