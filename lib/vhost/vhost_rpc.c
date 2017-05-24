@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+
 #include "spdk_internal/log.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"

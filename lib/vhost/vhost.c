@@ -570,7 +570,12 @@ spdk_vhost_startup(void *arg1, void *arg2)
 
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0)
-		rte_exit(EXIT_FAILURE, "Cannot construct vhost controllers\n");
+		rte_exit(EXIT_FAILURE, "Cannot construct vhost scsi controllers\n");
+
+	ret = spdk_vhost_blk_controller_construct();
+	if (ret != 0)
+		rte_exit(EXIT_FAILURE, "Cannot construct vhost block controllers\n");
+
 }
 
 static void *
