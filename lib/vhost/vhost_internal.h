@@ -66,14 +66,10 @@ struct spdk_vhost_dev_backend {
 	const struct vhost_device_ops ops;
 };
 
-
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr);
-
-uint32_t spdk_vhost_allocate_reactor(uint64_t cpumask);
-void spdk_vhost_free_reactor(uint32_t lcore);
 
 /*
  * Get available requests from avail ring.
@@ -99,10 +95,10 @@ struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc,
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
-int spdk_vhost_dev_construct(struct spdk_vhost_dev *dev);
+struct spdk_vhost_dev *spdk_vhost_dev_load(int vid);
 int spdk_vhost_dev_register(struct spdk_vhost_dev *dev,
 			    const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
-void spdk_vhost_dev_destruct(struct spdk_vhost_dev *dev);
+void spdk_vhost_dev_unload(struct spdk_vhost_dev *dev);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
