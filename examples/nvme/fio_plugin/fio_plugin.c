@@ -309,13 +309,13 @@ static int spdk_fio_close(struct thread_data *td, struct fio_file *f)
 
 static int spdk_fio_iomem_alloc(struct thread_data *td, size_t total_mem)
 {
-	td->orig_buffer = spdk_zmalloc(total_mem, NVME_IO_ALIGN, NULL);
+	td->orig_buffer = spdk_dma_zmalloc(total_mem, NVME_IO_ALIGN, NULL);
 	return td->orig_buffer == NULL;
 }
 
 static void spdk_fio_iomem_free(struct thread_data *td)
 {
-	spdk_free(td->orig_buffer);
+	spdk_dma_free(td->orig_buffer);
 }
 
 static int spdk_fio_io_u_init(struct thread_data *td, struct io_u *io_u)

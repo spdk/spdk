@@ -46,7 +46,7 @@ static uint64_t g_test_bdev_num_blocks;
 static struct spdk_bdev_io g_test_bdev_io;
 
 void *
-spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = malloc(size);
 	if (phys_addr)
@@ -56,7 +56,7 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = calloc(size, 1);
 	if (phys_addr)
@@ -66,7 +66,7 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void
-spdk_free(void *buf)
+spdk_dma_free(void *buf)
 {
 	free(buf);
 }
