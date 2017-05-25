@@ -166,62 +166,6 @@ spdk_vhost_dev_find_by_vid(int vid)
 	return NULL;
 }
 
-void
-spdk_vhost_dev_destruct(struct spdk_vhost_dev *vdev)
-{
-	struct rte_vhost_vring *q;
-	uint16_t i;
-
-	for (i = 0; i < vdev->num_queues; i++) {
-		q = &vdev->virtqueue[i];
-		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
-	}
-
-	free(vdev->mem);
-}
-
-int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev)
-{
-	int vid = vdev->vid;
-	uint16_t num_queues = rte_vhost_get_vring_num(vid);
-	uint16_t i;
-
-	if (num_queues > MAX_VHOST_VRINGS) {
-		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
-			    MAX_VHOST_VRINGS);
-		return -1;
-	}
-
-	for (i = 0; i < num_queues; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i])) {
-			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
-			return -1;
-		}
-
-		/* Disable notifications. */
-		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
-			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
-			return -1;
-		}
-
-	}
-
-	vdev->num_queues = num_queues;
-
-	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		return -1;
-	}
-
-	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
-		return -1;
-	}
-
-	return 0;
-}
-
 #define SHIFT_2MB	21
 #define SIZE_2MB	(1ULL << SHIFT_2MB)
 #define FLOOR_2MB(x)	(((uintptr_t)x) / SIZE_2MB) << SHIFT_2MB
@@ -283,7 +227,7 @@ spdk_vhost_dev_task_unref(struct spdk_vhost_dev *vdev)
 	vdev->task_cnt--;
 }
 
-void
+static void
 spdk_vhost_free_reactor(uint32_t lcore)
 {
 	g_num_ctrlrs[lcore]--;
@@ -487,7 +431,7 @@ spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 	return vdev->cpumask;
 }
 
-uint32_t
+static uint32_t
 spdk_vhost_allocate_reactor(uint64_t cpumask)
 {
 	uint32_t i, selected_core;
@@ -515,6 +459,86 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 
 	g_num_ctrlrs[selected_core]++;
 	return selected_core;
+}
+
+void
+spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
+{
+	struct rte_vhost_vring *q;
+	uint16_t i;
+
+	for (i = 0; i < vdev->num_queues; i++) {
+		q = &vdev->virtqueue[i];
+		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
+	}
+
+	free(vdev->mem);
+
+	spdk_vhost_free_reactor(vdev->lcore);
+	vdev->lcore = -1;
+}
+
+struct spdk_vhost_dev *
+spdk_vhost_dev_load(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+	char ifname[PATH_MAX];
+
+	uint16_t num_queues = rte_vhost_get_vring_num(vid);
+	uint16_t i;
+
+	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
+		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
+		return NULL;
+	}
+
+	vdev = spdk_vhost_dev_find(ifname);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Controller %s not found.\n", ifname);
+		return NULL;
+	}
+
+	if (vdev->lcore != -1) {
+		SPDK_ERRLOG("Controller %s already connected.\n", ifname);
+		return NULL;
+	}
+
+	if (num_queues > MAX_VHOST_VRINGS) {
+		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
+			    MAX_VHOST_VRINGS);
+		return NULL;
+	}
+
+	for (i = 0; i < num_queues; i++) {
+		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i])) {
+			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
+			return NULL;
+		}
+
+		/* Disable notifications. */
+		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
+			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
+			return NULL;
+		}
+
+	}
+
+	vdev->vid = vid;
+	vdev->num_queues = num_queues;
+
+	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
+		return NULL;
+	}
+
+	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
+		return NULL;
+	}
+
+	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
+
+	return vdev;
 }
 
 void
