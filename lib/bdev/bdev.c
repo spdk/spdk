@@ -81,6 +81,8 @@ struct spdk_bdev_channel {
 
 	/* The channel for the underlying device */
 	struct spdk_io_channel	*channel;
+
+	struct spdk_bdev_io_stat stat;
 };
 
 struct spdk_bdev *
@@ -514,6 +516,7 @@ spdk_bdev_channel_create(void *io_device, uint32_t priority, void *ctx_buf)
 
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt, priority);
+	memset(&ch->stat, 0, sizeof(ch->stat));
 
 	return 0;
 }
@@ -621,6 +624,9 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
+	channel->stat.bytes_read += nbytes;
+	channel->stat.num_read_ops++;
+
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iov.iov_base = buf;
@@ -661,6 +667,9 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
+	channel->stat.bytes_read += nbytes;
+	channel->stat.num_read_ops++;
+
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iovs = iov;
@@ -697,6 +706,9 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		SPDK_ERRLOG("blockdev_io memory allocation failed duing write\n");
 		return NULL;
 	}
+
+	channel->stat.bytes_written += nbytes;
+	channel->stat.num_write_ops++;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
@@ -738,6 +750,9 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
+	channel->stat.bytes_written += len;
+	channel->stat.num_write_ops++;
+
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iovs = iov;
@@ -745,7 +760,6 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->u.write.len = len;
 	bdev_io->u.write.offset = offset;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
-
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
@@ -857,6 +871,17 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	}
 
 	return rc;
+}
+
+void
+spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		      struct spdk_bdev_io_stat *stat)
+{
+
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	*stat = channel->stat;
+	memset(&channel->stat, 0, sizeof(channel->stat));
 }
 
 int
