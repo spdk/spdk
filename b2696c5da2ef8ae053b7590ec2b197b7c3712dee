@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aba93c23_b3c481bf",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T18:00:08Z",
+      "side": 1,
+      "message": "cannot contain \u0027\\0\u0027",
+      "revId": "b2696c5da2ef8ae053b7590ec2b197b7c3712dee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "224e2c27_06df45fc",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T18:00:08Z",
+      "side": 1,
+      "message": "HELO",
+      "revId": "b2696c5da2ef8ae053b7590ec2b197b7c3712dee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
