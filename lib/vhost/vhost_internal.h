@@ -66,6 +66,8 @@ struct spdk_vhost_dev_backend {
 	const struct vhost_device_ops ops;
 };
 
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr);
+
 uint32_t spdk_vhost_allocate_reactor(uint64_t cpumask);
 void spdk_vhost_free_reactor(uint32_t lcore);
 
