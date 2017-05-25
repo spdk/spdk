@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cb2d2d5_18a386b5",
+        "filename": "test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T06:31:26Z",
+      "side": 1,
+      "message": "payload is a local variable and what if other update_firmware cases call this same image_download function with different payload? The above set_size looks like a global one.",
+      "range": {
+        "startLine": 328,
+        "startChar": 11,
+        "endLine": 328,
+        "endChar": 31
+      },
+      "revId": "f80fc5104c2f8f63066739abfb90c52ebc8dcc75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cac93414_60be9781",
+        "filename": "test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T06:31:26Z",
+      "side": 1,
+      "message": "so this new case is only to cover below one situation where set_size\u003d4 \u0026 ctrlr.min_page_size\u003d5 ?\n\nNo other error situations will be considered in the update firmware?\n\nIf intended, maybe we can rename the function name to _update_firmware_with_error_size() ?",
+      "range": {
+        "startLine": 1379,
+        "startChar": 0,
+        "endLine": 1379,
+        "endChar": 36
+      },
+      "revId": "f80fc5104c2f8f63066739abfb90c52ebc8dcc75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
