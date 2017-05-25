@@ -639,6 +639,8 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	vdev->cpumask = cpumask;
 	vdev->lcore = -1;
 
+	vdev->type = SPDK_VHOST_DEV_T_SCSI;
+
 	rc = spdk_vhost_dev_register(vdev, &spdk_vhost_scsi_device_backend);
 	if (rc < 0) {
 		free(vdev->name);
