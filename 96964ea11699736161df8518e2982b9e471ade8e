@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2155b81_fc5424a7",
+        "filename": "test/lib/event/subsystem/subsystem_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:21:46Z",
+      "side": 0,
+      "message": "These CU_ASSERTs need to be replaced with new asserts - i.e. a global variable that gets set in the spdk_app_stop() stub and then checked after the call to spdk_app_subsystem_depend().",
+      "revId": "96964ea11699736161df8518e2982b9e471ade8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

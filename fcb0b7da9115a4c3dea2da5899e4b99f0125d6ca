@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09ff7d0e_59376fd1",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:21:46Z",
+      "side": 1,
+      "message": "This should return void now.  The \"real\" return code will be sent in the spdk_subsystem_init_next() parameter.",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff50e105_48376c2c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:21:46Z",
+      "side": 1,
+      "message": "I think these should all return void now.  That removes any confusion on how the return value is returned to the subsystem code.  Otherwise it is possible a subsystem could return 0 from this function but specify -1 in the spdk_subsystem_init_next() parameter.",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f937bc2f_f1009f4f",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:21:46Z",
+      "side": 1,
+      "message": "I\u0027m just curious why this needs to be added?",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84f43f3a_8306a3e8",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:21:46Z",
+      "side": 1,
+      "message": "It might be good to have an SPDK_ERRLOG here that indicates which subsystem failed.",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed8c1f7d_1c2e83c4",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:21:46Z",
+      "side": 1,
+      "message": "I think it would be more clear to just call spdk_app_stop(-1) here and return.",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9be4c791_b64a7d1a",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:21:46Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
