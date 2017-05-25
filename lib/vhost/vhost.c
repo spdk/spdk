@@ -40,6 +40,7 @@
 #include "vhost_internal.h"
 #include "vhost_scsi.h"
 #include "task.h"
+#include "vhost_iommu.h"
 
 static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 
@@ -219,6 +220,53 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev)
 	}
 
 	return 0;
+}
+
+#define SHIFT_2MB	21
+#define SIZE_2MB	(1ULL << SHIFT_2MB)
+#define FLOOR_2MB(x)	(((uintptr_t)x) / SIZE_2MB) << SHIFT_2MB
+#define CEIL_2MB(x)	((((uintptr_t)x) + SIZE_2MB - 1) / SIZE_2MB) << SHIFT_2MB
+
+void
+spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
+{
+	struct rte_vhost_mem_region *region;
+	uint32_t i;
+
+	for (i = 0; i < vdev->mem->nregions; i++) {
+		uint64_t start, end, len;
+		region = &vdev->mem->regions[i];
+		start = FLOOR_2MB(region->mmap_addr);
+		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+		len = end - start;
+		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
+			       start, len);
+		spdk_mem_register((void *)start, len);
+		if (spdk_iommu_mem_register(region->host_user_addr, region->size)) {
+			abort();
+		}
+	}
+}
+
+void
+spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
+{
+	struct rte_vhost_mem_region *region;
+	uint32_t i;
+
+	for (i = 0; i < vdev->mem->nregions; i++) {
+		uint64_t start, end, len;
+		region = &vdev->mem->regions[i];
+		start = FLOOR_2MB(region->mmap_addr);
+		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+		len = end - start;
+
+		if (spdk_iommu_mem_unregister(region->host_user_addr, region->size)) {
+			abort();
+		}
+
+		spdk_mem_unregister((void *)start, len);
+	}
 }
 
 void

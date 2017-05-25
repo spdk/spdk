@@ -45,7 +45,6 @@
 #include "vhost_internal.h"
 #include "vhost_scsi.h"
 #include "task.h"
-#include "vhost_iommu.h"
 
 #ifndef VIRTIO_F_VERSION_1
 #define VIRTIO_F_VERSION_1 32
@@ -539,12 +538,6 @@ vdev_worker(void *arg)
 	}
 }
 
-
-#define SHIFT_2MB	21
-#define SIZE_2MB	(1ULL << SHIFT_2MB)
-#define FLOOR_2MB(x)	(((uintptr_t)x) / SIZE_2MB) << SHIFT_2MB
-#define CEIL_2MB(x)	((((uintptr_t)x) + SIZE_2MB - 1) / SIZE_2MB) << SHIFT_2MB
-
 static void
 vdev_event_done_cb(void *arg1, void *arg2)
 {
@@ -580,7 +573,6 @@ add_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg1;
 	struct spdk_vhost_dev *vdev = &svdev->vdev;
-	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -591,18 +583,7 @@ add_vdev_cb(void *arg1, void *arg2)
 	}
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
 
-	for (i = 0; i < vdev->mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		len = end - start;
-		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
-			       start, len);
-		spdk_mem_register((void *)start, len);
-		spdk_iommu_mem_register(region->host_user_addr, region->size);
-
-	}
+	spdk_vhost_dev_mem_register(vdev);
 
 	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
 	spdk_poller_register(&svdev->controlq_poller, vdev_controlq_worker, svdev, vdev->lcore,
@@ -614,7 +595,6 @@ static void
 remove_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg1;
-	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -625,15 +605,7 @@ remove_vdev_cb(void *arg1, void *arg2)
 	}
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
-	for (i = 0; i < svdev->vdev.mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &svdev->vdev.mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		len = end - start;
-		spdk_iommu_mem_unregister(region->host_user_addr, region->size);
-		spdk_mem_unregister((void *)start, len);
-	}
+	spdk_vhost_dev_mem_unregister(&svdev->vdev);
 
 	sem_post((sem_t *)arg2);
 }
