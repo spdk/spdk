@@ -96,4 +96,8 @@ int spdk_vhost_dev_register(struct spdk_vhost_dev *dev,
 int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_unload(struct spdk_vhost_dev *dev);
 
+void spdk_vdev_event_done_cb(void *arg1, void *arg2);
+struct spdk_event *spdk_vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem);
+int spdk_vhost_sem_timedwait(sem_t *sem, unsigned sec);
+
 #endif /* SPDK_VHOST_INTERNAL_H */

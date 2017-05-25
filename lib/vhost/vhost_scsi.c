@@ -557,64 +557,41 @@ vdev_event_done_cb(void *arg1, void *arg2)
 	sem_post((sem_t *)arg2);
 }
 
-static struct spdk_event *
-vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem)
-{
-	if (sem_init(sem, 0, 0) < 0)
-		rte_panic("Failed to initialize semaphore.");
-
-	return spdk_event_allocate(core, fn, arg1, sem);
-}
-
-static int
-vhost_sem_timedwait(sem_t *sem, unsigned sec)
-{
-	struct timespec timeout;
-	int rc;
-
-	clock_gettime(CLOCK_REALTIME, &timeout);
-	timeout.tv_sec += sec;
-
-	rc = sem_timedwait(sem, &timeout);
-	sem_destroy(sem);
-
-	return rc;
-}
-
 static void
 add_vdev_cb(void *arg1, void *arg2)
 {
-	struct spdk_vhost_scsi_dev *svdev = arg1;
-	struct spdk_vhost_dev *vdev = &svdev->vdev;
-	struct rte_vhost_mem_region *region;
-	uint32_t i;
+       struct spdk_vhost_scsi_dev *svdev = arg1;
+       struct spdk_vhost_dev *vdev = &svdev->vdev;
+       struct rte_vhost_mem_region *region;
+       uint32_t i;
 
-	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svdev->scsi_dev[i] == NULL) {
-			continue;
-		}
-		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[i]);
-	}
-	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
+       for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+               if (svdev->scsi_dev[i] == NULL) {
+                       continue;
+               }
+               spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[i]);
+       }
+       SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
 
-	for (i = 0; i < vdev->mem->nregions; i++) {
-		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
-		start = FLOOR_2MB(region->mmap_addr);
-		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
-		len = end - start;
-		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
-			       start, len);
-		spdk_mem_register((void *)start, len);
-		spdk_iommu_mem_register(region->host_user_addr, region->size);
+       for (i = 0; i < vdev->mem->nregions; i++) {
+               uint64_t start, end, len;
+               region = &vdev->mem->regions[i];
+               start = FLOOR_2MB(region->mmap_addr);
+               end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+               len = end - start;
+               SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
+                              start, len);
+               spdk_mem_register((void *)start, len);
+               spdk_iommu_mem_register(region->host_user_addr, region->size);
 
-	}
+       }
 
-	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
-	spdk_poller_register(&svdev->controlq_poller, vdev_controlq_worker, svdev, vdev->lcore,
-			     CONTROLQ_POLL_PERIOD_US);
-	sem_post((sem_t *)arg2);
+       spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
+       spdk_poller_register(&svdev->controlq_poller, vdev_controlq_worker, svdev, vdev->lcore,
+                            CONTROLQ_POLL_PERIOD_US);
+       sem_post((sem_t *)arg2);
 }
+
 
 static void
 remove_vdev_cb(void *arg1, void *arg2)
@@ -891,9 +868,9 @@ new_device(int vid)
 		return -1;
 	}
 
-	event = vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
 	spdk_event_call(event);
-	if (vhost_sem_timedwait(&added, 1))
+	if (spdk_vhost_sem_timedwait(&added, 1))
 		rte_panic("Failed to register new device '%s'\n", vdev->name);
 	return 0;
 }
@@ -913,14 +890,14 @@ destroy_device(int vid)
 	}
 	svdev = (struct spdk_vhost_scsi_dev *) vdev;
 
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&svdev->requestq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
+	if (spdk_vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
 
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&svdev->controlq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
+	if (spdk_vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
 
 	/* Wait for all tasks to finish */
@@ -932,9 +909,9 @@ destroy_device(int vid)
 		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
 
-	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, svdev, &done_sem);
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, svdev, &done_sem);
 	spdk_event_call(event);
-	if (vhost_sem_timedwait(&done_sem, 1))
+	if (spdk_vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister poller.\n", vdev->name);
 
 	spdk_vhost_dev_unload(vdev);
