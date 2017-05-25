@@ -11,6 +11,13 @@ export TARGET_IP=127.0.0.1
 export INITIATOR_IP=127.0.0.1
 
 timing_enter iscsi_tgt
+
+./app/stub/stub -s 2048 -i 0 &
+pid=$!
+trap "kill $pid; exit 1" SIGINT SIGTERM EXIT
+
+export ISCSI_APP="./app/iscsi_tgt/iscsi_tgt -i 0"
+
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
@@ -23,4 +30,8 @@ fi
 run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 run_test ./test/iscsi_tgt/rbd/rbd.sh
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
+
+trap - SIGINT SIGTERM EXIT
+kill $pid
+
 timing_exit iscsi_tgt
