@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "592aecc2_4a71a453",
+        "filename": "test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1387,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T09:36:39Z",
+      "side": 1,
+      "message": "Looks like my previous comments are unclear. Sorry for the confusion.\n\nIn this way if this test case is focusing on the error size, we can have several different sub test case in this function:\n\n1) set_size \u003d 0; which fails spdk_nvme_ctrlr_update_firmware() for the multiple of 4 check\n\n2) set_size \u003d 4; ctrlr.min_page_size \u003d 0; which makes the payload_size equals to 0 (smaller of than). This will together checked with above payload (NULL or not NULL)\n\nBasically we will create different cases to examine the possible paths in the called spdk_nvme_ctrlr_update_firmware() function.\n\nOn the other side, for the two UT created functions _image_download() and _fw_commit(), you may add some specific check there like if payload is not NULL, whether the size is not zero. Please return the error code based on these input parameters. And for the _fw_commit(), you may add a global variable like (b_error_test). If it is set due to this error test, return 1. Otherwise return 0. This can help the future addition of more test cases instead of just returning 1 (always failed).\n\nWe can also talk offline on this if needed.\n\nThanks, Gang.",
+      "range": {
+        "startLine": 1386,
+        "startChar": 1,
+        "endLine": 1387,
+        "endChar": 25
+      },
+      "revId": "ee8edb546ae0e81c652ebfb1492e0242dd502531",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
