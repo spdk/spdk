@@ -362,8 +362,8 @@ def help_get_interface_ip_list(rpc_py, nic_name):
 def verify_add_delete_ip_address(rpc_py):
     rpc = spdk_rpc(rpc_py)
     nics = json.loads(rpc.get_interfaces())
-    # add ip on all nic
-    for x in nics:
+    # add ip on up to first 2 nics
+    for x in nics[:2]:
         faked_ip = "123.123.{}.{}".format(random.randint(1, 254), random.randint(1, 254))
         rpc.add_ip_address(x["ifc_index"], faked_ip)
         verify(faked_ip in help_get_interface_ip_list(rpc_py, x["name"]), 1,
