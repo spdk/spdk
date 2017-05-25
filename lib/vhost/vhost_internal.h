@@ -48,6 +48,7 @@
 struct spdk_vhost_dev {
 	struct rte_vhost_memory *mem;
 	char *name;
+	const struct spdk_vhost_dev_backend *backend;
 
 	int vid;
 	int task_cnt;
@@ -63,7 +64,9 @@ struct spdk_vhost_dev {
 struct spdk_vhost_dev_backend {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
-	const struct vhost_device_ops ops;
+
+	void (*new_device_cb)(void *arg1, void *arg2);
+	void (*destroy_device_cb)(void *arg1, void *arg2);
 };
 
 /*
@@ -89,11 +92,11 @@ struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc,
 		struct vring_desc *cur_desc);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
-struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
-struct spdk_vhost_dev *spdk_vhost_dev_load(int vid);
-int spdk_vhost_dev_register(struct spdk_vhost_dev *dev,
-			    const struct spdk_vhost_dev_backend *backend);
+int spdk_vhost_dev_register(struct spdk_vhost_dev *dev);
 int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
-void spdk_vhost_dev_unload(struct spdk_vhost_dev *dev);
+
+void spdk_vdev_event_done_cb(void *arg1, void *arg2);
+struct spdk_event *spdk_vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem);
+int spdk_vhost_sem_timedwait(sem_t *sem, unsigned sec);
 
 #endif /* SPDK_VHOST_INTERNAL_H */

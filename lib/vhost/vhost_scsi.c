@@ -88,16 +88,14 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_poller *controlq_poller;
 } __rte_cache_aligned;
 
-static int new_device(int vid);
-static void destroy_device(int vid);
+static void add_vdev_cb(void *arg1, void *arg2);
+static void remove_vdev_cb(void *arg1, void *arg2);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
-	.ops = {
-		.new_device =  new_device,
-		.destroy_device = destroy_device,
-	}
+	.new_device_cb = add_vdev_cb,
+	.destroy_device_cb = remove_vdev_cb
 };
 
 static uint64_t
@@ -552,36 +550,6 @@ vdev_worker(void *arg)
 #define CEIL_2MB(x)	((((uintptr_t)x) + SIZE_2MB - 1) / SIZE_2MB) << SHIFT_2MB
 
 static void
-vdev_event_done_cb(void *arg1, void *arg2)
-{
-	sem_post((sem_t *)arg2);
-}
-
-static struct spdk_event *
-vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem)
-{
-	if (sem_init(sem, 0, 0) < 0)
-		rte_panic("Failed to initialize semaphore.");
-
-	return spdk_event_allocate(core, fn, arg1, sem);
-}
-
-static int
-vhost_sem_timedwait(sem_t *sem, unsigned sec)
-{
-	struct timespec timeout;
-	int rc;
-
-	clock_gettime(CLOCK_REALTIME, &timeout);
-	timeout.tv_sec += sec;
-
-	rc = sem_timedwait(sem, &timeout);
-	sem_destroy(sem);
-
-	return rc;
-}
-
-static void
 add_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg1;
@@ -626,14 +594,14 @@ remove_vdev_cb(void *arg1, void *arg2)
 	sem_t done_sem;
 	uint32_t i;
 
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, spdk_vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&svdev->requestq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
+	if (spdk_vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
 
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, spdk_vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&svdev->controlq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
+	if (spdk_vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
 
 	/* Wait for all tasks to finish */
@@ -694,8 +662,9 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	vdev->name =  strdup(name);
 	vdev->cpumask = cpumask;
 	vdev->lcore = -1;
+	vdev->backend = &spdk_vhost_scsi_device_backend;
 
-	rc = spdk_vhost_dev_register(vdev, &spdk_vhost_scsi_device_backend);
+	rc = spdk_vhost_dev_register(vdev);
 	if (rc < 0) {
 		free(vdev->name);
 		spdk_free(svdev);
@@ -895,49 +864,6 @@ spdk_vhost_scsi_controller_construct(void)
 	}
 
 	return 0;
-}
-
-/*
- * A new device is added to a data core. First the device is added to the main linked list
- * and then allocated to a specific data core.
- */
-static int
-new_device(int vid)
-{
-	struct spdk_vhost_dev *vdev = NULL;
-	struct spdk_event *event;
-	sem_t added;
-
-	vdev = spdk_vhost_dev_load(vid);
-	if (vdev == NULL) {
-		return -1;
-	}
-
-	event = vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
-	spdk_event_call(event);
-	if (vhost_sem_timedwait(&added, 5))
-		rte_panic("Failed to register new device '%s'\n", vdev->name);
-	return 0;
-}
-
-static void
-destroy_device(int vid)
-{
-	struct spdk_vhost_dev *vdev;
-	struct spdk_event *event;
-	sem_t done_sem;
-
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
-	}
-
-	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, vdev, &done_sem);
-	spdk_event_call(event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister poller.\n", vdev->name);
-
-	spdk_vhost_dev_unload(vdev);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost", SPDK_TRACE_VHOST)

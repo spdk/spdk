@@ -50,6 +50,14 @@ static char dev_dirname[PATH_MAX] = "";
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
+static int new_device(int vid);
+static void destroy_device(int vid);
+
+struct vhost_device_ops g_spdk_vhost_device_ops =  {
+	.new_device = new_device,
+	.destroy_device = destroy_device
+};
+
 static void spdk_vhost_free_reactor(uint32_t lcore);
 static uint32_t spdk_vhost_allocate_reactor(uint64_t cpumask);
 
@@ -141,7 +149,38 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
-struct spdk_vhost_dev *
+void
+spdk_vdev_event_done_cb(void *arg1, void *arg2)
+{
+	sem_post((sem_t *)arg2);
+}
+
+struct spdk_event *
+spdk_vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem)
+{
+	if (sem_init(sem, 0, 0) < 0)
+		rte_panic("Failed to initialize semaphore.");
+
+	return spdk_event_allocate(core, fn, arg1, sem);
+}
+
+int
+spdk_vhost_sem_timedwait(sem_t *sem, unsigned sec)
+{
+	struct timespec timeout;
+	int rc;
+
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += sec;
+
+	rc = sem_timedwait(sem, &timeout);
+	sem_destroy(sem);
+
+	return rc;
+}
+
+
+static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
 	unsigned i;
@@ -157,7 +196,7 @@ spdk_vhost_dev_find_by_vid(int vid)
 	return NULL;
 }
 
-void
+static void
 spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_vring *q;
@@ -174,7 +213,7 @@ spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 	vdev->lcore = -1;
 }
 
-struct spdk_vhost_dev *
+static struct spdk_vhost_dev *
 spdk_vhost_dev_load(int vid)
 {
 	struct spdk_vhost_dev *vdev;
@@ -281,8 +320,7 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 }
 
 int
-spdk_vhost_dev_register(struct spdk_vhost_dev *vdev,
-			const struct spdk_vhost_dev_backend *backend)
+spdk_vhost_dev_register(struct spdk_vhost_dev *vdev)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -330,13 +368,13 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev,
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;
 	}
-	if (rte_vhost_driver_set_features(path, backend->virtio_features) ||
-	    rte_vhost_driver_disable_features(path, backend->disabled_features)) {
+	if (rte_vhost_driver_set_features(path, vdev->backend->virtio_features) ||
+	    rte_vhost_driver_disable_features(path, vdev->backend->disabled_features)) {
 		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", vdev->name);
 		return -EINVAL;
 	}
 
-	if (rte_vhost_driver_callback_register(path, &backend->ops) != 0) {
+	if (rte_vhost_driver_callback_register(path, &g_spdk_vhost_device_ops) != 0) {
 		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", vdev->name);
 		return -ENOENT;
 	}
@@ -483,6 +521,49 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 
 	g_num_ctrlrs[selected_core]++;
 	return selected_core;
+}
+
+/*
+ * A new device is added to a data core. First the device is added to the main linked list
+ * and then allocated to a specific data core.
+ */
+static int
+new_device(int vid)
+{
+	struct spdk_vhost_dev *vdev = NULL;
+	struct spdk_event *event;
+	sem_t added;
+
+	vdev = spdk_vhost_dev_load(vid);
+	if (vdev == NULL) {
+		return -1;
+	}
+
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, vdev->backend->new_device_cb, vdev, &added);
+	spdk_event_call(event);
+	if (spdk_vhost_sem_timedwait(&added, 5))
+		rte_panic("Failed to register new device '%s'\n", vdev->name);
+	return 0;
+}
+
+static void
+destroy_device(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+	struct spdk_event *event;
+	sem_t done_sem;
+
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
+	}
+
+	event = spdk_vhost_sem_event_alloc(vdev->lcore, vdev->backend->destroy_device_cb, vdev, &done_sem);
+	spdk_event_call(event);
+	if (spdk_vhost_sem_timedwait(&done_sem, 1))
+		rte_panic("%s: failed to unregister poller.\n", vdev->name);
+
+	spdk_vhost_dev_unload(vdev);
 }
 
 void
