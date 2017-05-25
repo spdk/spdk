@@ -27,7 +27,7 @@ NETMASK=$INITIATOR_IP/32
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
-$ISCSI_APP -c $testdir/iscsi.conf -m 0xFFFF &
+$ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
 pid=$!
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
