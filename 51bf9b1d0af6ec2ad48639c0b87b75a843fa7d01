@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c603c0a7_d81ff596",
+        "filename": "app/stub/stub.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T06:07:06Z",
+      "side": 1,
+      "message": "Maybe we can set NULL for this callback if nothing is done in the attach_cb",
+      "range": {
+        "startLine": 103,
+        "startChar": 39,
+        "endLine": 103,
+        "endChar": 48
+      },
+      "revId": "51bf9b1d0af6ec2ad48639c0b87b75a843fa7d01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5516057f_545541e3",
+        "filename": "app/stub/stub.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T06:07:06Z",
+      "side": 1,
+      "message": "It\u0027s better to check the return value here.",
+      "range": {
+        "startLine": 103,
+        "startChar": 1,
+        "endLine": 103,
+        "endChar": 16
+      },
+      "revId": "51bf9b1d0af6ec2ad48639c0b87b75a843fa7d01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c33e49ed_9030c4e3",
+        "filename": "app/stub/stub.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T06:07:06Z",
+      "side": 1,
+      "message": "So that this stub is get killed for the termination? what about adding a \"-t\" parameter. In this case, if there is \"-t\" set, it can exit normally. If no \"-t\", will be killed.",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 2
+      },
+      "revId": "51bf9b1d0af6ec2ad48639c0b87b75a843fa7d01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
