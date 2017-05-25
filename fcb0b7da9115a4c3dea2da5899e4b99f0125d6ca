@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cbaefa7c_07fd6642",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-05-25T23:20:35Z",
+      "side": 1,
+      "message": "A lots of unit test code is influenced, so I did not change it.",
+      "parentUuid": "09ff7d0e_59376fd1",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff50e105_48376c2c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 13
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "df19b1bb_bf98bd8d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-05-25T23:20:35Z",
+      "side": 1,
+      "message": "How about influencing the unit test?",
+      "parentUuid": "ff50e105_48376c2c",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f937bc2f_f1009f4f",
         "filename": "lib/event/reactor.c",
         "patchSetId": 13
@@ -47,6 +83,24 @@
       "writtenOn": "2017-05-25T21:21:46Z",
       "side": 1,
       "message": "I\u0027m just curious why this needs to be added?",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7470eeb_0219a7d5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-05-25T23:20:35Z",
+      "side": 1,
+      "message": "It is needed to not start reactor if there is an error in subsystem initialization.",
+      "parentUuid": "f937bc2f_f1009f4f",
       "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
