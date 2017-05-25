@@ -155,7 +155,7 @@ cleanup(void)
 
 	foreach_dev(dev) {
 		if (dev->health_page) {
-			spdk_free(dev->health_page);
+			spdk_dma_free(dev->health_page);
 		}
 	}
 }
@@ -270,7 +270,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	printf("Attached to %s\n", dev->name);
 
-	dev->health_page = spdk_zmalloc(sizeof(*dev->health_page), 4096, NULL);
+	dev->health_page = spdk_dma_zmalloc(sizeof(*dev->health_page), 4096, NULL);
 	if (dev->health_page == NULL) {
 		printf("Allocation error (health page)\n");
 		failed = 1;

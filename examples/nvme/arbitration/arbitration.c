@@ -297,9 +297,9 @@ static void
 task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct arb_task *task = __task;
-	task->buf = spdk_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
+	task->buf = spdk_dma_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
 	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf spdk_zmalloc failed\n");
+		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
 }
@@ -441,7 +441,7 @@ cleanup(void)
 	};
 
 	if (rte_mempool_get(task_pool, (void **)&task) == 0) {
-		spdk_free(task->buf);
+		spdk_dma_free(task->buf);
 	}
 
 }

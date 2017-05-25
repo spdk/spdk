@@ -375,8 +375,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 		exit(1);
 	}
 
-	entry->latency_page = spdk_zmalloc(sizeof(struct spdk_nvme_intel_rw_latency_page),
-					   4096, NULL);
+	entry->latency_page = spdk_dma_zmalloc(sizeof(struct spdk_nvme_intel_rw_latency_page),
+					       4096, NULL);
 	if (entry->latency_page == NULL) {
 		printf("Allocation error (latency page)\n");
 		exit(1);
@@ -516,9 +516,9 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
-	task->buf = spdk_zmalloc(g_io_size_bytes, g_io_align, NULL);
+	task->buf = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
 	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf spdk_zmalloc failed\n");
+		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
 	memset(task->buf, id % 8, g_io_size_bytes);
@@ -1314,7 +1314,7 @@ unregister_controllers(void)
 
 	while (entry) {
 		struct ctrlr_entry *next = entry->next;
-		spdk_free(entry->latency_page);
+		spdk_dma_free(entry->latency_page);
 		if (g_latency_ssd_tracking_enable &&
 		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
 			set_latency_tracking_feature(entry->ctrlr, false);
