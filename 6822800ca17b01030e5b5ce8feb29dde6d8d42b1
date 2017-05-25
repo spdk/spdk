@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4ac5977c_ff1fadaf",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T17:07:29Z",
+      "side": 1,
+      "message": "\u003d and \u003d\u003d are equivalent so this is ok - i was mainly suggesting that the operators should be consistent",
+      "parentUuid": "655cf3e4_74aaf143",
+      "range": {
+        "startLine": 134,
+        "startChar": 26,
+        "endLine": 134,
+        "endChar": 27
+      },
+      "revId": "6822800ca17b01030e5b5ce8feb29dde6d8d42b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3bd6b392_2410258c",
         "filename": "configure",
         "patchSetId": 1
