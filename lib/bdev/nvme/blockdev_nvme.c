@@ -115,7 +115,7 @@ static int g_hot_insert_nvme_controller_index = 0;
 static enum timeout_action g_action_on_timeout = TIMEOUT_ACTION_NONE;
 static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
-static bool g_nvme_hotplug_enabled;
+static bool g_nvme_hotplug_enabled = false;
 static int g_nvme_hotplug_poll_timeout_us = 0;
 static int g_nvme_hotplug_poll_core = 0;
 static struct spdk_poller *g_hotplug_poller;
@@ -848,7 +848,9 @@ bdev_nvme_library_init(void)
 		g_nvme_adminq_poll_timeout_us = 1000000;
 	}
 
-	g_nvme_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", true);
+	if (spdk_process_is_primary()) {
+		g_nvme_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", true);
+	}
 
 	g_nvme_hotplug_poll_timeout_us = spdk_conf_section_get_intval(sp, "HotplugPollRate");
 	if (g_nvme_hotplug_poll_timeout_us <= 0 || g_nvme_hotplug_poll_timeout_us > 100000) {
