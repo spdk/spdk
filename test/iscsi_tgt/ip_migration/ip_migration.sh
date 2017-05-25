@@ -45,7 +45,7 @@ do
 	timing_enter start_iscsi_tgt_$i
 
 	# TODO: run the different iSCSI instances on non-overlapping CPU masks
-	$ISCSI_APP -c $testdir/iscsi.conf.$i -s 1000 -i $i -m 0xFFFF &
+	$ISCSI_APP -c $testdir/iscsi.conf.$i -s 1000 -i $i -m $ISCSI_TEST_CORE_MASK &
 	pid=$!
 	echo "Process pid: $pid"
 

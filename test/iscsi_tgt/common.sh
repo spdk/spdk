@@ -11,3 +11,7 @@ fi
 if [ -z "$ISCSI_APP" ]; then
 	ISCSI_APP=./app/iscsi_tgt/iscsi_tgt
 fi
+
+if [ -z "$ISCSI_TEST_CORE_MASK" ]; then
+	ISCSI_TEST_CORE_MASK=0xFFFF
+fi
