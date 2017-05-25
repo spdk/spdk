@@ -619,9 +619,31 @@ add_vdev_cb(void *arg1, void *arg2)
 static void
 remove_vdev_cb(void *arg1, void *arg2)
 {
-	struct spdk_vhost_scsi_dev *svdev = arg1;
+	struct spdk_vhost_dev *vdev = arg1;
+	struct spdk_vhost_scsi_dev *svdev = (struct spdk_vhost_scsi_dev *) arg1;
 	struct rte_vhost_mem_region *region;
+	struct spdk_event *event;
+	sem_t done_sem;
 	uint32_t i;
+
+	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	spdk_poller_unregister(&svdev->requestq_poller, event);
+	if (vhost_sem_timedwait(&done_sem, 1))
+		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
+
+	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+	spdk_poller_unregister(&svdev->controlq_poller, event);
+	if (vhost_sem_timedwait(&done_sem, 1))
+		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
+
+	/* Wait for all tasks to finish */
+	for (i = 1000; i && vdev->task_cnt > 0; i--) {
+		usleep(1000);
+	}
+
+	if (vdev->task_cnt > 0) {
+		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
+	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
 		if (svdev->scsi_dev[i] == NULL) {
@@ -893,7 +915,7 @@ new_device(int vid)
 
 	event = vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
 	spdk_event_call(event);
-	if (vhost_sem_timedwait(&added, 1))
+	if (vhost_sem_timedwait(&added, 5))
 		rte_panic("Failed to register new device '%s'\n", vdev->name);
 	return 0;
 }
@@ -901,38 +923,16 @@ new_device(int vid)
 static void
 destroy_device(int vid)
 {
-	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_event *event;
 	sem_t done_sem;
-	uint32_t i;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
 		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
 	}
-	svdev = (struct spdk_vhost_scsi_dev *) vdev;
 
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
-	spdk_poller_unregister(&svdev->requestq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
-
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
-	spdk_poller_unregister(&svdev->controlq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
-
-	/* Wait for all tasks to finish */
-	for (i = 1000; i && vdev->task_cnt > 0; i--) {
-		usleep(1000);
-	}
-
-	if (vdev->task_cnt > 0) {
-		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
-	}
-
-	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, svdev, &done_sem);
+	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, vdev, &done_sem);
 	spdk_event_call(event);
 	if (vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister poller.\n", vdev->name);
