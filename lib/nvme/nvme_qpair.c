@@ -381,7 +381,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	req_size_padded = (sizeof(struct nvme_request) + 63) & ~(size_t)63;
 
-	qpair->req_buf = spdk_zmalloc(req_size_padded * num_requests, 64, NULL);
+	qpair->req_buf = spdk_dma_zmalloc(req_size_padded * num_requests, 64, NULL);
 	if (qpair->req_buf == NULL) {
 		return -ENOMEM;
 	}

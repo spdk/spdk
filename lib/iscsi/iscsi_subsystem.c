@@ -617,7 +617,7 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.MaxSessions = MaxSessions;
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
 
-	g_spdk_iscsi.session = spdk_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
+	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
 		perror("Unable to allocate session pointer array\n");
 		return -1;

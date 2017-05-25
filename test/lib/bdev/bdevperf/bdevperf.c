@@ -287,7 +287,7 @@ task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct bdevperf_task *task = __task;
 
-	task->buf = spdk_zmalloc(g_io_size, g_min_alignment, NULL);
+	task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
 }
 
 static __thread unsigned int seed = 0;

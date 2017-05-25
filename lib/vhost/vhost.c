@@ -104,7 +104,7 @@ static void
 spdk_vhost_dev_free(struct spdk_vhost_dev *dev)
 {
 	free(dev->mem);
-	spdk_free(dev);
+	spdk_dma_free(dev);
 }
 
 static void
@@ -126,7 +126,7 @@ spdk_vhost_dev_create(int vid)
 {
 	uint16_t num_queues = rte_vhost_get_vring_num(vid);
 	size_t size = sizeof(struct spdk_vhost_dev) + num_queues * sizeof(struct rte_vhost_vring);
-	struct spdk_vhost_dev *dev = spdk_zmalloc(size, SPDK_CACHE_LINE_SIZE, NULL);
+	struct spdk_vhost_dev *dev = spdk_dma_zmalloc(size, SPDK_CACHE_LINE_SIZE, NULL);
 	uint16_t i;
 
 	if (dev == NULL) {
@@ -980,7 +980,7 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 		return -ENOENT;
 	}
 
-	vdev = spdk_zmalloc(sizeof(*vdev), RTE_CACHE_LINE_SIZE, NULL);
+	vdev = spdk_dma_zmalloc(sizeof(*vdev), RTE_CACHE_LINE_SIZE, NULL);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
 		return -ENOMEM;
@@ -994,7 +994,7 @@ spdk_vhost_scsi_ctrlr_construct(const char *name, uint64_t cpumask)
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", name, errno,
 			    strerror(errno));
 		free(vdev->name);
-		spdk_free(vdev);
+		spdk_dma_free(vdev);
 		return -EIO;
 	}
 
@@ -1048,7 +1048,7 @@ spdk_vhost_scsi_ctrlr_remove(struct spdk_vhost_scsi_ctrlr *vdev)
 	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
 
 	free(vdev->name);
-	spdk_free(spdk_vhost_ctrlrs[ctrlr_num]);
+	spdk_dma_free(spdk_vhost_ctrlrs[ctrlr_num]);
 	spdk_vhost_ctrlrs[ctrlr_num] = NULL;
 
 	return 0;

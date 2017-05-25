@@ -63,7 +63,7 @@ blockdev_null_destruct(void *ctx)
 	struct null_bdev *bdev = ctx;
 
 	TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
-	spdk_free(bdev);
+	spdk_dma_free(bdev);
 
 	return 0;
 }
@@ -135,7 +135,7 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	bdev = spdk_zmalloc(sizeof(*bdev), 0, NULL);
+	bdev = spdk_dma_zmalloc(sizeof(*bdev), 0, NULL);
 	if (!bdev) {
 		SPDK_ERRLOG("could not allocate null_bdev\n");
 		return NULL;
@@ -186,7 +186,7 @@ blockdev_null_initialize(void)
 	 *  Instead of using a real rbuf from the bdev pool, just always point to
 	 *  this same zeroed buffer.
 	 */
-	g_null_read_buf = spdk_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0, NULL);
+	g_null_read_buf = spdk_dma_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0, NULL);
 
 	/*
 	 * We need to pick some unique address as our "io device" - so just use the
@@ -256,7 +256,7 @@ blockdev_null_finish(void)
 
 	TAILQ_FOREACH_SAFE(bdev, &g_null_bdev_head, tailq, tmp) {
 		TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
-		spdk_free(bdev);
+		spdk_dma_free(bdev);
 	}
 }
 
