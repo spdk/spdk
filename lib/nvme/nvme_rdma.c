@@ -574,7 +574,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 
 	rctrlr = nvme_rdma_ctrlr(ctrlr);
 
-	nvmf_data = spdk_zmalloc(sizeof(*nvmf_data), 0, NULL);
+	nvmf_data = spdk_dma_zmalloc(sizeof(*nvmf_data), 0, NULL);
 	if (!nvmf_data) {
 		SPDK_ERRLOG("nvmf_data allocation error\n");
 		rc = -1;
@@ -623,7 +623,7 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 	rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
 	rctrlr->cntlid = rsp->status_code_specific.success.cntlid;
 ret:
-	spdk_free(nvmf_data);
+	spdk_dma_free(nvmf_data);
 	return rc;
 }
 

@@ -108,7 +108,7 @@ read_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 *  to exit its polling loop.
 	 */
 	printf("%s", sequence->buf);
-	spdk_free(sequence->buf);
+	spdk_dma_free(sequence->buf);
 	sequence->is_completed = 1;
 }
 
@@ -124,8 +124,8 @@ write_complete(void *arg, const struct spdk_nvme_cpl *completion)
 	 *  the write I/O and allocate a new zeroed buffer for reading
 	 *  the data back from the NVMe namespace.
 	 */
-	spdk_free(sequence->buf);
-	sequence->buf = spdk_zmalloc(0x1000, 0x1000, NULL);
+	spdk_dma_free(sequence->buf);
+	sequence->buf = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
 
 	rc = spdk_nvme_ns_cmd_read(ns_entry->ns, ns_entry->qpair, sequence->buf,
 				   0, /* LBA start */
@@ -165,11 +165,11 @@ hello_world(void)
 		}
 
 		/*
-		 * Use spdk_zmalloc to allocate a 4KB zeroed buffer.  This memory
+		 * Use spdk_dma_zmalloc to allocate a 4KB zeroed buffer.  This memory
 		 * will be pinned, which is required for data buffers used for SPDK NVMe
 		 * I/O operations.
 		 */
-		sequence.buf = spdk_zmalloc(0x1000, 0x1000, NULL);
+		sequence.buf = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
 		sequence.is_completed = 0;
 		sequence.ns_entry = ns_entry;
 

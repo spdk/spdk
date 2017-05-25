@@ -1319,7 +1319,7 @@ __rw_done(void *ctx, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	spdk_free(args->op.rw.pin_buf);
+	spdk_dma_free(args->op.rw.pin_buf);
 	args->fn.file_op(args->arg, bserrno);
 	free_fs_request(req);
 }
@@ -1404,7 +1404,7 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 
 	__get_page_parameters(file, offset, length, &start_page, &page_size, &num_pages);
 	pin_buf_length = num_pages * page_size;
-	args->op.rw.pin_buf = spdk_malloc(pin_buf_length, 4096, NULL);
+	args->op.rw.pin_buf = spdk_dma_malloc(pin_buf_length, 4096, NULL);
 
 	args->op.rw.start_page = start_page;
 	args->op.rw.num_pages = num_pages;

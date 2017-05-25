@@ -747,7 +747,7 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -EINVAL;
 	}
 
-	svdev = spdk_zmalloc(sizeof(*svdev), SPDK_CACHE_LINE_SIZE, NULL);
+	svdev = spdk_dma_zmalloc(sizeof(*svdev), SPDK_CACHE_LINE_SIZE, NULL);
 	if (svdev == NULL) {
 		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
 		return -ENOMEM;
@@ -761,7 +761,7 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	rc = spdk_vhost_dev_register(vdev, &spdk_vhost_scsi_device_backend);
 	if (rc < 0) {
 		free(vdev->name);
-		spdk_free(svdev);
+		spdk_dma_free(svdev);
 	}
 
 	return rc;
@@ -793,7 +793,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 	 * it should be already *destructed* (spdk_vhost_dev_destruct)
 	 */
 	free(vdev->name);
-	spdk_free(svdev);
+	spdk_dma_free(svdev);
 
 	return 0;
 }

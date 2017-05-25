@@ -142,7 +142,7 @@ nvme_user_copy_cmd_complete(void *arg, const struct spdk_nvme_cpl *cpl)
 			memcpy(req->user_buffer, req->payload.u.contig, req->payload_size);
 		}
 
-		spdk_free(req->payload.u.contig);
+		spdk_dma_free(req->payload.u.contig);
 	}
 
 	/* Call the user's original callback now that the buffer has been copied */
@@ -165,7 +165,7 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 	uint64_t phys_addr;
 
 	if (buffer && payload_size) {
-		contig_buffer = spdk_zmalloc(payload_size, 4096, &phys_addr);
+		contig_buffer = spdk_dma_zmalloc(payload_size, 4096, &phys_addr);
 		if (!contig_buffer) {
 			return NULL;
 		}
@@ -178,7 +178,7 @@ nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpair,
 	req = nvme_allocate_request_contig(qpair, contig_buffer, payload_size, nvme_user_copy_cmd_complete,
 					   NULL);
 	if (!req) {
-		spdk_free(contig_buffer);
+		spdk_dma_free(contig_buffer);
 		return NULL;
 	}
 

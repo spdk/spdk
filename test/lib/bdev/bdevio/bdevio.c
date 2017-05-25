@@ -165,7 +165,7 @@ static bool g_completion_success;
 static void
 initialize_buffer(char **buf, int pattern, int size)
 {
-	*buf = spdk_zmalloc(size, 0x1000, NULL);
+	*buf = spdk_dma_zmalloc(size, 0x1000, NULL);
 	memset(*buf, pattern, size);
 }
 
@@ -284,8 +284,8 @@ blockdev_write_read_data_match(char *rx_buf, char *tx_buf, int data_length)
 	int rc;
 	rc = memcmp(rx_buf, tx_buf, data_length);
 
-	spdk_free(rx_buf);
-	spdk_free(tx_buf);
+	spdk_dma_free(rx_buf);
+	spdk_dma_free(tx_buf);
 
 	return rc;
 }

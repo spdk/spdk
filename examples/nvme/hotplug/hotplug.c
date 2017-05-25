@@ -147,7 +147,7 @@ unregister_dev(struct dev_ctx *dev)
 static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
 {
 	struct perf_task *task = __task;
-	task->buf = spdk_zmalloc(g_io_size_bytes, 0x200, NULL);
+	task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x200, NULL);
 	if (task->buf == NULL) {
 		fprintf(stderr, "task->buf rte_malloc failed\n");
 		exit(1);

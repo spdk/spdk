@@ -43,7 +43,7 @@
 #include <rte_version.h>
 
 void *
-spdk_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
 {
 	void *buf = rte_malloc_socket(NULL, size, align, socket_id);
 	if (buf && phys_addr) {
@@ -53,9 +53,9 @@ spdk_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id
 }
 
 void *
-spdk_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
 {
-	void *buf = spdk_malloc_socket(size, align, phys_addr, socket_id);
+	void *buf = spdk_dma_malloc_socket(size, align, phys_addr, socket_id);
 	if (buf) {
 		memset(buf, 0, size);
 	}
@@ -63,19 +63,19 @@ spdk_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_i
 }
 
 void *
-spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	return spdk_malloc_socket(size, align, phys_addr, SPDK_ENV_SOCKET_ID_ANY);
+	return spdk_dma_malloc_socket(size, align, phys_addr, SPDK_ENV_SOCKET_ID_ANY);
 }
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	return spdk_zmalloc_socket(size, align, phys_addr, SPDK_ENV_SOCKET_ID_ANY);
+	return spdk_dma_zmalloc_socket(size, align, phys_addr, SPDK_ENV_SOCKET_ID_ANY);
 }
 
 void *
-spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *new_buf = rte_realloc(buf, size, align);
 	if (new_buf && phys_addr) {
@@ -85,7 +85,7 @@ spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void
-spdk_free(void *buf)
+spdk_dma_free(void *buf)
 {
 	rte_free(buf);
 }

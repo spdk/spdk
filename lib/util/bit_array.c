@@ -73,7 +73,7 @@ spdk_bit_array_free(struct spdk_bit_array **bap)
 
 	ba = *bap;
 	*bap = NULL;
-	spdk_free(ba);
+	spdk_dma_free(ba);
 }
 
 static inline uint32_t
@@ -109,7 +109,7 @@ spdk_bit_array_resize(struct spdk_bit_array **bap, uint32_t num_bits)
 	 */
 	new_size += SPDK_BIT_ARRAY_WORD_BYTES;
 
-	new_ba = (struct spdk_bit_array *)spdk_realloc(*bap, new_size, 64, NULL);
+	new_ba = (struct spdk_bit_array *)spdk_dma_realloc(*bap, new_size, 64, NULL);
 	if (!new_ba) {
 		return -ENOMEM;
 	}

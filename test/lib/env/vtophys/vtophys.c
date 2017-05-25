@@ -83,18 +83,18 @@ vtophys_positive_test(void)
 	int rc = 0;
 
 	for (i = 0; i < 31; i++) {
-		p = spdk_zmalloc(size, 512, NULL);
+		p = spdk_dma_zmalloc(size, 512, NULL);
 		if (p == NULL)
 			continue;
 
 		if (spdk_vtophys(p) == SPDK_VTOPHYS_ERROR) {
 			rc = -1;
 			printf("Err: VA=%p is not mapped to a huge_page,\n", p);
-			spdk_free(p);
+			spdk_dma_free(p);
 			break;
 		}
 
-		spdk_free(p);
+		spdk_dma_free(p);
 		size = size << 1;
 	}
 

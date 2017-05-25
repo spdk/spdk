@@ -76,37 +76,37 @@ void spdk_env_init(const struct spdk_env_opts *opts);
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment.
  */
-void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size, alignment and socket id.
  */
-void *spdk_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
+void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment. The buffer will be zeroed.
  */
-void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size, alignment and socket id. The buffer will be zeroed.
  */
-void *spdk_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
+void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
 
 /**
  * Resize the allocated and pinned memory buffer with the given
  *   new size and alignment. Existing contents are preserved.
  */
-void *spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
+void *spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
 
 /**
- * Free a memory buffer previously allocated with spdk_zmalloc.
+ * Free a memory buffer previously allocated with spdk_dma_zmalloc.
  *   This call is never made from the performance path.
  */
-void spdk_free(void *buf);
+void spdk_dma_free(void *buf);
 
 /**
  * Reserve a named, process shared memory zone with the given size,

@@ -36,7 +36,7 @@
 #include "spdk/env.h"
 
 void *
-spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = NULL;
 	if (posix_memalign(&buf, align, size)) {
@@ -49,9 +49,9 @@ spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void *
-spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	void *buf = spdk_malloc(size, align, phys_addr);
+	void *buf = spdk_dma_malloc(size, align, phys_addr);
 
 	if (buf != NULL) {
 		memset(buf, 0, size);
@@ -60,24 +60,24 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 }
 
 void *
-spdk_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
 {
-	return spdk_malloc(size, align, phys_addr);
+	return spdk_dma_malloc(size, align, phys_addr);
 }
 
 void *
-spdk_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
+spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
 {
-	return spdk_zmalloc(size, align, phys_addr);
+	return spdk_dma_zmalloc(size, align, phys_addr);
 }
 
 void *
-spdk_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
+spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 {
 	return realloc(buf, size);
 }
 
-void spdk_free(void *buf)
+void spdk_dma_free(void *buf)
 {
 	free(buf);
 }

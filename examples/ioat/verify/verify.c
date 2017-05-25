@@ -359,7 +359,7 @@ init_src_buffer(void)
 {
 	int i;
 
-	g_src = spdk_zmalloc(SRC_BUFFER_SIZE, 512, NULL);
+	g_src = spdk_dma_zmalloc(SRC_BUFFER_SIZE, 512, NULL);
 	if (g_src == NULL) {
 		fprintf(stderr, "Allocate src buffer failed\n");
 		return -1;
@@ -476,7 +476,7 @@ main(int argc, char **argv)
 	rc = dump_result(threads, RTE_MAX_LCORE);
 
 cleanup:
-	spdk_free(g_src);
+	spdk_dma_free(g_src);
 	ioat_exit();
 
 	return rc;
