@@ -100,12 +100,6 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	}
 };
 
-static uint64_t
-gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
-{
-	return rte_vhost_gpa_to_vva(vdev->mem, addr);
-}
-
 static void task_submit(struct spdk_vhost_task *task);
 static int process_request(struct spdk_vhost_task *task);
 static void invalid_request(struct spdk_vhost_task *task);
@@ -252,7 +246,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 	struct virtio_scsi_ctrl_an_resp *an_resp;
 
 	desc = spdk_vhost_vq_get_desc(controlq, req_idx);
-	ctrl_req = (void *)gpa_to_vva(&svdev->vdev, desc->addr);
+	ctrl_req = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
@@ -273,7 +267,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		/* Get the response buffer */
 		assert(spdk_vhost_vring_desc_has_next(desc));
 		desc = spdk_vhost_vring_desc_get_next(controlq->desc, desc);
-		task->tmf_resp = (void *)gpa_to_vva(&svdev->vdev, desc->addr);
+		task->tmf_resp = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
 
 		/* Check if we are processing a valid request */
 		if (task->scsi_dev == NULL) {
@@ -299,7 +293,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
 		desc = spdk_vhost_vring_desc_get_next(controlq->desc, desc);
-		an_resp = (void *)gpa_to_vva(&svdev->vdev, desc->addr);
+		an_resp = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
 		an_resp->response = VIRTIO_SCSI_S_ABORTED;
 		break;
 	}
@@ -339,7 +333,7 @@ task_data_setup(struct spdk_vhost_task *task,
 		goto abort_task;
 	}
 
-	*req = (void *)gpa_to_vva(vdev, desc->addr);
+	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 
 	desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
 	task->scsi.dxfer_dir = spdk_vhost_vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV :
@@ -349,7 +343,7 @@ task_data_setup(struct spdk_vhost_task *task,
 		/*
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
-		task->resp = (void *)gpa_to_vva(vdev, desc->addr);
+		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 		if (!spdk_vhost_vring_desc_has_next(desc)) {
 			/*
 			 * TEST UNIT READY command and some others might not contain any payload and this is not an error.
@@ -376,7 +370,7 @@ task_data_setup(struct spdk_vhost_task *task,
 
 		/* All remaining descriptors are data. */
 		while (iovcnt < iovcnt_max) {
-			iovs[iovcnt].iov_base = (void *)gpa_to_vva(vdev, desc->addr);
+			iovs[iovcnt].iov_base = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 			iovs[iovcnt].iov_len = desc->len;
 			len += desc->len;
 			iovcnt++;
@@ -413,7 +407,7 @@ task_data_setup(struct spdk_vhost_task *task,
 
 		/* Process descriptors up to response. */
 		while (!spdk_vhost_vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
-			iovs[iovcnt].iov_base = (void *)gpa_to_vva(vdev, desc->addr);
+			iovs[iovcnt].iov_base = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 			iovs[iovcnt].iov_len = desc->len;
 			len += desc->len;
 			iovcnt++;
@@ -427,7 +421,7 @@ task_data_setup(struct spdk_vhost_task *task,
 			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
 		}
 
-		task->resp = (void *)gpa_to_vva(vdev, desc->addr);
+		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 		if (spdk_vhost_vring_desc_has_next(desc)) {
 			SPDK_WARNLOG("TO_DEV cmd: ignoring unexpected descriptors after response descriptor.\n");
 		}
