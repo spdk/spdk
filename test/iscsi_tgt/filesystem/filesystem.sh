@@ -18,7 +18,7 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
 
-$ISCSI_APP -c $testdir/iscsi.conf -m 0xFFFF &
+$ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
 pid=$!
 echo "Process pid: $pid"
 
