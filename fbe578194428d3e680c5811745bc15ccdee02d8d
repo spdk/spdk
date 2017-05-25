@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43325835_021aba72",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T23:44:32Z",
+      "side": 1,
+      "message": "Looks like this zero operation has done when allocating the ch memory in spdk_get_io_channel()",
+      "range": {
+        "startLine": 519,
+        "startChar": 1,
+        "endLine": 519,
+        "endChar": 40
+      },
+      "revId": "fbe578194428d3e680c5811745bc15ccdee02d8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0462634b_bd0cbe8b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T23:44:32Z",
+      "side": 1,
+      "message": "So far this new func is called no where? Do we have any chance that the accumulated read len and write len will overflow as they are accumulated on each IO?",
+      "range": {
+        "startLine": 865,
+        "startChar": 0,
+        "endLine": 865,
+        "endChar": 21
+      },
+      "revId": "fbe578194428d3e680c5811745bc15ccdee02d8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
