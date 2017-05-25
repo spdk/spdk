@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27f03807_5ec527ab",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1003,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-25T10:35:46Z",
+      "side": 1,
+      "message": "you can simply change this to\n\nif(svdev-\u003evdev.lcore !\u003d -1) {\n\nthis way you don\u0027t need vdev varialbe here.",
+      "range": {
+        "startLine": 1002,
+        "startChar": 0,
+        "endLine": 1003,
+        "endChar": 25
+      },
+      "revId": "7f04c370d176237b60f3e5a911de8837893b8623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "021f0f5a_90f8969b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1044,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-25T10:35:46Z",
+      "side": 1,
+      "message": "This is double free here.",
+      "range": {
+        "startLine": 1044,
+        "startChar": 1,
+        "endLine": 1044,
+        "endChar": 18
+      },
+      "revId": "7f04c370d176237b60f3e5a911de8837893b8623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c80d108_8df12cdb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1118,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-25T10:35:46Z",
+      "side": 1,
+      "message": "The same like in line 1003",
+      "range": {
+        "startLine": 1116,
+        "startChar": 0,
+        "endLine": 1118,
+        "endChar": 25
+      },
+      "revId": "7f04c370d176237b60f3e5a911de8837893b8623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2b0f8f3_35caabcc",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1153,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-25T10:35:46Z",
+      "side": 1,
+      "message": "The same like in line 1003",
+      "range": {
+        "startLine": 1151,
+        "startChar": 0,
+        "endLine": 1153,
+        "endChar": 25
+      },
+      "revId": "7f04c370d176237b60f3e5a911de8837893b8623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
