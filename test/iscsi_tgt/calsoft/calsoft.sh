@@ -28,6 +28,8 @@ mkdir -p /usr/local/etc
 cp $testdir/its.conf /usr/local/etc/
 cp $testdir/auth.conf /usr/local/etc/
 
+timing_enter start_iscsi_tgt
+
 $ISCSI_APP -c $testdir/iscsi.conf -m 0x1 &
 pid=$!
 echo "Process pid: $pid"
@@ -36,6 +38,8 @@ trap "killprocess $pid; exit 1 " SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
 echo "iscsi_tgt is listening. Running tests..."
+
+timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK

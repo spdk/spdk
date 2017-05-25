@@ -32,6 +32,8 @@ bdevs=$($rpc_py construct_malloc_bdev 64 512)
 $rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -s SPDK00000000000001 -n "$bdevs"
 echo "NVMf subsystem created."
 
+timing_enter start_iscsi_tgt
+
 # Start the iSCSI target
 $ISCSI_APP -c $testdir/iscsi.conf -m 0x1 -p 0 -s 512 &
 iscsipid=$!
@@ -40,6 +42,8 @@ trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 # The configuration file for the iSCSI target told it to use port 5261 for RPC
 waitforlisten $iscsipid 5261
 echo "iSCSI target has started."
+
+timing_exit start_iscsi_tgt
 
 echo "Creating an iSCSI target node."
 $rpc_py -p 5261 add_portal_group 1 $TARGET_IP:$ISCSI_PORT

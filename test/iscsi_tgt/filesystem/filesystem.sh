@@ -18,6 +18,8 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
 
+timing_enter start_iscsi_tgt
+
 $ISCSI_APP -c $testdir/iscsi.conf -m 0xFFFF &
 pid=$!
 echo "Process pid: $pid"
@@ -26,6 +28,8 @@ trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
 echo "iscsi_tgt is listening. Running tests..."
+
+timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK

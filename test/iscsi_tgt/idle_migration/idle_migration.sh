@@ -13,6 +13,8 @@ RPC_PORT=5260
 
 fio_py="python $rootdir/scripts/fio.py"
 
+timing_enter start_iscsi_tgt
+
 $ISCSI_APP -c $testdir/iscsi.conf -m 0xFFFF &
 pid=$!
 echo "Process pid: $pid"
@@ -21,6 +23,8 @@ trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
 echo "iscsi_tgt is listening. Running tests..."
+
+timing_exit start_iscsi_tgt
 
 $testdir/build_configuration.sh
 

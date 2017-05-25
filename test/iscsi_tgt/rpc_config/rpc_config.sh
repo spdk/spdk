@@ -19,6 +19,7 @@ MALLOC_BDEV_SIZE=64
 rpc_py=$rootdir/scripts/rpc.py
 rpc_config_py="python $testdir/rpc_config.py"
 
+timing_enter start_iscsi_tgt
 
 $ISCSI_APP -c $testdir/iscsi.conf &
 pid=$!
@@ -28,6 +29,8 @@ trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
 echo "iscsi_tgt is listening. Running tests..."
+
+timing_exit start_iscsi_tgt
 
 $rpc_config_py $rpc_py
 
