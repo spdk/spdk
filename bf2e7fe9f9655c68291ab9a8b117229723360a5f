@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29216e90_85e783a4",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T15:02:28Z",
+      "side": 1,
+      "message": "Another way to say the second sentence is:\n\nThis environment requires Vagrant 1.9.4 or newer and VirtualBox 5.1 or newer with the matching VirtualBox extension pack.\n\nI\u0027m certainly no expert in English, but I feel like \"minimum version of vagrant 1.9.4\" is missing a word or something.",
+      "revId": "bf2e7fe9f9655c68291ab9a8b117229723360a5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a434bb89_ed30c830",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T15:02:28Z",
+      "side": 1,
+      "message": "\"The idea behind...\" -\u003e This sentence, or one equivalent to it, should be in the Introduction section. I think it sets the stage nicely right up front.\n\nI\u0027m not sure saying \"just use the help\" is clear that you mean \"vagrant --help\". You do write out \"vagrant --help\" a bit below, but it isn\u0027t immediately obvious that\u0027s related to this paragraph. I suggest something like this:\n\nThis guide is intended to be enough to get the Vagrant VM up and running. For additional information on Vagrant see [here](link to vagrant docs) or type `vagrant --help`.",
+      "revId": "bf2e7fe9f9655c68291ab9a8b117229723360a5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9275b3af_61ab6339",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T15:02:28Z",
+      "side": 1,
+      "message": "At a minimum, let\u0027s put this log into a code block. You can do that with this syntax:\n\n~~~{.sh}\nlog here\n~~~\n\nI\u0027m not convinced the log is the best way to help people though. Maybe instead give them a few heuristics to check their system - like verifying that they have a device at /dev/nvme0 after they SSH in. My only concern with the log is that people will gloss over it because it is a long string of unfamiliar text.",
+      "revId": "bf2e7fe9f9655c68291ab9a8b117229723360a5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4550271_6b1b6b5c",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T15:02:28Z",
+      "side": 1,
+      "message": "Maybe tell the user to run\n\n~~~{.sh}\nlspci | grep \"Non-Volatile\"\n~~~\n\nafter doing the SSH to confirm they have an NVMe device. That\u0027s probably more useful than giving them the whole lspci output.",
+      "revId": "bf2e7fe9f9655c68291ab9a8b117229723360a5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
