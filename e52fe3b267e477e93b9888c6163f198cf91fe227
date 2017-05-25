@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f33875f_a0c29bad",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T23:25:34Z",
+      "side": 1,
+      "message": "Maybe we can move this check before the g_io_type_mask check. This is also consistent with above line 128.",
+      "range": {
+        "startLine": 135,
+        "startChar": 57,
+        "endLine": 135,
+        "endChar": 68
+      },
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4e3416b_e4f3c4fb",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T23:25:34Z",
+      "side": 1,
+      "message": "Where is the mutex locked? Shall call it before the INSERT_TAIL ?",
+      "range": {
+        "startLine": 142,
+        "startChar": 2,
+        "endLine": 142,
+        "endChar": 22
+      },
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
