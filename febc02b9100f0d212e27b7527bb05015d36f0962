@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f61441a_3d8dc352",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-25T05:58:20Z",
+      "side": 1,
+      "message": "Can we add a new function like spdk_iscsi_free_pools() to do this at the spdk_iscsi_subsystem_fini()? Here this function is to check pools...",
+      "range": {
+        "startLine": 480,
+        "startChar": 0,
+        "endLine": 486,
+        "endChar": 36
+      },
+      "revId": "febc02b9100f0d212e27b7527bb05015d36f0962",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
