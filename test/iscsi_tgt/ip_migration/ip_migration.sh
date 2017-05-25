@@ -42,7 +42,7 @@ do
 	port=$(($RPC_PORT + $i))
 	echo "Listen 127.0.0.1:$port" >> $testdir/iscsi.conf.$i
 	# TODO: run the different iSCSI instances on non-overlapping CPU masks
-	$ISCSI_APP -c $testdir/iscsi.conf.$i -s 1000 -i $i -m 0xFFFF &
+	$ISCSI_APP -c $testdir/iscsi.conf.$i -s 1000 -i $i -m $ISCSI_TEST_CORE_MASK &
 	pid=$!
 	echo "Process pid: $pid"
 
