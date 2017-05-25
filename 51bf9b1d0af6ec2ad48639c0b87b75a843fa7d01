@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "af0fe9de_774d3e05",
+        "filename": "app/stub/stub.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T16:54:13Z",
+      "side": 1,
+      "message": "lib/nvme/nvme.c does not check for a NULL attach_cb.  I think we need to pass a function pointer here.  We could change that behavior, but I think that would a separate patch.",
+      "parentUuid": "c603c0a7_d81ff596",
+      "range": {
+        "startLine": 103,
+        "startChar": 39,
+        "endLine": 103,
+        "endChar": 48
+      },
+      "revId": "51bf9b1d0af6ec2ad48639c0b87b75a843fa7d01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dee2cee2_1c745dfa",
+        "filename": "app/stub/stub.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T16:54:13Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "5516057f_545541e3",
+      "range": {
+        "startLine": 103,
+        "startChar": 1,
+        "endLine": 103,
+        "endChar": 16
+      },
+      "revId": "51bf9b1d0af6ec2ad48639c0b87b75a843fa7d01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c33e49ed_9030c4e3",
         "filename": "app/stub/stub.c",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2017-05-25T06:07:06Z",
       "side": 1,
       "message": "So that this stub is get killed for the termination? what about adding a \"-t\" parameter. In this case, if there is \"-t\" set, it can exit normally. If no \"-t\", will be killed.",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 2
+      },
+      "revId": "51bf9b1d0af6ec2ad48639c0b87b75a843fa7d01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fbf9efe_669bf419",
+        "filename": "app/stub/stub.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T16:54:13Z",
+      "side": 1,
+      "message": "I\u0027m not sure I follow.\n\nThis application is only useful if it waits like this.  If it exits immediately, it cannot serve as the primary process for other SPDK applications.",
+      "parentUuid": "c33e49ed_9030c4e3",
       "range": {
         "startLine": 105,
         "startChar": 0,
