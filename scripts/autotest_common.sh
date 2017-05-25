@@ -227,6 +227,21 @@ function rbd_cleanup() {
 	fi
 }
 
+function start_stub() {
+	$rootdir/test/app/stub/stub $1 &
+	stubpid=$!
+	echo Waiting for stub to ready for secondary processes...
+	while ! [ -e /var/run/.spdk0_config ]; do
+		sleep 0.1s
+	done
+	echo done.
+}
+
+function kill_stub() {
+	kill $stubpid
+	rm -rf /var/run/.spdk0_config
+}
+
 function run_test() {
 	set +x
 	echo "************************************"
