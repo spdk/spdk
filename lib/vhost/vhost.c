@@ -50,6 +50,11 @@ static char dev_dirname[PATH_MAX] = "";
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
+{
+	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
+}
+
 /*
  * Get available requests from avail ring.
  */
