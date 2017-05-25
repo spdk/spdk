@@ -36,6 +36,8 @@
 #include "spdk/env.h"
 #include "spdk/nvme.h"
 
+static char g_path[256];
+
 static void
 usage(char *executable_name)
 {
@@ -102,6 +104,12 @@ main(int argc, char **argv)
 	spdk_env_init(&opts);
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
+		exit(1);
+	}
+
+	snprintf(g_path, sizeof(g_path), "/var/run/spdk_stub%d", opts.shm_id);
+	if (mknod(g_path, S_IFREG, 0) != 0) {
+		fprintf(stderr, "could not create sentinel file %s\n", g_path);
 		exit(1);
 	}
 
