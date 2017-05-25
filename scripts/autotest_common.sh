@@ -231,15 +231,15 @@ function start_stub() {
 	$rootdir/test/app/stub/stub $1 &
 	stubpid=$!
 	echo Waiting for stub to ready for secondary processes...
-	while ! [ -e /var/run/.spdk0_config ]; do
-		sleep 0.1s
+	while ! [ -e /var/run/spdk_stub0 ]; do
+		sleep 1s
 	done
 	echo done.
 }
 
 function kill_stub() {
 	kill $stubpid
-	rm -rf /var/run/.spdk0_config
+	rm -rf /var/run/spdk_stub0
 }
 
 function run_test() {
