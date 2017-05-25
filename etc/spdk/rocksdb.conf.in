@@ -23,6 +23,7 @@
 
   # syslog facility
   LogFacility "local7"
+  SharedMemoryID 0
 
 [Rpc]
   # Defines whether spdk will enable configuration via RPC.
