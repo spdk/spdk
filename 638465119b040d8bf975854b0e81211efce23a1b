@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b84fef7_a75943ab",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T18:07:06Z",
+      "side": 1,
+      "message": "You should call iscsicleanup and killprocess here.",
+      "revId": "638465119b040d8bf975854b0e81211efce23a1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c8551c5_0ec5a86f",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T18:07:06Z",
+      "side": 1,
+      "message": "iscsicleanup will do both the log out and delete the node, so use that instead.",
+      "revId": "638465119b040d8bf975854b0e81211efce23a1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
