@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bd6b392_2410258c",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T05:22:10Z",
+      "side": 1,
+      "message": "I think you want \u003d instead of \u003d\u003d here.",
+      "revId": "6822800ca17b01030e5b5ce8feb29dde6d8d42b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
