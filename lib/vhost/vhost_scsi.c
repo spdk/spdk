@@ -850,32 +850,12 @@ new_device(int vid)
 {
 	struct spdk_vhost_dev *vdev = NULL;
 	struct spdk_event *event;
-
-	char ifname[PATH_MAX];
 	sem_t added;
 
-	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
-		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
-		return -1;
-	}
-
-	vdev = spdk_vhost_dev_find(ifname);
+	vdev = spdk_vhost_dev_load(vid);
 	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller %s not found.\n", ifname);
 		return -1;
 	}
-
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s already connected.\n", ifname);
-		return -1;
-	}
-
-	vdev->vid = vid;
-	if (spdk_vhost_dev_construct(vdev) != 0) {
-		return -1;
-	}
-
-	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 
 	event = vhost_sem_event_alloc(vdev->lcore, add_vdev_cb, vdev, &added);
 	spdk_event_call(event);
@@ -923,10 +903,7 @@ destroy_device(int vid)
 	if (vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister poller.\n", vdev->name);
 
-	spdk_vhost_free_reactor(vdev->lcore);
-	vdev->lcore = -1;
-
-	spdk_vhost_dev_destruct(vdev);
+	spdk_vhost_dev_unload(vdev);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost", SPDK_TRACE_VHOST)
