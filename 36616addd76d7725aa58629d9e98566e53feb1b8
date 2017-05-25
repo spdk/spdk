@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a522c5bf_0d4c355e",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:27:58Z",
+      "side": 1,
+      "message": "This should return void now.  (Similar to subsystem init function).",
+      "revId": "36616addd76d7725aa58629d9e98566e53feb1b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2450d12_04bd21b8",
+        "filename": "lib/bdev/aio/blockdev_aio.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:27:58Z",
+      "side": 0,
+      "message": "Can you just change this to add a call to spdk_bdev_module_init_next(0)?  Then you don\u0027t have to modify 25 lines of code for indentation only.",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c507509b_dcbae553",
+        "filename": "lib/bdev/null/blockdev_null.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T21:27:58Z",
+      "side": 0,
+      "message": "Just add the spdk_bdev_module_init_next(0) call here and avoid all of the extra indentation changes.",
+      "revId": "fcb0b7da9115a4c3dea2da5899e4b99f0125d6ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
