@@ -141,6 +141,36 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
+void
+spdk_vdev_event_done_cb(void *arg1, void *arg2)
+{
+	sem_post((sem_t *)arg2);
+}
+
+struct spdk_event *
+spdk_vhost_sem_event_alloc(uint32_t core, spdk_event_fn fn, void *arg1, sem_t *sem)
+{
+	if (sem_init(sem, 0, 0) < 0)
+		rte_panic("Failed to initialize semaphore.");
+
+	return spdk_event_allocate(core, fn, arg1, sem);
+}
+
+int
+spdk_vhost_sem_timedwait(sem_t *sem, unsigned sec)
+{
+	struct timespec timeout;
+	int rc;
+
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += sec;
+
+	rc = sem_timedwait(sem, &timeout);
+	sem_destroy(sem);
+
+	return rc;
+}
+
 struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
