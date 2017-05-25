@@ -28,7 +28,7 @@ mkdir -p /usr/local/etc
 cp $testdir/its.conf /usr/local/etc/
 cp $testdir/auth.conf /usr/local/etc/
 
-$ISCSI_APP -c $testdir/iscsi.conf &
+$ISCSI_APP -c $testdir/iscsi.conf -m 0x1 &
 pid=$!
 echo "Process pid: $pid"
 
