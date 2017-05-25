@@ -16,6 +16,24 @@
       "revId": "40626f954e952e08417568054e996ce35f7f52cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddef4557_ce91748a",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-25T04:38:24Z",
+      "side": 1,
+      "message": "Yeah - I\u0027ve been testing it using the DPDK submodule.  The build will see that DPDK_DIR points to the main build and will just use what\u0027s there instead of trying to build DPDK itself.  (See the root Makefile line 43).",
+      "parentUuid": "7f2ea2aa_21af951d",
+      "revId": "40626f954e952e08417568054e996ce35f7f52cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
