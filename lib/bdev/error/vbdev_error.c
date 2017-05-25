@@ -53,11 +53,17 @@ struct vbdev_error_disk {
 	TAILQ_ENTRY(vbdev_error_disk)	tailq;
 };
 
+struct vbdev_io {
+	struct spdk_bdev_io *bdev_io;
+	TAILQ_ENTRY(vbdev_io)	tailq;
+};
+
 static uint32_t g_io_type_mask;
 static uint32_t g_error_num;
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, vbdev_error_disk) g_vbdev_error_disks = TAILQ_HEAD_INITIALIZER(
 			g_vbdev_error_disks);
+static TAILQ_HEAD(, vbdev_io) g_vbdev_ios = TAILQ_HEAD_INITIALIZER(g_vbdev_ios);
 
 void
 spdk_vbdev_inject_error(uint32_t io_type_mask, uint32_t error_num)
@@ -81,16 +87,15 @@ vbdev_error_task_complete(struct spdk_bdev_io *bdev_io, bool success,
 static void
 vbdev_error_reset(struct vbdev_error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 {
-	/*
-	 * pass the I/O through unmodified.
-	 *
-	 * However, we do need to increment the generation count for the error bdev,
-	 * since the spdk_bdev_io_complete() path that normally updates it will not execute
-	 * after we resubmit the I/O to the base_bdev.
-	 */
-	if (bdev_io->u.reset.type == SPDK_BDEV_RESET_HARD) {
-		error_disk->disk.gencnt++;
+	struct vbdev_io *vbdev_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(vbdev_io, &g_vbdev_ios, tailq, tmp) {
+		TAILQ_REMOVE(&g_vbdev_ios, vbdev_io, tailq);
+		spdk_bdev_io_complete(vbdev_io->bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		free(vbdev_io);
 	}
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 static void
@@ -107,8 +112,11 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
+		pthread_mutex_lock(&g_vbdev_error_mutex);
+		g_error_num--;
 		vbdev_error_reset(error_disk, bdev_io);
-		break;
+		pthread_mutex_unlock(&g_vbdev_error_mutex);
+		return;
 	default:
 		SPDK_ERRLOG("Error Injection: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -117,12 +125,23 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	io_type_mask = 1U << bdev_io->type;
 
-	if (g_error_num == 0 || !(g_io_type_mask & io_type_mask)) {
+	if (g_error_num == 0 || (!(g_io_type_mask & io_type_mask) &&
+				 !(g_io_type_mask & (1U << SPDK_BDEV_IO_TYPE_RESET)))) {
 		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
 		return;
 	}
 
 	pthread_mutex_lock(&g_vbdev_error_mutex);
+	if (g_io_type_mask & (1U << SPDK_BDEV_IO_TYPE_RESET) && g_error_num) {
+		struct vbdev_io *vbdevio;
+
+		vbdevio = calloc(1, sizeof(*vbdevio));
+		vbdevio->bdev_io = bdev_io;
+
+		TAILQ_INSERT_TAIL(&g_vbdev_ios, vbdevio, tailq);
+		pthread_mutex_unlock(&g_vbdev_error_mutex);
+		return;
+	}
 	/* check again to make sure g_error_num has not been decremented since we checked it above */
 	if (g_error_num == 0) {
 		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
