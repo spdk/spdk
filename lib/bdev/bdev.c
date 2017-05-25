@@ -444,38 +444,13 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-spdk_bdev_cleanup_pending_buf_io(struct spdk_bdev *bdev)
-{
-	struct spdk_bdev_io *bdev_io, *tmp;
-
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_small[rte_lcore_id()], buf_link, tmp) {
-		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_small[rte_lcore_id()], bdev_io, buf_link);
-			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
-		}
-	}
-
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_large[rte_lcore_id()], buf_link, tmp) {
-		if (bdev_io->bdev == bdev) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_large[rte_lcore_id()], bdev_io, buf_link);
-			bdev_io->status = SPDK_BDEV_IO_STATUS_FAILED;
-		}
-	}
-}
-
-static void
 __submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_io_channel *ch;
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		spdk_bdev_cleanup_pending_buf_io(bdev);
-		ch = NULL;
-	} else {
-		ch = bdev_io->ch->channel;
-	}
+	ch = bdev_io->ch->channel;
 
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
@@ -581,27 +556,25 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 }
 
 static void
+_spdk_bdev_abort_io(need_buf_tailq_t *queue, struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_io *bdev_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(bdev_io, queue, buf_link, tmp) {
+		if (bdev_io->ch == ch) {
+			TAILQ_REMOVE(queue, bdev_io, buf_link);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
+static void
 spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
-	struct spdk_bdev_io		*bdev_io, *tmp;
-	uint32_t			core;
 
-	core = spdk_env_get_current_core();
-
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_small[core], buf_link, tmp) {
-		if (bdev_io->ch == ch) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_small[core], bdev_io, buf_link);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
-	}
-
-	TAILQ_FOREACH_SAFE(bdev_io, &g_bdev_mgr.need_buf_large[core], buf_link, tmp) {
-		if (bdev_io->ch == ch) {
-			TAILQ_REMOVE(&g_bdev_mgr.need_buf_large[core], bdev_io, buf_link);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
-	}
+	_spdk_bdev_abort_io(&g_bdev_mgr.need_buf_small[spdk_env_get_current_core()], ch);
+	_spdk_bdev_abort_io(&g_bdev_mgr.need_buf_large[spdk_env_get_current_core()], ch);
 
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
@@ -910,15 +883,41 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	return bdev_io;
 }
 
+static void
+_spdk_bdev_reset_dev(void *io_device, void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+	int rc;
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		SPDK_ERRLOG("reset failed\n");
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
+_spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
+			       void *ctx)
+{
+	struct spdk_bdev_channel	*channel;
+
+	channel = spdk_io_channel_get_ctx(ch);
+
+	_spdk_bdev_abort_io(&g_bdev_mgr.need_buf_small[spdk_env_get_current_core()], channel);
+	_spdk_bdev_abort_io(&g_bdev_mgr.need_buf_large[spdk_env_get_current_core()], channel);
+}
+
 int
 spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
+
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing reset\n");
@@ -929,13 +928,13 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		SPDK_ERRLOG("reset failed\n");
-	}
+	/* First, abort all I/O queued up waiting for buffers. */
+	spdk_for_each_channel(&g_bdev_mgr,
+			      _spdk_bdev_reset_abort_channel,
+			      bdev_io,
+			      _spdk_bdev_reset_dev);
 
-	return rc;
+	return 0;
 }
 
 int
