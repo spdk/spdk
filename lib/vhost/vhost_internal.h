@@ -45,6 +45,10 @@
 
 #define MAX_VHOST_VRINGS	256
 
+enum spdk_vhost_dev_type {
+	SPDK_VHOST_DEV_T_SCSI,
+};
+
 struct spdk_vhost_dev {
 	struct rte_vhost_memory *mem;
 	char *name;
@@ -53,6 +57,8 @@ struct spdk_vhost_dev {
 	int task_cnt;
 	int32_t lcore;
 	uint64_t cpumask;
+
+	enum spdk_vhost_dev_type type;
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
