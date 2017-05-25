@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4bea11f_56ade387",
+        "filename": "autotest/tests/lib/Filesystem_integrity_test.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-25T21:32:07Z",
+      "side": 1,
+      "message": "This is significantly harder to read than the current incarnation written in bash. And I love Python and am the biggest Python advocate on the development team, so the rest of the team probably thinks it is even less readable than I do.\n\nI have a few general questions:\n1) What advantages does this have over the version written in bash?\n2) Why does this need a 3k+ line framework? It looks like this test is just using a couple of simple utility functions out of that whole framework, which could easily be put in a single ~100 line file.",
+      "revId": "312f1c5b17dfe3a02a7dccd26ef96b5f3c62fbf7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
