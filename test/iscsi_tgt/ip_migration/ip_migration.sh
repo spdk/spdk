@@ -41,6 +41,9 @@ do
 	cp $testdir/iscsi.conf $testdir/iscsi.conf.$i
 	port=$(($RPC_PORT + $i))
 	echo "Listen 127.0.0.1:$port" >> $testdir/iscsi.conf.$i
+
+	timing_enter start_iscsi_tgt_$i
+
 	# TODO: run the different iSCSI instances on non-overlapping CPU masks
 	$ISCSI_APP -c $testdir/iscsi.conf.$i -s 1000 -i $i -m 0xFFFF &
 	pid=$!
@@ -50,6 +53,9 @@ do
 
 	waitforlisten $pid $port
 	echo "iscsi_tgt is listening. Running tests..."
+
+	timing_exit start_iscsi_tgt_$i
+
 	rpc_config $port $NETMASK
 	trap "kill_all_iscsi_target; exit 1" \
 		SIGINT SIGTERM EXIT
