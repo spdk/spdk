@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2c2fe131_5440895a",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-25T12:36:30Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "57e5f3ec_d453e521",
+      "revId": "2aa55c388df5d1e19166524e5d0b6fcc8d859131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e1c23c4_5cc9cfa3",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-05-25T05:43:41Z",
       "side": 1,
       "message": "I don\u0027t really care for almost 700 lines of output in here.  I understand your intent though.  At least 550 of these are just the DPDK/SPDK build - could we just show the first and last few lines of the build and put a comment in there noting that the rest has been snipped out?  Then they only need to hit page-down 3 or 4 times instead of 20 to get to the important stuff at the bottom.",
+      "revId": "2aa55c388df5d1e19166524e5d0b6fcc8d859131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbbbbeb9_93215421",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-25T12:36:30Z",
+      "side": 1,
+      "message": "since you and Daniel both asked so nicely.... :)",
+      "parentUuid": "5e1c23c4_5cc9cfa3",
       "revId": "2aa55c388df5d1e19166524e5d0b6fcc8d859131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
