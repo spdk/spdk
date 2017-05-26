@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7791af61_37c79860",
+        "filename": "app/nvmf_tgt/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T16:24:16Z",
+      "side": 1,
+      "message": "This change should be broken out into a separate patch explaining why it is needed.",
+      "revId": "02244104542faa83fda72aae1be1ea220025a23b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "924a9544_181fafb0",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T16:24:16Z",
+      "side": 1,
+      "message": "Please add this new file in a separate patch.  Then the final patch that uses the stub application would just add the parts that start and kill the stub.",
+      "revId": "02244104542faa83fda72aae1be1ea220025a23b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
