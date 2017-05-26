@@ -257,7 +257,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_pci_device *pci_dev;
 
 	spdk_pci_addr_parse(&pci_addr, trid->traddr);
-
+	if (ctx->trid.traddr[0] != '\0' && strcmp(trid->traddr, ctx->trid.traddr)) {
+		SPDK_WARNLOG("Attached device is not expected\n");
+		return;
+	}
 	SPDK_NOTICELOG("Attaching NVMe device %p at %s to subsystem %s\n",
 		       ctrlr,
 		       trid->traddr,
@@ -285,6 +288,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	if (rc < 0) {
 		SPDK_ERRLOG("Failed to add controller to subsystem\n");
 	}
+	ctx->found = true;
 }
 
 static int
