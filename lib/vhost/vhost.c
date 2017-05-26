@@ -35,6 +35,7 @@
 
 #include "spdk/env.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -619,6 +620,69 @@ spdk_vhost_shutdown_cb(void)
 		abort();
 	}
 	pthread_detach(tid);
+}
+
+static void
+vhost_timed_event_fn(void *arg1, void *arg2)
+{
+	struct spdk_vhost_timed_event *ev = arg1;
+
+	if (ev->cb_fn) {
+		ev->cb_fn(arg2);
+	}
+
+	sem_post(&ev->sem);
+}
+
+static void
+vhost_timed_event_init(struct spdk_vhost_timed_event *ev, int32_t lcore,
+		       spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec)
+{
+	/* No way to free spdk event so don't allow to use it again without calling, waiting. */
+	assert(ev->spdk_event == NULL);
+
+	if (sem_init(&ev->sem, 0, 0) < 0)
+		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
+
+	ev->cb_fn = cb_fn;
+	clock_gettime(CLOCK_REALTIME, &ev->timeout);
+	ev->timeout.tv_sec += timeout_sec;
+	ev->spdk_event = spdk_event_allocate(lcore, vhost_timed_event_fn, ev, arg);
+}
+
+void
+spdk_vhost_timed_event_init(struct spdk_vhost_timed_event *ev, int32_t lcore,
+			    spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec)
+{
+	vhost_timed_event_init(ev, lcore, cb_fn, arg, timeout_sec);
+}
+
+void
+spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg,
+			    unsigned timeout_sec, const char *errmsg)
+{
+	struct spdk_vhost_timed_event ev = {0};
+
+	vhost_timed_event_init(&ev, lcore, cb_fn, arg, timeout_sec);
+	spdk_event_call(ev.spdk_event);
+	spdk_vhost_timed_event_wait(&ev, errmsg);
+}
+
+void
+spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errmsg)
+{
+	int rc;
+
+	assert(ev->spdk_event != NULL);
+
+	rc = sem_timedwait(&ev->sem, &ev->timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
+		abort();
+	}
+
+	ev->spdk_event = NULL;
+	sem_destroy(&ev->sem);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
