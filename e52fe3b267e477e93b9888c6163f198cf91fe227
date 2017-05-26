@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "5a3d2b55_9088368f",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T23:06:37Z",
+      "side": 1,
+      "message": "I understand why you needed to add this vbdev_io structure.  What if instead, we added a new TAILQ_ENTRY to struct spdk_bdev_io called module_link.  The comment should say that it may be used by modules to put the bdev_io into its own list.  It must remove the bdev_io from this list before resubmitting the I/O to another bdev module.",
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "152a11ff_86962898",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T23:06:37Z",
+      "side": 1,
+      "message": "I have a concern about a single global list for these I/Os.  It means if I have two error vbdevs A and B, the following could occur:\n\n1) enable error injection w/ reset testing\n2) I/O goes to vbdev A\n3) reset goes to vbdev B\n\n#3 will cause the I/O from #2 to complete\n\nWhat if each vbdev_error_disk had its own vbdev_ios list?\n\nBefore making that change, should we also put io_type_mask and error_num in the vbdev_error_disk?  Then we can control the error injection much better on a per device basis.",
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93f236a9_4ebbfbb3",
         "filename": "lib/bdev/error/vbdev_error.c",
         "patchSetId": 2
