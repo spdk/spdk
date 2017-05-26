@@ -429,21 +429,20 @@ spdk_app_fini(void)
 int
 spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 {
-	struct spdk_event *event;
+	struct spdk_event *app_start_event;
 
 	g_spdk_app.rc = 0;
 
-	spdk_subsystem_init();
+	app_start_event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
+					      arg1, arg2);
+
+	spdk_event_call(spdk_event_allocate(rte_get_master_lcore(), spdk_subsystem_init,
+					    app_start_event, NULL));
 
 	/* Early return if there is error */
 	if (g_spdk_app.rc) {
 		return g_spdk_app.rc;
 	}
-
-	event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
-				    arg1, arg2);
-	/* Queues up the event, but can't run it until the reactors start */
-	spdk_event_call(event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
