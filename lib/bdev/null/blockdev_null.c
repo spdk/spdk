@@ -170,12 +170,12 @@ null_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
 }
 
-static int
+static void
 blockdev_null_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Null");
 	uint64_t size_in_mb, num_blocks;
-	int block_size, i;
+	int block_size, i, rc = 0;
 	struct spdk_bdev *bdev;
 	const char *name, *val;
 
@@ -195,7 +195,7 @@ blockdev_null_initialize(void)
 	spdk_io_device_register(&g_null_bdev_head, null_bdev_create_cb, null_bdev_destroy_cb, 0);
 
 	if (sp == NULL) {
-		return 0;
+		goto end;
 	}
 
 	i = 0;
@@ -241,12 +241,15 @@ blockdev_null_initialize(void)
 		bdev = create_null_bdev(name, num_blocks, block_size);
 		if (bdev == NULL) {
 			SPDK_ERRLOG("Could not create null bdev\n");
-			return EINVAL;
+			rc = EINVAL;
+			goto end;
 		}
 
 		i++;
 	}
-	return 0;
+
+end:
+	spdk_bdev_module_init_next(rc);
 }
 
 static void

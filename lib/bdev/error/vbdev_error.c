@@ -221,17 +221,17 @@ cleanup:
 	return rc;
 }
 
-static int
+static void
 vbdev_error_init(void)
 {
 	struct spdk_conf_section *sp;
 	const char *base_bdev_name;
-	int i;
+	int i, rc = 0;
 	struct spdk_bdev *base_bdev;
 
 	sp = spdk_conf_find_section(NULL, "BdevError");
 	if (sp == NULL) {
-		return 0;
+		goto end;
 	}
 
 	for (i = 0; ; i++) {
@@ -242,20 +242,25 @@ vbdev_error_init(void)
 		base_bdev_name = spdk_conf_section_get_nmval(sp, "BdevError", i, 0);
 		if (!base_bdev_name) {
 			SPDK_ERRLOG("ErrorInjection configuration missing blockdev name\n");
-			return -1;
+			rc = -1;
+			goto end;
 		}
 
 		base_bdev = spdk_bdev_get_by_name(base_bdev_name);
 		if (!base_bdev) {
 			SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", base_bdev_name);
-			return -1;
+			rc = -1;
+			goto end;
 		}
 
 		if (spdk_vbdev_error_create(base_bdev)) {
-			return -1;
+			rc = -1;
+			goto end;
 		}
 	}
-	return 0;
+
+end:
+	spdk_vbdev_module_init_next(rc);
 }
 
 static void
