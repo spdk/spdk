@@ -43,7 +43,7 @@
 
 #include "spdk_internal/log.h"
 
-static int blockdev_aio_initialize(void);
+static void blockdev_aio_initialize(void);
 static void aio_free_disk(struct file_disk *fdisk);
 
 static int
@@ -377,7 +377,8 @@ error_return:
 	return NULL;
 }
 
-static int blockdev_aio_initialize(void)
+static void
+blockdev_aio_initialize(void)
 {
 	size_t i;
 	struct spdk_conf_section *sp;
@@ -385,7 +386,7 @@ static int blockdev_aio_initialize(void)
 
 	sp = spdk_conf_find_section(NULL, "AIO");
 	if (!sp) {
-		return 0;
+		goto end;
 	}
 
 	i = 0;
@@ -415,7 +416,8 @@ static int blockdev_aio_initialize(void)
 		i++;
 	}
 
-	return 0;
+end:
+	spdk_bdev_module_init_next(0);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("aio", SPDK_TRACE_AIO)
