@@ -45,6 +45,29 @@
       "revId": "fbe578194428d3e680c5811745bc15ccdee02d8d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12fe78ff_7955f0e2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-05-26T07:54:21Z",
+      "side": 1,
+      "message": "If bdev_io is failed, do we still need to count it?",
+      "range": {
+        "startLine": 961,
+        "startChar": 1,
+        "endLine": 972,
+        "endChar": 2
+      },
+      "revId": "fbe578194428d3e680c5811745bc15ccdee02d8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
