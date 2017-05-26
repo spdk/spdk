@@ -33,7 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <linux/virtio_ring.h>
 #include <linux/virtio_scsi.h>
 
 #include "spdk/env.h"
@@ -45,12 +44,6 @@
 #include "vhost_internal.h"
 #include "vhost_scsi.h"
 #include "task.h"
-
-#ifndef VIRTIO_F_VERSION_1
-#define VIRTIO_F_VERSION_1 32
-#endif
-
-#define VHOST_USER_F_PROTOCOL_FEATURES	30
 
 /* Features supported by SPDK VHOST lib. */
 #define SPDK_VHOST_SCSI_FEATURES	((1ULL << VIRTIO_F_VERSION_1) | \

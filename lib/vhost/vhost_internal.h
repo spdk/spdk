@@ -43,6 +43,10 @@
 
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
+#ifndef VHOST_USER_F_PROTOCOL_FEATURES
+#define VHOST_USER_F_PROTOCOL_FEATURES	30
+#endif
+
 #define MAX_VHOST_VRINGS	256
 
 enum spdk_vhost_dev_type {
