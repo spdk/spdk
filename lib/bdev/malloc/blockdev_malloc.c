@@ -88,7 +88,7 @@ static struct malloc_disk *g_malloc_disk_head = NULL;
 
 int malloc_disk_count = 0;
 
-static int blockdev_malloc_initialize(void);
+static void blockdev_malloc_initialize(void);
 static void blockdev_malloc_finish(void);
 static void blockdev_malloc_get_spdk_running_config(FILE *fp);
 
@@ -421,10 +421,10 @@ static void free_malloc_disk(struct malloc_disk *mdisk)
 	spdk_free(mdisk);
 }
 
-static int blockdev_malloc_initialize(void)
+static void blockdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
-	int NumberOfLuns, LunSizeInMB, BlockSize, i;
+	int NumberOfLuns, LunSizeInMB, BlockSize, i, rc = 0;
 	uint64_t size;
 	struct spdk_bdev *bdev;
 
@@ -434,7 +434,8 @@ static int blockdev_malloc_initialize(void)
 		BlockSize = spdk_conf_section_get_intval(sp, "BlockSize");
 		if ((NumberOfLuns < 1) || (LunSizeInMB < 1)) {
 			SPDK_ERRLOG("Malloc section present, but no devices specified\n");
-			return EINVAL;
+			rc = EINVAL;
+			goto end;
 		}
 		if (BlockSize < 1) {
 			/* Default is 512 bytes */
@@ -445,11 +446,14 @@ static int blockdev_malloc_initialize(void)
 			bdev = create_malloc_disk(size / BlockSize, BlockSize);
 			if (bdev == NULL) {
 				SPDK_ERRLOG("Could not create malloc disk\n");
-				return EINVAL;
+				rc = EINVAL;
+				goto end;
 			}
 		}
 	}
-	return 0;
+
+end:
+	spdk_bdev_module_init_next(rc);
 }
 
 static void blockdev_malloc_finish(void)

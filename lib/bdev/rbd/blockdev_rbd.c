@@ -199,7 +199,7 @@ blockdev_rbd_start_aio(rbd_image_t image, struct blockdev_rbd_io *cmd,
 	return 0;
 }
 
-static int blockdev_rbd_library_init(void);
+static void blockdev_rbd_library_init(void);
 static void blockdev_rbd_library_fini(void);
 
 static int
@@ -543,10 +543,10 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	return &rbd->disk;
 }
 
-static int
+static void
 blockdev_rbd_library_init(void)
 {
-	int i;
+	int i, rc = 0;
 	const char *val;
 	const char *pool_name;
 	const char *rbd_name;
@@ -558,7 +558,7 @@ blockdev_rbd_library_init(void)
 		/*
 		 * Ceph section not found.  Do not initialize any rbd LUNS.
 		 */
-		return 0;
+		goto end;
 	}
 
 	/* Init rbd block devices */
@@ -571,13 +571,15 @@ blockdev_rbd_library_init(void)
 		pool_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 0);
 		if (pool_name == NULL) {
 			SPDK_ERRLOG("Ceph%d: rbd pool name needs to be provided\n", i);
-			goto cleanup;
+			rc = -1;
+			goto end;
 		}
 
 		rbd_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 1);
 		if (rbd_name == NULL) {
 			SPDK_ERRLOG("Ceph%d: format error\n", i);
-			goto cleanup;
+			rc = -1;
+			goto end;
 		}
 
 		val = spdk_conf_section_get_nmval(sp, "Ceph", i, 2);
@@ -589,17 +591,17 @@ blockdev_rbd_library_init(void)
 			if (block_size & 0x1ff) {
 				SPDK_ERRLOG("current block_size = %d, it should be multiple of 512\n",
 					    block_size);
-				goto cleanup;
+				rc = -1;
+				goto end;
 			}
 		}
 
 		if (spdk_bdev_rbd_create(pool_name, rbd_name, block_size) == NULL) {
-			goto cleanup;
+			rc = -1;
+			goto end;
 		}
 	}
 
-	return 0;
-cleanup:
-	blockdev_rbd_library_fini();
-	return -1;
+end:
+	spdk_bdev_module_init_next(rc);
 }
