@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e66d100f_6e828309",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T21:30:43Z",
+      "side": 0,
+      "message": "Don\u0027t we want to keep this assert?\n\nI\u0027d even argue we should change it into functional code that doesn\u0027t remove the thread if the io_channel list isn\u0027t empty.\n\nWe may even want to have this return an error code in the future.",
+      "revId": "02fd3f0e77224969d805ac4fc3fb2e5be0ce89ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
