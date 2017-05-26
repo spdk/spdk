@@ -673,6 +673,8 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 	struct spdk_blob_store		*bs = blob->bs;
 	spdk_bs_batch_t			*batch;
 	size_t				i;
+	uint64_t			lba;
+	uint32_t			lba_count;
 
 	/* Clusters don't move around in blobs. The list shrinks or grows
 	 * at the end, but no changes ever occur in the middle of the list.
@@ -681,10 +683,34 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 	batch = spdk_bs_sequence_to_batch(seq, _spdk_blob_persist_unmap_clusters_cpl, ctx);
 
 	/* Unmap all clusters that were truncated */
+	lba = 0;
+	lba_count = 0;
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
-		uint64_t lba = blob->active.clusters[i];
-		uint32_t lba_count = _spdk_bs_cluster_to_lba(bs, 1);
+		uint64_t next_lba = blob->active.clusters[i];
+		uint32_t next_lba_count = _spdk_bs_cluster_to_lba(bs, 1);
 
+		if ((lba + lba_count) == next_lba) {
+			/* This cluster is contiguous with the previous one. */
+			lba_count += next_lba_count;
+			continue;
+		}
+
+		/* This cluster is not contiguous with the previous one. */
+
+		/* If a run of LBAs previously existing, send them
+		 * as an unmap.
+		 */
+		if (lba_count > 0) {
+			spdk_bs_batch_unmap(batch, lba, lba_count);
+		}
+
+		/* Start building the next batch */
+		lba = next_lba;
+		lba_count = next_lba_count;
+	}
+
+	/* If we ended with a contiguous set of LBAs, send the unmap now */
+	if (lba_count > 0) {
 		spdk_bs_batch_unmap(batch, lba, lba_count);
 	}
 
