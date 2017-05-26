@@ -433,17 +433,15 @@ spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 
 	g_spdk_app.rc = 0;
 
-	spdk_subsystem_init();
+	event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
+				    arg1, arg2);
+
+	spdk_subsystem_init(event);
 
 	/* Early return if there is error */
 	if (g_spdk_app.rc) {
 		return g_spdk_app.rc;
 	}
-
-	event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
-				    arg1, arg2);
-	/* Queues up the event, but can't run it until the reactors start */
-	spdk_event_call(event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
