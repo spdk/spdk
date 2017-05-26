@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "989bc6d0_1bad2fce",
+        "filename": "test/lib/nvme/unit/nvme_ns_cmd_c/nvme_ns_cmd_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1104,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-05-26T06:55:57Z",
+      "side": 1,
+      "message": "You don\u0027t need to malloc 384 if you just want to test 256 lba counts.",
+      "revId": "145bb21665e517e218a029c5bb0bafc6ad862a85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
