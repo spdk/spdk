@@ -23,14 +23,15 @@ if ! rdma_nic_available; then
 fi
 
 timing_enter discovery
-
+timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf &
+$NVMF_APP -c $testdir/../nvmf.conf &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid ${RPC_PORT}
+timing_exit start_nvmf_tgt
 
 bdevs="$bdevs $($rpc_py construct_null_bdev Null0 $NULL_BDEV_SIZE $NULL_BLOCK_SIZE)"
 bdevs="$bdevs $($rpc_py construct_null_bdev Null1 $NULL_BDEV_SIZE $NULL_BLOCK_SIZE)"
