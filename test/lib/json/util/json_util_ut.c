@@ -140,6 +140,78 @@ test_num_to_uint64(void)
 }
 
 static void
+test_decode_object(void)
+{
+	struct my_object {
+		char *my_name;
+		uint32_t my_int;
+		bool my_bool;
+	};
+	struct spdk_json_val object[] = {
+		{"", 6, SPDK_JSON_VAL_OBJECT_BEGIN},
+		{"first", 5, SPDK_JSON_VAL_NAME},
+		{"HELLO", 5, SPDK_JSON_VAL_STRING},
+		{"second", 6, SPDK_JSON_VAL_NAME},
+		{"234", 3, SPDK_JSON_VAL_NUMBER},
+		{"third", 5, SPDK_JSON_VAL_NAME},
+		{"", 1, SPDK_JSON_VAL_TRUE},
+		{"", 0, SPDK_JSON_VAL_OBJECT_END},
+	};
+
+	struct spdk_json_object_decoder decoders[] = {
+		{"first", offsetof(struct my_object, my_name), spdk_json_decode_string, false},
+		{"second", offsetof(struct my_object, my_int), spdk_json_decode_uint32, false},
+		{"third", offsetof(struct my_object, my_bool), spdk_json_decode_bool, false},
+		{"fourth", offsetof(struct my_object, my_bool), spdk_json_decode_bool, true},
+	};
+	struct my_object output;
+	output.my_name = NULL;
+	uint32_t answer = 234;
+	char *answer_str = "HELLO";
+	bool answer_bool = true;
+
+	/* Passing Test: object containing simple types */
+	CU_ASSERT(spdk_json_decode_object(object, decoders, 4, &output) == 0);
+	CU_ASSERT(memcmp(output.my_name, answer_str, 6) == 0);
+	CU_ASSERT(output.my_int == answer);
+	CU_ASSERT(output.my_bool == answer_bool);
+
+	/* Failing Test: member with no matching decoder */
+	/* i.e. I remove the matching decoder from the boolean argument */
+	CU_ASSERT(spdk_json_decode_object(object, decoders, 2, &output) != 0);
+
+	/* Failing Test: non-optional decoder with no corresponding member */
+
+	decoders[3].optional = false;
+	CU_ASSERT(spdk_json_decode_object(object, decoders, 4, &output) != 0);
+
+	/* return to base state */
+	decoders[3].optional = true;
+
+	/* Failing Test: duplicated names for json values */
+	object[3].start = "first";
+	object[3].len = 5;
+	CU_ASSERT(spdk_json_decode_object(object, decoders, 3, &output) != 0);
+
+	/* return to base state */
+	object[3].start = "second";
+	object[3].len = 6;
+
+	/* Failing Test: invalid value for decoder */
+	object[2].start = "HELO";
+	CU_ASSERT(spdk_json_decode_object(object, decoders, 3, &output) != 0);
+
+	/* return to base state */
+	object[2].start = "HELLO";
+
+	/* Failing Test: not an object */
+	object[0].type = SPDK_JSON_VAL_ARRAY_BEGIN;
+	CU_ASSERT(spdk_json_decode_object(object, decoders, 3, &output) != 0);
+
+	free(output.my_name);
+}
+
+static void
 test_decode_array(void)
 {
 	struct spdk_json_val values[4];
@@ -584,6 +656,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "strequal", test_strequal) == NULL ||
 		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
 		CU_add_test(suite, "num_to_uint64", test_num_to_uint64) == NULL ||
+		CU_add_test(suite, "decode_object", test_decode_object) == NULL ||
 		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
 		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
 		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
