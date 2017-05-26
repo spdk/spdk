@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c1f6102_251a9911",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T22:21:38Z",
+      "side": 1,
+      "message": "One more nit.  There should be an extra newline between the first line and the subsequent lines.  We only want to see \"json_util: fixed off by 1 error\" in the GerritHub subject line (which will also be what is shown with git log --oneline).",
+      "revId": "08290eb7f3fa56575cb4cc6053b4e5754a5c9c43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "578408fa_687d7f16",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T22:21:38Z",
+      "side": 1,
+      "message": "is \"no array start\" a more descriptive name for this error case?",
+      "revId": "08290eb7f3fa56575cb4cc6053b4e5754a5c9c43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
