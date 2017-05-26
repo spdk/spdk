@@ -22,6 +22,30 @@
       "revId": "89c4052aa31ac6529a4b87cddbbf54aa4ad9a1b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5854d34b_77db4a27",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-05-26T06:54:10Z",
+      "side": 1,
+      "message": "here is intentional, it still have issue to run rpc under multi-process.",
+      "parentUuid": "733cd12a_9f0cec82",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 30
+      },
+      "revId": "89c4052aa31ac6529a4b87cddbbf54aa4ad9a1b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
