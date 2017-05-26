@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "446027a0_0681b531",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T22:48:13Z",
+      "side": 1,
+      "message": "I\u0027m pretty sure interleaving is typically done at a much lower granularity than pages.  I think for purposes of this article, you can just remove this paragraph - it\u0027s not really related to how memory management is done for user space drivers.",
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e9a0a5d_7bd46aad",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T22:48:13Z",
+      "side": 1,
+      "message": "With IOMMU enabled, the messages do not contain physical addresses - they contain bus addresses.  You discuss this more at the end of the document but I didn\u0027t get that far before starting this comment.  :)  Maybe instead of \"in the simplest case\", say \"in the absence of an IOMMU\".",
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e905920_1951effb",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T22:48:13Z",
+      "side": 1,
+      "message": "not any address, but any 4-byte aligned address",
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
