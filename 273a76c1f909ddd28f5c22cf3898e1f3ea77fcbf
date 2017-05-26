@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1bb1b159_c9e8c889",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-26T03:43:41Z",
+      "side": 1,
+      "message": "remove this blank, please.",
+      "range": {
+        "startLine": 215,
+        "startChar": 23,
+        "endLine": 215,
+        "endChar": 24
+      },
+      "revId": "273a76c1f909ddd28f5c22cf3898e1f3ea77fcbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bacce02f_4a4e24c2",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-26T03:43:41Z",
+      "side": 1,
+      "message": "What if we have another test case that set the req-\u003ecmd-\u003envme_cmd.nsid to a non zero value like 8. Thus the expected ns_list.ns_list[i] \u003d j (i, j is the actual value from the test case) is different. This could cover below logic:\n\nnvmf_direct_ctrlr_admin_identify_nslist()\n\t\tif (i \u003c\u003d req_ns_id) {\n\t\t\tcontinue;\n\t\t}\n\nOverall, it looks like you well designed several test cases to cover this function. Thanks.",
+      "range": {
+        "startLine": 242,
+        "startChar": 1,
+        "endLine": 242,
+        "endChar": 13
+      },
+      "revId": "273a76c1f909ddd28f5c22cf3898e1f3ea77fcbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
