@@ -573,7 +573,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 			SPDK_ERRLOG("One or more controllers failed in spdk_nvme_probe()\n");
 		}
 
-		if (!ctx.found) {
+		if (!ctx.found && spdk_process_is_primary()) {
 			SPDK_ERRLOG("Could not find NVMe controller at PCI address %04x:%02x:%02x.%x\n",
 				    pci_addr.domain, pci_addr.bus, pci_addr.dev, pci_addr.func);
 			goto error;
