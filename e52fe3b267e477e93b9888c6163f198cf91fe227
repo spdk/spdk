@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8cf44a16_96c863e4",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-05-26T01:51:18Z",
+      "side": 1,
+      "message": "of course not, here the bdev_io will absolutely not \u003d\u003d the vbdevio-\u003ebdev_io, the bdev_io here is for reset command, they are completely different.",
+      "parentUuid": "93f236a9_4ebbfbb3",
+      "range": {
+        "startLine": 93,
+        "startChar": 2,
+        "endLine": 93,
+        "endChar": 46
+      },
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f33875f_a0c29bad",
         "filename": "lib/bdev/error/vbdev_error.c",
         "patchSetId": 2
