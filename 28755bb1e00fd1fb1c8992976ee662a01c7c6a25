@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fb2aeb6_d0e0d2cb",
+        "filename": "test/lib/event/subsystem/subsystem_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T16:09:28Z",
+      "side": 1,
+      "message": "You should set global_rc \u003d -1 here.  Then you will be testing to make sure it was overwritten with 0 in spdk_app_stop.  Otherwise it is possible global_rc was never set by spdk_app_stop.",
+      "revId": "28755bb1e00fd1fb1c8992976ee662a01c7c6a25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4852e08_5a73db7e",
+        "filename": "test/lib/event/subsystem/subsystem_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T16:09:28Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "28755bb1e00fd1fb1c8992976ee662a01c7c6a25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63fa9f1b_34d8eea5",
+        "filename": "test/lib/scsi/init/init_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T16:09:28Z",
+      "side": 1,
+      "message": "same as previous file - should set global_rc \u003d -1 before calling spdk_scsi_subsystem_init\n\nsimilar for rest of this file",
+      "revId": "28755bb1e00fd1fb1c8992976ee662a01c7c6a25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
