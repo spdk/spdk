@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47eee21b_63e9c60c",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1353,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T21:59:16Z",
+      "side": 1,
+      "message": "This should be 3 bits instead of 2.",
+      "revId": "62d8ad37f3ebf2eca2de46c67b26b53b1c11baf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
