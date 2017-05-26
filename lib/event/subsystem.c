@@ -42,6 +42,7 @@ static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
 	TAILQ_HEAD_INITIALIZER(g_depends);
 static struct spdk_subsystem *g_next_subsystem;
+static struct spdk_event *g_app_start_event;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -126,6 +127,7 @@ spdk_subsystem_init_next(int rc)
 	}
 
 	if (!g_next_subsystem) {
+		spdk_event_call(g_app_start_event);
 		return;
 	}
 
@@ -137,9 +139,11 @@ spdk_subsystem_init_next(int rc)
 }
 
 void
-spdk_subsystem_init(void)
+spdk_subsystem_init(void *arg1, void *arg2)
 {
 	struct spdk_subsystem_depend *dep;
+
+	g_app_start_event = (struct spdk_event *)arg1;
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
 	TAILQ_FOREACH(dep, &g_depends, tailq) {
