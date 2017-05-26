@@ -571,4 +571,73 @@ spdk_vhost_shutdown_cb(void)
 	pthread_detach(tid);
 }
 
+static void
+vhost_timed_event_fn(void *arg1, void *arg2)
+{
+	struct spdk_vhost_timed_event *ev = arg1;
+
+	if (ev->cb_fn) {
+		ev->cb_fn(arg2);
+	}
+
+	sem_post(&ev->sem);
+}
+
+static void
+spdk_vhost_timed_event_init(struct spdk_vhost_timed_event *ev, int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec)
+{
+	if (sem_init(&ev->sem, 0, 0) < 0)
+		rte_panic("Failed to initialize semaphore.");
+
+	ev->cb_fn = cb_fn;
+	ev->is_dynamic = false;
+	clock_gettime(CLOCK_REALTIME, &ev->timeout);
+	ev->timeout.tv_sec += timeout_sec;
+	ev->spdk_event = spdk_event_allocate(lcore, vhost_timed_event_fn, ev, arg);
+}
+
+static void
+spdk_vhost_timed_event_call(struct spdk_vhost_timed_event *ev)
+{
+	spdk_event_call(ev->spdk_event);
+	spdk_vhost_timed_event_wait(ev);
+}
+
+struct spdk_vhost_timed_event *
+spdk_vhost_timed_event_alloc(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec)
+{
+	struct spdk_vhost_timed_event *ev = spdk_zmalloc(sizeof(struct spdk_vhost_timed_event), 0, NULL);
+
+	spdk_vhost_timed_event_init(ev, lcore, cb_fn, arg, timeout_sec);
+	ev->is_dynamic = true;
+
+	return ev;
+}
+
+void
+spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec)
+{
+	struct spdk_vhost_timed_event ev;
+
+	spdk_vhost_timed_event_init(&ev, lcore, cb_fn, arg, timeout_sec);
+	spdk_vhost_timed_event_call(&ev);
+}
+
+void
+spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev)
+{
+	int rc;
+
+	rc = sem_timedwait(&ev->sem, &ev->timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("%s: Timout while waiting for event done\n", __func__);
+		abort();
+	}
+
+	sem_destroy(&ev->sem);
+	if (ev->is_dynamic) {
+		spdk_free(ev);
+	}
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)

@@ -111,4 +111,19 @@ int spdk_vhost_dev_register(struct spdk_vhost_dev *dev,
 int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_destruct(struct spdk_vhost_dev *dev);
 
+typedef void (*spdk_vhost_timed_event_fn)(void *);
+
+struct spdk_vhost_timed_event {
+	spdk_vhost_timed_event_fn cb_fn;;
+	sem_t sem;
+	struct timespec timeout;
+	struct spdk_event *spdk_event;
+	bool is_dynamic;
+};
+
+struct spdk_vhost_timed_event *spdk_vhost_timed_event_alloc(int32_t lcore, spdk_vhost_timed_event_fn cn_fn, void *arg, unsigned timeout_sec);
+void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn, void *arg, unsigned timeout_sec);
+void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event);
+
+
 #endif /* SPDK_VHOST_INTERNAL_H */
