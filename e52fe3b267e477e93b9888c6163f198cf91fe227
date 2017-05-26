@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "93f236a9_4ebbfbb3",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-26T01:43:57Z",
+      "side": 1,
+      "message": "By the way, will you check whether \"vbdevio-\u003ebdev_io \u003d\u003d bdev_io\" before removing this vbdev_io?",
+      "range": {
+        "startLine": 93,
+        "startChar": 2,
+        "endLine": 93,
+        "endChar": 46
+      },
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f33875f_a0c29bad",
         "filename": "lib/bdev/error/vbdev_error.c",
         "patchSetId": 2
@@ -84,6 +107,30 @@
       "side": 1,
       "message": "line 134 locked, we can not call before insert tail, it used for all the following block.",
       "parentUuid": "c4e3416b_e4f3c4fb",
+      "range": {
+        "startLine": 142,
+        "startChar": 2,
+        "endLine": 142,
+        "endChar": 22
+      },
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db227c96_8b4d4d37",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-26T01:43:57Z",
+      "side": 1,
+      "message": "Yes. Sorry to did not see that line.",
+      "parentUuid": "270a3e38_a64af8eb",
       "range": {
         "startLine": 142,
         "startChar": 2,
