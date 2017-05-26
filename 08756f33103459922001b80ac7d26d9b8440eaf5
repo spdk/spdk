@@ -16,6 +16,24 @@
       "revId": "08756f33103459922001b80ac7d26d9b8440eaf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79364adb_148df2e0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T22:16:48Z",
+      "side": 1,
+      "message": "I\u0027m not sure we can here.  This bdev_registered() function will usually be asynchronous - i.e. lvolstore needs to try an spdk_bs_load, check the superblob, etc.",
+      "parentUuid": "c94d38f0_7a0346a1",
+      "revId": "08756f33103459922001b80ac7d26d9b8440eaf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
