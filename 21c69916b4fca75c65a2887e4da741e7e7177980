@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3237050_d38a3eda",
+        "filename": "test/iscsi_tgt/ext4test/ext4test.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-26T02:19:02Z",
+      "side": 1,
+      "message": "As we had this, do we want to also have below:\n\nrm -f $testdir/iscsi.conf\ntiming_exit ext4test",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 17
+      },
+      "revId": "21c69916b4fca75c65a2887e4da741e7e7177980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
