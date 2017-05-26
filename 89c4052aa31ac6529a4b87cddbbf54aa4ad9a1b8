@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "733cd12a_9f0cec82",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-26T06:50:19Z",
+      "side": 1,
+      "message": "$NVMF_APP",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 30
+      },
+      "revId": "89c4052aa31ac6529a4b87cddbbf54aa4ad9a1b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
