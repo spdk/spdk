@@ -142,6 +142,134 @@ _fs_unload(void *arg)
 }
 
 static void
+fs_open_sync(void)
+{
+	spdk_fs_iter iter;
+	struct spdk_file *file;
+	int rc, rc2, rc3;
+	struct spdk_io_channel *channel;
+
+	ut_send_request(_fs_init, NULL);
+
+	spdk_allocate_thread(_fs_send_msg, NULL);
+	channel = spdk_fs_alloc_io_channel_sync(g_fs);
+	CU_ASSERT(channel != NULL);
+
+	rc = spdk_fs_open_file(g_fs, channel, "file1", 0, &g_file);
+	CU_ASSERT(rc != 0);
+	SPDK_CU_ASSERT_FATAL(g_file == NULL);
+
+	iter = spdk_fs_iter_first(g_fs);
+	CU_ASSERT(iter == NULL);
+
+	rc = spdk_fs_open_file(g_fs, channel, "file1", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	iter = spdk_fs_iter_first(g_fs);
+	CU_ASSERT(iter != NULL);
+	file = spdk_fs_iter_get_file(iter);
+	SPDK_CU_ASSERT_FATAL(file != NULL);
+	CU_ASSERT(strcmp("file1", file->name) == 0);
+	iter = spdk_fs_iter_next(iter);
+	CU_ASSERT(iter == NULL);
+
+	/* Open file1 second time, open should success. */
+	rc = spdk_fs_open_file(g_fs, channel, "file1", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+
+	/* Open file1 third time, open should success. */
+	rc = spdk_fs_open_file(g_fs, channel, "file1", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	/* Close file1 first time, close should success. */
+	rc = spdk_file_close(g_file, channel);
+	CU_ASSERT(rc == 0);
+
+	/* Delete should fail, since we have open references. */
+	rc = spdk_fs_delete_file(g_fs, channel, "file1");
+	CU_ASSERT(rc != 0);
+
+	/* Close file1 second time, close should success. */
+	rc = spdk_file_close(g_file, channel);
+	CU_ASSERT(rc == 0);
+
+	/* Delete should fail, since we have open reference. */
+	rc = spdk_fs_delete_file(g_fs, channel, "file1");
+	CU_ASSERT(rc != 0);
+
+	/* Close file1 third time, close should success. */
+	rc = spdk_file_close(g_file, channel);
+	CU_ASSERT(rc == 0);
+
+	rc2 = spdk_fs_open_file(g_fs, channel, "file2", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc2 == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	iter = spdk_fs_iter_first(g_fs);
+	CU_ASSERT(iter != NULL);
+	file = spdk_fs_iter_get_file(iter);
+	SPDK_CU_ASSERT_FATAL(file != NULL);
+	CU_ASSERT(strcmp("file1", file->name) == 0);
+
+	iter = spdk_fs_iter_next(iter);
+	CU_ASSERT(iter != NULL);
+	file = spdk_fs_iter_get_file(iter);
+	SPDK_CU_ASSERT_FATAL(file != NULL);
+	CU_ASSERT(strcmp("file2", file->name) == 0);
+
+	iter = spdk_fs_iter_next(iter);
+	CU_ASSERT(iter == NULL);
+
+	rc = spdk_file_close(g_file, channel);
+	CU_ASSERT(rc == 0);
+
+	rc3 = spdk_fs_open_file(g_fs, channel, "file3", SPDK_BLOBFS_OPEN_CREATE, &g_file);
+	CU_ASSERT(rc3 == 0);
+	SPDK_CU_ASSERT_FATAL(g_file != NULL);
+
+	iter = spdk_fs_iter_first(g_fs);
+	CU_ASSERT(iter != NULL);
+	file = spdk_fs_iter_get_file(iter);
+	SPDK_CU_ASSERT_FATAL(file != NULL);
+	CU_ASSERT(strcmp("file1", file->name) == 0);
+
+	iter = spdk_fs_iter_next(iter);
+	CU_ASSERT(iter != NULL);
+	file = spdk_fs_iter_get_file(iter);
+	SPDK_CU_ASSERT_FATAL(file != NULL);
+	CU_ASSERT(strcmp("file2", file->name) == 0);
+
+	iter = spdk_fs_iter_next(iter);
+	CU_ASSERT(iter != NULL);
+	file = spdk_fs_iter_get_file(iter);
+	SPDK_CU_ASSERT_FATAL(file != NULL);
+	CU_ASSERT(strcmp("file3", file->name) == 0);
+
+	/* Delete should fail, since we have an open reference. */
+	rc3 = spdk_fs_delete_file(g_fs, channel, "file3");
+	CU_ASSERT(rc3 != 0);
+
+	rc3 = spdk_file_close(g_file, channel);
+	CU_ASSERT(rc3 == 0);
+
+	rc = spdk_fs_delete_file(g_fs, channel, "file1");
+	CU_ASSERT(rc == 0);
+
+	rc2 = spdk_fs_delete_file(g_fs, channel, "file2");
+	CU_ASSERT(rc2 == 0);
+
+	rc3 = spdk_fs_delete_file(g_fs, channel, "file3");
+	CU_ASSERT(rc3 == 0);
+
+	spdk_fs_free_io_channel(channel);
+	spdk_free_thread();
+
+	ut_send_request(_fs_unload, NULL);
+}
+
+static void
 cache_write(void)
 {
 	uint64_t length;
@@ -327,6 +455,7 @@ int main(int argc, char **argv)
 	}
 
 	if (
+		CU_add_test(suite, "fs_open_sync", fs_open_sync) == NULL ||
 		CU_add_test(suite, "write", cache_write) == NULL ||
 		CU_add_test(suite, "write_null_buffer", cache_write_null_buffer) == NULL ||
 		CU_add_test(suite, "create_sync", fs_create_sync) == NULL ||
