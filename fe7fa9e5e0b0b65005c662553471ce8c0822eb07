@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc1b5885_8b132f90",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-26T21:31:52Z",
+      "side": 1,
+      "message": "I\u0027m thinking to guard against foot-shooting, we should track how many outgoing for_each calls we have for each thread.  Then we can assert this count is zero when freeing a thread.",
+      "revId": "fe7fa9e5e0b0b65005c662553471ce8c0822eb07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
