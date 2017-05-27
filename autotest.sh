@@ -115,32 +115,7 @@ if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	timing_enter nvmf
-
-	run_test test/nvmf/fio/fio.sh
-	run_test test/nvmf/filesystem/filesystem.sh
-	run_test test/nvmf/discovery/discovery.sh
-	run_test test/nvmf/nvme_cli/nvme_cli.sh
-	run_test test/nvmf/shutdown/shutdown.sh
-	run_test test/nvmf/rpc/rpc.sh
-
-	if [ $RUN_NIGHTLY -eq 1 ]; then
-		run_test test/nvmf/multiconnection/multiconnection.sh
-	fi
-
-	timing_enter host
-
-	if [ $RUN_NIGHTLY -eq 1 ]; then
-		run_test test/nvmf/host/aer.sh
-	fi
-	run_test test/nvmf/host/identify.sh
-	run_test test/nvmf/host/perf.sh
-	run_test test/nvmf/host/identify_kernel_nvmf.sh
-	run_test test/nvmf/host/fio.sh
-
-	timing_exit host
-
-	timing_exit nvmf
+	run_test ./test/nvmf/nvmf.sh
 fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
