@@ -18,14 +18,15 @@ if ! rdma_nic_available; then
 fi
 
 timing_enter shutdown
-
+timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf &
+$NVMF_APP -c $testdir/../nvmf.conf &
 pid=$!
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
+timing_exit start_nvmf_tgt
 
 # Create 10 subsystems
 for i in `seq 1 10`
