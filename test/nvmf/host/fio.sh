@@ -20,14 +20,15 @@ if [ ! -d /usr/src/fio ]; then
 fi
 
 timing_enter fio
+timing_enter start_nvmf_tgt
 
-# Start up the NVMf target in another process
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf -m 0x2 -p 1 -s 512 &
+$NVMF_APP -c $testdir/../nvmf.conf &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $nvmfpid ${RPC_PORT}
+timing_exit start_nvmf_tgt
 
 $rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -p "*"
 

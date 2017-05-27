@@ -6,6 +6,14 @@ NVMF_IP_LEAST_ADDR=8
 NVMF_FIRST_TARGET_IP=$NVMF_IP_PREFIX.$NVMF_IP_LEAST_ADDR
 RPC_PORT=5260
 
+if [ -z "$NVMF_APP" ]; then
+	NVMF_APP=./app/nvmf_tgt/nvmf_tgt
+fi
+
+if [ -z "$NVMF_TEST_CORE_MASK" ]; then
+	NVMF_TEST_CORE_MASK=0xFFFF
+fi
+
 function load_ib_rdma_modules()
 {
 	if [ `uname` != Linux ]; then

@@ -15,7 +15,7 @@ if ! rdma_nic_available; then
 fi
 
 timing_enter rpc
-
+timing_enter start_nvmf_tgt
 # Start up the NVMf target in another process
 $rootdir/app/nvmf_tgt/nvmf_tgt -c $testdir/../nvmf.conf &
 pid=$!
@@ -23,6 +23,7 @@ pid=$!
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid ${RPC_PORT}
+timing_exit start_nvmf_tgt
 
 # set times for subsystem construct/delete
 if [ $RUN_NIGHTLY -eq 1 ]; then
