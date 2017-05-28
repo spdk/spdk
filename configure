@@ -228,6 +228,10 @@ fi
 python scripts/genconfig.py > config.h
 
 echo "done."
-echo "Type 'make' to build."
+if [[ "$OSTYPE" == "FreeBSD"* ]]; then
+        echo "Type 'gmake' to build."
+else
+        echo "Type 'make' to build."
+fi
 
 exit 0
