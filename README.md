@@ -3,79 +3,115 @@ Storage Performance Development Kit
 
 [![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
 
-[SPDK Mailing List](https://lists.01.org/mailman/listinfo/spdk)
+Learn all about SPDK at the [SPDK Website](http://www.spdk.io) including
+documentation, detailed information on the community and how to contribute,
+blogs and lots of other useful information. The library includes user space
+drivers for NVMe and NVMeOF, an iSCSI target, a block device abstraction
+layer and many others! Check out the [SPDK Website](http://www.spdk.io) for
+a complete list.
 
-[SPDK on 01.org](https://01.org/spdk)
+For a quick start though, here's what you will find in this readme:
+* Installing prerequisites, getting/building the code & running unit tests
+* Using vagrant to quickly kick the tires in a virtual machine
+* Advanced build options
+* Use of huge pages
+* Information about example code
 
-The Storage Performance Development Kit (SPDK) provides a set of tools
-and libraries for writing high performance, scalable, user-mode storage
-applications. It achieves high performance by moving all of the necessary
-drivers into userspace and operating in a polled mode instead of relying on
-interrupts, which avoids kernel context switches and eliminates interrupt
-handling overhead.
+Install the Prerequisites
+=========================
 
-The development kit currently includes:
-* [NVMe driver](http://www.spdk.io/doc/nvme.html)
-* [I/OAT (DMA engine) driver](http://www.spdk.io/doc/ioat.html)
-* [NVMe over Fabrics target](http://www.spdk.io/doc/nvmf.html)
-* [iSCSI target](http://www.spdk.io/doc/iscsi.html)
-* [vhost target](http://www.spdk.io/doc/vhost.html)
-
-Documentation
-=============
-
-[Doxygen API documentation](http://www.spdk.io/doc/) is available, as
-well as a [Porting Guide](http://www.spdk.io/doc/porting.html) for porting SPDK to different frameworks
-and operating systems.
-
-Many examples are available in the `examples` directory.
-
-[Changelog](CHANGELOG.md)
-
-Prerequisites
-=============
-
-To build SPDK, some dependencies must be installed.
+Note: package names change over time but we try to keep these up to date;
+if you see something missing or in need of correction please let us know!
+Also note that the requirements for building the docs can take a while to
+install so you may want to skip them unless you need them.
 
 Fedora/CentOS:
 
-    sudo dnf install -y gcc gcc-c++ CUnit-devel libaio-devel openssl-devel
-    # Additional dependencies for NVMe over Fabrics:
-    sudo dnf install -y libibverbs-devel librdmacm-devel
+~~~{.sh}
+sudo dnf update
+sudo dnf install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
+libibverbs-devel librdmacm-devel git astyle-devel python-pep8 lcov python \
+clang-analyzer
+# Additional dependencies for building docs
+sudo dnf install -y doxygen mscgen
+~~~
 
 Ubuntu/Debian:
 
-    sudo apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev
-    # Additional dependencies for NVMe over Fabrics:
-    sudo apt-get install -y libibverbs-dev librdmacm-dev
+~~~{.sh}
+sudo apt-get update
+sudo apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
+libibverbs-dev librdmacm-dev git astyle pep8 lcov clang
+# Additional dependencies for building docs
+sudo apt-get install -y doxygen mscgen
+~~~
 
 FreeBSD:
 
-    sudo pkg install gmake cunit openssl
+~~~{.sh}
+sudo pkg update
+sudo pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
+python
+# Additional dependencies for building docs
+sudo pkg install doxygen mscgen
+~~~
 
-Additionally, [DPDK](http://dpdk.org/doc/quick-start) is required.  The SPDK
-repository includes a suitable version of DPDK as a submodule:
+Clone the repo and initialize the DPDK submodule
+================================================
 
-    git submodule update --init
+~~~{.sh}
+git clone https://review.gerrithub.io/spdk/spdk
+cd spdk
+git submodule update --init
+~~~
 
-Building
-========
+Optionally use the git credential helper to store your GerritHub password
+=========================================================================
 
-Once the prerequisites are installed, building follows the common configure
-and make pattern (note: this will build the DPDK submodule as well).
+~~~{.sh}
+git config credential.helper store
+~~~
+
+Install the commit-msg hook
+===========================
+This inserts a unique change ID each time you commit and is required.
+
+~~~{.sh}
+curl -Lo .git/hooks/commit-msg https://review.gerrithub.io/tools/hooks/commit-msg
+chmod +x .git/hooks/commit-msg
+~~~
+
+Build the libraries
+===================
 
 Linux:
 
-    ./configure
-    make
+~~~{.sh}
+./configure
+make CONFIG_DEBUG=y CONFIG_COVERAGE=y
+~~~
 
 FreeBSD:
+Note: Make sure you have the correct kernel source in /usr/src/ and
+also note that CONFIG_COVERAGE option is not available right now
+for FreeBSD builds.
 
-    ./configure
-    gmake
+~~~{.sh}
+./configure
+gmake CONFIG_DEBUG=y
+~~~
 
-Vagrant
-=======
+Running the unit tests
+======================
+When you run the tests, you will see lots of expected failure messages,
+however seeing the message that all tests pass is what matters.
+
+~~~{.sh}
+./unittests.sh
+~~~
+
+Using Vagrant
+=============
 
 A [Vagrant](https://www.vagrantup.com/downloads.html) setup is also provided
 to create a Linux VM with a virtual NVMe controller to get up and running
@@ -102,18 +138,22 @@ Boolean (on/off) options are configured with a 'y' (yes) or 'n' (no). For
 example, this line of `CONFIG` controls whether the optional RDMA (libibverbs)
 support is enabled:
 
-    CONFIG_RDMA?=n
+	CONFIG_RDMA?=n
 
 To enable RDMA, this line may be added to `CONFIG.local` with a 'y' instead of
 'n'. For the majority of options this can be done using the `configure` script.
 For example:
 
-    ./configure --with-dpdk=./dpdk/x86_64-native-linuxapp-gcc --with-rdma
+~~~{.sh}
+./configure --with-dpdk=./dpdk/x86_64-native-linuxapp-gcc --with-rdma
+~~~
 
 Additionally, `CONFIG` options may also be overrriden on the `make` command
 line:
 
-    make CONFIG_RDMA=y
+~~~{.sh}
+make CONFIG_RDMA=y
+~~~
 
 Users may wish to use a version of DPDK different from the submodule included
 in the SPDK repository.  To specify an alternate DPDK installation, run
@@ -121,13 +161,17 @@ configure with the --with-dpdk option.  For example:
 
 Linux:
 
-    ./configure --with-dpdk=/path/to/dpdk/x86_64-native-linuxapp-gcc
-    make
+~~~{.sh}
+./configure --with-dpdk=/path/to/dpdk/x86_64-native-linuxapp-gcc
+make
+~~~{.sh}
 
 FreeBSD:
 
-    ./configure --with-dpdk=/path/to/dpdk/x86_64-native-bsdapp-clang
-    gmake
+~~~{.sh}
+./configure --with-dpdk=/path/to/dpdk/x86_64-native-bsdapp-clang
+gmake
+~~~
 
 The options specified on the `make` command line take precedence over the
 default values in `CONFIG` and `CONFIG.local`. This can be useful if you, for
@@ -143,7 +187,9 @@ any NVMe and I/OAT devices must be unbound from the native kernel drivers.
 SPDK includes a script to automate this process on both Linux and FreeBSD.
 This script should be run as root.
 
-    sudo scripts/setup.sh
+~~~{.sh}
+sudo scripts/setup.sh
+~~~
 
 Examples
 ========
