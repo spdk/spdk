@@ -232,6 +232,8 @@ struct spdk_fs_channel {
 	struct spdk_filesystem		*fs;
 	struct spdk_io_channel		*bs_channel;
 	fs_send_request_fn		send_request;
+	bool				sync;
+	pthread_spinlock_t		lock;
 };
 
 static struct spdk_fs_request *
@@ -239,11 +241,22 @@ alloc_fs_request(struct spdk_fs_channel *channel)
 {
 	struct spdk_fs_request *req;
 
+	if (channel->sync) {
+		pthread_spin_lock(&channel->lock);
+	}
+
 	req = TAILQ_FIRST(&channel->reqs);
-	if (!req) {
+	if (req) {
+		TAILQ_REMOVE(&channel->reqs, req, link);
+	}
+
+	if (channel->sync) {
+		pthread_spin_unlock(&channel->lock);
+	}
+
+	if (req == NULL) {
 		return NULL;
 	}
-	TAILQ_REMOVE(&channel->reqs, req, link);
 	memset(req, 0, sizeof(*req));
 	req->channel = channel;
 	req->args.from_request = true;
@@ -254,7 +267,17 @@ alloc_fs_request(struct spdk_fs_channel *channel)
 static void
 free_fs_request(struct spdk_fs_request *req)
 {
+	struct spdk_fs_channel *channel = req->channel;
+
+	if (channel->sync) {
+		pthread_spin_lock(&channel->lock);
+	}
+
 	TAILQ_INSERT_HEAD(&req->channel->reqs, req, link);
+
+	if (channel->sync) {
+		pthread_spin_unlock(&channel->lock);
+	}
 }
 
 static int
@@ -1457,6 +1480,8 @@ spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs)
 	io_channel = spdk_get_io_channel(&fs->io_target);
 	fs_channel = spdk_io_channel_get_ctx(io_channel);
 	fs_channel->send_request = fs->send_request;
+	fs_channel->sync = 1;
+	pthread_spin_init(&fs_channel->lock, 0);
 
 	return io_channel;
 }
