@@ -115,6 +115,12 @@
   # Split Nvme0n1 into Nvme0n1p0, NVMe0n1p ...
   Split Nvme0n1
 
+[Lvol]
+  # Syntax:
+  #   Split <bdev>
+  #
+  # Read logical volumes from bdev
+
 # Vhost scsi controller configuration
 # Users should change the VhostScsi section(s) below to match the desired
 # vhost configuration.

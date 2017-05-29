@@ -126,6 +126,12 @@
   # Split Nvme0n1 into Nvme0n1p0, NVMe0n1p ...
   Split Nvme0n1
 
+[Lvol]
+  # Syntax:
+  #   Split <bdev>
+  #
+  # Read logical volumes from bdev
+
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Core may be set or not. If set, the specified subsystem will run on
