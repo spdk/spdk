@@ -40,9 +40,11 @@ DPDK_CONFIG := spdk
 
 ifeq ($(OS),Linux)
 DPDK_CONFIG := $(DPDK_CONFIG)-linuxapp
+NPROC = $(shell nproc)
 else
 ifeq ($(OS),FreeBSD)
 DPDK_CONFIG := $(DPDK_CONFIG)-bsdapp
+NPROC := $(shell sysctl hw.ncpu | awk '{print $$NF}')
 endif
 endif
 
@@ -51,8 +53,6 @@ DPDK_CONFIG := $(DPDK_CONFIG)-clang
 else
 DPDK_CONFIG := $(DPDK_CONFIG)-gcc
 endif
-
-NPROC = $(shell nproc)
 
 ifeq ($(CONFIG_FIO_PLUGIN),y)
 DPDK_CFLAGS = -fPIC
