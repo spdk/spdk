@@ -31,14 +31,32 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(CURDIR)/../../..
+
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += blobfs ioat nvme
+APP := spdk_blobfs
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS := spdk_blobfs.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+CFLAGS += -I$(FIO_SOURCE_DIR)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIB_LIST = blobfs blob bdev blob_bdev copy event util conf trace \
+		log jsonrpc json rpc
+
+LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+
+LDFLAGS += -shared -rdynamic
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
