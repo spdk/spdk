@@ -31,25 +31,17 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS) -I.
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
-endif
+CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/ -Irte_virtio
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost/linux
 
-C_SRCS = bdev.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
+C_SRCS = blockdev_virtio.c
+C_SRCS += rte_virtio/virtio_ethdev.c rte_virtio/virtio_pci.c rte_virtio/virtio_rxtx.c
+C_SRCS += rte_virtio/virtio_user_ethdev.c
+C_SRCS += rte_virtio/virtio_user/vhost_user.c rte_virtio/virtio_user/virtio_user_dev.c
 
-LIBNAME = bdev
-
-DIRS-y += error gpt malloc null nvme rpc split
-
-ifeq ($(OS),Linux)
-DIRS-y += aio virtio
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
+LIBNAME = bdev_virtio
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
