@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22f43be5_ddce7bfb",
+        "filename": "etc/spdk/iscsi.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:43:43Z",
+      "side": 1,
+      "message": "I\u0027m not sure - will we need an explicit Lvol section in the configuration file?  lvolstore instantiation will be dictated by tasting a bdev to see if its has a blobstore w/ lvolstore metadata on it - not on whether the configuration file says there is an lvolstore on a bdev or not.",
+      "revId": "6d12b39d00c6f34f3f094bc5ba71c333b9b7074e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95cb19b9_0a9c6b48",
+        "filename": "lib/bdev/lvol/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:43:43Z",
+      "side": 1,
+      "message": "This should all be part of a new lib/lvol library.",
+      "revId": "6d12b39d00c6f34f3f094bc5ba71c333b9b7074e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43835109_2c867212",
+        "filename": "lib/bdev/lvol/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:43:43Z",
+      "side": 1,
+      "message": "vbdev_vol.c should be part of a separate patch.\n\nWe should end up with two separate directories under lib for lvol-related code:\n\nlib/lvol: core lvol/lvolstore code\nlib/bdev/lvol: code for registering lvols as bdevs\n\nUnit test code for lvol should also go under test/lib/lvol",
+      "revId": "6d12b39d00c6f34f3f094bc5ba71c333b9b7074e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6768ef3_0219d364",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:43:43Z",
+      "side": 1,
+      "message": "list should be kept in alphabetical order",
+      "revId": "6d12b39d00c6f34f3f094bc5ba71c333b9b7074e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
