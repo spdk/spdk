@@ -16,6 +16,24 @@
       "revId": "1274fbcc3d036c894f46aad93391a4b79afd6cda",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39244180_693f7557",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:35:03Z",
+      "side": 1,
+      "message": "I just thought it would be better to have both operands for the size calculation on the same line instead of splitting that expression across lines to fit under the 100 character limit.\n\nThis one was really more of a nit - I only made the change since I was already touching the env.c file.\n\nFYI - normally for the env.c changes I\u0027d just reply -1 and have you push a new patch but I really want to get this patch in ASAP so we can rebase all of the other patches that will have conflicts on this big one.",
+      "parentUuid": "d2049924_77254177",
+      "revId": "1274fbcc3d036c894f46aad93391a4b79afd6cda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
