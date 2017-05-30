@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9caa647f_1e34f7f6",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-05-30T22:06:50Z",
+      "side": 1,
+      "message": "Now is as good of a time to discuss this as any - spdk_dma_malloc or spdk_dma_alloc? spdk_dma_zmalloc or spdk_dma_zalloc?\n\nIf we\u0027re changing everything, we may as well have consensus on every last little detail.",
+      "revId": "1274fbcc3d036c894f46aad93391a4b79afd6cda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d2049924_77254177",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
