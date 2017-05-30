@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "46bfdd7e_e11fbe70",
+        "filename": "include/spdk_internal/log_syslog.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-30T19:45:37Z",
+      "side": 1,
+      "message": "I think this may belong in the changes that implement the trace facility abstraction.\n\nI see a few more changes where the tracelog changes seem have gotten mixed in.\n\nI think this is because originally the trace and log changes were all together in a big commit.  Let me see if I can do a better job of pulling this apart.",
+      "parentUuid": "22e3fc1e_155225c8",
+      "revId": "5626ffaa36bc48bf2ee1789347b35b0cbacf2109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eec9b4dd_c8d7996c",
         "filename": "test/lib/test_env.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-05-30T18:54:14Z",
       "side": 1,
       "message": "(Just picking one of these unit test files...)\n\nWe shouldn\u0027t have to include log/log_syslog.c in a bunch of our unit test files.  Is there a stub we should be adding here instead to allow these all to link?  Or what is the error we get if we do not include log_syslog.c?",
+      "revId": "5626ffaa36bc48bf2ee1789347b35b0cbacf2109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45857ea8_0b3f8c05",
+        "filename": "test/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-30T19:45:37Z",
+      "side": 1,
+      "message": "Hmm. I see what you mean.  Maybe Ed can explain this, but it looks wrong.\n\nEgrep pattern: log_syslog.c\n\n  File            Line\n0 common.c         9 #include \"log/log_syslog.c\"\n1 log_ut.c        40 #include \"log_syslog.c\"\n2 discovery_ut.c  38 #include \"log/log_syslog.c\"\n3 subsystem_ut.c  43 #include \"log/log_syslog.c\"\n4 dev_ut.c        39 #include \"log/log_syslog.c\"\n5 lun_ut.c        38 #include \"log/log_syslog.c\"\n6 scsi_bdev_ut.c  36 #include \"log/log_syslog.c\"\n7 scsi_nvme_ut.c  35 #include \"log/log_syslog.c\"\n8 test_env.c      37 #include \"log/log_syslog.c\"\n9 io_channel_ut.c 38 #include \"log/log_syslog.c\"\n\nI think the only file that should be including this is maybe the log_ut.c file.\n\nLet me investigate.",
+      "parentUuid": "eec9b4dd_c8d7996c",
       "revId": "5626ffaa36bc48bf2ee1789347b35b0cbacf2109",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
