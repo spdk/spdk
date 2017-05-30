@@ -774,8 +774,10 @@ function vm_start_fio_server()
 		if [[ $fio_bin != "" ]]; then
 			cat $fio_bin | vm_ssh $vm_num 'cat > /root/fio; chmod +x /root/fio'
 			vm_ssh $vm_num /root/fio $readonly --eta=never --server --daemonize=/root/fio.pid
+			vm_ssh $vm_num /root/fio --version
 		else
 			vm_ssh $vm_num fio $readonly --eta=never --server --daemonize=/root/fio.pid
+			vm_ssh $vm_num /root/fio --version
 		fi
 	done
 }
