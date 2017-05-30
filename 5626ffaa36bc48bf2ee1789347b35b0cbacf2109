@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22e3fc1e_155225c8",
+        "filename": "include/spdk_internal/log_syslog.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:54:14Z",
+      "side": 1,
+      "message": "This function does not seem to be syslog specific.  Or is the problem that this takes a FILE * parameter?",
+      "revId": "5626ffaa36bc48bf2ee1789347b35b0cbacf2109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eec9b4dd_c8d7996c",
+        "filename": "test/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:54:14Z",
+      "side": 1,
+      "message": "(Just picking one of these unit test files...)\n\nWe shouldn\u0027t have to include log/log_syslog.c in a bunch of our unit test files.  Is there a stub we should be adding here instead to allow these all to link?  Or what is the error we get if we do not include log_syslog.c?",
+      "revId": "5626ffaa36bc48bf2ee1789347b35b0cbacf2109",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
