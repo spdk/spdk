@@ -58,6 +58,7 @@ repository includes a suitable version of DPDK as a submodule:
 
     git submodule update --init
 
+JENKINS TEST
 Building
 ========
 
