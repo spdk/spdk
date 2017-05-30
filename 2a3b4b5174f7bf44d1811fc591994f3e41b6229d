@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89142707_8af9ce2d",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:53:24Z",
+      "side": 1,
+      "message": "I think it would be better to just exit with error if OSTYPE\u003dFreeBSD and CONFIG_COVERAGE\u003dy.  Then normal FreeBSD users who don\u0027t try to enable coverage don\u0027t get a warning message about it, and users who do try to enable coverage have to explicitly fix their configure command line instead of implicitly changing it for them.",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
