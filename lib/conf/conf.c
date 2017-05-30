@@ -263,7 +263,7 @@ append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp)
 
 	cp = CHECK_CP_OR_USE_DEFAULT(cp);
 	if (cp == NULL) {
-		SPDK_ERRLOG("cp == NULL\n");
+		SPDK_ERRLOG("%s: cp == NULL\n", __func__);
 		return;
 	}
 

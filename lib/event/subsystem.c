@@ -32,10 +32,8 @@
  */
 
 #include "spdk/stdinc.h"
-
-#include "spdk/log.h"
-
 #include "spdk_internal/event.h"
+#include "spdk/log.h"
 
 static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 	TAILQ_HEAD_INITIALIZER(g_subsystems);

@@ -32,7 +32,6 @@
  */
 
 #include "spdk/stdinc.h"
-
 #include "spdk_internal/event.h"
 #include "spdk_internal/log_syslog.h"
 
@@ -155,7 +154,7 @@ spdk_app_get_running_config(char **config_str, char *name)
 	fseek(fp, 0, SEEK_SET);
 	ret = fread(*config_str, sizeof(char), length, fp);
 	if (ret < length)
-		SPDK_ERRLOG("short read\n");
+		SPDK_ERRLOG("%s: warning - short read\n", __func__);
 	fclose(fp);
 	(*config_str)[length] = '\0';
 
