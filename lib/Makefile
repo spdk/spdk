@@ -41,7 +41,6 @@ DIRS-y += iscsi
 DIRS-$(CONFIG_VHOST) += vhost
 endif
 
-
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
