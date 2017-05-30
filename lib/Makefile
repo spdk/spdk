@@ -41,6 +41,7 @@ DIRS-y += iscsi
 DIRS-$(CONFIG_VHOST) += vhost
 endif
 
+DIRS-$(CONFIG_VTUNE) += ittnotify
 
 .PHONY: all clean $(DIRS-y)
 

@@ -49,6 +49,11 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+#ifdef SPDK_CONFIG_VTUNE
+#include "ittnotify.h"
+#include "spdk/string.h"
+#endif
+
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
 #define BUF_SMALL_POOL_SIZE	8192
 #define BUF_LARGE_POOL_SIZE	1024
@@ -87,6 +92,34 @@ struct spdk_bdev_channel {
 
 	/* Channel for the bdev manager */
 	struct spdk_io_channel *mgmt_channel;
+
+#ifdef SPDK_CONFIG_VTUNE
+	uint64_t	stat_tsc;
+
+	/*
+	sampling interval in internal spdk tsc ~0.1 sec
+	the same for all devices, should be static; don't know where to initialize it
+	*/
+	uint64_t	sample_interval;
+
+	/*
+	internal VTune usage
+	the same for all devices, should be static; TBD: to find right place to initialize it
+	*/
+	__itt_domain*	domain;
+
+	/*
+	internal VTune usage
+	string identifier for specific device
+	*/
+	__itt_string_handle*	device_identifier;
+#endif
+
+	/* statistic for submitted operations */
+	struct spdk_bdev_io_stat	submit_stat;
+
+	/* statistic for completed operations */
+	struct spdk_bdev_io_stat	complete_stat;
 };
 
 struct spdk_bdev *
@@ -529,6 +562,13 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	return 0;
 }
 
+static void 
+spdk_zero_bdev_channel_stat(struct spdk_bdev_channel *channel)
+{
+	memset(&channel->submit_stat, 0, sizeof(channel->submit_stat));
+	memset(&channel->complete_stat, 0, sizeof(channel->complete_stat));
+}
+
 static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
@@ -538,6 +578,18 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
+
+#ifdef SPDK_CONFIG_VTUNE
+	ch->domain = __itt_domain_create("spdk");
+	char *device_identifier = spdk_sprintf_alloc("spdk_%s", ch->bdev->name);
+	if (!device_identifier) {
+		return -1;
+	}	
+	ch->device_identifier = __itt_string_handle_create(device_identifier);
+	ch->stat_tsc = spdk_get_ticks();
+	ch->sample_interval = spdk_get_ticks_hz() / 100;
+#endif
+	spdk_zero_bdev_channel_stat(ch);
 
 	return 0;
 }
@@ -664,6 +716,9 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
+	channel->submit_stat.bytes_read += nbytes;
+	channel->submit_stat.num_read_ops++;
+
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iov.iov_base = buf;
@@ -704,6 +759,9 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		return NULL;
 	}
 
+	channel->submit_stat.bytes_read += nbytes;
+	channel->submit_stat.num_read_ops += iovcnt;
+
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iovs = iov;
@@ -740,6 +798,9 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		SPDK_ERRLOG("blockdev_io memory allocation failed duing write\n");
 		return NULL;
 	}
+
+	channel->submit_stat.bytes_written += nbytes;
+	channel->submit_stat.num_write_ops++;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
@@ -780,6 +841,9 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		SPDK_ERRLOG("bdev_io memory allocation failed duing writev\n");
 		return NULL;
 	}
+
+	channel->submit_stat.bytes_written += len;
+	channel->submit_stat.num_write_ops += iovcnt;
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
@@ -939,6 +1003,45 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	return 0;
 }
 
+#ifdef SPDK_CONFIG_VTUNE
+static void
+spdk_bdev_io_stat (struct spdk_bdev_io *bdev_io)
+{
+	uint64_t current_tsc;
+
+	if (!bdev_io->ch) {
+		return;
+	}
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		bdev_io->ch->complete_stat.bytes_read += bdev_io->u.read.len;
+		bdev_io->ch->complete_stat.num_read_ops++;
+	}  else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+		bdev_io->ch->complete_stat.bytes_written += bdev_io->u.write.len;
+		bdev_io->ch->complete_stat.num_write_ops++;
+	}
+
+	current_tsc = spdk_get_ticks();
+	if ((current_tsc - bdev_io->ch->stat_tsc) > bdev_io->ch->sample_interval) {
+		uint64_t metadata[8];
+
+		metadata[0] = bdev_io->ch->submit_stat.num_read_ops;
+		metadata[1] = bdev_io->ch->submit_stat.bytes_read;
+		metadata[2] = bdev_io->ch->submit_stat.num_write_ops;
+		metadata[3] = bdev_io->ch->submit_stat.bytes_written;
+		metadata[4] = bdev_io->ch->complete_stat.num_read_ops;
+		metadata[5] = bdev_io->ch->complete_stat.bytes_read;
+		metadata[6] = bdev_io->ch->complete_stat.num_write_ops;
+		metadata[7] = bdev_io->ch->complete_stat.bytes_written;
+
+		__itt_metadata_add(bdev_io->ch->domain, __itt_null, bdev_io->ch->device_identifier, __itt_metadata_u64, 8, &metadata[0]);
+
+		spdk_zero_bdev_channel_stat(bdev_io->ch);
+		bdev_io->ch->stat_tsc = current_tsc;
+	}
+}
+#endif
+
 static void
 bdev_io_deferred_completion(void *arg1, void *arg2)
 {
@@ -988,6 +1091,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 	bdev_io->status = status;
 
+#ifdef SPDK_CONFIG_VTUNE
+	spdk_bdev_io_stat(bdev_io);
+#endif
 	assert(bdev_io->cb != NULL);
 	bdev_io->cb(bdev_io, status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
 }

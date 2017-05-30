@@ -35,6 +35,9 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS) -I.
+ifeq ($(CONFIG_VTUNE),y)
+CFLAGS += -I$(VTUNE_SOURCE_DIR)/include
+endif
 C_SRCS = bdev.c scsi_nvme.c
 LIBNAME = bdev
 

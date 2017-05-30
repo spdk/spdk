@@ -101,6 +101,13 @@ enum spdk_bdev_reset_type {
 	SPDK_BDEV_RESET_SOFT,
 };
 
+struct spdk_bdev_io_stat {
+	uint64_t bytes_read;
+	uint64_t num_read_ops;
+	uint64_t bytes_written;
+	uint64_t num_write_ops;
+};
+
 /**
  * Block device completion callback
  *

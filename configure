@@ -115,6 +115,14 @@ for i in "$@"; do
 			FIO_SOURCE_DIR=
 			CONFIG_FIO_PLUGIN=n
 			;;
+		--with-vtune=*)
+			VTUNE_SOURCE_DIR="${i#*=}"
+			CONFIG_VTUNE=y
+			;;
+		--without-vtune)
+			VTUNE_SOURCE_DIR=
+			CONFIG_VTUNE=n
+			;;
 		--)
 			break
 			;;
@@ -134,6 +142,13 @@ fi
 if [ "$CONFIG_FIO_PLUGIN" = "y" ]; then
 	if [ -z "$FIO_SOURCE_DIR" ]; then
 		echo "When fio is enabled, you must specify the fio directory using --with-fio=path"
+		exit 1
+	fi
+fi
+
+if [ "$CONFIG_VTUNE" = "y" ]; then
+	if [ -z "$VTUNE_SOURCE_DIR" ]; then
+		echo "When VTune is enabled, you must specify the VTune directory using --with-vtune=path"
 		exit 1
 	fi
 fi
@@ -185,6 +200,12 @@ if [ -n "$CONFIG_RDMA" ]; then
 fi
 if [ -n "$CONFIG_RBD" ]; then
 	echo "CONFIG_RBD?=$CONFIG_RBD" >> CONFIG.local
+fi
+if [ -n "$CONFIG_VTUNE" ]; then
+	echo "CONFIG_VTUNE?=$CONFIG_VTUNE" >> CONFIG.local
+fi
+if [ -n "$VTUNE_SOURCE_DIR" ]; then
+	echo "VTUNE_SOURCE_DIR?=$VTUNE_SOURCE_DIR" >> CONFIG.local
 fi
 
 python scripts/genconfig.py > config.h

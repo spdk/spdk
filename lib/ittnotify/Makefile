@@ -34,9 +34,9 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += -Iinclude $(ENV_CFLAGS)
+CFLAGS += -I$(VTUNE_SOURCE_DIR)/include $(ENV_CFLAGS)
 
-C_SRCS = $(CURDIR)/src/ittnotify/ittnotify_static.c
+C_SRCS = $(VTUNE_SOURCE_DIR)/sdk/src/ittnotify/ittnotify_static.c
 
 LIBNAME = ittnotify
 
