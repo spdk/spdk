@@ -40,6 +40,7 @@
 #include "spdk/event.h"
 #include "iscsi/iscsi.h"
 #include "spdk/log.h"
+#include "spdk_internal/log_syslog.h"
 #include "spdk/net.h"
 
 static void

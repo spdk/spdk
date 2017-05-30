@@ -37,6 +37,7 @@
 #include "spdk/log.h"
 
 #include "log.c"
+#include "log_syslog.c"
 
 static void
 log_test(void)

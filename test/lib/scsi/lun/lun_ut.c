@@ -35,6 +35,7 @@
 
 #include "spdk_cunit.h"
 
+#include "log/log_syslog.c"
 #include "task.c"
 #include "lun.c"
 #include "lun_db.c"

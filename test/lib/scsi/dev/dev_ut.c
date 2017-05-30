@@ -36,6 +36,7 @@
 #include "CUnit/Basic.h"
 #include "spdk_cunit.h"
 
+#include "log/log_syslog.c"
 #include "dev.c"
 #include "port.c"
 

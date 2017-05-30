@@ -35,138 +35,21 @@
 
 #include "spdk_internal/log.h"
 
-static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
+struct spdk_trace_flag_head g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
+struct spdk_log_env g_log_env;
 
 unsigned int spdk_g_notice_stderr_flag = 1;
-int spdk_g_log_facility = LOG_DAEMON;
-unsigned int spdk_g_log_priority = LOG_NOTICE;
 
 SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
-
-#define MAX_TMPBUF 1024
-
-struct syslog_code {
-	const char *c_name;
-	int c_val;
-};
-
-static const struct syslog_code facilitynames[] = {
-	{ "auth",	LOG_AUTH,	},
-	{ "authpriv",	LOG_AUTHPRIV,	},
-	{ "cron",	LOG_CRON,	},
-	{ "daemon",	LOG_DAEMON,	},
-	{ "ftp",	LOG_FTP,	},
-	{ "kern",	LOG_KERN,	},
-	{ "lpr",	LOG_LPR,	},
-	{ "mail",	LOG_MAIL,	},
-	{ "news",	LOG_NEWS,	},
-	{ "syslog",	LOG_SYSLOG,	},
-	{ "user",	LOG_USER,	},
-	{ "uucp",	LOG_UUCP,	},
-	{ "local0",	LOG_LOCAL0,	},
-	{ "local1",	LOG_LOCAL1,	},
-	{ "local2",	LOG_LOCAL2,	},
-	{ "local3",	LOG_LOCAL3,	},
-	{ "local4",	LOG_LOCAL4,	},
-	{ "local5",	LOG_LOCAL5,	},
-	{ "local6",	LOG_LOCAL6,	},
-	{ "local7",	LOG_LOCAL7,	},
-#ifdef __FreeBSD__
-	{ "console",	LOG_CONSOLE,	},
-	{ "ntp",	LOG_NTP,	},
-	{ "security",	LOG_SECURITY,	},
-#endif
-	{ NULL,		-1,		}
-};
-
-static const struct syslog_code prioritynames[] = {
-	{ "alert",	LOG_ALERT,	},
-	{ "crit",	LOG_CRIT,	},
-	{ "debug",	LOG_DEBUG,	},
-	{ "emerg",	LOG_EMERG,	},
-	{ "err",	LOG_ERR,	},
-	{ "info",	LOG_INFO,	},
-	{ "notice",	LOG_NOTICE,	},
-	{ "warning",	LOG_WARNING,	},
-	{ NULL,		-1,		}
-};
-
-int
-spdk_set_log_facility(const char *facility)
-{
-	int i;
-
-	for (i = 0; facilitynames[i].c_name != NULL; i++) {
-		if (strcasecmp(facilitynames[i].c_name, facility) == 0) {
-			spdk_g_log_facility = facilitynames[i].c_val;
-			return 0;
-		}
-	}
-
-	spdk_g_log_facility = LOG_DAEMON;
-	return -1;
-}
-
-const char *
-spdk_get_log_facility(void)
-{
-	const char *def_name = NULL;
-	int i;
-
-	for (i = 0; facilitynames[i].c_name != NULL; i++) {
-		if (facilitynames[i].c_val == spdk_g_log_facility) {
-			return facilitynames[i].c_name;
-		} else if (facilitynames[i].c_val == LOG_DAEMON) {
-			def_name = facilitynames[i].c_name;
-		}
-	}
-
-	return def_name;
-}
-
-int
-spdk_set_log_priority(const char *priority)
-{
-	int i;
-
-	for (i = 0; prioritynames[i].c_name != NULL; i++) {
-		if (strcasecmp(prioritynames[i].c_name, priority) == 0) {
-			spdk_g_log_priority = prioritynames[i].c_val;
-			return 0;
-		}
-	}
-
-	spdk_g_log_priority = LOG_NOTICE;
-	return -1;
-}
 
 void
 spdk_noticelog(const char *file, const int line, const char *func,
 	       const char *format, ...)
 {
-	char buf[MAX_TMPBUF];
 	va_list ap;
 
 	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (file != NULL) {
-		if (func != NULL) {
-			if (spdk_g_notice_stderr_flag) {
-				fprintf(stderr, "%s:%4d:%s: %s", file, line, func, buf);
-			}
-			syslog(LOG_NOTICE, "%s:%4d:%s: %s", file, line, func, buf);
-		} else {
-			if (spdk_g_notice_stderr_flag) {
-				fprintf(stderr, "%s:%4d: %s", file, line, buf);
-			}
-			syslog(LOG_NOTICE, "%s:%4d: %s", file, line, buf);
-		}
-	} else {
-		if (spdk_g_notice_stderr_flag) {
-			fprintf(stderr, "%s", buf);
-		}
-		syslog(LOG_NOTICE, "%s", buf);
-	}
+	g_log_env.log_fn(SPDK_LOG_NOTICE, NULL, file, line, func, format, ap);
 	va_end(ap);
 }
 
@@ -174,25 +57,10 @@ void
 spdk_warnlog(const char *file, const int line, const char *func,
 	     const char *format, ...)
 {
-	char buf[MAX_TMPBUF];
 	va_list ap;
 
 	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (file != NULL) {
-		if (func != NULL) {
-			fprintf(stderr, "%s:%4d:%s: %s", file, line, func, buf);
-			syslog(LOG_WARNING, "%s:%4d:%s: %s",
-			       file, line, func, buf);
-		} else {
-			fprintf(stderr, "%s:%4d: %s", file, line, buf);
-			syslog(LOG_WARNING, "%s:%4d: %s", file, line, buf);
-		}
-	} else {
-		fprintf(stderr, "%s", buf);
-		syslog(LOG_WARNING, "%s", buf);
-	}
-
+	g_log_env.log_fn(SPDK_LOG_WARN, NULL, file, line, func, format, ap);
 	va_end(ap);
 }
 
@@ -200,18 +68,10 @@ void
 spdk_tracelog(const char *flag, const char *file, const int line, const char *func,
 	      const char *format, ...)
 {
-	char buf[MAX_TMPBUF];
 	va_list ap;
 
 	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (func != NULL) {
-		fprintf(stderr, "[%s] %s:%4d:%s: %s", flag, file, line, func, buf);
-		//syslog(LOG_INFO, "[%s] %s:%4d:%s: %s", flag, file, line, func, buf);
-	} else {
-		fprintf(stderr, "[%s] %s:%4d: %s", flag, file, line, buf);
-		//syslog(LOG_INFO, "[%s] %s:%4d: %s", flag, file, line, buf);
-	}
+	g_log_env.log_fn(SPDK_LOG_NOTICE, flag, file, line, func, format, ap);
 	va_end(ap);
 }
 
@@ -219,65 +79,17 @@ void
 spdk_errlog(const char *file, const int line, const char *func,
 	    const char *format, ...)
 {
-	char buf[MAX_TMPBUF];
 	va_list ap;
 
 	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (func != NULL) {
-		fprintf(stderr, "%s:%4d:%s: ***ERROR*** %s", file, line, func, buf);
-		syslog(LOG_ERR, "%s:%4d:%s: ***ERROR*** %s", file, line, func, buf);
-	} else {
-		fprintf(stderr, "%s:%4d: ***ERROR*** %s", file, line, buf);
-		syslog(LOG_ERR, "%s:%4d: ***ERROR*** %s", file, line, buf);
-	}
+	g_log_env.log_fn(SPDK_LOG_ERR, NULL, file, line, func, format, ap);
 	va_end(ap);
-}
-
-static void
-fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
-{
-	char tmpbuf[MAX_TMPBUF];
-	char buf16[16 + 1];
-	size_t total;
-	unsigned int idx;
-
-	fprintf(fp, "%s\n", label);
-
-	memset(buf16, 0, sizeof buf16);
-	total = 0;
-	for (idx = 0; idx < len; idx++) {
-		if (idx != 0 && idx % 16 == 0) {
-			snprintf(tmpbuf + total, sizeof tmpbuf - total,
-				 " %s", buf16);
-			fprintf(fp, "%s\n", tmpbuf);
-			total = 0;
-		}
-		if (idx % 16 == 0) {
-			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-					  "%08x ", idx);
-		}
-		if (idx % 8 == 0) {
-			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-					  "%s", " ");
-		}
-		total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-				  "%2.2x ", buf[idx] & 0xff);
-		buf16[idx % 16] = isprint(buf[idx]) ? buf[idx] : '.';
-	}
-	for (; idx % 16 != 0; idx++) {
-		total += snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
-		buf16[idx % 16] = ' ';
-	}
-	snprintf(tmpbuf + total, sizeof tmpbuf - total, "  %s", buf16);
-	fprintf(fp, "%s\n", tmpbuf);
-	fflush(fp);
 }
 
 void
 spdk_trace_dump(const char *label, const uint8_t *buf, size_t len)
 {
-	fdump(stderr, label, buf, len);
+	g_log_env.trace_dump(label, buf, len);
 }
 
 static struct spdk_trace_flag *
@@ -380,34 +192,20 @@ spdk_log_get_next_trace_flag(struct spdk_trace_flag *flag)
 void
 spdk_open_log(void)
 {
-	if (spdk_g_log_facility != 0) {
-		openlog("spdk", LOG_PID, spdk_g_log_facility);
-	} else {
-		openlog("spdk", LOG_PID, LOG_DAEMON);
-	}
+	g_log_env.open_log();
 }
 
 void
 spdk_close_log(void)
 {
-	closelog();
+	g_log_env.close_log();
 }
 
-void
-spdk_tracelog_usage(FILE *f, const char *trace_arg)
+void spdk_log_configure_env(spdk_open_log_fn open_fn, spdk_close_log_fn close_fn,
+			    spdk_log_fn log_fn, spdk_trace_dump_fn dump_fn)
 {
-#ifdef DEBUG
-	struct spdk_trace_flag *flag;
-
-	fprintf(f, " %s flag    enable trace flag (all", trace_arg);
-
-	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
-		fprintf(f, ", %s", flag->name);
-	}
-
-	fprintf(f, ")\n");
-#else
-	fprintf(f, " %s flag    enable trace flag (not supported - must rebuild with CONFIG_DEBUG=y)\n",
-		trace_arg);
-#endif
+	g_log_env.open_log = open_fn;
+	g_log_env.close_log = close_fn;
+	g_log_env.log_fn = log_fn;
+	g_log_env.trace_dump = dump_fn;
 }

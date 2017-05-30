@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "log/log_syslog.c"
 #include "task.c"
 #include "scsi_bdev.c"
 

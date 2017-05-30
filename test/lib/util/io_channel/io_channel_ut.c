@@ -35,6 +35,7 @@
 
 #include "spdk_cunit.h"
 
+#include "log/log_syslog.c"
 #include "util/io_channel.c"
 
 static void

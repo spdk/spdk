@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "log/log_syslog.c"
 
 void *
 spdk_malloc(size_t size, size_t align, uint64_t *phys_addr)

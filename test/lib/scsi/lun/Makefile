@@ -39,6 +39,7 @@ SPDK_LIB_LIST = cunit log
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += -lcunit
 

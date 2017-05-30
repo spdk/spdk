@@ -6,6 +6,7 @@
 #include "spdk/event.h"
 
 #include "spdk_internal/log.h"
+#include "log/log_syslog.c"
 
 #include "scsi/scsi_internal.h"
 

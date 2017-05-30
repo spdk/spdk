@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/log_syslog.h"
 
 #include <rte_config.h>
 #include <rte_lcore.h>
