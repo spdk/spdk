@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "53c79740_7fed2565",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-30T22:40:12Z",
+      "side": 1,
+      "message": "If for some reason the caller does not want the memory zero\u0027d, they might like a separate zmalloc call.  I think it might be good to keep the malloc call as a separate API.",
+      "parentUuid": "ee1ed1a7_e4d8a0b0",
+      "revId": "1274fbcc3d036c894f46aad93391a4b79afd6cda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d2049924_77254177",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
