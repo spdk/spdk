@@ -161,6 +161,7 @@ struct spdk_scsi_lun;
 
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
 const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
+bool spdk_scsi_lun_is_removed(const struct spdk_scsi_lun *lun);
 
 const char *spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
