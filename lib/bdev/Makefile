@@ -35,7 +35,14 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS) -I.
-C_SRCS = bdev.c scsi_nvme.c
+ifeq ($(CONFIG_VTUNE),y)
+CFLAGS += -I$(VTUNE_SOURCE_DIR)/include
+endif
+
+C_SRCS-$(CONFIG_VTUNE) += $(VTUNE_SOURCE_DIR)/sdk/src/ittnotify/ittnotify_static.c
+
+C_SRCS += bdev.c scsi_nvme.c
+
 LIBNAME = bdev
 
 DIRS-y += error malloc null nvme rpc split
