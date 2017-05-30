@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d437e0a1_1072fb64",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:38:17Z",
+      "side": 1,
+      "message": "I think this comment should be removed.\n\nWe need to have the reactors started before starting subsystem initialization.  Otherwise subsystems and bdevs cannot do asynchronous processing.",
+      "revId": "dc791692a3b9dd056c77c512c9c2aa5b7436b4f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
