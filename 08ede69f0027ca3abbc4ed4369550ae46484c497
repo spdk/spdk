@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2ee0380_873cd398",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-30T22:54:11Z",
+      "side": 1,
+      "message": "Girish says this function is not required.  I\u0027ll remove it.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e201b9d_99b6646f",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-30T22:54:11Z",
+      "side": 1,
+      "message": "This change isn\u0027t needed.  The function was moved because of a merge conflict.  I will revert this file in a subsequent patch.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45d609d1_812c058d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-30T22:54:11Z",
+      "side": 1,
+      "message": "Girish thinks these perfstat_ functions may not belong here.  I\u0027m thinking these could be due to a merge issue.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
