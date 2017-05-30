@@ -536,6 +536,15 @@ vhost_user_set_mem_table(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	memcpy(dev->mem_table_fds, pmsg->fds, sizeof(dev->mem_table_fds));
 	dev->has_new_mem_table = 1;
 
+	/* Remove from the data plane. */
+	if (dev->flags & VIRTIO_DEV_RUNNING) {
+		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		dev->notify_ops->destroy_device(dev->vid);
+	}
+
+	vhost_setup_mem_table(dev);
+	dev->has_new_mem_table = 0;
+
 	return 0;
 }
 
