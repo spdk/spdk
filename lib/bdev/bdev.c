@@ -46,6 +46,11 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
+#include "spdk/string.h"
+
+#ifdef SPDK_CONFIG_VTUNE
+#include "ittnotify.h"
+#endif
 
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
 #define BUF_SMALL_POOL_SIZE	8192
@@ -63,6 +68,10 @@ struct spdk_bdev_mgr {
 	TAILQ_HEAD(, spdk_bdev_module_if) vbdev_modules;
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
+
+#ifdef SPDK_CONFIG_VTUNE
+	__itt_domain	*domain;
+#endif
 };
 
 static struct spdk_bdev_mgr g_bdev_mgr = {
@@ -89,6 +98,13 @@ struct spdk_bdev_channel {
 	struct spdk_io_channel *mgmt_channel;
 
 	struct spdk_bdev_io_stat stat;
+
+#ifdef SPDK_CONFIG_VTUNE
+	uint64_t		start_tsc;
+	uint64_t		interval_tsc;
+	__itt_string_handle	*handle;
+#endif
+
 };
 
 struct spdk_bdev *
@@ -367,7 +383,12 @@ spdk_bdev_initialize(void)
 	if (!g_bdev_mgr.buf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
 		rc = -1;
+		goto end;
 	}
+
+#ifdef SPDK_CONFIG_VTUNE
+	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
+#endif
 
 	spdk_io_device_register(&g_bdev_mgr, spdk_bdev_mgmt_channel_create,
 				spdk_bdev_mgmt_channel_destroy,
@@ -562,6 +583,21 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
 	memset(&ch->stat, 0, sizeof(ch->stat));
+
+#ifdef SPDK_CONFIG_VTUNE
+	{
+		char *name;
+
+		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
+		if (!name) {
+			return -1;
+		}
+		ch->handle = __itt_string_handle_create(name);
+		free(name);
+		ch->start_tsc = spdk_get_ticks();
+		ch->interval_tsc = spdk_get_ticks_hz() / 100;
+	}
+#endif
 
 	return 0;
 }
@@ -957,6 +993,11 @@ void
 spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		      struct spdk_bdev_io_stat *stat)
 {
+#ifdef SPDK_CONFIG_VTUNE
+	SPDK_ERRLOG("Calling spdk_bdev_get_io_stat is not allowed when VTune integration is enabled.\n");
+	memset(stat, 0, sizeof(*stat));
+	return;
+#endif
 
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
@@ -1094,6 +1135,24 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			break;
 		}
 	}
+
+#ifdef SPDK_CONFIG_VTUNE
+	uint64_t now_tsc = spdk_get_ticks();
+	if (now_tsc > (bdev_io->ch->start_tsc + bdev_io->ch->interval_tsc)) {
+		uint64_t data[4];
+
+		data[0] = bdev_io->ch->stat.num_read_ops;
+		data[1] = bdev_io->ch->stat.bytes_read;
+		data[2] = bdev_io->ch->stat.num_write_ops;
+		data[3] = bdev_io->ch->stat.bytes_written;
+
+		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
+				   __itt_metadata_u64, 4, data);
+
+		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
+		bdev_io->ch->start_tsc = now_tsc;
+	}
+#endif
 
 	assert(bdev_io->cb != NULL);
 	bdev_io->cb(bdev_io, status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
