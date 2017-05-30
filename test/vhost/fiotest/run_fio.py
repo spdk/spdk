@@ -46,7 +46,7 @@ def run_fio(vms, fio_cfg_fname, out_path, perf_vmex=False):
         fio_cfg_prefix = fio_cfg_fname.split(".")[0]
 
         # Build command for FIO
-        fio_cmd = " ".join([fio_bin, "--eta=never"])
+        fio_cmd = " ".join([fio_bin, "--eta=never --debug=all"])
         for vm in vms:
             # vm[0] = IP address, vm[1] = Port number
             fio_cmd = " ".join([fio_cmd,
