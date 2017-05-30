@@ -1,4 +1,5 @@
 # Storage Performance Development Kit
+=======
 
 [![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
 
@@ -82,8 +83,17 @@ cd spdk
 git submodule update --init
 ~~~
 
+<<<<<<< 4ce7dd66cd6a063f8b6fb1975513be510bf56c50
 <a id="libraries"></a>
 ## Build
+=======
+JENKINS TEST
+Building
+========
+
+Once the prerequisites are installed, building follows the common configure
+and make pattern (note: this will build the DPDK submodule as well).
+>>>>>>> vhost/test: Jenkins test
 
 Linux:
 
