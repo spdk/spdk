@@ -76,6 +76,19 @@ function configure_linux {
 	done
 	rm $TMP
 
+	# virtio-scsi
+	TMP=`mktemp`
+	#collect all the device_id info of virtio-scsi devices.
+	grep "VIRTIO_PCI_DEVICEID_SCSI" $rootdir/lib/bdev/virtio/rte_virtio/virtio_pci.h \
+	| awk -F"x" '{print $2}' > $TMP
+
+	for dev_id in `cat $TMP`; do
+		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
+			linux_bind_driver "$bdf" "$driver_name"
+		done
+	done
+	rm $TMP
+
 	echo "1" > "/sys/bus/pci/rescan"
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
@@ -137,6 +150,20 @@ function reset_linux {
 	done
 	rm $TMP
 
+	# virtio-scsi
+	TMP=`mktemp`
+	#collect all the device_id info of virtio-scsi devices.
+	grep "VIRTIO_PCI_DEVICEID_SCSI" $rootdir/lib/bdev/virtio/rte_virtio/virtio_pci.h \
+	| awk -F"x" '{print $2}' > $TMP
+
+	modprobe virtio-pci || true
+	for dev_id in `cat $TMP`; do
+		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
+			linux_bind_driver "$bdf" virtio-pci
+		done
+	done
+	rm $TMP
+
 	echo "1" > "/sys/bus/pci/rescan"
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
@@ -166,6 +193,20 @@ function status_linux {
 	echo -e "BDF\t\tNuma Node\tDriver Name"
 	for dev_id in $TMP; do
 		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
+			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
+			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
+			echo -e "$bdf\t$node\t\t$driver"
+		done
+	done
+
+	echo "virtio"
+
+	#collect all the device_id info of virtio-scsi devices.
+	TMP=`grep "VIRTIO_PCI_DEVICEID_SCSI" $rootdir/lib/bdev/virtio/rte_virtio/virtio_pci.h \
+	| awk -F"x" '{print $2}'`
+	echo -e "BDF\t\tNuma Node\tDriver Name"
+	for dev_id in $TMP; do
+		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
 			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
 			echo -e "$bdf\t$node\t\t$driver"
