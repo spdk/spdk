@@ -16,6 +16,24 @@
       "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5199aa0d_42747d38",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-05-30T19:39:30Z",
+      "side": 1,
+      "message": "sounds good.  I\u0027ll hold off on the next patch set until I get a few more sets of comments, my wording is sometimes not the best so I suspect there will be other good suggestions coming in....",
+      "parentUuid": "89142707_8af9ce2d",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
