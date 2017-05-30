@@ -45,6 +45,30 @@
       "revId": "6b983845162cc283073a70064c105c7a0ee5fa9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0779a1e1_3f893bc8",
+        "filename": "lib/scsi/scsi.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T14:57:30Z",
+      "side": 1,
+      "message": "rc was already set by the pthread_mutex_init return value.",
+      "parentUuid": "b886eaee_66d597aa",
+      "range": {
+        "startLine": 108,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 11
+      },
+      "revId": "6b983845162cc283073a70064c105c7a0ee5fa9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
