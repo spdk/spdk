@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "718f771b_26097c16",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T15:00:45Z",
+      "side": 1,
+      "message": "Probably there should never be a subsystem without an init function.  But this follows the previous code which always checked if there was a subsystem-\u003einit set.\n\nI agree we should simplify this and ASSERT() that an init function was defined when the subsystem was registered (not here).  But that should be a separate patch.",
+      "parentUuid": "747eb44f_9aee0411",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 2
+      },
+      "revId": "6b983845162cc283073a70064c105c7a0ee5fa9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b886eaee_66d597aa",
         "filename": "lib/scsi/scsi.c",
         "patchSetId": 17
