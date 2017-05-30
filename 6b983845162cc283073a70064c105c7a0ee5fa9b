@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "747eb44f_9aee0411",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-05-30T08:00:57Z",
+      "side": 1,
+      "message": "Should there ever be subsystem without init ? Might be better to replace with assert.\nIs this only for unit test purpose ?",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 2
+      },
+      "revId": "6b983845162cc283073a70064c105c7a0ee5fa9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b886eaee_66d597aa",
+        "filename": "lib/scsi/scsi.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-05-30T08:00:57Z",
+      "side": 1,
+      "message": "Why continue initialization here without setting rc to -1 ?",
+      "range": {
+        "startLine": 108,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 11
+      },
+      "revId": "6b983845162cc283073a70064c105c7a0ee5fa9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
