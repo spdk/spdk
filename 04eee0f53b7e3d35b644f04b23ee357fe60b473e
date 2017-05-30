@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cce3f2b_6a9b5ce3",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:56:51Z",
+      "side": 1,
+      "message": "nit - should probably use :\u003d to be consistent - but please don\u0027t respin just for that change",
+      "revId": "04eee0f53b7e3d35b644f04b23ee357fe60b473e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
