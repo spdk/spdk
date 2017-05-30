@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89ec83db_ba75051c",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-30T16:58:58Z",
+      "side": 1,
+      "message": "Is there some technical reason to stop using rte_malloc and convert everything to rte_malloc_socket... or is this just a preference?",
+      "revId": "c0b9133def470e317f151f3691bc83497559e8af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
