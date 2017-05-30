@@ -87,6 +87,9 @@ fi
 
 . $BASE_DIR/common.sh
 
+echo "FIO VERSION..."
+/home/sys_sgsw/fio_ubuntu --version
+
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 echo "==============="
