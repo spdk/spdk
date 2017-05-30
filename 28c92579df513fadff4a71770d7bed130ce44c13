@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "821678c7_59d82cf5",
+        "filename": "etc/spdk/iscsi.conf.in",
+        "patchSetId": 12
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:24:54Z",
+      "side": 1,
+      "message": "Does this mean that GPT module should create a GPT on Nvme0n1?",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21ec023d_0a1f5783",
+        "filename": "include/spdk_internal/gpt.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:24:54Z",
+      "side": 1,
+      "message": "I would break this into two structures:\n\n1) info just for GPT parsing (maybe just struct spdk_gpt?)\n2) spdk_gpt_bdev structure that has an spdk_gpt plus the data structures to integrate it with bdev (spdk_bdev and io_channel).\n\nThen spdk_gpt_bdev does not need to be in this header file - it can just be defined in vbdev_gpt.c.  Also then there is no reference to \"bdev\" anywhere in gpt.c code.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "025b4a09_854fe45c",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:24:54Z",
+      "side": 1,
+      "message": "Comment needs to be updated.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40c91858_0fc2c111",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:24:54Z",
+      "side": 1,
+      "message": "Cannot allocate",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef9fd19b_f271dfd0",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:24:54Z",
+      "side": 1,
+      "message": "For any bdev related work, you should not need to call spdk_free_thread/spdk_allocate_thread.  This is automatically done by the reactors.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a92c9073_18aadd1d",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:24:54Z",
+      "side": 1,
+      "message": "Instead of using a conf section, you should try to read mbr/gpt when a new bdev is registered.  You will need to rebase your patches off of https://review.gerrithub.io/#/c/362077/.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a48a3310_ded93e3a",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T18:24:54Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to do this here.  This will cause a lot of side effects - including writing partition tables to devices that were not bound to uio/vfio.\n\nI think a helper script to put a GPT on an NVMe device is a good idea - but should probably be a separate script.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
