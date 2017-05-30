@@ -87,6 +87,9 @@ fi
 
 . $BASE_DIR/common.sh
 
+echo "FIO VERSION"
+$fio_bin --version
+
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 echo "==============="
