@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e38d1cb7_b3fde8d2",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-30T17:59:47Z",
+      "side": 1,
+      "message": "I would just make this a parameter to spdk_scsi_dev_construct.  That way users are forced to pick a scsi protocol ID.  (Yes, I know it means you will need to change 9 calls to this function in the unit test code.)\n\nOther than that, this patch looks good.  Thanks!",
+      "revId": "3fe717fd2753ba7b4fad326aec750585048a71f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
