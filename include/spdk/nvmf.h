@@ -150,36 +150,30 @@ int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem);
 
 void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
-struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn);
+struct spdk_nvmf_subsystem *nvmf_find_subsystem(const char *subnqn);
 
 bool spdk_nvmf_subsystem_exists(const char *subnqn);
 
 bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
 
-struct spdk_nvmf_listen_addr *
-spdk_nvmf_tgt_listen(const char *trname, const char *traddr, const char *trsvcid);
+struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(const char *trname, const char *traddr,
+		const char *trsvcid);
 
-int
-spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				 struct spdk_nvmf_listen_addr *listen_addr);
-
-bool
-spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
+int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvmf_listen_addr *listen_addr);
 
-int
-spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
-			     const char *host_nqn);
+bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
+		struct spdk_nvmf_listen_addr *listen_addr);
 
-int
-nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-			 struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr);
+int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
+				 const char *host_nqn);
+
+int nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+			     struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr);
 
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
-int
-spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev);
+int spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev);
 
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
 
@@ -191,7 +185,6 @@ void spdk_nvmf_acceptor_poll(void);
 
 void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
 
-void
-spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn);
+void spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn);
 
 #endif
