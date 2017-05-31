@@ -96,7 +96,6 @@ struct spdk_nvmf_subsystem_allowed_listener {
  */
 struct spdk_nvmf_subsystem {
 	uint32_t id;
-	uint32_t lcore;
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
