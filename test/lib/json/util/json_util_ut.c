@@ -52,6 +52,15 @@
 	NUM_SETUP(s); \
 	CU_ASSERT(spdk_json_number_to_int32(&v, &i32) != 0)
 
+#define NUM_UINT64_PASS(s, i) \
+	NUM_SETUP(s); \
+	CU_ASSERT(spdk_json_number_to_uint64(&v, &u64) == 0); \
+	CU_ASSERT(u64 == i)
+
+#define NUM_UINT64_FAIL(s) \
+	NUM_SETUP(s); \
+	CU_ASSERT(spdk_json_number_to_uint64(&v, &u64) != 0)
+
 static void
 test_strequal(void)
 {
@@ -101,6 +110,33 @@ test_num_to_int32(void)
 	NUM_INT32_FAIL("1.2E0");
 	NUM_INT32_FAIL("1.234e1");
 	NUM_INT32_FAIL("12341e-1");
+}
+
+static void
+test_num_to_uint64(void)
+{
+	struct spdk_json_val v;
+	char buf[100];
+	uint64_t u64 = 0;
+
+	NUM_SETUP("1234");
+	CU_ASSERT(spdk_json_number_to_uint64(&v, &u64) == 0);
+	CU_ASSERT(u64 == 1234);
+
+
+	NUM_UINT64_PASS("0", 0);
+	NUM_UINT64_PASS("1234", 1234);
+	NUM_UINT64_PASS("1234.00000", 1234);
+	NUM_UINT64_PASS("1.2e1", 12);
+	NUM_UINT64_PASS("12340e-1", 1234);
+	NUM_UINT64_PASS("123456780e-1", 12345678);
+
+	NUM_UINT64_FAIL("1.2");
+	NUM_UINT64_FAIL("-1234");
+	NUM_UINT64_FAIL("1.2E0");
+	NUM_UINT64_FAIL("1.234e1");
+	NUM_UINT64_FAIL("12341e-1");
+	NUM_UINT64_FAIL("123456781e-1");
 }
 
 static void
@@ -387,6 +423,95 @@ test_decode_uint32(void)
 }
 
 static void
+test_decode_uint64(void)
+{
+	struct spdk_json_val v;
+	uint64_t i;
+
+	/* incorrect type */
+	v.type = SPDK_JSON_VAL_STRING;
+	v.start = "String";
+	v.len = 6;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* invalid value (float) */
+	v.type = SPDK_JSON_VAL_NUMBER;
+	v.start = "123.45";
+	v.len = 6;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* edge case (0) */
+	v.start = "0";
+	v.len = 1;
+	i = 456;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
+	CU_ASSERT(i == 0);
+
+	/* invalid value (negative) */
+	v.start = "-1";
+	v.len = 2;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* edge case (maximum) */
+	v.start = "18446744073709551615";
+	v.len = 20;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
+	CU_ASSERT(i == 18446744073709551615U);
+
+	/* invalid value (overflow) */
+	v.start = "18446744073709551616";
+	v.len = 20;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* valid exponent */
+	v.start = "42E2";
+	v.len = 4;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
+	CU_ASSERT(i == 4200);
+
+	/* invalid exponent (overflow) */
+	v.start = "42e64";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* invalid exponent (decimal) */
+	v.start = "42.323E2";
+	v.len = 8;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* valid exponent with decimal */
+	v.start = "42.32E2";
+	v.len = 7;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
+	CU_ASSERT(i == 4232);
+
+	/* invalid negative exponent */
+	v.start = "400e-4";
+	v.len = 6;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* invalid negative exponent */
+	v.start = "-400e-2";
+	v.len = 7;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) != 0);
+
+	/* valid negative exponent */
+	v.start = "400e-2";
+	v.len = 6;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint64(&v, &i) == 0);
+	CU_ASSERT(i == 4)
+}
+
+static void
 test_decode_string(void)
 {
 	struct spdk_json_val v;
@@ -451,10 +576,12 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "strequal", test_strequal) == NULL ||
 		CU_add_test(suite, "num_to_int32", test_num_to_int32) == NULL ||
+		CU_add_test(suite, "num_to_uint64", test_num_to_uint64) == NULL ||
 		CU_add_test(suite, "decode_array", test_decode_array) == NULL ||
 		CU_add_test(suite, "decode_bool", test_decode_bool) == NULL ||
 		CU_add_test(suite, "decode_int32", test_decode_int32) == NULL ||
 		CU_add_test(suite, "decode_uint32", test_decode_uint32) == NULL ||
+		CU_add_test(suite, "decode_uint64", test_decode_uint64) == NULL ||
 		CU_add_test(suite, "decode_string", test_decode_string) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
