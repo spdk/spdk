@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "1afe9e25_d2fb9928",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:18:14Z",
+      "side": 1,
+      "message": "This comment looks copy-pasted from split; it should probably say something about how it uses the blobstore to allocate blocks from an underlying bdev.",
+      "revId": "6d12b39d00c6f34f3f094bc5ba71c333b9b7074e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b6768ef3_0219d364",
         "filename": "mk/spdk.modules.mk",
         "patchSetId": 3
