@@ -45,24 +45,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-bool
-spdk_nvmf_subsystem_exists(const char *subnqn)
-{
-	struct spdk_nvmf_subsystem	*subsystem;
-
-	if (!subnqn) {
-		return false;
-	}
-
-	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
-		if (strcmp(subnqn, subsystem->subnqn) == 0) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 struct spdk_nvmf_subsystem *
 spdk_nvmf_find_subsystem(const char *subnqn)
 {
