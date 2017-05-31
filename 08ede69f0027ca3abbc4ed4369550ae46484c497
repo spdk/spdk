@@ -36,6 +36,199 @@
     },
     {
       "key": {
+        "uuid": "3394f75e_f86b194c",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "If hg is NULL here, just return NULL rather than asserting.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c4669d6_40dd8bdd",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "We should try to avoid adding new assert()s for malloc failure handling; this should just free the histogram and return NULL so the caller can deal with it.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8a6a627_c46dbd18",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "Please use snprintf() rather than strncpy() here:\n\n  snprintf(hg-\u003eclass_name, sizeof(hg-\u003eclass_name), \"%s\", class_name);\n\n(and the same for the below values)",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c9959ec_ab7d8231",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "This could be simplified using the queue.h macros (TAILQ_*).",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b4b0740_bf918e23",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "Why \"Metric\" with uppercase M?",
+      "range": {
+        "startLine": 246,
+        "startChar": 26,
+        "endLine": 246,
+        "endChar": 32
+      },
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68ae222c_7412ae9b",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "This should use a JSON bool value - spdk_json_write_bool().",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bb24b55_73f89910",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "Please leave a blank line between variable declarations and code.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cbec1a6_50d43bdc",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "Writing the histogram data as an array is probably fine, but we could also write this as an array of objects that define the range so that the display code doesn\u0027t need to know about the math behind the buckets, e.g.:\n\n  [\n    {\"min\": 1.23, \"max\": 1.34, \"count\": 65432},\n    {\"min\": 1.35, \"max\": 1.65, \"count\": 1987},\n    {\"min\": 1.67, \"max\": 1.83, \"count\": 12098}\n  ]",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35e91e03_ebc890c4",
+        "filename": "scripts/hist_viewer.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "This should use #!/usr/bin/env python so that it searches $PATH.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2585e9aa_17bfb568",
+        "filename": "scripts/hist_viewer.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "I\u0027m not sure why this is needed; the output from the RPC should be valid JSON already.  Can you explain what this is fixing?",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79f1a50b_cda2af95",
+        "filename": "scripts/hist_viewer.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T21:26:05Z",
+      "side": 1,
+      "message": "Please write these as print(\"...\") so that it will work with Python 3 as well.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "45d609d1_812c058d",
         "filename": "scripts/rpc.py",
         "patchSetId": 1
