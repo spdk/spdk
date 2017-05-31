@@ -16,6 +16,41 @@
       "revId": "3fe717fd2753ba7b4fad326aec750585048a71f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f794fd0f_36fb4ea8",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:17:37Z",
+      "side": 1,
+      "message": "Agreed - we should make it a parameter to the constructor so that it\u0027s harder to use the API incorrectly.",
+      "parentUuid": "e38d1cb7_b3fde8d2",
+      "revId": "3fe717fd2753ba7b4fad326aec750585048a71f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ece1037_6d014cd8",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:17:37Z",
+      "side": 1,
+      "message": "This should be tab-indented to match the rest of the struct.",
+      "revId": "3fe717fd2753ba7b4fad326aec750585048a71f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
