@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fed3e718_511c1aed",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T16:30:24Z",
+      "side": 1,
+      "message": "I think this is in the wrong comment - it should be on module_init above rather than module_fini.",
+      "revId": "28972ebe9debcbf77aecb521fec5f1575e553bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
