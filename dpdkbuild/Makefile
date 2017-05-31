@@ -59,7 +59,7 @@ DPDK_CFLAGS = -fPIC
 endif
 
 ifeq ($(CONFIG_DEBUG),y)
-DPDK_CFLAGS += -O0
+DPDK_CFLAGS += -O0 -g
 endif
 
 $(SPDK_ROOT_DIR)/dpdk/build:
