@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26ae4cd8_ae0b1ebf",
+        "filename": "app/nvmf_tgt/conf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T23:50:56Z",
+      "side": 0,
+      "message": "This manipulation of ns_count was not necessary, since the subsystem was just created in this function and initialized to 0 by calloc().",
+      "revId": "3471d437e44c41dd48b8ee10ef72128b9a0cad9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
