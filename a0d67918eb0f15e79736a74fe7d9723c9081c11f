@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6dfa91c_bdcb728b",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-31T03:18:30Z",
+      "side": 1,
+      "message": "smaller",
+      "range": {
+        "startLine": 247,
+        "startChar": 37,
+        "endLine": 247,
+        "endChar": 42
+      },
+      "revId": "a0d67918eb0f15e79736a74fe7d9723c9081c11f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26647a6f_4b5cf4fd",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-31T03:18:30Z",
+      "side": 1,
+      "message": "smaller",
+      "range": {
+        "startLine": 265,
+        "startChar": 50,
+        "endLine": 265,
+        "endChar": 55
+      },
+      "revId": "a0d67918eb0f15e79736a74fe7d9723c9081c11f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
