@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0d07980_2b30fd10",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-31T07:20:57Z",
+      "side": 1,
+      "message": "I understand it\u0027s just a sanity check, but could you mention anything about vhost timed event in there?\ni.e. \"Failed to initialize vhost timed event semaphore\"",
+      "range": {
+        "startLine": 590,
+        "startChar": 12,
+        "endLine": 590,
+        "endChar": 45
+      },
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f53f2d97_6b5b9306",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-31T07:20:57Z",
+      "side": 1,
+      "message": "what is this flag for? do you plan to expand it\u0027s functionality in future? can you remove it for now to simplify the code?",
+      "range": {
+        "startLine": 612,
+        "startChar": 5,
+        "endLine": 612,
+        "endChar": 15
+      },
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aedb8cf2_163018c1",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-31T07:20:57Z",
+      "side": 1,
+      "message": "Could you leave error handling back in spdk_vhost_timed_event_wait() caller?\n\nPossibly:\nint spdk_vhost_timed_event_wait(...);\nif (spdk_vhost_timed_event_wait(...) !\u003d 0) {\n SPDK_ERRLOG(...);\n //do whatever\n}\n\nI know it\u0027s more code, but current errlog is not descriptive at all",
+      "range": {
+        "startLine": 633,
+        "startChar": 0,
+        "endLine": 633,
+        "endChar": 69
+      },
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d86c493_e95b8404",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-31T07:20:57Z",
+      "side": 1,
+      "message": ".",
+      "range": {
+        "startLine": 117,
+        "startChar": 33,
+        "endLine": 117,
+        "endChar": 34
+      },
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcfa02c0_10d62ae0",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-31T07:20:57Z",
+      "side": 1,
+      "message": "is this check-formatted?",
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
