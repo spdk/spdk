@@ -577,10 +577,6 @@ spdk_nvmf_construct_subsystem(const char *name,
 			goto error;
 		}
 
-		if (num_devs > MAX_VIRTUAL_NAMESPACE) {
-			goto error;
-		}
-
 		if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
 			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", name, sn);
 			goto error;
