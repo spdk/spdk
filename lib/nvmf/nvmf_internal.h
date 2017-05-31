@@ -36,12 +36,45 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/assert.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
 #define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
+
+struct spdk_nvmf_ctrlr_ops {
+	/**
+	 * Initialize the controller.
+	 */
+	int (*attach)(struct spdk_nvmf_subsystem *subsystem);
+
+	/**
+	 * Get NVMe identify controller data.
+	 */
+	void (*ctrlr_get_data)(struct spdk_nvmf_session *session);
+
+	/**
+	 * Process admin command.
+	 */
+	int (*process_admin_cmd)(struct spdk_nvmf_request *req);
+
+	/**
+	 * Process IO command.
+	 */
+	int (*process_io_cmd)(struct spdk_nvmf_request *req);
+
+	/**
+	 * Poll for completions.
+	 */
+	void (*poll_for_completions)(struct spdk_nvmf_subsystem *subsystem);
+
+	/**
+	 * Detach the controller.
+	 */
+	void (*detach)(struct spdk_nvmf_subsystem *subsystem);
+};
 
 struct spdk_nvmf_tgt {
 	uint16_t				max_queue_depth;
