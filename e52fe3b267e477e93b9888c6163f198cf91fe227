@@ -198,6 +198,23 @@
       "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95fd8699_f3f9aab6",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:31:06Z",
+      "side": 1,
+      "message": "This looks pretty error-prone; maybe this would be nicer:\n\n   return 0xffffffff - (1U \u003c\u003c SPDK_BDEV_IO_TYPE_RESET);",
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
