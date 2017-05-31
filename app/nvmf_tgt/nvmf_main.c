@@ -37,6 +37,7 @@
 #include "nvmf_tgt.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
+#include "spdk_internal/log_syslog.h"
 
 #define SPDK_NVMF_BUILD_ETC "/usr/local/etc/nvmf"
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"

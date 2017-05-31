@@ -43,6 +43,9 @@ SPDK_RPC_LIB_LIST += $(filter net,$(SPDK_LIB_LIST))
 SPDK_RPC_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
 SPDK_RPC_LIB_LIST += $(filter vhost,$(SPDK_LIB_LIST))
 
+# Include the log and trace libraries since they also have contructor only components
+SPDK_RPC_LIB_LIST += $(filter log,$(SPDK_LIB_LIST))
+
 SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_RPC_LIB_LIST),$(SPDK_LIB_LIST))
 
 SPDK_LIB_FILES = $(call spdk_lib_list_to_files,$(SPDK_LIB_LIST))

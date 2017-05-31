@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/log.h"
+#include "spdk_internal/log_syslog.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 

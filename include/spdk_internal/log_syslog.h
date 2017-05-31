@@ -33,42 +33,18 @@
 
 /**
  * \file
- * Logging interfaces
+ * Logging implementation using syslog
  */
 
-#ifndef SPDK_LOG_H
-#define SPDK_LOG_H
+#ifndef SPDK_INTERNAL_LOG_SYSLOG_H
+#define SPDK_INTERNAL_LOG_SYSLOG_H
 
 #include "spdk/stdinc.h"
 
-/*
- * Default: 1 - noticelog messages will print to stderr and syslog.
- * Can be set to 0 to print noticelog messages to syslog only.
- */
-extern unsigned int spdk_g_notice_stderr_flag;
+int spdk_set_log_facility(const char *facility);
+const char *spdk_get_log_facility(void);
+int spdk_set_log_priority(const char *priority);
 
-#define SPDK_NOTICELOG(...) \
-	spdk_noticelog(NULL, 0, NULL, __VA_ARGS__)
-#define SPDK_WARNLOG(...) \
-	spdk_warnlog(NULL, 0, NULL, __VA_ARGS__)
-#define SPDK_ERRLOG(...) \
-	spdk_errlog(__FILE__, __LINE__, __func__, __VA_ARGS__)
+void spdk_tracelog_usage(FILE *f, const char *trace_arg);
 
-void spdk_noticelog(const char *file, const int line, const char *func,
-		    const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
-void spdk_warnlog(const char *file, const int line, const char *func,
-		  const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
-void spdk_tracelog(const char *flag, const char *file, const int line,
-		   const char *func, const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
-void spdk_errlog(const char *file, const int line, const char *func,
-		 const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
-void spdk_trace_dump(const char *label, const uint8_t *buf, size_t len);
-
-bool spdk_log_get_trace_flag(const char *flag);
-int spdk_log_set_trace_flag(const char *flag);
-int spdk_log_clear_trace_flag(const char *flag);
-
-void spdk_open_log(void);
-void spdk_close_log(void);
-
-#endif /* SPDK_LOG_H */
+#endif /* SPDK_INTERNAL_LOG_SYSLOG_H */
