@@ -155,6 +155,27 @@ spdk_json_number_to_uint32(const struct spdk_json_val *val, uint32_t *num)
 }
 
 int
+spdk_json_number_to_uint64(const struct spdk_json_val *val, uint64_t *num)
+{
+	double dbl;
+
+	if (spdk_json_number_to_double(val, &dbl)) {
+		return -1;
+	}
+
+	if (dbl < 0) {
+		return -1;
+	}
+
+	*num = (uint64_t)dbl;
+	if (dbl != (double)*num) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int
 spdk_json_decode_object(const struct spdk_json_val *values,
 			const struct spdk_json_object_decoder *decoders, size_t num_decoders, void *out)
 {
@@ -276,6 +297,14 @@ spdk_json_decode_uint32(const struct spdk_json_val *val, void *out)
 	uint32_t *i = out;
 
 	return spdk_json_number_to_uint32(val, i);
+}
+
+int
+spdk_json_decode_uint64(const struct spdk_json_val *val, void *out)
+{
+	uint64_t *i = out;
+
+	return spdk_json_number_to_uint64(val, i);
 }
 
 int
