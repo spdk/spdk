@@ -126,7 +126,6 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, spdk_nvmf_session)		sessions;
 
 	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
-	uint32_t				num_hosts;
 
 	TAILQ_HEAD(, spdk_nvmf_subsystem_allowed_listener)	allowed_listeners;
 
