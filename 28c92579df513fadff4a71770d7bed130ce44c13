@@ -19,6 +19,58 @@
     },
     {
       "key": {
+        "uuid": "8d366737_ac45ffb7",
+        "filename": "etc/spdk/iscsi.conf.in",
+        "patchSetId": 12
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Rather than explicitly listing the bdevs with GPT in the config file, I was thinking that we should use the virtual blockdev registration hook to try reading the partition table on startup and automatically expose GPT partition bdevs if it is valid.\n\nIf that is too much complexity, we can do the static configuration for now, but I don\u0027t think \"Split\" is the right name for the config option.  It should be something like GPT.",
+      "parentUuid": "821678c7_59d82cf5",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94ee088c_01cdca45",
+        "filename": "include/spdk_internal/gpt.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Does the stuff in this file get used outside of the GPT bdev? If not, we should move it into lib/bdev/gpt (or better yet, move the definitions into the .c file if they are only used in one file).",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea470e05_c73d6984",
+        "filename": "include/spdk_internal/gpt.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "This is duplicating SPDK_GPT_PART_TYPE_UNUSED from gpt_spec.h",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21ec023d_0a1f5783",
         "filename": "include/spdk_internal/gpt.h",
         "patchSetId": 12
@@ -36,6 +88,336 @@
     },
     {
       "key": {
+        "uuid": "ee5dfb1d_5f95ff57",
+        "filename": "include/spdk_internal/gpt.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Consistently use tabs or spaces (don\u0027t mix them within one struct).",
+      "range": {
+        "startLine": 59,
+        "startChar": 23,
+        "endLine": 59,
+        "endChar": 24
+      },
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b1bc3d2_7b924b4b",
+        "filename": "include/spdk_internal/gpt.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Don\u0027t split declarations like this (only definitions should be split).",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "272b680a_3e49860e",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "NUMBER -\u003e COUNT?",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56364c9f_f6cbc059",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "GPT_PROTECTIVE_MBR and GPT_HYBRID_MBR don\u0027t seem to be used anywhere.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1a10d94_a2694bcb",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "This should probably be pulled out into its own file in lib/util (along with the iSCSI CRC32C code - I know they use different polynomials, but at least the code that computes a 32-bit CRC should be able to be generic).",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a7e4efe_9d10ea2e",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "This function should ideally take a const void * to make the callers simpler.\n\nAlso, size should be a size_t.",
+      "range": {
+        "startLine": 106,
+        "startChar": 41,
+        "endLine": 106,
+        "endChar": 62
+      },
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3aabe6e_da532e8f",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Why L? This should be a uint32_t, not a long. You should be able to use just ~0, or to be totally consistent with types, ~(uint32_t)0",
+      "range": {
+        "startLine": 126,
+        "startChar": 37,
+        "endLine": 126,
+        "endChar": 40
+      },
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fd741a3_38ef9e09",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "The endian conversion is on the wrong side.  head-\u003eheader_crc32 is in little endian, and original_crc is in host endianness.  This should be:\n\n   to_le32(\u0026head-\u003eheader_crc32, original_crc);",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12dc1a06_e127effe",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Please add some SPDK_ERRLOG() so we can debug this when it fails.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f49bd3d5_18d0cdeb",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "This is only used internally, so we should never pass it NULL and the check should not be necessary.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac776e7a_01150830",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "This multiplication could overflow if the values on disk are bogus/malicious - you should probably do the math in uint64_t.  You also need to pass in the size we expect partitions to be so this can\u0027t run past the end of the buffer - you are passing the calculated partiiton_size directly to the crc32 function, which may read off the end of the buffer.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90faa637_961459b9",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Same comment about overflow here - do the math in uint64_t.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a361c74d_7ddfa0c6",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Remove this extra blank line.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d006a80_b44a4a37",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Same here - gpt_bdev should never be NULL here, and this is an internal-only function, so it shouldn\u0027t have the NULL check.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e72fcb0_b26ce296",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Type mismatch - head_size is uint32_t, so this should be %u (or PRIu32 to be pedantically correct).",
+      "range": {
+        "startLine": 236,
+        "startChar": 25,
+        "endLine": 236,
+        "endChar": 27
+      },
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5e706fd_ac7bbd3c",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Variable declarations should be at the top of the block.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68dce058_68e50464",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Endian conversion is the wrong way around (mbr-\u003epartitions[0].start_lba is in little-endian order, and lba is in host order).  Also, start_lba is 32 bits, not 16.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83347f0d_30d1d8aa",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "This looks short enough to write as one line (and would be less confusing that way).",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "025b4a09_854fe45c",
         "filename": "lib/bdev/gpt/vbdev_gpt.c",
         "patchSetId": 12
@@ -47,6 +429,86 @@
       "writtenOn": "2017-05-30T18:24:54Z",
       "side": 1,
       "message": "Comment needs to be updated.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29ed273a_46706dba",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "num_partition_entries is directly read from untrusted data and must be range checked.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "222228a5_23af5083",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "You should be able to remove the .raw parts.",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9e1def5_808c5a0c",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "Why i + 1 here?\n\nAlso, the parentheses are unnecessary.",
+      "range": {
+        "startLine": 275,
+        "startChar": 93,
+        "endLine": 275,
+        "endChar": 100
+      },
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4a8805_f18b5452",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:13:56Z",
+      "side": 1,
+      "message": "gpt -\u003e GPT",
+      "range": {
+        "startLine": 276,
+        "startChar": 64,
+        "endLine": 276,
+        "endChar": 67
+      },
       "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
