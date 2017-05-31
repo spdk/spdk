@@ -39,6 +39,7 @@
 
 extern "C" {
 #include "spdk/trace.h"
+#include "spdk_internal/trace_shm.h"
 #include "iscsi/conn.h"
 }
 

@@ -114,15 +114,9 @@ struct spdk_trace_history {
 
 #define SPDK_TRACE_MAX_LCORE		128
 
-struct spdk_trace_histories {
-	uint64_t			tsc_rate;
+struct spdk_trace_masks {
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
-	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];
-	struct spdk_trace_owner		owner[UCHAR_MAX + 1];
-	struct spdk_trace_object	object[UCHAR_MAX + 1];
-	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
 };
-
 
 void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		       uint64_t object_id, uint64_t arg1);
