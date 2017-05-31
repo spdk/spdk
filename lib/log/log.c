@@ -36,6 +36,8 @@
 #include "spdk_internal/log.h"
 
 static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
+static TAILQ_HEAD(, spdk_log_module) g_loggers = TAILQ_HEAD_INITIALIZER(g_loggers);
+struct spdk_log_module *g_active_logger = NULL;
 
 static enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
 static enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_WARN;
@@ -44,24 +46,41 @@ SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
 
 #define MAX_TMPBUF 1024
 
-static const char *const spdk_level_names[] = {
-	"ERROR",
-	"WARNING",
-	"NOTICE",
-	"INFO",
-	"DEBUG",
-};
+void
+spdk_log_module_register(struct spdk_log_module *mod)
+{
+	TAILQ_INSERT_TAIL(&g_loggers, mod, link);
+}
 
 void
-spdk_log_open(void)
+spdk_log_open(const char *name)
 {
-	openlog("spdk", LOG_PID, LOG_LOCAL7);
+	struct spdk_log_module *logger;
+
+	if (g_active_logger) {
+		g_active_logger->close_log();
+		g_active_logger = NULL;
+	}
+
+	TAILQ_FOREACH(logger, &g_loggers, link) {
+		if (strcmp(logger->name, name) == 0) {
+			g_active_logger = logger;
+			break;
+		}
+	}
+
+	assert(g_active_logger != NULL);
+
+	g_active_logger->open_log();
 }
 
 void
 spdk_log_close(void)
 {
-	closelog();
+	if (g_active_logger) {
+		g_active_logger->close_log();
+		g_active_logger = NULL;
+	}
 }
 
 void
@@ -90,27 +109,8 @@ void
 spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	 const char *format, ...)
 {
-	int severity = LOG_INFO;
 	char buf[MAX_TMPBUF];
 	va_list ap;
-
-	switch (level) {
-	case SPDK_LOG_NONE:
-		return;
-	case SPDK_LOG_ERROR:
-		severity = LOG_ERR;
-		break;
-	case SPDK_LOG_WARN:
-		severity = LOG_WARNING;
-		break;
-	case SPDK_LOG_NOTICE:
-		severity = LOG_NOTICE;
-		break;
-	case SPDK_LOG_INFO:
-	case SPDK_LOG_DEBUG:
-		severity = LOG_INFO;
-		break;
-	}
 
 	va_start(ap, format);
 
@@ -120,57 +120,19 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 		fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
 	}
 
-	if (level <= g_spdk_log_level) {
-		syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+	if (level <= g_spdk_log_level && g_active_logger) {
+		g_active_logger->write_log(level, file, line, func, buf);
 	}
 
 	va_end(ap);
 }
 
-static void
-fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
-{
-	char tmpbuf[MAX_TMPBUF];
-	char buf16[16 + 1];
-	size_t total;
-	unsigned int idx;
-
-	fprintf(fp, "%s\n", label);
-
-	memset(buf16, 0, sizeof buf16);
-	total = 0;
-	for (idx = 0; idx < len; idx++) {
-		if (idx != 0 && idx % 16 == 0) {
-			snprintf(tmpbuf + total, sizeof tmpbuf - total,
-				 " %s", buf16);
-			fprintf(fp, "%s\n", tmpbuf);
-			total = 0;
-		}
-		if (idx % 16 == 0) {
-			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-					  "%08x ", idx);
-		}
-		if (idx % 8 == 0) {
-			total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-					  "%s", " ");
-		}
-		total += snprintf(tmpbuf + total, sizeof tmpbuf - total,
-				  "%2.2x ", buf[idx] & 0xff);
-		buf16[idx % 16] = isprint(buf[idx]) ? buf[idx] : '.';
-	}
-	for (; idx % 16 != 0; idx++) {
-		total += snprintf(tmpbuf + total, sizeof tmpbuf - total, "   ");
-		buf16[idx % 16] = ' ';
-	}
-	snprintf(tmpbuf + total, sizeof tmpbuf - total, "  %s", buf16);
-	fprintf(fp, "%s\n", tmpbuf);
-	fflush(fp);
-}
-
 void
 spdk_trace_dump(const char *label, const uint8_t *buf, size_t len)
 {
-	fdump(stderr, label, buf, len);
+	if (g_active_logger) {
+		g_active_logger->trace_dump(label, buf, len);
+	}
 }
 
 static struct spdk_trace_flag *

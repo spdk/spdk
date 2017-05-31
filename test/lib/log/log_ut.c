@@ -37,6 +37,7 @@
 #include "spdk/log.h"
 
 #include "log.c"
+#include "syslog.c"
 
 static void
 log_test(void)
@@ -62,7 +63,7 @@ log_test(void)
 	CU_ASSERT(spdk_log_get_trace_flag("debug") == false);
 #endif
 
-	spdk_log_open();
+	spdk_log_open("syslog");
 	spdk_log_set_trace_flag("debug");
 	SPDK_WARNLOG("log warning unit test\n");
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "log trace test\n");
