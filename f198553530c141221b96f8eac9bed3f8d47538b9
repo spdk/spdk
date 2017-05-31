@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e9adcbd_7f562c83",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 0,
+      "message": "I kind of think we should still mention some of the components - otherwise it\u0027s probably not clear to a first-time reader what this thing actually is, and the README on the front page of the GitHub project is probably the first place a lot of people will look (and they likely won\u0027t click through to the website if there\u0027s no explanation at all here).\n\nThis list is pretty out of date, though, so if we do keep it, we should sync it up with the one in doc/index.md.",
+      "revId": "f198553530c141221b96f8eac9bed3f8d47538b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -2,6 +2,172 @@
   "comments": [
     {
       "key": {
+        "uuid": "ad003e68_e79fe679",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "URL is wrong - should be http://www.spdk.io/\n\nGitHub Sites with custom domains don\u0027t support HTTPS, and http://spdk.io/ is just a redirect to http://www.spdk.io/",
+      "range": {
+        "startLine": 6,
+        "startChar": 51,
+        "endLine": 6,
+        "endChar": 58
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3122ab66_f16b99a1",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "Grammar nitpick: add a comma after start: \"For a quick start, though, here\u0027s what ...\"",
+      "range": {
+        "startLine": 10,
+        "startChar": 12,
+        "endLine": 10,
+        "endChar": 25
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50813a99_7492939a",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "Keep a blank line after headers for readability.",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c064fbfc_f2ac6e69",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "Grammar nitpick: this comma should be a semicolon.",
+      "range": {
+        "startLine": 19,
+        "startChar": 72,
+        "endLine": 19,
+        "endChar": 73
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e268f80_af4705e5",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "Drop the colon if this is intended to be a heading (\u003d\u003d\u003d).",
+      "range": {
+        "startLine": 55,
+        "startChar": 48,
+        "endLine": 55,
+        "endChar": 49
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71f03935_0b91c94d",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "Remove the colon here too.",
+      "range": {
+        "startLine": 64,
+        "startChar": 73,
+        "endLine": 64,
+        "endChar": 74
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61d4e1c1_6dc20010",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need to have the full GerritHub developer setup here in the main readme - normal users can still clone from GitHub and don\u0027t need the commit-msg hook.\n\nI\u0027m OK with keeping it here if you think this will encourage people to submit patches, but it\u0027s a little bit overkill for a normal user getting-started kind of guide.",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c04fa5d5_8e6ddf2f",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "This is actually a Makefile fragment, not shell script, so it shouldn\u0027t use the {.sh} highlighter.",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89142707_8af9ce2d",
         "filename": "configure",
         "patchSetId": 2
@@ -31,6 +197,24 @@
       "side": 1,
       "message": "sounds good.  I\u0027ll hold off on the next patch set until I get a few more sets of comments, my wording is sometimes not the best so I suspect there will be other good suggestions coming in....",
       "parentUuid": "89142707_8af9ce2d",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7c3a2f2_40fc375c",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:11:54Z",
+      "side": 1,
+      "message": "What actually goes wrong on FreeBSD with CONFIG_COVERAGE\u003dy?  Is it actually specific to clang vs gcc rather than FreeBSD vs Linux?\n\nAlso, this probably should be a separate patch since it isn\u0027t related to the README updates.",
+      "parentUuid": "5199aa0d_42747d38",
       "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
