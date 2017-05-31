@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7eb5fb3a_6bb6b027",
+        "filename": "test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-31T04:46:51Z",
+      "side": 1,
+      "message": "This logic looks like incorrect. We are going to cover the error case that \"size !\u003d0 \u0026\u0026 payload \u003d\u003d NULL || size \u003d\u003d 0 \u0026\u0026 payload !\u003d NULL\". The \"size \u003d\u003d 0 \u0026\u0026 payload \u003d\u003d NULL\" is valid.",
+      "range": {
+        "startLine": 340,
+        "startChar": 1,
+        "endLine": 340,
+        "endChar": 34
+      },
+      "revId": "4fed44b7d588132b9c0c2aa90b4ca09296c4adef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
