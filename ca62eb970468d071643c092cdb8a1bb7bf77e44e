@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a17f9be6_1c1b5a23",
+        "filename": "lib/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:32:42Z",
+      "side": 1,
+      "message": "This looks like it should go in the previous patch that adds the ittnotify library.",
+      "revId": "ca62eb970468d071643c092cdb8a1bb7bf77e44e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f19eaa1f_d5a59c6b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:32:42Z",
+      "side": 1,
+      "message": "We should probably add a SPDK_CONFIG_* flag for this (see the CONFIG file at the top level and the configure script) so that we don\u0027t include this stuff if VTune support is not enabled.",
+      "revId": "ca62eb970468d071643c092cdb8a1bb7bf77e44e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a4a6aac_657ba4ed",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:32:42Z",
+      "side": 1,
+      "message": "All variable declarations should be at the top of the function.",
+      "revId": "ca62eb970468d071643c092cdb8a1bb7bf77e44e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "134d4755_ff8a7139",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:32:42Z",
+      "side": 1,
+      "message": "We can\u0027t use the strcpy() family of functions (they are on the banned functions list in our Intel security checklist).\n\nInstead of allocating a fixed-size buffer and using strcpy()/strcat() to build it up, you can use something like:\n\n   device_identifier \u003d spdk_sprintf_alloc(\"spdk_%s\", ch-\u003ebdev-\u003ename);\n\nNote that this may fail, so you will need to add a failure path. \n\nAt the very least, if you want to use a fixed-size buffer, please use:\n\n   snprintf(device_identifier, sizeof(device_identifier), \"spdk_%s\", ch-\u003ebdev-\u003ename);",
+      "revId": "ca62eb970468d071643c092cdb8a1bb7bf77e44e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65e0a942_9d9aaa61",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1000,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:32:42Z",
+      "side": 1,
+      "message": "I don\u0027t think this should ever happen - do you see a case where bdev_io-\u003ech is NULL?  (You can add an assert(bdev_io-\u003ech !\u003d NULL) here for testing.)",
+      "revId": "ca62eb970468d071643c092cdb8a1bb7bf77e44e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2427f88_fad06ff3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1012,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:32:42Z",
+      "side": 1,
+      "message": "Move variable declaration to the top of the function.",
+      "revId": "ca62eb970468d071643c092cdb8a1bb7bf77e44e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
