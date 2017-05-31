@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88f68410_506bdc5f",
+        "filename": "test/lib/event/subsystem/subsystem_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T04:01:43Z",
+      "side": 1,
+      "message": "For all of these global_rc checks - you *must* set global_rc to the opposite value before calling spdk_subsystem_init().\n\nThis ensures that global_rc was set correctly during the spdk_subsystem_init() context.  Otherwise it is possible that global_rc could still contain an old value and never get updated and then passes the CU_ASSERT().\n\nPlease let me know if you do not understand my meaning.  I have tried to make this point in the last two versions of this patch but I have not seen any updates.  :-)",
+      "revId": "e1d171767094188a8c34f5041cc0ac994637b2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8d0fb63_3f4c2079",
+        "filename": "test/lib/scsi/init/init_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T04:01:43Z",
+      "side": 1,
+      "message": "Same comment here as I posted on previous file.  Please apply it to all cases where global_rc is checked.",
+      "revId": "e1d171767094188a8c34f5041cc0ac994637b2a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
