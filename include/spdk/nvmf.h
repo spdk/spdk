@@ -62,6 +62,7 @@ struct spdk_bdev;
 struct spdk_nvme_ctrlr;
 struct spdk_nvmf_request;
 struct spdk_nvmf_conn;
+struct spdk_nvmf_ctrlr_ops;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_conn *conn);
@@ -81,38 +82,6 @@ struct spdk_nvmf_listen_addr {
 struct spdk_nvmf_host {
 	char				*nqn;
 	TAILQ_ENTRY(spdk_nvmf_host)	link;
-};
-
-struct spdk_nvmf_ctrlr_ops {
-	/**
-	 * Initialize the controller.
-	 */
-	int (*attach)(struct spdk_nvmf_subsystem *subsystem);
-
-	/**
-	 * Get NVMe identify controller data.
-	 */
-	void (*ctrlr_get_data)(struct spdk_nvmf_session *session);
-
-	/**
-	 * Process admin command.
-	 */
-	int (*process_admin_cmd)(struct spdk_nvmf_request *req);
-
-	/**
-	 * Process IO command.
-	 */
-	int (*process_io_cmd)(struct spdk_nvmf_request *req);
-
-	/**
-	 * Poll for completions.
-	 */
-	void (*poll_for_completions)(struct spdk_nvmf_subsystem *subsystem);
-
-	/**
-	 * Detach the controller.
-	 */
-	void (*detach)(struct spdk_nvmf_subsystem *subsystem);
 };
 
 struct spdk_nvmf_subsystem_allowed_listener {
