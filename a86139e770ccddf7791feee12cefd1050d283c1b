@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52e3a0b0_515ae7f7",
+        "filename": "lib/event/app.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T05:05:56Z",
+      "side": 1,
+      "message": "I think you can remove this check now.  There is no way for g_spdk_app.rc to get updated until after the reactors are started and the spdk_subsystem_init event executes.",
+      "revId": "a86139e770ccddf7791feee12cefd1050d283c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c042468_e0736f45",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T05:05:56Z",
+      "side": 1,
+      "message": "Daniel made a comment on a previous version - this should be named something more descriptive.  He suggested g_app_start_event.",
+      "revId": "a86139e770ccddf7791feee12cefd1050d283c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
