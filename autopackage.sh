@@ -26,7 +26,7 @@ dpdk_pv=dpdk-$(date +%Y_%m_%d)
 dpdk_tarball=${dpdk_pv}.tar
 
 find . -iname "spdk-*.tar* dpdk-*.tar*" -delete
-git archive HEAD --prefix=${spdk_pv}/ -o ${spdk_tarball}
+git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
 
 # Build from packaged source
 tmpdir=$(mktemp -d)
@@ -35,7 +35,7 @@ tar -C "$tmpdir" -xf $spdk_tarball
 
 if [ -z "$WITH_DPDK_DIR" ]; then
 	cd dpdk
-	git archive HEAD --prefix=dpdk/ -o ../${dpdk_tarball}
+	git archive HEAD^{tree} --prefix=dpdk/ -o ../${dpdk_tarball}
 	cd ..
 	tar -C "$tmpdir/${spdk_pv}" -xf $dpdk_tarball
 fi
