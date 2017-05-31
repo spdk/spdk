@@ -89,6 +89,7 @@ ut_send_request(fs_request_fn fn, void *arg)
 {
 	struct ut_request req;
 
+
 	req.fn = fn;
 	req.arg = arg;
 	req.done = 0;
