@@ -86,4 +86,36 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 #define SPDK_TRACEDUMP(...) do { } while (0)
 #endif
 
+typedef void (*spdk_log_open_fn)(void);
+typedef void (*spdk_log_close_fn)(void);
+typedef void (*spdk_log_write_fn)(enum spdk_log_level level, const char *file, const int line,
+				  const char *func, const char *buf);
+typedef void (*spdk_log_trace_dump_fn)(const char *label, const uint8_t *buf, size_t len);
+
+struct spdk_log_module {
+	const char		*name;
+	spdk_log_open_fn	open_log;
+	spdk_log_close_fn	close_log;
+	spdk_log_write_fn	write_log;
+	spdk_log_trace_dump_fn	trace_dump;
+
+	TAILQ_ENTRY(spdk_log_module) link;
+};
+
+void spdk_log_module_register(struct spdk_log_module *mod);
+
+#define SPDK_LOG_MODULE_REGISTER(name_str, open_fn, close_fn, write_fn, trace_dump_fn)		\
+	static struct spdk_log_module open_fn ## _if = {					\
+	.name		= name_str,									\
+	.open_log 	= open_fn,								\
+	.close_log	= close_fn,								\
+	.write_log	= write_fn,								\
+	.trace_dump	= trace_dump_fn,                                			\
+	};  											\
+	__attribute__((constructor)) static void open_fn ## _init(void)  			\
+	{                                                           				\
+	    spdk_log_module_register(&open_fn ## _if);                  			\
+	}
+
+
 #endif /* SPDK_INTERNAL_LOG_H */

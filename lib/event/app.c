@@ -236,7 +236,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
-	spdk_log_open();
+	spdk_log_open("syslog");
 
 	if (opts->reactor_mask == NULL) {
 		sp = spdk_conf_find_section(g_spdk_app.config, "Global");

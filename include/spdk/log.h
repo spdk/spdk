@@ -45,7 +45,7 @@
  * Initialize the logging module. Messages prior
  * to this call will be dropped.
  */
-void spdk_log_open(void);
+void spdk_log_open(const char *name);
 
 /**
  * Close the currently active log. Messages after this call
