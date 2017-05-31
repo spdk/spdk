@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "3f34327b_659b0739",
+        "filename": "etc/spdk/iscsi.conf.in",
+        "patchSetId": 12
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:16:15Z",
+      "side": 1,
+      "message": "Another note on the automatic GPT checking - we might need to change our strategy for \"claimed\" bdevs, since some users may want to expose e.g. a raw NVMe device directly even if it happens to contain a GPT partition table.  We should probably just remove the concept of bdev claiming entirely and let the user choose how to use bdevs.",
+      "parentUuid": "8d366737_ac45ffb7",
+      "revId": "28c92579df513fadff4a71770d7bed130ce44c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "94ee088c_01cdca45",
         "filename": "include/spdk_internal/gpt.h",
         "patchSetId": 12
