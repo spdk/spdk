@@ -69,6 +69,44 @@ test_nvme_ns_construct(void)
 	CU_ASSERT(ns.stripe_size == 0);
 }
 
+static void
+test_nvme_ns_get_value(void)
+{
+	struct spdk_nvme_ns *ns;
+	int ret;
+
+	ns = (struct spdk_nvme_ns *)malloc(sizeof(struct spdk_nvme_ns));
+	SPDK_CU_ASSERT_FATAL(ns != NULL);
+	ns->id = 1;
+	ret = spdk_nvme_ns_get_id(ns);
+	CU_ASSERT(ret == 1);
+
+	ns->ctrlr = (struct spdk_nvme_ctrlr *)malloc(sizeof(struct spdk_nvme_ctrlr));
+	SPDK_CU_ASSERT_FATAL(ns->ctrlr != NULL);
+	ns->ctrlr->max_xfer_size = 0;
+	ret = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	CU_ASSERT(ret == 0);
+
+	ns->sector_size = 1;
+	ret = spdk_nvme_ns_get_sector_size(ns);
+	CU_ASSERT(ret == 1);
+
+	ns->flags = 0;
+	ret = spdk_nvme_ns_get_flags(ns);
+	CU_ASSERT(ret == 0);
+
+	ns->pi_type = 1;
+	ret = spdk_nvme_ns_get_pi_type(ns);
+	CU_ASSERT(ret == 1);
+
+	ns->md_size = 0;
+	ret = spdk_nvme_ns_get_md_size(ns);
+	CU_ASSERT(ret == 0);
+
+	free(ns->ctrlr);
+	free(ns);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -85,7 +123,8 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test_nvme_ns", test_nvme_ns_construct) == NULL
+		CU_add_test(suite, "test_nvme_ns", test_nvme_ns_construct) == NULL ||
+		CU_add_test(suite, "test_nvme_ns_get_value", test_nvme_ns_get_value) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
