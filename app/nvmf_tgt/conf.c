@@ -617,7 +617,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 			}
 
 			SPDK_NOTICELOG("Attaching block device %s to subsystem %s\n",
-				       spdk_bdev_get_name(bdev), subsystem->subnqn);
+				       spdk_bdev_get_name(bdev), spdk_nvmf_subsystem_get_nqn(subsystem));
 
 		}
 	}

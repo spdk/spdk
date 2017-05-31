@@ -255,7 +255,7 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 	struct nvmf_tgt_subsystem *tgt_subsystem, *subsys_tmp;
 
 	TAILQ_FOREACH_SAFE(tgt_subsystem, &g_subsystems, tailq, subsys_tmp) {
-		if (strcmp(tgt_subsystem->subsystem->subnqn, nqn) == 0) {
+		if (strcmp(spdk_nvmf_subsystem_get_nqn(tgt_subsystem->subsystem), nqn) == 0) {
 			nvmf_tgt_delete_subsystem(tgt_subsystem);
 			return 0;
 		}
