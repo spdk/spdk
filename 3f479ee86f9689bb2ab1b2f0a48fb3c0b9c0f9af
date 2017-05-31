@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faf28eb8_b36b4287",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T15:55:34Z",
+      "side": 1,
+      "message": "Should have a newline after the declaration.",
+      "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02f571d4_c3bb24ec",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T15:55:34Z",
+      "side": 1,
+      "message": "This comment is a bit confusing.  I think you can just say that this is making sure the spdk_vhost_timed_event is not initialized twice before sending it.",
+      "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b980eb7d_cd566ec4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T15:55:34Z",
+      "side": 1,
+      "message": "Timout \u003d\u003e Timeout",
+      "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b70b4b37_02cd8a8e",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T15:55:34Z",
+      "side": 1,
+      "message": "Timout \u003d\u003e Timeout",
+      "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30bcd65a_585682be",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T15:55:34Z",
+      "side": 1,
+      "message": "int \u003d\u003e in?",
+      "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b075000_5d861462",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-05-31T15:55:34Z",
+      "side": 1,
+      "message": "Do we need varargs here?  Or can we just pass a single log_string?  It would simplify the API and code a bit.  For the case where you need a variable string, just have the caller do an snprintf.\n\nThen I think the spdk_vhost_timed_event() can just point directly to that string, and you won\u0027t need to strdup/free.  Callers of this API will always block until the specified event has completed, so you could just either pass a literal string, or use snprintf on a stack-allocated char array.",
+      "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
