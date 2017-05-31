@@ -27,10 +27,10 @@ timing_enter build_kmod
 timing_exit build_kmod
 
 scanbuild=''
-if hash scan-build; then
+if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
 	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
 fi
-
+echo $scanbuild
 $MAKE $MAKEFLAGS clean
 
 timing_enter scanbuild_make

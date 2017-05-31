@@ -11,6 +11,8 @@ fi
 
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=1}; export SPDK_BUILD_DOC
+: ${SPDK_RUN_SCANBUILD=1}; export SPDK_RUN_SCANBUILD
+: ${SPDK_RUN_VALGRIND=1}; export SPDK_RUN_VALGRIND
 : ${SPDK_TEST_UNITTEST=1}; export SPDK_TEST_UNITTEST
 : ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
 : ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
@@ -83,7 +85,7 @@ if [ -z "$output_dir" ]; then
 	export output_dir
 fi
 
-if hash valgrind &> /dev/null; then
+if [ $SPDK_RUN_VALGRIND -eq 1 ] && hash valgrind &> /dev/null; then
 	valgrind='valgrind --leak-check=full --error-exitcode=2'
 else
 	valgrind=''
