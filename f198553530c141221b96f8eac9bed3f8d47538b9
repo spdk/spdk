@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b757e5b_dbf10997",
+        "filename": "lib/ittnotify/include/ittnotify.f90",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:23:28Z",
+      "side": 0,
+      "message": "I don\u0027t think we need the Fortran support for SPDK.",
+      "revId": "f198553530c141221b96f8eac9bed3f8d47538b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

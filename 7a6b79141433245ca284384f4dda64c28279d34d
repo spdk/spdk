@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e4cf5a2_150c9c26",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:23:28Z",
+      "side": 1,
+      "message": "Make sure your ~/.gitconfig user.name is set to whatever you want to show up in the git log - it can\u0027t be changed once we merge the patch.",
+      "revId": "7a6b79141433245ca284384f4dda64c28279d34d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1938013e_d162e8fb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:23:28Z",
+      "side": 1,
+      "message": "This commit looks like it\u0027s actually just adding the ittnotify library, so the commit message should be updated accordingly.",
+      "revId": "7a6b79141433245ca284384f4dda64c28279d34d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
