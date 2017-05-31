@@ -219,8 +219,8 @@ fs_create_sync(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread();
-	channel = spdk_fs_alloc_io_channel_sync(g_fs, SPDK_IO_PRIORITY_DEFAULT);
+	spdk_allocate_thread(_fs_send_msg, NULL);
+	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	CU_ASSERT(channel != NULL);
 
 	rc = spdk_fs_create_file(g_fs, channel, "testfile");
