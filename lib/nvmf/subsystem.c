@@ -89,7 +89,7 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 		return false;
 	}
 
-	if (subsystem->num_hosts == 0) {
+	if (TAILQ_EMPTY(&subsystem->hosts)) {
 		/* No hosts means any host can connect */
 		return true;
 	}
@@ -247,7 +247,6 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		TAILQ_REMOVE(&subsystem->hosts, host, link);
 		free(host->nqn);
 		free(host);
-		subsystem->num_hosts--;
 	}
 
 	TAILQ_FOREACH_SAFE(session, &subsystem->sessions, link, session_tmp) {
@@ -363,7 +362,6 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	}
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
-	subsystem->num_hosts++;
 	g_nvmf_tgt.discovery_genctr++;
 
 	return 0;
