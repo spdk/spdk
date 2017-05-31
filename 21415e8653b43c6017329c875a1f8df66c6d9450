@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66712cf2_7b821dfb",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:42:51Z",
+      "side": 1,
+      "message": "This should also have a comment that tells the user they must call spdk_bdev_module_init_next() with their return code.",
+      "revId": "21415e8653b43c6017329c875a1f8df66c6d9450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
