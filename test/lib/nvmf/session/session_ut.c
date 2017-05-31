@@ -48,7 +48,7 @@ spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn)
+spdk_nvmf_find_subsystem(const char *subnqn)
 {
 	return NULL;
 }

@@ -64,7 +64,7 @@ spdk_nvmf_subsystem_exists(const char *subnqn)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn)
+spdk_nvmf_find_subsystem(const char *subnqn)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 

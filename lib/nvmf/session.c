@@ -255,7 +255,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
 
-	subsystem = nvmf_find_subsystem(data->subnqn);
+	subsystem = spdk_nvmf_find_subsystem(data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
 		INVALID_CONNECT_DATA(subnqn);

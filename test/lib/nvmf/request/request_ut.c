@@ -121,7 +121,7 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 }
 
 struct spdk_nvmf_subsystem *
-nvmf_find_subsystem(const char *subnqn)
+spdk_nvmf_find_subsystem(const char *subnqn)
 {
 	return NULL;
 }
