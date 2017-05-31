@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "4f1b617c_3fa04add",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:44:39Z",
+      "side": 1,
+      "message": "g_event could probably use a more descriptive name. Is this the event that is called when all of the subsystems are done initializing?  Maybe g_app_start_event.",
+      "revId": "dc791692a3b9dd056c77c512c9c2aa5b7436b4f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d437e0a1_1072fb64",
         "filename": "lib/event/subsystem.c",
         "patchSetId": 6
