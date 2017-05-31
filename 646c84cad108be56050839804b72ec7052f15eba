@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbbab905_708d9b70",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-05-31T03:12:05Z",
+      "side": 1,
+      "message": "We can also add the below check:\n\nSPDK_CU_ASSERT_FATAL(g_file !\u003d NULL);",
+      "revId": "646c84cad108be56050839804b72ec7052f15eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
