@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "435b1a11_2e9400f0",
+        "filename": "test/lib/json/util/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:25:54Z",
+      "side": 1,
+      "message": "I see what you\u0027re trying to test, but modifying the decoders list in place looks a little bit confusing.  Maybe you can reorder the decoders so the one that you want to drop is last in the list, and then pass 3 instead of 4 as the count.",
+      "revId": "8bcf9336681cf41b22540b592cde5628a9d664a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
