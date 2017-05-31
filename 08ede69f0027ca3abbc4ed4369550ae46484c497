@@ -50,6 +50,29 @@
       "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aba7fb2b_3e1722b3",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-05-31T02:22:47Z",
+      "side": 1,
+      "message": "These perstat related changes do not exist in the master branch.  I don\u0027t know where they came from, but Girish thinks they are not a part of his change so I\u0027m going to remove them.",
+      "range": {
+        "startLine": 604,
+        "startChar": 4,
+        "endLine": 620,
+        "endChar": 36
+      },
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
