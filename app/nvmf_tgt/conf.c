@@ -292,20 +292,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static int
-spdk_nvmf_validate_sn(const char *sn)
-{
-	size_t len;
-
-	len = strlen(sn);
-	if (len > MAX_SN_LEN) {
-		SPDK_ERRLOG("Invalid sn \"%s\": length %zu > max %d\n", sn, len, MAX_SN_LEN);
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 {
 	uint32_t end;
@@ -590,16 +576,15 @@ spdk_nvmf_construct_subsystem(const char *name,
 			SPDK_ERRLOG("Subsystem %s: missing serial number\n", name);
 			goto error;
 		}
-		if (spdk_nvmf_validate_sn(sn) != 0) {
-			goto error;
-		}
 
 		if (num_devs > MAX_VIRTUAL_NAMESPACE) {
 			goto error;
 		}
 
-		subsystem->dev.virt.ns_count = 0;
-		snprintf(subsystem->dev.virt.sn, MAX_SN_LEN, "%s", sn);
+		if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
+			SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", name, sn);
+			goto error;
+		}
 
 		for (i = 0; i < num_devs; i++) {
 			namespace = dev_list[i];

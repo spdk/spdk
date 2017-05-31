@@ -412,7 +412,17 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 int
 spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
 {
+	size_t len, max_len;
+
 	if (subsystem->mode != NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+		return -1;
+	}
+
+	max_len = sizeof(subsystem->dev.virt.sn) - 1;
+	len = strlen(sn);
+	if (len > max_len) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid sn \"%s\": length %zu > max %zu\n",
+			      sn, len, max_len);
 		return -1;
 	}
 
