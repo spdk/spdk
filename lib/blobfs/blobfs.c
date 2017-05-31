@@ -1860,9 +1860,9 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 			int rc;
 
 			file->append_pos += length;
+			pthread_spin_unlock(&file->lock);
 			rc = __send_rw_from_file(file, &channel->sem, payload,
 						 offset, length, false);
-			pthread_spin_unlock(&file->lock);
 			sem_wait(&channel->sem);
 			return rc;
 		}
@@ -2007,10 +2007,14 @@ static int
 __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t length, sem_t *sem)
 {
 	struct cache_buffer *buf;
+	int rc;
 
 	buf = spdk_tree_find_filled_buffer(file->tree, offset);
 	if (buf == NULL) {
-		return __send_rw_from_file(file, sem, payload, offset, length, true);
+		pthread_spin_unlock(&file->lock);
+		rc = __send_rw_from_file(file, sem, payload, offset, length, true);
+		pthread_spin_lock(&file->lock);
+		return rc;
 	}
 
 	if ((offset + length) > (buf->offset + buf->bytes_filled)) {
