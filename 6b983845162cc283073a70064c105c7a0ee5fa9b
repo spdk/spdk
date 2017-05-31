@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e295ca20_77e15ad6",
+        "filename": "include/spdk_internal/event.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T00:39:19Z",
+      "side": 1,
+      "message": "This should probably have a doc comment indicating that the user must call spdk_subsystem_init_next() when they are done with their initialization.",
+      "revId": "6b983845162cc283073a70064c105c7a0ee5fa9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "747eb44f_9aee0411",
         "filename": "lib/event/subsystem.c",
         "patchSetId": 17
