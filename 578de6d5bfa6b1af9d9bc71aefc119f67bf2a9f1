@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "98f4f7f0_462d5a04",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:48:23Z",
+      "side": 1,
+      "message": "This will obviously have to change once we get John\u0027s rename patch in (mostly just a note to self to re-review this at that point).\n\nAlso, please use spdk_malloc() with parens so that it gets auto-linked by Doxygen.",
+      "range": {
+        "startLine": 4,
+        "startChar": 19,
+        "endLine": 4,
+        "endChar": 30
+      },
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4427abc9_784d9cd2",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:48:23Z",
+      "side": 1,
+      "message": "I don\u0027t think you can split the link across lines like this - see the generated output: https://ci.spdk.io/builds/review/578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1.1495587177/wkb-fedora-03/doc/html/memory.html",
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "446027a0_0681b531",
         "filename": "doc/memory.md",
         "patchSetId": 1
@@ -36,6 +76,29 @@
     },
     {
       "key": {
+        "uuid": "abec03d1_4adfd849",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:48:23Z",
+      "side": 1,
+      "message": "The NVMe spec calls these \"pages\", which I know is confusing, but we should avoid making up our own words.  Maybe \"device pages\" or something like that? (Also, in theory, the device can use a non-4K page size, but I assume none actually do in practice.)",
+      "range": {
+        "startLine": 36,
+        "startChar": 66,
+        "endLine": 36,
+        "endChar": 72
+      },
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e905920_1951effb",
         "filename": "doc/memory.md",
         "patchSetId": 1
@@ -47,6 +110,69 @@
       "writtenOn": "2017-05-26T22:48:13Z",
       "side": 1,
       "message": "not any address, but any 4-byte aligned address",
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27bae2b5_7a853f30",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:48:23Z",
+      "side": 1,
+      "message": "We should be consistent with use of ** vs __ (they both turn into italics in Markdown) - I would prefer **.",
+      "range": {
+        "startLine": 59,
+        "startChar": 61,
+        "endLine": 59,
+        "endChar": 68
+      },
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb300552_805cb191",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:48:23Z",
+      "side": 1,
+      "message": "Also add () here and update function name.",
+      "range": {
+        "startLine": 87,
+        "startChar": 29,
+        "endLine": 87,
+        "endChar": 40
+      },
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e7b86c1_f93f9ace",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-05-31T01:48:23Z",
+      "side": 1,
+      "message": "This paragraph almost makes it sound like this is not implemented yet and will be added in the future - we should probably clarify that it can be used today.",
       "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
