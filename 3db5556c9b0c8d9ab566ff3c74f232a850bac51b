@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54fb43d1_316efc6e",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-05-31T07:25:17Z",
+      "side": 1,
+      "message": "what about VIRTIO_F_VERSION_1?\nDaniel introduced it to fix some compilation issues on older kernels. I believe it is still required, if not - please mention it in commit msg",
+      "revId": "3db5556c9b0c8d9ab566ff3c74f232a850bac51b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
