@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "22d80600_0a066c38",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-31T09:57:14Z",
+      "side": 1,
+      "message": "Sure",
+      "parentUuid": "d0d07980_2b30fd10",
+      "range": {
+        "startLine": 590,
+        "startChar": 12,
+        "endLine": 590,
+        "endChar": 45
+      },
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f53f2d97_6b5b9306",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "d9fa8791_2a02dfc6",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-31T09:57:14Z",
+      "side": 1,
+      "message": "This is a good question :D\nI had usage for that but now we don\u0027t need dynamic events.\nWe can remove this.",
+      "parentUuid": "f53f2d97_6b5b9306",
+      "range": {
+        "startLine": 612,
+        "startChar": 5,
+        "endLine": 612,
+        "endChar": 15
+      },
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aedb8cf2_163018c1",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 4
@@ -59,6 +107,30 @@
       "writtenOn": "2017-05-31T07:20:57Z",
       "side": 1,
       "message": "Could you leave error handling back in spdk_vhost_timed_event_wait() caller?\n\nPossibly:\nint spdk_vhost_timed_event_wait(...);\nif (spdk_vhost_timed_event_wait(...) !\u003d 0) {\n SPDK_ERRLOG(...);\n //do whatever\n}\n\nI know it\u0027s more code, but current errlog is not descriptive at all",
+      "range": {
+        "startLine": 633,
+        "startChar": 0,
+        "endLine": 633,
+        "endChar": 69
+      },
+      "revId": "723d72e96967a46d9571fe9cb723bc042c750aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fce69d32_13e6ee29",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-05-31T09:57:14Z",
+      "side": 1,
+      "message": "We can do nothing if timeout out. We can assign some name for spdk_vhost_timed_event to print here which event failed but beside that still nothing but just abort() can be done in this case.",
+      "parentUuid": "aedb8cf2_163018c1",
       "range": {
         "startLine": 633,
         "startChar": 0,
