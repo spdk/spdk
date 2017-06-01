@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06cb18a2_eedce383",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "Malloc",
+      "range": {
+        "startLine": 139,
+        "startChar": 18,
+        "endLine": 139,
+        "endChar": 21
+      },
+      "revId": "b4c26b9231573688565c90caf90daa4fac7eb9d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
