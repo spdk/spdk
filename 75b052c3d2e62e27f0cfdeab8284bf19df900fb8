@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcd2a9b7_357b774f",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T17:00:40Z",
+      "side": 1,
+      "message": "This is fine for now, but we should probably replace this with a better parser that converts directly to integer in the future, since the range of double doesn\u0027t allow representing the full range of uint64.",
+      "revId": "75b052c3d2e62e27f0cfdeab8284bf19df900fb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
