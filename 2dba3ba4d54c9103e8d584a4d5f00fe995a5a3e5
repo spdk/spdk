@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff839758_c68a4647",
+        "filename": "test/lib/nvme/unit/nvme_ns_c/nvme_ns_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-01T09:41:10Z",
+      "side": 1,
+      "message": "Maybe we can also add the \"spdk_nvme_ns_supports_extended_lba\" function here which looks like a little complicated in the case to return \"true\" or \"false\".",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 22
+      },
+      "revId": "2dba3ba4d54c9103e8d584a4d5f00fe995a5a3e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
