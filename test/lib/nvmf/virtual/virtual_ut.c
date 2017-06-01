@@ -174,6 +174,13 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
 	return NULL;
 }
 
+const char *
+spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
+{
+	abort();
+	return NULL;
+}
+
 void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc)
 {
 }

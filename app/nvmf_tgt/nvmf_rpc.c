@@ -111,7 +111,7 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 		} else {
 			int i;
 			spdk_json_write_name(w, "serial_number");
-			spdk_json_write_string(w, subsystem->dev.virt.sn);
+			spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
 			spdk_json_write_name(w, "namespaces");
 			spdk_json_write_array_begin(w);
 			for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
