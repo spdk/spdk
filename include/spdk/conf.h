@@ -41,10 +41,29 @@
 
 #include "spdk/stdinc.h"
 
-struct spdk_conf_value;
-struct spdk_conf_item;
-struct spdk_conf_section;
-struct spdk_conf;
+struct spdk_conf_value {
+	struct spdk_conf_value *next;
+	char *value;
+};
+
+struct spdk_conf_item {
+	struct spdk_conf_item *next;
+	char *key;
+	struct spdk_conf_value *val;
+};
+
+struct spdk_conf_section {
+	struct spdk_conf_section *next;
+	char *name;
+	int num;
+	struct spdk_conf_item *item;
+};
+
+struct spdk_conf {
+	char *file;
+	struct spdk_conf_section *current_section;
+	struct spdk_conf_section *section;
+};
 
 struct spdk_conf *spdk_conf_allocate(void);
 void spdk_conf_free(struct spdk_conf *cp);
@@ -64,6 +83,14 @@ char *spdk_conf_section_get_nval(struct spdk_conf_section *sp, const char *key, 
 char *spdk_conf_section_get_val(struct spdk_conf_section *sp, const char *key);
 int spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key);
 bool spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key, bool default_val);
+
+struct spdk_conf_section *allocate_cf_section(void);
+struct spdk_conf_item *allocate_cf_item(void);
+struct spdk_conf_value *allocate_cf_value(void);
+void append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp);
+struct spdk_conf_item *find_cf_nitem(struct spdk_conf_section *sp, const char *key, int idx);
+void append_cf_item(struct spdk_conf_section *sp, struct spdk_conf_item *ip);
+void append_cf_value(struct spdk_conf_item *ip, struct spdk_conf_value *vp);
 
 void spdk_conf_set_as_default(struct spdk_conf *cp);
 

@@ -44,13 +44,6 @@
 
 #include "spdk/env.h"
 
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
 DEFINE_STUB_V(spdk_scsi_task_put, (struct spdk_scsi_task *task));
 DEFINE_STUB(spdk_ring_enqueue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
 DEFINE_STUB(spdk_ring_dequeue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);

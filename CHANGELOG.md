@@ -1,5 +1,11 @@
 # Changelog
 
+## Upcoming Release
+
+### Configuration (conf)
+
+A method to dynamically add/modify config data
+
 ## v17.10: Logical Volumes
 
 ### New dependencies

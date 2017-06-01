@@ -38,30 +38,6 @@
 #include "spdk/string.h"
 #include "spdk/log.h"
 
-struct spdk_conf_value {
-	struct spdk_conf_value *next;
-	char *value;
-};
-
-struct spdk_conf_item {
-	struct spdk_conf_item *next;
-	char *key;
-	struct spdk_conf_value *val;
-};
-
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
-struct spdk_conf {
-	char *file;
-	struct spdk_conf_section *current_section;
-	struct spdk_conf_section *section;
-};
-
 #define CF_DELIM " \t"
 
 #define LIB_MAX_TMPBUF 1024
@@ -190,19 +166,19 @@ spdk_conf_free(struct spdk_conf *cp)
 	free(cp);
 }
 
-static struct spdk_conf_section *
+struct spdk_conf_section *
 allocate_cf_section(void)
 {
 	return calloc(1, sizeof(struct spdk_conf_section));
 }
 
-static struct spdk_conf_item *
+struct spdk_conf_item *
 allocate_cf_item(void)
 {
 	return calloc(1, sizeof(struct spdk_conf_item));
 }
 
-static struct spdk_conf_value *
+struct spdk_conf_value *
 allocate_cf_value(void)
 {
 	return calloc(1, sizeof(struct spdk_conf_value));
@@ -256,7 +232,7 @@ spdk_conf_next_section(struct spdk_conf_section *sp)
 	return sp->next;
 }
 
-static void
+void
 append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp)
 {
 	struct spdk_conf_section *last;
@@ -277,7 +253,7 @@ append_cf_section(struct spdk_conf *cp, struct spdk_conf_section *sp)
 	last->next = sp;
 }
 
-static struct spdk_conf_item *
+struct spdk_conf_item *
 find_cf_nitem(struct spdk_conf_section *sp, const char *key, int idx)
 {
 	struct spdk_conf_item *ip;
@@ -301,7 +277,7 @@ find_cf_nitem(struct spdk_conf_section *sp, const char *key, int idx)
 	return NULL;
 }
 
-static void
+void
 append_cf_item(struct spdk_conf_section *sp, struct spdk_conf_item *ip)
 {
 	struct spdk_conf_item *last;
@@ -320,7 +296,7 @@ append_cf_item(struct spdk_conf_section *sp, struct spdk_conf_item *ip)
 	last->next = ip;
 }
 
-static void
+void
 append_cf_value(struct spdk_conf_item *ip, struct spdk_conf_value *vp)
 {
 	struct spdk_conf_value *last;
@@ -444,6 +420,7 @@ spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key, boo
 	return default_val;
 }
 
+#ifndef SPDK_NO_CONF_READ
 static int
 parse_line(struct spdk_conf *cp, char *lp)
 {
@@ -674,6 +651,7 @@ next_line:
 	fclose(fp);
 	return 0;
 }
+#endif /* SPDK_NO_CONF_READ */
 
 void
 spdk_conf_set_as_default(struct spdk_conf *cp)

@@ -44,13 +44,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk/env.h"
 
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
 struct spdk_io_channel {
 	struct spdk_thread		*thread;
 	struct io_device		*dev;
