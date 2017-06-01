@@ -409,6 +409,16 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	return 0;
 }
 
+const char *
+spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
+{
+	if (subsystem->mode != NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+		return NULL;
+	}
+
+	return subsystem->dev.virt.sn;
+}
+
 int
 spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
 {
