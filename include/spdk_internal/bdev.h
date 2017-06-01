@@ -417,8 +417,9 @@ spdk_bdev_io_from_ctx(void *ctx)
 	    spdk_bdev_module_list_add(&init_fn ## _if);                  			\
 	}
 
-#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn, bdev_registered_fn)\
+#define SPDK_VBDEV_MODULE_REGISTER(name, init_fn, fini_fn, config_fn, ctx_size_fn, bdev_registered_fn)\
 	static struct spdk_bdev_module_if init_fn ## _if = {					\
+	.module_name 	= name,								\
 	.module_init 	= init_fn,								\
 	.module_fini	= fini_fn,								\
 	.config_text	= config_fn,								\
