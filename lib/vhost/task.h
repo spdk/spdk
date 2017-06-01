@@ -43,6 +43,7 @@ struct spdk_vhost_dev;
 
 struct spdk_vhost_task {
 	struct spdk_scsi_task	scsi;
+	struct iovec iovs[VHOST_SCSI_IOVS_LEN];
 
 	union {
 		struct virtio_scsi_cmd_resp *resp;
@@ -55,20 +56,12 @@ struct spdk_vhost_task {
 	int req_idx;
 
 	struct rte_vhost_vring *vq;
-
-	TAILQ_ENTRY(spdk_vhost_task) iovecs_link;
 };
-
-void spdk_vhost_enqueue_task(struct spdk_vhost_task *task);
-struct spdk_vhost_task *spdk_vhost_dequeue_task(void);
 
 void spdk_vhost_task_put(struct spdk_vhost_task *task);
 struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev);
 
 void spdk_vhost_dev_task_ref(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_task_unref(struct spdk_vhost_dev *vdev);
-
-void spdk_vhost_iovec_free(struct iovec *iov);
-struct iovec *spdk_vhost_iovec_alloc(void);
 
 #endif /* SPDK_VHOST_TASK_H */
