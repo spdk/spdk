@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aec037f6_3a8eec41",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T17:58:46Z",
+      "side": 1,
+      "message": "This should probably mention that the new single reset type is equivalent to the former hard reset.",
+      "revId": "0918b4a617c719dc5484847a013599ac3f577c62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
