@@ -17,6 +17,13 @@ timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
+file=/home/sys_sgsw/aio-test.img
+if [ -f "$file" ]; then
+	parted -s $file mklabel gpt mkpart primary '0%' '50%' mkpart primary '50%' '100%'
+	echo " AIO $file AIO1" >>  $testdir/bdev.conf
+	echo "[Gpt]" >> $testdir/bdev.conf
+fi
+
 timing_enter verify
 $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
 timing_exit verify
