@@ -161,6 +161,7 @@ SPDK_RPC_REGISTER("get_nvmf_subsystems", spdk_rpc_get_nvmf_subsystems)
 
 #define RPC_MAX_LISTEN_ADDRESSES 255
 #define RPC_MAX_HOSTS 255
+#define RPC_MAX_NAMESPACES 255
 
 struct rpc_listen_addresses {
 	size_t num_listen_address;
@@ -213,7 +214,7 @@ decode_rpc_hosts(const struct spdk_json_val *val, void *out)
 
 struct rpc_dev_names {
 	size_t num_names;
-	char *names[MAX_VIRTUAL_NAMESPACE];
+	char *names[RPC_MAX_NAMESPACES];
 };
 
 static int
@@ -222,7 +223,7 @@ decode_rpc_dev_names(const struct spdk_json_val *val, void *out)
 	struct rpc_dev_names *dev_names = out;
 
 	return spdk_json_decode_array(val, spdk_json_decode_string, dev_names->names,
-				      MAX_VIRTUAL_NAMESPACE,
+				      SPDK_COUNTOF(dev_names->names),
 				      &dev_names->num_names, sizeof(char *));
 }
 
