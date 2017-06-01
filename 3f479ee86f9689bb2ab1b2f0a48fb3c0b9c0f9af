@@ -101,6 +101,29 @@
       "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee96f63a_d10abdf4",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T06:39:14Z",
+      "side": 1,
+      "message": "How about:\nvoid spdk_vhost_timed_event_timeout(struct spdk_vhost_timed_event *event, const char *errmsg);\nThen, you could completely get rid of log_string field.",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 124,
+        "endChar": 71
+      },
+      "revId": "3f479ee86f9689bb2ab1b2f0a48fb3c0b9c0f9af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
