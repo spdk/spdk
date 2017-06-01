@@ -106,6 +106,12 @@
   # leaving the rest of the device inaccessible
   #Split Malloc2 8 1
 
+[Lvol]
+  # Syntax:
+  #   Split <bdev>
+  #
+  # Read logical volumes from bdev
+
 # Vhost scsi controller configuration
 # Users should change the VhostScsi section(s) below to match the desired
 # vhost configuration.

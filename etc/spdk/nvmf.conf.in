@@ -117,6 +117,11 @@
   # leaving the rest of the device inaccessible
   Split Malloc3 8 1
 
+[Lvol]
+  # Syntax:
+  #   Split <bdev>
+  #
+  # Read logical volumes from bdev
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
 # - Core may be set or not. If set, the specified subsystem will run on

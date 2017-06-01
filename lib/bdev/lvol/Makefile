@@ -1,3 +1,4 @@
+
 #
 #  BSD LICENSE
 #
@@ -31,19 +32,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS) -I.
-C_SRCS = bdev.c scsi_nvme.c
-LIBNAME = bdev
-
-DIRS-y += error lvol malloc null nvme rpc split
-
-ifeq ($(OS),Linux)
-DIRS-y += aio
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
+CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/
+C_SRCS = vbdev_lvol.c
+LIBNAME = vbdev_lvol
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
