@@ -17,9 +17,39 @@ timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
+if [ $(uname -s) = Linux ]; then
+	uuid=`grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h | awk -F "(" '{ print $2}' | sed 's/)//g' | awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g'`
+	echo "uuid=" $uuid
+
+	echo " " >> $testdir/bdev.conf
+	echo "[Gpt]" >> $testdir/bdev.conf
+	echo "  Disable Yes" >> $testdir/bdev.conf
+	
+	#echo " " >> $testdir/bdev.conf
+	#echo "[Rpc]" >> $testdir/bdev.conf
+	#echo "  Enable Yes" >> $testdir/bdev.conf
+	#$testdir/nbd/nbd -c $testdir/bdev.conf -b Malloc0 -n /dev/nbd0 &
+	#nbd_pid=$!
+        #echo "Process nbd pid: $nbd_pid"
+	#waitforlisten $nbd_pid 5260	
+
+	#if [ -f /dev/nbd0 ]; then
+		echo "enter here"
+		disk=/home/ziyeyang/spdk_external/spdk/aio-test.img
+		parted -s $disk mklabel gpt mkpart primary '0%' '50%' mkpart primary '50%' '100%'
+		#change the GUID to SPDK GUID value
+		sgdisk -u 1:$uuid $disk
+		#sgdisk -u 2:$uuid $disk
+	#fi
+
+	#kill $nbd_pid
+
+fi
+
 timing_enter verify
-$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
+$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 2 -s 4096 -w verify -t 1 -o all
 timing_exit verify
+
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Use size 192KB which both exceeds typical 128KB max NVMe I/O

@@ -1458,5 +1458,12 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 void
 spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
-	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	/* Currently only GPT module has bdev_registered function,  and we need to
+	    * put  this module in the last for detecting whether there is GPT.
+	      However,  we need another patch to solve this issue */
+	if (vbdev_module->bdev_registered) {
+		TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	} else {
+		TAILQ_INSERT_HEAD(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	}
 }
