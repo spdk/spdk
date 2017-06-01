@@ -200,45 +200,10 @@ static void invalid_request(struct spdk_vhost_task *task);
 static void
 submit_completion(struct spdk_vhost_task *task)
 {
-	struct iovec *iovs = NULL;
-	int result;
-
 	vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, task->scsi.data_transferred);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
 
-	if (task->scsi.iovs != &task->scsi.iov) {
-		iovs = task->scsi.iovs;
-		task->scsi.iovs = &task->scsi.iov;
-		task->scsi.iovcnt = 1;
-	}
-
 	spdk_vhost_task_put(task);
-
-	if (!iovs) {
-		return;
-	}
-
-	while (1) {
-		task = spdk_vhost_dequeue_task();
-		if (!task) {
-			spdk_vhost_iovec_free(iovs);
-			break;
-		}
-
-		/* Set iovs so underlying functions will not try to alloc IOV */
-		task->scsi.iovs = iovs;
-		task->scsi.iovcnt = VHOST_SCSI_IOVS_LEN;
-
-		result = process_request(task);
-		if (result == 0) {
-			task_submit(task);
-			break;
-		} else {
-			task->scsi.iovs = &task->scsi.iov;
-			task->scsi.iovcnt = 1;
-			invalid_request(task);
-		}
-	}
 }
 
 static void
@@ -408,11 +373,9 @@ task_data_setup(struct spdk_vhost_task *task,
 	struct rte_vhost_vring *vq = task->vq;
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
 	struct vring_desc *desc =  &task->vq->desc[task->req_idx];
-	struct iovec *iovs = task->scsi.iovs;
-	uint16_t iovcnt = 0, iovcnt_max = task->scsi.iovcnt;
+	struct iovec *iovs = task->iovs;
+	uint16_t iovcnt = 0, iovcnt_max = VHOST_SCSI_IOVS_LEN;
 	uint32_t len = 0;
-
-	assert(iovcnt_max == 1 || iovcnt_max == VHOST_SCSI_IOVS_LEN);
 
 	/* Sanity check. First descriptor must be readable and must have next one. */
 	if (unlikely(vring_desc_is_wr(desc) || !vring_desc_has_next(desc))) {
@@ -425,6 +388,7 @@ task_data_setup(struct spdk_vhost_task *task,
 
 	desc = vring_desc_get_next(vq->desc, desc);
 	task->scsi.dxfer_dir = vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV;
+	task->scsi.iovs = iovs;
 
 	if (task->scsi.dxfer_dir == SPDK_SCSI_DIR_FROM_DEV) {
 		/*
@@ -446,14 +410,6 @@ task_data_setup(struct spdk_vhost_task *task,
 		}
 
 		desc = vring_desc_get_next(vq->desc, desc);
-		if (iovcnt_max != VHOST_SCSI_IOVS_LEN && vring_desc_has_next(desc)) {
-			iovs = spdk_vhost_iovec_alloc();
-			if (iovs == NULL) {
-				return 1;
-			}
-
-			iovcnt_max = VHOST_SCSI_IOVS_LEN;
-		}
 
 		/* All remaining descriptors are data. */
 		while (iovcnt < iovcnt_max) {
@@ -479,19 +435,6 @@ task_data_setup(struct spdk_vhost_task *task,
 		 * No need to check descriptor WR flag as this is done while setting scsi.dxfer_dir.
 		 */
 
-		if (iovcnt_max != VHOST_SCSI_IOVS_LEN && vring_desc_has_next(desc)) {
-			/* If next descriptor is not for response, allocate iovs. */
-			if (!vring_desc_is_wr(vring_desc_get_next(vq->desc, desc))) {
-				iovs = spdk_vhost_iovec_alloc();
-
-				if (iovs == NULL) {
-					return 1;
-				}
-
-				iovcnt_max = VHOST_SCSI_IOVS_LEN;
-			}
-		}
-
 		/* Process descriptors up to response. */
 		while (!vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
 			iovs[iovcnt].iov_base = (void *)gpa_to_vva(vdev, desc->addr);
@@ -514,22 +457,17 @@ task_data_setup(struct spdk_vhost_task *task,
 		}
 	}
 
-	if (iovcnt_max > 1 && iovcnt == iovcnt_max) {
+	if (iovcnt == iovcnt_max) {
 		SPDK_WARNLOG("Too many IO vectors in chain!\n");
 		goto abort_task;
 	}
 
-	task->scsi.iovs = iovs;
 	task->scsi.iovcnt = iovcnt;
 	task->scsi.length = len;
 	task->scsi.transfer_len = len;
 	return 0;
 
 abort_task:
-	if (iovs != task->scsi.iovs) {
-		spdk_vhost_iovec_free(iovs);
-	}
-
 	if (task->resp) {
 		task->resp->response = VIRTIO_SCSI_S_ABORTED;
 	}
@@ -597,9 +535,6 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 			task_submit(task);
 			SPDK_TRACELOG(SPDK_TRACE_VHOST, "====== Task %p req_idx %d submitted ======\n", task,
 				      task->req_idx);
-		} else if (result > 0) {
-			spdk_vhost_enqueue_task(task);
-			SPDK_TRACELOG(SPDK_TRACE_VHOST, "====== Task %p req_idx %d deferred ======\n", task, task->req_idx);
 		} else {
 			invalid_request(task);
 			SPDK_TRACELOG(SPDK_TRACE_VHOST, "====== Task %p req_idx %d failed ======\n", task, task->req_idx);
