@@ -20,16 +20,16 @@ import json
 
 # Populate test parameters into these lists to run different workloads
 # The configuration below runs QD 1 & 128. To add QD 32 set q_depth=['1', '32', '128']
-q_depth = ['1', '8', '128']
+q_depth = ['1', '128']
 # io_size specifies the size in bytes of the IO workload.
 # To add 64K IOs set io_size = ['4096', '65536']
 io_size = ['4096']
 workload_type = ['randrw']
-mix = ['100', '70']
+mix = ['100']
 core_mask = ['0x1']
 # run_time parameter specifies how long to run each test.
 # Set run_time = ['600'] to run the test for 10 minutes
-run_time = ['30']
+run_time = ['60']
 # iter_num parameter is used to run the test multiple times.
 # set iter_num = ['1', '2', '3'] to repeat each test 3 times
 iter_num = ['1']
@@ -129,7 +129,7 @@ copyfile(sys.argv[1], config_file_for_test)
 
 # Add the number of threads to the fio config file
 with open(config_file_for_test, "a") as conf_file:
-    conf_file.write("numjobs=" + str(num_ssds) + "\n")
+    conf_file.write("numjobs=" + str(1) + "\n")
 
 # Add the NVMe bdf to the fio config file
 for i in range(0, num_ssds):
