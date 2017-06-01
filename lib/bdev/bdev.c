@@ -743,7 +743,6 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return -EINVAL;
 	}
