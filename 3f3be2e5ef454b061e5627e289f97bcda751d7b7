@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15041763_b14756fe",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T17:16:04Z",
+      "side": 1,
+      "message": "The license header is mis-indented (see scripts/check_format.sh output).",
+      "revId": "3f3be2e5ef454b061e5627e289f97bcda751d7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9ad8ac3_5a1b8ac7",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T17:16:04Z",
+      "side": 1,
+      "message": "The include guards should be SPDK_INTERNAL_MOCK_H in case we add an include/spdk/mock.h later.",
+      "revId": "3f3be2e5ef454b061e5627e289f97bcda751d7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbe6665f_aa938a51",
+        "filename": "lib/ut_mock/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T17:16:04Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need to add this to the include path - anything including mock.h should use #include \"spdk_internal/mock.h\".",
+      "revId": "3f3be2e5ef454b061e5627e289f97bcda751d7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e94cb64c_87572885",
+        "filename": "lib/ut_mock/spdk_mock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T17:16:04Z",
+      "side": 1,
+      "message": "This looks double-indented.",
+      "revId": "3f3be2e5ef454b061e5627e289f97bcda751d7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
