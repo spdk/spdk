@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05b91ac1_076d53a9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-01T09:36:04Z",
+      "side": 1,
+      "message": "Whether \"break\" needed after this function? Same for below iteration. Thanks.",
+      "range": {
+        "startLine": 560,
+        "startChar": 3,
+        "endLine": 560,
+        "endChar": 62
+      },
+      "revId": "0d0869f7da1fdb4ad7e04717049579fdd6c606d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
