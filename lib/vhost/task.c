@@ -47,18 +47,11 @@
 		typeof(((type *)0)->member) *__mptr = (ptr); \
 		(type *)((char *)__mptr - offsetof(type, member)); })
 
-typedef TAILQ_HEAD(, spdk_vhost_task) need_iovecs_tailq_t;
-
 static struct rte_mempool *g_task_pool;
-static struct rte_mempool *g_iov_buffer_pool;
-
-static need_iovecs_tailq_t g_need_iovecs[RTE_MAX_LCORE];
 
 void
 spdk_vhost_task_put(struct spdk_vhost_task *task)
 {
-	assert(&task->scsi.iov == task->scsi.iovs);
-	assert(task->scsi.iovcnt == 1);
 	spdk_scsi_task_put(&task->scsi);
 }
 
@@ -91,44 +84,6 @@ spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev)
 	return task;
 }
 
-void
-spdk_vhost_enqueue_task(struct spdk_vhost_task *task)
-{
-	need_iovecs_tailq_t *tailq = &g_need_iovecs[rte_lcore_id()];
-
-	TAILQ_INSERT_TAIL(tailq, task, iovecs_link);
-}
-
-struct spdk_vhost_task *
-spdk_vhost_dequeue_task(void)
-{
-	need_iovecs_tailq_t *tailq = &g_need_iovecs[rte_lcore_id()];
-	struct spdk_vhost_task *task;
-
-	if (TAILQ_EMPTY(tailq))
-		return NULL;
-
-	task = TAILQ_FIRST(tailq);
-	TAILQ_REMOVE(tailq, task, iovecs_link);
-
-	return task;
-}
-
-struct iovec *
-spdk_vhost_iovec_alloc(void)
-{
-	struct iovec *iov = NULL;
-
-	rte_mempool_get(g_iov_buffer_pool, (void **)&iov);
-	return iov;
-}
-
-void
-spdk_vhost_iovec_free(struct iovec *iov)
-{
-	rte_mempool_put(g_iov_buffer_pool, iov);
-}
-
 static void
 spdk_vhost_subsystem_init(void)
 {
@@ -139,23 +94,8 @@ spdk_vhost_subsystem_init(void)
 	if (!g_task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
 		rc = -1;
-		goto end;
 	}
 
-	g_iov_buffer_pool = rte_mempool_create("vhost iov buffer pool", 2048,
-					       VHOST_SCSI_IOVS_LEN * sizeof(struct iovec),
-					       128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
-	if (!g_iov_buffer_pool) {
-		SPDK_ERRLOG("create iov buffer pool failed\n");
-		rc = -1;
-		goto end;
-	}
-
-	for (int i = 0; i < RTE_MAX_LCORE; i++) {
-		TAILQ_INIT(&g_need_iovecs[i]);
-	}
-
-end:
 	spdk_subsystem_init_next(rc);
 }
 
