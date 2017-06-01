@@ -17,6 +17,29 @@ timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
+if [ $(uname -s) = Linux ]; then
+	$rootdir/scripts/setup.sh reset
+	sleep 5
+
+	bdfs=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}')
+
+	# partition the nvme disk into 2 partitions.
+	i=0
+	for bdf in $bdfs;
+	do
+		parted -s /dev/nvme"$i"n1 mklabel gpt
+		parted -s /dev/nvme"$i"n1 mkpart primary '0%' '50%'
+		parted -s /dev/nvme"$i"n1 mkpart primary '50%' '100%'
+		let i=i+1
+	done
+
+	echo "" >> $testdir/bdev.conf
+	echo "[Gpt]" >> $testdir/bdev.conf
+	echo " Disable No" >> $testdir/bdev.conf
+
+	$rootdir/scripts/setup.sh
+fi
+
 timing_enter verify
 $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
 timing_exit verify
