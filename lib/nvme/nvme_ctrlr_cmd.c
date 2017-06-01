@@ -371,7 +371,7 @@ spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 
-	if (offset && !ctrlr->cdata.lpa.edlp) {
+	if ((log_page != SPDK_NVME_LOG_DISCOVERY) && offset && !ctrlr->cdata.lpa.edlp) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -EINVAL;
 	}
