@@ -303,4 +303,5 @@ vbdev_error_fini(void)
 	}
 }
 
-SPDK_VBDEV_MODULE_REGISTER(vbdev_error_init, vbdev_error_fini, NULL, NULL, NULL)
+SPDK_VBDEV_MODULE_REGISTER("Error_vbdev_module", vbdev_error_init, vbdev_error_fini, NULL, NULL,
+			   NULL)
