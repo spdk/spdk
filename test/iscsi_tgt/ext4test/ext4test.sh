@@ -92,6 +92,10 @@ for dev in $devs; do
 
 	rsync -qav --exclude=".git" --exclude="dpdk" $rootdir/ /mnt/${dev}dir/spdk
 
+	if [ -z "$DPDK_DIR" ]; then
+		DPDK_DIR="$rootdir"/dpdk/build
+	fi
+
 	make -C /mnt/${dev}dir/spdk DPDK_DIR=$DPDK_DIR clean
 	make -C /mnt/${dev}dir/spdk DPDK_DIR=$DPDK_DIR -j16
 
