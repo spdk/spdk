@@ -142,6 +142,7 @@ if hash lcov; then
 	# generate coverage data and combine with baseline
 	$LCOV -q -c -d $src -t "$(hostname)" -o cov_test.info
 	$LCOV -q -a cov_base.info -a cov_test.info -o $out/cov_total.info
+	$LCOV -q -r $out/cov_total.info 'dpdk/*' -o $out/cov_total.info
 	git clean -f "*.gcda"
 	rm -f cov_base.info cov_test.info
 fi
