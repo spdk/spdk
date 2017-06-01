@@ -1,0 +1,12 @@
+These scripts are used to perform benchmark testing with fio.
+The run_fio_test.py is the main script that runs the performance test and parses the test results.
+Users can populate test parameters for different fio workloads in the lists (q_depth, io_size, workload_type, mix, core_mask and run_time) at the top of the run_fio_test.py script. 
+The run_fio_test.py puts the test results in a csv file named <hostname>_<num ssds>_perf_output.csv.
+The run_fio_test.sh script demonstrates how to invoke the run_fio_test.py script with the
+input parameters: path_to_fio_conf, path_to_ioengine and num_ssds. The run_fio_test.sh script will
+call the SPDK setup.sh script to unbind NVMe devices from the kernel driver and bind them to the uio driver.
+We include a sample fio configuration file that includes the parameters we use in our test environment.
+The run_fio_test.py will append the NVMe devices to the end of the configuration file. The number of
+NVMe devices used is specified using the num_ssds parameter.
+
+Usage: ./run_fio_test.sh
