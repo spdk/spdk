@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bc2afb6_14ffcef0",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "move into vhost_internal",
+      "range": {
+        "startLine": 115,
+        "startChar": 12,
+        "endLine": 115,
+        "endChar": 34
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5741b9a6_370a917f",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": ".",
+      "range": {
+        "startLine": 118,
+        "startChar": 58,
+        "endLine": 118,
+        "endChar": 59
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b2e400d_cb6a29da",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "is this necessary?",
+      "range": {
+        "startLine": 128,
+        "startChar": 5,
+        "endLine": 128,
+        "endChar": 49
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "005821aa_0076feeb",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "why not inline?",
+      "range": {
+        "startLine": 139,
+        "startChar": 1,
+        "endLine": 141,
+        "endChar": 9
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7258e182_afaa7d12",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "Is this comment valid? If so, could you elaborate more?",
+      "range": {
+        "startLine": 225,
+        "startChar": 2,
+        "endLine": 225,
+        "endChar": 50
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6840f03_18b74fec",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "since you disabled barrier feature you can just remove this chunk of code. in the type switch below it will jump to default branch and goto err. Isn\u0027t that correct behavior?",
+      "range": {
+        "startLine": 252,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 6
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50fcc1c9_1cedb435",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "why not #ifdef [...] #define [...] at the top?",
+      "range": {
+        "startLine": 269,
+        "startChar": 0,
+        "endLine": 269,
+        "endChar": 28
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3eb4cf6_5b6d33ea",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "you already disabled scsi feature, do you need this entire switch case?",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 271,
+        "endChar": 76
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5f2e7ce_38e41663",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": ".",
+      "range": {
+        "startLine": 281,
+        "startChar": 23,
+        "endLine": 281,
+        "endChar": 29
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ba8771b_d116670d",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "how about moving the abort inside spdk_vhost_blk_get_tasks?",
+      "range": {
+        "startLine": 323,
+        "startChar": 0,
+        "endLine": 323,
+        "endChar": 23
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e828fc16_d0700ea7",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-01T14:14:09Z",
+      "side": 1,
+      "message": "imo it is. since this is not any hot io path, why not?",
+      "range": {
+        "startLine": 355,
+        "startChar": 3,
+        "endLine": 355,
+        "endChar": 43
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
