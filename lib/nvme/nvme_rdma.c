@@ -1058,13 +1058,13 @@ nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 static int
 nvme_fabrics_get_log_discovery_page(struct spdk_nvme_ctrlr *ctrlr,
-				    void *log_page, uint32_t size)
+				    void *log_page, uint32_t size, uint64_t offset)
 {
 	struct nvme_completion_poll_status status;
 	int rc;
 
 	status.done = false;
-	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size, 0,
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY, 0, log_page, size, offset,
 					      nvme_completion_poll_cb, &status);
 	if (rc < 0) {
 		return -1;
@@ -1143,10 +1143,12 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
 	struct spdk_nvmf_discovery_log_page *log_page;
+	struct spdk_nvmf_discovery_log_page_entry *log_page_entry;
 	union spdk_nvme_cc_register cc;
 	char buffer[4096];
 	int rc;
-	uint64_t i, numrec, buffer_max_entries;
+	uint64_t i, numrec, buffer_max_entries, log_page_offset = 0;
+	uint64_t remaining_num_rec = 0;
 
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
 	/* For discovery_ctrlr set the timeout to 0 */
@@ -1171,33 +1173,34 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		return -1;
 	}
 
-	rc = nvme_fabrics_get_log_discovery_page(discovery_ctrlr, buffer, sizeof(buffer));
-	if (rc < 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "nvme_fabrics_get_log_discovery_page error\n");
-		nvme_ctrlr_destruct(discovery_ctrlr);
-		/* It is not a discovery_ctrlr info and try to directly connect it */
-		rc = nvme_ctrlr_probe(discovery_trid, NULL, probe_cb, cb_ctx);
-		return rc;
-	}
-
-	log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
-
-	/*
-	 * For now, only support retrieving one buffer of discovery entries.
-	 * This could be extended to call Get Log Page multiple times as needed.
-	 */
 	buffer_max_entries = (sizeof(buffer) - offsetof(struct spdk_nvmf_discovery_log_page, entries[0])) /
 			     sizeof(struct spdk_nvmf_discovery_log_page_entry);
-	numrec = spdk_min(log_page->numrec, buffer_max_entries);
-	if (numrec != log_page->numrec) {
-		SPDK_WARNLOG("Discovery service returned %" PRIu64 " entries,"
-			     "but buffer can only hold %" PRIu64 "\n",
-			     log_page->numrec, numrec);
-	}
+	do {
+		rc = nvme_fabrics_get_log_discovery_page(discovery_ctrlr, buffer, sizeof(buffer), log_page_offset);
+		if (rc < 0) {
+			SPDK_TRACELOG(SPDK_TRACE_NVME, "nvme_fabrics_get_log_discovery_page error\n");
+			nvme_ctrlr_destruct(discovery_ctrlr);
+			/* It is not a discovery_ctrlr info and try to directly connect it */
+			rc = nvme_ctrlr_probe(discovery_trid, NULL, probe_cb, cb_ctx);
+			return rc;
+		}
 
-	for (i = 0; i < numrec; i++) {
-		nvme_rdma_discovery_probe(&log_page->entries[i], cb_ctx, probe_cb);
-	}
+		if (!remaining_num_rec) {
+			log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
+			remaining_num_rec = log_page->numrec;
+			log_page_offset = offsetof(struct spdk_nvmf_discovery_log_page, entries[0]);
+			log_page_entry = &log_page->entries[0];
+		} else {
+			log_page_entry = (struct spdk_nvmf_discovery_log_page_entry *)buffer;
+		}
+
+		numrec = spdk_min(remaining_num_rec, buffer_max_entries);
+		for (i = 0; i < numrec; i++) {
+			nvme_rdma_discovery_probe(log_page_entry++, cb_ctx, probe_cb);
+		}
+		remaining_num_rec -= numrec;
+		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
+	} while (remaining_num_rec != 0);
 
 	nvme_ctrlr_destruct(discovery_ctrlr);
 	return 0;
