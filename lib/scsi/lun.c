@@ -400,8 +400,7 @@ spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun)
 	return lun->name;
 }
 
-bool
-spdk_scsi_lun_is_removed(const struct spdk_scsi_lun *lun)
+bool spdk_scsi_lun_is_removed(const struct spdk_scsi_lun *lun)
 {
-	return lun == NULL || lun->removed;
+	return lun->removed;
 }

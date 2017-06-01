@@ -42,6 +42,7 @@
 #include "spdk/event.h"
 #include "spdk/likely.h"
 
+#include "spdk_internal/bdev.h"
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 #include "vhost_scsi.h"
@@ -105,6 +106,40 @@ static uint64_t
 gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
 	return rte_vhost_gpa_to_vva(vdev->mem, addr);
+}
+
+static void
+spdk_vhost_scsi_lun_hot_remove(void *remove_ctx)
+{
+	void **args = (void **) remove_ctx;
+	spdk_bdev_remove_cb_t old_cb = args[0];
+
+	/** original callback */
+	old_cb(args[1]);
+
+	free(remove_ctx);
+}
+
+static void
+overwrite_lun_hotremove_cb(struct spdk_scsi_lun *lun)
+{
+	struct spdk_bdev *bdev = spdk_bdev_get_by_name(spdk_scsi_lun_get_name(lun));
+	void **remove_ctx;
+
+	remove_ctx = malloc(sizeof(void *) * 2);
+	if (remove_ctx == NULL) {
+		rte_panic("Couldn't allocate memory required for hotremove\n");
+	}
+
+	pthread_mutex_lock(&bdev->mutex);
+	assert(bdev->status == SPDK_BDEV_STATUS_CLAIMED);
+
+	remove_ctx[0] = bdev->remove_cb;
+	remove_ctx[1] = bdev->remove_ctx;
+
+	bdev->remove_cb = spdk_vhost_scsi_lun_hot_remove;
+	bdev->remove_ctx = remove_ctx;
+	pthread_mutex_unlock(&bdev->mutex);
 }
 
 /*
@@ -554,7 +589,7 @@ process_request(struct spdk_vhost_task *task)
 
 	task->scsi_dev = get_scsi_dev(task->svdev, req->lun);
 	task->scsi.lun = get_scsi_lun(task->scsi_dev, req->lun);
-	if (unlikely(spdk_scsi_lun_is_removed(task->scsi.lun))) {
+	if (unlikely(task->scsi.lun == NULL || spdk_scsi_lun_is_removed(task->scsi.lun))) {
 		task->scsi.iovs = &task->scsi.iov;
 		task->scsi.iovcnt = 1;
 
@@ -869,6 +904,7 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -EINVAL;
 	}
 
+	overwrite_lun_hotremove_cb(spdk_scsi_dev_get_lun(svdev->scsi_dev[scsi_dev_num], lun_id_list[0]));
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
