@@ -1458,5 +1458,12 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 void
 spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
-	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	/* Need to put gpt_vbdev module in the last for detecting whether there is GPT.
+	  * May need another patch to solve the vbdev dependency case.
+	  */
+	if (vbdev_module->module_name && strcmp(vbdev_module->module_name, "Gpt_vbdev_module")) {
+		TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	} else {
+		TAILQ_INSERT_HEAD(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	}
 }
