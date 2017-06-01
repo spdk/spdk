@@ -17,9 +17,22 @@ timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
+if [ $(uname -s) = Linux ]; then
+	nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+	nbd_pid=$!
+        echo "Process nbd pid: $nbd_pid"
+	parted -s /dev/nbd0 mklabel gpt mkpart primary '0%' '50%' mkpart primary '50%' '100%'
+	sgdisk -u 2:0x11111111111111111111111111111111 /dev/nbd0
+	kill -9 $nbd_pid
+
+	echo " " >> $testdir/bdev.conf
+	echo "[Gpt]" >> $testdir/bdev.conf
+fi
+
 timing_enter verify
 $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
 timing_exit verify
+
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Use size 192KB which both exceeds typical 128KB max NVMe I/O
