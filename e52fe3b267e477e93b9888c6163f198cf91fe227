@@ -83,6 +83,29 @@
     },
     {
       "key": {
+        "uuid": "17a455ad_f20c132a",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-01T09:28:40Z",
+      "side": 1,
+      "message": "If moving this lock acquisition at line 127 (before the g_error_num \u003d\u003d 0 check, looks like we can remove the double check at line 146.",
+      "range": {
+        "startLine": 134,
+        "startChar": 1,
+        "endLine": 134,
+        "endChar": 42
+      },
+      "revId": "e52fe3b267e477e93b9888c6163f198cf91fe227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f33875f_a0c29bad",
         "filename": "lib/bdev/error/vbdev_error.c",
         "patchSetId": 2
