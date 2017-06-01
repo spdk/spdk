@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "077d0318_95c8b6ba",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T18:28:46Z",
+      "side": 1,
+      "message": "transfer -\u003e execute?",
+      "range": {
+        "startLine": 292,
+        "startChar": 26,
+        "endLine": 292,
+        "endChar": 34
+      },
+      "revId": "7a941fffae4e28f806d5f09da65512e42e925e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e862ae8_aaa0db78",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T18:28:46Z",
+      "side": 1,
+      "message": "Drop extra blank line at the end of the struct.",
+      "revId": "7a941fffae4e28f806d5f09da65512e42e925e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3377056f_0ce14092",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T18:28:46Z",
+      "side": 1,
+      "message": "This could probably just be \"nvme_passthru\" and get reused for I/O commands.",
+      "range": {
+        "startLine": 301,
+        "startChar": 9,
+        "endLine": 301,
+        "endChar": 15
+      },
+      "revId": "7a941fffae4e28f806d5f09da65512e42e925e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "301ac170_ed8a78b6",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1129,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T18:28:46Z",
+      "side": 1,
+      "message": "Before we cast nbytes to uint32_t here, we should check if (nbytes \u003e UINT32_MAX) and fail if so.",
+      "revId": "7a941fffae4e28f806d5f09da65512e42e925e82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
