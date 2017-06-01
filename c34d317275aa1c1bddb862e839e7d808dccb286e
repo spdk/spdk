@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ded5049c_9f4a072f",
+        "filename": "lib/nvme/nvme_ctrlr_cmd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T23:25:17Z",
+      "side": 1,
+      "message": "The discovery controller should expose the extended log page capability, so this workaround shouldn\u0027t be necessary - is that broken with our target?",
+      "revId": "c34d317275aa1c1bddb862e839e7d808dccb286e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "387efe77_5f5f6f9f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1197,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-01T23:25:17Z",
+      "side": 1,
+      "message": "If we are reading the second or later page, buffer_max_entries is not the right limit - it assumes the beginning of the page will be occupied by the header, but the later pages will be entirely entries.",
+      "revId": "c34d317275aa1c1bddb862e839e7d808dccb286e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
