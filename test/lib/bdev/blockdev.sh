@@ -17,8 +17,26 @@ timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
+if [ $(uname -s) = Linux ] && [ -f /usr/sbin/sgdisk ]; then
+	$rootdir/scripts/setup.sh reset
+        sleep 5
+
+        bdfs=$(lspci -mm -n -D | grep 0108 | tr -d '"' | awk -F " " '{print $1}')
+
+        # partition the nvme disk into 2 partitions.
+        for bdf in $bdfs; do
+                name=`ls /sys/bus/pci/devices/$bdf/nvme`
+                parted -s /dev/"$name"n1 mklabel gpt mkpart primary '0%' '50%' mkpart primary '50%' '100%'
+                #change the GUID to SPDK GUID value
+                /usr/sbin/sgdisk -u 1:$SPDK_GPT_UUID /dev/"$name"n1
+                /usr/sbin/sgdisk -u 2:$SPDK_GPT_UUID /dev/"$name"n1
+        done
+
+        $rootdir/scripts/setup.sh
+fi
+
 timing_enter verify
-$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
+$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 2 -s 4096 -w verify -t 1
 timing_exit verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
