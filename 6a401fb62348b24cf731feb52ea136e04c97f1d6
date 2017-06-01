@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3a947ece_303971d4",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-01T16:20:16Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "8bc2afb6_14ffcef0",
+      "range": {
+        "startLine": 115,
+        "startChar": 12,
+        "endLine": 115,
+        "endChar": 34
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5741b9a6_370a917f",
         "filename": "lib/vhost/vhost_block.c",
         "patchSetId": 6
@@ -59,6 +83,30 @@
       "writtenOn": "2017-06-01T14:14:09Z",
       "side": 1,
       "message": "is this necessary?",
+      "range": {
+        "startLine": 128,
+        "startChar": 5,
+        "endLine": 128,
+        "endChar": 49
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5250fd10_48c71ee3",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-01T16:20:16Z",
+      "side": 1,
+      "message": "yes, (but this should be named rd_cnt and wr_cnt) to check if request is valid we need to return to caller how many we have RD and WR descriptors. Eg for READ rd_cnt \u003d 1, wr_cnt must be \u003e 1, do WRITE rd_cnt \u003e 1 wr_cnt \u003d 1. Then if() in lines 177 to 179 might be removed.",
+      "parentUuid": "6b2e400d_cb6a29da",
       "range": {
         "startLine": 128,
         "startChar": 5,
@@ -140,6 +188,30 @@
     },
     {
       "key": {
+        "uuid": "791cb5c3_52901a6c",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-01T16:20:16Z",
+      "side": 1,
+      "message": "Rather not. QEMU is unconditionally clear this flag with following comment in code:\n\n    /* VIRTIO_BLK_T_OUT defines the command direction. VIRTIO_BLK_T_BARRIER\n     * is an optional flag. Although a guest should not send this flag if\n     * not negotiated we ignored it in the past. So keep ignoring it. */\n\nSo I think this should be cleared to keep compatibility with qemu virtio-blk",
+      "parentUuid": "e6840f03_18b74fec",
+      "range": {
+        "startLine": 252,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 6
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50fcc1c9_1cedb435",
         "filename": "lib/vhost/vhost_block.c",
         "patchSetId": 6
@@ -174,6 +246,30 @@
       "writtenOn": "2017-06-01T14:14:09Z",
       "side": 1,
       "message": "you already disabled scsi feature, do you need this entire switch case?",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 271,
+        "endChar": 76
+      },
+      "revId": "6a401fb62348b24cf731feb52ea136e04c97f1d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc089b14_cf58cb16",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-01T16:20:16Z",
+      "side": 1,
+      "message": "Only to get the tracelog in case guest driver is broken.",
+      "parentUuid": "d3eb4cf6_5b6d33ea",
       "range": {
         "startLine": 271,
         "startChar": 0,
