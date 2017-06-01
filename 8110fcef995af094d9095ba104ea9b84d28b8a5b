@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49f3f948_522e8cec",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-01T17:45:39Z",
+      "side": 1,
+      "message": "I don\u0027t think mtrr is valid on modern Linux systems. I think the right way to fix this is to patch DPDK. Specifically in the file eal_pci_uio.c, function pci_uio_map_resource_by_index, the filename can be changed to resource_wc%d instead of just resource%d. Not all devices will have a resource_wc file, so if the open fails you should fall back to the old file name.",
+      "revId": "8110fcef995af094d9095ba104ea9b84d28b8a5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
