@@ -31,19 +31,25 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-CFLAGS += $(ENV_CFLAGS) -I.
-C_SRCS = bdev.c scsi_nvme.c
-LIBNAME = bdev
+APP = lvol_ut
 
-DIRS-y += error lvol malloc null nvme rpc split
+C_SRCS := lvol_ut.c
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/lvol -I$(SPDK_ROOT_DIR)/test
 
-ifeq ($(OS),Linux)
-DIRS-y += aio
-endif
+SPDK_LIB_LIST = util log
 
-DIRS-$(CONFIG_RBD) += rbd
+LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
