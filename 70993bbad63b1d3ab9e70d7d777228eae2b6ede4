@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29c0bb77_de4337ad",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-01T23:22:49Z",
+      "side": 1,
+      "message": "Shall we call \"goto end;\" here?",
+      "range": {
+        "startLine": 361,
+        "startChar": 2,
+        "endLine": 361,
+        "endChar": 10
+      },
+      "revId": "70993bbad63b1d3ab9e70d7d777228eae2b6ede4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
