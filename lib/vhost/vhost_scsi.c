@@ -37,12 +37,12 @@
 
 #include "spdk/env.h"
 #include "spdk/scsi.h"
+#include "spdk/scsi_spec.h"
 #include "spdk/conf.h"
 #include "spdk/event.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
-#include "vhost_scsi.h"
 #include "task.h"
 
 /* Features supported by SPDK VHOST lib. */
@@ -570,6 +570,22 @@ remove_vdev_cb(void *arg)
 	spdk_vhost_dev_mem_unregister(&svdev->vdev);
 }
 
+static struct spdk_vhost_scsi_dev *
+to_scsi_dev(struct spdk_vhost_dev *ctrlr)
+{
+	if (ctrlr == NULL) {
+		return NULL;
+	}
+
+	if (ctrlr->type != SPDK_VHOST_DEV_T_SCSI) {
+		SPDK_ERRLOG("Controller %s: expected SCSI controller (%d) but got %d\n",
+			    ctrlr->name, SPDK_VHOST_DEV_T_SCSI, ctrlr->type);
+		return NULL;
+	}
+
+	return (struct spdk_vhost_scsi_dev *)ctrlr;
+}
+
 int
 spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 {
@@ -611,12 +627,15 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 }
 
 int
-spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
+spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
 	int i;
 
-	vdev = &svdev->vdev;
+	if (svdev == NULL) {
+		return -EINVAL;
+	}
+
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev[i]) {
 			SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
@@ -642,11 +661,14 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 }
 
 struct spdk_scsi_dev *
-spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_scsi_dev *svdev, uint8_t num)
+spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, uint8_t num)
 {
-	assert(svdev != NULL);
+	struct spdk_vhost_scsi_dev *svdev;
+
 	assert(num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
-	return svdev->scsi_dev[num];
+	svdev = to_scsi_dev(vdev);
+
+	return svdev ? svdev->scsi_dev[num] : NULL;
 }
 
 int
@@ -677,13 +699,16 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -1;
 	}
 
-	svdev = (struct spdk_vhost_scsi_dev *) spdk_vhost_dev_find(ctrlr_name);
-	if (svdev == NULL) {
-		SPDK_ERRLOG("Controller %s is not defined\n", ctrlr_name);
+	vdev = spdk_vhost_dev_find(ctrlr_name);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Controller %s is not deffined.\n", ctrlr_name);
 		return -ENODEV;
 	}
 
-	vdev = &svdev->vdev;
+	svdev = to_scsi_dev(vdev);
+	if (svdev == NULL) {
+		return -EINVAL;
+	}
 
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", ctrlr_name);
@@ -716,13 +741,19 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 }
 
 int
-spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num)
+spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num)
 {
-	struct spdk_vhost_dev *vdev = &svdev->vdev;
+	struct spdk_vhost_scsi_dev *svdev;
 
+	assert(vdev != NULL);
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s is in use and hotremove is not supported\n", vdev->name);
 		return -EBUSY;
+	}
+
+	svdev = to_scsi_dev(vdev);
+	if (svdev == NULL) {
+		return -ENODEV;
 	}
 
 	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
@@ -833,7 +864,8 @@ destroy_device(int vid)
 	if (vdev == NULL) {
 		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
 	}
-	svdev = (struct spdk_vhost_scsi_dev *) vdev;
+	svdev = to_scsi_dev(vdev);
+	assert(svdev);
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);
