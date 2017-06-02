@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include <CUnit/Basic.h>
+#include "spdk_cunit.h"
 
 #include "subsystem.c"
 
@@ -96,6 +96,7 @@ subsystem_sort_test_depends_on_single(void)
 	i = 4;
 	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
 		snprintf(subsystem_name, sizeof(subsystem_name), "subsystem%d", i);
+		SPDK_CU_ASSERT_FATAL(i > 0);
 		i--;
 		CU_ASSERT(strcmp(subsystem_name, subsystem->name) == 0);
 	}
