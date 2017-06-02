@@ -441,7 +441,7 @@ spdk_reactor_start(struct spdk_reactor *reactor)
 		switch (rte_eal_get_lcore_state(reactor->lcore)) {
 		case FINISHED:
 			rte_eal_wait_lcore(reactor->lcore);
-		/* drop through */
+		/* FALLTHROUGH */
 		case WAIT:
 			rte_eal_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
 			break;
