@@ -839,13 +839,14 @@ print_performance(void)
 		worker = worker->next;
 	}
 
-	assert(ns_count != 0);
-	printf("========================================================\n");
-	printf("%-55s: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
-	       "Total", total_io_per_second, total_mb_per_second,
-	       sum_ave_latency / ns_count, sum_min_latency / ns_count,
-	       sum_max_latency / ns_count);
-	printf("\n");
+	if (ns_count != 0) {
+		printf("========================================================\n");
+		printf("%-55s: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
+		       "Total", total_io_per_second, total_mb_per_second,
+		       sum_ave_latency / ns_count, sum_min_latency / ns_count,
+		       sum_max_latency / ns_count);
+		printf("\n");
+	}
 
 	if (g_latency_sw_tracking_level == 0) {
 		return;
