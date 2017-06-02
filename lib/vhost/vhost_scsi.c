@@ -610,7 +610,6 @@ int
 spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_dev *vdev;
 	int rc;
 
 	if (name == NULL) {
@@ -630,16 +629,9 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -ENOMEM;
 	}
 
-	vdev = &svdev->vdev;
-	vdev->name =  strdup(name);
-	vdev->cpumask = cpumask;
-	vdev->lcore = -1;
-
-	vdev->type = SPDK_VHOST_DEV_T_SCSI;
-
-	rc = spdk_vhost_dev_register(vdev, &spdk_vhost_scsi_device_backend);
+	rc = spdk_vhost_dev_register(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
+				     &spdk_vhost_scsi_device_backend);
 	if (rc < 0) {
-		free(vdev->name);
 		spdk_dma_free(svdev);
 	}
 
@@ -661,17 +653,13 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 	}
 
 	if (spdk_vhost_dev_unregister(vdev) != 0) {
-		SPDK_ERRLOG("Could not unregister scsi controller %s with vhost library\n", vdev->name);
 		return -EIO;
 	}
-
-	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
 
 	/*
 	 * since spdk_vhost_scsi_vdev must not be in use,
 	 * it should be already *destructed* (spdk_vhost_dev_destruct)
 	 */
-	free(vdev->name);
 	spdk_dma_free(svdev);
 
 	return 0;
