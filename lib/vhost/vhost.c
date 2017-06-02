@@ -39,7 +39,6 @@
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
-#include "vhost_scsi.h"
 #include "task.h"
 #include "vhost_iommu.h"
 
