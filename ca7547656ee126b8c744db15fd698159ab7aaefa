@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca406ae7_018aca12",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-02T00:24:06Z",
+      "side": 1,
+      "message": "I think this needs to be +\u003d rather than \u003d.\n\nYou could also write it slightly more concisely as:\n\n   C_SRCS-$(CONFIG_VTUNE) +\u003d $(VTUNE_SOURCE_DIR)/sdk/src/ittnotify/ittnotify_static.c",
+      "revId": "ca7547656ee126b8c744db15fd698159ab7aaefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec701f32_0be82a21",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-02T00:24:06Z",
+      "side": 1,
+      "message": "You can put this spdk/string.h include outside the #ifdef, even if we don\u0027t use it there (just add it to the list above).",
+      "revId": "ca7547656ee126b8c744db15fd698159ab7aaefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3f7c195_d50145f1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-02T00:24:06Z",
+      "side": 1,
+      "message": "You should free(name) at some point (spdk_sprintf_alloc() allocates the string using malloc() internally).",
+      "revId": "ca7547656ee126b8c744db15fd698159ab7aaefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19ca0f6d_2f4d7960",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-02T00:24:06Z",
+      "side": 1,
+      "message": "Is this because get_io_stat() also resets the current statistics?\n\nI guess that is OK for now, but we might want to keep two sets of stats or something similar to remove this limitation.",
+      "revId": "ca7547656ee126b8c744db15fd698159ab7aaefa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
