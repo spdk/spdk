@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "14581e26_52809756",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-02T20:09:07Z",
+      "side": 1,
+      "message": "This patch just removes rte_lcore. The patch two after this removes rte_launch.\n\nrte_launch is included in rte_lcore.h so it worked out, but in reality we should have always been #including rte_launch here.",
+      "parentUuid": "d0f5ef4d_694ef8f4",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 23
+      },
+      "revId": "d36a06ec39de07e3c08358b6106c3b7e2400969f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bdaabb58_4a382a03",
         "filename": "lib/event/reactor.c",
         "patchSetId": 1
