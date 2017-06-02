@@ -123,7 +123,7 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	struct spdk_bdev *bdev = spdk_bdev_first();
 
 	while (bdev != NULL) {
-		if (strncmp(bdev_name, bdev->name, sizeof(bdev->name)) == 0) {
+		if (strcmp(bdev_name, bdev->name) == 0) {
 			return bdev;
 		}
 		bdev = spdk_bdev_next(bdev);
