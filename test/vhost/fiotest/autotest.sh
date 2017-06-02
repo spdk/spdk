@@ -261,6 +261,8 @@ for vm_num in $used_vms; do
 	vm_reset_scsi_devices $vm_num $SCSI_DISK
 done
 
+sleep 20
+
 if ! $no_shutdown; then
 	echo "==============="
 	echo "INFO: APP EXITING"
