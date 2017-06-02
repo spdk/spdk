@@ -204,6 +204,7 @@ bdev_nvme_destruct(void *ctx)
 		spdk_io_device_unregister(nvme_ctrlr->ctrlr);
 		spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller, NULL);
 		spdk_nvme_detach(nvme_ctrlr->ctrlr);
+		free((void *)nvme_ctrlr->name);
 		free(nvme_ctrlr);
 		return 0;
 	}
