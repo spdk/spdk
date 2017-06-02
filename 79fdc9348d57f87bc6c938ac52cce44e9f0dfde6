@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9394f752_6d758118",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-02T11:09:18Z",
+      "side": 1,
+      "message": "this is dpdk define, use spdk_unlikely instead",
+      "range": {
+        "startLine": 99,
+        "startChar": 5,
+        "endLine": 99,
+        "endChar": 13
+      },
+      "revId": "79fdc9348d57f87bc6c938ac52cce44e9f0dfde6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9779c5d6_d3f35a71",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-02T11:09:18Z",
+      "side": 1,
+      "message": "this must be really important if you\u0027re checking it twice :)",
+      "range": {
+        "startLine": 517,
+        "startChar": 1,
+        "endLine": 522,
+        "endChar": 2
+      },
+      "revId": "79fdc9348d57f87bc6c938ac52cce44e9f0dfde6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ad1d0ce_9a7c3d59",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-02T11:09:18Z",
+      "side": 1,
+      "message": "Could you export features into defines, as it is in vhost_scsi? it\u0027s not really readable here",
+      "revId": "79fdc9348d57f87bc6c938ac52cce44e9f0dfde6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
