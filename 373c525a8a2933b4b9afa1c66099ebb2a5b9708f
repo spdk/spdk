@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b33f801e_7b69dc8d",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-06-02T19:21:27Z",
+      "side": 1,
+      "message": "Is the the only thread API planned?  Will there be an API to launch a thread that is not pinned?  Also, how will API support hybrid polling?",
+      "range": {
+        "startLine": 213,
+        "startChar": 1,
+        "endLine": 215,
+        "endChar": 23
+      },
+      "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
