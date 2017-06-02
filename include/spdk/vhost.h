@@ -51,7 +51,6 @@ void spdk_vhost_shutdown_cb(void);
 
 /* Forward declaration */
 struct spdk_vhost_dev;
-struct spdk_vhost_scsi_dev;
 
 /**
  * Get handle to next controller.
