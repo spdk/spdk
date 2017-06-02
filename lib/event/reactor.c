@@ -45,7 +45,6 @@
 
 #include <rte_config.h>
 #include <rte_launch.h>
-#include <rte_lcore.h>
 
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
@@ -437,7 +436,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 static void
 spdk_reactor_start(struct spdk_reactor *reactor)
 {
-	if (reactor->lcore != rte_get_master_lcore()) {
+	if (reactor->lcore != spdk_env_get_current_core()) {
 		switch (rte_eal_get_lcore_state(reactor->lcore)) {
 		case FINISHED:
 			rte_eal_wait_lcore(reactor->lcore);
@@ -469,8 +468,9 @@ spdk_app_get_current_core(void)
 int
 spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
 {
-	unsigned int i;
+	uint32_t i;
 	char *end;
+	uint64_t validmask;
 
 	if (mask == NULL || cpumask == NULL) {
 		return -1;
@@ -482,11 +482,12 @@ spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
 		return -1;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if ((*cpumask & (1ULL << i)) && !rte_lcore_is_enabled(i)) {
-			*cpumask &= ~(1ULL << i);
-		}
+	validmask = 0;
+	SPDK_ENV_FOREACH_CORE(i) {
+		validmask |= 1ULL << i;
 	}
+
+	*cpumask &= validmask;
 
 	return 0;
 }
@@ -525,8 +526,6 @@ spdk_reactors_start(void)
 {
 	struct spdk_reactor *reactor;
 	uint32_t i, current_core;
-
-	assert(rte_get_master_lcore() == rte_lcore_id());
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
