@@ -51,7 +51,6 @@ void spdk_vhost_shutdown_cb(void);
 
 /* Forward declaration */
 struct spdk_vhost_dev;
-struct spdk_vhost_scsi_dev;
 
 /**
  * Get handle to next controller.
@@ -63,5 +62,14 @@ struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *ctrl);
 uint64_t spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *ctrl);
 int spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask);
+
+int spdk_vhost_scsi_controller_construct(void);
+int spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask);
+int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
+struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *ctrl,
+		uint8_t num);
+int spdk_vhost_scsi_dev_add_dev(const char *name, unsigned scsi_dev_num, const char *lun_name);
+int spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num);
+
 
 #endif /* SPDK_VHOST_H */
