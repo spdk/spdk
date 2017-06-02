@@ -22,6 +22,30 @@
       "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbb0d99b_20373496",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-02T20:04:50Z",
+      "side": 0,
+      "message": "Separation of concerns. Removing rte_lcore and rte_launch are two separate things and can be done independently.",
+      "parentUuid": "a4720b11_02ad9896",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 23
+      },
+      "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
