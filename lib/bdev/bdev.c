@@ -1027,6 +1027,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		 * freed its context for this I/O.
 		 */
 		if (bdev_io->bdev->gencnt != bdev_io->gencnt) {
+			SPDK_ERRLOG("bdev I/O completed after a reset incremented the generation count!\n");
 			spdk_bdev_put_io(bdev_io);
 			return;
 		}
