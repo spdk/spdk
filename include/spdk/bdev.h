@@ -43,6 +43,7 @@
 
 #include "spdk/event.h"
 #include "spdk/scsi_spec.h"
+#include "spdk/nvme_spec.h"
 
 #define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
 #define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
@@ -82,6 +83,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_UNMAP,
 	SPDK_BDEV_IO_TYPE_FLUSH,
 	SPDK_BDEV_IO_TYPE_RESET,
+	SPDK_BDEV_IO_TYPE_NVME_ADMIN,
 };
 
 /** Blockdev reset operation type */
@@ -231,6 +233,10 @@ struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_chan
 struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 				     uint64_t offset, uint64_t length,
 				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+struct spdk_bdev_io *spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
+		struct spdk_io_channel *ch,
+		const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg);
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		    enum spdk_bdev_reset_type, spdk_bdev_io_completion_cb cb, void *cb_arg);
