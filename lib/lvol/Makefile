@@ -1,3 +1,4 @@
+
 #
 #  BSD LICENSE
 #
@@ -34,11 +35,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdev blob blobfs env event ioat iscsi json jsonrpc log lvol nvme nvmf scsi util
+CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/
+C_SRCS = lvol.c
+LIBNAME = lvol
 
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
