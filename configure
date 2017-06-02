@@ -128,6 +128,12 @@ done
 if [ -z "$CONFIG_ENV" ]; then
 	if [ -z "$CONFIG_DPDK_DIR" ]; then
 		CONFIG_DPDK_DIR=$(readlink -f $(dirname $0))/dpdk/build
+		if [ ! -d "$CONFIG_DPDK_DIR" ]; then
+			echo "DPDK not found; please specify --with-dpdk=<path> or run:"
+			echo
+			echo "  git submodule update --init"
+			exit 1
+		fi
 	fi
 fi
 
