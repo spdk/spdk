@@ -91,10 +91,12 @@ struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc,
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
+
+int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
+			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
+int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
+
 struct spdk_vhost_dev *spdk_vhost_dev_load(int vid);
-int spdk_vhost_dev_register(struct spdk_vhost_dev *dev,
-			    const struct spdk_vhost_dev_backend *backend);
-int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_unload(struct spdk_vhost_dev *dev);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
