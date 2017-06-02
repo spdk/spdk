@@ -127,7 +127,14 @@ done
 
 if [ -z "$CONFIG_ENV" ]; then
 	if [ -z "$CONFIG_DPDK_DIR" ]; then
-		CONFIG_DPDK_DIR=$(readlink -f $(dirname $0))/dpdk/build
+		rootdir=$(readlink -f $(dirname $0))
+		if [ ! -f "$rootdir"/dpdk/config/common_spdk ]; then
+			echo "DPDK not found; please specify --with-dpdk=<path> or run:"
+			echo
+			echo "  git submodule update --init"
+			exit 1
+		fi
+		CONFIG_DPDK_DIR="$rootdir"/dpdk/build
 	fi
 fi
 
