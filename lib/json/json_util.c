@@ -117,6 +117,30 @@ spdk_json_number_to_double(const struct spdk_json_val *val, double *num)
 }
 
 int
+spdk_json_number_to_long_double(const struct spdk_json_val *val, long double *num)
+{
+	char buf[32];
+	char *end;
+
+	if (val->type != SPDK_JSON_VAL_NUMBER || val->len >= sizeof(buf)) {
+		*num = 0.0;
+		return -1;
+	}
+
+	memcpy(buf, val->start, val->len);
+	buf[val->len] = '\0';
+
+	errno = 0;
+	/* TODO: strtod() uses locale for decimal point (. is not guaranteed) */
+	*num = strtold(buf, &end);
+	if (*end != '\0' || errno != 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int
 spdk_json_number_to_int32(const struct spdk_json_val *val, int32_t *num)
 {
 	double dbl;
@@ -148,6 +172,27 @@ spdk_json_number_to_uint32(const struct spdk_json_val *val, uint32_t *num)
 
 	*num = (uint32_t)dbl;
 	if (dbl != (double)*num) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+spdk_json_number_to_uint64(const struct spdk_json_val *val, uint64_t *num)
+{
+	long double dbl;
+
+	if (spdk_json_number_to_long_double(val, &dbl)) {
+		return -1;
+	}
+
+	if (dbl < 0) {
+		return -1;
+	}
+
+	*num = (uint64_t)dbl;
+	if (dbl != (long double)*num) {
 		return -1;
 	}
 
@@ -276,6 +321,14 @@ spdk_json_decode_uint32(const struct spdk_json_val *val, void *out)
 	uint32_t *i = out;
 
 	return spdk_json_number_to_uint32(val, i);
+}
+
+int
+spdk_json_decode_uint64(const struct spdk_json_val *val, void *out)
+{
+	uint64_t *i = out;
+
+	return spdk_json_number_to_uint64(val, i);
 }
 
 int
