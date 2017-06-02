@@ -46,6 +46,23 @@
       "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0c7c0f7_0e2bdc30",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-02T23:43:44Z",
+      "side": 0,
+      "message": "This is removing the only lcore check in this function, as far as I can see, which means that the spdk_reactor_get() call can run off the end of the g_reactors array.  We should either keep the bounds checking here or add it in spdk_reactor_get().",
+      "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
