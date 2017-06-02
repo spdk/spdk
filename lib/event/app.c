@@ -35,9 +35,6 @@
 
 #include "spdk_internal/event.h"
 
-#include <rte_config.h>
-#include <rte_launch.h>
-
 #include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/conf.h"
