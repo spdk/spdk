@@ -362,8 +362,7 @@ task_data_setup(struct spdk_vhost_task *task,
 
 		/* All remaining descriptors are data. */
 		while (iovcnt < iovcnt_max) {
-			iovs[iovcnt].iov_base = spdk_vhost_gpa_to_vva(vdev, desc->addr);
-			iovs[iovcnt].iov_len = desc->len;
+			spdk_vhost_vring_desc_to_iov(vdev, &iovs[iovcnt], desc);
 			len += desc->len;
 			iovcnt++;
 
@@ -399,8 +398,7 @@ task_data_setup(struct spdk_vhost_task *task,
 
 		/* Process descriptors up to response. */
 		while (!spdk_vhost_vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
-			iovs[iovcnt].iov_base = spdk_vhost_gpa_to_vva(vdev, desc->addr);
-			iovs[iovcnt].iov_len = desc->len;
+			spdk_vhost_vring_desc_to_iov(vdev, &iovs[iovcnt], desc);
 			len += desc->len;
 			iovcnt++;
 
