@@ -62,6 +62,12 @@ ifeq ($(CONFIG_DEBUG),y)
 DPDK_CFLAGS += -O0 -g
 endif
 
+ifeq ($(CONFIG_WERROR),y)
+DPDK_CFLAGS += -Werror
+else
+DPDK_CFLAGS += -wno-error
+endif
+
 $(SPDK_ROOT_DIR)/dpdk/build:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/dpdk config T=$(DPDK_CONFIG)
 
