@@ -128,6 +128,18 @@ spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr)
 	abort();
 }
 
+int
+spdk_pci_device_map_bar_write_combine(struct spdk_pci_device *device, uint32_t bar)
+{
+	abort();
+}
+
+int
+spdk_pci_device_unmap_bar_write_combine(struct spdk_pci_device *device, uint32_t bar)
+{
+	abort();
+}
+
 struct spdk_pci_addr
 spdk_pci_device_get_addr(struct spdk_pci_device *dev)
 {

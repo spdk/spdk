@@ -287,6 +287,9 @@ int spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
 			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
 int spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr);
 
+int spdk_pci_device_map_bar_write_combine(struct spdk_pci_device *dev, uint32_t bar);
+int spdk_pci_device_unmap_bar_write_combine(struct spdk_pci_device *dev, uint32_t bar);
+
 uint16_t spdk_pci_device_get_domain(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_bus(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_dev(struct spdk_pci_device *dev);
