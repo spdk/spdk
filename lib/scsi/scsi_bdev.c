@@ -1810,7 +1810,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	case SPDK_SPC_MODE_SENSE_6:
 		alloc_len = cdb[4];
 		md = 6;
-
+		/* FALLTHROUGH */
 	case SPDK_SPC_MODE_SENSE_10:
 		llba = 0;
 
@@ -1886,6 +1886,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	case SPDK_SPC_LOG_SELECT:
 		SPDK_TRACELOG(SPDK_TRACE_SCSI, "LOG_SELECT\n");
 		cmd_parsed = 1;
+		/* FALLTHROUGH */
 	case SPDK_SPC_LOG_SENSE:
 		if (!cmd_parsed) {
 			SPDK_TRACELOG(SPDK_TRACE_SCSI, "LOG_SENSE\n");
@@ -1902,6 +1903,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	case SPDK_SPC_TEST_UNIT_READY:
 		SPDK_TRACELOG(SPDK_TRACE_SCSI, "TEST_UNIT_READY\n");
 		cmd_parsed = 1;
+		/* FALLTHROUGH */
 	case SPDK_SBC_START_STOP_UNIT:
 		if (!cmd_parsed) {
 			SPDK_TRACELOG(SPDK_TRACE_SCSI, "START_STOP_UNIT\n");
