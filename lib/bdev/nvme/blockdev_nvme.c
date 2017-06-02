@@ -584,7 +584,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 			SPDK_ERRLOG("Unable to send abort. Resetting.\n");
 		}
 
-	/* Fallthrough */
+	/* FALLTHROUGH */
 	case TIMEOUT_ACTION_RESET:
 		rc = spdk_nvme_ctrlr_reset(ctrlr);
 		if (rc) {

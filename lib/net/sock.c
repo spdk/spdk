@@ -184,7 +184,7 @@ retry:
 						    "Verify IP address in config file "
 						    "and make sure setup script is "
 						    "run before starting spdk app.\n", ip);
-				/* fallthrough */
+				/* FALLTHROUGH */
 				default:
 					/* try next family */
 					close(sock);
