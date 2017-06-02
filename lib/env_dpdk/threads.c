@@ -71,3 +71,19 @@ spdk_env_get_socket_id(uint32_t core)
 {
 	return rte_lcore_to_socket_id(core);
 }
+
+int
+spdk_env_thread_launch_pinned(uint32_t core, thread_start_fn fn, void *arg)
+{
+	int rc;
+
+	rc = rte_eal_remote_launch(fn, arg, core);
+
+	return rc;
+}
+
+void
+spdk_env_thread_wait_all(void)
+{
+	rte_eal_mp_wait_lcore();
+}
