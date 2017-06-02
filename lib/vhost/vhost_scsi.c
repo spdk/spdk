@@ -879,6 +879,10 @@ destroy_device(int vid)
 	}
 	svdev = (struct spdk_vhost_scsi_dev *) vdev;
 
+	if (vdev->task_cnt > 0) {
+		SPDK_ERRLOG("%s: Tasks were still pending when device destroyed\n", vdev->name);
+	}
+
 	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
 	spdk_poller_unregister(&svdev->requestq_poller, event);
 	if (vhost_sem_timedwait(&done_sem, 1))
@@ -895,6 +899,7 @@ destroy_device(int vid)
 	}
 
 	if (vdev->task_cnt > 0) {
+		assert(false);
 		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
 
