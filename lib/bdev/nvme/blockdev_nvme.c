@@ -196,6 +196,7 @@ bdev_nvme_destruct(void *ctx)
 	nvme_ctrlr->ref--;
 
 	TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk, link);
+	free(nvme_disk->disk.name);
 	free(nvme_disk);
 
 	if (nvme_ctrlr->ref == 0) {
@@ -925,10 +926,12 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->ns = ns;
 		nvme_ctrlr->ref++;
 
-		snprintf(bdev->disk.name, SPDK_BDEV_MAX_NAME_LENGTH,
-			 "%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
-		snprintf(bdev->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH,
-			 "NVMe disk");
+		bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
+		if (!bdev->disk.name) {
+			free(bdev);
+			return;
+		}
+		bdev->disk.product_name = "NVMe disk";
 
 		if (cdata->oncs.dsm) {
 			/*

@@ -40,6 +40,7 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -121,6 +122,17 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 }
 
 static void
+vbdev_error_disk_free(struct vbdev_error_disk *disk)
+{
+	if (!disk) {
+		return;
+	}
+
+	free(disk->disk.name);
+	free(disk);
+}
+
+static void
 vbdev_error_free(struct vbdev_error_disk *error_disk)
 {
 	if (!error_disk) {
@@ -130,7 +142,7 @@ vbdev_error_free(struct vbdev_error_disk *error_disk)
 	TAILQ_REMOVE(&g_vbdev_error_disks, error_disk, tailq);
 
 	spdk_bdev_unclaim(error_disk->base_bdev);
-	free(error_disk);
+	vbdev_error_disk_free(error_disk);
 }
 
 static int
@@ -203,8 +215,12 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 
 	disk->base_bdev = base_bdev;
 	memcpy(&disk->disk, base_bdev, sizeof(*base_bdev));
-	snprintf(disk->disk.name, sizeof(disk->disk.name), "EE_%s", base_bdev->name);
-	snprintf(disk->disk.product_name, sizeof(disk->disk.product_name), "Error Injection Disk");
+	disk->disk.name = spdk_sprintf_alloc("EE_%s", base_bdev->name);
+	if (!disk->disk.name) {
+		rc = -ENOMEM;
+		goto cleanup;
+	}
+	disk->disk.product_name = "Error Injection Disk";
 	disk->disk.ctxt = disk;
 	disk->disk.fn_table = &vbdev_error_fn_table;
 
@@ -215,7 +231,7 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	rc = 0;
 	return rc;
 cleanup:
-	free(disk);
+	vbdev_error_disk_free(disk);
 	return rc;
 }
 

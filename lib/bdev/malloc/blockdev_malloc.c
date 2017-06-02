@@ -41,6 +41,7 @@
 #include "spdk/env.h"
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -124,13 +125,24 @@ blockdev_malloc_delete_from_list(struct malloc_disk *malloc_disk)
 	}
 }
 
+static void
+malloc_disk_free(struct malloc_disk *malloc_disk)
+{
+	if (!malloc_disk) {
+		return;
+	}
+
+	free(malloc_disk->disk.name);
+	spdk_dma_free(malloc_disk->malloc_buf);
+	spdk_dma_free(malloc_disk);
+}
+
 static int
 blockdev_malloc_destruct(void *ctx)
 {
 	struct malloc_disk *malloc_disk = ctx;
 	blockdev_malloc_delete_from_list(malloc_disk);
-	spdk_dma_free(malloc_disk->malloc_buf);
-	spdk_dma_free(malloc_disk);
+	malloc_disk_free(malloc_disk);
 	return 0;
 }
 
@@ -391,12 +403,16 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 	mdisk->malloc_buf = spdk_dma_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL);
 	if (!mdisk->malloc_buf) {
 		SPDK_ERRLOG("spdk_dma_zmalloc failed\n");
-		spdk_dma_free(mdisk);
+		malloc_disk_free(mdisk);
 		return NULL;
 	}
 
-	snprintf(mdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Malloc%d", malloc_disk_count);
-	snprintf(mdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Malloc disk");
+	mdisk->disk.name = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
+	if (!mdisk->disk.name) {
+		malloc_disk_free(mdisk);
+		return NULL;
+	}
+	mdisk->disk.product_name = "Malloc disk";
 	malloc_disk_count++;
 
 	mdisk->disk.write_cache = 1;

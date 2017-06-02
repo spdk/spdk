@@ -41,6 +41,7 @@
 #include "spdk/rpc.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -167,6 +168,7 @@ vbdev_split_free(struct split_disk *split_disk)
 	split_base = split_disk->split_base;
 
 	TAILQ_REMOVE(&g_split_disks, split_disk, tailq);
+	free(split_disk->disk.name);
 	free(split_disk);
 
 	if (split_base) {
@@ -295,8 +297,13 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		d->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
 
 		/* Append partition number to the base bdev's name, e.g. Malloc0 -> Malloc0p0 */
-		snprintf(d->disk.name, sizeof(d->disk.name), "%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i);
-		snprintf(d->disk.product_name, sizeof(d->disk.product_name), "Split Disk");
+		d->disk.name = spdk_sprintf_alloc("%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i);
+		if (!d->disk.name) {
+			free(d);
+			rc = -ENOMEM;
+			goto cleanup;
+		}
+		d->disk.product_name = "Split Disk";
 		d->base_bdev = base_bdev;
 		d->offset_bytes = offset_bytes;
 		d->offset_blocks = offset_blocks;

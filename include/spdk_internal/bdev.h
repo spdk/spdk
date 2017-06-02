@@ -79,9 +79,6 @@
  * must be passed to the bdev database via spdk_bdev_register().
  */
 
-#define SPDK_BDEV_MAX_NAME_LENGTH		16
-#define SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH	50
-
 /** Block device module */
 struct spdk_bdev_module_if {
 	/**
@@ -170,10 +167,10 @@ struct spdk_bdev {
 	void *ctxt;
 
 	/** Unique name for this block device. */
-	char name[SPDK_BDEV_MAX_NAME_LENGTH];
+	char *name;
 
 	/** Unique product name for this kind of block device. */
-	char product_name[SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH];
+	char *product_name;
 
 	/** Size in bytes of a logical block for the backend */
 	uint32_t blocklen;

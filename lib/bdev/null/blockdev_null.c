@@ -63,6 +63,7 @@ blockdev_null_destruct(void *ctx)
 	struct null_bdev *bdev = ctx;
 
 	TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
+	free(bdev->bdev.name);
 	spdk_dma_free(bdev);
 
 	return 0;
@@ -141,8 +142,12 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	snprintf(bdev->bdev.name, SPDK_BDEV_MAX_NAME_LENGTH, "%s", name);
-	snprintf(bdev->bdev.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Null disk");
+	bdev->bdev.name = strdup(name);
+	if (!bdev->bdev.name) {
+		spdk_dma_free(bdev);
+		return NULL;
+	}
+	bdev->bdev.product_name = "Null disk";
 
 	bdev->bdev.write_cache = 0;
 	bdev->bdev.blocklen = block_size;

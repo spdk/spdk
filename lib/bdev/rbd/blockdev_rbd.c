@@ -44,6 +44,7 @@
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
 
@@ -80,6 +81,7 @@ blockdev_rbd_free(struct blockdev_rbd *rbd)
 		return;
 	}
 
+	free(rbd->disk.name);
 	free(rbd->rbd_name);
 	free(rbd->pool_name);
 	free(rbd);
@@ -522,9 +524,12 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
-	snprintf(rbd->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "Ceph%d",
-		 blockdev_rbd_count);
-	snprintf(rbd->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "Ceph Rbd Disk");
+	rbd->disk.name = spdk_sprintf_alloc("Ceph%d", blockdev_rbd_count);
+	if (!rbd->disk.name) {
+		blockdev_rbd_free(rbd);
+		return NULL;
+	}
+	rbd->disk.product_name = "Ceph Rbd Disk";
 	blockdev_rbd_count++;
 
 	rbd->disk.write_cache = 0;

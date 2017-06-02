@@ -332,6 +332,7 @@ static void aio_free_disk(struct file_disk *fdisk)
 {
 	if (fdisk == NULL)
 		return;
+	free(fdisk->disk.name);
 	free(fdisk);
 }
 
@@ -355,8 +356,11 @@ create_aio_disk(const char *name, const char *fname)
 	fdisk->size = spdk_fd_get_size(fdisk->fd);
 
 	TAILQ_INIT(&fdisk->sync_completion_list);
-	snprintf(fdisk->disk.name, SPDK_BDEV_MAX_NAME_LENGTH, "%s", name);
-	snprintf(fdisk->disk.product_name, SPDK_BDEV_MAX_PRODUCT_NAME_LENGTH, "AIO disk");
+	fdisk->disk.name = strdup(name);
+	if (!fdisk->disk.name) {
+		goto error_return;
+	}
+	fdisk->disk.product_name = "AIO disk";
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;

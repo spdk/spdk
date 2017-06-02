@@ -60,7 +60,6 @@ struct file_disk {
 	struct spdk_bdev	disk;
 	const char		*file;
 	int			fd;
-	char			disk_name[SPDK_BDEV_MAX_NAME_LENGTH];
 	uint64_t		size;
 
 	/**
