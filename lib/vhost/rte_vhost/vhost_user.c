@@ -147,6 +147,7 @@ vhost_user_reset_owner(struct virtio_net *dev)
 {
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
 		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		rte_panic("Destroying dev in %s\n", __func__);
 		dev->notify_ops->destroy_device(dev->vid);
 	}
 
@@ -422,6 +423,7 @@ vhost_user_set_vring_base(struct virtio_net *dev,
 	/* Remove from the data plane. */
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
 		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		rte_panic("Destroying dev in %s\n", __func__);
 		dev->notify_ops->destroy_device(dev->vid);
 	}
 
@@ -687,6 +689,7 @@ vhost_user_set_vring_call(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	/* Remove from the data plane. */
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
 		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		rte_panic("Destroying dev in %s\n", __func__);
 		dev->notify_ops->destroy_device(dev->vid);
 	}
 
@@ -714,6 +717,7 @@ vhost_user_set_vring_kick(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	/* Remove from the data plane. */
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
 		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		rte_panic("Destroying dev in %s\n", __func__);
 		dev->notify_ops->destroy_device(dev->vid);
 	}
 
@@ -759,6 +763,7 @@ vhost_user_get_vring_base(struct virtio_net *dev,
 	/* We have to stop the queue (virtio) if it is running. */
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
 		dev->flags &= ~VIRTIO_DEV_RUNNING;
+		rte_panic("Destroying dev in %s\n", __func__);
 		dev->notify_ops->destroy_device(dev->vid);
 	}
 
