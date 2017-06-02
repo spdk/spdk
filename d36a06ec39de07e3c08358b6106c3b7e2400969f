@@ -69,6 +69,29 @@
       "revId": "d36a06ec39de07e3c08358b6106c3b7e2400969f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33cf80d4_4c4c6ac5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-02T23:39:25Z",
+      "side": 1,
+      "message": "This probably should be |\u003d - the loop above was taking out cores that were in the cpumask but not enabled for DPDK, but this is building up a mask from 0.",
+      "range": {
+        "startLine": 487,
+        "startChar": 12,
+        "endLine": 487,
+        "endChar": 14
+      },
+      "revId": "d36a06ec39de07e3c08358b6106c3b7e2400969f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
