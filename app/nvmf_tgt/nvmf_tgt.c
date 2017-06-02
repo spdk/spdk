@@ -33,9 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "nvmf_tgt.h"
 
 #include "spdk/bdev.h"
@@ -312,7 +309,7 @@ spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
 	opts->shutdown_cb = spdk_nvmf_shutdown_cb;
 	spdk_app_init(opts);
 
-	printf("Total cores available: %d\n", rte_lcore_count());
+	printf("Total cores available: %d\n", spdk_env_get_core_count());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(spdk_nvmf_startup, NULL, NULL);
 
