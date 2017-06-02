@@ -92,6 +92,113 @@ spdk_json_strdup(const struct spdk_json_val *val)
 	return s;
 }
 
+struct spdk_json_num {
+	bool negative;
+	uint64_t significand;
+	int64_t exponent;
+};
+
+static int
+spdk_json_number_split(const struct spdk_json_val *val, struct spdk_json_num *num)
+{
+	const char *iter;
+	size_t remaining;
+	uint64_t *pval;
+	uint64_t frac_digits = 0;
+	uint64_t exponent_u64 = 0;
+	bool exponent_negative = false;
+	enum {
+		NUM_STATE_INT,
+		NUM_STATE_FRAC,
+		NUM_STATE_EXP,
+	} state;
+
+	memset(num, 0, sizeof(*num));
+
+	if (val->type != SPDK_JSON_VAL_NUMBER) {
+		return -EINVAL;
+	}
+
+	remaining = val->len;
+	if (remaining == 0) {
+		return -EINVAL;
+	}
+
+	iter = val->start;
+	if (*iter == '-') {
+		num->negative = true;
+		iter++;
+		remaining--;
+	}
+
+	state = NUM_STATE_INT;
+	pval = &num->significand;
+	while (remaining--) {
+		char c = *iter++;
+
+		if (c == '.') {
+			state = NUM_STATE_FRAC;
+		} else if (c == 'e' || c == 'E') {
+			state = NUM_STATE_EXP;
+			pval = &exponent_u64;
+		} else if (c == '-') {
+			assert(state == NUM_STATE_EXP);
+			exponent_negative = true;
+		} else if (c == '+') {
+			assert(state == NUM_STATE_EXP);
+			/* exp_negative = false; */ /* already false by default */
+		} else {
+			uint64_t new_val;
+
+			assert(c >= '0' && c <= '9');
+			new_val = *pval * 10 + c - '0';
+			if (new_val < *pval) {
+				return -ERANGE;
+			}
+
+			if (state == NUM_STATE_FRAC) {
+				frac_digits++;
+			}
+
+			*pval = new_val;
+		}
+	}
+
+	if (exponent_negative) {
+		if (exponent_u64 > 9223372036854775808ULL) { /* abs(INT64_MIN) */
+			return -ERANGE;
+		}
+		num->exponent = (int64_t) - exponent_u64;
+	} else {
+		if (exponent_u64 > INT64_MAX) {
+			return -ERANGE;
+		}
+		num->exponent = exponent_u64;
+	}
+	num->exponent -= frac_digits;
+
+	/* Apply as much of the exponent as possible without overflow or truncation */
+	if (num->exponent < 0) {
+		while (num->exponent && num->significand >= 10 && num->significand % 10 == 0) {
+			num->significand /= 10;
+			num->exponent++;
+		}
+	} else { /* positive exponent */
+		while (num->exponent) {
+			uint64_t new_val = num->significand * 10;
+
+			if (new_val < num->significand) {
+				break;
+			}
+
+			num->significand = new_val;
+			num->exponent--;
+		}
+	}
+
+	return 0;
+}
+
 int
 spdk_json_number_to_double(const struct spdk_json_val *val, double *num)
 {
@@ -119,38 +226,53 @@ spdk_json_number_to_double(const struct spdk_json_val *val, double *num)
 int
 spdk_json_number_to_int32(const struct spdk_json_val *val, int32_t *num)
 {
-	double dbl;
+	struct spdk_json_num split_num;
+	int rc;
 
-	if (spdk_json_number_to_double(val, &dbl)) {
-		return -1;
+	rc = spdk_json_number_split(val, &split_num);
+	if (rc) {
+		return rc;
 	}
 
-	*num = (int32_t)dbl;
-	if (dbl != (double)*num) {
-		return -1;
+	if (split_num.exponent) {
+		return -ERANGE;
 	}
 
+	if (split_num.negative) {
+		if (split_num.significand > 2147483648) { /* abs(INT32_MIN) */
+			return -ERANGE;
+		}
+		*num = (int32_t) - (int64_t)split_num.significand;
+		return 0;
+	}
+
+	/* positive */
+	if (split_num.significand > INT32_MAX) {
+		return -ERANGE;
+	}
+	*num = (int32_t)split_num.significand;
 	return 0;
 }
 
 int
 spdk_json_number_to_uint32(const struct spdk_json_val *val, uint32_t *num)
 {
-	double dbl;
+	struct spdk_json_num split_num;
+	int rc;
 
-	if (spdk_json_number_to_double(val, &dbl)) {
-		return -1;
+	rc = spdk_json_number_split(val, &split_num);
+	if (rc) {
+		return rc;
 	}
 
-	if (dbl < 0) {
-		return -1;
+	if (split_num.exponent || split_num.negative) {
+		return -ERANGE;
 	}
 
-	*num = (uint32_t)dbl;
-	if (dbl != (double)*num) {
-		return -1;
+	if (split_num.significand > UINT32_MAX) {
+		return -ERANGE;
 	}
-
+	*num = (uint32_t)split_num.significand;
 	return 0;
 }
 
