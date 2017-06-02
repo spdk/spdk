@@ -46,6 +46,23 @@
       "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58548098_b92a9aa2",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-02T23:40:47Z",
+      "side": 1,
+      "message": "Do we have any way to get thread return values?\n\nIf not, maybe the thread_start_fn should return void instead of int (or we should add some way to get the return codes).",
+      "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
