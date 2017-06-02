@@ -558,3 +558,82 @@ spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
 
 	return -1;
 }
+
+#ifdef __linux__
+#include <asm/mtrr.h>
+static int mtrr_fd = -1;
+
+__attribute__((constructor)) static void
+spdk_init_mtrr_handle(void)
+{
+
+	if (mtrr_fd < 0) {
+		mtrr_fd = open("/proc/mtrr", O_WRONLY);
+	}
+}
+
+__attribute__((destructor)) static void
+spdk_exit_mtrr_handle(void)
+{
+
+	if (mtrr_fd >= 0) {
+		close(mtrr_fd);
+	}
+}
+
+int
+spdk_pci_device_map_bar_write_combine(struct spdk_pci_device *device, uint32_t bar)
+{
+	struct mtrr_sentry sentry;
+
+	if (mtrr_fd < 0) {
+		return -1;
+	}
+
+	sentry.base = device->mem_resource[bar].phys_addr;
+	sentry.size = device->mem_resource[bar].len;
+	sentry.type = MTRR_TYPE_WRCOMB;
+
+	if (ioctl(mtrr_fd, MTRRIOC_ADD_ENTRY, &sentry) < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+spdk_pci_device_unmap_bar_write_combine(struct spdk_pci_device *device, uint32_t bar)
+{
+	struct mtrr_sentry sentry;
+
+	if (mtrr_fd < 0) {
+		return -1;
+	}
+
+	sentry.base = device->mem_resource[bar].phys_addr;
+	sentry.size = device->mem_resource[bar].len;
+	sentry.type = MTRR_TYPE_WRCOMB;
+
+	if (ioctl(mtrr_fd, MTRRIOC_DEL_ENTRY, &sentry) < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+#endif /* __linux__ */
+
+#ifdef __FreeBSD__
+int
+spdk_pci_device_map_bar_write_combine(struct spdk_pci_device *device, uint32_t bar)
+{
+	/* TODO */
+	return 0;
+}
+
+int
+spdk_pci_device_unmap_bar_write_combine(struct spdk_pci_device *device, uint32_t bar)
+{
+	/* TODO */
+	return 0;
+}
+#endif /* __FreeBSD__ */

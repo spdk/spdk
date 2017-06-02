@@ -458,6 +458,13 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 
 	if (!cmbsz.bits.sqs) {
 		pctrlr->ctrlr.opts.use_cmb_sqs = false;
+		return;
+	}
+
+	rc = spdk_pci_device_map_bar_write_combine(pctrlr->devhandle, bir);
+	if (rc != 0) {
+		SPDK_NOTICELOG("BAR %u: CMB mapped with write combined failed,"
+			       " you may get performance drop!\n", bir);
 	}
 
 	return;
@@ -478,6 +485,10 @@ nvme_pcie_ctrlr_unmap_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		if (nvme_pcie_ctrlr_get_cmbloc(pctrlr, &cmbloc)) {
 			SPDK_ERRLOG("get_cmbloc() failed\n");
 			return -EIO;
+		}
+		rc = spdk_pci_device_map_bar_write_combine(pctrlr->devhandle, cmbloc.bits.bir);
+		if (rc != 0) {
+			SPDK_NOTICELOG("MTRR: CMB unmap failed\n");
 		}
 		rc = spdk_pci_device_unmap_bar(pctrlr->devhandle, cmbloc.bits.bir, addr);
 	}
