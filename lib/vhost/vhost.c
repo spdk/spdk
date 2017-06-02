@@ -150,6 +150,15 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
+bool
+spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
+			     const struct vring_desc *desc)
+{
+	iov->iov_base =  spdk_vhost_gpa_to_vva(vdev, desc->addr);
+	iov->iov_len = desc->len;
+	return !iov->iov_base;
+}
+
 struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
