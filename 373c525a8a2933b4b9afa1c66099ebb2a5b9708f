@@ -22,6 +22,30 @@
       "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c85e1276_933366ef",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-02T20:06:57Z",
+      "side": 1,
+      "message": "This was the only thread API needed to remove the calls from the event library. The primary expansion I see is a way to launch an unpinned thread, but not much beyond that.\n\nI don\u0027t know what a hybrid polling design will end up looking like or if it has a material impact on these wrappers. I\u0027ll leave that for the future.",
+      "parentUuid": "b33f801e_7b69dc8d",
+      "range": {
+        "startLine": 213,
+        "startChar": 1,
+        "endLine": 215,
+        "endChar": 23
+      },
+      "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
