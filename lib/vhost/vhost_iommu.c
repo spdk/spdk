@@ -33,14 +33,18 @@
 
 #include "spdk/stdinc.h"
 
+#include "vhost_iommu.h"
+
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+
 #include <linux/vfio.h>
 
 #include "spdk/env.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
-
-#include "vhost_iommu.h"
 
 struct vfio_map {
 	uint64_t iova;
@@ -303,3 +307,19 @@ int spdk_iommu_mem_unregister(uint64_t addr, uint64_t len)
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_vfio", SPDK_TRACE_VHOST_VFIO)
+
+#else
+
+/* linux/vfio.h not available */
+
+int spdk_iommu_mem_register(uint64_t addr, uint64_t len)
+{
+	return 0;
+}
+
+int spdk_iommu_mem_unregister(uint64_t addr, uint64_t len)
+{
+	return 0;
+}
+
+#endif
