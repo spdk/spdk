@@ -157,6 +157,12 @@
   # leaving the rest of the device inaccessible
   Split Malloc2 8 1
 
+[Lvol]
+  # Syntax:
+  #   Split <bdev>
+  #
+  # Read logical volumes from bdev
+
 # Users should change the TargetNode section(s) below to match the
 #  desired iSCSI target node configuration.
 # TargetName, Mapping, LUN0 are minimum required
