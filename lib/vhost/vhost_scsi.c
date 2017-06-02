@@ -213,7 +213,7 @@ invalid_request(struct spdk_vhost_task *task)
 static struct spdk_scsi_dev *
 get_scsi_dev(struct spdk_vhost_scsi_dev *svdev, const __u8 *lun)
 {
-	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "LUN", lun, 8);
+	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN", lun, 8);
 	/* First byte must be 1 and second is target */
 	if (lun[0] != 1 || lun[1] >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS)
 		return NULL;
@@ -243,11 +243,11 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 	desc = spdk_vhost_vq_get_desc(controlq, req_idx);
 	ctrl_req = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
 
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA,
+	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
 		      req_idx, desc, (void *)desc->addr, desc->len, desc->flags, controlq->last_used_idx,
 		      controlq->kickfd, controlq->size);
-	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "Request desriptor", (uint8_t *)ctrl_req,
+	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "Request desriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
 	task = spdk_vhost_task_get(svdev);
@@ -273,7 +273,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		switch (ctrl_req->subtype) {
 		case VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET:
 			/* Handle LUN reset */
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA, "LUN reset\n");
+			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN reset\n");
 			task->scsi.lun = get_scsi_lun(task->scsi_dev, ctrl_req->lun);
 
 			mgmt_task_submit(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
@@ -281,7 +281,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		default:
 			task->tmf_resp->response = VIRTIO_SCSI_S_ABORTED;
 			/* Unsupported command */
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA, "Unsupported TMF command %x\n", ctrl_req->subtype);
+			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "Unsupported TMF command %x\n", ctrl_req->subtype);
 			break;
 		}
 		break;
@@ -293,7 +293,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		break;
 	}
 	default:
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA, "Unsupported control command %x\n", ctrl_req->type);
+		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "Unsupported control command %x\n", ctrl_req->type);
 		break;
 	}
 
@@ -343,9 +343,9 @@ task_data_setup(struct spdk_vhost_task *task,
 			/*
 			 * TEST UNIT READY command and some others might not contain any payload and this is not an error.
 			 */
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA,
+			SPDK_TRACELOG(SPDK_TRACE_VHOST_DATA,
 				      "No payload descriptors for FROM DEV command req_idx=%"PRIu16".\n", task->req_idx);
-			SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "CDB=", (*req)->cdb, VIRTIO_SCSI_CDB_SIZE);
+			SPDK_TRACEDUMP(SPDK_TRACE_VHOST_DATA, "CDB=", (*req)->cdb, VIRTIO_SCSI_CDB_SIZE);
 			task->scsi.iovcnt = 1;
 			task->scsi.iovs[0].iov_len = 0;
 			task->scsi.length = 0;
@@ -381,7 +381,7 @@ task_data_setup(struct spdk_vhost_task *task,
 			}
 		}
 	} else {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA, "TO DEV");
+		SPDK_TRACELOG(SPDK_TRACE_VHOST_DATA, "TO DEV");
 		/*
 		 * TO_DEV (WRITE):[RD_req][RD_buf0]...[RD_bufN][WR_resp]
 		 * No need to check descriptor WR flag as this is done while setting scsi.dxfer_dir.
@@ -465,7 +465,7 @@ process_request(struct spdk_vhost_task *task)
 	task->scsi.lun = get_scsi_lun(task->scsi_dev, req->lun);
 	task->scsi.cdb = req->cdb;
 	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
-	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
+	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
 	return 0;
 }
 
@@ -507,10 +507,12 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 				      task->req_idx);
 		} else if (result > 0) {
 			spdk_vhost_enqueue_task(task);
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d deferred ======\n", task, task->req_idx);
+			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d deferred ======\n", task,
+				      task->req_idx);
 		} else {
 			invalid_request(task);
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d failed ======\n", task, task->req_idx);
+			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d failed ======\n", task,
+				      task->req_idx);
 		}
 	}
 }
@@ -610,7 +612,6 @@ int
 spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_dev *vdev;
 	int rc;
 
 	if (name == NULL) {
@@ -630,16 +631,9 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -ENOMEM;
 	}
 
-	vdev = &svdev->vdev;
-	vdev->name =  strdup(name);
-	vdev->cpumask = cpumask;
-	vdev->lcore = -1;
-
-	vdev->type = SPDK_VHOST_DEV_T_SCSI;
-
-	rc = spdk_vhost_dev_register(vdev, &spdk_vhost_scsi_device_backend);
+	rc = spdk_vhost_dev_register(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
+				     &spdk_vhost_scsi_device_backend);
 	if (rc < 0) {
-		free(vdev->name);
 		spdk_dma_free(svdev);
 	}
 
@@ -661,17 +655,13 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 	}
 
 	if (spdk_vhost_dev_unregister(vdev) != 0) {
-		SPDK_ERRLOG("Could not unregister scsi controller %s with vhost library\n", vdev->name);
 		return -EIO;
 	}
-
-	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
 
 	/*
 	 * since spdk_vhost_scsi_vdev must not be in use,
 	 * it should be already *destructed* (spdk_vhost_dev_destruct)
 	 */
-	free(vdev->name);
 	spdk_dma_free(svdev);
 
 	return 0;
@@ -906,6 +896,6 @@ destroy_device(int vid)
 	spdk_vhost_dev_unload(vdev);
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost", SPDK_TRACE_VHOST_SCSI)
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_queue", SPDK_TRACE_VHOST_SCSI_DATA)
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_data", SPDK_TRACE_VHOST_SCSI_DATA)
+SPDK_LOG_REGISTER_TRACE_FLAG("vhost_scsi", SPDK_TRACE_VHOST_SCSI)
+SPDK_LOG_REGISTER_TRACE_FLAG("vhost_scsi_queue", SPDK_TRACE_VHOST_SCSI_QUEUE)
+SPDK_LOG_REGISTER_TRACE_FLAG("vhost_scsi_data", SPDK_TRACE_VHOST_DATA)
