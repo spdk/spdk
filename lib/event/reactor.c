@@ -43,15 +43,13 @@
 #include <pthread_np.h>
 #endif
 
-#include <rte_config.h>
-#include <rte_launch.h>
-
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
 #include "spdk/env.h"
 
 #define SPDK_MAX_SOCKET		64
 
+#define SPDK_MAX_REACTORS		128
 #define SPDK_REACTOR_SPIN_TIME_US	1000
 #define SPDK_TIMER_POLL_ITERATIONS	5
 #define SPDK_EVENT_BATCH_SIZE		8
@@ -118,7 +116,7 @@ struct spdk_reactor {
 	uint64_t					max_delay_us;
 } __attribute__((aligned(64)));
 
-static struct spdk_reactor g_reactors[RTE_MAX_LCORE];
+static struct spdk_reactor g_reactors[SPDK_MAX_REACTORS];
 
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
@@ -433,26 +431,6 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
 }
 
-static void
-spdk_reactor_start(struct spdk_reactor *reactor)
-{
-	if (reactor->lcore != spdk_env_get_current_core()) {
-		switch (rte_eal_get_lcore_state(reactor->lcore)) {
-		case FINISHED:
-			rte_eal_wait_lcore(reactor->lcore);
-		/* drop through */
-		case WAIT:
-			rte_eal_remote_launch(_spdk_reactor_run, (void *)reactor, reactor->lcore);
-			break;
-		case RUNNING:
-			printf("Something already running on lcore %d\n", reactor->lcore);
-			break;
-		}
-	} else {
-		_spdk_reactor_run(reactor);
-	}
-}
-
 int
 spdk_app_get_core_count(void)
 {
@@ -526,6 +504,7 @@ spdk_reactors_start(void)
 {
 	struct spdk_reactor *reactor;
 	uint32_t i, current_core;
+	int rc;
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 
@@ -533,15 +512,20 @@ spdk_reactors_start(void)
 	SPDK_ENV_FOREACH_CORE(i) {
 		if (i != current_core) {
 			reactor = spdk_reactor_get(i);
-			spdk_reactor_start(reactor);
+			rc = spdk_env_thread_launch_pinned(reactor->lcore, _spdk_reactor_run, reactor);
+			if (rc < 0) {
+				SPDK_ERRLOG("Unable to start reactor thread on core %u\n", reactor->lcore);
+				assert(false);
+				return;
+			}
 		}
 	}
 
 	/* Start the master reactor */
 	reactor = spdk_reactor_get(current_core);
-	spdk_reactor_start(reactor);
+	_spdk_reactor_run(reactor);
 
-	rte_eal_mp_wait_lcore();
+	spdk_env_thread_wait_all();
 
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
 }
@@ -687,12 +671,6 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 
 	if (*ppoller != NULL) {
 		SPDK_ERRLOG("Attempted reuse of poller pointer\n");
-		abort();
-	}
-
-	if (lcore >= RTE_MAX_LCORE) {
-		SPDK_ERRLOG("Attempted use lcore %u larger than max lcore %u\n",
-			    lcore, RTE_MAX_LCORE - 1);
 		abort();
 	}
 
