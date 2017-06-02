@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "e18cf7a0_4053376b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-06-02T23:59:31Z",
+      "side": 1,
+      "message": "I agree that hybrid polling does not necessitate a different API.  Perhaps a better question is, since this API abstracts rte_eal_remote_launch(), do the DPDK lcore functions support hybrid polling?\n\nmore at:\n\nhttp://events.linuxfoundation.org/sites/events/files/slides/lemoal-nvme-polling-vault-2017-final_0.pdf",
+      "parentUuid": "c85e1276_933366ef",
+      "range": {
+        "startLine": 213,
+        "startChar": 1,
+        "endLine": 215,
+        "endChar": 23
+      },
+      "revId": "373c525a8a2933b4b9afa1c66099ebb2a5b9708f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58548098_b92a9aa2",
         "filename": "include/spdk/env.h",
         "patchSetId": 1
