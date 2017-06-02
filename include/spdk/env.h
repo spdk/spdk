@@ -207,6 +207,24 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
  */
 uint32_t spdk_env_get_socket_id(uint32_t core);
 
+typedef int (*thread_start_fn)(void *);
+
+/**
+ * \brief Launch a thread pinned to the given core. Only a single pinned thread
+ * may be launched per core. Subsequent attempts to launch pinned threads on
+ * that core will fail.
+ *
+ * \param core The core to pin the thread to.
+ * \param fn Entry point on the new thread.
+ * \param arg Argument apssed to thread_start_fn
+ */
+int spdk_env_thread_launch_pinned(uint32_t core, thread_start_fn fn, void *arg);
+
+/**
+ * \brief Wait for all threads to exit before returning.
+ */
+void spdk_env_thread_wait_all(void);
+
 /**
  * Return true if the calling process is primary process
  */
