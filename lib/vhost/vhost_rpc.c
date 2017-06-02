@@ -32,14 +32,13 @@
  */
 
 #include "spdk/stdinc.h"
-
 #include "spdk_internal/log.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
-#include "vhost_scsi.h"
 #include "spdk/vhost.h"
 #include "task.h"
+#include "vhost_internal.h"
 
 static void
 json_scsi_dev_write(struct spdk_json_write_ctx *ctx, struct spdk_scsi_dev *dev)
@@ -108,7 +107,7 @@ spdk_rpc_get_vhost_scsi_controllers(struct spdk_jsonrpc_server_conn *conn,
 		spdk_json_write_array_begin(w);
 
 		for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-			dev = spdk_vhost_scsi_dev_get_dev((struct spdk_vhost_scsi_dev *) vdev, i);
+			dev = spdk_vhost_scsi_dev_get_dev(vdev, i);
 			if (!dev)
 				continue;
 
@@ -224,7 +223,7 @@ spdk_rpc_remove_vhost_scsi_controller(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_remove((struct spdk_vhost_scsi_dev *) vdev);
+	rc = spdk_vhost_scsi_dev_remove(vdev);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -340,7 +339,7 @@ spdk_rpc_remove_vhost_scsi_dev(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_remove_dev((struct spdk_vhost_scsi_dev *) vdev, req.scsi_dev_num);
+	rc = spdk_vhost_scsi_dev_remove_dev(vdev, req.scsi_dev_num);
 	if (rc < 0) {
 		goto invalid;
 	}
