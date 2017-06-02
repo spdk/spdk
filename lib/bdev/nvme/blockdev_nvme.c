@@ -57,7 +57,7 @@ struct nvme_ctrlr {
 	 */
 	struct spdk_nvme_ctrlr		*ctrlr;
 	struct spdk_nvme_transport_id	trid;
-	const char			*name;
+	char				*name;
 	int				ref;
 
 	struct spdk_poller		*adminq_timer_poller;
@@ -212,6 +212,7 @@ bdev_nvme_destruct(void *ctx)
 		spdk_io_device_unregister(nvme_ctrlr->ctrlr);
 		spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller, NULL);
 		spdk_nvme_detach(nvme_ctrlr->ctrlr);
+		free(nvme_ctrlr->name);
 		free(nvme_ctrlr);
 		return 0;
 	}
@@ -618,7 +619,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 	struct nvme_probe_ctx *ctx = cb_ctx;
-	const char *name = NULL;
+	char *name = NULL;
 	size_t i;
 
 	if (ctx) {
