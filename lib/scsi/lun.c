@@ -52,6 +52,10 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 void
 spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
+	if (task->function == SPDK_SCSI_TASK_FUNC_LUN_RESET &&
+	    task->status == SPDK_SCSI_STATUS_GOOD) {
+		spdk_scsi_lun_clear_all(task->lun);
+	}
 	spdk_event_call(task->cb_event);
 }
 
