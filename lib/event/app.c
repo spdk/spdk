@@ -36,7 +36,7 @@
 #include "spdk_internal/event.h"
 
 #include <rte_config.h>
-#include <rte_lcore.h>
+#include <rte_launch.h>
 
 #include "spdk/env.h"
 #include "spdk/log.h"
@@ -341,7 +341,8 @@ spdk_app_init(struct spdk_app_opts *opts)
 	}
 
 	if (opts->shutdown_cb != NULL) {
-		g_shutdown_event = spdk_event_allocate(rte_lcore_id(), __shutdown_event_cb,
+		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
+						       __shutdown_event_cb,
 						       NULL, NULL);
 
 		sigact.sa_handler = __shutdown_signal;
@@ -433,10 +434,10 @@ spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
 
 	g_spdk_app.rc = 0;
 
-	app_start_event = spdk_event_allocate(rte_get_master_lcore(), start_fn,
+	app_start_event = spdk_event_allocate(spdk_env_get_current_core(), start_fn,
 					      arg1, arg2);
 
-	spdk_event_call(spdk_event_allocate(rte_get_master_lcore(), spdk_subsystem_init,
+	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_init,
 					    app_start_event, NULL));
 
 	/* This blocks until spdk_app_stop is called */
