@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include <rte_config.h>
-#include <rte_lcore.h>
+#include <rte_launch.h>
 
 #include "spdk/ioat.h"
 #include "spdk/env.h"
@@ -75,7 +75,7 @@ struct ioat_chan_entry {
 struct worker_thread {
 	struct ioat_chan_entry 	*ctx;
 	struct worker_thread	*next;
-	unsigned		lcore;
+	unsigned		core;
 };
 
 struct ioat_task {
@@ -168,7 +168,7 @@ register_workers(void)
 			return -1;
 		}
 
-		worker->lcore = i;
+		worker->core = i;
 		worker->next = g_workers;
 		g_workers = worker;
 		g_num_workers++;
@@ -346,7 +346,7 @@ work_fn(void *arg)
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ioat_chan_entry *t = NULL;
 
-	printf("Starting thread on core %u\n", worker->lcore);
+	printf("Starting thread on core %u\n", worker->core);
 
 	tsc_end = spdk_get_ticks() + g_user_config.time_in_sec * spdk_get_ticks_hz();
 
@@ -401,7 +401,7 @@ dump_result(void)
 	uint64_t total_xfer_per_sec, total_bw_in_MiBps;
 	struct worker_thread *worker = g_workers;
 
-	printf("Channel_ID     Lcore     Transfers     Bandwidth     Failed\n");
+	printf("Channel_ID     Core     Transfers     Bandwidth     Failed\n");
 	printf("-----------------------------------------------------------\n");
 	while (worker != NULL) {
 		struct ioat_chan_entry *t = worker->ctx;
@@ -415,7 +415,7 @@ dump_result(void)
 
 			if (xfer_per_sec) {
 				printf("%10d%10d%12" PRIu64 "/s%8" PRIu64 " MiB/s%11" PRIu64 "\n",
-				       t->ioat_chan_id, worker->lcore, xfer_per_sec,
+				       t->ioat_chan_id, worker->core, xfer_per_sec,
 				       bw_in_MiBps, t->xfer_failed);
 			}
 			t = t->next;
@@ -479,7 +479,7 @@ associate_workers_with_chan(void)
 			free(t);
 			return 1;
 		}
-		printf("Associating ioat_channel %d with lcore %d\n", i, worker->lcore);
+		printf("Associating ioat_channel %d with core %d\n", i, worker->core);
 		t->chan = chan;
 		t->next = worker->ctx;
 		worker->ctx = t;
@@ -543,12 +543,12 @@ main(int argc, char **argv)
 	}
 
 	/* Launch all of the slave workers */
-	master_core = rte_get_master_lcore();
+	master_core = spdk_env_get_current_core();
 	master_worker = NULL;
 	worker = g_workers;
 	while (worker != NULL) {
-		if (worker->lcore != master_core) {
-			rte_eal_remote_launch(work_fn, worker, worker->lcore);
+		if (worker->core != master_core) {
+			rte_eal_remote_launch(work_fn, worker, worker->core);
 		} else {
 			assert(master_worker == NULL);
 			master_worker = worker;
