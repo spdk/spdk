@@ -383,7 +383,14 @@ test_decode_uint32(void)
 	v.len = 6;
 	i = 0;
 	CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
-	CU_ASSERT(i == 4)
+	CU_ASSERT(i == 4);
+
+	/* valid negative exponent */
+	v.start = "10e-1";
+	v.len = 5;
+	i = 0;
+	CU_ASSERT(spdk_json_decode_uint32(&v, &i) == 0);
+	CU_ASSERT(i == 1)
 }
 
 static void
