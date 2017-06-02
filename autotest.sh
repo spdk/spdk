@@ -120,7 +120,9 @@ fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter vhost
-	run_test ./test/vhost/spdk_vhost.sh --integrity
+	# The vhost tests are currently failing about 30% of the time. They are disabled
+	# until the root cause can be found.
+	# run_test ./test/vhost/spdk_vhost.sh --integrity
 	timing_exit vhost
 fi
 
