@@ -610,40 +610,12 @@ int
 spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_dev *vdev;
-	int rc;
 
-	if (name == NULL) {
-		SPDK_ERRLOG("Can't add controller with no name\n");
-		return -EINVAL;
-	}
+	svdev = (struct spdk_vhost_scsi_dev *) spdk_vhost_dev_construct(name, cpumask,
+			SPDK_VHOST_DEV_T_SCSI,
+			&spdk_vhost_scsi_device_backend, sizeof(*svdev) - sizeof(svdev->vdev));
 
-	if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
-		SPDK_ERRLOG("cpumask 0x%jx not a subset of app mask 0x%jx\n",
-			    cpumask, spdk_app_get_core_mask());
-		return -EINVAL;
-	}
-
-	svdev = spdk_dma_zmalloc(sizeof(*svdev), SPDK_CACHE_LINE_SIZE, NULL);
-	if (svdev == NULL) {
-		SPDK_ERRLOG("Couldn't allocate memory for vhost dev\n");
-		return -ENOMEM;
-	}
-
-	vdev = &svdev->vdev;
-	vdev->name =  strdup(name);
-	vdev->cpumask = cpumask;
-	vdev->lcore = -1;
-
-	vdev->type = SPDK_VHOST_DEV_T_SCSI;
-
-	rc = spdk_vhost_dev_register(vdev, &spdk_vhost_scsi_device_backend);
-	if (rc < 0) {
-		free(vdev->name);
-		spdk_dma_free(svdev);
-	}
-
-	return rc;
+	return svdev != NULL;
 }
 
 int
@@ -660,19 +632,9 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_scsi_dev *svdev)
 		}
 	}
 
-	if (spdk_vhost_dev_unregister(vdev) != 0) {
-		SPDK_ERRLOG("Could not unregister scsi controller %s with vhost library\n", vdev->name);
+	if (spdk_vhost_dev_destruct(vdev) != 0) {
 		return -EIO;
 	}
-
-	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
-
-	/*
-	 * since spdk_vhost_scsi_vdev must not be in use,
-	 * it should be already *destructed* (spdk_vhost_dev_destruct)
-	 */
-	free(vdev->name);
-	spdk_dma_free(svdev);
 
 	return 0;
 }
