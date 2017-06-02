@@ -257,20 +257,28 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 }
 
 int
-spdk_vhost_dev_register(struct spdk_vhost_dev *vdev,
-			const struct spdk_vhost_dev_backend *backend)
+spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
+			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
 
-	if (vdev->name == NULL) {
+	assert(vdev);
+
+	if (name == NULL) {
 		SPDK_ERRLOG("Can't register controller with no name\n");
 		return -EINVAL;
 	}
 
-	if (spdk_vhost_dev_find(vdev->name)) {
-		SPDK_ERRLOG("vhost controller %s already exists.\n", vdev->name);
+	if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
+		SPDK_ERRLOG("cpumask 0x%jx not a subset of app mask 0x%jx\n",
+			    cpumask, spdk_app_get_core_mask());
+		return -EINVAL;
+	}
+
+	if (spdk_vhost_dev_find(name)) {
+		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
 		return -EEXIST;
 	}
 
@@ -285,9 +293,9 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev,
 		return -ENOSPC;
 	}
 
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
-			    vdev->name);
+	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
+		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname,
+			    name);
 		return -EINVAL;
 	}
 
@@ -295,42 +303,53 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev,
 	if (stat(path, &file_stat) != -1) {
 		if (!S_ISSOCK(file_stat.st_mode)) {
 			SPDK_ERRLOG("Cannot remove %s: not a socket.\n", path);
-			return -EINVAL;
+			return -EIO;
 		} else if (unlink(path) != 0) {
 			SPDK_ERRLOG("Cannot remove %s.\n", path);
-			abort();
+			return -EIO;
 		}
 	}
 
 	if (rte_vhost_driver_register(path, 0) != 0) {
-		SPDK_ERRLOG("Could not register controller %s with vhost library\n", vdev->name);
+		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
 		return -EIO;
 	}
 	if (rte_vhost_driver_set_features(path, backend->virtio_features) ||
 	    rte_vhost_driver_disable_features(path, backend->disabled_features)) {
-		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", vdev->name);
-		return -EINVAL;
-	}
+		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
 
-	if (rte_vhost_driver_callback_register(path, &backend->ops) != 0) {
-		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", vdev->name);
-		return -ENOENT;
-	}
-
-	if (rte_vhost_driver_start(path) != 0) {
-		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", vdev->name, errno,
-			    strerror(errno));
+		rte_vhost_driver_unregister(path);
 		return -EIO;
 	}
 
+	if (rte_vhost_driver_callback_register(path, &backend->ops) != 0) {
+		rte_vhost_driver_unregister(path);
+		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
+		return -EIO;
+	}
+
+	vdev->name = strdup(name);
+	vdev->vid = -1;
+	vdev->lcore = -1;
+	vdev->cpumask = cpumask;
+	vdev->type = type;
+
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
+
+	if (rte_vhost_driver_start(path) != 0) {
+		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", name, errno,
+			    strerror(errno));
+		rte_vhost_driver_unregister(path);
+		return -EIO;
+	}
+
 	SPDK_NOTICELOG("Controller %s: new controller added\n", vdev->name);
 	return 0;
 }
 
 int
-spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
+spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -365,6 +384,7 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 
 	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
 
+	free(vdev->name);
 	g_spdk_vhost_devices[ctrlr_num] = NULL;
 	return 0;
 }
