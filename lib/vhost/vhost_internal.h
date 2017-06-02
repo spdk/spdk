@@ -53,6 +53,8 @@
 
 #define MAX_VHOST_VRINGS	256
 
+#define SPDK_VHOST_SCSI_CTRLR_MAX_DEVS 8
+
 enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_SCSI,
 };
