@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5df8e381_2120cd62",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-02T17:18:06Z",
+      "side": 1,
+      "message": "This was a bug I checked in before that was only exposed by this patch.",
+      "revId": "c3db15b984b4dd8ca1220ca59e0628d22e9aab61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
