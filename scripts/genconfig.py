@@ -46,6 +46,6 @@ for config in ('CONFIG', 'CONFIG.local'):
 
 for key, value in defs.items():
     if value == 0:
-        print "#undef {0}".format(key)
+        print("#undef {0}".format(key))
     else:
-        print "#define {0} {1}".format(key, value)
+        print("#define {0} {1}".format(key, value))
