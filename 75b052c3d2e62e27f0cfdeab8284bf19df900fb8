@@ -16,6 +16,24 @@
       "revId": "75b052c3d2e62e27f0cfdeab8284bf19df900fb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee8fb452_d98353e5",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-06-02T13:06:10Z",
+      "side": 1,
+      "message": "Agree. Changing for now to long double as it covers whole uint64 as well.",
+      "parentUuid": "bcd2a9b7_357b774f",
+      "revId": "75b052c3d2e62e27f0cfdeab8284bf19df900fb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
