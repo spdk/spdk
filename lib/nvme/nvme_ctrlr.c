@@ -79,7 +79,7 @@ void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
 	opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
-	opts->use_cmb_sqs = false;
+	opts->use_cmb_sqs = true;
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	opts->keep_alive_timeout_ms = 10 * 1000;
 	opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;

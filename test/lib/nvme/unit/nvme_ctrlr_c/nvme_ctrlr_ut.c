@@ -1316,7 +1316,7 @@ test_ctrlr_opts_set_defaults(void)
 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 	CU_ASSERT_EQUAL(opts.num_io_queues, DEFAULT_MAX_IO_QUEUES);
-	CU_ASSERT_FALSE(opts.use_cmb_sqs);
+	CU_ASSERT_TRUE(opts.use_cmb_sqs);
 	CU_ASSERT_EQUAL(opts.arb_mechanism, SPDK_NVME_CC_AMS_RR);
 	CU_ASSERT_EQUAL(opts.keep_alive_timeout_ms, 10 * 1000);
 	CU_ASSERT_EQUAL(opts.io_queue_size, DEFAULT_IO_QUEUE_SIZE);

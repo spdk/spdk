@@ -199,6 +199,7 @@ static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
 static int g_shm_id = -1;
+static uint32_t g_disable_sq_cmb;
 
 static const char *g_core_mask;
 
@@ -774,6 +775,7 @@ static void usage(char *program_name)
 	printf("\t[-t time in seconds]\n");
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
+	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
 	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
@@ -1053,7 +1055,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:LM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1094,6 +1096,9 @@ parse_args(int argc, char **argv)
 		case 'M':
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
+			break;
+		case 'D':
+			g_disable_sq_cmb = 1;
 			break;
 		default:
 			usage(argv[0]);
@@ -1244,6 +1249,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		pci_dev = spdk_pci_get_device(&pci_addr);
 		if (!pci_dev) {
 			return false;
+		}
+
+		if (g_disable_sq_cmb) {
+			opts->use_cmb_sqs = false;
 		}
 
 		pci_id = spdk_pci_device_get_id(pci_dev);
