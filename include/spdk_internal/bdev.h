@@ -352,6 +352,8 @@ struct spdk_bdev_io {
 };
 
 void spdk_bdev_register(struct spdk_bdev *bdev);
+void spdk_bdev_unregister(struct spdk_bdev *bdev);
+
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb);
 struct spdk_bdev_io *spdk_bdev_get_io(void);
 struct spdk_bdev_io *spdk_bdev_get_child_io(struct spdk_bdev_io *parent,

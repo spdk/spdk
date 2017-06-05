@@ -107,7 +107,6 @@ struct spdk_bdev_io_stat {
 };
 
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
-void spdk_bdev_unregister(struct spdk_bdev *bdev);
 
 struct spdk_bdev *spdk_bdev_first(void);
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);

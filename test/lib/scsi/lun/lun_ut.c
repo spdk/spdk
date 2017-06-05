@@ -183,10 +183,6 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 	}
 }
 
-void spdk_bdev_unregister(struct spdk_bdev *bdev)
-{
-}
-
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev *bdev)
 {
