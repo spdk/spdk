@@ -55,7 +55,8 @@ spdk_rpc_error_bdev_io_type_parse(char *name)
 	} else if (strcmp(name, "reset") == 0) {
 		return 1U << SPDK_BDEV_IO_TYPE_RESET;
 	} else if (strcmp(name, "all") == 0) {
-		return 0xffffffff;
+		/* skip the reset mask */
+		return 0xffffffff - (1U << SPDK_BDEV_IO_TYPE_RESET);
 	} else if (strcmp(name, "clear") == 0) {
 		return 0;
 	}
