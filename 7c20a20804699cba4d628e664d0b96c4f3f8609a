@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3518c915_13454ef4",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T23:35:43Z",
+      "side": 1,
+      "message": "I\u0027m good with the link but my goal with replacing the old paragraph wasn\u0027t just to make it different.  Trying to put the what it is, more mktg related, on spdk.io and leave this readme with as little duplicate content as possible just pointing to the website.  I\u0027ll change the link though",
+      "parentUuid": "01d73076_73591355",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f409c3b_509f9842",
         "filename": "README.md",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-05T23:21:31Z",
       "side": 1,
       "message": "I would make \"Quick Start\" a section heading. You can write either:\n\n# Quick Start\n\nor\n\nQuick Start\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\nI believe they are equivalent in markdown.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35c9d87b_0bd7673f",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T23:35:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f409c3b_509f9842",
       "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d60ec875_3fceb1aa",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T23:35:43Z",
+      "side": 1,
+      "message": "Yup, that\u0027ll be the next rev as I saw anchors and links as being Quick Start / Submit a Patch / Update a Patch.  Well, maybe a few more but didn\u0027t want to make each of these smaller sections it\u0027s own thing until we saw the rest of this flesh out",
+      "parentUuid": "e4512972_e9469f19",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1f0b645_e3297f5b",
         "filename": "README.md",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2017-06-05T23:21:31Z",
       "side": 1,
       "message": "I\u0027m not sure we need to mention that the list may be out of date. It\u0027s just extra text that I think goes without saying.\n\nYou can make the note about documentation if you want, though.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79c146ba_7f99a93d",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T23:35:43Z",
+      "side": 1,
+      "message": "So I added that because depending on which Fedora I used the package names were slightly different.  Less text is better though so yeah I\u0027ll yank it, thanks",
+      "parentUuid": "c1f0b645_e3297f5b",
       "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "bd1e55ed_04452714",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T23:35:43Z",
+      "side": 1,
+      "message": "I really don\u0027t want to do that - it\u0027s not that much extra work (not enough to turn someone away) and makes it a lot easier to take that next step of contributing.  When I get over to spdk.io I\u0027ll want to do the same thing there, remove the mention of cloning from github. I don\u0027t think it worth but but we can certainly debate it more!",
+      "parentUuid": "3ae29ceb_758c3a95",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cab39238_e25d67ee",
         "filename": "README.md",
         "patchSetId": 4
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "34d63607_dd6f834b",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T23:35:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cab39238_e25d67ee",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41a45fd3_f63f7b69",
         "filename": "README.md",
         "patchSetId": 4
@@ -115,6 +223,24 @@
       "writtenOn": "2017-06-05T23:21:31Z",
       "side": 1,
       "message": "Maybe clarify that you\u0027ll see lots of messages indicating errors, but these errors are intentional and part of the test cases.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88214c69_3d07240d",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T23:35:43Z",
+      "side": 1,
+      "message": "Hmmm, what is unclear about \"expected failure messages\" - trying to avoid being too wordy which I often tend to do :)",
+      "parentUuid": "41a45fd3_f63f7b69",
       "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
