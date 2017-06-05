@@ -200,30 +200,6 @@ spdk_json_number_split(const struct spdk_json_val *val, struct spdk_json_num *nu
 }
 
 int
-spdk_json_number_to_double(const struct spdk_json_val *val, double *num)
-{
-	char buf[32];
-	char *end;
-
-	if (val->type != SPDK_JSON_VAL_NUMBER || val->len >= sizeof(buf)) {
-		*num = 0.0;
-		return -1;
-	}
-
-	memcpy(buf, val->start, val->len);
-	buf[val->len] = '\0';
-
-	errno = 0;
-	/* TODO: strtod() uses locale for decimal point (. is not guaranteed) */
-	*num = strtod(buf, &end);
-	if (*end != '\0' || errno != 0) {
-		return -1;
-	}
-
-	return 0;
-}
-
-int
 spdk_json_number_to_int32(const struct spdk_json_val *val, int32_t *num)
 {
 	struct spdk_json_num split_num;
