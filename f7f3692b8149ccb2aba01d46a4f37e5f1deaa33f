@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cdd34ff_254cb0fa",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-05T13:46:50Z",
+      "side": 1,
+      "message": "\"tab\" instead of \"space\"",
+      "range": {
+        "startLine": 56,
+        "startChar": 27,
+        "endLine": 56,
+        "endChar": 28
+      },
+      "revId": "f7f3692b8149ccb2aba01d46a4f37e5f1deaa33f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
