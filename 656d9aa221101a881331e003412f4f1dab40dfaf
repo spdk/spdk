@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f61bf8d8_e550e5fa",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1720,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2017-06-05T17:34:02Z",
+      "side": 1,
+      "message": "Any change being made to add this to spdk_bdev?\nAlso a small nit pick: The name is confusing. Is this just a descriptor or a descriptor list?",
+      "revId": "656d9aa221101a881331e003412f4f1dab40dfaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
