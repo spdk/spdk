@@ -76,6 +76,7 @@ $valgrind test/lib/util/bit_array/bit_array_ut
 $valgrind test/lib/util/io_channel/io_channel_ut
 $valgrind test/lib/util/string/string_ut
 
+$valgrind test/lib/vhost/vhost/vhost_ut
 # local unit test coverage
 if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -d . -c -t "$(hostname)" -o $UT_COVERAGE/ut_cov_test.info
