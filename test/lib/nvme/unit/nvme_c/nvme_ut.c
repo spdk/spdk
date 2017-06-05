@@ -30,7 +30,6 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include "spdk_cunit.h"
 
 #include "spdk/env.h"
@@ -163,10 +162,42 @@ test_opc_data_transfer(void)
 }
 
 static void
-test_trid_parse(void)
+test_trid_parse_and_compare(void)
 {
 	struct spdk_nvme_transport_id trid1, trid2;
+	int ret;
 
+	/* set trid1 trid2 value to id parse */
+	ret = spdk_nvme_transport_id_parse(NULL, "trtype:PCIe traddr:0000:04:00.0");
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1, NULL);
+	CU_ASSERT(ret == -EINVAL);
+	ret = spdk_nvme_transport_id_parse(NULL, NULL);
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1, "trtype-PCIe traddr-0000-04-00.0");
+	CU_ASSERT(ret == -EINVAL);
+	ret = spdk_nvme_transport_id_parse(&trid1, "trtype-PCIe traddr-0000-04-00.0-:");
+	CU_ASSERT(ret == -EINVAL);
+	ret = spdk_nvme_transport_id_parse(&trid1, " \t\n:");
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1,
+					   "trtype:PCRD\n"
+					   "adrfam:ipv4\n"
+					   "traddr:192.168.100.8\n"
+					   "trsvcid:4420\n"
+					   "subnqn:nqn.2014-08.org.nvmexpress.discovery");
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1,
+					   "trtype:rdma\n"
+					   "adrfam:ipv 4\n"
+					   "traddr:192.168.100.8\n"
+					   "trsvcid:4420\n"
+					   "subnqn:nqn.2014-08.org.nvmexpress.discovery");
+	CU_ASSERT(ret == -EINVAL);
 	memset(&trid1, 0, sizeof(trid1));
 	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
 					       "trtype:rdma\n"
@@ -185,7 +216,16 @@ test_trid_parse(void)
 	CU_ASSERT(trid2.trtype == SPDK_NVME_TRANSPORT_PCIE);
 	CU_ASSERT(strcmp(trid2.traddr, "0000:04:00.0") == 0);
 
+	/* set trid2 and test id_compare */
+	memset(&trid2, 0, sizeof(trid2));
+	spdk_nvme_transport_id_parse(&trid2,
+				     "trtype:PCIe\n"
+				     "adrfam:ipv6\n"
+				     "traddr:192.168.100.9\n"
+				     "trsvcid:4421\n"
+				     "subnqn:nqn.2016-08.org.nvmexpress.discovery");
 	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
+
 }
 
 static void
@@ -315,7 +355,7 @@ int main(int argc, char **argv)
 			    test_spdk_nvme_transport_id_parse_trtype) == NULL ||
 		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_adrfam",
 			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
-		CU_add_test(suite, "test_trid_parse", test_trid_parse) == NULL
+		CU_add_test(suite, "test_trid_parse_and_compare", test_trid_parse_and_compare) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
