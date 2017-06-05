@@ -54,7 +54,7 @@ trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; do
 sleep 1
 
 echo "Test error injection"
-$rpc_py bdev_inject_error 'all' -n 1000
+$rpc_py bdev_inject_error EE_Malloc0 'all' -n 1000
 
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
@@ -71,7 +71,7 @@ else
 fi
 set -e
 
-$rpc_py bdev_inject_error 'clear'
+$rpc_py bdev_inject_error EE_Malloc0 'clear'
 echo "Error injection test done"
 
 iscsicleanup
