@@ -982,6 +982,39 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch
 	return bdev_io;
 }
 
+
+struct spdk_bdev_io *
+spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			   const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed during nvme_admin_passthru\n");
+		return NULL;
+	}
+
+	bdev_io->ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_IO;
+	bdev_io->u.nvme_passthru.cmd = *cmd;
+	bdev_io->u.nvme_passthru.buf = buf;
+	bdev_io->u.nvme_passthru.nbytes = nbytes;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		return NULL;
+	}
+
+	return bdev_io;
+}
+
 int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
