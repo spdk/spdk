@@ -40,6 +40,7 @@
 #include "spdk/vhost.h"
 #include "task.h"
 #include "vhost_internal.h"
+#include "spdk/bdev.h"
 
 static void
 json_scsi_dev_write(struct spdk_json_write_ctx *ctx, struct spdk_scsi_dev *dev)
@@ -363,3 +364,277 @@ invalid:
 	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
 }
 SPDK_RPC_REGISTER("remove_vhost_scsi_dev", spdk_rpc_remove_vhost_scsi_dev)
+
+struct rpc_vhost_block_ctrlr {
+	char *ctrlr;
+	char *cpumask;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_vhost_block_ctrlr[] = {
+	{"ctrlr", offsetof(struct rpc_vhost_block_ctrlr, ctrlr), spdk_json_decode_string },
+	{"cpumask", offsetof(struct rpc_vhost_block_ctrlr, cpumask), spdk_json_decode_string, true},
+};
+
+static void
+free_rpc_vhost_block_ctrlr(struct rpc_vhost_block_ctrlr *req)
+{
+	free(req->ctrlr);
+	free(req->cpumask);
+}
+
+static void
+spdk_rpc_construct_vhost_block_controller(struct spdk_jsonrpc_server_conn *conn,
+		const struct spdk_json_val *params,
+		const struct spdk_json_val *id)
+{
+	struct rpc_vhost_block_ctrlr req = {0};
+	struct spdk_json_write_ctx *w;
+	int rc;
+	uint64_t cpumask;
+
+	if (spdk_json_decode_object(params, rpc_construct_vhost_block_ctrlr,
+				    SPDK_COUNTOF(rpc_construct_vhost_block_ctrlr),
+				    &req)) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	cpumask = spdk_app_get_core_mask();
+	if (req.cpumask != NULL && spdk_vhost_parse_core_mask(req.cpumask, &cpumask)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_blk_construct(req.ctrlr, cpumask);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_vhost_block_ctrlr(&req);
+	w = spdk_jsonrpc_begin_result(conn, id);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(conn, w);
+
+	return;
+invalid:
+	free_rpc_vhost_block_ctrlr(&req);
+	spdk_jsonrpc_send_error_response(conn, id,
+					 SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
+
+}
+SPDK_RPC_REGISTER("construct_vhost_block_controller", spdk_rpc_construct_vhost_block_controller)
+
+struct rpc_remove_vhost_block_ctrlr {
+	char *ctrlr;
+};
+
+static const struct spdk_json_object_decoder rpc_remove_vhost_block_ctrlr[] = {
+	{"ctrlr", offsetof(struct rpc_remove_vhost_block_ctrlr, ctrlr), spdk_json_decode_string },
+};
+
+static void
+free_rpc_remove_vhost_block_ctrlr(struct rpc_remove_vhost_block_ctrlr *req)
+{
+	free(req->ctrlr);
+}
+
+static void
+spdk_rpc_remove_vhost_block_controller(struct spdk_jsonrpc_server_conn *conn,
+				       const struct spdk_json_val *params,
+				       const struct spdk_json_val *id)
+{
+	struct rpc_remove_vhost_block_ctrlr req = {NULL};
+	struct spdk_json_write_ctx *w;
+	struct spdk_vhost_dev *vdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_remove_vhost_block_ctrlr,
+				    SPDK_COUNTOF(rpc_remove_vhost_block_ctrlr), &req)) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (!(vdev = spdk_vhost_dev_find(req.ctrlr))) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_blk_destroy(vdev);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_remove_vhost_block_ctrlr(&req);
+
+	if (id != NULL) {
+		w = spdk_jsonrpc_begin_result(conn, id);
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(conn, w);
+	}
+
+	return;
+invalid:
+	free_rpc_remove_vhost_block_ctrlr(&req);
+	spdk_jsonrpc_send_error_response(conn, id,
+					 SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
+
+}
+SPDK_RPC_REGISTER("remove_vhost_block_controller", spdk_rpc_remove_vhost_block_controller)
+
+static void
+spdk_rpc_get_vhost_block_controllers(struct spdk_jsonrpc_server_conn *conn,
+				     const struct spdk_json_val *params,
+				     const struct spdk_json_val *id)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_vhost_dev *vdev = NULL;
+	struct spdk_bdev *bdev;
+	char buf[32];
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(conn, id,
+						 SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_vhost_block_controllers requires no parameters");
+		return;
+	}
+	w = spdk_jsonrpc_begin_result(conn, id);
+	spdk_json_write_array_begin(w);
+	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
+		if (vdev->type != SPDK_VHOST_DEV_T_BLK)
+			continue;
+		spdk_json_write_object_begin(w);
+
+		spdk_json_write_name(w, "ctrlr");
+		spdk_json_write_string(w, spdk_vhost_dev_get_name(vdev));
+
+		spdk_json_write_name(w, "cpu_mask");
+		snprintf(buf, sizeof(buf), "%#" PRIx64,
+			 spdk_vhost_dev_get_cpumask(vdev));
+		spdk_json_write_string(w, buf);
+
+		bdev = spdk_vhost_blk_get_dev(vdev);
+		if (bdev) {
+			spdk_json_write_name(w, "bdev");
+			spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+		}
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(conn, w);
+	return;
+}
+SPDK_RPC_REGISTER("get_vhost_block_controllers", spdk_rpc_get_vhost_block_controllers)
+
+struct rpc_add_vhost_block_dev {
+	char *ctrlr;
+	char *dev_name;
+};
+
+static const struct spdk_json_object_decoder rpc_vhost_blk_add_dev[] = {
+	{"ctrlr", offsetof(struct rpc_add_vhost_block_dev, ctrlr), spdk_json_decode_string },
+	{"dev_name", offsetof(struct rpc_add_vhost_block_dev, dev_name), spdk_json_decode_string },
+};
+
+static void
+free_rpc_add_vhost_block_dev(struct rpc_add_vhost_block_dev *req)
+{
+	free(req->ctrlr);
+	free(req->dev_name);
+}
+
+static void
+spdk_rpc_add_vhost_block_dev(struct spdk_jsonrpc_server_conn *conn,
+			     const struct spdk_json_val *params,
+			     const struct spdk_json_val *id)
+{
+	struct rpc_add_vhost_block_dev req = {0};
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_vhost_blk_add_dev,
+				    SPDK_COUNTOF(rpc_vhost_blk_add_dev),
+				    &req)) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_blk_add_dev(req.ctrlr, req.dev_name);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_add_vhost_block_dev(&req);
+
+	if (id != NULL) {
+		w = spdk_jsonrpc_begin_result(conn, id);
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(conn, w);
+	}
+
+	return;
+invalid:
+	free_rpc_add_vhost_block_dev(&req);
+	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
+}
+SPDK_RPC_REGISTER("add_vhost_block_dev", spdk_rpc_add_vhost_block_dev)
+
+struct rpc_remove_vhost_block_ctrlr_dev {
+	char *ctrlr;
+};
+
+static const struct spdk_json_object_decoder rpc_vhost_block_remove_dev[] = {
+	{"ctrlr", offsetof(struct rpc_remove_vhost_block_ctrlr_dev, ctrlr), spdk_json_decode_string },
+};
+
+static void
+free_rpc_remove_vhost_block_ctrlr_dev(struct rpc_remove_vhost_block_ctrlr_dev *req)
+{
+	free(req->ctrlr);
+}
+
+static void
+spdk_rpc_remove_vhost_block_dev(struct spdk_jsonrpc_server_conn *conn,
+				const struct spdk_json_val *params,
+				const struct spdk_json_val *id)
+{
+	struct rpc_remove_vhost_block_ctrlr_dev req = {0};
+	struct spdk_json_write_ctx *w;
+	struct spdk_vhost_dev *vdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_vhost_block_remove_dev,
+				    SPDK_COUNTOF(rpc_vhost_block_remove_dev),
+				    &req)) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (!(vdev = spdk_vhost_dev_find(req.ctrlr))) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_blk_remove_dev(vdev);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_remove_vhost_block_ctrlr_dev(&req);
+
+	if (id != NULL) {
+		w = spdk_jsonrpc_begin_result(conn, id);
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(conn, w);
+	}
+
+	return;
+invalid:
+	free_rpc_remove_vhost_block_ctrlr_dev(&req);
+	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
+}
+SPDK_RPC_REGISTER("remove_vhost_block_dev", spdk_rpc_remove_vhost_block_dev)
