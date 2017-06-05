@@ -529,5 +529,34 @@ p.add_argument('ctrlr', help='controller name to remove device from')
 p.add_argument('scsi_dev_num', help='scsi_dev_num', type=int)
 p.set_defaults(func=remove_vhost_scsi_dev)
 
+def construct_vhost_blk_controller(args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'dev_name': args.dev_name,
+    }
+    if args.cpumask:
+        params['cpumask'] = args.cpumask
+    jsonrpc_call('construct_vhost_blk_controller', params)
+
+p = subparsers.add_parser('construct_vhost_blk_controller', help='Add a new vhost block controller')
+p.add_argument('ctrlr', help='controller name')
+p.add_argument('dev_name', help='device name')
+p.add_argument('--cpumask', help='cpu mask for this controller')
+p.set_defaults(func=construct_vhost_blk_controller)
+
+def remove_vhost_blk_controller(args):
+    params = {'ctrlr': args.ctrlr}
+    jsonrpc_call('remove_vhost_blk_controller', params)
+
+p = subparsers.add_parser('remove_vhost_blk_controller', help='Remove a vhost block controller')
+p.add_argument('ctrlr', help='controller name')
+p.set_defaults(func=remove_vhost_blk_controller)
+
+def get_vhost_blk_controllers(args):
+    print_dict(jsonrpc_call('get_vhost_blk_controllers'))
+
+p = subparsers.add_parser('get_vhost_blk_controllers', help='List vhost block controllers')
+p.set_defaults(func=get_vhost_blk_controllers)
+
 args = parser.parse_args()
 args.func(args)
