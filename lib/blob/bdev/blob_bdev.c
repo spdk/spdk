@@ -71,13 +71,13 @@ bdev_blob_read(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *p
 	       uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
 {
 	struct spdk_bdev *bdev = __get_bdev(dev);
-	struct spdk_bdev_io *bdev_io;
+	int rc;
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
-	bdev_io = spdk_bdev_read(bdev, channel, payload, lba * block_size,
-				 lba_count * block_size, bdev_blob_io_complete, cb_args);
-	if (bdev_io == NULL) {
-		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
+	rc = spdk_bdev_read(bdev, channel, payload, lba * block_size,
+			    lba_count * block_size, bdev_blob_io_complete, cb_args);
+	if (rc) {
+		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}
 }
 
@@ -86,13 +86,13 @@ bdev_blob_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *
 		uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
 {
 	struct spdk_bdev *bdev = __get_bdev(dev);
-	struct spdk_bdev_io *bdev_io;
+	int rc;
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
-	bdev_io = spdk_bdev_write(bdev, channel, payload, lba * block_size,
-				  lba_count * block_size, bdev_blob_io_complete, cb_args);
-	if (bdev_io == NULL) {
-		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
+	rc = spdk_bdev_write(bdev, channel, payload, lba * block_size,
+			     lba_count * block_size, bdev_blob_io_complete, cb_args);
+	if (rc) {
+		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}
 }
 
@@ -102,7 +102,7 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 {
 	struct spdk_bdev *bdev = __get_bdev(dev);
 	struct spdk_scsi_unmap_bdesc *desc;
-	struct spdk_bdev_io *bdev_io;
+	int rc;
 
 	SPDK_STATIC_ASSERT(sizeof(cb_args->scratch) >= sizeof(*desc), "scratch too small");
 
@@ -111,9 +111,9 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 	to_be32(&desc->block_count, lba_count);
 	desc->reserved = 0;
 
-	bdev_io = spdk_bdev_unmap(bdev, channel, desc, 1, bdev_blob_io_complete, cb_args);
-	if (bdev_io == NULL) {
-		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, -EIO);
+	rc = spdk_bdev_unmap(bdev, channel, desc, 1, bdev_blob_io_complete, cb_args);
+	if (rc) {
+		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}
 }
 
