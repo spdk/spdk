@@ -378,6 +378,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	rte_mempool_put(task_pool, task);
+	spdk_bdev_free_io(bdev_io);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target, target->lcore,
 			     10 * 1000000);

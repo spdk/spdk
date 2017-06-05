@@ -223,11 +223,11 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	return NULL;
 }
 
-int
+struct spdk_bdev_io *
 spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return 0;
+	return NULL;
 }
 
 struct spdk_bdev_io *

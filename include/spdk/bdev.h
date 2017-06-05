@@ -327,10 +327,10 @@ struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_chan
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return -1 on failure, 0 on success.
+ * \return A handle to the I/O request, or NULL on failure.
  */
-int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+struct spdk_bdev_io *spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+				     spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Free an I/O request. This should be called after the callback for the I/O has

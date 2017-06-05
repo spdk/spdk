@@ -922,7 +922,7 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, channel);
 }
 
-int
+struct spdk_bdev_io *
 spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
@@ -934,7 +934,7 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing reset\n");
-		return -1;
+		return NULL;
 	}
 
 	bdev_io->ch = channel;
@@ -947,7 +947,7 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			      bdev_io,
 			      _spdk_bdev_reset_dev);
 
-	return 0;
+	return bdev_io;
 }
 
 int

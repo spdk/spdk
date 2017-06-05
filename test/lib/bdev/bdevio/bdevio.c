@@ -657,10 +657,10 @@ __blockdev_reset(void *arg1, void *arg2)
 {
 	struct bdevio_request *req = arg1;
 	struct io_target *target = req->target;
-	int rc;
+	struct spdk_bdev_io *bdev_io;
 
-	rc = spdk_bdev_reset(target->bdev, target->ch, quick_test_complete, NULL);
-	if (rc < 0) {
+	bdev_io = spdk_bdev_reset(target->bdev, target->ch, quick_test_complete, NULL);
+	if (!bdev_io) {
 		g_completion_success = false;
 		wake_ut_thread();
 	}
