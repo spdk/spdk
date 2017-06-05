@@ -37,7 +37,12 @@
 #include "spdk/stdinc.h"
 #include "spdk/bdev.h"
 
+enum vbdev_error_type {
+	VBDEV_IO_FAILURE = 1,
+	VBDEV_IO_PENDING,
+};
+
 int spdk_vbdev_error_create(struct spdk_bdev *base_bdev);
-int spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num);
+int spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_type, uint32_t error_num);
 
 #endif // SPDK_BLOCKDEV_ERROR_H
