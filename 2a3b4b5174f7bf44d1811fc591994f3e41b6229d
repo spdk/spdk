@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a6a1866a_0fb71885",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad003e68_e79fe679",
+      "range": {
+        "startLine": 6,
+        "startChar": 51,
+        "endLine": 6,
+        "endChar": 58
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3122ab66_f16b99a1",
         "filename": "README.md",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2017-05-31T00:11:54Z",
       "side": 1,
       "message": "Grammar nitpick: add a comma after start: \"For a quick start, though, here\u0027s what ...\"",
+      "range": {
+        "startLine": 10,
+        "startChar": 12,
+        "endLine": 10,
+        "endChar": 25
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0008b52_0f0d8588",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "If you really want to nitpick, see https://owl.english.purdue.edu/owl/owlprint/607/ specifically extended rule #2. Although I believe neither would actually get a red mark in an English 101 class, I prefer what I have here and believe it\u0027s more in line with the spirit of the rule :)",
+      "parentUuid": "3122ab66_f16b99a1",
       "range": {
         "startLine": 10,
         "startChar": 12,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "c039e594_ec241614",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50813a99_7492939a",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c064fbfc_f2ac6e69",
         "filename": "README.md",
         "patchSetId": 2
@@ -76,6 +142,30 @@
       "writtenOn": "2017-05-31T00:11:54Z",
       "side": 1,
       "message": "Grammar nitpick: this comma should be a semicolon.",
+      "range": {
+        "startLine": 19,
+        "startChar": 72,
+        "endLine": 19,
+        "endChar": 73
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "942913f6_4ca98491",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "yeah, OK, agree w/you on that one ;)",
+      "parentUuid": "c064fbfc_f2ac6e69",
       "range": {
         "startLine": 19,
         "startChar": 72,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "c570d52a_ba96e117",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5e268f80_af4705e5",
+      "range": {
+        "startLine": 55,
+        "startChar": 48,
+        "endLine": 55,
+        "endChar": 49
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "71f03935_0b91c94d",
         "filename": "README.md",
         "patchSetId": 2
@@ -122,6 +236,30 @@
       "writtenOn": "2017-05-31T00:11:54Z",
       "side": 1,
       "message": "Remove the colon here too.",
+      "range": {
+        "startLine": 64,
+        "startChar": 73,
+        "endLine": 64,
+        "endChar": 74
+      },
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82186030_b70980ab",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71f03935_0b91c94d",
       "range": {
         "startLine": 64,
         "startChar": 73,
@@ -151,6 +289,24 @@
     },
     {
       "key": {
+        "uuid": "8da99b6d_0534b0b0",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "yes, that\u0027s why I kept it in here.  It\u0027s simple and harmless... (and fast) so might as well",
+      "parentUuid": "61d4e1c1_6dc20010",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c04fa5d5_8e6ddf2f",
         "filename": "README.md",
         "patchSetId": 2
@@ -162,6 +318,24 @@
       "writtenOn": "2017-05-31T00:11:54Z",
       "side": 1,
       "message": "This is actually a Makefile fragment, not shell script, so it shouldn\u0027t use the {.sh} highlighter.",
+      "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c0cf448_f053121f",
+        "filename": "README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T18:11:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c04fa5d5_8e6ddf2f",
       "revId": "2a3b4b5174f7bf44d1811fc591994f3e41b6229d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
