@@ -51,22 +51,39 @@
 struct vbdev_error_disk {
 	struct spdk_bdev		disk;
 	struct spdk_bdev		*base_bdev;
+	uint32_t			io_type_mask;
+	uint32_t			error_num;
 	TAILQ_ENTRY(vbdev_error_disk)	tailq;
 };
 
-static uint32_t g_io_type_mask;
-static uint32_t g_error_num;
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, vbdev_error_disk) g_vbdev_error_disks = TAILQ_HEAD_INITIALIZER(
 			g_vbdev_error_disks);
 
-void
-spdk_vbdev_inject_error(uint32_t io_type_mask, uint32_t error_num)
+int
+spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num)
 {
+	struct spdk_bdev *bdev;
+	struct vbdev_error_disk *error_disk;
+
 	pthread_mutex_lock(&g_vbdev_error_mutex);
-	g_io_type_mask = io_type_mask;
-	g_error_num = error_num;
+	bdev = spdk_bdev_get_by_name(name);
+	if (!bdev) {
+		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
+		pthread_mutex_unlock(&g_vbdev_error_mutex);
+		return -1;
+	}
+
+	TAILQ_FOREACH(error_disk, &g_vbdev_error_disks, tailq) {
+		if (bdev == &error_disk->disk) {
+			break;
+		}
+	}
+
+	error_disk->io_type_mask = io_type_mask;
+	error_disk->error_num = error_num;
 	pthread_mutex_unlock(&g_vbdev_error_mutex);
+	return 0;
 }
 
 static void
@@ -105,20 +122,13 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	io_type_mask = 1U << bdev_io->type;
 
-	if (g_error_num == 0 || !(g_io_type_mask & io_type_mask)) {
+	if (error_disk->error_num == 0 || !(error_disk->io_type_mask & io_type_mask)) {
 		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
 		return;
 	}
 
-	pthread_mutex_lock(&g_vbdev_error_mutex);
-	/* check again to make sure g_error_num has not been decremented since we checked it above */
-	if (g_error_num == 0) {
-		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
-	} else {
-		g_error_num--;
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
-	pthread_mutex_unlock(&g_vbdev_error_mutex);
+	error_disk->error_num--;
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 }
 
 static void

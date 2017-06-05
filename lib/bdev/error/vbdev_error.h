@@ -38,6 +38,6 @@
 #include "spdk/bdev.h"
 
 int spdk_vbdev_error_create(struct spdk_bdev *base_bdev);
-void spdk_vbdev_inject_error(uint32_t io_type_mask, uint32_t error_num);
+int spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num);
 
 #endif // SPDK_BLOCKDEV_ERROR_H
