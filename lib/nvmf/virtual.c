@@ -489,6 +489,20 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 }
 
 static int
+nvmf_virtual_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+				    struct spdk_nvmf_request *req)
+{
+	if (spdk_bdev_nvme_io_passthru(bdev, ch, &req->cmd->nvme_cmd, req->data, req->length,
+				       nvmf_virtual_ctrlr_complete_cmd, req) == NULL) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}
+
+static int
 nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	uint32_t nsid;
@@ -519,9 +533,7 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
 		return nvmf_virtual_ctrlr_dsm_cmd(bdev, ch, req);
 	default:
-		SPDK_ERRLOG("Unsupported IO command opc: %x\n", cmd->opc);
-		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		return nvmf_virtual_ctrlr_nvme_passthru_io(bdev, ch, req);
 	}
 }
 
