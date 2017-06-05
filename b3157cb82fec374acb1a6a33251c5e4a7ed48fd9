@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "966ef284_64db663e",
+        "filename": "test/lib/vhost/vhost/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T11:40:06Z",
+      "side": 1,
+      "message": "Consider \u0027{0}\u0027 or use designated initializes.",
+      "range": {
+        "startLine": 275,
+        "startChar": 29,
+        "endLine": 275,
+        "endChar": 31
+      },
+      "revId": "b3157cb82fec374acb1a6a33251c5e4a7ed48fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8ce8d1e_57962ded",
+        "filename": "test/lib/vhost/vhost/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T11:40:06Z",
+      "side": 1,
+      "message": "Casting not needed here.",
+      "range": {
+        "startLine": 278,
+        "startChar": 9,
+        "endLine": 278,
+        "endChar": 31
+      },
+      "revId": "b3157cb82fec374acb1a6a33251c5e4a7ed48fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38648f7f_2b3aab93",
+        "filename": "test/lib/vhost/vhost/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T11:40:06Z",
+      "side": 1,
+      "message": "Additional size is wrong here. Additional  size should be vq.size * sizeof(uint16_t). You should put this line after  line 291 and use vq.size directly.",
+      "range": {
+        "startLine": 278,
+        "startChar": 64,
+        "endLine": 278,
+        "endChar": 83
+      },
+      "revId": "b3157cb82fec374acb1a6a33251c5e4a7ed48fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43b5fdec_95f2a623",
+        "filename": "test/lib/vhost/vhost/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T11:40:06Z",
+      "side": 1,
+      "message": "Pls, use vq and avail directly instead of those intermediate variables.",
+      "range": {
+        "startLine": 282,
+        "startChar": 1,
+        "endLine": 286,
+        "endChar": 24
+      },
+      "revId": "b3157cb82fec374acb1a6a33251c5e4a7ed48fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c7db5fa_fef23a01",
+        "filename": "test/lib/vhost/vhost/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T11:40:06Z",
+      "side": 1,
+      "message": "Size is not mask, it is count but must be power of two.",
+      "range": {
+        "startLine": 291,
+        "startChar": 1,
+        "endLine": 291,
+        "endChar": 21
+      },
+      "revId": "b3157cb82fec374acb1a6a33251c5e4a7ed48fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a887e173_07a4e640",
+        "filename": "test/lib/vhost/vhost/vhost_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T11:40:06Z",
+      "side": 1,
+      "message": "Why two variables? You can use pointer to cpu mask directly in \nspdk_vhost_parse_core_mask()",
+      "range": {
+        "startLine": 314,
+        "startChar": 0,
+        "endLine": 315,
+        "endChar": 22
+      },
+      "revId": "b3157cb82fec374acb1a6a33251c5e4a7ed48fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
