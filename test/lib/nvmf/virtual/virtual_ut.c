@@ -160,6 +160,16 @@ struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_chann
 	return NULL;
 }
 
+struct spdk_bdev_io *
+spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev,
+			   struct spdk_io_channel *ch,
+			   const struct spdk_nvme_cmd *cmd,
+			   void *buf, size_t nbytes,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return NULL;
+}
+
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	return -1;
