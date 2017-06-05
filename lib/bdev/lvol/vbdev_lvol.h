@@ -44,5 +44,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+void spdk_rpc_lvol_cb(void *cb_arg, int bserrno);
 
 #endif /* SPDK_VBDEV_LVOL_H */

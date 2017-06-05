@@ -89,9 +89,12 @@ vbdev_lvol_store_op_complete_cb(void *cb_arg, struct spdk_lvol_store *lvol_store
 	}
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_stores, lvol_store, lvol_stores);
 	SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL, "lvol store bdev inserted\n");
+	strcpy(lvol_store->guid, "one");
 
-	if (rpc != NULL && rpc->rpc_fn != NULL)
+	if (rpc != NULL && rpc->rpc_fn != NULL) {
+		rpc->lvol_store = lvol_store;
 		rpc->rpc_fn(rpc, 0);
+	}
 
 	return;
 }
@@ -105,7 +108,7 @@ vbdev_construct_lvol_store(struct spdk_bdev *base_bdev, struct spdk_lvol_store_r
 		SPDK_ERRLOG("Lvol store bdev %s is already claimed\n", spdk_bdev_get_name(base_bdev));
 		return -1;
 	}
-	if(rpc == NULL) {
+	if (rpc == NULL) {
 		rpc = calloc(1, sizeof(*rpc));
 		rpc->base_bdev = base_bdev;
 		rpc->rpc_fn = NULL;

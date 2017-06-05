@@ -53,9 +53,8 @@ struct spdk_lvol_store_rpc_req {
 	void				*cb_arg;
 	struct spdk_lvol_store		*lvol_store;
 	struct spdk_bs_dev		*bs_dev;
-	struct rpc_construct_lvol_store *req;
 	struct spdk_jsonrpc_server_conn *conn;
-	struct spdk_json_val 		*id;
+	const struct spdk_json_val 		*id;
 	struct spdk_bdev		*base_bdev;
 };
 
@@ -71,7 +70,7 @@ struct spdk_lvol_store {
 	struct spdk_bs_dev		*bs_dev;
 	struct spdk_bdev		*base_bdev;
 	struct spdk_blob_store		*blobstore;
-	char 				*guid;
+	char 				guid[10];
 
 	TAILQ_ENTRY(spdk_lvol_store)	lvol_stores;
 };
