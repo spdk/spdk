@@ -456,7 +456,8 @@ p.set_defaults(func=delete_nvmf_subsystem)
 def bdev_inject_error(args):
     params = {
         'name': args.name,
-        'type': args.type,
+        'io_type': args.io_type,
+        'error_type': args.error_type,
         'num': args.num,
     }
 
@@ -464,7 +465,8 @@ def bdev_inject_error(args):
 
 p = subparsers.add_parser('bdev_inject_error', help='bdev inject error')
 p.add_argument('name', help="""the name of the error injection bdev""")
-p.add_argument('type', help="""type: 'clear' 'read' 'write' 'unmap' 'flush' 'reset' 'all'""")
+p.add_argument('io_type', help="""io_type: 'clear' 'read' 'write' 'unmap' 'flush' 'all'""")
+p.add_argument('error_type', help="""error_type: 'failure' 'pending'""")
 p.add_argument('-n', '--num', help='the number of commands you want to fail', type=int, default=1)
 p.set_defaults(func=bdev_inject_error)
 
