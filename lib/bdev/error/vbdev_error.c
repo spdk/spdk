@@ -52,8 +52,10 @@ struct vbdev_error_disk {
 	struct spdk_bdev		disk;
 	struct spdk_bdev		*base_bdev;
 	uint32_t			io_type_mask;
+	uint32_t			error_type;
 	uint32_t			error_num;
 	TAILQ_ENTRY(vbdev_error_disk)	tailq;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_ios;
 };
 
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -61,7 +63,7 @@ static TAILQ_HEAD(, vbdev_error_disk) g_vbdev_error_disks = TAILQ_HEAD_INITIALIZ
 			g_vbdev_error_disks);
 
 int
-spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num)
+spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_type, uint32_t error_num)
 {
 	struct spdk_bdev *bdev;
 	struct vbdev_error_disk *error_disk;
@@ -85,9 +87,12 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num)
 		pthread_mutex_unlock(&g_vbdev_error_mutex);
 		return -1;
 	}
-
 	error_disk->io_type_mask = io_type_mask;
 	error_disk->error_num = error_num;
+	error_disk->error_type = error_type;
+	if (io_type_mask == 0) {
+		error_disk->error_num = 0;
+	}
 	pthread_mutex_unlock(&g_vbdev_error_mutex);
 	return 0;
 }
@@ -95,14 +100,13 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num)
 static void
 vbdev_error_reset(struct vbdev_error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 {
-	/*
-	 * pass the I/O through unmodified.
-	 *
-	 * However, we do need to increment the generation count for the error bdev,
-	 * since the spdk_bdev_io_complete() path that normally updates it will not execute
-	 * after we resubmit the I/O to the base_bdev.
-	 */
-	error_disk->disk.gencnt++;
+	struct spdk_bdev_io *pending_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(pending_io, &error_disk->pending_ios, module_link, tmp) {
+		TAILQ_REMOVE(&error_disk->pending_ios, pending_io, module_link);
+		spdk_bdev_io_complete(pending_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 static void
@@ -119,7 +123,8 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		vbdev_error_reset(error_disk, bdev_io);
-		break;
+		error_disk->error_num = 0;
+		return;
 	default:
 		SPDK_ERRLOG("Error Injection: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -133,8 +138,12 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		return;
 	}
 
-	error_disk->error_num--;
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	if (error_disk->error_type == VBDEV_IO_FAILURE) {
+		error_disk->error_num--;
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	} else {
+		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
+	}
 }
 
 static void
@@ -233,9 +242,8 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	disk->disk.product_name = "Error Injection Disk";
 	disk->disk.ctxt = disk;
 	disk->disk.fn_table = &vbdev_error_fn_table;
-
 	spdk_vbdev_register(&disk->disk, &base_bdev, 1);
-
+	TAILQ_INIT(&disk->pending_ios);
 	TAILQ_INSERT_TAIL(&g_vbdev_error_disks, disk, tailq);
 
 	rc = 0;
