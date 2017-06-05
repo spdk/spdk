@@ -30,7 +30,6 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include "spdk_cunit.h"
 
 #include "spdk/env.h"
@@ -145,6 +144,14 @@ nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
+memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id *trid2)
+{
+	memset(trid1, 0, sizeof(struct spdk_nvme_transport_id));
+	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
+	return;
+}
+
+static void
 test_opc_data_transfer(void)
 {
 	enum spdk_nvme_data_transfer xfer;
@@ -163,10 +170,28 @@ test_opc_data_transfer(void)
 }
 
 static void
-test_trid_parse(void)
+test_trid_parse_and_compare(void)
 {
 	struct spdk_nvme_transport_id trid1, trid2;
+	int ret;
 
+	/* set trid1 trid2 value to id parse */
+	ret = spdk_nvme_transport_id_parse(NULL, "trtype:PCIe traddr:0000:04:00.0");
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1, NULL);
+	CU_ASSERT(ret == -EINVAL);
+	ret = spdk_nvme_transport_id_parse(NULL, NULL);
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1, "trtype-PCIe traddr-0000-04-00.0");
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1, "trtype-PCIe traddr-0000-04-00.0-:");
+	CU_ASSERT(ret == -EINVAL);
+	memset(&trid1, 0, sizeof(trid1));
+	ret = spdk_nvme_transport_id_parse(&trid1, " \t\n:");
+	CU_ASSERT(ret == -EINVAL);
 	memset(&trid1, 0, sizeof(trid1));
 	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1,
 					       "trtype:rdma\n"
@@ -186,6 +211,35 @@ test_trid_parse(void)
 	CU_ASSERT(strcmp(trid2.traddr, "0000:04:00.0") == 0);
 
 	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) != 0);
+
+	/* set trid1 trid2 and test id_compare */
+	memset_trid(&trid1, &trid2);
+	trid1.adrfam = SPDK_NVMF_ADRFAM_IPV6;
+	trid2.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
+	CU_ASSERT(ret > 0);
+
+	memset_trid(&trid1, &trid2);
+	snprintf(trid1.traddr, sizeof(trid1.traddr), "192.168.100.8");
+	snprintf(trid2.traddr, sizeof(trid2.traddr), "192.168.100.9");
+	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
+	CU_ASSERT(ret < 0);
+
+	memset_trid(&trid1, &trid2);
+	snprintf(trid1.trsvcid, sizeof(trid1.trsvcid), "4420");
+	snprintf(trid2.trsvcid, sizeof(trid2.trsvcid), "4421");
+	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
+	CU_ASSERT(ret < 0);
+
+	memset_trid(&trid1, &trid2);
+	snprintf(trid1.subnqn, sizeof(trid1.subnqn), "subnqn:nqn.2016-08.org.nvmexpress.discovery");
+	snprintf(trid2.subnqn, sizeof(trid2.subnqn), "subnqn:nqn.2017-08.org.nvmexpress.discovery");
+	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
+	CU_ASSERT(ret < 0);
+
+	memset_trid(&trid1, &trid2);
+	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
+	CU_ASSERT(ret == 0);
 }
 
 static void
@@ -315,7 +369,7 @@ int main(int argc, char **argv)
 			    test_spdk_nvme_transport_id_parse_trtype) == NULL ||
 		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_adrfam",
 			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
-		CU_add_test(suite, "test_trid_parse", test_trid_parse) == NULL
+		CU_add_test(suite, "test_trid_parse_and_compare", test_trid_parse_and_compare) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
