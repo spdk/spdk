@@ -31,14 +31,33 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = bdev blob blobfs env event ioat iscsi json jsonrpc log nvme nvmf scsi util vhost
+C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost/rte_vhost
+CFLAGS += $(ENV_CFLAGS)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+#CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIB_LIST = util log
+
+LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
+
+APP = $(TEST_FILE:.c=)
+
+all: $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+%.o: $(SPDK_ROOT_DIR)/lib/vhost/%.c %.d $(MAKEFILE_LIST)
+	$(COMPILE_C)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
