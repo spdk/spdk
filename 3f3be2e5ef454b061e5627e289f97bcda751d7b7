@@ -139,6 +139,24 @@
       "revId": "3f3be2e5ef454b061e5627e289f97bcda751d7b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ed05d1b_a68c0c1c",
+        "filename": "lib/ut_mock/spdk_mock.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-05T19:01:32Z",
+      "side": 1,
+      "message": "nope, looks OK now.  I think I had my editor settings wrong the first time as just touching the file fixed it. Maybe I just opened a file instead of the project so got editor defaults or something.  Anyway, looks good now.  thanks Daniel!",
+      "parentUuid": "ce9d65da_313b0d99",
+      "revId": "3f3be2e5ef454b061e5627e289f97bcda751d7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
