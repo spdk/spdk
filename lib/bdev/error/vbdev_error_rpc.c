@@ -40,6 +40,7 @@
 #include "vbdev_error.h"
 
 #define ERROR_BDEV_IO_TYPE_INVALID (1U << (SPDK_BDEV_IO_TYPE_RESET + 1))
+#define ERROR_BDEV_ERROR_TYPE_INVALID (VBDEV_IO_PENDING + 1)
 
 static uint32_t
 spdk_rpc_error_bdev_io_type_parse(char *name)
@@ -52,14 +53,23 @@ spdk_rpc_error_bdev_io_type_parse(char *name)
 		return 1U << SPDK_BDEV_IO_TYPE_FLUSH;
 	} else if (strcmp(name, "unmap") == 0) {
 		return 1U << SPDK_BDEV_IO_TYPE_UNMAP;
-	} else if (strcmp(name, "reset") == 0) {
-		return 1U << SPDK_BDEV_IO_TYPE_RESET;
 	} else if (strcmp(name, "all") == 0) {
 		return 0xffffffff;
 	} else if (strcmp(name, "clear") == 0) {
 		return 0;
 	}
 	return ERROR_BDEV_IO_TYPE_INVALID;
+}
+
+static uint32_t
+spdk_rpc_error_bdev_error_type_parse(char *name)
+{
+	if (strcmp(name, "failure") == 0) {
+		return VBDEV_IO_FAILURE;
+	} else if (strcmp(name, "pending") == 0) {
+		return VBDEV_IO_PENDING;
+	}
+	return ERROR_BDEV_ERROR_TYPE_INVALID;
 }
 
 struct rpc_construct_error_bdev {
@@ -124,13 +134,15 @@ SPDK_RPC_REGISTER("construct_error_bdev", spdk_rpc_construct_error_bdev)
 
 struct rpc_error_information {
 	char *name;
-	char *type;
+	char *io_type;
+	char *error_type;
 	uint32_t num;
 };
 
 static const struct spdk_json_object_decoder rpc_error_information_decoders[] = {
 	{"name", offsetof(struct rpc_error_information, name), spdk_json_decode_string},
-	{"type", offsetof(struct rpc_error_information, type), spdk_json_decode_string},
+	{"io_type", offsetof(struct rpc_error_information, io_type), spdk_json_decode_string},
+	{"error_type", offsetof(struct rpc_error_information, error_type), spdk_json_decode_string},
 	{"num", offsetof(struct rpc_error_information, num), spdk_json_decode_uint32, true},
 };
 
@@ -138,7 +150,8 @@ static void
 free_rpc_error_information(struct rpc_error_information *p)
 {
 	free(p->name);
-	free(p->type);
+	free(p->io_type);
+	free(p->error_type);
 }
 
 static void
@@ -149,6 +162,7 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_server_conn *conn,
 	struct rpc_error_information req = {};
 	struct spdk_json_write_ctx *w;
 	uint32_t io_type;
+	uint32_t error_type;
 	int ret;
 
 	if (spdk_json_decode_object(params, rpc_error_information_decoders,
@@ -158,12 +172,17 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	io_type = spdk_rpc_error_bdev_io_type_parse(req.type);
+	io_type = spdk_rpc_error_bdev_io_type_parse(req.io_type);
 	if (io_type == ERROR_BDEV_IO_TYPE_INVALID) {
 		goto invalid;
 	}
 
-	ret = spdk_vbdev_inject_error(req.name, io_type, req.num);
+	error_type = spdk_rpc_error_bdev_error_type_parse(req.error_type);
+	if (error_type == ERROR_BDEV_ERROR_TYPE_INVALID) {
+		goto invalid;
+	}
+
+	ret = spdk_vbdev_inject_error(req.name, io_type, error_type, req.num);
 	if (ret) {
 		goto invalid;
 	}
