@@ -84,6 +84,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_FLUSH,
 	SPDK_BDEV_IO_TYPE_RESET,
 	SPDK_BDEV_IO_TYPE_NVME_ADMIN,
+	SPDK_BDEV_IO_TYPE_NVME_IO,
 };
 
 /**
@@ -226,6 +227,11 @@ struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_chan
 void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   struct spdk_bdev_io_stat *stat);
 struct spdk_bdev_io *spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
+		struct spdk_io_channel *ch,
+		const struct spdk_nvme_cmd *cmd,
+		void *buf, size_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg);
+struct spdk_bdev_io *spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev,
 		struct spdk_io_channel *ch,
 		const struct spdk_nvme_cmd *cmd,
 		void *buf, size_t nbytes,

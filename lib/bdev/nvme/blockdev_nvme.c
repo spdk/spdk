@@ -139,6 +139,9 @@ static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *q
 			       uint64_t offset);
 static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
+static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+				 struct nvme_bdev_io *bio,
+				 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
 
 static int
 bdev_nvme_get_ctx_size(void)
@@ -313,6 +316,14 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 						bdev_io->u.nvme_passthru.buf,
 						bdev_io->u.nvme_passthru.nbytes);
 
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+		return bdev_nvme_io_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					     ch,
+					     (struct nvme_bdev_io *)bdev_io->driver_ctx,
+					     &bdev_io->u.nvme_passthru.cmd,
+					     bdev_io->u.nvme_passthru.buf,
+					     bdev_io->u.nvme_passthru.nbytes);
+
 	default:
 		return -EINVAL;
 	}
@@ -339,6 +350,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
 		return true;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -1136,6 +1148,28 @@ bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 
 	return spdk_nvme_ctrlr_cmd_admin_raw(nbdev->nvme_ctrlr->ctrlr, cmd, buf,
 					     (uint32_t)nbytes, bdev_nvme_admin_passthru_done, bio);
+}
+
+static int
+bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+		      struct nvme_bdev_io *bio,
+		      struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+
+	if (nbytes > UINT32_MAX) {
+		SPDK_ERRLOG("nbytes is greater than UINT32_MAX.\n");
+		return -EINVAL;
+	}
+
+	/*
+	 * Each NVMe bdev is a specific namespace, and all NVMe I/O commands require a nsid,
+	 * so fill it out automatically.
+	 */
+	cmd->nsid = spdk_nvme_ns_get_id(nbdev->ns);
+
+	return spdk_nvme_ctrlr_cmd_io_raw(nbdev->nvme_ctrlr->ctrlr, nvme_ch->qpair, cmd, buf,
+					  (uint32_t)nbytes, bdev_nvme_queued_done, bio);
 }
 
 static void
