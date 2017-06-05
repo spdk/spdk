@@ -349,7 +349,7 @@ bool  spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu);
 
 void spdk_iscsi_shutdown(void);
 int spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
-				struct iscsi_param *params, uint8_t *data,
+				struct iscsi_param **params_p, uint8_t *data,
 				int alloc_len, int data_len);
 int spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
 
