@@ -123,11 +123,13 @@ invalid:
 SPDK_RPC_REGISTER("construct_error_bdev", spdk_rpc_construct_error_bdev)
 
 struct rpc_error_information {
+	char *name;
 	char *type;
 	uint32_t num;
 };
 
 static const struct spdk_json_object_decoder rpc_error_information_decoders[] = {
+	{"name", offsetof(struct rpc_error_information, name), spdk_json_decode_string},
 	{"type", offsetof(struct rpc_error_information, type), spdk_json_decode_string},
 	{"num", offsetof(struct rpc_error_information, num), spdk_json_decode_uint32, true},
 };
@@ -135,6 +137,7 @@ static const struct spdk_json_object_decoder rpc_error_information_decoders[] = 
 static void
 free_rpc_error_information(struct rpc_error_information *p)
 {
+	free(p->name);
 	free(p->type);
 }
 
@@ -159,7 +162,11 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	spdk_vbdev_inject_error(ret, req.num);
+	ret = spdk_vbdev_inject_error(req.name, ret, req.num);
+	if (ret) {
+		goto invalid;
+	}
+
 	free_rpc_error_information(&req);
 
 	if (id == NULL) {
