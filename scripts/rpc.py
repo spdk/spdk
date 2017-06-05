@@ -527,5 +527,52 @@ p.add_argument('ctrlr', help='controller name to remove device from')
 p.add_argument('scsi_dev_num', help='scsi_dev_num', type=int)
 p.set_defaults(func=remove_vhost_scsi_dev)
 
+def construct_vhost_block_controller(args):
+    params = {'ctrlr': args.ctrlr}
+    if args.cpumask:
+        params['cpumask'] = args.cpumask
+    jsonrpc_call('construct_vhost_block_controller', params)
+
+p = subparsers.add_parser('construct_vhost_block_controller', help='Add a new vhost block controller')
+p.add_argument('ctrlr', help='controller name')
+p.add_argument('--cpumask', help='cpu mask for this controller')
+p.set_defaults(func=construct_vhost_block_controller)
+
+def remove_vhost_block_controller(args):
+    params = {'ctrlr': args.ctrlr}
+    jsonrpc_call('remove_vhost_block_controller', params)
+
+p = subparsers.add_parser('remove_vhost_block_controller', help='Remove a vhost block controller')
+p.add_argument('ctrlr', help='controller name')
+p.set_defaults(func=remove_vhost_block_controller)
+
+def get_vhost_block_controllers(args):
+    print_dict(jsonrpc_call('get_vhost_block_controllers'))
+
+p = subparsers.add_parser('get_vhost_block_controllers', help='List vhost block controllers')
+p.set_defaults(func=get_vhost_block_controllers)
+
+def add_vhost_block_dev(args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'dev_name': args.dev_name
+    }
+    jsonrpc_call('add_vhost_block_dev', params)
+
+p = subparsers.add_parser('add_vhost_block_dev', help='Add a device to the vhost block controller')
+p.add_argument('ctrlr', help='name of the controller to add a device to')
+p.add_argument('dev_name', help='vhost block device name')
+p.set_defaults(func=add_vhost_block_dev)
+
+def remove_vhost_block_dev(args):
+    params = {
+        'ctrlr': args.ctrlr,
+    }
+    jsonrpc_call('remove_vhost_block_dev', params)
+
+p = subparsers.add_parser('remove_vhost_block_dev', help='Remove a device from the vhost block controller')
+p.add_argument('ctrlr', help='name of the controller to remove a device from')
+p.set_defaults(func=remove_vhost_block_dev)
+
 args = parser.parse_args()
 args.func(args)
