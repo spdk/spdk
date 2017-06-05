@@ -223,11 +223,13 @@ struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev);
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				    void *buf, uint64_t offset, uint64_t nbytes,
-				    spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		   void *buf, uint64_t offset, uint64_t nbytes,
+		   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a read request to the bdev on the given channel. This differs from
@@ -245,12 +247,14 @@ struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_chann
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				     struct iovec *iov, int iovcnt,
-				     uint64_t offset, uint64_t nbytes,
-				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		    struct iovec *iov, int iovcnt,
+		    uint64_t offset, uint64_t nbytes,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a write request to the bdev on the given channel.
@@ -263,11 +267,13 @@ struct spdk_bdev_io *spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_chan
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				     void *buf, uint64_t offset, uint64_t nbytes,
-				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		    void *buf, uint64_t offset, uint64_t nbytes,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a write request to the bdev on the given channel. This differs from
@@ -285,12 +291,14 @@ struct spdk_bdev_io *spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_chan
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				      struct iovec *iov, int iovcnt,
-				      uint64_t offset, uint64_t len,
-				      spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		     struct iovec *iov, int iovcnt,
+		     uint64_t offset, uint64_t len,
+		     spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit an unmap request to the block device. Unmap is sometimes also called trim or
@@ -304,12 +312,14 @@ struct spdk_bdev_io *spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_cha
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				     struct spdk_scsi_unmap_bdesc *unmap_d,
-				     uint16_t bdesc_count,
-				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		    struct spdk_scsi_unmap_bdesc *unmap_d,
+		    uint16_t bdesc_count,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a flush request to the bdev on the given channel. For devices with volatile
@@ -323,11 +333,13 @@ struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_chan
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				     uint64_t offset, uint64_t length,
-				     spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		    uint64_t offset, uint64_t length,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a reset request to the bdev on the given channel.
@@ -337,7 +349,9 @@ struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_chan
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return -1 on failure, 0 on success.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
 int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
@@ -358,13 +372,15 @@ int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
-		struct spdk_io_channel *ch,
-		const struct spdk_nvme_cmd *cmd,
-		void *buf, size_t nbytes,
-		spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
+				  struct spdk_io_channel *ch,
+				  const struct spdk_nvme_cmd *cmd,
+				  void *buf, size_t nbytes,
+				  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit an NVMe I/O command to the bdev. This passes directly through
@@ -383,13 +399,15 @@ struct spdk_bdev_io *spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
- * \return A handle to the I/O request, or NULL on failure.
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
  */
-struct spdk_bdev_io *spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev,
-		struct spdk_io_channel *ch,
-		const struct spdk_nvme_cmd *cmd,
-		void *buf, size_t nbytes,
-		spdk_bdev_io_completion_cb cb, void *cb_arg);
+int spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev,
+			       struct spdk_io_channel *ch,
+			       const struct spdk_nvme_cmd *cmd,
+			       void *buf, size_t nbytes,
+			       spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Free an I/O request. This should be called after the callback for the I/O has

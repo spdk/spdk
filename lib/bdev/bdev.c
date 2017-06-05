@@ -705,7 +705,7 @@ spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
 	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -716,13 +716,13 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -738,13 +738,13 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt,
 		uint64_t offset, uint64_t nbytes,
@@ -756,13 +756,13 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -776,13 +776,13 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		void *buf, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -793,13 +793,13 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("blockdev_io memory allocation failed duing write\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -815,13 +815,13 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		 struct iovec *iov, int iovcnt,
 		 uint64_t offset, uint64_t len,
@@ -833,13 +833,13 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, len) != 0) {
-		return NULL;
+		return -EINVAL;
 	}
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing writev\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -853,13 +853,13 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct spdk_scsi_unmap_bdesc *unmap_d,
 		uint16_t bdesc_count,
@@ -872,19 +872,19 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (bdesc_count == 0) {
 		SPDK_ERRLOG("Invalid bdesc_count 0\n");
-		return NULL;
+		return -EINVAL;
 	}
 
 	if (bdesc_count > bdev->max_unmap_bdesc_count) {
 		SPDK_ERRLOG("Invalid bdesc_count %u > max_unmap_bdesc_count %u\n",
 			    bdesc_count, bdev->max_unmap_bdesc_count);
-		return NULL;
+		return -EINVAL;
 	}
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing unmap\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -896,13 +896,13 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		uint64_t offset, uint64_t length,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -915,7 +915,7 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing flush\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -927,10 +927,10 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
 static void
@@ -973,7 +973,7 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing reset\n");
-		return -1;
+		return -ENOMEM;;
 	}
 
 	bdev_io->ch = channel;
@@ -1005,7 +1005,7 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	memset(&channel->stat, 0, sizeof(channel->stat));
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			      const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -1017,7 +1017,7 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed during nvme_admin_passthru\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -1031,14 +1031,13 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
-
-struct spdk_bdev_io *
+int
 spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -1050,7 +1049,7 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed during nvme_admin_passthru\n");
-		return NULL;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -1064,10 +1063,10 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return NULL;
+		return rc;
 	}
 
-	return bdev_io;
+	return 0;
 }
 
 int
