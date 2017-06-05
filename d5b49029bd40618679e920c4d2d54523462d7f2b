@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a60dd0d3_89d16e87",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1130,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-05T17:49:39Z",
+      "side": 1,
+      "message": "This path leaks the completion event - we should check nbytes \u003e UINT32_MAX before allocating the event.\n\nAlso, it would be nicer to write this in an early-return style:\n\n    if (nbytes \u003e UINT32_MAX) {\n        SPDK_ERRLOG(...);\n        return -1;\n    }\n\n    return spdk_nvme_ctrlr_cmd_admin_raw(...);",
+      "revId": "d5b49029bd40618679e920c4d2d54523462d7f2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
