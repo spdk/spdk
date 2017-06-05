@@ -123,17 +123,19 @@ spdk_bdev_get_io_channel(struct spdk_bdev *bdev)
 	return NULL;
 }
 
-struct spdk_bdev_io *spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				     uint64_t offset, uint64_t length, spdk_bdev_io_completion_cb cb, void *cb_arg)
+int
+spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		uint64_t offset, uint64_t length, spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
-struct spdk_bdev_io *spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-				     struct spdk_scsi_unmap_bdesc *unmap_d, uint16_t bdesc_count, spdk_bdev_io_completion_cb cb,
-				     void *cb_arg)
+int
+spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct spdk_scsi_unmap_bdesc *unmap_d, uint16_t bdesc_count, spdk_bdev_io_completion_cb cb,
+		void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
 void
@@ -148,16 +150,18 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 	return false;
 }
 
-struct spdk_bdev_io *spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch, void *buf,
-				     uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb, void *cb_arg)
+int
+spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch, void *buf,
+		uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
-struct spdk_bdev_io *spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch, void *buf,
-				    uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb, void *cb_arg)
+int
+spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch, void *buf,
+	       uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
 int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)

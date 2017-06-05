@@ -43,7 +43,6 @@ SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
 struct spdk_scsi_globals g_spdk_scsi;
 
 static uint64_t g_test_bdev_num_blocks;
-static struct spdk_bdev_io g_test_bdev_io;
 
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
@@ -189,38 +188,38 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 	*iovcntp = 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
 	       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return &g_test_bdev_io;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		 struct iovec *iov, int iovcnt,
 		 uint64_t offset, uint64_t len,
 		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct spdk_scsi_unmap_bdesc *unmap_d,
 		uint16_t bdesc_count,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
 int
@@ -230,12 +229,12 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	return 0;
 }
 
-struct spdk_bdev_io *
+int
 spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		uint64_t offset, uint64_t length,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	return NULL;
+	return 0;
 }
 
 /*
