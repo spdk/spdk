@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a651ea3f_7a8259cd",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T15:50:23Z",
+      "side": 1,
+      "message": "Seem reasonable, but pls remove unneeded casting.",
+      "range": {
+        "startLine": 207,
+        "startChar": 7,
+        "endLine": 207,
+        "endChar": 15
+      },
+      "revId": "9872d3a946934cad53a75b5c6b57841b94fad5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
