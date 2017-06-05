@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4f4dbdb_367d10a1",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-05T18:09:35Z",
+      "side": 1,
+      "message": "This should probably also still check for i \u003c 64 to avoid undefined behavior.\n\nIn the future, we should introduce a coremask abstraction that can handle more than 64 cores and hide all this detail.",
+      "revId": "16b9697e4172aa73b71f25434090e3b3ab54128f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
