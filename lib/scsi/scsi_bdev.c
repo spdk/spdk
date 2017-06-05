@@ -1248,6 +1248,8 @@ spdk_bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	struct spdk_scsi_task *task = cb_arg;
 	int sc, sk, asc, ascq;
 
+	task->blockdev_io = bdev_io;
+
 	spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
 	spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
 	spdk_scsi_lun_complete_task(task->lun, task);
@@ -1311,6 +1313,7 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
+	int rc;
 
 	blen = spdk_bdev_get_block_size(bdev);
 
@@ -1322,10 +1325,10 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		      "Read: lba=%"PRIu64", len=%"PRIu64"\n",
 		      lba, (uint64_t)task->length / blen);
 
-	task->blockdev_io = spdk_bdev_readv(bdev, task->ch, task->iovs,
-					    task->iovcnt, offset, nbytes,
-					    spdk_bdev_scsi_task_complete_cmd, task);
-	if (!task->blockdev_io) {
+	rc = spdk_bdev_readv(bdev, task->ch, task->iovs,
+			     task->iovcnt, offset, nbytes,
+			     spdk_bdev_scsi_task_complete_cmd, task);
+	if (rc < 0) {
 		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1347,6 +1350,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
+	int rc;
 	struct spdk_scsi_task *primary = task->parent;
 
 	if (len == 0) {
@@ -1377,12 +1381,12 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	}
 
 	offset += task->offset;
-	task->blockdev_io = spdk_bdev_writev(bdev, task->ch, task->iovs,
-					     task->iovcnt, offset, task->length,
-					     spdk_bdev_scsi_task_complete_cmd,
-					     task);
+	rc = spdk_bdev_writev(bdev, task->ch, task->iovs,
+			      task->iovcnt, offset, task->length,
+			      spdk_bdev_scsi_task_complete_cmd,
+			      task);
 
-	if (!task->blockdev_io) {
+	if (rc < 0) {
 		SPDK_ERRLOG("spdk_bdev_writev failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1412,6 +1416,7 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 	uint64_t blen;
 	uint64_t offset;
 	uint64_t nbytes;
+	int rc;
 
 	if (num_blocks == 0) {
 		return SPDK_SCSI_TASK_COMPLETE;
@@ -1432,10 +1437,10 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	task->blockdev_io = spdk_bdev_flush(bdev, task->ch, offset, nbytes,
-					    spdk_bdev_scsi_task_complete_cmd, task);
+	rc = spdk_bdev_flush(bdev, task->ch, offset, nbytes,
+			     spdk_bdev_scsi_task_complete_cmd, task);
 
-	if (!task->blockdev_io) {
+	if (rc < 0) {
 		SPDK_ERRLOG("spdk_bdev_flush() failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
@@ -1486,6 +1491,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 	uint32_t bdesc_count, max_unmap_bdesc_count;
 	int bdesc_data_len;
 	int data_len;
+	int rc;
 
 	if (task->iovcnt == 1) {
 		data = (uint8_t *)task->iovs[0].iov_base;
@@ -1533,11 +1539,11 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	task->blockdev_io = spdk_bdev_unmap(bdev, task->ch, desc,
-					    bdesc_count, spdk_bdev_scsi_task_complete_cmd,
-					    task);
+	rc = spdk_bdev_unmap(bdev, task->ch, desc,
+			     bdesc_count, spdk_bdev_scsi_task_complete_cmd,
+			     task);
 
-	if (!task->blockdev_io) {
+	if (rc < 0) {
 		SPDK_ERRLOG("SCSI Unmapping failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,

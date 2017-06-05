@@ -239,6 +239,7 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
+	int rc;
 
 	target = task->target;
 
@@ -246,8 +247,14 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	memset(task->buf, 0, g_io_size);
 
 	/* Read the data back in */
-	spdk_bdev_read(target->bdev, target->ch, NULL, task->offset, g_io_size,
-		       bdevperf_complete, task);
+	rc = spdk_bdev_read(target->bdev, target->ch, NULL, task->offset, g_io_size,
+			    bdevperf_complete, task);
+	if (rc < 0) {
+		printf("Failed to submit read: %d\n", rc);
+		target->is_draining = true;
+		g_run_failed = true;
+		return;
+	}
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -259,6 +266,7 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
+	int			rc;
 
 	target = task->target;
 
@@ -269,14 +277,26 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 		to_be64(&task->bdesc.lba, task->offset / block_size);
 		to_be32(&task->bdesc.block_count, g_io_size / block_size);
 
-		spdk_bdev_unmap(target->bdev, target->ch, &task->bdesc, 1, bdevperf_unmap_complete,
-				task);
+		rc = spdk_bdev_unmap(target->bdev, target->ch, &task->bdesc, 1, bdevperf_unmap_complete,
+				     task);
+		if (rc < 0) {
+			printf("Failed to submit unmap: %d\n", rc);
+			target->is_draining = true;
+			g_run_failed = true;
+			return;
+		}
 	} else {
 		/* Read the data back in */
-		spdk_bdev_read(target->bdev, target->ch, NULL,
-			       task->offset,
-			       g_io_size,
-			       bdevperf_complete, task);
+		rc = spdk_bdev_read(target->bdev, target->ch, NULL,
+				    task->offset,
+				    g_io_size,
+				    bdevperf_complete, task);
+		if (rc < 0) {
+			printf("Failed to submit read: %d\n", rc);
+			target->is_draining = true;
+			g_run_failed = true;
+			return;
+		}
 	}
 
 	spdk_bdev_free_io(bdev_io);
@@ -300,6 +320,7 @@ bdevperf_submit_single(struct io_target *target)
 	struct bdevperf_task	*task = NULL;
 	uint64_t		offset_in_ios;
 	void			*rbuf;
+	int			rc;
 
 	bdev = target->bdev;
 	ch = target->ch;
@@ -325,18 +346,36 @@ bdevperf_submit_single(struct io_target *target)
 		memset(task->buf, rand_r(&seed) % 256, g_io_size);
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		spdk_bdev_writev(bdev, ch, &task->iov, 1, task->offset, g_io_size,
-				 bdevperf_verify_write_complete, task);
+		rc = spdk_bdev_writev(bdev, ch, &task->iov, 1, task->offset, g_io_size,
+				      bdevperf_verify_write_complete, task);
+		if (rc < 0) {
+			printf("Failed to submit writev: %d\n", rc);
+			target->is_draining = true;
+			g_run_failed = true;
+			return;
+		}
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 		rbuf = g_zcopy ? NULL : task->buf;
-		spdk_bdev_read(bdev, ch, rbuf, task->offset, g_io_size,
-			       bdevperf_complete, task);
+		rc = spdk_bdev_read(bdev, ch, rbuf, task->offset, g_io_size,
+				    bdevperf_complete, task);
+		if (rc < 0) {
+			printf("Failed to submit read: %d\n", rc);
+			target->is_draining = true;
+			g_run_failed = true;
+			return;
+		}
 	} else {
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		spdk_bdev_writev(bdev, ch, &task->iov, 1, task->offset, g_io_size,
-				 bdevperf_complete, task);
+		rc = spdk_bdev_writev(bdev, ch, &task->iov, 1, task->offset, g_io_size,
+				      bdevperf_complete, task);
+		if (rc < 0) {
+			printf("Failed to submit writev: %d\n", rc);
+			target->is_draining = true;
+			g_run_failed = true;
+			return;
+		}
 	}
 
 	target->current_queue_depth++;
@@ -378,6 +417,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	rte_mempool_put(task_pool, task);
+	spdk_bdev_free_io(bdev_io);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target, target->lcore,
 			     10 * 1000000);
@@ -388,14 +428,20 @@ reset_target(void *arg)
 {
 	struct io_target *target = arg;
 	struct bdevperf_task	*task = NULL;
+	int rc;
 
 	spdk_poller_unregister(&target->reset_timer, NULL);
 
 	/* Do reset. */
 	rte_mempool_get(task_pool, (void **)&task);
 	task->target = target;
-	spdk_bdev_reset(target->bdev, target->ch,
-			reset_cb, task);
+	rc = spdk_bdev_reset(target->bdev, target->ch,
+			     reset_cb, task);
+	if (rc < 0) {
+		printf("Reset failed: %d\n", rc);
+		target->is_draining = true;
+		g_run_failed = true;
+	}
 }
 
 static void
