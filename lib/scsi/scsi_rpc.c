@@ -78,6 +78,7 @@ spdk_rpc_get_luns(struct spdk_jsonrpc_server_conn *conn,
 }
 SPDK_RPC_REGISTER("get_luns", spdk_rpc_get_luns)
 
+
 static void
 spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_server_conn *conn,
 			  const struct spdk_json_val *params,
