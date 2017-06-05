@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15e675b8_03d53ba4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-05T13:41:25Z",
+      "side": 1,
+      "message": "this is astyle 2.05.1 bug. I couldn\u0027t force it to format this line properly.",
+      "range": {
+        "startLine": 260,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 1
+      },
+      "revId": "b7306f4e7d393f411bf054fd0a0799f1260c797e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
