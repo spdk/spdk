@@ -455,6 +455,7 @@ p.set_defaults(func=delete_nvmf_subsystem)
 
 def bdev_inject_error(args):
     params = {
+	'name': args.name,
         'type': args.type,
         'num': args.num,
     }
@@ -462,6 +463,7 @@ def bdev_inject_error(args):
     jsonrpc_call('bdev_inject_error', params)
 
 p = subparsers.add_parser('bdev_inject_error', help='bdev inject error')
+p.add_argument('name', help="""the name of the error injection bdev""")
 p.add_argument('type', help="""type: 'clear' 'read' 'write' 'unmap' 'flush' 'reset' 'all'""")
 p.add_argument('-n', '--num', help='the number of commands you want to fail', type=int, default=1)
 p.set_defaults(func=bdev_inject_error)
