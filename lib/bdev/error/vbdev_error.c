@@ -54,6 +54,7 @@ struct vbdev_error_disk {
 	uint32_t			io_type_mask;
 	uint32_t			error_num;
 	TAILQ_ENTRY(vbdev_error_disk)	tailq;
+	TAILQ_HEAD(, spdk_bdev_io)	pending_ios;
 };
 
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -89,14 +90,13 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num)
 static void
 vbdev_error_reset(struct vbdev_error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 {
-	/*
-	 * pass the I/O through unmodified.
-	 *
-	 * However, we do need to increment the generation count for the error bdev,
-	 * since the spdk_bdev_io_complete() path that normally updates it will not execute
-	 * after we resubmit the I/O to the base_bdev.
-	 */
-	error_disk->disk.gencnt++;
+	struct spdk_bdev_io *pending_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(pending_io, &error_disk->pending_ios, module_link, tmp) {
+		TAILQ_REMOVE(&error_disk->pending_ios, pending_io, module_link);
+		spdk_bdev_io_complete(pending_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 static void
@@ -112,6 +112,7 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
+		error_disk->error_num--;
 		vbdev_error_reset(error_disk, bdev_io);
 		break;
 	default:
@@ -122,8 +123,14 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	io_type_mask = 1U << bdev_io->type;
 
-	if (error_disk->error_num == 0 || !(error_disk->io_type_mask & io_type_mask)) {
+	if (error_disk->error_num == 0 || (!(error_disk->io_type_mask & io_type_mask) &&
+					   !(error_disk->io_type_mask & (1U << SPDK_BDEV_IO_TYPE_RESET)))) {
 		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
+		return;
+	}
+
+	if (error_disk->io_type_mask & (1U << SPDK_BDEV_IO_TYPE_RESET) && error_disk->error_num) {
+		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
 		return;
 	}
 
