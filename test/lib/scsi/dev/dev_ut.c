@@ -59,11 +59,6 @@ test_setup(void)
 	return 0;
 }
 
-void
-spdk_bdev_unregister(struct spdk_bdev *bdev)
-{
-}
-
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
