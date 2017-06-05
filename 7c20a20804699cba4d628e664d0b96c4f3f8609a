@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01d73076_73591355",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "I\u0027d prefer that the link actually said \"spdk.io\" instead of \"SPDK Website\". I think spdk.io is pretty easy to remember and it may just stick in people\u0027s heads.\n\nI like the old paragraph that explained what SPDK was better than this one, but I\u0027m very open to tweaks to improve it. Maybe we make a list of the things we want the opening paragraph to accomplish that the old one doesn\u0027t and go from there?",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f409c3b_509f9842",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "I would make \"Quick Start\" a section heading. You can write either:\n\n# Quick Start\n\nor\n\nQuick Start\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\nI believe they are equivalent in markdown.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4512972_e9469f19",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "I like having an overview up front, but maybe treat it more like a real table of contents. We can probably even make markdown generate real links with #anchors. Maybe the list of topics is:\n\n* Installation\n* Unit Tests\n* Using Vagrant as a local development environment\n* Advanced Build Options\n* Hugepages\n* Documentation and Examples",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1f0b645_e3297f5b",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need to mention that the list may be out of date. It\u0027s just extra text that I think goes without saying.\n\nYou can make the note about documentation if you want, though.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ae29ceb_758c3a95",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "Maybe the quick start guide just has people clone from GitHub? That\u0027s quicker and easier, and they only need GerritHub if they\u0027re going to submit patches.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cab39238_e25d67ee",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "I think you should just say \u0027make\u0027 here. We can cover the other flags in the advanced usage section.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41a45fd3_f63f7b69",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "Maybe clarify that you\u0027ll see lots of messages indicating errors, but these errors are intentional and part of the test cases.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b741af0c_b97fece3",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:21:31Z",
+      "side": 1,
+      "message": "This seems like a good candidate for a separate patch. I\u0027d be ready to approve and merge just the changes in this file right now, whereas I think we\u0027ll go around a few times on the README.md changes. One does not depend on the other.",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
