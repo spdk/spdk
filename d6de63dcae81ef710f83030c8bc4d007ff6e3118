@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "554ed7cb_fda34472",
+        "filename": "lib/ut_mock/spdk_mock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:25:41Z",
+      "side": 1,
+      "message": "The globals here can be made static. They can also probably be bools instead of ints.",
+      "revId": "d6de63dcae81ef710f83030c8bc4d007ff6e3118",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "365411f9_4b56936e",
+        "filename": "lib/ut_mock/spdk_mock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-05T23:25:41Z",
+      "side": 1,
+      "message": "All if blocks should have {} around them.",
+      "revId": "d6de63dcae81ef710f83030c8bc4d007ff6e3118",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
