@@ -2120,7 +2120,7 @@ spdk_iscsi_op_login_rsp_handle_t_bit(struct spdk_iscsi_conn *conn,
  */
 static int
 spdk_iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
-			       struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param *params,
+			       struct spdk_iscsi_pdu *rsp_pdu, struct iscsi_param **params,
 			       int alloc_len)
 {
 	int rc = 0;
@@ -2145,7 +2145,7 @@ spdk_iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 	SPDK_TRACEDUMP(SPDK_TRACE_DEBUG, "Negotiated Params", rsp_pdu->data, rc);
 
 	/* handle the CSG bit case */
-	rc = spdk_iscsi_op_login_rsp_handle_csg_bit(conn, rsp_pdu, params,
+	rc = spdk_iscsi_op_login_rsp_handle_csg_bit(conn, rsp_pdu, *params,
 			alloc_len);
 	if (rc < 0)
 		return rc;
@@ -2163,6 +2163,7 @@ spdk_iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int rc;
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_param *params = NULL;
+	struct iscsi_param **params_p = &params;
 	int alloc_len;
 	int cid;
 
@@ -2177,7 +2178,7 @@ spdk_iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	rc = spdk_iscsi_op_login_rsp_init(conn, pdu, rsp_pdu, &params,
 					  &alloc_len, &cid);
 	if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE || rc == SPDK_ISCSI_LOGIN_ERROR_PARAMETER) {
-		spdk_iscsi_op_login_response(conn, rsp_pdu, params);
+		spdk_iscsi_op_login_response(conn, rsp_pdu, *params_p);
 		return rc;
 	}
 
@@ -2188,21 +2189,21 @@ spdk_iscsi_op_login(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	if (conn->state == ISCSI_CONN_STATE_INVALID) {
-		rc = spdk_iscsi_op_login_phase_none(conn, rsp_pdu, params,
+		rc = spdk_iscsi_op_login_phase_none(conn, rsp_pdu, *params_p,
 						    alloc_len, cid);
 		if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE || rc == SPDK_ISCSI_LOGIN_ERROR_PARAMETER) {
-			spdk_iscsi_op_login_response(conn, rsp_pdu, params);
+			spdk_iscsi_op_login_response(conn, rsp_pdu, *params_p);
 			return rc;
 		}
 	}
 
-	rc = spdk_iscsi_op_login_rsp_handle(conn, rsp_pdu, params, alloc_len);
+	rc = spdk_iscsi_op_login_rsp_handle(conn, rsp_pdu, params_p, alloc_len);
 	if (rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE) {
-		spdk_iscsi_op_login_response(conn, rsp_pdu, params);
+		spdk_iscsi_op_login_response(conn, rsp_pdu, *params_p);
 		return rc;
 	}
 
-	rc = spdk_iscsi_op_login_response(conn, rsp_pdu, params);
+	rc = spdk_iscsi_op_login_response(conn, rsp_pdu, *params_p);
 
 	if (rc == 0) {
 		conn->state = ISCSI_CONN_STATE_RUNNING;
@@ -2218,6 +2219,7 @@ static int
 spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	struct iscsi_param *params = NULL;
+	struct iscsi_param **params_p = &params;
 	struct spdk_iscsi_pdu *rsp_pdu;
 	uint8_t *data;
 	uint64_t lun;
@@ -2302,17 +2304,17 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	memset(data, 0, alloc_len);
 
 	/* negotiate parameters */
-	data_len = spdk_iscsi_negotiate_params(conn, params,
+	data_len = spdk_iscsi_negotiate_params(conn, params_p,
 					       data, alloc_len, data_len);
 	if (data_len < 0) {
 		SPDK_ERRLOG("spdk_iscsi_negotiate_params() failed\n");
-		spdk_iscsi_param_free(params);
+		spdk_iscsi_param_free(*params_p);
 		free(data);
 		return -1;
 	}
 
 	/* sendtargets is special case */
-	val = spdk_iscsi_param_get_val(params, "SendTargets");
+	val = spdk_iscsi_param_get_val(*params_p, "SendTargets");
 	if (val != NULL) {
 		if (spdk_iscsi_param_eq_val(conn->sess->params,
 					    "SessionType", "Discovery")) {
@@ -2393,7 +2395,7 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	rc = spdk_iscsi_copy_param2var(conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_copy_param2var() failed\n");
-		spdk_iscsi_param_free(params);
+		spdk_iscsi_param_free(*params_p);
 		return -1;
 	}
 
@@ -2401,11 +2403,11 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	rc = spdk_iscsi_check_values(conn);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_check_values() failed\n");
-		spdk_iscsi_param_free(params);
+		spdk_iscsi_param_free(*params_p);
 		return -1;
 	}
 
-	spdk_iscsi_param_free(params);
+	spdk_iscsi_param_free(*params_p);
 	return 0;
 }
 

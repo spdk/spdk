@@ -851,7 +851,7 @@ spdk_iscsi_negotiate_param_init(struct spdk_iscsi_conn *conn,
 
 int
 spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
-			    struct iscsi_param *params, uint8_t *data, int alloc_len,
+			    struct iscsi_param **params, uint8_t *data, int alloc_len,
 			    int data_len)
 {
 	struct iscsi_param *param;
@@ -876,14 +876,14 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 		return total;
 	}
 
-	if (params == NULL) {
+	if (*params == NULL) {
 		/* no input */
 		return total;
 	}
 
 	/* discovery? */
 	discovery = 0;
-	cur_param = spdk_iscsi_param_find(params, "SessionType");
+	cur_param = spdk_iscsi_param_find(*params, "SessionType");
 	if (cur_param == NULL) {
 		cur_param = spdk_iscsi_param_find(conn->sess->params, "SessionType");
 		if (cur_param == NULL) {
@@ -924,9 +924,9 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 	/* To adjust the location of FirstBurstLength location and put it to
 	 *  the end, then we can always firstly determine the MaxBurstLength
 	 */
-	param = spdk_iscsi_param_find(params, "MaxBurstLength");
+	param = spdk_iscsi_param_find(*params, "MaxBurstLength");
 	if (param != NULL) {
-		param = spdk_iscsi_param_find(params, "FirstBurstLength");
+		param = spdk_iscsi_param_find(*params, "FirstBurstLength");
 
 		/* check the existence of FirstBurstLength */
 		if (param != NULL) {
@@ -934,13 +934,13 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 			if (param->next != NULL) {
 				snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN + 1, "%s", param->val);
 				type = param->type;
-				spdk_iscsi_param_add(&params, "FirstBurstLength",
+				spdk_iscsi_param_add(params, "FirstBurstLength",
 						     in_val, NULL, type);
 			}
 		}
 	}
 
-	for (param = params; param != NULL; param = param->next) {
+	for (param = *params; param != NULL; param = param->next) {
 		struct iscsi_param *params_dst = conn->params;
 		int add_param_value = 0;
 		new_val = NULL;

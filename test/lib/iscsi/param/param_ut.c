@@ -71,12 +71,14 @@ burst_length_param_negotation(int FirstBurstLength, int MaxBurstLength,
 	struct spdk_iscsi_sess sess;
 	struct spdk_iscsi_conn conn;
 	struct iscsi_param *params;
+	struct iscsi_param **params_p;
 	char data[8192];
 	int rc;
 	int total, len;
 
 	total = 0;
 	params = NULL;
+	params_p = &params;
 
 	memset(&sess, 0, sizeof(sess));
 	memset(&conn, 0, sizeof(conn));
@@ -131,11 +133,11 @@ burst_length_param_negotation(int FirstBurstLength, int MaxBurstLength,
 	total++;
 
 	/* store incoming parameters */
-	rc = spdk_iscsi_parse_params(&params, data, total, false, NULL);
+	rc = spdk_iscsi_parse_params(params_p, data, total, false, NULL);
 	CU_ASSERT(rc == 0);
 
 	/* negotiate parameters */
-	rc = spdk_iscsi_negotiate_params(&conn, params,
+	rc = spdk_iscsi_negotiate_params(&conn, params_p,
 					 data, 8192, rc);
 	CU_ASSERT(rc > 0);
 
@@ -148,7 +150,7 @@ burst_length_param_negotation(int FirstBurstLength, int MaxBurstLength,
 
 	spdk_iscsi_param_free(sess.params);
 	spdk_iscsi_param_free(conn.params);
-	spdk_iscsi_param_free(params);
+	spdk_iscsi_param_free(*params_p);
 }
 
 static void
