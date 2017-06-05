@@ -335,6 +335,9 @@ struct spdk_bdev_io {
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
+	/** Tt may be used by modules to put the bdev_io into its own list. */
+	TAILQ_ENTRY(spdk_bdev_io) module_link;
+
 	/** Per I/O context for use by the blockdev module */
 	uint8_t driver_ctx[0];
 
