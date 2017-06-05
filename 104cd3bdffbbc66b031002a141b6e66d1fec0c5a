@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77c4e0f3_db41b7e0",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T12:23:55Z",
+      "side": 1,
+      "message": "New line not needed.",
+      "revId": "104cd3bdffbbc66b031002a141b6e66d1fec0c5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea2485c3_9dfa66f9",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T12:23:55Z",
+      "side": 1,
+      "message": "Can we keep those close to place where it is used?",
+      "range": {
+        "startLine": 375,
+        "startChar": 0,
+        "endLine": 388,
+        "endChar": 2
+      },
+      "revId": "104cd3bdffbbc66b031002a141b6e66d1fec0c5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a994176_ceeeebea",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T12:23:55Z",
+      "side": 1,
+      "message": "Lets keep the same convention as later functions.",
+      "range": {
+        "startLine": 464,
+        "startChar": 0,
+        "endLine": 465,
+        "endChar": 0
+      },
+      "revId": "104cd3bdffbbc66b031002a141b6e66d1fec0c5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83a07cec_3f6cb70f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-05T12:23:55Z",
+      "side": 1,
+      "message": "Whitepaces",
+      "range": {
+        "startLine": 534,
+        "startChar": 0,
+        "endLine": 534,
+        "endChar": 8
+      },
+      "revId": "104cd3bdffbbc66b031002a141b6e66d1fec0c5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
