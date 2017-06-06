@@ -150,10 +150,9 @@ main(int argc, char *argv[])
 	}
 
 	opts.shutdown_cb = spdk_vhost_shutdown_cb;
-	spdk_app_init(&opts);
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(spdk_vhost_startup, (void *)socket_path, NULL);
+	rc = spdk_app_start(&opts, spdk_vhost_startup, (void *)socket_path, NULL);
 
 	spdk_app_fini();
 

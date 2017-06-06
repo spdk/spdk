@@ -764,15 +764,16 @@ main(int argc, char **argv)
 {
 	const char		*config_file;
 	int			num_failures;
+	struct spdk_app_opts	opts = {};
 
 	if (argc == 1) {
 		config_file = "/usr/local/etc/spdk/iscsi.conf";
 	} else {
 		config_file = argv[1];
 	}
-	bdevtest_init(config_file, "0x3");
+	bdevtest_init(config_file, "0x3", &opts);
 
-	num_failures = spdk_app_start(test_main, NULL, NULL);
+	num_failures = spdk_app_start(&opts, test_main, NULL, NULL);
 	spdk_app_fini();
 
 	return num_failures;
