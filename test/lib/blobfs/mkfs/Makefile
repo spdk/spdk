@@ -41,7 +41,8 @@ APP = mkfs
 C_SRCS := mkfs.c
 CFLAGS += $(DPDK_INC)
 
-SPDK_LIB_LIST = blobfs blob bdev blob_bdev copy event util conf trace \
+SPDK_LIB_LIST = event_bdev
+SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
 		log jsonrpc json rpc
 
 LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
