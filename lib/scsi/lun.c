@@ -197,7 +197,7 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 		spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
 		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
-		if (!lun->removed) {
+		if (lun->status == SPDK_SCSI_LUN_STATUS_PRESENT) {
 			rc = spdk_bdev_scsi_execute(lun->bdev, task);
 		} else {
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
@@ -227,6 +227,11 @@ spdk_scsi_lun_hotplug(void *arg)
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
 	if (TAILQ_EMPTY(&lun->pending_tasks) && TAILQ_EMPTY(&lun->tasks)) {
+		lun->status = SPDK_SCSI_LUN_STATUS_DELETE;
+		if (lun->hotremove_cb) {
+			lun->hotremove_cb(lun->hotremove_ctx, lun);
+		}
+
 		spdk_scsi_lun_free_io_channel(lun);
 		spdk_scsi_lun_delete(lun->name);
 	}
@@ -236,9 +241,12 @@ static void spdk_scsi_lun_hot_remove(void *remove_ctx)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
 
-	lun->removed = true;
-	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun,
-			     lun->lcore, 0);
+	lun->status = SPDK_SCSI_LUN_STATUS_REMOVED;
+	if (lun->hotremove_cb) {
+		lun->hotremove_cb(lun->hotremove_ctx, lun);
+	}
+
+	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun, lun->lcore, 0);
 }
 
 /**
@@ -292,6 +300,8 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev)
 		free(lun);
 		return NULL;
 	}
+
+	lun->status = SPDK_SCSI_LUN_STATUS_PRESENT;
 
 	return lun;
 }
@@ -402,4 +412,24 @@ const char *
 spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun)
 {
 	return lun->name;
+}
+
+enum spdk_scsi_lun_status
+spdk_scsi_lun_get_status(const struct spdk_scsi_lun *lun)
+{
+	return lun->status;
+}
+
+struct spdk_scsi_dev *
+spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
+{
+	return lun->dev;
+}
+
+void
+spdk_scsi_lun_set_hotremove_cb(struct spdk_scsi_lun *lun, void (*hotremove_cb)(void *, struct spdk_scsi_lun *),
+			       void *hotremove_ctx)
+{
+	lun->hotremove_cb = hotremove_cb;
+	lun->hotremove_ctx = hotremove_ctx;
 }

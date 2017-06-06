@@ -102,11 +102,17 @@ struct spdk_scsi_lun {
 	/** The core hotplug_poller is assigned */
 	uint32_t			lcore;
 
-	/** The LUN is removed */
-	bool				removed;
+	/** The LUN status */
+	enum spdk_scsi_lun_status	status;
 
 	/** The LUN is clamed */
 	bool claimed;
+
+	/** Callback to be fired on LUN removal. If set, lun must be manually destroyed */
+	void (*hotremove_cb)(void *arg, struct spdk_scsi_lun *lun);
+
+	/** Argument for hotremove_cb */
+	void *hotremove_ctx;
 
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
 	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
@@ -135,9 +141,7 @@ void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 int spdk_scsi_lun_claim(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun);
-int spdk_scsi_lun_delete(const char *lun_name);
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
-void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
 
 int spdk_scsi_lun_db_add(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_db_delete(struct spdk_scsi_lun *lun);

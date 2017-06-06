@@ -92,6 +92,26 @@ enum spdk_scsi_task_mgmt_resp {
 	SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED
 };
 
+enum spdk_scsi_lun_status {
+	/** LUN is operational */
+	SPDK_SCSI_LUN_STATUS_PRESENT,
+
+	/**
+	 * LUN is hotremoved (not able to receive further commands).
+	 * When LUN is in this state the hot-remove callback can be called from
+	 * any lcore icluding lcore of LUNs IO channel.
+	 *
+	 */
+	SPDK_SCSI_LUN_STATUS_REMOVED,
+
+	/**
+	 * Stop using LUN because it is about to be deleted by SCSI layer.
+	 * When LUN is in this state and hot-remove callback is called the
+	 * current lcore is the same as lcore of LUNs IO channel.
+	 */
+	SPDK_SCSI_LUN_STATUS_DELETE,
+};
+
 struct spdk_scsi_task {
 	uint8_t				type;
 	uint8_t				status;
@@ -161,6 +181,12 @@ struct spdk_scsi_lun;
 
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
 const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
+enum spdk_scsi_lun_status spdk_scsi_lun_get_status(const struct spdk_scsi_lun *lun);
+struct spdk_scsi_dev *spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun);
+void spdk_scsi_lun_set_hotremove_cb(struct spdk_scsi_lun *lun, void (*hotremove_cb)(void *, struct spdk_scsi_lun *),
+				    void *hotremove_ctx);
+int spdk_scsi_lun_delete(const char *lun_name);
+void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
 
 const char *spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
