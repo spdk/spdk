@@ -39,6 +39,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "vbdev_lvol.h"
 #include "spdk/rpc.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
@@ -217,6 +218,47 @@ vbdev_lvol_store_fini(void)
 		vbdev_destruct_lvol_store(spdk_lvol_store, vbdev_empty_destroy, NULL);
 	}
 }
+
+struct spdk_lvol_store *
+vbdev_lvol_store_first(void)
+{
+	struct spdk_lvol_store *ls;
+
+	ls = TAILQ_FIRST(&g_spdk_lvol_stores);
+	if (ls) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Starting lvolstore iteration at %p\n", ls);
+	}
+
+	return ls;
+}
+
+struct spdk_lvol_store *
+vbdev_lvol_store_next(struct spdk_lvol_store *prev)
+{
+	struct spdk_lvol_store *ls;
+
+	ls = TAILQ_NEXT(prev, lvol_stores);
+	if (ls) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Continuing lvolstore iteration at %p\n", ls);
+	}
+
+	return ls;
+}
+
+struct spdk_lvol_store *
+vbdev_get_lvol_store_by_guid(struct spdk_lvol_store_guid *guid)
+{
+	struct spdk_lvol_store *ls = vbdev_lvol_store_first();
+
+	while (ls != NULL) {
+		if (strncmp((char *)ls->guid.raw, (char *) guid->raw, 16) == 0) {
+			return ls;
+		}
+		ls = vbdev_lvol_store_next(ls);
+	}
+	return NULL;
+}
+
 
 SPDK_VBDEV_MODULE_REGISTER(vbdev_lvol_store_init, vbdev_lvol_store_fini, NULL, NULL, NULL)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_lvol", SPDK_TRACE_VBDEV_LVOL)
