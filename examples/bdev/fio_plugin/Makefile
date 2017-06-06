@@ -2,6 +2,7 @@
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
+#  Copyright (c) 2015-2016, Micron Technology, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,14 +32,28 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += bdev ioat nvme
+APP := fio_plugin
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = fio_plugin.c
+CFLAGS += -I. $(ENV_CFLAGS) -I$(FIO_SOURCE_DIR)
+LDFLAGS += -shared -rdynamic
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST +=  util bdev conf copy rpc jsonrpc json log
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+
+all: $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(BLOCKDEV_MODULES_FILES)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
