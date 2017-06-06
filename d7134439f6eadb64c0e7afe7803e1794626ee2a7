@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6942bb89_73f37304",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:44:10Z",
+      "side": 0,
+      "message": "This seems wrong - doesn\u0027t \u0026opts need to be passed to spdk_app_start() now?",
+      "revId": "d7134439f6eadb64c0e7afe7803e1794626ee2a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bb1eede_af772dc4",
+        "filename": "test/lib/event/event_perf/event_perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:44:10Z",
+      "side": 0,
+      "message": "This change to remove the thread-local variable seems unrelated, and it adds a new use of an rte_* API, which we are trying to eliminate.",
+      "revId": "d7134439f6eadb64c0e7afe7803e1794626ee2a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d6211f6_4224361d",
+        "filename": "test/lib/event/event_perf/event_perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:44:10Z",
+      "side": 0,
+      "message": "I think Jim wanted to keep this test to allow benchmarking of just event passing without the overhead of the rest of the reactor loop.\n\nI am open to changing it, but we should make sure Jim is OK with it before we check this in.",
+      "revId": "d7134439f6eadb64c0e7afe7803e1794626ee2a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

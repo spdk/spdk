@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34941119_6de7ebb0",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:44:10Z",
+      "side": 1,
+      "message": "I think opts can be const here.",
+      "revId": "503ca467bec665c9413b1ecd610176d059391237",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
