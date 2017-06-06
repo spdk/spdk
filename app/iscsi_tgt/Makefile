@@ -46,7 +46,8 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 C_SRCS := iscsi_tgt.c
 
-SPDK_LIB_LIST = jsonrpc json rpc bdev_rpc bdev iscsi scsi net copy trace conf
+SPDK_LIB_LIST = event_bdev
+SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev iscsi scsi net copy trace conf
 SPDK_LIB_LIST += util log log_rpc event app_rpc
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
