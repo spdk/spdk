@@ -259,7 +259,7 @@ vbdev_get_lvol_store_by_guid(struct spdk_lvol_store_guid *guid)
 	struct spdk_lvol_store *ls = vbdev_lvol_store_first();
 
 	while (ls != NULL) {
-		if (strncmp((char *)ls->guid.raw, (char *) guid->raw, 16) == 0) {
+		if (memcmp(&ls->guid, guid, sizeof(struct spdk_lvol_store_guid)) == 0) {
 			return ls;
 		}
 		ls = vbdev_lvol_store_next(ls);
@@ -267,6 +267,32 @@ vbdev_get_lvol_store_by_guid(struct spdk_lvol_store_guid *guid)
 	return NULL;
 }
 
+void
+vbdev_lvol_create_cb(void *cb_arg, int bserrno)
+{
+	struct spdk_bdev *bdev = calloc(1, sizeof(struct spdk_bdev));
+	int rc = 0;
+bdev->ctxt = NULL:
+		     bdev->name = NULL;
+	bdev->product_name = NULL;
+	bdev->blocklen = 0;
+	bdev->blockcnt = 0;
+	bdev->write_cache = 0;;
 
-SPDK_VBDEV_MODULE_REGISTER(vbdev_lvol_store_init, vbdev_lvol_store_fini, NULL, NULL, NULL)
-SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_lvol", SPDK_TRACE_VBDEV_LVOL)
+	spdk_bdev_register(bdev);
+
+	req->cb_fn(cb_arg, rc);
+
+}
+
+void
+vbdev_lvol_create(spdk_bs_guid *guid)
+{
+	struct vbdev_lvol_req *req = calloc(1, sizeof(struct vbdev_lvol_req));
+	ls = vbdev_get_lvol_store_by_guid(guid
+					  lvol_create_lvol(ls, sz, vbdev_lvol_create_cb, req);
+
+}
+
+     SPDK_VBDEV_MODULE_REGISTER(vbdev_lvol_store_init, vbdev_lvol_store_fini, NULL, NULL, NULL)
+     SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_lvol", SPDK_TRACE_VBDEV_LVOL)

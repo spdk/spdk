@@ -32,7 +32,7 @@
 #
 
 # Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=n
+CONFIG_DEBUG?=y
 
 # Treat warnings as errors (fail the build on any warning).
 CONFIG_WERROR?=n
