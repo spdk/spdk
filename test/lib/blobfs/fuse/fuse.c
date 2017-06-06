@@ -335,14 +335,13 @@ int main(int argc, char **argv)
 	opts.reactor_mask = "0x3";
 	opts.dpdk_mem_size = 6144;
 	opts.shutdown_cb = spdk_fuse_shutdown;
-	spdk_app_init(&opts);
 
 	g_bdev_name = argv[2];
 	g_mountpoint = argv[3];
 	g_fuse_argc = argc - 2;
 	g_fuse_argv = &argv[2];
 
-	spdk_app_start(spdk_fuse_run, NULL, NULL);
+	spdk_app_start(&opts, spdk_fuse_run, NULL, NULL);
 	spdk_app_fini();
 
 	return 0;
