@@ -40,6 +40,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/conf.h"
 #include "spdk/event.h"
+#include "spdk/util.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -57,12 +58,10 @@
 
 /* Features that are specified in VIRTIO SCSI but currently not supported:
  * - Live migration not supported yet
- * - Hotplug/hotremove
  * - LUN params change
  * - T10 PI
  */
 #define SPDK_VHOST_SCSI_DISABLED_FEATURES	((1ULL << VHOST_F_LOG_ALL) | \
-						(1ULL << VIRTIO_SCSI_F_HOTPLUG) | \
 						(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
 						(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
@@ -78,6 +77,8 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
+
+	struct spdk_ring *eventq_ring;
 } __rte_cache_aligned;
 
 static int new_device(int vid);
@@ -92,9 +93,84 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	}
 };
 
-static void task_submit(struct spdk_vhost_task *task);
-static int process_request(struct spdk_vhost_task *task);
-static void invalid_request(struct spdk_vhost_task *task);
+static void
+process_eventq(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct rte_vhost_vring *vq;
+	struct vring_desc *desc;
+	struct virtio_scsi_event *ev, *desc_ev;
+	uint32_t req_size;
+	uint16_t req;
+
+	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
+
+	while (spdk_ring_dequeue(svdev->eventq_ring, (void **)&ev, 1) == 1) {
+		if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
+			SPDK_ERRLOG("Controller %s: Failed to send virtio event (no avail ring entries?).\n",
+				    svdev->vdev.name);
+			spdk_dma_free(ev);
+			break;
+		}
+
+		desc =  spdk_vhost_vq_get_desc(vq, req);
+		desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+
+		if (desc->len >= sizeof(*desc_ev) && desc_ev != NULL) {
+			req_size = sizeof(*desc_ev);
+			memcpy(desc_ev, ev, sizeof(*desc_ev));
+		} else {
+			SPDK_ERRLOG("Controller %s: Invalid eventq descriptor.\n", svdev->vdev.name);
+			req_size = 0;
+		}
+
+		spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
+		spdk_dma_free(ev);
+	}
+}
+
+static void
+eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, struct spdk_scsi_dev *dev,
+	       const struct spdk_scsi_lun *lun, uint32_t event, uint32_t reason)
+{
+	struct virtio_scsi_event *ev;
+	int dev_id, lun_id;
+
+	if (dev == NULL) {
+		SPDK_ERRLOG("%s: eventq device cannot be NULL.\n", svdev->vdev.name);
+		return;
+	}
+
+	for (dev_id = 0; dev_id < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_id++) {
+		if (svdev->scsi_dev[dev_id] == dev) {
+			break;
+		}
+	}
+
+	if (dev_id == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("Dev %s is not a part of vhost scsi controller '%s'.\n", spdk_scsi_dev_get_name(dev),
+			    svdev->vdev.name);
+		return;
+	}
+
+	/* some events may apply to the entire target via ids set to 0 */
+	lun_id = lun == NULL ? 0 : spdk_scsi_lun_get_id(lun);
+
+	ev = spdk_dma_zmalloc(sizeof(*ev), SPDK_CACHE_LINE_SIZE, NULL);
+	assert(ev);
+
+	ev->event = event;
+	ev->lun[0] = 1;
+	ev->lun[1] = dev_id;
+	ev->lun[2] = lun_id >> 8; /* relies on linux kernel implementation */
+	ev->lun[3] = lun_id & 0xFF;
+	ev->reason = reason;
+
+	if (spdk_ring_enqueue(svdev->eventq_ring, (void **)&ev, 1) != 1) {
+		SPDK_ERRLOG("Controller %s: Failed to inform guest about LUN #%d removal (no room in ring?).\n",
+			    svdev->vdev.name, lun_id);
+		spdk_dma_free(ev);
+	}
+}
 
 static void
 submit_completion(struct spdk_vhost_task *task)
@@ -155,6 +231,11 @@ mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
 static void
 invalid_request(struct spdk_vhost_task *task)
 {
+	/* Flush eventq so that guest is instantly notified about any hotremoved luns.
+	 * This might prevent him from sending more invalid requests and trying to reset
+	 * the device.
+	 */
+	process_eventq(task->svdev);
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_task_put(task);
 
@@ -452,6 +533,7 @@ vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
+	process_eventq(svdev);
 	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
 }
 
@@ -492,6 +574,7 @@ static void
 remove_vdev_cb(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
+	void *ev;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -503,6 +586,11 @@ remove_vdev_cb(void *arg)
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
 	spdk_vhost_dev_mem_unregister(&svdev->vdev);
+
+	/* Cleanup not sent events */
+	while (spdk_ring_dequeue(svdev->eventq_ring, &ev, 1) == 1) {
+		spdk_dma_free(ev);
+	}
 }
 
 static struct spdk_vhost_scsi_dev *
@@ -526,20 +614,28 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 {
 	struct spdk_vhost_scsi_dev *svdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_dev),
 					    SPDK_CACHE_LINE_SIZE, NULL);
-	int ret;
+	int rc;
 
 	if (svdev == NULL) {
 		return -ENOMEM;
 	}
 
-	ret = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
-				       &spdk_vhost_scsi_device_backend);
-
-	if (ret) {
+	svdev->eventq_ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16, SOCKET_ID_ANY);
+	if (svdev->eventq_ring == NULL) {
 		spdk_dma_free(svdev);
+		return -ENOMEM;
 	}
 
-	return ret;
+	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
+				      &spdk_vhost_scsi_device_backend);
+
+	if (rc) {
+		spdk_ring_free(svdev->eventq_ring);
+		spdk_dma_free(svdev);
+		return rc;
+	}
+
+	return 0;
 }
 
 int
@@ -563,6 +659,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return -EIO;
 	}
 
+	spdk_ring_free(svdev->eventq_ring);
 	spdk_dma_free(svdev);
 	return 0;
 }
@@ -576,6 +673,22 @@ spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, uint8_t num)
 	svdev = to_scsi_dev(vdev);
 
 	return svdev ? svdev->scsi_dev[num] : NULL;
+}
+
+static void
+spdk_vhost_scsi_lun_hotremove(struct spdk_scsi_lun *lun, void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+
+	assert(lun != NULL);
+	assert(svdev != NULL);
+	if ((svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
+		SPDK_WARNLOG("Controller %s: hotremove is not supported\n", svdev->vdev.name);
+		return;
+	}
+
+	eventq_enqueue(svdev, spdk_scsi_lun_get_dev(lun), lun, VIRTIO_SCSI_T_TRANSPORT_RESET,
+		       VIRTIO_SCSI_EVT_RESET_REMOVED);
 }
 
 int
@@ -635,14 +748,13 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	lun_names_list[0] = (char *)lun_name;
 
 	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
-					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, NULL, NULL);
+					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
 
 	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
 		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
 			    dev_name, lun_name, vdev->name);
 		return -EINVAL;
 	}
-
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
