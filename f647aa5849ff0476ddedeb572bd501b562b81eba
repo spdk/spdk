@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "687b972f_ac817eea",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-06T17:07:12Z",
+      "side": 1,
+      "message": "requested -\u003e request\n\nfailure, in which case",
+      "revId": "f647aa5849ff0476ddedeb572bd501b562b81eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
