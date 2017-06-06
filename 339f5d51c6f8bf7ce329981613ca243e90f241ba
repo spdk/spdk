@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7640fc31_6fff5d84",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T21:39:24Z",
+      "side": 1,
+      "message": "We don\u0027t actually double buffer.",
+      "range": {
+        "startLine": 276,
+        "startChar": 78,
+        "endLine": 277,
+        "endChar": 43
+      },
+      "revId": "339f5d51c6f8bf7ce329981613ca243e90f241ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
