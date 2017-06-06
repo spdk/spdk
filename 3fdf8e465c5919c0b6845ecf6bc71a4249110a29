@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a10b0de5_bc23e606",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T23:06:06Z",
+      "side": 1,
+      "message": "Does virtio-blk always use 512-byte sectors?",
+      "revId": "3fdf8e465c5919c0b6845ecf6bc71a4249110a29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ee02108_7d08ac4a",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T23:06:06Z",
+      "side": 1,
+      "message": "This looks like it could use spdk_conf_section_get_num().",
+      "revId": "3fdf8e465c5919c0b6845ecf6bc71a4249110a29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccbd6ede_08411fb3",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T23:06:06Z",
+      "side": 1,
+      "message": "Remove commented-out code. (Why are some of the error cases going to the next device and some returning?)",
+      "revId": "3fdf8e465c5919c0b6845ecf6bc71a4249110a29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
