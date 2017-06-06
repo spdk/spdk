@@ -64,8 +64,8 @@ submit_new_event(void *arg1, void *arg2)
 	spdk_event_call(event);
 }
 
-static int
-event_work_fn(void *arg)
+static void
+event_work_fn(void *arg1, void *arg2)
 {
 	uint64_t tsc_end;
 
@@ -86,8 +86,6 @@ event_work_fn(void *arg)
 	}
 
 	call_count[rte_lcore_id()] = __call_count;
-
-	return 0;
 }
 
 static void
@@ -115,11 +113,9 @@ performance_dump(int io_time)
 int
 main(int argc, char **argv)
 {
-	struct spdk_app_opts opts;
+	struct spdk_app_opts opts = {};
 	int op;
-	uint32_t i, current_core;
 
-	spdk_app_opts_init(&opts);
 	opts.name = "event_perf";
 
 	g_time_in_sec = 0;
@@ -145,29 +141,17 @@ main(int argc, char **argv)
 
 	optind = 1;  /* reset the optind */
 
-	spdk_app_init(&opts);
-
 	g_tsc_rate = spdk_get_ticks_hz();
 	g_tsc_us_rate = g_tsc_rate / (1000 * 1000);
 
 	printf("Running I/O for %d seconds...", g_time_in_sec);
 	fflush(stdout);
 
-	/* call event_work_fn on each slave lcore */
-	current_core = spdk_env_get_current_core();
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (i != current_core) {
-			rte_eal_remote_launch(event_work_fn, NULL, i);
-		}
-	}
-
-	/* call event_work_fn on lcore0 */
-	event_work_fn(NULL);
-
-	rte_eal_mp_wait_lcore();
+	spdk_app_start(&opts, event_work_fn, NULL, NULL);
 
 	performance_dump(g_time_in_sec);
 
+	spdk_app_fini();
 	printf("done.\n");
 	return 0;
 }
