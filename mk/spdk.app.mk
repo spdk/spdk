@@ -31,24 +31,29 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# Event subsystems only export constructor functions, so wrap these
+# in whole-archive linker args
+SPDK_FILTER_LIB_LIST = $(filter event_%,$(SPDK_LIB_LIST))
+
 # RPC libraries only export constructor functions, so these need to be treated
 #  separately and wrapped in whole-archive linker args
-SPDK_RPC_LIB_LIST = $(filter %_rpc,$(SPDK_LIB_LIST))
+SPDK_FILTER_LIB_LIST += $(filter %_rpc,$(SPDK_LIB_LIST))
 
 # Currently some libraries contain their respective RPC methods
 #  rather than breaking them out into separate libraries.  So we must also include
 #  these directories in the RPC library list.
-SPDK_RPC_LIB_LIST += $(filter iscsi,$(SPDK_LIB_LIST))
-SPDK_RPC_LIB_LIST += $(filter net,$(SPDK_LIB_LIST))
-SPDK_RPC_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
-SPDK_RPC_LIB_LIST += $(filter vhost,$(SPDK_LIB_LIST))
+SPDK_FILTER_LIB_LIST += $(filter iscsi,$(SPDK_LIB_LIST))
+SPDK_FILTER_LIB_LIST += $(filter net,$(SPDK_LIB_LIST))
+SPDK_FILTER_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
+SPDK_FILTER_LIB_LIST += $(filter vhost,$(SPDK_LIB_LIST))
 
-SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_RPC_LIB_LIST),$(SPDK_LIB_LIST))
+SPDK_WHOLE_ARCHIVE_LIB_LIST = $(sort $(SPDK_FILTER_LIB_LIST))
+SPDK_REMAINING_LIB_LIST = $(filter-out $(SPDK_WHOLE_ARCHIVE_LIB_LIST),$(SPDK_LIB_LIST))
 
 SPDK_LIB_FILES = $(call spdk_lib_list_to_files,$(SPDK_LIB_LIST))
 SPDK_LIB_LINKER_ARGS = \
 	-L$(SPDK_ROOT_DIR)/build/lib \
 	-Wl,--whole-archive \
-	$(SPDK_RPC_LIB_LIST:%=-lspdk_%) \
+	$(SPDK_WHOLE_ARCHIVE_LIB_LIST:%=-lspdk_%) \
 	-Wl,--no-whole-archive \
 	$(SPDK_REMAINING_LIB_LIST:%=-lspdk_%)
