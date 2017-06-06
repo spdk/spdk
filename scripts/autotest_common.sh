@@ -144,7 +144,7 @@ function process_core() {
 		echo "exe for $core is $exe"
 		if [[ ! -z "$exe" ]]; then
 			if hash gdb; then
-				gdb -batch -ex "bt full" $exe $core
+				gdb -batch -ex "thread apply all bt full" $exe $core
 			fi
 			cp $exe $output_dir
 		fi
