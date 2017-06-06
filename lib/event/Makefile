@@ -38,6 +38,6 @@ CFLAGS += $(ENV_CFLAGS)
 LIBNAME = event
 C_SRCS = app.c reactor.c subsystem.c
 
-DIRS-y = rpc
+DIRS-y = rpc subsystems
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
