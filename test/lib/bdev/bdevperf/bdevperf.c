@@ -486,6 +486,11 @@ bdevperf_run(void *arg1, void *arg2)
 	struct io_target *target;
 	struct spdk_event *event;
 
+	task_pool = rte_mempool_create("task_pool", 4096 * spdk_env_get_core_count(),
+				       sizeof(struct bdevperf_task),
+				       64, 0, NULL, NULL, task_ctor, NULL,
+				       SOCKET_ID_ANY, 0);
+
 	bdevperf_construct_targets();
 
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
@@ -516,6 +521,7 @@ main(int argc, char **argv)
 	const char *workload_type;
 	int op;
 	bool mix_specified;
+	struct spdk_app_opts opts = {};
 
 	/* default value */
 	config_file = NULL;
@@ -672,14 +678,9 @@ main(int argc, char **argv)
 
 	blockdev_heads_init();
 
-	bdevtest_init(config_file, core_mask);
+	bdevtest_init(config_file, core_mask, &opts);
 
-	task_pool = rte_mempool_create("task_pool", 4096 * spdk_env_get_core_count(),
-				       sizeof(struct bdevperf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
-
-	spdk_app_start(bdevperf_run, NULL, NULL);
+	spdk_app_start(&opts, bdevperf_run, NULL, NULL);
 
 	performance_dump(g_time_in_sec);
 	spdk_app_fini();
