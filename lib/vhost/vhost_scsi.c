@@ -66,7 +66,7 @@
 						(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
 						(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
-#define CONTROLQ_POLL_PERIOD_US (1000 * 5)
+#define MGMT_POLL_PERIOD_US (1000 * 5)
 
 #define VIRTIO_SCSI_CONTROLQ   0
 #define VIRTIO_SCSI_EVENTQ   1
@@ -77,7 +77,9 @@ struct spdk_vhost_scsi_dev {
 
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
-	struct spdk_poller *controlq_poller;
+	struct spdk_poller *mgmt_poller;
+
+	bool hotremove_pending;
 } __rte_cache_aligned;
 
 static int new_device(int vid);
@@ -398,6 +400,7 @@ process_request(struct spdk_vhost_task *task)
 	return 0;
 }
 
+
 static void
 process_controlq(struct spdk_vhost_scsi_dev *vdev, struct rte_vhost_vring *vq)
 {
@@ -442,14 +445,6 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 }
 
 static void
-vdev_controlq_worker(void *arg)
-{
-	struct spdk_vhost_scsi_dev *svdev = arg;
-
-	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
-}
-
-static void
 vdev_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
@@ -457,6 +452,58 @@ vdev_worker(void *arg)
 
 	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.num_queues; q_idx++) {
 		process_requestq(svdev, &svdev->vdev.virtqueue[q_idx]);
+	}
+}
+
+static void
+process_hotremove(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_scsi_dev *dev;
+	struct spdk_scsi_lun *lun;
+	int i, j;
+	int max_lun;
+
+	if (svdev->vdev.task_cnt > 0) {
+		return;
+	}
+
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		dev = svdev->scsi_dev[i];
+		if (dev == NULL)
+			continue;
+
+		max_lun = spdk_scsi_dev_get_max_lun(dev);
+		for (j = 0; j < max_lun; ++j) {
+			lun = spdk_scsi_dev_get_lun(dev, j);
+			if (lun == NULL || !spdk_scsi_lun_is_removed(lun))
+				continue;
+
+			spdk_scsi_lun_free_io_channel(lun);
+			spdk_scsi_lun_delete(spdk_scsi_lun_get_name(lun));
+			SPDK_NOTICELOG("Controller %s: hot-removed lun #%d from dev 'Dev %d'\n", svdev->vdev.name, j, i);
+		}
+
+		if (spdk_scsi_dev_get_max_lun(dev) == 0) {
+			spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
+			spdk_scsi_dev_destruct(svdev->scsi_dev[i]);
+			svdev->scsi_dev[i] = NULL;
+			SPDK_NOTICELOG("Controller %s: hot-removed device 'Dev %d'\n", svdev->vdev.name, i);
+		}
+	}
+
+	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, svdev->vdev.lcore, 0);
+	svdev->hotremove_pending = false;
+}
+
+static void
+vdev_mgmt_worker(void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+
+	if (svdev->hotremove_pending) {
+		process_hotremove(svdev);
+	} else {
+		process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
 	}
 }
 
@@ -478,8 +525,8 @@ add_vdev_cb(void *arg)
 	spdk_vhost_dev_mem_register(vdev);
 
 	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
-	spdk_poller_register(&svdev->controlq_poller, vdev_controlq_worker, svdev, vdev->lcore,
-			     CONTROLQ_POLL_PERIOD_US);
+	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev, vdev->lcore,
+			     MGMT_POLL_PERIOD_US);
 }
 
 static void
@@ -572,11 +619,40 @@ spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, uint8_t num)
 	return svdev ? svdev->scsi_dev[num] : NULL;
 }
 
+static void
+hotremove_event_cb(void *arg1, void *arg2)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg1;
+
+	svdev->hotremove_pending = true;
+	spdk_poller_unregister(&svdev->requestq_poller, NULL);
+}
+
+static void
+spdk_vhost_scsi_lun_hotremove(void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+	struct spdk_event *event;
+
+	if (svdev == NULL) {
+		SPDK_ERRLOG("Couldn't find vhost scsi controller to handle lun-hotremove on.");
+		abort();
+	}
+
+	event = spdk_event_allocate(svdev->vdev.lcore, hotremove_event_cb, svdev, NULL);
+	if (event == NULL) {
+		SPDK_ERRLOG("Couldn't allocate memory to handle vhost scsi lun hotremove.");
+		abort();
+	}
+	spdk_event_call(event);
+}
+
 int
 spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const char *lun_name)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
+	struct spdk_scsi_lun *lun;
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
@@ -636,7 +712,9 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 			    dev_name, lun_name, vdev->name);
 		return -EINVAL;
 	}
+	lun = spdk_scsi_dev_get_lun(svdev->scsi_dev[scsi_dev_num], lun_id_list[0]);
 
+	spdk_scsi_lun_set_hotremove_cb(lun, spdk_vhost_scsi_lun_hotremove, svdev);
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
@@ -770,13 +848,23 @@ destroy_device(int vid)
 	svdev = to_scsi_dev(vdev);
 	assert(svdev);
 
+	/* Wait for hotremove tasks to be fired */
+	for (i = 1000; i && svdev->hotremove_pending > 0; i--) {
+		usleep(1000);
+	}
+
+	if (svdev->hotremove_pending > 0) {
+		SPDK_ERRLOG("%s: hotremove tasks did not finish in 1s.\n", vdev->name);
+		//TODO abort, there are "dangling" luns
+	}
+
+	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
+	spdk_poller_unregister(&svdev->mgmt_poller, event.spdk_event);
+	spdk_vhost_timed_event_wait(&event, "unregister control queue poller");
+
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);
 	spdk_vhost_timed_event_wait(&event, "unregister request queue poller");
-
-	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
-	spdk_poller_unregister(&svdev->controlq_poller, event.spdk_event);
-	spdk_vhost_timed_event_wait(&event, "unregister controll queue poller");
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {
@@ -784,9 +872,9 @@ destroy_device(int vid)
 	}
 
 	if (vdev->task_cnt > 0) {
-		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
+		//TODO
+		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
-
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
 
