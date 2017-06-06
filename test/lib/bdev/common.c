@@ -37,13 +37,14 @@
 #include "spdk/event.h"
 
 static void
-bdevtest_init(const char *config_file, const char *cpumask)
+bdevtest_init(const char *config_file, const char *cpumask,
+		 struct spdk_app_opts *opts)
 {
-	struct spdk_app_opts opts;
+	if (!opts) {
+		return;
+	}
 
-	spdk_app_opts_init(&opts);
-	opts.name = "bdevtest";
-	opts.config_file = config_file;
-	opts.reactor_mask = cpumask;
-	spdk_app_init(&opts);
+	opts->name = "bdevtest";
+	opts->config_file = config_file;
+	opts->reactor_mask = cpumask;
 }
