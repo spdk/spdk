@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f36a7414_7cf38b9c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:28:22Z",
+      "side": 1,
+      "message": "We should probably just return rc from spdk_bdev_io_submit() here so that it can provide the best error code.",
+      "revId": "0e51924a0948d6c77ddf9f1a47c9920046106a71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ff5a25a_9fd5fdff",
+        "filename": "lib/nvmf/virtual.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:28:22Z",
+      "side": 1,
+      "message": "I think it would be simpler to just treat any non-zero return code as a failure (rather than \u003c 0).  Then you could just write:\n\n    if (spdk_bdev_read(...)) {\n        ...\n    }\n\nAs long as we make sure to always return negated error codes, this is not a big deal, but I don\u0027t think we\u0027re ever going to want to use positive values to indicate success.",
+      "revId": "0e51924a0948d6c77ddf9f1a47c9920046106a71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
