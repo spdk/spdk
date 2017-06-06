@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a66be353_e3bc0680",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T12:29:34Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 545,
+        "startChar": 78,
+        "endLine": 545,
+        "endChar": 84
+      },
+      "revId": "401101922251fc8069f33c83b3f503fde41f3afc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76118748_30116b95",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T12:29:34Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 563,
+        "startChar": 30,
+        "endLine": 563,
+        "endChar": 41
+      },
+      "revId": "401101922251fc8069f33c83b3f503fde41f3afc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f618127_ceb21f2a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T12:29:34Z",
+      "side": 1,
+      "message": "i see equivalent scsi description few lines above, but please reword this one. It\u0027s just wrong. Something like \"name of a controller to add device to\" will do much better.",
+      "range": {
+        "startLine": 563,
+        "startChar": 30,
+        "endLine": 563,
+        "endChar": 63
+      },
+      "revId": "401101922251fc8069f33c83b3f503fde41f3afc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ba7ddd0_24c32cac",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T12:29:34Z",
+      "side": 1,
+      "message": "how about \"device name\"?",
+      "range": {
+        "startLine": 564,
+        "startChar": 33,
+        "endLine": 564,
+        "endChar": 53
+      },
+      "revId": "401101922251fc8069f33c83b3f503fde41f3afc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
