@@ -456,7 +456,7 @@ associate_workers_with_chan(void)
 	struct spdk_ioat_chan *chan = get_next_chan();
 	struct worker_thread	*worker = g_workers;
 	struct ioat_chan_entry	*t;
-	char buf_pool_name[20], task_pool_name[20];
+	char buf_pool_name[30], task_pool_name[30];
 	int i = 0;
 
 	while (chan != NULL) {
