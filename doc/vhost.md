@@ -153,5 +153,4 @@ assigned to vm.
 
 ## Hot plug is not supported
 Hot plug is not supported in vhost yet. Event queue path doesn't handle that
-case. While hot plug will be just ignored, hot removal might cause segmentation
-fault.
+case yet.
