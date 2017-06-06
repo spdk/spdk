@@ -84,7 +84,7 @@ static uint16_t crc16_t10dif(uint8_t *buf, size_t len)
 
 struct dev {
 	struct spdk_nvme_ctrlr			*ctrlr;
-	char 					name[100];
+	char 					name[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 };
 
 static struct dev devs[MAX_DEVS];

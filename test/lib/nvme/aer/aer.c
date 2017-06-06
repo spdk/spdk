@@ -43,7 +43,7 @@ struct dev {
 	struct spdk_nvme_ctrlr				*ctrlr;
 	struct spdk_nvme_health_information_page	*health_page;
 	uint32_t					orig_temp_threshold;
-	char 						name[100];
+	char 						name[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 };
 
 #define ADMINQ_SIZE 128
