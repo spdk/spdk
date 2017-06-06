@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07d64434_0cd4089e",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T05:17:11Z",
+      "side": 1,
+      "message": "please remove, you don\u0027t need it",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 31
+      },
+      "revId": "c545aa4235472c383f23941491af28568328ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bafc5618_eed6ace8",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T05:17:11Z",
+      "side": 1,
+      "message": "there\u0027s an spdk_bdev_get_name function in spdk/bdev.h",
+      "range": {
+        "startLine": 518,
+        "startChar": 29,
+        "endLine": 518,
+        "endChar": 38
+      },
+      "revId": "c545aa4235472c383f23941491af28568328ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
