@@ -40,11 +40,13 @@
 
 #include "spdk/bdev.h"
 #include "spdk/gpt_spec.h"
+#include "spdk/blob.h"
 
 struct spdk_bdev;
 struct spdk_lvol_store;
-#define spdk_lvol_store_guid spdk_gpt_guid
-#define SPDK_LVOL_STORE_GUID SPDK_GPT_GUID
+struct spdk_lvol_store_guid {
+	char raw[16];
+};
 
 typedef void (*spdk_lvol_store_op_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
 		int bserrno);
@@ -59,6 +61,7 @@ struct spdk_lvol_store_req {
 	char				*guid;
 };
 
+
 struct spdk_lvol_store {
 	struct spdk_bs_dev		*bs_dev;
 	struct spdk_bdev		*base_bdev;
@@ -71,12 +74,24 @@ struct spdk_lvol_store {
 struct spdk_lvol {
 	struct spdk_bdev		*disk;
 	struct spdk_lvol_store		*lvol_store;
+	struct spdk_blob		*blob;
+	size_t 				sz;
 };
 
+struct spdk_lvol_create_req {
+	spdk_lvol_op_complete		cb_fn;
+	void				*cb_arg;
+	size_t 				sz;
+	struct spdk_lvol_store		*ls;
+	struct spdk_blob		*blob;
+};
 
 int lvol_store_initialize(struct spdk_bs_dev *bs_dev, spdk_lvol_store_op_complete cb_fn,
 			  void *cb_arg);
 int lvol_store_free(struct spdk_lvol_store *lvol_store, spdk_lvol_op_complete cb_fn,
 		    void *cb_arg);
 
+void lvol_create_lvol(struct spdk_lvol_store *, size_t,	spdk_lvol_op_complete, void *);
+void lvol_create_lvol_cb(void *, spdk_blob_id, int);
+void lvol_create_lvol_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno);
 #endif  /* SPDK_LVOL_H */

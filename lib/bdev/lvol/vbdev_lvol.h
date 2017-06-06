@@ -47,6 +47,7 @@
 typedef void (*vbdev_lvol_store_op_with_handle_complete)(void *cb_arg,
 		struct spdk_lvol_store *lvol_store, int bserrno);
 typedef void (*vbdev_lvol_store_op_complete)(void *cb_arg, int bserrno);
+typedef void (*vbdev_lvol_op_complete)(void *cb_arg, int bserrno);
 
 struct spdk_lvol_store_rpc_req {
 	struct spdk_jsonrpc_server_conn *conn;
@@ -61,7 +62,11 @@ struct vbdev_lvol_store_req {
 	struct spdk_bs_dev              *bs_dev;
 	struct spdk_bdev                *base_bdev;
 };
-
+struct vbdev_lvol_req {
+	vbdev_lvol_op_complete		cb_fn;
+	void                            *cb_arg;
+};
+struct spdk_lvol_store_guid;
 int vbdev_construct_lvol_store(struct spdk_bdev *base_bdev,
 			       vbdev_lvol_store_op_with_handle_complete cb_fn,
 			       void *cb_arg);
@@ -75,4 +80,7 @@ struct spdk_lvol_store *vbdev_lvol_store_first(void);
 struct spdk_lvol_store *vbdev_lvol_store_next(struct spdk_lvol_store *);
 struct spdk_lvol_store *vbdev_get_lvol_store_by_guid(struct spdk_lvol_store_guid *);
 
+struct spdk_bdev *create_lvol_disk(struct spdk_lvol_store *ls, struct spdk_blob *blob, size_t num_blocks);
+void vbdev_lvol_create_cb(void *cb_arg, int bserrno);
+void vbdev_lvol_create(struct spdk_lvol_store_guid *guid, size_t sz, vbdev_lvol_op_complete cb_fn, void *cb_arg);
 #endif /* SPDK_VBDEV_LVOL_H */

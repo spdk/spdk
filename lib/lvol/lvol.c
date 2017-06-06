@@ -51,7 +51,7 @@ lvol_store_init_cb(void *cb_arg, struct spdk_blob_store *bs, int bserrno)
 	} else {
 		assert(bs != NULL);
 		lvol_store->blobstore = bs;
-		lvol_store->guid = SPDK_GPT_GUID(0, 0, 0, 0, 0);
+		/*lvol_store->guid = SPDK_GPT_GUID(0, 0, 0, 0, 0);*/
 
 		SPDK_TRACELOG(SPDK_TRACE_LVOL, "lvol store initialized from bdev\n");
 	}
@@ -148,6 +148,40 @@ lvol_store_free(struct spdk_lvol_store *lvol_store, spdk_lvol_op_complete cb_fn,
 	spdk_bs_unload(lvol_store->blobstore, lvol_store_free_cb, lvs_req);
 
 	return 0;
+}
+
+void lvol_create_lvol_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+
+	struct spdk_lvol_create_req *req = cb_arg;
+	size_t sz = req->sz;
+	int rc = 0;
+
+	if (sz != 0) {
+		rc = spdk_bs_md_resize_blob(blob, sz);
+		if (rc < 0) {
+			/* TODO: Error resizing, destroy blob */
+		}
+	}
+	req->cb_fn(cb_arg, rc);
+}
+
+void
+lvol_create_lvol_cb(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+	struct spdk_lvol_create_req *req = cb_arg;
+	spdk_bs_md_open_blob(req->ls->blobstore, blobid, lvol_create_lvol_open_cb, req);
+}
+
+void
+lvol_create_lvol(struct spdk_lvol_store *ls, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_create_req *req = calloc(1, sizeof(struct spdk_lvol_create_req));
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->ls = ls;
+	spdk_bs_md_create_blob(ls->blobstore, lvol_create_lvol_cb, req);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)
