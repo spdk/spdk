@@ -53,6 +53,40 @@
     },
     {
       "key": {
+        "uuid": "42a25c2f_9c16b643",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T22:48:28Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem to be used anywhere.",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0edab9ca_0b5045bc",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T22:48:28Z",
+      "side": 1,
+      "message": "Same here - if this function isn\u0027t used anywhere, it should be dropped from this patch.",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8505674_8e703c80",
         "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
         "patchSetId": 3
@@ -64,6 +98,80 @@
       "writtenOn": "2017-06-06T22:31:33Z",
       "side": 1,
       "message": "This change can be reverted",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "446569a1_6f6e6d42",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T22:48:28Z",
+      "side": 1,
+      "message": "g_hist_id should be static if it\u0027s not used outside this file (or removed if we can just use string names everywhere).",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b25f5e4_b601bc53",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T22:48:28Z",
+      "side": 1,
+      "message": "Rather than requiring the user to list the IDs and then pass the corresponding integer ID to the RPCs, does it make sense to just pass the name directly to the hist_enable/hist_disable calls?  I don\u0027t think those are in the performance path (spdk_histogram_find() is doing a linear lookup anyway).  Then we could get rid of the hist_id in the spdk_histogram object too and just always refer to them by name.",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8cb63de_ff4ef6d5",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T22:48:28Z",
+      "side": 1,
+      "message": "This looks like an error case, so it should use spdk_jsonrpc_send_error_response(), not the normal result path.",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75dfe571_26db02bf",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T22:48:28Z",
+      "side": 1,
+      "message": "I think something like \"get_stats\" would make more sense than \"show\".",
+      "range": {
+        "startLine": 209,
+        "startChar": 19,
+        "endLine": 209,
+        "endChar": 28
+      },
       "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
