@@ -68,6 +68,7 @@ Configuration file syntax:
   # The file name is the backing device
   # The bdev name can be referenced from elsewhere in the configuration file.
   AIO /dev/sdb AIO0
+  AIO /dev/sdc AIO1
 ~~~
 
 This exports 2 aio block devices, named AIO0 and AIO1.
