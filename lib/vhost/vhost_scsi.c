@@ -85,6 +85,8 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *controlq_poller;
+
+	struct spdk_poller *hotremove_poller;
 } __rte_cache_aligned;
 
 static int new_device(int vid);
@@ -458,6 +460,8 @@ process_request(struct spdk_vhost_task *task)
 
 	task->scsi_dev = get_scsi_dev(task->svdev, req->lun);
 	if (unlikely(task->scsi_dev == NULL)) {
+		task->scsi.iovs = &task->scsi.iov;
+		task->scsi.iovcnt = 1;
 		task->resp->response = VIRTIO_SCSI_S_BAD_TARGET;
 		return -1;
 	}
@@ -565,6 +569,45 @@ vhost_sem_timedwait(sem_t *sem, unsigned sec)
 }
 
 static void
+spdk_vhost_scsi_register_pollers(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_vhost_dev *vdev = &svdev->vdev;
+
+	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
+	spdk_poller_register(&svdev->controlq_poller, vdev_controlq_worker, svdev, vdev->lcore,
+			     CONTROLQ_POLL_PERIOD_US);
+}
+
+static void
+spdk_vhost_scsi_unregister_pollers(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_vhost_dev *vdev = &svdev->vdev;
+	struct spdk_event *event;
+	sem_t done_sem;
+
+	if (vdev->lcore == -1) {
+		return;
+	}
+
+	if ((uint32_t) vdev->lcore != spdk_env_get_current_core()) {
+		event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+		spdk_poller_unregister(&svdev->requestq_poller, event);
+		if (vhost_sem_timedwait(&done_sem, 1)) {
+			rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
+		}
+
+		event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
+		spdk_poller_unregister(&svdev->controlq_poller, event);
+		if (vhost_sem_timedwait(&done_sem, 1)) {
+			rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
+		}
+	} else {
+		spdk_poller_unregister(&svdev->requestq_poller, NULL);
+		spdk_poller_unregister(&svdev->controlq_poller, NULL);
+	}
+}
+
+static void
 add_vdev_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg1;
@@ -581,9 +624,7 @@ add_vdev_cb(void *arg1, void *arg2)
 
 	spdk_vhost_dev_mem_register(vdev);
 
-	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
-	spdk_poller_register(&svdev->controlq_poller, vdev_controlq_worker, svdev, vdev->lcore,
-			     CONTROLQ_POLL_PERIOD_US);
+	spdk_vhost_scsi_register_pollers(svdev);
 	sem_post((sem_t *)arg2);
 }
 
@@ -685,11 +726,96 @@ spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_scsi_dev *svdev, uint8_t num)
 	return svdev->scsi_dev[num];
 }
 
+static void
+hotremove_worker(void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+
+	struct spdk_scsi_dev *dev;
+	struct spdk_scsi_lun *lun;
+	int i, j;
+	int lun_num;
+
+	if (svdev->vdev.task_cnt > 0) {
+		return;
+	}
+
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		dev = svdev->scsi_dev[i];
+		if (dev == NULL)
+			continue;
+
+		lun_num = 0;
+		for (j = 0; j < spdk_scsi_dev_get_max_lun(dev); ++j) {
+			lun = spdk_scsi_dev_get_lun(dev, j);
+			if (lun == NULL)
+				continue;
+
+			if (spdk_scsi_lun_is_removed(lun)) {
+				spdk_scsi_lun_free_io_channel(lun);
+				spdk_scsi_lun_delete(spdk_scsi_lun_get_name(lun));
+				SPDK_NOTICELOG("Controller %s: hot-removed lun #%d from dev 'Dev %d'\n", svdev->vdev.name, j, i);
+
+			} else {
+				++lun_num;
+			}
+		}
+
+		if (lun_num == 0) {
+			spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
+			spdk_scsi_dev_destruct(svdev->scsi_dev[i]);
+			svdev->scsi_dev[i] = NULL;
+			SPDK_NOTICELOG("Controller %s: hot-removed device 'Dev %d'\n", svdev->vdev.name, i);
+		}
+	}
+
+
+	spdk_poller_unregister(&svdev->hotremove_poller, NULL);
+	spdk_vhost_scsi_register_pollers(svdev);
+}
+
+static void
+hotremove_event_cb(void *arg1, void *arg2)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg1;
+
+	if (svdev->hotremove_poller) {
+		/*
+		 * lun has been already marked as removed,
+		 * and hotremove poller will remove it sooner or later
+		 */
+		return;
+	} else {
+		spdk_vhost_scsi_unregister_pollers(svdev);
+		spdk_poller_register(&svdev->hotremove_poller, hotremove_worker, svdev, svdev->vdev.lcore, 0);
+	}
+}
+
+static void
+spdk_vhost_scsi_lun_hotremove(void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+	struct spdk_event *event;
+
+	if (svdev == NULL) {
+		SPDK_ERRLOG("Couldn't find vhost scsi controller to handle lun-hotremove on.");
+		abort();
+	}
+
+	event = spdk_event_allocate(svdev->vdev.lcore, hotremove_event_cb, svdev, NULL);
+	if (event == NULL) {
+		SPDK_ERRLOG("Couldn't allocate memory to handle vhost scsi lun hotremove.");
+		abort();
+	}
+	spdk_event_call(event);
+}
+
 int
 spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const char *lun_name)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
+	struct spdk_scsi_lun *lun;
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
@@ -746,7 +872,9 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 			    dev_name, lun_name, vdev->name);
 		return -EINVAL;
 	}
+	lun = spdk_scsi_dev_get_lun(svdev->scsi_dev[scsi_dev_num], lun_id_list[0]);
 
+	spdk_scsi_lun_set_hotremove_cb(lun, spdk_vhost_scsi_lun_hotremove, svdev);
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
@@ -871,7 +999,7 @@ destroy_device(int vid)
 	struct spdk_vhost_dev *vdev;
 	struct spdk_event *event;
 	sem_t done_sem;
-	uint32_t i;
+	int i;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -879,15 +1007,7 @@ destroy_device(int vid)
 	}
 	svdev = (struct spdk_vhost_scsi_dev *) vdev;
 
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
-	spdk_poller_unregister(&svdev->requestq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister request queue poller.\n", vdev->name);
-
-	event = vhost_sem_event_alloc(vdev->lcore, vdev_event_done_cb, NULL, &done_sem);
-	spdk_poller_unregister(&svdev->controlq_poller, event);
-	if (vhost_sem_timedwait(&done_sem, 1))
-		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
+	spdk_vhost_scsi_unregister_pollers(svdev);
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {
