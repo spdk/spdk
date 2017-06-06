@@ -96,21 +96,16 @@ struct spdk_app_opts {
 void spdk_app_opts_init(struct spdk_app_opts *opts);
 
 /**
- * \brief Initialize an application to use the event framework. This must be called prior to using
- * any other functions in this library.
+ * \brief Start the framework. Once started, the framework will call start_fn on the master
+ * core with the arguments provided. This call will block until \ref spdk_app_stop is called.
  */
-void spdk_app_init(struct spdk_app_opts *opts);
+int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
+		   void *arg1, void *arg2);
 
 /**
  * \brief Perform final shutdown operations on an application using the event framework.
  */
 int spdk_app_fini(void);
-
-/**
- * \brief Start the framework. Once started, the framework will call start_fn on the master
- * core with the arguments provided. This call will block until \ref spdk_app_stop is called.
- */
-int spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2);
 
 /**
  * \brief Start shutting down the framework.  Typically this function is not called directly, and

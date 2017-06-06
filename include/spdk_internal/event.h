@@ -51,8 +51,6 @@ int spdk_reactors_fini(void);
 void spdk_reactors_start(void);
 void spdk_reactors_stop(void);
 
-uint32_t spdk_event_queue_run_batch(uint32_t lcore);
-
 struct spdk_subsystem {
 	const char *name;
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
