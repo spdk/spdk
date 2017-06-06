@@ -1,0 +1,20 @@
+[global]
+ioengine=spdk_bdev
+spdk_conf=./examples/bdev/fio_plugin/bdev.conf.in
+thread=1
+group_reporting=1
+direct=1
+verify=0
+norandommap=1
+cpumask=1
+percentile_list=50:99:99.9:99.99:99.999
+
+[4k_randread_qd1]
+filename=Malloc0
+description="4KiB Random Read QD=1"
+bs=4k
+rw=randread
+iodepth=1
+time_based=1
+ramp_time=0
+runtime=10
