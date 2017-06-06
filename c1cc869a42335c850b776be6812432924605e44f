@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea297a8d_9cfbc3d3",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:21:59Z",
+      "side": 1,
+      "message": "Probably should make this more generic - the underlying device may not specifically have a \"flash translation layer\", but it could support unmap if it does thin provisioning, for example.",
+      "range": {
+        "startLine": 297,
+        "startChar": 33,
+        "endLine": 297,
+        "endChar": 56
+      },
+      "revId": "c1cc869a42335c850b776be6812432924605e44f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3059b7e_8de56fb3",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:21:59Z",
+      "side": 1,
+      "message": "ADMIN -\u003e Admin (the spec doesn\u0027t write it in all caps).",
+      "range": {
+        "startLine": 346,
+        "startChar": 18,
+        "endLine": 346,
+        "endChar": 23
+      },
+      "revId": "c1cc869a42335c850b776be6812432924605e44f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6b00457_ead041ec",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:21:59Z",
+      "side": 1,
+      "message": "The nsid is also automatically filled out and can be left empty.",
+      "revId": "c1cc869a42335c850b776be6812432924605e44f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
