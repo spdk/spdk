@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fa902ae_0b937e95",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-06T22:31:33Z",
+      "side": 1,
+      "message": "Why is this hstats_tally and not histogram_tally?",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08099551_88411db9",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-06T22:31:33Z",
+      "side": 1,
+      "message": "This should be named something like \"spdk_histogram_dump_json\"",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbb8555a_26ed3353",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-06T22:31:33Z",
+      "side": 1,
+      "message": "spdk_histogram_register should be paired with spdk_histogram_unregister. Conversely, if you like spdk_histogram_free better pair it with spdk_histogram_alloc, or go a different route and do spdk_histogram_create and spdk_histogram_destroy. Any of those are fine, as long as they\u0027re consistent.",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8505674_8e703c80",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-06T22:31:33Z",
+      "side": 1,
+      "message": "This change can be reverted",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
