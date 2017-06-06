@@ -510,9 +510,7 @@ initialize_spdk(void *arg)
 {
 	struct spdk_app_opts *opts = (struct spdk_app_opts *)arg;
 
-	spdk_app_init(opts);
-
-	spdk_app_start(spdk_rocksdb_run, NULL, NULL);
+	spdk_app_start(opts, spdk_rocksdb_run, NULL, NULL);
 	spdk_app_fini();
 
 	delete opts;

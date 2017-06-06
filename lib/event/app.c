@@ -216,8 +216,9 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 }
 
-void
-spdk_app_init(struct spdk_app_opts *opts)
+int
+spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
+	       void *arg1, void *arg2)
 {
 	struct spdk_conf		*config;
 	struct spdk_conf_section	*sp;
@@ -228,6 +229,12 @@ spdk_app_init(struct spdk_app_opts *opts)
 	uint64_t		tpoint_group_mask;
 	char			*end;
 	struct spdk_env_opts env_opts = {};
+	struct spdk_event *app_start_event;
+
+	if (!opts) {
+		SPDK_ERRLOG("opts should not be NULL\n");
+		exit(EXIT_FAILURE);
+	}
 
 	if (opts->enable_coredump) {
 		struct rlimit core_limits;
@@ -409,6 +416,18 @@ spdk_app_init(struct spdk_app_opts *opts)
 			spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
 		}
 	}
+
+	g_spdk_app.rc = 0;
+	app_start_event = spdk_event_allocate(spdk_env_get_current_core(), start_fn,
+					      arg1, arg2);
+
+	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_init,
+					    app_start_event, NULL));
+
+	/* This blocks until spdk_app_stop is called */
+	spdk_reactors_start();
+
+	return g_spdk_app.rc;
 }
 
 int
@@ -423,25 +442,6 @@ spdk_app_fini(void)
 	spdk_close_log();
 
 	return rc;
-}
-
-int
-spdk_app_start(spdk_event_fn start_fn, void *arg1, void *arg2)
-{
-	struct spdk_event *app_start_event;
-
-	g_spdk_app.rc = 0;
-
-	app_start_event = spdk_event_allocate(spdk_env_get_current_core(), start_fn,
-					      arg1, arg2);
-
-	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_init,
-					    app_start_event, NULL));
-
-	/* This blocks until spdk_app_stop is called */
-	spdk_reactors_start();
-
-	return g_spdk_app.rc;
 }
 
 void

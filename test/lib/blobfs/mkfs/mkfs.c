@@ -106,12 +106,11 @@ int main(int argc, char **argv)
 	opts.reactor_mask = "0x3";
 	opts.dpdk_mem_size = 1024;
 	opts.shutdown_cb = NULL;
-	spdk_app_init(&opts);
 
 	spdk_fs_set_cache_size(512);
 
 	g_bdev_name = argv[2];
-	spdk_app_start(spdk_mkfs_run, NULL, NULL);
+	spdk_app_start(&opts, spdk_mkfs_run, NULL, NULL);
 	spdk_app_fini();
 
 	return 0;
