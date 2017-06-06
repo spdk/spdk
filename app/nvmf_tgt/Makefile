@@ -34,6 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subsystems.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = nvmf_tgt
@@ -42,16 +43,17 @@ CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS := conf.c nvmf_main.c nvmf_tgt.c nvmf_rpc.c
 
-SPDK_LIB_LIST = nvmf event log trace conf util bdev copy rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
+SPDK_LIB_LIST = nvmf event log trace conf util copy rpc jsonrpc json
+SPDK_LIB_LIST += app_rpc log_rpc
 
-LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
+LIBS += $(EVENT_SUBSYSTEMS_LINKER_ARGS) \
+	$(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
 	$(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(SPDK_WHOLE_LIBS) $(EVENT_SUBSYSTEMS_FILES) $(BLOCKDEV_MODULES_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

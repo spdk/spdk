@@ -260,7 +260,7 @@ spdk_bdev_module_get_max_ctx_size(void)
 	return max_bdev_module_size;
 }
 
-static void
+void
 spdk_bdev_config_text(FILE *fp)
 {
 	struct spdk_bdev_module_if *bdev_module;
@@ -344,7 +344,7 @@ spdk_vbdev_module_init_next(int rc)
 	}
 }
 
-static void
+void
 spdk_bdev_initialize(void)
 {
 	int cache_size;
@@ -404,7 +404,7 @@ end:
 	spdk_bdev_module_init_next(rc);
 }
 
-static int
+int
 spdk_bdev_finish(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
@@ -1434,5 +1434,3 @@ spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
 }
-SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_initialize, spdk_bdev_finish, spdk_bdev_config_text)
-SPDK_SUBSYSTEM_DEPEND(bdev, copy)

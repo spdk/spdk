@@ -34,6 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subsystems.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = iscsi_tgt
@@ -46,9 +47,10 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
 C_SRCS := iscsi_tgt.c
 
-SPDK_LIB_LIST = jsonrpc json rpc bdev_rpc bdev iscsi scsi net copy trace conf
+SPDK_LIB_LIST = jsonrpc json rpc iscsi scsi net copy trace conf
 SPDK_LIB_LIST += util log log_rpc event app_rpc
 
+LIBS += $(EVENT_SUBSYSTEMS_LINKER_ARGS)
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) -lcrypto
@@ -56,7 +58,7 @@ LIBS += $(ENV_LINKER_ARGS)
 
 all : $(APP)
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(EVENT_SUBSYSTEMS_FILES) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES)
 	$(LINK_C)
 
 clean :

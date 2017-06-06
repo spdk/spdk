@@ -34,6 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subsystems.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = fuse
@@ -41,9 +42,10 @@ APP = fuse
 C_SRCS := fuse.c
 CFLAGS += $(DPDK_INC)
 
-SPDK_LIB_LIST = blobfs blob bdev blob_bdev copy event util conf trace \
+SPDK_LIB_LIST = blobfs blob blob_bdev copy event util conf trace \
 		log jsonrpc json rpc
 
+LIBS += $(EVENT_SUBSYSTEMS_LINKER_ARGS)
 LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 LIBS+= -L/usr/local/lib -lfuse3
