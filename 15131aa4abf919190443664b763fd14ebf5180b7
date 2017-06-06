@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "414ce1a2_c29b9216",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-06T07:30:46Z",
+      "side": 1,
+      "message": "This looks like shall be \"io_type\"",
+      "range": {
+        "startLine": 166,
+        "startChar": 41,
+        "endLine": 166,
+        "endChar": 44
+      },
+      "revId": "15131aa4abf919190443664b763fd14ebf5180b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
