@@ -16,6 +16,24 @@
       "revId": "656d9aa221101a881331e003412f4f1dab40dfaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "139c3a2c_ebef0b5e",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1720,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T16:53:01Z",
+      "side": 1,
+      "message": "You\u0027re right, this is actually just a single descriptor - I misread the spec. I\u0027ll push a version with the name fixed up.\n\nAs for adding this to bdev, we don\u0027t have a way to expose this right now (and this patch is just adding the NVMe spec definitions).  It is probably a good idea to expose a unique ID for each bdev, though, and this field could be useful for that purpose (for NVMe 1.3+ devices).",
+      "parentUuid": "f61bf8d8_e550e5fa",
+      "revId": "656d9aa221101a881331e003412f4f1dab40dfaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
