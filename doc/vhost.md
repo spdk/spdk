@@ -148,10 +148,3 @@ GRUB_CMDLINE_LINUX="scsi_mod.use_blk_mq=1"
 
 To achieve better performance make sure to increase number of cores
 assigned to vm.
-
-# Known bugs and limitations {#vhost_bugs}
-
-## Hot plug is not supported
-Hot plug is not supported in vhost yet. Event queue path doesn't handle that
-case. While hot plug will be just ignored, hot removal might cause segmentation
-fault.
