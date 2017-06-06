@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f9451ca_4eaa0df2",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-06T07:00:40Z",
+      "side": 1,
+      "message": "What if introducing a MACRO for this calculation (which is same at line 126) like SPDK_BDEV_ERROR_IO_IS_RESET. This will make the code more readable. Thanks.",
+      "range": {
+        "startLine": 131,
+        "startChar": 5,
+        "endLine": 131,
+        "endChar": 63
+      },
+      "revId": "e773efaabff224815e1060e5df9de7ae23915b1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
