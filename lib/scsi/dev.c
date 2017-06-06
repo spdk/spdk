@@ -130,6 +130,7 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 		}
 	}
 	dev->maxlun = maxlun;
+	lun->dev = NULL;
 }
 
 /* This typedef exists to work around an astyle 2.05 bug.

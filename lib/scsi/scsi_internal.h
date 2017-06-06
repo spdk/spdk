@@ -108,6 +108,12 @@ struct spdk_scsi_lun {
 	/** The LUN is clamed */
 	bool claimed;
 
+	/** Callback to be fired when LUN removal is first triggered. */
+	void (*hotremove_cb)( struct spdk_scsi_lun *lun, void *arg);
+
+	/** Argument for hotremove_cb */
+	void *hotremove_ctx;
+
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
 	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
 };
