@@ -108,6 +108,8 @@ struct spdk_scsi_lun {
 	/** The LUN is clamed */
 	bool claimed;
 
+	void (*hotremove_cb)(void *arg);
+
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
 	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
 };

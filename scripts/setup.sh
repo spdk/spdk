@@ -46,7 +46,7 @@ function linux_hugetlbfs_mount() {
 }
 
 function configure_linux {
-	driver_name=vfio-pci
+	driver_name=uio_pci_generic
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
 		# No IOMMU. Use uio.
 		driver_name=uio_pci_generic
