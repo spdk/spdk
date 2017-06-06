@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f52a79d9_878fca6e",
+        "filename": "lib/ut_mock/spdk_mock.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-06T17:37:13Z",
+      "side": 1,
+      "message": "I know Ben said the opposite in the previous review, but if these variables are intended to be set outside of this library (from the unit tests), they need to be non-static, and they should be declared extern in the spdk_mock.h header.\n\nAlternatively, if this spdk_mock.c file is intended to be #included directly from the unit tests, then it doesn\u0027t need to be built as a library.",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "4796deafaa8caaf9815f5cf22851e55540490dd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
