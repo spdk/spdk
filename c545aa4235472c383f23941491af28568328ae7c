@@ -25,6 +25,52 @@
     },
     {
       "key": {
+        "uuid": "e1dbb8e9_036781a1",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T06:27:54Z",
+      "side": 1,
+      "message": "bdev?",
+      "range": {
+        "startLine": 494,
+        "startChar": 19,
+        "endLine": 494,
+        "endChar": 22
+      },
+      "revId": "c545aa4235472c383f23941491af28568328ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7acd405_6b61e3af",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-06T06:27:54Z",
+      "side": 1,
+      "message": "could we have some empty lines in-between for readability?",
+      "range": {
+        "startLine": 506,
+        "startChar": 0,
+        "endLine": 515,
+        "endChar": 37
+      },
+      "revId": "c545aa4235472c383f23941491af28568328ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bafc5618_eed6ace8",
         "filename": "lib/vhost/vhost_rpc.c",
         "patchSetId": 5
