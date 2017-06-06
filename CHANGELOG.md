@@ -1,5 +1,11 @@
 # Changelog
 
+## v17.10: (Upcoming Release)
+
+An [fio](http://github.com/axboe/fio) plugin was added that can route
+I/O to the bdev layer. See the [plugin documentation](https://github.com/spdk/spdk/blob/master/examples/bdev/fio_plugin/README.md)
+for more information.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
