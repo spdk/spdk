@@ -72,6 +72,6 @@ void spdk_rpc_lvol_store_construct_cb(void *cb_arg, int bserrno);
 void vbdev_empty_destroy(void *cb_arg, int bserrno);
 struct spdk_lvol_store *vbdev_lvol_store_first(void);
 struct spdk_lvol_store *vbdev_lvol_store_next(struct spdk_lvol_store *);
-//struct spdk_lvol_store *vbdev_get_lvol_store_by_guid(struct spdk_lvol_store_guid *);
+struct spdk_lvol_store *vbdev_get_lvol_store_by_guid(struct spdk_lvol_store_guid *);
 
 #endif /* SPDK_VBDEV_LVOL_H */

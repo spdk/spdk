@@ -39,9 +39,13 @@
 #define SPDK_LVOL_H
 
 #include "spdk/bdev.h"
+#include "spdk/gpt_spec.h"
+#include "spdk/blob.h"
 
 struct spdk_bdev;
 struct spdk_lvol_store;
+#define spdk_lvol_store_guid spdk_gpt_guid
+#define SPDK_LVOL_STORE_GUID SPDK_GPT_GUID
 
 typedef void (*spdk_lvol_store_op_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
 		int bserrno);
@@ -60,7 +64,8 @@ struct spdk_lvol_store {
 	struct spdk_bs_dev		*bs_dev;
 	struct spdk_bdev		*base_bdev;
 	struct spdk_blob_store		*blobstore;
-	char 				*guid;
+	char 				guid2[10];
+	struct spdk_lvol_store_guid	guid;
 
 	TAILQ_ENTRY(spdk_lvol_store)	lvol_stores;
 };
@@ -76,4 +81,6 @@ int lvol_store_initialize(struct spdk_bs_dev *bs_dev, spdk_lvol_store_op_complet
 int lvol_store_free(struct spdk_lvol_store *lvol_store, spdk_lvol_op_complete cb_fn,
 		    void *cb_arg);
 
+void lvol_create_lvol(struct spdk_lvol_store *, size_t,	spdk_lvol_op_complete, void *);
+void lvol_create_lvol_complete(void *, spdk_blob_id, int);
 #endif  /* SPDK_LVOL_H */

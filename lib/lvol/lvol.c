@@ -147,4 +147,24 @@ lvol_store_free(struct spdk_lvol_store *lvol_store, spdk_lvol_op_complete cb_fn,
 	return 0;
 }
 
+void
+lvol_create_lvol_complete(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+
+	/*
+		if (sz != 0) {
+			spdk_bs_md_resize_blob(blob, sz);
+		}
+	 */
+}
+
+void
+lvol_create_lvol(struct spdk_lvol_store *ls, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *b)
+//spdk_lvol_store_create_lvol_complete *cb_fn, void *cb_arg)
+{
+
+	spdk_bs_md_create_blob(ls->blobstore, lvol_create_lvol_complete, NULL);
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)
