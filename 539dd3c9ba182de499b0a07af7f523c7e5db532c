@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9571695_0bd0b1b9",
+        "filename": "lib/bdev/error/vbdev_error_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-06T07:15:05Z",
+      "side": 1,
+      "message": "Regarding new line 165, we can change this \"ret\" to \"io_type\" and have a new local variable int ret as the return value. This will make the line 165 more clear. For your reference. Thanks.",
+      "range": {
+        "startLine": 151,
+        "startChar": 10,
+        "endLine": 151,
+        "endChar": 13
+      },
+      "revId": "539dd3c9ba182de499b0a07af7f523c7e5db532c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
