@@ -200,12 +200,6 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 	return count;
 }
 
-uint32_t
-spdk_event_queue_run_batch(uint32_t lcore)
-{
-	return _spdk_event_queue_run_batch(spdk_reactor_get(lcore));
-}
-
 /**
  *
  * \brief Set current reactor thread name to "reactor <cpu #>".
