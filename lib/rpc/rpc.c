@@ -256,21 +256,4 @@ spdk_rpc_finish(void)
 	return 0;
 }
 
-static void
-spdk_rpc_config_text(FILE *fp)
-{
-	fprintf(fp,
-		"\n"
-		"[Rpc]\n"
-		"  # Defines whether to enable configuration via RPC.\n"
-		"  # Default is disabled.  Note that the RPC interface is not\n"
-		"  # authenticated, so users should be careful about enabling\n"
-		"  # RPC in non-trusted environments.\n"
-		"  Enable %s\n"
-		"  # Listen address for the RPC service.\n"
-		"  # May be an IP address or an absolute path to a Unix socket.\n"
-		"  Listen %s\n",
-		enable_rpc() ? "Yes" : "No", rpc_get_listen_addr());
-}
-
-SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_initialize, spdk_rpc_finish, spdk_rpc_config_text)
+SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_initialize, spdk_rpc_finish)

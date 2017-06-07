@@ -58,7 +58,6 @@ struct spdk_subsystem {
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
 	void (*init)(void);
 	int (*fini)(void);
-	void (*config)(FILE *fp);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
@@ -75,17 +74,15 @@ void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 void spdk_subsystem_init(void *arg1, void *arg2);
 int spdk_subsystem_fini(void);
 void spdk_subsystem_init_next(int rc);
-void spdk_subsystem_config(FILE *fp);
 
 /**
  * \brief Register a new subsystem
  */
-#define SPDK_SUBSYSTEM_REGISTER(_name, _init, _fini, _config)			\
+#define SPDK_SUBSYSTEM_REGISTER(_name, _init, _fini)				\
 	struct spdk_subsystem __spdk_subsystem_ ## _name = {			\
 	.name = #_name,								\
 	.init = _init,								\
 	.fini = _fini,								\
-	.config = _config,							\
 	};									\
 	__attribute__((constructor)) static void _name ## _register(void)	\
 	{									\

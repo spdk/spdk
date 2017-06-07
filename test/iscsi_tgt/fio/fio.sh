@@ -5,33 +5,6 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-function running_config() {
-	# generate a config file from the running iscsi_tgt
-	#  running_config.sh will leave the file at /tmp/iscsi.conf
-	$testdir/running_config.sh $pid
-	sleep 1
-
-	# now start iscsi_tgt again using the generated config file
-	# keep the same iscsiadm configuration to confirm that the
-	#  config file matched the running configuration
-	killprocess $pid
-	trap "iscsicleanup; exit 1" SIGINT SIGTERM EXIT
-
-	timing_enter start_iscsi_tgt2
-
-	$ISCSI_APP -c /tmp/iscsi.conf &
-	pid=$!
-	echo "Process pid: $pid"
-	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
-	waitforlisten $pid ${RPC_PORT}
-	echo "iscsi_tgt is listening. Running tests..."
-
-	timing_exit start_iscsi_tgt2
-
-	sleep 1
-	$fio_py 4096 1 randrw 5
-}
-
 if [ -z "$TARGET_IP" ]; then
 	echo "TARGET_IP not defined in environment"
 	exit 1
@@ -90,15 +63,6 @@ trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 sleep 1
 $fio_py 4096 1 randrw 1 verify
 $fio_py 131072 32 randrw 1 verify
-
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	$fio_py 4096 1 write 300 verify
-
-	# Run the running_config test which will generate a config file from the
-	#  running iSCSI target, then kill and restart the iSCSI target using the
-	#  generated config file
-	running_config
-fi
 
 rm -f ./local-job0-0-verify.state
 

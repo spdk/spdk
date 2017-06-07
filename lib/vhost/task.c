@@ -165,5 +165,5 @@ spdk_vhost_subsystem_fini(void)
 	return 0;
 }
 
-SPDK_SUBSYSTEM_REGISTER(vhost, spdk_vhost_subsystem_init, spdk_vhost_subsystem_fini, NULL)
+SPDK_SUBSYSTEM_REGISTER(vhost, spdk_vhost_subsystem_init, spdk_vhost_subsystem_fini)
 SPDK_SUBSYSTEM_DEPEND(vhost, scsi)

@@ -64,5 +64,5 @@ int spdk_net_framework_idle_time(void)
 	return IDLE_INTERVAL_TIME_IN_US;
 }
 
-SPDK_SUBSYSTEM_REGISTER(net_framework, spdk_net_framework_start, spdk_net_framework_fini, NULL)
+SPDK_SUBSYSTEM_REGISTER(net_framework, spdk_net_framework_start, spdk_net_framework_fini)
 SPDK_SUBSYSTEM_DEPEND(net_framework, interface)

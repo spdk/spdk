@@ -135,7 +135,7 @@ SPDK_TRACE_REGISTER_FN(scsi_trace)
 					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0, 0, 0, "");
 }
 
-SPDK_SUBSYSTEM_REGISTER(scsi, spdk_scsi_subsystem_init, spdk_scsi_subsystem_fini, NULL)
+SPDK_SUBSYSTEM_REGISTER(scsi, spdk_scsi_subsystem_init, spdk_scsi_subsystem_fini)
 SPDK_SUBSYSTEM_DEPEND(scsi, bdev)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)

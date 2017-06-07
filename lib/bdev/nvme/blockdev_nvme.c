@@ -47,8 +47,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-static void bdev_nvme_get_spdk_running_config(FILE *fp);
-
 struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -150,7 +148,6 @@ bdev_nvme_get_ctx_size(void)
 }
 
 SPDK_BDEV_MODULE_REGISTER(bdev_nvme_library_init, bdev_nvme_library_fini,
-			  bdev_nvme_get_spdk_running_config,
 			  bdev_nvme_get_ctx_size)
 
 static int
@@ -1170,12 +1167,6 @@ bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 
 	return spdk_nvme_ctrlr_cmd_io_raw(nbdev->nvme_ctrlr->ctrlr, nvme_ch->qpair, cmd, buf,
 					  (uint32_t)nbytes, bdev_nvme_queued_done, bio);
-}
-
-static void
-bdev_nvme_get_spdk_running_config(FILE *fp)
-{
-	/* TODO */
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)

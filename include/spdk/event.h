@@ -75,7 +75,6 @@ struct spdk_app_opts {
 	int shm_id;
 
 	spdk_app_shutdown_cb	shutdown_cb;
-	spdk_sighandler_t	usr1_handler;
 
 	bool			enable_coredump;
 	int			dpdk_mem_channel;
@@ -124,11 +123,6 @@ void spdk_app_start_shutdown(void);
  * the shutdown process and returns. Once the shutdown process is complete, \ref spdk_app_start will return.
  */
 void spdk_app_stop(int rc);
-
-/**
- * \brief Generate a configuration file that corresponds to the current running state.
- */
-int spdk_app_get_running_config(char **config_str, char *name);
 
 /**
  * \brief Return the shared memory id for this application.

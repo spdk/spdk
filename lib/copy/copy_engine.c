@@ -259,4 +259,4 @@ spdk_copy_engine_finish(void)
 }
 
 SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size)
-SPDK_SUBSYSTEM_REGISTER(copy, spdk_copy_engine_initialize, spdk_copy_engine_finish, NULL)
+SPDK_SUBSYSTEM_REGISTER(copy, spdk_copy_engine_initialize, spdk_copy_engine_finish)

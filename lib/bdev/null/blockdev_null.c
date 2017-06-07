@@ -268,23 +268,7 @@ blockdev_null_finish(void)
 	}
 }
 
-static void
-blockdev_null_get_spdk_running_config(FILE *fp)
-{
-	struct null_bdev *bdev;
-	uint64_t null_bdev_size;
-
-	fprintf(fp, "\n[Null]\n");
-
-	TAILQ_FOREACH(bdev, &g_null_bdev_head, tailq) {
-		null_bdev_size = bdev->bdev.blocklen * bdev->bdev.blockcnt;
-		null_bdev_size /= (1024 * 1024);
-		fprintf(fp, "  %s %" PRIu64 " %d\n",
-			bdev->bdev.name, null_bdev_size, bdev->bdev.blocklen);
-	}
-}
-
 SPDK_BDEV_MODULE_REGISTER(blockdev_null_initialize, blockdev_null_finish,
-			  blockdev_null_get_spdk_running_config, blockdev_null_get_ctx_size)
+			  blockdev_null_get_ctx_size)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_null", SPDK_TRACE_BDEV_NULL)
