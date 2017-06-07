@@ -223,3 +223,9 @@ spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
 
 	return -1;
 }
+
+int
+spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
+{
+	return -1;
+}
