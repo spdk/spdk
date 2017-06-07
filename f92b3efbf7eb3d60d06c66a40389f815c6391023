@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0369b958_9e81a0fa",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:34:09Z",
+      "side": 1,
+      "message": "These casts from void * are not necessary in C.  Also, these allocations and NULL checks could be avoided by just making them stack variables.",
+      "range": {
+        "startLine": 220,
+        "startChar": 9,
+        "endLine": 220,
+        "endChar": 35
+      },
+      "revId": "f92b3efbf7eb3d60d06c66a40389f815c6391023",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
