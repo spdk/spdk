@@ -4,24 +4,35 @@
 
 # RocksDB Integration {#blobfs_rocksdb}
 
-1. Build SPDK as normal.
+1. Clone and build the SPDK repository as per https://github.com/spdk/spdk.git.
 
-2. Clone the RocksDB git repo from the SPDK github projects.  Make sure you check out the spdk branch.
+  git clone https://github.com/spdk/spdk.git
+  cd spdk
+  ./configure
+  make
 
+2. Into a separate directory, clone the RocksDB git repo from the SPDK GitHub fork.  Make sure you check out the spdk branch.
+
+  cd ..
 	git clone -b spdk https://github.com/spdk/rocksdb.git
 
-3. Build RocksDB.  Note that currently only the db_bench benchmarking tool is integrated with BlobFS.
+3. Build RocksDB.  Only the db_bench benchmarking tool is integrated with BlobFS.
    (Note: add "DEBUG_LEVEL=0" for a release build.)
 
+  cd rocksdb
 	make db_bench SPDK_DIR=path/to/spdk
 
-4. Copy etc/spdk/rocksdb.conf.in to /usr/local/etc/spdk/rocksdb.conf.
+4. Copy etc/spdk/rocksdb.conf.in from the spdk repository to /usr/local/etc/spdk/rocksdb.conf.
 
-5. Append an NVMe section to the configuration file.
+  cd ../spdk
+  cp etc/spdk/rocksdb.conf.in /usr/local/etc/spdk/rocksdb.conf
+
+5. Append an NVMe section to the configuration file using SPDK's gen_nvme.sh script.
 
 	scripts/gen_nvme.sh >> /usr/local/etc/spdk/rocksdb.conf
 
 6. Verify the configuration file has specified the correct NVMe SSD.  If there are any NVMe SSDs you do not wish to use for RocksDB/SPDK testing, remove them from the configuration file.
+
 7. Make sure you have at least 5GB of memory allocated for huge pages.  By default the SPDK setup.sh script only allocates 2GB (1024 huge pages).  The following will allocate 5GB worth of 2MB huge pages (in addition to binding the NVMe devices to uio/vfio).  If using 1GB huge pages, adjust the NRHUGE value accordingly.
 
 	NRHUGE=2560 scripts/setup.sh
