@@ -143,7 +143,7 @@ static void
 test_decode_array(void)
 {
 	struct spdk_json_val values[4];
-	uint32_t my_int[2];
+	uint32_t my_int[2] = {0, 0};
 	char *my_string[2] = {NULL, NULL};
 	size_t out_size;
 
