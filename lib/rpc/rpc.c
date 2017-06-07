@@ -225,7 +225,7 @@ spdk_rpc_setup(void *arg)
 			     RPC_SELECT_INTERVAL);
 }
 
-static void
+int
 spdk_rpc_initialize(void)
 {
 	/*
@@ -236,10 +236,10 @@ spdk_rpc_initialize(void)
 	 */
 	spdk_poller_register(&g_rpc_poller, spdk_rpc_setup, NULL, spdk_env_get_current_core(), 0);
 
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
-static int
+int
 spdk_rpc_finish(void)
 {
 	if (g_rpc_listen_addr_unix.sun_path[0]) {
@@ -255,5 +255,3 @@ spdk_rpc_finish(void)
 
 	return 0;
 }
-
-SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_initialize, spdk_rpc_finish)

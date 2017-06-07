@@ -36,9 +36,11 @@
 #include "nvmf_tgt.h"
 
 #include "spdk/bdev.h"
+#include "spdk/copy_engine.h"
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/rpc.h"
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
@@ -267,9 +269,13 @@ acceptor_poll(void *arg)
 }
 
 static void
-spdk_nvmf_startup(void *arg1, void *arg2)
+spdk_nvmf_startup(void *cb_arg, int rc)
 {
-	int rc;
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize a library\n");
+		spdk_app_stop(rc);
+		return;
+	}
 
 	rc = spdk_nvmf_parse_conf();
 	if (rc < 0) {
@@ -294,11 +300,20 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 		fflush(stdout);
 	}
 
+	spdk_rpc_initialize();
+
 	return;
 
 initialize_error:
 	nvmf_tgt_delete_subsystems();
 	spdk_app_stop(rc);
+}
+
+static void
+spdk_nvmf_init(void *arg1, void *arg2)
+{
+	spdk_copy_engine_initialize();
+	spdk_bdev_initialize(spdk_nvmf_startup, NULL);
 }
 
 int
@@ -311,9 +326,13 @@ spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
 
 	printf("Total cores available: %d\n", spdk_env_get_core_count());
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(spdk_nvmf_startup, NULL, NULL);
+	rc = spdk_app_start(spdk_nvmf_init, NULL, NULL);
 
 	spdk_app_fini();
+
+	spdk_rpc_finish();
+	spdk_bdev_finish();
+	spdk_copy_engine_finish();
 
 	return rc;
 }

@@ -398,7 +398,7 @@ fs_load_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 }
 
 static void
-spdk_rocksdb_run(void *arg1, void *arg2)
+spdk_rocksdb_run(void *cb_arg, int rc)
 {
 	struct spdk_bdev *bdev;
 
@@ -418,6 +418,12 @@ spdk_rocksdb_run(void *arg1, void *arg2)
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
 	printf("using bdev %s\n", g_bdev_name.c_str());
 	spdk_fs_load(g_bs_dev, __send_request, fs_load_cb, NULL);
+}
+
+static void
+spdk_rocksdb_init(void *arg1, void *arg2)
+{
+	spdk_bdev_initialize(spdk_rocksdb_run, NULL);
 }
 
 static void
@@ -445,7 +451,7 @@ initialize_spdk(void *arg)
 
 	spdk_app_init(opts);
 
-	spdk_app_start(spdk_rocksdb_run, NULL, NULL);
+	spdk_app_start(spdk_rocksdb_init, NULL, NULL);
 	spdk_app_fini();
 
 	delete opts;

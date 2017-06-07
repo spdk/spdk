@@ -33,12 +33,15 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/log.h"
+#include "spdk/bdev.h"
 #include "spdk/conf.h"
+#include "spdk/copy_engine.h"
 #include "spdk/event.h"
+#include "spdk/log.h"
+#include "spdk/rpc.h"
+#include "spdk/scsi.h"
 
 #include "spdk/vhost.h"
-
 
 #define SPDK_VHOST_DEFAULT_CONFIG "/usr/local/etc/spdk/vhost.conf"
 #define SPDK_VHOST_DEFAULT_ENABLE_COREDUMP true
@@ -153,9 +156,15 @@ main(int argc, char *argv[])
 	spdk_app_init(&opts);
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(spdk_vhost_startup, (void *)socket_path, NULL);
+	rc = spdk_app_start(spdk_vhost_init, (void *)socket_path, NULL);
 
 	spdk_app_fini();
+
+	spdk_rpc_finish();
+	spdk_vhost_subsystem_fini();
+	spdk_scsi_subsystem_fini();
+	spdk_bdev_finish();
+	spdk_copy_engine_finish();
 
 	return rc;
 }

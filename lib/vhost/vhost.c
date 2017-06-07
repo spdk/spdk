@@ -33,11 +33,18 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/bdev.h"
+#include "spdk/conf.h"
+#include "spdk/copy_engine.h"
 #include "spdk/env.h"
+#include "spdk/event.h"
 #include "spdk/likely.h"
+#include "spdk/log.h"
+#include "spdk/rpc.h"
+#include "spdk/scsi.h"
 #include "spdk/util.h"
-
 #include "spdk/vhost.h"
+
 #include "vhost_internal.h"
 #include "task.h"
 #include "vhost_iommu.h"
@@ -577,11 +584,17 @@ spdk_vhost_dev_load(int vid)
 	return vdev;
 }
 
-void
-spdk_vhost_startup(void *arg1, void *arg2)
+static void
+spdk_vhost_startup(void *cb_arg, int rc)
 {
 	int ret;
-	const char *basename = arg1;
+	const char *basename = cb_arg;
+
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize a library\n");
+		spdk_app_stop(rc);
+		return;
+	}
 
 	if (basename && strlen(basename) > 0) {
 		ret = snprintf(dev_dirname, sizeof(dev_dirname) - 2, "%s", basename);
@@ -596,11 +609,22 @@ spdk_vhost_startup(void *arg1, void *arg2)
 		}
 	}
 
+	spdk_scsi_subsystem_init();
+	spdk_vhost_subsystem_init();
+	spdk_rpc_initialize();
+
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost controllers\n");
 		abort();
 	}
+}
+
+void
+spdk_vhost_init(void *arg1, void *arg2)
+{
+	spdk_copy_engine_initialize();
+	spdk_bdev_initialize(spdk_vhost_startup, arg1);
 }
 
 static void *

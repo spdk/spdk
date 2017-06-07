@@ -414,17 +414,18 @@ static void spdk_interface_ip_update(void)
 	pthread_mutex_unlock(&interface_lock);
 }
 
-static void
+int
 spdk_interface_init(void)
 {
 	TAILQ_INIT(&g_interface_head);
 	spdk_prepare_ifc_list();
 	spdk_get_ifc_ipv4();
 
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
-static int spdk_interface_destroy(void)
+int
+spdk_interface_destroy(void)
 {
 	struct spdk_interface *ifc_entry;
 
@@ -462,13 +463,13 @@ void *spdk_interface_get_list(void)
 
 #else /* Not Linux */
 
-static void
+int
 spdk_interface_init(void)
 {
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
-static int
+int
 spdk_interface_destroy(void)
 {
 	return 0;
@@ -493,5 +494,3 @@ spdk_interface_get_list(void)
 }
 
 #endif
-
-SPDK_SUBSYSTEM_REGISTER(interface, spdk_interface_init, spdk_interface_destroy)
