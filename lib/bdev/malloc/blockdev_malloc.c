@@ -91,7 +91,6 @@ int malloc_disk_count = 0;
 
 static void blockdev_malloc_initialize(void);
 static void blockdev_malloc_finish(void);
-static void blockdev_malloc_get_spdk_running_config(FILE *fp);
 
 static int
 blockdev_malloc_get_ctx_size(void)
@@ -100,7 +99,7 @@ blockdev_malloc_get_ctx_size(void)
 }
 
 SPDK_BDEV_MODULE_REGISTER(blockdev_malloc_initialize, blockdev_malloc_finish,
-			  blockdev_malloc_get_spdk_running_config, blockdev_malloc_get_ctx_size)
+			  blockdev_malloc_get_ctx_size)
 
 static void
 blockdev_malloc_delete_from_list(struct malloc_disk *malloc_disk)
@@ -480,41 +479,6 @@ static void blockdev_malloc_finish(void)
 		mdisk = g_malloc_disk_head;
 		g_malloc_disk_head = mdisk->next;
 		free_malloc_disk(mdisk);
-	}
-}
-
-static void
-blockdev_malloc_get_spdk_running_config(FILE *fp)
-{
-	int num_malloc_luns = 0;
-	uint64_t malloc_lun_size = 0;
-
-	/* count number of malloc LUNs, get LUN size */
-	struct malloc_disk *mdisk = g_malloc_disk_head;
-	while (mdisk != NULL) {
-		if (0 == malloc_lun_size) {
-			/* assume all malloc luns the same size */
-			malloc_lun_size = mdisk->disk.blocklen * mdisk->disk.blockcnt;
-			malloc_lun_size /= (1024 * 1024);
-		}
-		num_malloc_luns++;
-		mdisk = mdisk->next;
-	}
-
-	if (num_malloc_luns > 0) {
-		fprintf(fp,
-			"\n"
-			"# Users may change this section to create a different number or size of\n"
-			"# malloc LUNs.\n"
-			"# This will generate %d LUNs with a malloc-allocated backend. Each LUN \n"
-			"# will be %" PRIu64 "MB in size and these will be named Malloc0 through Malloc%d.\n"
-			"# Not all LUNs defined here are necessarily used below.\n"
-			"[Malloc]\n"
-			"  NumberOfLuns %d\n"
-			"  LunSizeInMB %" PRIu64 "\n",
-			num_malloc_luns, malloc_lun_size,
-			num_malloc_luns - 1, num_malloc_luns,
-			malloc_lun_size);
 	}
 }
 

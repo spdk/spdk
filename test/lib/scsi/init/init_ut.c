@@ -41,7 +41,7 @@
 #include "scsi.c"
 
 /* Unit test stubbed bdev subsystem dependency */
-SPDK_SUBSYSTEM_REGISTER(bdev, NULL, NULL, NULL)
+SPDK_SUBSYSTEM_REGISTER(bdev, NULL, NULL)
 
 static int global_rc;
 

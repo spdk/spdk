@@ -98,12 +98,6 @@ struct spdk_bdev_module_if {
 	 */
 	void (*module_fini)(void);
 
-	/**
-	 * Function called to return a text string representing the
-	 * module's configuration options for inclusion in a configuration file.
-	 */
-	void (*config_text)(FILE *fp);
-
 	/** Name for the modules being defined. */
 	const char *module_name;
 
@@ -398,11 +392,10 @@ spdk_bdev_io_from_ctx(void *ctx)
 	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
 }
 
-#define SPDK_BDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)			\
+#define SPDK_BDEV_MODULE_REGISTER(init_fn, fini_fn, ctx_size_fn)				\
 	static struct spdk_bdev_module_if init_fn ## _if = {					\
 	.module_init 	= init_fn,								\
 	.module_fini	= fini_fn,								\
-	.config_text	= config_fn,								\
 	.get_ctx_size	= ctx_size_fn,                                				\
 	};  											\
 	__attribute__((constructor)) static void init_fn ## _init(void)  			\
@@ -410,11 +403,10 @@ spdk_bdev_io_from_ctx(void *ctx)
 	    spdk_bdev_module_list_add(&init_fn ## _if);                  			\
 	}
 
-#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn, bdev_registered_fn)\
+#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, ctx_size_fn, bdev_registered_fn)		\
 	static struct spdk_bdev_module_if init_fn ## _if = {					\
 	.module_init 	= init_fn,								\
 	.module_fini	= fini_fn,								\
-	.config_text	= config_fn,								\
 	.get_ctx_size	= ctx_size_fn,                                				\
 	.bdev_registered	= bdev_registered_fn,						\
 	};  											\

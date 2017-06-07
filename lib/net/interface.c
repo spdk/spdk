@@ -494,4 +494,4 @@ spdk_interface_get_list(void)
 
 #endif
 
-SPDK_SUBSYSTEM_REGISTER(interface, spdk_interface_init, spdk_interface_destroy, NULL)
+SPDK_SUBSYSTEM_REGISTER(interface, spdk_interface_init, spdk_interface_destroy)

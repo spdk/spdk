@@ -56,7 +56,6 @@ set_up_subsystem(struct spdk_subsystem *subsystem, const char *name)
 {
 	subsystem->init = NULL;
 	subsystem->fini = NULL;
-	subsystem->config = NULL;
 	subsystem->name = name;
 }
 
@@ -171,10 +170,10 @@ subsystem_sort_test_depends_on_multiple(void)
 	TAILQ_REMOVE(&g_subsystems, subsystem, tailq);
 }
 
-SPDK_SUBSYSTEM_REGISTER(subsystem1, NULL, NULL, NULL)
-SPDK_SUBSYSTEM_REGISTER(subsystem2, NULL, NULL, NULL)
-SPDK_SUBSYSTEM_REGISTER(subsystem3, NULL, NULL, NULL)
-SPDK_SUBSYSTEM_REGISTER(subsystem4, NULL, NULL, NULL)
+SPDK_SUBSYSTEM_REGISTER(subsystem1, NULL, NULL)
+SPDK_SUBSYSTEM_REGISTER(subsystem2, NULL, NULL)
+SPDK_SUBSYSTEM_REGISTER(subsystem3, NULL, NULL)
+SPDK_SUBSYSTEM_REGISTER(subsystem4, NULL, NULL)
 SPDK_SUBSYSTEM_DEPEND(subsystem1, subsystem2)
 SPDK_SUBSYSTEM_DEPEND(subsystem2, subsystem3)
 SPDK_SUBSYSTEM_DEPEND(subsystem3, subsystem4)

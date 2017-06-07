@@ -416,5 +416,5 @@ vbdev_split_fini(void)
 	}
 }
 
-SPDK_VBDEV_MODULE_REGISTER(vbdev_split_init, vbdev_split_fini, NULL, NULL, NULL)
+SPDK_VBDEV_MODULE_REGISTER(vbdev_split_init, vbdev_split_fini, NULL, NULL)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_split", SPDK_TRACE_VBDEV_SPLIT)

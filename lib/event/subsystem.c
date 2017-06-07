@@ -184,14 +184,3 @@ spdk_subsystem_fini(void)
 
 	return rc;
 }
-
-void
-spdk_subsystem_config(FILE *fp)
-{
-	struct spdk_subsystem *subsystem;
-
-	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
-		if (subsystem->config)
-			subsystem->config(fp);
-	}
-}

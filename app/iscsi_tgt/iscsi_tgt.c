@@ -40,21 +40,6 @@
 #include "spdk/net.h"
 
 static void
-spdk_sigusr1(int signo __attribute__((__unused__)))
-{
-	char *config_str = NULL;
-	if (spdk_app_get_running_config(&config_str, "iscsi.conf") < 0)
-		fprintf(stderr, "Error getting config\n");
-	else {
-		fprintf(stdout, "============================\n");
-		fprintf(stdout, " iSCSI target running config\n");
-		fprintf(stdout, "=============================\n");
-		fprintf(stdout, "%s", config_str);
-	}
-	free(config_str);
-}
-
-static void
 usage(char *executable_name)
 {
 	struct spdk_app_opts opts;
@@ -178,7 +163,6 @@ main(int argc, char **argv)
 	optind = 1; /* reset the optind */
 
 	opts.shutdown_cb = spdk_iscsi_shutdown;
-	opts.usr1_handler = spdk_sigusr1;
 	spdk_app_init(&opts);
 
 	printf("Total cores available: %u\n", spdk_env_get_core_count());
