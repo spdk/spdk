@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "d8e22d41_63f49d2c",
+        "filename": "test/lib/event/event_perf/event_perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-07T01:59:31Z",
+      "side": 0,
+      "message": "I think that we do not need to additional variable to record it, we can just operation on the call_count array.",
+      "parentUuid": "3bb1eede_af772dc4",
+      "revId": "d7134439f6eadb64c0e7afe7803e1794626ee2a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d6211f6_4224361d",
         "filename": "test/lib/event/event_perf/event_perf.c",
         "patchSetId": 5
@@ -47,6 +65,24 @@
       "writtenOn": "2017-06-06T17:44:10Z",
       "side": 0,
       "message": "I think Jim wanted to keep this test to allow benchmarking of just event passing without the overhead of the rest of the reactor loop.\n\nI am open to changing it, but we should make sure Jim is OK with it before we check this in.",
+      "revId": "d7134439f6eadb64c0e7afe7803e1794626ee2a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28bc0e3f_d46cdba0",
+        "filename": "test/lib/event/event_perf/event_perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-07T01:59:31Z",
+      "side": 0,
+      "message": "Let\u0027s wait for Jim\u0027s opinion. But if we merge spdk_app_init into spdk_app_start. Definitely, we need to remove spdk_event_queue_run_batch.",
+      "parentUuid": "2d6211f6_4224361d",
       "revId": "d7134439f6eadb64c0e7afe7803e1794626ee2a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

@@ -16,6 +16,24 @@
       "revId": "503ca467bec665c9413b1ecd610176d059391237",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f9d7a7f_34e871cb",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-07T01:59:31Z",
+      "side": 1,
+      "message": "In our current code, we need to change the field in opts structure in spdk_app_start, so we can not use const. If we use, we need to copy the data from opts into another variable.",
+      "parentUuid": "34941119_6de7ebb0",
+      "revId": "503ca467bec665c9413b1ecd610176d059391237",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
