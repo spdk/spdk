@@ -40,6 +40,7 @@
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
+#include "spdk/vhost.h"
 #include "task.h"
 
 #undef container_of
@@ -129,17 +130,14 @@ spdk_vhost_iovec_free(struct iovec *iov)
 	rte_mempool_put(g_iov_buffer_pool, iov);
 }
 
-static void
+int
 spdk_vhost_subsystem_init(void)
 {
-	int rc = 0;
-
 	g_task_pool = rte_mempool_create("vhost task pool", 16384, sizeof(struct spdk_vhost_task),
 					 128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
 	if (!g_task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
-		rc = -1;
-		goto end;
+		return -1;
 	}
 
 	g_iov_buffer_pool = rte_mempool_create("vhost iov buffer pool", 2048,
@@ -147,23 +145,18 @@ spdk_vhost_subsystem_init(void)
 					       128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
 	if (!g_iov_buffer_pool) {
 		SPDK_ERRLOG("create iov buffer pool failed\n");
-		rc = -1;
-		goto end;
+		return -1;
 	}
 
 	for (int i = 0; i < RTE_MAX_LCORE; i++) {
 		TAILQ_INIT(&g_need_iovecs[i]);
 	}
 
-end:
-	spdk_subsystem_init_next(rc);
+	return 0;
 }
 
-static int
+int
 spdk_vhost_subsystem_fini(void)
 {
 	return 0;
 }
-
-SPDK_SUBSYSTEM_REGISTER(vhost, spdk_vhost_subsystem_init, spdk_vhost_subsystem_fini)
-SPDK_SUBSYSTEM_DEPEND(vhost, scsi)

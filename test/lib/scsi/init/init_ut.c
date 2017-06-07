@@ -40,11 +40,6 @@
 
 #include "scsi.c"
 
-/* Unit test stubbed bdev subsystem dependency */
-SPDK_SUBSYSTEM_REGISTER(bdev, NULL, NULL)
-
-static int global_rc;
-
 static int
 null_init(void)
 {
@@ -55,22 +50,6 @@ static int
 null_clean(void)
 {
 	return 0;
-}
-
-void
-spdk_add_subsystem(struct spdk_subsystem *subsystem)
-{
-}
-
-void
-spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend)
-{
-}
-
-void
-spdk_subsystem_init_next(int rc)
-{
-	global_rc = rc;
 }
 
 static struct spdk_conf *
@@ -122,17 +101,17 @@ static void
 scsi_init_sp_null(void)
 {
 	struct spdk_conf *config;
+	int rc;
 
 	config = spdk_conf_allocate();
 	SPDK_CU_ASSERT_FATAL(config != NULL);
 
 	spdk_conf_set_as_default(config);
 
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+	rc = spdk_scsi_subsystem_init();
 
 	/* sp = null; set default scsi params */
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_set_as_default(NULL);
 
@@ -144,19 +123,20 @@ scsi_init_set_max_unmap_lba_count_config_param(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.max_unmap_lba_count = 65536 of Scsi section */
 	config = spdk_config_init_scsi_params("MaxUnmapLbaCount", "65536");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+
+	rc = spdk_scsi_subsystem_init();
 
 	/* Assert the scsi_params.max_unmap_lba_count == 65536 and
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.max_unmap_lba_count = 65536;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -166,20 +146,21 @@ scsi_init_set_max_unmap_block_descriptor_count_config_param(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.max_unmap_block_descriptor_count = 1
 	 * of Scsi section */
 	config = spdk_config_init_scsi_params("MaxUnmapBlockDescriptorCount", "1");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+
+	rc = spdk_scsi_subsystem_init();
 
 	/* Assert the scsi_params.max_unmap_block_descriptor_count == 1 and
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.max_unmap_block_descriptor_count = 1;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -189,20 +170,21 @@ scsi_init_set_optimal_unmap_granularity_config_param(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.optimal_unmap_granularity = 0
 	 * of Scsi section */
 	config = spdk_config_init_scsi_params("OptimalUnmapGranularity", "0");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+
+	rc = spdk_scsi_subsystem_init();
 
 	/* Assert the scsi_params.optimal_unmap_granularity == 0 and
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.optimal_unmap_granularity = 0;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -212,20 +194,21 @@ scsi_init_set_unmap_granularity_alignment_config_param(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.unmap_granularity_alignment = 0
 	 * of Scsi section */
 	config = spdk_config_init_scsi_params("UnmapGranularityAlignment", "0");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+
+	rc = spdk_scsi_subsystem_init();
 
 	/* Assert the scsi_params.unmap_granularity_alignment == 0 and
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.unmap_granularity_alignment = 0;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -235,20 +218,21 @@ scsi_init_ugavalid_yes(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.ugavalid = Yes
 	 * of Scsi section */
 	config = spdk_config_init_scsi_params("Ugavalid", "Yes");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+
+	rc = spdk_scsi_subsystem_init();
 
 	/* Assert the scsi_params.ugavalid == 1 and
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.ugavalid = 1;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -258,20 +242,21 @@ scsi_init_ugavalid_no(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.ugavalid = No
 	 * of Scsi section */
 	config = spdk_config_init_scsi_params("Ugavalid", "No");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+
+	rc = spdk_scsi_subsystem_init();
 
 	/* Assert the scsi_params.ugavalid == 0 and
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.ugavalid = 0;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -281,14 +266,15 @@ scsi_init_ugavalid_unknown_value_failure(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.ugavalid = unknown value
 	 * of Scsi section */
 	config = spdk_config_init_scsi_params("Ugavalid", "unknown value");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
-	CU_ASSERT_EQUAL(global_rc, 0);
+
+	rc = spdk_scsi_subsystem_init();
+	CU_ASSERT_EQUAL(rc, 0);
 
 	/* Assert the scsi_params.ugavalid == DEFAULT_UGAVALID and
 	 * assert the rest of the params are set to their default values */
@@ -304,20 +290,20 @@ scsi_init_max_write_same_length(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* set scsi_params.max_write_same_length = 512
 	 * of Scsi section */
 	config = spdk_config_init_scsi_params("MaxWriteSameLength", "512");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+	rc = spdk_scsi_subsystem_init();
 
 	/* Assert the scsi_params.max_write_same_length == 512 and
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.max_write_same_length = 512;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -327,19 +313,19 @@ scsi_init_read_config_scsi_params(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* Set null for item's key and value;
 	 * set default scsi parameters */
 	config = spdk_config_init_scsi_params("", "");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+	rc = spdk_scsi_subsystem_init();
 
 	/* Sets the default values for all the parameters
 	 * of the Scsi section and returns success */
 	set_default_scsi_params(&params);
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }
@@ -349,20 +335,20 @@ scsi_init_success(void)
 {
 	struct spdk_scsi_parameters params;
 	struct spdk_conf *config;
+	int rc;
 
 	/* Set null for item's key and value;
 	 * set default scsi parameters */
 	config = spdk_config_init_scsi_params("", "");
 	spdk_conf_set_as_default(config);
-	global_rc = -1;
-	spdk_scsi_subsystem_init();
+	rc = spdk_scsi_subsystem_init();
 
 	/* Sets the default values for all the parameters
 	 * of the Scsi section, initialize th device
 	 *  and returns success */
 	set_default_scsi_params(&params);
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-	CU_ASSERT_EQUAL(global_rc, 0);
+	CU_ASSERT_EQUAL(rc, 0);
 
 	spdk_conf_free(config);
 }

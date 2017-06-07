@@ -80,6 +80,8 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 };
 
+static spdk_bdev_init_cpl	g_cb_fn = NULL;
+static void			*g_cb_arg = NULL;
 static struct spdk_bdev_module_if *g_next_bdev_module;
 static struct spdk_bdev_module_if *g_next_vbdev_module;
 
@@ -281,7 +283,9 @@ spdk_bdev_module_init_next(int rc)
 	if (rc) {
 		assert(g_next_bdev_module != NULL);
 		SPDK_ERRLOG("Failed to init bdev module: %s\n", g_next_bdev_module->module_name);
-		spdk_subsystem_init_next(rc);
+		g_cb_fn(g_cb_arg, 0);
+		g_cb_fn = NULL;
+		g_cb_arg = NULL;
 		return;
 	}
 
@@ -304,7 +308,9 @@ spdk_vbdev_module_init_next(int rc)
 	if (rc) {
 		assert(g_next_vbdev_module != NULL);
 		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->module_name);
-		spdk_subsystem_init_next(rc);
+		g_cb_fn(g_cb_arg, 0);
+		g_cb_fn = NULL;
+		g_cb_arg = NULL;
 		return;
 	}
 
@@ -317,15 +323,20 @@ spdk_vbdev_module_init_next(int rc)
 	if (g_next_vbdev_module) {
 		g_next_vbdev_module->module_init();
 	} else {
-		spdk_subsystem_init_next(0);
+		g_cb_fn(g_cb_arg, 0);
+		g_cb_fn = NULL;
+		g_cb_arg = NULL;
 	}
 }
 
-static void
-spdk_bdev_initialize(void)
+int
+spdk_bdev_initialize(spdk_bdev_init_cpl cb_fn, void *cb_arg)
 {
 	int cache_size;
-	int rc = 0;
+
+	assert(g_cb_fn == NULL);
+	g_cb_fn = cb_fn;
+	g_cb_arg = cb_arg;
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
 				  SPDK_BDEV_IO_POOL_SIZE,
@@ -336,8 +347,7 @@ spdk_bdev_initialize(void)
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool");
-		rc = -1;
-		goto end;
+		return -1;
 	}
 
 	/**
@@ -353,8 +363,7 @@ spdk_bdev_initialize(void)
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_small_pool) {
 		SPDK_ERRLOG("create rbuf small pool failed\n");
-		rc = -1;
-		goto end;
+		return -1;
 	}
 
 	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
@@ -365,8 +374,7 @@ spdk_bdev_initialize(void)
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
-		rc = -1;
-		goto end;
+		return -1;
 	}
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -377,11 +385,12 @@ spdk_bdev_initialize(void)
 				spdk_bdev_mgmt_channel_destroy,
 				sizeof(struct spdk_bdev_mgmt_channel));
 
-end:
-	spdk_bdev_module_init_next(rc);
+	spdk_bdev_module_init_next(0);
+
+	return 0;
 }
 
-static int
+int
 spdk_bdev_finish(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
@@ -1401,5 +1410,3 @@ spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
 }
-SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_initialize, spdk_bdev_finish)
-SPDK_SUBSYSTEM_DEPEND(bdev, copy)

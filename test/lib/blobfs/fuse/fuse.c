@@ -299,10 +299,22 @@ init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 }
 
 static void
-spdk_fuse_run(void *arg1, void *arg2)
+spdk_fuse_run(void *cb_arg, int rc)
 {
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize a library\n");
+		spdk_app_stop(rc);
+		return;
+	}
+
 	construct_targets();
 	spdk_fs_load(g_bs_dev, __send_request, init_cb, NULL);
+}
+
+static void
+spdk_fuse_init(void *arg1, void *arg2)
+{
+	spdk_bdev_initialize(spdk_fuse_run, NULL);
 }
 
 static void
@@ -342,7 +354,10 @@ int main(int argc, char **argv)
 	g_fuse_argc = argc - 2;
 	g_fuse_argv = &argv[2];
 
-	spdk_app_start(spdk_fuse_run, NULL, NULL);
+	spdk_app_start(spdk_fuse_init, NULL, NULL);
+
+	spdk_bdev_finish();
+
 	spdk_app_fini();
 
 	return 0;
