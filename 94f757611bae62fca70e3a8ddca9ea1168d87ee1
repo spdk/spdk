@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a4cbeab_f86b67ee",
+        "filename": "test/lib/nvme/unit/nvme_ns_c/nvme_ns_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:20:13Z",
+      "side": 1,
+      "message": "This function should be mocked up to return a test-provided Identify Namespace data structure.",
+      "revId": "94f757611bae62fca70e3a8ddca9ea1168d87ee1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af3795dd_2ec4926e",
+        "filename": "test/lib/nvme/unit/nvme_ns_c/nvme_ns_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:20:13Z",
+      "side": 1,
+      "message": "It would be simpler to just make a spdk_nvme_ns on the stack (that way you don\u0027t need to have allocation failure checks) - see the test_nvme_ns_construct() example right above.\n\n(Also, for future note: you don\u0027t need the cast from void * to a more specific pointer type in C, and it would be less error-prone to use sizeof(*ns).)",
+      "revId": "94f757611bae62fca70e3a8ddca9ea1168d87ee1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53ae7bdd_21530cb6",
+        "filename": "test/lib/nvme/unit/nvme_ns_c/nvme_ns_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:20:13Z",
+      "side": 1,
+      "message": "Same here - replace malloc() with a stack variable.",
+      "revId": "94f757611bae62fca70e3a8ddca9ea1168d87ee1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd7704d5_ec7b1ff4",
+        "filename": "test/lib/nvme/unit/nvme_ns_c/nvme_ns_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:20:13Z",
+      "side": 1,
+      "message": "These tests are bypassing the code that\u0027s actually interesting to test. The getter functions themselves are trivial and not likely to have any bugs that are caught by directly assigning values into ns.\n\nRather than directly assigning things into ns, please use nvme_ns_construct() to fill out the ns fields.  You will need to fill out the nvme_ctrlr_cmd_identify_namespace() stub above to return the mocked-up Identify Namespace data.  Then you can test whether nvme_ns_identify_update() is actually filling out ns correctly based on the nsdata.  There are lots of interesting cases to test, so you will probably need multiple Identify Namespace data versions to hit all of the paths.",
+      "revId": "94f757611bae62fca70e3a8ddca9ea1168d87ee1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
