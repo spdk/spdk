@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdevio bdevperf
+DIRS-y = bdevio bdevperf lvol_ut
 
 .PHONY: all clean $(DIRS-y)
 
