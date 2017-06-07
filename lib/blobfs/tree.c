@@ -97,6 +97,7 @@ spdk_tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
 	tree = root;
 	while (tree->level > 0) {
 		index = offset / CACHE_TREE_LEVEL_SIZE(tree->level);
+		assert(index < CACHE_TREE_WIDTH);
 		offset &= CACHE_TREE_LEVEL_MASK(tree->level);
 		if (tree->u.tree[index] == NULL) {
 			tree->u.tree[index] = calloc(1, sizeof(*tree));
@@ -107,6 +108,7 @@ spdk_tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
 	}
 
 	index = offset / CACHE_BUFFER_SIZE;
+	assert(index < CACHE_TREE_WIDTH);
 	assert(tree->u.buffer[index] == NULL);
 	tree->u.buffer[index] = buffer;
 	tree->present_mask |= (1ULL << index);
