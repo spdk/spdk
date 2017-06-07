@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcfce354_dc5783b1",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-07T08:03:50Z",
+      "side": 1,
+      "message": "Add the \"{}\" for the if condition. Thanks.",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 63,
+        "endChar": 15
+      },
+      "revId": "2e5f8131c6afac06b4f799685519a945e9c7c6e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc69b6bd_c7656c21",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-07T08:03:50Z",
+      "side": 1,
+      "message": "This case looks like a little simple. Will we add more test scenarios? Also the commit message says this patch for the \"parse and compare\". We may add this in another specific patch. Thanks.",
+      "range": {
+        "startLine": 356,
+        "startChar": 0,
+        "endLine": 356,
+        "endChar": 15
+      },
+      "revId": "2e5f8131c6afac06b4f799685519a945e9c7c6e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d1c3dce_3bbbd5e8",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-07T08:03:50Z",
+      "side": 1,
+      "message": "no new line here",
+      "revId": "2e5f8131c6afac06b4f799685519a945e9c7c6e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
