@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75b379be_ca5f72cc",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:30:49Z",
+      "side": 1,
+      "message": "This should just test for ret \u003e 0 to match the documentation (it just says greater than 0, not specific \u003d\u003d 1).",
+      "revId": "f4a41ab5f3209883c02d7987886eca94c2cd23b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af55febd_4333d747",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:30:49Z",
+      "side": 1,
+      "message": "Please avoid strcpy() - it is on the banned functions list.  You can replace this with something like:\n\n   snprintf(trid1.traddr, sizeof(trid1.traddr), \"192.168.100.8\");\n\nAlternatively, you could just use spdk_nvme_transport_id_parse() to parse a real trid string.",
+      "revId": "f4a41ab5f3209883c02d7987886eca94c2cd23b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
