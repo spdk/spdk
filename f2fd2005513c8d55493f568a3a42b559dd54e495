@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "29d31d85_41e0e9fd",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:04:39Z",
+      "side": 1,
+      "message": "Won\u0027t this crash if ctx is NULL? (when you pass NULL as trid_local in the spdk_nvme_probe() call)",
+      "range": {
+        "startLine": 574,
+        "startChar": 44,
+        "endLine": 574,
+        "endChar": 53
+      },
+      "revId": "f2fd2005513c8d55493f568a3a42b559dd54e495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3c94bd0_a6bf0203",
         "filename": "lib/bdev/nvme/blockdev_nvme.c",
         "patchSetId": 7
@@ -19,6 +42,23 @@
         "endLine": 743,
         "endChar": 2
       },
+      "revId": "f2fd2005513c8d55493f568a3a42b559dd54e495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adbaea3d_1c17d8b1",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:04:39Z",
+      "side": 1,
+      "message": "We should just set trid.subnqn to this value before calling spdk_nvme_transport_id_parse() (that way the trtype check is not needed and we won\u0027t have to update it for other transports added in the future).",
       "revId": "f2fd2005513c8d55493f568a3a42b559dd54e495",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b86381b_97237f45",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-07T21:04:39Z",
+      "side": 0,
+      "message": "The idea behind calling probe here was that we can overlap NVMe controller startup (reset, etc.) for many controllers at once; if we call spdk_bdev_nvme_create() for each transport ID, the startup becomes serialized again.\n\nI\u0027m not totally opposed to moving away from probing all devices at once if it\u0027s for a good reason, but this looks like a startup performance regression without a good reason.",
+      "revId": "fc6e9354ca77dd935b6735e51f9e8dee8640f4e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
