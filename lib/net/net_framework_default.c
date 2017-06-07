@@ -42,9 +42,9 @@ const char *spdk_net_framework_get_name(void)
 }
 
 __attribute__((weak))
-void spdk_net_framework_start(void)
+int spdk_net_framework_start(void)
 {
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
 __attribute__((weak))
@@ -63,6 +63,3 @@ int spdk_net_framework_idle_time(void)
 {
 	return IDLE_INTERVAL_TIME_IN_US;
 }
-
-SPDK_SUBSYSTEM_REGISTER(net_framework, spdk_net_framework_start, spdk_net_framework_fini)
-SPDK_SUBSYSTEM_DEPEND(net_framework, interface)

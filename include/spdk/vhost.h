@@ -43,10 +43,10 @@
 
 #include "spdk/event.h"
 
-/**
- * \param event event object. event arg1 is optional path to vhost socket.
- */
-void spdk_vhost_startup(void *arg1, void *arg2);
+int spdk_vhost_subsystem_init(void);
+int spdk_vhost_subsystem_fini(void);
+
+void spdk_vhost_init(void *arg1, void *arg2);
 void spdk_vhost_shutdown_cb(void);
 
 /* Forward declaration */

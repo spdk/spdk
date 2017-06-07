@@ -33,11 +33,14 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/bdev.h"
+#include "spdk/copy_engine.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
 #include "iscsi/iscsi.h"
 #include "spdk/log.h"
 #include "spdk/net.h"
+#include "spdk/rpc.h"
 
 static void
 usage(char *executable_name)
@@ -65,12 +68,31 @@ usage(char *executable_name)
 }
 
 static void
-spdk_startup(void *arg1, void *arg2)
+spdk_startup(void *cb_arg, int rc)
+{
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize a library\n");
+		spdk_app_stop(rc);
+		return;
+	}
+
+	spdk_interface_init();
+	spdk_net_framework_start();
+	spdk_scsi_subsystem_init();
+	spdk_iscsi_subsystem_init();
+	spdk_rpc_initialize();
+}
+
+static void
+iscsi_init(void *arg1, void *arg2)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
 		fflush(stdout);
 	}
+
+	spdk_copy_engine_initialize();
+	spdk_bdev_initialize(spdk_startup, NULL);
 }
 
 int
@@ -168,7 +190,15 @@ main(int argc, char **argv)
 	printf("Total cores available: %u\n", spdk_env_get_core_count());
 	printf("Using net framework %s\n", spdk_net_framework_get_name());
 	/* Blocks until the application is exiting */
-	app_rc = spdk_app_start(spdk_startup, NULL, NULL);
+	app_rc = spdk_app_start(iscsi_init, NULL, NULL);
+
+	spdk_rpc_finish();
+	spdk_iscsi_subsystem_fini();
+	spdk_scsi_subsystem_fini();
+	spdk_net_framework_fini();
+	spdk_interface_destroy();
+	spdk_bdev_finish();
+	spdk_copy_engine_finish();
 
 	rc = spdk_app_fini();
 

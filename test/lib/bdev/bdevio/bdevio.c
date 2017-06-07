@@ -693,13 +693,19 @@ blockdev_test_reset(void)
 }
 
 static void
-test_main(void *arg1, void *arg2)
+test_main(void *cb_arg, int rc)
 {
 	CU_pSuite suite = NULL;
 	unsigned int num_failures;
 
 	pthread_mutex_init(&g_test_mutex, NULL);
 	pthread_cond_init(&g_test_cond, NULL);
+
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize a library\n");
+		spdk_app_stop(rc);
+		return;
+	}
 
 	if (bdevio_construct_targets() < 0) {
 		spdk_app_stop(-1);
@@ -759,6 +765,13 @@ test_main(void *arg1, void *arg2)
 	spdk_app_stop(num_failures);
 }
 
+static void
+test_init(void *arg1, void *arg2)
+{
+	spdk_copy_engine_initialize();
+	spdk_bdev_initialize(test_main, NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -772,8 +785,11 @@ main(int argc, char **argv)
 	}
 	bdevtest_init(config_file, "0x3");
 
-	num_failures = spdk_app_start(test_main, NULL, NULL);
+	num_failures = spdk_app_start(test_init, NULL, NULL);
 	spdk_app_fini();
+
+	spdk_bdev_finish();
+	spdk_copy_engine_finish();
 
 	return num_failures;
 }

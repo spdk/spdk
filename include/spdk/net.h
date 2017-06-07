@@ -45,7 +45,7 @@
 #define IDLE_INTERVAL_TIME_IN_US 5000
 
 const char *spdk_net_framework_get_name(void);
-void spdk_net_framework_start(void);
+int spdk_net_framework_start(void);
 void spdk_net_framework_clear_socket_association(int sock);
 int spdk_net_framework_fini(void);
 int spdk_net_framework_idle_time(void);
@@ -61,6 +61,8 @@ struct spdk_interface {
 	TAILQ_ENTRY(spdk_interface)	tailq;
 };
 
+int spdk_interface_init(void);
+int spdk_interface_destroy(void);
 int spdk_interface_add_ip_address(int ifc_index, char *ip_addr);
 int spdk_interface_delete_ip_address(int ifc_index, char *ip_addr);
 void *spdk_interface_get_list(void);

@@ -107,6 +107,11 @@ struct spdk_bdev_io_stat {
 	uint64_t num_write_ops;
 };
 
+typedef void (*spdk_bdev_init_cpl)(void *cb_arg, int rc);
+
+int spdk_bdev_initialize(spdk_bdev_init_cpl cb_fn, void *cb_arg);
+int spdk_bdev_finish(void);
+
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 
 struct spdk_bdev *spdk_bdev_first(void);

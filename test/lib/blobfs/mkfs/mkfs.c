@@ -67,9 +67,15 @@ init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 }
 
 static void
-spdk_mkfs_run(void *arg1, void *arg2)
+spdk_mkfs_run(void *cb_arg, int rc)
 {
 	struct spdk_bdev *bdev;
+
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize a library\n");
+		spdk_app_stop(rc);
+		return;
+	}
 
 	bdev = spdk_bdev_get_by_name(g_bdev_name);
 
@@ -89,6 +95,12 @@ spdk_mkfs_run(void *arg1, void *arg2)
 	fflush(stdout);
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
 	spdk_fs_init(g_bs_dev, NULL, init_cb, NULL);
+}
+
+static void
+spdk_mkfs_init(void *arg1, void *arg2)
+{
+	spdk_bdev_initialize(spdk_mkfs_run, NULL);
 }
 
 int main(int argc, char **argv)
@@ -111,7 +123,10 @@ int main(int argc, char **argv)
 	spdk_fs_set_cache_size(512);
 
 	g_bdev_name = argv[2];
-	spdk_app_start(spdk_mkfs_run, NULL, NULL);
+	spdk_app_start(spdk_mkfs_init, NULL, NULL);
+
+	spdk_bdev_finish();
+
 	spdk_app_fini();
 
 	return 0;

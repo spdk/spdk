@@ -480,11 +480,17 @@ performance_statistics_thread(void *arg)
 }
 
 static void
-bdevperf_run(void *arg1, void *arg2)
+bdevperf_run(void *cb_arg, int rc)
 {
 	uint32_t i;
 	struct io_target *target;
 	struct spdk_event *event;
+
+	if (rc) {
+		SPDK_ERRLOG("Failed to initialize a library\n");
+		spdk_app_stop(rc);
+		return;
+	}
 
 	bdevperf_construct_targets();
 
@@ -506,6 +512,13 @@ bdevperf_run(void *arg1, void *arg2)
 			spdk_event_call(event);
 		}
 	}
+}
+
+static void
+bdevperf_init(void *arg1, void *arg2)
+{
+	spdk_copy_engine_initialize();
+	spdk_bdev_initialize(bdevperf_run, NULL);
 }
 
 int
@@ -679,7 +692,10 @@ main(int argc, char **argv)
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
 
-	spdk_app_start(bdevperf_run, NULL, NULL);
+	spdk_app_start(bdevperf_init, NULL, NULL);
+
+	spdk_bdev_finish();
+	spdk_copy_engine_finish();
 
 	performance_dump(g_time_in_sec);
 	spdk_app_fini();
