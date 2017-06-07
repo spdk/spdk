@@ -44,7 +44,7 @@ C_SRCS-$(CONFIG_VTUNE) += $(VTUNE_SOURCE_DIR)/sdk/src/ittnotify/ittnotify_static
 
 LIBNAME = bdev
 
-DIRS-y += error malloc null nvme rpc split
+DIRS-y += error lvol malloc null nvme rpc split
 
 ifeq ($(OS),Linux)
 DIRS-y += aio
