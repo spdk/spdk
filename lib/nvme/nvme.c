@@ -604,16 +604,19 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 
 	cmp = strcasecmp(trid1->traddr, trid2->traddr);
 	if (cmp) {
+		printf("traddr did not match\n");
 		return cmp;
 	}
 
 	cmp = strcasecmp(trid1->trsvcid, trid2->trsvcid);
 	if (cmp) {
+		printf("trsvcid did not match\n");
 		return cmp;
 	}
 
 	cmp = strcasecmp(trid1->subnqn, trid2->subnqn);
 	if (cmp) {
+		printf("subnqn did not match\n");
 		return cmp;
 	}
 
