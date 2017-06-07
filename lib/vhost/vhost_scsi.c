@@ -598,6 +598,7 @@ remove_vdev_cb(void *arg1, void *arg2)
 			continue;
 		}
 		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
+		spdk_vhost_scsi_dev_remove_dev(svdev, i);
 	}
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
@@ -871,7 +872,6 @@ destroy_device(int vid)
 	struct spdk_vhost_dev *vdev;
 	struct spdk_event *event;
 	sem_t done_sem;
-	uint32_t i;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -889,19 +889,14 @@ destroy_device(int vid)
 	if (vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister control queue poller.\n", vdev->name);
 
-	/* Wait for all tasks to finish */
-	for (i = 1000; i && vdev->task_cnt > 0; i--) {
-		usleep(1000);
-	}
-
-	if (vdev->task_cnt > 0) {
-		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
-	}
-
 	event = vhost_sem_event_alloc(vdev->lcore, remove_vdev_cb, svdev, &done_sem);
 	spdk_event_call(event);
 	if (vhost_sem_timedwait(&done_sem, 1))
 		rte_panic("%s: failed to unregister poller.\n", vdev->name);
+
+	if (vdev->task_cnt > 0) {
+		SPDK_ERRLOG("%s: Leaked %u tasks when shutting down\n", vdev->name, vdev->task_cnt);
+	}
 
 	spdk_vhost_dev_unload(vdev);
 }
