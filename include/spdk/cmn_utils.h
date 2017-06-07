@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
+ *   Copyright (c) NetApp, Inc.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,49 +31,23 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMF_REQUEST_H
-#define NVMF_REQUEST_H
+/**
+ * \file
+ * Common utilities
+ */
 
-#include "spdk/nvmf_spec.h"
-#include "spdk/queue.h"
+#ifndef SPDK_CMN_UTILS_H
+#define SPDK_CMN_UTILS_H
 
-typedef enum _spdk_nvmf_request_exec_status {
-	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
-	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
-} spdk_nvmf_request_exec_status;
+#include "spdk/stdinc.h"
 
-union nvmf_h2c_msg {
-	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
-	struct spdk_nvme_cmd				nvme_cmd;
-	struct spdk_nvmf_fabric_prop_set_cmd		prop_set_cmd;
-	struct spdk_nvmf_fabric_prop_get_cmd		prop_get_cmd;
-	struct spdk_nvmf_fabric_connect_cmd		connect_cmd;
-};
-SPDK_STATIC_ASSERT(sizeof(union nvmf_h2c_msg) == 64, "Incorrect size");
+#define SEC_TO_NANOSEC			1000000000UL
+#define hz rte_get_tsc_hz()
 
-union nvmf_c2h_msg {
-	struct spdk_nvme_cpl				nvme_cpl;
-	struct spdk_nvmf_fabric_prop_get_rsp		prop_get_rsp;
-	struct spdk_nvmf_fabric_connect_rsp		connect_rsp;
-};
-SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
-
-struct spdk_nvmf_request {
-	struct spdk_nvmf_conn		*conn;
-	uint32_t			length;
-	enum spdk_nvme_data_transfer	xfer;
-	void				*data;
-	union nvmf_h2c_msg		*cmd;
-	union nvmf_c2h_msg		*rsp;
-	struct spdk_scsi_unmap_bdesc	*unmap_bdesc;
-#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
-	uint64_t time[6];
-#endif
-};
-
-int
-spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
-
-int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
-
+uint64_t spdk_timestamp_ticks(void);
+uint64_t spdk_ticks_to_nsec(uint64_t ticks);
+uint64_t spdk_power_fn(uint32_t base, uint64_t exp);
+uint32_t spdk_percent_fn(uint64_t multiplier, uint64_t divisor);
+uint32_t spdk_floor_log2(uint64_t x);
+uint32_t spdk_floor_log10(uint64_t x);
 #endif

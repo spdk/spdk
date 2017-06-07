@@ -1,7 +1,7 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
+#  Copyright (c) NetApp, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,55 +31,22 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=n
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/json.unittest.mk
 
-# Treat warnings as errors (fail the build on any warning).
-CONFIG_WERROR?=n
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/util
 
-# Build with link-time optimization.
-CONFIG_LTO?=n
+APP = histogram_ut
+C_SRCS := histogram_ut.c
 
-# Build with code coverage instrumentation.
-CONFIG_COVERAGE?=n
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
+LIBS += -lcunit
 
-# Build with Address Sanitizer enabled
-CONFIG_ASAN?=n
+all : $(APP)
 
-# Build with Undefined Behavior Sanitizer enabled
-CONFIG_UBSAN?=n
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
 
-# Build with Thread Sanitizer enabled
-CONFIG_TSAN?=n
-
-# Directory that contains the desired SPDK environment library.
-# By default, this is implemented using DPDK.
-CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
-
-# This directory should contain 'include' and 'lib' directories for your DPDK
-# installation. Alternatively you can specify this on the command line
-# with 'make DPDK_DIR=/path/to/dpdk'. This is only a valid entry
-# when using the default SPDK environment library.
-CONFIG_DPDK_DIR?=/path/to/dpdk
-
-# Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
-# fio source code directory.
-CONFIG_FIO_PLUGIN?=n
-
-# This directory should contain the source code directory for fio
-# which is required for building the SPDK FIO plugin.
-FIO_SOURCE_DIR?=/usr/src/fio
-
-# Enable RDMA support for the NVMf target.
-# Requires ibverbs development libraries.
-CONFIG_RDMA?=n
-
-# Build Ceph RBD support in bdev modules
-# Requires librbd development libraries
-CONFIG_RBD?=n
-
-# Build vhost library.
-CONFIG_VHOST?=y
-
-# Build histogram probe points at RDMA layer
-CONFIG_HISTOGRAM_RDMA?=y
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
