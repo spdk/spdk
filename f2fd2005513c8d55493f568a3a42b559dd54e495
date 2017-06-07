@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3c94bd0_a6bf0203",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-07T09:52:59Z",
+      "side": 1,
+      "message": "Why still pass NULL for local devices is that: we fail the test by passing trid in FreeBSD. I did not have FreeBSD environment, I can not dig more currently.",
+      "range": {
+        "startLine": 741,
+        "startChar": 1,
+        "endLine": 743,
+        "endChar": 2
+      },
+      "revId": "f2fd2005513c8d55493f568a3a42b559dd54e495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
