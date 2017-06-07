@@ -110,7 +110,7 @@ vbdev_construct_lvol_store(struct spdk_bdev *base_bdev,
 
 	if (!spdk_bdev_claim(base_bdev, NULL, NULL)) {
 		SPDK_ERRLOG("Lvol store bdev %s is already claimed\n", spdk_bdev_get_name(base_bdev));
-		return -1;
+		goto invalid;
 	}
 
 	vbdev_ls_req = calloc(1, sizeof(*vbdev_ls_req));
