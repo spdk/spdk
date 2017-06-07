@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37ddbe84_232fc8fa",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-07T13:53:14Z",
+      "side": 1,
+      "message": "new line",
+      "revId": "6e7cf50a3f851742b41b5bbd86f275c4855b9e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d714613_390a8b82",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-07T13:53:14Z",
+      "side": 1,
+      "message": "sdev or just dev.",
+      "range": {
+        "startLine": 734,
+        "startChar": 23,
+        "endLine": 734,
+        "endChar": 30
+      },
+      "revId": "6e7cf50a3f851742b41b5bbd86f275c4855b9e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f49d2c62_ef1aab43",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-07T13:53:14Z",
+      "side": 1,
+      "message": "-\u003e just lun?",
+      "range": {
+        "startLine": 735,
+        "startChar": 23,
+        "endLine": 735,
+        "endChar": 30
+      },
+      "revId": "6e7cf50a3f851742b41b5bbd86f275c4855b9e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecbaaa86_a7ec56b0",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-07T13:53:14Z",
+      "side": 1,
+      "message": "Just negate this condition and continue. This way one level of indentation can be avoided.",
+      "range": {
+        "startLine": 748,
+        "startChar": 3,
+        "endLine": 748,
+        "endChar": 54
+      },
+      "revId": "6e7cf50a3f851742b41b5bbd86f275c4855b9e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8932c1d7_56e37866",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-07T13:53:14Z",
+      "side": 1,
+      "message": "I think, you should not assume that there is only one lun per device so it should use spdk_scsi_dev_delete_lun() here and not destroy svdev-\u003escsi_dev[i].",
+      "range": {
+        "startLine": 749,
+        "startChar": 4,
+        "endLine": 751,
+        "endChar": 47
+      },
+      "revId": "6e7cf50a3f851742b41b5bbd86f275c4855b9e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f6b1282_e3bb250f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-07T13:53:14Z",
+      "side": 1,
+      "message": "Lets not limit us here. In case more luns per device will be supported code will be working out of box.",
+      "range": {
+        "startLine": 755,
+        "startChar": 4,
+        "endLine": 755,
+        "endChar": 10
+      },
+      "revId": "6e7cf50a3f851742b41b5bbd86f275c4855b9e45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
