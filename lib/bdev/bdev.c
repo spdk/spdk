@@ -36,6 +36,9 @@
 
 #include "spdk/bdev.h"
 
+#include <pthread.h>
+
+#include "spdk/util.h"
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
 #include "spdk/likely.h"
@@ -90,6 +93,15 @@ struct spdk_bdev_channel {
 
 	struct spdk_bdev_io_stat stat;
 };
+
+struct spdk_bdev_io_tracker {
+	TAILQ_ENTRY(spdk_bdev_io_tracker) tracking_link;
+
+	struct spdk_bdev_io bdev_io;
+};
+
+pthread_spinlock_t g_bdev_io_tracker_lock;
+TAILQ_HEAD(, spdk_bdev_io_tracker) g_bdev_io_tracker;
 
 struct spdk_bdev *
 spdk_bdev_first(void)
@@ -328,9 +340,12 @@ spdk_bdev_initialize(void)
 	int cache_size;
 	int rc = 0;
 
+	pthread_spin_init(&g_bdev_io_tracker_lock, PTHREAD_PROCESS_PRIVATE);
+	TAILQ_INIT(&g_bdev_io_tracker);
+
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
 				  SPDK_BDEV_IO_POOL_SIZE,
-				  sizeof(struct spdk_bdev_io) +
+				  sizeof(struct spdk_bdev_io_tracker) +
 				  spdk_bdev_module_get_max_ctx_size(),
 				  64,
 				  SPDK_ENV_SOCKET_ID_ANY);
@@ -398,6 +413,22 @@ spdk_bdev_finish(void)
 		SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
 			    spdk_mempool_count(g_bdev_mgr.bdev_io_pool),
 			    SPDK_BDEV_IO_POOL_SIZE);
+
+		struct spdk_bdev_io_tracker *tr;
+		struct spdk_bdev_io *bio;
+		int i = 0;
+
+		SPDK_ERRLOG("Pending bdev_io objects:\n");
+		pthread_spin_lock(&g_bdev_io_tracker_lock);
+		TAILQ_FOREACH(tr, &g_bdev_io_tracker, tracking_link) {
+			bio = &tr->bdev_io;
+			SPDK_ERRLOG("[% 4d] type: %d, gencnt: %"PRIu32", status: %d, in_submit_request: %s, bdev [name: %s, gencnt: %"
+				    PRIu32"]\n",
+				    i, bio->type, bio->gencnt, bio->status, bio->in_submit_request ? "true" : "false",
+				    bio->bdev->name, bio->bdev->gencnt);
+			i++;
+		}
+		pthread_spin_unlock(&g_bdev_io_tracker_lock);
 	}
 
 	if (spdk_mempool_count(g_bdev_mgr.buf_small_pool) != BUF_SMALL_POOL_SIZE) {
@@ -418,6 +449,8 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 
+	pthread_spin_destroy(&g_bdev_io_tracker_lock);
+
 	spdk_io_device_unregister(&g_bdev_mgr);
 
 	return 0;
@@ -426,22 +459,28 @@ spdk_bdev_finish(void)
 struct spdk_bdev_io *
 spdk_bdev_get_io(void)
 {
-	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_io_tracker *tr_bdev_io;
 
-	bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
-	if (!bdev_io) {
+	tr_bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+	if (!tr_bdev_io) {
 		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
 		abort();
 	}
 
-	memset(bdev_io, 0, sizeof(*bdev_io));
+	memset(tr_bdev_io, 0, sizeof(*tr_bdev_io));
 
-	return bdev_io;
+	pthread_spin_lock(&g_bdev_io_tracker_lock);
+	TAILQ_INSERT_TAIL(&g_bdev_io_tracker, tr_bdev_io, tracking_link);
+	pthread_spin_unlock(&g_bdev_io_tracker_lock);
+
+	return &tr_bdev_io->bdev_io;
 }
 
 static void
 spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_bdev_io_tracker *tr_bdev_io;
+
 	if (!bdev_io) {
 		return;
 	}
@@ -450,7 +489,13 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 		spdk_bdev_io_put_buf(bdev_io);
 	}
 
-	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+	tr_bdev_io = SPDK_CONTAINEROF(bdev_io, struct spdk_bdev_io_tracker, bdev_io);
+
+	pthread_spin_lock(&g_bdev_io_tracker_lock);
+	TAILQ_REMOVE(&g_bdev_io_tracker, tr_bdev_io, tracking_link);
+	pthread_spin_unlock(&g_bdev_io_tracker_lock);
+
+	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)tr_bdev_io);
 }
 
 static void
