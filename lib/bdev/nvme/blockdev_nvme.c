@@ -542,30 +542,50 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	return true;
 }
 
+static struct nvme_ctrlr *
+nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_ctrlr	*nvme_ctrlr;
+
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->trid) == 0) {
+			return nvme_ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct nvme_probe_ctx *ctx = cb_ctx;
-	size_t i;
-	bool claim_device = false;
 
 	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Probing device %s\n", trid->traddr);
 
-	for (i = 0; i < ctx->count; i++) {
-		if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
-			claim_device = true;
-			break;
-		}
-	}
-
-	if (!claim_device) {
-		SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
+	if (nvme_ctrlr_get(trid)) {
+		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
+			    trid->traddr);
 		return false;
 	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		struct spdk_pci_addr pci_addr;
+		bool claim_device = false;
+		struct nvme_probe_ctx *ctx = cb_ctx;
+		size_t i;
+
+		for (i = 0; i < ctx->count; i++) {
+			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
+				claim_device = true;
+				break;
+			}
+		}
+
+		if (!claim_device) {
+			SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
+			return false;
+		}
 
 		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
 			return false;
@@ -678,20 +698,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_timeout,
 				timeout_cb, NULL);
 	}
-}
-
-static struct nvme_ctrlr *
-nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
-{
-	struct nvme_ctrlr	*nvme_ctrlr;
-
-	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->trid) == 0) {
-			return nvme_ctrlr;
-		}
-	}
-
-	return NULL;
 }
 
 static void
@@ -817,31 +823,6 @@ bdev_nvme_library_init(void)
 
 	spdk_nvme_retry_count = retry_count;
 
-	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
-		if (val == NULL) {
-			break;
-		}
-
-		rc = spdk_nvme_transport_id_parse(&probe_ctx->trids[i], val);
-		if (rc < 0) {
-			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
-			rc = -1;
-			goto end;
-		}
-
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
-		if (val == NULL) {
-			SPDK_ERRLOG("No name provided for TransportID\n");
-			rc = -1;
-			goto end;
-		}
-
-		probe_ctx->names[i] = val;
-
-		probe_ctx->count++;
-	}
-
 	if ((g_timeout = spdk_conf_section_get_intval(sp, "Timeout")) < 0) {
 		/* Check old name for backward compatibility */
 		if ((g_timeout = spdk_conf_section_get_intval(sp, "NvmeTimeoutValue")) < 0) {
@@ -893,6 +874,45 @@ bdev_nvme_library_init(void)
 		g_nvme_hotplug_poll_core = spdk_env_get_current_core();
 	}
 
+
+	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
+		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
+		if (val == NULL) {
+			break;
+		}
+
+		rc = spdk_nvme_transport_id_parse(&probe_ctx->trids[i], val);
+		if (rc < 0) {
+			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
+			rc = -1;
+			goto end;
+		}
+
+		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
+		if (val == NULL) {
+			SPDK_ERRLOG("No name provided for TransportID\n");
+			rc = -1;
+			goto end;
+		}
+
+		probe_ctx->names[i] = val;
+		probe_ctx->count++;
+
+		if (probe_ctx->trids[i].trtype == SPDK_NVME_TRANSPORT_RDMA) {
+			if (probe_ctx->trids[i].subnqn[0] == '\0') {
+				SPDK_ERRLOG("Need to provide subsystem nqn\n");
+				rc = -1;
+				goto end;
+			}
+
+			if (spdk_nvme_probe(&probe_ctx->trids[i], probe_ctx, probe_cb, attach_cb, NULL)) {
+				rc = -1;
+				goto end;
+			}
+		}
+	}
+
+	/* used to probe local NVMe device */
 	if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
 		rc = -1;
 		goto end;
