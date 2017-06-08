@@ -2830,8 +2830,6 @@ spdk_iscsi_compare_pdu_bhs_within_existed_r2t_tasks(struct spdk_iscsi_conn *conn
 static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task)
 {
-	task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(), process_task_completion,
-			      conn, task);
 	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
 			  (uintptr_t)task, (uintptr_t)task->pdu);
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
@@ -2841,8 +2839,6 @@ static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
 				       struct spdk_iscsi_task *task,
 				       enum spdk_scsi_task_func func)
 {
-	task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(), process_task_mgmt_completion,
-			      conn, task);
 	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi, func);
 }
 
@@ -2963,7 +2959,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	if (task->scsi.lun == NULL) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
-		process_task_completion(conn, task);
+		process_task_completion(task, conn);
 		return 0;
 	}
 

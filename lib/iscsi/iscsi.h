@@ -353,8 +353,10 @@ int spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 				int alloc_len, int data_len);
 int spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn);
 
-void process_task_completion(void *arg1, void *arg2);
-void process_task_mgmt_completion(void *arg1, void *arg2);
+void process_task_completion(struct spdk_iscsi_task *task,
+			     struct spdk_iscsi_conn *conn);
+void process_task_mgmt_completion(struct spdk_iscsi_task *task,
+				  struct spdk_iscsi_conn *conn);
 
 /* Memory management */
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);

@@ -64,4 +64,7 @@ struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev);
 void spdk_vhost_dev_task_ref(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_task_unref(struct spdk_vhost_dev *vdev);
 
+void process_task_completion(struct spdk_vhost_task *task);
+void process_task_mgmt_completion(struct spdk_vhost_task *task);
+
 #endif /* SPDK_VHOST_TASK_H */

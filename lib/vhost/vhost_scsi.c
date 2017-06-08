@@ -106,19 +106,15 @@ submit_completion(struct spdk_vhost_task *task)
 	spdk_vhost_task_put(task);
 }
 
-static void
-process_mgmt_task_completion(void *arg1, void *arg2)
+void
+process_task_mgmt_completion(struct spdk_vhost_task *task)
 {
-	struct spdk_vhost_task *task = arg1;
-
 	submit_completion(task);
 }
 
-static void
-process_task_completion(void *arg1, void *arg2)
+void
+process_task_completion(struct spdk_vhost_task *task)
 {
-	struct spdk_vhost_task *task = arg1;
-
 	/* The SCSI task has completed.  Do final processing and then post
 	   notification to the virtqueue's "used" ring.
 	 */
@@ -142,9 +138,6 @@ task_submit(struct spdk_vhost_task *task)
 	 */
 
 	task->resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
-			      process_task_completion,
-			      task, NULL);
 	spdk_scsi_dev_queue_task(task->scsi_dev, &task->scsi);
 }
 
@@ -152,9 +145,6 @@ static void
 mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
-			      process_mgmt_task_completion,
-			      task, NULL);
 	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, func);
 }
 

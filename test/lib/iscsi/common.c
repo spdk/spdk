@@ -130,12 +130,14 @@ spdk_shutdown_iscsi_conns(void)
 }
 
 void
-process_task_completion(void *arg1, void *arg2)
+process_task_completion(struct spdk_iscsi_task *task,
+			struct spdk_iscsi_conn *conn)
 {
 }
 
 void
-process_task_mgmt_completion(void *arg1, void *arg2)
+process_task_mgmt_completion(struct spdk_iscsi_task *task,
+			     struct spdk_iscsi_conn *conn)
 {
 }
 

@@ -40,7 +40,26 @@
 #include "iscsi/task.h"
 
 static void
-spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
+spdk_iscsi_task_completion(struct spdk_scsi_task *scsi_task, void *cb_arg)
+{
+	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
+	struct spdk_iscsi_conn *conn = cb_arg;
+
+	switch (scsi_task->type) {
+	case SPDK_SCSI_TASK_TYPE_CMD:
+		process_task_completion(task, conn);
+		break;
+	case SPDK_SCSI_TASK_TYPE_MANAGE:
+		process_task_mgmt_completion(task, conn);
+		break;
+	default:
+		assert(false);
+		break;
+	}
+}
+
+static void
+spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task, void *cb_arg)
 {
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
@@ -67,7 +86,9 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 	assert(conn->pending_task_cnt < UINT32_MAX);
 	conn->pending_task_cnt++;
 	spdk_scsi_task_construct(&task->scsi,
+				 spdk_iscsi_task_completion,
 				 spdk_iscsi_task_free,
+				 conn,
 				 parent ? &parent->scsi : NULL);
 	if (parent) {
 		task->tag = parent->tag;
