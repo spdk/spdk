@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "68b91ead_6bfede10",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "we already have function spdk_histogram_tally called by probe code, which is a macro checks hg and enable flag and calls hstats_tally",
+      "parentUuid": "9fa902ae_0b937e95",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08099551_88411db9",
         "filename": "include/spdk/histogram.h",
         "patchSetId": 3
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "f3e1a737_8a2603cf",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32daaa76_c0eb5662",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbb8555a_26ed3353",
         "filename": "include/spdk/histogram.h",
         "patchSetId": 3
@@ -71,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "f50028d3_f3537fae",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done, spdk_histogram_register changed to spdk_histogram_alloc",
+      "parentUuid": "cbb8555a_26ed3353",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42a25c2f_9c16b643",
         "filename": "include/spdk/util.h",
         "patchSetId": 3
@@ -82,6 +136,24 @@
       "writtenOn": "2017-06-06T22:48:28Z",
       "side": 1,
       "message": "This doesn\u0027t seem to be used anywhere.",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d13d22d9_868c26c0",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Used in instrumentation code, to push delta nano sec count to histogram.",
+      "parentUuid": "42a25c2f_9c16b643",
       "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -140,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "a87ed90b_c33bd837",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8505674_8e703c80",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "446569a1_6f6e6d42",
         "filename": "lib/util/histogram.c",
         "patchSetId": 3
@@ -151,6 +241,24 @@
       "writtenOn": "2017-06-06T22:48:28Z",
       "side": 1,
       "message": "g_hist_id should be static if it\u0027s not used outside this file (or removed if we can just use string names everywhere).",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f76c023a_3c83ca32",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "446569a1_6f6e6d42",
       "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -174,6 +282,24 @@
     },
     {
       "key": {
+        "uuid": "86849ae1_6f5fd7c5",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "This histogram service is used across and within any module of spdk code, at any granularity for I/O or non-I/O paths. As number of features increases in spdk, we will have  more than ten different histogram probes active at a time for performance analysis. So having id makes it convenient to use from client side when it is more than ten.  Also user need not have to type lengthy names this avoids name conflict while calling histogram allocation by user.",
+      "parentUuid": "7b25f5e4_b601bc53",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8cb63de_ff4ef6d5",
         "filename": "lib/util/rpc/histogram_rpc.c",
         "patchSetId": 3
@@ -191,6 +317,24 @@
     },
     {
       "key": {
+        "uuid": "4afe5358_6d5cf51c",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8cb63de_ff4ef6d5",
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75dfe571_26db02bf",
         "filename": "lib/util/rpc/histogram_rpc.c",
         "patchSetId": 3
@@ -202,6 +346,30 @@
       "writtenOn": "2017-06-06T22:48:28Z",
       "side": 1,
       "message": "I think something like \"get_stats\" would make more sense than \"show\".",
+      "range": {
+        "startLine": 209,
+        "startChar": 19,
+        "endLine": 209,
+        "endChar": 28
+      },
+      "revId": "1932e49705e09835b79e56dccb28540eff7465e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d19dd14f_82559391",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75dfe571_26db02bf",
       "range": {
         "startLine": 209,
         "startChar": 19,
