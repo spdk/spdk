@@ -1461,8 +1461,7 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		goto free;
 	}
 
-	/* Delete the I/O submission queue and then the completion queue */
-
+	/* Delete the I/O submission queue */
 	status.done = false;
 	rc = nvme_pcie_ctrlr_cmd_delete_io_sq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
@@ -1475,6 +1474,13 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
+	/* Complete any I/O in the completion queue */
+	nvme_pcie_qpair_process_completions(qpair, 0);
+
+	/* Abort the rest of the I/O */
+	nvme_pcie_qpair_abort_trackers(qpair, 1);
+
+	/* Delete the completion queue */
 	status.done = false;
 	rc = nvme_pcie_ctrlr_cmd_delete_io_cq(ctrlr, qpair, nvme_completion_poll_cb, &status);
 	if (rc != 0) {
