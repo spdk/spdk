@@ -62,7 +62,6 @@
  * - T10 PI
  */
 #define SPDK_VHOST_SCSI_DISABLED_FEATURES	((1ULL << VHOST_F_LOG_ALL) | \
-						(1ULL << VIRTIO_SCSI_F_HOTPLUG) | \
 						(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
 						(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
@@ -411,6 +410,58 @@ process_controlq(struct spdk_vhost_scsi_dev *vdev, struct rte_vhost_vring *vq)
 }
 
 static void
+process_event(struct spdk_vhost_scsi_dev *svdev, struct spdk_scsi_lun *lun, uint32_t event,
+	      uint32_t reason)
+{
+	struct rte_vhost_vring *vq;
+	struct spdk_scsi_dev *dev;
+	struct vring_desc *desc;
+	struct virtio_scsi_event *ev;
+	uint16_t req;
+	uint16_t reqs_cnt;
+	size_t dev_id = 0;
+	int lun_id = 0;
+
+	/* some events may apply to the entire target via ids set to 0 */
+	if (lun != NULL) {
+		lun_id = spdk_scsi_lun_get_id(lun);
+		dev = spdk_scsi_lun_get_dev(lun);
+		dev_id = (void *)dev - (void *)svdev->scsi_dev[0];
+		if (dev_id >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+			SPDK_ERRLOG("Lun #%d is not a part of vhost scsi controller '%s'.\n", lun_id, svdev->vdev.name);
+			abort();
+		}
+	}
+
+	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, &req, 1);
+	assert(reqs_cnt == 1);
+
+	desc =  spdk_vhost_vq_get_desc(vq, req);
+
+	ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+	ev->event = event;
+	ev->lun[0] = 1;
+	ev->lun[1] = dev_id & 0xFF;
+	ev->lun[2] = (lun_id >> 8) & 0xFF; /* relies on linux kernel implementation */
+	ev->lun[3] = lun_id & 0xFF;
+	memset(&ev->lun[4], 0, 4);
+	ev->reason = reason;
+
+	spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, sizeof(*ev));
+}
+
+static void
+process_hotremove_event(struct spdk_vhost_scsi_dev *svdev, struct spdk_scsi_lun *lun)
+{
+	if (svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) {
+		return;
+	}
+
+	process_event(svdev, lun, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
+}
+
+static void
 process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 {
 	uint16_t reqs[32];
@@ -460,6 +511,7 @@ destroy_removed_luns(struct spdk_vhost_scsi_dev *svdev)
 	struct spdk_scsi_lun *lun;
 	int i, j;
 	int max_lun;
+
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
 		dev = svdev->scsi_dev[i];
 		if (dev == NULL)
@@ -471,6 +523,7 @@ destroy_removed_luns(struct spdk_vhost_scsi_dev *svdev)
 			if (lun == NULL || !spdk_scsi_lun_is_removed(lun))
 				continue;
 
+			process_hotremove_event(svdev, lun);
 			spdk_scsi_lun_free_io_channel(lun);
 			spdk_scsi_lun_delete(spdk_scsi_lun_get_name(lun));
 			SPDK_NOTICELOG("Controller %s: hot-removed lun #%d from dev 'Dev %d'\n", svdev->vdev.name, j, i);
@@ -626,7 +679,7 @@ spdk_vhost_scsi_lun_hotremove(void *arg)
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
 	if (svdev == NULL) {
-		SPDK_ERRLOG("Couldn't find vhost scsi controller to handle lun-hotremove on.");
+		SPDK_ERRLOG("Couldn't find vhost scsi controller to handle lun hotremove on.");
 		abort();
 	}
 
@@ -840,7 +893,7 @@ destroy_device(int vid)
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->mgmt_poller, event.spdk_event);
-	spdk_vhost_timed_event_wait(&event, "unregister control queue poller");
+	spdk_vhost_timed_event_wait(&event, "unregister management poller");
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);

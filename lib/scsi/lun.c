@@ -413,6 +413,12 @@ spdk_scsi_lun_is_removed(const struct spdk_scsi_lun *lun)
 	return lun->removed;
 }
 
+struct spdk_scsi_dev *
+spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
+{
+	return lun->dev;
+}
+
 void
 spdk_scsi_lun_set_hotremove_cb(struct spdk_scsi_lun *lun, void (*hotremove_cb)(void *),
 			       void *hotremove_ctx)
