@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0beeab7_fdd15519",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T21:14:53Z",
+      "side": 1,
+      "message": "This comment can go in the commit message, but it doesn\u0027t make sense in the code (it will quickly get outdated).",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b239883_f9a47409",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T21:14:53Z",
+      "side": 1,
+      "message": "spdk/util.h is already included above.",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af8e6393_38f3c950",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T21:14:53Z",
+      "side": 1,
+      "message": "Please add this in the alphabetically ordered list above.  It shouldn\u0027t hurt to include the header even if the config flag is not turned on.",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e13929b6_c1cd0606",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T21:14:53Z",
+      "side": 1,
+      "message": "It would be better to record the histogram entries in units of ticks and then do the conversion at display time (the histogram data structure is tuned for this use case, and it avoids needing a divide in the I/O path).",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c1433b1_a2ce3523",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T21:14:53Z",
+      "side": 1,
+      "message": "This should probably be inside the mutex-protected region below so it\u0027s thread safe.",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55a38430_301a7b51",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T21:14:53Z",
+      "side": 1,
+      "message": "Same here - this should go inside the mutex.",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbcf2352_163694a7",
+        "filename": "lib/nvmf/request.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T21:14:53Z",
+      "side": 1,
+      "message": "This magic number 6 is a little unfortunate; can you include the enum values in this header so you can at least use a name?",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
