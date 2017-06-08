@@ -68,10 +68,9 @@ $valgrind test/lib/scsi/lun/lun_ut
 $valgrind test/lib/scsi/scsi_bdev/scsi_bdev_ut
 $valgrind test/lib/scsi/scsi_nvme/scsi_nvme_ut
 
-# TODO: fix valgrind warnings and add $valgrind to iSCSI tests
 $valgrind test/lib/iscsi/param/param_ut
 $valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/target_node.conf
-test/lib/iscsi/pdu/pdu
+$valgrind test/lib/iscsi/pdu/pdu
 
 $valgrind test/lib/util/bit_array/bit_array_ut
 $valgrind test/lib/util/io_channel/io_channel_ut
