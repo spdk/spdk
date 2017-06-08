@@ -2830,8 +2830,6 @@ spdk_iscsi_compare_pdu_bhs_within_existed_r2t_tasks(struct spdk_iscsi_conn *conn
 static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task)
 {
-	task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(), process_task_completion,
-			      conn, task);
 	spdk_trace_record(TRACE_ISCSI_TASK_QUEUE, conn->id, task->scsi.length,
 			  (uintptr_t)task, (uintptr_t)task->pdu);
 	spdk_scsi_dev_queue_task(conn->dev, &task->scsi);
@@ -2841,8 +2839,6 @@ static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
 				       struct spdk_iscsi_task *task,
 				       enum spdk_scsi_task_func func)
 {
-	task->scsi.cb_event = spdk_event_allocate(spdk_env_get_current_core(), process_task_mgmt_completion,
-			      conn, task);
 	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi, func);
 }
 
@@ -2866,7 +2862,7 @@ int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
 			uint32_t remaining_size = 0;
 
 			remaining_size = task->scsi.transfer_len - task->current_datain_offset;
-			subtask = spdk_iscsi_task_get(conn, task);
+			subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
 			assert(subtask != NULL);
 			subtask->scsi.offset = task->current_datain_offset;
 			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
@@ -2937,7 +2933,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	SPDK_TRACEDUMP(SPDK_TRACE_DEBUG, "CDB", cdb, 16);
 
-	task = spdk_iscsi_task_get(conn, NULL);
+	task = spdk_iscsi_task_get(conn, NULL, spdk_iscsi_task_cpl);
 	if (!task) {
 		SPDK_ERRLOG("Unable to acquire task\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
@@ -2963,7 +2959,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	if (task->scsi.lun == NULL) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
-		process_task_completion(conn, task);
+		spdk_iscsi_task_mgmt_cpl(&task->scsi, conn);
 		return 0;
 	}
 
@@ -3253,7 +3249,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	lun_i = spdk_islun2lun(lun);
 	dev = conn->dev;
 
-	task = spdk_iscsi_task_get(conn, NULL);
+	task = spdk_iscsi_task_get(conn, NULL, spdk_iscsi_task_mgmt_cpl);
 	if (!task) {
 		SPDK_ERRLOG("Unable to acquire task\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
@@ -4089,7 +4085,7 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 		task->current_r2t_length = 0;
 	}
 
-	subtask = spdk_iscsi_task_get(conn, task);
+	subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
 	if (subtask == NULL) {
 		SPDK_ERRLOG("Unable to acquire subtask\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;

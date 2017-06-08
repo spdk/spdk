@@ -846,11 +846,10 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 	return ret;
 }
 
-void
-process_task_mgmt_completion(void *arg1, void *arg2)
+void spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg)
 {
-	struct spdk_iscsi_conn *conn = arg1;
-	struct spdk_iscsi_task *task = arg2;
+	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
+	struct spdk_iscsi_conn *conn = cb_arg;
 
 	conn->last_activity_tsc = spdk_get_ticks();
 	spdk_iscsi_task_mgmt_response(conn, task);
@@ -909,11 +908,11 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	process_completed_read_subtask_list(conn, primary);
 }
 
-void process_task_completion(void *arg1, void *arg2)
+void spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg)
 {
-	struct spdk_iscsi_conn *conn = arg1;
-	struct spdk_iscsi_task *task = arg2;
 	struct spdk_iscsi_task *primary;
+	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
+	struct spdk_iscsi_conn *conn = cb_arg;
 
 	assert(task != NULL);
 	spdk_trace_record(TRACE_ISCSI_TASK_DONE, conn->id, 0, (uintptr_t)task, 0);

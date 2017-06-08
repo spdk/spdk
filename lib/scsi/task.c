@@ -60,17 +60,24 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 
 		spdk_scsi_task_free_data(task);
 
-		task->free_fn(task);
+		task->free_fn(task, task->cb_arg);
 	}
 }
 
 void
 spdk_scsi_task_construct(struct spdk_scsi_task *task,
-			 void (*free_fn)(struct spdk_scsi_task *task),
+			 spdk_scsi_task_cpl cpl_fn,
+			 spdk_scsi_task_free free_fn,
+			 void *cb_arg,
 			 struct spdk_scsi_task *parent)
 {
+	assert(task != NULL);
+	assert(cpl_fn != NULL);
 	assert(free_fn != NULL);
+
+	task->cpl_fn = cpl_fn;
 	task->free_fn = free_fn;
+	task->cb_arg = cb_arg;
 
 	task->ref++;
 

@@ -106,18 +106,18 @@ submit_completion(struct spdk_vhost_task *task)
 	spdk_vhost_task_put(task);
 }
 
-static void
-process_mgmt_task_completion(void *arg1, void *arg2)
+void
+spdk_vhost_task_mgmt_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg)
 {
-	struct spdk_vhost_task *task = arg1;
+	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
 
 	submit_completion(task);
 }
 
-static void
-process_task_completion(void *arg1, void *arg2)
+void
+spdk_vhost_task_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg)
 {
-	struct spdk_vhost_task *task = arg1;
+	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
 
 	/* The SCSI task has completed.  Do final processing and then post
 	   notification to the virtqueue's "used" ring.
@@ -137,14 +137,11 @@ static void
 task_submit(struct spdk_vhost_task *task)
 {
 	/* The task is ready to be submitted.  First create the callback event that
-	   will be invoked when the SCSI command is completed.  See process_task_completion()
+	   will be invoked when the SCSI command is completed.  See spdk_vhost_task_cpl()
 	   for what SPDK vhost-scsi does when the task is completed.
 	 */
 
 	task->resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
-			      process_task_completion,
-			      task, NULL);
 	spdk_scsi_dev_queue_task(task->scsi_dev, &task->scsi);
 }
 
@@ -152,9 +149,6 @@ static void
 mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
-	task->scsi.cb_event = spdk_event_allocate(rte_lcore_id(),
-			      process_mgmt_task_completion,
-			      task, NULL);
 	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, func);
 }
 
@@ -208,7 +202,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "Request desriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
-	task = spdk_vhost_task_get(svdev);
+	task = spdk_vhost_task_get(svdev, spdk_vhost_task_mgmt_cpl);
 	task->vq = controlq;
 	task->svdev = svdev;
 	task->req_idx = req_idx;
@@ -422,7 +416,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	assert(reqs_cnt <= 32);
 
 	for (i = 0; i < reqs_cnt; i++) {
-		task = spdk_vhost_task_get(svdev);
+		task = spdk_vhost_task_get(svdev, spdk_vhost_task_cpl);
 
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
