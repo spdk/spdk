@@ -345,6 +345,24 @@
     },
     {
       "key": {
+        "uuid": "d9672707_c025aa6c",
+        "filename": "scripts/hist_viewer.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "35e91e03_ebc890c4",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2585e9aa_17bfb568",
         "filename": "scripts/hist_viewer.py",
         "patchSetId": 1
@@ -362,6 +380,24 @@
     },
     {
       "key": {
+        "uuid": "a664b38a_4e9db650",
+        "filename": "scripts/hist_viewer.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Done, this change is not needed as output is JSON",
+      "parentUuid": "2585e9aa_17bfb568",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79f1a50b_cda2af95",
         "filename": "scripts/hist_viewer.py",
         "patchSetId": 1
@@ -373,6 +409,24 @@
       "writtenOn": "2017-05-31T21:26:05Z",
       "side": 1,
       "message": "Please write these as print(\"...\") so that it will work with Python 3 as well.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab7df3be_7df9392b",
+        "filename": "scripts/hist_viewer.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T03:02:24Z",
+      "side": 1,
+      "message": "Unless we develop scripts which are compatible to both 2.7 and 3.5. This will end up many methods in current script to be ported to python 3 apart from print.  check_format.sh will give warning if we add this and using Python 2.7",
+      "parentUuid": "79f1a50b_cda2af95",
       "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
