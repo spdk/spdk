@@ -22,6 +22,30 @@
       "revId": "3d9c246ab1c985bdb0d32a08d8c1822281ea7c1f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1ed261a_efe84721",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T09:18:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2293084c_6591c821",
+      "range": {
+        "startLine": 154,
+        "startChar": 21,
+        "endLine": 154,
+        "endChar": 25
+      },
+      "revId": "3d9c246ab1c985bdb0d32a08d8c1822281ea7c1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
