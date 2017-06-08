@@ -104,8 +104,7 @@ maxburstlength_test(void)
 	struct spdk_iscsi_conn conn;
 	struct spdk_scsi_dev dev;
 	struct spdk_scsi_lun lun;
-	struct spdk_iscsi_pdu *req_pdu;
-	struct spdk_iscsi_pdu *data_out_pdu;
+	struct spdk_iscsi_pdu *req_pdu, *data_out_pdu, *r2t_pdu;
 	struct iscsi_bhs_scsi_req *req;
 	struct iscsi_bhs_r2t *r2t;
 	struct iscsi_bhs_data_out *data_out;
@@ -177,6 +176,19 @@ maxburstlength_test(void)
 
 	rc = spdk_iscsi_execute(&conn, data_out_pdu);
 	CU_ASSERT(rc == SPDK_ISCSI_CONNECTION_FATAL);
+
+	CU_ASSERT(response_pdu->task != NULL);
+	spdk_iscsi_task_disassociate_pdu(response_pdu->task);
+	spdk_iscsi_task_put(response_pdu->task);
+	spdk_put_pdu(response_pdu);
+
+	r2t_pdu = TAILQ_FIRST(&conn.write_pdu_list);
+	CU_ASSERT(r2t_pdu != NULL);
+	TAILQ_REMOVE(&conn.write_pdu_list, r2t_pdu, tailq);
+	spdk_put_pdu(r2t_pdu);
+
+	spdk_put_pdu(data_out_pdu);
+	spdk_put_pdu(req_pdu);
 }
 
 int

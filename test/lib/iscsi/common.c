@@ -33,6 +33,7 @@ spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 	if (!pdu)
 		return;
 
+	pdu->ref--;
 	if (pdu->ref < 0) {
 		CU_FAIL("negative ref count");
 		pdu->ref = 0;
