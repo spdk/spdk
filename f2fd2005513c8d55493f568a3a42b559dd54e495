@@ -62,6 +62,24 @@
       "revId": "f2fd2005513c8d55493f568a3a42b559dd54e495",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3d62129_de8733d1",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-08T01:44:32Z",
+      "side": 1,
+      "message": "The check is for the comparison. If you set it for pcie nvme device, the latter comparsion will be wrong.",
+      "parentUuid": "adbaea3d_1c17d8b1",
+      "revId": "f2fd2005513c8d55493f568a3a42b559dd54e495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

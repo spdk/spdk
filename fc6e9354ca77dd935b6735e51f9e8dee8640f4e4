@@ -16,6 +16,24 @@
       "revId": "fc6e9354ca77dd935b6735e51f9e8dee8640f4e4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45982336_62cea589",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 896,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-08T01:44:32Z",
+      "side": 0,
+      "message": "For NVMe-OF target, the initialization needs to serialize. I would like to make it consistent handle for both local and remote.",
+      "parentUuid": "4b86381b_97237f45",
+      "revId": "fc6e9354ca77dd935b6735e51f9e8dee8640f4e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
