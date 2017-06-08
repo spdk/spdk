@@ -43,11 +43,6 @@
 #include "spdk/vhost.h"
 #include "task.h"
 
-#undef container_of
-#define container_of(ptr, type, member) ({ \
-		typeof(((type *)0)->member) *__mptr = (ptr); \
-		(type *)((char *)__mptr - offsetof(type, member)); })
-
 static struct rte_mempool *g_task_pool;
 
 void
@@ -66,7 +61,7 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 }
 
 struct spdk_vhost_task *
-spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev)
+spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev, spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_vhost_task *task;
 	int rc;
@@ -80,7 +75,10 @@ spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev)
 	memset(task, 0, sizeof(*task));
 	task->svdev = vdev;
 	spdk_vhost_dev_task_ref((struct spdk_vhost_dev *) task->svdev);
-	spdk_scsi_task_construct(&task->scsi, spdk_vhost_task_free_cb, NULL);
+	spdk_scsi_task_construct(&task->scsi,
+				 cpl_fn,
+				 spdk_vhost_task_free_cb,
+				 NULL);
 
 	return task;
 }
