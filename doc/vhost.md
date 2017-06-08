@@ -48,11 +48,27 @@ target.  A fully documented example configuration file is located at
 `etc/spdk/vhost.conf.in`.  This file defines the following:
 
 ### Storage Backends
-Storage backends are block devices which will be exposed as SCSI LUNs on
-devices attached to the vhost-scsi controller.  SPDK supports several different
-types of storage backends, including NVMe, Linux AIO, malloc ramdisk and Ceph
-RBD.  Refer to @ref bdev_getting_started for additional information on
-specifying storage backends in the configuration file.
+Storage backends are block devices which will be exposed to the guest OS.  In
+case of vhost block controller they are exposed as block devices, in case of
+vhost scsi as SCSI LUNs on devices attached to the vhost-scsi controller.
+SPDK supports several different types of storage backends, including NVMe,
+Linux AIO, malloc ramdisk and CephRBD.  Refer to @ref bdev_getting_started for
+additional information on specifying storage backends in the configuration file.
+
+### Mappings Block Controllers and Storage Backends
+The vhost target is exposing block controllers to the virtual machines.
+The device in the vhost controller is associated with an SPDK block device and
+configuration file defines those associations.  The block device to Dev mapping
+is specified in the configuration file as:
+
+~~~
+[VhostBlkX]
+  Name vhost.X          # Name of vhost socket
+  Dev BackendX          # "BackendX" is block device name from previous
+                        # sections in config file
+  #Cpumask 0x1          # Optional parameter defining which core controller uses
+
+~~~
 
 ### Mappings Between SCSI Controllers and Storage Backends
 The vhost target is exposing SCSI controllers to the virtual machines.
@@ -92,6 +108,11 @@ specify cores on the same CPU socket as its associated VM.
 Userspace vhost-scsi adds the following command line option for QEMU:
 ~~~
        -device vhost-user-scsi-pci,id=scsi0,chardev=char0
+~~~
+
+Userspace vhost-block adds the following command line option for QEMU:
+~~~
+       -device vhost-user-blk-pci,capacity=CAPACITY,chardev=char0
 ~~~
 
 In order to start qemu with vhost you need to specify following options:
