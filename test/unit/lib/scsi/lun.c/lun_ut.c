@@ -76,6 +76,11 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 }
 
 static void
+spdk_lun_ut_cpl_task(struct spdk_scsi_task *task)
+{
+}
+
+static void
 spdk_lun_ut_free_task(struct spdk_scsi_task *task)
 {
 	free(task);
@@ -93,7 +98,9 @@ spdk_get_task(uint32_t *owner_task_ctr)
 		return NULL;
 	}
 
-	spdk_scsi_task_construct(task, spdk_lun_ut_free_task, NULL);
+	spdk_scsi_task_construct(task, spdk_lun_ut_cpl_task,
+				 spdk_lun_ut_free_task,
+				 NULL);
 	g_task_count++;
 
 	return task;
