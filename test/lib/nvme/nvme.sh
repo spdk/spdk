@@ -80,7 +80,7 @@ if [ $(uname -s) = Linux ]; then
 		$rootdir/examples/nvme/identify/identify -i 0 &
 		count=$(($count + 1))
 	done
-	wait $pid
+	wait
 	timing_exit multi_process
 fi
 
