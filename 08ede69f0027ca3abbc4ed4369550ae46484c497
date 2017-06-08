@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "a5ff0230_4b100057",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3394f75e_f86b194c",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c4669d6_40dd8bdd",
         "filename": "lib/util/histogram.c",
         "patchSetId": 1
@@ -64,6 +82,24 @@
       "writtenOn": "2017-05-31T21:26:05Z",
       "side": 1,
       "message": "We should try to avoid adding new assert()s for malloc failure handling; this should just free the histogram and return NULL so the caller can deal with it.",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18bc632e_17105482",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c4669d6_40dd8bdd",
       "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "d4df9b93_a874720d",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f8a6a627_c46dbd18",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c9959ec_ab7d8231",
         "filename": "lib/util/histogram.c",
         "patchSetId": 1
@@ -98,6 +152,24 @@
       "writtenOn": "2017-05-31T21:26:05Z",
       "side": 1,
       "message": "This could be simplified using the queue.h macros (TAILQ_*).",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c303fa6_ed441176",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c9959ec_ab7d8231",
       "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -127,6 +199,30 @@
     },
     {
       "key": {
+        "uuid": "edb9b897_3961c843",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b4b0740_bf918e23",
+      "range": {
+        "startLine": 246,
+        "startChar": 26,
+        "endLine": 246,
+        "endChar": 32
+      },
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68ae222c_7412ae9b",
         "filename": "lib/util/histogram.c",
         "patchSetId": 1
@@ -138,6 +234,24 @@
       "writtenOn": "2017-05-31T21:26:05Z",
       "side": 1,
       "message": "This should use a JSON bool value - spdk_json_write_bool().",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "410730c5_08a94039",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "68ae222c_7412ae9b",
       "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -161,6 +275,24 @@
     },
     {
       "key": {
+        "uuid": "7bb32d17_5c964c63",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7bb24b55_73f89910",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1cbec1a6_50d43bdc",
         "filename": "lib/util/histogram.c",
         "patchSetId": 1
@@ -172,6 +304,24 @@
       "writtenOn": "2017-05-31T21:26:05Z",
       "side": 1,
       "message": "Writing the histogram data as an array is probably fine, but we could also write this as an array of objects that define the range so that the display code doesn\u0027t need to know about the math behind the buckets, e.g.:\n\n  [\n    {\"min\": 1.23, \"max\": 1.34, \"count\": 65432},\n    {\"min\": 1.35, \"max\": 1.65, \"count\": 1987},\n    {\"min\": 1.67, \"max\": 1.83, \"count\": 12098}\n  ]",
+      "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9b53e98_e46c5b35",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-08T02:48:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1cbec1a6_50d43bdc",
       "revId": "08ede69f0027ca3abbc4ed4369550ae46484c497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
