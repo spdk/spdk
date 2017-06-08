@@ -51,7 +51,8 @@ spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
 }
 
 struct spdk_iscsi_task *
-spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent)
+spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent,
+		    spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_iscsi_task *task;
 	int rc;
@@ -67,6 +68,7 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 	assert(conn->pending_task_cnt < UINT32_MAX);
 	conn->pending_task_cnt++;
 	spdk_scsi_task_construct(&task->scsi,
+				 cpl_fn,
 				 spdk_iscsi_task_free,
 				 parent ? &parent->scsi : NULL);
 	if (parent) {
