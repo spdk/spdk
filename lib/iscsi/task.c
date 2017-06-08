@@ -45,9 +45,9 @@ spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
 	spdk_iscsi_task_disassociate_pdu(task);
-	rte_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
 	assert(task->conn->pending_task_cnt > 0);
 	task->conn->pending_task_cnt--;
+	rte_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
 }
 
 struct spdk_iscsi_task *
