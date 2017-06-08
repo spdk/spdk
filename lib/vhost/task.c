@@ -67,8 +67,8 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
 
-	rte_mempool_put(g_task_pool, task);
 	spdk_vhost_dev_task_unref((struct spdk_vhost_dev *) task->svdev);
+	rte_mempool_put(g_task_pool, task);
 }
 
 struct spdk_vhost_task *
