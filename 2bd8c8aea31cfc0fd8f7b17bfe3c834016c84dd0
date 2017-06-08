@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff84d885_ff351b58",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-08T15:31:26Z",
+      "side": 1,
+      "message": "You need to wait for hotremove poller if it is running.",
+      "revId": "2bd8c8aea31cfc0fd8f7b17bfe3c834016c84dd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "846f469b_502a5db7",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-08T15:31:26Z",
+      "side": 1,
+      "message": "rte_panic -\u003e SPDK_ERRLOG() + abort",
+      "range": {
+        "startLine": 596,
+        "startChar": 3,
+        "endLine": 596,
+        "endChar": 12
+      },
+      "revId": "2bd8c8aea31cfc0fd8f7b17bfe3c834016c84dd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5be4f88d_9f600672",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-08T15:31:26Z",
+      "side": 1,
+      "message": "rte_panic -\u003e SPDK_ERRLOG() + abort",
+      "range": {
+        "startLine": 602,
+        "startChar": 3,
+        "endLine": 602,
+        "endChar": 12
+      },
+      "revId": "2bd8c8aea31cfc0fd8f7b17bfe3c834016c84dd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c46beb19_8f6efe06",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-08T15:31:26Z",
+      "side": 1,
+      "message": "Value from this function might change. Safe way would be to max_lun \u003d spdk_scsi_dev_get_max_lun(dev); \nbefore loop and then iterate using j \u003c max_lun condition.",
+      "range": {
+        "startLine": 749,
+        "startChar": 18,
+        "endLine": 749,
+        "endChar": 48
+      },
+      "revId": "2bd8c8aea31cfc0fd8f7b17bfe3c834016c84dd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68eea8bf_61fa00cd",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-08T15:31:26Z",
+      "side": 1,
+      "message": "use spdk_scsi_dev_get_max_lun(dev) and lun_num can be removed.",
+      "range": {
+        "startLine": 764,
+        "startChar": 6,
+        "endLine": 764,
+        "endChar": 18
+      },
+      "revId": "2bd8c8aea31cfc0fd8f7b17bfe3c834016c84dd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
