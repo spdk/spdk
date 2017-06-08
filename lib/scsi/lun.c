@@ -46,7 +46,7 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 		TAILQ_REMOVE(&lun->tasks, task, scsi_link);
 		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
 	}
-	spdk_event_call(task->cb_event);
+	task->cpl_fn(task, task->cb_arg);
 }
 
 void
@@ -56,7 +56,7 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 	    task->status == SPDK_SCSI_STATUS_GOOD) {
 		spdk_scsi_lun_clear_all(task->lun);
 	}
-	spdk_event_call(task->cb_event);
+	task->cpl_fn(task, task->cb_arg);
 }
 
 void

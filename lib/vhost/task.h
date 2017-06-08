@@ -36,6 +36,11 @@
 
 #include "spdk/scsi.h"
 
+#undef container_of
+#define container_of(ptr, type, member) ({ \
+		typeof(((type *)0)->member) *__mptr = (ptr); \
+		(type *)((char *)__mptr - offsetof(type, member)); })
+
 /* Allocated iovec buffer len */
 #define VHOST_SCSI_IOVS_LEN		128
 
@@ -59,9 +64,13 @@ struct spdk_vhost_task {
 };
 
 void spdk_vhost_task_put(struct spdk_vhost_task *task);
-struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev);
+struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev,
+		spdk_scsi_task_cpl cpl_fn);
 
 void spdk_vhost_dev_task_ref(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_task_unref(struct spdk_vhost_dev *vdev);
+
+void spdk_vhost_task_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg);
+void spdk_vhost_task_mgmt_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg);
 
 #endif /* SPDK_VHOST_TASK_H */
