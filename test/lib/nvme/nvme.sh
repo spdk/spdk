@@ -62,7 +62,6 @@ timing_exit arbitration
 if [ $(uname -s) = Linux ]; then
 	timing_enter multi_process
 	$rootdir/examples/nvme/arbitration/arbitration -i 0 -s 4096 -t 10 -c 0xf &
-	pid=$!
 	sleep 3
 	$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w randread -s 4096 -t 10 -c 0x10 &
 	sleep 1
@@ -80,7 +79,7 @@ if [ $(uname -s) = Linux ]; then
 		$rootdir/examples/nvme/identify/identify -i 0 &
 		count=$(($count + 1))
 	done
-	wait $pid
+	wait
 	timing_exit multi_process
 fi
 
