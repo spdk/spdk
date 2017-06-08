@@ -155,7 +155,8 @@ spdk_iscsi_task_get_cmdsn(struct spdk_iscsi_task *task)
 }
 
 struct spdk_iscsi_task *spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
-		struct spdk_iscsi_task *parent);
+		struct spdk_iscsi_task *parent,
+		spdk_scsi_task_cpl cpl_fn);
 
 static inline struct spdk_iscsi_task *
 spdk_iscsi_task_from_scsi_task(struct spdk_scsi_task *task)

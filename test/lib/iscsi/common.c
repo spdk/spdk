@@ -12,7 +12,9 @@
 SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
 
 struct spdk_iscsi_task *
-spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent)
+spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
+		    struct spdk_iscsi_task *parent,
+		    spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_iscsi_task *task;
 
@@ -130,13 +132,15 @@ spdk_shutdown_iscsi_conns(void)
 }
 
 void
-process_task_completion(void *arg1, void *arg2)
+spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg)
 {
+
 }
 
 void
-process_task_mgmt_completion(void *arg1, void *arg2)
+spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task, void *cb_arg)
 {
+
 }
 
 int

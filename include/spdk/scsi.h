@@ -73,11 +73,6 @@ enum spdk_scsi_task_func {
 	SPDK_SCSI_TASK_FUNC_LUN_RESET,
 };
 
-enum spdk_scsi_task_type {
-	SPDK_SCSI_TASK_TYPE_CMD = 0,
-	SPDK_SCSI_TASK_TYPE_MANAGE,
-};
-
 /*
  * SAM does not define the value for these service responses.  Each transport
  *  (i.e. SAS, FC, iSCSI) will map these value to transport-specific codes,
@@ -92,8 +87,11 @@ enum spdk_scsi_task_mgmt_resp {
 	SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED
 };
 
+struct spdk_scsi_task;
+typedef void (*spdk_scsi_task_cpl)(struct spdk_scsi_task *task, void *cb_arg);
+typedef void (*spdk_scsi_task_free)(struct spdk_scsi_task *task, void *cb_arg);
+
 struct spdk_scsi_task {
-	uint8_t				type;
 	uint8_t				status;
 	uint8_t				function; /* task mgmt function */
 	uint8_t				response; /* task mgmt response */
@@ -101,7 +99,10 @@ struct spdk_scsi_task {
 	struct spdk_io_channel		*ch;
 	struct spdk_scsi_port		*target_port;
 	struct spdk_scsi_port		*initiator_port;
-	struct spdk_event 		*cb_event;
+
+	spdk_scsi_task_cpl		cpl_fn;
+	spdk_scsi_task_free		free_fn;
+	void				*cb_arg;
 
 	uint32_t ref;
 	uint32_t transfer_len;
@@ -116,8 +117,6 @@ struct spdk_scsi_task {
 
 	uint64_t offset;
 	struct spdk_scsi_task *parent;
-
-	void (*free_fn)(struct spdk_scsi_task *);
 
 	uint8_t *cdb;
 
@@ -205,7 +204,9 @@ const char *spdk_scsi_port_get_name(const struct spdk_scsi_port *port);
 
 
 void spdk_scsi_task_construct(struct spdk_scsi_task *task,
-			      void (*free_fn)(struct spdk_scsi_task *task),
+			      spdk_scsi_task_cpl cpl_fn,
+			      spdk_scsi_task_free free_fn,
+			      void *cb_arg,
 			      struct spdk_scsi_task *parent);
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
 
