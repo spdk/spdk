@@ -3,7 +3,7 @@
 # vhost Getting Started Guide {#vhost_getting_started}
 
 The Storage Performance Development Kit vhost application is named "vhost".
-This application extends SPDK to present virtio-scsi controllers to QEMU-based
+This application extends SPDK to present virtio storage controllers to QEMU-based
 VMs and process I/O submitted to devices attached to those controllers.
 
 # Prerequisites {#vhost_prereqs}
@@ -35,10 +35,10 @@ Once built, the binary will be at `app/vhost/vhost`.
 
 ## QEMU
 
-Vhost functionality is dependent on QEMU patches to enable vhost-scsi in
-userspace - those patches are currently working their way through the QEMU
-mailing list, but temporary patches to enable this functionality are available
-in the spdk branch at https://github.com/spdk/qemu.
+Vhost functionality is dependent on QEMU patches to enable virtio-scsi and 
+virtio-block in userspace - those patches are currently working their way 
+through the QEMU mailing list, but temporary patches to enable this 
+functionality are available in the spdk branch at https://github.com/spdk/qemu.
 
 # Configuration {#vhost_config}
 
@@ -48,11 +48,27 @@ target.  A fully documented example configuration file is located at
 `etc/spdk/vhost.conf.in`.  This file defines the following:
 
 ### Storage Backends
-Storage backends are block devices which will be exposed as SCSI LUNs on
-devices attached to the vhost-scsi controller.  SPDK supports several different
-types of storage backends, including NVMe, Linux AIO, malloc ramdisk and Ceph
-RBD.  Refer to @ref bdev_getting_started for additional information on
-specifying storage backends in the configuration file.
+Storage backends are devices which will be exposed to the guest OS.  In
+case of vhost block controller they are exposed as block devices, in case of
+vhost scsi as SCSI LUNs on devices attached to the vhost-scsi controller.
+SPDK supports several different types of storage backends, including NVMe,
+Linux AIO, malloc ramdisk and CephRBD.  Refer to @ref bdev_getting_started for
+additional information on specifying storage backends in the configuration file.
+
+### Mappings Block Controllers and Storage Backends
+The vhost target is exposing block controllers to the virtual machines.
+The device in the vhost controller is associated with an SPDK block device and
+configuration file defines those associations.  The block device to Dev mapping
+is specified in the configuration file as:
+
+~~~
+[VhostBlkX]
+  Name vhost.X          # Name of vhost socket
+  Dev BackendX          # "BackendX" is block device name from previous
+                        # sections in config file
+  #Cpumask 0x1          # Optional parameter defining which core controller uses
+
+~~~
 
 ### Mappings Between SCSI Controllers and Storage Backends
 The vhost target is exposing SCSI controllers to the virtual machines.
@@ -76,7 +92,8 @@ are specified in the configuration file as:
 Userspace vhost uses UNIX domain sockets for communication between QEMU
 and the vhost target.  Each vhost controller is associated with a UNIX domain
 socket file with filename equal to the Name argument in configuration file.
-Sockets are created at current directory when starting the SPDK vhost target.
+Sockets are created at current working directory when starting the SPDK vhost
+target.
 
 ### Core Affinity Configuration
 Vhost target can be restricted to run on certain cores by specifying a ReactorMask.
@@ -85,13 +102,20 @@ to run vhost with cores on each socket to achieve optimal performance.
 
 To specify which core each controller should use, it can be defined by optional
 Cpumask parameter in configuration file.  For NUMA systems the Cpumask should
-specify cores on the same CPU socket as its associated VM.
+specify cores on the same CPU socket as its associated VM. Application will
+pick one core from ReactorMask masked by Cpumask. Cpumask must be subset of
+ReactorMask.
 
 ## QEMU
 
 Userspace vhost-scsi adds the following command line option for QEMU:
 ~~~
        -device vhost-user-scsi-pci,id=scsi0,chardev=char0
+~~~
+
+Userspace vhost-block adds the following command line option for QEMU:
+~~~
+       -device vhost-user-blk-pci,logical_block_size=4096,size=SIZE_IN_MiB,chardev=char0
 ~~~
 
 In order to start qemu with vhost you need to specify following options:
@@ -129,6 +153,8 @@ Assume that qemu and spdk are in respectively `qemu` and `spdk` directories.
              -device ide-hd,drive=disk,bootindex=0 \
              -chardev socket,id=char0,path=./spdk/vhost.0 \
              -device vhost-user-scsi-pci,id=scsi0,chardev=char0 \
+             -chardev socket,id=char1,path=./spdk/vhost.1 \
+             -device vhost-user-blk-pci,logical_block_size=4096,size=512M,chardev=char1 \
              --enable-kvm
 ~~~
 
