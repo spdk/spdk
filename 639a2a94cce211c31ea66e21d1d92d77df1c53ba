@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffeefd8f_fc43632a",
+        "filename": "doc/blobfs.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T19:51:58Z",
+      "side": 1,
+      "message": "The canonical project URL is https://github.com/spdk/spdk (no .git).",
+      "range": {
+        "startLine": 7,
+        "startChar": 46,
+        "endLine": 7,
+        "endChar": 78
+      },
+      "revId": "639a2a94cce211c31ea66e21d1d92d77df1c53ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "435ca266_ccd2efe4",
+        "filename": "doc/blobfs.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T19:51:58Z",
+      "side": 1,
+      "message": "This is using spaces for indent, and the next line is using tab.",
+      "revId": "639a2a94cce211c31ea66e21d1d92d77df1c53ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7695cdf7_69653086",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T19:51:58Z",
+      "side": 1,
+      "message": "This file should probably have a license header.",
+      "revId": "639a2a94cce211c31ea66e21d1d92d77df1c53ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3d1b1eb_40aaba2b",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-08T19:51:58Z",
+      "side": 1,
+      "message": "You can clean up this #ifdef now, since SPDK_IO_PRIORITY_DEFAULT is gone in the version of SPDK this will be merged into.",
+      "revId": "639a2a94cce211c31ea66e21d1d92d77df1c53ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
