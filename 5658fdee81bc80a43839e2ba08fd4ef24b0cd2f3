@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78f41408_4bf4bcad",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-09T18:14:22Z",
+      "side": 1,
+      "message": "This needs to first check that strlen(address) is not 0 (otherwise the - 1 will underflow the buffer).\n\nI\u0027m also not sure this first fgets() actually needs to change, since sscanf() in spdk_pci_addr_parse() will ignore trailing whitespace, but I am OK with updating both just to be consistent.",
+      "revId": "5658fdee81bc80a43839e2ba08fd4ef24b0cd2f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
