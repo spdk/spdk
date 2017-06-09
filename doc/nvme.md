@@ -1,14 +1,46 @@
 # NVMe Driver {#nvme}
 
+# Introduction {#nvme_intro}
+
+The NVMe driver is a C library that may be linked directly into an application
+that provides direct, zero-copy data transfer to and from
+[NVMe SSDs](http://nvmexpress.org/). It is entirely passive, meaning that it spawns
+no threads and only performs actions in response to function calls from the
+application itself. The library controls NVMe devices by directly mapping the
+[PCI BAR](https://en.wikipedia.org/wiki/PCI_configuration_space) into the local
+process and performing [MMIO](https://en.wikipedia.org/wiki/Memory-mapped_I/O).
+I/O is submitted asynchronously via queue pairs and the general flow isn't
+entirely dissimilar from Linux's
+[libaio](http://man7.org/linux/man-pages/man2/io_submit.2.html).
+
+More recently, the library has been improved to also connect to remote NVMe
+devices via NVMe over Fabrics. Users may now call spdk_nvme_probe() on both
+local PCI busses and on remote NVMe over Fabrics discovery services. The API is
+otherwise unchanged.
+
+# Examples {#nvme_examples}
+
+There are a number of examples provided that demonstrate how to use the NVMe
+library. They are all in the [examples/nvme](https://github.com/spdk/spdk/tree/master/examples/nvme)
+directory in the repository. The best place to start is
+[hello_world](https://github.com/spdk/spdk/blob/master/examples/nvme/hello_world/hello_world.c).
+
+# Running Benchmarks {#nvme_benchmarks}
+
+SPDK provides a plugin to the very popular [fio](https://github.com/axboe/fio)
+tool to for running some basic benchmarks. See the fio start up
+[guide](https://github.com/spdk/spdk/blob/master/examples/nvme/fio_plugin/README.md)
+for more details.
+
 # Public Interface {#nvme_interface}
 
 - spdk/nvme.h
 
-# Key Functions {#nvme_key_functions}
-
-Function                                    | Description
+Key Functions                               | Description
 ------------------------------------------- | -----------
 spdk_nvme_probe()                           | @copybrief spdk_nvme_probe()
+spdk_nvme_ctrlr_alloc_io_qpair()            | @copybrief spdk_nvme_ctrlr_alloc_io_qpair()
+spdk_nvme_ctrlr_get_ns()                    | @copybrief spdk_nvme_ctrlr_get_ns()
 spdk_nvme_ns_cmd_read()                     | @copybrief spdk_nvme_ns_cmd_read()
 spdk_nvme_ns_cmd_write()                    | @copybrief spdk_nvme_ns_cmd_write()
 spdk_nvme_ns_cmd_dataset_management()       | @copybrief spdk_nvme_ns_cmd_dataset_management()
@@ -17,76 +49,55 @@ spdk_nvme_qpair_process_completions()       | @copybrief spdk_nvme_qpair_process
 spdk_nvme_ctrlr_cmd_admin_raw()             | @copybrief spdk_nvme_ctrlr_cmd_admin_raw()
 spdk_nvme_ctrlr_process_admin_completions() | @copybrief spdk_nvme_ctrlr_process_admin_completions()
 
-
-# NVMe Initialization {#nvme_initialization}
-
-\msc
-
-	app [label="Application"], nvme [label="NVMe Driver"];
-	app=>nvme [label="nvme_probe()"];
-	app<<nvme [label="probe_cb(pci_dev)"];
-	nvme=>nvme [label="nvme_attach(devhandle)"];
-	nvme=>nvme [label="nvme_ctrlr_start(nvme_controller ptr)"];
-	nvme=>nvme [label="identify controller"];
-	nvme=>nvme [label="create queue pairs"];
-	nvme=>nvme [label="identify namespace(s)"];
-	app<<nvme [label="attach_cb(pci_dev, nvme_controller)"];
-	app=>app [label="create block devices based on controller's namespaces"];
-
-\endmsc
-
-
 # NVMe I/O Submission {#nvme_io_submission}
 
-I/O is submitted to an NVMe namespace using nvme_ns_cmd_xxx functions
-defined in nvme_ns_cmd.c.  The NVMe driver submits the I/O request
-as an NVMe submission queue entry on the queue pair specified in the command.
-The application must poll for I/O completion on each queue pair with outstanding I/O
-to receive completion callbacks.
+I/O is submitted to an NVMe namespace using nvme_ns_cmd_xxx functions. The NVMe
+driver submits the I/O request as an NVMe submission queue entry on the queue
+pair specified in the command. The function returns immediately, prior to the
+completion of the command. The application must poll for I/O completion on each
+queue pair with outstanding I/O to receive completion callbacks by calling
+spdk_nvme_qpair_process_completions().
 
 @sa spdk_nvme_ns_cmd_read, spdk_nvme_ns_cmd_write, spdk_nvme_ns_cmd_dataset_management,
 spdk_nvme_ns_cmd_flush, spdk_nvme_qpair_process_completions
 
+## Scaling Performance {#nvme_scaling}
 
-# NVMe Asynchronous Completion {#nvme_async_completion}
+NVMe queue pairs (struct spdk_nvme_qpair) provide parallel submission paths for
+I/O. I/O may be submitted on multiple queue pairs simultaneously from different
+threads. Queue pairs contain no locks or atomics, however, so a given queue
+pair may only be used by a single thread at a time. This requirement is not
+enforced by the NVMe driver (doing so would require a lock), and violating this
+requirement results in undefined behavior.
 
-The userspace NVMe driver follows an asynchronous polled model for
-I/O completion.
+The number of queue pairs allowed is dicated by the NVMe SSD itself. The
+specification allows for thousands, but most devices support between 32
+and 128. The specification makes no guarantees about the performance available from
+each queue pair, but in practice the full performance of a device is almost
+always achievable using just one queue pair. For example, if a device claims to
+be capable of 450,000 I/O per second at queue depth 128, in practice it does
+not matter if the driver is using 4 queue pairs each with queue depth 32, or a
+single queue pair with queue depth 128.
 
-## I/O commands {#nvme_async_io}
+Given the above, the easiest threading model for an application using SPDK is
+to spawn a fixed number of threads in a pool and dedicate a single NVMe queue
+pair to each thread. A further improvement would be to pin each thread to a
+separate CPU core, and often the SPDK documentation will use "CPU core" and
+"thread" interchangeably because we have this threading model in mind.
 
-The application may submit I/O from one or more threads on one or more queue pairs
-and must call spdk_nvme_qpair_process_completions()
-for each queue pair that submitted I/O.
-
-When the application calls spdk_nvme_qpair_process_completions(),
-if the NVMe driver detects completed I/Os that were submitted on that queue,
-it will invoke the registered callback function
-for each I/O within the context of spdk_nvme_qpair_process_completions().
-
-## Admin commands {#nvme_async_admin}
-
-The application may submit admin commands from one or more threads
-and must call spdk_nvme_ctrlr_process_admin_completions()
-from at least one thread to receive admin command completions.
-The thread that processes admin completions need not be the same thread that submitted the
-admin commands.
-
-When the application calls spdk_nvme_ctrlr_process_admin_completions(),
-if the NVMe driver detects completed admin commands submitted from any thread,
-it will invote the registered callback function
-for each command within the context of spdk_nvme_ctrlr_process_admin_completions().
-
-It is the application's responsibility to manage the order of submitted admin commands.
-If certain admin commands must be submitted while no other commands are outstanding,
-it is the application's responsibility to enforce this rule
-using its own synchronization method.
-
+The NVMe driver takes no locks, so it scales linearly in terms of performance
+per thread as long as a queue pair and a CPU core are dedicated to each new
+thread. In order to take full advantage of this scaling, applications should
+consider organizing their internal data structures such that data is assigned
+exclusively to a single thread. All operations that require that data should be
+done by sending a request to the owning thread. This results in a message
+passing architecture, as opposed to a locking architecture, and will result in
+superior scaling across CPU cores.
 
 # NVMe over Fabrics Host Support {#nvme_fabrics_host}
 
 The NVMe driver supports connecting to remote NVMe-oF targets and
-interacting with them in the same manner as local NVMe controllers.
+interacting with them in the same manner as local NVMe SSDs.
 
 ## Specifying Remote NVMe over Fabrics Targets {#nvme_fabrics_trid}
 
@@ -95,6 +106,7 @@ to the normal enumeration process for local PCIe-attached NVMe devices.
 To connect to a remote NVMe over Fabrics subsystem, the user may call
 spdk_nvme_probe() with the `trid` parameter specifying the address of
 the NVMe-oF target.
+
 The caller may fill out the spdk_nvme_transport_id structure manually
 or use the spdk_nvme_transport_id_parse() function to convert a
 human-readable string representation into the required structure.
@@ -107,7 +119,6 @@ subsystems to be attached.  Alternatively, if the address specifies a
 single NVM subsystem directly, the NVMe library will call `probe_cb`
 for just that subsystem; this allows the user to skip the discovery step
 and connect directly to a subsystem with a known address.
-
 
 # NVMe Multi Process {#nvme_multi_process}
 
@@ -144,21 +155,6 @@ Example: identical shm_id and non-overlapping core masks
 ./perf -q 1 -s 4096 -w randread -c 0x1 -t 60 -i 1
 ./perf -q 8 -s 131072 -w write -c 0x10 -t 60 -i 1
 ~~~
-
-## Scalability and Performance {#nvme_multi_process_scalability_performance}
-
-To maximize the I/O bandwidth of an NVMe device, ensure that each application has its own
-queue pairs.
-
-The optimal threading model for SPDK is one thread per core, regardless of which processes
-that thread belongs to in the case of multi-process environment. To achieve maximum
-performance, each thread should also have its own I/O queue pair. Applications that share
-memory should be given core masks that do not overlap.
-
-However, admin commands may have some performance impact as there is only one admin queue
-pair per NVMe SSD. The NVMe driver will automatically take a cross-process capable lock
-to enable the sharing of admin queue pair. Further, when each process polls the admin
-queue for completions, it will only see completions for commands that it originated.
 
 ## Limitations {#nvme_multi_process_limitations}
 
