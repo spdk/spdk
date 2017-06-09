@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "553998e5_aff8074b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-09T12:27:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0beeab7_fdd15519",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b239883_f9a47409",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-08T21:14:53Z",
       "side": 1,
       "message": "spdk/util.h is already included above.",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4edd8199_fa41fafe",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-09T12:27:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b239883_f9a47409",
       "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "87a5082e_cbcb9fa4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-09T12:27:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "af8e6393_38f3c950",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e13929b6_c1cd0606",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2017-06-08T21:14:53Z",
       "side": 1,
       "message": "It would be better to record the histogram entries in units of ticks and then do the conversion at display time (the histogram data structure is tuned for this use case, and it avoids needing a divide in the I/O path).",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e58746d_03d434aa",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-09T12:27:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e13929b6_c1cd0606",
       "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "9ce6cf09_aba82372",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-09T12:27:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9c1433b1_a2ce3523",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55a38430_301a7b51",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "2ac7867b_303c73f0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-09T12:27:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55a38430_301a7b51",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bbcf2352_163694a7",
         "filename": "lib/nvmf/request.h",
         "patchSetId": 4
@@ -115,6 +223,24 @@
       "writtenOn": "2017-06-08T21:14:53Z",
       "side": 1,
       "message": "This magic number 6 is a little unfortunate; can you include the enum values in this header so you can at least use a name?",
+      "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62619e7d_09a6a94e",
+        "filename": "lib/nvmf/request.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-09T12:27:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bbcf2352_163694a7",
       "revId": "def622f238734bc442e54a2774b0c2765ee096b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
