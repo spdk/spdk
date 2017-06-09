@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "759bc037_880adb80",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-09T18:35:42Z",
+      "side": 1,
+      "message": "This link seems to be broken in the output - not sure why:\n\nhttps://ci.spdk.io/builds/review/016c55f91513c20e7b9f386f4e65327c8baf1aa2.1497028911/wkb-fedora-03/doc/html/nvme.html",
+      "revId": "016c55f91513c20e7b9f386f4e65327c8baf1aa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34d2e647_6c2cea54",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-09T18:35:42Z",
+      "side": 1,
+      "message": "\"128.\" is getting parsed as a numbered list - make sure that\u0027s not at the beginning of the line.",
+      "revId": "016c55f91513c20e7b9f386f4e65327c8baf1aa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "945b370b_0bf0ccfb",
+        "filename": "doc/nvme.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-09T18:35:42Z",
+      "side": 1,
+      "message": "I\u0027m not sure linking to the Linux-specific pthread API makes sense here; most users will be using our DPDK environment, which already does this automatically.",
+      "revId": "016c55f91513c20e7b9f386f4e65327c8baf1aa2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
