@@ -1261,6 +1261,8 @@ spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct spdk_scsi_task *task = cb_arg;
 
+	task->blockdev_io = bdev_io;
+
 	if (success) {
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
 	}
