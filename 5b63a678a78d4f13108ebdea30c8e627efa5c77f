@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "feed0a69_65f07197",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-09T18:08:21Z",
+      "side": 1,
+      "message": "This is equivalent to where they were called before (it used to happen inside spdk_app_fini).",
+      "parentUuid": "956a5d7c_3da2cdc6",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 27
+      },
+      "revId": "5b63a678a78d4f13108ebdea30c8e627efa5c77f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99a68df8_70221271",
         "filename": "lib/scsi/scsi.c",
         "patchSetId": 3
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "32ac3c90_627aa465",
+        "filename": "lib/scsi/scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-09T18:08:21Z",
+      "side": 1,
+      "message": "I agree, but I didn\u0027t change this for this patch.",
+      "parentUuid": "99a68df8_70221271",
+      "revId": "5b63a678a78d4f13108ebdea30c8e627efa5c77f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cba3ac22_78dd9a09",
         "filename": "lib/scsi/scsi.c",
         "patchSetId": 3
@@ -53,6 +95,30 @@
       "writtenOn": "2017-06-08T10:33:12Z",
       "side": 1,
       "message": "User app can combine eg. vhost and iscsi targets. You should check if subsystem is not initialized more than once.\n\nSome refcnt or linked list of dependent modules would be good to know when do invoke real fini in spdk_scsi_subsystem_fini()",
+      "range": {
+        "startLine": 105,
+        "startChar": 1,
+        "endLine": 109,
+        "endChar": 2
+      },
+      "revId": "5b63a678a78d4f13108ebdea30c8e627efa5c77f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ffdf198_bff932dc",
+        "filename": "lib/scsi/scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-09T18:08:21Z",
+      "side": 1,
+      "message": "The initialization is performed by the top level app, so if an app is combining both vhost and iscsi, it will still only call this function once.",
+      "parentUuid": "cba3ac22_78dd9a09",
       "range": {
         "startLine": 105,
         "startChar": 1,
