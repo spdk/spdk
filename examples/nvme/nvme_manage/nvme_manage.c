@@ -280,6 +280,24 @@ display_controller_list(void)
 	}
 }
 
+static char *
+get_line(char *buf, int buf_size, FILE *f)
+{
+	char *ret;
+	size_t len;
+
+	ret = fgets(buf, buf_size, f);
+	if (ret == NULL) {
+		return NULL;
+	}
+
+	len = strlen(buf);
+	if (len > 0 && buf[len - 1] == '\n') {
+		buf[len - 1] = '\0';
+	}
+	return buf;
+}
+
 static struct dev *
 get_controller(void)
 {
@@ -298,7 +316,7 @@ get_controller(void)
 	printf("Please Input PCI Address(domain:bus:dev.func): \n");
 
 	while ((ch = getchar()) != '\n' && ch != EOF);
-	p = fgets(address, 64, stdin);
+	p = get_line(address, 64, stdin);
 	if (p == NULL) {
 		return NULL;
 	}
@@ -769,7 +787,7 @@ update_firmware_image(void)
 
 	printf("Please Input The Path Of Firmware Image\n");
 
-	if (fgets(path, 256, stdin) == NULL) {
+	if (get_line(path, sizeof(path), stdin) == NULL) {
 		printf("Invalid path setting\n");
 		while (getchar() != '\n');
 		return;
