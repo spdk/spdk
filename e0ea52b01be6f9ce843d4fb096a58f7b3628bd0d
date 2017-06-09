@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49db082f_25af6f61",
+        "filename": "doc/vision.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-09T22:53:24Z",
+      "side": 1,
+      "message": "I\u0027m not at all confident that I agree with this vision statement, and I wrote it.",
+      "revId": "e0ea52b01be6f9ce843d4fb096a58f7b3628bd0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
