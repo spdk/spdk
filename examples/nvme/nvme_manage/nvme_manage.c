@@ -303,6 +303,10 @@ get_controller(void)
 		return NULL;
 	}
 
+	if (address[strlen(address) - 1] == '\n') {
+		address[strlen(address) - 1] = '\0';
+	}
+
 	while (isspace(*p)) {
 		p++;
 	}
@@ -773,6 +777,10 @@ update_firmware_image(void)
 		printf("Invalid path setting\n");
 		while (getchar() != '\n');
 		return;
+	}
+
+	if (path[strlen(path) - 1] == '\n') {
+		path[strlen(path) - 1] = '\0';
 	}
 
 	fd = open(path, O_RDONLY);
