@@ -59,6 +59,24 @@
     },
     {
       "key": {
+        "uuid": "67d6ba14_2a04a133",
+        "filename": "doc/memory.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-09T17:35:13Z",
+      "side": 1,
+      "message": "I wrote this paragraph because one of the reasons memory can move, and I mention it later, is in response to an interleaving rebalance after a DIMM hot insert.",
+      "parentUuid": "446027a0_0681b531",
+      "revId": "578de6d5bfa6b1af9d9bc71aefc119f67bf2a9f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3e9a0a5d_7bd46aad",
         "filename": "doc/memory.md",
         "patchSetId": 1
