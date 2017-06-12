@@ -44,7 +44,7 @@ CONFIG_LTO?=n
 CONFIG_COVERAGE?=n
 
 # Build with Address Sanitizer enabled
-CONFIG_ASAN?=n
+CONFIG_ASAN?=y
 
 # Build with Undefined Behavior Sanitizer enabled
 CONFIG_UBSAN?=n
