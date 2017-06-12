@@ -16,7 +16,7 @@ if hash astyle; then
 	#  as-is to enable ongoing work to synch with a generic upstream DPDK vhost library,
 	#  rather than making diffs more complicated by a lot of changes to follow SPDK
 	#  coding standards.
-	git ls-files '*.[ch]' '*.cpp' | grep -v rte_vhost | grep -v cpp_headers | \
+	git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' | grep -v rte_vhost | grep -v cpp_headers | \
 		xargs astyle --options=.astylerc >> astyle.log
 	if grep -q "^Formatted" astyle.log; then
 		echo " errors detected"
