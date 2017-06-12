@@ -644,6 +644,7 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 		vsocket->reconnect = !(flags & RTE_VHOST_USER_NO_RECONNECT);
 		if (vsocket->reconnect && reconn_tid == 0) {
 			if (vhost_user_reconnect_init() < 0) {
+				pthread_mutex_destroy(&vsocket->conn_mutex);
 				free(vsocket->path);
 				free(vsocket);
 				goto out;
@@ -654,6 +655,7 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 	}
 	ret = create_unix_socket(vsocket);
 	if (ret < 0) {
+		pthread_mutex_destroy(&vsocket->conn_mutex);
 		free(vsocket->path);
 		free(vsocket);
 		goto out;
