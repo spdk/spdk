@@ -50,7 +50,10 @@ PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
 	for bdf in $(linux_iter_pci 0108); do
-		LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
+		# Only test when ASAN is not enabled. If ASAN is enabled, we cannot test.
+		if [ $SPDK_CONFIG_ASAN -eq 0 ]; then
+			LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
+		fi
 		break
 	done
 
@@ -63,6 +66,8 @@ timing_exit arbitration
 
 if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
 	timing_enter multi_process
+	# disable ALSR
+	echo 0 > /proc/sys/kernel/randomize_va_space
 	$rootdir/examples/nvme/arbitration/arbitration -i 0 -s 4096 -t 10 -c 0xf &
 	pid=$!
 	sleep 3
@@ -83,6 +88,8 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
 		count=$(($count + 1))
 	done
 	wait $pid
+	# re-enable ALSR
+	echo 2 > /proc/sys/kernel/randomize_va_space
 	timing_exit multi_process
 fi
 
