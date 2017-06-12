@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45fcc3ba_26711819",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T21:48:54Z",
+      "side": 1,
+      "message": "I think we should put these declarations in spdk_mock.h so they don\u0027t have to be duplicated in every test.",
+      "revId": "7fe36bd6ef3376683dba43a5b069b9e6143a7258",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
