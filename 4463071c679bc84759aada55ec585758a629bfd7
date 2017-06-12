@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b055abc2_5bc29c20",
+        "filename": "include/spdk_internal/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T22:22:27Z",
+      "side": 1,
+      "message": "General comment: This seems a little bit over-engineered; does this actually need to be runtime swappable with function pointers, or can we just have a trace implementation library with a list of functions that need to be defined, similar to the env library? Then the user would link to libspdk_trace as well as libspdk_trace_shm or whatever implementation they want, and no intermediary function pointers would be necessary.",
+      "revId": "4463071c679bc84759aada55ec585758a629bfd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c14d7790_58dbb5fd",
+        "filename": "include/spdk_internal/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T22:22:27Z",
+      "side": 1,
+      "message": "Fix up inconsistent spaces and tabs for indentation here.",
+      "range": {
+        "startLine": 75,
+        "startChar": 39,
+        "endLine": 75,
+        "endChar": 70
+      },
+      "revId": "4463071c679bc84759aada55ec585758a629bfd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a7459d5_1ce94538",
+        "filename": "include/spdk_internal/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T22:22:27Z",
+      "side": 1,
+      "message": "Spaces -\u003e tabs in indentation.",
+      "revId": "4463071c679bc84759aada55ec585758a629bfd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53aaa543_f17b1f3a",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T22:22:27Z",
+      "side": 1,
+      "message": "These variables are in the global namespace, so they need to be static (to take them out of the global namespace) or prefixed with spdk_.",
+      "revId": "4463071c679bc84759aada55ec585758a629bfd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
