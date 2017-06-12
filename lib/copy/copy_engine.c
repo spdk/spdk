@@ -237,7 +237,7 @@ spdk_copy_engine_module_finish(void)
 	}
 }
 
-static void
+void
 spdk_copy_engine_initialize(void)
 {
 	spdk_copy_engine_module_initialize();
@@ -251,7 +251,7 @@ spdk_copy_engine_initialize(void)
 	spdk_subsystem_init_next(0);
 }
 
-static int
+int
 spdk_copy_engine_finish(void)
 {
 	spdk_copy_engine_module_finish();
@@ -259,4 +259,3 @@ spdk_copy_engine_finish(void)
 }
 
 SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size)
-SPDK_SUBSYSTEM_REGISTER(copy, spdk_copy_engine_initialize, spdk_copy_engine_finish, NULL)

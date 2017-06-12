@@ -42,7 +42,7 @@ CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS := vhost.c
 
-SPDK_LIB_LIST = event_bdev
+SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi net copy trace conf
 SPDK_LIB_LIST += util log log_rpc event app_rpc
 SPDK_LIB_LIST += vhost rte_vhost
