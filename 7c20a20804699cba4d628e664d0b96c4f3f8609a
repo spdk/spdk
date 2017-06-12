@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "99dd1007_abdb819c",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T17:48:07Z",
+      "side": 1,
+      "message": "OK, reverted this back except for including a link to SPDK.IO and removing those other links and we can wordsmith this first section in a single small patch after the reset of this is through",
+      "parentUuid": "01d73076_73591355",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f409c3b_509f9842",
         "filename": "README.md",
         "patchSetId": 4
@@ -142,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "cb182c29_73dc82df",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T17:48:07Z",
+      "side": 1,
+      "message": "OK, removed",
+      "parentUuid": "79c146ba_7f99a93d",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ae29ceb_758c3a95",
         "filename": "README.md",
         "patchSetId": 4
@@ -171,6 +207,24 @@
       "side": 1,
       "message": "I really don\u0027t want to do that - it\u0027s not that much extra work (not enough to turn someone away) and makes it a lot easier to take that next step of contributing.  When I get over to spdk.io I\u0027ll want to do the same thing there, remove the mention of cloning from github. I don\u0027t think it worth but but we can certainly debate it more!",
       "parentUuid": "3ae29ceb_758c3a95",
+      "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "833a5b57_fd227f52",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T17:48:07Z",
+      "side": 1,
+      "message": "open to strike the 2nd method if nobody likes this, want to see what it looks like though...",
+      "parentUuid": "bd1e55ed_04452714",
       "revId": "7c20a20804699cba4d628e664d0b96c4f3f8609a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
