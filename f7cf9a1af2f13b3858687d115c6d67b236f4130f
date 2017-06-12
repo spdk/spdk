@@ -45,6 +45,30 @@
       "revId": "f7cf9a1af2f13b3858687d115c6d67b236f4130f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27d061e2_93eec418",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-12T18:39:05Z",
+      "side": 1,
+      "message": "good catch, thanks",
+      "parentUuid": "53ef7ace_1aa4e36f",
+      "range": {
+        "startLine": 429,
+        "startChar": 11,
+        "endLine": 429,
+        "endChar": 51
+      },
+      "revId": "f7cf9a1af2f13b3858687d115c6d67b236f4130f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
