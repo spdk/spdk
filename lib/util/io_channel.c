@@ -296,6 +296,12 @@ spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
 	return (uint8_t *)ch + sizeof(*ch);
 }
 
+struct spdk_thread *
+spdk_io_channel_get_thread(struct spdk_io_channel *ch)
+{
+	return ch->thread;
+}
+
 struct call_channel {
 	void *io_device;
 	spdk_channel_msg fn;
