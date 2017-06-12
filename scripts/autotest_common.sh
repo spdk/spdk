@@ -49,6 +49,7 @@ case `uname` in
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		config_params+=' --enable-coverage'
 		config_params+=' --enable-ubsan'
+		config_params+=' --enable-asan'
 		;;
 	*)
 		echo "Unknown OS in $0"
