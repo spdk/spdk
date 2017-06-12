@@ -40,6 +40,8 @@ mkdir -p $TEST_DIR
 
 . $BASE_DIR/autotest.config
 
+RPC_PORT=5260
+
 function error()
 {
 	echo "==========="
@@ -146,10 +148,19 @@ function spdk_vhost_run()
 
 	( cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd & echo $! >&3) 3>$vhost_pid_file  2>&1 | tee -a $vhost_log_file &
 
-	echo "INFO: waiting 25s to allow app to run..."
-	sleep 25
-	kill -0 $(cat $vhost_pid_file)
-	echo "INFO: vhost started - pid=$(cat $vhost_pid_file)"
+	echo "INFO: waiting for app to run..."
+	ret=1
+	local vhost_pid="$(cat $vhost_pid_file)"
+	while [ $ret -ne 0 ]; do
+		if ! kill -s 0 $vhost_pid; then
+			error "Vhost is not running on pid $vhost_pid"
+			return 1
+		fi
+		if netstat -an --tcp | grep -iw listen | grep -q ${RPC_PORT}; then
+			ret=0
+		fi
+	done
+	echo "INFO: vhost started - pid=$vhost_pid"
 
 	rm $vhost_conf_file
 }
