@@ -99,6 +99,12 @@ main(int argc, char **argv)
 		}
 	}
 
+	if (opts.shm_id < 0) {
+		fprintf(stderr, "%s: -i shared memory ID must be specified\n", argv[0]);
+		usage(argv[0]);
+		exit(1);
+	}
+
 	optind = 1; /* reset the optind */
 
 	spdk_env_init(&opts);
