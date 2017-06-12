@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e0a98805_a5cf597b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-12T20:01:05Z",
+      "side": 1,
+      "message": "could it be that after these pending tasks somehow complete before the reset, this counter becomes \u003c 0?",
+      "range": {
+        "startLine": 553,
+        "startChar": 15,
+        "endLine": 553,
+        "endChar": 23
+      },
+      "revId": "816d3d81d1f7ce0de3166a083c1d408eaa8c7f95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ba0668b_aa3f913a",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
