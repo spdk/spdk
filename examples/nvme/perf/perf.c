@@ -850,7 +850,7 @@ print_performance(void)
 		printf("\n");
 	}
 
-	if (g_latency_sw_tracking_level == 0) {
+	if (g_latency_sw_tracking_level == 0 || total_io_completed == 0) {
 		return;
 	}
 
