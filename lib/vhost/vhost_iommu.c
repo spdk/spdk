@@ -91,6 +91,11 @@ vfio_cfg_init(void)
 	}
 
 	dir = opendir("/proc/self/fd");
+	if (!dir) {
+		SPDK_ERRLOG("Failed to open /proc/self/fd (%d)\n", errno);
+		return -1;
+	}
+
 	while ((d = readdir(dir)) != NULL) {
 		if (d->d_type != DT_LNK)
 			continue;
