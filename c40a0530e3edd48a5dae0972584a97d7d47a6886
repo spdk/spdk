@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6cd78bb_ed54e0a4",
+        "filename": "test/app/stub/stub.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-12T21:22:30Z",
+      "side": 1,
+      "message": "change this line too?\n\n-i id   shared memory id [required]",
+      "revId": "c40a0530e3edd48a5dae0972584a97d7d47a6886",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
