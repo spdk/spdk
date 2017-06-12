@@ -1122,28 +1122,26 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_io_deferred_completion(void *arg1, void *arg2)
+bdev_io_deferred_completion(void *ctx)
 {
-	struct spdk_bdev_io *bdev_io = arg1;
-	enum spdk_bdev_io_status status = (enum spdk_bdev_io_status)arg2;
+	struct spdk_bdev_io *bdev_io = ctx;
 
 	assert(bdev_io->in_submit_request == false);
 
-	spdk_bdev_io_complete(bdev_io, status);
+	spdk_bdev_io_complete(bdev_io, bdev_io->status);
 }
 
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
+	bdev_io->status = status;
+
 	if (bdev_io->in_submit_request) {
 		/*
-		 * Defer completion via an event to avoid potential infinite recursion if the
+		 * Defer completion to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.
 		 */
-		spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(),
-						    bdev_io_deferred_completion,
-						    bdev_io,
-						    (void *)status));
+		spdk_thread_send_msg(spdk_get_thread(), bdev_io_deferred_completion, bdev_io);
 		return;
 	}
 
@@ -1168,9 +1166,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		}
 	}
 
-	bdev_io->status = status;
-
-	if (bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 			bdev_io->ch->stat.bytes_read += bdev_io->u.read.len;
