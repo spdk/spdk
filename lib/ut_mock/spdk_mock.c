@@ -33,7 +33,6 @@
 
 #include "spdk_internal/spdk_mock.h"
 
-int ut_fake_pthread_mutex_init = 0;
 int
 __wrap_pthread_mutex_init(pthread_mutex_t *mtx, const pthread_mutexattr_t *attr)
 {
@@ -44,7 +43,6 @@ __wrap_pthread_mutex_init(pthread_mutex_t *mtx, const pthread_mutexattr_t *attr)
 	}
 }
 
-int ut_fake_pthread_mutexattr_init = 0;
 int
 __wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
 {

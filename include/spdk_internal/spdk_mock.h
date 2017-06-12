@@ -36,6 +36,9 @@
 
 #include "spdk/stdinc.h"
 
+int ut_fake_pthread_mutexattr_init;
+int ut_fake_pthread_mutex_init;
+
 #define DECLARE_WRAPPER(fn, ret, args) \
 		ret __wrap_ ## fn args; ret __real_ ## fn args;
 
