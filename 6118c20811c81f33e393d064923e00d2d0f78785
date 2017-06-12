@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16b806fd_d0681250",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1143,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-12T22:55:40Z",
+      "side": 1,
+      "message": "spdk_get_thread() is very slow and takes a lock, so we can\u0027t use it here.",
+      "revId": "6118c20811c81f33e393d064923e00d2d0f78785",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
