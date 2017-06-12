@@ -240,8 +240,6 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	optind = 1;
-
 	return 0;
 }
 

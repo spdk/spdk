@@ -143,8 +143,6 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	optind = 1;  /* reset the optind */
-
 	spdk_app_init(&opts);
 
 	g_tsc_rate = spdk_get_ticks_hz();

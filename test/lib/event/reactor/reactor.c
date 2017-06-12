@@ -134,8 +134,6 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	optind = 1;
-
 	opts.shutdown_cb = test_cleanup;
 
 	spdk_app_init(&opts);
