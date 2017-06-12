@@ -785,7 +785,7 @@ destroy_device(int vid)
 	}
 
 	if (vdev->task_cnt > 0) {
-		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
+		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
 
 
