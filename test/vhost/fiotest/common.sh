@@ -40,6 +40,17 @@ mkdir -p $TEST_DIR
 
 . $BASE_DIR/autotest.config
 
+RPC_PORT=5260
+
+# Trace flag is optional, if it wasn't set earlier - disable it after sourcing
+# autotest_common.sh
+if [[ $- =~ x ]]; then
+	source $SPDK_BUILD_DIR/scripts/autotest_common.sh
+else
+	source $SPDK_BUILD_DIR/scripts/autotest_common.sh
+	set +x
+fi
+
 function error()
 {
 	echo "==========="
@@ -146,10 +157,10 @@ function spdk_vhost_run()
 
 	( cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd & echo $! >&3) 3>$vhost_pid_file  2>&1 | tee -a $vhost_log_file &
 
-	echo "INFO: waiting 25s to allow app to run..."
-	sleep 25
-	kill -0 $(cat $vhost_pid_file)
-	echo "INFO: vhost started - pid=$(cat $vhost_pid_file)"
+	echo "INFO: waiting for app to run..."
+	local vhost_pid="$(cat $vhost_pid_file)"
+	waitforlisten "$vhost_pid" ${RPC_PORT}
+	echo "INFO: vhost started - pid=$vhost_pid"
 
 	rm $vhost_conf_file
 }
@@ -332,7 +343,7 @@ function vm_shutdown()
 	# "fail" due to shutdown
 	echo "Shutting down virtual machine $vm_dir"
 	set +e
-	vm_ssh $1 "nohup sh -c 'shutdown -h -P now'"
+	vm_ssh $1 "nohup sh -c 'shutdown -h -P now'" || true
 	echo "INFO: VM$1 is shutting down - wait a while to complete"
 	set -e
 }
