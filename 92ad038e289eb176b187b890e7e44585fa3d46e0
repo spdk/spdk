@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "52920a0d_fd8a85ae",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "I was thinking we\u0027d incorporate it into the opening thing that  we\u0027ll redo on the next patch but I\u0027m fine adding it back",
+      "parentUuid": "c78598a4_914f6bbc",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "463efe19_7ecac264",
         "filename": "README.md",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-12T21:22:58Z",
       "side": 1,
       "message": "I\u0027d like these bullet points to have the same wording as the title sections.",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "923f9f72_f22cc22b",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Oh yeah, that\u0027d be nice.  Might as well add anchors now too",
+      "parentUuid": "463efe19_7ecac264",
       "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ab62ec1c_413af284",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e18ec49_fad9bfbf",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc32eefb_c2f79302",
         "filename": "README.md",
         "patchSetId": 6
@@ -64,6 +118,24 @@
       "writtenOn": "2017-06-12T21:22:58Z",
       "side": 1,
       "message": "I liked the old sentence we had that set up what we were doing (\"To build SPDK, some dependencies must be installed.).",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44889e9d_346fb3a9",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Well that seems obvious otherwise we wouldn\u0027t have this section :)  This actually informs them of something they might not know",
+      "parentUuid": "dc32eefb_c2f79302",
       "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "803c15d1_7cb4f90b",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "why not?",
+      "parentUuid": "d8f75572_4bc14e4c",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38726b65_8dcaca33",
         "filename": "README.md",
         "patchSetId": 6
@@ -98,6 +188,24 @@
       "writtenOn": "2017-06-12T21:22:58Z",
       "side": 1,
       "message": "The RDMA libraries are optional and I\u0027d like to continue to indicate that like we had before.",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79368b9f_bcb48d34",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "38726b65_8dcaca33",
       "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "48ee9d1a_40417136",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "edf66c7e_84863ea9",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "801bbd14_0b715a1e",
         "filename": "README.md",
         "patchSetId": 6
@@ -132,6 +258,24 @@
       "writtenOn": "2017-06-12T21:22:58Z",
       "side": 1,
       "message": "Now that I look at this, I think we should just point people at GitHub as the canonical place to clone from. We can write the documentation for submitting at patch (http://www.spdk.io/development) from the perspective of a repository that was originally cloned from GitHub to make that process as seemless as possible.\n\nThis particular document should probably have a section called \"Contributing\" that just links to http://www.spdk.io/development.",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28799214_32e4147e",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "yeah, that could work",
+      "parentUuid": "801bbd14_0b715a1e",
       "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "d1118e2d_2aabbdd5",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Well, the other titles are all imperative statements, well except for the change you\u0027ve asked to update the title of pre-reqs back to just pre-reqs :) I don\u0027t really care, just giving you a hard time! I will change them to all be one word action verbs",
+      "parentUuid": "5a2305e6_63744487",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65de1073_2ecc9d47",
         "filename": "README.md",
         "patchSetId": 6
@@ -166,6 +328,24 @@
       "writtenOn": "2017-06-12T21:22:58Z",
       "side": 1,
       "message": "What does \"correct\" mean here? Does the source in /usr/src need to match the version you are currently booted to? Is there a good way to verify \"correct\"?",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97d7ddac_9b8c140e",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "matching is probably a better word? Correct is so generic though we\u0027d never be wrong saying it :)",
+      "parentUuid": "65de1073_2ecc9d47",
       "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "dd0464f8_d9ad5d11",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f8ca48f6_2cb9baa5",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb5dfbdb_dc560ef0",
         "filename": "README.md",
         "patchSetId": 6
@@ -200,6 +398,24 @@
       "writtenOn": "2017-06-12T21:22:58Z",
       "side": 1,
       "message": "Put the ./unittests.sh first. After that, say:\n\nYou will see several error messages when running the unit tests, but they are part of the test suite. The final message at the end of the script indicates success or failure.",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb665534_06a3949f",
+        "filename": "README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-12T21:49:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb5dfbdb_dc560ef0",
       "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
