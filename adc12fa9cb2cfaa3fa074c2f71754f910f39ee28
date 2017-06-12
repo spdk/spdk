@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a95be5d3_05832b9e",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T23:20:36Z",
+      "side": 1,
+      "message": "This should be indented consistently with the rest of the code (tabs vs spaces).  We should probably add .cc to the list of extensions passed to astyle.",
+      "revId": "adc12fa9cb2cfaa3fa074c2f71754f910f39ee28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
