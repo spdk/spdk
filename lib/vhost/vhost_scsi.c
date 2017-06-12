@@ -483,22 +483,92 @@ add_vdev_cb(void *arg)
 			     CONTROLQ_POLL_PERIOD_US);
 }
 
-static void
-remove_vdev_cb(void *arg)
-{
-	struct spdk_vhost_scsi_dev *svdev = arg;
-	uint32_t i;
+struct cleanup_worker_data {
+	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_event *done_event;
+	struct spdk_poller *cleanup_poller;
 
-	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svdev->scsi_dev[i] == NULL) {
-			continue;
+	bool resets_sent;
+	uint32_t timeout;
+};
+
+static void
+lun_reset_done_cb(void *arg1, void *arg2)
+{
+	struct spdk_vhost_task *task = arg1;
+	SPDK_NOTICELOG("Controller %s: cleanup reset of LUN (id:%d) done, status %d\n",
+		       task->svdev->vdev.name,
+		       spdk_scsi_lun_get_id(task->scsi.lun), task->scsi.status);
+
+	assert(task->req_idx == -1);
+	spdk_vhost_task_put(task);
+}
+
+static void
+vdev_cleanup_worker(void *arg)
+{
+	struct cleanup_worker_data *data = arg;
+	struct spdk_vhost_scsi_dev *svdev = data->svdev;
+	struct spdk_vhost_task *task;
+	struct spdk_scsi_lun *lun;
+	unsigned i;
+
+	/*
+	 * If we have outstanding tasks reset them before removing vdev
+	 */
+	if (data->resets_sent == false && svdev->vdev.task_cnt > 0) {
+		SPDK_NOTICELOG("Controller %s: outstanding task (%d) - reseting all devices\n", svdev->vdev.name,
+			       svdev->vdev.task_cnt);
+		for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+			if (svdev->scsi_dev[i] == NULL) {
+				continue;
+			}
+
+			lun = spdk_scsi_dev_get_lun(svdev->scsi_dev[i], 0);
+			if (!lun) {
+				SPDK_NOTICELOG("Controller %s: device %u have no LUN attached\n", svdev->vdev.name, i);
+				continue;
+			}
+
+			task = spdk_vhost_task_get(svdev);
+			task->req_idx = -1;
+			task->scsi_dev = svdev->scsi_dev[i];
+			task->scsi.lun = lun;
+			task->scsi.cb_event = spdk_event_allocate(svdev->vdev.lcore,
+					      lun_reset_done_cb, task, arg);
+			spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 		}
-		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
+
+		data->resets_sent = true;
+		return;
 	}
 
-	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
-	spdk_vhost_dev_mem_unregister(&svdev->vdev);
+	/*
+	 * Remove device when no outstanding tasks.
+	 */
+	if (svdev->vdev.task_cnt == 0 || data->timeout == 0) {
+		if (svdev->vdev.task_cnt != 0) {
+			SPDK_ERRLOG("Controller %s: Failed to complete %d tasks. Some memory might leak.\n",
+				    svdev->vdev.name, svdev->vdev.task_cnt);
+			svdev->vdev.task_cnt = 0;
+		}
+
+		for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+			if (svdev->scsi_dev[i] == NULL) {
+				continue;
+			}
+			spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
+		}
+
+		SPDK_NOTICELOG("Stopping cleanup poller for vhost controller %s\n", svdev->vdev.name);
+		spdk_vhost_dev_mem_unregister(&svdev->vdev);
+		spdk_poller_unregister(&data->cleanup_poller, data->done_event);
+	} else {
+		data->timeout--;
+	}
 }
+
+
 
 static struct spdk_vhost_scsi_dev *
 to_scsi_dev(struct spdk_vhost_dev *ctrlr)
@@ -762,6 +832,8 @@ destroy_device(int vid)
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_timed_event event = {0};
+	struct cleanup_worker_data cleanup_data = {0};
+	uint32_t i;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -778,7 +850,17 @@ destroy_device(int vid)
 	spdk_poller_unregister(&svdev->controlq_poller, event.spdk_event);
 	spdk_vhost_timed_event_wait(&event, "unregister controll queue poller");
 
-	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
+	for (i = 5000; i && vdev->task_cnt > 0; i--) {
+		usleep(1000);
+	}
+
+	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 10);
+	cleanup_data.svdev = svdev;
+	cleanup_data.done_event = event.spdk_event;
+	cleanup_data.timeout = 1000 * 9;
+	spdk_poller_register(&cleanup_data.cleanup_poller, vdev_cleanup_worker, &cleanup_data, vdev->lcore,
+			     1000);
+	spdk_vhost_timed_event_wait(&event, "cleanup vdev worker");
 
 	spdk_vhost_dev_unload(vdev);
 }
