@@ -332,6 +332,7 @@ static void aio_free_disk(struct file_disk *fdisk)
 {
 	if (fdisk == NULL)
 		return;
+	free((void *)fdisk->file);
 	free(fdisk->disk.name);
 	free(fdisk);
 }
@@ -347,7 +348,10 @@ create_aio_disk(const char *name, const char *fname)
 		return NULL;
 	}
 
-	fdisk->file = fname;
+	fdisk->file = strdup(fname);
+	if (!fdisk->file) {
+		goto error_return;
+	}
 	if (blockdev_aio_open(fdisk)) {
 		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fname, fdisk->fd, errno);
 		goto error_return;
