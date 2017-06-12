@@ -151,6 +151,32 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
 
+extern int ut_fake_pthread_mutexattr_init;
+extern int ut_fake_pthread_mutex_init;
+static void
+test_nvme_robust_mutex_init_shared(void)
+{
+	pthread_mutex_t mtx;
+	int rc = 0;
+
+	ut_fake_pthread_mutexattr_init = 0;
+	ut_fake_pthread_mutex_init = 0;
+	rc = nvme_robust_mutex_init_shared(&mtx);
+	CU_ASSERT(rc == 0);
+
+#ifndef __FreeBSD__
+	ut_fake_pthread_mutexattr_init = -1;
+	ut_fake_pthread_mutex_init = 0;
+	rc = nvme_robust_mutex_init_shared(&mtx);
+	CU_ASSERT(rc == ut_fake_pthread_mutexattr_init);
+
+	ut_fake_pthread_mutexattr_init = 0;
+	ut_fake_pthread_mutex_init = -1;
+	rc = nvme_robust_mutex_init_shared(&mtx);
+	CU_ASSERT(rc == ut_fake_pthread_mutex_init);
+#endif
+}
+
 static void
 test_opc_data_transfer(void)
 {
@@ -364,12 +390,16 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test_opc_data_transfer", test_opc_data_transfer) == NULL ||
+		CU_add_test(suite, "test_opc_data_transfer",
+			    test_opc_data_transfer) == NULL ||
 		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_trtype",
 			    test_spdk_nvme_transport_id_parse_trtype) == NULL ||
 		CU_add_test(suite, "test_spdk_nvme_transport_id_parse_adrfam",
 			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
-		CU_add_test(suite, "test_trid_parse_and_compare", test_trid_parse_and_compare) == NULL
+		CU_add_test(suite, "test_trid_parse_and_compare",
+			    test_trid_parse_and_compare) == NULL ||
+		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
+			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
