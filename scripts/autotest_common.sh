@@ -25,6 +25,7 @@ fi
 : ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
 
 config_params='--enable-debug --enable-werror'
+SPDK_CONFIG_ASAN=0; export SPDK_CONFIG_ASAN
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
@@ -49,6 +50,10 @@ case `uname` in
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		config_params+=' --enable-coverage'
 		config_params+=' --enable-ubsan'
+		if /usr/sbin/ldconfig -p | grep -q asan; then
+			config_params+=' --enable-asan'
+			SPDK_CONFIG_ASAN=1
+		fi
 		;;
 	*)
 		echo "Unknown OS in $0"
@@ -86,7 +91,7 @@ if [ -z "$output_dir" ]; then
 	export output_dir
 fi
 
-if [ $SPDK_RUN_VALGRIND -eq 1 ] && hash valgrind &> /dev/null; then
+if [ $SPDK_CONFIG_ASAN -eq 0 ] && [ $SPDK_RUN_VALGRIND -eq 1 ] && hash valgrind &> /dev/null; then
 	valgrind='valgrind --leak-check=full --error-exitcode=2'
 else
 	valgrind=''
