@@ -175,8 +175,6 @@ main(int argc, char **argv)
 		sleep(10);
 	}
 
-	optind = 1; /* reset the optind */
-
 	opts.shutdown_cb = spdk_iscsi_shutdown;
 	opts.usr1_handler = spdk_sigusr1;
 	spdk_app_init(&opts);

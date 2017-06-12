@@ -99,8 +99,6 @@ main(int argc, char **argv)
 		}
 	}
 
-	optind = 1; /* reset the optind */
-
 	spdk_env_init(&opts);
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");

@@ -236,6 +236,7 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	char **args = NULL;
 	char **dpdk_args = NULL;
 	int argcount, i, rc;
+	int orig_optind;
 
 	argcount = spdk_build_eal_cmdline(opts, &args);
 	if (argcount <= 0) {
@@ -262,7 +263,10 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	memcpy(dpdk_args, args, sizeof(char *) * argcount);
 
 	fflush(stdout);
+	orig_optind = optind;
+	optind = 1;
 	rc = rte_eal_init(argcount, dpdk_args);
+	optind = orig_optind;
 
 	spdk_free_args(args, argcount);
 	free(dpdk_args);

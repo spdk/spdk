@@ -514,7 +514,7 @@ parse_args(int argc, char **argv)
 	}
 
 	g_aio_optind = optind;
-	optind = 1;
+
 	return 0;
 }
 
