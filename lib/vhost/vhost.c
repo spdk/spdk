@@ -506,12 +506,6 @@ spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
-	if (vdev->task_cnt > 0) {
-		SPDK_ERRLOG("%s: Leaked %u tasks when shutting down\n", vdev->name, vdev->task_cnt);
-	}
-	vdev->task_cnt = 0;
-	vdev->vid = -1;
-	vdev->num_queues = 0;
 }
 
 struct spdk_vhost_dev *
