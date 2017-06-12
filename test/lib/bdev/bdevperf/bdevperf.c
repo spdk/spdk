@@ -714,8 +714,6 @@ main(int argc, char **argv)
 		g_zcopy = false;
 	}
 
-	optind = 1;  /* reset the optind */
-
 	blockdev_heads_init();
 
 	bdevtest_init(config_file, core_mask);

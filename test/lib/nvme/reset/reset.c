@@ -485,7 +485,6 @@ parse_args(int argc, char **argv)
 		g_is_random = 1;
 	}
 
-	optind = 1;
 	return 0;
 }
 

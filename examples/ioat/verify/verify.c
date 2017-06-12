@@ -275,7 +275,7 @@ parse_args(int argc, char **argv)
 		usage(argv[0]);
 		return 1;
 	}
-	optind = 1;
+
 	return 0;
 }
 
