@@ -43,7 +43,7 @@ usage(char *executable_name)
 {
 	printf("%s [options]\n", executable_name);
 	printf("options:\n");
-	printf(" -i shared memory ID\n");
+	printf(" -i shared memory ID [required]\n");
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
@@ -97,6 +97,12 @@ main(int argc, char **argv)
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
 		}
+	}
+
+	if (opts.shm_id < 0) {
+		fprintf(stderr, "%s: -i shared memory ID must be specified\n", argv[0]);
+		usage(argv[0]);
+		exit(1);
 	}
 
 	optind = 1; /* reset the optind */
