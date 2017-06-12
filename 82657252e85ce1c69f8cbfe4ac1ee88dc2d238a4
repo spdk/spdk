@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5f89fc5_3cf9829c",
+        "filename": "lib/iscsi/task.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-12T16:48:25Z",
+      "side": 1,
+      "message": "Maybe pass the completion function as an argument here instead?  By my count there are only 5 places where this functions gets called - 3 for commands, 2 for task management.  Then we could get rid of the task-\u003etype completely.\n\nYou should be able to do something similar on the vhost side.",
+      "revId": "82657252e85ce1c69f8cbfe4ac1ee88dc2d238a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
