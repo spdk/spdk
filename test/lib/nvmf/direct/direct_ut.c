@@ -45,6 +45,14 @@ spdk_env_get_current_core(void)
 	return 0;
 }
 
+struct spdk_nvme_ctrlr {
+
+	uint32_t			num_ns;
+};
+
+struct spdk_nvme_qpair {
+
+};
 void
 spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 		     uint32_t lcore, uint64_t period_microseconds)
@@ -96,7 +104,10 @@ spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 			   void *buf, uint32_t len,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
-	return -1;
+	if (buf == NULL) {
+		return -1;
+	}
+	return 0;
 }
 
 struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id)
@@ -204,6 +215,35 @@ spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req)
 
 /* test suite function */
 static void
+test_nvmf_ctrlr_process_io_cmd(void)
+{
+	int ret;
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_conn		conn = {};
+	struct spdk_nvmf_session  sess = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair	io_qpair = {};
+	union nvmf_c2h_msg		rsp = {};
+	struct spdk_nvmf_subsystem 	subsys = {
+		.dev.direct.ctrlr = &ctrlr,
+		.dev.direct.io_qpair = &io_qpair,
+	};
+	req.conn = &conn;
+	req.conn->sess = &sess;
+	req.conn->sess->subsys = &subsys;
+
+
+	req.rsp = &rsp;
+	req.rsp->nvme_cpl.status.sc = 0;
+	ret = nvmf_direct_ctrlr_process_io_cmd(&req);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == 6)
+	CU_ASSERT(ret == 0);
+	req.data = "test";
+	ret = nvmf_direct_ctrlr_process_io_cmd(&req);
+	CU_ASSERT(ret == 1);
+}
+
+static void
 nvmf_test_nvmf_direct_ctrlr_admin_identify_nslist(void)
 {
 }
@@ -224,7 +264,9 @@ int main(int argc, char **argv)
 	}
 
 	if (CU_add_test(suite, "direct_ctrlr_admin_identify_nslist",
-			nvmf_test_nvmf_direct_ctrlr_admin_identify_nslist) == NULL) {
+			nvmf_test_nvmf_direct_ctrlr_admin_identify_nslist) == NULL ||
+	    CU_add_test(suite, "nvmf_ctrlr_process_io_cmd", test_nvmf_ctrlr_process_io_cmd) == NULL
+	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
