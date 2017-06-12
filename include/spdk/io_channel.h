@@ -78,6 +78,8 @@ void spdk_free_thread(void);
 /**
  * \brief Get a handle to the current thread. This handle may be passed
  * to other threads and used as the target of spdk_thread_send_msg().
+ *
+ * \sa spdk_io_channel_get_thread()
  */
 struct spdk_thread *spdk_get_thread(void);
 
@@ -139,6 +141,11 @@ void spdk_put_io_channel(struct spdk_io_channel *ch);
  * \brief Returns the context buffer associated with an I/O channel.
  */
 void *spdk_io_channel_get_ctx(struct spdk_io_channel *ch);
+
+/**
+ * \brief Returns the spdk_thread associated with an I/O channel.
+ */
+struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
 
 /**
  * \brief Call 'fn' on each channel associated with io_device. This happens
