@@ -42,7 +42,7 @@ bdevtest_init(const char *config_file, const char *cpumask)
 	struct spdk_app_opts opts;
 
 	spdk_app_opts_init(&opts);
-	opts.name = "bdevtest";
+	opts.name = "bdevtest-yzy";
 	opts.config_file = config_file;
 	opts.reactor_mask = cpumask;
 	spdk_app_init(&opts);
