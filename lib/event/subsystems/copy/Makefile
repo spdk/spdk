@@ -33,27 +33,9 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = mkfs
+CFLAGS += $(ENV_CFLAGS) -I.
+C_SRCS = copy.c
+LIBNAME = event_copy
 
-C_SRCS := mkfs.c
-CFLAGS += $(DPDK_INC)
-
-SPDK_LIB_LIST = event_bdev event_copy
-SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
-		log jsonrpc json rpc
-
-LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
-LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
