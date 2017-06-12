@@ -152,6 +152,30 @@
       "revId": "5b63a678a78d4f13108ebdea30c8e627efa5c77f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e2a7ed8_3c5b591f",
+        "filename": "lib/scsi/scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-12T17:42:34Z",
+      "side": 1,
+      "message": "You\u0027re right - I need to refactor that code out of the library and into the application.",
+      "parentUuid": "47feea59_3309aca2",
+      "range": {
+        "startLine": 105,
+        "startChar": 1,
+        "endLine": 109,
+        "endChar": 2
+      },
+      "revId": "5b63a678a78d4f13108ebdea30c8e627efa5c77f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
