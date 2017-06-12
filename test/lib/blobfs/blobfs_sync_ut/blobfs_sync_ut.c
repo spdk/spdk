@@ -107,6 +107,12 @@ ut_send_request(fs_request_fn fn, void *arg)
 		}
 		pthread_mutex_unlock(&g_mutex);
 	}
+
+	/*
+	 * Make sure the address of the local req variable is not in g_req when we exit this
+	 * function to make static analysis tools happy.
+	 */
+	g_req = NULL;
 }
 
 static void
