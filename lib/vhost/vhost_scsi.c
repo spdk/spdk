@@ -761,6 +761,7 @@ destroy_device(int vid)
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_timed_event event = {0};
+	uint32_t i;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -776,6 +777,16 @@ destroy_device(int vid)
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->controlq_poller, event.spdk_event);
 	spdk_vhost_timed_event_wait(&event, "unregister controll queue poller");
+
+	/* Wait for all tasks to finish */
+	for (i = 1000; i && vdev->task_cnt > 0; i--) {
+		usleep(1000);
+	}
+
+	if (vdev->task_cnt > 0) {
+		rte_panic("%s: pending tasks did not finish in 1s.\n", vdev->name);
+	}
+
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
 
