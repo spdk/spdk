@@ -48,7 +48,10 @@ timing_exit overhead
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
 	for bdf in $(linux_iter_pci 0108); do
-		/usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
+		# Only test when ASAN is not enabled. If ASAN is enabled, we cannot test.
+		if [ $SPDK_CONFIG_ASAN -eq 0 ]; then
+			/usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
+		fi
 		break
 	done
 
