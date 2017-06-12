@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b432089_15f4082e",
+        "filename": "examples/nvme/reserve/reserve.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T16:33:32Z",
+      "side": 1,
+      "message": "If you\u0027re not using phys_addr, you can just pass NULL here.",
+      "range": {
+        "startLine": 107,
+        "startChar": 39,
+        "endLine": 107,
+        "endChar": 49
+      },
+      "revId": "c74be662874432f184186c87aa311c7cac63fc99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78d01342_ba0f3a19",
+        "filename": "examples/nvme/reserve/reserve.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T16:33:32Z",
+      "side": 1,
+      "message": "We should just check for allocation failure and handle it gracefully (print a message and return an error code).",
+      "revId": "c74be662874432f184186c87aa311c7cac63fc99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a58403f4_43decfbb",
+        "filename": "examples/nvme/reserve/reserve.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T16:33:32Z",
+      "side": 1,
+      "message": "Rather than hard-coding 8 here, can you use sizeof(*host_id)?",
+      "range": {
+        "startLine": 111,
+        "startChar": 59,
+        "endLine": 111,
+        "endChar": 61
+      },
+      "revId": "c74be662874432f184186c87aa311c7cac63fc99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c079c263_0cfe417e",
+        "filename": "examples/nvme/reserve/reserve.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T16:33:32Z",
+      "side": 1,
+      "message": "This path leaks host_id.",
+      "revId": "c74be662874432f184186c87aa311c7cac63fc99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a9b85d9_d0caf902",
+        "filename": "examples/nvme/reserve/reserve.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-12T16:33:32Z",
+      "side": 1,
+      "message": "The reservation functions already allocate a DMA-capable buffer and copy back to the user\u0027s buffer (see nvme_allocate_request_user_copy()), so this part of the change is not strictly necessary.",
+      "revId": "c74be662874432f184186c87aa311c7cac63fc99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
