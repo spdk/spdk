@@ -95,6 +95,7 @@ spdk_vhost_subsystem_init(void)
 		SPDK_ERRLOG("create task pool failed\n");
 		rc = -1;
 	}
+	spdk_scsi_task_tracker_init();
 
 	spdk_subsystem_init_next(rc);
 }
@@ -102,6 +103,7 @@ spdk_vhost_subsystem_init(void)
 static int
 spdk_vhost_subsystem_fini(void)
 {
+	spdk_scsi_task_tracker_fini();
 	return 0;
 }
 

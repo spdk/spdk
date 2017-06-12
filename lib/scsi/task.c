@@ -37,6 +37,9 @@
 #include "spdk/env.h"
 #include "spdk/util.h"
 
+pthread_spinlock_t g_scsi_task_tracker_lock;
+TAILQ_HEAD(, spdk_scsi_task) g_scsi_task_tracker;
+
 void
 spdk_scsi_task_put(struct spdk_scsi_task *task)
 {
@@ -53,6 +56,10 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 			spdk_scsi_task_put(task->parent);
 			task->parent = NULL;
 		}
+
+		pthread_spin_lock(&g_scsi_task_tracker_lock);
+		TAILQ_REMOVE(&g_scsi_task_tracker, task, tracking_link);
+		pthread_spin_unlock(&g_scsi_task_tracker_lock);
 
 		if (bdev_io) {
 			spdk_bdev_free_io(bdev_io);
@@ -91,6 +98,10 @@ spdk_scsi_task_construct(struct spdk_scsi_task *task,
 		task->target_port = parent->target_port;
 		task->initiator_port = parent->initiator_port;
 	}
+
+	pthread_spin_lock(&g_scsi_task_tracker_lock);
+	TAILQ_INSERT_TAIL(&g_scsi_task_tracker, task, tracking_link);
+	pthread_spin_unlock(&g_scsi_task_tracker_lock);
 }
 
 void
@@ -252,4 +263,28 @@ spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk,
 		spdk_scsi_task_build_sense_data(task, sk, asc, ascq);
 	}
 	task->status = sc;
+}
+
+void
+spdk_scsi_task_tracker_init(void)
+{
+	pthread_spin_init(&g_scsi_task_tracker_lock, PTHREAD_PROCESS_PRIVATE);
+	TAILQ_INIT(&g_scsi_task_tracker);
+}
+
+void
+spdk_scsi_task_tracker_fini(void)
+{
+	struct spdk_scsi_task *scsi_task;
+	int i = 0;
+
+	SPDK_ERRLOG("Pending scsi_task objects:\n");
+	pthread_spin_lock(&g_scsi_task_tracker_lock);
+	TAILQ_FOREACH(scsi_task, &g_scsi_task_tracker, tracking_link) {
+		SPDK_ERRLOG("[% 4d] type: %d, ref: %"PRIu32", status: %d, function: %d, response: %d\n", i, scsi_task->type, scsi_task->ref,
+			    scsi_task->status, scsi_task->function, scsi_task->response);
+		i++;
+	}
+	pthread_spin_unlock(&g_scsi_task_tracker_lock);
+	pthread_spin_destroy(&g_scsi_task_tracker_lock);
 }

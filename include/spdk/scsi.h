@@ -140,6 +140,7 @@ struct spdk_scsi_task {
 	void *blockdev_io;
 
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
+	TAILQ_ENTRY(spdk_scsi_task) tracking_link;
 
 	uint32_t abort_id;
 };
@@ -210,6 +211,8 @@ void spdk_scsi_task_construct(struct spdk_scsi_task *task,
 void spdk_scsi_task_put(struct spdk_scsi_task *task);
 
 void spdk_scsi_task_free_data(struct spdk_scsi_task *task);
+void spdk_scsi_task_tracker_init(void);
+void spdk_scsi_task_tracker_fini(void);
 /**
  * Set internal buffer to given one. Caller is owner of that buffer.
  *
