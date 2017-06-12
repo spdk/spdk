@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ba0668b_aa3f913a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-12T17:50:24Z",
+      "side": 1,
+      "message": "Instead of waiting a flat 5 seconds, start the cleanup poller immediately to run every millisecond. For the  first 5 seconds it runs, just check for task_count to be 0. If it gets to 0, shut down. If it times out, then do the reset and shutdown.\n\nThat allows the shutdown to happen quickly in the common cases.",
+      "revId": "816d3d81d1f7ce0de3166a083c1d408eaa8c7f95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
