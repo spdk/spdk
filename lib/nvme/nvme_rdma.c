@@ -49,6 +49,7 @@
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
+#include "spdk/endian.h"
 
 #include "nvme_internal.h"
 
@@ -1149,6 +1150,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	int rc;
 	uint64_t i, numrec, buffer_max_entries_first, buffer_max_entries, log_page_offset = 0;
 	uint64_t remaining_num_rec = 0;
+	uint16_t recfmt;
 	struct nvme_completion_poll_status status;
 
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
@@ -1207,6 +1209,12 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 
 		if (!remaining_num_rec) {
 			log_page = (struct spdk_nvmf_discovery_log_page *)buffer;
+			recfmt = from_le16(&log_page->recfmt);
+			if (recfmt != 0) {
+				SPDK_ERRLOG("Unrecognized discovery log record format %" PRIu16 "\n", recfmt);
+				nvme_ctrlr_destruct(discovery_ctrlr);
+				return -EPROTO;
+			}
 			remaining_num_rec = log_page->numrec;
 			log_page_offset = offsetof(struct spdk_nvmf_discovery_log_page, entries[0]);
 			log_page_entry = &log_page->entries[0];
