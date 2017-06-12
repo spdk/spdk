@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88125e9c_5eb51082",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-12T16:25:52Z",
+      "side": 1,
+      "message": "It is rather long timeout. What configuration is making such big delay?",
+      "range": {
+        "startLine": 150,
+        "startChar": 1,
+        "endLine": 150,
+        "endChar": 9
+      },
+      "revId": "40828e06878786de78421e6547634ba893121aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
