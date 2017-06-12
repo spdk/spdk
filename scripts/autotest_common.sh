@@ -23,6 +23,7 @@ fi
 : ${SPDK_TEST_IOAT=1}; export SPDK_TEST_IOAT
 : ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
 : ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
+: ${SPDK_CONFIG_ASAN=0}; export SPDK_CONFIG_ASAN
 
 config_params='--enable-debug --enable-werror'
 
@@ -49,6 +50,13 @@ case `uname` in
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		config_params+=' --enable-coverage'
 		config_params+=' --enable-ubsan'
+		if [ $SPDK_CONFIG_ASAN -eq 1 ]; then
+			if /usr/sbin/ldconfig -p | grep -q asan; then
+				config_params+=' --enable-asan'
+			else
+				SPDK_CONFIG_ASAN=0
+			fi
+		fi
 		;;
 	*)
 		echo "Unknown OS in $0"
@@ -86,7 +94,8 @@ if [ -z "$output_dir" ]; then
 	export output_dir
 fi
 
-if [ $SPDK_RUN_VALGRIND -eq 1 ] && hash valgrind &> /dev/null; then
+# Valgrind does not work well when ASAN is enabled, so only use valgrind if ASAN is disabled
+if [ $SPDK_CONFIG_ASAN -eq 0 ] && [ $SPDK_RUN_VALGRIND -eq 1 ] && hash valgrind &> /dev/null; then
 	valgrind='valgrind --leak-check=full --error-exitcode=2'
 else
 	valgrind=''
