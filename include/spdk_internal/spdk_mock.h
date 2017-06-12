@@ -40,8 +40,11 @@
 		ret __wrap_ ## fn args; ret __real_ ## fn args;
 
 /* define new wrappers (alphabetically please) here using above helper macro */
+extern int ut_fake_pthread_mutex_init;
 DECLARE_WRAPPER(pthread_mutex_init, int,
 		(pthread_mutex_t *mtx, const pthread_mutexattr_t *attr));
+
+extern int ut_fake_pthread_mutexattr_init;
 DECLARE_WRAPPER(pthread_mutexattr_init, int,
 		(pthread_mutexattr_t *attr));
 

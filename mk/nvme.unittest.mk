@@ -35,13 +35,14 @@ NVME_DIR := $(SPDK_ROOT_DIR)/lib/nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
 C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIB_LIST = util log
+SPDK_LIB_LIST = util log spdk_mock
 
 LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
 
