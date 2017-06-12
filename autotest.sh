@@ -92,7 +92,12 @@ fi
 
 if [ $SPDK_TEST_NVME -eq 1 ]; then
 	run_test test/lib/nvme/nvme.sh
-	run_test test/lib/nvme/hotplug.sh intel
+	# Only test hotplug without ASAN enabled. Since if it is
+	# enabled, it catches SEGV earlier than our handler which
+	# breaks the hotplug logic
+	if [ $SPDK_RUN_ASAN -eq 0 ]; then
+		run_test test/lib/nvme/hotplug.sh intel
+	fi
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		run_test test/lib/nvme/nvmemp.sh
 	fi
