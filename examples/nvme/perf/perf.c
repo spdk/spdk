@@ -765,22 +765,24 @@ print_performance(void)
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
-			io_per_second = (float)ns_ctx->io_completed / g_time_in_sec;
-			mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
-			average_latency = (float)(ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
-			min_latency = (float)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
-			max_latency = (float)ns_ctx->max_tsc * 1000 * 1000 / g_tsc_rate;
-			printf("%-43.43s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
-			       ns_ctx->entry->name, worker->lcore,
-			       io_per_second, mb_per_second,
-			       average_latency, min_latency, max_latency);
-			total_io_per_second += io_per_second;
-			total_mb_per_second += mb_per_second;
-			total_io_completed += ns_ctx->io_completed;
-			sum_ave_latency += average_latency;
-			sum_min_latency += min_latency;
-			sum_max_latency += max_latency;
-			ns_count++;
+			if (ns_ctx->io_completed != 0) {
+				io_per_second = (float)ns_ctx->io_completed / g_time_in_sec;
+				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
+				average_latency = (float)(ns_ctx->total_tsc / ns_ctx->io_completed) * 1000 * 1000 / g_tsc_rate;
+				min_latency = (float)ns_ctx->min_tsc * 1000 * 1000 / g_tsc_rate;
+				max_latency = (float)ns_ctx->max_tsc * 1000 * 1000 / g_tsc_rate;
+				printf("%-43.43s from core %u: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
+				       ns_ctx->entry->name, worker->lcore,
+				       io_per_second, mb_per_second,
+				       average_latency, min_latency, max_latency);
+				total_io_per_second += io_per_second;
+				total_mb_per_second += mb_per_second;
+				total_io_completed += ns_ctx->io_completed;
+				sum_ave_latency += average_latency;
+				sum_min_latency += min_latency;
+				sum_max_latency += max_latency;
+				ns_count++;
+			}
 			ns_ctx = ns_ctx->next;
 		}
 		worker = worker->next;
@@ -795,7 +797,7 @@ print_performance(void)
 		printf("\n");
 	}
 
-	if (g_latency_sw_tracking_level == 0) {
+	if (g_latency_sw_tracking_level == 0 || total_io_completed == 0) {
 		return;
 	}
 
