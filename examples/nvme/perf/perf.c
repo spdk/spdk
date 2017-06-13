@@ -43,6 +43,7 @@
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
+#include "spdk/histogram.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -80,41 +81,6 @@ struct ns_entry {
 	uint64_t		size_in_ios;
 	char			name[1024];
 };
-
-/*
- * Latency tracking is done with ranges of bucket arrays.  The bucket
- * for any given I/O is determined solely by the TSC delta - any
- * translation to microseconds is only done after the test is finished
- * and statistics are printed.
- *
- * Each range has a number of buckets determined by NUM_BUCKETS_PER_RANGE
- * which is 128.  The buckets in ranges 0 and 1 each map to one specific
- * TSC delta.  The buckets in subsequent ranges each map to twice as many
- * TSC deltas as buckets in the range before it:
- *
- * Range 0:  1 TSC each - 128 buckets cover 0 to 127 (2^7-1)
- * Range 1:  1 TSC each - 128 buckets cover 128 to 255 (2^8-1)
- * Range 2:  2 TSC each - 128 buckets cover 256 to 511 (2^9-1)
- * Range 3:  4 TSC each - 128 buckets cover 512 to 1023 (2^10-1)
- * Range 4:  8 TSC each - 128 buckets cover 1024 to 2047 (2^11-1)
- * Range 5: 16 TSC each - 128 buckets cover 2048 to 4095 (2^12-1)
- * ...
- * Range 55: 2^54 TSC each - 128 buckets cover 2^61 to 2^62-1
- * Range 56: 2^55 TSC each - 128 buckets cover 2^62 to 2^63-1
- * Range 57: 2^56 TSC each - 128 buckets cover 2^63 to 2^64-1
- *
- * On a 2.3GHz processor, this strategy results in 50ns buckets in the
- * 7-14us range (sweet spot for Intel Optane SSD latency testing).
- *
- * Buckets can be made more granular by increasing BUCKET_SHIFT.  This
- * comes at the cost of additional storage per namespace context to
- * store the bucket data.
- */
-#define BUCKET_SHIFT 7
-#define BUCKET_LSB (64 - BUCKET_SHIFT)
-#define NUM_BUCKETS_PER_RANGE (1ULL << BUCKET_SHIFT)
-#define BUCKET_MASK (NUM_BUCKETS_PER_RANGE - 1)
-#define NUM_BUCKET_RANGES (BUCKET_LSB + 1)
 
 static const double g_latency_cutoffs[] = {
 	0.01,
@@ -157,7 +123,7 @@ struct ns_worker_ctx {
 
 	struct ns_worker_ctx	*next;
 
-	uint64_t		bucket[NUM_BUCKET_RANGES][NUM_BUCKETS_PER_RANGE];
+	struct spdk_histogram	histogram;
 };
 
 struct perf_task {
@@ -214,63 +180,6 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 static void
 task_complete(struct perf_task *task);
-
-static uint32_t
-get_bucket_range(uint64_t tsc)
-{
-	uint32_t clz, range;
-
-	assert(tsc != 0);
-
-	clz = __builtin_clzll(tsc);
-
-	if (clz <= BUCKET_LSB) {
-		range = BUCKET_LSB - clz;
-	} else {
-		range = 0;
-	}
-
-	return range;
-}
-
-static uint32_t
-get_bucket_index(uint64_t tsc, uint32_t range)
-{
-	uint32_t shift;
-
-	if (range == 0) {
-		shift = 0;
-	} else {
-		shift = range - 1;
-	}
-
-	return (tsc >> shift) & BUCKET_MASK;
-}
-
-static double
-get_us_from_bucket(uint32_t range, uint32_t index)
-{
-	uint64_t tsc;
-
-	index += 1;
-	if (range > 0) {
-		tsc = 1ULL << (range + BUCKET_SHIFT - 1);
-		tsc += (uint64_t)index << (range - 1);
-	} else {
-		tsc = index;
-	}
-
-	return (double)tsc * 1000 * 1000 / g_tsc_rate;
-}
-
-static void
-track_latency(struct ns_worker_ctx *ns_ctx, uint64_t tsc)
-{
-	uint32_t range = get_bucket_range(tsc);
-	uint32_t index = get_bucket_index(tsc, range);
-
-	ns_ctx->bucket[range][index]++;
-}
 
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
@@ -607,7 +516,7 @@ task_complete(struct perf_task *task)
 		ns_ctx->max_tsc = tsc_diff;
 	}
 	if (g_latency_sw_tracking_level > 0) {
-		track_latency(ns_ctx, tsc_diff);
+		spdk_histogram_add_datapoint(&ns_ctx->histogram, tsc_diff);
 	}
 	rte_mempool_put(task_pool, task);
 
@@ -793,6 +702,41 @@ static void usage(char *program_name)
 }
 
 static void
+check_cutoff(uint64_t start, uint64_t end, uint64_t count,
+	     uint64_t total, uint64_t so_far, void *ctx)
+{
+	double so_far_pct;
+	double **cutoff = ctx;
+
+	if (count == 0) {
+		return;
+	}
+
+	so_far_pct = (double)so_far / total;
+	while (so_far_pct >= **cutoff && **cutoff > 0) {
+		printf("%8.4f%% : %9.3fus\n", **cutoff * 100, (double)end * 1000 * 1000 / g_tsc_rate);
+		(*cutoff)++;
+	}
+}
+
+static void
+print_bucket(uint64_t start, uint64_t end, uint64_t count,
+	     uint64_t total, uint64_t so_far, void *ctx)
+{
+	double so_far_pct;
+
+	if (count == 0) {
+		return;
+	}
+
+	so_far_pct = (double)so_far * 100 / total;
+	printf("%9.3f - %9.3f: %9.4f%%  (%9ju)\n",
+	       (double)start * 1000 * 1000 / g_tsc_rate,
+	       (double)end * 1000 * 1000 / g_tsc_rate,
+	       so_far_pct, count);
+}
+
+static void
 print_performance(void)
 {
 	uint64_t total_io_completed;
@@ -858,27 +802,13 @@ print_performance(void)
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
-			uint64_t i, j, so_far = 0;
-			double so_far_pct = 0, bucket = 0;
 			const double *cutoff = g_latency_cutoffs;
 
 			printf("Summary latency data for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
 			printf("=================================================================================\n");
 
-			for (i = 0; i < NUM_BUCKET_RANGES; i++) {
-				for (j = 0; j < NUM_BUCKETS_PER_RANGE; j++) {
-					so_far += ns_ctx->bucket[i][j];
-					so_far_pct = (double)so_far / total_io_completed;
-					bucket = get_us_from_bucket(i, j);
-					if (ns_ctx->bucket[i][j] == 0) {
-						continue;
-					}
-					while (so_far_pct >= *cutoff && *cutoff > 0) {
-						printf("%8.4f%% : %9.3fus\n", *cutoff * 100, bucket);
-						cutoff++;
-					}
-				}
-			}
+			spdk_histogram_iterate(&ns_ctx->histogram, check_cutoff, &cutoff);
+
 			printf("\n");
 			ns_ctx = ns_ctx->next;
 		}
@@ -893,27 +823,11 @@ print_performance(void)
 	while (worker) {
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx) {
-			uint64_t i, j, so_far = 0;
-			float so_far_pct = 0;
-			double last_bucket, bucket = 0;
-
 			printf("Latency histogram for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
 			printf("==============================================================================\n");
 			printf("       Range in us     Cumulative    IO count\n");
 
-			for (i = 0; i < NUM_BUCKET_RANGES; i++) {
-				for (j = 0; j < NUM_BUCKETS_PER_RANGE; j++) {
-					so_far += ns_ctx->bucket[i][j];
-					so_far_pct = (float)so_far * 100 / total_io_completed;
-					last_bucket = bucket;
-					bucket = get_us_from_bucket(i, j);
-					if (ns_ctx->bucket[i][j] == 0) {
-						continue;
-					}
-					printf("%9.3f - %9.3f: %9.4f%%  (%9ju)\n",
-					       last_bucket, bucket, so_far_pct, ns_ctx->bucket[i][j]);
-				}
-			}
+			spdk_histogram_iterate(&ns_ctx->histogram, print_bucket, NULL);
 			printf("\n");
 			ns_ctx = ns_ctx->next;
 		}
@@ -1376,6 +1290,7 @@ associate_workers_with_ns(void)
 		ns_ctx->min_tsc = UINT64_MAX;
 		ns_ctx->entry = entry;
 		ns_ctx->next = worker->ns_ctx;
+		spdk_histogram_reset(&ns_ctx->histogram);
 		worker->ns_ctx = ns_ctx;
 
 		worker = worker->next;
