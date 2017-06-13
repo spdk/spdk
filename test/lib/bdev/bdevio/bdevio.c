@@ -139,9 +139,9 @@ bdevio_construct_targets(void)
 static void
 __put_io_channel(void *arg1, void *arg2)
 {
-	struct io_target *target = arg1;
+	struct spdk_io_channel	*ch = arg1;
 
-	spdk_put_io_channel(target->ch);
+	spdk_put_io_channel(ch);
 	wake_ut_thread();
 }
 
@@ -152,7 +152,7 @@ bdevio_cleanup_targets(void)
 
 	target = g_io_targets;
 	while (target != NULL) {
-		execute_spdk_function(__put_io_channel, target, NULL);
+		execute_spdk_function(__put_io_channel, target->ch, NULL);
 		spdk_bdev_unclaim(target->bdev);
 		g_io_targets = target->next;
 		free(target);
