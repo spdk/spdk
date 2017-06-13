@@ -27,10 +27,11 @@ as this README.
 Usage
 ------
 
-To use the SPDK fio plugin with fio, simply set the following in the fio configuration file
-(see example_config.fio in the same directory as this README).
+To use the SPDK fio plugin with fio, specify the plugin binary using LD_PRELOAD when running
+fio and set ioengine=spdk in the fio configuration file (see example_config.fio in the same
+directory as this README).
 
-    ioengine=<path to fio_plugin binary>
+    LD_PRELOAD=<path to fio_plugin binary> fio
 
 To select NVMe devices, you simply pass an identifier as the filename in the format
 
@@ -44,6 +45,9 @@ NVMe namespaces start at 1, not 0! And it should be put on the end. For example,
 
 Currently the SPDK fio plugin is limited to thread usage model, so fio jobs must also specify thread=1
 when using the SPDK fio plugin.
+
+fio also currently has a race condition on shutdown if dynamically loading the ioengine by specifying the
+engine's full path via the ioengine parameter - LD_PRELOAD is recommended to avoid this race condition.
 
 When testing random workloads, it is recommended to set norandommap=1.  fio's random map
 processing consumes extra CPU cycles which will degrade performance over time with
