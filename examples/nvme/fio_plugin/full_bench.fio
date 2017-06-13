@@ -1,5 +1,5 @@
 [global]
-ioengine=./examples/nvme/fio_plugin/fio_plugin
+ioengine=spdk
 thread=1
 group_reporting=1
 direct=1

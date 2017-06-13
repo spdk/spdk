@@ -45,10 +45,12 @@ timing_enter overhead
 $rootdir/test/lib/nvme/overhead/overhead -s 4096 -t 1
 timing_exit overhead
 
+PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
+
 if [ -d /usr/src/fio ]; then
 	timing_enter fio_plugin
 	for bdf in $(linux_iter_pci 0108); do
-		/usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
+		LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
 		break
 	done
 

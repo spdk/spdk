@@ -486,7 +486,7 @@ static void spdk_fio_cleanup(struct thread_data *td)
 
 /* FIO imports this structure using dlsym */
 struct ioengine_ops ioengine = {
-	.name			= "spdk_fio",
+	.name			= "spdk",
 	.version		= FIO_IOOPS_VERSION,
 	.queue			= spdk_fio_queue,
 	.getevents		= spdk_fio_getevents,
@@ -502,3 +502,13 @@ struct ioengine_ops ioengine = {
 	.io_u_free		= spdk_fio_io_u_free,
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
 };
+
+static void fio_init fio_spdk_register(void)
+{
+	register_ioengine(&ioengine);
+}
+
+static void fio_exit fio_spdk_unregister(void)
+{
+	unregister_ioengine(&ioengine);
+}
