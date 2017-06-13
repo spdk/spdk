@@ -31,36 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = iscsi_tgt
+CFLAGS += $(ENV_CFLAGS) -I.
+C_SRCS = scsi.c
+LIBNAME = event_scsi
 
-CFLAGS += $(ENV_CFLAGS)
-
-# Add iSCSI library directory to include path
-# TODO: remove this once iSCSI has a public API header
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-
-C_SRCS := iscsi_tgt.c
-
-SPDK_LIB_LIST = event_bdev event_copy event_net event_rpc event_scsi
-SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev iscsi scsi net copy trace conf
-SPDK_LIB_LIST += util log log_rpc event app_rpc
-
-LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
-	$(COPY_MODULES_LINKER_ARGS)
-LIBS += $(SPDK_LIB_LINKER_ARGS) -lcrypto
-LIBS += $(ENV_LINKER_ARGS)
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(BLOCKDEV_MODULES_FILES) $(COPY_MODULES_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -97,7 +97,7 @@ spdk_read_config_scsi_parameters(void)
 	return 0;
 }
 
-static void
+void
 spdk_scsi_subsystem_init(void)
 {
 	int rc = 0;
@@ -118,7 +118,7 @@ end:
 	spdk_subsystem_init_next(rc);
 }
 
-static int
+int
 spdk_scsi_subsystem_fini(void)
 {
 	pthread_mutex_destroy(&g_spdk_scsi.mutex);
@@ -134,8 +134,5 @@ SPDK_TRACE_REGISTER_FN(scsi_trace)
 	spdk_trace_register_description("SCSI TASK START", "", TRACE_SCSI_TASK_START,
 					OWNER_SCSI_DEV, OBJECT_SCSI_TASK, 0, 0, 0, "");
 }
-
-SPDK_SUBSYSTEM_REGISTER(scsi, spdk_scsi_subsystem_init, spdk_scsi_subsystem_fini, NULL)
-SPDK_SUBSYSTEM_DEPEND(scsi, bdev)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
