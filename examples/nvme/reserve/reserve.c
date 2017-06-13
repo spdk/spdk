@@ -98,17 +98,24 @@ static int
 get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int ret;
-	uint64_t host_id;
+	uint64_t *host_id;
 	struct spdk_nvme_cmd cmd = {};
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10 = SPDK_NVME_FEAT_HOST_IDENTIFIER;
 
+	host_id = spdk_dma_zmalloc(sizeof(*host_id), 0x1000, NULL);
+	if (!host_id) {
+		fprintf(stderr, "Host_ID DMA Buffer Allocation Failed\n");
+		return -1;
+	}
+
 	outstanding_commands = 0;
-	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, &host_id, sizeof(host_id),
+	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, sizeof(*host_id),
 					    get_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
 	if (ret) {
 		fprintf(stdout, "Get Feature: Failed\n");
+		spdk_dma_free(host_id);
 		return -1;
 	}
 
@@ -119,9 +126,10 @@ get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (features[SPDK_NVME_FEAT_HOST_IDENTIFIER].valid) {
-		fprintf(stdout, "Get Feature: Host Identifier 0x%" PRIx64 "\n", host_id);
+		fprintf(stdout, "Get Feature: Host Identifier 0x%" PRIx64 "\n", *host_id);
 	}
 
+	spdk_dma_free(host_id);
 	return 0;
 }
 
@@ -129,22 +137,29 @@ static int
 set_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int ret;
-	uint64_t host_id;
+	uint64_t *host_id;
 	struct spdk_nvme_cmd cmd = {};
 
 	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd.cdw10 = SPDK_NVME_FEAT_HOST_IDENTIFIER;
 
-	host_id = HOST_ID;
+	host_id = spdk_dma_zmalloc(sizeof(*host_id), 0x1000, NULL);
+	if (!host_id) {
+		fprintf(stderr, "Host_ID DMA Buffer Allocation Failed\n");
+		return -1;
+	}
+
+	*host_id = HOST_ID;
 
 	outstanding_commands = 0;
 	set_feature_result = -1;
 
-	fprintf(stdout, "Set Feature: Host Identifier 0x%" PRIx64 "\n", host_id);
-	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, &host_id, sizeof(host_id),
+	fprintf(stdout, "Set Feature: Host Identifier 0x%" PRIx64 "\n", *host_id);
+	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, sizeof(*host_id),
 					    set_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
 	if (ret) {
 		fprintf(stdout, "Set Feature: Failed\n");
+		spdk_dma_free(host_id);
 		return -1;
 	}
 
@@ -157,6 +172,7 @@ set_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	if (set_feature_result)
 		fprintf(stdout, "Set Feature: Host Identifier Failed\n");
 
+	spdk_dma_free(host_id);
 	return 0;
 }
 
@@ -212,7 +228,7 @@ static int
 reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair, uint16_t ns_id)
 {
 	int ret, i;
-	uint8_t payload[0x1000];
+	uint8_t *payload;
 	struct spdk_nvme_reservation_status_data *status;
 	struct spdk_nvme_reservation_ctrlr_data *cdata;
 	struct spdk_nvme_ns *ns;
@@ -222,10 +238,17 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 	outstanding_commands = 0;
 	reserve_command_result = -1;
 
+	payload = spdk_dma_zmalloc(0x1000, 0x1000, NULL);
+	if (!payload) {
+		fprintf(stderr, "DMA Buffer Allocation Failed\n");
+		return -1;
+	}
+
 	ret = spdk_nvme_ns_cmd_reservation_report(ns, qpair, payload, 0x1000,
 			reservation_ns_completion, NULL);
 	if (ret) {
 		fprintf(stderr, "Reservation Report Failed\n");
+		spdk_dma_free(payload);
 		return -1;
 	}
 
@@ -236,6 +259,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 
 	if (reserve_command_result) {
 		fprintf(stderr, "Reservation Report Failed\n");
+		spdk_dma_free(payload);
 		return 0;
 	}
 
@@ -253,6 +277,7 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 		fprintf(stdout, "Controller Reservation Key              0x%"PRIx64"\n", cdata->key);
 	}
 
+	spdk_dma_free(payload);
 	return 0;
 }
 
