@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea75fad3_2ae1d9bd",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-13T17:18:53Z",
+      "side": 1,
+      "message": "This could be written as:\n\n   if /usr/sbin/ldconfig -p | grep -q asan; then\n       ....",
+      "revId": "e0a552b504981cf3ca460b90a5b21dca79b17c15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
