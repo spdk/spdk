@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06a72dec_ddc3179b",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-13T07:04:41Z",
+      "side": 1,
+      "message": "please align these variables with \"tabs\" in one column. thanks.",
+      "range": {
+        "startLine": 221,
+        "startChar": 25,
+        "endLine": 221,
+        "endChar": 26
+      },
+      "revId": "4ca62a999cbad299c2105d1290c3568e35986fc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8479592_6063dcb6",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-13T07:04:41Z",
+      "side": 1,
+      "message": "instead have \"6\" here, we can check \"SPDK_NVME_SC_INTERNAL_DEVICE_ERROR\"",
+      "range": {
+        "startLine": 238,
+        "startChar": 42,
+        "endLine": 238,
+        "endChar": 43
+      },
+      "revId": "4ca62a999cbad299c2105d1290c3568e35986fc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c88e808a_cdf7a29b",
+        "filename": "test/lib/nvmf/direct/direct_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-13T07:04:41Z",
+      "side": 1,
+      "message": "we can have the same prefix based on the existing case like nvmf_test_nvmf_...\n\nThanks.",
+      "range": {
+        "startLine": 267,
+        "startChar": 53,
+        "endLine": 267,
+        "endChar": 57
+      },
+      "revId": "4ca62a999cbad299c2105d1290c3568e35986fc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
