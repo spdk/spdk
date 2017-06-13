@@ -42,7 +42,7 @@ $rootdir/examples/nvme/hello_world/hello_world
 timing_exit
 
 timing_enter overhead
-$rootdir/test/lib/nvme/overhead/overhead -s 4096 -t 1
+$rootdir/test/lib/nvme/overhead/overhead -s 4096 -t 1 -H
 timing_exit overhead
 
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
