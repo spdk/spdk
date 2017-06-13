@@ -113,14 +113,21 @@ fs_open(void)
 	spdk_fs_iter iter;
 	struct spdk_bs_dev dev;
 	struct spdk_file *file;
+	char name[257] = {'\0'};
 
 	init_dev(&dev);
+	memset(name, 'a', sizeof(name) - 1);
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
 	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
+
+	g_fserrno = 0;
+	/* Open should fail, because the file name is too long. */
+	spdk_fs_open_file_async(fs, name, SPDK_BLOBFS_OPEN_CREATE, open_cb, NULL);
+	CU_ASSERT(g_fserrno == -ENAMETOOLONG);
 
 	g_fserrno = 0;
 	spdk_fs_open_file_async(fs, "file1", 0, open_cb, NULL);
@@ -163,12 +170,12 @@ fs_open(void)
 	CU_ASSERT(g_fserrno == 0);
 	CU_ASSERT(TAILQ_EMPTY(&fs->files));
 
-	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
 	CU_ASSERT(g_fserrno == 0);
 
 	spdk_free_thread();
 }
+
 
 static void
 fs_truncate(void)
