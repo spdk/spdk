@@ -43,6 +43,9 @@
 
 #include "spdk/event.h"
 
+void spdk_vhost_subsystem_init(void);
+int spdk_vhost_subsystem_fini(void);
+
 /**
  * \param event event object. event arg1 is optional path to vhost socket.
  */
