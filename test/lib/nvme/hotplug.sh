@@ -109,7 +109,6 @@ sleep 2
 insert_devices
 sleep 2
 remove_devices
-devices_delete
 
 timing_enter wait_for_example
 wait $example_pid
@@ -121,6 +120,7 @@ qemupid=`cat "$qemu_pidfile" | awk '{printf $0}'`
 kill -9 $qemupid
 rm "$qemu_pidfile"
 rm "$test_img"
+devices_delete
 
 timing_exit hotplug_test
 
