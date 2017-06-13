@@ -49,7 +49,7 @@ CXXFLAGS += -fno-profile-arcs -fno-test-coverage
 CXXFLAGS += -fno-sanitize=undefined
 CXXFLAGS += -fno-sanitize=address
 
-SPDK_LIB_LIST = event_bdev event_copy
+SPDK_LIB_LIST = event_bdev event_copy event_rpc
 SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
 		log jsonrpc json rpc
 
