@@ -391,10 +391,17 @@ process_request(struct spdk_vhost_task *task)
 		return -1;
 	}
 
-	task->scsi.lun = get_scsi_lun(task->scsi_dev, req->lun);
 	task->scsi.cdb = req->cdb;
 	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
+
+	task->scsi.lun = get_scsi_lun(task->scsi_dev, req->lun);
+	if (unlikely(task->scsi.lun == NULL)) {
+		spdk_scsi_task_process_null_lun(&task->scsi);
+		task->resp->response = VIRTIO_SCSI_S_OK;
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -433,6 +440,10 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 		if (likely(result == 0)) {
 			task_submit(task);
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d submitted ======\n", task,
+				      task->req_idx);
+		} else if (result > 0) {
+			process_task_completion(task, NULL);
+			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d finished early ======\n", task,
 				      task->req_idx);
 		} else {
 			invalid_request(task);
