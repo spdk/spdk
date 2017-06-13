@@ -81,14 +81,14 @@ log_test(void)
 	CU_ASSERT(spdk_log_get_trace_flag("debug") == false);
 #endif
 
-	spdk_open_log();
+	spdk_log_open();
 	spdk_log_set_trace_flag("debug");
 	SPDK_WARNLOG("log warning unit test\n");
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "log trace test\n");
 	SPDK_TRACEDUMP(SPDK_TRACE_DEBUG, "log trace dump test:", "trace dump", 10);
 	spdk_trace_dump("spdk dump test:", "spdk dump", 9);
 
-	spdk_close_log();
+	spdk_log_close();
 }
 
 int main(int argc, char **argv)
