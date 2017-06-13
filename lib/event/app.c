@@ -40,7 +40,6 @@
 #include "spdk/conf.h"
 #include "spdk/trace.h"
 
-#define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
 #define SPDK_APP_DEFAULT_LOG_PRIORITY	SPDK_LOG_INFO
 
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
@@ -92,24 +91,15 @@ spdk_app_get_shm_id(void)
 "  # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.\n" \
 "  TpointGroupMask \"0x%" PRIX64 "\"\n" \
 "\n" \
-"  # syslog facility\n" \
-"  LogFacility \"%s\"\n" \
-"\n"
 
 static void
 spdk_app_config_dump_global_section(FILE *fp)
 {
-	const char *log_facility;
-
 	if (NULL == fp)
 		return;
 
-	log_facility = spdk_get_log_facility();
-	assert(log_facility != NULL);
-
 	fprintf(fp, GLOBAL_CONFIG_TMPL,
-		spdk_app_get_core_mask(), spdk_trace_get_tpoint_group_mask(),
-		log_facility);
+		spdk_app_get_core_mask(), spdk_trace_get_tpoint_group_mask());
 }
 
 int
@@ -158,25 +148,6 @@ spdk_app_get_running_config(char **config_str, char *name)
 	return 0;
 }
 
-static const char *
-spdk_app_get_log_facility(struct spdk_conf *config)
-{
-	struct spdk_conf_section *sp;
-	const char *logfacility;
-
-	sp = spdk_conf_find_section(config, "Global");
-	if (sp == NULL) {
-		return SPDK_APP_DEFAULT_LOG_FACILITY;
-	}
-
-	logfacility = spdk_conf_section_get_val(sp, "LogFacility");
-	if (logfacility == NULL) {
-		return SPDK_APP_DEFAULT_LOG_FACILITY;
-	}
-
-	return logfacility;
-}
-
 void
 spdk_app_start_shutdown(void)
 {
@@ -206,7 +177,6 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 
 	memset(opts, 0, sizeof(*opts));
 
-	opts->log_facility = SPDK_APP_DEFAULT_LOG_FACILITY;
 	opts->enable_coredump = true;
 	opts->shm_id = -1;
 	opts->dpdk_mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
@@ -264,22 +234,6 @@ spdk_app_init(struct spdk_app_opts *opts)
 	g_spdk_app.config = config;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
-
-	/* open log files */
-	if (opts->log_facility == NULL) {
-		opts->log_facility = spdk_app_get_log_facility(g_spdk_app.config);
-		if (opts->log_facility == NULL) {
-			SPDK_ERRLOG("NULL logfacility\n");
-			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
-		}
-	}
-	rc = spdk_set_log_facility(opts->log_facility);
-	if (rc < 0) {
-		SPDK_ERRLOG("log facility error\n");
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	spdk_log_open();
