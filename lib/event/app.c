@@ -41,7 +41,7 @@
 #include "spdk/trace.h"
 
 #define SPDK_APP_DEFAULT_LOG_FACILITY	"local7"
-#define SPDK_APP_DEFAULT_LOG_PRIORITY	"info"
+#define SPDK_APP_DEFAULT_LOG_PRIORITY	SPDK_LOG_INFO
 
 #define SPDK_APP_DPDK_DEFAULT_MEM_SIZE		-1
 #define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
@@ -288,12 +288,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		exit(EXIT_FAILURE);
 	}
 
-	rc = spdk_set_log_priority(SPDK_APP_DEFAULT_LOG_PRIORITY);
-	if (rc < 0) {
-		SPDK_ERRLOG("log priority error\n");
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
+	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	spdk_open_log();
 
 	if (opts->reactor_mask == NULL) {
