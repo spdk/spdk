@@ -74,6 +74,7 @@ main(int argc, char **argv)
 	int ch;
 	int rc;
 	struct spdk_app_opts opts = {};
+	enum spdk_log_level print_level = SPDK_LOG_NOTICE;
 
 	/* default value in opts */
 	spdk_app_opts_init(&opts);
@@ -125,7 +126,7 @@ main(int argc, char **argv)
 			opts.tpoint_group_mask = optarg;
 			break;
 		case 'q':
-			spdk_g_notice_stderr_flag = 0;
+			print_level = SPDK_LOG_WARN;
 			break;
 		case 'D':
 		case 'H':
@@ -135,7 +136,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (spdk_g_notice_stderr_flag == 1 &&
+	if (print_level > SPDK_LOG_WARN &&
 	    isatty(STDERR_FILENO) &&
 	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
 		printf("Warning: printing stderr to console terminal without -q option specified.\n");
@@ -144,6 +145,8 @@ main(int argc, char **argv)
 		printf("(Delaying for 10 seconds...)\n");
 		sleep(10);
 	}
+
+	spdk_log_set_print_level(print_level);
 
 	rc = spdk_nvmf_tgt_start(&opts);
 

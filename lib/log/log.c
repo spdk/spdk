@@ -37,9 +37,9 @@
 
 static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
 
-unsigned int spdk_g_notice_stderr_flag = 1;
 int spdk_g_log_facility = LOG_DAEMON;
 static enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
+static enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_NOTICE;
 
 SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
 
@@ -114,6 +114,17 @@ spdk_log_get_level(void) {
 	return g_spdk_log_level;
 }
 
+void
+spdk_log_set_print_level(enum spdk_log_level level)
+{
+	g_spdk_log_print_level = level;
+}
+
+enum spdk_log_level
+spdk_log_get_print_level(void) {
+	return g_spdk_log_print_level;
+}
+
 int
 spdk_set_log_facility(const char *facility)
 {
@@ -175,11 +186,12 @@ spdk_log(enum spdk_log_level level, const char *file, const int line, const char
 
 	vsnprintf(buf, sizeof(buf), format, ap);
 
-	if (level <= g_spdk_log_level) {
+	if (level <= g_spdk_log_print_level) {
 		fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
-		if (level <= SPDK_LOG_NOTICE) {
-			syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
-		}
+	}
+
+	if (level <= g_spdk_log_level) {
+		syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
 	}
 
 	va_end(ap);
