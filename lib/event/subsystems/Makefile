@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev copy iscsi net rpc scsi
+DIRS-y += bdev copy iscsi net rpc scsi vhost
 
 .PHONY: all clean $(DIRS-y)
 
