@@ -24,9 +24,6 @@
   # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
   #TpointGroupMask 0x0
 
-  # syslog facility
-  LogFacility "local7"
-
 [iSCSI]
   # node name (not include optional part)
   # Users can optionally change this to fit their environment.

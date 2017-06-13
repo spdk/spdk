@@ -69,7 +69,6 @@ struct spdk_app_opts {
 	const char *name;
 	const char *config_file;
 	const char *reactor_mask;
-	const char *log_facility;
 	const char *tpoint_group_mask;
 
 	int shm_id;
