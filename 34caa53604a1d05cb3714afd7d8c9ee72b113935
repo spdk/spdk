@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c5b29e4_be554598",
+        "filename": "test/lib/bdev/bdevio/bdevio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-13T15:31:58Z",
+      "side": 1,
+      "message": "execute_spdk_function blocks until the operation on the other thread completes. There wasn\u0027t a race here.",
+      "revId": "34caa53604a1d05cb3714afd7d8c9ee72b113935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
