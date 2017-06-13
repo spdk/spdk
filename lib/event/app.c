@@ -289,7 +289,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
-	spdk_open_log();
+	spdk_log_open();
 
 	if (opts->reactor_mask == NULL) {
 		sp = spdk_conf_find_section(g_spdk_app.config, "Global");
@@ -434,7 +434,7 @@ spdk_app_fini(void)
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
-	spdk_close_log();
+	spdk_log_close();
 
 	return rc;
 }
