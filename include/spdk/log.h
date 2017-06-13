@@ -72,11 +72,17 @@ void spdk_log_set_level(enum spdk_log_level level);
  */
 enum spdk_log_level spdk_log_get_level(void);
 
-/*
- * Default: 1 - noticelog messages will print to stderr and syslog.
- * Can be set to 0 to print noticelog messages to syslog only.
+/**
+ * Set the current log level threshold for printing to stderr.
+ * Messages with a level less than or equal to this level
+ * are also printed to stderr.
  */
-extern unsigned int spdk_g_notice_stderr_flag;
+void spdk_log_set_print_level(enum spdk_log_level level);
+
+/**
+ * Get the current log level print threshold.
+ */
+enum spdk_log_level spdk_log_get_print_level(void);
 
 #define SPDK_NOTICELOG(...) \
 	spdk_log(SPDK_LOG_NOTICE, __FILE__, __LINE__, __func__, __VA_ARGS__)
