@@ -39,6 +39,7 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
+#include "spdk/histogram.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -78,6 +79,8 @@ struct ns_entry {
 	bool			is_draining;
 	uint32_t		current_queue_depth;
 	char			name[1024];
+	struct spdk_histogram	submit_histogram;
+	struct spdk_histogram	complete_histogram;
 };
 
 struct perf_task {
@@ -87,6 +90,8 @@ struct perf_task {
 	struct iocb		iocb;
 #endif
 };
+
+static bool g_enable_histogram = false;
 
 static struct ctrlr_entry *g_ctrlr = NULL;
 static struct ns_entry *g_ns = NULL;
@@ -144,6 +149,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
 			     g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
+	spdk_histogram_reset(&entry->submit_histogram);
+	spdk_histogram_reset(&entry->complete_histogram);
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
@@ -305,6 +312,9 @@ submit_single_io(void)
 	if (tsc_submit > g_tsc_submit_max) {
 		g_tsc_submit_max = tsc_submit;
 	}
+	if (g_enable_histogram) {
+		spdk_histogram_add_datapoint(&entry->submit_histogram, tsc_submit);
+	}
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
@@ -356,6 +366,9 @@ check_io(void)
 		}
 		if (tsc_complete > g_tsc_complete_max) {
 			g_tsc_complete_max = tsc_complete;
+		}
+		if (g_enable_histogram) {
+			spdk_histogram_add_datapoint(&g_ns->complete_histogram, tsc_complete);
 		}
 		g_io_completed++;
 		if (!g_ns->is_draining) {
@@ -466,6 +479,25 @@ static void usage(char *program_name)
 	printf("\t[-s io size in bytes]\n");
 	printf("\t[-t time in seconds]\n");
 	printf("\t\t(default: 1)]\n");
+	printf("\t[-H enable histograms]\n");
+}
+
+static void
+print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+	     uint64_t total, uint64_t so_far)
+{
+	double so_far_pct;
+
+	if (count == 0) {
+		return;
+	}
+
+	so_far_pct = (double)so_far * 100 / total;
+
+	printf("%9.3f - %9.3f: %9.4f%%  (%9ju)\n",
+	       (double)start * 1000 * 1000 / g_tsc_rate,
+	       (double)end * 1000 * 1000 / g_tsc_rate,
+	       so_far_pct, count);
 }
 
 static void
@@ -479,6 +511,24 @@ print_stats(void)
 	       (float)g_tsc_submit / g_io_completed, g_tsc_submit_min, g_tsc_submit_max);
 	printf("complete avg, min, max = %8.1f, %ju, %ju\n",
 	       (float)g_tsc_complete / g_io_completed, g_tsc_complete_min, g_tsc_complete_max);
+
+	if (!g_enable_histogram) {
+		return;
+	}
+
+	printf("\n");
+	printf("Submit histogram\n");
+	printf("================\n");
+	printf("       Range in us     Cumulative     Count\n");
+	spdk_histogram_iterate(&g_ns->submit_histogram, print_bucket, NULL);
+	printf("\n");
+
+	printf("Complete histogram\n");
+	printf("==================\n");
+	printf("       Range in us     Cumulative     Count\n");
+	spdk_histogram_iterate(&g_ns->complete_histogram, print_bucket, NULL);
+	printf("\n");
+
 }
 
 static int
@@ -490,13 +540,16 @@ parse_args(int argc, char **argv)
 	g_io_size_bytes = 0;
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "s:t:")) != -1) {
+	while ((op = getopt(argc, argv, "s:t:H")) != -1) {
 		switch (op) {
 		case 's':
 			g_io_size_bytes = atoi(optarg);
 			break;
 		case 't':
 			g_time_in_sec = atoi(optarg);
+			break;
+		case 'H':
+			g_enable_histogram = true;
 			break;
 		default:
 			usage(argv[0]);
