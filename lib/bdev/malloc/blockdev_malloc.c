@@ -433,6 +433,7 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 
 static void free_malloc_disk(struct malloc_disk *mdisk)
 {
+	free(mdisk->disk.name);
 	spdk_dma_free(mdisk->malloc_buf);
 	spdk_dma_free(mdisk);
 }
