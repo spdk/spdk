@@ -20,9 +20,6 @@
   # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
   #TpointGroupMask 0x0
 
-  # syslog facility
-  LogFacility "local7"
-
 [Rpc]
   # Defines whether to enable configuration via RPC.
   # Default is disabled.  Note that the RPC interface is not

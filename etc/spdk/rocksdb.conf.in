@@ -21,8 +21,6 @@
   # Set to 0xFFFFFFFFFFFFFFFF to enable all events.
   #EventMask 0x0
 
-  # syslog facility
-  LogFacility "local7"
   SharedMemoryID 0
 
 [Rpc]

@@ -1,6 +1,5 @@
 [Global]
   Comment "Global section"
-  LogFacility "local7"
 
 [iSCSI]
   NodeBase "iqn.2013-06.com.intel.ch.spdk"
