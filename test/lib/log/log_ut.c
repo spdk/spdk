@@ -41,25 +41,6 @@
 static void
 log_test(void)
 {
-	int rc = 0;
-	const char *buf;
-
-	rc = spdk_set_log_facility("test");
-	CU_ASSERT(rc == -1);
-	CU_ASSERT_EQUAL(spdk_g_log_facility, LOG_DAEMON);
-	rc = spdk_set_log_facility("local7");
-	CU_ASSERT(rc == 0);
-	CU_ASSERT_EQUAL(spdk_g_log_facility, LOG_LOCAL7);
-
-	spdk_g_log_facility = -1;
-	buf = spdk_get_log_facility();
-	SPDK_CU_ASSERT_FATAL(buf != NULL);
-	CU_ASSERT_STRING_EQUAL(buf, "daemon");
-	spdk_g_log_facility = LOG_LOCAL7;
-	buf = spdk_get_log_facility();
-	SPDK_CU_ASSERT_FATAL(buf != NULL);
-	CU_ASSERT_STRING_EQUAL(buf, "local7");
-
 	spdk_log_set_level(SPDK_LOG_ERROR);
 	CU_ASSERT_EQUAL(spdk_log_get_level(), SPDK_LOG_ERROR);
 	spdk_log_set_level(SPDK_LOG_WARN);
