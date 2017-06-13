@@ -456,6 +456,24 @@
     },
     {
       "key": {
+        "uuid": "1ad4cb08_0755a26b",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-13T23:14:34Z",
+      "side": 1,
+      "message": "I assume you mean the one below that Jim commented on.  The other one is tied to the readme as the output doesn\u0027t match the readme without it (what to type to make)",
+      "parentUuid": "86d3d9b0_8af7af9c",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92b180c5_4e40414f",
         "filename": "configure",
         "patchSetId": 6
@@ -467,6 +485,24 @@
       "writtenOn": "2017-06-12T22:21:11Z",
       "side": 1,
       "message": "these patches don\u0027t seem related to the rest of the README changes and should be in a separate patch",
+      "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97baeb32_622d2cf4",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-13T23:14:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "92b180c5_4e40414f",
       "revId": "92ad038e289eb176b187b890e7e44585fa3d46e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
