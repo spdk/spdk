@@ -65,7 +65,6 @@ usage(char *executable_name)
 	printf(" -c config  config file (default: %s)\n", defaults.config_file);
 	printf(" -e mask    tracepoint group mask for spdk trace buffers (default: 0x0)\n");
 	printf(" -m mask    reactor core mask (default: 0x1)\n");
-	printf(" -l facility use specific syslog facility (default: %s)\n", defaults.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", defaults.mem_size);
@@ -87,7 +86,7 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	while ((ch = getopt(argc, argv, "c:de:l:m:p:qs:S:t:h")) != -1) {
+	while ((ch = getopt(argc, argv, "c:de:m:p:qs:S:t:h")) != -1) {
 		switch (ch) {
 		case 'c':
 			opts.config_file = optarg;
@@ -101,9 +100,6 @@ main(int argc, char *argv[])
 		case 'h':
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
-		case 'l':
-			opts.log_facility = optarg;
-			break;
 		case 'm':
 			opts.reactor_mask = optarg;
 			break;

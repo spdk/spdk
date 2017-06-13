@@ -37,47 +37,12 @@
 
 static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
 
-int spdk_g_log_facility = LOG_DAEMON;
 static enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
 static enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_NOTICE;
 
 SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
 
 #define MAX_TMPBUF 1024
-
-struct syslog_code {
-	const char *c_name;
-	int c_val;
-};
-
-static const struct syslog_code facilitynames[] = {
-	{ "auth",	LOG_AUTH,	},
-	{ "authpriv",	LOG_AUTHPRIV,	},
-	{ "cron",	LOG_CRON,	},
-	{ "daemon",	LOG_DAEMON,	},
-	{ "ftp",	LOG_FTP,	},
-	{ "kern",	LOG_KERN,	},
-	{ "lpr",	LOG_LPR,	},
-	{ "mail",	LOG_MAIL,	},
-	{ "news",	LOG_NEWS,	},
-	{ "syslog",	LOG_SYSLOG,	},
-	{ "user",	LOG_USER,	},
-	{ "uucp",	LOG_UUCP,	},
-	{ "local0",	LOG_LOCAL0,	},
-	{ "local1",	LOG_LOCAL1,	},
-	{ "local2",	LOG_LOCAL2,	},
-	{ "local3",	LOG_LOCAL3,	},
-	{ "local4",	LOG_LOCAL4,	},
-	{ "local5",	LOG_LOCAL5,	},
-	{ "local6",	LOG_LOCAL6,	},
-	{ "local7",	LOG_LOCAL7,	},
-#ifdef __FreeBSD__
-	{ "console",	LOG_CONSOLE,	},
-	{ "ntp",	LOG_NTP,	},
-	{ "security",	LOG_SECURITY,	},
-#endif
-	{ NULL,		-1,		}
-};
 
 static const char *const spdk_level_names[] = {
 	[SPDK_LOG_ERROR]	= "ERROR",
@@ -90,11 +55,7 @@ static const char *const spdk_level_names[] = {
 void
 spdk_log_open(void)
 {
-	if (spdk_g_log_facility != 0) {
-		openlog("spdk", LOG_PID, spdk_g_log_facility);
-	} else {
-		openlog("spdk", LOG_PID, LOG_DAEMON);
-	}
+	openlog("spdk", LOG_PID, LOG_LOCAL7);
 }
 
 void
@@ -123,39 +84,6 @@ spdk_log_set_print_level(enum spdk_log_level level)
 enum spdk_log_level
 spdk_log_get_print_level(void) {
 	return g_spdk_log_print_level;
-}
-
-int
-spdk_set_log_facility(const char *facility)
-{
-	int i;
-
-	for (i = 0; facilitynames[i].c_name != NULL; i++) {
-		if (strcasecmp(facilitynames[i].c_name, facility) == 0) {
-			spdk_g_log_facility = facilitynames[i].c_val;
-			return 0;
-		}
-	}
-
-	spdk_g_log_facility = LOG_DAEMON;
-	return -1;
-}
-
-const char *
-spdk_get_log_facility(void)
-{
-	const char *def_name = NULL;
-	int i;
-
-	for (i = 0; facilitynames[i].c_name != NULL; i++) {
-		if (facilitynames[i].c_val == spdk_g_log_facility) {
-			return facilitynames[i].c_name;
-		} else if (facilitynames[i].c_val == LOG_DAEMON) {
-			def_name = facilitynames[i].c_name;
-		}
-	}
-
-	return def_name;
 }
 
 void
