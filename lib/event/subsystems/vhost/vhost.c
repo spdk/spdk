@@ -33,75 +33,9 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
-#include "spdk_internal/log.h"
-#include "spdk_internal/event.h"
-#include "spdk/env.h"
-#include "spdk/queue.h"
 #include "spdk/vhost.h"
-#include "task.h"
 
-#undef container_of
-#define container_of(ptr, type, member) ({ \
-		typeof(((type *)0)->member) *__mptr = (ptr); \
-		(type *)((char *)__mptr - offsetof(type, member)); })
+#include "spdk_internal/event.h"
 
-static struct rte_mempool *g_task_pool;
-
-void
-spdk_vhost_task_put(struct spdk_vhost_task *task)
-{
-	spdk_scsi_task_put(&task->scsi);
-}
-
-static void
-spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
-{
-	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
-
-	spdk_vhost_dev_task_unref((struct spdk_vhost_dev *) task->svdev);
-	rte_mempool_put(g_task_pool, task);
-}
-
-struct spdk_vhost_task *
-spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev)
-{
-	struct spdk_vhost_task *task;
-	int rc;
-
-	rc = rte_mempool_get(g_task_pool, (void **)&task);
-	if ((rc < 0) || !task) {
-		SPDK_ERRLOG("Unable to get task\n");
-		rte_panic("no memory\n");
-	}
-
-	memset(task, 0, sizeof(*task));
-	task->svdev = vdev;
-	spdk_vhost_dev_task_ref((struct spdk_vhost_dev *) task->svdev);
-	spdk_scsi_task_construct(&task->scsi, spdk_vhost_task_free_cb, NULL);
-
-	return task;
-}
-
-void
-spdk_vhost_subsystem_init(void)
-{
-	int rc = 0;
-
-	g_task_pool = rte_mempool_create("vhost task pool", 16384, sizeof(struct spdk_vhost_task),
-					 128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
-	if (!g_task_pool) {
-		SPDK_ERRLOG("create task pool failed\n");
-		rc = -1;
-	}
-
-	spdk_subsystem_init_next(rc);
-}
-
-int
-spdk_vhost_subsystem_fini(void)
-{
-	return 0;
-}
+SPDK_SUBSYSTEM_REGISTER(vhost, spdk_vhost_subsystem_init, spdk_vhost_subsystem_fini, NULL)
+SPDK_SUBSYSTEM_DEPEND(vhost, scsi)
