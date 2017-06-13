@@ -41,6 +41,18 @@
 
 #include "spdk/stdinc.h"
 
+/**
+ * Initialize the logging module. Messages prior
+ * to this call will be dropped.
+ */
+void spdk_log_open(void);
+
+/**
+ * Close the currently active log. Messages after this call
+ * will be dropped.
+ */
+void spdk_log_close(void);
+
 enum spdk_log_level {
 	SPDK_LOG_ERROR,
 	SPDK_LOG_WARN,
@@ -90,8 +102,7 @@ bool spdk_log_get_trace_flag(const char *flag);
 int spdk_log_set_trace_flag(const char *flag);
 int spdk_log_clear_trace_flag(const char *flag);
 
-void spdk_open_log(void);
-void spdk_close_log(void);
+
 
 void spdk_tracelog_usage(FILE *f, const char *trace_arg);
 

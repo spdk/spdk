@@ -80,6 +80,22 @@ static const struct syslog_code facilitynames[] = {
 };
 
 void
+spdk_log_open(void)
+{
+	if (spdk_g_log_facility != 0) {
+		openlog("spdk", LOG_PID, spdk_g_log_facility);
+	} else {
+		openlog("spdk", LOG_PID, LOG_DAEMON);
+	}
+}
+
+void
+spdk_log_close(void)
+{
+	closelog();
+}
+
+void
 spdk_log_set_level(enum spdk_log_level level)
 {
 	g_spdk_log_level = level;
@@ -358,22 +374,6 @@ struct spdk_trace_flag *
 spdk_log_get_next_trace_flag(struct spdk_trace_flag *flag)
 {
 	return TAILQ_NEXT(flag, tailq);
-}
-
-void
-spdk_open_log(void)
-{
-	if (spdk_g_log_facility != 0) {
-		openlog("spdk", LOG_PID, spdk_g_log_facility);
-	} else {
-		openlog("spdk", LOG_PID, LOG_DAEMON);
-	}
-}
-
-void
-spdk_close_log(void)
-{
-	closelog();
 }
 
 void
