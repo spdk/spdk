@@ -79,6 +79,14 @@ static const struct syslog_code facilitynames[] = {
 	{ NULL,		-1,		}
 };
 
+static const char *const spdk_level_names[] = {
+	"ERROR",
+	"WARNING",
+	"NOTICE",
+	"INFO",
+	"DEBUG",
+};
+
 void
 spdk_log_open(void)
 {
@@ -140,96 +148,40 @@ spdk_get_log_facility(void)
 }
 
 void
-spdk_noticelog(const char *file, const int line, const char *func,
-	       const char *format, ...)
+spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
+	 const char *format, ...)
 {
+	int severity = LOG_INFO;
 	char buf[MAX_TMPBUF];
 	va_list ap;
 
+	switch (level) {
+	case SPDK_LOG_ERROR:
+		severity = LOG_ERR;
+		break;
+	case SPDK_LOG_WARN:
+		severity = LOG_WARNING;
+		break;
+	case SPDK_LOG_NOTICE:
+		severity = LOG_NOTICE;
+		break;
+	case SPDK_LOG_INFO:
+	case SPDK_LOG_DEBUG:
+		severity = LOG_INFO;
+		break;
+	}
+
 	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (file != NULL) {
-		if (func != NULL) {
-			if (spdk_g_notice_stderr_flag) {
-				fprintf(stderr, "%s:%4d:%s: %s", file, line, func, buf);
-			}
-			syslog(LOG_NOTICE, "%s:%4d:%s: %s", file, line, func, buf);
-		} else {
-			if (spdk_g_notice_stderr_flag) {
-				fprintf(stderr, "%s:%4d: %s", file, line, buf);
-			}
-			syslog(LOG_NOTICE, "%s:%4d: %s", file, line, buf);
+
+	vsnprintf(buf, sizeof(buf), format, ap);
+
+	if (level <= g_spdk_log_level) {
+		fprintf(stderr, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
+		if (level <= SPDK_LOG_NOTICE) {
+			syslog(severity, "%s:%4d:%s: *%s*: %s", file, line, func, spdk_level_names[level], buf);
 		}
-	} else {
-		if (spdk_g_notice_stderr_flag) {
-			fprintf(stderr, "%s", buf);
-		}
-		syslog(LOG_NOTICE, "%s", buf);
-	}
-	va_end(ap);
-}
-
-void
-spdk_warnlog(const char *file, const int line, const char *func,
-	     const char *format, ...)
-{
-	char buf[MAX_TMPBUF];
-	va_list ap;
-
-	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (file != NULL) {
-		if (func != NULL) {
-			fprintf(stderr, "%s:%4d:%s: %s", file, line, func, buf);
-			syslog(LOG_WARNING, "%s:%4d:%s: %s",
-			       file, line, func, buf);
-		} else {
-			fprintf(stderr, "%s:%4d: %s", file, line, buf);
-			syslog(LOG_WARNING, "%s:%4d: %s", file, line, buf);
-		}
-	} else {
-		fprintf(stderr, "%s", buf);
-		syslog(LOG_WARNING, "%s", buf);
 	}
 
-	va_end(ap);
-}
-
-void
-spdk_tracelog(const char *flag, const char *file, const int line, const char *func,
-	      const char *format, ...)
-{
-	char buf[MAX_TMPBUF];
-	va_list ap;
-
-	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (func != NULL) {
-		fprintf(stderr, "[%s] %s:%4d:%s: %s", flag, file, line, func, buf);
-		//syslog(LOG_INFO, "[%s] %s:%4d:%s: %s", flag, file, line, func, buf);
-	} else {
-		fprintf(stderr, "[%s] %s:%4d: %s", flag, file, line, buf);
-		//syslog(LOG_INFO, "[%s] %s:%4d: %s", flag, file, line, buf);
-	}
-	va_end(ap);
-}
-
-void
-spdk_errlog(const char *file, const int line, const char *func,
-	    const char *format, ...)
-{
-	char buf[MAX_TMPBUF];
-	va_list ap;
-
-	va_start(ap, format);
-	vsnprintf(buf, sizeof buf, format, ap);
-	if (func != NULL) {
-		fprintf(stderr, "%s:%4d:%s: ***ERROR*** %s", file, line, func, buf);
-		syslog(LOG_ERR, "%s:%4d:%s: ***ERROR*** %s", file, line, func, buf);
-	} else {
-		fprintf(stderr, "%s:%4d: ***ERROR*** %s", file, line, buf);
-		syslog(LOG_ERR, "%s:%4d: ***ERROR*** %s", file, line, buf);
-	}
 	va_end(ap);
 }
 
