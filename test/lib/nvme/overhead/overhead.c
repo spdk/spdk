@@ -436,8 +436,6 @@ work_fn(void)
 {
 	uint64_t tsc_end;
 
-	printf("Starting work_fn\n");
-
 	/* Allocate a queue pair for each namespace. */
 	if (init_ns_worker_ctx() != 0) {
 		printf("ERROR: init_ns_worker_ctx() failed\n");
@@ -503,14 +501,16 @@ print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 static void
 print_stats(void)
 {
-	printf("g_tsc_submit = %ju\n", g_tsc_submit);
-	printf("g_tsc_complete = %ju\n", g_tsc_complete);
-	printf("g_io_completed = %ju\n", g_io_completed);
+	double divisor = (double)g_tsc_rate / (1000 * 1000 * 1000);
 
-	printf("submit   avg, min, max = %8.1f, %ju, %ju\n",
-	       (float)g_tsc_submit / g_io_completed, g_tsc_submit_min, g_tsc_submit_max);
-	printf("complete avg, min, max = %8.1f, %ju, %ju\n",
-	       (float)g_tsc_complete / g_io_completed, g_tsc_complete_min, g_tsc_complete_max);
+	printf("submit (in ns)   avg, min, max = %8.1f, %8.1f, %8.1f\n",
+	       (double)g_tsc_submit / g_io_completed / divisor,
+	       (double)g_tsc_submit_min / divisor,
+	       (double)g_tsc_submit_max / divisor);
+	printf("complete (in ns) avg, min, max = %8.1f, %8.1f, %8.1f\n",
+	       (double)g_tsc_complete / g_io_completed / divisor,
+	       (double)g_tsc_complete_min / divisor,
+	       (double)g_tsc_complete_max / divisor);
 
 	if (!g_enable_histogram) {
 		return;
