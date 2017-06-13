@@ -963,7 +963,7 @@ spdk_iscsi_setup(void *arg1, void *arg2)
 	spdk_iscsi_acceptor_start();
 }
 
-static void
+void
 spdk_iscsi_subsystem_init(void)
 {
 	int rc = 0;
@@ -1005,7 +1005,7 @@ end:
 	spdk_subsystem_init_next(rc);
 }
 
-static int
+int
 spdk_iscsi_subsystem_fini(void)
 {
 	int rc;
@@ -1024,7 +1024,7 @@ spdk_iscsi_subsystem_fini(void)
 	return rc;
 }
 
-static void
+void
 spdk_iscsi_config_text(FILE *fp)
 {
 	spdk_iscsi_config_dump_section(fp);
@@ -1032,10 +1032,5 @@ spdk_iscsi_config_text(FILE *fp)
 	spdk_iscsi_config_dump_initiator_groups(fp);
 	spdk_iscsi_config_dump_target_nodes(fp);
 }
-
-SPDK_SUBSYSTEM_REGISTER(iscsi, spdk_iscsi_subsystem_init, spdk_iscsi_subsystem_fini,
-			spdk_iscsi_config_text)
-SPDK_SUBSYSTEM_DEPEND(iscsi, scsi)
-SPDK_SUBSYSTEM_DEPEND(iscsi, spdk_rpc)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
