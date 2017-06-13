@@ -392,6 +392,11 @@ process_request(struct spdk_vhost_task *task)
 	}
 
 	task->scsi.lun = get_scsi_lun(task->scsi_dev, req->lun);
+	if (unlikely(task->scsi.lun == NULL)) {
+		task->resp->response = VIRTIO_SCSI_S_BAD_TARGET;
+		return -1;
+	}
+
 	task->scsi.cdb = req->cdb;
 	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
