@@ -1,5 +1,4 @@
 [Global]
-  LogFacility "local7"
 
 [iSCSI]
   NodeBase "iqn.2016-06.io.spdk"

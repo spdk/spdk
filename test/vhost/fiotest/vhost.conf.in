@@ -1,5 +1,4 @@
 [Global]
-  LogFacility "local7"
 
 [Rpc]
   Enable Yes

@@ -92,9 +92,6 @@ enum spdk_log_level spdk_log_get_print_level(void);
 #define SPDK_ERRLOG(...) \
 	spdk_log(SPDK_LOG_ERROR, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
-int spdk_set_log_facility(const char *facility);
-const char *spdk_get_log_facility(void);
-
 void spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	      const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 

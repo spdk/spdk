@@ -54,8 +54,6 @@ usage(void)
 	printf(" -e mask    - tracepoint group mask for spdk trace buffers (default 0x0)\n");
 	printf(" -m mask    - core mask for DPDK\n");
 	printf(" -i shared memory ID (optional)\n");
-	printf(" -l facility - use specific syslog facility (default %s)\n",
-	       opts.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK\n");
@@ -82,7 +80,7 @@ main(int argc, char **argv)
 	opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
 	opts.max_delay_us = 1000; /* 1 ms */
 
-	while ((ch = getopt(argc, argv, "c:de:i:l:m:n:p:qs:t:DH")) != -1) {
+	while ((ch = getopt(argc, argv, "c:de:i:m:n:p:qs:t:DH")) != -1) {
 		switch (ch) {
 		case 'd':
 			opts.enable_coredump = false;
@@ -92,9 +90,6 @@ main(int argc, char **argv)
 			break;
 		case 'i':
 			opts.shm_id = atoi(optarg);
-			break;
-		case 'l':
-			opts.log_facility = optarg;
 			break;
 		case 't':
 			rc = spdk_log_set_trace_flag(optarg);
