@@ -159,6 +159,10 @@ struct spdk_scsi_dev;
  */
 struct spdk_scsi_lun;
 
+void spdk_scsi_subsystem_init(void);
+
+int spdk_scsi_subsystem_fini(void);
+
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
 const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
 
