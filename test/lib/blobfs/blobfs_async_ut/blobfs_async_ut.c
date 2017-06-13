@@ -178,6 +178,47 @@ fs_open(void)
 }
 
 static void
+fs_create(void)
+{
+	struct spdk_filesystem *fs;
+	struct spdk_bs_dev dev;
+	char name[257] = {'\0'};
+
+	init_dev(&dev);
+	memset(name, 'a', sizeof(name) - 1);
+	spdk_allocate_thread(_fs_send_msg, NULL);
+
+	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
+	CU_ASSERT(g_fserrno == 0);
+	fs = g_fs;
+
+	g_fserrno = 0;
+	/* Create should fail, because the file name is too long. */
+	spdk_fs_create_file_async(fs, name, create_cb, NULL);
+	CU_ASSERT(g_fserrno == -ENAMETOOLONG);
+
+	g_fserrno = 1;
+	spdk_fs_create_file_async(fs, "file1", create_cb, NULL);
+	CU_ASSERT(g_fserrno == 0);
+
+	g_fserrno = 1;
+	spdk_fs_create_file_async(fs, "file1", create_cb, NULL);
+	CU_ASSERT(g_fserrno == -EEXIST);
+
+	g_fserrno = 1;
+	spdk_fs_delete_file_async(fs, "file1", delete_cb, NULL);
+	CU_ASSERT(g_fserrno == 0);
+	CU_ASSERT(TAILQ_EMPTY(&fs->files));
+
+	g_fserrno = 1;
+	spdk_fs_unload(fs, fs_op_complete, NULL);
+	CU_ASSERT(g_fserrno == 0);
+
+	spdk_free_thread();
+}
+
+static void
 fs_truncate(void)
 {
 	struct spdk_filesystem *fs;
@@ -456,6 +497,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "fs_init", fs_init) == NULL ||
 		CU_add_test(suite, "fs_open", fs_open) == NULL ||
+		CU_add_test(suite, "fs_create", fs_create) == NULL ||
 		CU_add_test(suite, "fs_truncate", fs_truncate) == NULL ||
 		CU_add_test(suite, "fs_rename", fs_rename) == NULL ||
 		CU_add_test(suite, "tree_find_buffer", tree_find_buffer_ut) == NULL ||
