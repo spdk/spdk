@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64d5042a_67c61baa",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-13T06:25:58Z",
+      "side": 1,
+      "message": "It looks like even with per IO_qpair mempool, that different applications can not share on the same core. Here the \"perf\" is sharing the same cores with the primary \"arbitration\" application. For the short time, we can change to different core masks for different applications. I will look more into this problem at the driver layer. Thanks for pointing this issue out.",
+      "range": {
+        "startLine": 72,
+        "startChar": 69,
+        "endLine": 72,
+        "endChar": 73
+      },
+      "revId": "7c0705f3e161a8145ee8dca4a415db75e8c2d698",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
