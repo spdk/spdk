@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "c49c40ec_7b13ef93",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-13T15:36:05Z",
+      "side": 1,
+      "message": "I think in general these core masks can be just 1 CPU each instead of 4, but this is fine for now.",
+      "revId": "7c0705f3e161a8145ee8dca4a415db75e8c2d698",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64d5042a_67c61baa",
         "filename": "test/lib/nvme/nvme.sh",
         "patchSetId": 2
