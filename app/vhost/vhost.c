@@ -83,6 +83,7 @@ main(int argc, char *argv[])
 	char ch;
 	int rc;
 	const char *socket_path = NULL;
+	enum spdk_log_level print_level = SPDK_LOG_NOTICE;
 
 	vhost_app_opts_init(&opts);
 
@@ -110,7 +111,7 @@ main(int argc, char *argv[])
 			opts.dpdk_master_core = strtoul(optarg, NULL, 10);
 			break;
 		case 'q':
-			spdk_g_notice_stderr_flag = 0;
+			print_level = SPDK_LOG_WARN;
 			break;
 		case 's':
 			opts.dpdk_mem_size = strtoul(optarg, NULL, 10);
@@ -139,7 +140,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (spdk_g_notice_stderr_flag == 1 &&
+	if (print_level > SPDK_LOG_WARN &&
 	    isatty(STDERR_FILENO) &&
 	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
 		printf("Warning: printing stderr to console terminal without -q option specified.\n");
@@ -148,6 +149,8 @@ main(int argc, char *argv[])
 		printf("(Delaying for 10 seconds...)\n");
 		sleep(10);
 	}
+
+	spdk_log_set_print_level(print_level);
 
 	opts.shutdown_cb = spdk_vhost_shutdown_cb;
 	spdk_app_init(&opts);
