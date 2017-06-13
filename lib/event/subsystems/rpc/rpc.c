@@ -1,6 +1,7 @@
 /*-
  *   BSD LICENSE
  *
+ *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
@@ -31,27 +32,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_RPC_CONFIG_H_
-#define SPDK_RPC_CONFIG_H_
-
 #include "spdk/stdinc.h"
 
-#include "spdk/jsonrpc.h"
+#include "spdk/rpc.h"
 
-void spdk_rpc_initialize(void);
-int spdk_rpc_finish(void);
-void spdk_rpc_config_text(FILE *fp);
+#include "spdk_internal/event.h"
 
-typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_server_conn *conn,
-					const struct spdk_json_val *params,
-					const struct spdk_json_val *id);
-
-void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
-
-#define SPDK_RPC_REGISTER(method, func) \
-static void __attribute__((constructor)) rpc_register_##func(void) \
-{ \
-	spdk_rpc_register_method(method, func); \
-}
-
-#endif
+SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_initialize, spdk_rpc_finish, spdk_rpc_config_text)
