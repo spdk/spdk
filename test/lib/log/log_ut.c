@@ -60,12 +60,16 @@ log_test(void)
 	SPDK_CU_ASSERT_FATAL(buf != NULL);
 	CU_ASSERT_STRING_EQUAL(buf, "local7");
 
-	rc = spdk_set_log_priority("test");
-	CU_ASSERT(rc == -1);
-	CU_ASSERT_EQUAL(spdk_g_log_priority, LOG_NOTICE);
-	rc = spdk_set_log_priority("debug");
-	CU_ASSERT(rc == 0);
-	CU_ASSERT_EQUAL(spdk_g_log_priority, LOG_DEBUG);
+	spdk_log_set_level(SPDK_LOG_ERROR);
+	CU_ASSERT_EQUAL(spdk_log_get_level(), SPDK_LOG_ERROR);
+	spdk_log_set_level(SPDK_LOG_WARN);
+	CU_ASSERT_EQUAL(spdk_log_get_level(), SPDK_LOG_WARN);
+	spdk_log_set_level(SPDK_LOG_NOTICE);
+	CU_ASSERT_EQUAL(spdk_log_get_level(), SPDK_LOG_NOTICE);
+	spdk_log_set_level(SPDK_LOG_INFO);
+	CU_ASSERT_EQUAL(spdk_log_get_level(), SPDK_LOG_INFO);
+	spdk_log_set_level(SPDK_LOG_DEBUG);
+	CU_ASSERT_EQUAL(spdk_log_get_level(), SPDK_LOG_DEBUG);
 
 #ifdef DEBUG
 	CU_ASSERT(spdk_log_get_trace_flag("debug") == false);

@@ -39,7 +39,7 @@ static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_tr
 
 unsigned int spdk_g_notice_stderr_flag = 1;
 int spdk_g_log_facility = LOG_DAEMON;
-unsigned int spdk_g_log_priority = LOG_NOTICE;
+static enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
 
 SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
 
@@ -79,17 +79,16 @@ static const struct syslog_code facilitynames[] = {
 	{ NULL,		-1,		}
 };
 
-static const struct syslog_code prioritynames[] = {
-	{ "alert",	LOG_ALERT,	},
-	{ "crit",	LOG_CRIT,	},
-	{ "debug",	LOG_DEBUG,	},
-	{ "emerg",	LOG_EMERG,	},
-	{ "err",	LOG_ERR,	},
-	{ "info",	LOG_INFO,	},
-	{ "notice",	LOG_NOTICE,	},
-	{ "warning",	LOG_WARNING,	},
-	{ NULL,		-1,		}
-};
+void
+spdk_log_set_level(enum spdk_log_level level)
+{
+	g_spdk_log_level = level;
+}
+
+enum spdk_log_level
+spdk_log_get_level(void) {
+	return g_spdk_log_level;
+}
 
 int
 spdk_set_log_facility(const char *facility)
@@ -122,22 +121,6 @@ spdk_get_log_facility(void)
 	}
 
 	return def_name;
-}
-
-int
-spdk_set_log_priority(const char *priority)
-{
-	int i;
-
-	for (i = 0; prioritynames[i].c_name != NULL; i++) {
-		if (strcasecmp(prioritynames[i].c_name, priority) == 0) {
-			spdk_g_log_priority = prioritynames[i].c_val;
-			return 0;
-		}
-	}
-
-	spdk_g_log_priority = LOG_NOTICE;
-	return -1;
 }
 
 void

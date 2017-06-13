@@ -41,6 +41,17 @@
 
 #include "spdk/stdinc.h"
 
+enum spdk_log_level {
+	SPDK_LOG_ERROR,
+	SPDK_LOG_WARN,
+	SPDK_LOG_NOTICE,
+	SPDK_LOG_INFO,
+	SPDK_LOG_DEBUG,
+};
+
+void spdk_log_set_level(enum spdk_log_level level);
+enum spdk_log_level spdk_log_get_level(void);
+
 /*
  * Default: 1 - noticelog messages will print to stderr and syslog.
  * Can be set to 0 to print noticelog messages to syslog only.
@@ -56,7 +67,7 @@ extern unsigned int spdk_g_notice_stderr_flag;
 
 int spdk_set_log_facility(const char *facility);
 const char *spdk_get_log_facility(void);
-int spdk_set_log_priority(const char *priority);
+
 void spdk_noticelog(const char *file, const int line, const char *func,
 		    const char *format, ...) __attribute__((__format__(__printf__, 4, 5)));
 void spdk_warnlog(const char *file, const int line, const char *func,
