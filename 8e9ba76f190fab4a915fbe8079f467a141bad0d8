@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed2acafc_1892f38c",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-13T17:40:56Z",
+      "side": 1,
+      "message": "Minor nit: it might make sense to put ctx first as a sort of \"this\" pointer.",
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db0dcea9_5597ae21",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-13T17:40:56Z",
+      "side": 1,
+      "message": "histogram could be const here.",
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
