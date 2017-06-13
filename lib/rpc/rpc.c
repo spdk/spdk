@@ -225,7 +225,7 @@ spdk_rpc_setup(void *arg)
 			     RPC_SELECT_INTERVAL);
 }
 
-static void
+void
 spdk_rpc_initialize(void)
 {
 	/*
@@ -239,7 +239,7 @@ spdk_rpc_initialize(void)
 	spdk_subsystem_init_next(0);
 }
 
-static int
+int
 spdk_rpc_finish(void)
 {
 	if (g_rpc_listen_addr_unix.sun_path[0]) {
@@ -256,7 +256,7 @@ spdk_rpc_finish(void)
 	return 0;
 }
 
-static void
+void
 spdk_rpc_config_text(FILE *fp)
 {
 	fprintf(fp,
@@ -272,5 +272,3 @@ spdk_rpc_config_text(FILE *fp)
 		"  Listen %s\n",
 		enable_rpc() ? "Yes" : "No", rpc_get_listen_addr());
 }
-
-SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_initialize, spdk_rpc_finish, spdk_rpc_config_text)
