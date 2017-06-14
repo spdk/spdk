@@ -37,5 +37,21 @@
 
 #include "spdk_internal/event.h"
 
+static void
+spdk_vhost_subsystem_init(void)
+{
+	int rc = 0;
+
+	rc = spdk_vhost_init();
+
+	spdk_subsystem_init_next(rc);
+}
+
+static int
+spdk_vhost_subsystem_fini(void)
+{
+	return spdk_vhost_fini();
+}
+
 SPDK_SUBSYSTEM_REGISTER(vhost, spdk_vhost_subsystem_init, spdk_vhost_subsystem_fini, NULL)
 SPDK_SUBSYSTEM_DEPEND(vhost, scsi)

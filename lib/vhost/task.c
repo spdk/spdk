@@ -85,23 +85,21 @@ spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev)
 	return task;
 }
 
-void
-spdk_vhost_subsystem_init(void)
+int
+spdk_vhost_init(void)
 {
-	int rc = 0;
-
 	g_task_pool = rte_mempool_create("vhost task pool", 16384, sizeof(struct spdk_vhost_task),
 					 128, 0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
 	if (!g_task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
-		rc = -1;
+		return -1;
 	}
 
-	spdk_subsystem_init_next(rc);
+	return 0;
 }
 
 int
-spdk_vhost_subsystem_fini(void)
+spdk_vhost_fini(void)
 {
 	return 0;
 }
