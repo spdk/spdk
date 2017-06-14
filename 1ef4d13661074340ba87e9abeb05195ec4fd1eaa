@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70731a1f_d089f5f9",
+        "filename": "lib/log/log.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:17:42Z",
+      "side": 0,
+      "message": "SPDK_TRACELOG will now go to syslog().  I\u0027d suggest only using syslog() for \u003c\u003d SPDK_LOG_NOTICE, just so we don\u0027t change current behavior.",
+      "revId": "1ef4d13661074340ba87e9abeb05195ec4fd1eaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bec9132_6fa1510a",
+        "filename": "lib/log/log.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:17:42Z",
+      "side": 0,
+      "message": "I know that I have grepped for ERROR in logs before - could we keep that?",
+      "revId": "1ef4d13661074340ba87e9abeb05195ec4fd1eaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
