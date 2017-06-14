@@ -23,37 +23,22 @@ function monitor_cmd() {
 function devices_initialization() {
 	timing_enter devices_initialization
 	dd if=/dev/zero of=/root/test0 bs=1M count=1024
-	dd if=/dev/zero of=/root/test1 bs=1M count=1024
-	dd if=/dev/zero of=/root/test2 bs=1M count=1024
-	dd if=/dev/zero of=/root/test3 bs=1M count=1024
 	monitor_cmd "drive_add 0 file=/root/test0,format=raw,id=drive0,if=none"
-	monitor_cmd "drive_add 1 file=/root/test1,format=raw,id=drive1,if=none"
-	monitor_cmd "drive_add 2 file=/root/test2,format=raw,id=drive2,if=none"
-	monitor_cmd "drive_add 3 file=/root/test3,format=raw,id=drive3,if=none"
 	timing_exit devices_initialization
 }
 
 function insert_devices() {
 	monitor_cmd "device_add nvme,drive=drive0,id=nvme0,serial=nvme0"
-	monitor_cmd "device_add nvme,drive=drive1,id=nvme1,serial=nvme1"
-	monitor_cmd "device_add nvme,drive=drive2,id=nvme2,serial=nvme2"
-	monitor_cmd "device_add nvme,drive=drive3,id=nvme3,serial=nvme3"
 	ssh_vm "scripts/setup.sh"
 }
 
 function remove_devices() {
 	monitor_cmd "device_del nvme0"
-	monitor_cmd "device_del nvme1"
-	monitor_cmd "device_del nvme2"
-	monitor_cmd "device_del nvme3"
 }
 
 function devices_delete() {
 	timing_enter devices_delete
 	rm /root/test0
-	rm /root/test1
-	rm /root/test2
-	rm /root/test3
 	timing_exit devices_delete
 }
 
@@ -100,7 +85,7 @@ insert_devices
 
 timing_enter hotplug_test
 
-ssh_vm "examples/nvme/hotplug/hotplug -i 0 -t 20 -n 4 -r 8" &
+ssh_vm "examples/nvme/hotplug/hotplug -i 0 -t 20 -n 1 -r 2" &
 example_pid=$!
 
 sleep 2
