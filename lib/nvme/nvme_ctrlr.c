@@ -176,9 +176,27 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 */
 	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
 	if (qid > ctrlr->opts.num_io_queues) {
-		SPDK_ERRLOG("No free I/O queue IDs\n");
+		uint32_t i;
+
+		if (ctrlr->qpairs_created == false) {
+			ctrlr->qpairs_created = true;
+		}
+		spdk_bit_array_clear(ctrlr->free_io_qids, 0);
+		for (i = 1; i <= ctrlr->opts.num_io_queues; i++) {
+			spdk_bit_array_set(ctrlr->free_io_qids, i);
+		}
+		qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
+	}
+
+	if (ctrlr->qpairs_created) {
+		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
+			if (qpair->id == qid) {
+				break;
+			}
+		}
+		spdk_bit_array_clear(ctrlr->free_io_qids, qid);
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
-		return NULL;
+		return qpair;
 	}
 
 	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, qprio);
