@@ -67,6 +67,23 @@
       "revId": "d6b4463294c4e763fdebcda247ee46edb934d2b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91a451d6_057bbe65",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-14T16:36:19Z",
+      "side": 1,
+      "message": "This script is already running as root, so you can just use:\n\n  echo 0 \u003e /proc/sys/kernel/randomize_va_space",
+      "revId": "d6b4463294c4e763fdebcda247ee46edb934d2b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
