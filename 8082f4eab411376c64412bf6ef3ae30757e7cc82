@@ -1,0 +1,170 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b0439b1_78ec18a4",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "lets revert this",
+      "range": {
+        "startLine": 230,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 3
+      },
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19824adc_d751faa3",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "lets revert this",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 34
+      },
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2844c49b_191579b8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "to remove",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 1
+      },
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c6744d6_9cb6cf0a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "Remove this",
+      "range": {
+        "startLine": 177,
+        "startChar": 1,
+        "endLine": 178,
+        "endChar": 32
+      },
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a85a1812_c9de728f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "add eventq_flush() here",
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c7ba01a_beb3b425",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "add eventq_flush()",
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74e38f25_35a4d73b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "add eventq_flush()",
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5213a7ee_cae48535",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T09:27:50Z",
+      "side": 1,
+      "message": "leave only this line and remove rest.",
+      "range": {
+        "startLine": 672,
+        "startChar": 2,
+        "endLine": 672,
+        "endChar": 90
+      },
+      "revId": "8082f4eab411376c64412bf6ef3ae30757e7cc82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
