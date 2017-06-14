@@ -184,11 +184,9 @@ bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 static void
 bdev_nvme_poll(void *arg)
 {
-	struct nvme_io_channel *ch = arg;
+	struct spdk_nvme_qpair *qpair = arg;
 
-	if (ch->qpair != NULL) {
-		spdk_nvme_qpair_process_completions(ch->qpair, 0);
-	}
+	spdk_nvme_qpair_process_completions(qpair, 0);
 }
 
 static void
@@ -237,65 +235,20 @@ bdev_nvme_flush(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 	return 0;
 }
 
-static void
-_bdev_nvme_reset_done(void *io_device, void *ctx)
-{
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(ctx), SPDK_BDEV_IO_STATUS_SUCCESS);
-}
-
-static void
-_bdev_nvme_reset_create_qpair(void *io_device, struct spdk_io_channel *ch,
-			      void *ctx)
-{
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
-	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-
-	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
-	assert(nvme_ch->qpair != NULL); /* Currently, no good way to handle this error */
-}
-
-static void
-_bdev_nvme_reset(void *io_device, void *ctx)
-{
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
-	struct nvme_bdev_io *bio = ctx;
-	int rc;
-
-	rc = spdk_nvme_ctrlr_reset(ctrlr);
-	if (rc != 0) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
-
-	/* Recreate all of the I/O queue pairs */
-	spdk_for_each_channel(ctrlr,
-			      _bdev_nvme_reset_create_qpair,
-			      ctx,
-			      _bdev_nvme_reset_done);
-
-
-}
-
-static void
-_bdev_nvme_reset_destroy_qpair(void *io_device, struct spdk_io_channel *ch,
-			       void *ctx)
-{
-	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-
-	spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
-	nvme_ch->qpair = NULL;
-}
-
 static int
 bdev_nvme_reset(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio)
 {
-	/* First, delete all NVMe I/O queue pairs. */
-	spdk_for_each_channel(nbdev->nvme_ctrlr->ctrlr,
-			      _bdev_nvme_reset_destroy_qpair,
-			      bio,
-			      _bdev_nvme_reset);
+	int rc;
+	enum spdk_bdev_io_status status;
 
-	return 0;
+	status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	rc = spdk_nvme_ctrlr_reset(nbdev->nvme_ctrlr->ctrlr);
+	if (rc != 0) {
+		status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), status);
+	return rc;
 }
 
 static int
@@ -325,12 +278,6 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 static int
 _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	if (nvme_ch->qpair == NULL) {
-		/* The device is currently resetting */
-		return -1;
-	}
-
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_nvme_get_buf_cb);
@@ -427,7 +374,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	spdk_poller_register(&ch->poller, bdev_nvme_poll, ch,
+	spdk_poller_register(&ch->poller, bdev_nvme_poll, ch->qpair,
 			     spdk_env_get_current_core(), 0);
 	return 0;
 }
