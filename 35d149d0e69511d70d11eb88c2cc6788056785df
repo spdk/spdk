@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f32e97bb_e3c37ba3",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:46:59Z",
+      "side": 1,
+      "message": "I agree we should just put these in spdk_mock.h now.  None of the other stubs (except ut_fail_vtophys) have to declare their variables extern.",
+      "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d14860f4_6ac7312b",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:46:59Z",
+      "side": 1,
+      "message": "Should we put ifdefs around the CU_ASSERTs instead - so a different CU_ASSERT for Linux v. FreeBSD?  With a comment that for FreeBSD, we expect rc \u003d\u003d 0 since it stubs out shared mutexes.",
+      "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cf1d2aa_66ffe974",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:46:59Z",
+      "side": 1,
+      "message": "I think these should check that rc !\u003d 0 instead.\n\nnvme_robust_mutex_init_shared() must return a failure code, but it does not necessarily need to be the same failure code returned by our mock pthread_mutex_init() call.  Same for the one above.",
+      "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
