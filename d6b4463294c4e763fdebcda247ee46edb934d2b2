@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc38af7c_87a78339",
+        "filename": "autotest.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:08:33Z",
+      "side": 1,
+      "message": "Can you add a comment explaining why we cannot run the hotplug test with ASAN enabled?",
+      "revId": "d6b4463294c4e763fdebcda247ee46edb934d2b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b055cfcb_1728b30c",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:08:33Z",
+      "side": 1,
+      "message": "Could you use the similar format as above, but default to 0?\n\n: ${SPDK_CONFIG_ASAN\u003d0}; export SPDK_CONFIG_ASAN\n\nThen by default ASAN is not enabled, even if it is available on the system.  We can then pick one or two test systems which will enable ASAN.  On those systems, we will just skip hotplug, multiprocess and fio_plugin - and run the unit tests without valgrind.  All of those things will get tested on other systems so that is OK.",
+      "revId": "d6b4463294c4e763fdebcda247ee46edb934d2b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35fe6ae7_ee83367d",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:08:33Z",
+      "side": 1,
+      "message": "Based on above this comment, this logic should be modified.  First, if asan is not available, it sets SPDK_CONFIG_ASAN\u003d0.  Then if SPDK_CONFIG_ASAN\u003d1, add --enable-asan to the config_params.",
+      "revId": "d6b4463294c4e763fdebcda247ee46edb934d2b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bea6ffc3_1211e38f",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:08:33Z",
+      "side": 1,
+      "message": "Add a comment here at least explaining why we cannot use valgrind with ASAN enabled.",
+      "revId": "d6b4463294c4e763fdebcda247ee46edb934d2b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
