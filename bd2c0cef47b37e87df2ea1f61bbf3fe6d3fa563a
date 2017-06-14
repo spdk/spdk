@@ -1,0 +1,259 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41f82d5a_b3961e71",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "These files should not include bdev.h directly.  We want the lvol code to be independent of bdev - just like blobstore is.",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d0c01f2_5114ce4b",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "I would just use spdk_gpt_guid/SPDK_GPT_GUID directly here, rather than #defining them to an lvol name.",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e5ed88a_97005dbd",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "These should be done with a union of structures - similar to struct spdk_bs_cpl in lib/blob/request.h.",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4ba5a72_529ad44c",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "vol_store should not associate directly with spdk_bdev.  It should all be done via the spdk_bs_dev.  The spdk_bs_dev can have function pointers then that point to bdev, or to something simple like the malloc backend we use for blobstore/blobfs unit tests.",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2700378a_70825b01",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "spdk_lvol_store_init - this matches the similar calls for blobstore and blobfs",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbadbaae_4a728af3",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "spdk_lvol_store_unload",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "827029c6_b620f2b4",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "error message should say that here we could initialize the blobstore, or say something like \"lvol store init failed: could not initialize blobstore\".  Then you can differentiate between different reasons why the lvol store init could fail.",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2f91dbb_a23cc12b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "return not needed",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b3e0a48_e8a114d7",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "return not needed",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d41ca766_2984c242",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "remove commented code",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bf44b01_e648d3c3",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "remove commented code",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1117e5a_d512c2c2",
+        "filename": "test/lib/lvol/lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "return not needed",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9fae259_d88384a0",
+        "filename": "test/lib/lvol/lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "return not needed",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a16fbc7_2398ac50",
+        "filename": "test/lib/lvol/lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "You should set g_bserrno \u003d -1 here.  This just makes sure that g_bserrno was set to the correct value and not left over from a previous call.",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbd127c2_4a1b82d1",
+        "filename": "test/lib/lvol/lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T21:06:45Z",
+      "side": 1,
+      "message": "same here.",
+      "revId": "bd2c0cef47b37e87df2ea1f61bbf3fe6d3fa563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
