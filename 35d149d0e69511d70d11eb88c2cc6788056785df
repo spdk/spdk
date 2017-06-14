@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "b1128cf6_b1e2449e",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-14T17:28:03Z",
+      "side": 1,
+      "message": "So this isn\u0027t as clear as I thought it was... if I declare these in spdk_mock.h (which I did) I have to extern them here - I can\u0027t include spd_mock.h from here or I get a cc error because it\u0027s linked as a lib. I added a comment that these are temp per my prev comment. Again, this patch is a stepping stone to have both --wrap functions and stubs available in the base to take the next step of adding an API interface to say \"mock this function with this return value\" minimal concern over whether the function is a syscall or not.",
+      "parentUuid": "6568bbde_4a96b924",
+      "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d14860f4_6ac7312b",
         "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
         "patchSetId": 2
