@@ -42,7 +42,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
-#include "spdk/event.h"
 
 /* Defines for SPDK tracing framework */
 #define OWNER_SCSI_DEV				0x10
@@ -159,9 +158,9 @@ struct spdk_scsi_dev;
  */
 struct spdk_scsi_lun;
 
-void spdk_scsi_subsystem_init(void);
+int spdk_scsi_init(void);
 
-int spdk_scsi_subsystem_fini(void);
+int spdk_scsi_fini(void);
 
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
 const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
