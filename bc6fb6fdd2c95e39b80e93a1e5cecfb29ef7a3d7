@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "c589c8e7_27ead48f",
+        "filename": "app/iscsi_tgt/iscsi_tgt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:23:50Z",
+      "side": 1,
+      "message": "I think this should be SPDK_LOG_WARN to match current behavior.  The old spdk_g_notice_stderr_flag would only keep SPDK_NOTICELOG from going to stderr - it would not effect WARNLOG or ERRLOG.\n\nSame for if check below, plus the other apps.",
+      "revId": "bc6fb6fdd2c95e39b80e93a1e5cecfb29ef7a3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "903fc10e_76aa7452",
+        "filename": "app/iscsi_tgt/iscsi_tgt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:23:50Z",
+      "side": 1,
+      "message": "What is the different between spdk_log_set_level and spdk_log_set_print_level?  I was thinking we would just call spdk_log_set_level here.",
+      "revId": "bc6fb6fdd2c95e39b80e93a1e5cecfb29ef7a3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16db113c_f364abb3",
         "filename": "lib/log/log.c",
         "patchSetId": 1
