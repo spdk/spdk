@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78fe364b_4264ea0d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:45:36Z",
+      "side": 1,
+      "message": "I think you should at least mention the changes you needed to make to event_perf.",
+      "revId": "812b5747b58ae9be125759eb0c8df10a7eb045c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c5d3165_434b6915",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:45:36Z",
+      "side": 1,
+      "message": "I think you should just keep the previous comment for spdk_app_start().\n\nThe sentence about \"This must be called prior to using any other functions in this library.\" should definitely be removed - I think it was confusing.  For example, it is OK to call spdk_app_opts_init() before calling spdk_app_start().",
+      "revId": "812b5747b58ae9be125759eb0c8df10a7eb045c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f69c0681_9d7c7577",
+        "filename": "test/lib/bdev/common.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:45:36Z",
+      "side": 1,
+      "message": "I\u0027d suggest an assert() here instead.",
+      "revId": "812b5747b58ae9be125759eb0c8df10a7eb045c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
