@@ -37,5 +37,24 @@
 
 #include "spdk_internal/event.h"
 
-SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_initialize, spdk_bdev_finish, spdk_bdev_config_text)
+static void
+spdk_bdev_initialize_complete(void *cb_arg, int rc)
+{
+	spdk_subsystem_init_next(rc);
+}
+
+static void
+spdk_bdev_subsystem_initialize(void)
+{
+	spdk_bdev_initialize(spdk_bdev_initialize_complete, NULL);
+}
+
+static int
+spdk_bdev_subsystem_finish(void)
+{
+	return spdk_bdev_finish();
+}
+
+SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_subsystem_initialize,
+			spdk_bdev_subsystem_finish, spdk_bdev_config_text)
 SPDK_SUBSYSTEM_DEPEND(bdev, copy)

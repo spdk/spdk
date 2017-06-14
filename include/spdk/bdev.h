@@ -41,7 +41,6 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/event.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
 
@@ -107,7 +106,9 @@ struct spdk_bdev_io_stat {
 	uint64_t num_write_ops;
 };
 
-void spdk_bdev_initialize(void);
+typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
+
+void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg);
 int spdk_bdev_finish(void);
 void spdk_bdev_config_text(FILE *fp);
 
