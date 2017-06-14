@@ -326,8 +326,8 @@ extern struct spdk_iscsi_globals g_spdk_iscsi;
 
 struct spdk_iscsi_task;
 
-void spdk_iscsi_subsystem_init(void);
-int spdk_iscsi_subsystem_fini(void);
+int spdk_iscsi_init(void);
+int spdk_iscsi_fini(void);
 void spdk_iscsi_config_text(FILE *fp);
 
 int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
