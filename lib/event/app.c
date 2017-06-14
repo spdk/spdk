@@ -310,6 +310,7 @@ spdk_app_init(struct spdk_app_opts *opts)
 	env_opts.dpdk_mem_channel = opts->dpdk_mem_channel;
 	env_opts.dpdk_master_core = opts->dpdk_master_core;
 	env_opts.dpdk_mem_size = opts->dpdk_mem_size;
+	env_opts.no_pci = opts->no_pci;
 
 	spdk_env_init(&env_opts);
 

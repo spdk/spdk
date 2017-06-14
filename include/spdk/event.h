@@ -81,6 +81,7 @@ struct spdk_app_opts {
 	int			dpdk_mem_channel;
 	int	 		dpdk_master_core;
 	int			dpdk_mem_size;
+	bool			no_pci;
 
 	/* The maximum latency allowed when passing an event
 	 * from one core to another. A value of 0
