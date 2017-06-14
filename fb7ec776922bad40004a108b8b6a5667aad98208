@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27a2e749_fe777d98",
+        "filename": "doc/nvme.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:22:24Z",
+      "side": 1,
+      "message": "dictated",
+      "revId": "fb7ec776922bad40004a108b8b6a5667aad98208",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9dfe60d1_e41fb223",
+        "filename": "doc/nvme.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T15:22:24Z",
+      "side": 1,
+      "message": "takes no locks in the I/O path (just to be pedantic)",
+      "revId": "fb7ec776922bad40004a108b8b6a5667aad98208",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
