@@ -1129,8 +1129,6 @@ test_alloc_io_qpair_rr_1(void)
 	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
 	SPDK_CU_ASSERT_FATAL(q0->qprio == 0);
-	/* Only 1 I/O qpair was allocated, so this should fail */
-	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0) == NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
 
 	/*
@@ -1226,8 +1224,6 @@ test_alloc_io_qpair_wrr_2(void)
 	q3 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 3);
 	SPDK_CU_ASSERT_FATAL(q3 != NULL);
 	SPDK_CU_ASSERT_FATAL(q3->qprio == 3);
-	/* Only 4 I/O qpairs was allocated, so this should fail */
-	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0) == NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q3) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q2) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
