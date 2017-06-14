@@ -46,7 +46,7 @@ struct spdk_io_channel;
 
 struct spdk_copy_task;
 
-void spdk_copy_engine_initialize(void);
+int spdk_copy_engine_initialize(void);
 int spdk_copy_engine_finish(void);
 
 struct spdk_io_channel *spdk_copy_engine_get_io_channel(void);
