@@ -200,6 +200,7 @@ static uint32_t g_max_completions;
 static int g_dpdk_mem;
 static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
+static bool g_dpdk_no_pci;
 
 static const char *g_core_mask;
 
@@ -1176,6 +1177,8 @@ parse_args(int argc, char **argv)
 	if (TAILQ_EMPTY(&g_trid_list)) {
 		/* If no transport IDs specified, default to enumerating all local PCIe devices */
 		add_trid("trtype:PCIe");
+	} else {
+		g_dpdk_no_pci = true;
 	}
 
 	g_aio_optind = optind;
@@ -1416,6 +1419,9 @@ int main(int argc, char **argv)
 
 	if (g_dpdk_mem) {
 		opts.dpdk_mem_size = g_dpdk_mem;
+	}
+	if (g_dpdk_no_pci) {
+		opts.dpdk_no_pci = g_dpdk_no_pci;
 	}
 	spdk_env_init(&opts);
 
