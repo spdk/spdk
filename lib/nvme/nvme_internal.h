@@ -374,6 +374,8 @@ struct spdk_nvme_ctrlr {
 
 	bool				is_failed;
 
+	bool				qpairs_created;
+	
 	/** Controller support flags */
 	uint64_t			flags;
 
