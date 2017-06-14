@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16db113c_f364abb3",
+        "filename": "lib/log/log.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T00:39:53Z",
+      "side": 1,
+      "message": "brace should be on next line - or is this an astyle thing?",
+      "revId": "bc6fb6fdd2c95e39b80e93a1e5cecfb29ef7a3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
