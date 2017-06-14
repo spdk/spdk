@@ -196,10 +196,27 @@ test_spdk_nvmf_subsystem_add_ns(void)
 		.dev.virt.ns_count = 0,
 		.dev.virt.ns_list = {},
 	};
-	struct spdk_bdev bdev = {};
-	spdk_nvmf_subsystem_add_ns(&subsystem, &bdev);
+	struct spdk_bdev bdev1 = {}, bdev2 = {};
+	uint32_t nsid;
+
+	/* Allow NSID to be assigned automatically */
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, 0);
+	/* NSID 1 is the first unused ID */
+	CU_ASSERT(nsid == 1);
 	CU_ASSERT(subsystem.dev.virt.ns_count == 1);
-	CU_ASSERT_PTR_EQUAL(subsystem.dev.virt.ns_list[0], &bdev);
+	CU_ASSERT(subsystem.dev.virt.ns_list[nsid - 1] == &bdev1);
+
+	/* Request a specific NSID */
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
+	CU_ASSERT(nsid == 5);
+	CU_ASSERT(subsystem.dev.virt.ns_count == 2);
+	CU_ASSERT(subsystem.dev.virt.ns_list[nsid - 1] == &bdev2);
+
+	/* Request an NSID that is already in use */
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
+	CU_ASSERT(nsid == 0);
+	/* ns_count should be unchanged */
+	CU_ASSERT(subsystem.dev.virt.ns_count == 2);
 }
 
 static void
