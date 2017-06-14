@@ -384,29 +384,54 @@ static void spdk_nvmf_ctrlr_hot_remove(void *remove_ctx)
 	subsystem->is_removed = true;
 }
 
-int
-spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev)
+uint32_t
+spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
+			   uint32_t nsid)
 {
-	int i = 0;
+	uint32_t i;
 
 	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
-	while (i < MAX_VIRTUAL_NAMESPACE && subsystem->dev.virt.ns_list[i]) {
-		i++;
-	}
-	if (i == MAX_VIRTUAL_NAMESPACE) {
-		SPDK_ERRLOG("spdk_nvmf_subsystem_add_ns() failed\n");
-		return -1;
+
+	if (nsid == 0) {
+		/* NSID not specified - find a free index */
+		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
+			if (subsystem->dev.virt.ns_list[i] == NULL) {
+				nsid = i + 1;
+				break;
+			}
+		}
+		if (nsid == 0) {
+			SPDK_ERRLOG("All available NSIDs in use\n");
+			return 0;
+		}
+	} else {
+		/* Specific NSID requested */
+		i = nsid - 1;
+		if (i >= MAX_VIRTUAL_NAMESPACE) {
+			SPDK_ERRLOG("Requested NSID %" PRIu32 " out of range\n", nsid);
+			return 0;
+		}
+
+		if (subsystem->dev.virt.ns_list[i]) {
+			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", nsid);
+			return 0;
+		}
 	}
 
 	if (!spdk_bdev_claim(bdev, spdk_nvmf_ctrlr_hot_remove, subsystem)) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s is already claimed\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev));
-		return -1;
+		return 0;
 	}
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
+		      spdk_nvmf_subsystem_get_nqn(subsystem),
+		      spdk_bdev_get_name(bdev),
+		      nsid);
 
 	subsystem->dev.virt.ns_list[i] = bdev;
 	subsystem->dev.virt.ns_count++;
-	return 0;
+	return nsid;
 }
 
 const char *

@@ -590,7 +590,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 				SPDK_ERRLOG("Could not find namespace bdev '%s'\n", namespace);
 				goto error;
 			}
-			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev)) {
+			if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, 0) == 0) {
 				goto error;
 			}
 
