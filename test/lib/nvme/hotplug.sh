@@ -74,7 +74,7 @@ timing_enter start_qemu
 qemu-img create -b "$base_img" -f qcow2 "$test_img"
 
 qemu-system-x86_64 \
-	-daemonize -display none -m 1024 \
+	-daemonize -display none -m 8192 \
 	-pidfile "$qemu_pidfile" \
 	-hda "$test_img" \
 	-net user,hostfwd=tcp::10022-:22 \
