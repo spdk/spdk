@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6568bbde_4a96b924",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-14T16:22:45Z",
+      "side": 1,
+      "message": "Sure, can do.  But with the next patch I envision all of these globals going away, their functionality should be wrapped into the mock lib API",
+      "parentUuid": "f32e97bb_e3c37ba3",
+      "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d14860f4_6ac7312b",
         "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "2f9792aa_b2d412ef",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-14T16:22:45Z",
+      "side": 1,
+      "message": "yup, that works",
+      "parentUuid": "d14860f4_6ac7312b",
+      "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8cf1d2aa_66ffe974",
         "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2017-06-14T15:46:59Z",
       "side": 1,
       "message": "I think these should check that rc !\u003d 0 instead.\n\nnvme_robust_mutex_init_shared() must return a failure code, but it does not necessarily need to be the same failure code returned by our mock pthread_mutex_init() call.  Same for the one above.",
+      "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "918b0845_d1b32b9d",
+        "filename": "test/lib/nvme/unit/nvme_c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-14T16:22:45Z",
+      "side": 1,
+      "message": "But that\u0027s not how it\u0027s coded right now, the mock is supposed to return the value of the global, not just anything non-zero.  Am I understanding your comment correctly?",
+      "parentUuid": "8cf1d2aa_66ffe974",
       "revId": "35d149d0e69511d70d11eb88c2cc6788056785df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
