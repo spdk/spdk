@@ -36,8 +36,6 @@
 #include "spdk/log.h"
 #include "spdk/net.h"
 
-#include "spdk_internal/event.h"
-
 #ifdef __linux__ /* Interface management is Linux-specific */
 
 #include <linux/netlink.h>
@@ -414,14 +412,14 @@ static void spdk_interface_ip_update(void)
 	pthread_mutex_unlock(&interface_lock);
 }
 
-void
+int
 spdk_interface_init(void)
 {
 	TAILQ_INIT(&g_interface_head);
 	spdk_prepare_ifc_list();
 	spdk_get_ifc_ipv4();
 
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
 int
@@ -463,10 +461,10 @@ void *spdk_interface_get_list(void)
 
 #else /* Not Linux */
 
-void
+int
 spdk_interface_init(void)
 {
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
 int
