@@ -36,8 +36,6 @@
 
 #include "spdk/conf.h"
 
-#include "spdk_internal/event.h"
-
 #define DEFAULT_MAX_UNMAP_LBA_COUNT			4194304
 #define DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT	1
 #define DEFAULT_OPTIMAL_UNMAP_GRANULARITY		0
@@ -97,29 +95,28 @@ spdk_read_config_scsi_parameters(void)
 	return 0;
 }
 
-void
-spdk_scsi_subsystem_init(void)
+int
+spdk_scsi_init(void)
 {
-	int rc = 0;
+	int rc;
 
 	rc = pthread_mutex_init(&g_spdk_scsi.mutex, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("mutex_init() failed\n");
-		goto end;
+		return -1;
 	}
 
 	rc = spdk_read_config_scsi_parameters();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_scsi_parameters() failed\n");
-		rc = -1;
+		return -1;
 	}
 
-end:
-	spdk_subsystem_init_next(rc);
+	return 0;
 }
 
 int
-spdk_scsi_subsystem_fini(void)
+spdk_scsi_fini(void)
 {
 	pthread_mutex_destroy(&g_spdk_scsi.mutex);
 	return 0;

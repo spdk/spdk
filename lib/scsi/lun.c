@@ -36,7 +36,6 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
-#include "spdk/event.h"
 #include "spdk/util.h"
 
 void
