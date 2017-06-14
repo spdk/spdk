@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86609796_13782c77",
+        "filename": "test/unit/lib/util/bit_array.c/bit_array_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-14T20:13:28Z",
+      "side": 1,
+      "message": "what\u0027s the change?",
+      "revId": "726b93adb757fec612d6ef90f386111dffe25cbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
