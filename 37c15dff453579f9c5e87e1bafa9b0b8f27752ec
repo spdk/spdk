@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e543ad2_e810f449",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T15:06:45Z",
+      "side": 1,
+      "message": "Just free and break.",
+      "range": {
+        "startLine": 113,
+        "startChar": 3,
+        "endLine": 113,
+        "endChar": 63
+      },
+      "revId": "37c15dff453579f9c5e87e1bafa9b0b8f27752ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26f1e103_6363f873",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T15:06:45Z",
+      "side": 1,
+      "message": "add eventq_flush() here before spdk_vhost_vq_used_ring_enqueue()",
+      "revId": "37c15dff453579f9c5e87e1bafa9b0b8f27752ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a6ef790_7f82aff8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-14T15:06:45Z",
+      "side": 1,
+      "message": "!\u003d",
+      "range": {
+        "startLine": 565,
+        "startChar": 27,
+        "endLine": 565,
+        "endChar": 29
+      },
+      "revId": "37c15dff453579f9c5e87e1bafa9b0b8f27752ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
