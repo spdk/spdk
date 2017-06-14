@@ -995,6 +995,9 @@ int main(int argc, char **argv)
 	opts.dpdk_mem_channel = 1;
 	opts.dpdk_master_core = g_master_core;
 	opts.core_mask = g_core_mask;
+	if (g_trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		opts.dpdk_no_pci = true;
+	}
 	spdk_env_init(&opts);
 
 	rc = 0;

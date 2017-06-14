@@ -78,6 +78,7 @@ struct spdk_app_opts {
 	spdk_sighandler_t	usr1_handler;
 
 	bool			enable_coredump;
+	bool			dpdk_no_pci;
 	int			dpdk_mem_channel;
 	int	 		dpdk_master_core;
 	int			dpdk_mem_size;
