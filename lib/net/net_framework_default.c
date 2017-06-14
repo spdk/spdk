@@ -33,8 +33,6 @@
 
 #include "spdk/net.h"
 
-#include "spdk_internal/event.h"
-
 __attribute__((weak))
 const char *spdk_net_framework_get_name(void)
 {
@@ -42,9 +40,9 @@ const char *spdk_net_framework_get_name(void)
 }
 
 __attribute__((weak))
-void spdk_net_framework_start(void)
+int spdk_net_framework_start(void)
 {
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
 __attribute__((weak))

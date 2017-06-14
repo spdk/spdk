@@ -37,7 +37,41 @@
 
 #include "spdk_internal/event.h"
 
-SPDK_SUBSYSTEM_REGISTER(interface, spdk_interface_init, spdk_interface_destroy, NULL)
+static void
+spdk_interface_subsystem_init(void)
+{
+	int rc;
 
-SPDK_SUBSYSTEM_REGISTER(net_framework, spdk_net_framework_start, spdk_net_framework_fini, NULL)
+	rc = spdk_interface_init();
+
+	spdk_subsystem_init_next(rc);
+}
+
+static int
+spdk_interface_subsystem_destroy(void)
+{
+	return spdk_interface_destroy();
+}
+
+SPDK_SUBSYSTEM_REGISTER(interface, spdk_interface_subsystem_init,
+			spdk_interface_subsystem_destroy, NULL)
+
+static void
+spdk_net_subsystem_start(void)
+{
+	int rc;
+
+	rc = spdk_net_framework_start();
+
+	spdk_subsystem_init_next(rc);
+}
+
+static int
+spdk_net_subsystem_fini(void)
+{
+	return spdk_net_framework_fini();
+}
+
+SPDK_SUBSYSTEM_REGISTER(net_framework, spdk_net_subsystem_start,
+			spdk_net_subsystem_fini, NULL)
 SPDK_SUBSYSTEM_DEPEND(net_framework, interface)
