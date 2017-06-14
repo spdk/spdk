@@ -33,7 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/net.h"
 
