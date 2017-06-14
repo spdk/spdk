@@ -37,5 +37,21 @@
 
 #include "spdk_internal/event.h"
 
+static void
+spdk_scsi_subsystem_init(void)
+{
+	int rc;
+
+	rc = spdk_scsi_init();
+
+	spdk_subsystem_init_next(rc);
+}
+
+static int
+spdk_scsi_subsystem_fini(void)
+{
+	return spdk_scsi_fini();
+}
+
 SPDK_SUBSYSTEM_REGISTER(scsi, spdk_scsi_subsystem_init, spdk_scsi_subsystem_fini, NULL)
 SPDK_SUBSYSTEM_DEPEND(scsi, bdev)
