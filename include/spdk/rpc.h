@@ -38,7 +38,7 @@
 
 #include "spdk/jsonrpc.h"
 
-void spdk_rpc_initialize(void);
+int spdk_rpc_initialize(void);
 int spdk_rpc_finish(void);
 void spdk_rpc_config_text(FILE *fp);
 

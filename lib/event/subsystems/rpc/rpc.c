@@ -37,4 +37,21 @@
 
 #include "spdk_internal/event.h"
 
-SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_initialize, spdk_rpc_finish, spdk_rpc_config_text)
+static void
+spdk_rpc_subsystem_initialize(void)
+{
+	int rc;
+
+	rc = spdk_rpc_initialize();
+
+	spdk_subsystem_init_next(rc);
+}
+
+static int
+spdk_rpc_subsystem_finish(void)
+{
+	return spdk_rpc_finish();
+}
+
+SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_subsystem_initialize,
+			spdk_rpc_subsystem_finish, spdk_rpc_config_text)
