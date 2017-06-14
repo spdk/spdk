@@ -59,6 +59,7 @@ struct spdk_env_opts {
 	int	 		dpdk_mem_channel;
 	int	 		dpdk_master_core;
 	int			dpdk_mem_size;
+	bool			no_pci;
 };
 
 /**

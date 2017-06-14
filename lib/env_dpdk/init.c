@@ -198,6 +198,14 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 		}
 	}
 
+	/* set no pci  if enabled */
+	if (opts->no_pci) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--no-pci"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 #ifdef __linux__
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
