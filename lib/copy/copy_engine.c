@@ -39,8 +39,6 @@
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
 
-#include "spdk_internal/event.h"
-
 static size_t g_max_copy_module_size = 0;
 
 static struct spdk_copy_engine *hw_copy_engine = NULL;
@@ -237,7 +235,7 @@ spdk_copy_engine_module_finish(void)
 	}
 }
 
-void
+int
 spdk_copy_engine_initialize(void)
 {
 	spdk_copy_engine_module_initialize();
@@ -248,7 +246,7 @@ spdk_copy_engine_initialize(void)
 	spdk_io_device_register(&spdk_copy_module_list, copy_create_cb, copy_destroy_cb,
 				sizeof(struct copy_io_channel));
 
-	spdk_subsystem_init_next(0);
+	return 0;
 }
 
 int
