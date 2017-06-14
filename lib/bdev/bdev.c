@@ -44,7 +44,6 @@
 #include "spdk/scsi_spec.h"
 
 #include "spdk_internal/bdev.h"
-#include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
 
@@ -82,6 +81,8 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 
 static struct spdk_bdev_module_if *g_next_bdev_module;
 static struct spdk_bdev_module_if *g_next_vbdev_module;
+static spdk_bdev_init_cb	g_cb_fn = NULL;
+static void			*g_cb_arg = NULL;
 
 struct spdk_bdev_mgmt_channel {
 	need_buf_tailq_t need_buf_small;
@@ -298,13 +299,25 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	}
 }
 
+static void
+spdk_bdev_init_complete(int rc)
+{
+	spdk_bdev_init_cb cb_fn = g_cb_fn;
+	void *cb_arg = g_cb_arg;
+
+	g_cb_fn = NULL;
+	g_cb_arg = NULL;
+
+	cb_fn(cb_arg, rc);
+}
+
 void
 spdk_bdev_module_init_next(int rc)
 {
 	if (rc) {
 		assert(g_next_bdev_module != NULL);
 		SPDK_ERRLOG("Failed to init bdev module: %s\n", g_next_bdev_module->module_name);
-		spdk_subsystem_init_next(rc);
+		spdk_bdev_init_complete(rc);
 		return;
 	}
 
@@ -327,7 +340,7 @@ spdk_vbdev_module_init_next(int rc)
 	if (rc) {
 		assert(g_next_vbdev_module != NULL);
 		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->module_name);
-		spdk_subsystem_init_next(rc);
+		spdk_bdev_init_complete(rc);
 		return;
 	}
 
@@ -340,15 +353,20 @@ spdk_vbdev_module_init_next(int rc)
 	if (g_next_vbdev_module) {
 		g_next_vbdev_module->module_init();
 	} else {
-		spdk_subsystem_init_next(0);
+		spdk_bdev_init_complete(rc);;
 	}
 }
 
 void
-spdk_bdev_initialize(void)
+spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
 	int cache_size;
 	int rc = 0;
+
+	assert(cb_fn != NULL);
+
+	g_cb_fn = cb_fn;
+	g_cb_arg = cb_arg;
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
 				  SPDK_BDEV_IO_POOL_SIZE,

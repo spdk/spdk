@@ -35,6 +35,7 @@
 #include "scsi_internal.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
+#include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/util.h"
 
