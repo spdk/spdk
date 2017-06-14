@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9794014_76b2b734",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:52:44Z",
+      "side": 1,
+      "message": "What if user specifies a PCIe trid on the command line?\n\nI think this needs to walk the list of trids and check if any are PCIe or not.",
+      "revId": "4099625e57ec2aab9d8185978f07f527247e4c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4293c31_223d2db3",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-14T14:52:44Z",
+      "side": 1,
+      "message": "suggest putting this after dpdk_mem_size to match the order in spdk_env_opts",
+      "revId": "4099625e57ec2aab9d8185978f07f527247e4c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
