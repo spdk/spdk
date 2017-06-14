@@ -38,6 +38,7 @@ function insert_devices() {
 	monitor_cmd "device_add nvme,drive=drive1,id=nvme1,serial=nvme1"
 	monitor_cmd "device_add nvme,drive=drive2,id=nvme2,serial=nvme2"
 	monitor_cmd "device_add nvme,drive=drive3,id=nvme3,serial=nvme3"
+	sleep 1
 	ssh_vm "scripts/setup.sh"
 }
 
