@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "85005b94_b248dffd",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 998,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-14T16:43:21Z",
+      "side": 1,
+      "message": "Can you write this as:\n\n  if (g_trid.trtype !\u003d SPDK_NVME_TRANSPORT_PCIE) {\n\nThat way, when we add new NVMe-oF transports, we won\u0027t have to update this list.",
+      "revId": "4099625e57ec2aab9d8185978f07f527247e4c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9794014_76b2b734",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 2
@@ -13,6 +30,23 @@
       "writtenOn": "2017-06-14T14:52:44Z",
       "side": 1,
       "message": "What if user specifies a PCIe trid on the command line?\n\nI think this needs to walk the list of trids and check if any are PCIe or not.",
+      "revId": "4099625e57ec2aab9d8185978f07f527247e4c4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0414a72_e7922f03",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-14T16:43:21Z",
+      "side": 1,
+      "message": "We should avoid adding new options with \"dpdk\" in the name, since the env layer is generic (we should rename the current ones as well, but for now let\u0027s just stop adding new ones).\n\nI think just \"no_pci\" is fine as an option name.",
       "revId": "4099625e57ec2aab9d8185978f07f527247e4c4d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
