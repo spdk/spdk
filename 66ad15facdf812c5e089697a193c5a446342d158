@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "144e82fa_c65c439b",
+        "filename": "README.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-14T19:51:14Z",
+      "side": 1,
+      "message": "will fix, script name doesn\u0027t have an \u0027s\u0027 on the end",
+      "revId": "66ad15facdf812c5e089697a193c5a446342d158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
