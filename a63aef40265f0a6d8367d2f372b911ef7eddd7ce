@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a292c3c_c56e8b3f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T16:18:53Z",
+      "side": 1,
+      "message": "This frees the qpair, so accessing it below is a use-after-free.",
+      "revId": "a63aef40265f0a6d8367d2f372b911ef7eddd7ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
