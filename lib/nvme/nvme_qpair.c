@@ -376,6 +376,10 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->ctrlr = ctrlr;
 	qpair->trtype = ctrlr->trid.trtype;
 
+#ifdef SPDK_CONFIG_VTUNE
+	qpair->spin_count = 0;
+#endif
+
 	STAILQ_INIT(&qpair->free_req);
 	STAILQ_INIT(&qpair->queued_req);
 

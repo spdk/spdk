@@ -35,7 +35,11 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
+ifeq ($(CONFIG_VTUNE),y)
+CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
+endif
 C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_ns_cmd.c nvme_ns.c nvme_pcie.c nvme_qpair.c nvme.c nvme_quirks.c nvme_transport.c nvme_uevent.c
+C_SRCS-$(CONFIG_VTUNE) += ../bdev/vtune.c
 C_SRCS-$(CONFIG_RDMA) += nvme_rdma.c
 LIBNAME = nvme
 

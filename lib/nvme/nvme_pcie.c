@@ -40,6 +40,10 @@
 #include "spdk/likely.h"
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
+#ifdef SPDK_CONFIG_VTUNE
+#include "ittnotify.h"
+#endif
+
 
 #define NVME_ADMIN_ENTRIES	(128)
 #define NVME_ADMIN_TRACKERS	(64)
@@ -1865,6 +1869,9 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 int32_t
 nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
+#ifdef SPDK_CONFIG_VTUNE
+	__itt_timestamp  start_time = __itt_get_timestamp();
+#endif
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 	struct nvme_tracker	*tr;
@@ -1942,6 +1949,12 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
+
+#ifdef SPDK_CONFIG_VTUNE
+	if (num_completions == 0) {
+		qpair->spin_count += (__itt_get_timestamp() - start_time);
+	}
+#endif
 
 	return num_completions;
 }
