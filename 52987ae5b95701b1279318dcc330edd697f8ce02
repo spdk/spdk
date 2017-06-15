@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c982d0c2_882ab07d",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-15T12:41:41Z",
+      "side": 1,
+      "message": "According to DPDK Spec, this may be necessary and not required. And also I submitted a patch to fix recent multi-process issue. Please refer to https://review.gerrithub.io/#/c/365646/\n\nYou may verify the libasan changes with that patch. Thanks.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 45
+      },
+      "revId": "52987ae5b95701b1279318dcc330edd697f8ce02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
