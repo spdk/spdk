@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2193e7e_1332a8bc",
+        "filename": "lib/event/subsystems/copy/copy.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T21:47:59Z",
+      "side": 1,
+      "message": "I don\u0027t think this copyright line is needed here - this is all Intel original code.",
+      "revId": "e4af88cd85d95e5ef84646dca4d45b1c336e2345",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
