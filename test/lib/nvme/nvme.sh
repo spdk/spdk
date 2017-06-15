@@ -71,7 +71,7 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
 	kill -9 $!
 	count=0
 	while [ $count -le 2 ]; do
-		$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w read -s 4096 -t 1 -c 0xf0
+		$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w read -s 4096 -t 1 -c 0xf
 		count=$(($count + 1))
 	done
 	count=0
