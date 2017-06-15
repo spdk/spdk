@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd537c1c_bde015bb",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2017-06-15T03:19:46Z",
+      "side": 1,
+      "message": "Can you also make MAX_VIRTUAL_NAMESPACE a configurable parameter? maybe pass to spdk_nvmf_tgt_init() to be set.\n\nIs there any changing planned to replace spdk_bdev with something like spdk_nvme_namespace similar to spdk_scsi_lun?\nI am looking at something like that so we can have some state info, nguid, nsid and io_channels on namespace structure.",
+      "revId": "6e85b68db514485578d4062e0a6b5e456f5aa3ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
