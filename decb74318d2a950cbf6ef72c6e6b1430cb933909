@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d849483_27a47fad",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T23:59:01Z",
+      "side": 1,
+      "message": "Do we need the add_dev/remove_dev functions?\n\nFor vhost_scsi, it has a SCSI bus which can support many SCSI devices.  So add_dev/remove_dev allows us to add or remove SCSI devices from an existing controller.\n\nBut for blk, it can only have one block device.  I think we should just pass dev_name to spdk_vhost_blk_construct, and then remove add_dev and remove_dev entirely.",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adce8803_8dc273b7",
+        "filename": "lib/vhost/Makefile",
+        "patchSetId": 24
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T23:59:01Z",
+      "side": 1,
+      "message": "should this be vhost_blk.c?  just for consistency with virtio_blk, our spdk_vhost_blk names, etc.",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bc6b689_d19a24f3",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T23:59:01Z",
+      "side": 1,
+      "message": "can we just remove this?",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "047b9b09_afb99518",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T23:59:01Z",
+      "side": 1,
+      "message": "remove this nop?",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
