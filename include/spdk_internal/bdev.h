@@ -209,6 +209,11 @@ struct spdk_bdev {
 	void *remove_ctx;
 
 	TAILQ_ENTRY(spdk_bdev) link;
+
+	/** denotes if a reset is currently in progress on this bdev */
+	bool reset_in_progress;
+
+	TAILQ_HEAD(, spdk_bdev_io) queued_resets;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
