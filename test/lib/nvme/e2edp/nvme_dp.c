@@ -633,6 +633,7 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "nvme_dp";
 	opts.core_mask = "0x1";
+	opts.shm_id = 0;
 	spdk_env_init(&opts);
 
 	printf("NVMe Write/Read with End-to-End data protection test\n");

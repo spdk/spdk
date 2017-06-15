@@ -12,6 +12,9 @@ function linux_iter_pci {
 
 timing_enter nvme
 
+start_stub "-s 2048 -i 0 -m 0xF"
+trap "kill_stub; exit 1" SIGINT SIGTERM ExIT
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter aer
 	$testdir/aer/aer
@@ -23,14 +26,14 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 timing_enter identify
-$rootdir/examples/nvme/identify/identify
+$rootdir/examples/nvme/identify/identify -i 0
 for bdf in $(linux_iter_pci 0108); do
-	$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}"
+	$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}" -i 0
 done
 timing_exit identify
 
 timing_enter perf
-$rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 1 -LL
+$rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 1 -LL -i 0
 timing_exit perf
 
 timing_enter reserve
@@ -41,9 +44,24 @@ timing_enter hello_world
 $rootdir/examples/nvme/hello_world/hello_world
 timing_exit
 
+timing_enter sgl
+$testdir/sgl/sgl
+timing_exit sgl
+
+timing_enter e2edp
+$testdir/e2edp/nvme_dp
+timing_exit e2edp
+
 timing_enter overhead
 $rootdir/test/lib/nvme/overhead/overhead -s 4096 -t 1 -H
 timing_exit overhead
+
+timing_enter arbitration
+$rootdir/examples/nvme/arbitration/arbitration -t 3 -i 0
+timing_exit arbitration
+
+trap - SIGINT SIGTERM EXIT
+kill_stub
 
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
@@ -56,10 +74,6 @@ if [ -d /usr/src/fio ]; then
 
 	timing_exit fio_plugin
 fi
-
-timing_enter arbitration
-$rootdir/examples/nvme/arbitration/arbitration -t 3
-timing_exit arbitration
 
 if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
 	timing_enter multi_process
@@ -85,13 +99,5 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
 	wait $pid
 	timing_exit multi_process
 fi
-
-timing_enter sgl
-$testdir/sgl/sgl
-timing_exit sgl
-
-timing_enter e2edp
-$testdir/e2edp/nvme_dp
-timing_exit e2edp
 
 timing_exit nvme
