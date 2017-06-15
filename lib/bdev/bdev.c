@@ -49,6 +49,8 @@
 
 #ifdef SPDK_CONFIG_VTUNE
 #include "ittnotify.h"
+#include "ittnotify_types.h"
+int __itt_init_ittlib(const char *, __itt_group_id);
 #endif
 
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
@@ -646,7 +648,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 #ifdef SPDK_CONFIG_VTUNE
 	{
 		char *name;
-
+		__itt_init_ittlib(NULL, 0);
 		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
 		if (!name) {
 			return -1;
@@ -1264,15 +1266,17 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t now_tsc = spdk_get_ticks();
 	if (now_tsc > (bdev_io->ch->start_tsc + bdev_io->ch->interval_tsc)) {
-		uint64_t data[4];
+		uint64_t data[5];
 
 		data[0] = bdev_io->ch->stat.num_read_ops;
 		data[1] = bdev_io->ch->stat.bytes_read;
 		data[2] = bdev_io->ch->stat.num_write_ops;
 		data[3] = bdev_io->ch->stat.bytes_written;
+		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
+			  bdev_io->bdev->fn_table->get_spin_time(bdev_io->ch->channel) : 0;
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
-				   __itt_metadata_u64, 4, data);
+				   __itt_metadata_u64, 5, data);
 
 		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
 		bdev_io->ch->start_tsc = now_tsc;
