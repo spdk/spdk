@@ -96,8 +96,8 @@ struct nvme_bdev_io {
 	/** Saved status for admin passthru completion event. */
 	struct spdk_nvme_cpl cpl;
 
-	/** Event pointer for admin passthru completion. */
-	struct spdk_event *admin_passthru_completion_event;
+	/** Originating thread */
+	struct spdk_thread *orig_thread;
 };
 
 enum data_direction {
@@ -137,7 +137,8 @@ static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *q
 			       struct nvme_bdev_io *bio,
 			       int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
 			       uint64_t offset);
-static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
+static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
 static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				 struct nvme_bdev_io *bio,
@@ -364,6 +365,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 		return bdev_nvme_admin_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
+						ch,
 						(struct nvme_bdev_io *)bdev_io->driver_ctx,
 						&bdev_io->u.nvme_passthru.cmd,
 						bdev_io->u.nvme_passthru.buf,
@@ -1068,10 +1070,10 @@ bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 }
 
 static void
-bdev_nvme_admin_passthru_completion(void *arg1, void *arg2)
+bdev_nvme_admin_passthru_completion(void *ctx)
 {
-	struct spdk_bdev_io *bdev_io = arg1;
-	struct nvme_bdev_io *bio = arg2;
+	struct nvme_bdev_io *bio = ctx;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 
 	spdk_bdev_io_complete_nvme_status(bdev_io,
 					  bio->cpl.status.sct, bio->cpl.status.sc);
@@ -1083,7 +1085,7 @@ bdev_nvme_admin_passthru_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	struct nvme_bdev_io *bio = ref;
 
 	bio->cpl = *cpl;
-	spdk_event_call(bio->admin_passthru_completion_event);
+	spdk_thread_send_msg(bio->orig_thread, bdev_nvme_admin_passthru_completion, bio);
 }
 
 static void
@@ -1200,24 +1202,16 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 }
 
 static int
-bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
+bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+			 struct nvme_bdev_io *bio,
 			 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
-
 	if (nbytes > UINT32_MAX) {
 		SPDK_ERRLOG("nbytes is greater than UINT32_MAX.\n");
 		return -EINVAL;
 	}
 
-	bio->admin_passthru_completion_event =
-		spdk_event_allocate(spdk_env_get_current_core(), bdev_nvme_admin_passthru_completion,
-				    bdev_io, bio);
-
-	if (bio->admin_passthru_completion_event == NULL) {
-		SPDK_ERRLOG("memory allocation for bio->admin_passthru_completion_event failed.\n");
-		return -ENOMEM;
-	}
+	bio->orig_thread = spdk_io_channel_get_thread(ch);
 
 	return spdk_nvme_ctrlr_cmd_admin_raw(nbdev->nvme_ctrlr->ctrlr, cmd, buf,
 					     (uint32_t)nbytes, bdev_nvme_admin_passthru_done, bio);
