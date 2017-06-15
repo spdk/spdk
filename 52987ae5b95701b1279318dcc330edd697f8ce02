@@ -80,6 +80,24 @@
       "revId": "52987ae5b95701b1279318dcc330edd697f8ce02",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84ed3e73_ffcf0b13",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-15T23:10:39Z",
+      "side": 1,
+      "message": "Let me remove ASLR enabling/disabling here and provide another patch later if needed.",
+      "parentUuid": "272448f2_b19fc77f",
+      "revId": "52987ae5b95701b1279318dcc330edd697f8ce02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
