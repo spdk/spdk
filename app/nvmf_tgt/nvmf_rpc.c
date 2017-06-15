@@ -109,12 +109,17 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 						   subsystem->dev.direct.pci_addr.dev,
 						   subsystem->dev.direct.pci_addr.func);
 		} else {
-			int i;
+			uint32_t i;
+
 			spdk_json_write_name(w, "serial_number");
 			spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
 			spdk_json_write_name(w, "namespaces");
 			spdk_json_write_array_begin(w);
-			for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
+			for (i = 0; i < subsystem->dev.virt.max_nsid; i++) {
+				if (subsystem->dev.virt.ns_list[i] == NULL) {
+					continue;
+				}
+
 				spdk_json_write_object_begin(w);
 				spdk_json_write_name(w, "nsid");
 				spdk_json_write_int32(w, i + 1);

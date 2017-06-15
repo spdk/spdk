@@ -113,7 +113,7 @@ struct spdk_nvmf_subsystem {
 			char	sn[MAX_SN_LEN + 1];
 			struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
 			struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
-			uint16_t ns_count;
+			uint32_t max_nsid;
 		} virt;
 	} dev;
 

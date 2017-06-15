@@ -430,7 +430,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		      nsid);
 
 	subsystem->dev.virt.ns_list[i] = bdev;
-	subsystem->dev.virt.ns_count++;
+	subsystem->dev.virt.max_nsid = spdk_max(subsystem->dev.virt.max_nsid, nsid);
 	return nsid;
 }
 
