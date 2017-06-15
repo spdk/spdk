@@ -146,8 +146,8 @@ function spdk_vhost_run()
 
 	( cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd & echo $! >&3) 3>$vhost_pid_file  2>&1 | tee -a $vhost_log_file &
 
-	echo "INFO: waiting 25s to allow app to run..."
-	sleep 25
+	echo "INFO: waiting 5s to allow app to run..."
+	sleep 5
 	kill -0 $(cat $vhost_pid_file)
 	echo "INFO: vhost started - pid=$(cat $vhost_pid_file)"
 
