@@ -151,6 +151,9 @@ struct spdk_bdev_fn_table {
 	 * (most likely another nested object).
 	 */
 	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
+
+	/** Get spin-time per I/O channel. Optional - may be NULL. */
+	uint64_t (*get_spin_time)(struct spdk_io_channel *ch);
 };
 
 /** Blockdev I/O completion status */
