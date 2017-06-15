@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e33e19e7_976fb89c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T23:45:33Z",
+      "side": 1,
+      "message": "You should be able to remove the repeated commit message stuff here - just leave the original Change-Id (Change-Id: Ie25a87c4b3f781299fa744fdcff6c9a63d473935) and the commit message you want.",
+      "revId": "17193a9d94cb80a10e83fcc19648e3e499b204d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "293b0708_0faccde1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T23:45:33Z",
+      "side": 1,
+      "message": "Since this is in the generic bdev code, we can\u0027t assume that this is an NVMe bdev - it could be another type with different data in the channel.\n\nCan we just put spin_count into the existing generic spdk_bdev_io_stat structure?\n\nThis will need some way to get back to the generic spdk_bdev_channel from the NVMe-specific I/O channel, which we don\u0027t have right now - maybe Ben can help define how this should work.",
+      "revId": "17193a9d94cb80a10e83fcc19648e3e499b204d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d21c111_cc93d063",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1202,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T23:45:33Z",
+      "side": 1,
+      "message": "spin_count is based on __itt_get_timestamp(), but this is dividing by the SPDK tick time - are these guaranteed to be the same? (SPDK\u0027s tick counter is not guaranteed to be using the TSC, for example - it could be the HPET or other timer.)",
+      "revId": "17193a9d94cb80a10e83fcc19648e3e499b204d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
