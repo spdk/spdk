@@ -68,21 +68,28 @@ struct spdk_bdev_mgr {
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
 
+	spdk_bdev_poller_start_cb start_poller_fn;
+	spdk_bdev_poller_stop_cb stop_poller_fn;
+
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
 #endif
+
 };
 
 static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdev_modules),
 	.vbdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.vbdev_modules),
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
+	.start_poller_fn = NULL,
+	.stop_poller_fn = NULL
 };
 
 static struct spdk_bdev_module_if *g_next_bdev_module;
 static struct spdk_bdev_module_if *g_next_vbdev_module;
 static spdk_bdev_init_cb	g_cb_fn = NULL;
 static void			*g_cb_arg = NULL;
+
 
 struct spdk_bdev_mgmt_channel {
 	need_buf_tailq_t need_buf_small;
@@ -358,7 +365,25 @@ spdk_vbdev_module_init_next(int rc)
 }
 
 void
-spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
+spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
+		       spdk_bdev_poller_fn fn,
+		       void *arg,
+		       uint32_t lcore,
+		       uint64_t period_microseconds)
+{
+	g_bdev_mgr.start_poller_fn(ppoller, fn, arg, lcore, period_microseconds);
+}
+
+void
+spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller)
+{
+	g_bdev_mgr.stop_poller_fn(ppoller);
+}
+
+void
+spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
+		     spdk_bdev_poller_start_cb start_poller_fn,
+		     spdk_bdev_poller_stop_cb stop_poller_fn)
 {
 	int cache_size;
 	int rc = 0;
@@ -367,6 +392,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_cb_fn = cb_fn;
 	g_cb_arg = cb_arg;
+
+	g_bdev_mgr.start_poller_fn = start_poller_fn;
+	g_bdev_mgr.stop_poller_fn = stop_poller_fn;
 
 	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
 				  SPDK_BDEV_IO_POOL_SIZE,

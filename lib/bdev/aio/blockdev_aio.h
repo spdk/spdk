@@ -53,7 +53,7 @@ struct blockdev_aio_io_channel {
 	io_context_t		io_ctx;
 	long			queue_depth;
 	struct io_event		*events;
-	struct spdk_poller	*poller;
+	struct spdk_bdev_poller	*poller;
 };
 
 struct file_disk {
