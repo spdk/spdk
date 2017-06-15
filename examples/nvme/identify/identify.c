@@ -357,6 +357,16 @@ print_namespace(struct spdk_nvme_ns *ns)
 
 	printf("Deallocate:                  %s\n",
 	       (flags & SPDK_NVME_NS_DEALLOCATE_SUPPORTED) ? "Supported" : "Not Supported");
+	printf("Deallocated/Unwritten Error: %s\n",
+	       nsdata->nsfeat.dealloc_or_unwritten_error ? "Supported" : "Not Supported");
+	printf("Deallocated Read Value:      %s\n",
+	       nsdata->dlfeat.bits.read_value == SPDK_NVME_DEALLOC_READ_00 ? "All 0x00" :
+	       nsdata->dlfeat.bits.read_value == SPDK_NVME_DEALLOC_READ_FF ? "All 0xFF" :
+	       "Unknown");
+	printf("Deallocate in Write Zeroes:  %s\n",
+	       nsdata->dlfeat.bits.write_zero_deallocate ? "Supported" : "Not Supported");
+	printf("Deallocated Guard Field:     %s\n",
+	       nsdata->dlfeat.bits.guard_value ? "CRC for Read Value" : "0xFFFF");
 	printf("Flush:                       %s\n",
 	       (flags & SPDK_NVME_NS_FLUSH_SUPPORTED) ? "Supported" : "Not Supported");
 	printf("Reservation:                 %s\n",
@@ -378,8 +388,22 @@ print_namespace(struct spdk_nvme_ns *ns)
 	printf("Utilization (in LBAs):       %lld (%lldM)\n",
 	       (long long)nsdata->nuse,
 	       (long long)nsdata->nuse / 1024 / 1024);
+	if (nsdata->noiob) {
+		printf("Optimal I/O Boundary:        %u blocks\n", nsdata->noiob);
+	}
 	printf("Thin Provisioning:           %s\n",
 	       nsdata->nsfeat.thin_prov ? "Supported" : "Not Supported");
+	printf("Per-NS Atomic Units:         %s\n",
+	       nsdata->nsfeat.ns_atomic_write_unit ? "Yes" : "No");
+	if (nsdata->nawun) {
+		printf("Atomic Write Unit (Normal):  %d\n", nsdata->nawun + 1);
+	}
+	if (nsdata->nawupf) {
+		printf("Atomic Write Unit (PFail):   %d\n", nsdata->nawupf + 1);
+	}
+
+	printf("NGUID/EUI64 Never Reused:    %s\n",
+	       nsdata->nsfeat.guid_never_reused ? "Yes" : "No");
 	printf("Number of LBA Formats:       %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:          LBA Format #%02d\n",
 	       nsdata->flbas.format);
@@ -506,6 +530,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oaes.ns_attribute_notices ? "Supported" : "Not Supported");
 	printf("  Firmware Activation Notices:         %s\n",
 	       cdata->oaes.fw_activation_notices ? "Supported" : "Not Supported");
+
+	printf("128-bit Host Identifier:               %s\n",
+	       cdata->ctratt.host_id_exhid_supported ? "Supported" : "Not Supported");
 	printf("\n");
 
 	printf("Admin Command Set Attributes\n");
@@ -516,6 +543,18 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oacs.format ? "Supported" : "Not Supported");
 	printf("Firmware Activate/Download:            %s\n",
 	       cdata->oacs.firmware ? "Supported" : "Not Supported");
+	printf("Namespace Management:                  %s\n",
+	       cdata->oacs.ns_manage ? "Supported" : "Not Supported");
+	printf("Device Self-Test:                      %s\n",
+	       cdata->oacs.device_self_test ? "Supported" : "Not Supported");
+	printf("Directives:                            %s\n",
+	       cdata->oacs.directives ? "Supported" : "Not Supported");
+	printf("NVMe-MI:                               %s\n",
+	       cdata->oacs.nvme_mi ? "Supported" : "Not Supported");
+	printf("Virtualization Management:             %s\n",
+	       cdata->oacs.virtualization_management ? "Supported" : "Not Supported");
+	printf("Doorbell Buffer Config:                %s\n",
+	       cdata->oacs.doorbell_buffer_config ? "Supported" : "Not Supported");
 	printf("Abort Command Limit:                   %d\n", cdata->acl + 1);
 	printf("Async Event Request Limit:             %d\n", cdata->aerl + 1);
 	printf("Number of Firmware Slots:              ");
@@ -528,9 +567,30 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		printf("%s\n", cdata->frmw.slot1_ro ? "Yes" : "No");
 	else
 		printf("N/A\n");
+	if (cdata->fwug == 0x00) {
+		printf("Firmware Update Granularity:           No Information Provided\n");
+	} else if (cdata->fwug == 0xFF) {
+		printf("Firmware Update Granularity:           No Restriction\n");
+	} else {
+		printf("Firmware Update Granularity:           %u KiB\n",
+		       cdata->fwug * 4);
+	}
 	printf("Per-Namespace SMART Log:               %s\n",
 	       cdata->lpa.ns_smart ? "Yes" : "No");
+	printf("Command Effects Log Page:              %s\n",
+	       cdata->lpa.celp ? "Supported" : "Not Supported");
+	printf("Get Log Page Extended Data:            %s\n",
+	       cdata->lpa.edlp ? "Supported" : "Not Supported");
+	printf("Telemetry Log Pages:                   %s\n",
+	       cdata->lpa.telemetry ? "Supported" : "Not Supported");
 	printf("Error Log Page Entries Supported:      %d\n", cdata->elpe + 1);
+	if (cdata->kas == 0) {
+		printf("Keep Alive:                            Not Supported\n");
+	} else {
+		printf("Keep Alive:                            Supported\n");
+		printf("Keep Alive Granularity:                %u ms\n",
+		       cdata->kas * 100);
+	}
 	printf("\n");
 
 	printf("NVM Command Set Attributes\n");
@@ -554,6 +614,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->oncs.set_features_save ? "Supported" : "Not Supported");
 	printf("Reservations:                %s\n",
 	       cdata->oncs.reservations ? "Supported" : "Not Supported");
+	printf("Timestamp:                   %s\n",
+	       cdata->oncs.timestamp ? "Supported" : "Not Supported");
 	printf("Volatile Write Cache:        %s\n",
 	       cdata->vwc.present ? "Present" : "Not Present");
 	printf("Atomic Write Unit (Normal):  %d\n", cdata->awun + 1);
@@ -647,6 +709,8 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 			}
 			/* TODO: print other power state descriptor fields */
 		}
+		printf("Non-Operational Permissive Mode: %s\n",
+		       cdata->ctratt.non_operational_power_state_permissive_mode ? "Supported" : "Not Supported");
 		printf("\n");
 	}
 
@@ -717,6 +781,24 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 				       i + 1, health_page.temp_sensor[i],
 				       health_page.temp_sensor[i] - 273);
 			}
+		}
+		printf("\n");
+	}
+
+	if (cdata->hctma.bits.supported) {
+		printf("Host Controlled Thermal Management\n");
+		printf("==================================\n");
+		printf("Minimum Thermal Management Temperature:  ");
+		if (cdata->mntmt) {
+			printf("%u Kelvin (%u Celsius)\n", cdata->mntmt, cdata->mntmt - 273);
+		} else {
+			printf("Not Reported\n");
+		}
+		printf("Maximum Thermal Managment Temperature:   ");
+		if (cdata->mxtmt) {
+			printf("%u Kelvin (%u Celsius)\n", cdata->mxtmt, cdata->mxtmt - 273);
+		} else {
+			printf("Not Reported\n");
 		}
 		printf("\n");
 	}
