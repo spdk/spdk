@@ -47,6 +47,10 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+#ifdef SPDK_CONFIG_VTUNE
+#include "ittnotify.h"
+#endif
+
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 
 struct nvme_ctrlr {
@@ -77,6 +81,9 @@ struct nvme_bdev {
 struct nvme_io_channel {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_poller	*poller;
+#ifdef SPDK_CONFIG_VTUNE
+	uint64_t spin_count;
+#endif
 };
 
 #define NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT	1
@@ -185,9 +192,15 @@ static void
 bdev_nvme_poll(void *arg)
 {
 	struct nvme_io_channel *ch = arg;
-
 	if (ch->qpair != NULL) {
-		spdk_nvme_qpair_process_completions(ch->qpair, 0);
+#ifdef SPDK_CONFIG_VTUNE
+		__itt_timestamp  start_time = __itt_get_timestamp();	
+#endif
+		if (spdk_nvme_qpair_process_completions(ch->qpair, 0) == 0) {
+#ifdef SPDK_CONFIG_VTUNE
+			ch->spin_count += (__itt_get_timestamp() - start_time);
+#endif
+		}
 	}
 }
 

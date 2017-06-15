@@ -271,9 +271,6 @@ struct spdk_nvme_qpair {
 	TAILQ_ENTRY(spdk_nvme_qpair)	per_process_tailq;
 
 	void				*req_buf;
-#ifdef SPDK_CONFIG_VTUNE
-	uint64_t			spin_count;
-#endif
 };
 
 struct spdk_nvme_ns {

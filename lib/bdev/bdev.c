@@ -55,6 +55,7 @@
 struct nvme_io_channel {
 	struct spdk_nvme_qpair  *qpair;
 	struct spdk_poller      *poller;
+	uint64_t		spin_count;
 };
 #endif
 
@@ -1198,13 +1199,13 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		data[1] = bdev_io->ch->stat.bytes_read;
 		data[2] = bdev_io->ch->stat.num_write_ops;
 		data[3] = bdev_io->ch->stat.bytes_written;
-		data[4] = nvme_ch->qpair->spin_count / spdk_get_ticks_hz(); 
+		data[4] = nvme_ch->spin_count / spdk_get_ticks_hz();
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
 				   __itt_metadata_double, 5, data);
 
 		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
-		nvme_ch->qpair->spin_count = 0;
+		nvme_ch->spin_count = 0;
 		bdev_io->ch->start_tsc = now_tsc;
 	}
 #endif
