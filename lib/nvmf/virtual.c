@@ -63,14 +63,18 @@ struct __attribute__((packed)) nvme_read_cdw12 {
 
 static void nvmf_virtual_set_dsm(struct spdk_nvmf_session *session)
 {
-	int i;
+	uint32_t i;
 
-	for (i = 0; i < session->subsys->dev.virt.ns_count; i++) {
+	for (i = 0; i < session->subsys->dev.virt.max_nsid; i++) {
 		struct spdk_bdev *bdev = session->subsys->dev.virt.ns_list[i];
+
+		if (bdev == NULL) {
+			continue;
+		}
 
 		if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF,
-				      "Subsystem%d Namespace %s does not support unmap - not enabling DSM\n",
+				      "Subsystem%u Namespace %s does not support unmap - not enabling DSM\n",
 				      i, spdk_bdev_get_name(bdev));
 			return;
 		}
@@ -106,7 +110,7 @@ nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 	session->vcdata.cqes.min = 0x04;
 	session->vcdata.cqes.max = 0x04;
 	session->vcdata.maxcmd = 1024;
-	session->vcdata.nn = subsys->dev.virt.ns_count;
+	session->vcdata.nn = subsys->dev.virt.max_nsid;
 	session->vcdata.vwc.present = 1;
 	session->vcdata.sgls.supported = 1;
 	strncpy(session->vcdata.subnqn, session->subsys->subnqn, sizeof(session->vcdata.subnqn));
@@ -186,13 +190,18 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_bdev *bdev;
 	uint64_t num_blocks;
 
-	if (cmd->nsid > subsystem->dev.virt.ns_count || cmd->nsid == 0) {
+	if (cmd->nsid > subsystem->dev.virt.max_nsid || cmd->nsid == 0) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	bdev = subsystem->dev.virt.ns_list[cmd->nsid - 1];
+
+	if (bdev == NULL) {
+		memset(nsdata, 0, sizeof(*nsdata));
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 
 	num_blocks = spdk_bdev_get_num_blocks(bdev);
 
@@ -227,10 +236,13 @@ identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	num_ns = subsystem->dev.virt.ns_count;
+	num_ns = subsystem->dev.virt.max_nsid;
 
 	for (i = 1; i <= num_ns; i++) {
 		if (i <= cmd->nsid) {
+			continue;
+		}
+		if (subsystem->dev.virt.ns_list[i - 1] == NULL) {
 			continue;
 		}
 		ns_list->ns_list[count++] = i;
@@ -516,13 +528,18 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
 
-	if (nsid > subsystem->dev.virt.ns_count || nsid == 0) {
+	if (nsid > subsystem->dev.virt.max_nsid || nsid == 0) {
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	bdev = subsystem->dev.virt.ns_list[nsid - 1];
+	if (bdev == NULL) {
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	ch = subsystem->dev.virt.ch[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
@@ -544,8 +561,12 @@ nvmf_virtual_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
 	struct spdk_io_channel *ch;
 	uint32_t i;
 
-	for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
+	for (i = 0; i < subsystem->dev.virt.max_nsid; i++) {
 		bdev = subsystem->dev.virt.ns_list[i];
+		if (bdev == NULL) {
+			continue;
+		}
+
 		ch = spdk_bdev_get_io_channel(bdev);
 		if (ch == NULL) {
 			SPDK_ERRLOG("io_channel allocation failed\n");
@@ -562,7 +583,7 @@ nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 {
 	uint32_t i;
 
-	for (i = 0; i < subsystem->dev.virt.ns_count; i++) {
+	for (i = 0; i < subsystem->dev.virt.max_nsid; i++) {
 		if (subsystem->dev.virt.ns_list[i]) {
 			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
 			spdk_bdev_unclaim(subsystem->dev.virt.ns_list[i]);
@@ -570,7 +591,7 @@ nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 			subsystem->dev.virt.ns_list[i] = NULL;
 		}
 	}
-	subsystem->dev.virt.ns_count = 0;
+	subsystem->dev.virt.max_nsid = 0;
 }
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops = {
