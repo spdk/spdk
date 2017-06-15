@@ -42,7 +42,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-#include "spdk/event.h"
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 
@@ -354,6 +353,14 @@ struct spdk_bdev_io {
 
 void spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_unregister(struct spdk_bdev *bdev);
+
+void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
+			    spdk_bdev_poller_fn fn,
+			    void *arg,
+			    uint32_t lcore,
+			    uint64_t period_microseconds);
+
+void spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller);
 
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb);
 struct spdk_bdev_io *spdk_bdev_get_io(void);

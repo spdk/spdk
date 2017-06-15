@@ -298,8 +298,8 @@ blockdev_aio_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	spdk_poller_register(&ch->poller, blockdev_aio_poll, ch,
-			     spdk_env_get_current_core(), 0);
+	spdk_bdev_poller_start(&ch->poller, blockdev_aio_poll, ch,
+			       spdk_env_get_current_core(), 0);
 	return 0;
 }
 
@@ -310,7 +310,7 @@ blockdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 
 	io_destroy(io_channel->io_ctx);
 	free(io_channel->events);
-	spdk_poller_unregister(&io_channel->poller, NULL);
+	spdk_bdev_poller_stop(&io_channel->poller);
 }
 
 static struct spdk_io_channel *

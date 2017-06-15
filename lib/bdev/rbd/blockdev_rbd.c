@@ -71,7 +71,7 @@ struct blockdev_rbd_io_channel {
 	rbd_completion_t *comps;
 	uint32_t queue_depth;
 	struct blockdev_rbd *disk;
-	struct spdk_poller *poller;
+	struct spdk_bdev_poller *poller;
 };
 
 static void
@@ -442,8 +442,8 @@ blockdev_rbd_create_cb(void *io_device, void *ctx_buf)
 		goto err;
 	}
 
-	spdk_poller_register(&ch->poller, blockdev_rbd_io_poll, ch,
-			     spdk_env_get_current_core(), 0);
+	spdk_bdev_poller_start(&ch->poller, blockdev_rbd_io_poll, ch,
+			       spdk_env_get_current_core(), 0);
 
 	return 0;
 
@@ -459,7 +459,7 @@ blockdev_rbd_destroy_cb(void *io_device, void *ctx_buf)
 
 	blockdev_rbd_free_channel(io_channel);
 
-	spdk_poller_unregister(&io_channel->poller, NULL);
+	spdk_bdev_poller_stop(&io_channel->poller);
 }
 
 static struct spdk_io_channel *
