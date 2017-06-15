@@ -961,7 +961,6 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
-	bdev_io->defer_callback = true;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	/* First, abort all I/O queued up waiting for buffers. */
@@ -1073,34 +1072,18 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_io_deferred_completion(void *ctx)
+_spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
-	assert(bdev_io->in_submit_request == false);
-
-	spdk_bdev_io_complete(bdev_io, bdev_io->status);
+	assert(bdev_io->cb != NULL);
+	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
 }
 
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
 	bdev_io->status = status;
-
-	if (bdev_io->in_submit_request) {
-		bdev_io->defer_callback = true;
-	}
-
-	if (bdev_io->defer_callback) {
-		/*
-		 * Defer completion to avoid potential infinite recursion if the
-		 * user's completion callback issues a new I/O.
-		 */
-		bdev_io->defer_callback = false;
-		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->ch->channel),
-				     bdev_io_deferred_completion, bdev_io);
-		return;
-	}
 
 	assert(bdev_io->ch->io_outstanding > 0);
 	bdev_io->ch->io_outstanding--;
@@ -1156,8 +1139,16 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	}
 #endif
 
-	assert(bdev_io->cb != NULL);
-	bdev_io->cb(bdev_io, status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
+	if (bdev_io->in_submit_request || bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
+		/*
+		 * Defer completion to avoid potential infinite recursion if the
+		 * user's completion callback issues a new I/O.
+		 */
+		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->ch->channel),
+				     _spdk_bdev_io_complete, bdev_io);
+	} else {
+		_spdk_bdev_io_complete(bdev_io);
+	}
 }
 
 void

@@ -333,11 +333,6 @@ struct spdk_bdev_io {
 	 */
 	bool in_submit_request;
 
-	/**
-	 * Set to true when the a bdev_io's callback routine should be deferred after completion.
-	 */
-	bool defer_callback;
-
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
