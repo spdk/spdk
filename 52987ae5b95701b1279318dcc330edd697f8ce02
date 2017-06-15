@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e4febd60_98c6af9b",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T21:58:10Z",
+      "side": 1,
+      "message": "should be ASLR",
+      "revId": "52987ae5b95701b1279318dcc330edd697f8ce02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c982d0c2_882ab07d",
         "filename": "test/lib/nvme/nvme.sh",
         "patchSetId": 33
@@ -19,6 +36,47 @@
         "endLine": 70,
         "endChar": 45
       },
+      "revId": "52987ae5b95701b1279318dcc330edd697f8ce02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "237920d9_b372eb9f",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T21:58:10Z",
+      "side": 1,
+      "message": "Or does ASAN do something strange with the addresses?\n\nI think if ASAN causes problems with multi-process, we should only disable ASLR if SPDK_CONFIG_ASAN\u003d1.",
+      "parentUuid": "c982d0c2_882ab07d",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 45
+      },
+      "revId": "52987ae5b95701b1279318dcc330edd697f8ce02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "272448f2_b19fc77f",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T21:58:10Z",
+      "side": 1,
+      "message": "We should probably save the old value, and write it back here - instead of assuming it will be 2.\n\nAlso should be ASLR here too instead of ALSR.",
       "revId": "52987ae5b95701b1279318dcc330edd697f8ce02",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
