@@ -16,6 +16,24 @@
       "revId": "447294aecb2b3a4802c2b3262d2da9ddd479b410",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "055f03e3_d2c4d5e6",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-15T23:17:50Z",
+      "side": 1,
+      "message": "Looks like I changed to wrong place. Previously we made the script change to have different coremasks from the concurrently running applications. With this change, I\u0027d like to change it back to have the cover that applications can share the cores based on previous change (per IO qpair request mempool)",
+      "parentUuid": "34adf2e7_5fd0f619",
+      "revId": "447294aecb2b3a4802c2b3262d2da9ddd479b410",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
