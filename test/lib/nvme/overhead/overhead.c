@@ -621,6 +621,7 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "overhead";
 	opts.core_mask = "0x1";
+	opts.shm_id = 0;
 	spdk_env_init(&opts);
 
 	rc = parse_args(argc, argv);
