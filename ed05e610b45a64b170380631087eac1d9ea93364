@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7544354_5a9e654e",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T18:01:47Z",
+      "side": 1,
+      "message": "This file should have a #!/usr/bin/env python line at the top.",
+      "revId": "ed05e610b45a64b170380631087eac1d9ea93364",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60ab21a3_bd43c80f",
+        "filename": "scripts/perf/nvme/run_fio_test.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T18:01:47Z",
+      "side": 1,
+      "message": "This looks like it will only work when run from the scripts/perf/nvme directory; can you also specify the full path to run_fio_test.py?\n\nFor example:\n\n    python $testdir/run_fio_test.py ...",
+      "revId": "ed05e610b45a64b170380631087eac1d9ea93364",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "350f0512_a84dbfd1",
+        "filename": "scripts/perf/nvme/run_fio_test.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T18:01:47Z",
+      "side": 1,
+      "message": "I think $rootdir/scripts/perf/nvme in all of these commands is equivalent to $testdir, which would be shorter and easier to read.",
+      "range": {
+        "startLine": 13,
+        "startChar": 23,
+        "endLine": 13,
+        "endChar": 50
+      },
+      "revId": "ed05e610b45a64b170380631087eac1d9ea93364",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
