@@ -217,6 +217,30 @@
       "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc2eafa8_98883d8a",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:53:12Z",
+      "side": 1,
+      "message": "This function may not be needed if display is considered as part of generic histogram method, and we are printing  {min, max, frequency} json format via rpc call.",
+      "parentUuid": "b05298d8_c2c7bb3a",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 22
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
