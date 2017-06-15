@@ -586,6 +586,16 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	return 0;
 }
 
+uint64_t
+spdk_bdev_get_spin_time(struct spdk_bdev *bdev, void *ctx)
+{
+	if (bdev->fn_table->get_spin_time) {
+		return bdev->fn_table->get_spin_time(ctx);
+	}
+
+	return 0;
+}
+
 static int
 spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
@@ -1185,15 +1195,16 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t now_tsc = spdk_get_ticks();
 	if (now_tsc > (bdev_io->ch->start_tsc + bdev_io->ch->interval_tsc)) {
-		uint64_t data[4];
+		uint64_t data[5];
 
 		data[0] = bdev_io->ch->stat.num_read_ops;
 		data[1] = bdev_io->ch->stat.bytes_read;
 		data[2] = bdev_io->ch->stat.num_write_ops;
 		data[3] = bdev_io->ch->stat.bytes_written;
+		data[4] = spdk_bdev_get_spin_time(bdev_io->bdev, spdk_io_channel_get_ctx(bdev_io->ch->channel));
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
-				   __itt_metadata_u64, 4, data);
+				   __itt_metadata_u64, 5, data);
 
 		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
 		bdev_io->ch->start_tsc = now_tsc;

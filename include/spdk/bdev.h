@@ -140,6 +140,8 @@ bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type 
 
 int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
+uint64_t spdk_bdev_get_spin_time(struct spdk_bdev *bdev, void *ctx);
+
 /**
  * Get block device name.
  *
