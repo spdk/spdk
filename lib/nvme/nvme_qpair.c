@@ -372,6 +372,7 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	qpair->in_completion_context = 0;
 	qpair->delete_after_completion_context = 0;
+	qpair->no_deletion_notification_needed = 0;
 
 	qpair->ctrlr = ctrlr;
 	qpair->trtype = ctrlr->trid.trtype;

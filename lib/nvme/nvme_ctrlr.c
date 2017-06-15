@@ -983,6 +983,9 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		 *  qpairs to be deleted.
 		 */
 		qpair->in_completion_context = 0;
+
+		qpair->no_deletion_notification_needed = 1;
+
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
