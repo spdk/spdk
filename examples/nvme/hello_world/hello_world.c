@@ -316,6 +316,7 @@ int main(int argc, char **argv)
 	 */
 	spdk_env_opts_init(&opts);
 	opts.name = "hello_world";
+	opts.shm_id = 0;
 	spdk_env_init(&opts);
 
 	printf("Initializing NVMe Controllers\n");

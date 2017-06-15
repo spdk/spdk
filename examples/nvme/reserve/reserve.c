@@ -407,6 +407,7 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "reserve";
 	opts.core_mask = "0x1";
+	opts.shm_id = 0;
 	spdk_env_init(&opts);
 
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
