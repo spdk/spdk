@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34adf2e7_5fd0f619",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T21:54:18Z",
+      "side": 1,
+      "message": "why is this mask change needed?",
+      "revId": "447294aecb2b3a4802c2b3262d2da9ddd479b410",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
