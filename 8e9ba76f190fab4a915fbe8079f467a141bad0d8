@@ -2,6 +2,144 @@
   "comments": [
     {
       "key": {
+        "uuid": "041cdfdd_08705142",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "Since we have generic infrastructure for spdk including nvme/nvmf/iscsi etc modules,  histograms need to be managed centrally. As we are including this header in various layers/modules, they are not required to know the internal parameters of histogram. they need to know how to use histogram with generic apis to populate with the metric and place decided by clients.",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 72
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "feabec79_f35425eb",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "As we want to use this header file for various modules/users of spdk, pushing internal parameters of histogram such as buckets and range out of this file to histogram.c with uint64_t* bucket[]. Current histogram.c creates above 2d-array during spdk_histogram_alloc().\n\nNeed to track max/min/avg tally data as part of this structure.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 89
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2171616f_a8d9262e",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "same function exists in current https://review.gerrithub.io/#/c/363114/5/lib/util/histogram.c",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 53
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c69b2939_e13f1197",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "same function exists in current https://review.gerrithub.io/#/c/363114/5/lib/util/histogram.c",
+      "range": {
+        "startLine": 116,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 33
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da8fbd25_e4f7899f",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "This method is known as spdk_histogram_tally() does same work, can we move this to histogram.c along with min/max/ datapoint track whenever user calls this api",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 28
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42444358_19477630",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "this method in histogram.c is known as spdk_get_value_from_bucket()\ncan be renamed as above function name",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 139,
+        "endChar": 33
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed2acafc_1892f38c",
         "filename": "include/spdk/histogram.h",
         "patchSetId": 2
@@ -19,6 +157,29 @@
     },
     {
       "key": {
+        "uuid": "52607e72_af5a7a6a",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "This function is useful for local print, in a-addition to current way extracting via rpc with json format.",
+      "range": {
+        "startLine": 154,
+        "startChar": 15,
+        "endLine": 154,
+        "endChar": 32
+      },
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db0dcea9_5597ae21",
         "filename": "include/spdk/histogram.h",
         "patchSetId": 2
@@ -30,6 +191,29 @@
       "writtenOn": "2017-06-13T17:40:56Z",
       "side": 1,
       "message": "histogram could be const here.",
+      "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b05298d8_c2c7bb3a",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "This function is useful for local print, in a-addition to current way extracting via rpc with json format.",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 22
+      },
       "revId": "8e9ba76f190fab4a915fbe8079f467a141bad0d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
