@@ -475,6 +475,7 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "nvme_sgl";
 	opts.core_mask = "0x1";
+	opts.shm_id = 0;
 	spdk_env_init(&opts);
 
 	printf("NVMe Readv/Writev Request test\n");
