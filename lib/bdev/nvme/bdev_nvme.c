@@ -77,6 +77,12 @@ struct nvme_bdev {
 struct nvme_io_channel {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_bdev_poller	*poller;
+
+#ifdef SPDK_CONFIG_VTUNE
+	uint64_t		spin_ticks;
+	uint64_t		start_ticks;
+	uint64_t		end_ticks;
+#endif
 };
 
 #define NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT	1
@@ -186,9 +192,24 @@ static void
 bdev_nvme_poll(void *arg)
 {
 	struct nvme_io_channel *ch = arg;
-
 	if (ch->qpair != NULL) {
-		spdk_nvme_qpair_process_completions(ch->qpair, 0);
+
+#ifdef SPDK_CONFIG_VTUNE
+		if (ch->start_ticks == 0) {
+			ch->start_ticks = spdk_get_ticks();
+		}
+#endif
+		if (spdk_nvme_qpair_process_completions(ch->qpair, 0)) {
+#ifdef SPDK_CONFIG_VTUNE
+			if (ch->end_ticks != 0) {
+				ch->spin_ticks += (ch->end_ticks - ch->start_ticks);
+				ch->end_ticks = 0;
+			}
+			ch->start_ticks = 0;
+		} else {
+			ch->end_ticks = spdk_get_ticks();
+#endif
+		}
 	}
 }
 
@@ -585,12 +606,35 @@ bdev_nvme_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+#ifdef SPDK_CONFIG_VTUNE
+static uint64_t
+bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	uint64_t spin_time;
+
+	if (nvme_ch->end_ticks != 0) {
+		nvme_ch->spin_ticks += (nvme_ch->end_ticks - nvme_ch->start_ticks);
+		nvme_ch->end_ticks = 0;
+	}
+
+	spin_time = (nvme_ch->spin_ticks * 1000000ULL) / spdk_get_ticks_hz();
+	nvme_ch->start_ticks = 0;
+	nvme_ch->spin_ticks = 0;
+
+	return spin_time;
+}
+#endif
+
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= bdev_nvme_destruct,
 	.submit_request		= bdev_nvme_submit_request,
 	.io_type_supported	= bdev_nvme_io_type_supported,
 	.get_io_channel		= bdev_nvme_get_io_channel,
 	.dump_config_json	= bdev_nvme_dump_config_json,
+#ifdef SPDK_CONFIG_VTUNE
+	.get_spin_time		= bdev_nvme_get_spin_time,
+#endif
 };
 
 static bool
