@@ -50,6 +50,13 @@
 
 #ifdef SPDK_CONFIG_VTUNE
 #include "ittnotify.h"
+#include "spdk/nvme.h"
+#include "../nvme/nvme_internal.h"
+struct nvme_io_channel {
+	struct spdk_nvme_qpair  *qpair;
+	struct spdk_poller      *poller;
+	uint64_t		spin_count;
+};
 #endif
 
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
@@ -1185,17 +1192,20 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t now_tsc = spdk_get_ticks();
 	if (now_tsc > (bdev_io->ch->start_tsc + bdev_io->ch->interval_tsc)) {
-		uint64_t data[4];
+		double data[5];
+		struct nvme_io_channel * nvme_ch = spdk_io_channel_get_ctx(bdev_io->ch->channel);
 
 		data[0] = bdev_io->ch->stat.num_read_ops;
 		data[1] = bdev_io->ch->stat.bytes_read;
 		data[2] = bdev_io->ch->stat.num_write_ops;
 		data[3] = bdev_io->ch->stat.bytes_written;
+		data[4] = nvme_ch->spin_count / spdk_get_ticks_hz();
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
-				   __itt_metadata_u64, 4, data);
+				   __itt_metadata_double, 5, data);
 
 		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
+		nvme_ch->spin_count = 0;
 		bdev_io->ch->start_tsc = now_tsc;
 	}
 #endif
