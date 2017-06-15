@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ccd7f46_5d4249ab",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T20:54:09Z",
+      "side": 1,
+      "message": "I\u0027m not sure if we correctly support per-I/O context for virtual blockdevs; seems like we need to adjust bdev_io-\u003edriver_ctx when we pass the I/O to the base_bdev.",
+      "revId": "0c968cb902a540d1b3078d400e208cdda262d9d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
