@@ -16,6 +16,24 @@
       "revId": "6e85b68db514485578d4062e0a6b5e456f5aa3ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b99de32d_f08631f4",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T18:10:27Z",
+      "side": 1,
+      "message": "Yes, we should do another patch that makes the number of namespaces configurable.  I think it can actually just be fully dynamic, but we need to work out the thread safety implications.\n\nI also agree that we should have some kind of structure to track per-NS state like GUID, plus interfaces to configure those properties when namespaces are added. I\u0027ll take a crack at that next.",
+      "parentUuid": "fd537c1c_bde015bb",
+      "revId": "6e85b68db514485578d4062e0a6b5e456f5aa3ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
