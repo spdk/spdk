@@ -80,6 +80,12 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_num)
 		}
 	}
 
+	if (error_disk == NULL) {
+		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
+		pthread_mutex_unlock(&g_vbdev_error_mutex);
+		return -1;
+	}
+
 	error_disk->io_type_mask = io_type_mask;
 	error_disk->error_num = error_num;
 	pthread_mutex_unlock(&g_vbdev_error_mutex);
