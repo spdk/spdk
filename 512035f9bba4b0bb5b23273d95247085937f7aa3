@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7822019_be962394",
+        "filename": "lib/event/subsystems/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T22:22:19Z",
+      "side": 1,
+      "message": "you can remove this copyright",
+      "revId": "512035f9bba4b0bb5b23273d95247085937f7aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
