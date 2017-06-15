@@ -1474,11 +1474,13 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 		return -1;
 	}
 
-	/* Complete any I/O in the completion queue */
-	nvme_pcie_qpair_process_completions(qpair, 0);
+	if (qpair->no_deletion_notification_needed == 0) {
+		/* Complete any I/O in the completion queue */
+		nvme_pcie_qpair_process_completions(qpair, 0);
 
-	/* Abort the rest of the I/O */
-	nvme_pcie_qpair_abort_trackers(qpair, 1);
+		/* Abort the rest of the I/O */
+		nvme_pcie_qpair_abort_trackers(qpair, 1);
+	}
 
 	/* Delete the completion queue */
 	status.done = false;
