@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "130111c4_d830e521",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1955,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-15T17:27:01Z",
+      "side": 1,
+      "message": "I think we can put this in bdev_nvme_poll() in blockdev_nvme.c - that way, the VTune stats can still be entirely handled in the blockdev layer.",
+      "revId": "f82a3aedd387274a97cd6cbf20fbfe58ab6bb5f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
