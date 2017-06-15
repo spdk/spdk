@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3770b95a_f52b4dbf",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-15T05:01:06Z",
+      "side": 1,
+      "message": "Does DPDK skip mapping hugepages if --no-pci is passed? Maybe in a future patch we could track whether we\u0027re in no-pci mode and tell DPDK that we need only a very small number of hugepages to allocate rings and mempools, and then change the behavior of spdk_dma_malloc to just call regular malloc.\n\nActually, I think DPDK 17.05 added the ability to provide a custom memory allocator. We should look into that and if the user says --no-pci, we can do a custom allocator that just calls malloc and free.\n\nThis patch is fine for now - these are just ideas for the future.",
+      "revId": "d2e77718810663ed0161d8451af22cedeacd8a7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
