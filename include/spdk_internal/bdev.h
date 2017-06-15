@@ -333,6 +333,11 @@ struct spdk_bdev_io {
 	 */
 	bool in_submit_request;
 
+	/**
+	 * Set to true when the a bdev_io's callback routine should be deferred after completion.
+	 */
+	bool defer_callback;
+
 	/** Used in virtual device (e.g., RAID), indicates its parent spdk_bdev_io */
 	struct spdk_bdev_io *parent;
 
