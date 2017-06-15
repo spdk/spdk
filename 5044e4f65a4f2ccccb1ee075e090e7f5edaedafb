@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "12b05b69_7a4f3515",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "can you please look into sample https://review.gerrithub.io/#/c/363115/5/lib/nvmf/rdma.c\nto use histogram as a client with spdk_histogram_alloc/spdk_histogram_tally/spdk_histogram_free calls.",
+      "range": {
+        "startLine": 126,
+        "startChar": 8,
+        "endLine": 126,
+        "endChar": 27
+      },
+      "revId": "5044e4f65a4f2ccccb1ee075e090e7f5edaedafb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7633390a_37a5db7e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-06-15T03:47:10Z",
+      "side": 1,
+      "message": "Since we have generic infrastructure for spdk including nvme/nvmf/iscsi etc modules, we cannot have individual prints in client layer. histograms need to be managed centrally. and multiple layer histograms can be enabled/disable and dumped once to see the correlation, for example if we tracking latencies via histograms in entire I/O path with driver layer, protocol layer, nvme layer and their contributions",
+      "revId": "5044e4f65a4f2ccccb1ee075e090e7f5edaedafb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85c931e5_812968b3",
         "filename": "include/spdk/histogram_data.h",
         "patchSetId": 5
