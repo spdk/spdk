@@ -44,9 +44,31 @@ spdk_bdev_initialize_complete(void *cb_arg, int rc)
 }
 
 static void
+spdk_bdev_subsystem_start_poller(struct spdk_bdev_poller **ppoller,
+				 spdk_bdev_poller_fn fn,
+				 void *arg,
+				 uint32_t lcore,
+				 uint64_t period_microseconds)
+{
+	spdk_poller_register((struct spdk_poller **)ppoller,
+			     fn,
+			     arg,
+			     lcore,
+			     period_microseconds);
+}
+
+static void
+spdk_bdev_subsystem_stop_poller(struct spdk_bdev_poller **ppoller)
+{
+	spdk_poller_unregister((struct spdk_poller **)ppoller, NULL);
+}
+
+static void
 spdk_bdev_subsystem_initialize(void)
 {
-	spdk_bdev_initialize(spdk_bdev_initialize_complete, NULL);
+	spdk_bdev_initialize(spdk_bdev_initialize_complete, NULL,
+			     spdk_bdev_subsystem_start_poller,
+			     spdk_bdev_subsystem_stop_poller);
 }
 
 static int

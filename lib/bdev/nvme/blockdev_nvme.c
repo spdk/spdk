@@ -60,7 +60,7 @@ struct nvme_ctrlr {
 	char				*name;
 	int				ref;
 
-	struct spdk_poller		*adminq_timer_poller;
+	struct spdk_bdev_poller		*adminq_timer_poller;
 
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)	tailq;
@@ -76,7 +76,7 @@ struct nvme_bdev {
 
 struct nvme_io_channel {
 	struct spdk_nvme_qpair	*qpair;
-	struct spdk_poller	*poller;
+	struct spdk_bdev_poller	*poller;
 };
 
 #define NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT	1
@@ -124,7 +124,7 @@ static int g_nvme_adminq_poll_timeout_us = 0;
 static bool g_nvme_hotplug_enabled = false;
 static int g_nvme_hotplug_poll_timeout_us = 0;
 static int g_nvme_hotplug_poll_core = 0;
-static struct spdk_poller *g_hotplug_poller;
+static struct spdk_bdev_poller *g_hotplug_poller;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
@@ -217,7 +217,7 @@ bdev_nvme_destruct(void *ctx)
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
 		spdk_io_device_unregister(nvme_ctrlr->ctrlr);
-		spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller, NULL);
+		spdk_bdev_poller_stop(&nvme_ctrlr->adminq_timer_poller);
 		spdk_nvme_detach(nvme_ctrlr->ctrlr);
 		free(nvme_ctrlr->name);
 		free(nvme_ctrlr);
@@ -429,8 +429,8 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	spdk_poller_register(&ch->poller, bdev_nvme_poll, ch,
-			     spdk_env_get_current_core(), 0);
+	spdk_bdev_poller_start(&ch->poller, bdev_nvme_poll, ch,
+			       spdk_env_get_current_core(), 0);
 	return 0;
 }
 
@@ -440,7 +440,7 @@ bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 	struct nvme_io_channel *ch = ctx_buf;
 
 	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
-	spdk_poller_unregister(&ch->poller, NULL);
+	spdk_bdev_poller_stop(&ch->poller);
 }
 
 static struct spdk_io_channel *
@@ -742,8 +742,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	nvme_ctrlr_create_bdevs(nvme_ctrlr);
 
-	spdk_poller_register(&nvme_ctrlr->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
-			     spdk_env_get_current_core(), g_nvme_adminq_poll_timeout_us);
+	spdk_bdev_poller_start(&nvme_ctrlr->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
+			       spdk_env_get_current_core(), g_nvme_adminq_poll_timeout_us);
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
@@ -974,8 +974,9 @@ bdev_nvme_library_init(void)
 	}
 
 	if (g_nvme_hotplug_enabled) {
-		spdk_poller_register(&g_hotplug_poller, blockdev_nvme_hotplug, NULL,
-				     g_nvme_hotplug_poll_core, g_nvme_hotplug_poll_timeout_us);
+		spdk_bdev_poller_start(&g_hotplug_poller, blockdev_nvme_hotplug, NULL,
+				       g_nvme_hotplug_poll_core,
+				       g_nvme_hotplug_poll_timeout_us);
 	}
 
 end:
@@ -989,7 +990,7 @@ bdev_nvme_library_fini(void)
 	struct nvme_bdev *nvme_bdev, *btmp;
 
 	if (g_nvme_hotplug_enabled) {
-		spdk_poller_unregister(&g_hotplug_poller, NULL);
+		spdk_bdev_poller_stop(&g_hotplug_poller);
 	}
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
