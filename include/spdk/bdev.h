@@ -106,9 +106,21 @@ struct spdk_bdev_io_stat {
 	uint64_t num_write_ops;
 };
 
+struct spdk_bdev_poller;
+
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
 
-void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg);
+typedef void (*spdk_bdev_poller_fn)(void *arg);
+typedef void (*spdk_bdev_poller_start_cb)(struct spdk_bdev_poller **ppoller,
+		spdk_bdev_poller_fn fn,
+		void *arg,
+		uint32_t lcore,
+		uint64_t period_microseconds);
+typedef void (*spdk_bdev_poller_stop_cb)(struct spdk_bdev_poller **ppoller);
+
+void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
+			  spdk_bdev_poller_start_cb start_poller_fn,
+			  spdk_bdev_poller_stop_cb stop_poller_fn);
 int spdk_bdev_finish(void);
 void spdk_bdev_config_text(FILE *fp);
 
