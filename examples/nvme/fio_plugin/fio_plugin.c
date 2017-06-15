@@ -45,6 +45,7 @@
 #define NVME_IO_ALIGN		4096
 
 static bool spdk_env_initialized;
+static int g_dpdk_mem_size = 512;
 
 struct spdk_fio_request {
 	struct io_u		*io;
@@ -231,7 +232,7 @@ static int spdk_fio_setup(struct thread_data *td)
 	if (!spdk_env_initialized) {
 		spdk_env_opts_init(&opts);
 		opts.name = "fio";
-		opts.dpdk_mem_size = 512;
+		opts.dpdk_mem_size = g_dpdk_mem_size;
 		spdk_env_init(&opts);
 		spdk_env_initialized = true;
 		cpu_core_unaffinitized();
@@ -484,6 +485,29 @@ static void spdk_fio_cleanup(struct thread_data *td)
 	pthread_mutex_unlock(&mutex);
 }
 
+static int
+str_dpdk_mem_size_cb(void *data, const char *input)
+{
+	g_dpdk_mem_size = atoi(input);
+	if (!g_dpdk_mem_size)
+		g_dpdk_mem_size = 512;
+	return 0;
+}
+
+static struct fio_option options[] = {
+	{
+		.name		= "dpdk_mem_size_mb",
+		.lname		= "DPDK hugepage size in MB",
+		.type		= FIO_OPT_STR_STORE,
+		.cb			= str_dpdk_mem_size_cb,
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= NULL,
+	},
+};
+
 /* FIO imports this structure using dlsym */
 struct ioengine_ops ioengine = {
 	.name			= "spdk",
@@ -501,6 +525,8 @@ struct ioengine_ops ioengine = {
 	.io_u_init		= spdk_fio_io_u_init,
 	.io_u_free		= spdk_fio_io_u_free,
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
+	.options		= options,
+	.option_struct_size	= 1,
 };
 
 static void fio_init fio_spdk_register(void)
