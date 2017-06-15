@@ -993,6 +993,7 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
+	bdev_io->defer_callback = true;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	/* First, abort all I/O queued up waiting for buffers. */
@@ -1137,10 +1138,15 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io->status = status;
 
 	if (bdev_io->in_submit_request) {
+		bdev_io->defer_callback = true;
+	}
+
+	if (bdev_io->defer_callback) {
 		/*
 		 * Defer completion to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.
 		 */
+		bdev_io->defer_callback = false;
 		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->ch->channel),
 				     bdev_io_deferred_completion, bdev_io);
 		return;
