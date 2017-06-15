@@ -536,38 +536,6 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->gencnt = bdev->gencnt;
 	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->in_submit_request = false;
-	TAILQ_INIT(&bdev_io->child_io);
-}
-
-struct spdk_bdev_io *
-spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
-		       struct spdk_bdev *bdev,
-		       spdk_bdev_io_completion_cb cb,
-		       void *cb_arg)
-{
-	struct spdk_bdev_io *child;
-
-	child = spdk_bdev_get_io();
-	if (!child) {
-		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
-		return NULL;
-	}
-
-	if (cb_arg == NULL) {
-		cb_arg = child;
-	}
-
-	spdk_bdev_io_init(child, bdev, cb_arg, cb);
-
-	child->type = parent->type;
-	memcpy(&child->u, &parent->u, sizeof(child->u));
-	child->buf = NULL;
-	child->get_buf_cb = NULL;
-	child->parent = parent;
-
-	TAILQ_INSERT_TAIL(&parent->child_io, child, link);
-
-	return child;
 }
 
 bool
@@ -1088,8 +1056,6 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_io *child_io, *tmp;
-
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io is NULL\n");
 		return -1;
@@ -1099,22 +1065,6 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		SPDK_ERRLOG("bdev_io is in pending state\n");
 		assert(false);
 		return -1;
-	}
-
-	TAILQ_FOREACH_SAFE(child_io, &bdev_io->child_io, link, tmp) {
-		/*
-		 * Make sure no references to the parent I/O remain, since it is being
-		 * returned to the free pool.
-		 */
-		child_io->parent = NULL;
-		TAILQ_REMOVE(&bdev_io->child_io, child_io, link);
-
-		/*
-		 * Child I/O may have a buf that needs to be returned to a pool
-		 *  on a different core, so free it through the request submission
-		 *  process rather than calling put_io directly here.
-		 */
-		spdk_bdev_free_io(child_io);
 	}
 
 	spdk_bdev_put_io(bdev_io);
