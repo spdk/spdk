@@ -16,6 +16,24 @@
       "revId": "0c968cb902a540d1b3078d400e208cdda262d9d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdece476_0abb4733",
+        "filename": "lib/bdev/split/vbdev_split.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-15T21:13:54Z",
+      "side": 1,
+      "message": "I\u0027m only using it in the RESET case, where we are not resubmitting the original I/O to the base bdev.",
+      "parentUuid": "8ccd7f46_5d4249ab",
+      "revId": "0c968cb902a540d1b3078d400e208cdda262d9d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
