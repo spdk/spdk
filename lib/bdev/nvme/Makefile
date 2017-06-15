@@ -35,6 +35,9 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/
+ifeq ($(CONFIG_VTUNE),y)
+CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
+endif
 C_SRCS = blockdev_nvme.c blockdev_nvme_rpc.c
 LIBNAME = bdev_nvme
 
