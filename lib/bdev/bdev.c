@@ -944,6 +944,37 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, channel);
 }
 
+static void
+_spdk_bdev_start_reset(void *ctx)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_reset_abort_channel,
+			      bdev_io, _spdk_bdev_reset_dev);
+}
+
+static void
+_spdk_bdev_start_next_reset(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_thread *thread;
+
+	pthread_mutex_lock(&bdev->mutex);
+
+	if (bdev->reset_in_progress || TAILQ_EMPTY(&bdev->queued_resets)) {
+		pthread_mutex_unlock(&bdev->mutex);
+		return;
+	} else {
+		bdev_io = TAILQ_FIRST(&bdev->queued_resets);
+		TAILQ_REMOVE(&bdev->queued_resets, bdev_io, link);
+		bdev->reset_in_progress = true;
+		thread = spdk_io_channel_get_thread(bdev_io->ch->channel);
+		spdk_thread_send_msg(thread, _spdk_bdev_start_reset, bdev_io);
+	}
+
+	pthread_mutex_unlock(&bdev->mutex);
+}
+
 int
 spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -963,11 +994,11 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	bdev_io->type = SPDK_BDEV_IO_TYPE_RESET;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	/* First, abort all I/O queued up waiting for buffers. */
-	spdk_for_each_channel(bdev,
-			      _spdk_bdev_reset_abort_channel,
-			      bdev_io,
-			      _spdk_bdev_reset_dev);
+	pthread_mutex_lock(&bdev->mutex);
+	TAILQ_INSERT_TAIL(&bdev->queued_resets, bdev_io, link);
+	pthread_mutex_unlock(&bdev->mutex);
+
+	_spdk_bdev_start_next_reset(bdev);
 
 	return 0;
 }
@@ -1093,6 +1124,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			/* Increase the blockdev generation */
 			bdev_io->bdev->gencnt++;
 		}
+		bdev_io->bdev->reset_in_progress = false;
+		_spdk_bdev_start_next_reset(bdev_io->bdev);
 	} else {
 		/*
 		 * Check the gencnt, to see if this I/O was issued before the most
@@ -1241,6 +1274,9 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
+
+	bdev->reset_in_progress = false;
+	TAILQ_INIT(&bdev->queued_resets);
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));

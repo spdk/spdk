@@ -42,6 +42,7 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
+#include "spdk/io_channel.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -96,22 +97,21 @@ split_flush(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
 }
 
 static void
-split_reset(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
+_vbdev_split_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	/*
-	 * No offset to modify for reset - pass the I/O through unmodified.
-	 *
-	 * However, we do need to increment the generation count for the split bdev,
-	 * since the spdk_bdev_io_complete() path that normally updates it will not execute
-	 * after we resubmit the I/O to the base_bdev.
-	 */
-	split_disk->disk.gencnt++;
+	struct spdk_bdev_io *split_io = cb_arg;
+	struct spdk_io_channel *base_ch = *(struct spdk_io_channel **)split_io->driver_ctx;
+
+	spdk_put_io_channel(base_ch);
+	spdk_bdev_io_complete(split_io, success);
+	spdk_bdev_free_io(bdev_io);
 }
 
 static void
 vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct split_disk *split_disk = bdev_io->bdev->ctxt;
+	struct spdk_io_channel *base_ch;
 
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
@@ -128,8 +128,10 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		split_flush(split_disk, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		split_reset(split_disk, bdev_io);
-		break;
+		base_ch = spdk_get_io_channel(split_disk->base_bdev);
+		*(struct spdk_io_channel **)bdev_io->driver_ctx = base_ch;
+		spdk_bdev_reset(split_disk->base_bdev, base_ch, _vbdev_split_complete_reset, bdev_io);
+		return;
 	default:
 		SPDK_ERRLOG("split: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -416,5 +418,15 @@ vbdev_split_fini(void)
 	}
 }
 
-SPDK_VBDEV_MODULE_REGISTER(vbdev_split_init, vbdev_split_fini, NULL, NULL, NULL)
+static int
+vbdev_split_get_ctx_size(void)
+{
+	/*
+	 * Note: this context is only used for RESET operations, since it is the only
+	 *  I/O type that does not just resubmit to the base bdev.
+	 */
+	return sizeof(struct spdk_io_channel *);
+}
+
+SPDK_VBDEV_MODULE_REGISTER(vbdev_split_init, vbdev_split_fini, NULL, vbdev_split_get_ctx_size, NULL)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_split", SPDK_TRACE_VBDEV_SPLIT)
