@@ -34,6 +34,24 @@
       "revId": "6e85b68db514485578d4062e0a6b5e456f5aa3ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3a2f1d7_27ee6f2e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011327
+      },
+      "writtenOn": "2017-06-15T20:04:59Z",
+      "side": 1,
+      "message": "Fully dynamic brings in thread safety issues as you mentioned and to keep it lockless it will become a lot complex design. Apart from that we may not be able to do nsid search in O(1) as is done with a fixed array.\nHaving a configurable max namespaces would be good with most use cases I believe.\n\nI am working on a namespace structure which replaces bdev in ns_list based on my requirement. If you are going to work on it I would pass my requirement in comments when you submit for review. Please include me so I don\u0027t miss it.\nThank you!",
+      "parentUuid": "b99de32d_f08631f4",
+      "revId": "6e85b68db514485578d4062e0a6b5e456f5aa3ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
