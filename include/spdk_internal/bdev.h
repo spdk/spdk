@@ -338,12 +338,6 @@ struct spdk_bdev_io {
 	 */
 	bool defer_callback;
 
-	/** Used in virtual device (e.g., RAID), indicates its parent spdk_bdev_io */
-	struct spdk_bdev_io *parent;
-
-	/** Used in virtual device (e.g., RAID) for storing multiple child device I/Os */
-	TAILQ_HEAD(child_io, spdk_bdev_io) child_io;
-
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;
 
@@ -358,10 +352,6 @@ void spdk_bdev_unregister(struct spdk_bdev *bdev);
 
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb);
 struct spdk_bdev_io *spdk_bdev_get_io(void);
-struct spdk_bdev_io *spdk_bdev_get_child_io(struct spdk_bdev_io *parent,
-		struct spdk_bdev *bdev,
-		spdk_bdev_io_completion_cb cb,
-		void *cb_arg);
 void spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev *new_bdev);
 void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
