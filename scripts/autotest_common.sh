@@ -1,7 +1,7 @@
 set -xe
 ulimit -c unlimited
 
-export RUN_NIGHTLY=0
+export RUN_NIGHTLY=1
 
 if [[ ! -z $1 ]]; then
 	if [ -f $1 ]; then
@@ -281,3 +281,4 @@ function print_backtrace() {
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Fri Jun 16 14:40:52 MST 2017'
