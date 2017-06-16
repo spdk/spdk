@@ -12,6 +12,7 @@ reuse_vms=false
 force_build=false
 vms=()
 used_vms=""
+declare -A vm_modes
 disk_split=""
 x=""
 
@@ -38,10 +39,13 @@ function usage()
 	echo "    --dry-run             Don't perform any tests, run only and wait for enter to terminate"
 	echo "    --no-shutdown         Don't shutdown at the end but leave envirionment working"
 	echo "    --force-build         Force SPDK rebuild with the specified DPDK path."
-	echo "    --vm=NUM[,OS][,DISKS] VM configuration. This parameter might be used more than once:"
+	echo "    --vm=NUM[,OS][,DISKS][,MODE]"
+	echo "                          VM configuration. This parameter might be used more than once:"
 	echo "                          NUM - VM number (mandatory)"
 	echo "                          OS - VM os disk path (optional)"
 	echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
+	echo "                          MODE - Optional; Use either vhost-scsi or vhost-blk in vhost controller."
+	echo "                          Valid choices: vhost-scsi, vhost-blk. Default: vhost-scsi."
 	echo "    --disk-split          By default all test types execute fio jobs on all disks which are available on guest"
 	echo "                          system. Use this option if only some of the disks should be used for testing."
 	echo "                          Example: --disk-split=4,1-3 will result in VM 1 using it's first disk (ex. /dev/sda)"
@@ -132,7 +136,11 @@ rpc_py+="-s 127.0.0.1 "
 
 for vm_conf in ${vms[@]}; do
 	IFS=',' read -ra conf <<< "$vm_conf"
-	setup_cmd="$BASE_DIR/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=$test_type"
+	if [ "${conf[3]}" != "vhost-blk" ]; then
+		conf[3]="vhost-scsi"
+	fi
+
+	setup_cmd="$BASE_DIR/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=$test_type --spdk-vhost-mode=${conf[3]}"
 	if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
 		echo "ERROR: invalid VM configuration syntax $vm_conf"
 		exit 1;
@@ -148,6 +156,7 @@ for vm_conf in ${vms[@]}; do
 
 	setup_cmd+=" -f ${conf[0]}"
 	used_vms+=" ${conf[0]}"
+	vm_modes[${conf[0]}]=${conf[3]}
 	[[ x"${conf[1]}" != x"" ]] && setup_cmd+=" --os=${conf[1]}"
 	[[ x"${conf[2]}" != x"" ]] && setup_cmd+=" --disk=${conf[2]}"
 
@@ -163,33 +172,42 @@ for vm_conf in ${vms[@]}; do
 
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
-				echo "INFO: Creating controller naa.$disk.${conf[0]}"
-				$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
+				if [ "${conf[3]}" == "vhost-blk" ]; then
+					echo "INFO: Creating vhost block controller naa.$disk.${conf[0]}"
+					$rpc_py construct_vhost_block_controller naa.$disk.${conf[0]}
 
-				echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
-				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+					echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
+					$rpc_py add_vhost_block_dev naa.$disk.${conf[0]} $disk 
+				else
+					echo "INFO: Creating controller naa.$disk.${conf[0]}"
+					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
 
-				echo "INFO: Trying to remove inexistent device on existing controller"
-				if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 1 > /dev/null; then
-					echo "ERROR: Removing inexistent device (1) from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
-					false
+					echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
+					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+
+					echo "INFO: Trying to remove inexistent device on existing controller"
+					if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 1 > /dev/null; then
+						echo "ERROR: Removing inexistent device (1) from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
+						false
+					fi
+
+					echo "INFO: Trying to remove existing device from a controller"
+					$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
+
+					echo "INFO: Trying to remove a just-deleted device from a controller again"
+					if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0 > /dev/null; then
+						echo "ERROR: Removing device 0 from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
+						false
+					fi
+
+					echo "INFO: Re-adding device 0 to naa.$disk.${conf[0]}"
+					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 				fi
-
-				echo "INFO: Trying to remove existing device from a controller"
-				$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
-
-				echo "INFO: Trying to remove a just-deleted device from a controller again"
-				if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0 > /dev/null; then
-					echo "ERROR: Removing device 0 from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
-					false
-				fi
-
-				echo "INFO: Re-adding device 0 to naa.$disk.${conf[0]}"
-				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 			done
 		done <<< "${conf[2]}"
 		unset IFS;
 		$rpc_py get_vhost_scsi_controllers
+		$rpc_py get_vhost_block_controllers
 	fi
 	$setup_cmd
 done
@@ -229,10 +247,15 @@ for vm_num in $used_vms; do
 	echo "INFO: Setting up hostname: $host_name"
 	vm_ssh $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $readonly $vm_num
-	vm_check_scsi_location $vm_num
+
+	if [ ${vm_modes[$vm_num]} == "vhost-scsi" ]; then
+		vm_check_scsi_location $vm_num
+		vm_reset_scsi_devices $vm_num $SCSI_DISK
+	elif [ ${vm_modes[$vm_num]} == "vhost-blk" ]; then
+		vm_check_blk_location $vm_num
+	fi
 
 	SCSI_DISK="${SCSI_DISK::-1}"
-	vm_reset_scsi_devices $vm_num $SCSI_DISK
 
 	run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
 	for disk in $SCSI_DISK; do
@@ -258,7 +281,9 @@ fi
 $run_fio
 
 for vm_num in $used_vms; do
-	vm_reset_scsi_devices $vm_num $SCSI_DISK
+	if [ ${vm_modes[$vm_num]} == "vhost-scsi"]; then
+		vm_reset_scsi_devices $vm_num $SCSI_DISK
+	fi
 done
 
 if ! $no_shutdown; then
@@ -276,8 +301,13 @@ if ! $no_shutdown; then
 			while IFS=':' read -ra disks; do
 				for disk in "${disks[@]}"; do
 					echo "INFO: Removing all vhost devices from controller naa.$disk.${conf[0]}"
-					$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
-					$rpc_py remove_vhost_scsi_controller naa.$disk.${conf[0]}
+					if [ "${conf[3]}" == "vhost-blk" ]; then
+						$rpc_py remove_vhost_block_dev naa.$disk.${conf[0]}
+						$rpc_py remove_vhost_block_controller naa.$disk.${conf[0]}
+					else
+						$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
+						$rpc_py remove_vhost_scsi_controller naa.$disk.${conf[0]}
+					fi
 				done
 			done <<< "${conf[2]}"
 		done
