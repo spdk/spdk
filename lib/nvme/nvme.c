@@ -597,12 +597,17 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 		return cmp;
 	}
 
-	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
+	cmp = strcasecmp(trid1->traddr, trid2->traddr);
 	if (cmp) {
 		return cmp;
 	}
 
-	cmp = strcasecmp(trid1->traddr, trid2->traddr);
+	if (trid1->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		/* PCIe transport ID only uses trtype and traddr */
+		return 0;
+	}
+
+	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
 	if (cmp) {
 		return cmp;
 	}
