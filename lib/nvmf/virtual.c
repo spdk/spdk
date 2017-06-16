@@ -287,6 +287,51 @@ nvmf_virtual_ctrlr_identify(struct spdk_nvmf_request *req)
 }
 
 static int
+nvmf_virtual_ctrlr_abort(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint32_t cdw10 = cmd->cdw10;
+	uint16_t cid = cdw10 >> 16;
+	uint16_t sqid = cdw10 & 0xFFFFu;
+	struct spdk_nvmf_conn *conn;
+	struct spdk_nvmf_request *req_to_abort;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "abort sqid=%u cid=%u\n", sqid, cid);
+
+	conn = spdk_nvmf_session_get_conn(session, sqid);
+	if (conn == NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "sqid %u not found\n", sqid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/*
+	 * NOTE: This relies on the assumption that all connections for a session will be handled
+	 * on the same thread.  If this assumption becomes untrue, this will need to pass a message
+	 * to the thread handling conn, and the abort will need to be asynchronous.
+	 */
+	req_to_abort = spdk_nvmf_conn_get_request(conn, cid);
+	if (req_to_abort == NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "cid %u not found\n", cid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_nvmf_request_abort(req) == 0) {
+		rsp->cdw0 = 0; /* Command successfully aborted */
+	} else {
+		rsp->cdw0 = 1; /* Command not aborted */
+	}
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
@@ -351,6 +396,8 @@ nvmf_virtual_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		return nvmf_virtual_ctrlr_get_log_page(req);
 	case SPDK_NVME_OPC_IDENTIFY:
 		return nvmf_virtual_ctrlr_identify(req);
+	case SPDK_NVME_OPC_ABORT:
+		return nvmf_virtual_ctrlr_abort(req);
 	case SPDK_NVME_OPC_GET_FEATURES:
 		return nvmf_virtual_ctrlr_get_features(req);
 	case SPDK_NVME_OPC_SET_FEATURES:

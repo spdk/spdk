@@ -55,6 +55,7 @@ struct spdk_nvmf_conn {
 	struct spdk_nvmf_session		*sess;
 	enum conn_type				type;
 
+	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
 
@@ -101,6 +102,10 @@ void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 			       struct spdk_nvmf_fabric_connect_cmd *cmd,
 			       struct spdk_nvmf_fabric_connect_data *data,
 			       struct spdk_nvmf_fabric_connect_rsp *rsp);
+
+struct spdk_nvmf_conn *spdk_nvmf_session_get_conn(struct spdk_nvmf_session *session, uint16_t qid);
+
+struct spdk_nvmf_request *spdk_nvmf_conn_get_request(struct spdk_nvmf_conn *conn, uint16_t cid);
 
 void
 spdk_nvmf_property_get(struct spdk_nvmf_session *session,
