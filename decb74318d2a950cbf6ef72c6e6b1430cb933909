@@ -59,6 +59,30 @@
     },
     {
       "key": {
+        "uuid": "f29e5477_b7e3e91d",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-16T14:19:58Z",
+      "side": 1,
+      "message": "No, this is private. task.c/task.h is going to be removed soon.",
+      "parentUuid": "fa162bed_53143478",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 2
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1bc6b689_d19a24f3",
         "filename": "lib/vhost/vhost_block.c",
         "patchSetId": 24
@@ -76,6 +100,24 @@
     },
     {
       "key": {
+        "uuid": "217c3b2f_050112c5",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-16T14:19:58Z",
+      "side": 1,
+      "message": "IT is used in assert in line 366. Remove assert?",
+      "parentUuid": "1bc6b689_d19a24f3",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "047b9b09_afb99518",
         "filename": "lib/vhost/vhost_block.c",
         "patchSetId": 24
@@ -87,6 +129,24 @@
       "writtenOn": "2017-06-15T23:59:01Z",
       "side": 1,
       "message": "remove this nop?",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66ab35cc_04abd618",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-16T14:19:58Z",
+      "side": 1,
+      "message": "The build system might complain about unused parameter. This is to prevent this.",
+      "parentUuid": "047b9b09_afb99518",
       "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -185,6 +245,30 @@
     },
     {
       "key": {
+        "uuid": "4ecee4bb_a9adceca",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-16T14:19:58Z",
+      "side": 1,
+      "message": "This is rather needed and in vhost SCSI Will remove abort() only. Lets wait on resets fix to see what way to go.",
+      "parentUuid": "535229ab_db6d94bf",
+      "range": {
+        "startLine": 559,
+        "startChar": 0,
+        "endLine": 568,
+        "endChar": 2
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ed9aa90_13b87a08",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 24
@@ -196,6 +280,30 @@
       "writtenOn": "2017-06-16T11:45:20Z",
       "side": 1,
       "message": "Shouldn\u0027t this be present in include/spdk/vhost.h similar to other related calls ?",
+      "range": {
+        "startLine": 139,
+        "startChar": 4,
+        "endLine": 139,
+        "endChar": 39
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "127a1b70_8ab1cd88",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-16T14:19:58Z",
+      "side": 1,
+      "message": "It is private, called from vhost.c. The SCSI analogue also should be moved here.",
+      "parentUuid": "4ed9aa90_13b87a08",
       "range": {
         "startLine": 139,
         "startChar": 4,
