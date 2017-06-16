@@ -20,6 +20,18 @@ function monitor_cmd() {
 	return $rc
 }
 
+function get_devices_online_count() {
+	ssh_vm "lspci | grep "NVM" | wc -l"
+}
+
+function wait_for_devices_ready() {
+	count=$(get_devices_online_count)
+	while [ "$count" -ne "4" ]; do
+		echo "waitting for all devices online"
+		count=$(get_devices_online_count)
+	done
+}
+
 function devices_initialization() {
 	timing_enter devices_initialization
 	dd if=/dev/zero of=/root/test0 bs=1M count=1024
@@ -38,8 +50,8 @@ function insert_devices() {
 	monitor_cmd "device_add nvme,drive=drive1,id=nvme1,serial=nvme1"
 	monitor_cmd "device_add nvme,drive=drive2,id=nvme2,serial=nvme2"
 	monitor_cmd "device_add nvme,drive=drive3,id=nvme3,serial=nvme3"
-	sleep 5
 	ssh_vm "scripts/setup.sh"
+	wait_for_devices_ready
 }
 
 function remove_devices() {
