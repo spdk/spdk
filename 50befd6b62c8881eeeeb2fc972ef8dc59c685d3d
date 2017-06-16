@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91f4963d_a58f0adf",
+        "filename": "include/spdk/log.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-16T00:05:30Z",
+      "side": 1,
+      "message": "I\u0027m not sure you really need this SPDK_LOG_NONE anymore.",
+      "revId": "50befd6b62c8881eeeeb2fc972ef8dc59c685d3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfead950_ca9c9905",
+        "filename": "lib/log/log.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-16T00:05:30Z",
+      "side": 1,
+      "message": "I think this should still be NOTICE.\n\nSo NOTICE is the default - the apps provide a -q option to turn it down to WARN in case you are running from a tty.",
+      "revId": "50befd6b62c8881eeeeb2fc972ef8dc59c685d3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
