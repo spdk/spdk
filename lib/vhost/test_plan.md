@@ -13,6 +13,11 @@
 - runs on 3 host systems (Ubuntu 16.04, Centos 7.3 and Fedora 25)
   and 1 guest system (Ubuntu 16.04)
 
+#### Lvol tests
+- Using the same setup and steps as FIO Integrity tests
+- Logical volume block device is used as backend instead of using
+    NVMe device backed directly
+
 #### FIO Integrity tests
 - NVMe device is split into 4 LUNs, each is attached to separate vhost controller
 - FIO uses job configuration with randwrite mode to verify if random pattern was
