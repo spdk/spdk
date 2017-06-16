@@ -118,6 +118,24 @@
     },
     {
       "key": {
+        "uuid": "8e8533b2_0d7883f2",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-16T15:07:48Z",
+      "side": 1,
+      "message": "Or keep the assert and break out of the loop if rc !\u003d 0?  Then you can remove the unused attribute since rc will still be used in release builds.",
+      "parentUuid": "217c3b2f_050112c5",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "047b9b09_afb99518",
         "filename": "lib/vhost/vhost_block.c",
         "patchSetId": 24
@@ -147,6 +165,24 @@
       "side": 1,
       "message": "The build system might complain about unused parameter. This is to prevent this.",
       "parentUuid": "047b9b09_afb99518",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1be8e90d_5a505d8f",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-16T15:07:48Z",
+      "side": 1,
+      "message": "We have lots of unused parameters in SPDK and disable unused parameter warnings.  So we should remove this to keep it consistent with the rest of the code.",
+      "parentUuid": "66ab35cc_04abd618",
       "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
