@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8a0a25d_07391fba",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-16T08:59:51Z",
+      "side": 1,
+      "message": "According to patch 363361 in QEMU the command line for QEMU is as follows:\n-device vhost-user-blk-pci,chardev\u003dchar0, logical_block_size\u003d512,size\u003d20G",
+      "range": {
+        "startLine": 115,
+        "startChar": 43,
+        "endLine": 115,
+        "endChar": 51
+      },
+      "revId": "0cd55b646ea8fe25267f46e78276f5858ac5668d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
