@@ -400,6 +400,7 @@ function vm_setup()
 				os-mode=*) local os_mode="${OPTARG#*=}" ;;
 				qemu-args=*) local qemu_args="${qemu_args} ${OPTARG#*=}" ;;
 				disk-type=*) local disk_type="${OPTARG#*=}" ;;
+				spdk-vhost-mode=*) local spdk_vhost_mode="${OPTARG#*=}" ;;
 				disks=*) local disks="${OPTARG#*=}" ;;
 				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) local force_vm=${OPTARG#*=} ;;
@@ -532,9 +533,20 @@ function vm_setup()
 				;;
 			spdk_vhost)
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
-
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol}"
+				;;
+			spdk_vhost_blk)
+				[[ $disk =~ _size_([0-9]+[MG]?) ]] || true
+				size=${BASH_REMATCH[1]}
+				if [ -z "$size" ]; then
+					size="20G"
+				fi
+				disk=${disk%%_*}
+				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
+                                cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
+				cmd+="-device vhost-user-blk-pci,chardev=char_$disk,"
+                                cmd+="logical_block_size=4096,size=$size ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
@@ -762,6 +774,18 @@ function vm_reset_scsi_devices()
 		echo "INFO: VM$1 Performing device reset on disk $disk"
 		vm_ssh $1 sg_reset /dev/$disk -vNd
 	done
+}
+
+function vm_check_blk_location()
+{
+	local script='shopt -s nullglob; cd /sys/block; echo vd*'
+	SCSI_DISK="$(echo "$script" | vm_ssh $1 bash -s)"
+	SCSI_DISK+=" "
+
+	if [[ -z "$SCSI_DISK" ]]; then
+		error "no blk test disk found!"
+		return 1
+	fi
 }
 
 # Shutdown or kill any running VM and SPDK APP.
