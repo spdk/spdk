@@ -311,3 +311,10 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	return 0;
 }
+
+int
+spdk_nvmf_request_abort(struct spdk_nvmf_request *req)
+{
+	/* TODO: implement abort, at least for commands that are still queued in software */
+	return -1;
+}
