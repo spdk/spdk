@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39ab588b_8dc5bc7a",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-06-16T11:22:49Z",
+      "side": 1,
+      "message": "Sorry for a little copy-pasta, but sourcing autotest_common.sh always enabled -x trace option, and it is supposed to be optional in this script.",
+      "range": {
+        "startLine": 154,
+        "startChar": 1,
+        "endLine": 154,
+        "endChar": 25
+      },
+      "revId": "aed492e1b2962747f95d2ab91a6b0e8de47e66db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
