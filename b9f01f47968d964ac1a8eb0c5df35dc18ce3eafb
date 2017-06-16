@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12eb13c8_51b66e37",
+        "filename": "lib/log/log.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-16T20:11:15Z",
+      "side": 1,
+      "message": "It would be nice to mention that this array is indexed by the log level enum, and to be even more explicit, we could write this with C99-style designated initializers:\n\n   [SPDK_LOG_ERROR] \u003d \"ERROR\",\n   [SPDK_LOG_WARN] \u003d \"WARNING\",\n\netc.",
+      "revId": "b9f01f47968d964ac1a8eb0c5df35dc18ce3eafb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
