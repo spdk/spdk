@@ -56,9 +56,9 @@ struct spdk_env_opts {
 	const char 		*name;
 	const char 		*core_mask;
 	int 			shm_id;
-	int	 		dpdk_mem_channel;
-	int	 		dpdk_master_core;
-	int			dpdk_mem_size;
+	int	 		mem_channel;
+	int	 		master_core;
+	int			mem_size;
 	bool			no_pci;
 };
 

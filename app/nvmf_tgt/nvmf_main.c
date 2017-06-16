@@ -113,13 +113,13 @@ main(int argc, char **argv)
 			opts.reactor_mask = optarg;
 			break;
 		case 'n':
-			opts.dpdk_mem_channel = atoi(optarg);
+			opts.mem_channel = atoi(optarg);
 			break;
 		case 'p':
-			opts.dpdk_master_core = atoi(optarg);
+			opts.master_core = atoi(optarg);
 			break;
 		case 's':
-			opts.dpdk_mem_size = atoi(optarg);
+			opts.mem_size = atoi(optarg);
 			break;
 		case 'e':
 			opts.tpoint_group_mask = optarg;

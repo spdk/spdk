@@ -50,7 +50,7 @@ vhost_app_opts_init(struct spdk_app_opts *opts)
 	spdk_app_opts_init(opts);
 	opts->name = "vhost";
 	opts->config_file = SPDK_VHOST_DEFAULT_CONFIG;
-	opts->dpdk_mem_size = SPDK_VHOST_DEFAULT_MEM_SIZE;
+	opts->mem_size = SPDK_VHOST_DEFAULT_MEM_SIZE;
 }
 
 static void
@@ -68,7 +68,7 @@ usage(char *executable_name)
 	printf(" -l facility use specific syslog facility (default: %s)\n", defaults.log_facility);
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
-	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", defaults.dpdk_mem_size);
+	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", defaults.mem_size);
 	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
 	spdk_tracelog_usage(stdout, "-t");
 	printf(" -h         show this usage\n");
@@ -107,13 +107,13 @@ main(int argc, char *argv[])
 			opts.reactor_mask = optarg;
 			break;
 		case 'p':
-			opts.dpdk_master_core = strtoul(optarg, NULL, 10);
+			opts.master_core = strtoul(optarg, NULL, 10);
 			break;
 		case 'q':
 			spdk_g_notice_stderr_flag = 0;
 			break;
 		case 's':
-			opts.dpdk_mem_size = strtoul(optarg, NULL, 10);
+			opts.mem_size = strtoul(optarg, NULL, 10);
 			break;
 		case 'S':
 			socket_path = optarg;

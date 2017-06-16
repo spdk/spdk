@@ -1073,9 +1073,9 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "identify";
 	opts.shm_id = g_shm_id;
-	opts.dpdk_mem_size = g_dpdk_mem;
-	opts.dpdk_mem_channel = 1;
-	opts.dpdk_master_core = g_master_core;
+	opts.mem_size = g_dpdk_mem;
+	opts.mem_channel = 1;
+	opts.master_core = g_master_core;
 	opts.core_mask = g_core_mask;
 	if (g_trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		opts.no_pci = true;

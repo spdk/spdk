@@ -209,9 +209,9 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->log_facility = SPDK_APP_DEFAULT_LOG_FACILITY;
 	opts->enable_coredump = true;
 	opts->shm_id = -1;
-	opts->dpdk_mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
-	opts->dpdk_master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
-	opts->dpdk_mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
+	opts->mem_size = SPDK_APP_DPDK_DEFAULT_MEM_SIZE;
+	opts->master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
+	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;
 	opts->max_delay_us = 0;
 }
@@ -314,9 +314,9 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	env_opts.name = opts->name;
 	env_opts.core_mask = opts->reactor_mask;
 	env_opts.shm_id = opts->shm_id;
-	env_opts.dpdk_mem_channel = opts->dpdk_mem_channel;
-	env_opts.dpdk_master_core = opts->dpdk_master_core;
-	env_opts.dpdk_mem_size = opts->dpdk_mem_size;
+	env_opts.mem_channel = opts->mem_channel;
+	env_opts.master_core = opts->master_core;
+	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
 
 	spdk_env_init(&env_opts);

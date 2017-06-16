@@ -1344,7 +1344,7 @@ int main(int argc, char **argv)
 	}
 
 	if (g_dpdk_mem) {
-		opts.dpdk_mem_size = g_dpdk_mem;
+		opts.mem_size = g_dpdk_mem;
 	}
 	if (g_no_pci) {
 		opts.no_pci = g_no_pci;

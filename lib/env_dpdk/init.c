@@ -107,9 +107,9 @@ spdk_env_opts_init(struct spdk_env_opts *opts)
 	opts->name = SPDK_ENV_DPDK_DEFAULT_NAME;
 	opts->core_mask = SPDK_ENV_DPDK_DEFAULT_CORE_MASK;
 	opts->shm_id = SPDK_ENV_DPDK_DEFAULT_SHM_ID;
-	opts->dpdk_mem_size = SPDK_ENV_DPDK_DEFAULT_MEM_SIZE;
-	opts->dpdk_master_core = SPDK_ENV_DPDK_DEFAULT_MASTER_CORE;
-	opts->dpdk_mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
+	opts->mem_size = SPDK_ENV_DPDK_DEFAULT_MEM_SIZE;
+	opts->master_core = SPDK_ENV_DPDK_DEFAULT_MASTER_CORE;
+	opts->mem_channel = SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL;
 }
 
 static void
@@ -174,25 +174,25 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 	}
 
 	/* set the memory channel number */
-	if (opts->dpdk_mem_channel > 0) {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-n %d", opts->dpdk_mem_channel));
+	if (opts->mem_channel > 0) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-n %d", opts->mem_channel));
 		if (args == NULL) {
 			return -1;
 		}
 	}
 
 	/* set the memory size */
-	if (opts->dpdk_mem_size > 0) {
-		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-m %d", opts->dpdk_mem_size));
+	if (opts->mem_size > 0) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-m %d", opts->mem_size));
 		if (args == NULL) {
 			return -1;
 		}
 	}
 
 	/* set the master core */
-	if (opts->dpdk_master_core > 0) {
+	if (opts->master_core > 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--master-lcore=%d",
-				     opts->dpdk_master_core));
+				     opts->master_core));
 		if (args == NULL) {
 			return -1;
 		}
