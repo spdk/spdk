@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "fde71a19_9171c517",
+        "filename": "include/spdk_internal/log.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-16T20:14:29Z",
+      "side": 1,
+      "message": "This should probably use DEBUG level, since it\u0027s only enabled for debug builds, and then we could introduce another macro that takes a trace flag but is enabled in release builds and outputs to INFO log level.\n\nWe can do that in a separate patch to avoid making this patch too complicated, though.",
+      "revId": "b9f01f47968d964ac1a8eb0c5df35dc18ce3eafb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12eb13c8_51b66e37",
         "filename": "lib/log/log.c",
         "patchSetId": 5
