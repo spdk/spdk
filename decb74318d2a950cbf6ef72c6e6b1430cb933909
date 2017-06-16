@@ -36,6 +36,29 @@
     },
     {
       "key": {
+        "uuid": "fa162bed_53143478",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-16T11:45:20Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be part of lib/vhost/task.h ? Same as some of the functions below, might be moved to lib/vhost/task.c.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 2
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1bc6b689_d19a24f3",
         "filename": "lib/vhost/vhost_block.c",
         "patchSetId": 24
@@ -64,6 +87,121 @@
       "writtenOn": "2017-06-15T23:59:01Z",
       "side": 1,
       "message": "remove this nop?",
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2380dfc5_6f74f731",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-16T11:45:20Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 490,
+        "startChar": 53,
+        "endLine": 490,
+        "endChar": 54
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d6fe58a_3d29a871",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-16T11:45:20Z",
+      "side": 1,
+      "message": "Similar path in vhost_scsi returns ENODEV.",
+      "range": {
+        "startLine": 493,
+        "startChar": 10,
+        "endLine": 493,
+        "endChar": 16
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d5d14d1_60c17615",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-16T11:45:20Z",
+      "side": 1,
+      "message": "More descriptive error in case of timeout might be useful.\n\"add blk vdev\" at least.",
+      "range": {
+        "startLine": 536,
+        "startChar": 65,
+        "endLine": 536,
+        "endChar": 73
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "535229ab_db6d94bf",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-16T11:45:20Z",
+      "side": 1,
+      "message": "I think this part should be removed, similar to vhost_scsi.c.",
+      "range": {
+        "startLine": 559,
+        "startChar": 0,
+        "endLine": 568,
+        "endChar": 2
+      },
+      "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ed9aa90_13b87a08",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-16T11:45:20Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be present in include/spdk/vhost.h similar to other related calls ?",
+      "range": {
+        "startLine": 139,
+        "startChar": 4,
+        "endLine": 139,
+        "endChar": 39
+      },
       "revId": "decb74318d2a950cbf6ef72c6e6b1430cb933909",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
