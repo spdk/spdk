@@ -358,6 +358,10 @@ io_loop(void)
 			print_stats();
 			next_stats_tsc += g_tsc_rate;
 		}
+
+		if (g_insert_times == g_expected_insert_times && g_removal_times == g_expected_removal_times) {
+                        break;
+                }
 	}
 
 	TAILQ_FOREACH_SAFE(dev, &g_devs, tailq, dev_tmp) {
