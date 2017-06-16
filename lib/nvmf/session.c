@@ -273,6 +273,7 @@ spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
 		return;
 	}
 	conn->sq_head_max = cmd->sqsize;
+	conn->qid = cmd->qid;
 
 	if (cmd->qid == 0) {
 		conn->type = CONN_TYPE_AQ;
@@ -403,6 +404,26 @@ spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn)
 	if (session->num_connections == 0) {
 		session_destruct(session);
 	}
+}
+
+struct spdk_nvmf_conn *
+spdk_nvmf_session_get_conn(struct spdk_nvmf_session *session, uint16_t qid)
+{
+	struct spdk_nvmf_conn *conn;
+
+	TAILQ_FOREACH(conn, &session->connections, link) {
+		if (conn->qid == qid) {
+			return conn;
+		}
+	}
+	return NULL;
+}
+
+struct spdk_nvmf_request *
+spdk_nvmf_conn_get_request(struct spdk_nvmf_conn *conn, uint16_t cid)
+{
+	/* TODO: track list of outstanding requests in conn? */
+	return NULL;
 }
 
 static uint64_t

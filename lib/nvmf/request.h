@@ -73,4 +73,6 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
+int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
+
 #endif

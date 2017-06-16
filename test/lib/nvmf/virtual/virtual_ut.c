@@ -39,6 +39,19 @@
 
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
+
+struct spdk_nvmf_conn *
+spdk_nvmf_session_get_conn(struct spdk_nvmf_session *session, uint16_t qid)
+{
+	return NULL;
+}
+
+struct spdk_nvmf_request *
+spdk_nvmf_conn_get_request(struct spdk_nvmf_conn *conn, uint16_t cid)
+{
+	return NULL;
+}
+
 int
 spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req)
 {
@@ -93,6 +106,12 @@ spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req)
 
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
+int
+spdk_nvmf_request_abort(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
