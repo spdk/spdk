@@ -68,6 +68,8 @@ $valgrind test/lib/scsi/lun/lun_ut
 $valgrind test/lib/scsi/scsi_bdev/scsi_bdev_ut
 $valgrind test/lib/scsi/scsi_nvme/scsi_nvme_ut
 
+$valgrind test/lib/lvol/lvol_ut
+
 $valgrind test/lib/iscsi/param/param_ut
 $valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/target_node.conf
 $valgrind test/lib/iscsi/pdu/pdu
