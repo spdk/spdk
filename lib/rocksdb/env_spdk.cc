@@ -527,7 +527,7 @@ SpdkEnv::SpdkEnv(const std::string &dir, const std::string &conf,
 	opts->name = "rocksdb";
 	opts->config_file = mConfig.c_str();
 	opts->reactor_mask = "0x1";
-	opts->dpdk_mem_size = 1024 + cache_size_in_mb;
+	opts->mem_size = 1024 + cache_size_in_mb;
 	opts->shutdown_cb = spdk_rocksdb_shutdown;
 
 	spdk_fs_set_cache_size(cache_size_in_mb);

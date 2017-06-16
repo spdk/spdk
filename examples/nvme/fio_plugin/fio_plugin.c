@@ -231,7 +231,7 @@ static int spdk_fio_setup(struct thread_data *td)
 	if (!spdk_env_initialized) {
 		spdk_env_opts_init(&opts);
 		opts.name = "fio";
-		opts.dpdk_mem_size = 512;
+		opts.mem_size = 512;
 		spdk_env_init(&opts);
 		spdk_env_initialized = true;
 		cpu_core_unaffinitized();
