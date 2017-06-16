@@ -486,7 +486,6 @@ function vm_setup()
 
 	echo "INFO: TASK MASK: $task_mask"
 	local cmd="taskset -a $task_mask $INSTALL_DIR/bin/qemu-system-x86_64 ${eol}"
-
 	local vm_socket_offset=$(( 10000 + 100 * vm_num ))
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
@@ -555,11 +554,22 @@ function vm_setup()
 				cmd+="-device scsi-hd,drive=hd$i,vendor=$raw_name ${eol}"
 				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache ${eol}"
 				;;
-			spdk_vhost)
+			spdk_vhost_scsi)
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
-
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol}"
+				;;
+			spdk_vhost_blk)
+				[[ $disk =~ _size_([0-9]+[MG]?) ]] || true
+				size=${BASH_REMATCH[1]}
+				if [ -z "$size" ]; then
+					size="20G"
+				fi
+				disk=${disk%%_*}
+				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
+				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
+				cmd+="-device vhost-user-blk-pci,chardev=char_$disk,"
+				cmd+="logical_block_size=4096,size=$size ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
@@ -573,7 +583,7 @@ function vm_setup()
 				cmd+=" -device vhost-scsi-pci,wwpn=$disk ${eol}"
 				;;
 			*)
-				error "unknown mode '$disk_type', use: virtio, spdk_vhost or kernel_vhost"
+				error "unknown mode '$disk_type', use: virtio, spdk_vhost_scsi, spdk_vhost_blk or kernel_vhost"
 				return 1
 		esac
 	done
@@ -596,6 +606,7 @@ function vm_setup()
 	echo "rm -f $qemu_pid_file"
 	echo '$qemu_cmd'
 	echo "echo 'Waiting for QEMU pid file'"
+	echo "sleep 1"
 	echo "[[ ! -f $qemu_pid_file ]] && sleep 1"
 	echo "[[ ! -f $qemu_pid_file ]] && echo 'ERROR: no qemu pid file found' && exit 1"
 	echo
@@ -766,7 +777,7 @@ function vm_check_scsi_location()
 		disk_type="$(cat $entry/device/vendor)"; \
 		if [[ $disk_type == INTEL* ]] || [[ $disk_type == RAWSCSI* ]] || [[ $disk_type == LIO-ORG* ]]; then \
 			fname=$(basename $entry); \
-			echo -n "$fname "; \
+			echo -n " $fname"; \
 		fi; \
 	done'
 
@@ -787,6 +798,17 @@ function vm_reset_scsi_devices()
 		echo "INFO: VM$1 Performing device reset on disk $disk"
 		vm_ssh $1 sg_reset /dev/$disk -vNd
 	done
+}
+
+function vm_check_blk_location()
+{
+	local script='shopt -s nullglob; cd /sys/block; echo vd*'
+	SCSI_DISK="$(echo "$script" | vm_ssh $1 bash -s)"
+
+	if [[ -z "$SCSI_DISK" ]]; then
+		error "no blk test disk found!"
+		return 1
+	fi
 }
 
 # Shutdown or kill any running VM and SPDK APP.

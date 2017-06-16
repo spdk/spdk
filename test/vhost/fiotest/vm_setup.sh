@@ -15,7 +15,8 @@ function usage()
 	echo "    --test-type=TYPE      Perform specified test:"
 	echo "                          virtio - test host virtio-scsi-pci using file as disk image"
 	echo "                          kernel_vhost - use kernel driver vhost-scsi"
-	echo "                          spdk_vhost - use spdk vhost"
+	echo "                          spdk_vhost_scsi - use spdk vhost scsi"
+	echo "                          spdk_vhost_blk - use spdk vhost block"
 	echo "    ---cache=CACHE        Use CACHE for virtio test: "
 	echo "                          writethrough, writeback, none, unsafe or directsyns"
 	echo "                          Default is writethrough"
@@ -43,6 +44,7 @@ while getopts 'xf:h-:' optchar; do
 			work-dir=*) TEST_DIR="${OPTARG#*=}" ;;
 			raw-cache=*) raw_cache="--raw-cache=${OPTARG#*=}" ;;
 			test-type=*) test_type="${OPTARG#*=}" ;;
+			spdk-vhost-mode=*) spdk_vhost_mode="${OPTARG#*=}" ;;
 			disk=*) disk="${OPTARG#*=}" ;;
 			os=*) os="${OPTARG#*=}"
 				if [[ ! -r "$os" ]]; then
@@ -65,7 +67,7 @@ done
 . $BASE_DIR/common.sh
 
 [[ -z "$os" ]] && os="$TEST_DIR/debian.qcow2"
-[[ $test_type == "spdk_vhost" ]] && [[ -z "$disk" ]] && disk="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
+[[ $test_type =~ "spdk_vhost" ]] && [[ -z "$disk" ]] && disk="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
 if [[ $test_type == "kernel_vhost" ]] && [[ -z "$disk" ]]; then
 	echo "ERROR: for $test_type '--disk=WWN' is mandatory"
 	exit 1
