@@ -6,6 +6,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
+lvol_run=false
 fio_jobs="$BASE_DIR/fio_jobs/"
 test_type=spdk_vhost
 reuse_vms=false
@@ -42,6 +43,7 @@ function usage()
 	echo "                          NUM - VM number (mandatory)"
 	echo "                          OS - VM os disk path (optional)"
 	echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
+	echo "    --lvol-run            Enable the lvol functionality for a bdev device"
 	echo "    --disk-split          By default all test types execute fio jobs on all disks which are available on guest"
 	echo "                          system. Use this option if only some of the disks should be used for testing."
 	echo "                          Example: --disk-split=4,1-3 will result in VM 1 using it's first disk (ex. /dev/sda)"
@@ -66,6 +68,7 @@ while getopts 'xh-:' optchar; do
 			test-type=*) test_type="${OPTARG#*=}" ;;
 			force-build) force_build=true ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
+			lvol-run) lvol_run=true ;;
 			disk-split=*) disk_split="${OPTARG#*=}" ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
@@ -163,6 +166,7 @@ for vm_conf in ${vms[@]}; do
 
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
+				echo "=============================$disk============================="
 				echo "INFO: Creating controller naa.$disk.${conf[0]}"
 				$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
 
@@ -182,6 +186,17 @@ for vm_conf in ${vms[@]}; do
 				if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0 > /dev/null; then
 					echo "ERROR: Removing device 0 from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
 					false
+				fi
+
+				if $lvol_run -eq true ;then
+					echo "INFO: Add the lvol to $disk"
+					guid=`$rpc_py -v construct_lvol_store $disk | grep GUID | awk '{print $2}' | sed -e 's@"@@g'`
+
+					echo "INFO: Add a bdev with an lvol backend to $disk"
+					$rpc_py construct_lvol_bdev $guid 32
+
+					echo "INFO: Destroy an lvol store to $disk"
+					$rpc_py destroy_lvol_store $guid
 				fi
 
 				echo "INFO: Re-adding device 0 to naa.$disk.${conf[0]}"
