@@ -19,6 +19,11 @@
   written to and read from correctly on each LUN
 - runs on Fedora 25 and Ubuntu 16.04 guest systems
 
+#### Lvol tests
+- Using the same setup and steps as FIO Integrity tests
+- Logical volume block device is used as backend instead of using
+    NVMe device backed directly
+
 #### Filesystem integrity
 - runs SPDK with 1 VM with 1 NVMe device attached.
 - creates a partition table and filesystem on passed device, and mounts it
