@@ -951,7 +951,7 @@ bdev_nvme_library_init(void)
 		probe_ctx->names[i] = val;
 		probe_ctx->count++;
 
-		if (probe_ctx->trids[i].trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		if (probe_ctx->trids[i].trtype != SPDK_NVME_TRANSPORT_PCIE) {
 			if (probe_ctx->trids[i].subnqn[0] == '\0') {
 				SPDK_ERRLOG("Need to provide subsystem nqn\n");
 				rc = -1;
