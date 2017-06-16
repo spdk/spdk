@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4f2dc48_5de510b2",
+        "filename": "test/lib/nvme/hotplug.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-16T18:07:04Z",
+      "side": 1,
+      "message": "I don\u0027t think this is quoted the way you want it to be (the \" around NVM ends the first string), although it happens to work anyway.\n\nYou can also simplify this to:\n\n  ssh_vm \"lspci | grep -c NVM\"",
+      "revId": "1f9eab75b98bf2c95f5768ceffda9cb054885113",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4515fae3_6add3fc3",
+        "filename": "test/lib/nvme/hotplug.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-16T18:07:04Z",
+      "side": 1,
+      "message": "-ne works on numbers, so this doesn\u0027t need the quotes.",
+      "revId": "1f9eab75b98bf2c95f5768ceffda9cb054885113",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
