@@ -58,11 +58,9 @@
 
 /* Features that are specified in VIRTIO SCSI but currently not supported:
  * - Live migration not supported yet
- * - LUN params change
  * - T10 PI
  */
 #define SPDK_VHOST_SCSI_DISABLED_FEATURES	((1ULL << VHOST_F_LOG_ALL) | \
-						(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
 						(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
 #define MGMT_POLL_PERIOD_US (1000 * 5)
