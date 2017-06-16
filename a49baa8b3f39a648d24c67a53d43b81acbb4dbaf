@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c74245f_458308af",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-16T16:06:47Z",
+      "side": 1,
+      "message": "This should be handled with an a SCSI check condition instead (with ASC \u003d LOGICAL_UNIT_NOT_SUPPORTED).  see spdk_scsi_task_process_null_lun() which does this work when iSCSI runs into a NULL LUN.  You should be able to use that same function here.",
+      "revId": "a49baa8b3f39a648d24c67a53d43b81acbb4dbaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
