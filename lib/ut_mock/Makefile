@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = spdk_mock.c
+C_SRCS = mock.c
 LIBNAME = spdk_mock
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
