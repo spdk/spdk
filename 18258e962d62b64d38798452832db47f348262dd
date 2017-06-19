@@ -1,0 +1,291 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31b25b56_6e27b8b4",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "readonly",
+      "range": {
+        "startLine": 74,
+        "startChar": 70,
+        "endLine": 74,
+        "endChar": 79
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a48fc23_e9dac204",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "is_readonly",
+      "range": {
+        "startLine": 79,
+        "startChar": 20,
+        "endLine": 79,
+        "endChar": 33
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d69af0d_858adc93",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "this is vhost-blk specific and should be placed in vhost_block.c",
+      "range": {
+        "startLine": 581,
+        "startChar": 5,
+        "endLine": 581,
+        "endChar": 33
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ec6c55c_8dbcb064",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "\u0026ff",
+      "range": {
+        "startLine": 584,
+        "startChar": 46,
+        "endLine": 584,
+        "endChar": 48
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c77e698_4ec72387",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 586,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "return !!(ff \u0026 (1ULL \u003c\u003c VIRTIO_BLK_F_RO))",
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5a234c0_95e6bbd4",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "false",
+      "range": {
+        "startLine": 621,
+        "startChar": 46,
+        "endLine": 621,
+        "endChar": 47
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e66480ea_e026a400",
+        "filename": "lib/vhost/vhost_block.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "how about making 2 vhost_blk_device_backend globals: one default and one for ro.",
+      "range": {
+        "startLine": 647,
+        "startChar": 0,
+        "endLine": 649,
+        "endChar": 79
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8f6691a_ba66293f",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "just readonly",
+      "range": {
+        "startLine": 372,
+        "startChar": 6,
+        "endLine": 372,
+        "endChar": 19
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a008d3b_8a29c49e",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "this function doesn\u0027t enable anything",
+      "range": {
+        "startLine": 389,
+        "startChar": 0,
+        "endLine": 389,
+        "endChar": 23
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f9b9993_2e1ea97f",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "why do you read config file in rpc call?",
+      "range": {
+        "startLine": 393,
+        "startChar": 6,
+        "endLine": 393,
+        "endChar": 28
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7636f2f0_c7f83fa8",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "read-only flag should be written unconditionally",
+      "range": {
+        "startLine": 543,
+        "startChar": 2,
+        "endLine": 543,
+        "endChar": 40
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9de30c0_35b3f08a",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": "spdk_json_write_bool(w, spdk_vhost_get_read_only_bit(vdev));",
+      "range": {
+        "startLine": 546,
+        "startChar": 3,
+        "endLine": 546,
+        "endChar": 37
+      },
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "defbcd7d_46dbc31b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-19T13:01:57Z",
+      "side": 1,
+      "message": ".",
+      "revId": "18258e962d62b64d38798452832db47f348262dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
