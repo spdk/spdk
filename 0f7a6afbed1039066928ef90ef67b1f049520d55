@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f6b1ea7c_83255e41",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-19T14:47:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4dc6873d_4ca525ba",
+      "revId": "0f7a6afbed1039066928ef90ef67b1f049520d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c84757e0_6f0e3c7f",
         "filename": "include/spdk/lvol.h",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-16T15:46:21Z",
       "side": 1,
       "message": "Note that these structures should all move to either a header file in spdk_internal, or into the .c files.  We do not want users to access fields directly - the API should be using the functions instead.  (See blob.h and blobfs.h).",
+      "revId": "0f7a6afbed1039066928ef90ef67b1f049520d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "717d6c54_6d4fffbf",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-19T14:47:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c84757e0_6f0e3c7f",
       "revId": "0f7a6afbed1039066928ef90ef67b1f049520d55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "b98b8ed8_93edba3b",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-19T14:47:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21435280_39a8ebea",
+      "revId": "0f7a6afbed1039066928ef90ef67b1f049520d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "266314e4_f42ed37e",
         "filename": "include/spdk/lvol.h",
         "patchSetId": 10
@@ -81,6 +135,24 @@
       "writtenOn": "2017-06-16T15:46:21Z",
       "side": 1,
       "message": "For blobstore, we have struct spdk_blob_store and spdk_bs_init.\nFor blobfs, we have struct spdk_filesystem and spdk_fs_init\n\nSo maybe these should be spdk_lvs_init and spdk_lvs_unload for consistency?",
+      "revId": "0f7a6afbed1039066928ef90ef67b1f049520d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0330f621_fe491c80",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-19T14:47:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "266314e4_f42ed37e",
       "revId": "0f7a6afbed1039066928ef90ef67b1f049520d55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
