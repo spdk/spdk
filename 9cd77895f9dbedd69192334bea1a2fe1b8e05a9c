@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbe50673_34270ca6",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-19T16:32:15Z",
+      "side": 1,
+      "message": "Why is the sleep 1 needed?\n\nAlso not sure about what the \"\u0026\" does here.  Should this be \u0026\u0026?",
+      "revId": "9cd77895f9dbedd69192334bea1a2fe1b8e05a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4e4bb8b_2aee73d2",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-19T16:32:15Z",
+      "side": 1,
+      "message": "This will always add a 10 second sleep, even if the VMs shutdown in 1 or 2 seconds.  We really want to avoid these kinds of delays, since they add time to every patch that runs through the test pool.\n\nCould we instead check all of the VMs every second?  If kill -0 $vm_pid fails for all of the VMs, then we can immediately return.  If it is still not successful after 10 seconds, then we can proceed with the -KILL and return failure here.",
+      "revId": "9cd77895f9dbedd69192334bea1a2fe1b8e05a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
