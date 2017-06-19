@@ -31,27 +31,22 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-SPDK_LIB_LIST = log cunit
-
-CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-LIBS += $(SPDK_LIB_LINKER_ARGS)
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/util
+APP = string_ut
+C_SRCS := string_ut.c
+
 LIBS += -lcunit
 
-APP = io_channel_ut
-C_SRCS = $(APP).c
+all : $(APP)
 
-all: $(APP)
-
-$(APP): $(OBJS) $(SPDK_LIB_FILES)
+$(APP) : $(OBJS) $(SPDK_LIBS)
 	$(LINK_C)
 
-clean:
+clean :
 	$(CLEAN_C) $(APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

@@ -73,8 +73,8 @@ $valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/t
 $valgrind test/lib/iscsi/pdu/pdu
 
 $valgrind test/unit/lib/util/bit_array.c/bit_array_ut
-$valgrind test/lib/util/io_channel/io_channel_ut
-$valgrind test/lib/util/string/string_ut
+$valgrind test/unit/lib/util/io_channel.c/io_channel_ut
+$valgrind test/unit/lib/util/string.c/string_ut
 
 # local unit test coverage
 if [ "$cov_avail" = "yes" ]; then
