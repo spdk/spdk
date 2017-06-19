@@ -34,8 +34,14 @@ echo "NVMf subsystem created."
 
 timing_enter start_iscsi_tgt
 
+cp $testdir/iscsi.conf $testdir/iscsi.conf.tmp
+
+if [ $1 -eq 1 ]; then
+	echo "[NVMe]" >> $testdir/iscsi.conf.tmp
+	echo " TransportID 'trtype:RDMA adrfam:ipv4 traddr:192.168.100.8 trsvcid:4420 subnqn:nqn.2016-06.io.spdk:cnode1' Nvme0" >> $testdir/iscsi.conf.tmp
+fi
 # Start the iSCSI target
-$ISCSI_APP -c $testdir/iscsi.conf -m 0x1 -p 0 -s 512 &
+$ISCSI_APP -c $testdir/iscsi.conf.tmp -m 0x1 -p 0 -s 512 &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -48,7 +54,9 @@ timing_exit start_iscsi_tgt
 echo "Creating an iSCSI target node."
 $rpc_py -p 5261 add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 $rpc_py -p 5261 add_initiator_group 1 ALL $INITIATOR_IP/32
-$rpc_py -p 5261 construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a 192.168.100.8 -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+if [ $1 -eq 0 ]; then
+	$rpc_py -p 5261 construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a 192.168.100.8 -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+fi
 $rpc_py -p 5261 construct_target_node Target1 Target1_alias 'Nvme0n1:0' '1:1' 64 1 0 0 0
 sleep 1
 
@@ -66,6 +74,7 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $iscsipid
+rm -f $testdir/iscsi.conf.tmp
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 killprocess $nvmfpid
 
