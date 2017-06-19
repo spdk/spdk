@@ -31,8 +31,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-TEST_FILE = direct_ut.c
+TEST_FILE = session_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/nvmf.unittest.mk
