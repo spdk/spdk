@@ -265,7 +265,7 @@ if ! $no_shutdown; then
 	echo "==============="
 	echo "INFO: APP EXITING"
 	echo "INFO: killing all VMs"
-	vm_kill_all
+	vm_shutdown_all
 	echo "INFO: waiting 2 seconds to let all VMs die"
 	sleep 2
 	if [[ $test_type == "spdk_vhost" ]]; then
