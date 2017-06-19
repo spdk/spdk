@@ -373,12 +373,14 @@ struct rpc_vhost_block_ctrlr {
 	char *ctrlr;
 	char *dev_name;
 	char *cpumask;
+	bool readonly;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_vhost_block_ctrlr[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_block_ctrlr, ctrlr), spdk_json_decode_string },
 	{"dev_name", offsetof(struct rpc_vhost_block_ctrlr, dev_name), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_block_ctrlr, cpumask), spdk_json_decode_string, true},
+	{"readonly", offsetof(struct rpc_vhost_block_ctrlr, readonly), spdk_json_decode_bool, true},
 };
 
 static void
@@ -413,7 +415,7 @@ spdk_rpc_construct_vhost_block_controller(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_blk_construct(req.ctrlr, cpumask, req.dev_name);
+	rc = spdk_vhost_blk_construct(req.ctrlr, cpumask, req.dev_name, req.readonly);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -525,6 +527,9 @@ spdk_rpc_get_vhost_block_controllers(struct spdk_jsonrpc_server_conn *conn,
 		spdk_json_write_name(w, "cpu_mask");
 		snprintf(buf, sizeof(buf), "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
 		spdk_json_write_string_fmt(w, "%s", buf);
+
+		spdk_json_write_name(w, "readonly");
+		spdk_json_write_bool(w, spdk_vhost_blk_get_readonly(vdev));
 
 		bdev = spdk_vhost_blk_get_dev(vdev);
 		spdk_json_write_name(w, "bdev");
