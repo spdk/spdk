@@ -53,7 +53,7 @@ $valgrind test/unit/lib/json/json_parse.c/json_parse_ut
 $valgrind test/unit/lib/json/json_util.c/json_util_ut
 $valgrind test/unit/lib/json/json_write.c/json_write_ut
 
-$valgrind test/lib/jsonrpc/server/jsonrpc_server_ut
+$valgrind test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 
 $valgrind test/lib/log/log_ut
 
