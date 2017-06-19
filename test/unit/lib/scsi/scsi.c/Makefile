@@ -31,23 +31,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-SPDK_LIB_LIST = log util cunit
+SPDK_LIB_LIST = log conf trace util
 
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi
-LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 LIBS += -lcunit
 
-APP = scsi_bdev_ut
-C_SRCS = scsi_bdev_ut.c
+APP = scsi_ut
+C_SRCS = scsi_ut.c
 
 all: $(APP)
 
-$(APP): $(OBJS) $(SPDK_LIB_FILES)
+$(APP): $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:
