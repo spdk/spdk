@@ -32,7 +32,13 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-TEST_FILE = session_ut.c
+DIRS-y = direct.c discovery.c request.c session.c subsystem.c virtual.c
 
-include $(SPDK_ROOT_DIR)/mk/nvmf.unittest.mk
+.PHONY: all clean $(DIRS-y)
+
+all: $(DIRS-y)
+clean: $(DIRS-y)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
