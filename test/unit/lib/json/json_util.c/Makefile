@@ -31,9 +31,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-TEST_FILE = json_write_ut.c
-OTHER_FILES = json_parse.c
+TEST_FILE = json_util_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/json.unittest.mk

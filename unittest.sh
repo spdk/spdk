@@ -49,9 +49,9 @@ $valgrind test/lib/nvme/unit/nvme_quirks_c/nvme_quirks_ut
 
 $valgrind test/lib/ioat/unit/ioat_ut
 
-$valgrind test/lib/json/parse/json_parse_ut
-$valgrind test/lib/json/util/json_util_ut
-$valgrind test/lib/json/write/json_write_ut
+$valgrind test/unit/lib/json/json_parse.c/json_parse_ut
+$valgrind test/unit/lib/json/json_util.c/json_util_ut
+$valgrind test/unit/lib/json/json_write.c/json_write_ut
 
 $valgrind test/lib/jsonrpc/server/jsonrpc_server_ut
 
