@@ -65,6 +65,7 @@ struct spdk_vhost_blk_dev {
 	struct spdk_io_channel *bdev_io_channel;
 	struct spdk_poller *requestq_poller;
 	struct spdk_ring *tasks_pool;
+	bool readonly;
 };
 
 static void
@@ -255,10 +256,13 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 			rc = spdk_bdev_readv(bvdev->bdev, bvdev->bdev_io_channel,
 					     &task->iovs[1], task->iovcnt, offset,
 					     task->length, blk_request_complete_cb, task);
-		} else {
+		} else if (!bvdev->readonly) {
 			rc = spdk_bdev_writev(bvdev->bdev, bvdev->bdev_io_channel,
 					      &task->iovs[1], task->iovcnt, offset,
 					      task->length, blk_request_complete_cb, task);
+		} else {
+			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Device is in read-only mode!\n");
+			rc = -1;
 		}
 
 		if (rc) {
@@ -304,6 +308,7 @@ vdev_worker(void *arg)
 	spdk_vhost_blk_get_tasks(bvdev, tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
 		process_blk_request(tasks[i], bvdev, reqs[i]);
+
 	}
 }
 
@@ -421,6 +426,14 @@ spdk_vhost_blk_get_dev(struct spdk_vhost_dev *vdev)
 	return bvdev->bdev;
 }
 
+bool
+spdk_vhost_blk_get_readonly(struct spdk_vhost_dev *vdev)
+{
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+	assert(bvdev != NULL);
+	return bvdev->readonly;
+}
+
 static void
 bdev_remove_cb(void *remove_ctx)
 {
@@ -487,21 +500,37 @@ destroy_device(int vid)
 	spdk_vhost_dev_unload(vdev);
 }
 
+#define VIRTIO_BLK_FEATURES (1ULL << VHOST_F_LOG_ALL) | (1ULL << VHOST_USER_F_PROTOCOL_FEATURES) |	\
+		(1ULL << VIRTIO_F_VERSION_1) | (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |			\
+		(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |			\
+		(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_RO) |				\
+		(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) |			\
+		(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI) |				\
+		(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE)
+
+#define VIRTIO_BLK_DISABLED_FEATURES (1ULL << VHOST_F_LOG_ALL) | (1ULL << VIRTIO_BLK_F_GEOMETRY) |	\
+		(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |\
+		(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI)
+
+#define VIRTIO_BLK_FEATURES_ENABLE_READONLY (VIRTIO_BLK_DISABLED_FEATURES) & ~(1ULL << VIRTIO_BLK_F_RO)
+
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
-	.virtio_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VHOST_USER_F_PROTOCOL_FEATURES) |
-	(1ULL << VIRTIO_F_VERSION_1) | (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
-	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |
-	(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_RO) |
-	(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) |
-	(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI) |
-	(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE),
-	.disabled_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
-	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
-	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
+	.virtio_features = VIRTIO_BLK_FEATURES,
+	.disabled_features = VIRTIO_BLK_DISABLED_FEATURES,
 	.ops = {
 		.new_device =  new_device,
 		.destroy_device = destroy_device,
 	}
+};
+
+const struct spdk_vhost_dev_backend vhost_blk_device_backend_enable_ro = {
+	.virtio_features = VIRTIO_BLK_FEATURES,
+	.disabled_features = VIRTIO_BLK_FEATURES_ENABLE_READONLY,
+	.ops = {
+		.new_device = new_device,
+		.destroy_device = destroy_device,
+	}
+
 };
 
 int
@@ -513,6 +542,7 @@ spdk_vhost_blk_controller_construct(void)
 	char *cpumask_str;
 	char *name;
 	uint64_t cpumask;
+	bool readonly = false;
 
 	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostBlk")) {
@@ -532,6 +562,7 @@ spdk_vhost_blk_controller_construct(void)
 		}
 
 		cpumask_str = spdk_conf_section_get_val(sp, "Cpumask");
+		readonly = spdk_conf_section_get_boolval(sp, "Readonly", false);
 		if (cpumask_str == NULL) {
 			cpumask = spdk_app_get_core_mask();
 		} else if (spdk_vhost_parse_core_mask(cpumask_str, &cpumask)) {
@@ -544,7 +575,7 @@ spdk_vhost_blk_controller_construct(void)
 			continue;
 		}
 
-		if (spdk_vhost_blk_construct(name, cpumask, bdev_name) < 0) {
+		if (spdk_vhost_blk_construct(name, cpumask, bdev_name, readonly) < 0) {
 			return -1;
 		}
 	}
@@ -553,7 +584,7 @@ spdk_vhost_blk_controller_construct(void)
 }
 
 int
-spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_name)
+spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_name, bool readonly)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_bdev *bdev;
@@ -579,8 +610,15 @@ spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_nam
 
 	bvdev->bdev = bdev;
 
-	ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
-				       &vhost_blk_device_backend);
+	if (!readonly)
+		ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
+					       &vhost_blk_device_backend);
+	else {
+		ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
+					       &vhost_blk_device_backend_enable_ro);
+		bvdev->readonly = true;
+	}
+
 	if (ret != 0) {
 		spdk_bdev_unclaim(bdev);
 		goto err;
