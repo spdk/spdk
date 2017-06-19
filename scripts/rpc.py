@@ -536,12 +536,15 @@ def construct_vhost_block_controller(args):
     }
     if args.cpumask:
         params['cpumask'] = args.cpumask
+    if args.readonly:
+        params['readonly'] = args.readonly
     jsonrpc_call('construct_vhost_block_controller', params)
 
 p = subparsers.add_parser('construct_vhost_block_controller', help='Add a new vhost block controller')
 p.add_argument('ctrlr', help='controller name')
 p.add_argument('dev_name', help='device name')
 p.add_argument('--cpumask', help='cpu mask for this controller')
+p.add_argument("-r", "--readonly", action='store_true', help='Set controller as read-only')
 p.set_defaults(func=construct_vhost_block_controller)
 
 def remove_vhost_block_controller(args):
