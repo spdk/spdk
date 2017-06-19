@@ -324,6 +324,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 	}
 
 	vdev->name = strdup(name);
+	vdev->path = strdup(path);
 	vdev->vid = -1;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
@@ -379,6 +380,7 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 	SPDK_NOTICELOG("Controller %s: removed\n", vdev->name);
 
 	free(vdev->name);
+	free(vdev->path);
 	g_spdk_vhost_devices[ctrlr_num] = NULL;
 	return 0;
 }
