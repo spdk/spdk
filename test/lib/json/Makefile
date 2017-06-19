@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = jsoncat parse util write
+DIRS-y = jsoncat
 
 .PHONY: all clean $(DIRS-y)
 
