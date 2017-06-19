@@ -36,15 +36,64 @@
 
 #include "spdk/stdinc.h"
 
-#define DECLARE_WRAPPER(fn, ret, args) \
-		ret __wrap_ ## fn args; ret __real_ ## fn args;
+/* used to signify pass through */
+#define MOCK_PASS (0xdeadbeef)
 
-/* define new wrappers (alphabetically please) here using above helper macro */
-extern int ut_fake_pthread_mutex_init;
+/* for controlling mocked function behavior, setting */
+/* and getting values from the stub, the _P macros are */
+/* for mocking functions that return pointer values */
+#define MOCK_SET(fn, ret, val) \
+	ut_ ## fn = (ret){val};
+
+#define MOCK_SET_P(fn, ret, val) \
+	ut_p_ ## fn = (ret){val};
+
+#define MOCK_GET(fn) \
+	ut_ ## fn
+
+#define MOCK_GET_P(fn) \
+	ut_p_ ## fn
+
+/* for declaring function protoypes for wrappers */
+#define DECLARE_WRAPPER(fn, ret, args) \
+	extern ret ut_ ## fn; \
+	ret __wrap_ ## fn args; ret __real_ ## fn args;
+
+/* for defining the implmentation of wrappers for syscalls */
+#define DEFINE_WRAPPER(fn, ret, dargs, pargs, val) \
+	ret ut_ ## fn = val; \
+	ret __wrap_ ## fn dargs \
+	{ \
+		if (ut_ ## fn == (ret)MOCK_PASS) { \
+			return __real_ ## fn pargs; \
+		} else { \
+			return MOCK_GET(fn); \
+		} \
+	}
+
+/* for defining the implmentation of stubs for SPDK funcs */
+/* the _P macro is for stubs that return pointer values */
+#define DEFINE_STUB(fn, ret, dargs, val) \
+	ret ut_ ## fn = val; \
+	ret fn dargs; \
+	ret fn dargs \
+	{ \
+		return MOCK_GET(fn); \
+	}
+
+#define DEFINE_STUB_P(fn, ret, dargs, val) \
+	ret ut_ ## fn = val; \
+	ret* ut_p_ ## fn = &(ut_ ## fn); \
+	ret* fn dargs; \
+	ret* fn dargs \
+	{ \
+		return MOCK_GET_P(fn); \
+	}
+
+/* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(pthread_mutex_init, int,
 		(pthread_mutex_t *mtx, const pthread_mutexattr_t *attr));
 
-extern int ut_fake_pthread_mutexattr_init;
 DECLARE_WRAPPER(pthread_mutexattr_init, int,
 		(pthread_mutexattr_t *attr));
 
