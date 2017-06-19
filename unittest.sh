@@ -30,6 +30,8 @@ if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -c -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
 fi
 
+$valgrind test/unit/lib/bdev/scsi_nvme.c/scsi_nvme_ut
+
 $valgrind test/lib/blob/blob_ut/blob_ut
 
 $valgrind test/lib/blobfs/blobfs_async_ut/blobfs_async_ut
@@ -66,7 +68,6 @@ $valgrind test/lib/scsi/dev/dev_ut
 $valgrind test/lib/scsi/init/init_ut
 $valgrind test/lib/scsi/lun/lun_ut
 $valgrind test/lib/scsi/scsi_bdev/scsi_bdev_ut
-$valgrind test/lib/scsi/scsi_nvme/scsi_nvme_ut
 
 $valgrind test/lib/iscsi/param/param_ut
 $valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/target_node.conf
