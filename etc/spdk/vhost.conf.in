@@ -138,6 +138,8 @@
   #Name vhost.2
   # Use first partition from the second Malloc device
   #Dev Malloc2p0
+  #	Put controller in read-only mode
+  #Readonly Yes
   # Start the poller for this vhost controller on one of the cores in
   #  this cpumask.  By default, it not specified, will use any core in the
   #  SPDK process.
