@@ -21,13 +21,13 @@ function monitor_cmd() {
 }
 
 function get_online_devices_count() {
-	ssh_vm "lspci | grep "NVM" | wc -l"
+	ssh_vm "lspci | grep -c NVM"
 }
 
 function wait_for_devices_ready() {
 	count=$(get_online_devices_count)
 
-	while [ "$count" -ne "4" ]; do
+	while [ $count -ne 4 ]; do
 		echo "waitting for all devices online"
 		count=$(get_online_devices_count)
 	done
