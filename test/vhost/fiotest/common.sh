@@ -328,14 +328,13 @@ function vm_shutdown()
 		return 0
 	fi
 
+	# Temporarily disabling exit flag for next ssh command, since it will
+	# "fail" due to shutdown
 	echo "Shutting down virtual machine $vm_dir"
-	if vm_ssh $1 "nohup sh -c 'shutdown -h -P now'; exit 0"; then
-		echo "INFO: VM$1 is shutting down - wait a while to complete"
-		return 0
-	else
-		error "VM$1 shutting FAILED"
-		return 1
-	fi
+	set +e
+	vm_ssh $1 "nohup sh -c 'shutdown -h -P now'"
+	echo "INFO: VM$1 is shutting down - wait a while to complete"
+	set -e
 }
 
 # Kill given VM
@@ -380,6 +379,32 @@ function vm_shutdown_all()
 	for vm in $VM_BASE_DIR/[0-9]*; do
 		vm_shutdown $(basename $vm)
 	done
+
+	echo "INFO: Waiting for VMs to shutdown..."
+	timeo=10
+	while [[ $timeo -gt 0 ]]; do
+		all_vms_down=1
+		for vm in $VM_BASE_DIR/[0-9]*; do
+			if /bin/kill -0 "$(cat $vm/qemu.pid)"; then
+				all_vms_down=0
+				break
+			fi
+		done
+
+		if [[ $all_vms_down == 1 ]]; then
+			echo "INFO: All VMs successfully shut down"
+			return 0
+		fi
+
+		((timeo-=1))
+		sleep 1
+	done
+
+	echo "ERROR: VMs were NOT shutdown properly - sending SIGKILL"
+	for vm in $VM_BASE_DIR/[0-9]*; do
+		/bin/kill -KILL "$(cat $vm/qemu.pid)"
+	done
+	return 1
 }
 
 function vm_setup()
