@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "217daa40_2d8e63f7",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T17:01:44Z",
+      "side": 1,
+      "message": "I think the goal is to get a 0 return code from the vm_ssh command; it is probably easier to just ignore the return code and let the vm_shutdown_all code below handle the case where the command fails.\n\ne.g.\n\n   vm_ssh $1 \"shutdown -h -P now\" || true",
+      "parentUuid": "dbe50673_34270ca6",
+      "revId": "9cd77895f9dbedd69192334bea1a2fe1b8e05a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4e4bb8b_2aee73d2",
         "filename": "test/vhost/fiotest/common.sh",
         "patchSetId": 2
