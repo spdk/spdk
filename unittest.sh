@@ -38,14 +38,14 @@ $valgrind test/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 # blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
 test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
 
-$valgrind test/lib/nvme/unit/nvme_c/nvme_ut
-$valgrind test/lib/nvme/unit/nvme_ctrlr_c/nvme_ctrlr_ut
-$valgrind test/lib/nvme/unit/nvme_ctrlr_cmd_c/nvme_ctrlr_cmd_ut
-$valgrind test/lib/nvme/unit/nvme_ns_c/nvme_ns_ut
-$valgrind test/lib/nvme/unit/nvme_ns_cmd_c/nvme_ns_cmd_ut
-$valgrind test/lib/nvme/unit/nvme_qpair_c/nvme_qpair_ut
-$valgrind test/lib/nvme/unit/nvme_pcie_c/nvme_pcie_ut
-$valgrind test/lib/nvme/unit/nvme_quirks_c/nvme_quirks_ut
+$valgrind test/unit/lib/nvme/nvme.c/nvme_ut
+$valgrind test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
+$valgrind test/unit/lib/nvme/nvme_ctrlr_cmd.c/nvme_ctrlr_cmd_ut
+$valgrind test/unit/lib/nvme/nvme_ns.c/nvme_ns_ut
+$valgrind test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut
+$valgrind test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut
+$valgrind test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut
+$valgrind test/unit/lib/nvme/nvme_quirks.c/nvme_quirks_ut
 
 $valgrind test/lib/ioat/unit/ioat_ut
 
