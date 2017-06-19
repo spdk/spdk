@@ -1,0 +1,163 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf31ecc5_d229ba11",
+        "filename": "include/spdk_internal/gpt.h",
+        "patchSetId": 32
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "Can you call this \"header\" or \"hdr\" to avoid confusion with CHS head?",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4b0ef7d_3acf096d",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "I\u0027m not really clear on what the distinction is between this file and the main vbdev_gpt.c file - both seem to look inside the GPT on-disk structures.  Can we merge this stuff into the other file and avoid the need for the header?",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef3ba207_dc304f42",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "We can\u0027t assert() things about data read from the disk - there could be data corruption (or intentionally malicious modifications) that hit this case.  This function should just return an error code if it finds an unexpected partition entry size.",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a1f075a_a95a69d2",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "I think this could be reworded for clarity (this looks copy-pasted from split, which does something pretty different):\n\n\"This driver reads a GPT partition table from a bdev and exposes a virtual block device for each partition.\"",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05b0a2ee_c774df09",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "I think it would be clearer to have \"partition\" mentioned somewhere in this structure\u0027s name (or \"part\" if you think that is too long).",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7267422d_bc7a7102",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "This needs to be rebased - bdev name is now dynamically allocated.",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fac9b60c_e03a781f",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "Please use the -D option rather than hard-coding the 0000 domain (see the other lspci calls, in test/lib/nvme/nvme.sh for example).",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "434ce34d_83f8808b",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "Please write this as one line to match our normal style:\n\n  for X in Y; do\n      xxx\n  done\n\n(The semicolon isn\u0027t necessary if you break the line between for and do, but it\u0027s nicer in the single-line form.)",
+      "range": {
+        "startLine": 27,
+        "startChar": 17,
+        "endLine": 27,
+        "endChar": 18
+      },
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47a8b7a1_146af57b",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:37:08Z",
+      "side": 1,
+      "message": "This should be doable in a single parted command (see example in test/nvmf/filesystem/filesystem.sh).",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
