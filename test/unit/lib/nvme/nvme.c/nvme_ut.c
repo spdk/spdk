@@ -63,13 +63,6 @@ spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 	return true;
 }
 
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		void *devhandle)
-{
-	return NULL;
-}
-
 int
 nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 			  void *cb_ctx,
@@ -153,19 +146,61 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
 
+DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
+	      (const struct spdk_nvme_transport_id *trid,
+	       const struct spdk_nvme_ctrlr_opts *opts,
+	       void *devhandle), {0})
+
+DEFINE_STUB(dummy_probe_cb, bool,
+	    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	     struct spdk_nvme_ctrlr_opts *opts), false)
+
+static void
+test_nvme_ctrlr_probe(void)
+{
+	int rc = 0;
+	const struct spdk_nvme_transport_id *trid = NULL;
+	void *devhandle = NULL;
+	spdk_nvme_probe_cb probe_cb = dummy_probe_cb;
+	void *cb_ctx = NULL;
+
+	MOCK_SET(dummy_probe_cb, bool, false)
+	rc = nvme_ctrlr_probe(trid, devhandle, probe_cb, cb_ctx);
+	CU_ASSERT(rc == 1);
+
+	// additional path coverage
+	MOCK_SET(dummy_probe_cb, bool, true)
+	MOCK_SET_P(nvme_transport_ctrlr_construct,
+		   struct spdk_nvme_ctrlr *, NULL)
+	rc = nvme_ctrlr_probe(trid, devhandle, probe_cb, cb_ctx);
+	CU_ASSERT(rc == -1);
+
+	// additional path coverage
+	// setup enough global stuff to get coverage
+	g_spdk_nvme_driver = malloc(sizeof(struct nvme_driver));
+	MOCK_SET(dummy_probe_cb, bool, true)
+	MOCK_SET_P(nvme_transport_ctrlr_construct,
+		   struct spdk_nvme_ctrlr *, &ut_nvme_transport_ctrlr_construct);
+	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
+	rc = nvme_ctrlr_probe(trid, devhandle, probe_cb, cb_ctx);
+	CU_ASSERT(rc == 0);
+
+	free(g_spdk_nvme_driver);
+}
+
 static void
 test_nvme_robust_mutex_init_shared(void)
 {
 	pthread_mutex_t mtx;
 	int rc = 0;
 
-	ut_fake_pthread_mutexattr_init = 0;
-	ut_fake_pthread_mutex_init = 0;
+	MOCK_SET(pthread_mutexattr_init, int, MOCK_PASS)
+	MOCK_SET(pthread_mutex_init, int, MOCK_PASS)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	CU_ASSERT(rc == 0);
 
-	ut_fake_pthread_mutexattr_init = -1;
-	ut_fake_pthread_mutex_init = 0;
+	MOCK_SET(pthread_mutexattr_init, int, -1)
+	MOCK_SET(pthread_mutex_init, int, MOCK_PASS)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	/* for FreeBSD the only possible return value is 0 */
 #ifndef __FreeBSD__
@@ -174,8 +209,8 @@ test_nvme_robust_mutex_init_shared(void)
 	CU_ASSERT(rc == 0);
 #endif
 
-	ut_fake_pthread_mutexattr_init = 0;
-	ut_fake_pthread_mutex_init = -1;
+	MOCK_SET(pthread_mutexattr_init, int, MOCK_PASS)
+	MOCK_SET(pthread_mutex_init, int, -1)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 #ifndef __FreeBSD__
 	CU_ASSERT(rc != 0);
@@ -405,6 +440,8 @@ int main(int argc, char **argv)
 			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
 		CU_add_test(suite, "test_trid_parse_and_compare",
 			    test_trid_parse_and_compare) == NULL ||
+		CU_add_test(suite, "test_nvme_ctrlr_probe",
+			    test_nvme_ctrlr_probe) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
