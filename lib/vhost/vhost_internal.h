@@ -73,6 +73,7 @@ struct spdk_vhost_dev {
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
+	bool readonly;
 	struct rte_vhost_vring virtqueue[MAX_VHOST_VRINGS] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 };
 
