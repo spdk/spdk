@@ -36,6 +36,7 @@
 #include "spdk_internal/log.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/conf.h"
 
 #include "spdk/vhost.h"
 #include "task.h"
@@ -368,11 +369,13 @@ SPDK_RPC_REGISTER("remove_vhost_scsi_dev", spdk_rpc_remove_vhost_scsi_dev)
 struct rpc_vhost_block_ctrlr {
 	char *ctrlr;
 	char *cpumask;
+	bool flag_readonly;
 };
 
 static const struct spdk_json_object_decoder rpc_construct_vhost_block_ctrlr[] = {
 	{"ctrlr", offsetof(struct rpc_vhost_block_ctrlr, ctrlr), spdk_json_decode_string },
 	{"cpumask", offsetof(struct rpc_vhost_block_ctrlr, cpumask), spdk_json_decode_string, true},
+	{"readonly", offsetof(struct rpc_vhost_block_ctrlr, flag_readonly), spdk_json_decode_bool, true},
 };
 
 static void
@@ -381,6 +384,20 @@ free_rpc_vhost_block_ctrlr(struct rpc_vhost_block_ctrlr *req)
 	free(req->ctrlr);
 	free(req->cpumask);
 }
+
+static int
+enable_vir_blk_readonly(void)
+{
+	struct spdk_conf_section *sp;// = spdk_conf_first_section(NULL);
+
+	sp = spdk_conf_find_section(NULL, "VhostBlk0");
+	if (sp == NULL) {
+		return 0;
+	}
+	return spdk_conf_section_get_boolval(sp, "Enable_read_only", false);
+}
+
+#define VIRTIO_BLK_F_RO 5
 
 static void
 spdk_rpc_construct_vhost_block_controller(struct spdk_jsonrpc_server_conn *conn,
@@ -391,11 +408,19 @@ spdk_rpc_construct_vhost_block_controller(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_json_write_ctx *w;
 	int rc;
 	uint64_t cpumask;
+	bool readonly;
 
 	if (spdk_json_decode_object(params, rpc_construct_vhost_block_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_block_ctrlr),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	readonly = enable_vir_blk_readonly();
+	if(req.flag_readonly == true && (!readonly))
+	{
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -406,10 +431,11 @@ spdk_rpc_construct_vhost_block_controller(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_blk_construct(req.ctrlr, cpumask);
+	rc = spdk_vhost_blk_construct(req.ctrlr, cpumask, req.flag_readonly);
 	if (rc < 0) {
 		goto invalid;
 	}
+
 
 	free_rpc_vhost_block_ctrlr(&req);
 	w = spdk_jsonrpc_begin_result(conn, id);
@@ -492,6 +518,7 @@ spdk_rpc_get_vhost_block_controllers(struct spdk_jsonrpc_server_conn *conn,
 	struct spdk_vhost_dev *vdev = NULL;
 	struct spdk_bdev *bdev;
 	char buf[32];
+	uint64_t features = 0;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(conn, id,
@@ -513,6 +540,11 @@ spdk_rpc_get_vhost_block_controllers(struct spdk_jsonrpc_server_conn *conn,
 		snprintf(buf, sizeof(buf), "%#" PRIx64,
 			 spdk_vhost_dev_get_cpumask(vdev));
 		spdk_json_write_string(w, buf);
+		if(spdk_vhost_get_read_only_bit(vdev))
+		{
+			spdk_json_write_name(w, "read-only");
+			spdk_json_write_string(w, "true");
+		}
 
 		bdev = spdk_vhost_blk_get_dev(vdev);
 		if (bdev) {

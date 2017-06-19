@@ -618,7 +618,7 @@ spdk_vhost_blk_controller_construct(void)
 			return -1;
 		}
 
-		if (spdk_vhost_blk_construct(name, cpumask) < 0) {
+		if (spdk_vhost_blk_construct(name, cpumask, 0) < 0) {
 			return -1;
 		}
 
@@ -637,11 +637,16 @@ spdk_vhost_blk_controller_construct(void)
 }
 
 int
-spdk_vhost_blk_construct(const char *name, uint64_t cpumask)
+spdk_vhost_blk_construct(const char *name, uint64_t cpumask, bool read_only)
 {
 	struct spdk_vhost_blk_dev *bvdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_blk_dev),
 					   SPDK_CACHE_LINE_SIZE, NULL);
+	struct spdk_vhost_dev_backend new_vhost_blk_device_backend;
 	int ret;
+
+	memcpy(&new_vhost_blk_device_backend, &vhost_blk_device_backend, sizeof(struct spdk_vhost_dev_backend));
+	if(read_only)
+		new_vhost_blk_device_backend.disabled_features &= ~(1ULL << VIRTIO_BLK_F_RO);
 
 	if (bvdev == NULL) {
 		return -ENOMEM;
@@ -649,7 +654,7 @@ spdk_vhost_blk_construct(const char *name, uint64_t cpumask)
 
 
 	ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
-				       &vhost_blk_device_backend);
+				       &new_vhost_blk_device_backend);
 	if (ret) {
 		spdk_dma_free(bvdev);
 	}

@@ -577,6 +577,18 @@ spdk_vhost_dev_load(int vid)
 	return vdev;
 }
 
+#define VIRTIO_BLK_F_RO 5
+bool spdk_vhost_get_read_only_bit(struct spdk_vhost_dev *vdev)
+{
+	uint64_t ff=0;
+	rte_vhost_get_negotiated_features(vdev->vid, ff);
+//	if(vdev->negotiated_features & (1ULL << VIRTIO_BLK_F_RO))
+	if(ff & (1ULL << VIRTIO_BLK_F_RO))
+		return true;
+	else
+		return false;
+}
+
 void
 spdk_vhost_startup(void *arg1, void *arg2)
 {
