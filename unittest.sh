@@ -69,6 +69,8 @@ $valgrind test/unit/lib/scsi/lun.c/lun_ut
 $valgrind test/unit/lib/scsi/scsi.c/scsi_ut
 $valgrind test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut
 
+$valgrind test/unit/lib/lvol/lvol_ut
+
 $valgrind test/lib/iscsi/param/param_ut
 $valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/target_node.conf
 $valgrind test/lib/iscsi/pdu/pdu
