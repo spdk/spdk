@@ -31,26 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/spdk_mock.h"
+#include "spdk_internal/mock.h"
 
-int ut_fake_pthread_mutex_init = 0;
-int
-__wrap_pthread_mutex_init(pthread_mutex_t *mtx, const pthread_mutexattr_t *attr)
-{
-	if (ut_fake_pthread_mutex_init == 0) {
-		return __real_pthread_mutex_init(mtx, attr);
-	} else {
-		return ut_fake_pthread_mutex_init;
-	}
-}
+DEFINE_WRAPPER(pthread_mutex_init, int,
+	       (pthread_mutex_t *mtx, const pthread_mutexattr_t *attr),
+	       (mtx, attr), MOCK_PASS_THRU)
 
-int ut_fake_pthread_mutexattr_init = 0;
-int
-__wrap_pthread_mutexattr_init(pthread_mutexattr_t *attr)
-{
-	if (ut_fake_pthread_mutexattr_init == 0) {
-		return __real_pthread_mutexattr_init(attr);
-	} else {
-		return ut_fake_pthread_mutexattr_init;
-	}
-}
+DEFINE_WRAPPER(pthread_mutexattr_init, int,
+	       (pthread_mutexattr_t *attr), (attr), MOCK_PASS_THRU)

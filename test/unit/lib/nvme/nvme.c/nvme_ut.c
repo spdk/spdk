@@ -39,7 +39,7 @@
 
 #include "lib/test_env.c"
 
-#include "spdk_internal/spdk_mock.h"
+#include "spdk_internal/mock.h"
 
 int
 spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
@@ -61,13 +61,6 @@ bool
 spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
 {
 	return true;
-}
-
-struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		void *devhandle)
-{
-	return NULL;
 }
 
 int
@@ -153,19 +146,66 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
 
+DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
+	      (const struct spdk_nvme_transport_id *trid,
+	       const struct spdk_nvme_ctrlr_opts *opts,
+	       void *devhandle), {0})
+
+DEFINE_STUB(dummy_probe_cb, bool,
+	    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	     struct spdk_nvme_ctrlr_opts *opts), false)
+
+static void
+test_nvme_ctrlr_probe(void)
+{
+	int rc = 0;
+	const struct spdk_nvme_transport_id *trid = NULL;
+	void *devhandle = NULL;
+	void *cb_ctx = NULL;
+	struct spdk_nvme_ctrlr *dummy = NULL;
+
+	/* test when probe_cb returns false */
+	MOCK_SET(dummy_probe_cb, bool, false)
+	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
+	CU_ASSERT(rc == 1);
+
+	/* probe_cb returns true but we can't construct a ctrl */
+	MOCK_SET(dummy_probe_cb, bool, true)
+	MOCK_SET_P(nvme_transport_ctrlr_construct,
+		   struct spdk_nvme_ctrlr *, NULL)
+	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
+	CU_ASSERT(rc == -1);
+
+	/* happy path */
+	g_spdk_nvme_driver = malloc(sizeof(struct nvme_driver));
+	SPDK_CU_ASSERT_FATAL(g_spdk_nvme_driver != NULL);
+	MOCK_SET(dummy_probe_cb, bool, true)
+	MOCK_SET_P(nvme_transport_ctrlr_construct,
+		   struct spdk_nvme_ctrlr *, &ut_nvme_transport_ctrlr_construct);
+	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
+	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
+	CU_ASSERT(rc == 0);
+	dummy = TAILQ_FIRST(&g_spdk_nvme_driver->init_ctrlrs);
+	CU_ASSERT(dummy == &ut_nvme_transport_ctrlr_construct);
+
+	free(g_spdk_nvme_driver);
+}
+
 static void
 test_nvme_robust_mutex_init_shared(void)
 {
 	pthread_mutex_t mtx;
 	int rc = 0;
 
-	ut_fake_pthread_mutexattr_init = 0;
-	ut_fake_pthread_mutex_init = 0;
+	/* test where both pthread calls succeed */
+	MOCK_SET(pthread_mutexattr_init, int, 0)
+	MOCK_SET(pthread_mutex_init, int, 0)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	CU_ASSERT(rc == 0);
 
-	ut_fake_pthread_mutexattr_init = -1;
-	ut_fake_pthread_mutex_init = 0;
+	/* test where we can't init attr's but init mutex works */
+	MOCK_SET(pthread_mutexattr_init, int, -1)
+	MOCK_SET(pthread_mutex_init, int, 0)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	/* for FreeBSD the only possible return value is 0 */
 #ifndef __FreeBSD__
@@ -174,9 +214,11 @@ test_nvme_robust_mutex_init_shared(void)
 	CU_ASSERT(rc == 0);
 #endif
 
-	ut_fake_pthread_mutexattr_init = 0;
-	ut_fake_pthread_mutex_init = -1;
+	/* test where we can init attr's but the mutex init fails */
+	MOCK_SET(pthread_mutexattr_init, int, 0)
+	MOCK_SET(pthread_mutex_init, int, -1)
 	rc = nvme_robust_mutex_init_shared(&mtx);
+	/* for FreeBSD the only possible return value is 0 */
 #ifndef __FreeBSD__
 	CU_ASSERT(rc != 0);
 #else
@@ -447,8 +489,12 @@ int main(int argc, char **argv)
 			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
 		CU_add_test(suite, "test_trid_parse_and_compare",
 			    test_trid_parse_and_compare) == NULL ||
-		CU_add_test(suite, "test_trid_trtype_str", test_trid_trtype_str) == NULL ||
-		CU_add_test(suite, "test_trid_adrfam_str", test_trid_adrfam_str) == NULL ||
+		CU_add_test(suite, "test_trid_trtype_str",
+			    test_trid_trtype_str) == NULL ||
+		CU_add_test(suite, "test_trid_adrfam_str",
+			    test_trid_adrfam_str) == NULL ||
+		CU_add_test(suite, "test_nvme_ctrlr_probe",
+			    test_nvme_ctrlr_probe) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
