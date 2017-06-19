@@ -159,13 +159,13 @@ test_nvme_robust_mutex_init_shared(void)
 	pthread_mutex_t mtx;
 	int rc = 0;
 
-	ut_fake_pthread_mutexattr_init = 0;
-	ut_fake_pthread_mutex_init = 0;
+	MOCK_PUT(pthread_mutexattr_init, 0)
+	MOCK_PUT(pthread_mutex_init, 0)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	CU_ASSERT(rc == 0);
 
-	ut_fake_pthread_mutexattr_init = -1;
-	ut_fake_pthread_mutex_init = 0;
+	MOCK_PUT(pthread_mutexattr_init, -1)
+	MOCK_PUT(pthread_mutex_init, 0)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	/* for FreeBSD the only possible return value is 0 */
 #ifndef __FreeBSD__
@@ -174,8 +174,8 @@ test_nvme_robust_mutex_init_shared(void)
 	CU_ASSERT(rc == 0);
 #endif
 
-	ut_fake_pthread_mutexattr_init = 0;
-	ut_fake_pthread_mutex_init = -1;
+	MOCK_PUT(pthread_mutexattr_init, 0)
+	MOCK_PUT(pthread_mutex_init, -1)
 	rc = nvme_robust_mutex_init_shared(&mtx);
 #ifndef __FreeBSD__
 	CU_ASSERT(rc != 0);

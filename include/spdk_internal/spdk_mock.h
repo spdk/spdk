@@ -36,15 +36,35 @@
 
 #include "spdk/stdinc.h"
 
-#define DECLARE_WRAPPER(fn, ret, args) \
-		ret __wrap_ ## fn args; ret __real_ ## fn args;
+/* for controlling mocked function behavior */
+#define MOCK_PUT(fn, val) \
+	ut_ ## fn = val;
 
-/* define new wrappers (alphabetically please) here using above helper macro */
-extern int ut_fake_pthread_mutex_init;
+/* for mocked functions to get their return value */
+#define MOCK_GET(fn) \
+	ut_ ## fn;
+
+/* for declaring function protoypes for wrappers */
+#define DECLARE_WRAPPER(fn, ret, args) \
+	extern ret ut_ ## fn; \
+	ret __wrap_ ## fn args; ret __real_ ## fn args;
+
+/* for defining the implmentation of wrappers */
+#define DEFINE_WRAPPER(fn, ret, dargs, pargs, val) \
+	ret ut_ ## fn = {val}; \
+	ret __wrap_ ## fn dargs \
+	{ \
+		if (ut_ ## fn == 0) { \
+			return __real_ ## fn pargs; \
+		} else { \
+			return MOCK_GET(fn) \
+		} \
+	}
+
+/* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(pthread_mutex_init, int,
 		(pthread_mutex_t *mtx, const pthread_mutexattr_t *attr));
 
-extern int ut_fake_pthread_mutexattr_init;
 DECLARE_WRAPPER(pthread_mutexattr_init, int,
 		(pthread_mutexattr_t *attr));
 
