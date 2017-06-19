@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1c28113_2050bdbb",
+        "filename": "doc/nvme.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T21:42:22Z",
+      "side": 1,
+      "message": "This URL is still broken - see https://ci.spdk.io/builds/review/d9537aa45df67ee6b40e68390f4808be3dbaeb76.1497636237/wkb-fedora-03/doc/html/nvme.html",
+      "revId": "d9537aa45df67ee6b40e68390f4808be3dbaeb76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
