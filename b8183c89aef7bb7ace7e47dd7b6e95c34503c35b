@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ccb1271_a3e4e93f",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T18:01:31Z",
+      "side": 0,
+      "message": "This file still uses spdk_event_call(), so I assume it is pulling spdk/event.h via some other header.",
+      "revId": "b8183c89aef7bb7ace7e47dd7b6e95c34503c35b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
