@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0496ada7_90d51ffa",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2962,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-19T23:14:27Z",
+      "side": 1,
+      "message": "This is in the normal SCSI op path - is it supposed to be calling the management task completion function here?",
+      "revId": "6bae39a6cf1ba01f79d830bf5ca02e35e08eec6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
