@@ -46,25 +46,26 @@ struct dev {
 	char 						name[SPDK_NVMF_TRADDR_MAX_LEN + 1];
 };
 
-#define ADMINQ_SIZE 128
+static void get_feature_test(struct dev *dev);
 
 static struct dev devs[MAX_DEVS];
 static int num_devs = 0;
 
-static int aer_done = 0;
-static int get_queues_done = 0;
-
 #define foreach_dev(iter) \
 	for (iter = devs; iter - devs < num_devs; iter++)
 
-
+static int outstanding_commands = 0;
+static int aer_done = 0;
 static int temperature_done = 0;
 static int failed = 0;
 static struct spdk_nvme_transport_id g_trid;
 
-static void set_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+static void
+set_temp_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct dev *dev = cb_arg;
+
+	outstanding_commands--;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("%s: set feature (temp threshold) failed\n", dev->name);
@@ -81,18 +82,26 @@ static int
 set_temp_threshold(struct dev *dev, uint32_t temp)
 {
 	struct spdk_nvme_cmd cmd = {};
+	int rc;
 
 	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
 	cmd.cdw10 = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
 	cmd.cdw11 = temp;
 
-	return spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, set_feature_completion, dev);
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, set_temp_completion, dev);
+	if (rc == 0) {
+		outstanding_commands++;
+	}
+
+	return rc;
 }
 
 static void
-get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+get_temp_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct dev *dev = cb_arg;
+
+	outstanding_commands--;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("%s: get feature (temp threshold) failed\n", dev->name);
@@ -111,11 +120,17 @@ static int
 get_temp_threshold(struct dev *dev)
 {
 	struct spdk_nvme_cmd cmd = {};
+	int rc;
 
 	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
 	cmd.cdw10 = SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD;
 
-	return spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, get_feature_completion, dev);
+	rc = spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0, get_temp_completion, dev);
+	if (rc == 0) {
+		outstanding_commands++;
+	}
+
+	return rc;
 }
 
 static void
@@ -130,6 +145,8 @@ get_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct dev *dev = cb_arg;
 
+	outstanding_commands --;
+
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("%s: get log page failed\n", dev->name);
 		failed = 1;
@@ -143,9 +160,16 @@ get_log_page_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 static int
 get_health_log_page(struct dev *dev)
 {
-	return spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
-						SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
-						get_log_page_completion, dev);
+	int rc;
+
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
+					      SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
+					      get_log_page_completion, dev);
+	if (rc == 0) {
+		outstanding_commands++;
+	}
+
+	return rc;
 }
 
 static void
@@ -160,7 +184,8 @@ cleanup(void)
 	}
 }
 
-static void aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+static void
+aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	uint32_t log_page_id = (cpl->cdw0 & 0xFF0000) >> 16;
 	struct dev *dev = arg;
@@ -276,9 +301,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
-get_feature_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+get_feature_test_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct dev *dev = cb_arg;
+
+	outstanding_commands--;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		printf("%s: get number of queues failed\n", dev->name);
@@ -286,26 +313,31 @@ get_feature_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
-	get_queues_done++;
+	if (aer_done < num_devs) {
+		/*
+		 * Resubmit Get Features command to continue filling admin queue
+		 * while the test is running.
+		 */
+		get_feature_test(dev);
+	}
 }
 
 static void
 get_feature_test(struct dev *dev)
 {
-	struct spdk_nvme_cmd cmd[ADMINQ_SIZE];
-	int i;
+	struct spdk_nvme_cmd cmd;
 
-	memset(cmd, 0, sizeof(cmd));
-	for (i = 0; i < ADMINQ_SIZE; i++) {
-		cmd[i].opc = SPDK_NVME_OPC_GET_FEATURES;
-		cmd[i].cdw10 = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
-		if (spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd[i], NULL, 0,
-						  get_feature_cb, dev) != 0) {
-			printf("Failed to send Get Features command for dev=%p\n", dev);
-			failed = 1;
-			return;
-		}
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
+	cmd.cdw10 = SPDK_NVME_FEAT_NUMBER_OF_QUEUES;
+	if (spdk_nvme_ctrlr_cmd_admin_raw(dev->ctrlr, &cmd, NULL, 0,
+					  get_feature_test_cb, dev) != 0) {
+		printf("Failed to send Get Features command for dev=%p\n", dev);
+		failed = 1;
+		return;
 	}
+
+	outstanding_commands++;
 }
 
 int main(int argc, char **argv)
@@ -358,7 +390,7 @@ int main(int argc, char **argv)
 	}
 	temperature_done = 0;
 
-	/* Send enough admin commands to fill admin queue before triggering AER */
+	/* Send admin commands to test admin queue wraparound while waiting for the AER */
 	foreach_dev(dev) {
 		get_feature_test(dev);
 	}
@@ -373,17 +405,11 @@ int main(int argc, char **argv)
 		set_temp_threshold(dev, 200);
 	}
 
-	/* Send enough admin commands to fill admin queue while waiting AER to be triggered */
-	foreach_dev(dev) {
-		get_feature_test(dev);
-	}
-
 	if (failed) {
 		goto done;
 	}
 
-	while (!failed && ((aer_done < num_devs) || (temperature_done < num_devs) ||
-			   (get_queues_done < (2 * ADMINQ_SIZE * num_devs)))) {
+	while (!failed && (aer_done < num_devs || temperature_done < num_devs)) {
 		foreach_dev(dev) {
 			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
 		}
@@ -394,6 +420,12 @@ int main(int argc, char **argv)
 	}
 
 	printf("Cleaning up...\n");
+
+	while (outstanding_commands) {
+		foreach_dev(dev) {
+			spdk_nvme_ctrlr_process_admin_completions(dev->ctrlr);
+		}
+	}
 
 	for (i = 0; i < num_devs; i++) {
 		struct dev *dev = &devs[i];
