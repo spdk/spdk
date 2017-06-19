@@ -63,6 +63,7 @@ enum spdk_vhost_dev_type {
 struct spdk_vhost_dev {
 	struct rte_vhost_memory *mem;
 	char *name;
+	char *path;
 
 	int vid;
 	int task_cnt;
