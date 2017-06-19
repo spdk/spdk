@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "6eba98bd_e5b4b847",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-06-19T20:04:54Z",
+      "side": 1,
+      "message": "Correct - doing just \"shutdown -h -P now\" results in tearing down ssh connection to VM, and then exit code is not equal to 0, so the -x trace flag would see it as a fail.",
+      "parentUuid": "217daa40_2d8e63f7",
+      "revId": "9cd77895f9dbedd69192334bea1a2fe1b8e05a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4e4bb8b_2aee73d2",
         "filename": "test/vhost/fiotest/common.sh",
         "patchSetId": 2
@@ -48,6 +66,24 @@
       "writtenOn": "2017-06-19T16:32:15Z",
       "side": 1,
       "message": "This will always add a 10 second sleep, even if the VMs shutdown in 1 or 2 seconds.  We really want to avoid these kinds of delays, since they add time to every patch that runs through the test pool.\n\nCould we instead check all of the VMs every second?  If kill -0 $vm_pid fails for all of the VMs, then we can immediately return.  If it is still not successful after 10 seconds, then we can proceed with the -KILL and return failure here.",
+      "revId": "9cd77895f9dbedd69192334bea1a2fe1b8e05a9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "490ca45b_3cc5340e",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-06-19T20:04:54Z",
+      "side": 1,
+      "message": "Will do",
+      "parentUuid": "e4e4bb8b_2aee73d2",
       "revId": "9cd77895f9dbedd69192334bea1a2fe1b8e05a9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
