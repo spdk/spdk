@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d681b8fb_d3044de5",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-20T20:46:23Z",
+      "side": 1,
+      "message": "This should get a doc comment describing what units it returns.",
+      "revId": "84251db497afe22564b4978650ac889abeb72e63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25c63f58_18f10dc6",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-20T20:46:23Z",
+      "side": 1,
+      "message": "Mention units (spdk_get_ticks()?)",
+      "revId": "84251db497afe22564b4978650ac889abeb72e63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
