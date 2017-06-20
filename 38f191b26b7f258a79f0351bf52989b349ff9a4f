@@ -104,6 +104,57 @@
     },
     {
       "key": {
+        "uuid": "d32b1350_d06e3e00",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T22:13:46Z",
+      "side": 1,
+      "message": "could you rename this to gpt_base?  just to make it clear this is the base bdev, and not a bdev for a partition",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6076a35b_07eeb4fe",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T22:13:46Z",
+      "side": 1,
+      "message": "should this be an assert instead?  gpt_base should never be NULL here",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ac5c1c2_5cb617d4",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T22:13:46Z",
+      "side": 1,
+      "message": "maybe rename this to \"spdk_gpt_base_bdev_init\"?  then it is clear this function is related to operations on the base bdev, not the bdevs that might be created for partitions",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ce4b0249_50999d88",
         "filename": "lib/bdev/gpt/vbdev_gpt.c",
         "patchSetId": 36
