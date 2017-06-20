@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0ec74e3_72880387",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-20T22:24:25Z",
+      "side": 1,
+      "message": "well I suppose 0 is a bad value here since we can\u0027t use it for a return :) Will make up some value and define it as NO_MOCK or something",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
