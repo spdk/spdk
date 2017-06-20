@@ -31,18 +31,31 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y = bdevio bdevperf
+APP = nbd
 
-ifeq ($(OS),Linux)
-DIRS-y += nbd
-endif
+C_SRCS := nbd.c
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += -I. $(ENV_CFLAGS)
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = event_bdev event_copy event_rpc
+SPDK_LIB_LIST += bdev copy event trace log conf util rpc jsonrpc json
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
+	$(COPY_MODULES_LINKER_ARGS)
+
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
