@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ab80b3b_45f833f3",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T20:58:18Z",
+      "side": 1,
+      "message": "I think you can get rid of this cb_arg (and the cb_arg member in spdk_scsI_task below).  See other comments in this review.",
+      "revId": "74b00addc0d5c15a17a0bae6f6cb150c0f68094d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7604913_e07c7e93",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T20:58:18Z",
+      "side": 1,
+      "message": "i think this can be removed too",
+      "revId": "74b00addc0d5c15a17a0bae6f6cb150c0f68094d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b7389d7_3343c284",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T20:58:18Z",
+      "side": 1,
+      "message": "We have spdk_iscsi_task::conn which means you could get rid of this cb_arg parameter.  Not sure why we weren\u0027t doing that in the original code...",
+      "revId": "74b00addc0d5c15a17a0bae6f6cb150c0f68094d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83c13987_6f531e4e",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T20:58:18Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "74b00addc0d5c15a17a0bae6f6cb150c0f68094d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
