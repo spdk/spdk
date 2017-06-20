@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8978a9c_dfa8ce28",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:47:49Z",
+      "side": 1,
+      "message": "could we just clear the -e flag for this call to vm_ssh?  so something like:\n\n# disable exit flag for now, since ssh command will \"fail\" due to shutdown\nset +e\nvm_ssh $1 \"shutdown -h -P now\"\nset -e\n\nThis is a lot more clear to future readers of this script.",
+      "revId": "bc88dfc3c8147ebca78aca632850a9216a3c3d64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2570599_4906d240",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:47:49Z",
+      "side": 1,
+      "message": "do the sleep after checking all_vms_down - it saves us a second :-)",
+      "revId": "bc88dfc3c8147ebca78aca632850a9216a3c3d64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
