@@ -31,32 +31,33 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Logical Volume Interface
- */
+#include "spdk_internal/lvolstore.h"
+#include "spdk_internal/log.h"
 
-#ifndef SPDK_LVOL_H
-#define SPDK_LVOL_H
+void
+spdk_generate_uuid(uuid_t uuid)
+{
+	uuid_generate_time_safe(uuid);
 
-#include "spdk/queue.h"
-#include "spdk/blob.h"
+	char uuid_str[37];
+	uuid_unparse_lower(uuid, uuid_str);
+	SPDK_TRACELOG(SPDK_TRACE_LVOL, "generated lvol store guid:%s\n", uuid_str);
+}
 
-struct spdk_lvol_store;
-struct spdk_lvol;
+int
+spdk_uuid_compare(const uuid_t uu1, const uuid_t uu2)
+{
+	return uuid_compare(uu1, uu2);
+}
 
-typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
-		int lvserrno);
-typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
-typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol *lvol,
-		int lvserrno);
-typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvserrno);
+void
+spdk_uuid_unparse(uuid_t uu, char *out)
+{
+	uuid_unparse(uu, out);
+}
 
-int spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
-int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
-
-void spdk_generate_uuid(uuid_t uuid);
-int spdk_uuid_compare(const uuid_t uu1, const uuid_t uu2);
-void spdk_uuid_unparse(uuid_t uu, char *out);
-int spdk_uuid_parse(char *in, uuid_t uu);
-
-#endif  /* SPDK_LVOL_H */
+int
+spdk_uuid_parse(char *in, uuid_t uu)
+{
+	return uuid_parse(in, uu);
+}

@@ -36,7 +36,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
-C_SRCS = lvol.c
+C_SRCS = lvol.c uuid.c
 LIBNAME = lvol
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

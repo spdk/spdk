@@ -42,6 +42,28 @@
 int g_lvserrno;
 struct spdk_lvol_store *g_lvol_store;
 
+void
+spdk_generate_uuid(uuid_t uuid)
+{
+}
+
+int
+spdk_uuid_compare(const uuid_t uu1, const uuid_t uu2)
+{
+	return 0;
+}
+
+void
+spdk_uuid_unparse(uuid_t uu, char *out)
+{
+}
+
+int
+spdk_uuid_parse(char *in, uuid_t uu)
+{
+	return 0;
+}
+
 static void
 _lvol_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
