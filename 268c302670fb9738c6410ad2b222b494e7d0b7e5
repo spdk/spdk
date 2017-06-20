@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "7c75f4d1_0c9dd9da",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-20T05:16:54Z",
+      "side": 1,
+      "message": "According to Jim\u0027 comments, blob as BEV may also use some functions of GPT format, so we need to keep this as separate file.",
+      "parentUuid": "f4b0ef7d_3acf096d",
+      "revId": "268c302670fb9738c6410ad2b222b494e7d0b7e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef3ba207_dc304f42",
         "filename": "lib/bdev/gpt/gpt.c",
         "patchSetId": 32
