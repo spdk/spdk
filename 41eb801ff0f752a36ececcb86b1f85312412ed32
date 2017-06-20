@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "7353c19c_be0db5e6",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T22:32:59Z",
+      "side": 1,
+      "message": "maybe it\u0027s just me, but \"PUT\" doesn\u0027t seem right here - SET or SET_RETURN seems better - I think it will make it more clear when we add PUSH variants for a return value stack\n\nbut I\u0027m ok with this if everyone else is",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0ec74e3_72880387",
         "filename": "include/spdk_internal/spdk_mock.h",
         "patchSetId": 1
@@ -13,6 +30,58 @@
       "writtenOn": "2017-06-20T22:24:25Z",
       "side": 1,
       "message": "well I suppose 0 is a bad value here since we can\u0027t use it for a return :) Will make up some value and define it as NO_MOCK or something",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3c644d5_6f949773",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T22:32:59Z",
+      "side": 1,
+      "message": "i think you\u0027ll need a separate global - one for the return value, one for whether or not you should return that return value or just call the real variant",
+      "parentUuid": "d0ec74e3_72880387",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c36be8c4_3133f392",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T22:32:59Z",
+      "side": 1,
+      "message": "i\u0027m guessing we\u0027ll need to define mock version of functions that return void, at which point this won\u0027t work - might need a separate DEFINE_VOID_WRAPPER variant (same for DECLARE above)",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a59bd9f1_1c7639a9",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T22:32:59Z",
+      "side": 1,
+      "message": "you forgot the \"to appease Jim\" part",
       "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
