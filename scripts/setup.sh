@@ -4,11 +4,15 @@ set -e
 
 rootdir=$(readlink -f $(dirname $0))/..
 
-function linux_iter_pci {
+function linux_iter_pci_class_code {
 	# Argument is the class code
-	# TODO: More specifically match against only class codes in the grep
-	# step.
-	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
+	lspci -mm -n -D | tr -d '"' | awk -v cc="$1" -F " " '{if (cc == $2) print $1}'
+}
+
+function linux_iter_pci_dev_id {
+	# Argument 1 is the vendor id
+	# Argument 2 is the device id
+	lspci -mm -n -D | tr -d '"' | awk -v ven="$1" -v dev="$2" -F " " '{if (ven == $3 && dev == $4) print $1}'
 }
 
 function linux_bind_driver() {
@@ -54,7 +58,7 @@ function configure_linux {
 
 	# NVMe
 	modprobe $driver_name || true
-	for bdf in $(linux_iter_pci 0108); do
+	for bdf in $(linux_iter_pci_class_code 0108); do
 		linux_bind_driver "$bdf" "$driver_name"
 	done
 
@@ -66,8 +70,7 @@ function configure_linux {
 	| awk -F"x" '{print $2}' > $TMP
 
 	for dev_id in `cat $TMP`; do
-		# Abuse linux_iter_pci by giving it a device ID instead of a class code
-		for bdf in $(linux_iter_pci $dev_id); do
+		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
 			linux_bind_driver "$bdf" "$driver_name"
 		done
 	done
@@ -115,7 +118,7 @@ function configure_linux {
 function reset_linux {
 	# NVMe
 	modprobe nvme || true
-	for bdf in $(linux_iter_pci 0108); do
+	for bdf in $(linux_iter_pci_class_code 0108); do
 		linux_bind_driver "$bdf" nvme
 	done
 
@@ -128,8 +131,7 @@ function reset_linux {
 
 	modprobe ioatdma || true
 	for dev_id in `cat $TMP`; do
-		# Abuse linux_iter_pci by giving it a device ID instead of a class code
-		for bdf in $(linux_iter_pci $dev_id); do
+		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
 			linux_bind_driver "$bdf" ioatdma
 		done
 	done
@@ -145,7 +147,7 @@ function status_linux {
 	echo "NVMe devices"
 
 	echo -e "BDF\t\tNuma Node\tDriver name\t\tDevice name"
-	for bdf in $(linux_iter_pci 0108); do
+	for bdf in $(linux_iter_pci_class_code 0108); do
 		driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 		node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
 		if [ "$driver" = "nvme" ]; then
@@ -163,8 +165,7 @@ function status_linux {
 	| awk -F"x" '{print $2}'`
 	echo -e "BDF\t\tNuma Node\tDriver Name"
 	for dev_id in $TMP; do
-		# Abuse linux_iter_pci by giving it a device ID instead of a class code
-		for bdf in $(linux_iter_pci $dev_id); do
+		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
 			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
 			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
 			echo -e "$bdf\t$node\t\t$driver"
