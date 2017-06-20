@@ -49,6 +49,13 @@ else
 fi
 timing_exit scanbuild_make
 
+# Check for generated files that are not listed in .gitignore
+if [ `git status --porcelain | wc -l` -ne 0 ]; then
+	echo "Generated files missing from .gitignore:"
+	git status --porcelain
+	exit 1
+fi
+
 # Check that header file dependencies are working correctly by
 #  capturing a binary's stat data before and after touching a
 #  header file and re-making.
