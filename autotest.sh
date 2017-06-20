@@ -149,5 +149,5 @@ if hash lcov; then
 	$LCOV -q -a cov_base.info -a cov_test.info -o $out/cov_total.info
 	$LCOV -q -r $out/cov_total.info 'dpdk/*' -o $out/cov_total.info
 	git clean -f "*.gcda"
-	rm -f cov_base.info cov_test.info
+	rm -f cov_base.info cov_test.info OLD_STDOUT OLD_STDERR
 fi
