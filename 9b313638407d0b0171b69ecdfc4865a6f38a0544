@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d1d16d5_68a173db",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:48:18Z",
+      "side": 1,
+      "message": "this still looks misaligned",
+      "revId": "9b313638407d0b0171b69ecdfc4865a6f38a0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
