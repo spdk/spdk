@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df408e5b_5ecf97b3",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T19:09:44Z",
+      "side": 1,
+      "message": "should we print out the features and vhost_features in hex to facilitate debug?",
+      "revId": "587a20bb206b2f33fa6b7953baf17cae2d2ca6bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
