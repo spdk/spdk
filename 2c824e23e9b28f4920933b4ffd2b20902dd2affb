@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b99fda2_4ee40a57",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:36:48Z",
+      "side": 1,
+      "message": "Can we use the waitforlisten function defined in autotest_common.sh?",
+      "revId": "2c824e23e9b28f4920933b4ffd2b20902dd2affb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
