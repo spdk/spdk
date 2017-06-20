@@ -31,39 +31,33 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_LVOLSTORE_H
-#define SPDK_LVOLSTORE_H
+#include "spdk_internal/lvolstore.h"
+#include "spdk_internal/log.h"
 
-#include "spdk/lvol.h"
+void
+spdk_generate_uuid(uuid_t uuid)
+{
+	uuid_generate_time_safe(uuid);
 
-struct spdk_lvol_store_req {
-	union {
-		struct {
-			spdk_lvs_op_complete    cb_fn;
-			void                    *cb_arg;
-		} lvs_basic;
+	char uuid_str[37];
+	uuid_unparse_lower(uuid, uuid_str);
+	SPDK_TRACELOG(SPDK_TRACE_LVOL, "generated lvol store guid:%s\n", uuid_str);
+}
 
-		struct {
-			spdk_lvs_op_with_handle_complete cb_fn;
-			void                            *cb_arg;
-			struct spdk_lvol_store          *lvol_store;
-		} lvs_handle;
-	} u;
-};
+int
+spdk_uuid_compare(const uuid_t uu1, const uuid_t uu2)
+{
+	return uuid_compare(uu1, uu2);
+}
 
-struct spdk_lvol_store {
-	struct spdk_bs_dev              *bs_dev;
-	struct spdk_bdev                *base_bdev;
-	struct spdk_blob_store          *blobstore;
-	uuid_t				uuid;
+void
+spdk_uuid_unparse(uuid_t uu, char *out)
+{
+	uuid_unparse(uu, out);
+}
 
-	TAILQ_ENTRY(spdk_lvol_store)    lvol_stores;
-};
-
-struct spdk_lvol {
-	struct spdk_bdev                *disk;
-	struct spdk_lvol_store          *lvol_store;
-};
-
-
-#endif
+int
+spdk_uuid_parse(char *in, uuid_t uu)
+{
+	return uuid_parse(in, uu);
+}

@@ -68,6 +68,8 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 		return -1;
 	}
 
+	spdk_generate_uuid(lvs->uuid);
+
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
 		free(lvs);

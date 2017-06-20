@@ -86,6 +86,8 @@ extern "C" {
 #include <sys/user.h>
 #include <sys/wait.h>
 
+#include <uuid/uuid.h>
+
 #ifdef __cplusplus
 }
 #endif
