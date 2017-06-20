@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "5739d7de_e803f932",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "lvs_basic?  since you will want to save lvol_basic for operations on lvols (i.e. lvol_read/lvol_write)",
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6029db06_2abe61be",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "lvs_handle",
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5910580e_bbd43a29",
         "filename": "include/spdk_internal/lvolstore.h",
         "patchSetId": 13
@@ -19,6 +53,108 @@
         "endLine": 56,
         "endChar": 44
       },
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f62a65b3_ccad6f21",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "remove \"bdev\" (see below)",
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68fa8db0_1284eb5f",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "Suggest moving this function to just before spdk_lvs_unload.  Then the unload functions are together in the file.\n\nYou can also omit the \"spdk\" prefix from these static callback functions.  The \"spdk\" prefix is typically used to denote parts of the public API.",
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "373dd579_91ee0fd7",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "this log message is not really accurate\n\nunload does not mean we are removing the lvol store from the bdev - it just means it is no longer loaded and cannot be used.  A subsequent spdk_lvs_load will still be able to use the lvol store.\n\nI would also remove the \"bdev\" - bdev has a very specific meaning (spdk_bdev) which lvolstore is not dependent on",
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0e82e0b_d0e07ae1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "Initializing (not Loading)\n\nLoading will be a different operation.",
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44f50e56_64d3cfc5",
+        "filename": "test/lib/lvol/lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "nit - the string does not match the function name",
+      "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38a221df_8b7ae881",
+        "filename": "unittest.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T18:59:39Z",
+      "side": 1,
+      "message": "note - see the recent patches from daniel - we are moving all unit test code into the test/unit directory hierarchy - we should put your new unit tests there too - you will need to rebase off of latest master first",
       "revId": "091e86609d7939c0e89df9e672390a65f17b25c0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
