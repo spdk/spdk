@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05a39637_d786a70f",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T17:57:51Z",
+      "side": 1,
+      "message": "We should remove \"dpdk\" from the changes in this file.  This is inline with a recent change by Ziye, changing \"dpdk_mem_size\" to \"mem_size\".",
+      "revId": "8d917c15e413ebc41562f798b5ec27295298c715",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74932f38_c9b4fb54",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T17:57:51Z",
+      "side": 1,
+      "message": "maybe this is just my browser, but it seems this is not lined up with the other lines here",
+      "revId": "8d917c15e413ebc41562f798b5ec27295298c715",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
