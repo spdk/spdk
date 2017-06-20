@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34a98189_dc25ee00",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-20T17:43:16Z",
+      "side": 1,
+      "message": "This is duplicating the inclusion below.",
+      "revId": "f8fbf97de279791fb7717f87e84e950aab3ce257",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
