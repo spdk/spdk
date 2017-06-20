@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b5c19c5_f3f3ed60",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-20T20:41:47Z",
+      "side": 1,
+      "message": "This function doesn\u0027t need to be part of the public API.",
+      "revId": "abd4091831ed8217091be0ef5f515f1c7a9adbc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0f13085_98ad72b9",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-20T20:41:47Z",
+      "side": 1,
+      "message": "Instead of void *, pass the spdk_io_channel.",
+      "revId": "abd4091831ed8217091be0ef5f515f1c7a9adbc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f5553ab_7403464a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-20T20:41:47Z",
+      "side": 1,
+      "message": "This is only ever going to be called on line 1204. You can just write the code right there and delete this function.",
+      "revId": "abd4091831ed8217091be0ef5f515f1c7a9adbc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1533ac87_e3837822",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1203,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-20T20:41:47Z",
+      "side": 1,
+      "message": "Pass bdev_io-\u003ech-\u003echannel to the callback and make the blockdev_nvme.c file do the spdk_io_channel_get_ctx call.",
+      "revId": "abd4091831ed8217091be0ef5f515f1c7a9adbc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3dde6eb_7853a881",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-20T20:41:47Z",
+      "side": 1,
+      "message": "Instead of using itt calls, call spdk_get_ticks() here instead.",
+      "revId": "abd4091831ed8217091be0ef5f515f1c7a9adbc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed7e4b6a_40602f81",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-20T20:41:47Z",
+      "side": 1,
+      "message": "I don\u0027t think the logic is right here - the start_time needs to be on the nvme_io_channel so it is persisted across calls to this function. Basically, this should read:\n\n1) poll and get number of completions\n2) if number of completions is 0 and ch-\u003estart_time is 0, set start_time to current_time\n3) if number of completions is not 0 and ch-\u003estart_time is not 0, increment ch-\u003espin_time by current_time - ch-\u003estart_time, set ch-\u003estart_time to 0.",
+      "revId": "abd4091831ed8217091be0ef5f515f1c7a9adbc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
