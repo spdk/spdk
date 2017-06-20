@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "da920bad_52f77c1e",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-20T22:52:13Z",
+      "side": 1,
+      "message": "yeah I had MOCK_EXPECT but I have no real preference. I\u0027ll go with MOCK_SET on next rev unless I hear otherwise",
+      "parentUuid": "7353c19c_be0db5e6",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0ec74e3_72880387",
         "filename": "include/spdk_internal/spdk_mock.h",
         "patchSetId": 1
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "782a4881_f6698db3",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-20T22:52:13Z",
+      "side": 1,
+      "message": "you think? some magic value of 0xfeedbeef or something I think would work without another global and a one-liner could make sure that nobody tries to push that value for a valid return.",
+      "parentUuid": "f3c644d5_6f949773",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c36be8c4_3133f392",
         "filename": "include/spdk_internal/spdk_mock.h",
         "patchSetId": 1
@@ -65,6 +101,24 @@
       "writtenOn": "2017-06-20T22:32:59Z",
       "side": 1,
       "message": "i\u0027m guessing we\u0027ll need to define mock version of functions that return void, at which point this won\u0027t work - might need a separate DEFINE_VOID_WRAPPER variant (same for DECLARE above)",
+      "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efc2b2c9_73990dcf",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-20T22:52:13Z",
+      "side": 1,
+      "message": "yeah, I\u0027ll hit one of those soon and update then if that\u0027s cool.",
+      "parentUuid": "c36be8c4_3133f392",
       "revId": "41eb801ff0f752a36ececcb86b1f85312412ed32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
