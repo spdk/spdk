@@ -135,6 +135,23 @@
       "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f9deb93_f375119d",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:45:27Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to add these lines here - Gpt is enabled by default (if I am reading your vbdev init function correctly)",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
