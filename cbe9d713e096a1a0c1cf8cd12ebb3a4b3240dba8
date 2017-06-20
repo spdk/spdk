@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b5235a2_ba63f883",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T19:03:50Z",
+      "side": 1,
+      "message": "(Copied from review on previous revision.)\n\nDo we need the add_dev/remove_dev functions?\n\nFor vhost_scsi, it has a SCSI bus which can support many SCSI devices.  So add_dev/remove_dev allows us to add or remove SCSI devices from an existing controller.\n\nBut for blk, it can only have one block device.  I think we should just pass dev_name to spdk_vhost_blk_construct, and then remove add_dev and remove_dev entirely.",
+      "revId": "cbe9d713e096a1a0c1cf8cd12ebb3a4b3240dba8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
