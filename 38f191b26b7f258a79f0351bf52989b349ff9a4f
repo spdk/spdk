@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbe3fb2b_1cf1feee",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "should we also store the number of partition entries in the gpt structure?",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b597ecb_34f5796b",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "you only need to check usable_lba_end here; if start \u003e end, the previous check will catch it",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20c470dd_ddce646d",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "Is this error message correct?  It\u0027s not exactly clear what these checks are trying to guard against (probably because I\u0027m not as familiar with GPT format as you.)",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6619e1aa_87e35984",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "this can go on previous line",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "191b848e_58d7d39e",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "if a GPT_PROTECTIVE_MBR is not found, should this function return failure?  (I\u0027m not sure - I haven\u0027t read the spec.)",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fca3fc59_80c3df5c",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "This needs to be handled differently now.  Can you look at recent changes to the vbdev split module?",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce4b0249_50999d88",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "I don\u0027t think this will work here.  This will not handle hotplug cases after the app starts.  Or other RPC driven use cases (i.e. NVMe-oF host, Ceph).\n\nMaybe before init runs, you just put the new bdevs on this list.  And process the list when init is called.  But then we need to be able to dynamically check for GPTs on new bdevs after init.",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34136442_88870f82",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-20T21:43:55Z",
+      "side": 1,
+      "message": "I think we should find a way to do this without having to a full reset and restore.\n\nHow about running parted on a ramdisk, and then specifying that ramdisk to SPDK using the AIO bdev module?\n\nThese tests do not seem to be actually testing that the GPT detection was successful.",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
