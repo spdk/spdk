@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84cde9b8_5cb65f5d",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T00:09:48Z",
+      "side": 1,
+      "message": "Jim has pulled out the common parts of the histogram data structure into spdk/histogram_data.h (struct spdk_histogram_data), which you should be able to use here to simplify the implementation significantly.",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
