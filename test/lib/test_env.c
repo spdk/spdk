@@ -196,7 +196,7 @@ spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
 		return -EINVAL;
 	}
 
-	if (domain > 0xFFFF || bus > 0xFF || dev > 0x1F || func > 7) {
+	if (bus > 0xFF || dev > 0x1F || func > 7) {
 		return -EINVAL;
 	}
 
