@@ -222,20 +222,6 @@ spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 	}
 }
 
-void
-spdk_vhost_dev_task_ref(struct spdk_vhost_dev *vdev)
-{
-	assert(vdev->task_cnt < INT_MAX);
-	vdev->task_cnt++;
-}
-
-void
-spdk_vhost_dev_task_unref(struct spdk_vhost_dev *vdev)
-{
-	assert(vdev->task_cnt > 0);
-	vdev->task_cnt--;
-}
-
 static void
 spdk_vhost_free_reactor(uint32_t lcore)
 {
