@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39e942ce_34898ad4",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T22:05:43Z",
+      "side": 1,
+      "message": "I think we should find a way to make this simpler and easier to understand.\n\nCould we split the error specification into two parts?\n1) the I/O type to inject the error on (READ, WRITE, UNMAP, FLUSH) - let\u0027s leave RESET out for now\n2) what kind of error to inject - could be \"inject status failure\", or \"hold I/O to cause a reset\"\n\nI am also thinking that the io_type_mask per error_disk should be changed to something where we allocate a structure for each injected error.  Then this function just walks that list (if it is not empty), looking to see if the submitted request matches one of the injected error conditions.",
+      "revId": "ac366025f7f3a6238bc919b7770bccf0a607af15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
