@@ -16,6 +16,24 @@
       "revId": "587a20bb206b2f33fa6b7953baf17cae2d2ca6bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "610d2fc4_72b863c7",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-21T05:43:43Z",
+      "side": 1,
+      "message": "this log should indicate a failure of either qemu or guest kernel. In my opinion we should even panic here. If this error happens, the kernel expects us to have some features on, but we (spdk) don;t even get to know that. Bad things can happen. Which features don\u0027t match doesn\u0027t really matter - it\u0027s the fact that this negotiating logic failed. It should literally be:\nnegotiate_features() {\nint a \u003d get_driver_features();\nint b \u003d get_device_features();\nreturn a \u0026 b;\n}\nand it\u0027s not.\nSure, we could print some extra data here, but this case requires debugging anyway.",
+      "parentUuid": "df408e5b_5ecf97b3",
+      "revId": "587a20bb206b2f33fa6b7953baf17cae2d2ca6bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
