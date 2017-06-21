@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dad17d6b_cedc3386",
+        "filename": "test/lib/bdev/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T20:07:59Z",
+      "side": 1,
+      "message": "nbd should only be added ifeq ($(OS),Linux))",
+      "revId": "ae5b4a0f6cc425fbbc60ce1ae6837057ac9cc5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65cddb55_a6c0fa8f",
+        "filename": "test/lib/bdev/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T20:07:59Z",
+      "side": 1,
+      "message": "We should be checking the return codes of the bdev I/O functions.\n\nAlso, if we don\u0027t need the iovec functionality, we could just use spdk_bdev_read() and let the bdev layer use its built-in single iovec.",
+      "revId": "ae5b4a0f6cc425fbbc60ce1ae6837057ac9cc5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73c65031_77c6661c",
+        "filename": "test/lib/bdev/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T20:07:59Z",
+      "side": 1,
+      "message": "This allocation needs an error check.",
+      "revId": "ae5b4a0f6cc425fbbc60ce1ae6837057ac9cc5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb8624c6_2d575eba",
+        "filename": "test/lib/bdev/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T20:07:59Z",
+      "side": 1,
+      "message": "I think this needs some casts to work correctly - right now, you are doing pointer math on \u0026io-\u003ereq, which is a struct pointer. You probably want a char * cast or something similar to make the offset in bytes work correctly.",
+      "range": {
+        "startLine": 239,
+        "startChar": 29,
+        "endLine": 239,
+        "endChar": 51
+      },
+      "revId": "ae5b4a0f6cc425fbbc60ce1ae6837057ac9cc5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5b585fe_7a3c16a5",
+        "filename": "test/lib/bdev/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T20:07:59Z",
+      "side": 1,
+      "message": "Same pointer math issue here.",
+      "range": {
+        "startLine": 264,
+        "startChar": 28,
+        "endLine": 264,
+        "endChar": 50
+      },
+      "revId": "ae5b4a0f6cc425fbbc60ce1ae6837057ac9cc5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7402e7f6_df0367b8",
+        "filename": "test/lib/bdev/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T20:07:59Z",
+      "side": 1,
+      "message": "This probably needs to handle fork() failure (fork can return -1).",
+      "revId": "ae5b4a0f6cc425fbbc60ce1ae6837057ac9cc5c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
