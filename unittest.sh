@@ -47,7 +47,7 @@ $valgrind test/unit/lib/nvme/nvme_qpair.c/nvme_qpair_ut
 $valgrind test/unit/lib/nvme/nvme_pcie.c/nvme_pcie_ut
 $valgrind test/unit/lib/nvme/nvme_quirks.c/nvme_quirks_ut
 
-$valgrind test/lib/ioat/unit/ioat_ut
+$valgrind test/unit/lib/ioat/ioat.c/ioat_ut
 
 $valgrind test/unit/lib/json/json_parse.c/json_parse_ut
 $valgrind test/unit/lib/json/json_util.c/json_util_ut
