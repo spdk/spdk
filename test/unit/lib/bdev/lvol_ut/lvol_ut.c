@@ -50,6 +50,12 @@ spdk_uuid_compare(const uuid_t uu1, const uuid_t uu2)
 	return 0;
 }
 
+void
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	return;
+}
+
 bool
 spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx)
 {
@@ -153,6 +159,12 @@ lvol_store_op_complete(void *cb_arg, int lvserrno)
 	return;
 }
 
+void
+spdk_lvol_create(struct spdk_lvol_store *ls, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+
+}
 
 static void
 lvol_init(void)

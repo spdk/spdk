@@ -33,6 +33,7 @@
 
 #include "spdk_internal/lvolstore.h"
 #include "spdk_internal/log.h"
+#include "spdk/string.h"
 
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
@@ -124,6 +125,61 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	free(lvs);
 
 	return 0;
+}
+
+void
+spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
+{
+	struct spdk_lvol_create_req *req = cb_arg;
+	spdk_blob_id blob_id = spdk_blob_get_id(blob);
+	size_t sz = req->lvol->sz;
+	char guid[37];
+
+	if (sz != 0 && bserrno >= 0) {
+		spdk_uuid_unparse(req->lvol->lvol_store->uuid, guid);
+		req->lvol->blob = blob;
+		req->lvol->name = spdk_sprintf_alloc("%s_%lu",
+						     guid,
+						     (uint64_t)blob_id);
+
+		bserrno = spdk_bs_md_resize_blob(blob, sz);
+		if (bserrno < 0) {
+			/* TODO: Error resizing, destroy blob */
+		}
+	} else {
+		bserrno = -1;
+	}
+
+	req->cb_fn(cb_arg, bserrno);
+
+	free(req);
+}
+
+void
+spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int bserrno)
+{
+	struct spdk_lvol_create_req *req = cb_arg;
+
+	if (bserrno < 0) {
+		req->cb_fn(cb_arg, bserrno);
+		return;
+	}
+
+	spdk_bs_md_open_blob(req->lvol->lvol_store->blobstore, blobid, spdk_lvol_create_open_cb, req);
+}
+
+void
+spdk_lvol_create(struct spdk_lvol_store *ls, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_create_req *req = calloc(1, sizeof(struct spdk_lvol_create_req));
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+	req->lvol = calloc(1, sizeof(struct spdk_lvol));
+	req->lvol->lvol_store = ls;
+	req->lvol->sz = sz;
+
+	spdk_bs_md_create_blob(ls->blobstore, spdk_lvol_create_cb, req);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)

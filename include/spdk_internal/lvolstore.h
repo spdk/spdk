@@ -63,7 +63,17 @@ struct spdk_lvol_store {
 struct spdk_lvol {
 	struct spdk_bdev                *disk;
 	struct spdk_lvol_store          *lvol_store;
+	struct spdk_blob                *blob;
+	size_t                          sz;
+	char                            *name;
+
+	TAILQ_ENTRY(spdk_lvol)         lvols;
 };
 
+struct spdk_lvol_create_req {
+	spdk_lvol_op_complete           cb_fn;
+	void                            *cb_arg;
+	struct spdk_lvol                *lvol;
+};
 
 #endif

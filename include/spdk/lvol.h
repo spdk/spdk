@@ -53,6 +53,9 @@ typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvserrno);
 
 int spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
+void spdk_lvol_create(struct spdk_lvol_store *, size_t,	spdk_lvol_op_complete, void *);
+void spdk_lvol_create_cb(void *, spdk_blob_id, int);
+void spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno);
 
 void spdk_generate_uuid(uuid_t uuid);
 int spdk_uuid_compare(const uuid_t uu1, const uuid_t uu2);
