@@ -16,6 +16,24 @@
       "revId": "2c824e23e9b28f4920933b4ffd2b20902dd2affb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "541beb03_b32df951",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-06-21T08:23:59Z",
+      "side": 1,
+      "message": "My comment from previous patch set: \n\"Sorry for a little copy-pasta, but sourcing autotest_common.sh always enabled -x trace option, and it is supposed to be optional in this script.\"\n\nI honestly wanted to use waitforlisten from autotest_common.sh but I have no idea how to source it so that it wouldn\u0027t enable -x flag:) (-x is optional in fiotest, by default it is disabled so I\u0027d prefer not to enable it by sourcing other script)",
+      "parentUuid": "9b99fda2_4ee40a57",
+      "revId": "2c824e23e9b28f4920933b4ffd2b20902dd2affb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
