@@ -235,7 +235,7 @@ spdk_pci_device_unmap_bar(struct spdk_pci_device *device, uint32_t bar, void *ad
 	return 0;
 }
 
-uint16_t
+uint32_t
 spdk_pci_device_get_domain(struct spdk_pci_device *dev)
 {
 	return dev->addr.domain;
@@ -458,8 +458,8 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 		.l_len = 0,
 	};
 
-	snprintf(shm_name, sizeof(shm_name), PCI_PRI_FMT, pci_addr->domain, pci_addr->bus, pci_addr->dev,
-		 pci_addr->func);
+	snprintf(shm_name, sizeof(shm_name), "%04x:%04x:%02x.%x", pci_addr->domain, pci_addr->bus,
+		 pci_addr->dev, pci_addr->func);
 
 	dev_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (dev_fd == -1) {
@@ -531,7 +531,7 @@ spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
 		return -EINVAL;
 	}
 
-	if (domain > 0xFFFF || bus > 0xFF || dev > 0x1F || func > 7) {
+	if (bus > 0xFF || dev > 0x1F || func > 7) {
 		return -EINVAL;
 	}
 
@@ -548,7 +548,7 @@ spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
 {
 	int rc;
 
-	rc = snprintf(bdf, sz, PCI_PRI_FMT,
+	rc = snprintf(bdf, sz, "%04x:%04x:%02x.%x",
 		      addr->domain, addr->bus,
 		      addr->dev, addr->func);
 
