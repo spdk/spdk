@@ -41,7 +41,7 @@
 #include "blobfs.c"
 #include "tree.c"
 
-#include "lib/blob/bs_dev_common.c"
+#include "unit/lib/blob/bs_dev_common.c"
 
 struct spdk_filesystem *g_fs;
 struct spdk_file *g_file;

@@ -40,7 +40,7 @@
 #include "spdk/barrier.h"
 
 #include "spdk_cunit.h"
-#include "lib/blob/bs_dev_common.c"
+#include "unit/lib/blob/bs_dev_common.c"
 #include "lib/test_env.c"
 #include "blobfs.c"
 #include "tree.c"

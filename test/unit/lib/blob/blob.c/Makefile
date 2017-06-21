@@ -31,13 +31,25 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = blob_ut
-.PHONY: all clean $(DIRS-y)
+APP = blob_ut
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+C_SRCS := blob_ut.c
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/blob -I$(SPDK_ROOT_DIR)/test
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIB_LIST = util log
+
+LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
