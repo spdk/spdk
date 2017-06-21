@@ -77,10 +77,14 @@
 /* Allocated iovec buffer len */
 #define VHOST_SCSI_IOVS_LEN		128
 
+struct spdk_scsi_dev_w {
+	struct spdk_scsi_dev *scsi_dev;
+};
+
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 
-	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+	struct spdk_scsi_dev_w dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 
@@ -97,7 +101,7 @@ struct spdk_vhost_task {
 	};
 
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_scsi_dev *scsi_dev;
+	struct spdk_scsi_dev_w *dev;
 
 	int req_idx;
 
@@ -117,6 +121,62 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 };
 
 static struct spdk_ring *g_task_pool;
+
+static void spdk_vhost_scsi_lun_hotremove(struct spdk_scsi_lun *lun, void *arg);
+
+static int
+spdk_vhost_scsi_dev_w_init(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num,
+			   char *lun_names_list[], int *lun_id_list, int num_luns)
+{
+	struct spdk_scsi_dev_w *dev;
+	struct spdk_scsi_lun *lun;
+	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
+
+	dev = &svdev->dev[scsi_dev_num];
+	if (dev->scsi_dev != NULL) {
+		SPDK_ERRLOG("Controller %s dev %u already occupied\n", svdev->vdev.name, scsi_dev_num);
+		return -1;
+	}
+
+	snprintf(dev_name, sizeof(dev_name), "Dev %u", scsi_dev_num);
+	dev->scsi_dev = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
+						SPDK_SPC_PROTOCOL_IDENTIFIER_SAS);
+
+	if (dev->scsi_dev == NULL) {
+		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
+			    dev_name, lun_names_list[0], svdev->vdev.name);
+		return -1;
+	}
+
+	lun = spdk_scsi_dev_get_lun(dev->scsi_dev, lun_id_list[0]);
+	spdk_scsi_lun_set_hotremove_cb(lun, spdk_vhost_scsi_lun_hotremove, svdev);
+
+	spdk_scsi_dev_add_port(dev->scsi_dev, 0, "vhost");
+
+	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
+		       svdev->vdev.name, dev_name, lun_names_list[0]);
+
+	return 0;
+}
+
+static int
+spdk_vhost_scsi_dev_w_remove(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num)
+{
+	struct spdk_scsi_dev_w *dev = &svdev->dev[scsi_dev_num];
+
+	if (dev->scsi_dev == NULL) {
+		SPDK_ERRLOG("Controller %s dev %u is not occupied\n", svdev->vdev.name, scsi_dev_num);
+		return -1;
+	}
+
+	spdk_scsi_dev_destruct(dev->scsi_dev);
+	dev->scsi_dev = NULL;
+
+	SPDK_NOTICELOG("Controller %s: removed device 'Dev %u'\n",
+		       svdev->vdev.name, scsi_dev_num);
+
+	return 0;
+}
 
 static void
 spdk_vhost_task_put(struct spdk_vhost_task *task)
@@ -201,7 +261,7 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, struct spdk_scsi_dev *dev,
 	}
 
 	for (dev_id = 0; dev_id < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_id++) {
-		if (svdev->scsi_dev[dev_id] == dev) {
+		if (svdev->dev[dev_id].scsi_dev == dev) {
 			break;
 		}
 	}
@@ -279,14 +339,14 @@ task_submit(struct spdk_vhost_task *task)
 	 */
 
 	task->resp->response = VIRTIO_SCSI_S_OK;
-	spdk_scsi_dev_queue_task(task->scsi_dev, &task->scsi);
+	spdk_scsi_dev_queue_task(task->dev->scsi_dev, &task->scsi);
 }
 
 static void
 mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
-	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, func);
+	spdk_scsi_dev_queue_mgmt_task(task->dev->scsi_dev, &task->scsi, func);
 }
 
 static void
@@ -310,7 +370,7 @@ invalid_request(struct spdk_vhost_task *task)
 static int
 parse_virtio_lun(struct spdk_vhost_task *task, const __u8 *lun)
 {
-	struct spdk_scsi_dev *dev;
+	struct spdk_scsi_dev_w *dev;
 	uint16_t lun_id = (((uint16_t)lun[2] << 8) | lun[3]) & 0x3FFF;
 
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN", lun, 8);
@@ -319,13 +379,13 @@ parse_virtio_lun(struct spdk_vhost_task *task, const __u8 *lun)
 	if (lun[0] != 1 || lun[1] >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS)
 		return -1;
 
-	dev = task->svdev->scsi_dev[lun[1]];
-	if (dev == NULL) {
+	dev = &task->svdev->dev[lun[1]];
+	if (dev->scsi_dev == NULL) {
 		return -1;
 	}
 
-	task->scsi_dev = dev;
-	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_id);
+	task->dev = dev;
+	task->scsi.lun = spdk_scsi_dev_get_lun(dev->scsi_dev, lun_id);
 	return 0;
 }
 
@@ -526,7 +586,7 @@ process_request(struct spdk_vhost_task *task)
 	}
 
 	task->scsi.cdb = req->cdb;
-	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
+	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->dev->scsi_dev, 0);
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
 
 	if (unlikely(task->scsi.lun == NULL)) {
@@ -627,10 +687,10 @@ add_vdev_cb(void *arg)
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svdev->scsi_dev[i] == NULL) {
+		if (svdev->dev[i].scsi_dev == NULL) {
 			continue;
 		}
-		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[i]);
+		spdk_scsi_dev_allocate_io_channels(svdev->dev[i].scsi_dev);
 	}
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
 
@@ -653,10 +713,10 @@ remove_vdev_cb(void *arg)
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svdev->scsi_dev[i] == NULL) {
+		if (svdev->dev[i].scsi_dev == NULL) {
 			continue;
 		}
-		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
+		spdk_scsi_dev_free_io_channels(svdev->dev[i].scsi_dev);
 	}
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
@@ -723,7 +783,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
-		if (svdev->scsi_dev[i]) {
+		if (svdev->dev[i].scsi_dev) {
 			SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
 			return -EBUSY;
 		}
@@ -745,7 +805,7 @@ spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, uint8_t num)
 	assert(num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 	svdev = to_scsi_dev(vdev);
 
-	return svdev ? svdev->scsi_dev[num] : NULL;
+	return svdev ? svdev->dev[num].scsi_dev : NULL;
 }
 
 static void
@@ -769,10 +829,10 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
-	struct spdk_scsi_lun *lun;
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
+	int rc;
 
 	if (ctrlr_name == NULL) {
 		SPDK_ERRLOG("No controller name\n");
@@ -809,7 +869,7 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -ENODEV;
 	}
 
-	if (svdev->scsi_dev[scsi_dev_num] != NULL) {
+	if (svdev->dev[scsi_dev_num].scsi_dev != NULL) {
 		SPDK_ERRLOG("Controller %s dev %u already occupied\n", ctrlr_name, scsi_dev_num);
 		return -EEXIST;
 	}
@@ -821,27 +881,15 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	lun_id_list[0] = 0;
 	lun_names_list[0] = (char *)lun_name;
 
-	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
-					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS);
-
-	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
-		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
-			    dev_name, lun_name, vdev->name);
-		return -EINVAL;
-	}
-	lun = spdk_scsi_dev_get_lun(svdev->scsi_dev[scsi_dev_num], lun_id_list[0]);
-
-	spdk_scsi_lun_set_hotremove_cb(lun, spdk_vhost_scsi_lun_hotremove, svdev);
-	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
-	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
-		       vdev->name, dev_name, lun_name);
-	return 0;
+	rc = spdk_vhost_scsi_dev_w_init(svdev, scsi_dev_num, lun_names_list, lun_id_list, 1);
+	return rc;
 }
 
 int
 spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num)
 {
 	struct spdk_vhost_scsi_dev *svdev;
+	int rc;
 
 	assert(vdev != NULL);
 	if (vdev->lcore != -1) {
@@ -854,17 +902,8 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		return -ENODEV;
 	}
 
-	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
-		SPDK_ERRLOG("Controller %s dev %u is not occupied\n", vdev->name, scsi_dev_num);
-		return -ENODEV;
-	}
-
-	spdk_scsi_dev_destruct(svdev->scsi_dev[scsi_dev_num]);
-	svdev->scsi_dev[scsi_dev_num] = NULL;
-
-	SPDK_NOTICELOG("Controller %s: removed device 'Dev %u'\n",
-		       vdev->name, scsi_dev_num);
-	return 0;
+	rc = spdk_vhost_scsi_dev_w_remove(svdev, scsi_dev_num);
+	return rc;
 }
 
 int
