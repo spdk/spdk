@@ -34,6 +34,11 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-TEST_FILE = ioat_ut.c
+DIRS-y = ioat.c
 
-include $(SPDK_ROOT_DIR)/mk/ioat.unittest.mk
+.PHONY: all clean $(DIRS-y)
+
+all: $(DIRS-y)
+clean: $(DIRS-y)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
