@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6ed8334_26bc7725",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "I don\u0027t think you want an SPDK_ERRLOG here.  Many bdevs will not have a GPT - we do not want error messages for all of them.",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0deccfeb_c0ef6bdc",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "channel will get leaked if status !\u003d SUCCESS",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92ede38d_c596941b",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "I think vbdev_gpt_create and _vbdev_gpt_create are too confusing.  Maybe the first one should be vbdev_gpt_read_gpt?  And the second one maybe vbdev_gpt_create_bdevs?  We really want the function names to clearly state what the function is doing - it makes it easier to read the code.\n\nI think you should also do the spdk_gpt_parse() call here.  Then vbdev_gpt_create_bdevs only is called when there is valid GPT.",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a9b9a84_fc890eed",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "Now I know why you had the Gpt section previously in the test script.  But I think Gpt module should just be enabled by default - if user does not have it in their conf file, then it just means it is enabled.",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c0e861d_844d5fb0",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "I think the code would be clearer to have two separate variables - i.e. g_gpt_disabled and g_gpt_init_done.  Then we do not need special knowledge about this value being set to -1 to mean disabled.",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7453353_c1ee02ce",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "Should we remove the bdev from the tailq here too?  It is not critical, but I think that would be cleaner (to show that all bdevs have been accounted for).",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82b327bf_518880af",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "Then here you can just return immediately if g_gpt_disabled \u003d\u003d true.\n\n(It might be nice to have a feature to unregister a module at runtime.  But that could be done in the future.)",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6011fd37_6589ecd3",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "You need to specify a ctx_size_fn here, for the 8 bytes (pointer value) used for the new reset handling.  See vbdev_split for an example.",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b53087ee_0020a859",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 46
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:33:14Z",
+      "side": 1,
+      "message": "please take a look at my new nbd tool - then I think you can do this for each NVMe device:\n\nnbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 \u0026\nparted -s /dev/nbd0 ...\n\u003ckill nbd process\u003e\n\nI\u0027m still not sure how you know any of the code works though.  If the gpt code does not properly parse the GPT, bdevperf will still run OK.",
+      "revId": "a613f29773f3e40ad533e4132ae5d8b010c58ada",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
