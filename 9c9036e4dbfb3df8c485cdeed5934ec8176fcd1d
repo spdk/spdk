@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9229d048_426a4024",
+        "filename": "README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T16:54:46Z",
+      "side": 1,
+      "message": "I think it would be clearer if the continued lines were indented.",
+      "revId": "9c9036e4dbfb3df8c485cdeed5934ec8176fcd1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ddd959b_ed8948f4",
+        "filename": "README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T16:54:46Z",
+      "side": 1,
+      "message": "Can you put the anchors on the line before the header? That seems to make the links scroll to show the header rather than just after it.",
+      "range": {
+        "startLine": 75,
+        "startChar": 15,
+        "endLine": 75,
+        "endChar": 34
+      },
+      "revId": "9c9036e4dbfb3df8c485cdeed5934ec8176fcd1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd9116e0_c0a118fa",
+        "filename": "README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T16:54:46Z",
+      "side": 1,
+      "message": "unittests.sh -\u003e unittest.sh",
+      "range": {
+        "startLine": 105,
+        "startChar": 1,
+        "endLine": 105,
+        "endChar": 14
+      },
+      "revId": "9c9036e4dbfb3df8c485cdeed5934ec8176fcd1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85001561_5006a3e0",
+        "filename": "README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T16:54:46Z",
+      "side": 1,
+      "message": "While you\u0027re updating this, I think we should drop the --with-dpdk part of this configure example (--with-dpdk is explained in the paragraphs below, and we should encourage use of the sub module by default).",
+      "range": {
+        "startLine": 145,
+        "startChar": 12,
+        "endLine": 145,
+        "endChar": 58
+      },
+      "revId": "9c9036e4dbfb3df8c485cdeed5934ec8176fcd1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c993382_7a6f6659",
+        "filename": "README.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-21T16:54:46Z",
+      "side": 1,
+      "message": "additinoal -\u003e additional, cinluding -\u003e including",
+      "range": {
+        "startLine": 201,
+        "startChar": 69,
+        "endLine": 201,
+        "endChar": 78
+      },
+      "revId": "9c9036e4dbfb3df8c485cdeed5934ec8176fcd1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
