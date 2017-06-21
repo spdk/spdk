@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e159ca8f_ecb63f2e",
+        "filename": "examples/bdev/fio_plugin/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T22:17:15Z",
+      "side": 1,
+      "message": "Can this follow the NVMe BKM, using LD_PRELOAD, for consistency?",
+      "revId": "d46b27f78462d5f4511ca43a3c7a8e9df6e338ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99f001f1_4d407c85",
+        "filename": "examples/bdev/fio_plugin/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T22:17:15Z",
+      "side": 1,
+      "message": "I\u0027m thinking this should refer to bdev names instead.  (Maybe you just copied the NVMe README as-is and forgot to modify it?)",
+      "revId": "d46b27f78462d5f4511ca43a3c7a8e9df6e338ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f49041be_a7e37696",
+        "filename": "examples/bdev/fio_plugin/example_config.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T22:17:15Z",
+      "side": 1,
+      "message": "i think you want the bdev one here - but really this should follow the new NVMe fio example - ioengine\u003dspdk and specify the plugin via LD_PRELOAD",
+      "revId": "d46b27f78462d5f4511ca43a3c7a8e9df6e338ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
