@@ -282,7 +282,7 @@ size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 uint64_t spdk_vtophys(void *buf);
 
 struct spdk_pci_addr {
-	uint16_t			domain;
+	uint32_t			domain;
 	uint8_t				bus;
 	uint8_t				dev;
 	uint8_t				func;
@@ -306,7 +306,7 @@ int spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
 			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
 int spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr);
 
-uint16_t spdk_pci_device_get_domain(struct spdk_pci_device *dev);
+uint32_t spdk_pci_device_get_domain(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_bus(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_dev(struct spdk_pci_device *dev);
 uint8_t spdk_pci_device_get_func(struct spdk_pci_device *dev);
