@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "199dedfc_f3b85f45",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:10:19Z",
+      "side": 1,
+      "message": "OK - thanks for clarifying.",
+      "parentUuid": "06ecf2d4_097092ad",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b597ecb_34f5796b",
         "filename": "lib/bdev/gpt/gpt.c",
         "patchSetId": 36
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "previous check is : usable_lba_start and usable_lba_end. so I did not think that the previous check can cover it.",
       "parentUuid": "7b597ecb_34f5796b",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cf0394d_7cfc6792",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-21T20:10:19Z",
+      "side": 1,
+      "message": "Can you give me an example where just checking usable_lba_end \u003e lba_end would not be sufficient?\n\nThe previous check ensures that usable_lba_end \u003c\u003d usable_lba_start.  If usable_lba_end \u003e lba_end, then we automatically know that usable_lba_start \u003e lba_end.",
+      "parentUuid": "26f7487c_6cbc5e5b",
       "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
