@@ -235,7 +235,7 @@ spdk_pci_device_unmap_bar(struct spdk_pci_device *device, uint32_t bar, void *ad
 	return 0;
 }
 
-uint16_t
+uint32_t
 spdk_pci_device_get_domain(struct spdk_pci_device *dev)
 {
 	return dev->addr.domain;
@@ -531,7 +531,7 @@ spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf)
 		return -EINVAL;
 	}
 
-	if (domain > 0xFFFF || bus > 0xFF || dev > 0x1F || func > 7) {
+	if (bus > 0xFF || dev > 0x1F || func > 7) {
 		return -EINVAL;
 	}
 
