@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "06ecf2d4_097092ad",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-21T04:01:26Z",
+      "side": 1,
+      "message": "Not needed, we already have head stored in gpt, and we can read its value",
+      "parentUuid": "bbe3fb2b_1cf1feee",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b597ecb_34f5796b",
         "filename": "lib/bdev/gpt/gpt.c",
         "patchSetId": 36
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-20T21:43:55Z",
       "side": 1,
       "message": "you only need to check usable_lba_end here; if start \u003e end, the previous check will catch it",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26f7487c_6cbc5e5b",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-21T04:01:26Z",
+      "side": 1,
+      "message": "previous check is : usable_lba_start and usable_lba_end. so I did not think that the previous check can cover it.",
+      "parentUuid": "7b597ecb_34f5796b",
       "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -81,6 +117,24 @@
       "writtenOn": "2017-06-20T21:43:55Z",
       "side": 1,
       "message": "if a GPT_PROTECTIVE_MBR is not found, should this function return failure?  (I\u0027m not sure - I haven\u0027t read the spec.)",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24eb669e_6efe685a",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-21T04:01:26Z",
+      "side": 1,
+      "message": "There are other types. But I can add a check there to show that.",
+      "parentUuid": "191b848e_58d7d39e",
       "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
