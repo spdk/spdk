@@ -79,6 +79,7 @@
 #define VHOST_SCSI_IOVS_LEN		128
 
 struct spdk_scsi_dev_w {
+	/** Actual scsi device currently used */
 	struct spdk_scsi_dev *scsi_dev;
 };
 
@@ -86,6 +87,7 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 
 	struct spdk_scsi_dev_w dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+	struct spdk_scsi_dev *removed_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 
@@ -126,6 +128,24 @@ static struct spdk_ring *g_task_pool;
 static void spdk_vhost_scsi_lun_hotremove(struct spdk_scsi_lun *lun, void *arg);
 
 static int
+spdk_vhost_scsi_dev_get_index(struct spdk_vhost_scsi_dev *svdev, struct spdk_scsi_dev *scsi_dev)
+{
+	int dev_index;
+
+	for (dev_index = 0; dev_index < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_index++) {
+		if (svdev->dev[dev_index].scsi_dev == scsi_dev) {
+			break;
+		}
+	}
+
+	if (dev_index == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		return -1;
+	}
+
+	return dev_index;
+}
+
+static int
 spdk_vhost_scsi_dev_w_init(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num,
 			   char *lun_names_list[], int *lun_id_list, int num_luns)
 {
@@ -160,21 +180,61 @@ spdk_vhost_scsi_dev_w_init(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_
 	return 0;
 }
 
+static void
+spdk_vhost_scsi_dev_w_remove_cb(void *arg1, void *arg2)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg1;
+	struct spdk_scsi_dev_w *dev = arg2;
+	int dev_index;
+
+	if (dev->scsi_dev == NULL) {
+		SPDK_ERRLOG("Controller %s: trying to remove empty device\n", svdev->vdev.name);
+		return;
+	}
+
+	dev_index = spdk_vhost_scsi_dev_get_index(svdev, dev->scsi_dev);
+	if (dev_index < 0) {
+		SPDK_ERRLOG("Dev %s is not a part of ctrlr %s\n", spdk_scsi_dev_get_name(dev->scsi_dev), svdev->vdev.name);
+		return;
+	}
+
+	if (svdev->removed_dev[dev_index] != NULL) {
+		SPDK_ERRLOG("%s: Device %d is still being removed\n", svdev->vdev.name, dev_index);
+		return;
+	}
+
+	svdev->removed_dev[dev_index] = dev->scsi_dev;
+	dev->scsi_dev = NULL;
+
+	SPDK_NOTICELOG("Controller %s: removed device 'Dev %u'\n", svdev->vdev.name, dev_index);
+
+}
+
+static void eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, struct spdk_scsi_dev *dev,
+			   struct spdk_scsi_lun *lun, uint32_t event, uint32_t reason);
+
 static int
 spdk_vhost_scsi_dev_w_remove(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num)
 {
 	struct spdk_scsi_dev_w *dev = &svdev->dev[scsi_dev_num];
+	struct spdk_scsi_dev *scsi_dev = dev->scsi_dev;
+	struct spdk_event *event;
 
-	if (dev->scsi_dev == NULL) {
-		SPDK_ERRLOG("Controller %s dev %u is not occupied\n", svdev->vdev.name, scsi_dev_num);
+	if (svdev->vdev.lcore == -1) {
+		/* controller is not in use, remove dev and exit */
+		spdk_vhost_scsi_dev_w_remove_cb(svdev, dev);
+		return 0;
+	}
+
+	if ((svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
+		SPDK_WARNLOG("Controller %s: hotremove is not supported\n", svdev->vdev.name);
 		return -1;
 	}
 
-	spdk_scsi_dev_destruct(dev->scsi_dev);
-	dev->scsi_dev = NULL;
+	event = spdk_event_allocate(svdev->vdev.lcore, spdk_vhost_scsi_dev_w_remove_cb, svdev, dev);
+	spdk_event_call(event);
 
-	SPDK_NOTICELOG("Controller %s: removed device 'Dev %u'\n",
-		       svdev->vdev.name, scsi_dev_num);
+	eventq_enqueue(svdev, scsi_dev, NULL, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
 
 	return 0;
 }
@@ -239,6 +299,23 @@ process_eventq(struct spdk_vhost_scsi_dev *svdev)
 
 		spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
 		spdk_dma_free(ev);
+	}
+}
+
+static void
+process_dev_status(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_scsi_dev *dev;
+	int i;
+
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
+		dev = svdev->removed_dev[i];
+
+		if (dev && spdk_scsi_dev_get_task_cnt(dev) == 0) {
+			spdk_scsi_dev_free_io_channels(dev);
+			spdk_scsi_dev_destruct(dev);
+			svdev->removed_dev[i] = NULL;
+		}
 	}
 }
 
@@ -664,6 +741,7 @@ vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
+	process_dev_status(svdev);
 	process_eventq(svdev);
 	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
 }
@@ -888,11 +966,6 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 	int rc;
 
 	assert(vdev != NULL);
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotremove is not supported\n", vdev->name);
-		return -EBUSY;
-	}
-
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
 		return -ENODEV;
