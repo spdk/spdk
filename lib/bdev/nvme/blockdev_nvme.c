@@ -854,6 +854,7 @@ bdev_nvme_library_init(void)
 	size_t i;
 	struct nvme_probe_ctx *probe_ctx = NULL;
 	int retry_count;
+	int local_nvme_num = 0;
 
 	sp = spdk_conf_find_section(NULL, "Nvme");
 	if (sp == NULL) {
@@ -964,13 +965,17 @@ bdev_nvme_library_init(void)
 				rc = -1;
 				goto end;
 			}
+		} else {
+			local_nvme_num++;
 		}
 	}
 
-	/* used to probe local NVMe device */
-	if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
-		rc = -1;
-		goto end;
+	if (local_nvme_num != 0) {
+		/* used to probe local NVMe device */
+		if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
+			rc = -1;
+			goto end;
+		}
 	}
 
 	if (g_nvme_hotplug_enabled) {
