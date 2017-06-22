@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f29510ff_642aa24d",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T04:57:59Z",
+      "side": 1,
+      "message": "Overall I think this patch is ready to go - except for these two uses of spdk_bdev (here and line 63).  Can we remove them from this patch?",
+      "revId": "d4e743ecfdcc19a652f04fb021a4d5a19d06ddc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
