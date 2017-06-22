@@ -226,7 +226,7 @@ spdk_scsi_lun_hotplug(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
-	if (TAILQ_EMPTY(&lun->pending_tasks) && TAILQ_EMPTY(&lun->tasks)) {
+	if (!spdk_scsi_lun_has_pending_tasks(lun)) {
 		spdk_scsi_lun_free_io_channel(lun);
 		spdk_scsi_lun_delete(lun->name);
 	}
@@ -415,4 +415,10 @@ const struct spdk_scsi_dev *
 spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
 {
 	return lun->dev;
+}
+
+bool
+spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
+{
+	return !TAILQ_EMPTY(&lun->pending_tasks) || !TAILQ_EMPTY(&lun->tasks);
 }

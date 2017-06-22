@@ -177,6 +177,11 @@ spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 {
 }
 
+bool
+spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
+{
+	return false;
+}
 
 static void
 dev_destruct_null_dev(void)
