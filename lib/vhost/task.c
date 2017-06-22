@@ -62,29 +62,32 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 	rte_mempool_put(g_task_pool, task);
 }
 
-struct spdk_vhost_task *
-spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev, spdk_scsi_task_cpl cpl_fn)
+void
+spdk_vhost_task_get(struct spdk_vhost_scsi_dev *svdev, void **tasks, int count,
+		    spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_vhost_task *task;
-	int rc;
+	int rc, i;
 
-	rc = rte_mempool_get(g_task_pool, (void **)&task);
-	if ((rc < 0) || !task) {
+	rc = rte_mempool_get_bulk(g_task_pool, tasks, count);
+	if (rc < 0) {
 		SPDK_ERRLOG("Unable to get task\n");
 		rte_panic("no memory\n");
 	}
 
-	memset(task, 0, sizeof(*task));
-	task->svdev = vdev;
+	assert(((struct spdk_vhost_dev *) svdev)->task_cnt <= INT_MAX - count);
+	((struct spdk_vhost_dev *) svdev)->task_cnt += count;
 
-	assert(((struct spdk_vhost_dev *) task->svdev)->task_cnt < INT_MAX);
-	((struct spdk_vhost_dev *) task->svdev)->task_cnt++;
-	spdk_scsi_task_construct(&task->scsi,
-				 cpl_fn,
-				 spdk_vhost_task_free_cb,
-				 NULL);
+	for (i = 0; i < count; ++i) {
+		task = tasks[i];
+		memset(task, 0, sizeof(*task));
 
-	return task;
+		task->svdev = svdev;
+		spdk_scsi_task_construct(&task->scsi,
+					 cpl_fn,
+					 spdk_vhost_task_free_cb,
+					 NULL);
+	}
 }
 
 int
