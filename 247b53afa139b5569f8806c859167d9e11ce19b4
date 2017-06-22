@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7844e463_7853653f",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-22T23:59:40Z",
+      "side": 1,
+      "message": "Reset is no longer the last thing in the enum after the addition of the NVMe passthru I/O types; do we need to extend this? (If so, we should probably also put a comment at the end of the enum to remind people to update this file.)",
+      "range": {
+        "startLine": 60,
+        "startChar": 38,
+        "endLine": 60,
+        "endChar": 64
+      },
+      "revId": "247b53afa139b5569f8806c859167d9e11ce19b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5070aee_9a1e8377",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-22T23:59:40Z",
+      "side": 1,
+      "message": "Rather than hard-coding SPDK_BDEV_IO_TYPE_RESET as the array bound here, can you use SPDK_COUNTOF(error_disk-\u003eerror_vector)?",
+      "revId": "247b53afa139b5569f8806c859167d9e11ce19b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94884e44_e18df4f9",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-22T23:59:40Z",
+      "side": 1,
+      "message": "This probably needs a check to make sure io_type is not out of bounds.\n\nI think it\u0027s also probably fine to just use io_type as the index directly (remove - 1) and just waste the first entry; it\u0027s not a big amount of memory, and it will simplify the code.",
+      "range": {
+        "startLine": 109,
+        "startChar": 27,
+        "endLine": 109,
+        "endChar": 38
+      },
+      "revId": "247b53afa139b5569f8806c859167d9e11ce19b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
