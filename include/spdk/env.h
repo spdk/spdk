@@ -377,6 +377,11 @@ int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
 int spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr);
 
 /**
+ * Removes any CPU affinitization from the current thread.
+ */
+void spdk_unaffinitize_thread(void);
+
+/**
  * Call a function with CPU affinity unset.
  *
  * This can be used to run a function that creates other threads without inheriting the calling
