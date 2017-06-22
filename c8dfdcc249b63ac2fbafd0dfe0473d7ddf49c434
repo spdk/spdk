@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15b79990_85afd010",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:56:10Z",
+      "side": 1,
+      "message": "does free_rpc_construct_lvol_store need to be called here?  (and for the error case below?)\n\ni think there is a similar problem with the destruct callback below",
+      "revId": "c8dfdcc249b63ac2fbafd0dfe0473d7ddf49c434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
