@@ -262,29 +262,22 @@ get_scsi_lun(struct spdk_scsi_dev *scsi_dev, const __u8 *lun)
 }
 
 static void
-process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *controlq,
-		     uint16_t req_idx)
+process_ctrl_request(struct spdk_vhost_task *task)
 {
-	struct spdk_vhost_task *task;
-
 	struct vring_desc *desc;
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
 
-	desc = spdk_vhost_vq_get_desc(controlq, req_idx);
-	ctrl_req = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+	desc = spdk_vhost_vq_get_desc(task->vq, task->req_idx);
+	ctrl_req = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
-		      req_idx, desc, (void *)desc->addr, desc->len, desc->flags, controlq->last_used_idx,
-		      controlq->kickfd, controlq->size);
+		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->last_used_idx,
+		      task->vq->kickfd, task->vq->size);
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "Request desriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
-	task = spdk_vhost_task_get(svdev, spdk_vhost_task_mgmt_cpl);
-	task->vq = controlq;
-	task->svdev = svdev;
-	task->req_idx = req_idx;
 	task->scsi_dev = get_scsi_dev(task->svdev, ctrl_req->lun);
 
 	/* Process the TMF request */
@@ -292,8 +285,8 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 	case VIRTIO_SCSI_T_TMF:
 		/* Get the response buffer */
 		assert(spdk_vhost_vring_desc_has_next(desc));
-		desc = spdk_vhost_vring_desc_get_next(controlq->desc, desc);
-		task->tmf_resp = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+		desc = spdk_vhost_vring_desc_get_next(task->vq->desc, desc);
+		task->tmf_resp = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 
 		/* Check if we are processing a valid request */
 		if (task->scsi_dev == NULL) {
@@ -318,8 +311,8 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		break;
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
-		desc = spdk_vhost_vring_desc_get_next(controlq->desc, desc);
-		an_resp = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+		desc = spdk_vhost_vring_desc_get_next(task->vq->desc, desc);
+		an_resp = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 		an_resp->response = VIRTIO_SCSI_S_ABORTED;
 		break;
 	}
@@ -328,7 +321,7 @@ process_ctrl_request(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *
 		break;
 	}
 
-	spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, controlq, req_idx, 0);
+	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_task_put(task);
 }
 
@@ -479,33 +472,44 @@ process_request(struct spdk_vhost_task *task)
 }
 
 static void
-process_controlq(struct spdk_vhost_scsi_dev *vdev, struct rte_vhost_vring *vq)
+process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 {
+	struct spdk_vhost_task *tasks[32];
+	struct spdk_vhost_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	spdk_vhost_task_get(svdev, (void **)tasks, reqs_cnt, spdk_vhost_task_mgmt_cpl);
 	for (i = 0; i < reqs_cnt; i++) {
-		process_ctrl_request(vdev, vq, reqs[i]);
+		task = tasks[i];
+		task->vq = vq;
+		task->svdev = svdev;
+		task->req_idx = reqs[i];
+
+		process_ctrl_request(task);
 	}
 }
 
 static void
 process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 {
+	struct spdk_vhost_task *tasks[32];
+	struct spdk_vhost_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
-	struct spdk_vhost_task *task;
 	int result;
 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
 	assert(reqs_cnt <= 32);
 
-	for (i = 0; i < reqs_cnt; i++) {
-		task = spdk_vhost_task_get(svdev, spdk_vhost_task_cpl);
+	spdk_vhost_task_get(svdev, (void **)tasks, reqs_cnt, spdk_vhost_task_cpl);
 
+	for (i = 0; i < reqs_cnt; i++) {
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
+
+		task = tasks[i];
 		task->vq = vq;
 		task->svdev = svdev;
 		task->req_idx = reqs[i];
