@@ -277,8 +277,8 @@ spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
 		return NULL;
 	}
 
-	snprintf(ring_name, sizeof(ring_name), "spdk_ring_%u",
-		 __sync_fetch_and_add(&ring_num, 1));
+	snprintf(ring_name, sizeof(ring_name), "ring_%u_%d",
+		 __sync_fetch_and_add(&ring_num, 1), getpid());
 
 	return (struct spdk_ring *)rte_ring_create(ring_name, count, socket_id, flags);
 }
