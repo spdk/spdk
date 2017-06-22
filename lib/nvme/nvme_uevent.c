@@ -43,7 +43,6 @@
 #include <linux/netlink.h>
 
 #define SPDK_UEVENT_MSG_LEN 4096
-#define TRADDR_FMT "%.4" PRIx16 ":%.2" PRIx8 ":%.2" PRIx8 ".%" PRIx8
 
 int
 spdk_uevent_connect(void)
@@ -89,7 +88,6 @@ spdk_uevent_connect(void)
 static int
 parse_event(const char *buf, struct spdk_uevent *event)
 {
-	int ret;
 	char action[SPDK_UEVENT_MSG_LEN];
 	char subsystem[SPDK_UEVENT_MSG_LEN];
 	char dev_path[SPDK_UEVENT_MSG_LEN];
@@ -115,7 +113,7 @@ parse_event(const char *buf, struct spdk_uevent *event)
 
 	if (!strncmp(subsystem, "uio", 3)) {
 		char *pci_address, *tmp;
-		unsigned int domain, bus, dev, func;
+		struct spdk_pci_addr pci_addr;
 
 		event->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_UIO;
 		if (!strncmp(action, "add", 3)) {
@@ -130,11 +128,11 @@ parse_event(const char *buf, struct spdk_uevent *event)
 
 		pci_address = strrchr(dev_path, '/');
 		pci_address++;
-		ret = sscanf(pci_address, "%x:%x:%x.%x", &domain, &bus, &dev, &func);
-		if (ret != 4) {
+		if (spdk_pci_addr_parse(&pci_addr, pci_address) != 0) {
 			SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", pci_address);
+			return -1;
 		}
-		snprintf(event->traddr, sizeof(event->traddr), TRADDR_FMT, domain, bus, dev, func);
+		spdk_pci_addr_fmt(event->traddr, sizeof(event->traddr), &pci_addr);
 		return 1;
 	}
 	return -1;
