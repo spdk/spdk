@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d0a1576_026485b0",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-22T04:19:36Z",
+      "side": 1,
+      "message": "This option is the amount of memory allocated, not the hugepage size. Hugepages themselves can be multiple sizes (2MB, 1GB, etc.), so someone may mistake \"Hugepage size\" for which size hugepage we use internally.\n\nMaybe describe this as \"Memory Size in MB\"",
+      "revId": "58daea3f002c87bf7b23e4e4a6367607023d9f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
