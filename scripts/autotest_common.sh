@@ -251,7 +251,7 @@ function start_stub() {
 
 function kill_stub() {
 	kill $stubpid
-	rm -rf /var/run/spdk_stub0
+	rm -f /var/run/spdk_stub0
 }
 
 function run_test() {
