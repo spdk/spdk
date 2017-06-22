@@ -41,7 +41,7 @@ CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS := stub.c
 
-SPDK_LIB_LIST = nvme util log trace
+SPDK_LIB_LIST = event conf nvme util log trace
 
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += $(ENV_LINKER_ARGS)

@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/env.h"
+#include "spdk/event.h"
 #include "spdk/nvme.h"
 
 static char g_path[256];
@@ -64,14 +64,40 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 }
 
+static void
+stub_start(void *arg1, void *arg2)
+{
+	int shm_id = (intptr_t)arg1;
+
+	spdk_unaffinitize_thread();
+
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
+		exit(1);
+	}
+
+	snprintf(g_path, sizeof(g_path), "/var/run/spdk_stub%d", shm_id);
+	if (mknod(g_path, S_IFREG, 0) != 0) {
+		fprintf(stderr, "could not create sentinel file %s\n", g_path);
+		exit(1);
+	}
+}
+
+static void
+stub_shutdown(void)
+{
+	unlink(g_path);
+	spdk_app_stop(0);
+}
+
 int
 main(int argc, char **argv)
 {
 	int ch;
-	struct spdk_env_opts opts = {};
+	struct spdk_app_opts opts = {};
 
 	/* default value in opts structure */
-	spdk_env_opts_init(&opts);
+	spdk_app_opts_init(&opts);
 
 	opts.name = "stub";
 
@@ -81,7 +107,7 @@ main(int argc, char **argv)
 			opts.shm_id = atoi(optarg);
 			break;
 		case 'm':
-			opts.core_mask = optarg;
+			opts.reactor_mask = optarg;
 			break;
 		case 'n':
 			opts.mem_channel = atoi(optarg);
@@ -105,21 +131,10 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	spdk_env_init(&opts);
-	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
-		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		exit(1);
-	}
+	opts.shutdown_cb = stub_shutdown;
+	opts.max_delay_us = 1000 * 1000;
 
-	snprintf(g_path, sizeof(g_path), "/var/run/spdk_stub%d", opts.shm_id);
-	if (mknod(g_path, S_IFREG, 0) != 0) {
-		fprintf(stderr, "could not create sentinel file %s\n", g_path);
-		exit(1);
-	}
-
-	while (1) {
-		sleep(1);
-	}
+	spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id, NULL);
 
 	return 0;
 }
