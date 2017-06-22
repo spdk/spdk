@@ -174,6 +174,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	dev->num_ports = 0;
 	dev->maxlun = 0;
 	dev->protocol_id = protocol_id;
+	dev->task_cnt = 0;
 
 	for (i = 0; i < num_luns; i++) {
 		bdev = spdk_bdev_get_by_name(lun_name_list[i]);
@@ -335,4 +336,10 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	}
 
 	return dev->lun[lun_id];
+}
+
+int
+spdk_scsi_dev_get_task_cnt(struct spdk_scsi_dev *dev)
+{
+	return dev->task_cnt;
 }
