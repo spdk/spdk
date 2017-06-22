@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "600d5ca4_274ee806",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "the base lvol library code should store the bs_dev during init/load - the vbdev module should not need to do it",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13a89632_d803379e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "ok - now i see why you had the bdev pointer in the base lvs structure - but we still need to remove it :(\n\nyou will need to create your own structure private to this file, that contains both an lvol_store pointer and a bdev pointer - this is the structure you will add to your global list on the next line below",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaaf2d1a_5a44416f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "we should not need to use this request structure here - similar to my comments on the destruct function below",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e77bbddb_72fe1364",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "I think you can avoid using the vbdev_lvol_store_req here completely.\n\nJust have vbdev_lvs_destruct_cb call vbdev_empty_destroy directly (instead of using the cb_fn).  And pass lvs as the callback argument.  Then in vbdev_lvs_destruct_cb, you can get the base_bdev from the lvs.\n\nThis will make the code a lot simpler.",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b6bf846_5c172526",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "these are the same definitions as in lvolstore.h - we should be able to just use those typedefs instead of redefining here",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6736b106_6529a483",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 15
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "so these (blob blob_bdev lvol) really don\u0027t belong here, but if you don\u0027t put them here you need to add them to the list of libraries in every single app\u0027s Makefile which is a major pain!\n\nfor now, could you just put these on a separate line, with a comment explaining why you are putting them here even though they are not BLOCKDEV modules?  i have some ideas for making the library inclusion easier in the app makefiles but haven\u0027t had time to work on it",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cc83961_9c68f793",
+        "filename": "test/unit/lib/bdev/Makefile",
+        "patchSetId": 15
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "should just be lvol",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7684b1ac_898e60ef",
+        "filename": "test/unit/lib/bdev/lvol_ut/lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "you should just be able to pass \u0026g_bdev here, and avoid the extra parameters (see comment on previous file)\n\nyou can use other mechanisms to determine success/failure - for example, check if an lvs was added to the global list or not",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a0db855_12e3da2d",
+        "filename": "unittest.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-22T05:45:03Z",
+      "side": 1,
+      "message": "the directory name for this one should be \"vbdev_lvol.c\" instead of \"lvol_ut\" for consistency with the rest of the unit tests under test/unit/lib",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
