@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "267b2e28_96e3a9b3",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-06-22T00:56:20Z",
+      "side": 0,
+      "message": "It should be better if we could add \"todo\" comment here to remind us modify the snprintf format in case the DPDK provide another new format other than PCI_PRI_FMT.",
+      "revId": "70318fd2e66b670d85fbaf454ae4a9f48bc85a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
