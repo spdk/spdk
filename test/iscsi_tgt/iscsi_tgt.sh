@@ -43,9 +43,6 @@ kill_stub
 
 # TODO: enable remote NVMe controllers with multi-process so that
 #  we can use the stub for this test
-#test configure remote NVMe device from rpc
-run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 0
-#test configure remote NVMe device from conf file
-run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
+run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
 
 timing_exit iscsi_tgt
