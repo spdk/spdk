@@ -171,6 +171,7 @@ const char *spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev);
 struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id);
+int spdk_scsi_dev_get_task_cnt(struct spdk_scsi_dev *dev);
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task,
 				   enum spdk_scsi_task_func func);
