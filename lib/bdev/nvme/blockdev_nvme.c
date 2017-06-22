@@ -719,6 +719,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		for (i = 0; i < ctx->count; i++) {
 			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
 				name = strdup(ctx->names[i]);
+				SPDK_NOTICELOG("blockdev: name =%s\n", name);
 				break;
 			}
 		}
