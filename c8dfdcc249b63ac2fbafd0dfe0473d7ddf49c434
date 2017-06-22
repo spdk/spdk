@@ -16,6 +16,24 @@
       "revId": "c8dfdcc249b63ac2fbafd0dfe0473d7ddf49c434",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5bb3eabb_f079ebc7",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-06-22T10:34:37Z",
+      "side": 1,
+      "message": "I\u0027ve added free_rpc_construct_lvol_store call in line 127 in next patch in series (lvol: create lvol). Should have done this inside this patch. Same should be done for destruct (line 220). We do not need to do it in callback as we stop using it before we even call construct/destruct. Let me know if this is OK.",
+      "parentUuid": "15b79990_85afd010",
+      "revId": "c8dfdcc249b63ac2fbafd0dfe0473d7ddf49c434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
