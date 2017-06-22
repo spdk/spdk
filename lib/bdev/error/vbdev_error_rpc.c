@@ -39,20 +39,20 @@
 #include "spdk_internal/log.h"
 #include "vbdev_error.h"
 
-#define ERROR_BDEV_IO_TYPE_INVALID (1U << (SPDK_BDEV_IO_TYPE_RESET + 1))
+#define ERROR_BDEV_IO_TYPE_INVALID (SPDK_BDEV_IO_TYPE_RESET + 1)
 #define ERROR_BDEV_ERROR_TYPE_INVALID (VBDEV_IO_PENDING + 1)
 
 static uint32_t
 spdk_rpc_error_bdev_io_type_parse(char *name)
 {
 	if (strcmp(name, "read") == 0) {
-		return 1U << SPDK_BDEV_IO_TYPE_READ;
+		return SPDK_BDEV_IO_TYPE_READ;
 	} else if (strcmp(name, "write") == 0) {
-		return 1U << SPDK_BDEV_IO_TYPE_WRITE;
+		return SPDK_BDEV_IO_TYPE_WRITE;
 	} else if (strcmp(name, "flush") == 0) {
-		return 1U << SPDK_BDEV_IO_TYPE_FLUSH;
+		return SPDK_BDEV_IO_TYPE_FLUSH;
 	} else if (strcmp(name, "unmap") == 0) {
-		return 1U << SPDK_BDEV_IO_TYPE_UNMAP;
+		return SPDK_BDEV_IO_TYPE_UNMAP;
 	} else if (strcmp(name, "all") == 0) {
 		return 0xffffffff;
 	} else if (strcmp(name, "clear") == 0) {
