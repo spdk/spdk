@@ -43,11 +43,16 @@ static struct spdk_lvol_store *g_lvol_store = NULL;
 bool lvol_store_initialize_fail = false;
 bool lvol_store_initialize_cb_fail = false;
 
-
 int
 spdk_uuid_compare(const uuid_t uu1, const uuid_t uu2)
 {
 	return 0;
+}
+
+void
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	return;
 }
 
 bool
@@ -153,6 +158,12 @@ lvol_store_op_complete(void *cb_arg, int lvserrno)
 	return;
 }
 
+void
+spdk_lvol_create(struct spdk_lvol_store *ls, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+
+}
 
 static void
 lvol_init(void)
@@ -222,6 +233,30 @@ static void
 lvol_fini(void)
 {
 
+}
+
+int
+spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
+{
+	return 0;
+}
+
+int
+spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
+int
+spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
+{
+	return 0;
+}
+
+int
+spdk_json_write_object_end(struct spdk_json_write_ctx *w)
+{
+	return 0;
 }
 
 int main(int argc, char **argv)
