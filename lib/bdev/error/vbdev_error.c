@@ -47,13 +47,18 @@
 
 #include "vbdev_error.h"
 
+struct vbdev_error_info {
+	bool				enabled;
+	uint32_t			error_type;
+	uint32_t			error_num;
+};
+
 /* Context for each error bdev */
 struct vbdev_error_disk {
 	struct spdk_bdev		disk;
 	struct spdk_bdev		*base_bdev;
-	uint32_t			io_type_mask;
-	uint32_t			error_type;
-	uint32_t			error_num;
+	struct vbdev_error_info		error_vector[SPDK_BDEV_IO_TYPE_RESET];
+
 	TAILQ_ENTRY(vbdev_error_disk)	tailq;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_ios;
 };
@@ -63,10 +68,11 @@ static TAILQ_HEAD(, vbdev_error_disk) g_vbdev_error_disks = TAILQ_HEAD_INITIALIZ
 			g_vbdev_error_disks);
 
 int
-spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_type, uint32_t error_num)
+spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
 {
 	struct spdk_bdev *bdev;
 	struct vbdev_error_disk *error_disk;
+	int i;
 
 	pthread_mutex_lock(&g_vbdev_error_mutex);
 	bdev = spdk_bdev_get_by_name(name);
@@ -88,11 +94,21 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type_mask, uint32_t error_type, 
 		return -1;
 	}
 
-	error_disk->io_type_mask = io_type_mask;
-	error_disk->error_num = error_num;
-	error_disk->error_type = error_type;
-	if (io_type_mask == 0) {
-		error_disk->error_num = 0;
+	if (0xffffffff == io_type) {
+		for (i = 0; i < SPDK_BDEV_IO_TYPE_RESET; i++) {
+			error_disk->error_vector[i].enabled = true;
+			error_disk->error_vector[i].error_type = error_type;
+			error_disk->error_vector[i].error_num = error_num;
+		}
+	} else if (0 == io_type) {
+		for (i = 0; i < SPDK_BDEV_IO_TYPE_RESET; i++) {
+			error_disk->error_vector[i].enabled = false;
+			error_disk->error_vector[i].error_num = 0;
+		}
+	} else {
+		error_disk->error_vector[io_type - 1].enabled = true;
+		error_disk->error_vector[io_type - 1].error_type = error_type;
+		error_disk->error_vector[io_type - 1].error_num = error_num;
 	}
 	pthread_mutex_unlock(&g_vbdev_error_mutex);
 	return 0;
@@ -110,11 +126,20 @@ vbdev_error_reset(struct vbdev_error_disk *error_disk, struct spdk_bdev_io *bdev
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
+static uint32_t
+vbdev_error_get_error_type(struct vbdev_error_disk *error_disk, uint32_t io_type)
+{
+	if (error_disk->error_vector[io_type - 1].enabled && error_disk->error_vector[io_type - 1].error_num) {
+		return error_disk->error_vector[io_type - 1].error_type;
+	}
+	return 0;
+}
+
 static void
 vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_error_disk *error_disk = bdev_io->bdev->ctxt;
-	uint32_t io_type_mask;
+	uint32_t error_type;
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -124,7 +149,6 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		vbdev_error_reset(error_disk, bdev_io);
-		error_disk->error_num = 0;
 		return;
 	default:
 		SPDK_ERRLOG("Error Injection: unknown I/O type %d\n", bdev_io->type);
@@ -132,18 +156,16 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		return;
 	}
 
-	io_type_mask = 1U << bdev_io->type;
-
-	if (error_disk->error_num == 0 || !(error_disk->io_type_mask & io_type_mask)) {
+	error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
+	if (error_type == 0) {
 		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
 		return;
-	}
-
-	if (error_disk->error_type == VBDEV_IO_FAILURE) {
-		error_disk->error_num--;
+	} else if(error_type == VBDEV_IO_FAILURE) {
+		error_disk->error_vector[bdev_io->type - 1].error_num--;
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	} else {
+	} else if (error_type == VBDEV_IO_PENDING) {
 		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
+		error_disk->error_vector[bdev_io->type - 1].error_num--;
 	}
 }
 
