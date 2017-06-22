@@ -41,6 +41,7 @@
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/histogram_data.h"
+#include "spdk/endian.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -76,6 +77,9 @@ struct ns_entry {
 	struct ns_entry		*next;
 	uint32_t		io_size_blocks;
 	uint64_t		size_in_ios;
+	uint32_t		io_flags;
+	uint16_t		apptag_mask;
+	uint16_t		apptag;
 	char			name[1024];
 };
 
@@ -130,6 +134,8 @@ struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
 	void			*buf;
 	uint64_t		submit_tsc;
+	uint16_t		appmask;
+	uint16_t		apptag;
 #if HAVE_LIBAIO
 	struct iocb		iocb;
 #endif
@@ -157,6 +163,10 @@ static uint64_t g_tsc_rate;
 
 static uint32_t g_io_align = 0x200;
 static uint32_t g_io_size_bytes;
+static uint32_t g_max_io_md_size;
+static uint32_t g_max_io_size_blocks;
+static uint32_t g_metacfg_pract_flag;
+static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
@@ -180,6 +190,23 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 static void
 task_complete(struct perf_task *task);
+
+static uint16_t crc16_t10dif(uint8_t *buf, size_t len)
+{
+	uint32_t rem = 0;
+	unsigned int i, j;
+
+	uint16_t poly = 0x8bb7;
+
+	for (i = 0; i < len; i++) {
+		rem = rem ^ (buf[i] << 8);
+		for (j = 0; j < 8; j++) {
+			rem = rem << 1;
+			rem = (rem & 0x10000) ? rem ^ poly : rem;
+		}
+	}
+	return (uint16_t)rem;
+}
 
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
@@ -221,7 +248,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		return;
 	}
 
-	entry = malloc(sizeof(struct ns_entry));
+	entry = calloc(sizeof(struct ns_entry), 1);
 	if (entry == NULL) {
 		perror("ns_entry malloc");
 		exit(1);
@@ -234,6 +261,18 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
 			     g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
+
+	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
+		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
+	}
+
+	if (g_max_io_md_size < spdk_nvme_ns_get_md_size(ns)) {
+		g_max_io_md_size = spdk_nvme_ns_get_md_size(ns);
+	}
+
+	if (g_max_io_size_blocks < entry->io_size_blocks) {
+		g_max_io_size_blocks = entry->io_size_blocks;
+	}
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
@@ -439,6 +478,69 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 }
 #endif /* HAVE_LIBAIO */
 
+static void task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task,
+				       uint64_t lba, uint32_t lba_count, bool is_write)
+{
+	struct spdk_nvme_protection_info *pi;
+	uint32_t i, md_size, sector_size, pi_offset;
+	uint16_t crc16;
+
+	task->appmask = 0;
+	task->apptag = 0;
+
+	if (!spdk_nvme_ns_supports_extended_lba(entry->u.nvme.ns)) {
+		return;
+	}
+
+	if (spdk_nvme_ns_get_pi_type(entry->u.nvme.ns) ==
+	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
+		return;
+	}
+
+	if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
+		return;
+	}
+
+	sector_size = spdk_nvme_ns_get_sector_size(entry->u.nvme.ns);
+	md_size = spdk_nvme_ns_get_md_size(entry->u.nvme.ns);
+
+	for (i = 0; i < lba_count; i++) {
+		/* PI locates at the last 8 bytes of metadata */
+		pi_offset = ((sector_size + md_size) * (i + 1)) - 8;
+		pi = (struct spdk_nvme_protection_info *)(task->buf + pi_offset);
+		memset(pi, 0, sizeof(*pi));
+
+		if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
+			/* Let's use number of lbas for application tag */
+			task->appmask = 0xffff;
+			task->apptag = lba_count;
+		}
+
+		if (is_write) {
+			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
+				/* CRC buffer should not include PI */
+				crc16 = crc16_t10dif(task->buf + (sector_size + md_size) * i,
+						     sector_size + md_size - 8);
+				to_be16(&pi->guard, crc16);
+			}
+			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
+				/* Let's use number of lbas for application tag */
+				to_be16(&pi->app_tag, lba_count);
+			}
+			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
+				/* Type3 don't support REFTAG */
+				if (spdk_nvme_ns_get_pi_type(entry->u.nvme.ns) ==
+				    SPDK_NVME_FMT_NVM_PROTECTION_TYPE3) {
+					return;
+				}
+
+				/* Type1 and Type2 */
+				to_be32(&pi->ref_tag, (uint32_t)lba + i);
+			}
+		}
+	}
+}
+
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
 static __thread unsigned int seed = 0;
@@ -471,9 +573,15 @@ submit_single_io(struct perf_task *task)
 		} else
 #endif
 		{
-			rc = spdk_nvme_ns_cmd_read(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, task->buf,
-						   offset_in_ios * entry->io_size_blocks,
-						   entry->io_size_blocks, io_complete, task, 0);
+			task_extended_lba_setup_pi(entry, task, offset_in_ios * entry->io_size_blocks,
+						   entry->io_size_blocks, false);
+
+			rc = spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+							   task->buf, NULL,
+							   offset_in_ios * entry->io_size_blocks,
+							   entry->io_size_blocks, io_complete,
+							   task, entry->io_flags,
+							   task->appmask, task->apptag);
 		}
 	} else {
 #if HAVE_LIBAIO
@@ -483,9 +591,15 @@ submit_single_io(struct perf_task *task)
 		} else
 #endif
 		{
-			rc = spdk_nvme_ns_cmd_write(entry->u.nvme.ns, ns_ctx->u.nvme.qpair, task->buf,
-						    offset_in_ios * entry->io_size_blocks,
-						    entry->io_size_blocks, io_complete, task, 0);
+			task_extended_lba_setup_pi(entry, task, offset_in_ios * entry->io_size_blocks,
+						   entry->io_size_blocks, true);
+
+			rc = spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+							    task->buf, NULL,
+							    offset_in_ios * entry->io_size_blocks,
+							    entry->io_size_blocks, io_complete,
+							    task, entry->io_flags,
+							    task->appmask, task->apptag);
 		}
 	}
 
@@ -554,6 +668,7 @@ static void
 submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 {
 	struct perf_task *task;
+	uint32_t max_io_size_bytes;
 
 	while (queue_depth-- > 0) {
 		task = calloc(1, sizeof(*task));
@@ -562,12 +677,17 @@ submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 			exit(1);
 		}
 
-		task->buf = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+		/* maximum extended lba format size from all active
+		 * namespace, it's same with g_io_size_bytes for
+		 * namespace without metadata
+		 */
+		max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
+		task->buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
 		if (task->buf == NULL) {
 			fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 			exit(1);
 		}
-		memset(task->buf, queue_depth % 8 + 1, g_io_size_bytes);
+		memset(task->buf, queue_depth % 8 + 1, max_io_size_bytes);
 
 		task->ns_ctx = ns_ctx;
 
@@ -712,6 +832,12 @@ static void usage(char *program_name)
 	printf("\t  subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
 	printf("\t Example: -r 'trtype:PCIe traddr:0000:04:00.0' for PCIe or\n");
 	printf("\t          -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420' for NVMeoF\n");
+	printf("\t[-e metadata configuration]\n");
+	printf("\t Keys:\n");
+	printf("\t  PRACT      Protection Information Action bit (PRACT=1 or PRACT=0)\n");
+	printf("\t  PRCHK      Control of Protection Information Checking (PRCHK=GUARD|REFTAG|APPTAG)\n");
+	printf("\t Example: -e 'PRACT=0,PRCHK=GUARD|REFTAG|APPTAG'\n");
+	printf("\t          -e 'PRACT=1,PRCHK=GUARD'\n");
 	printf("\t[-d DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
@@ -973,6 +1099,35 @@ add_trid(const char *trid_str)
 }
 
 static int
+parse_metadata(const char *metacfg_str)
+{
+	const char *sep;
+
+	if (strstr(metacfg_str, "PRACT=1") != NULL) {
+		g_metacfg_pract_flag = SPDK_NVME_IO_FLAGS_PRACT;
+	}
+
+	sep = strchr(metacfg_str, ',');
+	if (!sep) {
+		return 0;
+	}
+
+	if (strstr(sep, "PRCHK=") != NULL) {
+		if (strstr(sep, "GUARD") != NULL) {
+			g_metacfg_prchk_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+		}
+		if (strstr(sep, "REFTAG") != NULL) {
+			g_metacfg_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+		}
+		if (strstr(sep, "APPTAG") != NULL) {
+			g_metacfg_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_APPTAG;
+		}
+	}
+
+	return 0;
+}
+
+static int
 parse_args(int argc, char **argv)
 {
 	const char *workload_type;
@@ -988,13 +1143,19 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:e:i:lm:q:r:s:t:w:DLM:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
 			break;
 		case 'd':
 			g_dpdk_mem = atoi(optarg);
+			break;
+		case 'e':
+			if (parse_metadata(optarg)) {
+				usage(argv[0]);
+				return 1;
+			}
 			break;
 		case 'i':
 			g_shm_id = atoi(optarg);
@@ -1023,15 +1184,15 @@ parse_args(int argc, char **argv)
 		case 'w':
 			workload_type = optarg;
 			break;
+		case 'D':
+			g_disable_sq_cmb = 1;
+			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
 			break;
 		case 'M':
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
-			break;
-		case 'D':
-			g_disable_sq_cmb = 1;
 			break;
 		default:
 			usage(argv[0]);
