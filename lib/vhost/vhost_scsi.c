@@ -80,6 +80,7 @@
 
 struct spdk_scsi_dev_w {
 	struct spdk_scsi_dev *scsi_dev;
+	int task_cnt;
 };
 
 struct spdk_vhost_scsi_dev {
@@ -142,6 +143,7 @@ spdk_vhost_scsi_dev_w_init(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_
 	snprintf(dev_name, sizeof(dev_name), "Dev %u", scsi_dev_num);
 	dev->scsi_dev = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
 						SPDK_SPC_PROTOCOL_IDENTIFIER_SAS);
+	dev->task_cnt = 0;
 
 	if (dev->scsi_dev == NULL) {
 		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
@@ -190,7 +192,9 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
 
-	--task->svdev->vdev.task_cnt;
+	if (spdk_likely(task->dev)) {
+		--task->dev->task_cnt;
+	}
 	spdk_ring_enqueue(g_task_pool, (void **) &task, 1);
 }
 
@@ -206,8 +210,6 @@ spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_task *
 		SPDK_ERRLOG("%s: couldn't get %zu tasks from task_pool\n", svdev->vdev.name, res_count);
 		abort();
 	}
-
-	svdev->vdev.task_cnt += res_count;
 }
 
 static void
@@ -383,6 +385,8 @@ parse_virtio_lun(struct spdk_vhost_task *task, const __u8 *lun)
 	}
 
 	task->dev = dev;
+	++dev->task_cnt;
+
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev->scsi_dev, lun_id);
 	return 0;
 }
@@ -997,7 +1001,6 @@ destroy_device(int vid)
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_timed_event event = {0};
-	uint32_t i;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -1014,14 +1017,8 @@ destroy_device(int vid)
 	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);
 	spdk_vhost_timed_event_wait(&event, "unregister request queue poller");
 
-	/* Wait for all tasks to finish */
-	for (i = 1000; i && vdev->task_cnt > 0; i--) {
-		usleep(1000);
-	}
-
-	if (vdev->task_cnt > 0) {
-		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
-	}
+	sleep(1);
+	/* FIXME: loop through all devs all wait for each task_cnt; */
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
 
