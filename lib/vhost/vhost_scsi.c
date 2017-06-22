@@ -82,6 +82,7 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+	struct spdk_scsi_dev *removed_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 
@@ -118,6 +119,24 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 };
 
 static struct spdk_ring *g_task_pool;
+
+static int
+spdk_vhost_scsi_dev_get_index(struct spdk_vhost_scsi_dev *svdev, struct spdk_scsi_dev *scsi_dev)
+{
+	int dev_index;
+
+	for (dev_index = 0; dev_index < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_index++) {
+		if (svdev->scsi_dev[dev_index] == scsi_dev) {
+			break;
+		}
+	}
+
+	if (dev_index == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		return -1;
+	}
+
+	return dev_index;
+}
 
 static void
 spdk_vhost_task_put(struct spdk_vhost_task *task)
@@ -179,6 +198,23 @@ process_eventq(struct spdk_vhost_scsi_dev *svdev)
 
 		spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
 		spdk_dma_free(ev);
+	}
+}
+
+static void
+process_dev_status(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_scsi_dev *dev;
+	int i;
+
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
+		dev = svdev->removed_dev[i];
+
+		if (dev && spdk_scsi_dev_get_task_cnt(dev) == 0) {
+			spdk_scsi_dev_free_io_channels(dev);
+			spdk_scsi_dev_destruct(dev);
+			svdev->removed_dev[i] = NULL;
+		}
 	}
 }
 
@@ -603,6 +639,7 @@ vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
+	process_dev_status(svdev);
 	process_eventq(svdev);
 	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
 }
@@ -833,17 +870,48 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	return 0;
 }
 
+static void
+spdk_vhost_scsi_dev_remove_dev_cb(void *arg1, void *arg2)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg1;
+	struct spdk_scsi_dev *dev = arg2;
+	int dev_index;
+
+	if (dev == NULL) {
+		SPDK_ERRLOG("Controller %s: trying to remove empty device\n", svdev->vdev.name);
+		return;
+	}
+
+	dev_index = spdk_vhost_scsi_dev_get_index(svdev, dev);
+	if (dev_index < 0) {
+		SPDK_ERRLOG("Dev %s is not a part of ctrlr %s\n", spdk_scsi_dev_get_name(dev), svdev->vdev.name);
+		return;
+	}
+
+	if (svdev->removed_dev[dev_index] != NULL) {
+		SPDK_ERRLOG("%s: Device %d is still being removed\n", svdev->vdev.name, dev_index);
+		return;
+	}
+
+	svdev->removed_dev[dev_index] = dev;
+	svdev->scsi_dev[dev_index] = NULL;
+
+	SPDK_NOTICELOG("Controller %s: removed device 'Dev %u'\n", svdev->vdev.name, dev_index);
+
+}
+
 int
 spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num)
 {
 	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_event *event;
 
-	assert(vdev != NULL);
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotremove is not supported\n", vdev->name);
-		return -EBUSY;
+	if (scsi_dev_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("%s: invalid device number %d\n", vdev->name, scsi_dev_num);
+		return -1;
 	}
 
+	assert(vdev != NULL);
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
 		return -ENODEV;
@@ -854,8 +922,23 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		return -ENODEV;
 	}
 
-	spdk_scsi_dev_destruct(svdev->scsi_dev[scsi_dev_num]);
-	svdev->scsi_dev[scsi_dev_num] = NULL;
+	if (svdev->vdev.lcore == -1) {
+		/* controller is not in use, remove dev and exit */
+		spdk_vhost_scsi_dev_remove_dev_cb(svdev, svdev->scsi_dev[scsi_dev_num]);
+		return 0;
+	}
+
+	if ((svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
+		SPDK_WARNLOG("Controller %s: hotremove is not supported\n", svdev->vdev.name);
+		return -1;
+	}
+
+	event = spdk_event_allocate(svdev->vdev.lcore, spdk_vhost_scsi_dev_remove_dev_cb, svdev,
+				    svdev->scsi_dev[scsi_dev_num]);
+	spdk_event_call(event);
+
+	eventq_enqueue(svdev, svdev->scsi_dev[scsi_dev_num], NULL, VIRTIO_SCSI_T_TRANSPORT_RESET,
+		       VIRTIO_SCSI_EVT_RESET_REMOVED);
 
 	SPDK_NOTICELOG("Controller %s: removed device 'Dev %u'\n",
 		       vdev->name, scsi_dev_num);
