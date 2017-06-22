@@ -432,7 +432,7 @@ static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned 
 		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
-	memset(task->buf, id % 8, g_io_size_bytes);
+	memset(task->buf, id % 8 + 1, g_io_size_bytes);
 }
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
