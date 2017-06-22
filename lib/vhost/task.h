@@ -64,10 +64,11 @@ struct spdk_vhost_task {
 };
 
 void spdk_vhost_task_put(struct spdk_vhost_task *task);
-struct spdk_vhost_task *spdk_vhost_task_get(struct spdk_vhost_scsi_dev *vdev,
-		spdk_scsi_task_cpl cpl_fn);
+void spdk_vhost_task_get(struct spdk_vhost_scsi_dev *svdev, void **tasks, int count,
+			 spdk_scsi_task_cpl cpl_fn);
 
 void spdk_vhost_task_cpl(struct spdk_scsi_task *scsi_task);
 void spdk_vhost_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
+
 
 #endif /* SPDK_VHOST_TASK_H */
