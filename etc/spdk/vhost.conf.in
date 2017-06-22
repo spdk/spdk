@@ -32,7 +32,7 @@
   # Default is disabled.  Note that the RPC interface is not
   # authenticated, so users should be careful about enabling
   # RPC in non-trusted environments.
-  Enable No
+  Enable Yes 
   # Listen address for the RPC service.
   # May be an IP address or an absolute path to a Unix socket.
   Listen 127.0.0.1
