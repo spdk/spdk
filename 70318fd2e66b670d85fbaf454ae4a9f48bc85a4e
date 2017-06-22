@@ -16,6 +16,24 @@
       "revId": "70318fd2e66b670d85fbaf454ae4a9f48bc85a4e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b260848_80582c3b",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-22T16:34:52Z",
+      "side": 0,
+      "message": "OK, I think we should just use our own printf format string here anyway - we aren\u0027t printing out a DPDK PCI address anyway. I\u0027ll switch it over.",
+      "parentUuid": "267b2e28_96e3a9b3",
+      "revId": "70318fd2e66b670d85fbaf454ae4a9f48bc85a4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
