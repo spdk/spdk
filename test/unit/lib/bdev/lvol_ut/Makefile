@@ -40,7 +40,7 @@ APP = lvol_ut
 C_SRCS := lvol_ut.c
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/lvol -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIB_LIST = log
+SPDK_LIB_LIST = log util
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
 
