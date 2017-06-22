@@ -41,6 +41,7 @@
 #include "spdk/conf.h"
 #include "spdk/event.h"
 #include "spdk/util.h"
+#include "spdk/likely.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -403,7 +404,7 @@ task_data_setup(struct spdk_vhost_task *task,
 	uint32_t len = 0;
 
 	/* Sanity check. First descriptor must be readable and must have next one. */
-	if (unlikely(spdk_vhost_vring_desc_is_wr(desc) || !spdk_vhost_vring_desc_has_next(desc))) {
+	if (spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc) || !spdk_vhost_vring_desc_has_next(desc))) {
 		SPDK_WARNLOG("Invalid first (request) descriptor.\n");
 		task->resp = NULL;
 		goto abort_task;
@@ -448,7 +449,7 @@ task_data_setup(struct spdk_vhost_task *task,
 				break;
 
 			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
-			if (unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
+			if (spdk_unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
 				SPDK_WARNLOG("FROM DEV cmd: descriptor nr %" PRIu16" in payload chain is read only.\n", iovcnt);
 				task->resp = NULL;
 				goto abort_task;
@@ -512,7 +513,7 @@ process_request(struct spdk_vhost_task *task)
 	}
 
 	result = spdk_vhost_task_init_target(task, req->lun);
-	if (unlikely(result != 0)) {
+	if (spdk_unlikely(result != 0)) {
 		task->resp->response = VIRTIO_SCSI_S_BAD_TARGET;
 		return -1;
 	}
@@ -520,7 +521,7 @@ process_request(struct spdk_vhost_task *task)
 	task->scsi.cdb = req->cdb;
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
 
-	if (unlikely(task->scsi.lun == NULL)) {
+	if (spdk_unlikely(task->scsi.lun == NULL)) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
 		task->resp->response = VIRTIO_SCSI_S_OK;
 		return 1;
@@ -537,7 +538,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
-	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
 		task = tasks[i];
@@ -559,7 +560,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	uint16_t reqs_cnt, i;
 	int result;
 
-	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	assert(reqs_cnt <= 32);
 
 	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
