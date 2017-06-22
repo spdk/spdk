@@ -336,3 +336,17 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 
 	return dev->lun[lun_id];
 }
+
+bool
+spdk_scsi_dev_has_pending_tasks(struct spdk_scsi_dev *dev)
+{
+	int i;
+
+	for (i = 0; i <= dev->maxlun; ++i) {
+		if (dev->lun[i] && !TAILQ_EMPTY(&dev->lun[i]->tasks)) {
+			return true;
+		}
+	}
+
+	return false;
+}
