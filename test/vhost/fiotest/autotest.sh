@@ -152,12 +152,6 @@ for vm_conf in ${vms[@]}; do
 	[[ x"${conf[2]}" != x"" ]] && setup_cmd+=" --disk=${conf[2]}"
 
 	if [[ $test_type == "spdk_vhost" ]]; then
-		echo "INFO: Trying to remove inexistent controller"
-		if $rpc_py remove_vhost_scsi_controller unk0 > /dev/null; then
-			echo "ERROR: Removing inexistent controller succeeded, but it shouldn't"
-			false
-		fi
-
 		echo "INFO: Adding device via RPC ..."
 		echo ""
 
@@ -167,24 +161,6 @@ for vm_conf in ${vms[@]}; do
 				$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
 
 				echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
-				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
-
-				echo "INFO: Trying to remove inexistent device on existing controller"
-				if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 1 > /dev/null; then
-					echo "ERROR: Removing inexistent device (1) from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
-					false
-				fi
-
-				echo "INFO: Trying to remove existing device from a controller"
-				$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
-
-				echo "INFO: Trying to remove a just-deleted device from a controller again"
-				if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0 > /dev/null; then
-					echo "ERROR: Removing device 0 from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
-					false
-				fi
-
-				echo "INFO: Re-adding device 0 to naa.$disk.${conf[0]}"
 				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 			done
 		done <<< "${conf[2]}"
@@ -265,7 +241,7 @@ if ! $no_shutdown; then
 	echo "==============="
 	echo "INFO: APP EXITING"
 	echo "INFO: killing all VMs"
-	vm_shutdown_all
+	vm_kill_all
 	echo "INFO: waiting 2 seconds to let all VMs die"
 	sleep 2
 	if [[ $test_type == "spdk_vhost" ]]; then
