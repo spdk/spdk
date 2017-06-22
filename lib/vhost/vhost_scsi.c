@@ -300,24 +300,27 @@ invalid_request(struct spdk_vhost_task *task)
 		      task->resp ? task->resp->response : -1);
 }
 
-static struct spdk_scsi_dev *
-get_scsi_dev(struct spdk_vhost_scsi_dev *svdev, const __u8 *lun)
+static int
+parse_virtio_lun(struct spdk_vhost_task *task, const __u8 *lun)
 {
-	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN", lun, 8);
-	/* First byte must be 1 and second is target */
-	if (lun[0] != 1 || lun[1] >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS)
-		return NULL;
-
-	return svdev->scsi_dev[lun[1]];
-}
-
-static struct spdk_scsi_lun *
-get_scsi_lun(struct spdk_scsi_dev *scsi_dev, const __u8 *lun)
-{
+	struct spdk_scsi_dev *dev;
 	uint16_t lun_id = (((uint16_t)lun[2] << 8) | lun[3]) & 0x3FFF;
 
-	/* For now only one LUN per controller is allowed so no need to search LUN IDs */
-	return spdk_scsi_dev_get_lun(scsi_dev, lun_id);
+	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN", lun, 8);
+
+	/* First byte must be 1 and second is target */
+	if (lun[0] != 1 || lun[1] >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS)
+		return -1;
+
+	dev = task->svdev->scsi_dev[lun[1]];
+	if (dev == NULL) {
+		return -1;
+	}
+
+	task->scsi_dev = dev;
+	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
+	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_id);
+	return 0;
 }
 
 static void
@@ -337,7 +340,7 @@ process_ctrl_request(struct spdk_vhost_task *task)
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "Request desriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
-	task->scsi_dev = get_scsi_dev(task->svdev, ctrl_req->lun);
+	parse_virtio_lun(task, ctrl_req->lun);
 
 	/* Process the TMF request */
 	switch (ctrl_req->type) {
@@ -357,7 +360,6 @@ process_ctrl_request(struct spdk_vhost_task *task)
 		case VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET:
 			/* Handle LUN reset */
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN reset\n");
-			task->scsi.lun = get_scsi_lun(task->scsi_dev, ctrl_req->lun);
 
 			mgmt_task_submit(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 			return;
@@ -510,17 +512,15 @@ process_request(struct spdk_vhost_task *task)
 		return result;
 	}
 
-	task->scsi_dev = get_scsi_dev(task->svdev, req->lun);
-	if (unlikely(task->scsi_dev == NULL)) {
+	result = parse_virtio_lun(task, req->lun);
+	if (unlikely(result != 0)) {
 		task->resp->response = VIRTIO_SCSI_S_BAD_TARGET;
 		return -1;
 	}
 
 	task->scsi.cdb = req->cdb;
-	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
 
-	task->scsi.lun = get_scsi_lun(task->scsi_dev, req->lun);
 	if (unlikely(task->scsi.lun == NULL)) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
 		task->resp->response = VIRTIO_SCSI_S_OK;
