@@ -228,18 +228,11 @@ void spdk_delay_us(unsigned int us)
 	rte_delay_us(us);
 }
 
-void *
-spdk_call_unaffinitized(void *cb(void *arg), void *arg)
+void
+spdk_unaffinitize_thread(void)
 {
-	rte_cpuset_t orig_cpuset, new_cpuset;
-	void *ret;
+	rte_cpuset_t new_cpuset;
 	long num_cores, i;
-
-	if (cb == NULL) {
-		return NULL;
-	}
-
-	rte_thread_get_affinity(&orig_cpuset);
 
 	CPU_ZERO(&new_cpuset);
 
@@ -251,6 +244,21 @@ spdk_call_unaffinitized(void *cb(void *arg), void *arg)
 	}
 
 	rte_thread_set_affinity(&new_cpuset);
+}
+
+void *
+spdk_call_unaffinitized(void *cb(void *arg), void *arg)
+{
+	rte_cpuset_t orig_cpuset;
+	void *ret;
+
+	if (cb == NULL) {
+		return NULL;
+	}
+
+	rte_thread_get_affinity(&orig_cpuset);
+
+	spdk_unaffinitize_thread();
 
 	ret = cb(arg);
 
