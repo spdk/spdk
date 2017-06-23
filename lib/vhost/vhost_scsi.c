@@ -44,7 +44,11 @@
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
-#include "task.h"
+
+#undef container_of
+#define container_of(ptr, type, member) ({ \
+		typeof(((type *)0)->member) *__mptr = (ptr); \
+		(type *)((char *)__mptr - offsetof(type, member)); })
 
 /* Features supported by SPDK VHOST lib. */
 #define SPDK_VHOST_SCSI_FEATURES	((1ULL << VIRTIO_F_VERSION_1) | \
@@ -70,6 +74,9 @@
 #define VIRTIO_SCSI_EVENTQ   1
 #define VIRTIO_SCSI_REQUESTQ   2
 
+/* Allocated iovec buffer len */
+#define VHOST_SCSI_IOVS_LEN		128
+
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 
@@ -79,6 +86,23 @@ struct spdk_vhost_scsi_dev {
 
 	struct spdk_ring *eventq_ring;
 } __rte_cache_aligned;
+
+struct spdk_vhost_task {
+	struct spdk_scsi_task	scsi;
+	struct iovec iovs[VHOST_SCSI_IOVS_LEN];
+
+	union {
+		struct virtio_scsi_cmd_resp *resp;
+		struct virtio_scsi_ctrl_tmf_resp *tmf_resp;
+	};
+
+	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_scsi_dev *scsi_dev;
+
+	int req_idx;
+
+	struct rte_vhost_vring *vq;
+};
 
 static int new_device(int vid);
 static void destroy_device(int vid);
@@ -91,6 +115,42 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 		.destroy_device = destroy_device,
 	}
 };
+
+static struct spdk_ring *g_task_pool;
+
+static void
+spdk_vhost_task_put(struct spdk_vhost_task *task)
+{
+	spdk_scsi_task_put(&task->scsi);
+}
+
+static void
+spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
+{
+	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
+
+	--task->svdev->vdev.task_cnt;
+	spdk_ring_enqueue(g_task_pool, (void **) &task, 1);
+}
+
+static void
+spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_task **tasks,
+		     size_t count, spdk_scsi_task_cpl cpl_fn)
+{
+	size_t res_count, i;
+
+	res_count = spdk_ring_dequeue(g_task_pool, (void **)tasks, count);
+	if (res_count != count) {
+		SPDK_ERRLOG("%s: couldn't get %zu tasks from task_pool\n", svdev->vdev.name, count);
+		/* FIXME: we should never run out of tasks, but what if we do? */
+		abort();
+	}
+
+	svdev->vdev.task_cnt += res_count;
+	for (i = 0; i < res_count; ++i) {
+		spdk_scsi_task_construct(&tasks[i]->scsi, cpl_fn, spdk_vhost_task_free_cb, NULL);
+	}
+}
 
 static void
 process_eventq(struct spdk_vhost_scsi_dev *svdev)
@@ -181,7 +241,7 @@ submit_completion(struct spdk_vhost_task *task)
 	spdk_vhost_task_put(task);
 }
 
-void
+static void
 spdk_vhost_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
@@ -189,7 +249,7 @@ spdk_vhost_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 	submit_completion(task);
 }
 
-void
+static void
 spdk_vhost_task_cpl(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
@@ -482,8 +542,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
 
-	spdk_vhost_task_get(svdev, (void **)tasks, reqs_cnt, spdk_vhost_task_mgmt_cpl);
-
+	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt, spdk_vhost_task_mgmt_cpl);
 
 	for (i = 0; i < reqs_cnt; i++) {
 		task = tasks[i];
@@ -507,7 +566,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, RTE_DIM(reqs));
 	assert(reqs_cnt <= 32);
 
-	spdk_vhost_task_get(svdev, (void **)tasks, reqs_cnt, spdk_vhost_task_cpl);
+	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt, spdk_vhost_task_cpl);
 
 	for (i = 0; i < reqs_cnt; i++) {
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
@@ -918,6 +977,44 @@ destroy_device(int vid)
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
 
 	spdk_vhost_dev_unload(vdev);
+}
+
+int
+spdk_vhost_init(void)
+{
+	struct spdk_vhost_dev *task;
+	int rc, i;
+
+	g_task_pool = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16384, SOCKET_ID_ANY);
+	if (g_task_pool == NULL) {
+		SPDK_ERRLOG("Failed to init vhost scsi task pool\n");
+		return -1;
+	}
+
+	for (i = 0; i < 16384 - 1; ++i) {
+		task = spdk_dma_zmalloc(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL);
+		rc = spdk_ring_enqueue(g_task_pool, (void **)&task, 1);
+		if (rc != 1) {
+			SPDK_ERRLOG("Failed to alloc vhost scsi tasks\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_vhost_fini(void)
+{
+	struct spdk_vhost_dev *task;
+
+	while (spdk_ring_dequeue(g_task_pool, (void **)&task, 1) == 1) {
+		spdk_dma_free(task);
+	}
+
+	spdk_ring_free(g_task_pool);
+
+	return 0;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_scsi", SPDK_TRACE_VHOST_SCSI)
