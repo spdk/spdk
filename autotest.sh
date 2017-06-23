@@ -60,6 +60,8 @@ timing_exit cleanup
 # set up huge pages
 timing_enter afterboot
 ./scripts/setup.sh
+cat /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+cat /sys/kernel/mm/hugepages/hugepages-2048kB/free_hugepages
 timing_exit afterboot
 
 timing_enter nvmf_setup
