@@ -39,7 +39,6 @@
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
-#include "task.h"
 #include "vhost_iommu.h"
 
 static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
