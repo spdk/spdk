@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aae1b759_e539f497",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-23T15:37:51Z",
+      "side": 1,
+      "message": "Looks like we did not return the discovery_ctrlr to the upper layer and just destruct in this function scope. The nvme-cli needs the ctrlr to do the discover operation. Leverage the remove_cb() here for this purpose. The probe_cb() does not have the ctrlr parameter and attach_cb() is also impossible here.",
+      "range": {
+        "startLine": 1235,
+        "startChar": 5,
+        "endLine": 1235,
+        "endChar": 14
+      },
+      "revId": "b26e462665361839fe79243a074c45377a1e5c49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
