@@ -55,7 +55,7 @@ $valgrind test/unit/lib/json/json_write.c/json_write_ut
 
 $valgrind test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 
-$valgrind test/lib/log/log_ut
+$valgrind test/unit/lib/log/log.c/log_ut
 
 $valgrind test/unit/lib/nvmf/discovery.c/discovery_ut
 $valgrind test/unit/lib/nvmf/request.c/request_ut
