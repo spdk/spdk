@@ -60,6 +60,7 @@ timing_exit cleanup
 # set up huge pages
 timing_enter afterboot
 ./scripts/setup.sh
+cat /proc/sys/vm/nr_hugepages
 timing_exit afterboot
 
 timing_enter nvmf_setup
