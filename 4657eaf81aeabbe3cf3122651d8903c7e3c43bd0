@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ca84f0d_182754aa",
+        "filename": "test/scsi/scsi.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-06-23T08:17:33Z",
+      "side": 1,
+      "message": "First try to stop vhost cleanly - using SIGINT.\nIf vhost does not exit after some time - kill it with SIGKILL and fail the test.",
+      "range": {
+        "startLine": 15,
+        "startChar": 16,
+        "endLine": 15,
+        "endChar": 51
+      },
+      "revId": "4657eaf81aeabbe3cf3122651d8903c7e3c43bd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7ad02e4_a6996738",
+        "filename": "test/scsi/scsi.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-06-23T08:17:33Z",
+      "side": 1,
+      "message": "Not needed, remove. This should be done separately. Also - numer of hugepages is hardcoded.",
+      "range": {
+        "startLine": 22,
+        "startChar": 8,
+        "endLine": 22,
+        "endChar": 71
+      },
+      "revId": "4657eaf81aeabbe3cf3122651d8903c7e3c43bd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1edc904_5fdd886c",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-06-23T08:17:33Z",
+      "side": 1,
+      "message": "vm_shutdown_all",
+      "range": {
+        "startLine": 244,
+        "startChar": 1,
+        "endLine": 244,
+        "endChar": 12
+      },
+      "revId": "4657eaf81aeabbe3cf3122651d8903c7e3c43bd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
