@@ -300,6 +300,8 @@ nvme_driver_init(void)
 	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
 	TAILQ_INIT(&g_spdk_nvme_driver->attached_ctrlrs);
 
+	g_spdk_nvme_driver->discovery_ctrlr = NULL;
+
 	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 
 	return ret;
@@ -446,6 +448,19 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	 */
 
 	rc = nvme_init_controllers(cb_ctx, attach_cb);
+
+	/*
+	 * Caller needs to attach the discovery ctrlr
+	 */
+	if (g_spdk_nvme_driver->discovery_ctrlr) {
+		struct spdk_nvme_ctrlr *discovery_ctrlr = g_spdk_nvme_driver->discovery_ctrlr;
+
+		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->attached_ctrlrs, discovery_ctrlr, tailq);
+		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+		attach_cb(cb_ctx, &discovery_ctrlr->trid, discovery_ctrlr, &discovery_ctrlr->opts);
+	}
 
 	return rc;
 }

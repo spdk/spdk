@@ -1152,6 +1152,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	uint64_t remaining_num_rec = 0;
 	uint16_t recfmt;
 	struct nvme_completion_poll_status status;
+	bool attach_discovery_ctrlr = false;
 
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
 	/* For discovery_ctrlr set the timeout to 0 */
@@ -1232,7 +1233,14 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
 	} while (remaining_num_rec != 0);
 
-	nvme_ctrlr_destruct(discovery_ctrlr);
+	/* It is a discovery_ctrlr and check whether to attach it */
+	attach_discovery_ctrlr = probe_cb(cb_ctx, discovery_trid, &discovery_opts);
+	if (attach_discovery_ctrlr == true) {
+		g_spdk_nvme_driver->discovery_ctrlr = discovery_ctrlr;
+	} else {
+		nvme_ctrlr_destruct(discovery_ctrlr);
+	}
+
 	return 0;
 }
 
