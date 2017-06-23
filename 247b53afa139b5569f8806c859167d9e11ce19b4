@@ -86,6 +86,30 @@
       "revId": "247b53afa139b5569f8806c859167d9e11ce19b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4042a739_9ebbfb59",
+        "filename": "lib/bdev/error/vbdev_error.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-06-23T01:20:01Z",
+      "side": 1,
+      "message": "Here the io_type come from the function spdk_rpc_error_bdev_io_type_parse(), I think it already checked in this function. make sense?",
+      "parentUuid": "94884e44_e18df4f9",
+      "range": {
+        "startLine": 109,
+        "startChar": 27,
+        "endLine": 109,
+        "endChar": 38
+      },
+      "revId": "247b53afa139b5569f8806c859167d9e11ce19b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
