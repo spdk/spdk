@@ -22,6 +22,30 @@
       "revId": "b26e462665361839fe79243a074c45377a1e5c49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e9c4da5_58e1fcef",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1235,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-23T16:40:04Z",
+      "side": 1,
+      "message": "We never report the discovery controller via probe_cb or attach_cb, so I\u0027m not sure why we should call remove_cb on it - can you expand on why this is needed?",
+      "parentUuid": "aae1b759_e539f497",
+      "range": {
+        "startLine": 1235,
+        "startChar": 5,
+        "endLine": 1235,
+        "endChar": 14
+      },
+      "revId": "b26e462665361839fe79243a074c45377a1e5c49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
