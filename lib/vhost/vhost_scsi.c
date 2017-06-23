@@ -85,6 +85,7 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_scsi_dev *removed_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
+	struct spdk_poller *shutdown_poller;
 
 	struct spdk_ring *eventq_ring;
 } __rte_cache_aligned;
@@ -682,20 +683,10 @@ add_vdev_cb(void *arg)
 }
 
 static void
-remove_vdev_cb(void *arg)
+delete_vdev(struct spdk_vhost_scsi_dev *svdev)
 {
-	struct spdk_vhost_scsi_dev *svdev = arg;
 	void *ev;
-	uint32_t i;
 
-	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svdev->scsi_dev[i] == NULL) {
-			continue;
-		}
-		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
-	}
-
-	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
 	spdk_vhost_dev_mem_unregister(&svdev->vdev);
 
 	/* Cleanup not sent events */
@@ -705,6 +696,8 @@ remove_vdev_cb(void *arg)
 
 	spdk_ring_free(svdev->eventq_ring);
 	svdev->eventq_ring = NULL;
+
+	spdk_vhost_dev_unload(&svdev->vdev);
 }
 
 static struct spdk_vhost_scsi_dev *
@@ -1019,6 +1012,7 @@ new_device(int vid)
 {
 	struct spdk_vhost_scsi_dev *svdev = NULL;
 
+	/* FIXME: sync with shutdown poller */
 	svdev = to_scsi_dev(spdk_vhost_dev_load(vid));
 	if (svdev == NULL) {
 		return -1;
@@ -1029,13 +1023,46 @@ new_device(int vid)
 }
 
 static void
+shutdown_worker(void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+	struct spdk_scsi_dev *dev;
+	int i;
+
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
+		dev = svdev->scsi_dev[i];
+		if (dev == NULL) {
+			continue;
+		}
+
+		spdk_vhost_scsi_dev_w_remove_cb(svdev, dev);
+	}
+
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
+		dev = svdev->removed_dev[i];
+		if (dev == NULL) {
+			continue;
+		}
+
+		if (spdk_scsi_dev_get_task_cnt(dev) > 0) {
+			return;
+		}
+
+		spdk_scsi_dev_free_io_channels(dev);
+		spdk_scsi_dev_destruct(dev);
+		svdev->removed_dev[i] = NULL;
+	}
+
+	delete_vdev(svdev);
+	spdk_poller_unregister(&svdev->shutdown_poller, NULL);
+}
+
+static void
 destroy_device(int vid)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
-	struct spdk_scsi_dev *scsi_dev;
 	struct spdk_vhost_timed_event event = {0};
-	uint32_t i, j;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -1043,6 +1070,8 @@ destroy_device(int vid)
 	}
 	svdev = to_scsi_dev(vdev);
 	assert(svdev);
+
+	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->mgmt_poller, event.spdk_event);
@@ -1052,29 +1081,7 @@ destroy_device(int vid)
 	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);
 	spdk_vhost_timed_event_wait(&event, "unregister request queue poller");
 
-	/* Wait for all tasks to finish */
-	for (i = 1000; i; i--) {
-		usleep(1000);
-
-		for (j = 0; j < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++j) {
-			scsi_dev = svdev->scsi_dev[j];
-			if (scsi_dev && spdk_scsi_dev_get_task_cnt(scsi_dev)) {
-				break;
-			}
-		}
-
-		if (j == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-			break;
-		}
-	}
-
-	if (i == 0) {
-		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
-	}
-
-	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
-
-	spdk_vhost_dev_unload(vdev);
+	spdk_poller_register(&svdev->shutdown_poller, shutdown_worker, svdev, vdev->lcore, 0);
 }
 
 int
