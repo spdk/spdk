@@ -458,6 +458,7 @@ struct nvme_driver {
 	pthread_mutex_t			lock;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
+	struct spdk_nvme_ctrlr          *discovery_ctrlr;
 	bool				initialized;
 };
 
