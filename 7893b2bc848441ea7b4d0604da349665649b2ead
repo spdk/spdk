@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43625336_8936619e",
+        "filename": "lib/bdev/gpt/gpt.h",
+        "patchSetId": 52
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-23T00:42:21Z",
+      "side": 1,
+      "message": "we should pick a \"real\" GUID here - just run uuidgen and use whatever it prints out\n\nthen we should add a helper function in scripts/autotest_common.sh that greps for this guid string and builds a string that can be used to pass to sgdisk",
+      "revId": "7893b2bc848441ea7b4d0604da349665649b2ead",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "247a83c4_40ba8012",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-23T00:42:21Z",
+      "side": 1,
+      "message": "I\u0027m concerned there are some cases where this claim could succeed but then some error path does not unclaim it.\n\nWe will make some changes in this area - around claiming bdevs.  Probably vbdev modules will not need to worry about claiming.  So for now, I think you can just wait to try claim the bdev until you find that (1) it has a GPT and (2) it has an SPDK partition on it.",
+      "revId": "7893b2bc848441ea7b4d0604da349665649b2ead",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2425937_75da927e",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-23T00:42:21Z",
+      "side": 1,
+      "message": "can we keep gpt enabled by default instead if Gpt section does not exist?",
+      "revId": "7893b2bc848441ea7b4d0604da349665649b2ead",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf53e11b_e30c643d",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 52
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-23T00:42:21Z",
+      "side": 1,
+      "message": "add the waitforlisten here as we discussed on e-mail",
+      "revId": "7893b2bc848441ea7b4d0604da349665649b2ead",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8336eea_14f486e0",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 52
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-23T00:42:21Z",
+      "side": 1,
+      "message": "remove extra newline",
+      "revId": "7893b2bc848441ea7b4d0604da349665649b2ead",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
