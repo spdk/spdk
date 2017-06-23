@@ -1,0 +1,147 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb8d3d51_10029a18",
+        "filename": "test/scsi/rpc/rpc_scsi.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-23T05:30:56Z",
+      "side": 1,
+      "message": "is retcode used? i only see \"1\" being passed",
+      "range": {
+        "startLine": 48,
+        "startChar": 17,
+        "endLine": 48,
+        "endChar": 24
+      },
+      "revId": "da814d7cd9f8a7a5021de4f69e07ab48da2a0569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "338bd4a5_36c89e9b",
+        "filename": "test/scsi/scsi.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-23T05:30:56Z",
+      "side": 1,
+      "message": "you probably want kill -2 or kill -9",
+      "revId": "da814d7cd9f8a7a5021de4f69e07ab48da2a0569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68d4dae3_4ac07ccb",
+        "filename": "test/scsi/scsi.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-23T05:30:56Z",
+      "side": 1,
+      "message": "you shouldn\u0027t use hardcoded paths, use relative ones instead.",
+      "range": {
+        "startLine": 19,
+        "startChar": 31,
+        "endLine": 19,
+        "endChar": 32
+      },
+      "revId": "da814d7cd9f8a7a5021de4f69e07ab48da2a0569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2455d4f0_e8a37384",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-23T05:30:56Z",
+      "side": 1,
+      "message": "-1",
+      "revId": "da814d7cd9f8a7a5021de4f69e07ab48da2a0569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e45ae156_5d3e503c",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-23T05:30:56Z",
+      "side": 1,
+      "message": "why did you uncomment that? are resets required for these tests?",
+      "revId": "da814d7cd9f8a7a5021de4f69e07ab48da2a0569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6140cae5_8bdfd5c9",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-23T05:30:56Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 237,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 4
+      },
+      "revId": "da814d7cd9f8a7a5021de4f69e07ab48da2a0569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac20077d_ac459618",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-23T05:30:56Z",
+      "side": 1,
+      "message": "please revert",
+      "range": {
+        "startLine": 245,
+        "startChar": 1,
+        "endLine": 245,
+        "endChar": 12
+      },
+      "revId": "da814d7cd9f8a7a5021de4f69e07ab48da2a0569",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
