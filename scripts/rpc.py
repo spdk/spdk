@@ -258,7 +258,7 @@ def construct_lvol_bdev(args):
     jsonrpc_call('construct_lvol_bdev', params)
 p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an lvol backend')
 p.add_argument('guid', help='lvol store guid')
-p.add_argument('size', help='size for this bdev')
+p.add_argument('size', help='size for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
 
 def destroy_lvol_store(args):
@@ -276,7 +276,7 @@ def extend_lvol_bdev(args):
     jsonrpc_call('extend_lvol_bdev', params)
 p = subparsers.add_parser('extend_lvol_bdev', help='Extend an lvol bdev')
 p.add_argument('name', help='lvol bdev name')
-p.add_argument('size', help='new size for this bdev')
+p.add_argument('size', help='new size for this bdev', type=int)
 p.set_defaults(func=extend_lvol_bdev)
 
 def set_trace_flag(args):

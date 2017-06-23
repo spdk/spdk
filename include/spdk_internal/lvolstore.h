@@ -55,7 +55,7 @@ struct spdk_lvol_store {
 	struct spdk_bs_dev              *bs_dev;
 	struct spdk_bdev                *base_bdev;
 	struct spdk_blob_store          *blobstore;
-	uuid_t				uuid;
+	uuid_t                          uuid;
 
 	TAILQ_ENTRY(spdk_lvol_store)    lvol_stores;
 };
@@ -63,7 +63,18 @@ struct spdk_lvol_store {
 struct spdk_lvol {
 	struct spdk_bdev                *disk;
 	struct spdk_lvol_store          *lvol_store;
+	struct spdk_blob                *blob;
+	size_t                          sz;
+	char                            *name;
+
+	TAILQ_ENTRY(spdk_lvol)          lvols;
 };
 
+struct spdk_lvol_create_req {
+	spdk_lvol_op_complete           cb_fn;
+	void                            *cb_arg;
+	struct spdk_lvol                *lvol;
+	bool                            blob_created;
+};
 
 #endif
