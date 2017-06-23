@@ -116,6 +116,14 @@ struct spdk_nvme_ctrlr_opts {
 	 * or driver-assisted striping.
 	 */
 	uint32_t io_queue_requests;
+
+	/**
+	 * Flags for the operations on the ctrlr
+	 */
+	struct {
+		uint8_t attach_discovery_ctrlr  : 1; /* Set to attach the discovery ctrlr */
+		uint8_t reserved                : 7;
+	} flags;
 };
 
 /**

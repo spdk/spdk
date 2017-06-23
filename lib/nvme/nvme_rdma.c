@@ -1193,6 +1193,11 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		return -ENXIO;
 	}
 
+	probe_cb(cb_ctx, discovery_trid, &discovery_opts);
+	if (discovery_opts.flags.attach_discovery_ctrlr == true) {
+		g_spdk_nvme_driver->discovery_ctrlr = discovery_ctrlr;
+	}
+
 	buffer_max_entries_first = (sizeof(buffer) - offsetof(struct spdk_nvmf_discovery_log_page,
 				    entries[0])) /
 				   sizeof(struct spdk_nvmf_discovery_log_page_entry);
@@ -1232,7 +1237,10 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
 	} while (remaining_num_rec != 0);
 
-	nvme_ctrlr_destruct(discovery_ctrlr);
+	if (discovery_opts.flags.attach_discovery_ctrlr == false) {
+		nvme_ctrlr_destruct(discovery_ctrlr);
+	}
+
 	return 0;
 }
 
