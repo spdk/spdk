@@ -37,8 +37,8 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
+#include "spdk/scsi.h"
 #include "spdk/vhost.h"
-#include "task.h"
 #include "vhost_internal.h"
 
 static void
