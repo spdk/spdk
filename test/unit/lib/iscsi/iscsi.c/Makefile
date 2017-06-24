@@ -31,20 +31,24 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-SPDK_LIB_LIST = log conf util cunit
+SPDK_LIB_LIST = log util cunit trace conf
 
 CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-LIBS += -lcunit
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+LIBS += -lcunit -lcrypto
+SCSI_OBJS = port
+ISCSI_OBJS = crc32c md5 param
+OBJS += $(SCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/scsi/%.o)
+OBJS += $(ISCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/iscsi/%.o)
 
-APP = target_node_ut
-C_SRCS = target_node_ut.c
+APP = iscsi_ut
+C_SRCS = iscsi_ut.c
 
 all: $(APP)
 

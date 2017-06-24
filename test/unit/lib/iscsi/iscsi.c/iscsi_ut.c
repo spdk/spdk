@@ -38,6 +38,8 @@
 
 #include "CUnit/Basic.h"
 
+#include "iscsi/iscsi.c"
+
 #include "../common.c"
 #include "iscsi/acceptor.h"
 #include "iscsi/portal_grp.h"
