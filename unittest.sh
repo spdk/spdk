@@ -69,9 +69,9 @@ $valgrind test/unit/lib/scsi/lun.c/lun_ut
 $valgrind test/unit/lib/scsi/scsi.c/scsi_ut
 $valgrind test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut
 
-$valgrind test/lib/iscsi/param/param_ut
-$valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/target_node.conf
-$valgrind test/lib/iscsi/pdu/pdu
+$valgrind test/unit/lib/iscsi/param.c/param_ut
+$valgrind test/unit/lib/iscsi/tgt_node.c/tgt_node_ut test/unit/lib/iscsi/tgt_node.c/tgt_node.conf
+$valgrind test/unit/lib/iscsi/iscsi.c/iscsi_ut
 
 $valgrind test/unit/lib/util/bit_array.c/bit_array_ut
 $valgrind test/unit/lib/util/io_channel.c/io_channel_ut
