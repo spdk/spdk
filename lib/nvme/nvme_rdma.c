@@ -1153,6 +1153,12 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	uint16_t recfmt;
 	struct nvme_completion_poll_status status;
 
+	if (strcmp(discovery_trid->subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
+		/* It is not a discovery_ctrlr info and try to directly connect it */
+		rc = nvme_ctrlr_probe(discovery_trid, NULL, probe_cb, cb_ctx);
+		return rc;
+	}
+
 	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
@@ -1202,8 +1208,6 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		if (rc < 0) {
 			SPDK_TRACELOG(SPDK_TRACE_NVME, "nvme_fabrics_get_log_discovery_page error\n");
 			nvme_ctrlr_destruct(discovery_ctrlr);
-			/* It is not a discovery_ctrlr info and try to directly connect it */
-			rc = nvme_ctrlr_probe(discovery_trid, NULL, probe_cb, cb_ctx);
 			return rc;
 		}
 
