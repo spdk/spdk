@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a623b591_a971ca93",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T21:39:22Z",
+      "side": 1,
+      "message": "logical_block_size should be not less than NVMe block size, so safe value would be 4096 here.\n\n\u0027size\u003d20G\u0027 - is this hardcoded value some kind or requirement of the test?\n\nWe can split this to spdk_vhost_scsi and spdk_vhost_blk?\nNote also, that by changing  this case to\nspdk_vhost_scsi)\n   ...\n   ;;\nspdk_vhost_blk)\n   [[ $disk \u003d~ _size_([0-9]+[MG]?) ]] || false\n   size\u003d${BASH_REMATCH[1]}\n   ...\n   disk\u003d${disk%%_*}\n   ;;\n\nyou can slip in parameters needed for vhost blk.",
+      "range": {
+        "startLine": 541,
+        "startChar": 5,
+        "endLine": 541,
+        "endChar": 50
+      },
+      "revId": "16629a76f9d78e6b96a2228b20c469d2e3c4234a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43ab827e_3e8eadc6",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T21:39:22Z",
+      "side": 1,
+      "message": "this loop can be replaced by:\ncd /sys/block;\necho vd*;",
+      "range": {
+        "startLine": 775,
+        "startChar": 0,
+        "endLine": 778,
+        "endChar": 5
+      },
+      "revId": "16629a76f9d78e6b96a2228b20c469d2e3c4234a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
