@@ -427,6 +427,7 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 	int 					rc;
 	uint8_t					*buf;
 	size_t					remaining_sz;
+	uint64_t				last_cluster;
 
 	assert(pages != NULL);
 	assert(page_count != NULL);
@@ -484,7 +485,7 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 	}
 
 	/* Serialize extents */
-	uint64_t last_cluster = 0;
+	last_cluster = 0;
 	while (last_cluster < blob->active.num_clusters) {
 		_spdk_blob_serialize_extent(blob, last_cluster, &last_cluster,
 					    buf, remaining_sz);
