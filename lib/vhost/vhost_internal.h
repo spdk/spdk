@@ -64,7 +64,6 @@ struct spdk_vhost_dev {
 	char *name;
 
 	int vid;
-	int task_cnt;
 	int32_t lcore;
 	uint64_t cpumask;
 

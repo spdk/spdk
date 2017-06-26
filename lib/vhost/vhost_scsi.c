@@ -130,7 +130,6 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_task *task = container_of(scsi_task, struct spdk_vhost_task, scsi);
 
-	--task->svdev->vdev.task_cnt;
 	spdk_ring_enqueue(g_task_pool, (void **) &task, 1);
 }
 
@@ -146,8 +145,6 @@ spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_task *
 		/* FIXME: we should never run out of tasks, but what if we do? */
 		abort();
 	}
-
-	svdev->vdev.task_cnt += res_count;
 }
 
 static void
@@ -952,8 +949,9 @@ destroy_device(int vid)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
+	struct spdk_scsi_dev *scsi_dev;
 	struct spdk_vhost_timed_event event = {0};
-	uint32_t i;
+	uint32_t i, j;
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -971,11 +969,22 @@ destroy_device(int vid)
 	spdk_vhost_timed_event_wait(&event, "unregister request queue poller");
 
 	/* Wait for all tasks to finish */
-	for (i = 1000; i && vdev->task_cnt > 0; i--) {
+	for (i = 1000; i; i--) {
 		usleep(1000);
+
+		for (j = 0; j < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++j) {
+			scsi_dev = svdev->scsi_dev[j];
+			if (scsi_dev && spdk_scsi_dev_get_task_cnt(scsi_dev)) {
+				break;
+			}
+		}
+
+		if (j == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+			break;
+		}
 	}
 
-	if (vdev->task_cnt > 0) {
+	if (i == 0) {
 		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
 
