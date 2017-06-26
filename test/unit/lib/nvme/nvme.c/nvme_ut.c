@@ -313,6 +313,18 @@ test_trid_parse_and_compare(void)
 	CU_ASSERT(ret < 0);
 
 	memset_trid(&trid1, &trid2);
+	snprintf(trid1.subnqn, sizeof(trid1.subnqn), "subnqn:nqn.2016-08.org.nvmexpress.discovery");
+	snprintf(trid2.subnqn, sizeof(trid2.subnqn), "subnqn:nqn.2016-08.org.nvmexpress.discovery");
+	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
+	CU_ASSERT(ret == 0);
+
+	memset_trid(&trid1, &trid2);
+	snprintf(trid1.subnqn, sizeof(trid1.subnqn), "subnqn:nqn.2016-08.org.nvmexpress.discovery");
+	snprintf(trid2.subnqn, sizeof(trid2.subnqn), "subnqn:nqn.2016-08.org.Nvmexpress.discovery");
+	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
+	CU_ASSERT(ret > 0);
+
+	memset_trid(&trid1, &trid2);
 	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
 	CU_ASSERT(ret == 0);
 }
