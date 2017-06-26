@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87210d17_08c9b022",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-26T16:59:32Z",
+      "side": 1,
+      "message": "I don\u0027t think $SPDK_SRC_DIR is right - the directory is not necessarily named \"spdk\".  This variable doesn\u0027t seem to be used anywhere else, so the mistake wasn\u0027t noticed before.",
+      "revId": "64e76d36d287fd90504141b2bf4e01fa51e89ba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
