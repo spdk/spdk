@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dec6e736_9699fd7d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-26T16:32:08Z",
+      "side": 1,
+      "message": "This is ignoring the return value of the probe_cb - instead of adding a new \"attach_discovery_ctrlr\" flag, can you use the return value of this probe call to decide whether to attach?",
+      "revId": "2cddd888c4b49b9b254dacb5947fee59f534728c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "500dadea_38fce78e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1198,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-26T16:32:08Z",
+      "side": 1,
+      "message": "We don\u0027t know if this is a discovery controller yet - it may fail the Get Log Page below if the user passed a non-discovery-service address.",
+      "revId": "2cddd888c4b49b9b254dacb5947fee59f534728c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
