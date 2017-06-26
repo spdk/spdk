@@ -241,6 +241,9 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 
 	for (t = 0; t < MAX_ISCSI_TARGET_NODE; t++) {
 		int idx;
+		const char *authmethod = "None";
+		char authgroup[32] = "None";
+		const char *usedigest = "Auto";
 
 		target = g_spdk_iscsi.target[t];
 		if (NULL == target) continue;
@@ -259,10 +262,6 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 				target->map[m].pg->tag,
 				target->map[m].ig->tag);
 		}
-
-		const char *authmethod = "None";
-		char authgroup[32] = "None";
-		const char *usedigest = "Auto";
 
 		if (target->auth_chap_disabled)
 			authmethod = "None";
