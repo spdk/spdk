@@ -29,8 +29,7 @@ timing_exit db_bench_build
 cp $rootdir/etc/spdk/rocksdb.conf.in $ROCKSDB_CONF
 $rootdir/scripts/gen_nvme.sh >> $ROCKSDB_CONF
 
-start_stub "-i 0 -m 0xFFF"
-trap 'kill_stub; rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
+trap 'rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 $rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
 mkdir $output_dir/rocksdb
@@ -38,7 +37,6 @@ RESULTS_DIR=$output_dir/rocksdb USE_PERF=0 DURATION=30 NUM_KEYS=50000000 ROCKSDB
 
 trap - SIGINT SIGTERM EXIT
 
-kill_stub
 rm -f $ROCKSDB_CONF
 
 timing_exit rocksdb
