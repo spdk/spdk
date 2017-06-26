@@ -213,10 +213,8 @@ list_negotiation_test(void)
 static void
 parse_valid_test(void)
 {
-	struct iscsi_param *params;
+	struct iscsi_param *params = NULL;
 	int rc;
-
-	params = NULL;
 	char *data;
 	int len;
 	char *partial_parameter = NULL;
@@ -289,10 +287,8 @@ parse_valid_test(void)
 static void
 parse_invalid_test(void)
 {
-	struct iscsi_param *params;
+	struct iscsi_param *params = NULL;
 	int rc;
-
-	params = NULL;
 	char *data;
 	int len;
 
