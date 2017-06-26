@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f28a8cf_9578f771",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1011330
+      },
+      "writtenOn": "2017-06-26T11:39:56Z",
+      "side": 1,
+      "message": "here spin_time is calculated in us, so I think it should be something like this:\n\nspin_time \u003d (nvme_ch-\u003espin_ticks * 1000000ULL) / spdk_get_ticks_hz();",
+      "range": {
+        "startLine": 616,
+        "startChar": 1,
+        "endLine": 616,
+        "endChar": 67
+      },
+      "revId": "04de770e174dd4fbba20c776db9a08d077a7a2f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
