@@ -232,14 +232,18 @@ process_request(struct nbd_disk *nbd)
 	case NBD_CMD_DISC:
 		nbd_shutdown();
 		return;
+#ifdef NBD_FLAG_SEND_FLUSH
 	case NBD_CMD_FLUSH:
 		io->type = SPDK_BDEV_IO_TYPE_FLUSH;
 		nbd_submit_bdev_io(nbd->bdev, nbd->ch, io);
 		break;
+#endif
+#ifdef NBD_FLAG_SEND_TRIM
 	case NBD_CMD_TRIM:
 		io->type = SPDK_BDEV_IO_TYPE_UNMAP;
 		nbd_submit_bdev_io(nbd->bdev, nbd->ch, io);
 		break;
+#endif
 	}
 }
 
@@ -320,11 +324,13 @@ nbd_start_kernel(int nbd_fd, int *sp)
 		exit(-1);
 	}
 
+#ifdef NBD_FLAG_SEND_TRIM
 	rc = ioctl(nbd_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", strerror(errno));
 		exit(-1);
 	}
+#endif
 
 	/* This will block in the kernel until the client disconnects. */
 	ioctl(nbd_fd, NBD_DO_IT);
