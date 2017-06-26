@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1eb21b9_7614963c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "-\u003e return dev_index;",
+      "range": {
+        "startLine": 130,
+        "startChar": 3,
+        "endLine": 130,
+        "endChar": 9
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48608ba_85568caf",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "just return -1;",
+      "range": {
+        "startLine": 134,
+        "startChar": 1,
+        "endLine": 138,
+        "endChar": 18
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "650409b9_54019b58",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "-\u003e process_removed_devs?",
+      "range": {
+        "startLine": 205,
+        "startChar": 1,
+        "endLine": 205,
+        "endChar": 18
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c980bd02_f2384acb",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "why can\u0027t pass index as arg2? This would simplify this patch.",
+      "range": {
+        "startLine": 877,
+        "startChar": 1,
+        "endLine": 877,
+        "endChar": 34
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c2d01e4_0ab917ff",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "-\u003e -EINVAL",
+      "range": {
+        "startLine": 911,
+        "startChar": 10,
+        "endLine": 911,
+        "endChar": 11
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fa05513_21a20108",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "no need assert here.",
+      "range": {
+        "startLine": 914,
+        "startChar": 1,
+        "endLine": 914,
+        "endChar": 22
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "829fc371_381ef464",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 933,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "-\u003e -ENOTSUP",
+      "range": {
+        "startLine": 933,
+        "startChar": 10,
+        "endLine": 933,
+        "endChar": 11
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abe801b8_f23afee3",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "This should be moved to spdk_vhost_scsi_dev_remove_dev_cb()",
+      "range": {
+        "startLine": 940,
+        "startChar": 1,
+        "endLine": 944,
+        "endChar": 35
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "720a3fd2_2ce725ea",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1060,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T22:19:21Z",
+      "side": 1,
+      "message": "what about removed_dev?",
+      "range": {
+        "startLine": 1060,
+        "startChar": 3,
+        "endLine": 1060,
+        "endChar": 33
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
