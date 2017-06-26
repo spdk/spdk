@@ -41,10 +41,12 @@
 
 static int get_addr_str(struct sockaddr_in *paddr, char *host, size_t hlen)
 {
+	uint8_t *pa;
+
 	if (paddr == NULL || host == NULL)
 		return -1;
 
-	uint8_t *pa = (uint8_t *)&paddr->sin_addr.s_addr;
+	pa = (uint8_t *)&paddr->sin_addr.s_addr;
 	snprintf(host, hlen, "%u.%u.%u.%u", pa[0], pa[1], pa[2], pa[3]);
 
 	return 0;
