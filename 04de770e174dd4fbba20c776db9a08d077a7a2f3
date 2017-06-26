@@ -22,6 +22,30 @@
       "revId": "04de770e174dd4fbba20c776db9a08d077a7a2f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "362b69fa_a8f2492b",
+        "filename": "lib/bdev/nvme/blockdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-06-26T12:57:38Z",
+      "side": 1,
+      "message": "Yeah - the way I wrote it will lose too much precision for short spin times. I\u0027ll rewrite as you indicated.",
+      "parentUuid": "2f28a8cf_9578f771",
+      "range": {
+        "startLine": 616,
+        "startChar": 1,
+        "endLine": 616,
+        "endChar": 67
+      },
+      "revId": "04de770e174dd4fbba20c776db9a08d077a7a2f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
