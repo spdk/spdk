@@ -164,8 +164,11 @@ test_decode_object(void)
 		{"third", offsetof(struct my_object, my_bool), spdk_json_decode_bool, false},
 		{"fourth", offsetof(struct my_object, my_bool), spdk_json_decode_bool, true},
 	};
-	struct my_object output;
-	output.my_name = NULL;
+	struct my_object output = {
+		.my_name = NULL,
+		.my_int = 0,
+		.my_bool = false,
+	};
 	uint32_t answer = 234;
 	char *answer_str = "HELLO";
 	bool answer_bool = true;
