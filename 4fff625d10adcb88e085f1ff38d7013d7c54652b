@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1e03c7e_881c3258",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T20:25:48Z",
+      "side": 1,
+      "message": "Should we check id !\u003d NULL here?",
+      "range": {
+        "startLine": 185,
+        "startChar": 37,
+        "endLine": 185,
+        "endChar": 39
+      },
+      "revId": "4fff625d10adcb88e085f1ff38d7013d7c54652b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55312f31_573c1acd",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T20:25:48Z",
+      "side": 1,
+      "message": "Should we check id !\u003d NULL here?",
+      "range": {
+        "startLine": 418,
+        "startChar": 37,
+        "endLine": 418,
+        "endChar": 39
+      },
+      "revId": "4fff625d10adcb88e085f1ff38d7013d7c54652b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6de40902_05194f32",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T20:25:48Z",
+      "side": 1,
+      "message": "why new line?",
+      "revId": "4fff625d10adcb88e085f1ff38d7013d7c54652b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98e66059_4b84c2ca",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T20:25:48Z",
+      "side": 1,
+      "message": "Bdev is mandatory so this should always emit some value. In case there is no bdev (hot-removed?) you should call spdk_json_write_null() instead.",
+      "range": {
+        "startLine": 521,
+        "startChar": 2,
+        "endLine": 524,
+        "endChar": 3
+      },
+      "revId": "4fff625d10adcb88e085f1ff38d7013d7c54652b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
