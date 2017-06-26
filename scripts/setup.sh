@@ -84,6 +84,16 @@ function configure_linux {
 		mount -t hugetlbfs nodev "$hugetlbfs_mount"
 	fi
 	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
+	try=100
+	while [ $try -gt 0 ]; do
+		free_hugepages=$(cat /sys/kernel/mm/hugepages/hugepages-2048kB/free_hugepages)
+		echo "free_hugepages: $free_hugepages"
+		if [ $free_hugepages -ge $NRHUGE ]; then
+			break
+		fi
+		sleep 1
+		try=$((try - 1))
+	done
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
