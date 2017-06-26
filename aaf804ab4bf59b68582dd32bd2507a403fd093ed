@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0b32f0d_bd9be787",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-26T16:50:40Z",
+      "side": 1,
+      "message": "I believe NQN is supposed to be case sensitive (we use strcasecmp() on NQNs elsewhere, but I think this is wrong - nothing in the spec says that it is case insensitive).\n\nAlso, the current use of strn*cmp() is not quite correct, since it matches prefixes if subnqn is longer than SPDK_NVMF_DISCOVERY_NQN (e.g. strncmp(\"abcdef\", \"abc\", 3) \u003d\u003d 0).  You can pass sizeof(discovery_trid-\u003esubnqn) if you want to use strncmp(); alternatively, discovery_trid-\u003esubnqn is required to be null terminated anyway, so you can just use strcmp().",
+      "revId": "aaf804ab4bf59b68582dd32bd2507a403fd093ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
