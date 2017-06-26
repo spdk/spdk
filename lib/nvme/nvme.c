@@ -617,7 +617,7 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 		return cmp;
 	}
 
-	cmp = strcasecmp(trid1->subnqn, trid2->subnqn);
+	cmp = strcmp(trid1->subnqn, trid2->subnqn);
 	if (cmp) {
 		return cmp;
 	}
