@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fb9d2ba_bf7456f4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-26T11:51:22Z",
+      "side": 1,
+      "message": "newline",
+      "range": {
+        "startLine": 533,
+        "startChar": 14,
+        "endLine": 533,
+        "endChar": 15
+      },
+      "revId": "395b78069e678e852b322fc10fd8a45f556afb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e64e5616_d7278280",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-26T11:51:22Z",
+      "side": 1,
+      "message": "the device is not vhost-blk specific, it\u0027s just a device.\nplease rename to e.g. \"device name to use with this controller\"",
+      "range": {
+        "startLine": 542,
+        "startChar": 33,
+        "endLine": 542,
+        "endChar": 56
+      },
+      "revId": "395b78069e678e852b322fc10fd8a45f556afb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
