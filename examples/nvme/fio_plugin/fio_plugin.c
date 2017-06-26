@@ -346,6 +346,9 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	struct spdk_fio_request	*fio_req = io_u->engine_data;
 	struct spdk_fio_qpair	*fio_qpair;
 	struct spdk_nvme_ns	*ns = NULL;
+	uint32_t		block_size;
+	uint64_t		lba;
+	uint32_t		lba_count;
 
 	/* Find the namespace that corresponds to the file in the io_u */
 	fio_qpair = fio_thread->fio_qpair;
@@ -360,9 +363,9 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		return FIO_Q_COMPLETED;
 	}
 
-	uint32_t block_size = spdk_nvme_ns_get_sector_size(ns);
-	uint64_t lba = io_u->offset / block_size;
-	uint32_t lba_count = io_u->xfer_buflen / block_size;
+	block_size = spdk_nvme_ns_get_sector_size(ns);
+	lba = io_u->offset / block_size;
+	lba_count = io_u->xfer_buflen / block_size;
 
 	switch (io_u->ddir) {
 	case DDIR_READ:
@@ -420,9 +423,11 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 
 		if (t) {
+			uint64_t elapse;
+
 			clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
-			uint64_t elapse = ((t1.tv_sec - t0.tv_sec) * 1000000000L)
-					  + t1.tv_nsec - t0.tv_nsec;
+			elapse = ((t1.tv_sec - t0.tv_sec) * 1000000000L)
+				 + t1.tv_nsec - t0.tv_nsec;
 			if (elapse > timeout) {
 				break;
 			}
