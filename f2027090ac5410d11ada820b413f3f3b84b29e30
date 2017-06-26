@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "20acc5de_998c8bbe",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-26T14:39:29Z",
+      "side": 1,
+      "message": "-1 is valid value if guest don\u0027t want interrups and don\u0027t set vector address for queue (eg work in poll mode).",
+      "range": {
+        "startLine": 10,
+        "startChar": 33,
+        "endLine": 10,
+        "endChar": 55
+      },
+      "revId": "f2027090ac5410d11ada820b413f3f3b84b29e30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4cfb7aa_6f8a4fa3",
         "filename": "lib/vhost/rte_vhost/vhost_user.c",
         "patchSetId": 3
