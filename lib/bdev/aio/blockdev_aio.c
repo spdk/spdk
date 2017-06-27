@@ -59,7 +59,7 @@ blockdev_aio_open(struct file_disk *disk)
 {
 	int fd;
 
-	fd = open(disk->file, O_RDWR | O_DIRECT);
+	fd = open(disk->file, O_RDWR);
 	if (fd < 0) {
 		perror("open");
 		disk->fd = -1;
