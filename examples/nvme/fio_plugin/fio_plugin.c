@@ -253,7 +253,7 @@ static int spdk_fio_setup(struct thread_data *td)
 				continue;
 			}
 			spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
-		} else if (trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		} else {
 			if (trid.subnqn[0] == '\0') {
 				snprintf(trid.subnqn, sizeof(trid.subnqn), "%s",
 					 SPDK_NVMF_DISCOVERY_NQN);
