@@ -206,6 +206,30 @@
       "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4b1f491_54c9733b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1060,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-27T05:40:28Z",
+      "side": 1,
+      "message": "if this is regular poller restart, removed_devs will be deleted once poller is restarted. if this is shutdown - there\u0027s another io_channel leak. I\u0027d leave it as is. We\u0027re currently leaking devices anyway. Shutdown poller fixes io_channel leak.",
+      "parentUuid": "720a3fd2_2ce725ea",
+      "range": {
+        "startLine": 1060,
+        "startChar": 3,
+        "endLine": 1060,
+        "endChar": 33
+      },
+      "revId": "1350ba848a83f5eb29b10a1f9a8bb414fc6dd5db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
