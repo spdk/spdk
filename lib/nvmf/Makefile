@@ -37,9 +37,9 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 CFLAGS += $(ENV_CFLAGS)
 LIBNAME = nvmf
 
-C_SRCS = discovery.c subsystem.c nvmf.c \
+C_SRCS = subsystem.c nvmf.c \
 	 request.c session.c transport.c \
-	 direct.c virtual.c
+	 ctrlr_discovery.c ctrlr_bdev.c
 
 C_SRCS-$(CONFIG_RDMA) += rdma.c
 
