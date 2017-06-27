@@ -771,6 +771,7 @@ int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  * \param payload The data buffer for the firmware image.
  * \param size The data size will be downloaded.
  * \param slot The slot that the firmware image will be committed to.
+ * \param commit_action The action to perform when firmware is committed.
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request,
  * -1 if the size is not multiple of 4.
@@ -778,7 +779,7 @@ int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  * This function is thread safe and can be called at any point after spdk_nvme_attach().
  */
 int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
-				    int slot);
+				    int slot, enum spdk_nvme_fw_commit_action commit_action);
 
 /**
  * \brief Get the identify namespace data as defined by the NVMe specification.
