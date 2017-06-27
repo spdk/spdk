@@ -43,8 +43,7 @@ struct spdk_nvmf_subsystem *spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid
 
 void spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length);
 
-extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
-extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
+extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_bdev_ctrlr_ops;
 extern const struct spdk_nvmf_ctrlr_ops spdk_nvmf_discovery_ctrlr_ops;
 
 #endif /* SPDK_NVMF_SUBSYSTEM_H */
