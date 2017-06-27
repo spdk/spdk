@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "762ac220_e5dec082",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:59:37Z",
+      "side": 1,
+      "message": "Can you elaborate this a little bit more?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 43
+      },
+      "revId": "dda9af56a14a9a8855ea939bfadb2aa3a91b0614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "130c1dbc_77fbb5d0",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 4
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:59:37Z",
+      "side": 1,
+      "message": "This should point default value which is No",
+      "range": {
+        "startLine": 142,
+        "startChar": 12,
+        "endLine": 142,
+        "endChar": 15
+      },
+      "revId": "dda9af56a14a9a8855ea939bfadb2aa3a91b0614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b209f2c_92a01615",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:59:37Z",
+      "side": 1,
+      "message": "} else if (!bvdev-\u003ereadonly) {\n...\n} else {\n  SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, \"\u003c\u003c Message \u003e\u003e\");\n  rc \u003d -1;\n}",
+      "range": {
+        "startLine": 263,
+        "startChar": 2,
+        "endLine": 263,
+        "endChar": 10
+      },
+      "revId": "dda9af56a14a9a8855ea939bfadb2aa3a91b0614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c09e807e_202137f7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:59:37Z",
+      "side": 1,
+      "message": "This change is not needed. See comment bellow.",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 525,
+        "endChar": 2
+      },
+      "revId": "dda9af56a14a9a8855ea939bfadb2aa3a91b0614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6eca733a_e8bae312",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:59:37Z",
+      "side": 1,
+      "message": "For handling readonly using rte_vhost_driver_enable_features/rte_vhost_driver_disable_features should be sufficient.",
+      "range": {
+        "startLine": 600,
+        "startChar": 1,
+        "endLine": 606,
+        "endChar": 39
+      },
+      "revId": "dda9af56a14a9a8855ea939bfadb2aa3a91b0614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5fc7d1f_81463b0d",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:59:37Z",
+      "side": 1,
+      "message": "This don\u0027t belong here -\u003e struct spdk_vhost_blk_dev",
+      "range": {
+        "startLine": 76,
+        "startChar": 1,
+        "endLine": 76,
+        "endChar": 15
+      },
+      "revId": "dda9af56a14a9a8855ea939bfadb2aa3a91b0614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b7aa338_ae41d644",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:59:37Z",
+      "side": 1,
+      "message": "Do we rly need this NOP function?",
+      "range": {
+        "startLine": 392,
+        "startChar": 0,
+        "endLine": 399,
+        "endChar": 1
+      },
+      "revId": "dda9af56a14a9a8855ea939bfadb2aa3a91b0614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
