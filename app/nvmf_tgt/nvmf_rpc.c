@@ -58,14 +58,6 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 
 	spdk_json_write_name(w, "nqn");
 	spdk_json_write_string(w, spdk_nvmf_subsystem_get_nqn(subsystem));
-	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
-		spdk_json_write_name(w, "mode");
-		if (spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_DIRECT) {
-			spdk_json_write_string(w, "direct");
-		} else {
-			spdk_json_write_string(w, "virtual");
-		}
-	}
 	spdk_json_write_name(w, "subtype");
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_json_write_string(w, "NVMe");
@@ -112,35 +104,25 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	spdk_json_write_array_end(w);
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
-		if (spdk_nvmf_subsystem_get_mode(subsystem) == NVMF_SUBSYSTEM_MODE_DIRECT) {
-			spdk_json_write_name(w, "pci_address");
-			spdk_json_write_string_fmt(w, "%04x:%02x:%02x.%x",
-						   subsystem->dev.direct.pci_addr.domain,
-						   subsystem->dev.direct.pci_addr.bus,
-						   subsystem->dev.direct.pci_addr.dev,
-						   subsystem->dev.direct.pci_addr.func);
-		} else {
-			uint32_t i;
+		uint32_t i;
 
-			spdk_json_write_name(w, "serial_number");
-			spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
-			spdk_json_write_name(w, "namespaces");
-			spdk_json_write_array_begin(w);
-			for (i = 0; i < subsystem->dev.virt.max_nsid; i++) {
-				if (subsystem->dev.virt.ns_list[i] == NULL) {
-					continue;
-				}
-
-				spdk_json_write_object_begin(w);
-				spdk_json_write_name(w, "nsid");
-				spdk_json_write_int32(w, i + 1);
-				spdk_json_write_name(w, "name");
-				spdk_json_write_string(w, spdk_bdev_get_name(subsystem->dev.virt.ns_list[i]));
-				spdk_json_write_object_end(w);
+		spdk_json_write_name(w, "serial_number");
+		spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
+		spdk_json_write_name(w, "namespaces");
+		spdk_json_write_array_begin(w);
+		for (i = 0; i < subsystem->dev.max_nsid; i++) {
+			if (subsystem->dev.ns_list[i] == NULL) {
+				continue;
 			}
-			spdk_json_write_array_end(w);
 
+			spdk_json_write_object_begin(w);
+			spdk_json_write_name(w, "nsid");
+			spdk_json_write_int32(w, i + 1);
+			spdk_json_write_name(w, "name");
+			spdk_json_write_string(w, spdk_bdev_get_name(subsystem->dev.ns_list[i]));
+			spdk_json_write_object_end(w);
 		}
+		spdk_json_write_array_end(w);
 	}
 	spdk_json_write_object_end(w);
 }
@@ -280,7 +262,6 @@ free_rpc_hosts(struct rpc_hosts *r)
 
 struct rpc_subsystem {
 	int32_t core;
-	char *mode;
 	char *nqn;
 	struct rpc_listen_addresses listen_addresses;
 	struct rpc_hosts hosts;
@@ -299,7 +280,6 @@ free_rpc_subsystem(struct rpc_subsystem *req)
 
 static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"core", offsetof(struct rpc_subsystem, core), spdk_json_decode_int32, true},
-	{"mode", offsetof(struct rpc_subsystem, mode), spdk_json_decode_string},
 	{"nqn", offsetof(struct rpc_subsystem, nqn), spdk_json_decode_string},
 	{"listen_addresses", offsetof(struct rpc_subsystem, listen_addresses), decode_rpc_listen_addresses},
 	{"hosts", offsetof(struct rpc_subsystem, hosts), decode_rpc_hosts, true},
@@ -324,7 +304,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ret = spdk_nvmf_construct_subsystem(req.nqn, req.mode, req.core,
+	ret = spdk_nvmf_construct_subsystem(req.nqn, req.core,
 					    req.listen_addresses.num_listen_address,
 					    req.listen_addresses.addresses,
 					    req.hosts.num_hosts, req.hosts.hosts, req.pci_address,

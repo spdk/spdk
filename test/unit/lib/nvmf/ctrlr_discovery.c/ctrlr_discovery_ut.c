@@ -35,12 +35,11 @@
 
 #include "spdk_cunit.h"
 
-#include "discovery.c"
+#include "ctrlr_discovery.c"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
+const struct spdk_nvmf_ctrlr_ops spdk_nvmf_bdev_ctrlr_ops;
 
 struct spdk_nvmf_tgt g_nvmf_tgt = {
 	.subsystems = TAILQ_HEAD_INITIALIZER(g_nvmf_tgt.subsystems)
@@ -225,7 +224,7 @@ test_discovery_log(void)
 
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_create_subsystem("nqn.2016-06.io.spdk:subsystem1", SPDK_NVMF_SUBTYPE_NVME,
-					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
+					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	listen_addr = spdk_nvmf_tgt_listen("test_transport1", SPDK_NVMF_ADRFAM_IPV4, "1234", "5678");
