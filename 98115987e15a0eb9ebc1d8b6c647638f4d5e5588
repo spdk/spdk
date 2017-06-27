@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "028bbb8c_92a10b4d",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42033d72_34b5e090",
+      "revId": "98115987e15a0eb9ebc1d8b6c647638f4d5e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f5b6d7a_b0bc39fb",
         "filename": "lib/lvol/uuid.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-22T05:06:57Z",
       "side": 1,
       "message": "variable declaration should go before the call to uuid_generate_time_safe()",
+      "revId": "98115987e15a0eb9ebc1d8b6c647638f4d5e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f809b799_6b22b0b9",
+        "filename": "lib/lvol/uuid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f5b6d7a_b0bc39fb",
       "revId": "98115987e15a0eb9ebc1d8b6c647638f4d5e5588",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "264bd5d2_75dd4e46",
+        "filename": "lib/lvol/uuid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96da2f18_e8794204",
+      "revId": "98115987e15a0eb9ebc1d8b6c647638f4d5e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f47b1a5c_6065cd93",
         "filename": "mk/spdk.app.mk",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2017-06-22T05:06:57Z",
       "side": 1,
       "message": "i think this should go in mk/spdk.common.mk in SYS_LIBS - that is where we add other system libraries to the linker flags - this one is really meant for just spdk libraries, not system libraries",
+      "revId": "98115987e15a0eb9ebc1d8b6c647638f4d5e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f62c79d5_b325f241",
+        "filename": "mk/spdk.app.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f47b1a5c_6065cd93",
       "revId": "98115987e15a0eb9ebc1d8b6c647638f4d5e5588",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
