@@ -41,7 +41,7 @@ do
 	j=0
 	for bdf in $bdfs; do
 		let j=j+1
-		$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode$j 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -p "$bdf"
+		$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode$j "transport:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -p "$bdf"
 	done
 
 	n=$j

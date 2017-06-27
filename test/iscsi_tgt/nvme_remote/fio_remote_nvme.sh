@@ -29,7 +29,7 @@ trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid 5260
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
-$rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -s SPDK00000000000001 -n "$bdevs"
+$rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode1 "transport:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -s SPDK00000000000001 -n "$bdevs"
 echo "NVMf subsystem created."
 
 timing_enter start_iscsi_tgt
@@ -48,7 +48,7 @@ timing_exit start_iscsi_tgt
 echo "Creating an iSCSI target node."
 $rpc_py -p 5261 add_portal_group 1 $TARGET_IP:$ISCSI_PORT
 $rpc_py -p 5261 add_initiator_group 1 ALL $INITIATOR_IP/32
-$rpc_py -p 5261 construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a 192.168.100.8 -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
+$rpc_py -p 5261 construct_nvme_bdev -b "Nvme0" -t "rdma" -f "ipv4" -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -n nqn.2016-06.io.spdk:cnode1
 $rpc_py -p 5261 construct_target_node Target1 Target1_alias 'Nvme0n1:0' '1:1' 64 1 0 0 0
 sleep 1
 
