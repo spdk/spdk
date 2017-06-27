@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a30b93d_ea149a25",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T16:39:02Z",
+      "side": 1,
+      "message": "Any link to this bug?",
+      "range": {
+        "startLine": 10,
+        "startChar": 28,
+        "endLine": 10,
+        "endChar": 51
+      },
+      "revId": "2b9cf3a6941d47356e08b41fd52e80df9729bd04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
