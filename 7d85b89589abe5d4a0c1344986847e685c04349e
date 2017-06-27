@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "df5f7cce_2f12bdeb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "600d5ca4_274ee806",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13a89632_d803379e",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 15
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-22T05:45:03Z",
       "side": 1,
       "message": "ok - now i see why you had the bdev pointer in the base lvs structure - but we still need to remove it :(\n\nyou will need to create your own structure private to this file, that contains both an lvol_store pointer and a bdev pointer - this is the structure you will add to your global list on the next line below",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f83b2019_68073e3a",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13a89632_d803379e",
       "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "1f5bccc5_bba47c8e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b6bf846_5c172526",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6736b106_6529a483",
         "filename": "mk/spdk.modules.mk",
         "patchSetId": 15
@@ -104,6 +158,24 @@
     },
     {
       "key": {
+        "uuid": "012f61d8_5bbff859",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 15
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6736b106_6529a483",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1cc83961_9c68f793",
         "filename": "test/unit/lib/bdev/Makefile",
         "patchSetId": 15
@@ -115,6 +187,24 @@
       "writtenOn": "2017-06-22T05:45:03Z",
       "side": 1,
       "message": "should just be lvol",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93513f15_af795ec5",
+        "filename": "test/unit/lib/bdev/Makefile",
+        "patchSetId": 15
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:41Z",
+      "side": 1,
+      "message": "Renamed vbdev_lvol.c to be in line with other unit tests.",
+      "parentUuid": "1cc83961_9c68f793",
       "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -149,6 +239,24 @@
       "writtenOn": "2017-06-22T05:45:03Z",
       "side": 1,
       "message": "the directory name for this one should be \"vbdev_lvol.c\" instead of \"lvol_ut\" for consistency with the rest of the unit tests under test/unit/lib",
+      "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a154ad5_90a76995",
+        "filename": "unittest.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-06-27T15:39:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a0db855_12e3da2d",
       "revId": "7d85b89589abe5d4a0c1344986847e685c04349e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
