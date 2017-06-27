@@ -30,11 +30,11 @@ trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid ${RPC_PORT}
 timing_exit start_nvmf_tgt
 
-$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode1 'transport:RDMA traddr:192.168.100.8 trsvcid:4420' '' -p "*"
+$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode1 "transport:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -p "*"
 
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
-LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1"
+LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
 
 sync
 
