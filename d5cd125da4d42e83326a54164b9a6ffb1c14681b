@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91cb628b_38797b0a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:50:13Z",
+      "side": 1,
+      "message": "-\u003e \"to removed LUN and avoid unnecessary resets\"",
+      "range": {
+        "startLine": 240,
+        "startChar": 5,
+        "endLine": 241,
+        "endChar": 16
+      },
+      "revId": "d5cd125da4d42e83326a54164b9a6ffb1c14681b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
