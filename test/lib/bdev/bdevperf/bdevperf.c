@@ -247,8 +247,8 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	memset(task->buf, 0, g_io_size);
 
 	/* Read the data back in */
-	rc = spdk_bdev_read(target->bdev, target->ch, NULL, task->offset, g_io_size,
-			    bdevperf_complete, task);
+	rc = spdk_bdev_zread_start(target->bdev, target->ch, task->offset, g_io_size,
+				   bdevperf_complete, task);
 	if (rc) {
 		printf("Failed to submit read: %d\n", rc);
 		target->is_draining = true;
@@ -287,10 +287,10 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 		}
 	} else {
 		/* Read the data back in */
-		rc = spdk_bdev_read(target->bdev, target->ch, NULL,
-				    task->offset,
-				    g_io_size,
-				    bdevperf_complete, task);
+		rc = spdk_bdev_zread_start(target->bdev, target->ch,
+					   task->offset,
+					   g_io_size,
+					   bdevperf_complete, task);
 		if (rc) {
 			printf("Failed to submit read: %d\n", rc);
 			target->is_draining = true;
@@ -356,9 +356,14 @@ bdevperf_submit_single(struct io_target *target)
 		}
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
-		rbuf = g_zcopy ? NULL : task->buf;
-		rc = spdk_bdev_read(bdev, ch, rbuf, task->offset, g_io_size,
-				    bdevperf_complete, task);
+		if (g_zcopy) {
+			rc = spdk_bdev_zread_start(bdev, ch, task->offset, g_io_size,
+						   bdevperf_complete, task);
+		} else {
+			rbuf = task->buf;
+			rc = spdk_bdev_read(bdev, ch, rbuf, task->offset, g_io_size,
+					    bdevperf_complete, task);
+		}
 		if (rc) {
 			printf("Failed to submit read: %d\n", rc);
 			target->is_draining = true;

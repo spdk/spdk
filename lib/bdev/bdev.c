@@ -734,64 +734,19 @@ spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
 	return 0;
 }
 
-int
-spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-	       void *buf, uint64_t offset, uint64_t nbytes,
-	       spdk_bdev_io_completion_cb cb, void *cb_arg)
+static int
+_spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io, struct spdk_io_channel *ch,
+		 struct iovec *iov, int iovcnt,
+		 uint64_t offset, uint64_t nbytes,
+		 spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
 	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
-		return -EINVAL;
-	}
-
-	bdev_io = spdk_bdev_get_io();
-	if (!bdev_io) {
-		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
-		return -ENOMEM;
-	}
-
-	bdev_io->ch = channel;
-	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
-	bdev_io->u.read.iov.iov_base = buf;
-	bdev_io->u.read.iov.iov_len = nbytes;
-	bdev_io->u.read.iovs = &bdev_io->u.read.iov;
-	bdev_io->u.read.iovcnt = 1;
-	bdev_io->u.read.len = nbytes;
-	bdev_io->u.read.offset = offset;
-	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
-
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
-	return 0;
-}
-
-int
-spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
-		struct iovec *iov, int iovcnt,
-		uint64_t offset, uint64_t nbytes,
-		spdk_bdev_io_completion_cb cb, void *cb_arg)
-{
-	struct spdk_bdev_io *bdev_io;
-	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
-
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
-	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return -EINVAL;
-	}
-
-	bdev_io = spdk_bdev_get_io();
-	if (!bdev_io) {
-		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
-		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
@@ -810,6 +765,85 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	return 0;
 }
+
+int
+spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+	       void *buf, uint64_t offset, uint64_t nbytes,
+	       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct iovec *iov;
+	struct spdk_bdev_io *bdev_io;
+
+	if (buf == NULL) {
+		abort(); // TODO: remove me
+		return -EINVAL;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
+		return -ENOMEM;
+	}
+
+	iov = &bdev_io->u.read.iov;
+	iov->iov_base = buf;
+	iov->iov_len = nbytes;
+
+	return _spdk_bdev_readv(bdev, bdev_io, ch, iov, 1, offset, nbytes, cb, cb_arg);
+}
+
+int
+spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt,
+		uint64_t offset, uint64_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev_io *bdev_io;
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		if (iov[i].iov_base == NULL) {
+			abort(); // TODO: remove me
+			return -EINVAL;
+		}
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
+		return -ENOMEM;
+	}
+
+	return _spdk_bdev_readv(bdev, bdev_io, ch, iov, iovcnt, offset, nbytes, cb, cb_arg);
+}
+
+int
+spdk_bdev_zread_start(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		      uint64_t offset, uint64_t nbytes,
+		      spdk_bdev_io_completion_cb io_complete_cb, void *cb_arg)
+{
+	struct iovec *iov;
+	struct spdk_bdev_io *bdev_io;
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("spdk_bdev_io memory allocation failed duing read\n");
+		return -ENOMEM;
+	}
+
+	iov = &bdev_io->u.read.iov;
+	iov->iov_base = NULL;
+	iov->iov_len = 0;
+
+	return _spdk_bdev_readv(bdev, bdev_io, ch, iov, 1, offset, nbytes, io_complete_cb, cb_arg);
+}
+
+int
+spdk_bdev_zread_finish(struct spdk_bdev_io *bdev_io)
+{
+	return spdk_bdev_free_io(bdev_io);
+}
+
 
 int
 spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,

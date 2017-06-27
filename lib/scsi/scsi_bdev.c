@@ -1327,9 +1327,13 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		      "Read: lba=%"PRIu64", len=%"PRIu64"\n",
 		      lba, (uint64_t)task->length / blen);
 
-	rc = spdk_bdev_readv(bdev, task->ch, task->iovs,
-			     task->iovcnt, offset, nbytes,
-			     spdk_bdev_scsi_task_complete_cmd, task);
+	if (task->iovcnt == 1 && task->iovs[0].iov_base == NULL) {
+		rc = spdk_bdev_zread_start(bdev, task->ch, offset, nbytes,
+					   spdk_bdev_scsi_task_complete_cmd, task);
+	} else {
+		rc = spdk_bdev_readv(bdev, task->ch, task->iovs, task->iovcnt, offset, nbytes,
+				     spdk_bdev_scsi_task_complete_cmd, task);
+	}
 	if (rc) {
 		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,

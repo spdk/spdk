@@ -274,6 +274,24 @@ int spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Begin a zero-copy read.
+ *
+ * Control flow:
+ * - User calls spdk_bdev_zread_start().
+ * - Once the bdev module has read the data into a buffer, the user's io_complete_cb is called with
+ *   a bdev_io, and the user may call spdk_bdev_io_get_iovec() to retrieve data from the buffer.
+ * - User calls spdk_bdev_zread_finish() to indicate they are done with the buffer and the bdev_io.
+ */
+int spdk_bdev_zread_start(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+			  uint64_t offset, uint64_t nbytes,
+			  spdk_bdev_io_completion_cb io_complete_cb, void *cb_arg);
+
+/**
+ * Complete a zero-copy read and release bdev_io.
+ */
+int spdk_bdev_zread_finish(struct spdk_bdev_io *bdev_io);
+
+/**
  * Submit a write request to the bdev on the given channel.
  *
  * \param bdev Block device

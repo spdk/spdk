@@ -181,13 +181,6 @@ spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
 	}
 }
 
-void
-spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp)
-{
-	*iovp = NULL;
-	*iovcntp = 0;
-}
-
 int
 spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	       void *buf, uint64_t offset, uint64_t nbytes,
@@ -200,6 +193,20 @@ int
 spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
+int
+spdk_bdev_zread_start(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+		      uint64_t offset, uint64_t nbytes,
+		      spdk_bdev_io_completion_cb io_complete_cb, void *cb_arg)
+{
+	return 0;
+}
+
+int
+spdk_bdev_zread_finish(struct spdk_bdev_io *bdev_io)
 {
 	return 0;
 }
