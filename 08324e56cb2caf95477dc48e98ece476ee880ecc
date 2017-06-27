@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c09ec324_20d96a44",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T15:29:24Z",
+      "side": 1,
+      "message": "I recently discovered SPDK_CONTAINEROF() from spdk/util.h, Can we use it here?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 55
+      },
+      "revId": "08324e56cb2caf95477dc48e98ece476ee880ecc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
