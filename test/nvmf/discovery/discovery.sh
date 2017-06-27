@@ -38,8 +38,7 @@ bdevs="$bdevs $($rpc_py construct_null_bdev Null1 $NULL_BDEV_SIZE $NULL_BLOCK_SI
 
 modprobe -v nvme-rdma
 
-$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -p "*"
-$rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode2 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -s SPDK00000000000001 -n "$bdevs"
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -s SPDK00000000000001 -n "$bdevs"
 
 nvme discover -t rdma -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 
@@ -47,7 +46,6 @@ echo "Perform nvmf subsystem discovery via RPC"
 $rpc_py get_nvmf_subsystems
 
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
 
 trap - SIGINT SIGTERM EXIT
 

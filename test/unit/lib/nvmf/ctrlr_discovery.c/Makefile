@@ -33,7 +33,7 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-TEST_FILE = discovery_ut.c
+TEST_FILE = ctrlr_discovery_ut.c
 OTHER_FILES = subsystem.c
 
 include $(SPDK_ROOT_DIR)/mk/nvmf.unittest.mk

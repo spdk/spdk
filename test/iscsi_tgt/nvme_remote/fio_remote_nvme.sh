@@ -29,7 +29,7 @@ trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 waitforlisten $nvmfpid 5260
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
-$rpc_py construct_nvmf_subsystem Virtual nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -s SPDK00000000000001 -n "$bdevs"
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -s SPDK00000000000001 -n "$bdevs"
 echo "NVMf subsystem created."
 
 timing_enter start_iscsi_tgt
