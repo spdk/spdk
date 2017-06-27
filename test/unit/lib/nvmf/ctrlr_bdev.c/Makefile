@@ -33,6 +33,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-TEST_FILE = direct_ut.c
+TEST_FILE = ctrlr_bdev_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/nvmf.unittest.mk

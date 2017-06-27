@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "virtual.c"
+#include "ctrlr_bdev.c"
 
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
@@ -219,7 +219,7 @@ void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, 
 }
 
 static void
-nvmf_test_nvmf_virtual_ctrlr_get_log_page(void)
+nvmf_test_nvmf_bdev_ctrlr_get_log_page(void)
 {
 }
 
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 	}
 
 	if (CU_add_test(suite, "virtual_ctrlr_get_log_page",
-			nvmf_test_nvmf_virtual_ctrlr_get_log_page) == NULL) {
+			nvmf_test_nvmf_bdev_ctrlr_get_log_page) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

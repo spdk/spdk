@@ -69,12 +69,11 @@ $valgrind test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 
 $valgrind test/unit/lib/log/log.c/log_ut
 
-$valgrind test/unit/lib/nvmf/discovery.c/discovery_ut
 $valgrind test/unit/lib/nvmf/request.c/request_ut
 $valgrind test/unit/lib/nvmf/session.c/session_ut
 $valgrind test/unit/lib/nvmf/subsystem.c/subsystem_ut
-$valgrind test/unit/lib/nvmf/direct.c/direct_ut
-$valgrind test/unit/lib/nvmf/virtual.c/virtual_ut
+$valgrind test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
+$valgrind test/unit/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
 
 $valgrind test/unit/lib/scsi/dev.c/dev_ut
 $valgrind test/unit/lib/scsi/lun.c/lun_ut
