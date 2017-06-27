@@ -31,25 +31,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../../)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-CFLAGS += $(ENV_CFLAGS) -I.
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
-endif
+APP = vbdev_lvol_ut
 
-C_SRCS = bdev.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
+C_SRCS := vbdev_lvol_ut.c
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/lvol
 
-LIBNAME = bdev
+SPDK_LIB_LIST = log
 
-DIRS-y += error lvol malloc null nvme rpc split
+LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
 
-ifeq ($(OS),Linux)
-DIRS-y += aio
-endif
+all : $(APP)
 
-DIRS-$(CONFIG_RBD) += rbd
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

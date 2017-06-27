@@ -70,6 +70,7 @@ $valgrind test/unit/lib/scsi/scsi.c/scsi_ut
 $valgrind test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut
 
 $valgrind test/unit/lib/lvol/lvol.c/lvol_ut
+$valgrind test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
 
 $valgrind test/lib/iscsi/param/param_ut
 $valgrind test/lib/iscsi/target_node/target_node_ut test/lib/iscsi/target_node/target_node.conf
