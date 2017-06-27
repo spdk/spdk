@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5c0104f_e0daae82",
+        "filename": "dpdk",
+        "patchSetId": 25
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:50:13Z",
+      "side": 1,
+      "message": "Is this intended change?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43554964_937bbece",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:50:13Z",
+      "side": 1,
+      "message": "Can be in one line.",
+      "range": {
+        "startLine": 136,
+        "startChar": 1,
+        "endLine": 137,
+        "endChar": 12
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aca1f076_4ab27c3e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:50:13Z",
+      "side": 1,
+      "message": "Pls remove not needed brackets.",
+      "range": {
+        "startLine": 157,
+        "startChar": 10,
+        "endLine": 157,
+        "endChar": 11
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd435312_06054e82",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:50:13Z",
+      "side": 1,
+      "message": "Just checked that struct virtio_scsi_event is packed, so __alignof__ is not needed.",
+      "range": {
+        "startLine": 159,
+        "startChar": 36,
+        "endLine": 159,
+        "endChar": 57
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a686545c_c7cf0cf1",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:50:13Z",
+      "side": 1,
+      "message": "not needed.",
+      "range": {
+        "startLine": 173,
+        "startChar": 2,
+        "endLine": 173,
+        "endChar": 9
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2d5099e_af9f365e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:50:13Z",
+      "side": 1,
+      "message": "Is this astyle/checkformat whim? If not, can whole line be utilized?",
+      "range": {
+        "startLine": 236,
+        "startChar": 1,
+        "endLine": 242,
+        "endChar": 4
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
