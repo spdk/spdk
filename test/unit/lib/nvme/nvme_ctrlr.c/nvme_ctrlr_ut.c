@@ -1401,23 +1401,25 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	int point_payload = 1;
 	int slot = 0;
 	int ret = 0;
+	int sc;
+	enum spdk_nvme_fw_commit_action commit_action = SPDK_NVME_FW_COMMIT_REPLACE_IMG;
 
 	/* Set invalid size check function return value */
 	set_size = 5;
-	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &sc);
 	CU_ASSERT(ret == -1);
 
 	/* When payload is NULL but set_size < min_page_size */
 	set_size = 4;
 	ctrlr.min_page_size = 5;
-	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &sc);
 	CU_ASSERT(ret == -1);
 
 	/* When payload not NULL but min_page_size is 0 */
 	set_size = 4;
 	ctrlr.min_page_size = 0;
 	payload = &point_payload;
-	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &sc);
 	CU_ASSERT(ret == -1);
 
 	/* Check firmware image download when payload not NULL and min_page_size not 0 , status.cpl value is 1 */
@@ -1425,7 +1427,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	set_size = 4;
 	ctrlr.min_page_size = 5;
 	payload = &point_payload;
-	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &sc);
 	CU_ASSERT(ret == -ENXIO);
 
 	/* Check firmware image download and set status.cpl value is 0 */
@@ -1433,7 +1435,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	set_size = 4;
 	ctrlr.min_page_size = 5;
 	payload = &point_payload;
-	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &sc);
 	CU_ASSERT(ret == -1);
 
 	/* Check firmware commit */
@@ -1443,7 +1445,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	set_size = 4;
 	ctrlr.min_page_size = 5;
 	payload = &point_payload;
-	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &sc);
 	CU_ASSERT(ret == -ENXIO);
 
 	/* Set size check firmware download and firmware commit */
@@ -1453,7 +1455,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	set_size = 4;
 	ctrlr.min_page_size = 5;
 	payload = &point_payload;
-	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot);
+	ret = spdk_nvme_ctrlr_update_firmware(&ctrlr, payload, set_size, slot, commit_action, &sc);
 	CU_ASSERT(ret == 0);
 }
 
