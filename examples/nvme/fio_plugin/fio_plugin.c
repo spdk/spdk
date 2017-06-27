@@ -45,7 +45,12 @@
 #define NVME_IO_ALIGN		4096
 
 static bool spdk_env_initialized;
-static int g_mem_size = 512;
+
+struct spdk_fio_options {
+	void	*pad;	/* off1 used in option descriptions may not be 0 */
+	int	mem_size;
+	int	shm_id;
+};
 
 struct spdk_fio_request {
 	struct io_u		*io;
@@ -186,6 +191,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static int spdk_fio_setup(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
+	struct spdk_fio_options *fio_options = td->eo;
 	struct spdk_env_opts opts;
 	struct fio_file *f;
 	char *p;
@@ -215,7 +221,8 @@ static int spdk_fio_setup(struct thread_data *td)
 	if (!spdk_env_initialized) {
 		spdk_env_opts_init(&opts);
 		opts.name = "fio";
-		opts.mem_size = g_mem_size;
+		opts.mem_size = fio_options->mem_size;
+		opts.shm_id = fio_options->shm_id;
 		spdk_env_init(&opts);
 		spdk_env_initialized = true;
 		spdk_unaffinitize_thread();
@@ -473,15 +480,6 @@ static void spdk_fio_cleanup(struct thread_data *td)
 	pthread_mutex_unlock(&mutex);
 }
 
-static int
-str_mem_size_cb(void *data, const char *input)
-{
-	g_mem_size = atoi(input);
-	if (!g_mem_size)
-		g_mem_size = 512;
-	return 0;
-}
-
 /* This function enables addition of SPDK parameters to the fio config
  * Adding new parameters by defining them here and defining a callback
  * function to read the parameter value. */
@@ -489,8 +487,18 @@ static struct fio_option options[] = {
 	{
 		.name		= "mem_size_mb",
 		.lname		= "Memory size in MB",
-		.type		= FIO_OPT_STR_STORE,
-		.cb		= str_mem_size_cb,
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, mem_size),
+		.def		= "512",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "shm_id",
+		.lname		= "shared memory ID",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, shm_id),
+		.def		= "-1",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
@@ -517,7 +525,7 @@ struct ioengine_ops ioengine = {
 	.io_u_free		= spdk_fio_io_u_free,
 	.flags			= FIO_RAWIO | FIO_NOEXTEND | FIO_NODISKUTIL | FIO_MEMALIGN,
 	.options		= options,
-	.option_struct_size	= 1,
+	.option_struct_size	= sizeof(struct spdk_fio_options),
 };
 
 static void fio_init fio_spdk_register(void)
