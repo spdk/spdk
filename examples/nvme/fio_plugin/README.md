@@ -35,13 +35,18 @@ directory as this README).
 
 To select NVMe devices, you simply pass an identifier as the filename in the format
 
-    'key=value [key=value] ... ns=value'
+    filename=key=value [key=value] ... ns=value
 
 Do not have any ':' in filename, otherwise it will be spilt into several file names. Also the
-NVMe namespaces start at 1, not 0! And it should be put on the end. For example,
-   1. For local PCIe NVMe device  - 'trtype=PCIe traddr=0000.04.00.0 ns=1'. traddr for local
-      NVMe device should use this format: domain.bus.slot.func
-   2. For devices exported by NVMe-oF target, 'trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1'
+NVMe namespaces start at 1, not 0! The namespace must also be specified at the end.
+
+Local PCIe NVMe devices will be specified using a PCI domain.bus.slot.func traddr format.  For example:
+
+    filename=trtype=PCIe traddr=0000.04.00.0 ns=1
+
+Remote devices accessed via NVMe over Fabrics will be specified based on the following example:
+
+    filename=trtype=RDMA adrfam=IPv4 traddr=192.168.100.8 trsvcid=4420 ns=1
 
 Currently the SPDK fio plugin is limited to thread usage model, so fio jobs must also specify thread=1
 when using the SPDK fio plugin.
