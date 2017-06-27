@@ -148,21 +148,24 @@ ReactorMask 0xF000000
 the [Subsystem] section of the configuration file. For example,
 to assign the Subsystems to lcores 25 and 26:
 ~~~{.sh}
+[Nvme]
+TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme0
+TransportID "trtype:PCIe traddr:0000:82:00.0" Nvme1
+
 [Subsystem1]
 NQN nqn.2016-06.io.spdk:cnode1
 Core 25
-Mode Direct
 Listen RDMA 192.168.100.8:4420
 Host nqn.2016-06.io.spdk:init
-NVMe 0000:81:00.0
+SN SPDK00000000000001
+Namespace Nvme0n1
 
 [Subsystem2]
 NQN nqn.2016-06.io.spdk:cnode2
 Core 26
-Mode Direct
 Listen RDMA 192.168.100.9:4420
-Host nqn.2016-06.io.spdk:init
-NVMe 0000:86:00.0
+SN SPDK00000000000002
+Namespace Nvme1n1
 ~~~
 SPDK executes all code for an NVMe-oF subsystem on a single thread. Different subsystems may execute
 on different threads. SPDK gives the user maximum control to determine how many CPU cores are used
@@ -178,15 +181,13 @@ file as follows:
 
 **Create malloc LUNs:** See @ref bdev_getting_started for details on creating Malloc block devices.
 
-**Create a virtual controller:** Virtual mode allows any SPDK block device to be presented as an
-NVMe-oF namespace. These block devices don't need to be NVMe devices. For example, to create a
-virtual controller for malloc LUNs named Malloc0 and Malloc1:
+**Create a virtual controller:** Any device may be presented as a namespace. For example, to create a
+virtual controller with two namespaces backed by the malloc LUNs named Malloc0 and Malloc1:
 ~~~{.sh}
 # Virtual controller
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
   Core 0
-  Mode Virtual
   Listen RDMA 192.168.2.21:4420
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001

@@ -35,7 +35,7 @@
 
 #include "spdk_cunit.h"
 
-#include "virtual.c"
+#include "ctrlr_bdev.c"
 
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
