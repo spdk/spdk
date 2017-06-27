@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cd0258c_17a702eb",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T16:29:07Z",
+      "side": 1,
+      "message": "This should be spdk_vhost_scsi",
+      "range": {
+        "startLine": 28,
+        "startChar": 33,
+        "endLine": 28,
+        "endChar": 43
+      },
+      "revId": "b3d61075e6891a1c1a542f5a90bd3e5598e5a7fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d002c81d_238e1d75",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T16:29:07Z",
+      "side": 1,
+      "message": "You should mention default value here or make size mandatory.",
+      "range": {
+        "startLine": 47,
+        "startChar": 53,
+        "endLine": 47,
+        "endChar": 61
+      },
+      "revId": "b3d61075e6891a1c1a542f5a90bd3e5598e5a7fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ead0570d_bb996496",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T16:29:07Z",
+      "side": 1,
+      "message": "This make bellow condition in if [[ ... ]] never true.\n\nYou can change line 755\n - echo -n \"$fname \"; \\\n + echo -n \" $fname\"; \\\n\nand remove line 250 from autotest.sh",
+      "range": {
+        "startLine": 782,
+        "startChar": 1,
+        "endLine": 782,
+        "endChar": 15
+      },
+      "revId": "b3d61075e6891a1c1a542f5a90bd3e5598e5a7fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
