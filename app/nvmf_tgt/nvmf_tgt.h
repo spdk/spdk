@@ -75,12 +75,11 @@ void nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *subsystem);
 
 struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(const char *name,
 		enum spdk_nvmf_subtype subtype,
-		enum spdk_nvmf_subsystem_mode mode,
 		uint32_t lcore);
 
 int
 spdk_nvmf_construct_subsystem(const char *name,
-			      const char *mode, int32_t lcore,
+			      int32_t lcore,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], const char *bdf,
 			      const char *sn, int num_devs, char *dev_list[]);

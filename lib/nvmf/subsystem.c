@@ -179,7 +179,6 @@ spdk_nvmf_valid_nqn(const char *nqn)
 struct spdk_nvmf_subsystem *
 spdk_nvmf_create_subsystem(const char *nqn,
 			   enum spdk_nvmf_subtype type,
-			   enum spdk_nvmf_subsystem_mode mode,
 			   void *cb_ctx,
 			   spdk_nvmf_subsystem_connect_fn connect_cb,
 			   spdk_nvmf_subsystem_disconnect_fn disconnect_cb)
@@ -199,7 +198,6 @@ spdk_nvmf_create_subsystem(const char *nqn,
 
 	subsystem->id = g_nvmf_tgt.current_subsystem_id;
 	subsystem->subtype = type;
-	subsystem->mode = mode;
 	subsystem->cb_ctx = cb_ctx;
 	subsystem->connect_cb = connect_cb;
 	subsystem->disconnect_cb = disconnect_cb;
@@ -210,11 +208,8 @@ spdk_nvmf_create_subsystem(const char *nqn,
 
 	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		subsystem->ops = &spdk_nvmf_discovery_ctrlr_ops;
-	} else if (mode == NVMF_SUBSYSTEM_MODE_DIRECT) {
-		subsystem->ops = &spdk_nvmf_direct_ctrlr_ops;
-		subsystem->dev.direct.outstanding_admin_cmd_count = 0;
 	} else {
-		subsystem->ops = &spdk_nvmf_virtual_ctrlr_ops;
+		subsystem->ops = &spdk_nvmf_bdev_ctrlr_ops;
 	}
 
 	TAILQ_INSERT_TAIL(&g_nvmf_tgt.subsystems, subsystem, entries);
@@ -369,16 +364,6 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	return 0;
 }
 
-int
-nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-			 struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr)
-{
-	subsystem->dev.direct.ctrlr = ctrlr;
-	subsystem->dev.direct.pci_addr = *pci_addr;
-
-	return 0;
-}
-
 static void spdk_nvmf_ctrlr_hot_remove(void *remove_ctx)
 {
 	struct spdk_nvmf_subsystem *subsystem = (struct spdk_nvmf_subsystem *)remove_ctx;
@@ -393,12 +378,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	uint32_t i;
 	int rc;
 
-	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
-
 	if (nsid == 0) {
 		/* NSID not specified - find a free index */
 		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
-			if (subsystem->dev.virt.ns_list[i] == NULL) {
+			if (subsystem->dev.ns_list[i] == NULL) {
 				nsid = i + 1;
 				break;
 			}
@@ -415,14 +398,14 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			return 0;
 		}
 
-		if (subsystem->dev.virt.ns_list[i]) {
+		if (subsystem->dev.ns_list[i]) {
 			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", nsid);
 			return 0;
 		}
 	}
 
 	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ctrlr_hot_remove, subsystem,
-			    &subsystem->dev.virt.desc[i]);
+			    &subsystem->dev.desc[i]);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
@@ -434,19 +417,15 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		      spdk_bdev_get_name(bdev),
 		      nsid);
 
-	subsystem->dev.virt.ns_list[i] = bdev;
-	subsystem->dev.virt.max_nsid = spdk_max(subsystem->dev.virt.max_nsid, nsid);
+	subsystem->dev.ns_list[i] = bdev;
+	subsystem->dev.max_nsid = spdk_max(subsystem->dev.max_nsid, nsid);
 	return nsid;
 }
 
 const char *
 spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	if (subsystem->mode != NVMF_SUBSYSTEM_MODE_VIRTUAL) {
-		return NULL;
-	}
-
-	return subsystem->dev.virt.sn;
+	return subsystem->dev.sn;
 }
 
 int
@@ -454,11 +433,7 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 {
 	size_t len, max_len;
 
-	if (subsystem->mode != NVMF_SUBSYSTEM_MODE_VIRTUAL) {
-		return -1;
-	}
-
-	max_len = sizeof(subsystem->dev.virt.sn) - 1;
+	max_len = sizeof(subsystem->dev.sn) - 1;
 	len = strlen(sn);
 	if (len > max_len) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid sn \"%s\": length %zu > max %zu\n",
@@ -466,7 +441,7 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 		return -1;
 	}
 
-	snprintf(subsystem->dev.virt.sn, sizeof(subsystem->dev.virt.sn), "%s", sn);
+	snprintf(subsystem->dev.sn, sizeof(subsystem->dev.sn), "%s", sn);
 
 	return 0;
 }
@@ -484,13 +459,4 @@ nvmf_subtype_t
 spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subtype;
-}
-
-/* Workaround for astyle formatting bug */
-typedef enum spdk_nvmf_subsystem_mode nvmf_mode_t;
-
-nvmf_mode_t
-spdk_nvmf_subsystem_get_mode(struct spdk_nvmf_subsystem *subsystem)
-{
-	return subsystem->mode;
 }

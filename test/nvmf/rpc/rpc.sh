@@ -32,8 +32,7 @@ else
 	times=3
 fi
 
-# get all available nvme bdf info.
-bdfs=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}')
+bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 # do frequent add delete.
 for i in `seq 1 $times`
@@ -41,7 +40,7 @@ do
 	j=0
 	for bdf in $bdfs; do
 		let j=j+1
-		$rpc_py construct_nvmf_subsystem Direct nqn.2016-06.io.spdk:cnode$j "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -p "$bdf"
+		$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$j "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" '' -s SPDK00000000000001 -n "$bdevs"
 	done
 
 	n=$j
