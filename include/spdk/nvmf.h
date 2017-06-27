@@ -59,18 +59,12 @@ struct spdk_nvmf_session;
 struct spdk_nvmf_conn;
 struct spdk_nvmf_request;
 struct spdk_bdev;
-struct spdk_nvme_ctrlr;
 struct spdk_nvmf_request;
 struct spdk_nvmf_conn;
 struct spdk_nvmf_ctrlr_ops;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_conn *conn);
-
-enum spdk_nvmf_subsystem_mode {
-	NVMF_SUBSYSTEM_MODE_DIRECT	= 0,
-	NVMF_SUBSYSTEM_MODE_VIRTUAL	= 1,
-};
 
 struct spdk_nvmf_listen_addr {
 	char					*traddr;
@@ -98,25 +92,15 @@ struct spdk_nvmf_subsystem_allowed_listener {
 struct spdk_nvmf_subsystem {
 	uint32_t id;
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-	enum spdk_nvmf_subsystem_mode mode;
 	enum spdk_nvmf_subtype subtype;
 	bool is_removed;
-	union {
-		struct {
-			struct spdk_nvme_ctrlr	*ctrlr;
-			struct spdk_nvme_qpair	*io_qpair;
-			struct spdk_pci_addr	pci_addr;
-			struct spdk_poller	*admin_poller;
-			int32_t			outstanding_admin_cmd_count;
-		} direct;
 
-		struct {
-			char	sn[MAX_SN_LEN + 1];
-			struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
-			struct spdk_bdev_desc *desc[MAX_VIRTUAL_NAMESPACE];
-			struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
-			uint32_t max_nsid;
-		} virt;
+	struct {
+		char sn[MAX_SN_LEN + 1];
+		struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
+		struct spdk_bdev_desc *desc[MAX_VIRTUAL_NAMESPACE];
+		struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
+		uint32_t max_nsid;
 	} dev;
 
 	const struct spdk_nvmf_ctrlr_ops *ops;
@@ -136,7 +120,6 @@ struct spdk_nvmf_subsystem {
 
 struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,
 		enum spdk_nvmf_subtype type,
-		enum spdk_nvmf_subsystem_mode mode,
 		void *cb_ctx,
 		spdk_nvmf_subsystem_connect_fn connect_cb,
 		spdk_nvmf_subsystem_disconnect_fn disconnect_cb);
@@ -166,9 +149,6 @@ bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 				 const char *host_nqn);
 
-int nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-			     struct spdk_nvme_ctrlr *ctrlr, const struct spdk_pci_addr *pci_addr);
-
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
 /**
@@ -190,7 +170,6 @@ int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char
 
 const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
-enum spdk_nvmf_subsystem_mode spdk_nvmf_subsystem_get_mode(struct spdk_nvmf_subsystem *subsystem);
 
 void spdk_nvmf_acceptor_poll(void);
 

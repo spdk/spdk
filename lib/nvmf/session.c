@@ -640,7 +640,7 @@ spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
 	struct spdk_nvmf_conn	*conn, *tmp;
 	struct spdk_nvmf_subsystem 	*subsys = session->subsys;
 
-	if (subsys->is_removed && subsys->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL) {
+	if (subsys->is_removed) {
 		if (session->aer_req) {
 			struct spdk_nvmf_request *aer = session->aer_req;
 
