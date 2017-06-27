@@ -119,13 +119,6 @@
 # - Core may be set or not. If set, the specified subsystem will run on
 #   it, otherwise each subsystem will use a round-robin method to allocate
 #   core from available cores,  lcores are numbered starting at 0.
-# - Mode may be either "Direct" or "Virtual". Direct means that physical
-#   devices attached to the target will be presented to hosts as if they
-#   were directly attached to the host. No software emulation or command
-#   validation is performed. Virtual means that an NVMe controller is
-#   emulated in software and the namespaces it contains map to block devices
-#   on the target system. These block devices do not need to be NVMe devices.
-#   Only Direct mode is currently supported.
 # - Between 1 and 255 Listen directives are allowed. This defines
 #   the addresses on which new connections may be accepted. The format
 #   is Listen <type> <address> where type currently can only be RDMA.
@@ -136,26 +129,24 @@
 #   PCI domain:bus:device.function can be replaced by "*" to indicate
 #   any PCI device.
 
-# Direct controller
+# Namespaces backed by physical NVMe devices
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
   Core 0
-  Mode Direct
   Listen RDMA 15.15.15.2:4420
-  Host nqn.2016-06.io.spdk:init
-  NVMe 0000:00:00.0
-
-# Multiple subsystems are allowed.
-# Virtual controller
-[Subsystem2]
-  NQN nqn.2016-06.io.spdk:cnode2
-  Core 0
-  Mode Virtual
-  Listen RDMA 192.168.2.21:4420
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001
   Namespace Nvme0n1
   Namespace Nvme1n1
+
+# Multiple subsystems are allowed.
+# Namespaces backed by non-NVMe devices
+[Subsystem2]
+  NQN nqn.2016-06.io.spdk:cnode2
+  Core 0
+  Listen RDMA 192.168.2.21:4420
+  Host nqn.2016-06.io.spdk:init
+  SN SPDK00000000000002
   Namespace Malloc0
   Namespace Malloc1
   Namespace AIO0

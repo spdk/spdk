@@ -36,8 +36,7 @@
 #include "spdk_cunit.h"
 #include "subsystem.h"
 
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_direct_ctrlr_ops;
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops;
+const struct spdk_nvmf_ctrlr_ops spdk_nvmf_bdev_ctrlr_ops;
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_discovery_ctrlr_ops;
 
 #include "subsystem.c"
@@ -197,9 +196,8 @@ static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {
-		.mode = NVMF_SUBSYSTEM_MODE_VIRTUAL,
-		.dev.virt.max_nsid = 0,
-		.dev.virt.ns_list = {},
+		.dev.max_nsid = 0,
+		.dev.ns_list = {},
 	};
 	struct spdk_bdev bdev1 = {}, bdev2 = {};
 	uint32_t nsid;
@@ -208,19 +206,19 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, 0);
 	/* NSID 1 is the first unused ID */
 	CU_ASSERT(nsid == 1);
-	CU_ASSERT(subsystem.dev.virt.max_nsid == 1);
-	CU_ASSERT(subsystem.dev.virt.ns_list[nsid - 1] == &bdev1);
+	CU_ASSERT(subsystem.dev.max_nsid == 1);
+	CU_ASSERT(subsystem.dev.ns_list[nsid - 1] == &bdev1);
 
 	/* Request a specific NSID */
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
 	CU_ASSERT(nsid == 5);
-	CU_ASSERT(subsystem.dev.virt.max_nsid == 5);
-	CU_ASSERT(subsystem.dev.virt.ns_list[nsid - 1] == &bdev2);
+	CU_ASSERT(subsystem.dev.max_nsid == 5);
+	CU_ASSERT(subsystem.dev.ns_list[nsid - 1] == &bdev2);
 
 	/* Request an NSID that is already in use */
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
 	CU_ASSERT(nsid == 0);
-	CU_ASSERT(subsystem.dev.virt.max_nsid == 5);
+	CU_ASSERT(subsystem.dev.max_nsid == 5);
 }
 
 static void
@@ -232,7 +230,7 @@ nvmf_test_create_subsystem(void)
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
 	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
-					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
+					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_delete_subsystem(subsystem);
@@ -243,7 +241,7 @@ nvmf_test_create_subsystem(void)
 	nqn[223] = '\0';
 	CU_ASSERT(strlen(nqn) == 223);
 	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
-					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
+					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	spdk_nvmf_delete_subsystem(subsystem);
@@ -254,7 +252,7 @@ nvmf_test_create_subsystem(void)
 	nqn[224] = '\0';
 	CU_ASSERT(strlen(nqn) == 224);
 	subsystem = spdk_nvmf_create_subsystem(nqn, SPDK_NVMF_SUBTYPE_NVME,
-					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
+					       NULL, NULL, NULL);
 	CU_ASSERT(subsystem == NULL);
 }
 
