@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1495adb9_51ce3664",
+        "filename": "doc/vhost.md",
+        "patchSetId": 25
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T14:51:31Z",
+      "side": 0,
+      "message": "This is still true.",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 156,
+        "endChar": 42
+      },
+      "revId": "e3ff3e4e599db4d7a8a5034231da72e48b86ab81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
