@@ -137,6 +137,76 @@
       "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0251762d_d134975c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-27T16:50:55Z",
+      "side": 1,
+      "message": "I can squash it to 4 lines instead of 7, will that be ok?",
+      "parentUuid": "d2d5099e_af9f365e",
+      "range": {
+        "startLine": 236,
+        "startChar": 1,
+        "endLine": 242,
+        "endChar": 4
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdcf8b9c_19b22d10",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-27T16:50:55Z",
+      "side": 1,
+      "message": "note to self:\nthis should surely be changed, but probably in a separate patch",
+      "range": {
+        "startLine": 870,
+        "startChar": 29,
+        "endLine": 870,
+        "endChar": 34
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f41ee276_6ff53f63",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 897,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-27T16:50:55Z",
+      "side": 1,
+      "message": "note to self:\nis this swap intended?",
+      "range": {
+        "startLine": 897,
+        "startChar": 32,
+        "endLine": 897,
+        "endChar": 43
+      },
+      "revId": "0226aea7a794aa7b1b0d705e7b6efc6b63a5a19d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
