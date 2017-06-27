@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = direct.c discovery.c request.c session.c subsystem.c virtual.c
+DIRS-y = request.c session.c subsystem.c ctrlr_discovery.c ctrlr_bdev.c
 
 .PHONY: all clean $(DIRS-y)
 

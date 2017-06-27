@@ -49,7 +49,7 @@
 
 #include "spdk_internal/log.h"
 
-#define MODEL_NUMBER "SPDK Virtual Controller"
+#define MODEL_NUMBER "SPDK bdev Controller"
 #define FW_VERSION "FFFFFFFF"
 
 /* read command dword 12 */
@@ -61,12 +61,12 @@ struct __attribute__((packed)) nvme_read_cdw12 {
 	uint8_t		lr	: 1;	/* limited retry */
 };
 
-static void nvmf_virtual_set_dsm(struct spdk_nvmf_session *session)
+static void nvmf_bdev_set_dsm(struct spdk_nvmf_session *session)
 {
 	uint32_t i;
 
-	for (i = 0; i < session->subsys->dev.virt.max_nsid; i++) {
-		struct spdk_bdev *bdev = session->subsys->dev.virt.ns_list[i];
+	for (i = 0; i < session->subsys->dev.max_nsid; i++) {
+		struct spdk_bdev *bdev = session->subsys->dev.ns_list[i];
 
 		if (bdev == NULL) {
 			continue;
@@ -86,7 +86,7 @@ static void nvmf_virtual_set_dsm(struct spdk_nvmf_session *session)
 }
 
 static void
-nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
+nvmf_bdev_ctrlr_get_data(struct spdk_nvmf_session *session)
 {
 	struct spdk_nvmf_subsystem *subsys = session->subsys;
 
@@ -110,22 +110,22 @@ nvmf_virtual_ctrlr_get_data(struct spdk_nvmf_session *session)
 	session->vcdata.cqes.min = 0x04;
 	session->vcdata.cqes.max = 0x04;
 	session->vcdata.maxcmd = 1024;
-	session->vcdata.nn = subsys->dev.virt.max_nsid;
+	session->vcdata.nn = subsys->dev.max_nsid;
 	session->vcdata.vwc.present = 1;
 	session->vcdata.sgls.supported = 1;
 	strncpy(session->vcdata.subnqn, session->subsys->subnqn, sizeof(session->vcdata.subnqn));
-	nvmf_virtual_set_dsm(session);
+	nvmf_bdev_set_dsm(session);
 }
 
 static void
-nvmf_virtual_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
+nvmf_bdev_ctrlr_poll_for_completions(struct spdk_nvmf_subsystem *subsystem)
 {
 	return;
 }
 
 static void
-nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
-				void *cb_arg)
+nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
+			     void *cb_arg)
 {
 	struct spdk_nvmf_request 	*req = cb_arg;
 	struct spdk_nvme_cpl 		*response = &req->rsp->nvme_cpl;
@@ -145,7 +145,7 @@ nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static int
-nvmf_virtual_ctrlr_get_log_page(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
 	uint8_t lid;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -190,13 +190,13 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	struct spdk_bdev *bdev;
 	uint64_t num_blocks;
 
-	if (cmd->nsid > subsystem->dev.virt.max_nsid || cmd->nsid == 0) {
+	if (cmd->nsid > subsystem->dev.max_nsid || cmd->nsid == 0) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	bdev = subsystem->dev.virt.ns_list[cmd->nsid - 1];
+	bdev = subsystem->dev.ns_list[cmd->nsid - 1];
 
 	if (bdev == NULL) {
 		memset(nsdata, 0, sizeof(*nsdata));
@@ -236,13 +236,13 @@ identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	num_ns = subsystem->dev.virt.max_nsid;
+	num_ns = subsystem->dev.max_nsid;
 
 	for (i = 1; i <= num_ns; i++) {
 		if (i <= cmd->nsid) {
 			continue;
 		}
-		if (subsystem->dev.virt.ns_list[i - 1] == NULL) {
+		if (subsystem->dev.ns_list[i - 1] == NULL) {
 			continue;
 		}
 		ns_list->ns_list[count++] = i;
@@ -255,7 +255,7 @@ identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static int
-nvmf_virtual_ctrlr_identify(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_identify(struct spdk_nvmf_request *req)
 {
 	uint8_t cns;
 	struct spdk_nvmf_session *session = req->conn->sess;
@@ -287,7 +287,7 @@ nvmf_virtual_ctrlr_identify(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_virtual_ctrlr_abort(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_abort(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_session *session = req->conn->sess;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
@@ -334,7 +334,7 @@ nvmf_virtual_ctrlr_abort(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_get_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -361,7 +361,7 @@ nvmf_virtual_ctrlr_get_features(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_set_features(struct spdk_nvmf_request *req)
 {
 	uint8_t feature;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
@@ -385,7 +385,7 @@ nvmf_virtual_ctrlr_set_features(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_virtual_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -395,15 +395,15 @@ nvmf_virtual_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
-		return nvmf_virtual_ctrlr_get_log_page(req);
+		return nvmf_bdev_ctrlr_get_log_page(req);
 	case SPDK_NVME_OPC_IDENTIFY:
-		return nvmf_virtual_ctrlr_identify(req);
+		return nvmf_bdev_ctrlr_identify(req);
 	case SPDK_NVME_OPC_ABORT:
-		return nvmf_virtual_ctrlr_abort(req);
+		return nvmf_bdev_ctrlr_abort(req);
 	case SPDK_NVME_OPC_GET_FEATURES:
-		return nvmf_virtual_ctrlr_get_features(req);
+		return nvmf_bdev_ctrlr_get_features(req);
 	case SPDK_NVME_OPC_SET_FEATURES:
-		return nvmf_virtual_ctrlr_set_features(req);
+		return nvmf_bdev_ctrlr_set_features(req);
 	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
 		return spdk_nvmf_session_async_event_request(req);
 	case SPDK_NVME_OPC_KEEP_ALIVE:
@@ -434,8 +434,8 @@ nvmf_virtual_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 }
 
 static int
-nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		       struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t lba_address;
 	uint64_t blockcnt;
@@ -468,14 +468,14 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	if (cmd->opc == SPDK_NVME_OPC_READ) {
 		spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_read(desc, ch, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
+		if (spdk_bdev_read(desc, ch, req->data, offset, req->length, nvmf_bdev_ctrlr_complete_cmd,
 				   req)) {
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	} else {
 		spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_write(desc, ch, req->data, offset, req->length, nvmf_virtual_ctrlr_complete_cmd,
+		if (spdk_bdev_write(desc, ch, req->data, offset, req->length, nvmf_bdev_ctrlr_complete_cmd,
 				    req)) {
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -486,14 +486,14 @@ nvmf_virtual_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 }
 
 static int
-nvmf_virtual_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			     struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	uint64_t nbytes;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
 	nbytes = spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev);
-	if (spdk_bdev_flush(desc, ch, 0, nbytes, nvmf_virtual_ctrlr_complete_cmd, req)) {
+	if (spdk_bdev_flush(desc, ch, 0, nbytes, nvmf_bdev_ctrlr_complete_cmd, req)) {
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -501,8 +501,8 @@ nvmf_virtual_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc
 }
 
 static int
-nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			   struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	int i;
 	uint32_t attribute;
@@ -533,7 +533,7 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			to_be64(&unmap[i].lba, dsm_range[i].starting_lba);
 			to_be32(&unmap[i].block_count, dsm_range[i].length);
 		}
-		if (spdk_bdev_unmap(desc, ch, unmap, nr, nvmf_virtual_ctrlr_complete_cmd, req)) {
+		if (spdk_bdev_unmap(desc, ch, unmap, nr, nvmf_bdev_ctrlr_complete_cmd, req)) {
 			free(unmap);
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -549,11 +549,11 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 }
 
 static int
-nvmf_virtual_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-				    struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
 	if (spdk_bdev_nvme_io_passthru(desc, ch, &req->cmd->nvme_cmd, req->data, req->length,
-				       nvmf_virtual_ctrlr_complete_cmd, req)) {
+				       nvmf_bdev_ctrlr_complete_cmd, req)) {
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -563,7 +563,7 @@ nvmf_virtual_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_des
 }
 
 static int
-nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
+nvmf_bdev_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	uint32_t nsid;
 	struct spdk_bdev *bdev;
@@ -577,78 +577,78 @@ nvmf_virtual_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
 
-	if (nsid > subsystem->dev.virt.max_nsid || nsid == 0) {
+	if (nsid > subsystem->dev.max_nsid || nsid == 0) {
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	bdev = subsystem->dev.virt.ns_list[nsid - 1];
+	bdev = subsystem->dev.ns_list[nsid - 1];
 	if (bdev == NULL) {
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	desc = subsystem->dev.virt.desc[nsid - 1];
-	ch = subsystem->dev.virt.ch[nsid - 1];
+	desc = subsystem->dev.desc[nsid - 1];
+	ch = subsystem->dev.ch[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE:
-		return nvmf_virtual_ctrlr_rw_cmd(bdev, desc, ch, req);
+		return nvmf_bdev_ctrlr_rw_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_FLUSH:
-		return nvmf_virtual_ctrlr_flush_cmd(bdev, desc, ch, req);
+		return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
-		return nvmf_virtual_ctrlr_dsm_cmd(bdev, desc, ch, req);
+		return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
 	default:
-		return nvmf_virtual_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
 }
 
 static int
-nvmf_virtual_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
+nvmf_bdev_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_io_channel *ch;
 	uint32_t i;
 
-	for (i = 0; i < subsystem->dev.virt.max_nsid; i++) {
-		bdev = subsystem->dev.virt.ns_list[i];
+	for (i = 0; i < subsystem->dev.max_nsid; i++) {
+		bdev = subsystem->dev.ns_list[i];
 		if (bdev == NULL) {
 			continue;
 		}
 
-		ch = spdk_bdev_get_io_channel(subsystem->dev.virt.desc[i]);
+		ch = spdk_bdev_get_io_channel(subsystem->dev.desc[i]);
 		if (ch == NULL) {
 			SPDK_ERRLOG("io_channel allocation failed\n");
 			return -1;
 		}
-		subsystem->dev.virt.ch[i] = ch;
+		subsystem->dev.ch[i] = ch;
 	}
 
 	return 0;
 }
 
 static void
-nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
+nvmf_bdev_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 {
 	uint32_t i;
 
-	for (i = 0; i < subsystem->dev.virt.max_nsid; i++) {
-		if (subsystem->dev.virt.ns_list[i]) {
-			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
-			spdk_bdev_close(subsystem->dev.virt.desc[i]);
-			subsystem->dev.virt.ch[i] = NULL;
-			subsystem->dev.virt.ns_list[i] = NULL;
+	for (i = 0; i < subsystem->dev.max_nsid; i++) {
+		if (subsystem->dev.ns_list[i]) {
+			spdk_put_io_channel(subsystem->dev.ch[i]);
+			spdk_bdev_close(subsystem->dev.desc[i]);
+			subsystem->dev.ch[i] = NULL;
+			subsystem->dev.ns_list[i] = NULL;
 		}
 	}
-	subsystem->dev.virt.max_nsid = 0;
+	subsystem->dev.max_nsid = 0;
 }
 
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_virtual_ctrlr_ops = {
-	.attach				= nvmf_virtual_ctrlr_attach,
-	.ctrlr_get_data			= nvmf_virtual_ctrlr_get_data,
-	.process_admin_cmd		= nvmf_virtual_ctrlr_process_admin_cmd,
-	.process_io_cmd			= nvmf_virtual_ctrlr_process_io_cmd,
-	.poll_for_completions		= nvmf_virtual_ctrlr_poll_for_completions,
-	.detach				= nvmf_virtual_ctrlr_detach,
+const struct spdk_nvmf_ctrlr_ops spdk_nvmf_bdev_ctrlr_ops = {
+	.attach				= nvmf_bdev_ctrlr_attach,
+	.ctrlr_get_data			= nvmf_bdev_ctrlr_get_data,
+	.process_admin_cmd		= nvmf_bdev_ctrlr_process_admin_cmd,
+	.process_io_cmd			= nvmf_bdev_ctrlr_process_io_cmd,
+	.poll_for_completions		= nvmf_bdev_ctrlr_poll_for_completions,
+	.detach				= nvmf_bdev_ctrlr_detach,
 };
