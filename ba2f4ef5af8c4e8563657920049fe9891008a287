@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6d545ef_ceeb8d09",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-27T17:10:56Z",
+      "side": 1,
+      "message": "why move this line down to here, instead of just keeping it where it was and removing the kill_stub part?",
+      "revId": "ba2f4ef5af8c4e8563657920049fe9891008a287",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
