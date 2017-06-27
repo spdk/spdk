@@ -16,6 +16,24 @@
       "revId": "aaf804ab4bf59b68582dd32bd2507a403fd093ed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a808ee5_c56d706a",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-27T01:53:31Z",
+      "side": 1,
+      "message": "Yes. Also checked the NVMe-oF spec, as you mentioned, there is no obvious place to say this well-known discovery service NQN is case insensitive.\n\nI will have another patch to correct this and use the \"strcmp\" accordingly. Thanks.",
+      "parentUuid": "d0b32f0d_bd9be787",
+      "revId": "aaf804ab4bf59b68582dd32bd2507a403fd093ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
