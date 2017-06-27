@@ -490,7 +490,7 @@ nvme_ctrlr_state_string(enum nvme_ctrlr_state state)
 {
 	switch (state) {
 	case NVME_CTRLR_STATE_INIT:
-		return "init";
+			return "init";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		return "disable and wait for CSTS.RDY = 1";
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
@@ -1683,7 +1683,7 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 
 int
 spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
-				int slot)
+				int slot, uint32_t commit_action)
 {
 	struct spdk_nvme_fw_commit		fw_commit;
 	struct nvme_completion_poll_status	status;
@@ -1695,6 +1695,15 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 
 	if (size % 4) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_update_firmware invalid size!\n");
+		return -1;
+	}
+
+	/* Current support only for SPDK_NVME_FW_COMMIT_REPLACE_IMG
+	 * and SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG
+	 */
+	if ((commit_action != SPDK_NVME_FW_COMMIT_REPLACE_IMG) &&
+	    (commit_action != SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG)) {
+		SPDK_ERRLOG("spdk_nvme_ctrlr_update_firmware invalid command!\n");
 		return -1;
 	}
 
@@ -1730,7 +1739,7 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 	/* Firmware commit */
 	memset(&fw_commit, 0, sizeof(struct spdk_nvme_fw_commit));
 	fw_commit.fs = slot;
-	fw_commit.ca = SPDK_NVME_FW_COMMIT_REPLACE_IMG;
+	fw_commit.ca = commit_action;
 
 	status.done = false;
 
@@ -1745,8 +1754,15 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
-		SPDK_ERRLOG("nvme_ctrlr_cmd_fw_commit failed!\n");
-		return -ENXIO;
+		if ((status.cpl.status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC) &&
+		    (status.cpl.status.sc == SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET)) {
+			SPDK_NOTICELOG("firmware activation requires conventional reset to be performed. !\n");
+			return SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET;
+		} else if (status.cpl.status.sct != SPDK_NVME_SCT_COMMAND_SPECIFIC ||
+			   status.cpl.status.sc != SPDK_NVME_SC_FIRMWARE_REQ_NVM_RESET) {
+			SPDK_ERRLOG("nvme_ctrlr_cmd_fw_commit failed!\n");
+			return -ENXIO;
+		}
 	}
 
 	return spdk_nvme_ctrlr_reset(ctrlr);

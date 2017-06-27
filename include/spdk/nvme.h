@@ -762,7 +762,7 @@ int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  * This function is thread safe and can be called at any point after spdk_nvme_attach().
  */
 int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
-				    int slot);
+				    int slot, uint32_t commit_action);
 
 /**
  * \brief Get the identify namespace data as defined by the NVMe specification.

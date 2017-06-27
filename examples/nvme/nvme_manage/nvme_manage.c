@@ -836,8 +836,11 @@ update_firmware_image(void)
 		return;
 	}
 
-	rc = spdk_nvme_ctrlr_update_firmware(ctrlr->ctrlr, fw_image, size, slot);
-	if (rc) {
+	rc = spdk_nvme_ctrlr_update_firmware(ctrlr->ctrlr, fw_image, size, slot,
+					     SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG);
+	if (rc == SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET) {
+		printf("conventional reset is needed to enable firmware !\n");
+	} else if (rc) {
 		printf("spdk_nvme_ctrlr_update_firmware failed\n");
 	} else {
 		printf("spdk_nvme_ctrlr_update_firmware success\n");
