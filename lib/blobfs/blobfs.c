@@ -2075,13 +2075,13 @@ spdk_file_read(struct spdk_file *file, struct spdk_io_channel *_channel,
 
 	file->open_for_writing = false;
 
-	if (length == 0 || offset >= file->length) {
+	if (length == 0 || offset >= file->append_pos) {
 		pthread_spin_unlock(&file->lock);
 		return 0;
 	}
 
-	if (offset + length > file->length) {
-		length = file->length - offset;
+	if (offset + length > file->append_pos) {
+		length = file->append_pos - offset;
 	}
 
 	if (offset != file->next_seq_offset) {
