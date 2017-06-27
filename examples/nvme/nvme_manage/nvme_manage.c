@@ -771,6 +771,8 @@ update_firmware_image(void)
 	void					*fw_image;
 	struct dev				*ctrlr;
 	const struct spdk_nvme_ctrlr_data	*cdata;
+	enum spdk_nvme_fw_commit_action		commit_action;
+	struct spdk_nvme_status			status;
 
 	ctrlr = get_controller();
 	if (ctrlr == NULL) {
@@ -836,8 +838,12 @@ update_firmware_image(void)
 		return;
 	}
 
-	rc = spdk_nvme_ctrlr_update_firmware(ctrlr->ctrlr, fw_image, size, slot);
-	if (rc) {
+	commit_action = SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG;
+	rc = spdk_nvme_ctrlr_update_firmware(ctrlr->ctrlr, fw_image, size, slot, commit_action, &status);
+	if (rc == -ENXIO && status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC &&
+	    status.sc == SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET) {
+		printf("conventional reset is needed to enable firmware !\n");
+	} else if (rc) {
 		printf("spdk_nvme_ctrlr_update_firmware failed\n");
 	} else {
 		printf("spdk_nvme_ctrlr_update_firmware success\n");
