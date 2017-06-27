@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce93f710_983019c3",
+        "filename": "test/unit/lib/nvmf/direct.c/direct_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-06-27T11:35:08Z",
+      "side": 1,
+      "message": "This looks like incorrect. Are you trying to assert SPDK_NVME_SC_INTERNAL_DEVICE_ERROR which is a status code. the SPDK_NVME_OPC_IDENTIFY is a opcode.",
+      "range": {
+        "startLine": 238,
+        "startChar": 42,
+        "endLine": 238,
+        "endChar": 64
+      },
+      "revId": "d3ac4fe76a407414943dffb224169056ab6c3fdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
