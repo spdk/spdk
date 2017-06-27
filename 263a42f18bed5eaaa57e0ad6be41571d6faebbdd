@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79f06f3f_581d152e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-06-27T17:01:33Z",
+      "side": 1,
+      "message": "Check this before calloc()",
+      "range": {
+        "startLine": 248,
+        "startChar": 20,
+        "endLine": 248,
+        "endChar": 30
+      },
+      "revId": "263a42f18bed5eaaa57e0ad6be41571d6faebbdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
