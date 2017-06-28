@@ -139,7 +139,8 @@ typedef struct spdk_scsi_dev _spdk_scsi_dev;
 
 _spdk_scsi_dev *
 spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_list, int num_luns,
-			uint8_t protocol_id)
+			uint8_t protocol_id, void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+			void *hotremove_ctx)
 {
 	struct spdk_scsi_dev *dev;
 	struct spdk_bdev *bdev;
@@ -185,6 +186,9 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 		if (lun == NULL) {
 			goto error;
 		}
+
+		lun->hotremove_cb = hotremove_cb;
+		lun->hotremove_ctx = hotremove_ctx;
 
 		rc = spdk_scsi_dev_add_lun(dev, lun, lun_id_list[i]);
 		if (rc < 0) {
