@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5207ab34_8c77da00",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 1464,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T00:34:54Z",
+      "side": 1,
+      "message": "We need to fix the dependency issue first.  This is putting bdev specific code into the generic bdev layer.\n\nCan you explain why the GPT module needs to be last?",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc54c483_c58a8ee3",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T00:34:54Z",
+      "side": 1,
+      "message": "Can you explain this further?  Do you mean the case where a bdev like NVMe is dynamically added via RPC?",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6f8a367_04a316b2",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 62
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T00:34:54Z",
+      "side": 1,
+      "message": "Maybe just break this up into multiple lines using backslashes so it is easier to read.",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a9501b3_ad85446b",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 62
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T00:34:54Z",
+      "side": 1,
+      "message": "\"is still exisiting\" \u003d\u003e \"still exists\"\n\nBut why do we need to sleep for 5 seconds?  I think if the nbd process died, it should cause a test failure.",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5e2a5a0_0828cc89",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 62
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T00:34:54Z",
+      "side": 1,
+      "message": "It is still not clear to me how we are actually testing the GPT code here.  If the GPT module fails to detect the SPDK partition, bdevperf will still run without problems.",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
