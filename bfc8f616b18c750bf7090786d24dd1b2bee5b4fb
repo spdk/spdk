@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09fcb611_25685b12",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:19:22Z",
+      "side": 1,
+      "message": "This is very pedantic - but would \"parse_virtio_lun_byte_array\" make it more clear what this is doing?\n\nYou and I know that the lun byte array contains more information than just the LUN ID - its also the target/device ID.  I\u0027m just thinking that a more explicit name will make this more clear to other readers of the code that are not as familiar with virtio specifics.",
+      "revId": "bfc8f616b18c750bf7090786d24dd1b2bee5b4fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
