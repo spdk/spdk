@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16ca6086_cdaabf25",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T19:45:20Z",
+      "side": 1,
+      "message": "What is this function needed for?",
+      "revId": "84980d884ef32678c6ffc67143d6f8073b394140",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31c24fbe_3ae555ae",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T19:45:20Z",
+      "side": 1,
+      "message": "I think the hotremove_cb and ctx should be new parameters to spdk_scsi_dev_construct, instead of a completely separate function.\n\nCurrently I see no use case for having multiple LUNs on a SCSI device, each with a different hot remove callback routine.",
+      "revId": "84980d884ef32678c6ffc67143d6f8073b394140",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
