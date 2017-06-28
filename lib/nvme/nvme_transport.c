@@ -89,6 +89,12 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 }
 
 int
+nvme_transport_get_hotplug_fd(enum spdk_nvme_transport_type transport_type)
+{
+	NVME_TRANSPORT_CALL(transport_type, get_hotplug_fd, (transport_type));
+}
+
+int
 nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 			  void *cb_ctx,
 			  spdk_nvme_probe_cb probe_cb,

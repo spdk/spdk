@@ -617,6 +617,12 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 int
+nvme_pcie_get_hotplug_fd(enum spdk_nvme_transport_type transport_type)
+{
+	return hotplug_fd;
+}
+
+int
 nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 		     void *cb_ctx,
 		     spdk_nvme_probe_cb probe_cb,
