@@ -232,13 +232,17 @@ spdk_scsi_lun_hotplug(void *arg)
 	}
 }
 
-static void spdk_scsi_lun_hot_remove(void *remove_ctx)
+static void
+spdk_scsi_lun_hot_remove(void *remove_ctx)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
 
 	lun->removed = true;
-	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun,
-			     lun->lcore, 0);
+	if (lun->hotremove_cb) {
+		lun->hotremove_cb(lun, lun->hotremove_ctx);
+	}
+
+	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun, lun->lcore, 0);
 }
 
 /**
@@ -402,4 +406,10 @@ const char *
 spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun)
 {
 	return lun->name;
+}
+
+struct spdk_scsi_dev *
+spdk_scsi_lun_get_dev(struct spdk_scsi_lun *lun)
+{
+	return lun->dev;
 }
