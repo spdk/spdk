@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd3053a8_ad626079",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:24:38Z",
+      "side": 1,
+      "message": "I\u0027d prefer we add a spdk_scsi_lun_has_pending_tasks, and have this function call it for each lun.\n\nAlso do you need to check both tasks and pending_tasks on the LUN?  pending_tasks are tasks that pending execution.  tasks is a list of tasks that have started execution but have not completed yet.",
+      "revId": "33fa417db830f61109b8e30cd6c4ed5a1897c020",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
