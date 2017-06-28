@@ -47,7 +47,8 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(const char *trname, const char *traddr, const char *trsvcid)
+spdk_nvmf_listen_addr_create(const char *trname, enum spdk_nvmf_adrfam adrfam, const char *traddr,
+			     const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 
@@ -76,6 +77,8 @@ spdk_nvmf_listen_addr_create(const char *trname, const char *traddr, const char 
 		free(listen_addr);
 		return NULL;
 	}
+
+	listen_addr->adrfam = adrfam;
 
 	return listen_addr;
 }
@@ -172,15 +175,17 @@ test_spdk_nvmf_tgt_listen(void)
 
 	/* Invalid trname */
 	const char *trname  = "test_invalid_trname";
+	enum spdk_nvmf_adrfam adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	const char *traddr  = "192.168.100.1";
 	const char *trsvcid = "4420";
-	CU_ASSERT(spdk_nvmf_tgt_listen(trname, traddr, trsvcid) == NULL);
+	CU_ASSERT(spdk_nvmf_tgt_listen(trname, adrfam, traddr, trsvcid) == NULL);
 
 	/* Listen addr is not create and create valid listen addr */
 	trname  = "test_transport1";
+	adrfam = SPDK_NVMF_ADRFAM_IPV4;
 	traddr  = "192.168.3.11";
 	trsvcid = "3320";
-	listen_addr = spdk_nvmf_tgt_listen(trname, traddr, trsvcid);
+	listen_addr = spdk_nvmf_tgt_listen(trname, adrfam, traddr, trsvcid);
 	SPDK_CU_ASSERT_FATAL(listen_addr != NULL);
 	CU_ASSERT(listen_addr->traddr != NULL);
 	CU_ASSERT(listen_addr->trsvcid != NULL);

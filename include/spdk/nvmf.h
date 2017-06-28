@@ -76,6 +76,7 @@ struct spdk_nvmf_listen_addr {
 	char					*traddr;
 	char					*trsvcid;
 	char					*trname;
+	enum spdk_nvmf_adrfam			adrfam;
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
 };
 
@@ -152,8 +153,8 @@ struct spdk_nvmf_subsystem *spdk_nvmf_find_subsystem(const char *subnqn);
 
 bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
 
-struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(const char *trname, const char *traddr,
-		const char *trsvcid);
+struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(const char *trname, enum spdk_nvmf_adrfam adrfam,
+		const char *traddr, const char *trsvcid);
 
 int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvmf_listen_addr *listen_addr);
