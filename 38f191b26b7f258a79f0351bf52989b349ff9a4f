@@ -108,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "632a3fae_4e2d0d6f",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-28T02:27:48Z",
+      "side": 1,
+      "message": "\"The previous check ensures that usable_lba_end \u003c\u003d usable_lba_start\"\nI think that it only ensures:  usable_lba_end \u003e\u003d usable_lba_start.",
+      "parentUuid": "1cf0394d_7cfc6792",
+      "revId": "38f191b26b7f258a79f0351bf52989b349ff9a4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20c470dd_ddce646d",
         "filename": "lib/bdev/gpt/gpt.c",
         "patchSetId": 36
