@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa908897_fe3a9928",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T19:57:50Z",
+      "side": 1,
+      "message": "I would have suggested doing this renaming as part of a separate patch.  Makes it easier to review (i.e. making sure there are no side effects of the rename in the middle of all of the other changes).",
+      "revId": "c7dcdb5091b1fc28e245d7916775c523d2d112fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd09bdff_710c96d0",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T19:57:50Z",
+      "side": 1,
+      "message": "Can you explain what is meant by this comment?  Are you saying that the Linux kernel implementation does not match the virtio spec?",
+      "revId": "c7dcdb5091b1fc28e245d7916775c523d2d112fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffbf45dc_f04f1bc5",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T19:57:50Z",
+      "side": 1,
+      "message": "You can just pass \"0\" instead of lun_id_list[0] here.\n\nBut I still think the cb and ctx should be parameters to spdk_scsi_dev_construct.  Let scsi/dev.c do this work instead of vhost.  Then iSCSI can leverage it too.",
+      "revId": "c7dcdb5091b1fc28e245d7916775c523d2d112fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
