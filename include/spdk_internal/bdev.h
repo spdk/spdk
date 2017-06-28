@@ -351,6 +351,27 @@ struct spdk_bdev_io {
 	/* No members may be added after driver_ctx! */
 };
 
+struct spdk_vbdev_module_depend {
+	const char *name;
+	const char *depends_on;
+	TAILQ_ENTRY(spdk_vbdev_module_depend) tailq;
+};
+
+void spdk_add_vbdev_module_depend(struct spdk_vbdev_module_depend *depend);
+
+/**
+ * \brief Declare that a vbdev module depends on another vbdev module.
+ */
+#define SPDK_VBDEV_MODULE_DEPEND(_name, _depends_on)						\
+	static struct spdk_vbdev_module_depend __vbdev_module_ ## _name ## _depend_on ## _depends_on = { \
+	.name = #_name,										\
+	.depends_on = #_depends_on,								\
+	};											\
+	__attribute__((constructor)) static void _name ## _depend_on ## _depends_on(void)	\
+	{											\
+		 spdk_add_vbdev_module_depend(&__vbdev_module_ ## _name ## _depend_on ## _depends_on); \
+	}
+
 void spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_unregister(struct spdk_bdev *bdev);
 
@@ -417,8 +438,9 @@ spdk_bdev_io_from_ctx(void *ctx)
 	    spdk_bdev_module_list_add(&init_fn ## _if);                  			\
 	}
 
-#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn, bdev_registered_fn)\
+#define SPDK_VBDEV_MODULE_REGISTER(name, init_fn, fini_fn, config_fn, ctx_size_fn, bdev_registered_fn)\
 	static struct spdk_bdev_module_if init_fn ## _if = {					\
+	.module_name	= #name,									\
 	.module_init 	= init_fn,								\
 	.module_fini	= fini_fn,								\
 	.config_text	= config_fn,								\
