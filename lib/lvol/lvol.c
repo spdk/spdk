@@ -33,6 +33,7 @@
 
 #include "spdk_internal/lvolstore.h"
 #include "spdk_internal/log.h"
+#include "spdk/string.h"
 
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
@@ -123,6 +124,79 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	free(lvs);
 
 	return 0;
+}
+
+void
+spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+	spdk_blob_id blob_id = spdk_blob_get_id(blob);
+	struct spdk_lvol *lvol = req->u.lvol_handle.lvol;
+	size_t sz = lvol->sz;
+	char guid[37];
+	uint64_t length = sz * 1024 * 1024;
+
+	if (sz == 0 || lvolerrno < 0) {
+		free(lvol);
+		req->u.lvol_handle.cb_fn(cb_arg, NULL, -1);
+		free(req);
+		return;
+	}
+
+	uuid_unparse(lvol->lvol_store->uuid, guid);
+	lvol->blob = blob;
+	lvol->name = spdk_sprintf_alloc("%s_%lu", guid, (uint64_t)blob_id);
+
+	lvolerrno = spdk_bs_md_resize_blob(blob, sz);
+	spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
+
+	if (lvolerrno < 0) {
+		/* spdk_bs_md_close_blob will set lvolerrno to 0, so we have to pass information
+		 * to callback function that blob creation actually failed */
+		req->u.lvol_handle.blob_created = false;
+		//spdk_bs_md_close_blob(&blob, req->cb_fn, cb_arg);
+	} else {
+		req->u.lvol_handle.blob_created = true;
+		/* spdk_bs_md_sync_blob(blob, req->u.lvol_handle.cb_fn, cb_arg); */
+	}
+	req->u.lvol_handle.cb_fn(cb_arg, lvol, lvolerrno);
+	free(req);
+}
+
+void
+spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_blob_store *bs;
+
+	if (lvolerrno < 0) {
+		req->u.lvol_handle.cb_fn(cb_arg, NULL, lvolerrno);
+		return;
+	}
+
+	bs = req->u.lvol_handle.lvol->lvol_store->blobstore;
+
+	spdk_bs_md_open_blob(bs, blobid, spdk_lvol_create_open_cb, req);
+}
+
+void
+spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
+		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_store_req *req;
+	struct spdk_lvol *lvol;
+
+	req = calloc(1, sizeof(struct spdk_lvol_create_req));
+	req->u.lvol_handle.cb_fn = cb_fn;
+	req->u.lvol_handle.cb_arg = cb_arg;
+
+
+	lvol = calloc(1, sizeof(struct spdk_lvol));
+	lvol->lvol_store = lvs;
+	lvol->sz = sz;
+	req->u.lvol_handle.lvol = lvol;
+
+	spdk_bs_md_create_blob(lvs->blobstore, spdk_lvol_create_cb, req);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)

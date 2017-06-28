@@ -32,7 +32,7 @@
  */
 
 #include "spdk/blob_bdev.h"
-
+#include "spdk/rpc.h"
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
@@ -184,6 +184,30 @@ vbdev_lvs_fini(void)
 	}
 }
 
+static int
+vbdev_lvol_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct spdk_lvol *lvol = ctx;
+	struct lvol_store_bdev_pair *lvs_pair;
+	struct spdk_bdev *bdev;
+
+	lvs_pair = vbdev_get_lvs_pair_by_lvs(lvol->lvol_store);
+	bdev = lvs_pair->bdev;
+
+	spdk_json_write_name(w, "base_bdev");
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	return 0;
+}
+
+static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
+	.destruct		= NULL,
+	.io_type_supported	= NULL,
+	.submit_request		= NULL,
+	.get_io_channel		= NULL,
+	.dump_config_json	= vbdev_lvol_dump_config_json,
+};
+
 struct lvol_store_bdev_pair *
 vbdev_lvol_store_first(void)
 {
@@ -240,6 +264,83 @@ vbdev_get_lvs_pair_by_lvs(struct spdk_lvol_store *lvs_orig)
 		lvs_pair = vbdev_lvol_store_next(lvs_pair);
 	}
 	return NULL;
+}
+
+struct spdk_bdev *
+create_lvol_disk(struct spdk_lvol *lvol)
+{
+	struct spdk_bdev *bdev;
+	struct lvol_store_bdev_pair *lvs_pair;
+
+	if (lvol->sz == 0) {
+		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
+		return NULL;
+	}
+
+	bdev = calloc(1, sizeof(struct spdk_bdev));
+	if (!bdev) {
+		perror("disk");
+		return NULL;
+	}
+
+	bdev->name = lvol->name;
+	if (!bdev->name) {
+		free(bdev);
+		return NULL;
+	}
+
+	bdev->product_name = "Logical Volume";
+
+	bdev->write_cache = 1;
+	lvs_pair = vbdev_get_lvs_pair_by_lvs(lvol->lvol_store);
+	bdev->blocklen = lvs_pair->bdev->blocklen;
+	bdev->blockcnt = lvol->sz;
+	/* bdev->max_unmap_bdesc_count = MALLOC_MAX_UNMAP_BDESC; */
+
+	bdev->ctxt = lvol;
+	bdev->fn_table = &vbdev_lvol_fn_table;
+
+	spdk_bdev_register(bdev);
+
+	return bdev;
+}
+
+
+void
+vbdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_lvol_create_req *create_req = (struct spdk_lvol_create_req *) cb_arg;
+	struct vbdev_lvol_req *req = (struct vbdev_lvol_req *)(create_req->cb_arg);
+	struct spdk_bdev *bdev = NULL;
+
+	if (lvolerrno >= 0 && create_req->blob_created) {
+		bdev = create_lvol_disk(create_req->lvol);
+	}
+
+	if (bdev == NULL) {
+		lvolerrno = -1;
+	}
+	req->cb_fn(req->cb_arg, bdev, lvolerrno);
+
+	free(req);
+}
+
+void
+vbdev_lvol_create(uuid_t guid, size_t sz,
+		  vbdev_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct vbdev_lvol_req *req = calloc(1, sizeof(struct vbdev_lvol_req));
+	struct spdk_lvol_store *ls;
+
+	ls = vbdev_get_lvol_store_by_guid(guid);
+	if (ls == NULL) {
+		cb_fn(cb_arg, NULL, -1);
+		return;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	spdk_lvol_create(ls, sz, vbdev_lvol_create_cb, req);
 }
 
 SPDK_VBDEV_MODULE_REGISTER(vbdev_lvs_init, vbdev_lvs_fini, NULL, NULL, NULL)

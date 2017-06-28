@@ -47,11 +47,15 @@ struct spdk_lvol;
 typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
 		int lvserrno);
 typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
+typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
 typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol *lvol,
-		int lvserrno);
-typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvserrno);
+		int lvolerrno);
 
 int spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
+void spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
+		      spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_lvol_create_cb(void *, spdk_blob_id, int);
+void spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno);
 
 #endif  /* SPDK_LVOL_H */
