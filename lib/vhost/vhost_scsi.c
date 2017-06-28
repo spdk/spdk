@@ -635,7 +635,7 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	lun_names_list[0] = (char *)lun_name;
 
 	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
-					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS);
+					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, NULL, NULL);
 
 	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
 		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",

@@ -162,6 +162,7 @@ int spdk_scsi_fini(void);
 
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
 const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
+const struct spdk_scsi_dev *spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun);
 
 const char *spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
@@ -189,13 +190,18 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
  *		      responsible for managing the memory containing this list.
  *		      lun_id_list[x] is the LUN ID for lun_list[x].
  * \param num_luns Number of entries in lun_list and lun_id_list.
+ * \param hotremove_cb Callback to lun hotremoval. Will be called
+ * 		       once hotremove is first triggered.
+ * \param hotremove_ctx Additional argument to hotremove_cb
  * \return The constructed spdk_scsi_dev object.
  */
 struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		char *lun_name_list[],
 		int *lun_id_list,
 		int num_luns,
-		uint8_t protocol_id);
+		uint8_t protocol_id,
+		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		void *hotremove_ctx);
 
 void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun);
 
