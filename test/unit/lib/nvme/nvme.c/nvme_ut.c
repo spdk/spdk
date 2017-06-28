@@ -381,6 +381,48 @@ test_spdk_nvme_transport_id_parse_adrfam(void)
 
 }
 
+static void
+test_trid_trtype_str(void)
+{
+	const char *s;
+
+	s = spdk_nvme_transport_id_trtype_str(-5);
+	CU_ASSERT(s == NULL);
+
+	s = spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_PCIE);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "PCIe") == 0);
+
+	s = spdk_nvme_transport_id_trtype_str(SPDK_NVME_TRANSPORT_RDMA);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "RDMA") == 0);
+}
+
+static void
+test_trid_adrfam_str(void)
+{
+	const char *s;
+
+	s = spdk_nvme_transport_id_adrfam_str(-5);
+	CU_ASSERT(s == NULL);
+
+	s = spdk_nvme_transport_id_adrfam_str(SPDK_NVMF_ADRFAM_IPV4);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "IPv4") == 0);
+
+	s = spdk_nvme_transport_id_adrfam_str(SPDK_NVMF_ADRFAM_IPV6);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "IPv6") == 0);
+
+	s = spdk_nvme_transport_id_adrfam_str(SPDK_NVMF_ADRFAM_IB);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "IB") == 0);
+
+	s = spdk_nvme_transport_id_adrfam_str(SPDK_NVMF_ADRFAM_FC);
+	SPDK_CU_ASSERT_FATAL(s != NULL);
+	CU_ASSERT(strcmp(s, "FC") == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -405,6 +447,8 @@ int main(int argc, char **argv)
 			    test_spdk_nvme_transport_id_parse_adrfam) == NULL ||
 		CU_add_test(suite, "test_trid_parse_and_compare",
 			    test_trid_parse_and_compare) == NULL ||
+		CU_add_test(suite, "test_trid_trtype_str", test_trid_trtype_str) == NULL ||
+		CU_add_test(suite, "test_trid_adrfam_str", test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {

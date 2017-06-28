@@ -214,6 +214,22 @@ int spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char
 int spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str);
 
 /**
+ * Look up the string representation of a transport ID transport type.
+ *
+ * \param trtype Transport type to convert.
+ * \return Static string constant describing trtype, or NULL if trtype not found.
+ */
+const char *spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype);
+
+/**
+ * Look up the string representation of a transport ID address family.
+ *
+ * \param adrfam Address family to convert.
+ * \return Static string constant describing adrfam, or NULL if adrmfam not found.
+ */
+const char *spdk_nvme_transport_id_adrfam_str(enum spdk_nvmf_adrfam adrfam);
+
+/**
  * Parse the string representation of a tranport ID address family.
  *
  * \param adrfam Output address family (allocated by caller).
