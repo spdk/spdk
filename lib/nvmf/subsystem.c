@@ -264,7 +264,8 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 }
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_tgt_listen(const char *trname, const char *traddr, const char *trsvcid)
+spdk_nvmf_tgt_listen(const char *trname, enum spdk_nvmf_adrfam adrfam, const char *traddr,
+		     const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
@@ -272,6 +273,7 @@ spdk_nvmf_tgt_listen(const char *trname, const char *traddr, const char *trsvcid
 
 	TAILQ_FOREACH(listen_addr, &g_nvmf_tgt.listen_addrs, link) {
 		if ((strcmp(listen_addr->trname, trname) == 0) &&
+		    (listen_addr->adrfam == adrfam) &&
 		    (strcmp(listen_addr->traddr, traddr) == 0) &&
 		    (strcmp(listen_addr->trsvcid, trsvcid) == 0)) {
 			return listen_addr;
@@ -284,7 +286,7 @@ spdk_nvmf_tgt_listen(const char *trname, const char *traddr, const char *trsvcid
 		return NULL;
 	}
 
-	listen_addr = spdk_nvmf_listen_addr_create(trname, traddr, trsvcid);
+	listen_addr = spdk_nvmf_listen_addr_create(trname, adrfam, traddr, trsvcid);
 	if (!listen_addr) {
 		return NULL;
 	}

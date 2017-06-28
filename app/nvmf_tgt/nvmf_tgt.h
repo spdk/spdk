@@ -42,6 +42,7 @@
 
 struct rpc_listen_address {
 	char *transport;
+	char *adrfam;
 	char *traddr;
 	char *trsvcid;
 };
