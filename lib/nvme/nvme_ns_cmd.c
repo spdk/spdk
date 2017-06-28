@@ -382,6 +382,85 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 }
 
 int
+spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
+			 uint64_t lba,
+			 uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+			 uint32_t io_flags)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = buffer;
+	payload.md = NULL;
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
+			      SPDK_NVME_OPC_COMPARE,
+			      io_flags, 0,
+			      0, true);
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else {
+		return -ENOMEM;
+	}
+}
+
+int
+spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				 void *buffer,
+				 void *metadata,
+				 uint64_t lba,
+				 uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+				 uint32_t io_flags, uint16_t apptag_mask, uint16_t apptag)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+
+	payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	payload.u.contig = buffer;
+	payload.md = metadata;
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
+			      SPDK_NVME_OPC_COMPARE,
+			      io_flags,
+			      apptag_mask, apptag, true);
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else {
+		return -ENOMEM;
+	}
+}
+
+int
+spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			  uint64_t lba, uint32_t lba_count,
+			  spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+			  spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			  spdk_nvme_req_next_sge_cb next_sge_fn)
+{
+	struct nvme_request *req;
+	struct nvme_payload payload;
+
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
+		return -EINVAL;
+
+	payload.type = NVME_PAYLOAD_TYPE_SGL;
+	payload.md = NULL;
+	payload.u.sgl.reset_sgl_fn = reset_sgl_fn;
+	payload.u.sgl.next_sge_fn = next_sge_fn;
+	payload.u.sgl.cb_arg = cb_arg;
+
+	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
+			      SPDK_NVME_OPC_COMPARE,
+			      io_flags, 0, 0, true);
+	if (req != NULL) {
+		return nvme_qpair_submit_request(qpair, req);
+	} else {
+		return -ENOMEM;
+	}
+}
+
+int
 spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *buffer,
 		      uint64_t lba,
 		      uint32_t lba_count, spdk_nvme_cmd_cb cb_fn, void *cb_arg,

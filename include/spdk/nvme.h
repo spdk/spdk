@@ -1225,6 +1225,81 @@ int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					void *payload, uint32_t len,
 					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
+/**
+ * \brief Submits a compare I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the compare I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload virtual address pointer to the data payload
+ * \param lba starting LBA to compare the data
+ * \param lba_count length (in sectors) for the compare operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
+			     uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg, uint32_t io_flags);
+
+/**
+ * \brief Submits a compare I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the compare I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param lba starting LBA to compare the data
+ * \param lba_count length (in sectors) for the compare operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ * \param reset_sgl_fn callback function to reset scattered payload
+ * \param next_sge_fn callback function to iterate each scattered
+ * payload memory segment
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			      uint64_t lba, uint32_t lba_count,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+			      spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			      spdk_nvme_req_next_sge_cb next_sge_fn);
+
+/**
+ * \brief Submits a compare I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the compare I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload virtual address pointer to the data payload
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ * \param lba starting LBA to compare the data
+ * \param lba_count length (in sectors) for the compare operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ * \param apptag_mask application tag mask.
+ * \param apptag application tag to use end-to-end protection information.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				     void *payload, void *metadata,
+				     uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+				     void *cb_arg, uint32_t io_flags,
+
 #ifdef __cplusplus
 }
 #endif
