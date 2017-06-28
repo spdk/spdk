@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06691b76_e196b89f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:10:09Z",
+      "side": 1,
+      "message": "A simpler and smaller patch would be to add local svdev, controlq and req_idx variables, and set their values from the new task parameter.",
+      "revId": "cfec014c3824530eaad80de738fe4015efcc8fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2b58d83_655fd00a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:10:09Z",
+      "side": 1,
+      "message": "Can -\u003evq and -\u003esvdev assignment be moved into spdk_vhost_task_get?",
+      "revId": "cfec014c3824530eaad80de738fe4015efcc8fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
