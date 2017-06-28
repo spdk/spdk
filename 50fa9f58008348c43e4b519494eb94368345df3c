@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04a0cc4b_aa9293cf",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T20:50:02Z",
+      "side": 1,
+      "message": "Please check your git config user.name setting.",
+      "revId": "50fa9f58008348c43e4b519494eb94368345df3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77ac99c9_c42711f0",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T20:50:02Z",
+      "side": 1,
+      "message": "If this is always going to return the PCIe hotplug fd (and no other transports will export a hotplug fd), you don\u0027t need to add a transport function for this.  You can just create an internal PCIe-specific function, declare it in nvme_internal.h, and call it directly here.\n\nIf we do think that other transports will have hotplug fds in the future, then we\u0027ll need to rethink this API, since it can only return one fd.",
+      "revId": "50fa9f58008348c43e4b519494eb94368345df3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
