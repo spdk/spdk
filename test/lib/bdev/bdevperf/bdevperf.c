@@ -532,12 +532,17 @@ bdevperf_run(void *arg1, void *arg2)
 	struct io_target *target;
 	struct spdk_event *event;
 
+	bdevperf_construct_targets();
+
+	/*
+	 * Create the task pool after we have enumerated the targets, so that we know
+	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
+	 *  that must be accounted for.
+	 */
 	task_pool = rte_mempool_create("task_pool", 4096 * spdk_env_get_core_count(),
 				       sizeof(struct bdevperf_task),
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
-
-	bdevperf_construct_targets();
 
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
