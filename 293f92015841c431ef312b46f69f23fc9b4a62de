@@ -16,6 +16,23 @@
       "revId": "293f92015841c431ef312b46f69f23fc9b4a62de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b662c814_cab67516",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-06-28T11:42:18Z",
+      "side": 0,
+      "message": "Looks like remove_vhost_scsi_controller and delete_bdev methods should also be tested",
+      "revId": "293f92015841c431ef312b46f69f23fc9b4a62de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
