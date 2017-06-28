@@ -1197,7 +1197,7 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 			struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = SPDK_NVMF_TRTYPE_RDMA;
-	entry->adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	entry->adrfam = listen_addr->adrfam;
 	entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED;
 
 	spdk_strcpy_pad(entry->trsvcid, listen_addr->trsvcid, sizeof(entry->trsvcid), ' ');

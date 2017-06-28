@@ -496,6 +496,8 @@ spdk_nvmf_construct_subsystem(const char *name,
 	for (i = 0; i < num_listen_addresses; i++) {
 		int nic_numa_node = spdk_get_ifaddr_numa_node(addresses[i].traddr);
 		unsigned subsys_numa_node = spdk_env_get_socket_id(app_subsys->lcore);
+		const char *adrfam_str;
+		enum spdk_nvmf_adrfam adrfam;
 
 		if (nic_numa_node >= 0) {
 			if (subsys_numa_node != (unsigned)nic_numa_node) {
@@ -514,11 +516,22 @@ spdk_nvmf_construct_subsystem(const char *name,
 			goto error;
 		}
 
-		listen_addr = spdk_nvmf_tgt_listen(addresses[i].transport,
+		adrfam_str = addresses[i].adrfam;
+		if (adrfam_str == NULL) {
+			adrfam_str = "IPv4";
+		}
+
+		if (spdk_nvme_transport_id_parse_adrfam(&adrfam, adrfam_str)) {
+			SPDK_ERRLOG("Unknown address family '%s'\n", adrfam_str);
+			goto error;
+		}
+
+		listen_addr = spdk_nvmf_tgt_listen(addresses[i].transport, adrfam,
 						   addresses[i].traddr, addresses[i].trsvcid);
 		if (listen_addr == NULL) {
-			SPDK_ERRLOG("Failed to listen on transport %s, traddr %s, trsvcid %s\n",
+			SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
 				    addresses[i].transport,
+				    adrfam_str,
 				    addresses[i].traddr,
 				    addresses[i].trsvcid);
 			goto error;

@@ -47,7 +47,8 @@ struct spdk_nvmf_tgt g_nvmf_tgt = {
 };
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(const char *trname, const char *traddr, const char *trsvcid)
+spdk_nvmf_listen_addr_create(const char *trname, enum spdk_nvmf_adrfam adrfam,
+			     const char *traddr, const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 
@@ -76,6 +77,8 @@ spdk_nvmf_listen_addr_create(const char *trname, const char *traddr, const char 
 		free(listen_addr);
 		return NULL;
 	}
+
+	listen_addr->adrfam = adrfam;
 
 	return listen_addr;
 }
@@ -225,7 +228,7 @@ test_discovery_log(void)
 					       NVMF_SUBSYSTEM_MODE_DIRECT, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
-	listen_addr = spdk_nvmf_tgt_listen("test_transport1", "1234", "5678");
+	listen_addr = spdk_nvmf_tgt_listen("test_transport1", SPDK_NVMF_ADRFAM_IPV4, "1234", "5678");
 	SPDK_CU_ASSERT_FATAL(listen_addr != NULL);
 
 	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, listen_addr) == 0);

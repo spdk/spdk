@@ -78,12 +78,20 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 
 	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
 		listen_addr = allowed_listener->listen_addr;
+		const char *adrfam = spdk_nvme_transport_id_adrfam_str(listen_addr->adrfam);
+
 		spdk_json_write_object_begin(w);
 		/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 		spdk_json_write_name(w, "transport");
 		spdk_json_write_string(w, listen_addr->trname);
 		spdk_json_write_name(w, "trtype");
 		spdk_json_write_string(w, listen_addr->trname);
+
+		if (adrfam) {
+			spdk_json_write_name(w, "adrfam");
+			spdk_json_write_string(w, adrfam);
+		}
+
 		spdk_json_write_name(w, "traddr");
 		spdk_json_write_string(w, listen_addr->traddr);
 		spdk_json_write_name(w, "trsvcid");
@@ -180,6 +188,7 @@ static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
 	/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 	{"transport", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
 	{"trtype", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
+	{"adrfam", offsetof(struct rpc_listen_address, adrfam), spdk_json_decode_string, true},
 	{"traddr", offsetof(struct rpc_listen_address, traddr), spdk_json_decode_string},
 	{"trsvcid", offsetof(struct rpc_listen_address, trsvcid), spdk_json_decode_string},
 };
@@ -254,6 +263,7 @@ free_rpc_listen_addresses(struct rpc_listen_addresses *r)
 
 	for (i = 0; i < r->num_listen_address; i++) {
 		free(r->addresses[i].transport);
+		free(r->addresses[i].adrfam);
 		free(r->addresses[i].traddr);
 		free(r->addresses[i].trsvcid);
 	}
