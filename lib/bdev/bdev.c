@@ -64,7 +64,7 @@ struct spdk_bdev_mgr {
 	struct spdk_mempool *buf_large_pool;
 
 	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
-	TAILQ_HEAD(, spdk_bdev_module_if) vbdev_modules;
+	TAILQ_HEAD(spdk_bdev_module_if_list, spdk_bdev_module_if) vbdev_modules;
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
 
@@ -89,7 +89,8 @@ static struct spdk_bdev_module_if *g_next_bdev_module;
 static struct spdk_bdev_module_if *g_next_vbdev_module;
 static spdk_bdev_init_cb	g_cb_fn = NULL;
 static void			*g_cb_arg = NULL;
-
+static TAILQ_HEAD(, spdk_vbdev_module_depend) g_vbdev_depends =
+	TAILQ_HEAD_INITIALIZER(g_vbdev_depends);
 
 struct spdk_bdev_mgmt_channel {
 	need_buf_tailq_t need_buf_small;
@@ -380,6 +381,62 @@ spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller)
 	g_bdev_mgr.stop_poller_fn(ppoller);
 }
 
+static struct spdk_bdev_module_if *
+spdk_vbdev_module_find(struct spdk_bdev_module_if_list *list, const char *name)
+{
+	struct spdk_bdev_module_if *iter;
+
+	TAILQ_FOREACH(iter, list, tailq) {
+		if (strcmp(name, iter->module_name) == 0) {
+			return iter;
+		}
+	}
+
+	return NULL;
+}
+
+static void
+vbdev_module_sort(void)
+{
+	bool depends_on, depends_on_sorted;
+	struct spdk_bdev_module_if *vbdev_module, *vbdev_module_tmp;
+	struct spdk_vbdev_module_depend *vbdev_module_dep;
+
+	struct spdk_bdev_module_if_list vbdev_module_list = TAILQ_HEAD_INITIALIZER(vbdev_module_list);
+
+	while (!TAILQ_EMPTY(&g_bdev_mgr.vbdev_modules)) {
+		TAILQ_FOREACH_SAFE(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq, vbdev_module_tmp) {
+			depends_on = false;
+			TAILQ_FOREACH(vbdev_module_dep, &g_vbdev_depends, tailq) {
+				if (strcmp(vbdev_module->module_name, vbdev_module_dep->name) == 0) {
+					depends_on = true;
+					depends_on_sorted = !!spdk_vbdev_module_find(&vbdev_module_list, vbdev_module_dep->depends_on);
+					if (depends_on_sorted) {
+						continue;
+					}
+					break;
+				}
+			}
+
+			if (depends_on == false) {
+				TAILQ_REMOVE(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+				TAILQ_INSERT_TAIL(&vbdev_module_list, vbdev_module, tailq);
+			} else {
+				if (depends_on_sorted == true) {
+					TAILQ_REMOVE(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+					TAILQ_INSERT_TAIL(&vbdev_module_list, vbdev_module, tailq);
+				}
+			}
+		}
+	}
+
+	TAILQ_FOREACH_SAFE(vbdev_module, &vbdev_module_list, tailq, vbdev_module_tmp) {
+		TAILQ_REMOVE(&vbdev_module_list, vbdev_module, tailq);
+		TAILQ_INSERT_HEAD(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	}
+}
+
+
 void
 spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 		     spdk_bdev_poller_start_cb start_poller_fn,
@@ -437,6 +494,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 		rc = -1;
 		goto end;
 	}
+
+	vbdev_module_sort();
 
 #ifdef SPDK_CONFIG_VTUNE
 	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
@@ -1459,4 +1518,10 @@ void
 spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+}
+
+void
+spdk_add_vbdev_module_depend(struct spdk_vbdev_module_depend *depend)
+{
+	TAILQ_INSERT_TAIL(&g_vbdev_depends, depend, tailq);
 }
