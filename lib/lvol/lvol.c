@@ -33,6 +33,7 @@
 
 #include "spdk_internal/lvolstore.h"
 #include "spdk_internal/log.h"
+#include "spdk/string.h"
 
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
@@ -123,6 +124,124 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	free(lvs);
 
 	return 0;
+}
+
+void
+spdk_lvol_return_to_caller(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+	req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, req->u.lvol_handle.lvol, lvolerrno);
+	free(req);
+}
+
+void
+spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+	spdk_blob_id blob_id = spdk_blob_get_id(blob);
+	struct spdk_lvol *lvol = req->u.lvol_handle.lvol;
+	size_t sz = lvol->sz;
+	char guid[37];
+	uint64_t length = sz * 1024 * 1024;
+
+	if (sz == 0) {
+		lvolerrno = -1;
+		goto invalid;
+	}
+
+	if (lvolerrno < 0) {
+		goto invalid;
+	}
+
+	lvol->blob = blob;
+
+	uuid_unparse(lvol->lvol_store->uuid, guid);
+	lvol->name = spdk_sprintf_alloc("%s_%lu", guid, (uint64_t)blob_id);
+
+	lvolerrno = spdk_bs_md_resize_blob(blob, sz);
+	if (lvolerrno < 0) {
+		free(lvol->name);
+		spdk_bs_md_close_blob(&blob, spdk_lvol_do_nothing, NULL);
+		/* spdk_bs_md_delete_blob(blob->bs, blob->id, spdk_lvol_do_nothing, NULL); */
+		goto invalid;
+	}
+
+	spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
+
+	spdk_bs_md_sync_blob(blob, spdk_lvol_return_to_caller, cb_arg);
+
+	return;
+
+invalid:
+	free(lvol);
+	req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, NULL, lvolerrno);
+	free(req);
+	return;
+
+}
+
+void
+spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_blob_store *bs;
+
+	if (lvolerrno < 0) {
+		free(req->u.lvol_handle.lvol);
+		req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, NULL, lvolerrno);
+		free(req);
+		return;
+	}
+
+	bs = req->u.lvol_handle.lvol->lvol_store->blobstore;
+
+	spdk_bs_md_open_blob(bs, blobid, spdk_lvol_create_open_cb, req);
+}
+
+void
+spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
+		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_store_req *req;
+	struct spdk_lvol *lvol;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return;
+	}
+	req->u.lvol_handle.cb_fn = cb_fn;
+	req->u.lvol_handle.cb_arg = cb_arg;
+
+	lvol = calloc(1, sizeof(*lvol));
+	if (!lvol) {
+		free(req);
+		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
+		return;
+	}
+	lvol->lvol_store = lvs;
+	lvol->sz = sz;
+	req->u.lvol_handle.lvol = lvol;
+
+	spdk_bs_md_create_blob(lvs->blobstore, spdk_lvol_create_cb, req);
+}
+
+void
+spdk_lvol_do_nothing(void *cb_arg, int lvolerrno)
+{
+
+}
+
+void
+spdk_lvol_destroy(struct spdk_lvol *lvol)
+{
+	struct spdk_blob_store *bs = lvol->lvol_store->blobstore;
+	spdk_blob_id blobid = spdk_blob_get_id(lvol->blob);
+
+	spdk_bs_md_close_blob(&(lvol->blob), spdk_lvol_do_nothing, NULL);
+	spdk_bs_md_delete_blob(bs, blobid, spdk_lvol_do_nothing, NULL);
+	free(lvol->name);
+	free(lvol);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)

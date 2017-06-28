@@ -40,8 +40,21 @@ int g_lvserrno;
 static struct spdk_bdev g_bdev = {};
 static struct spdk_bs_dev *g_bs_dev = NULL;
 static struct spdk_lvol_store *g_lvol_store = NULL;
+static struct spdk_lvol *g_lvol = NULL;
 bool lvol_store_initialize_fail = false;
 bool lvol_store_initialize_cb_fail = false;
+
+void
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	return;
+}
+
+void
+spdk_bdev_unregister(struct spdk_bdev *bdev)
+{
+	return;
+}
 
 bool
 spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx)
@@ -104,6 +117,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	} else {
 		lvs = calloc(1, sizeof(*lvs));
 		lvs->bs_dev = bs_dev;
+		uuid_generate_time(lvs->uuid);
 		error = 0;
 	}
 	cb_fn(cb_arg, lvs, error);
@@ -133,6 +147,14 @@ spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 }
 
 static void
+lvol_op_with_handle_complete(void *cb_arg, struct spdk_lvol *lvol, int lvserrno)
+{
+	g_lvserrno = lvserrno;
+	g_lvol = lvol;
+	return;
+}
+
+static void
 lvol_store_op_with_handle_complete(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 {
 	g_lvserrno = lvserrno;
@@ -147,6 +169,29 @@ lvol_store_op_complete(void *cb_arg, int lvserrno)
 	return;
 }
 
+void
+spdk_lvol_create(struct spdk_lvol_store *ls, size_t sz,
+		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol *lvol;
+	int error = 0;
+
+	lvol = calloc(1, sizeof(*lvol));
+	lvol->lvol_store = ls;
+	lvol->sz = sz;
+	lvol->name = "test_lvol_id";
+	error = 0;
+
+	cb_fn(cb_arg, lvol, error);
+}
+
+void
+spdk_lvol_destroy(struct spdk_lvol *lvol)
+{
+	CU_ASSERT_FATAL(lvol == g_lvol);
+	free(lvol);
+	g_lvol = NULL;
+}
 
 static void
 lvol_init(void)
@@ -194,6 +239,15 @@ lvol_init(void)
 	bs_dev_temp = g_bs_dev;
 	g_bs_dev = NULL;
 
+	/* Create lvol on lvol store */
+	size_t sz = 10;
+
+	vbdev_lvol_create(lvs->uuid, sz, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol != NULL);
+
+	vbdev_lvol_destruct(g_lvol);
+
 	/* Bdev with lvol store already claimed */
 	rc = vbdev_lvs_create(&g_bdev, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
@@ -210,6 +264,30 @@ lvol_init(void)
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(g_bs_dev == NULL);
 	CU_ASSERT(g_bdev.status = SPDK_BDEV_STATUS_UNCLAIMED);
+}
+
+int
+spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
+{
+	return 0;
+}
+
+int
+spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
+int
+spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
+{
+	return 0;
+}
+
+int
+spdk_json_write_object_end(struct spdk_json_write_ctx *w)
+{
+	return 0;
 }
 
 int main(int argc, char **argv)
