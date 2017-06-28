@@ -1002,6 +1002,81 @@ int spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
 				  uint32_t io_flags);
 
 /**
+ * \brief Submits a compare I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the compare I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload virtual address pointer to the data payload
+ * \param lba starting LBA to compare the data
+ * \param lba_count length (in sectors) for the compare operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
+			     uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg, uint32_t io_flags);
+
+/**
+ * \brief Submits a compare I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the compare I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param lba starting LBA to compare the data
+ * \param lba_count length (in sectors) for the compare operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ * \param reset_sgl_fn callback function to reset scattered payload
+ * \param next_sge_fn callback function to iterate each scattered
+ * payload memory segment
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+			      uint64_t lba, uint32_t lba_count,
+			      spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
+			      spdk_nvme_req_reset_sgl_cb reset_sgl_fn,
+			      spdk_nvme_req_next_sge_cb next_sge_fn);
+
+/**
+ * \brief Submits a compare I/O to the specified NVMe namespace.
+ *
+ * \param ns NVMe namespace to submit the compare I/O
+ * \param qpair I/O queue pair to submit the request
+ * \param payload virtual address pointer to the data payload
+ * \param metadata virtual address pointer to the metadata payload, the length
+ *	           of metadata is specified by spdk_nvme_ns_get_md_size()
+ * \param lba starting LBA to compare the data
+ * \param lba_count length (in sectors) for the compare operation
+ * \param cb_fn callback function to invoke when the I/O is completed
+ * \param cb_arg argument to pass to the callback function
+ * \param io_flags set flags, defined in nvme_spec.h, for this I/O
+ * \param apptag_mask application tag mask.
+ * \param apptag application tag to use end-to-end protection information.
+ *
+ * \return 0 if successfully submitted, ENOMEM if an nvme_request
+ *	     structure cannot be allocated for the I/O request
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				     void *payload, void *metadata,
+				     uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+				     void *cb_arg, uint32_t io_flags,
+
+/**
  * \brief Submits a read I/O to the specified NVMe namespace.
  *
  * \param ns NVMe namespace to submit the read I/O
@@ -1042,7 +1117,7 @@ int spdk_nvme_ns_cmd_read(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  * The user must ensure that only one thread submits I/O on a given qpair at any given time.
- */
+*/
 int spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   uint64_t lba, uint32_t lba_count,
 			   spdk_nvme_cmd_cb cb_fn, void *cb_arg, uint32_t io_flags,
@@ -1087,7 +1162,7 @@ int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
  * \param type A bit field constructed from \ref enum spdk_nvme_dsm_attribute.
  * \param qpair I/O queue pair to submit the request
  * \param ranges An array of \ref spdk_nvme_dsm_range elements describing
- 		 the LBAs to operate on.
+		the LBAs to operate on.
  * \param num_ranges The number of elements in the ranges array.
  * \param cb_fn callback function to invoke when the I/O is completed
  * \param cb_arg argument to pass to the callback function
@@ -1103,8 +1178,8 @@ int spdk_nvme_ns_cmd_read_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpai
  * required, simply build and submit a raw command using spdk_nvme_ctrlr_cmd_io_raw().
  */
 int spdk_nvme_ns_cmd_dataset_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
-					uint32_t type,
-					const struct spdk_nvme_dsm_range *ranges,
+				        uint32_t type,
+				        const struct spdk_nvme_dsm_range *ranges,
 					uint16_t num_ranges,
 					spdk_nvme_cmd_cb cb_fn,
 					void *cb_arg);
@@ -1143,14 +1218,14 @@ int spdk_nvme_ns_cmd_flush(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpai
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  * The user must ensure that only one thread submits I/O on a given qpair at any given time.
- */
+*/
 int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
-		struct spdk_nvme_qpair *qpair,
-		struct spdk_nvme_reservation_register_data *payload,
-		bool ignore_key,
-		enum spdk_nvme_reservation_register_action action,
-		enum spdk_nvme_reservation_register_cptpl cptpl,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+					  struct spdk_nvme_qpair *qpair,
+					  struct spdk_nvme_reservation_register_data *payload,
+					  bool ignore_key,
+					  enum spdk_nvme_reservation_register_action action,
+					  enum spdk_nvme_reservation_register_cptpl cptpl,
+					  spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
  * \brief Submits a reservation release to the specified NVMe namespace.
@@ -1171,12 +1246,12 @@ int spdk_nvme_ns_cmd_reservation_register(struct spdk_nvme_ns *ns,
  * The user must ensure that only one thread submits I/O on a given qpair at any given time.
  */
 int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
-		struct spdk_nvme_qpair *qpair,
-		struct spdk_nvme_reservation_key_data *payload,
-		bool ignore_key,
-		enum spdk_nvme_reservation_release_action action,
-		enum spdk_nvme_reservation_type type,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+					 struct spdk_nvme_qpair *qpair,
+					 struct spdk_nvme_reservation_key_data *payload,
+					 bool ignore_key,
+					 enum spdk_nvme_reservation_release_action action,
+					 enum spdk_nvme_reservation_type type,
+					 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
  * \brief Submits a reservation acquire to the specified NVMe namespace.
@@ -1197,12 +1272,12 @@ int spdk_nvme_ns_cmd_reservation_release(struct spdk_nvme_ns *ns,
  * The user must ensure that only one thread submits I/O on a given qpair at any given time.
  */
 int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
-		struct spdk_nvme_qpair *qpair,
-		struct spdk_nvme_reservation_acquire_data *payload,
-		bool ignore_key,
-		enum spdk_nvme_reservation_acquire_action action,
-		enum spdk_nvme_reservation_type type,
-		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+					 struct spdk_nvme_qpair *qpair,
+					 struct spdk_nvme_reservation_acquire_data *payload,
+					 bool ignore_key,
+					 enum spdk_nvme_reservation_acquire_action action,
+					 enum spdk_nvme_reservation_type type,
+					 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
  * \brief Submits a reservation report to the specified NVMe namespace.
@@ -1219,7 +1294,7 @@ int spdk_nvme_ns_cmd_reservation_acquire(struct spdk_nvme_ns *ns,
  *
  * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  * The user must ensure that only one thread submits I/O on a given qpair at any given time.
- */
+*/
 int spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 					struct spdk_nvme_qpair *qpair,
 					void *payload, uint32_t len,
