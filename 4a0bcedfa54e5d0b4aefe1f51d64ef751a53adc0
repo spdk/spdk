@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24faecab_6c913349",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:12:58Z",
+      "side": 1,
+      "message": "Should replace this with SPDK_CONTAINEROF (already available from spdk/util.h).  I\u0027m OK if you just want to make that change in this patch instead of making it a separate patch.",
+      "revId": "4a0bcedfa54e5d0b4aefe1f51d64ef751a53adc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
