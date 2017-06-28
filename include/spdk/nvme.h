@@ -286,6 +286,14 @@ typedef void (*spdk_nvme_attach_cb)(void *cb_ctx, const struct spdk_nvme_transpo
 typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Export the socket fd for monitor the hotplug events to application
+ *
+ * Provide secondary option for hotplug events monitor, export the fd for hotplug monitor to
+ * application and then the application can use their own strategy to detect the events.
+ */
+int spdk_nvme_get_hotplug_fd(void);
+
+/**
  * \brief Enumerate the bus indicated by the transport ID and attach the userspace NVMe driver
  * to each device found if desired.
  *

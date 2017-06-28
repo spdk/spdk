@@ -581,6 +581,7 @@ int	nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
 void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
+int	nvme_pcie_get_hotplug_fd(void);
 
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
