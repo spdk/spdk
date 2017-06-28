@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8cc3ec33_b109e707",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 1464,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-28T02:27:48Z",
+      "side": 1,
+      "message": "make sure all the GPT detection can be finished before the subsystem initialization. If GPT vbdev is initialized before split or other modules, when called spdk_bdev_register, it will not put bdev in the global list, and since the detection can only be finished in asynchronous way, then will cause issue to run the bdev test.",
+      "parentUuid": "5207ab34_8c77da00",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc54c483_c58a8ee3",
         "filename": "lib/bdev/gpt/vbdev_gpt.c",
         "patchSetId": 62
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-28T00:34:54Z",
       "side": 1,
       "message": "Can you explain this further?  Do you mean the case where a bdev like NVMe is dynamically added via RPC?",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08cd2288_9bd1d33d",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 62
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-28T02:27:48Z",
+      "side": 1,
+      "message": "Yes. For any rpc call to create other devices in other modules, it will call spdk_bdev_register, and it will call vbdev_gpt_register, and it will detect there is GPT or not. Unfortunately, those detection is in asynchronous manner. And if we detect it is a gpt, will automatically claim those devices, and the old device will not be presented anymore. And if there is not asynchronous RPC for checking the available devices, it will cause issue for RPC test.",
+      "parentUuid": "bc54c483_c58a8ee3",
       "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "15df0ced_84a7c47a",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 62
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-28T02:27:48Z",
+      "side": 1,
+      "message": "If we give a device is not existing, nbd process will die. However, we did not know when it will die, so we need to wait several seconds, to make sure it starts in a correct status.",
+      "parentUuid": "4a9501b3_ad85446b",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5e2a5a0_0828cc89",
         "filename": "test/lib/bdev/blockdev.sh",
         "patchSetId": 62
@@ -81,6 +135,24 @@
       "writtenOn": "2017-06-28T00:34:54Z",
       "side": 1,
       "message": "It is still not clear to me how we are actually testing the GPT code here.  If the GPT module fails to detect the SPDK partition, bdevperf will still run without problems.",
+      "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7650bc64_7da1d703",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 62
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-28T02:27:48Z",
+      "side": 1,
+      "message": "To test GPT, we use nbd to partition those devices and set GPT \"disabled Yes\" in configuration file. For conducting GPT test, we need to remove GPT \"disabled Yes\", so we need to refresh the configuration file.",
+      "parentUuid": "f5e2a5a0_0828cc89",
       "revId": "d78956ade53e843274d1c4ee4f2a70c8abfe4c37",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
