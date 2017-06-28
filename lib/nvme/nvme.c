@@ -451,6 +451,12 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 }
 
 int
+spdk_nvme_get_hotplug_fd(void)
+{
+	return nvme_transport_get_hotplug_fd(SPDK_NVME_TRANSPORT_PCIE);
+}
+
+int
 spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
 {
 	if (trtype == NULL || str == NULL) {

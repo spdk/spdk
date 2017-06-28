@@ -1134,6 +1134,11 @@ nvme_rdma_discovery_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 	nvme_ctrlr_probe(&trid, NULL, probe_cb, cb_ctx);
 }
 
+int
+nvme_rdma_get_hotplug_fd(enum spdk_nvme_transport_type transport_type)
+{
+	return 0;
+}
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
 nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,

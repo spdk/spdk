@@ -79,6 +79,12 @@ nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
+int
+nvme_transport_get_hotplug_fd(enum spdk_nvme_transport_type transport_type)
+{
+	return 0;
+}
+
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
