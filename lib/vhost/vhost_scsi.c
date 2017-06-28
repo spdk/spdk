@@ -862,14 +862,14 @@ spdk_vhost_scsi_controller_construct(void)
 static int
 new_device(int vid)
 {
-	struct spdk_vhost_dev *vdev = NULL;
+	struct spdk_vhost_scsi_dev *svdev = NULL;
 
-	vdev = spdk_vhost_dev_load(vid);
-	if (vdev == NULL) {
+	svdev = to_scsi_dev(spdk_vhost_dev_load(vid));
+	if (svdev == NULL) {
 		return -1;
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, add_vdev_cb, vdev, 1, "add scsi vdev");
+	spdk_vhost_timed_event_send(svdev->vdev.lcore, add_vdev_cb, svdev, 1, "add scsi vdev");
 	return 0;
 }
 
