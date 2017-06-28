@@ -39,6 +39,8 @@
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
 
+#include <sys/epoll.h>
+
 struct dev_ctx {
 	TAILQ_ENTRY(dev_ctx)	tailq;
 	bool			is_new;
@@ -75,6 +77,12 @@ static int g_expected_removal_times = -1;
 static int g_insert_times;
 static int g_removal_times;
 static int g_shm_id = -1;
+static int g_hotplug_fd = -1;
+static pthread_t hotplug_monitor;
+static pthread_t io_loop;
+static int g_epfd;
+static bool quit;
+pthread_mutex_t g_mutex;
 
 static void
 task_complete(struct perf_task *task);
@@ -125,6 +133,7 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 		goto skip;
 	}
 	g_insert_times++;
+
 	TAILQ_INSERT_TAIL(&g_devs, dev, tailq);
 	return;
 
@@ -300,8 +309,8 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	spdk_nvme_detach(ctrlr);
 }
 
-static void
-io_loop(void)
+static void *
+io_loop_func(void *arg)
 {
 	struct dev_ctx *dev, *dev_tmp;
 	uint64_t tsc_end;
@@ -312,7 +321,7 @@ io_loop(void)
 
 	while (1) {
 		uint64_t now;
-
+		pthread_mutex_lock(&g_mutex);
 		/*
 		 * Check for completed I/O for each controller. A new
 		 * I/O will be submitted in the io_complete callback
@@ -329,14 +338,6 @@ io_loop(void)
 		}
 
 		/*
-		 * Check for hotplug events.
-		 */
-		if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
-			fprintf(stderr, "spdk_nvme_probe() failed\n");
-			break;
-		}
-
-		/*
 		 * Check for devices which were hot-removed and have finished
 		 * processing outstanding I/Os.
 		 *
@@ -349,6 +350,7 @@ io_loop(void)
 				unregister_dev(dev);
 			}
 		}
+		pthread_mutex_unlock(&g_mutex);
 
 		now = spdk_get_ticks();
 		if (now > tsc_end) {
@@ -368,6 +370,8 @@ io_loop(void)
 		drain_io(dev);
 		unregister_dev(dev);
 	}
+	quit = true;
+	return NULL;
 }
 
 static void usage(char *program_name)
@@ -431,6 +435,34 @@ register_controllers(void)
 	return 0;
 }
 
+static void *
+hotplug_monitor_func(void *arg)
+{
+	struct epoll_event ev, events[20];
+	int i, nfds = 0;
+
+	memset(events, 0, sizeof(struct epoll_event) * 20);
+	g_epfd = epoll_create(256);
+	ev.data.fd = g_hotplug_fd;
+	ev.events = EPOLLIN;
+	epoll_ctl(g_epfd, EPOLL_CTL_ADD, g_hotplug_fd, &ev);
+	while (quit == false) {
+		nfds = epoll_wait(g_epfd, events, 20, 5000);
+		for (i = 0; i < nfds; ++i) {
+			if (events[i].events & EPOLLIN) {
+				pthread_mutex_lock(&g_mutex);
+				if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
+					fprintf(stderr, "spdk_nvme_probe() failed\n");
+					break;
+				}
+				pthread_mutex_unlock(&g_mutex);
+				memset(events, 0, sizeof(struct epoll_event) * 20);
+			}
+		}
+	}
+	return NULL;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
@@ -460,9 +492,15 @@ int main(int argc, char **argv)
 	if (register_controllers() != 0) {
 		return 1;
 	}
-
+	g_hotplug_fd = spdk_nvme_get_hotplug_fd();
 	fprintf(stderr, "Initialization complete. Starting I/O...\n");
-	io_loop();
+
+	pthread_mutex_init(&g_mutex, NULL);
+	pthread_create(&hotplug_monitor, NULL, hotplug_monitor_func, NULL);
+	pthread_create(&io_loop, NULL, io_loop_func, NULL);
+
+	pthread_join(hotplug_monitor, NULL);
+	pthread_join(io_loop, NULL);
 
 	if (g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) {
 		fprintf(stderr, "Expected inserts %d != actual inserts %d\n",
