@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd6e6ecb_ae651232",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T22:30:45Z",
+      "side": 1,
+      "message": "This should use SPDK_ERRLOG() like the case above.",
+      "revId": "28cda6da438b4f77317deaf46c8f50353939538e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "077d7181_562c52a1",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T22:30:45Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem to be used anywhere (and isn\u0027t defined in the current version of linux/virtio_blk.h as far as I can tell).",
+      "revId": "28cda6da438b4f77317deaf46c8f50353939538e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81ad5582_c3b33ff8",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T22:30:45Z",
+      "side": 1,
+      "message": "Add blank line between declarations and statements.",
+      "revId": "28cda6da438b4f77317deaf46c8f50353939538e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a0cc24d_373b10ec",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T22:30:45Z",
+      "side": 1,
+      "message": "This looks like the only place \"out\" is used - can we drop the label and make this just break?",
+      "revId": "28cda6da438b4f77317deaf46c8f50353939538e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "789691fb_47b02bb4",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T22:30:45Z",
+      "side": 1,
+      "message": "Drop extra blank line",
+      "revId": "28cda6da438b4f77317deaf46c8f50353939538e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9de6a6b_4a8905f9",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T22:30:45Z",
+      "side": 1,
+      "message": "This is a dead store and can be removed.",
+      "revId": "28cda6da438b4f77317deaf46c8f50353939538e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43c8d19b_c1f7dabd",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T22:30:45Z",
+      "side": 1,
+      "message": "Drop extra blank line",
+      "revId": "28cda6da438b4f77317deaf46c8f50353939538e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
