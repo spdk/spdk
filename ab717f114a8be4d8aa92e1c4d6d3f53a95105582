@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f840271c_1feb49fd",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T00:29:36Z",
+      "side": 1,
+      "message": "This needs \\param docs above (also can probably use enum spdk_nvme_fw_commit_action as the type).",
+      "revId": "ab717f114a8be4d8aa92e1c4d6d3f53a95105582",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a63f8e52_7cb05230",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-28T00:29:36Z",
+      "side": 1,
+      "message": "Unrelated whitespace change?",
+      "revId": "ab717f114a8be4d8aa92e1c4d6d3f53a95105582",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
