@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d856ce50_161aa962",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:33:42Z",
+      "side": 1,
+      "message": "Won\u0027t this function be called from the context of a reactor/poller?  i think this would only maybe work if this function was called from the context of the DPDK vhost thread.  Otherwise if the RPC poller and eventq poller are running on the same reactor, this loop will always timeout because the event poller never gets to run.  (Plus this will keep anything else from running on this reactor for a full second.)",
+      "revId": "182c09dcf74ce65bdd1af6b516b17141a0be0442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
