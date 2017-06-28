@@ -202,6 +202,10 @@ spdk_mem_map_free(struct spdk_mem_map **pmap)
 
 	map = *pmap;
 
+	if (!map) {
+		return;
+	}
+
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 	spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_UNREGISTER);
 	TAILQ_REMOVE(&g_spdk_mem_maps, map, tailq);
