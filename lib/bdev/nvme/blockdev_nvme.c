@@ -460,6 +460,8 @@ bdev_nvme_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_nvme_ns *ns;
 	union spdk_nvme_vs_register vs;
 	union spdk_nvme_csts_register csts;
+	const char *trtype_str;
+	const char *adrfam_str;
 	char buf[128];
 
 	cdata = spdk_nvme_ctrlr_get_data(nvme_bdev->nvme_ctrlr->ctrlr);
@@ -478,13 +480,16 @@ bdev_nvme_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "trid");
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_name(w, "trtype");
-	if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		spdk_json_write_string(w, "PCIe");
-	} else if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_RDMA) {
-		spdk_json_write_string(w, "RDMA");
-	} else {
-		spdk_json_write_string(w, "Unknown");
+	trtype_str = spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype);
+	if (trtype_str) {
+		spdk_json_write_name(w, "trtype");
+		spdk_json_write_string(w, trtype_str);
+	}
+
+	adrfam_str = spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam);
+	if (adrfam_str) {
+		spdk_json_write_name(w, "adrfam");
+		spdk_json_write_string(w, adrfam_str);
 	}
 
 	if (nvme_ctrlr->trid.traddr[0] != '\0') {

@@ -467,6 +467,19 @@ spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const
 	return 0;
 }
 
+const char *
+spdk_nvme_transport_id_trtype_str(enum spdk_nvme_transport_type trtype)
+{
+	switch (trtype) {
+	case SPDK_NVME_TRANSPORT_PCIE:
+		return "PCIe";
+	case SPDK_NVME_TRANSPORT_RDMA:
+		return "RDMA";
+	default:
+		return NULL;
+	}
+}
+
 int
 spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *str)
 {
@@ -486,6 +499,23 @@ spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *s
 		return -ENOENT;
 	}
 	return 0;
+}
+
+const char *
+spdk_nvme_transport_id_adrfam_str(enum spdk_nvmf_adrfam adrfam)
+{
+	switch (adrfam) {
+	case SPDK_NVMF_ADRFAM_IPV4:
+		return "IPv4";
+	case SPDK_NVMF_ADRFAM_IPV6:
+		return "IPv6";
+	case SPDK_NVMF_ADRFAM_IB:
+		return "IB";
+	case SPDK_NVMF_ADRFAM_FC:
+		return "FC";
+	default:
+		return NULL;
+	}
 }
 
 int
