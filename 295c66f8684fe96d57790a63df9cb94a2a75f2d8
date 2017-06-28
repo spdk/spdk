@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7caedcad_271207bb",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:00:55Z",
+      "side": 1,
+      "message": "Maybe print out features and vhost_features here to help with the debugging?",
+      "revId": "295c66f8684fe96d57790a63df9cb94a2a75f2d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
