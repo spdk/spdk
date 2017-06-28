@@ -79,7 +79,10 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
 		listen_addr = allowed_listener->listen_addr;
 		spdk_json_write_object_begin(w);
+		/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 		spdk_json_write_name(w, "transport");
+		spdk_json_write_string(w, listen_addr->trname);
+		spdk_json_write_name(w, "trtype");
 		spdk_json_write_string(w, listen_addr->trname);
 		spdk_json_write_name(w, "traddr");
 		spdk_json_write_string(w, listen_addr->traddr);
@@ -174,7 +177,9 @@ struct rpc_listen_addresses {
 };
 
 static const struct spdk_json_object_decoder rpc_listen_address_decoders[] = {
-	{"transport", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string},
+	/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
+	{"transport", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
+	{"trtype", offsetof(struct rpc_listen_address, transport), spdk_json_decode_string, true},
 	{"traddr", offsetof(struct rpc_listen_address, traddr), spdk_json_decode_string},
 	{"trsvcid", offsetof(struct rpc_listen_address, trsvcid), spdk_json_decode_string},
 };

@@ -509,6 +509,11 @@ spdk_nvmf_construct_subsystem(const char *name,
 			}
 		}
 
+		if (addresses[i].transport == NULL) {
+			SPDK_ERRLOG("Missing listen address transport type\n");
+			goto error;
+		}
+
 		listen_addr = spdk_nvmf_tgt_listen(addresses[i].transport,
 						   addresses[i].traddr, addresses[i].trsvcid);
 		if (listen_addr == NULL) {
