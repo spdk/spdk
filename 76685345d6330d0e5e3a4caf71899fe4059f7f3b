@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7062662e_d7d849df",
+        "filename": "lib/vhost/task.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:03:55Z",
+      "side": 1,
+      "message": "could this be:\n\ntask-\u003esvdev-\u003evdev.task_cnt--;",
+      "revId": "76685345d6330d0e5e3a4caf71899fe4059f7f3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baac8948_fae9b7cb",
+        "filename": "lib/vhost/task.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:03:55Z",
+      "side": 1,
+      "message": "task-\u003esvdev-\u003evdev.task_cnt++?",
+      "revId": "76685345d6330d0e5e3a4caf71899fe4059f7f3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52245964_c63ac954",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-28T20:03:55Z",
+      "side": 0,
+      "message": "should we add asserts to the functions that are now directly incrementing/decrementing the task_cnt?",
+      "revId": "295c66f8684fe96d57790a63df9cb94a2a75f2d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
