@@ -16,6 +16,24 @@
       "revId": "b7d530f4fa2dae512a7150de0eb11b1802b3f64b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aabed42_b9bffe82",
+        "filename": "dpdk",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-29T14:01:18Z",
+      "side": 1,
+      "message": "dpdk changed since I last checked in so on rebase I did \"git submodule update\" and \"git add dpdk\" and that\u0027s how it got there.  Did this last time it changed out from under me and it showed up in my list and was fine.  Just rebased again",
+      "parentUuid": "afcec960_a16f1c9e",
+      "revId": "b7d530f4fa2dae512a7150de0eb11b1802b3f64b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
