@@ -23,7 +23,9 @@ timing_enter check_format
 timing_exit check_format
 
 timing_enter build_kmod
-./scripts/build_kmod.sh build
+if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
+	./scripts/build_kmod.sh build
+fi
 timing_exit build_kmod
 
 scanbuild=''

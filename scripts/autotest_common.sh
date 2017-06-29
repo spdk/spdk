@@ -11,6 +11,7 @@ fi
 
 # Set defaults for missing test config options
 : ${SPDK_BUILD_DOC=1}; export SPDK_BUILD_DOC
+: ${SPDK_BUILD_IOAT_KMOD=1}; export SPDK_BUILD_KMOD
 : ${SPDK_RUN_SCANBUILD=1}; export SPDK_RUN_SCANBUILD
 : ${SPDK_RUN_VALGRIND=1}; export SPDK_RUN_VALGRIND
 : ${SPDK_TEST_UNITTEST=1}; export SPDK_TEST_UNITTEST
