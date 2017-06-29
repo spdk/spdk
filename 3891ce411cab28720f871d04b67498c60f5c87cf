@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0bfd8ca_b71374a8",
+        "filename": "examples/blobfs/fio_plugin/jobfile",
+        "patchSetId": 4
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T18:34:36Z",
+      "side": 1,
+      "message": "Should this be updated to use the LD_PRELOAD method like the NVMe fio_plugin?",
+      "revId": "3891ce411cab28720f871d04b67498c60f5c87cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
