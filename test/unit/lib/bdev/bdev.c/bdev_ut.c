@@ -99,9 +99,207 @@ null_clean(void)
 	return 0;
 }
 
-static void
-bdev_test(void)
+static int
+stub_destruct(void *ctx)
 {
+	return 0;
+}
+
+static struct spdk_bdev_fn_table fn_table = {
+	.destruct = stub_destruct,
+};
+
+static struct spdk_bdev *
+allocate_bdev(char *name)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = calloc(1, sizeof(*bdev));
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	bdev->name = name;
+	bdev->fn_table = &fn_table;
+
+	spdk_bdev_register(bdev);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
+
+	return bdev;
+}
+
+static struct spdk_bdev *
+allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev *array[2];
+
+	bdev = calloc(1, sizeof(*bdev));
+	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	bdev->name = name;
+	bdev->fn_table = &fn_table;
+
+	/* vbdev must have at least one base bdev */
+	CU_ASSERT(base1 != NULL);
+
+	array[0] = base1;
+	array[1] = base2;
+
+	spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
+
+	return bdev;
+}
+
+static void
+free_bdev(struct spdk_bdev *bdev)
+{
+	spdk_bdev_unregister(bdev);
+	free(bdev);
+}
+
+static void
+free_vbdev(struct spdk_bdev *bdev)
+{
+	spdk_vbdev_unregister(bdev);
+	free(bdev);
+}
+
+static void
+open_write_test(void)
+{
+	struct spdk_bdev *bdev[8];
+	struct spdk_bdev_desc *desc[8];
+	int rc;
+
+	/*
+	 * Create a tree of bdevs to test various open w/ write cases.
+	 *
+	 * bdev0 through bdev2 are physical block devices, such as NVMe
+	 * namespaces or Ceph block devices.
+	 *
+	 * bdev3 is a virtual bdev with multiple base bdevs.  This models
+	 * caching or RAID use cases.
+	 *
+	 * bdev4 through bdev6 are all virtual bdevs with the same base
+	 * bdev.  This models partitioning or logical volume use cases.
+	 *
+	 * bdev7 is a virtual bdev with multiple base bdevs, but these
+	 * base bdevs are themselves virtual bdevs.
+	 *
+	 *                bdev7
+	 *                  |
+	 *            +----------+
+	 *            |          |
+	 *          bdev3      bdev4   bdev5   bdev6
+	 *            |          |       |       |
+	 *        +---+---+      +-------+-------+
+	 *        |       |              |
+	 *      bdev0   bdev1          bdev2
+	 */
+
+	bdev[0] = allocate_bdev("bdev0");
+	bdev[1] = allocate_bdev("bdev1");
+	bdev[2] = allocate_bdev("bdev2");
+
+	bdev[3] = allocate_vbdev("bdev3", bdev[0], bdev[1]);
+
+	bdev[4] = allocate_vbdev("bdev4", bdev[2], NULL);
+	bdev[5] = allocate_vbdev("bdev5", bdev[2], NULL);
+	bdev[6] = allocate_vbdev("bdev6", bdev[2], NULL);
+
+	bdev[7] = allocate_vbdev("bdev7", bdev[3], bdev[4]);
+
+	/* Open bdev0 read-only.  This should succeed. */
+	rc = spdk_bdev_open(bdev[0], false, NULL, NULL, &desc[0]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[0] != NULL);
+	spdk_bdev_close(desc[0]);
+
+	/* Open bdev1 read/write.  This should succeed. */
+	rc = spdk_bdev_open(bdev[1], true, NULL, NULL, &desc[1]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[1] != NULL);
+
+	/*
+	 * Open bdev3 read/write.  This should fail, since one of its
+	 * base bdevs have been explicitly opened read/write.
+	 */
+	rc = spdk_bdev_open(bdev[3], true, NULL, NULL, &desc[3]);
+	CU_ASSERT(rc == -EPERM);
+
+	/* Open bdev3 read-only.  This should succeed. */
+	rc = spdk_bdev_open(bdev[3], false, NULL, NULL, &desc[3]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[3] != NULL);
+	spdk_bdev_close(desc[3]);
+
+	/*
+	 * Open bdev7 read/write.  This should fail, since one of its
+	 * base bdevs have been explicitly opened read/write.  This
+	 * test ensures the bdev code traverses through multiple levels
+	 * of base bdevs.
+	 */
+	rc = spdk_bdev_open(bdev[7], true, NULL, NULL, &desc[7]);
+	CU_ASSERT(rc == -EPERM);
+
+	/* Open bdev7 read-only.  This should succeed. */
+	rc = spdk_bdev_open(bdev[7], false, NULL, NULL, &desc[7]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[7] != NULL);
+	spdk_bdev_close(desc[7]);
+
+	/* Reset tree by closing remaining descriptors. */
+	spdk_bdev_close(desc[1]);
+
+	/* Open bdev7 read/write.  This should succeed. */
+	rc = spdk_bdev_open(bdev[7], true, NULL, NULL, &desc[7]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[7] != NULL);
+
+	/*
+	 * Open bdev4 read/write.  This should fail, since one of its
+	 * virtual bdevs has been explicitly opened read/write.
+	 */
+	rc = spdk_bdev_open(bdev[4], true, NULL, NULL, &desc[4]);
+	CU_ASSERT(rc == -EPERM);
+
+	/* Open bdev4 read-only.  This should succeed. */
+	rc = spdk_bdev_open(bdev[4], false, NULL, NULL, &desc[4]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[4] != NULL);
+	spdk_bdev_close(desc[4]);
+
+	/*
+	 * Open bdev2 read/write.  This should fail, since one of its
+	 * virtual bdevs has been explicitly opened read/write.  This
+	 * test ensures the bdev code traverses through multiple levels
+	 * of virtual bdevs.
+	 */
+	rc = spdk_bdev_open(bdev[2], true, NULL, NULL, &desc[2]);
+	CU_ASSERT(rc == -EPERM);
+
+	/* Open bdev2 read-only.  This should succeed. */
+	rc = spdk_bdev_open(bdev[2], false, NULL, NULL, &desc[2]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[2] != NULL);
+	spdk_bdev_close(desc[2]);
+
+	/* Reset tree by closing remaining descriptors. */
+	spdk_bdev_close(desc[7]);
+
+	free_vbdev(bdev[7]);
+
+	free_vbdev(bdev[3]);
+	free_vbdev(bdev[4]);
+	free_vbdev(bdev[5]);
+	free_vbdev(bdev[6]);
+
+	free_bdev(bdev[0]);
+	free_bdev(bdev[1]);
+	free_bdev(bdev[2]);
+
 }
 
 int
@@ -121,7 +319,7 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "bdev", bdev_test) == NULL
+		CU_add_test(suite, "open_write", open_write_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

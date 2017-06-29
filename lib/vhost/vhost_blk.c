@@ -62,6 +62,7 @@ struct spdk_vhost_blk_task {
 struct spdk_vhost_blk_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *bdev_desc;
 	struct spdk_io_channel *bdev_io_channel;
 	struct spdk_poller *requestq_poller;
 	struct spdk_ring *tasks_pool;
@@ -341,7 +342,7 @@ add_vdev_cb(void *arg)
 	spdk_vhost_dev_mem_register(&bvdev->vdev);
 
 	if (bvdev->bdev) {
-		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev);
+		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
 		if (!bvdev->bdev_io_channel) {
 			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
 			abort();
@@ -571,9 +572,10 @@ spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_nam
 		return -1;
 	}
 
-	if (spdk_bdev_claim(bdev, bdev_remove_cb, bvdev) == false) {
-		SPDK_ERRLOG("Controller %s: failed to claim bdev '%s'\n",
-			    name, dev_name);
+	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvdev, &bvdev->bdev_desc);
+	if (ret != 0) {
+		SPDK_ERRLOG("Controller %s: could not open bdev '%s', error=%d\n",
+			    name, dev_name, ret);
 		goto err;
 	}
 
@@ -582,7 +584,7 @@ spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_nam
 	ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
 				       &vhost_blk_device_backend);
 	if (ret != 0) {
-		spdk_bdev_unclaim(bdev);
+		spdk_bdev_close(bvdev->bdev_desc);
 		goto err;
 	}
 
@@ -605,7 +607,7 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 		return -EINVAL;
 	}
 
-	spdk_bdev_unclaim(bvdev->bdev);
+	spdk_bdev_close(bvdev->bdev_desc);
 	bvdev->bdev = NULL;
 
 	SPDK_NOTICELOG("Controller %s: removed device\n", vdev->name);
