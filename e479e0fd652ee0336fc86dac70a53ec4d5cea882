@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "816c723b_9eca7582",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-29T15:38:16Z",
+      "side": 1,
+      "message": "These should be passed to spdk_scsi_lun_construct.",
+      "revId": "e479e0fd652ee0336fc86dac70a53ec4d5cea882",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
