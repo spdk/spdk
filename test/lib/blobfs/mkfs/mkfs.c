@@ -79,12 +79,6 @@ spdk_mkfs_run(void *arg1, void *arg2)
 		return;
 	}
 
-	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-		SPDK_ERRLOG("could not claim bdev %s\n", g_bdev_name);
-		spdk_app_stop(-1);
-		return;
-	}
-
 	printf("Initializing filesystem on bdev %s...", g_bdev_name);
 	fflush(stdout);
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev);

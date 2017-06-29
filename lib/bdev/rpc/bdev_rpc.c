@@ -72,12 +72,8 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_server_conn *conn,
 		spdk_json_write_name(w, "num_blocks");
 		spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
 
-		spdk_json_write_name(w, "claimed");
-		if (bdev->status == SPDK_BDEV_STATUS_CLAIMED) {
-			spdk_json_write_bool(w, true);
-		} else {
-			spdk_json_write_bool(w, false);
-		}
+		spdk_json_write_name(w, "opened_for_write");
+		spdk_json_write_bool(w, bdev->opened_for_write);
 
 		spdk_json_write_name(w, "driver_specific");
 		spdk_json_write_object_begin(w);
