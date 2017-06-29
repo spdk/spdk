@@ -63,8 +63,6 @@ struct spdk_json_write_ctx;
 /** Blockdev status */
 enum spdk_bdev_status {
 	SPDK_BDEV_STATUS_INVALID,
-	SPDK_BDEV_STATUS_UNCLAIMED,
-	SPDK_BDEV_STATUS_CLAIMED,
 	SPDK_BDEV_STATUS_REMOVING,
 };
 
@@ -74,6 +72,11 @@ enum spdk_bdev_status {
  * This is a virtual representation of a block device that is exported by the backend.
  */
 struct spdk_bdev;
+
+/**
+ * \brief Handle to an opened SPDK block device.
+ */
+struct spdk_bdev_desc;
 
 /** Blockdev I/O type */
 enum spdk_bdev_io_type {
@@ -139,29 +142,26 @@ struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
  */
 struct spdk_bdev *spdk_bdev_first_leaf(void);
 struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
-/**
- * Claim ownership of a block device.
- *
- * User applications and virtual blockdevs may use this to mediate access to bdevs.
- *
- * When the ownership of the bdev is no longer needed, the user should call spdk_bdev_unclaim().
- *
- * \param bdev Block device to claim.
- * \param remove_cb callback function for hot remove the device.
- * \param remove_ctx param for hot removal callback function.
- * \return true if the caller claimed the bdev, or false if it was already claimed by another user.
- */
-bool spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx);
 
 /**
- * Release claim of ownership of a block device.
+ * Open a block device for I/O operations.
  *
- * When a bdev reference acquired with spdk_bdev_claim() is no longer needed, the user should
- * release the claim using spdk_bdev_unclaim().
- *
- * \param bdev Block device to release.
+ * \param bdev Block device to epen.
+ * \param write true is read/write access requested, false if read-only
+ * \param remove_cb callback function for hot remove the device.
+ * \param remove_ctx param for hot removal callback function.
+ * \param desc output parameter for descriptor when operation is successful
+ * \return 0 if operation is successful, suitable errno value otherwise
  */
-void spdk_bdev_unclaim(struct spdk_bdev *bdev);
+int spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+		   void *remove_ctx, struct spdk_bdev_desc **desc);
+
+/**
+ * Close a previously opened block device.
+ *
+ * \param desc Block device descriptor to close.
+ */
+void spdk_bdev_close(struct spdk_bdev_desc *desc);
 
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
@@ -229,15 +229,16 @@ size_t spdk_bdev_get_buf_align(const struct spdk_bdev *bdev);
 bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
 
 /**
- * Obtain an I/O channel for this block device. I/O channels are bound to threads,
- * so the resulting I/O channel may only be used from the thread it was originally
- * obtained from.
+ * Obtain an I/O channel for the block device opened by the specified
+ * descriptor. I/O channels are bound to threads, so the resulting I/O
+ * channel may only be used from the thread it was originally obtained
+ * from.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor
  *
  * \return A handle to the I/O channel or NULL on failure.
  */
-struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev *bdev);
+struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
 
 /**
  * Submit a read request to the bdev on the given channel.

@@ -477,11 +477,6 @@ spdk_rocksdb_run(void *arg1, void *arg2)
 		exit(1);
 	}
 
-	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-		SPDK_ERRLOG("could not claim bdev %s\n", g_bdev_name.c_str());
-		exit(1);
-	}
-
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
 	printf("using bdev %s\n", g_bdev_name.c_str());
 	spdk_fs_load(g_bs_dev, __send_request, fs_load_cb, NULL);
