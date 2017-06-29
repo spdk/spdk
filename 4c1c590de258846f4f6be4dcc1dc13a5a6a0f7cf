@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc0be7fe_4caa3b44",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 7
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:13:12Z",
+      "side": 1,
+      "message": "Maybe ReadOnly to match the style of other config options?",
+      "revId": "4c1c590de258846f4f6be4dcc1dc13a5a6a0f7cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da2c9f0b_89b1467f",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:13:12Z",
+      "side": 1,
+      "message": "Leave a blank line before the #endif.",
+      "revId": "4c1c590de258846f4f6be4dcc1dc13a5a6a0f7cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14640511_0e8f6a6e",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:13:12Z",
+      "side": 1,
+      "message": "Unrelated whitespace change.",
+      "revId": "4c1c590de258846f4f6be4dcc1dc13a5a6a0f7cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d99bd757_df1b0496",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:13:12Z",
+      "side": 1,
+      "message": "This can probably also be static.",
+      "revId": "4c1c590de258846f4f6be4dcc1dc13a5a6a0f7cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73b6faac_1003e3fe",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:13:12Z",
+      "side": 1,
+      "message": "This initialization is a dead store and can be removed.",
+      "revId": "4c1c590de258846f4f6be4dcc1dc13a5a6a0f7cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4cc2267_4382f598",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:13:12Z",
+      "side": 1,
+      "message": "This should match the name in the construct RPC (use \"readonly\" or \"read_only\" for both).",
+      "range": {
+        "startLine": 526,
+        "startChar": 27,
+        "endLine": 526,
+        "endChar": 36
+      },
+      "revId": "4c1c590de258846f4f6be4dcc1dc13a5a6a0f7cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
