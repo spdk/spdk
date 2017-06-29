@@ -391,6 +391,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			   uint32_t nsid)
 {
 	uint32_t i;
+	int rc;
 
 	assert(subsystem->mode == NVMF_SUBSYSTEM_MODE_VIRTUAL);
 
@@ -420,9 +421,11 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		}
 	}
 
-	if (!spdk_bdev_claim(bdev, spdk_nvmf_ctrlr_hot_remove, subsystem)) {
-		SPDK_ERRLOG("Subsystem %s: bdev %s is already claimed\n",
-			    subsystem->subnqn, spdk_bdev_get_name(bdev));
+	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ctrlr_hot_remove, subsystem,
+			    &subsystem->dev.virt.desc[i]);
+	if (rc != 0) {
+		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
+			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
 		return 0;
 	}
 

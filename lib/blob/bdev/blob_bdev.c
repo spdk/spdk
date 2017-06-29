@@ -43,6 +43,7 @@
 struct blob_bdev {
 	struct spdk_bs_dev	bs_dev;
 	struct spdk_bdev	*bdev;
+	struct spdk_bdev_desc	*desc;
 };
 
 static inline struct spdk_bdev *
@@ -120,9 +121,9 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 static struct spdk_io_channel *
 bdev_blob_create_channel(struct spdk_bs_dev *dev)
 {
-	struct spdk_bdev *bdev = __get_bdev(dev);
+	struct blob_bdev *blob_bdev = (struct blob_bdev *)dev;
 
-	return spdk_bdev_get_io_channel(bdev);
+	return spdk_bdev_get_io_channel(blob_bdev->desc);
 }
 
 static void
@@ -141,6 +142,8 @@ struct spdk_bs_dev *
 spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 {
 	struct blob_bdev *b;
+	struct spdk_bdev_desc *desc;
+	int rc;
 
 	b = calloc(1, sizeof(*b));
 
@@ -149,7 +152,15 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 		return NULL;
 	}
 
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("could not open bdev, error=%d\n", rc);
+		free(b);
+		return NULL;
+	}
+
 	b->bdev = bdev;
+	b->desc = desc;
 	b->bs_dev.blockcnt = spdk_bdev_get_num_blocks(bdev);
 	b->bs_dev.blocklen = spdk_bdev_get_block_size(bdev);
 	b->bs_dev.create_channel = bdev_blob_create_channel;
