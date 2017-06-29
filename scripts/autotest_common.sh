@@ -26,6 +26,7 @@ fi
 : ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
 : ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
 : ${SPDK_RUN_ASAN=0}; export SPDK_RUN_ASAN
+: ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 
 config_params='--enable-debug --enable-werror'
 
@@ -51,7 +52,9 @@ case `uname` in
 		MAKE=make
 		MAKEFLAGS=${MAKEFLAGS:--j$(nproc)}
 		config_params+=' --enable-coverage'
-		config_params+=' --enable-ubsan'
+		if [ $SPDK_RUN_UBSAN -eq 1 ]; then
+			config_params+=' --enable-ubsan'
+		fi
 		if [ $SPDK_RUN_ASAN -eq 1 ]; then
 			if /usr/sbin/ldconfig -p | grep -q asan; then
 				config_params+=' --enable-asan'
