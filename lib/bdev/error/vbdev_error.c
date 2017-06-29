@@ -157,7 +157,6 @@ vbdev_error_free(struct vbdev_error_disk *error_disk)
 
 	TAILQ_REMOVE(&g_vbdev_error_disks, error_disk, tailq);
 
-	spdk_bdev_unclaim(error_disk->base_bdev);
 	vbdev_error_disk_free(error_disk);
 }
 
@@ -216,11 +215,6 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 {
 	struct vbdev_error_disk *disk;
 	int rc;
-
-	if (!spdk_bdev_claim(base_bdev, NULL, NULL)) {
-		SPDK_ERRLOG("Error bdev %s is already claimed\n", base_bdev->name);
-		return -1;
-	}
 
 	disk = calloc(1, sizeof(*disk));
 	if (!disk) {

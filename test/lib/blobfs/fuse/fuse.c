@@ -246,11 +246,6 @@ construct_targets(void)
 		exit(1);
 	}
 
-	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
-		exit(1);
-	}
-
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
 
 	printf("Mounting BlobFS on bdev %s\n", spdk_bdev_get_name(bdev));

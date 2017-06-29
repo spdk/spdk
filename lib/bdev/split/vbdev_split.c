@@ -153,7 +153,6 @@ static void
 vbdev_split_base_put_ref(struct split_base *split_base)
 {
 	if (__sync_sub_and_fetch(&split_base->ref, 1) == 0) {
-		spdk_bdev_unclaim(split_base->base_bdev);
 		free(split_base);
 	}
 }
@@ -238,11 +237,6 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	uint64_t i;
 	int rc;
 	struct split_base *split_base;
-
-	if (!spdk_bdev_claim(base_bdev, NULL, NULL)) {
-		SPDK_ERRLOG("Split bdev %s is already claimed\n", spdk_bdev_get_name(base_bdev));
-		return -1;
-	}
 
 	if (split_size_mb) {
 		if (((split_size_mb * mb) % base_bdev->blocklen) != 0) {
