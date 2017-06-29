@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f281b3b1_8003d72e",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T23:34:55Z",
+      "side": 1,
+      "message": "This looks like it should be SPDK_BUILD_IOAT_KMOD",
+      "range": {
+        "startLine": 14,
+        "startChar": 36,
+        "endLine": 14,
+        "endChar": 51
+      },
+      "revId": "66acf3279a73c31462895cfb7371288aa4718f37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
