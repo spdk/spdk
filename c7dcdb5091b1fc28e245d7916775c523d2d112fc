@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "955cc1a1_9d3f1911",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-29T06:06:00Z",
+      "side": 1,
+      "message": "The virtio spec does not specify lun field format for eventq. All it says is \"The lun ﬁeld addresses a logical unit in the SCSI host.\". Linux is parsing this lun field [1] differently from i.e. requestq lun field [2]. It uses all 16 bits to address LUN, without any addressing method set. [3]\n\n[1] http://elixir.free-electrons.com/linux/latest/source/drivers/scsi/virtio_scsi.c#L328\n[2] http://elixir.free-electrons.com/linux/latest/source/drivers/scsi/virtio_scsi.c#L497\n[3] http://www.t10.org/ftp/t10/document.97/97-122r0.pdf (this doc is from SAM-2, but lun field in kernel requestq/controlq still uses the same format)",
+      "parentUuid": "dd09bdff_710c96d0",
+      "revId": "c7dcdb5091b1fc28e245d7916775c523d2d112fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ffbf45dc_f04f1bc5",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 27
