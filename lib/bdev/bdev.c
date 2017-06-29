@@ -147,6 +147,48 @@ spdk_bdev_next(struct spdk_bdev *prev)
 	return bdev;
 }
 
+static struct spdk_bdev *
+_bdev_next_leaf(struct spdk_bdev *bdev)
+{
+	while (bdev != NULL) {
+		if (TAILQ_EMPTY(&bdev->vbdevs)) {
+			return bdev;
+		} else {
+			bdev = TAILQ_NEXT(bdev, link);
+		}
+	}
+
+	return bdev;
+}
+
+struct spdk_bdev *
+spdk_bdev_first_leaf(void)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = _bdev_next_leaf(TAILQ_FIRST(&g_bdev_mgr.bdevs));
+
+	if (bdev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Starting bdev iteration at %s\n", bdev->name);
+	}
+
+	return bdev;
+}
+
+struct spdk_bdev *
+spdk_bdev_next_leaf(struct spdk_bdev *prev)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = _bdev_next_leaf(TAILQ_NEXT(prev, link));
+
+	if (bdev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Continuing bdev iteration at %s\n", bdev->name);
+	}
+
+	return bdev;
+}
+
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
@@ -1313,13 +1355,15 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 	}
 }
 
-void
-spdk_bdev_register(struct spdk_bdev *bdev)
+static void
+_spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module_if *vbdev_module;
 
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
+
+	TAILQ_INIT(&bdev->vbdevs);
 
 	bdev->reset_in_progress = false;
 	TAILQ_INIT(&bdev->queued_resets);
@@ -1337,6 +1381,21 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 			vbdev_module->bdev_registered(bdev);
 		}
 	}
+}
+
+void
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	_spdk_bdev_register(bdev);
+	bdev->base_bdev = NULL;
+}
+
+void
+spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev *base_bdev)
+{
+	_spdk_bdev_register(vbdev);
+	vbdev->base_bdev = base_bdev;
+	TAILQ_INSERT_TAIL(&base_bdev->vbdevs, vbdev, vbdev_link);
 }
 
 void
@@ -1370,6 +1429,14 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
 	}
+}
+
+void
+spdk_vbdev_unregister(struct spdk_bdev *vbdev)
+{
+	assert(vbdev->base_bdev != NULL);
+	TAILQ_REMOVE(&vbdev->base_bdev->vbdevs, vbdev, vbdev_link);
+	spdk_bdev_unregister(vbdev);
 }
 
 bool
