@@ -44,25 +44,24 @@
 #include "spdk_internal/log.h"
 
 static void
-spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_server_conn *conn,
-			      const struct spdk_json_val *params,
-			      const struct spdk_json_val *id)
+spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_init_grp *ig;
 	int i;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_initiator_groups requires no parameters");
 		return;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
@@ -90,7 +89,7 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_server_conn *conn,
 
 	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_initiator_groups", spdk_rpc_get_initiator_groups)
 
@@ -162,9 +161,8 @@ static const struct spdk_json_object_decoder rpc_initiator_group_decoders[] = {
 };
 
 static void
-spdk_rpc_add_initiator_group(struct spdk_jsonrpc_server_conn *conn,
-			     const struct spdk_json_val *params,
-			     const struct spdk_json_val *id)
+spdk_rpc_add_initiator_group(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
 	size_t i;
@@ -215,17 +213,17 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_server_conn *conn,
 
 	free_rpc_initiator_group(&req);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	if (initiators) {
 		for (i = 0; i < req.initiator_list.num_initiators; i++) {
 			free(initiators[i]);
@@ -251,9 +249,8 @@ static const struct spdk_json_object_decoder rpc_delete_initiator_group_decoders
 };
 
 static void
-spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_server_conn *conn,
-				const struct spdk_json_val *params,
-				const struct spdk_json_val *id)
+spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
 {
 	struct rpc_delete_initiator_group req = {};
 	struct spdk_json_write_ctx *w;
@@ -277,24 +274,23 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_server_conn *conn,
 	spdk_iscsi_tgt_node_delete_map(NULL, ig);
 	spdk_iscsi_init_grp_release(ig);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 SPDK_RPC_REGISTER("delete_initiator_group", spdk_rpc_delete_initiator_group)
 
 static void
-spdk_rpc_get_target_nodes(struct spdk_jsonrpc_server_conn *conn,
-			  const struct spdk_json_val *params,
-			  const struct spdk_json_val *id)
+spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	struct spdk_json_write_ctx *w;
@@ -302,16 +298,16 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_server_conn *conn,
 	int i, maxlun;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_target_nodes requires no parameters");
 		return;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 
 	for (tgt_idx = 0 ; tgt_idx < MAX_ISCSI_TARGET_NODE; tgt_idx++) {
@@ -383,7 +379,7 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_server_conn *conn,
 	}
 	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_target_nodes", spdk_rpc_get_target_nodes)
 
@@ -495,9 +491,8 @@ static const struct spdk_json_object_decoder rpc_target_node_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_target_node(struct spdk_jsonrpc_server_conn *conn,
-			       const struct spdk_json_val *params,
-			       const struct spdk_json_val *id)
+spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
 	struct rpc_target_node req = {};
 	struct spdk_json_write_ctx *w;
@@ -546,17 +541,17 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_server_conn *conn,
 
 	free_rpc_target_node(&req);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_target_node(&req);
 }
 SPDK_RPC_REGISTER("construct_target_node", spdk_rpc_construct_target_node)
@@ -576,9 +571,8 @@ static const struct spdk_json_object_decoder rpc_delete_target_node_decoders[] =
 };
 
 static void
-spdk_rpc_delete_target_node(struct spdk_jsonrpc_server_conn *conn,
-			    const struct spdk_json_val *params,
-			    const struct spdk_json_val *id)
+spdk_rpc_delete_target_node(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
 {
 	struct rpc_delete_target_node req = {};
 	struct spdk_json_write_ctx *w;
@@ -602,41 +596,40 @@ spdk_rpc_delete_target_node(struct spdk_jsonrpc_server_conn *conn,
 
 	free_rpc_delete_target_node(&req);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_delete_target_node(&req);
 }
 SPDK_RPC_REGISTER("delete_target_node", spdk_rpc_delete_target_node)
 
 static void
-spdk_rpc_get_portal_groups(struct spdk_jsonrpc_server_conn *conn,
-			   const struct spdk_json_val *params,
-			   const struct spdk_json_val *id)
+spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_portal *portal;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_portal_groups requires no parameters");
 		return;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
@@ -662,7 +655,7 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_server_conn *conn,
 
 	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_portal_groups", spdk_rpc_get_portal_groups)
 
@@ -737,9 +730,8 @@ static const struct spdk_json_object_decoder rpc_portal_group_decoders[] = {
 };
 
 static void
-spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
-			  const struct spdk_json_val *params,
-			  const struct spdk_json_val *id)
+spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct rpc_portal_group req = {};
 	struct spdk_iscsi_portal *portal_list[MAX_PORTAL] = {};
@@ -772,13 +764,13 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_server_conn *conn,
 
 out:
 	if (rc == 0) {
-		if (id != NULL) {
-			w = spdk_jsonrpc_begin_result(conn, id);
+		w = spdk_jsonrpc_begin_result(request);
+		if (w != NULL) {
 			spdk_json_write_bool(w, true);
-			spdk_jsonrpc_end_result(conn, w);
+			spdk_jsonrpc_end_result(request, w);
 		}
 	} else {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 
 		for (i = 0; i < req.portal_list.num_portals; i++) {
 			spdk_iscsi_portal_destroy(portal_list[i]);
@@ -797,9 +789,8 @@ static const struct spdk_json_object_decoder rpc_delete_portal_group_decoders[] 
 };
 
 static void
-spdk_rpc_delete_portal_group(struct spdk_jsonrpc_server_conn *conn,
-			     const struct spdk_json_val *params,
-			     const struct spdk_json_val *id)
+spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct rpc_delete_portal_group req = {};
 	struct spdk_json_write_ctx *w;
@@ -824,24 +815,23 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_server_conn *conn,
 	spdk_iscsi_tgt_node_delete_map(pg, NULL);
 	spdk_iscsi_portal_grp_release(pg);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 SPDK_RPC_REGISTER("delete_portal_group", spdk_rpc_delete_portal_group)
 
 static void
-spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_server_conn *conn,
-			       const struct spdk_json_val *params,
-			       const struct spdk_json_val *id)
+spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_conn *conns = g_conns_array;
@@ -849,16 +839,16 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_server_conn *conn,
 	uint16_t tsih;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_iscsi_connections requires no parameters");
 		return;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
@@ -909,6 +899,6 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_server_conn *conn,
 	}
 	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_iscsi_connections", spdk_rpc_get_iscsi_connections)

@@ -63,6 +63,10 @@ parse_single_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val
 {
 	bool invalid = false;
 	struct jsonrpc_request req = {};
+	struct spdk_jsonrpc_request request;
+
+	request.conn = conn;
+	request.id = NULL;
 
 	if (spdk_json_decode_object(values, jsonrpc_request_decoders,
 				    SPDK_COUNTOF(jsonrpc_request_decoders),
@@ -87,6 +91,8 @@ parse_single_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val
 		    req.id->type != SPDK_JSON_VAL_NULL) {
 			req.id = NULL;
 			invalid = true;
+		} else {
+			request.id = req.id;
 		}
 	}
 
@@ -100,10 +106,9 @@ parse_single_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val
 
 done:
 	if (invalid) {
-		spdk_jsonrpc_server_handle_error(conn, SPDK_JSONRPC_ERROR_INVALID_REQUEST, req.method, req.params,
-						 req.id);
+		spdk_jsonrpc_server_handle_error(&request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	} else {
-		spdk_jsonrpc_server_handle_request(conn, req.method, req.params, req.id);
+		spdk_jsonrpc_server_handle_request(&request, req.method, req.params);
 	}
 }
 
@@ -118,9 +123,16 @@ parse_batch_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val 
 
 	assert(conn->json_writer == NULL);
 
+
 	if (num_values == 0) {
+		struct spdk_jsonrpc_request error_request;
+
 		SPDK_TRACELOG(SPDK_TRACE_RPC, "empty batch array not allowed");
-		spdk_jsonrpc_server_handle_error(conn, SPDK_JSONRPC_ERROR_INVALID_REQUEST, NULL, NULL, NULL);
+
+		/* Build a request with id = NULL since we don't have a valid request ID */
+		error_request.conn = conn;
+		error_request.id = NULL;
+		spdk_jsonrpc_server_handle_error(&error_request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 		return;
 	}
 
@@ -145,10 +157,15 @@ parse_batch_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val 
 int
 spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, size_t size)
 {
+	struct spdk_jsonrpc_request error_request;
 	ssize_t rc;
 	void *end = NULL;
 
 	assert(conn->json_writer == NULL);
+
+	/* Build a request with id = NULL since we don't have a valid request ID */
+	error_request.conn = conn;
+	error_request.id = NULL;
 
 	conn->batch = false;
 
@@ -158,7 +175,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 		return 0;
 	} else if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_TRACELOG(SPDK_TRACE_RPC, "JSON parse error\n");
-		spdk_jsonrpc_server_handle_error(conn, SPDK_JSONRPC_ERROR_PARSE_ERROR, NULL, NULL, NULL);
+		spdk_jsonrpc_server_handle_error(&error_request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 
 		/*
 		 * Can't recover from parse error (no guaranteed resync point in streaming JSON).
@@ -172,7 +189,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 			     SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_TRACELOG(SPDK_TRACE_RPC, "JSON parse error on second pass\n");
-		spdk_jsonrpc_server_handle_error(conn, SPDK_JSONRPC_ERROR_PARSE_ERROR, NULL, NULL, NULL);
+		spdk_jsonrpc_server_handle_error(&error_request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 		return -1;
 	}
 
@@ -185,7 +202,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 		parse_batch_request(conn, conn->values);
 	} else {
 		SPDK_TRACELOG(SPDK_TRACE_RPC, "top-level JSON value was not array or object\n");
-		spdk_jsonrpc_server_handle_error(conn, SPDK_JSONRPC_ERROR_INVALID_REQUEST, NULL, NULL, NULL);
+		spdk_jsonrpc_server_handle_error(&error_request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	}
 
 	return end - json;
@@ -229,11 +246,11 @@ end_response(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_write_ctx *
 }
 
 struct spdk_json_write_ctx *
-spdk_jsonrpc_begin_result(struct spdk_jsonrpc_server_conn *conn, const struct spdk_json_val *id)
+spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {
 	struct spdk_json_write_ctx *w;
 
-	w = begin_response(conn, id);
+	w = begin_response(request->conn, request->id);
 	if (w == NULL) {
 		return NULL;
 	}
@@ -244,29 +261,30 @@ spdk_jsonrpc_begin_result(struct spdk_jsonrpc_server_conn *conn, const struct sp
 }
 
 void
-spdk_jsonrpc_end_result(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_write_ctx *w)
+spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w)
 {
 	assert(w != NULL);
-	assert(w == conn->json_writer);
+	assert(w == request->conn->json_writer);
 
-	end_response(conn, w);
+	end_response(request->conn, w);
 }
 
 void
-spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_server_conn *conn,
-				 const struct spdk_json_val *id,
+spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_json_val v_null;
+	const struct spdk_json_val *id;
 
+	id = request->id;
 	if (id == NULL) {
 		/* For error responses, if id is missing, explicitly respond with "id": null. */
 		v_null.type = SPDK_JSON_VAL_NULL;
 		id = &v_null;
 	}
 
-	w = begin_response(conn, id);
+	w = begin_response(request->conn, id);
 	if (w == NULL) {
 		return;
 	}
@@ -279,7 +297,7 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_server_conn *conn,
 	spdk_json_write_string(w, msg);
 	spdk_json_write_object_end(w);
 
-	end_response(conn, w);
+	end_response(request->conn, w);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("rpc", SPDK_TRACE_RPC)

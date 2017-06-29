@@ -42,9 +42,8 @@ int spdk_rpc_listen(const char *listen_addr);
 void spdk_rpc_accept(void);
 void spdk_rpc_close(void);
 
-typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_server_conn *conn,
-					const struct spdk_json_val *params,
-					const struct spdk_json_val *id);
+typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
+					const struct spdk_json_val *params);
 
 void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
 

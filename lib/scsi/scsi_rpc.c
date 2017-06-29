@@ -38,24 +38,23 @@
 #include "spdk/util.h"
 
 static void
-spdk_rpc_get_luns(struct spdk_jsonrpc_server_conn *conn,
-		  const struct spdk_json_val *params,
-		  const struct spdk_json_val *id)
+spdk_rpc_get_luns(struct spdk_jsonrpc_request *request,
+		  const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_lun_db_entry *current;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_luns requires no parameters");
 		return;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 
 	current = spdk_scsi_lun_list_head;
@@ -74,30 +73,29 @@ spdk_rpc_get_luns(struct spdk_jsonrpc_server_conn *conn,
 
 	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_luns", spdk_rpc_get_luns)
 
 static void
-spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_server_conn *conn,
-			  const struct spdk_json_val *params,
-			  const struct spdk_json_val *id)
+spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_scsi_dev *devs = spdk_scsi_dev_get_list();
 	int i;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_scsi_devices requires no parameters");
 		return;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 
 	for (i = 0; i < SPDK_SCSI_MAX_DEVS; i++) {
@@ -119,6 +117,6 @@ spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_server_conn *conn,
 	}
 	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_scsi_devices", spdk_rpc_get_scsi_devices)

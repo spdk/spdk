@@ -77,9 +77,8 @@ static const struct spdk_json_object_decoder rpc_construct_error_bdev_decoders[]
 };
 
 static void
-spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_server_conn *conn,
-			      const struct spdk_json_val *params,
-			      const struct spdk_json_val *id)
+spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
 {
 	struct rpc_construct_error_bdev req = {};
 	struct spdk_json_write_ctx *w;
@@ -103,21 +102,21 @@ spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		free_rpc_construct_error_bdev(&req);
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 
 	free_rpc_construct_error_bdev(&req);
 
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_construct_error_bdev(&req);
 }
 SPDK_RPC_REGISTER("construct_error_bdev", spdk_rpc_construct_error_bdev)
@@ -142,9 +141,8 @@ free_rpc_error_information(struct rpc_error_information *p)
 }
 
 static void
-spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_server_conn *conn,
-			   const struct spdk_json_val *params,
-			   const struct spdk_json_val *id)
+spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
 {
 	struct rpc_error_information req = {};
 	struct spdk_json_write_ctx *w;
@@ -170,17 +168,17 @@ spdk_rpc_bdev_inject_error(struct spdk_jsonrpc_server_conn *conn,
 
 	free_rpc_error_information(&req);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_error_information(&req);
 }
 SPDK_RPC_REGISTER("bdev_inject_error", spdk_rpc_bdev_inject_error)

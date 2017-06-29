@@ -180,17 +180,14 @@ spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 }
 
 void
-spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_server_conn *conn,
-				   const struct spdk_json_val *method, const struct spdk_json_val *params,
-				   const struct spdk_json_val *id)
+spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *method, const struct spdk_json_val *params)
 {
-	conn->server->handle_request(conn, method, params, id);
+	request->conn->server->handle_request(request, method, params);
 }
 
 void
-spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_server_conn *conn, int error,
-				 const struct spdk_json_val *method, const struct spdk_json_val *params,
-				 const struct spdk_json_val *id)
+spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
 {
 	const char *msg;
 
@@ -220,7 +217,7 @@ spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_server_conn *conn, int erro
 		break;
 	}
 
-	spdk_jsonrpc_send_error_response(conn, id, error, msg);
+	spdk_jsonrpc_send_error_response(request, error, msg);
 }
 
 static int

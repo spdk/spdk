@@ -54,11 +54,9 @@ struct spdk_rpc_method {
 static SLIST_HEAD(, spdk_rpc_method) g_rpc_methods = SLIST_HEAD_INITIALIZER(g_rpc_methods);
 
 static void
-spdk_jsonrpc_handler(
-	struct spdk_jsonrpc_server_conn *conn,
-	const struct spdk_json_val *method,
-	const struct spdk_json_val *params,
-	const struct spdk_json_val *id)
+spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
+		     const struct spdk_json_val *method,
+		     const struct spdk_json_val *params)
 {
 	struct spdk_rpc_method *m;
 
@@ -66,12 +64,12 @@ spdk_jsonrpc_handler(
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (spdk_json_strequal(method, m->name)) {
-			m->func(conn, params, id);
+			m->func(request, params);
 			return;
 		}
 	}
 
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND, "Method not found");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND, "Method not found");
 }
 
 int

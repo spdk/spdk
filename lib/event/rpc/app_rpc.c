@@ -53,9 +53,8 @@ static const struct spdk_json_object_decoder rpc_kill_instance_decoders[] = {
 };
 
 static void
-spdk_rpc_kill_instance(struct spdk_jsonrpc_server_conn *conn,
-		       const struct spdk_json_val *params,
-		       const struct spdk_json_val *id)
+spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	static const struct {
 		const char	*signal_string;
@@ -96,17 +95,16 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_server_conn *conn,
 	kill(getpid(), signals[i].signal);
 	free_rpc_kill_instance(&req);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
-
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_kill_instance(&req);
 }
 SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance)
