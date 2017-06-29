@@ -19,7 +19,9 @@ timing_enter autobuild
 ./configure $config_params
 
 timing_enter check_format
-./scripts/check_format.sh
+if [ $SPDK_RUN_CHECK_FORMAT -eq 1 ]; then
+	./scripts/check_format.sh
+fi
 timing_exit check_format
 
 timing_enter build_kmod
