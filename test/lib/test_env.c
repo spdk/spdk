@@ -149,6 +149,12 @@ spdk_mempool_put(struct spdk_mempool *mp, void *ele)
 	free(ele);
 }
 
+size_t
+spdk_mempool_count(const struct spdk_mempool *mp)
+{
+	return 1024;
+}
+
 bool
 spdk_process_is_primary(void)
 {
@@ -222,4 +228,10 @@ spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
 	}
 
 	return -1;
+}
+
+uint32_t
+spdk_env_get_core_count(void)
+{
+	return 1;
 }
