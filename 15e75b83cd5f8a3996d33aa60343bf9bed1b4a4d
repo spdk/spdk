@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edf671df_179a9e0c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T16:11:17Z",
+      "side": 1,
+      "message": "Should this part of the comment be removed too?",
+      "revId": "15e75b83cd5f8a3996d33aa60343bf9bed1b4a4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
