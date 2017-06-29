@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa3190d1_6d7ffaf9",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T16:23:45Z",
+      "side": 1,
+      "message": "If we exit here or in the dev \u003d\u003d NULL case below, we don\u0027t set task-\u003escsi_dev, but the process_ctrl_request() code doesn\u0027t check the return code and reads task-\u003escsi_dev anyway.\n\nIt seems like the parse_virtio_lun() caller should check the return code, or we should always fill out task-\u003escsi_dev etc. (with NULL if not found) in this function.",
+      "revId": "23e3334454c00bcb4e45a6f97854b500b3a463b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
