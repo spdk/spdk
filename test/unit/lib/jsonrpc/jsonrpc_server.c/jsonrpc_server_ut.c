@@ -143,9 +143,10 @@ static size_t g_num_reqs;
 	g_params++
 
 static void
-ut_handle(struct spdk_jsonrpc_server_conn *conn, int error, const struct spdk_json_val *method,
-	  const struct spdk_json_val *params, const struct spdk_json_val *id)
+ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_json_val *method,
+	  const struct spdk_json_val *params)
 {
+	const struct spdk_json_val *id = request->id;
 	struct req *r;
 
 	SPDK_CU_ASSERT_FATAL(g_num_reqs != MAX_REQS);
@@ -177,19 +178,16 @@ ut_handle(struct spdk_jsonrpc_server_conn *conn, int error, const struct spdk_js
 }
 
 void
-spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_server_conn *conn, int error,
-				 const struct spdk_json_val *method, const struct spdk_json_val *params,
-				 const struct spdk_json_val *id)
+spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
 {
-	ut_handle(conn, error, method, params,  id);
+	ut_handle(request, error, NULL, NULL);
 }
 
 void
-spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_server_conn *conn,
-				   const struct spdk_json_val *method, const struct spdk_json_val *params,
-				   const struct spdk_json_val *id)
+spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *method, const struct spdk_json_val *params)
 {
-	ut_handle(conn, 0, method, params, id);
+	ut_handle(request, 0, method, params);
 }
 
 int

@@ -52,9 +52,8 @@ static const struct spdk_json_object_decoder rpc_construct_null_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_server_conn *conn,
-			     const struct spdk_json_val *params,
-			     const struct spdk_json_val *id)
+spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct rpc_construct_null req = {};
 	struct spdk_json_write_ctx *w;
@@ -72,21 +71,21 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_server_conn *conn,
 		goto invalid;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		free(req.name);
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 	spdk_json_write_string(w, bdev->name);
 	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	free(req.name);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free(req.name);
 }
 SPDK_RPC_REGISTER("construct_null_bdev", spdk_rpc_construct_null_bdev)

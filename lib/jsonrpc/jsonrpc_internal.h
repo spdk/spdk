@@ -45,6 +45,11 @@
 #define SPDK_JSONRPC_MAX_CONNS		64
 #define SPDK_JSONRPC_MAX_VALUES		1024
 
+struct spdk_jsonrpc_request {
+	struct spdk_jsonrpc_server_conn *conn;
+	const struct spdk_json_val *id;
+};
+
 struct spdk_jsonrpc_server_conn {
 	struct spdk_jsonrpc_server *server;
 	int sockfd;
@@ -67,14 +72,10 @@ struct spdk_jsonrpc_server {
 
 /* jsonrpc_server_tcp */
 int spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size);
-void spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_server_conn *conn,
+void spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 					const struct spdk_json_val *method,
-					const struct spdk_json_val *params,
-					const struct spdk_json_val *id);
-void spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_server_conn *conn, int error,
-				      const struct spdk_json_val *method,
-				      const struct spdk_json_val *params,
-				      const struct spdk_json_val *id);
+					const struct spdk_json_val *params);
+void spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error);
 
 /* jsonrpc_server */
 int spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, size_t size);

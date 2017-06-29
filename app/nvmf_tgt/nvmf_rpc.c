@@ -146,24 +146,23 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 }
 
 static void
-spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_server_conn *conn,
-			     const struct spdk_json_val *params,
-			     const struct spdk_json_val *id)
+spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct nvmf_tgt_subsystem	*tgt_subsystem;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "get_nvmf_subsystems requires no parameters");
 		return;
 	}
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_array_begin(w);
 	tgt_subsystem = nvmf_tgt_subsystem_first();
 	while (tgt_subsystem) {
@@ -171,7 +170,7 @@ spdk_rpc_get_nvmf_subsystems(struct spdk_jsonrpc_server_conn *conn,
 		tgt_subsystem = nvmf_tgt_subsystem_next(tgt_subsystem);
 	}
 	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_nvmf_subsystems", spdk_rpc_get_nvmf_subsystems)
 
@@ -310,9 +309,8 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 };
 
 static void
-spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
-				  const struct spdk_json_val *params,
-				  const struct spdk_json_val *id)
+spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
+				  const struct spdk_json_val *params)
 {
 	struct rpc_subsystem req = {};
 	struct spdk_json_write_ctx *w;
@@ -338,13 +336,17 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 
 	free_rpc_subsystem(&req);
 
-	w = spdk_jsonrpc_begin_result(conn, id);
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_subsystem(&req);
 }
 SPDK_RPC_REGISTER("construct_nvmf_subsystem", spdk_rpc_construct_nvmf_subsystem)
@@ -364,9 +366,8 @@ static const struct spdk_json_object_decoder rpc_delete_subsystem_decoders[] = {
 };
 
 static void
-spdk_rpc_delete_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
-			       const struct spdk_json_val *params,
-			       const struct spdk_json_val *id)
+spdk_rpc_delete_nvmf_subsystem(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
 	struct rpc_delete_subsystem req = {};
 	struct spdk_json_write_ctx *w;
@@ -390,17 +391,17 @@ spdk_rpc_delete_nvmf_subsystem(struct spdk_jsonrpc_server_conn *conn,
 
 	free_rpc_delete_subsystem(&req);
 
-	if (id == NULL) {
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
 		return;
 	}
 
-	w = spdk_jsonrpc_begin_result(conn, id);
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(conn, w);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(conn, id, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 	free_rpc_delete_subsystem(&req);
 }
 SPDK_RPC_REGISTER("delete_nvmf_subsystem", spdk_rpc_delete_nvmf_subsystem)
