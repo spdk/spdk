@@ -99,8 +99,72 @@ null_clean(void)
 }
 
 static void
-bdev_test(void)
+open_write_test(void)
 {
+	struct spdk_bdev bdev[20];
+	struct spdk_bdev *array[20];
+	struct spdk_bdev_desc *desc[20];
+	int rc;
+
+	spdk_bdev_register(&bdev[0]);
+	CU_ASSERT(TAILQ_EMPTY(&bdev[0].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[0].vbdevs));
+
+	spdk_bdev_register(&bdev[1]);
+	CU_ASSERT(TAILQ_EMPTY(&bdev[1].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[1].vbdevs));
+
+	spdk_bdev_register(&bdev[2]);
+	CU_ASSERT(TAILQ_EMPTY(&bdev[2].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[2].vbdevs));
+
+	array[0] = &bdev[0];
+	array[1] = &bdev[1];
+	spdk_vbdev_register(&bdev[3], array, 2);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev[3].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[3].vbdevs));
+
+	array[0] = &bdev[2];
+	spdk_vbdev_register(&bdev[4], array, 1);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev[4].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[4].vbdevs));
+	spdk_vbdev_register(&bdev[5], array, 1);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev[5].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[5].vbdevs));
+	spdk_vbdev_register(&bdev[6], array, 1);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev[6].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[6].vbdevs));
+	spdk_vbdev_register(&bdev[7], array, 1);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev[7].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[7].vbdevs));
+
+	array[0] = &bdev[3];
+	array[1] = &bdev[5];
+	spdk_vbdev_register(&bdev[8], array, 2);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev[8].base_bdevs));
+	CU_ASSERT(TAILQ_EMPTY(&bdev[8].vbdevs));
+
+	rc = spdk_bdev_open(&bdev[0], false, NULL, NULL, &desc[0]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[0] != NULL);
+
+	rc = spdk_bdev_open(&bdev[1], true, NULL, NULL, &desc[1]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[1] != NULL);
+
+	rc = spdk_bdev_open(&bdev[3], true, NULL, NULL, &desc[3]);
+	CU_ASSERT(rc == -EPERM);
+
+	rc = spdk_bdev_open(&bdev[3], false, NULL, NULL, &desc[3]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[3] != NULL);
+
+	rc = spdk_bdev_open(&bdev[8], true, NULL, NULL, &desc[8]);
+	CU_ASSERT(rc == -EPERM);
+
+	rc = spdk_bdev_open(&bdev[8], false, NULL, NULL, &desc[8]);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc[8] != NULL);
 }
 
 int
@@ -120,7 +184,7 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "bdev", bdev_test) == NULL
+		CU_add_test(suite, "open_write", open_write_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
