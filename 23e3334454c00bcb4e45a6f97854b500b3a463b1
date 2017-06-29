@@ -16,6 +16,24 @@
       "revId": "23e3334454c00bcb4e45a6f97854b500b3a463b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4014c98_c2c17d12",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-29T17:25:14Z",
+      "side": 1,
+      "message": "I relied on the fact that task is always memset with zeros (line #148 at current patchset). Should I always preset task-\u003escsi_dev to NULL anyway?",
+      "parentUuid": "fa3190d1_6d7ffaf9",
+      "revId": "23e3334454c00bcb4e45a6f97854b500b3a463b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
