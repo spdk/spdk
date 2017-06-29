@@ -137,7 +137,7 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 }
 
 struct spdk_io_channel *
-spdk_bdev_get_io_channel(struct spdk_bdev *bdev)
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
 	return NULL;
 }
@@ -198,7 +198,7 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	return -1;
 }
 
-void spdk_bdev_unclaim(struct spdk_bdev *bdev)
+void spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
 }
 

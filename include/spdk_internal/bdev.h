@@ -211,11 +211,12 @@ struct spdk_bdev {
 
 	TAILQ_ENTRY(spdk_bdev) vbdev_link;
 
-	/** Remove callback function pointer to upper level stack */
-	spdk_bdev_remove_cb_t remove_cb;
+	bool bdev_opened_for_write;
 
-	/** Callback context for hot remove the device */
-	void *remove_ctx;
+	uint32_t vbdevs_opened_for_write;
+
+	/** List of open descriptors for this block device. */
+	TAILQ_HEAD(, spdk_bdev_desc) open_descs;
 
 	TAILQ_ENTRY(spdk_bdev) link;
 
