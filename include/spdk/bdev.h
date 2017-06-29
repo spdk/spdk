@@ -126,9 +126,19 @@ void spdk_bdev_config_text(FILE *fp);
 
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 
+/**
+ * These two functions iterate the full list of bdevs, including bdevs
+ *  that have virtual bdevs on top of them.
+ */
 struct spdk_bdev *spdk_bdev_first(void);
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
 
+/**
+ * These two functions only iterate over bdevs which have no virtual
+ *  bdevs on top of them.
+ */
+struct spdk_bdev *spdk_bdev_first_leaf(void);
+struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
 /**
  * Claim ownership of a block device.
  *
