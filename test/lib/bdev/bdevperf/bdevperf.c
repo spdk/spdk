@@ -76,6 +76,7 @@ static void bdevperf_submit_single(struct io_target *target);
 
 struct io_target {
 	struct spdk_bdev	*bdev;
+	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
 	struct io_target	*next;
 	unsigned		lcore;
@@ -116,14 +117,10 @@ bdevperf_construct_targets(void)
 	struct spdk_bdev *bdev;
 	struct io_target *target;
 	size_t align;
+	int rc;
 
 	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
-
-		if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
-		}
 
 		if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 			printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
@@ -137,6 +134,14 @@ bdevperf_construct_targets(void)
 			/* Return immediately because all mallocs will presumably fail after this */
 			return;
 		}
+
+		rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+		if (rc != 0) {
+			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+			bdev = spdk_bdev_next_leaf(bdev);
+			continue;
+		}
+
 		target->bdev = bdev;
 		/* Mapping each target to lcore */
 		index = g_target_count % spdk_env_get_core_count();
@@ -171,7 +176,7 @@ end_run(void *arg1, void *arg2)
 	struct io_target *target = arg1;
 
 	spdk_put_io_channel(target->ch);
-	spdk_bdev_unclaim(target->bdev);
+	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
 			spdk_poller_unregister(&g_perf_timer, NULL);
@@ -452,7 +457,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
 	while (target != NULL) {
-		target->ch = spdk_bdev_get_io_channel(target->bdev);
+		target->ch = spdk_bdev_get_io_channel(target->bdev_desc);
 
 		/* Start a timer to stop this I/O chain when the run is over */
 		spdk_poller_register(&target->run_timer, end_target, target, target->lcore,

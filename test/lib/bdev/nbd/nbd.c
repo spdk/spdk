@@ -74,6 +74,7 @@ struct nbd_io {
 
 struct nbd_disk {
 	struct spdk_bdev	*bdev;
+	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
 	int			fd;
 	struct spdk_poller	*poller;
@@ -108,7 +109,7 @@ static void
 nbd_shutdown(void)
 {
 	spdk_put_io_channel(g_nbd_disk.ch);
-	spdk_bdev_unclaim(g_nbd_disk.bdev);
+	spdk_bdev_close(g_nbd_disk.bdev_desc);
 	close(g_nbd_disk.fd);
 	spdk_app_stop(0);
 }
@@ -349,14 +350,15 @@ nbd_start(void *arg1, void *arg2)
 		return;
 	}
 
-	if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-		SPDK_ERRLOG("could not claim bdev %s\n", g_bdev_name);
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &g_nbd_disk.bdev_desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("could not open bdev %s, error=%d\n", g_bdev_name, rc);
 		spdk_app_stop(-1);
 		return;
 	}
 
 	g_nbd_disk.bdev = bdev;
-	g_nbd_disk.ch = spdk_bdev_get_io_channel(bdev);
+	g_nbd_disk.ch = spdk_bdev_get_io_channel(g_nbd_disk.bdev_desc);
 
 	rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
 	if (rc != 0) {

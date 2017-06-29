@@ -616,7 +616,7 @@ nvmf_virtual_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
 			continue;
 		}
 
-		ch = spdk_bdev_get_io_channel(bdev);
+		ch = spdk_bdev_get_io_channel(subsystem->dev.virt.desc[i]);
 		if (ch == NULL) {
 			SPDK_ERRLOG("io_channel allocation failed\n");
 			return -1;
@@ -635,7 +635,7 @@ nvmf_virtual_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 	for (i = 0; i < subsystem->dev.virt.max_nsid; i++) {
 		if (subsystem->dev.virt.ns_list[i]) {
 			spdk_put_io_channel(subsystem->dev.virt.ch[i]);
-			spdk_bdev_unclaim(subsystem->dev.virt.ns_list[i]);
+			spdk_bdev_close(subsystem->dev.virt.desc[i]);
 			subsystem->dev.virt.ch[i] = NULL;
 			subsystem->dev.virt.ns_list[i] = NULL;
 		}
