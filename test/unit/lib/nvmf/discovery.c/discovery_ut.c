@@ -89,11 +89,11 @@ spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr)
 	return;
 }
 
-bool
-spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
-		void *remove_ctx)
+int
+spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	       void *remove_ctx, struct spdk_bdev_desc **desc)
 {
-	return true;
+	return 0;
 }
 
 const char *

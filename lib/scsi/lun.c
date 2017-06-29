@@ -278,8 +278,10 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 		return NULL;
 	}
 
-	if (!spdk_bdev_claim(bdev, spdk_scsi_lun_hot_remove, lun)) {
-		SPDK_ERRLOG("LUN %s: bdev %s is already claimed\n", name, spdk_bdev_get_name(bdev));
+	rc = spdk_bdev_open(bdev, true, spdk_scsi_lun_hot_remove, lun, &lun->bdev_desc);
+
+	if (rc != 0) {
+		SPDK_ERRLOG("LUN %s: bdev %s cannot be opened, error=%d\n", name, spdk_bdev_get_name(bdev), rc);
 		free(lun);
 		return NULL;
 	}
@@ -295,7 +297,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	rc = spdk_scsi_lun_db_add(lun);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to add LUN %s to DB\n", lun->name);
-		spdk_bdev_unclaim(bdev);
+		spdk_bdev_close(lun->bdev_desc);
 		free(lun);
 		return NULL;
 	}
@@ -306,7 +308,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
-	spdk_bdev_unclaim(lun->bdev);
+	spdk_bdev_close(lun->bdev_desc);
 	spdk_poller_unregister(&lun->hotplug_poller, NULL);
 	spdk_scsi_lun_db_delete(lun);
 
@@ -379,7 +381,7 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 
 	lun->lcore = spdk_env_get_current_core();
 
-	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev);
+	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev_desc);
 	if (lun->io_channel == NULL) {
 		return -1;
 	}

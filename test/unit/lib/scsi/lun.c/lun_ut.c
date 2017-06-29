@@ -137,15 +137,15 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	return -1;
 }
 
-bool
-spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
-		void *remove_ctx)
+int
+spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	       void *remove_ctx, struct spdk_bdev_desc **desc)
 {
-	return true;
+	return 0;
 }
 
 void
-spdk_bdev_unclaim(struct spdk_bdev *bdev)
+spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
 }
 
@@ -191,7 +191,7 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 }
 
 struct spdk_io_channel *
-spdk_bdev_get_io_channel(struct spdk_bdev *bdev)
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
 	return NULL;
 }
