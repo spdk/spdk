@@ -106,13 +106,13 @@ bdevio_construct_targets(void)
 
 	printf("I/O targets:\n");
 
-	bdev = spdk_bdev_first();
+	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
 		uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
 		uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
 		if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-			bdev = spdk_bdev_next(bdev);
+			bdev = spdk_bdev_next_leaf(bdev);
 			continue;
 		}
 
@@ -130,7 +130,7 @@ bdevio_construct_targets(void)
 		execute_spdk_function(__get_io_channel, target, NULL);
 		g_io_targets = target;
 
-		bdev = spdk_bdev_next(bdev);
+		bdev = spdk_bdev_next_leaf(bdev);
 	}
 
 	return 0;
