@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afcec960_a16f1c9e",
+        "filename": "dpdk",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T00:04:46Z",
+      "side": 1,
+      "message": "This DPDK submodule update looks unintentional.",
+      "revId": "b7d530f4fa2dae512a7150de0eb11b1802b3f64b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
