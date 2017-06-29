@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e114616e_82a497a4",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:06:55Z",
+      "side": 1,
+      "message": "These should probably be named vhost_blk (\"blk\" rather than \"block\") to be consistent with the rest of the code.",
+      "range": {
+        "startLine": 434,
+        "startChar": 29,
+        "endLine": 434,
+        "endChar": 40
+      },
+      "revId": "b6f7845b4d7b7bb2a4f561b4c6bf2170b15210d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
