@@ -66,7 +66,7 @@
 						(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
 						(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
-#define CONTROLQ_POLL_PERIOD_US (1000 * 5)
+#define MGMT_POLL_PERIOD_US (1000 * 5)
 
 #define VIRTIO_SCSI_CONTROLQ   0
 #define VIRTIO_SCSI_EVENTQ   1
@@ -77,7 +77,7 @@ struct spdk_vhost_scsi_dev {
 
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
-	struct spdk_poller *controlq_poller;
+	struct spdk_poller *mgmt_poller;
 } __rte_cache_aligned;
 
 static int new_device(int vid);
@@ -448,7 +448,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 }
 
 static void
-vdev_controlq_worker(void *arg)
+vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
@@ -484,8 +484,8 @@ add_vdev_cb(void *arg)
 	spdk_vhost_dev_mem_register(vdev);
 
 	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
-	spdk_poller_register(&svdev->controlq_poller, vdev_controlq_worker, svdev, vdev->lcore,
-			     CONTROLQ_POLL_PERIOD_US);
+	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev, vdev->lcore,
+			     MGMT_POLL_PERIOD_US);
 }
 
 static void
@@ -781,8 +781,8 @@ destroy_device(int vid)
 	spdk_vhost_timed_event_wait(&event, "unregister request queue poller");
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
-	spdk_poller_unregister(&svdev->controlq_poller, event.spdk_event);
-	spdk_vhost_timed_event_wait(&event, "unregister controll queue poller");
+	spdk_poller_unregister(&svdev->mgmt_poller, event.spdk_event);
+	spdk_vhost_timed_event_wait(&event, "unregister management poller");
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {
@@ -792,7 +792,6 @@ destroy_device(int vid)
 	if (vdev->task_cnt > 0) {
 		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
-
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
 
