@@ -33,6 +33,23 @@
       "revId": "073d18c1fa986c9831b51962645eb432a2c5f99a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adce95b2_ae05948c",
+        "filename": "lib/vhost/task.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T16:16:34Z",
+      "side": 1,
+      "message": "Unrelated whitespace change",
+      "revId": "073d18c1fa986c9831b51962645eb432a2c5f99a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
