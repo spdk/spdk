@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1a4e0bf_66b07f39",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-06-29T14:00:54Z",
+      "side": 1,
+      "message": "./rpc.py -v construct_lvol_store  Malloc1\nrequest:\n{\n  \"params\": {\n    \"base_name\": \"Malloc1\"\n  },\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"construct_lvol_store\",\n  \"id\": 1\n}\nresponse:\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": {\n    \"GUID\": \"123\"\n  }\n}\n\n./rpc.py -v construct_lvol_bdev 123 4096\nrequest:\n{\n  \"params\": {\n    \"guid\": \"123\",\n    \"size\": \"4096\"\n  },\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"construct_lvol_bdev\",\n  \"id\": 1\n}\n[HANG]",
+      "revId": "1e6a91a515265b21f7bb172e52777f98248d437d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a7efaa7_021ad4c1",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-06-29T14:00:54Z",
+      "side": 1,
+      "message": "GUID or guid ?",
+      "range": {
+        "startLine": 255,
+        "startChar": 9,
+        "endLine": 255,
+        "endChar": 13
+      },
+      "revId": "1e6a91a515265b21f7bb172e52777f98248d437d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f04c07b1_4311ecc9",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-06-29T14:00:54Z",
+      "side": 1,
+      "message": "what is unit ?",
+      "range": {
+        "startLine": 261,
+        "startChar": 29,
+        "endLine": 261,
+        "endChar": 46
+      },
+      "revId": "1e6a91a515265b21f7bb172e52777f98248d437d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
