@@ -240,7 +240,7 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	disk->disk.ctxt = disk;
 	disk->disk.fn_table = &vbdev_error_fn_table;
 
-	spdk_bdev_register(&disk->disk);
+	spdk_vbdev_register(&disk->disk, &base_bdev, 1);
 
 	TAILQ_INSERT_TAIL(&g_vbdev_error_disks, disk, tailq);
 

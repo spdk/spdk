@@ -201,6 +201,16 @@ struct spdk_bdev {
 	/** The bdev status */
 	enum spdk_bdev_status status;
 
+	/** The list of block devices that this block device is built on top of (if any). */
+	TAILQ_HEAD(, spdk_bdev) base_bdevs;
+
+	TAILQ_ENTRY(spdk_bdev) base_bdev_link;
+
+	/** The list of virtual block devices built on top of this block device. */
+	TAILQ_HEAD(, spdk_bdev) vbdevs;
+
+	TAILQ_ENTRY(spdk_bdev) vbdev_link;
+
 	/** Remove callback function pointer to upper level stack */
 	spdk_bdev_remove_cb_t remove_cb;
 
@@ -353,6 +363,10 @@ struct spdk_bdev_io {
 
 void spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_unregister(struct spdk_bdev *bdev);
+
+void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
+			 int base_bdev_count);
+void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
 void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 			    spdk_bdev_poller_fn fn,

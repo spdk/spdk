@@ -147,6 +147,48 @@ spdk_bdev_next(struct spdk_bdev *prev)
 	return bdev;
 }
 
+static struct spdk_bdev *
+_bdev_next_leaf(struct spdk_bdev *bdev)
+{
+	while (bdev != NULL) {
+		if (TAILQ_EMPTY(&bdev->vbdevs)) {
+			return bdev;
+		} else {
+			bdev = TAILQ_NEXT(bdev, link);
+		}
+	}
+
+	return bdev;
+}
+
+struct spdk_bdev *
+spdk_bdev_first_leaf(void)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = _bdev_next_leaf(TAILQ_FIRST(&g_bdev_mgr.bdevs));
+
+	if (bdev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Starting bdev iteration at %s\n", bdev->name);
+	}
+
+	return bdev;
+}
+
+struct spdk_bdev *
+spdk_bdev_next_leaf(struct spdk_bdev *prev)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = _bdev_next_leaf(TAILQ_NEXT(prev, link));
+
+	if (bdev) {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Continuing bdev iteration at %s\n", bdev->name);
+	}
+
+	return bdev;
+}
+
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
@@ -1313,13 +1355,16 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 	}
 }
 
-void
-spdk_bdev_register(struct spdk_bdev *bdev)
+static void
+_spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module_if *vbdev_module;
 
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
+
+	TAILQ_INIT(&bdev->vbdevs);
+	TAILQ_INIT(&bdev->base_bdevs);
 
 	bdev->reset_in_progress = false;
 	TAILQ_INIT(&bdev->queued_resets);
@@ -1336,6 +1381,25 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 		if (vbdev_module->bdev_registered) {
 			vbdev_module->bdev_registered(bdev);
 		}
+	}
+}
+
+void
+spdk_bdev_register(struct spdk_bdev *bdev)
+{
+	_spdk_bdev_register(bdev);
+}
+
+void
+spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
+{
+	int i;
+
+	_spdk_bdev_register(vbdev);
+	for (i = 0; i < base_bdev_count; i++) {
+		assert(base_bdevs[i] != NULL);
+		TAILQ_INSERT_TAIL(&vbdev->base_bdevs, base_bdevs[i], base_bdev_link);
+		TAILQ_INSERT_TAIL(&base_bdevs[i]->vbdevs, vbdev, vbdev_link);
 	}
 }
 
@@ -1370,6 +1434,18 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
 	}
+}
+
+void
+spdk_vbdev_unregister(struct spdk_bdev *vbdev)
+{
+	struct spdk_bdev *base_bdev;
+
+	assert(!TAILQ_EMPTY(&vbdev->base_bdevs));
+	TAILQ_FOREACH(base_bdev, &vbdev->base_bdevs, base_bdev_link) {
+		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
+	}
+	spdk_bdev_unregister(vbdev);
 }
 
 bool
