@@ -117,17 +117,17 @@ bdevperf_construct_targets(void)
 	struct io_target *target;
 	size_t align;
 
-	bdev = spdk_bdev_first();
+	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
 
 		if (!spdk_bdev_claim(bdev, NULL, NULL)) {
-			bdev = spdk_bdev_next(bdev);
+			bdev = spdk_bdev_next_leaf(bdev);
 			continue;
 		}
 
 		if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 			printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-			bdev = spdk_bdev_next(bdev);
+			bdev = spdk_bdev_next_leaf(bdev);
 			continue;
 		}
 
@@ -161,7 +161,7 @@ bdevperf_construct_targets(void)
 		head[index] = target;
 		g_target_count++;
 
-		bdev = spdk_bdev_next(bdev);
+		bdev = spdk_bdev_next_leaf(bdev);
 	}
 }
 
