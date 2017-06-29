@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e060981_3d621bb0",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:06:55Z",
+      "side": 1,
+      "message": "This still needs an id NULL check before starting the response (it doesn\u0027t make sense to send a get_vhost_block_controllers with no id, but we should still handle it by just doing nothing).",
+      "revId": "ed05a249c890aae21c984334841ac23a158f80aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe2fac2e_25ec497f",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T17:06:55Z",
+      "side": 1,
+      "message": "This could use spdk_json_write_string_fmt() to avoid needing a separate snprintf() step.",
+      "revId": "ed05a249c890aae21c984334841ac23a158f80aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
