@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e4a4790_2789e920",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 986,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-29T16:19:48Z",
+      "side": 1,
+      "message": "This looks a little bit tricky - I guess the 16384 is the size of the ring above, which could probably be in a variable so it has a name, and I assume the \u0027- 1\u0027 is because one ring entry has to remain free; that could probably use a comment.",
+      "revId": "21f3144b6a7cbb78801c5ac4be6e39e166c2ba81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
