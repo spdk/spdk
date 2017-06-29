@@ -54,6 +54,7 @@ pthread_cond_t g_test_cond;
 
 struct io_target {
 	struct spdk_bdev	*bdev;
+	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
 	struct io_target	*next;
 };
@@ -94,7 +95,7 @@ __get_io_channel(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
 
-	target->ch = spdk_bdev_get_io_channel(target->bdev);
+	target->ch = spdk_bdev_get_io_channel(target->bdev_desc);
 	wake_ut_thread();
 }
 
@@ -103,6 +104,7 @@ bdevio_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
 	struct io_target *target;
+	int rc;
 
 	printf("I/O targets:\n");
 
@@ -111,7 +113,15 @@ bdevio_construct_targets(void)
 		uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
 		uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
-		if (!spdk_bdev_claim(bdev, NULL, NULL)) {
+		target = malloc(sizeof(struct io_target));
+		if (target == NULL) {
+			return -ENOMEM;
+		}
+
+		rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+		if (rc != 0) {
+			free(target);
+			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 			bdev = spdk_bdev_next_leaf(bdev);
 			continue;
 		}
@@ -121,10 +131,6 @@ bdevio_construct_targets(void)
 		       num_blocks, block_size,
 		       (num_blocks * block_size + 1024 * 1024 - 1) / (1024 * 1024));
 
-		target = malloc(sizeof(struct io_target));
-		if (target == NULL) {
-			return -ENOMEM;
-		}
 		target->bdev = bdev;
 		target->next = g_io_targets;
 		execute_spdk_function(__get_io_channel, target, NULL);
@@ -153,7 +159,7 @@ bdevio_cleanup_targets(void)
 	target = g_io_targets;
 	while (target != NULL) {
 		execute_spdk_function(__put_io_channel, target, NULL);
-		spdk_bdev_unclaim(target->bdev);
+		spdk_bdev_close(target->bdev_desc);
 		g_io_targets = target->next;
 		free(target);
 		target = g_io_targets;

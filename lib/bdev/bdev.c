@@ -96,6 +96,14 @@ struct spdk_bdev_mgmt_channel {
 	need_buf_tailq_t need_buf_large;
 };
 
+struct spdk_bdev_desc {
+	struct spdk_bdev		*bdev;
+	spdk_bdev_remove_cb_t		remove_cb;
+	void				*remove_ctx;
+	bool				write;
+	TAILQ_ENTRY(spdk_bdev_desc)	link;
+};
+
 struct spdk_bdev_channel {
 	struct spdk_bdev	*bdev;
 
@@ -702,9 +710,9 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 }
 
 struct spdk_io_channel *
-spdk_bdev_get_io_channel(struct spdk_bdev *bdev)
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
-	return spdk_get_io_channel(bdev);
+	return spdk_get_io_channel(desc->bdev);
 }
 
 const char *
@@ -785,7 +793,6 @@ spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return -EINVAL;
 	}
@@ -825,7 +832,6 @@ spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return -EINVAL;
 	}
@@ -862,7 +868,6 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
 		return -EINVAL;
 	}
@@ -902,7 +907,6 @@ spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (spdk_bdev_io_valid(bdev, offset, len) != 0) {
 		return -EINVAL;
 	}
@@ -940,7 +944,6 @@ spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	if (bdesc_count == 0) {
 		SPDK_ERRLOG("Invalid bdesc_count 0\n");
 		return -EINVAL;
@@ -982,7 +985,6 @@ spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing flush\n");
@@ -1069,8 +1071,6 @@ spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 {
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-
-	assert(bdev->status != SPDK_BDEV_STATUS_UNCLAIMED);
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
@@ -1362,6 +1362,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
+	TAILQ_INIT(&bdev->open_descs);
+	bdev->opened_for_write = false;
 
 	TAILQ_INIT(&bdev->vbdevs);
 
@@ -1372,7 +1374,6 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 				sizeof(struct spdk_bdev_channel));
 
 	pthread_mutex_init(&bdev->mutex, NULL);
-	bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
@@ -1401,21 +1402,26 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev *base_bdev)
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
+	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Removing bdev %s from list\n", bdev->name);
 
 	pthread_mutex_lock(&bdev->mutex);
-	assert(bdev->status == SPDK_BDEV_STATUS_CLAIMED || bdev->status == SPDK_BDEV_STATUS_UNCLAIMED);
-	if (bdev->status == SPDK_BDEV_STATUS_CLAIMED) {
-		if (bdev->remove_cb) {
-			bdev->status = SPDK_BDEV_STATUS_REMOVING;
+
+	bdev->status = SPDK_BDEV_STATUS_REMOVING;
+
+	TAILQ_FOREACH_SAFE(desc, &bdev->open_descs, link, tmp) {
+		if (desc->remove_cb) {
 			pthread_mutex_unlock(&bdev->mutex);
-			bdev->remove_cb(bdev->remove_ctx);
-			return;
-		} else {
-			bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
+			desc->remove_cb(desc->remove_ctx);
+			pthread_mutex_lock(&bdev->mutex);
 		}
+	}
+
+	if (!TAILQ_EMPTY(&bdev->open_descs)) {
+		pthread_mutex_unlock(&bdev->mutex);
+		return;
 	}
 
 	TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, link);
@@ -1439,43 +1445,68 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 	spdk_bdev_unregister(vbdev);
 }
 
-bool
-spdk_bdev_claim(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
-		void *remove_ctx)
+int
+spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	       void *remove_ctx, struct spdk_bdev_desc **_desc)
 {
-	bool success;
+	struct spdk_bdev_desc *desc;
+	struct spdk_bdev *tmp;
+
+	desc = calloc(1, sizeof(*desc));
+	if (desc == NULL) {
+		return -ENOMEM;
+	}
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	if (bdev->status != SPDK_BDEV_STATUS_CLAIMED) {
-		/* Take ownership of bdev. */
-		bdev->remove_cb = remove_cb;
-		bdev->remove_ctx = remove_ctx;
-		bdev->status = SPDK_BDEV_STATUS_CLAIMED;
-		success = true;
-	} else {
-		/* bdev is already claimed. */
-		success = false;
+	if (write) {
+		tmp = bdev;
+		while (tmp) {
+			if (tmp->opened_for_write) {
+				SPDK_ERRLOG("open(%s) failed, %s already opened for write\n",
+					    bdev->name, tmp->name);
+				free(desc);
+				return -EPERM;
+			}
+			tmp = tmp->base_bdev;
+		}
 	}
+
+	TAILQ_INSERT_TAIL(&bdev->open_descs, desc, link);
+
+	if (write) {
+		bdev->opened_for_write = true;
+	}
+
+	desc->bdev = bdev;
+	desc->remove_cb = remove_cb;
+	desc->remove_ctx = remove_ctx;
+	desc->write = write;
+	*_desc = desc;
 
 	pthread_mutex_unlock(&bdev->mutex);
 
-	return success;
+	return 0;
 }
 
 void
-spdk_bdev_unclaim(struct spdk_bdev *bdev)
+spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
+	struct spdk_bdev *bdev = desc->bdev;
 	bool do_unregister = false;
 
 	pthread_mutex_lock(&bdev->mutex);
-	assert(bdev->status == SPDK_BDEV_STATUS_CLAIMED || bdev->status == SPDK_BDEV_STATUS_REMOVING);
+
+	if (desc->write) {
+		bdev->opened_for_write = false;
+	}
+
+	TAILQ_REMOVE(&bdev->open_descs, desc, link);
+	free(desc);
+
 	if (bdev->status == SPDK_BDEV_STATUS_REMOVING) {
 		do_unregister = true;
 	}
-	bdev->remove_cb = NULL;
-	bdev->remove_ctx = NULL;
-	bdev->status = SPDK_BDEV_STATUS_UNCLAIMED;
 	pthread_mutex_unlock(&bdev->mutex);
 
 	if (do_unregister == true) {
