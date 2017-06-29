@@ -319,7 +319,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 
 		vbdev_split_base_get_ref(split_base, d);
 
-		spdk_bdev_register(&d->disk);
+		spdk_vbdev_register(&d->disk, base_bdev);
 
 		TAILQ_INSERT_TAIL(&g_split_disks, d, tailq);
 
