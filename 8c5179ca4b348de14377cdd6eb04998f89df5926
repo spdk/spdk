@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e95a9c7_175dc1b9",
+        "filename": "lib/vhost/task.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-29T15:46:15Z",
+      "side": 1,
+      "message": "You don\u0027t need these casts here - svdev-\u003evdev is much simpler (and will still work if for some reason we moved vdev within the svdev structure):\n\nassert(task-\u003esvdev-\u003evdev.task_cnt \u003e 0);\ntask-\u003esvdev-\u003evdev.task_cnt--;",
+      "revId": "8c5179ca4b348de14377cdd6eb04998f89df5926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bef55110_9b725a5e",
+        "filename": "lib/vhost/task.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-29T15:46:15Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "8c5179ca4b348de14377cdd6eb04998f89df5926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
