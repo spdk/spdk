@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "09198adc_87b1cc91",
+        "filename": "include/spdk_internal/spdk_mock.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T17:03:25Z",
+      "side": 1,
+      "message": "can do",
+      "parentUuid": "6d4ff325_30a170d7",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a1619ee_951d6011",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-30T16:53:17Z",
       "side": 1,
       "message": "what if instead we created a MOCK_GET_STUB() macro?  then instead of needing this dummy proxy, you could DEFINE_STUB(probe_cb,xxx) and then do:\n\nMOCK_SET(probe_cb, bool, false)\nrc \u003d nvme_ctrlr_probe(trid, devhandle, MOCK_GET_STUB(probe_cb), cb_ctx);\n\nOr something like that...",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b6c718a_247bf923",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T17:03:25Z",
+      "side": 1,
+      "message": "I don\u0027t have enough foresight to know how often this pattern will be needed.  How about I make a note of it and if I hit it many more times as I finish the series of patches to complete UT for nvme.c I add something like that?",
+      "parentUuid": "8a1619ee_951d6011",
       "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "71b04d1b_a1927c02",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T17:03:25Z",
+      "side": 1,
+      "message": "Heh, yeah I thought about that when I was typing that comment. The reason I didn\u0027t go into detail is to purposely not set and example that every single path needs to be explained in comment in the UT code. That\u0027s a decent amount of overhead where one could argue that the *code* should be commented to that level, not the UT code. I decided to go with that simple comment just as a separator more than anything so anyone working on that function at a later point would know where one code path was done being tested and the next one started.",
+      "parentUuid": "863451f4_9766e668",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81e082e9_a6a364bf",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "79ff47c1_d0df5e43",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T17:03:25Z",
+      "side": 1,
+      "message": "bahm thought I got all of those.  will fix sorry",
+      "parentUuid": "81e082e9_a6a364bf",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ac1a5a3_f2d6d43e",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -81,6 +153,24 @@
       "writtenOn": "2017-06-30T16:53:17Z",
       "side": 1,
       "message": "Should these be 0 instead of MOCK_PASS?  We want to explicitly force this routine to return 0, not passthrough to the libc call.  MOCK_PASS will work  but using 0 keeps the exact same test behavior.\n\nSimilarly for others below.",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b1004b9_e37c7312",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T17:03:25Z",
+      "side": 1,
+      "message": "yeah, you\u0027re right. it was 0 but I went hog wild when I added the MOCK_PASS define :)",
+      "parentUuid": "0ac1a5a3_f2d6d43e",
       "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
