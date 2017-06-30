@@ -16,6 +16,24 @@
       "revId": "21f3144b6a7cbb78801c5ac4be6e39e166c2ba81",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b5a5b50_c53f0de8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 986,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-30T17:36:11Z",
+      "side": 1,
+      "message": "I\u0027ll add the size macro, but I disagree with adding the comment. It\u0027s spdk_ring that should be documented. As stated in rte_ring_create doc:\n\"The real usable ring size is *count-1* instead of *count* to differentiate a free ring from an empty ring.\" (rte_ring.h:281)",
+      "parentUuid": "5e4a4790_2789e920",
+      "revId": "21f3144b6a7cbb78801c5ac4be6e39e166c2ba81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
