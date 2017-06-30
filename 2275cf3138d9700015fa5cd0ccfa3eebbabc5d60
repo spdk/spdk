@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e64c6e25_da42b6e3",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T21:08:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b4e38ce_37a46de8",
+      "range": {
+        "startLine": 171,
+        "startChar": 12,
+        "endLine": 171,
+        "endChar": 18
+      },
+      "revId": "2275cf3138d9700015fa5cd0ccfa3eebbabc5d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1f9df3b_9fd1ac8d",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 8
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "c7b00757_fc21b4ab",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T21:08:54Z",
+      "side": 1,
+      "message": "have to do the first or the static analyzer has a cow even if I NULL out the global at the end of the func",
+      "parentUuid": "c1f9df3b_9fd1ac8d",
+      "revId": "2275cf3138d9700015fa5cd0ccfa3eebbabc5d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fe4c580_b36d9231",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 8
@@ -53,6 +95,24 @@
       "writtenOn": "2017-06-30T20:45:09Z",
       "side": 1,
       "message": "We should also verify that the probed controller got added to init_ctrlrs.",
+      "revId": "2275cf3138d9700015fa5cd0ccfa3eebbabc5d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60d54498_a6f186e3",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T21:08:54Z",
+      "side": 1,
+      "message": "good call!",
+      "parentUuid": "5fe4c580_b36d9231",
       "revId": "2275cf3138d9700015fa5cd0ccfa3eebbabc5d60",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
