@@ -16,6 +16,24 @@
       "revId": "d1777ce8a7dcfcc9b74b8b33b9c347eb5bf394f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95b6e713_bb723248",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-06-30T17:47:54Z",
+      "side": 1,
+      "message": "nice catch. it also means that safety check in spdk_scsi_dev_get_lun is wrong and can technically overflow. I\u0027ll probably do yet another patchset cleaning all that up.",
+      "parentUuid": "86ed5988_0ed32d54",
+      "revId": "d1777ce8a7dcfcc9b74b8b33b9c347eb5bf394f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
