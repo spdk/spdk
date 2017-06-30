@@ -143,6 +143,24 @@
     },
     {
       "key": {
+        "uuid": "08fe50ba_9d175441",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T18:48:00Z",
+      "side": 1,
+      "message": "So I looked at this a little more and I\u0027m not sure exactly what you mean.  Without any new macros I can still get rid of the stack variable probe_cb in this example just by passing in dummy_probe_cb so it looks like this (below). Is there another simplification you see?\n\nDEFINE_STUB(dummy_probe_cb, bool,\n\t    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,\n\t     struct spdk_nvme_ctrlr_opts *opts), false)\n\nstatic void\ntest_nvme_ctrlr_probe(void)\n{\n\tint rc \u003d 0;\n\tconst struct spdk_nvme_transport_id *trid \u003d NULL;\n\tvoid *devhandle \u003d NULL;\n\tvoid *cb_ctx \u003d NULL;\n\n\t/* test when probe_cb returns false */\n\tMOCK_SET(dummy_probe_cb, bool, false)\n\trc \u003d nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);\n\tCU_ASSERT(rc \u003d\u003d 1);",
+      "parentUuid": "84e7803a_ab577b7c",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81e082e9_a6a364bf",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
