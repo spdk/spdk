@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b045ea8c_4027c514",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-30T01:28:36Z",
+      "side": 1,
+      "message": "open",
+      "range": {
+        "startLine": 149,
+        "startChar": 31,
+        "endLine": 149,
+        "endChar": 35
+      },
+      "revId": "08daea71c84a21b4b56492198f39d460309375d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51a0c7b7_f0f1f4bf",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-30T01:28:36Z",
+      "side": 1,
+      "message": "how to determine the number of desc? It will only contain one *desc?",
+      "range": {
+        "startLine": 157,
+        "startChar": 30,
+        "endLine": 157,
+        "endChar": 51
+      },
+      "revId": "08daea71c84a21b4b56492198f39d460309375d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdb1dc77_6d9932fb",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-30T01:28:36Z",
+      "side": 1,
+      "message": "I only see index from 0 to 8, so do we need 20 bdev",
+      "range": {
+        "startLine": 105,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 33
+      },
+      "revId": "08daea71c84a21b4b56492198f39d460309375d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
