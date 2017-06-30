@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f280faef_a0bf744e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-06-30T01:15:28Z",
+      "side": 1,
+      "message": "Can we provide a new flag parameter in the two functions, then we can have one interface.",
+      "range": {
+        "startLine": 130,
+        "startChar": 3,
+        "endLine": 130,
+        "endChar": 8
+      },
+      "revId": "ad8dbcb6f7f12f723a509137a763043db48b1c79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
