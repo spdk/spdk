@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2807bb48_6689cd6c",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-30T22:30:27Z",
+      "side": 1,
+      "message": "remove period at the end",
+      "revId": "75001699acb27f8991a9b7adaf569c85604e7657",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fbc0aff_bb4706bb",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-30T22:30:27Z",
+      "side": 1,
+      "message": "Change this to # Usage?",
+      "revId": "75001699acb27f8991a9b7adaf569c85604e7657",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bb5fdb0_cf4a541c",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-30T22:30:27Z",
+      "side": 1,
+      "message": "While you are here cleaning up some of this text...\n\nHow about this:  The specification of the PCIe address should not use the normal \u0027:\u0027 and instead only use \u0027.\u0027.  This is a limitation...(the rest looks good).\n\nThe last two sentences can probably be combined and remove at least one of the \"also\"s.  (Maybe the exclamation point too?)",
+      "revId": "75001699acb27f8991a9b7adaf569c85604e7657",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
