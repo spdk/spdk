@@ -17,6 +17,19 @@ A [Vagrant](https://www.vagrantup.com/) setup has been added to make it easier t
 develop and use SPDK on systems without suitable NVMe hardware.  See the Vagrant
 section of README.md for more information.
 
+### Userspace vhost-blk target
+
+The vhost library and example app have been updated to support the vhost-blk
+protocol in addition to the existing vhost-scsi protocol.
+See the [vhost documentation](http://www.spdk.io/doc/vhost.html) for more details.
+
+### Block device abstraction layer (bdev)
+
+A GPT virtual block device has been added, which automatically exposes GPT partitions
+with a special SPDK-specific partition type as bdevs.
+See the [GPT bdev documentation](http://www.spdk.io/doc/bdev.md#bdev_config_gpt) for
+more information.
+
 ### NVMe driver
 
 The NVMe driver has been updated to support recent Intel SSDs, including the Intel®
