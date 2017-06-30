@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "aa3ac6dd_051d913c",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-30T17:35:52Z",
+      "side": 1,
+      "message": "This pattern is used extensively in SPDK - we pass function pointers to stubbed functions literally all over the place in the existing blobstore and blobfs unit test code for example.\n\nI\u0027m OK if you want to put it in a separate patch - but please much sooner rather than later.  :)",
+      "parentUuid": "3b6c718a_247bf923",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "863451f4_9766e668",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -101,6 +119,24 @@
       "side": 1,
       "message": "Heh, yeah I thought about that when I was typing that comment. The reason I didn\u0027t go into detail is to purposely not set and example that every single path needs to be explained in comment in the UT code. That\u0027s a decent amount of overhead where one could argue that the *code* should be commented to that level, not the UT code. I decided to go with that simple comment just as a separator more than anything so anyone working on that function at a later point would know where one code path was done being tested and the next one started.",
       "parentUuid": "863451f4_9766e668",
+      "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84e7803a_ab577b7c",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-06-30T17:35:52Z",
+      "side": 1,
+      "message": "I agree - I don\u0027t want a ton of overhead.  But a single line here would go a long way to help the reader understand the unit test code instead of just saying RTFC.  Something as simple as \"Test case where probe_fn indicates to not attach\".  Or below \"Test that nvme_ctrlr_probe fails if no transport_ctrl can be constructed\".\n\nMaybe I\u0027m just overly sensitive to this based on a bunch of unit test code I just wrote to test new spdk bdev open/close functionality.  There are some complicated cases to test and without comments it would require a ton of work on the reader to try to understand why each case is important.\n\nI\u0027m OK leaving this as-is for now but we should chat more on this.  I think in the end we want to have a model example for unit tests to point people towards while we get existing tests converted and I think unit tests with zero comments explaining anything about the tests sets the wrong example.",
+      "parentUuid": "71b04d1b_a1927c02",
       "revId": "ee1d1d145fffc1f7fc5b9956a7c5421f69d2e060",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
