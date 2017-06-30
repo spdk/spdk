@@ -16,6 +16,24 @@
       "revId": "bc54d67681514f21476c5aa54683b2ebe4bc0f06",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d893466_bc5a4f7e",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-06-30T21:06:36Z",
+      "side": 1,
+      "message": "Hmmm, why make it run for only one sec, how does that assure both are running at the same time? Based on my testing 1 sec may not be enough between primary and secondary, maybe we need to change the -t 1 to a -t 6?",
+      "parentUuid": "fa6e6050_a25a3445",
+      "revId": "bc54d67681514f21476c5aa54683b2ebe4bc0f06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
