@@ -6,6 +6,9 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 
+# delay time for apps to start up as primary
+app_start=5
+
 function linux_iter_pci {
 	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
 }
@@ -14,6 +17,7 @@ timing_enter nvme
 
 if [ `uname` = Linux ]; then
 	start_stub "-s 2048 -i 0 -m 0xF"
+	sleep $app_start
 	trap "kill_stub; exit 1" SIGINT SIGTERM ExIT
 fi
 
@@ -85,7 +89,7 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
 	timing_enter multi_process
 	$rootdir/examples/nvme/arbitration/arbitration -i 0 -s 4096 -t 10 -c 0xf &
 	pid=$!
-	sleep 3
+	sleep $app_start
 	$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w randread -s 4096 -t 10 -c 0x10 &
 	sleep 1
 	kill -9 $!
@@ -99,7 +103,9 @@ if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
 		core=$((1 << (($count + 4))))
 		printf -v hexcore "0x%x" "$core"
 		$rootdir/examples/nvme/perf/perf -i 0 -q 128 -w read -s 4096 -t 1 -c $hexcore &
+		sleep $app_start
 		$rootdir/examples/nvme/identify/identify -i 0 &
+		sleep $app_start
 		count=$(($count + 1))
 	done
 	wait $pid
