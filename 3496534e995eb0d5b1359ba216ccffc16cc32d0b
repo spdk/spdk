@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d74aae7_edf4ccbb",
+        "filename": "examples/bdev/fio_plugin/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-30T22:34:58Z",
+      "side": 1,
+      "message": "Maybe use # for consistency.",
+      "revId": "3496534e995eb0d5b1359ba216ccffc16cc32d0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
