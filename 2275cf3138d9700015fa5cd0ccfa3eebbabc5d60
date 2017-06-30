@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b4e38ce_37a46de8",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-30T20:45:09Z",
+      "side": 1,
+      "message": "Maybe \"probe_cb returns true\" rather than \"probe_cb works\"?\n\n(It \"works\" either way, it\u0027s just allowing the user to choose which devices they want to attach.)\n\nAlso typo: \"can\u0027d\" -\u003e \"can\u0027t\"",
+      "range": {
+        "startLine": 171,
+        "startChar": 12,
+        "endLine": 171,
+        "endChar": 18
+      },
+      "revId": "2275cf3138d9700015fa5cd0ccfa3eebbabc5d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1f9df3b_9fd1ac8d",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-30T20:45:09Z",
+      "side": 1,
+      "message": "This needs a malloc() failure check:\n\n    SPDK_CU_ASSERT_FATAL(g_spdk_nvme_driver !\u003d NULL).\n\nAlternatively, we could just use a stack-allocated struct nvme_driver:\n\n    struct nvme_driver driver; (at the top of the block)\n    g_spdk_nvme_driver \u003d \u0026driver;",
+      "revId": "2275cf3138d9700015fa5cd0ccfa3eebbabc5d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fe4c580_b36d9231",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-06-30T20:45:09Z",
+      "side": 1,
+      "message": "We should also verify that the probed controller got added to init_ctrlrs.",
+      "revId": "2275cf3138d9700015fa5cd0ccfa3eebbabc5d60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
