@@ -17,6 +17,11 @@ A [Vagrant](https://www.vagrantup.com/) setup has been added to make it easier t
 develop and use SPDK on systems without suitable NVMe hardware.  See the Vagrant
 section of README.md for more information.
 
+### Userspace vhost-blk target
+
+The vhost library and example app have been updated to support the vhost-blk
+protocol in addition to the existing vhost-scsi protocol.
+
 ### NVMe driver
 
 The NVMe driver has been updated to support recent Intel SSDs, including the Intel®
