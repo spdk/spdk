@@ -226,6 +226,24 @@
       "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cad8d8d_85a4a6f9",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 532,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-07-03T09:04:06Z",
+      "side": 1,
+      "message": "removed, as it is not needed",
+      "parentUuid": "b6a67df6_cb903f98",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
