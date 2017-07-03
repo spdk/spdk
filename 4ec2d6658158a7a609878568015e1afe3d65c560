@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66625862_a991194b",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-03T07:18:36Z",
+      "side": 1,
+      "message": "Another thing with sourcing autotest_common is that it sets -E flag which affects vm_shutdown commands (they exit with error, even though -e is temporarily disabled).\nI am not sure but I suspect that disabling -E like that is not an option as it would also disable the flag from \"main\" spdk/autotest.sh.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 15
+      },
+      "revId": "4ec2d6658158a7a609878568015e1afe3d65c560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
