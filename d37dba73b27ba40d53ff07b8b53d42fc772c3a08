@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0548d326_36068b87",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-03T06:06:02Z",
+      "side": 1,
+      "message": "This is not related to changes in this commit. Noted for any future change.",
+      "parentUuid": "f0d0679b_2cca3f27",
+      "range": {
+        "startLine": 397,
+        "startChar": 1,
+        "endLine": 397,
+        "endChar": 29
+      },
+      "revId": "d37dba73b27ba40d53ff07b8b53d42fc772c3a08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff6ba407_b4d11cec",
         "filename": "test/vhost/fiotest/common.sh",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2017-06-27T16:13:00Z",
       "side": 1,
       "message": "why just don\u0027t use \u0027pkill -F $vm/qemu.pid\u0027",
+      "range": {
+        "startLine": 400,
+        "startChar": 3,
+        "endLine": 400,
+        "endChar": 46
+      },
+      "revId": "d37dba73b27ba40d53ff07b8b53d42fc772c3a08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84365564_a276d32a",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-03T06:06:02Z",
+      "side": 1,
+      "message": "As above. (Also - this works too)",
+      "parentUuid": "ff6ba407_b4d11cec",
       "range": {
         "startLine": 400,
         "startChar": 3,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "71b0ec47_1ef6eca8",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-03T06:06:02Z",
+      "side": 1,
+      "message": "As above. Noted for any future change.",
+      "parentUuid": "c48dd3c8_d253a2c9",
+      "revId": "d37dba73b27ba40d53ff07b8b53d42fc772c3a08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "041c6905_e33cad67",
         "filename": "test/vhost/fiotest/common.sh",
         "patchSetId": 11
@@ -76,6 +142,30 @@
       "writtenOn": "2017-06-27T16:13:00Z",
       "side": 1,
       "message": "This will throw error if N-th VM is dead already.",
+      "range": {
+        "startLine": 417,
+        "startChar": 2,
+        "endLine": 417,
+        "endChar": 39
+      },
+      "revId": "d37dba73b27ba40d53ff07b8b53d42fc772c3a08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d14ebd77_2d754f2c",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-03T06:06:02Z",
+      "side": 1,
+      "message": "As above. Noted for any future change.",
+      "parentUuid": "041c6905_e33cad67",
       "range": {
         "startLine": 417,
         "startChar": 2,
