@@ -229,6 +229,19 @@ static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 	.dump_config_json	= vbdev_split_dump_config_json,
 };
 
+static void
+vbdev_split_base_hotremove(void *remove_ctx)
+{
+	struct spdk_bdev *base_bdev = remove_ctx;
+	struct split_disk *split_disk, *tmp;
+
+	TAILQ_FOREACH_SAFE(split_disk, &g_split_disks, tailq, tmp) {
+		if (split_disk->base_bdev == base_bdev) {
+			spdk_bdev_unregister(&split_disk->disk);
+		}
+	}
+}
+
 static int
 vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t split_size_mb)
 {
@@ -239,7 +252,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	int rc;
 	struct split_base *split_base;
 
-	if (!spdk_bdev_claim(base_bdev, NULL, NULL)) {
+	if (!spdk_bdev_claim(base_bdev, vbdev_split_base_hotremove, base_bdev)) {
 		SPDK_ERRLOG("Split bdev %s is already claimed\n", spdk_bdev_get_name(base_bdev));
 		return -1;
 	}
