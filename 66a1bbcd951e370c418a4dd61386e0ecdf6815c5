@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d1c19bd7_8ae89749",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-07-03T08:27:23Z",
+      "side": 1,
+      "message": "Jims changes were taken and this file is renamed as histogram_data.h",
+      "parentUuid": "84cde9b8_5cb65f5d",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "811e6c97_41dfd153",
         "filename": "include/spdk/histogram.h",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2017-06-21T00:18:18Z",
       "side": 1,
       "message": "I would prefer that these macros were written as static inline functions instead, unless there\u0027s a reason they can\u0027t be functions.  (That will allow better type checking, and generally it\u0027s nice to avoid the preprocessor unless it\u0027s really needed.)",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cfae381_ea5dcb39",
+        "filename": "include/spdk/histogram.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-07-03T08:27:23Z",
+      "side": 1,
+      "message": "Fixed with inline functions replacing macro",
+      "parentUuid": "811e6c97_41dfd153",
       "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7e101b5a_bcb87552",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-07-03T08:27:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96a3a12c_6412ef68",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8a0c590_2cfc616d",
         "filename": "lib/util/rpc/histogram_rpc.c",
         "patchSetId": 5
@@ -64,6 +118,24 @@
       "writtenOn": "2017-06-21T00:18:18Z",
       "side": 1,
       "message": "Leave a blank line between variable decls and code.",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85688333_fa631418",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-07-03T08:27:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8a0c590_2cfc616d",
       "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "114880b0_9e1e4a62",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-07-03T08:27:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "37bee3dc_acc491e3",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a310cd5e_532ddea2",
         "filename": "lib/util/rpc/histogram_rpc.c",
         "patchSetId": 5
@@ -98,6 +188,24 @@
       "writtenOn": "2017-06-21T00:18:18Z",
       "side": 1,
       "message": "All of these RPCs need to check if \u0027id\u0027 is NULL before sending a response (JSON-RPC 2.0 allows for \"notification\" calls, which don\u0027t specify an id and should not cause a response unless there is an error).",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c39a723_394c9998",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011277
+      },
+      "writtenOn": "2017-07-03T08:27:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a310cd5e_532ddea2",
       "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
