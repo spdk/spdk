@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a570f905_a3c1a53a",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-03T09:27:47Z",
+      "side": 1,
+      "message": "add newline between declaration and code",
+      "revId": "541a8e545784df47b88c3dbb6807fc1f895f3afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f5d180f_9105245d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-03T09:27:47Z",
+      "side": 1,
+      "message": "could you move this into new line so that it\u0027s aligned like the rest of this macro? also, please add additional brackets around whole macro.",
+      "range": {
+        "startLine": 502,
+        "startChar": 28,
+        "endLine": 502,
+        "endChar": 98
+      },
+      "revId": "541a8e545784df47b88c3dbb6807fc1f895f3afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b43648e_70e384a6",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-03T09:27:47Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 510,
+        "startChar": 37,
+        "endLine": 510,
+        "endChar": 98
+      },
+      "revId": "541a8e545784df47b88c3dbb6807fc1f895f3afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a74009d4_dea9e5b2",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-03T09:27:47Z",
+      "side": 1,
+      "message": "the name suggests that this macro *enables* something, but it does not. could you remove it and use VIRTIO_BLK_DISABLED_FEATURES \u0026 ~(1ULL \u003c\u003c VIRTIO_BLK_F_RO) directly in vhost_blk_device_backend_enable_ro?",
+      "range": {
+        "startLine": 514,
+        "startChar": 8,
+        "endLine": 514,
+        "endChar": 43
+      },
+      "revId": "541a8e545784df47b88c3dbb6807fc1f895f3afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "274a6e12_9a733d78",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-03T09:27:47Z",
+      "side": 1,
+      "message": "how about vhost_blk_device_backend_readonly?",
+      "range": {
+        "startLine": 525,
+        "startChar": 43,
+        "endLine": 525,
+        "endChar": 77
+      },
+      "revId": "541a8e545784df47b88c3dbb6807fc1f895f3afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "850a69fa_ed03f170",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-03T09:27:47Z",
+      "side": 1,
+      "message": "either change to ReadOnly as it is in vhost.conf.in or modify vhost.conf.in",
+      "range": {
+        "startLine": 563,
+        "startChar": 48,
+        "endLine": 563,
+        "endChar": 56
+      },
+      "revId": "541a8e545784df47b88c3dbb6807fc1f895f3afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "daefd220_fac94416",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-03T09:27:47Z",
+      "side": 1,
+      "message": "could you refactor it into a single spdk_vhost_dev_construct call and bvdev-\u003ereadonly \u003d readonly?",
+      "range": {
+        "startLine": 611,
+        "startChar": 1,
+        "endLine": 618,
+        "endChar": 2
+      },
+      "revId": "541a8e545784df47b88c3dbb6807fc1f895f3afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
