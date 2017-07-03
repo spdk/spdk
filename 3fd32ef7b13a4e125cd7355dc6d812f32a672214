@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ee736a5_c9824d5a",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-03T19:16:10Z",
+      "side": 1,
+      "message": "I don\u0027t think this approach will scale.  Eventually we may allow different devices to configure FLUSH, SEG_MAX, BLK_SIZE, etc.  I don\u0027t think want a different global dev_backend for each possible permutation.\n\nCould we instead put an spdk_vhost_dev_backend in the spdk_vhost_dev struct?  Then when we construct a new vhost_dev (whether scsi or blk), it can copy the default backend into the allocated vdev, and then modify that copy based on the config settings.",
+      "revId": "3fd32ef7b13a4e125cd7355dc6d812f32a672214",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
