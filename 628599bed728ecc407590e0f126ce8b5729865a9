@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b9f5626_a8e628d4",
+        "filename": "test/scsi/scsi.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-03T10:45:06Z",
+      "side": 1,
+      "message": "space",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 1
+      },
+      "revId": "628599bed728ecc407590e0f126ce8b5729865a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "892cd802_e5195938",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-03T10:45:06Z",
+      "side": 1,
+      "message": "This should stay as vm_shutdown_all",
+      "range": {
+        "startLine": 244,
+        "startChar": 4,
+        "endLine": 244,
+        "endChar": 8
+      },
+      "revId": "628599bed728ecc407590e0f126ce8b5729865a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
