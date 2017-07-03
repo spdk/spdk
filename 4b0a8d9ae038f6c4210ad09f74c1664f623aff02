@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "039a3be6_d8eba5c0",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-03T19:17:33Z",
+      "side": 1,
+      "message": "I guess this patch is OK - but here we use cpu_mask and above we have cpumask.  It would be better for these to be consistent.  If there are already some inconsistencies (for SCSI) we should fix those too.",
+      "revId": "4b0a8d9ae038f6c4210ad09f74c1664f623aff02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
