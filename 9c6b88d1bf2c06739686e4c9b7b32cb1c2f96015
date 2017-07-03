@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c2f9cc1_54de4c28",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-03T15:00:43Z",
+      "side": 1,
+      "message": "What about vhost-blk?",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 37
+      },
+      "revId": "9c6b88d1bf2c06739686e4c9b7b32cb1c2f96015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
