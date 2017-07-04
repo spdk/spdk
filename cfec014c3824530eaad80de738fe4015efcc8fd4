@@ -33,6 +33,24 @@
       "revId": "cfec014c3824530eaad80de738fe4015efcc8fd4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e643507c_d7c5ea1c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-04T16:42:45Z",
+      "side": 1,
+      "message": "After patch https://review.gerrithub.io/#/c/366723 there will be no loop inside spdk_vhost_task_get. Moving -\u003evq and -\u003esvdev assignments there would require reintroducing that extra loop inside spdk_vhost_task_get. We probably don\u0027t want that.",
+      "parentUuid": "e2b58d83_655fd00a",
+      "revId": "cfec014c3824530eaad80de738fe4015efcc8fd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
