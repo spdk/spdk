@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a940fdba_dc633581",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T09:19:16Z",
+      "side": 1,
+      "message": "I am afraid we could run the test case in VM. just remove this test case.",
+      "range": {
+        "startLine": 19,
+        "startChar": 5,
+        "endLine": 19,
+        "endChar": 9
+      },
+      "revId": "d7d2097521af3022563d8d27b22954c630643a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e0fbf96_575e3993",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T09:19:16Z",
+      "side": 1,
+      "message": "subsystems, not target nodes.",
+      "range": {
+        "startLine": 55,
+        "startChar": 29,
+        "endLine": 55,
+        "endChar": 34
+      },
+      "revId": "d7d2097521af3022563d8d27b22954c630643a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f97e4257_8f72bff8",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T09:19:16Z",
+      "side": 1,
+      "message": "subsystems.",
+      "range": {
+        "startLine": 56,
+        "startChar": 24,
+        "endLine": 56,
+        "endChar": 29
+      },
+      "revId": "d7d2097521af3022563d8d27b22954c630643a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20b6ff00_a714984e",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T09:19:16Z",
+      "side": 1,
+      "message": "subsystems",
+      "range": {
+        "startLine": 59,
+        "startChar": 35,
+        "endLine": 59,
+        "endChar": 40
+      },
+      "revId": "d7d2097521af3022563d8d27b22954c630643a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "edb7122b_dd010326",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T09:19:16Z",
+      "side": 1,
+      "message": "subsystems",
+      "range": {
+        "startLine": 62,
+        "startChar": 18,
+        "endLine": 62,
+        "endChar": 23
+      },
+      "revId": "d7d2097521af3022563d8d27b22954c630643a6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
