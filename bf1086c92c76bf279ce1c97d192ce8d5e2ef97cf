@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7da65cb9_f3f0e411",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "we do not need to create NVMe bdevs by rpc method manually.\nthe blockdev_nvme will do the work.\n1 keep the system has 4 NVMe installed.\n2 run setup.sh\n3 Run iscsi target.\n4 use rpc to create 4 target nodes base on the NVMe bdevs.",
+      "range": {
+        "startLine": 8,
+        "startChar": 40,
+        "endLine": 8,
+        "endChar": 44
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50d26049_f4ab6e77",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "login to the target nodes created in step4.",
+      "range": {
+        "startLine": 9,
+        "startChar": 2,
+        "endLine": 9,
+        "endChar": 10
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7be1ac3_06320da7",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "remove the improper character.",
+      "range": {
+        "startLine": 9,
+        "startChar": 55,
+        "endLine": 9,
+        "endChar": 56
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9215517a_b9f9bee4",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "the fio should return error code and stop immediately. check the fio return code, make sure it meet the expectation.",
+      "range": {
+        "startLine": 11,
+        "startChar": 49,
+        "endLine": 11,
+        "endChar": 55
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "823aac37_32ba2144",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "logout and delete the target nodes.",
+      "range": {
+        "startLine": 12,
+        "startChar": 22,
+        "endLine": 12,
+        "endChar": 28
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a680f98_8f507355",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "remove the improper character.",
+      "range": {
+        "startLine": 14,
+        "startChar": 63,
+        "endLine": 14,
+        "endChar": 64
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "057ba39b_3f8afa42",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "run setup.sh\ncreate 4 target nodes which based on the hotinsert NVMe devices.",
+      "range": {
+        "startLine": 14,
+        "startChar": 10,
+        "endLine": 14,
+        "endChar": 16
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25398f37_776e0658",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "could you please modify the steps according the iscsi tgt?",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 4
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1b72605_f11a0189",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-04T08:16:31Z",
+      "side": 1,
+      "message": "remove the improper character.",
+      "range": {
+        "startLine": 24,
+        "startChar": 60,
+        "endLine": 24,
+        "endChar": 61
+      },
+      "revId": "bf1086c92c76bf279ce1c97d192ce8d5e2ef97cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
