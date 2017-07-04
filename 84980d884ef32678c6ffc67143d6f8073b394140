@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4d4d3e9a_2dfd8ff7",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-04T16:43:08Z",
+      "side": 1,
+      "message": "hotremove_cb has to know from which device given lun is being removed.",
+      "parentUuid": "16ca6086_cdaabf25",
+      "revId": "84980d884ef32678c6ffc67143d6f8073b394140",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31c24fbe_3ae555ae",
         "filename": "include/spdk/scsi.h",
         "patchSetId": 2
