@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "18a663ec_61b81c66",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "I\u0027m not sure if we would like to make logical volumes configurable option due to this library. If yes, I\u0027ll go ahead and make changes.",
+      "parentUuid": "86f7e7e7_d60a1664",
+      "range": {
+        "startLine": 89,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 22
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "849f3d15_d24f65dd",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2017-07-04T09:41:25Z",
       "side": 1,
       "message": "You can move this before calloc() so no free is needed.",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 19
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4cf52d3_e265104f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "849f3d15_d24f65dd",
       "range": {
         "startLine": 95,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9421dcd7_ba0f2fe0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "lvol-\u003esz is equal to cluster_size * requested number of clusters via spdk_lvol_create(). Default cluster_size, and what is used currently for lvols, is equal to 1MiB (SPDK_BLOB_OPTS_CLUSTER_SZ). I\u0027ve added assert in case of any future changes.",
+      "parentUuid": "e603d1aa_d62d6582",
+      "range": {
+        "startLine": 106,
+        "startChar": 18,
+        "endLine": 106,
+        "endChar": 43
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f99fde26_4a2ec9bd",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 4
@@ -88,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "593f8e1e_f74874c2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f99fde26_4a2ec9bd",
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5571ca6a_59bd0b96",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 4
@@ -99,6 +189,30 @@
       "writtenOn": "2017-07-04T09:41:25Z",
       "side": 1,
       "message": "I think we really need some good errors reporting stuff. This message doesn\u0027t say anything. Also in some cases is invalid and confusing. It should shortly describe what went wrong (no memory? Invalid parameters? IO error?).\n\nThe same is true for all RPC call\u0027s here.\n\nErrors reporting is really important. If user can\u0027t figure out what he is doing wrong he would simply say \"It is not working\".",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 101
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c843f6f9_e4b62e49",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Definitely agree, will work on that.",
+      "parentUuid": "5571ca6a_59bd0b96",
       "range": {
         "startLine": 83,
         "startChar": 1,
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "09f6a97b_30d2b8ae",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8b80a67_4439cdd8",
+      "range": {
+        "startLine": 143,
+        "startChar": 1,
+        "endLine": 143,
+        "endChar": 57
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51204a9b_86c5ac45",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 4
@@ -145,6 +283,30 @@
       "writtenOn": "2017-07-04T09:41:25Z",
       "side": 1,
       "message": "Is lvol-\u003esz % cluster_size \u003d\u003d 0 asserted somewhere else?",
+      "range": {
+        "startLine": 153,
+        "startChar": 31,
+        "endLine": 153,
+        "endChar": 54
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d81d9eec_90c3edb8",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "lvol-\u003esz is sz * cluster size, so this should be fine. Line 244 in this file.\nI will make changes to how number of clusters or cluster sizes are passed in couple next patch sets.",
+      "parentUuid": "51204a9b_86c5ac45",
       "range": {
         "startLine": 153,
         "startChar": 31,
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "24f000a9_b729ed2a",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Even though we all know 42 is the answer for most important question, this is not the case here :)\nReturn from uuid_unparse has length of 36 bytes + 1 byte for tailing \u0027\\0\u0027, thus 37. I\u0027ve added UUID_STRING_LEN define, hopefully explaining it bit better.",
+      "parentUuid": "7220ae3f_e15e6528",
+      "range": {
+        "startLine": 154,
+        "startChar": 11,
+        "endLine": 154,
+        "endChar": 13
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "123aec8b_a1363f9a",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 4
@@ -191,6 +377,30 @@
       "writtenOn": "2017-07-04T09:41:25Z",
       "side": 1,
       "message": "Is -1 valid as error code? if so this should not contain \u0027errno\u0027 part. Maybe -EINVAL?",
+      "range": {
+        "startLine": 158,
+        "startChar": 2,
+        "endLine": 158,
+        "endChar": 17
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3bc6b15_75300406",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "You are right that more detailed error numbers are required in some places. Will work on that.\nFor this particular instance, I\u0027ve removed number_of_clusters \u003d\u003d 0 check. As we will have lvol extend command it shouldn\u0027t be issue to create lvol with 0 clusters.",
+      "parentUuid": "123aec8b_a1363f9a",
       "range": {
         "startLine": 158,
         "startChar": 2,
@@ -226,6 +436,30 @@
     },
     {
       "key": {
+        "uuid": "993766fc_02804248",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e87a035_72f87af2",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 2
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4055e18_c61b1be0",
         "filename": "scripts/rpc.py",
         "patchSetId": 4
@@ -249,6 +483,30 @@
     },
     {
       "key": {
+        "uuid": "ce6e6f3a_190292ce",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b4055e18_c61b1be0",
+      "range": {
+        "startLine": 247,
+        "startChar": 42,
+        "endLine": 248,
+        "endChar": 48
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "705781b2_cdf327be",
         "filename": "scripts/rpc.py",
         "patchSetId": 4
@@ -260,6 +518,30 @@
       "writtenOn": "2017-07-04T09:41:25Z",
       "side": 1,
       "message": "guid -\u003e GUID",
+      "range": {
+        "startLine": 260,
+        "startChar": 40,
+        "endLine": 260,
+        "endChar": 44
+      },
+      "revId": "324709500ce85b8642c47a68efce850f6a272093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "228da874_0fadbbaf",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-04T14:29:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "705781b2_cdf327be",
       "range": {
         "startLine": 260,
         "startChar": 40,
