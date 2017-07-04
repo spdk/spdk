@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af3d9360_035f495b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-04T14:46:57Z",
+      "side": 1,
+      "message": "I think you need to call spdk_vhost_dev_remove() here, otherwise you get unusable controller.",
+      "range": {
+        "startLine": 607,
+        "startChar": 2,
+        "endLine": 607,
+        "endChar": 11
+      },
+      "revId": "b83df4dfd658663080532591f6ef8dfa21cc1cb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
