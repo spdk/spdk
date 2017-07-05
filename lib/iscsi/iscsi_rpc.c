@@ -295,7 +295,7 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	struct spdk_json_write_ctx *w;
 	size_t tgt_idx;
-	int i, maxlun;
+	int i;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -341,8 +341,7 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "luns");
 		spdk_json_write_array_begin(w);
-		maxlun = spdk_scsi_dev_get_max_lun(tgtnode->dev);
-		for (i = 0; i < maxlun; i++) {
+		for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(tgtnode->dev, i);
 
 			if (lun) {

@@ -45,7 +45,7 @@
 static void
 json_scsi_dev_write(struct spdk_json_write_ctx *ctx, struct spdk_scsi_dev *dev)
 {
-	int l, maxlun;
+	int l;
 
 	spdk_json_write_name(ctx, "id");
 	spdk_json_write_int32(ctx, spdk_scsi_dev_get_id(dev));
@@ -55,8 +55,8 @@ json_scsi_dev_write(struct spdk_json_write_ctx *ctx, struct spdk_scsi_dev *dev)
 
 	spdk_json_write_name(ctx, "luns");
 	spdk_json_write_array_begin(ctx);
-	maxlun = spdk_scsi_dev_get_max_lun(dev);
-	for (l = 0; l < maxlun; l++) {
+
+	for (l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
 		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
 
 		if (!lun) {
