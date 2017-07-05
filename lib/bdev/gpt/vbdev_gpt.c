@@ -462,8 +462,8 @@ end:
 	}
 }
 
-static int
-vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
+int
+spdk_vbdev_gpt_read_gpt(struct spdk_bdev *bdev, bool rpc)
 {
 	struct spdk_gpt_bdev *gpt_bdev;
 	int rc;
@@ -480,6 +480,10 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 		spdk_gpt_bdev_free(gpt_bdev);
 		SPDK_ERRLOG("Failed to send bdev_io command\n");
 		return -1;
+	}
+
+	if (rpc) {
+		(SPDK_GET_BDEV_MODULE(gpt))->examine_in_progress++;
 	}
 
 	return 0;
@@ -518,7 +522,7 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	rc = vbdev_gpt_read_gpt(bdev);
+	rc = spdk_vbdev_gpt_read_gpt(bdev, false);
 	if (rc) {
 		spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 		SPDK_ERRLOG("Failed to read info from bdev %s\n", spdk_bdev_get_name(bdev));
