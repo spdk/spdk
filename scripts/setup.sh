@@ -42,7 +42,7 @@ function linux_bind_driver() {
 }
 
 function linux_hugetlbfs_mount() {
-	mount | grep '^hugetlbfs ' | awk '{ print $3 }'
+	mount | grep ' type hugetlbfs ' | awk '{ print $3 }'
 }
 
 function configure_linux {
