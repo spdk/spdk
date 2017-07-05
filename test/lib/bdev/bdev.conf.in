@@ -15,3 +15,6 @@
 
 [AIO]
   AIO /dev/ram0 AIO0
+
+[Rpc]
+  Enable Yes
