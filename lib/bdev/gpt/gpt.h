@@ -57,5 +57,6 @@ struct spdk_gpt {
 };
 
 int spdk_gpt_parse(struct spdk_gpt *gpt);
+int spdk_vbdev_gpt_read_gpt(struct spdk_bdev *base_bdev);
 
 #endif  /* SPDK_INTERNAL_GPT_H */
