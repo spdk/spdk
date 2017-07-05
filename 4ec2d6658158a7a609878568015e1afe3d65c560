@@ -22,6 +22,47 @@
       "revId": "4ec2d6658158a7a609878568015e1afe3d65c560",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b82ca73_fc16d6f1",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-05T18:14:17Z",
+      "side": 1,
+      "message": "You can do set +x even if it is already set that way, so it\u0027s simpler to write this as:\n\nsource $SPDK_BUILD_DIR/scripts/autotest_common.sh\nset +x\n\nWe also write out \"source\" instead of \".\" because it is clearer.\n\nThe -e is a good best practice. If you have a command that may fail, handle the failure in the script. The simplest way to handle it is to append an || true at the end of the line if you don\u0027t care that it failed.",
+      "parentUuid": "66625862_a991194b",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 15
+      },
+      "revId": "4ec2d6658158a7a609878568015e1afe3d65c560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e975dea_0cd732c3",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-05T18:14:17Z",
+      "side": 1,
+      "message": "What\u0027s the ret\u003d1 for?",
+      "revId": "4ec2d6658158a7a609878568015e1afe3d65c560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
