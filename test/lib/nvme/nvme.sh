@@ -18,7 +18,7 @@ timing_enter nvme
 if [ `uname` = Linux ]; then
 	start_stub "-s 2048 -i 0 -m 0xF"
 	sleep $app_start
-	trap "kill_stub; exit 1" SIGINT SIGTERM ExIT
+	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
