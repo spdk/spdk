@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a5e5f05_4e3b1572",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-05T16:37:24Z",
+      "side": 1,
+      "message": "I think there are a few issues we have to work out here. The only io_device registered is the bdev itself, so if you call this on different descriptors (i.e. a read-only one and a read/write one) on the same thread, you end up with the same channel. Then, when you call one of the I/O operations like spdk_bdev_read, we have no way to enforce that the user is allowed to perform the operation.\n\nI see two potential solutions:\n\nOne option is to dynamically register the descriptors as individual io_devices so they get their own channels. However, this probably uses quite a bit more memory in some cases than is really necessary.\n\nThe other option is to keep returning the one global channel for a given thread, but modify the spdk_bdev_read/write/etc. calls to take the spdk_bdev_desc instead of the spdk_bdev. On the surface this looks like a bigger API change, but in this release cycle we\u0027ve already dramatically altered this bdev API. If there is any time to actually make a change like this, it\u0027s probably now. I think it makes more intuitive sense too - POSIX calls like read/write/etc. take the file descriptor - not the file itself.",
+      "revId": "c3bfd3e3692dcc3ddb8607a7aa1623b90f0a2f3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
