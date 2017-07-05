@@ -816,10 +816,11 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -EINVAL;
 	}
 
-	if (vdev->lcore != -1) {
+	if (vdev->lcore != -1 && (svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
 		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", ctrlr_name);
-		return -ENODEV;
+		return -EBUSY;
 	}
+
 
 	if (svdev->scsi_dev[scsi_dev_num] != NULL) {
 		SPDK_ERRLOG("Controller %s dev %u already occupied\n", ctrlr_name, scsi_dev_num);
@@ -843,6 +844,9 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -EINVAL;
 	}
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
+
+	eventq_enqueue(svdev, svdev->scsi_dev[scsi_dev_num], NULL, VIRTIO_SCSI_T_TRANSPORT_RESET,
+		       VIRTIO_SCSI_EVT_RESET_RESCAN);
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
 	return 0;
