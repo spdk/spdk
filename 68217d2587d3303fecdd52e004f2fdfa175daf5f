@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e9cf4153_9ed0c5c8",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-05T17:36:26Z",
+      "side": 1,
+      "message": "This is reintroducing a hard-coded IP address - please use $NVMF_FIRST_TARGET_IP",
+      "range": {
+        "startLine": 41,
+        "startChar": 54,
+        "endLine": 41,
+        "endChar": 67
+      },
+      "revId": "68217d2587d3303fecdd52e004f2fdfa175daf5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
