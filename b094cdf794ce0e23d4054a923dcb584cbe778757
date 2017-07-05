@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "041917db_af346593",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-05T20:00:45Z",
+      "side": 1,
+      "message": "could this be meta_flags or pr_flags?  just to make it more clear what these flags are for",
+      "revId": "b094cdf794ce0e23d4054a923dcb584cbe778757",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29f36b7e_74428464",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-05T20:00:45Z",
+      "side": 1,
+      "message": "could we wrap this with \"if (task-\u003emeta_flags)\" - just to make it clear we only need to call this function when it is needed (and won\u0027t affect normal read/write case)",
+      "revId": "b094cdf794ce0e23d4054a923dcb584cbe778757",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
