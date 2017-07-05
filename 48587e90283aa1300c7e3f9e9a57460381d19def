@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d555d45f_37a15cdf",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-05T16:32:22Z",
+      "side": 1,
+      "message": "Rather than setting a special global here, it would be nice if we could just call nvme_ctrlr_probe() on it, which would add it to the init_ctrlrs list.  We will have to change nvme_ctrlr_process_init() to handle a controller that is already in NVME_CTRLR_STATE_READY, but otherwise, everything should work as normal, and no special case will need to be added in nvme_init_controllers().\n\nWe also need to update any NVMe library users so that they are ready for a discovery controller in probe_cb. We need to add checks throughout all of the examples so that we don\u0027t try to do I/O to a discovery subsystem.",
+      "revId": "48587e90283aa1300c7e3f9e9a57460381d19def",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
