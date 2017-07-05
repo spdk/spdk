@@ -48,4 +48,6 @@ run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 0
 #Test configure remote NVMe device from conf file
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
 
+run_test ./test/iscsi_tgt/gpt/fio_gpt.sh
+
 timing_exit iscsi_tgt
