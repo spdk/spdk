@@ -45,4 +45,7 @@ kill_stub
 #  we can use the stub for this test
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
 
+# Need to run nbd for partition
+run_test ./test/iscsi_tgt/gpt/fio_gpt.sh
+
 timing_exit iscsi_tgt
