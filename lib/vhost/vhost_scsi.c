@@ -42,6 +42,7 @@
 #include "spdk/event.h"
 #include "spdk/util.h"
 #include "spdk/likely.h"
+#include "spdk/barrier.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -782,6 +783,7 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
+	struct spdk_scsi_dev *scsi_dev;
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
@@ -816,9 +818,9 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -EINVAL;
 	}
 
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", ctrlr_name);
-		return -ENODEV;
+	if (vdev->lcore != -1 && (svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
+		SPDK_ERRLOG("Controller %s is in use and hotplug is not enabled for this controller\n", ctrlr_name);
+		return -ENOTSUP;
 	}
 
 	if (svdev->scsi_dev[scsi_dev_num] != NULL) {
@@ -833,16 +835,26 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	lun_id_list[0] = 0;
 	lun_names_list[0] = (char *)lun_name;
 
-	svdev->removed_dev[scsi_dev_num] = false;
-	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
-					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
-
-	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
+	scsi_dev = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
+					   SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
+	if (scsi_dev == NULL) {
 		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
 			    dev_name, lun_name, vdev->name);
 		return -EINVAL;
 	}
-	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
+
+	spdk_scsi_dev_add_port(scsi_dev, 0, "vhost");
+
+	svdev->removed_dev[scsi_dev_num] = false;
+	spdk_compiler_barrier();
+	svdev->scsi_dev[scsi_dev_num] = scsi_dev;
+
+	if (vdev->lcore != -1) {
+		spdk_wmb();
+		eventq_enqueue(svdev, svdev->scsi_dev[scsi_dev_num], NULL, VIRTIO_SCSI_T_TRANSPORT_RESET,
+			       VIRTIO_SCSI_EVT_RESET_RESCAN);
+	}
+
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
 	return 0;
