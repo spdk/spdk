@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "424317ad_403c2a62",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 821,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-05T15:27:44Z",
+      "side": 1,
+      "message": "Message is inconsistent with error code. If you want keep message the error should be -ENOTSUP, if you want keep error the message should be something like \"hotplug is not enabled for this controller\".\nI would vote for changing message.",
+      "range": {
+        "startLine": 820,
+        "startChar": 0,
+        "endLine": 821,
+        "endChar": 16
+      },
+      "revId": "90c2b6e907c7456345952c59e947f41ddb49733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f72857c6_b56cb329",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-05T15:27:44Z",
+      "side": 1,
+      "message": "I think this should be done using local variable becouse in line 846 you are modifying this device.",
+      "range": {
+        "startLine": 838,
+        "startChar": 1,
+        "endLine": 838,
+        "endChar": 30
+      },
+      "revId": "90c2b6e907c7456345952c59e947f41ddb49733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7265796_a32b50e8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-05T15:27:44Z",
+      "side": 1,
+      "message": "Do we need store barier before sending event?",
+      "range": {
+        "startLine": 849,
+        "startChar": 2,
+        "endLine": 849,
+        "endChar": 16
+      },
+      "revId": "90c2b6e907c7456345952c59e947f41ddb49733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
