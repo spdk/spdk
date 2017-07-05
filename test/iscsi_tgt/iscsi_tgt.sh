@@ -44,5 +44,6 @@ kill_stub
 # TODO: enable remote NVMe controllers with multi-process so that
 #  we can use the stub for this test
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
+run_test ./test/iscsi_tgt/gpt/fio_gpt.sh
 
 timing_exit iscsi_tgt
