@@ -82,6 +82,16 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 1 0 0 0
 sleep 1
 
+
+if [ ! -z "`grep "Nvme0" $testdir/iscsi.conf`" ]; then
+	partition_dev $testdir/iscsi.conf Nvme0n1
+	$rpc_py construct_gpt_bdev Nvme0
+	#since rpc call for gpt is async
+	sleep 5
+	$rpc_py construct_target_node Target4 Target4_alias 'Nvme0np1:0' '1:2' 64 1 0 0 0
+	sleep 1
+fi
+
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
 iscsiadm -m node --login -p $TARGET_IP:$PORT
 
