@@ -6,9 +6,6 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 
-# delay time for apps to start up as primary
-app_start=5
-
 function linux_iter_pci {
 	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
 }
@@ -17,8 +14,7 @@ timing_enter nvme
 
 if [ `uname` = Linux ]; then
 	start_stub "-s 2048 -i 0 -m 0xF"
-	sleep $app_start
-	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+	trap "kill_stub; exit 1" SIGINT SIGTERM ExIT
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -67,6 +63,18 @@ $rootdir/examples/nvme/arbitration/arbitration -t 3 -i 0
 timing_exit arbitration
 
 if [ `uname` = Linux ]; then
+	timing_enter multi_secondary
+	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -s 4096 -t 3 -c 0x1 &
+	pid0=$!
+	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -s 4096 -t 3 -c 0x2 &
+	pid1=$!
+	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -s 4096 -t 3 -c 0x4
+	wait $pid0
+	wait $pid1
+	timing_exit multi_secondary
+fi
+
+if [ `uname` = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
@@ -83,33 +91,6 @@ if [ -d /usr/src/fio ]; then
 	done
 
 	timing_exit fio_plugin
-fi
-
-if [ $(uname -s) = Linux ] && [ $SPDK_TEST_NVME_MULTIPROCESS -eq 1 ]; then
-	timing_enter multi_process
-	$rootdir/examples/nvme/arbitration/arbitration -i 0 -s 4096 -t 10 -c 0xf &
-	pid=$!
-	sleep $app_start
-	$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w randread -s 4096 -t 10 -c 0x10 &
-	sleep 1
-	kill -9 $!
-	count=0
-	while [ $count -le 2 ]; do
-		$rootdir/examples/nvme/perf/perf -i 0 -q 1 -w read -s 4096 -t 1 -c 0xf
-		count=$(($count + 1))
-	done
-	count=0
-	while [ $count -le 1 ]; do
-		core=$((1 << (($count + 4))))
-		printf -v hexcore "0x%x" "$core"
-		$rootdir/examples/nvme/perf/perf -i 0 -q 128 -w read -s 4096 -t 1 -c $hexcore &
-		sleep $app_start
-		$rootdir/examples/nvme/identify/identify -i 0 &
-		sleep $app_start
-		count=$(($count + 1))
-	done
-	wait $pid
-	timing_exit multi_process
 fi
 
 timing_exit nvme
