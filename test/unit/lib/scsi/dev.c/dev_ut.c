@@ -190,9 +190,7 @@ dev_destruct_zero_luns(void)
 {
 	struct spdk_scsi_dev dev = { 0 };
 
-	/* pass maxlun as 0.
-	 * No luns attached to the dev */
-	dev.maxlun = 0;
+	/* No luns attached to the dev */
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(&dev);
@@ -203,7 +201,6 @@ dev_destruct_null_lun(void)
 {
 	struct spdk_scsi_dev dev = { 0 };
 
-	dev.maxlun = 1;
 	/* pass null for the lun */
 	dev.lun[0] = NULL;
 
@@ -220,7 +217,6 @@ dev_destruct_success(void)
 	lun = calloc(1, sizeof(struct spdk_scsi_lun));
 
 	/* dev with a single lun */
-	dev.maxlun = 1;
 	dev.lun[0] = lun;
 
 	/* free the dev */
@@ -537,7 +533,6 @@ dev_print_success(void)
 	struct spdk_scsi_dev dev = { 0 };
 	struct spdk_scsi_lun lun = { 0 };
 
-	dev.maxlun = 1;
 	dev.lun[0] = &lun;
 
 	/* Prints the dev and a list of the LUNs associated with

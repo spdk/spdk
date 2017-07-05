@@ -232,7 +232,6 @@ static void
 spdk_iscsi_config_dump_target_nodes(FILE *fp)
 {
 	int t = 0, l = 0, m = 0;
-	int maxlun;
 	struct spdk_scsi_dev *dev = NULL;
 	struct spdk_iscsi_tgt_node *target = NULL;
 
@@ -283,8 +282,7 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 		fprintf(fp, TARGET_NODE_AUTH_TMPL,
 			authmethod, authgroup, usedigest);
 
-		maxlun = spdk_scsi_dev_get_max_lun(dev);
-		for (l = 0; l < maxlun; l++) {
+		for (l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
 			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
 
 			if (!lun) {
