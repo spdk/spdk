@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e4a12bd_333dfd5b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-05T21:51:27Z",
+      "side": 1,
+      "message": "Should we provide an output parameter for the NVMe status code?  Currently we always return errno-like values - my concern is that returning SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET will be very non-standard.\n\nI think if the update firmware was successful, this function should always return 0.  Let the output parameter tell the caller whether they need to follow up with a conventional reset.",
+      "revId": "208aba52bfd068a705259fd7815c7bcb38e07495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4820807_660af8de",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1762,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-05T21:51:27Z",
+      "side": 1,
+      "message": "if SCT \u003d\u003d COMMAND_SPECIFIC but SC !\u003d REQ_CONVENTION_RESET, this check will fail and we will indicate that the fw commit was successful.\n\nI think this should just be an \"else\" without the sct/sc checks.  Or it needs something like:\n\nif (sc \u003d\u003d REQ_CONVENTIONAL_RESET) {\n  return REQ_CONVENTIONAL_RESET;\n} else if (sc \u003d\u003d REQ_NVM_RESET) {\n  return spdk_nvme_ctrlr_reset(ctrlr);\n} else {\n  return -ENXIO;\n}",
+      "revId": "208aba52bfd068a705259fd7815c7bcb38e07495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
