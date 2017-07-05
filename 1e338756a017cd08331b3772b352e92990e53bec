@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a59b3c21_193da2ac",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-05T19:36:05Z",
+      "side": 1,
+      "message": "You should not open the base bdev for each partition.  You should only call spdk_bdev_open() for cases when GPT needs to initiate the I/O operation (i.e. read the partition table).\n\nWe use open/close to ensure only one user can have write access at a time to any given bdev, and also to ensure that if user has a partition open with write access, that someone cannot also open the base device with write access too.\n\n(Note: I need to improve the documentation to make this more clear.)",
+      "revId": "1e338756a017cd08331b3772b352e92990e53bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "563c4409_55482b34",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 77
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-05T19:36:05Z",
+      "side": 1,
+      "message": "Is this just trying to check that nbd_pid is still running?  What kind of problems are there in nbd_start()?\n\nI just don\u0027t think these tests are ensuring GPT works at all.  If we try to start the nbd process, and it fails for some reason, this script will not cause a test error - it will just skip the GPT tests.",
+      "revId": "1e338756a017cd08331b3772b352e92990e53bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
