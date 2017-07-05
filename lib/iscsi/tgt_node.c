@@ -1048,11 +1048,11 @@ int
 spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 				 struct spdk_iscsi_tgt_node *target)
 {
-	int i, maxlun;
+	int i, maxluns;
 	struct spdk_iscsi_task *task;
 
-	maxlun = spdk_scsi_dev_get_max_lun(target->dev);
-	for (i = 0; i < maxlun; i++) {
+	maxluns = spdk_scsi_dev_get_max_lun_count(target->dev);
+	for (i = 0; i < maxluns; i++) {
 		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
 
 		if (!lun)

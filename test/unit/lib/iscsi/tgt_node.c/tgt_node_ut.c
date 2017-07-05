@@ -64,15 +64,15 @@ spdk_iscsi_portal_grp_find_by_tag(int tag)
 }
 
 int
-spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev)
+spdk_scsi_dev_get_max_lun_count(const struct spdk_scsi_dev *dev)
 {
-	return dev->maxlun;
+	return dev->max_lun_count;
 }
 
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
-	if (lun_id < 0 || lun_id > dev->maxlun) {
+	if (lun_id < 0 || lun_id >= dev->max_lun_count) {
 		return NULL;
 	}
 
