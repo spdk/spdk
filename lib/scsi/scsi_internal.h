@@ -63,7 +63,7 @@ struct spdk_scsi_dev {
 
 	char			name[SPDK_SCSI_DEV_MAX_NAME];
 
-	int			maxlun;
+	int			max_lun_count;
 	struct spdk_scsi_lun	*lun[SPDK_SCSI_DEV_MAX_LUN];
 
 	int			num_ports;
