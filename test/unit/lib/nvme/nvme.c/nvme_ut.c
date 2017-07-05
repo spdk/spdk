@@ -165,21 +165,21 @@ test_nvme_ctrlr_probe(void)
 	struct spdk_nvme_ctrlr *dummy = NULL;
 
 	/* test when probe_cb returns false */
-	MOCK_SET(dummy_probe_cb, bool, false)
+	MOCK_SET(dummy_probe_cb, bool, false);
 	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == 1);
 
 	/* probe_cb returns true but we can't construct a ctrl */
-	MOCK_SET(dummy_probe_cb, bool, true)
+	MOCK_SET(dummy_probe_cb, bool, true);
 	MOCK_SET_P(nvme_transport_ctrlr_construct,
-		   struct spdk_nvme_ctrlr *, NULL)
+		   struct spdk_nvme_ctrlr *, NULL);
 	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == -1);
 
 	/* happy path */
 	g_spdk_nvme_driver = malloc(sizeof(struct nvme_driver));
 	SPDK_CU_ASSERT_FATAL(g_spdk_nvme_driver != NULL);
-	MOCK_SET(dummy_probe_cb, bool, true)
+	MOCK_SET(dummy_probe_cb, bool, true);
 	MOCK_SET_P(nvme_transport_ctrlr_construct,
 		   struct spdk_nvme_ctrlr *, &ut_nvme_transport_ctrlr_construct);
 	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
@@ -198,14 +198,14 @@ test_nvme_robust_mutex_init_shared(void)
 	int rc = 0;
 
 	/* test where both pthread calls succeed */
-	MOCK_SET(pthread_mutexattr_init, int, 0)
-	MOCK_SET(pthread_mutex_init, int, 0)
+	MOCK_SET(pthread_mutexattr_init, int, 0);
+	MOCK_SET(pthread_mutex_init, int, 0);
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	CU_ASSERT(rc == 0);
 
 	/* test where we can't init attr's but init mutex works */
-	MOCK_SET(pthread_mutexattr_init, int, -1)
-	MOCK_SET(pthread_mutex_init, int, 0)
+	MOCK_SET(pthread_mutexattr_init, int, -1);
+	MOCK_SET(pthread_mutex_init, int, 0);
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	/* for FreeBSD the only possible return value is 0 */
 #ifndef __FreeBSD__
@@ -215,8 +215,8 @@ test_nvme_robust_mutex_init_shared(void)
 #endif
 
 	/* test where we can init attr's but the mutex init fails */
-	MOCK_SET(pthread_mutexattr_init, int, 0)
-	MOCK_SET(pthread_mutex_init, int, -1)
+	MOCK_SET(pthread_mutexattr_init, int, 0);
+	MOCK_SET(pthread_mutex_init, int, -1);
 	rc = nvme_robust_mutex_init_shared(&mtx);
 	/* for FreeBSD the only possible return value is 0 */
 #ifndef __FreeBSD__

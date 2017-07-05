@@ -43,10 +43,10 @@
 /* and getting values from the stub, the _P macros are */
 /* for mocking functions that return pointer values */
 #define MOCK_SET(fn, ret, val) \
-	ut_ ## fn = (ret){val};
+	ut_ ## fn = (ret){val}
 
 #define MOCK_SET_P(fn, ret, val) \
-	ut_p_ ## fn = (ret){val};
+	ut_p_ ## fn = (ret){val}
 
 #define MOCK_GET(fn) \
 	ut_ ## fn
