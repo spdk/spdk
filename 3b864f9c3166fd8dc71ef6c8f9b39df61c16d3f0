@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b2f4f6e_b8ba162c",
+        "filename": "etc/spdk/rocksdb.conf.in",
+        "patchSetId": 9
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-05T19:57:37Z",
+      "side": 1,
+      "message": "This looks like a rebase mistake - the current rocksdb.conf.in doesn\u0027t have a SharedMemoryID.",
+      "revId": "3b864f9c3166fd8dc71ef6c8f9b39df61c16d3f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
