@@ -12,6 +12,11 @@ export INITIATOR_IP=127.0.0.1
 
 source $rootdir/test/iscsi_tgt/common.sh
 
+#Since we sue stube function, do the partition here
+cp $testdir/fio/iscsi.conf.in $testdir/iscsi.conf
+$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
+partition_dev $testdir/iscsi.conf NVMe0n1 $rootdir
+rm -rf $testdir/iscsi.conf
 timing_enter iscsi_tgt
 
 # ISCSI_TEST_CORE_MASK is the biggest core mask specified by
@@ -26,9 +31,9 @@ trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 
 export ISCSI_APP="./app/iscsi_tgt/iscsi_tgt -i 0"
 
+run_test ./test/iscsi_tgt/fio/fio.sh
 run_test ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test ./test/iscsi_tgt/filesystem/filesystem.sh
-run_test ./test/iscsi_tgt/fio/fio.sh
 run_test ./test/iscsi_tgt/reset/reset.sh
 run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
 run_test ./test/iscsi_tgt/idle_migration/idle_migration.sh
