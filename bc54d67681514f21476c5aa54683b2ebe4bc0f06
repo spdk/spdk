@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "4d2c90a4_b163b34d",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-05T19:40:04Z",
+      "side": 1,
+      "message": "do we need to account for a race here between the process exiting from the kill, and the wait call?  might need to wrap this with a set +e/set -e so this doesn\u0027t result in the script exiting from that kind of failure",
+      "revId": "bc54d67681514f21476c5aa54683b2ebe4bc0f06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa6e6050_a25a3445",
         "filename": "test/lib/nvme/nvme.sh",
         "patchSetId": 1
