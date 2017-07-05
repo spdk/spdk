@@ -312,5 +312,44 @@ function print_backtrace() {
 	return 0
 }
 
+function partition_dev () {
+	if [ $(uname -s) = Linux ] && [ -f /usr/sbin/sgdisk ]; then
+		conf=$1
+		devname=$2
+		rootdir=$3
+
+		if [ ! -e $conf ]; then
+			return 1
+		fi
+
+		modprobe nbd
+		$rootdir/test/lib/bdev/nbd/nbd -c $conf -b $devname -n /dev/nbd0 &
+		nbd_pid=$!
+		echo "Process nbd pid: $nbd_pid"
+		waitforlisten $nbd_pid 5260
+		# Not need to check non-zero value since we have "set -e" in the script
+		waitforbdev $devname "python $rootdir/scripts/rpc.py"
+
+		if [ -e /dev/nbd0 ]; then
+				parted -s /dev/nbd0 mklabel gpt mkpart primary '0%' '50%' mkpart primary '50%' '100%'
+				#change the GUID to SPDK GUID value
+				/usr/sbin/sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
+				/usr/sbin/sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
+		fi
+
+		killprocess $nbd_pid
+
+		# run nbd again to test get_bdevs
+                $rootdir/test/lib/bdev/nbd/nbd -c $conf -b $devname -n /dev/nbd0 &
+                nbd_pid=$!
+                waitforlisten $nbd_pid 5260
+                waitforbdev $devname $rootdir/scripts/rpc.py
+                $rpc_py get_bdevs
+                killprocess $nbd_pid
+	fi
+
+	return 0
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR

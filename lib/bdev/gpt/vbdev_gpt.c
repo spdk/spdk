@@ -448,8 +448,8 @@ end:
 	}
 }
 
-static int
-vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
+int
+spdk_vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 {
 	struct spdk_gpt_bdev *gpt_bdev;
 	int rc;
@@ -486,7 +486,7 @@ vbdev_gpt_init(void)
 
 	TAILQ_FOREACH_SAFE(base_bdev, &g_bdevs, link, tmp) {
 		TAILQ_REMOVE(&g_bdevs, base_bdev, link);
-		rc = vbdev_gpt_read_gpt(base_bdev);
+		rc = spdk_vbdev_gpt_read_gpt(base_bdev);
 		if (rc) {
 			SPDK_ERRLOG("Failed to read info from bdev %s\n",
 				    spdk_bdev_get_name(base_bdev));
