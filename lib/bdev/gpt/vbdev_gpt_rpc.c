@@ -31,32 +31,69 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * GPT internal Interface
- */
+#include "spdk/stdinc.h"
+#include "spdk/string.h"
+#include "spdk/rpc.h"
+#include "spdk/util.h"
 
-#ifndef SPDK_INTERNAL_GPT_H
-#define SPDK_INTERNAL_GPT_H
+#include "spdk_internal/log.h"
+#include "gpt.h"
 
-#include "spdk/gpt_spec.h"
-#include "spdk/bdev.h"
-
-#define SPDK_GPT_PART_TYPE_GUID SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
-#define SPDK_GPT_BUFFER_SIZE 32768  /* 32KB */
-#define	SPDK_GPT_GUID_EQUAL(x,y) (memcmp(x, y, sizeof(struct spdk_gpt_guid)) == 0)
-
-struct spdk_gpt {
-	unsigned char *buf;
-	uint64_t lba_start;
-	uint64_t lba_end;
-	uint64_t total_sectors;
-	uint32_t sector_size;
-	struct spdk_mbr *mbr;
-	struct spdk_gpt_header *header;
-	struct spdk_gpt_partition_entry *partitions;
+struct rpc_construct_gpt_bdev {
+	char *base_name;
 };
 
-int spdk_gpt_parse(struct spdk_gpt *gpt);
-int spdk_vbdev_gpt_read_gpt(struct spdk_bdev *base_bdev);
+static void
+free_rpc_check_gpt_bdev(struct rpc_construct_gpt_bdev *req)
+{
+	free(req->base_name);
+}
 
-#endif  /* SPDK_INTERNAL_GPT_H */
+static const struct spdk_json_object_decoder rpc_construct_gpt_bdev_decoders[] = {
+	{"base_name", offsetof(struct rpc_construct_gpt_bdev, base_name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_check_gpt_bdev(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
+
+{
+	struct rpc_construct_gpt_bdev req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *base_bdev;
+
+	if (spdk_json_decode_object(params, rpc_construct_gpt_bdev_decoders,
+				    SPDK_COUNTOF(rpc_construct_gpt_bdev_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	base_bdev = spdk_bdev_get_by_name(req.base_name);
+	if (!base_bdev) {
+		SPDK_ERRLOG("Could not find bdev %s\n", req.base_name);
+		goto invalid;
+	}
+
+	if (spdk_vbdev_gpt_read_gpt(base_bdev)) {
+		SPDK_ERRLOG("Could not read gpt partition of bdev %s\n", req.base_name);
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		free_rpc_check_gpt_bdev(&req);
+		return;
+	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	free_rpc_check_gpt_bdev(&req);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_check_gpt_bdev(&req);
+}
+SPDK_RPC_REGISTER("check_gpt_bdev", spdk_rpc_check_gpt_bdev)
