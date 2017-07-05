@@ -17,35 +17,15 @@ timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
-if [ $(uname -s) = Linux ] && [ -f /usr/sbin/sgdisk ]; then
-	echo "[Rpc]" >> $testdir/bdev.conf
-	echo "  Enable Yes" >> $testdir/bdev.conf
-
-	if [ ! -z "`grep "Nvme0" $testdir/bdev.conf`" ]; then
-		modprobe nbd
-		$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
-		nbd_pid=$!
-		echo "Process nbd pid: $nbd_pid"
-		waitforlisten $nbd_pid 5260
-		#if return 1, it will trap, so do not need to consider this case
-		waitforbdev Nvme0n1 $rootdir/scripts/rpc.py
-
-		if [ -e /dev/nbd0 ]; then
-			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
-			# change the partition type GUID to SPDK GUID value
-			/usr/sbin/sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
-			/usr/sbin/sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
-		fi
-		killprocess $nbd_pid
-
-		# run nbd again to test get_bdevs
-		$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
-		nbd_pid=$!
-		waitforlisten $nbd_pid 5260
-		waitforbdev Nvme0n1p1 $rootdir/scripts/rpc.py
-		$rpc_py get_bdevs
-		killprocess $nbd_pid
-	fi
+if grep -q Nvme0 $testdir/iscsi.conf; then
+	partition_dev $testdir/bdev.conf Nvme0n1 $rootdir
+	# run nbd again to test get_bdevs
+	$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+	nbd_pid=$!
+	waitforlisten $nbd_pid 5260
+	waitforbdev Nvme0n1p1 $rootdir/scripts/rpc.py
+	$rpc_py get_bdevs
+	killprocess $nbd_pid
 fi
 
 timing_enter verify
