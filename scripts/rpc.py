@@ -243,6 +243,13 @@ p = subparsers.add_parser('construct_error_bdev', help='Add bdev with error inje
 p.add_argument('base_name', help='base bdev name')
 p.set_defaults(func=construct_error_bdev)
 
+def check_gpt_bdev(args):
+    params = {'base_name': args.base_name}
+    jsonrpc_call('check_gpt_bdev', params)
+p = subparsers.add_parser('check_gpt_bdev', help='Add bdev with gpt backend')
+p.add_argument('base_name', help='base bdev name')
+p.set_defaults(func=check_gpt_bdev)
+
 def set_trace_flag(args):
     params = {'flag': args.flag}
     jsonrpc_call('set_trace_flag', params)
