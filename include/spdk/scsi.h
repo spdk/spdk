@@ -166,7 +166,6 @@ const struct spdk_scsi_dev *spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lu
 
 const char *spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev);
 int spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev);
-int spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev);
 struct spdk_scsi_lun *spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id);
 bool spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev);
 void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);

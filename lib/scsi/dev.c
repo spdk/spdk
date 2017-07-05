@@ -76,7 +76,7 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 		return;
 	}
 
-	for (i = 0; i < dev->maxlun; i++) {
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
 			continue;
 		}
@@ -103,9 +103,6 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev,
 	lun->id = id;
 	lun->dev = dev;
 	dev->lun[id] = lun;
-	if (dev->maxlun <= id) {
-		dev->maxlun = id + 1;
-	}
 
 	return 0;
 }
@@ -115,21 +112,11 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 			 struct spdk_scsi_lun *lun)
 {
 	int i;
-	int maxlun = 0;
 
-	for (i = 0; i < dev->maxlun; i++) {
-		if (dev->lun[i] && dev->lun[i] == lun)
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		if (dev->lun[i] == lun)
 			dev->lun[i] = NULL;
 	}
-
-	for (i = 0; i < dev->maxlun; i++) {
-		if (dev->lun[i]) {
-			if (maxlun <= dev->lun[i]->id) {
-				maxlun = dev->lun[i]->id + 1;
-			}
-		}
-	}
-	dev->maxlun = maxlun;
 }
 
 /* This typedef exists to work around an astyle 2.05 bug.
@@ -173,7 +160,6 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	strncpy(dev->name, name, SPDK_SCSI_DEV_MAX_NAME);
 
 	dev->num_ports = 0;
-	dev->maxlun = 0;
 	dev->protocol_id = protocol_id;
 
 	for (i = 0; i < num_luns; i++) {
@@ -270,7 +256,7 @@ spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
 
 	printf("device %d HDD UNIT\n", dev->id);
 
-	for (i = 0; i < dev->maxlun; i++) {
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		lun = dev->lun[i];
 		if (lun == NULL)
 			continue;
@@ -322,16 +308,10 @@ spdk_scsi_dev_get_id(const struct spdk_scsi_dev *dev)
 	return dev->id;
 }
 
-int
-spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev)
-{
-	return dev->maxlun;
-}
-
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
-	if (lun_id < 0 || lun_id > dev->maxlun) {
+	if (lun_id < 0 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
 		return NULL;
 	}
 
@@ -343,7 +323,7 @@ spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev)
 {
 	int i;
 
-	for (i = 0; i < dev->maxlun; ++i) {
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
 		if (dev->lun[i] && spdk_scsi_lun_has_pending_tasks(dev->lun[i])) {
 			return true;
 		}
