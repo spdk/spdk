@@ -52,6 +52,12 @@ __get_bdev(struct spdk_bs_dev *dev)
 	return ((struct blob_bdev *)dev)->bdev;
 }
 
+static inline struct spdk_bdev_desc *
+__get_desc(struct spdk_bs_dev *dev)
+{
+	return ((struct blob_bdev *)dev)->desc;
+}
+
 static void
 bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 {
@@ -135,6 +141,9 @@ bdev_blob_destroy_channel(struct spdk_bs_dev *dev, struct spdk_io_channel *chann
 static void
 bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 {
+	struct spdk_bdev_desc *desc = __get_desc(bs_dev);
+
+	spdk_bdev_close(desc);
 	free(bs_dev);
 }
 
