@@ -136,7 +136,6 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 		conn->sockfd = rc;
 		conn->recv_len = 0;
 		conn->send_len = 0;
-		conn->json_writer = 0;
 
 		nonblock = 1;
 		rc = ioctl(conn->sockfd, FIONBIO, &nonblock);
