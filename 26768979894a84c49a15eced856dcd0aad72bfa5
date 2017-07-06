@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c27c0e7_21b80aed",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-06T18:18:34Z",
+      "side": 1,
+      "message": "I think we do need both SC and SCT - the SC codes for command-specific errors overlap with the generic ones. (Or you could just require the user to pass a pointer to a full struct spdk_nvme_status).",
+      "revId": "26768979894a84c49a15eced856dcd0aad72bfa5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b157cb3_dfbffdc0",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1696,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-06T18:18:34Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be an assert() - we should just return -EINVAL if it is NULL.",
+      "revId": "26768979894a84c49a15eced856dcd0aad72bfa5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a0d7846_eb9e862f",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1763,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-06T18:18:34Z",
+      "side": 1,
+      "message": "I think it would be simplest to just always update *sc, regardless of what the value is.",
+      "revId": "26768979894a84c49a15eced856dcd0aad72bfa5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
