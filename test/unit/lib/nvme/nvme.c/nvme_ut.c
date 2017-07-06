@@ -41,102 +41,64 @@
 
 #include "spdk_internal/mock.h"
 
-int
-spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
-{
-	return -1;
-}
+DEFINE_STUB_V(nvme_ctrlr_destruct, (struct spdk_nvme_ctrlr *ctrlr))
 
-struct spdk_pci_id
-spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
-{
-	struct spdk_pci_id pci_id;
+DEFINE_STUB_V(nvme_ctrlr_fail,
+	      (struct spdk_nvme_ctrlr *ctrlr, bool hot_remove))
 
-	memset(&pci_id, 0xFF, sizeof(pci_id));
+DEFINE_STUB_V(nvme_ctrlr_proc_get_ref, (struct spdk_nvme_ctrlr *ctrlr))
 
-	return pci_id;
-}
+DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr))
 
-bool
-spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype)
-{
-	return true;
-}
+DEFINE_STUB(spdk_pci_nvme_enumerate, int,
+	    (spdk_pci_enum_cb enum_cb, void *enum_ctx), -1)
 
-int
-nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
-			  void *cb_ctx,
-			  spdk_nvme_probe_cb probe_cb,
-			  spdk_nvme_remove_cb remove_cb)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id,
+	    (struct spdk_pci_device *pci_dev),
+	    MOCK_STRUCT_INIT(.vendor_id = 0xffff, .device_id = 0xffff,
+			     .subvendor_id = 0xffff, .subdevice_id = 0xffff))
 
-void
-nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
-{
-}
+DEFINE_STUB(spdk_nvme_transport_available, bool,
+	    (enum spdk_nvme_transport_type trtype), true)
 
-int
-nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
-{
-	return 0;
-}
+DEFINE_STUB(nvme_transport_ctrlr_scan, int,
+	    (const struct spdk_nvme_transport_id *trid,
+	     void *cb_ctx,
+	     spdk_nvme_probe_cb probe_cb,
+	     spdk_nvme_remove_cb remove_c), 0)
 
-int
-nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return 0;
-}
+DEFINE_STUB(nvme_ctrlr_add_process, int,
+	    (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0)
 
-int
-nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return 0;
-}
+DEFINE_STUB(nvme_ctrlr_process_init, int,
+	    (struct spdk_nvme_ctrlr *ctrlr), 0)
 
-void
-nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
-{
-}
+DEFINE_STUB(nvme_ctrlr_start, int,
+	    (struct spdk_nvme_ctrlr *ctrlr), 0)
+
+DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr,
+	    (struct spdk_pci_device *pci_dev), {0})
+
+DEFINE_STUB(spdk_pci_addr_compare, int,
+	    (const struct spdk_pci_addr *a1,
+	     const struct spdk_pci_addr *a2), 1)
+
+DEFINE_STUB(nvme_ctrlr_get_ref_count, int,
+	    (struct spdk_nvme_ctrlr *ctrlr), 0)
+
+DEFINE_STUB(dummy_probe_cb, bool,
+	    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	     struct spdk_nvme_ctrlr_opts *opts), false)
+
+DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
+	      (const struct spdk_nvme_transport_id *trid,
+	       const struct spdk_nvme_ctrlr_opts *opts,
+	       void *devhandle), {0})
 
 void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
 	memset(opts, 0, sizeof(*opts));
-}
-
-struct spdk_pci_addr
-spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
-{
-	struct spdk_pci_addr pci_addr;
-
-	memset(&pci_addr, 0, sizeof(pci_addr));
-	return pci_addr;
-}
-
-int
-spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
-{
-	return true;
-}
-
-void
-nvme_ctrlr_proc_get_ref(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return;
-}
-
-void
-nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return;
-}
-
-int
-nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return 0;
 }
 
 static void
@@ -145,15 +107,6 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid1, 0, sizeof(struct spdk_nvme_transport_id));
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
-
-DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
-	      (const struct spdk_nvme_transport_id *trid,
-	       const struct spdk_nvme_ctrlr_opts *opts,
-	       void *devhandle), {0})
-
-DEFINE_STUB(dummy_probe_cb, bool,
-	    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	     struct spdk_nvme_ctrlr_opts *opts), false)
 
 static void
 test_nvme_ctrlr_probe(void)
