@@ -653,6 +653,9 @@ work_fn(void *arg)
 		while (ns_ctx != NULL) {
 			check_io(ns_ctx);
 			ns_ctx = ns_ctx->next;
+			if (spdk_get_ticks() > tsc_end) {
+				break;
+			}
 		}
 
 		if (spdk_get_ticks() > tsc_end) {
