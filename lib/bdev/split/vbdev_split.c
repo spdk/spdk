@@ -52,6 +52,7 @@ SPDK_DECLARE_BDEV_MODULE(split);
 /* Base block device split context */
 struct split_base {
 	struct spdk_bdev	*base_bdev;
+	struct spdk_bdev_desc	*desc;
 	uint32_t		ref;
 };
 
@@ -132,7 +133,8 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_RESET:
 		base_ch = spdk_get_io_channel(split_disk->base_bdev);
 		*(struct spdk_io_channel **)bdev_io->driver_ctx = base_ch;
-		spdk_bdev_reset(split_disk->base_bdev, base_ch, _vbdev_split_complete_reset, bdev_io);
+		spdk_bdev_reset(split_disk->split_base->desc, base_ch,
+				_vbdev_split_complete_reset, bdev_io);
 		return;
 	default:
 		SPDK_ERRLOG("split: unknown I/O type %d\n", bdev_io->type);
@@ -141,7 +143,7 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	}
 
 	/* Submit the modified I/O to the underlying bdev. */
-	spdk_bdev_io_resubmit(bdev_io, split_disk->base_bdev);
+	spdk_bdev_io_resubmit(bdev_io, split_disk->split_base->desc);
 }
 
 static void
@@ -240,12 +242,6 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	int rc;
 	struct split_base *split_base;
 
-	rc = spdk_bdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(split));
-	if (rc) {
-		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
-		return -1;
-	}
-
 	if (split_size_mb) {
 		if (((split_size_mb * mb) % base_bdev->blocklen) != 0) {
 			SPDK_ERRLOG("Split size %" PRIu64 " MB is not possible with block size "
@@ -281,6 +277,21 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	}
 	split_base->base_bdev = base_bdev;
 	split_base->ref = 0;
+
+	rc = spdk_bdev_open(base_bdev, false, NULL, NULL, &split_base->desc);
+	if (rc) {
+		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(base_bdev));
+		free(split_base);
+		return -1;
+	}
+
+	rc = spdk_bdev_module_claim_bdev(base_bdev, split_base->desc, SPDK_GET_BDEV_MODULE(split));
+	if (rc) {
+		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
+		spdk_bdev_close(split_base->desc);
+		free(split_base);
+		return -1;
+	}
 
 	offset_bytes = 0;
 	offset_blocks = 0;
@@ -334,7 +345,9 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 
 cleanup:
 	if (split_base->ref == 0) {
-		/* If no split_disk instances were created, free the base context */
+		/* If no split_disk instances were created, free the resources */
+		spdk_bdev_module_release_bdev(split_base->base_bdev);
+		spdk_bdev_close(split_base->desc);
 		free(split_base);
 	}
 
