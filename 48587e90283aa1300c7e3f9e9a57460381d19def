@@ -16,6 +16,24 @@
       "revId": "48587e90283aa1300c7e3f9e9a57460381d19def",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92efddbe_ea4fe284",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1237,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-06T06:37:59Z",
+      "side": 1,
+      "message": "Thanks for this comment.\n\nLooks like we can just call the \"probe_cb\" here as the discovery_ctrlr has been constructed already and some of its initialization has been done in the above code. We can call the probe_cb() and then explicitly set the READY state and added to the init_ctrlrs list. Thus the nvme_ctrlr_process_init() will do nothing on this already in ready state ctrlr.",
+      "parentUuid": "d555d45f_37a15cdf",
+      "revId": "48587e90283aa1300c7e3f9e9a57460381d19def",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
