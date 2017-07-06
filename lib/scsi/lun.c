@@ -194,6 +194,7 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
 		task->status = SPDK_SCSI_STATUS_GOOD;
 		task->ch = lun->io_channel;
+		task->desc = lun->bdev_desc;
 		spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
 		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);

@@ -169,26 +169,27 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 }
 
 static void
-nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_io_channel *ch, struct nbd_io *io)
+nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		   struct spdk_io_channel *ch, struct nbd_io *io)
 {
 	int rc;
 
 	switch (io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		rc = spdk_bdev_read(bdev, ch, io->payload, from_be64(&io->req.from),
+		rc = spdk_bdev_read(desc, ch, io->payload, from_be64(&io->req.from),
 				    io->payload_size, nbd_io_done, io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = spdk_bdev_write(bdev, ch, io->payload, from_be64(&io->req.from),
+		rc = spdk_bdev_write(desc, ch, io->payload, from_be64(&io->req.from),
 				     io->payload_size, nbd_io_done, io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		to_be64(&io->unmap.lba, from_be64(&io->req.from) / spdk_bdev_get_block_size(bdev));
 		to_be32(&io->unmap.block_count, io->payload_size / spdk_bdev_get_block_size(bdev));
-		rc = spdk_bdev_unmap(bdev, ch, &io->unmap, 1, nbd_io_done, io);
+		rc = spdk_bdev_unmap(desc, ch, &io->unmap, 1, nbd_io_done, io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		rc = spdk_bdev_flush(bdev, ch, 0, spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev),
+		rc = spdk_bdev_flush(desc, ch, 0, spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev),
 				     nbd_io_done, io);
 		break;
 	default:
@@ -224,7 +225,7 @@ process_request(struct nbd_disk *nbd)
 	switch (from_be32(&io->req.type)) {
 	case NBD_CMD_READ:
 		io->type = SPDK_BDEV_IO_TYPE_READ;
-		nbd_submit_bdev_io(nbd->bdev, nbd->ch, io);
+		nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
 		break;
 	case NBD_CMD_WRITE:
 		io->type = SPDK_BDEV_IO_TYPE_WRITE;
@@ -236,13 +237,13 @@ process_request(struct nbd_disk *nbd)
 #ifdef NBD_FLAG_SEND_FLUSH
 	case NBD_CMD_FLUSH:
 		io->type = SPDK_BDEV_IO_TYPE_FLUSH;
-		nbd_submit_bdev_io(nbd->bdev, nbd->ch, io);
+		nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
 		break;
 #endif
 #ifdef NBD_FLAG_SEND_TRIM
 	case NBD_CMD_TRIM:
 		io->type = SPDK_BDEV_IO_TYPE_UNMAP;
-		nbd_submit_bdev_io(nbd->bdev, nbd->ch, io);
+		nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
 		break;
 #endif
 	}
@@ -276,7 +277,7 @@ nbd_poll(void *arg)
 		io->offset += ret;
 		if (io->offset == io->payload_size) {
 			io->payload_in_progress = false;
-			nbd_submit_bdev_io(nbd->bdev, nbd->ch, io);
+			nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
 			io->offset = 0;
 		}
 	}

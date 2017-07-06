@@ -253,11 +253,11 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		}
 
 		if (type == VIRTIO_BLK_T_IN) {
-			rc = spdk_bdev_readv(bvdev->bdev, bvdev->bdev_io_channel,
+			rc = spdk_bdev_readv(bvdev->bdev_desc, bvdev->bdev_io_channel,
 					     &task->iovs[1], task->iovcnt, req->sector * 512,
 					     task->length, blk_request_complete_cb, task);
 		} else if (!bvdev->readonly) {
-			rc = spdk_bdev_writev(bvdev->bdev, bvdev->bdev_io_channel,
+			rc = spdk_bdev_writev(bvdev->bdev_desc, bvdev->bdev_io_channel,
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
 					      task->length, blk_request_complete_cb, task);
 		} else {
