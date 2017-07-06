@@ -66,7 +66,9 @@ parse_single_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val
 	struct spdk_jsonrpc_request request;
 
 	request.conn = conn;
-	request.id = NULL;
+	request.id.start = request.id_data;
+	request.id.len = 0;
+	request.id.type = SPDK_JSON_VAL_INVALID;
 
 	if (spdk_json_decode_object(values, jsonrpc_request_decoders,
 				    SPDK_COUNTOF(jsonrpc_request_decoders),
@@ -86,13 +88,22 @@ parse_single_request(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_val
 	}
 
 	if (req.id) {
-		if (req.id->type != SPDK_JSON_VAL_STRING &&
-		    req.id->type != SPDK_JSON_VAL_NUMBER &&
-		    req.id->type != SPDK_JSON_VAL_NULL) {
-			req.id = NULL;
+		if (req.id->type == SPDK_JSON_VAL_STRING ||
+		    req.id->type == SPDK_JSON_VAL_NUMBER) {
+			/* Copy value into request */
+			if (req.id->len <= SPDK_JSONRPC_ID_MAX_LEN) {
+				request.id.type = req.id->type;
+				request.id.len = req.id->len;
+				memcpy(request.id.start, req.id->start, req.id->len);
+			} else {
+				SPDK_TRACELOG(SPDK_TRACE_RPC, "JSON-RPC request id too long (%u)\n",
+					      req.id->len);
+				invalid = true;
+			}
+		} else if (req.id->type == SPDK_JSON_VAL_NULL) {
+			request.id.type = SPDK_JSON_VAL_NULL;
+		} else  {
 			invalid = true;
-		} else {
-			request.id = req.id;
 		}
 	}
 
@@ -121,7 +132,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 
 	/* Build a request with id = NULL since we don't have a valid request ID */
 	error_request.conn = conn;
-	error_request.id = NULL;
+	error_request.id.type = SPDK_JSON_VAL_NULL;
 
 	/* Check to see if we have received a full JSON value. */
 	rc = spdk_json_parse(json, size, NULL, 0, &end, 0);
@@ -176,10 +187,8 @@ begin_response(struct spdk_jsonrpc_server_conn *conn, const struct spdk_json_val
 	spdk_json_write_name(w, "jsonrpc");
 	spdk_json_write_string(w, "2.0");
 
-	if (id) {
-		spdk_json_write_name(w, "id");
-		spdk_json_write_val(w, id);
-	}
+	spdk_json_write_name(w, "id");
+	spdk_json_write_val(w, id);
 
 	return w;
 }
@@ -197,7 +206,12 @@ spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {
 	struct spdk_json_write_ctx *w;
 
-	w = begin_response(request->conn, request->id);
+	if (request->id.type == SPDK_JSON_VAL_INVALID) {
+		/* Notification - no response required */
+		return NULL;
+	}
+
+	w = begin_response(request->conn, &request->id);
 	if (w == NULL) {
 		return NULL;
 	}
@@ -220,17 +234,13 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {
 	struct spdk_json_write_ctx *w;
-	struct spdk_json_val v_null;
-	const struct spdk_json_val *id;
 
-	id = request->id;
-	if (id == NULL) {
+	if (request->id.type == SPDK_JSON_VAL_INVALID) {
 		/* For error responses, if id is missing, explicitly respond with "id": null. */
-		v_null.type = SPDK_JSON_VAL_NULL;
-		id = &v_null;
+		request->id.type = SPDK_JSON_VAL_NULL;
 	}
 
-	w = begin_response(request->conn, id);
+	w = begin_response(request->conn, &request->id);
 	if (w == NULL) {
 		return;
 	}

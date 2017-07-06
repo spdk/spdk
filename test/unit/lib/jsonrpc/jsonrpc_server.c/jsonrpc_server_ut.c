@@ -98,6 +98,10 @@ static size_t g_num_reqs;
 	CU_ASSERT(g_cur_req->id.type == SPDK_JSON_VAL_STRING); \
 	CU_ASSERT(memcmp(g_cur_req->id.start, str, sizeof(str) - 1) == 0)
 
+#define REQ_ID_NULL() \
+	CU_ASSERT(g_cur_req->got_id); \
+	CU_ASSERT(g_cur_req->id.type == SPDK_JSON_VAL_NULL)
+
 #define REQ_ID_MISSING() \
 	CU_ASSERT(g_cur_req->got_id == false)
 
@@ -146,7 +150,7 @@ static void
 ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_json_val *method,
 	  const struct spdk_json_val *params)
 {
-	const struct spdk_json_val *id = request->id;
+	const struct spdk_json_val *id = &request->id;
 	struct req *r;
 
 	SPDK_CU_ASSERT_FATAL(g_num_reqs != MAX_REQS);
@@ -169,7 +173,7 @@ ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_jso
 		r->got_params = false;
 	}
 
-	if (id) {
+	if (id && id->type != SPDK_JSON_VAL_INVALID) {
 		r->got_id = true;
 		r->id = *id;
 	} else {
@@ -180,6 +184,14 @@ ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_jso
 void
 spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
 {
+	/*
+	 * Map missing id to Null - this mirrors the behavior in the real
+	 * spdk_jsonrpc_server_handle_error() function.
+	 */
+	if (request->id.type == SPDK_JSON_VAL_INVALID) {
+		request->id.type = SPDK_JSON_VAL_NULL;
+	}
+
 	ut_handle(request, error, NULL, NULL);
 }
 
@@ -254,14 +266,14 @@ test_parse_request(void)
 	PARSE_FAIL("{\"jsonrpc\": \"2.0\", \"method\": \"foobar, \"params\": \"bar\", \"baz]");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_PARSE_ERROR);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
 
 	/* invalid request (method must be a string; params must be array or object) */
 	PARSE_PASS("{\"jsonrpc\": \"2.0\", \"method\": 1, \"params\": \"bar\"}", "");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
 
 	/* batch, invalid JSON */
@@ -272,14 +284,14 @@ test_parse_request(void)
 		"]");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_PARSE_ERROR);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
 
 	/* empty array */
 	PARSE_PASS("[]", "");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
 
 	/* batch - not supported */
@@ -295,7 +307,7 @@ test_parse_request(void)
 
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
 
 	free(conn);
