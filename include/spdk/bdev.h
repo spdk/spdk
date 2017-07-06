@@ -164,6 +164,14 @@ int spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t rem
  */
 void spdk_bdev_close(struct spdk_bdev_desc *desc);
 
+/**
+ * Get the bdev associated with a bdev descriptor.
+ *
+ * \param desc Open block device desciptor
+ * \return bdev associated with the descriptor
+ */
+struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
+
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
 int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
@@ -256,7 +264,7 @@ struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		   void *buf, uint64_t offset, uint64_t nbytes,
 		   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
@@ -280,7 +288,7 @@ int spdk_bdev_read(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    struct iovec *iov, int iovcnt,
 		    uint64_t offset, uint64_t nbytes,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
@@ -300,7 +308,7 @@ int spdk_bdev_readv(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+int spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    void *buf, uint64_t offset, uint64_t nbytes,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
@@ -324,7 +332,7 @@ int spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		     struct iovec *iov, int iovcnt,
 		     uint64_t offset, uint64_t len,
 		     spdk_bdev_io_completion_cb cb, void *cb_arg);
@@ -345,7 +353,7 @@ int spdk_bdev_writev(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    struct spdk_scsi_unmap_bdesc *unmap_d,
 		    uint16_t bdesc_count,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
@@ -366,7 +374,7 @@ int spdk_bdev_unmap(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+int spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    uint64_t offset, uint64_t length,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
@@ -382,7 +390,7 @@ int spdk_bdev_flush(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
+int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
@@ -405,7 +413,7 @@ int spdk_bdev_reset(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
+int spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc,
 				  struct spdk_io_channel *ch,
 				  const struct spdk_nvme_cmd *cmd,
 				  void *buf, size_t nbytes,
@@ -432,7 +440,7 @@ int spdk_bdev_nvme_admin_passthru(struct spdk_bdev *bdev,
  * be called (even if the request ultimately failed). Return
  * negated errno on failure, in which case the callback will not be called.
  */
-int spdk_bdev_nvme_io_passthru(struct spdk_bdev *bdev,
+int spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *bdev_desc,
 			       struct spdk_io_channel *ch,
 			       const struct spdk_nvme_cmd *cmd,
 			       void *buf, size_t nbytes,
