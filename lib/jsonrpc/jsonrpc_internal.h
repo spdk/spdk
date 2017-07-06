@@ -58,8 +58,6 @@ struct spdk_jsonrpc_server_conn {
 	uint8_t recv_buf[SPDK_JSONRPC_RECV_BUF_SIZE];
 	size_t send_len;
 	uint8_t send_buf[SPDK_JSONRPC_SEND_BUF_SIZE];
-	struct spdk_json_write_ctx *json_writer;
-	bool batch;
 };
 
 struct spdk_jsonrpc_server {
