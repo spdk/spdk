@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e6a73d9_ee40e7b9",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-06T17:24:52Z",
+      "side": 1,
+      "message": "maybe change this to \"check_gpt_bdev\"?  since this function may not actually construct a gpt bdev (if no gpt exists)",
+      "revId": "53c3a1e1744f33edc611aa36abf92c3d8e4b030f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bb61f9a_b3661cb7",
+        "filename": "test/iscsi_tgt/gpt/fio_gpt.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-06T17:24:52Z",
+      "side": 1,
+      "message": "I think you can remove this comment (it follows similar logic to other functions/commands/etc. used throughout our scripts)",
+      "revId": "53c3a1e1744f33edc611aa36abf92c3d8e4b030f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8edc2553_61aa595c",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-06T17:24:52Z",
+      "side": 1,
+      "message": "It\u0027s not clear what this comment means.",
+      "revId": "53c3a1e1744f33edc611aa36abf92c3d8e4b030f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
