@@ -192,10 +192,10 @@ __blockdev_write(void *arg1, void *arg2)
 	int rc;
 
 	if (req->iovcnt) {
-		rc = spdk_bdev_writev(target->bdev, target->ch, req->iov, req->iovcnt, req->offset,
+		rc = spdk_bdev_writev(target->bdev_desc, target->ch, req->iov, req->iovcnt, req->offset,
 				      req->data_len, quick_test_complete, NULL);
 	} else {
-		rc = spdk_bdev_write(target->bdev, target->ch, req->buf, req->offset,
+		rc = spdk_bdev_write(target->bdev_desc, target->ch, req->buf, req->offset,
 				     req->data_len, quick_test_complete, NULL);
 	}
 
@@ -254,10 +254,10 @@ __blockdev_read(void *arg1, void *arg2)
 	int rc;
 
 	if (req->iovcnt) {
-		rc = spdk_bdev_readv(target->bdev, target->ch, req->iov, req->iovcnt, req->offset,
+		rc = spdk_bdev_readv(target->bdev_desc, target->ch, req->iov, req->iovcnt, req->offset,
 				     req->data_len, quick_test_complete, NULL);
 	} else {
-		rc = spdk_bdev_read(target->bdev, target->ch, req->buf, req->offset,
+		rc = spdk_bdev_read(target->bdev_desc, target->ch, req->buf, req->offset,
 				    req->data_len, quick_test_complete, NULL);
 	}
 
@@ -666,7 +666,7 @@ __blockdev_reset(void *arg1, void *arg2)
 	struct io_target *target = req->target;
 	int rc;
 
-	rc = spdk_bdev_reset(target->bdev, target->ch, quick_test_complete, NULL);
+	rc = spdk_bdev_reset(target->bdev_desc, target->ch, quick_test_complete, NULL);
 	if (rc < 0) {
 		g_completion_success = false;
 		wake_ut_thread();

@@ -1328,7 +1328,7 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev,
 		      "Read: lba=%"PRIu64", len=%"PRIu64"\n",
 		      lba, (uint64_t)task->length / blen);
 
-	rc = spdk_bdev_readv(bdev, task->ch, task->iovs,
+	rc = spdk_bdev_readv(task->desc, task->ch, task->iovs,
 			     task->iovcnt, offset, nbytes,
 			     spdk_bdev_scsi_task_complete_cmd, task);
 	if (rc) {
@@ -1384,7 +1384,7 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	}
 
 	offset += task->offset;
-	rc = spdk_bdev_writev(bdev, task->ch, task->iovs,
+	rc = spdk_bdev_writev(task->desc, task->ch, task->iovs,
 			      task->iovcnt, offset, task->length,
 			      spdk_bdev_scsi_task_complete_cmd,
 			      task);
@@ -1440,7 +1440,7 @@ spdk_bdev_scsi_sync(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	rc = spdk_bdev_flush(bdev, task->ch, offset, nbytes,
+	rc = spdk_bdev_flush(task->desc, task->ch, offset, nbytes,
 			     spdk_bdev_scsi_task_complete_cmd, task);
 
 	if (rc) {
@@ -1488,7 +1488,6 @@ static int
 spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		     struct spdk_scsi_task *task)
 {
-
 	uint8_t *data;
 	struct spdk_scsi_unmap_bdesc *desc;
 	uint32_t bdesc_count, max_unmap_bdesc_count;
@@ -1542,7 +1541,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	rc = spdk_bdev_unmap(bdev, task->ch, desc,
+	rc = spdk_bdev_unmap(task->desc, task->ch, desc,
 			     bdesc_count, spdk_bdev_scsi_task_complete_cmd,
 			     task);
 
@@ -1965,6 +1964,6 @@ spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 int
 spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 {
-	return spdk_bdev_reset(bdev, task->ch,
+	return spdk_bdev_reset(task->desc, task->ch,
 			       spdk_bdev_scsi_task_complete_mgmt, task);
 }
