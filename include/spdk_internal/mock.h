@@ -73,8 +73,9 @@
 
 /* for defining the implmentation of stubs for SPDK funcs */
 /* the _P macro is for stubs that return pointer values */
+/* the _V macro is for stubs that don't have a return value */
 #define DEFINE_STUB(fn, ret, dargs, val) \
-	ret ut_ ## fn = val; \
+	ret ut_ ## fn = {val}; \
 	ret fn dargs; \
 	ret fn dargs \
 	{ \
@@ -89,6 +90,9 @@
 	{ \
 		return MOCK_GET_P(fn); \
 	}
+
+#define DEFINE_STUB_V(fn, dargs) \
+	void fn dargs {}
 
 /* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(pthread_mutex_init, int,
