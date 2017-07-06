@@ -42,12 +42,16 @@
 
 #define SPDK_JSONRPC_RECV_BUF_SIZE	(32 * 1024)
 #define SPDK_JSONRPC_SEND_BUF_SIZE	(32 * 1024)
+#define SPDK_JSONRPC_ID_MAX_LEN		128
 #define SPDK_JSONRPC_MAX_CONNS		64
 #define SPDK_JSONRPC_MAX_VALUES		1024
 
 struct spdk_jsonrpc_request {
 	struct spdk_jsonrpc_server_conn *conn;
-	const struct spdk_json_val *id;
+
+	/* Copy of request id value */
+	struct spdk_json_val id;
+	uint8_t id_data[SPDK_JSONRPC_ID_MAX_LEN];
 };
 
 struct spdk_jsonrpc_server_conn {
