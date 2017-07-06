@@ -33,6 +33,24 @@
       "revId": "1e338756a017cd08331b3772b352e92990e53bec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4812d51d_461357ab",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 77
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-06T01:23:53Z",
+      "side": 1,
+      "message": "It fails, since the /dev/nbd0 always exists. And the partition operation will be fail.",
+      "parentUuid": "563c4409_55482b34",
+      "revId": "1e338756a017cd08331b3772b352e92990e53bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
