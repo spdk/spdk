@@ -653,21 +653,34 @@ work_fn(void *arg)
 		while (ns_ctx != NULL) {
 			check_io(ns_ctx);
 			ns_ctx = ns_ctx->next;
+			if (spdk_get_ticks() > tsc_end) {
+				break;
+			}
 		}
 
-		if (spdk_get_ticks() > tsc_end) {
-			break;
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx != NULL) {
+			drain_io(ns_ctx);
+			cleanup_ns_worker_ctx(ns_ctx);
+			ns_ctx = ns_ctx->next;
 		}
+
 	}
 
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
-		drain_io(ns_ctx);
-		cleanup_ns_worker_ctx(ns_ctx);
-		ns_ctx = ns_ctx->next;
+	if (spdk_get_ticks() > tsc_end) {
+		break;
 	}
+}
 
-	return 0;
+ns_ctx = worker->ns_ctx;
+while (ns_ctx != NULL)
+{
+	drain_io(ns_ctx);
+	cleanup_ns_worker_ctx(ns_ctx);
+	ns_ctx = ns_ctx->next;
+}
+
+return 0;
 }
 
 static void usage(char *program_name)
