@@ -31,65 +31,53 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#ifndef SPDK_LVOLSTORE_H
+#define SPDK_LVOLSTORE_H
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#include "spdk/lvol.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct spdk_lvol_store_req {
+	union {
+		struct {
+			spdk_lvs_op_complete    cb_fn;
+			void                    *cb_arg;
+			struct spdk_bdev	*base_bdev;
+		} lvs_basic;
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+		struct {
+			spdk_lvs_op_with_handle_complete cb_fn;
+			void                            *cb_arg;
+			struct spdk_lvol_store          *lvol_store;
+			struct spdk_bs_dev		*bs_dev;
+			struct spdk_bdev		*base_bdev;
+		} lvs_handle;
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
+		struct {
+			spdk_lvol_op_complete    cb_fn;
+			void                    *cb_arg;
+		} lvol_basic;
 
-#include <uuid/uuid.h>
+		struct {
+			spdk_lvol_op_with_handle_complete cb_fn;
+			void                            *cb_arg;
+			struct spdk_lvol		*lvol;
+		} lvol_handle;
+	} u;
+};
 
-#ifdef __cplusplus
-}
-#endif
+struct spdk_lvol_store {
+	struct spdk_bs_dev              *bs_dev;
+	struct spdk_blob_store          *blobstore;
+	uuid_t				uuid;
+	TAILQ_ENTRY(spdk_lvol)		lvols;
+};
 
-#endif /* SPDK_STDINC_H */
+struct spdk_lvol {
+	struct spdk_lvol_store		*lvol_store;
+	struct spdk_blob		*blob;
+	size_t				sz;
+	char				*name;
+	struct spdk_bdev		*bdev; // Shouldn't be here ?
+};
+
+#endif /* SPDK_LVOLSTORE_H */
