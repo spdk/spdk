@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "216a73a3_b7d11b6a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-06T07:59:27Z",
+      "side": 1,
+      "message": "Because it doesn\u0027t matter before hotplug.",
+      "parentUuid": "4e6a9929_9a5d72a6",
+      "range": {
+        "startLine": 838,
+        "startChar": 1,
+        "endLine": 838,
+        "endChar": 30
+      },
+      "revId": "90c2b6e907c7456345952c59e947f41ddb49733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7265796_a32b50e8",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 2
@@ -107,6 +131,30 @@
       "side": 1,
       "message": "this is just queuing the event. I\u0027m relying on a fact that RPC is run on the same poller as vhost. This event won\u0027t be processed until after this function has returned.",
       "parentUuid": "e7265796_a32b50e8",
+      "range": {
+        "startLine": 849,
+        "startChar": 2,
+        "endLine": 849,
+        "endChar": 16
+      },
+      "revId": "90c2b6e907c7456345952c59e947f41ddb49733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "569a6ffd_d2f388ec",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-06T07:59:27Z",
+      "side": 1,
+      "message": "Your assumption  is wrong. RPC might be run on any core.",
+      "parentUuid": "dbc1f449_0922ffde",
       "range": {
         "startLine": 849,
         "startChar": 2,
