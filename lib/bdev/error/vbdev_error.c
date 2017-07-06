@@ -60,6 +60,7 @@ struct vbdev_error_info {
 struct vbdev_error_disk {
 	struct spdk_bdev		disk;
 	struct spdk_bdev		*base_bdev;
+	struct spdk_bdev_desc		*base_bdev_desc;
 	struct vbdev_error_info		error_vector[SPDK_BDEV_IO_TYPE_RESET];
 
 	TAILQ_ENTRY(vbdev_error_disk)	tailq;
@@ -162,7 +163,7 @@ vbdev_error_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 	error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
 	if (error_type == 0) {
-		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev);
+		spdk_bdev_io_resubmit(bdev_io, error_disk->base_bdev_desc);
 		return;
 	} else if (error_type == VBDEV_IO_FAILURE) {
 		error_disk->error_vector[bdev_io->type].error_num--;
@@ -259,7 +260,12 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		goto cleanup;
 	}
 
-	rc = spdk_bdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(error));
+	rc = spdk_bdev_open(base_bdev, false, NULL, NULL, &disk->base_bdev_desc);
+	if (rc) {
+		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(base_bdev));
+	}
+
+	rc = spdk_bdev_module_claim_bdev(base_bdev, disk->base_bdev_desc, SPDK_GET_BDEV_MODULE(error));
 	if (rc) {
 		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
 		goto cleanup;

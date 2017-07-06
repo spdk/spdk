@@ -207,7 +207,7 @@ vbdev_gpt_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	case SPDK_BDEV_IO_TYPE_RESET:
 		base_ch = spdk_get_io_channel(gpt_partition_disk->base_bdev);
 		*(struct spdk_io_channel **)bdev_io->driver_ctx = base_ch;
-		spdk_bdev_reset(gpt_partition_disk->base_bdev, base_ch,
+		spdk_bdev_reset(gpt_partition_disk->gpt_base->bdev_desc, base_ch,
 				_vbdev_gpt_complete_reset, bdev_io);
 		return;
 	default:
@@ -217,7 +217,7 @@ vbdev_gpt_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	}
 
 	/* Submit the modified I/O to the underlying bdev. */
-	spdk_bdev_io_resubmit(bdev_io, gpt_partition_disk->base_bdev);
+	spdk_bdev_io_resubmit(bdev_io, gpt_partition_disk->gpt_base->bdev_desc);
 }
 
 static void
@@ -412,8 +412,6 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	/* free the ch and also close the bdev_desc */
 	spdk_put_io_channel(gpt_bdev->ch);
 	gpt_bdev->ch = NULL;
-	spdk_bdev_close(gpt_bdev->bdev_desc);
-	gpt_bdev->bdev_desc = NULL;
 	spdk_bdev_free_io(bdev_io);
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
@@ -428,7 +426,7 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 		goto end;
 	}
 
-	rc = spdk_bdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(gpt));
+	rc = spdk_bdev_module_claim_bdev(bdev, gpt_bdev->bdev_desc, SPDK_GET_BDEV_MODULE(gpt));
 	if (rc) {
 		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
 		goto end;
@@ -450,6 +448,7 @@ end:
 
 	if (gpt_bdev->ref == 0) {
 		/* If no gpt_partition_disk instances were created, free the base context */
+		spdk_bdev_close(gpt_bdev->bdev_desc);
 		spdk_gpt_bdev_free(gpt_bdev);
 		if (claimed) {
 			spdk_bdev_module_release_bdev(bdev);
@@ -469,7 +468,7 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 		return -1;
 	}
 
-	rc = spdk_bdev_read(gpt_bdev->bdev, gpt_bdev->ch, gpt_bdev->gpt.buf, 0, SPDK_GPT_BUFFER_SIZE,
+	rc = spdk_bdev_read(gpt_bdev->bdev_desc, gpt_bdev->ch, gpt_bdev->gpt.buf, 0, SPDK_GPT_BUFFER_SIZE,
 			    spdk_gpt_bdev_complete, gpt_bdev);
 	if (rc < 0) {
 		spdk_gpt_bdev_free(gpt_bdev);
