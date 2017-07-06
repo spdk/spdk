@@ -45,6 +45,7 @@ struct req {
 	bool got_method;
 	bool got_id;
 	bool got_params;
+	struct spdk_jsonrpc_request *request;
 	struct spdk_json_val method;
 	struct spdk_json_val id;
 	struct spdk_json_val params[MAX_PARAMS];
@@ -98,6 +99,10 @@ static size_t g_num_reqs;
 	CU_ASSERT(g_cur_req->id.type == SPDK_JSON_VAL_STRING); \
 	CU_ASSERT(memcmp(g_cur_req->id.start, str, sizeof(str) - 1) == 0)
 
+#define REQ_ID_NULL() \
+	CU_ASSERT(g_cur_req->got_id); \
+	CU_ASSERT(g_cur_req->id.type == SPDK_JSON_VAL_NULL)
+
 #define REQ_ID_MISSING() \
 	CU_ASSERT(g_cur_req->got_id == false)
 
@@ -142,16 +147,21 @@ static size_t g_num_reqs;
 	CU_ASSERT(memcmp(g_params->start, str, g_params->len) == 0); \
 	g_params++
 
+#define FREE_REQUEST() \
+	free(g_reqs->request); \
+	g_reqs->request = NULL
+
 static void
 ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_json_val *method,
 	  const struct spdk_json_val *params)
 {
-	const struct spdk_json_val *id = request->id;
+	const struct spdk_json_val *id = &request->id;
 	struct req *r;
 
 	SPDK_CU_ASSERT_FATAL(g_num_reqs != MAX_REQS);
 	r = &g_reqs[g_num_reqs++];
 
+	r->request = request;
 	r->error = error;
 
 	if (method) {
@@ -169,7 +179,7 @@ ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_jso
 		r->got_params = false;
 	}
 
-	if (id) {
+	if (id && id->type != SPDK_JSON_VAL_INVALID) {
 		r->got_id = true;
 		r->id = *id;
 	} else {
@@ -180,6 +190,14 @@ ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_jso
 void
 spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error)
 {
+	/*
+	 * Map missing id to Null - this mirrors the behavior in the real
+	 * spdk_jsonrpc_server_handle_error() function.
+	 */
+	if (request->id.type == SPDK_JSON_VAL_INVALID) {
+		request->id.type = SPDK_JSON_VAL_NULL;
+	}
+
 	ut_handle(request, error, NULL, NULL);
 }
 
@@ -221,6 +239,7 @@ test_parse_request(void)
 	PARAM_NUM("42");
 	PARAM_NUM("23");
 	PARAM_ARRAY_END();
+	FREE_REQUEST();
 
 	/* rpc call with named parameters */
 	PARSE_PASS("{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"subtrahend\": 23, \"minuend\": 42}, \"id\": 3}",
@@ -235,6 +254,7 @@ test_parse_request(void)
 	PARAM_NAME("minuend");
 	PARAM_NUM("42");
 	PARAM_OBJECT_END();
+	FREE_REQUEST();
 
 	/* notification */
 	PARSE_PASS("{\"jsonrpc\": \"2.0\", \"method\": \"update\", \"params\": [1,2,3,4,5]}", "");
@@ -249,20 +269,23 @@ test_parse_request(void)
 	PARAM_NUM("4");
 	PARAM_NUM("5");
 	PARAM_ARRAY_END();
+	FREE_REQUEST();
 
 	/* invalid JSON */
 	PARSE_FAIL("{\"jsonrpc\": \"2.0\", \"method\": \"foobar, \"params\": \"bar\", \"baz]");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_PARSE_ERROR);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
+	FREE_REQUEST();
 
 	/* invalid request (method must be a string; params must be array or object) */
 	PARSE_PASS("{\"jsonrpc\": \"2.0\", \"method\": 1, \"params\": \"bar\"}", "");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
+	FREE_REQUEST();
 
 	/* batch, invalid JSON */
 	PARSE_FAIL(
@@ -272,15 +295,17 @@ test_parse_request(void)
 		"]");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_PARSE_ERROR);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
+	FREE_REQUEST();
 
 	/* empty array */
 	PARSE_PASS("[]", "");
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
+	FREE_REQUEST();
 
 	/* batch - not supported */
 	PARSE_PASS(
@@ -295,8 +320,9 @@ test_parse_request(void)
 
 	REQ_BEGIN_INVALID(SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	REQ_METHOD_MISSING();
-	REQ_ID_MISSING();
+	REQ_ID_NULL();
 	REQ_PARAMS_MISSING();
+	FREE_REQUEST();
 
 	free(conn);
 	free(server);
@@ -332,6 +358,7 @@ test_parse_request_streaming(void)
 	PARAM_ARRAY_BEGIN();
 	PARAM_NUM("1");
 	PARAM_ARRAY_END();
+	FREE_REQUEST();
 
 	/* Partial (but not invalid) requests - parse should not consume anything. */
 	strcpy(g_buf, "{\"jsonrpc\":\"2.0\",\"method\":\"b\",\"params\":[2],\"id\":2}");
@@ -342,10 +369,12 @@ test_parse_request_streaming(void)
 		int rc = spdk_jsonrpc_parse_request(conn, g_buf, i);
 		/* Partial request - no data consumed */
 		CU_ASSERT(rc == 0);
+		FREE_REQUEST();
 	}
 
 	/* Verify that full request can be parsed successfully */
 	CU_ASSERT(spdk_jsonrpc_parse_request(conn, g_buf, len) == (ssize_t)len);
+	FREE_REQUEST();
 
 	free(conn);
 	free(server);
