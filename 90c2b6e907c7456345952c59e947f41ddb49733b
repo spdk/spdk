@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "4e6a9929_9a5d72a6",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-06T05:25:58Z",
+      "side": 1,
+      "message": "yup, it could. however, it\u0027s been like that since forever.",
+      "parentUuid": "f72857c6_b56cb329",
+      "range": {
+        "startLine": 838,
+        "startChar": 1,
+        "endLine": 838,
+        "endChar": 30
+      },
+      "revId": "90c2b6e907c7456345952c59e947f41ddb49733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7265796_a32b50e8",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 2
@@ -59,6 +83,30 @@
       "writtenOn": "2017-07-05T15:27:44Z",
       "side": 1,
       "message": "Do we need store barier before sending event?",
+      "range": {
+        "startLine": 849,
+        "startChar": 2,
+        "endLine": 849,
+        "endChar": 16
+      },
+      "revId": "90c2b6e907c7456345952c59e947f41ddb49733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbc1f449_0922ffde",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-06T05:25:58Z",
+      "side": 1,
+      "message": "this is just queuing the event. I\u0027m relying on a fact that RPC is run on the same poller as vhost. This event won\u0027t be processed until after this function has returned.",
+      "parentUuid": "e7265796_a32b50e8",
       "range": {
         "startLine": 849,
         "startChar": 2,
