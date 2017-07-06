@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "de81fb94_ed170492",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1686,
+      "author": {
+        "id": 1011274
+      },
+      "writtenOn": "2017-07-06T00:34:50Z",
+      "side": 1,
+      "message": "Add output param int *sc.\nIf function returns 0, firmware update was successful.\nIf conventional reset required, function returns -ENXIO and sc \u003d\u003d REQ_CONVENTIONAL_RESET, otherwise, firmware update failed.\nIs this okay?",
+      "range": {
+        "startLine": 1686,
+        "startChar": 4,
+        "endLine": 1686,
+        "endChar": 60
+      },
+      "revId": "208aba52bfd068a705259fd7815c7bcb38e07495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4820807_660af8de",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 4
@@ -30,6 +53,24 @@
       "writtenOn": "2017-07-05T21:51:27Z",
       "side": 1,
       "message": "if SCT \u003d\u003d COMMAND_SPECIFIC but SC !\u003d REQ_CONVENTION_RESET, this check will fail and we will indicate that the fw commit was successful.\n\nI think this should just be an \"else\" without the sct/sc checks.  Or it needs something like:\n\nif (sc \u003d\u003d REQ_CONVENTIONAL_RESET) {\n  return REQ_CONVENTIONAL_RESET;\n} else if (sc \u003d\u003d REQ_NVM_RESET) {\n  return spdk_nvme_ctrlr_reset(ctrlr);\n} else {\n  return -ENXIO;\n}",
+      "revId": "208aba52bfd068a705259fd7815c7bcb38e07495",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3e1c6fc_621b6638",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1762,
+      "author": {
+        "id": 1011274
+      },
+      "writtenOn": "2017-07-06T00:34:50Z",
+      "side": 1,
+      "message": "This line is checking for controller reset, not conventional reset. The check will not fail because the test is an OR. But I agree that we probably don\u0027t need to check sct. We do however need to reset the controller is sct:sc \u003d\u003d 00:00.",
+      "parentUuid": "e4820807_660af8de",
       "revId": "208aba52bfd068a705259fd7815c7bcb38e07495",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
