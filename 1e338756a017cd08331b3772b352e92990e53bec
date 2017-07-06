@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "67f735ab_9ad3626e",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 77
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-06T01:29:47Z",
+      "side": 1,
+      "message": "Firstly, I did not open it for each partition, it only opens while having the first partition.\n\nSecondly, if we did not open it here. How to pass the bdev tests. The will be both NVMe0n1,  NVMe0n1p1, NVMe0n1P2. According to the current logic, the parted device cannot be tested.",
+      "parentUuid": "a59b3c21_193da2ac",
+      "revId": "1e338756a017cd08331b3772b352e92990e53bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "563c4409_55482b34",
         "filename": "test/lib/bdev/blockdev.sh",
         "patchSetId": 77
