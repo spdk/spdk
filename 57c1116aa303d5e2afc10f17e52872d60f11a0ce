@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2639967e_616314be",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-06T15:12:01Z",
+      "side": 1,
+      "message": "this is to ensure that mgmt poller doesn\u0027t delete scsi_dev we\u0027ve just created",
+      "range": {
+        "startLine": 849,
+        "startChar": 1,
+        "endLine": 849,
+        "endChar": 12
+      },
+      "revId": "57c1116aa303d5e2afc10f17e52872d60f11a0ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
