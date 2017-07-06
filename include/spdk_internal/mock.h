@@ -39,14 +39,18 @@
 /* used to signify pass through */
 #define MOCK_PASS_THRU (0xdeadbeef)
 
+/* helper for initializing struct value with mock macros */
+#define MOCK_STRUCT_INIT(...) \
+	{ __VA_ARGS__ }
+
 /* for controlling mocked function behavior, setting */
 /* and getting values from the stub, the _P macros are */
 /* for mocking functions that return pointer values */
 #define MOCK_SET(fn, ret, val) \
-	ut_ ## fn = (ret){val}
+	ut_ ## fn = (ret)val
 
 #define MOCK_SET_P(fn, ret, val) \
-	ut_p_ ## fn = (ret){val}
+	ut_p_ ## fn = (ret)val
 
 #define MOCK_GET(fn) \
 	ut_ ## fn
@@ -73,6 +77,7 @@
 
 /* for defining the implmentation of stubs for SPDK funcs */
 /* the _P macro is for stubs that return pointer values */
+/* the _V macro is for stubs that don't have a return value */
 #define DEFINE_STUB(fn, ret, dargs, val) \
 	ret ut_ ## fn = val; \
 	ret fn dargs; \
@@ -89,6 +94,9 @@
 	{ \
 		return MOCK_GET_P(fn); \
 	}
+
+#define DEFINE_STUB_V(fn, dargs) \
+	void fn dargs {}
 
 /* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(pthread_mutex_init, int,
