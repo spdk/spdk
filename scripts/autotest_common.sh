@@ -194,6 +194,21 @@ function waitforlisten() {
 	set -x
 }
 
+function waitforbdev() {
+	bdev_name=$1
+	rpc_py=$2
+
+	for ((i=1; i<=10; i++)); do
+		if [ ! -z "`$rpc_py get_bdevs | grep $bdev_name`" ];
+			return 0
+		else
+			sleep 0.1
+		fi
+	done
+
+	return -l
+}
+
 function killprocess() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
