@@ -404,9 +404,11 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 
 	qpair->req_buf = spdk_dma_zmalloc(req_size_padded * num_requests, 64, NULL);
 	if (qpair->req_buf == NULL) {
+		SPDK_ERRLOG("STAILQ_FIRST(&qpair->free_req) == NULL\n");
 		return -ENOMEM;
 	}
 
+	SPDK_ERRLOG("constructing list with num_requests=%"PRIu32"\n", num_requests);
 	for (i = 0; i < num_requests; i++) {
 		struct nvme_request *req = qpair->req_buf + i * req_size_padded;
 
