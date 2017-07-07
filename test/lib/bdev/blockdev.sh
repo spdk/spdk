@@ -31,7 +31,7 @@ if [ $(uname -s) = Linux ] && [ -f /usr/sbin/sgdisk ]; then
 		waitforbdev Nvme0n1 $rootdir/scripts/rpc.py
 
 		if [ -e /dev/nbd0 ]; then
-			parted -s /dev/nbd0 mklabel gpt mkpart primary '0%' '50%' mkpart primary '50%' '100%'
+			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
 			# change the partition type GUID to SPDK GUID value
 			/usr/sbin/sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
 			/usr/sbin/sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0

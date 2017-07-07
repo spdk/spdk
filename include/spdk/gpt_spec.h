@@ -135,7 +135,7 @@ struct spdk_gpt_partition_entry {
 		uint64_t reserved_uefi : 45;
 		uint64_t guid_specific : 16;
 	} attr;
-	uint8_t partition_name[72];
+	uint16_t partition_name[36];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_gpt_partition_entry) == 128, "size incorrect");
 
