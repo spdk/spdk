@@ -330,7 +330,7 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 		uint64_t lba_start = from_le64(&p->starting_lba);
 		uint64_t lba_end = from_le64(&p->ending_lba);
 
-		if (!SPDK_GPT_UUID_EQUAL(&gpt->partitions[i].part_type_guid,
+		if (!SPDK_GPT_GUID_EQUAL(&gpt->partitions[i].part_type_guid,
 					 &SPDK_GPT_PART_TYPE_GUID) ||
 		    lba_start == 0) {
 			continue;
