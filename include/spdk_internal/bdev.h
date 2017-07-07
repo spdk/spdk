@@ -104,7 +104,7 @@ struct spdk_bdev_module_if {
 	void (*config_text)(FILE *fp);
 
 	/** Name for the modules being defined. */
-	const char *module_name;
+	const char *name;
 
 	/**
 	 * Returns the allocation size required for the backend for uses such as local
@@ -423,29 +423,31 @@ spdk_bdev_io_from_ctx(void *ctx)
 	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
 }
 
-#define SPDK_BDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn)			\
-	static struct spdk_bdev_module_if init_fn ## _if = {					\
+#define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn)		\
+	static struct spdk_bdev_module_if _name ## _if = {					\
+	.name		= #_name,								\
 	.module_init 	= init_fn,								\
 	.module_fini	= fini_fn,								\
 	.config_text	= config_fn,								\
 	.get_ctx_size	= ctx_size_fn,                                				\
 	};  											\
-	__attribute__((constructor)) static void init_fn ## _init(void)  			\
+	__attribute__((constructor)) static void _name ## _init(void)  				\
 	{                                                           				\
-	    spdk_bdev_module_list_add(&init_fn ## _if);                  			\
+	    spdk_bdev_module_list_add(&_name ## _if);                  				\
 	}
 
-#define SPDK_VBDEV_MODULE_REGISTER(init_fn, fini_fn, config_fn, ctx_size_fn, bdev_registered_fn)\
-	static struct spdk_bdev_module_if init_fn ## _if = {					\
+#define SPDK_VBDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, registered_fn)\
+	static struct spdk_bdev_module_if _name ## _if = {					\
+	.name		= #_name,								\
 	.module_init 	= init_fn,								\
 	.module_fini	= fini_fn,								\
 	.config_text	= config_fn,								\
 	.get_ctx_size	= ctx_size_fn,                                				\
-	.bdev_registered	= bdev_registered_fn,						\
+	.bdev_registered	= registered_fn,						\
 	};  											\
-	__attribute__((constructor)) static void init_fn ## _init(void)  			\
+	__attribute__((constructor)) static void _name ## _init(void) 				\
 	{                                                           				\
-	    spdk_vbdev_module_list_add(&init_fn ## _if);                  			\
+	    spdk_vbdev_module_list_add(&_name ## _if);                  			\
 	}
 
 #endif /* SPDK_INTERNAL_BDEV_H */
