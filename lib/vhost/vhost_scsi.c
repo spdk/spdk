@@ -1016,7 +1016,7 @@ spdk_vhost_init(void)
 	struct spdk_vhost_dev *task;
 	int rc, i;
 
-	g_task_pool = spdk_ring_create(SPDK_RING_TYPE_MP_SC, SPDK_VHOST_SCSI_TASK_POOL_SIZE, SOCKET_ID_ANY);
+	g_task_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC, SPDK_VHOST_SCSI_TASK_POOL_SIZE, SOCKET_ID_ANY);
 	if (g_task_pool == NULL) {
 		SPDK_ERRLOG("Failed to init vhost scsi task pool\n");
 		return -1;
