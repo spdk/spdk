@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c8bfbf1_362fdbeb",
+        "filename": "autotest.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-07T19:49:22Z",
+      "side": 1,
+      "message": "can you add separate timing_enter/exit calls for vhost_blk and vhost_scsi?",
+      "revId": "0122e075d72902be04ef2ac8adb2459213b591cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
