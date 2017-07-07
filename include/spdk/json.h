@@ -198,6 +198,27 @@ int spdk_json_write_int64(struct spdk_json_write_ctx *w, int64_t val);
 int spdk_json_write_uint64(struct spdk_json_write_ctx *w, uint64_t val);
 int spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val);
 int spdk_json_write_string_raw(struct spdk_json_write_ctx *w, const char *val, size_t len);
+
+/**
+ * Write null-terminated UTF-16LE string.
+ *
+ * \param w JSON write context.
+ * \param val UTF-16LE string; must be null terminated.
+ * \return 0 on success or negative on failure.
+ */
+int spdk_json_write_string_utf16le(struct spdk_json_write_ctx *w, const uint16_t *val);
+
+/**
+ * Write UTF-16LE string.
+ *
+ * \param w JSON write context.
+ * \param val UTF-16LE string; may contain embedded null characters.
+ * \param len Length of val in 16-bit code units (i.e. size of string in bytes divided by 2).
+ * \return 0 on success or negative on failure.
+ */
+int spdk_json_write_string_utf16le_raw(struct spdk_json_write_ctx *w, const uint16_t *val,
+				       size_t len);
+
 int spdk_json_write_string_fmt(struct spdk_json_write_ctx *w, const char *fmt,
 			       ...) __attribute__((__format__(__printf__, 2, 3)));
 int spdk_json_write_array_begin(struct spdk_json_write_ctx *w);

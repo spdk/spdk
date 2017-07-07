@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/endian.h"
 #include "spdk/json.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
@@ -249,6 +250,49 @@ static inline bool
 utf16_valid_surrogate_low(uint32_t val)
 {
 	return val >= 0xDC00 && val <= 0xDFFF;
+}
+
+/*
+ * Check for a valid UTF-16LE encoding of a single codepoint.
+ *
+ * \return Length of valid UTF-16LE sequence in 16-bit code units, or negative if invalid.
+ */
+static inline int
+utf16le_valid(const uint16_t *start, const uint16_t *end)
+{
+	const uint16_t *p = start;
+	uint16_t high, low;
+
+	if (p == end) {
+		return 0;
+	}
+
+	high = from_le16(p);
+
+	if (high <= 0xD7FF || high >= 0xE000) {
+		/* Single code unit in BMP */
+		return 1;
+	}
+
+	if (high >= 0xDC00) {
+		/* Low surrogate in first code unit - invalid */
+		return -1;
+	}
+
+	assert(utf16_valid_surrogate_high(high));
+
+	if (++p == end) {
+		/* Not enough code units left */
+		return -1;
+	}
+	low = from_le16(p);
+
+	if (!utf16_valid_surrogate_low(low)) {
+		return -1;
+	}
+
+	/* Valid surrogate pair */
+	return 2;
 }
 
 static inline uint32_t
