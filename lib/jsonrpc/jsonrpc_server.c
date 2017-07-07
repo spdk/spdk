@@ -136,10 +136,14 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 		return -1;
 	}
 
+	conn->outstanding_requests++;
+
 	request->conn = conn;
 	request->id.start = request->id_data;
 	request->id.len = 0;
 	request->id.type = SPDK_JSON_VAL_INVALID;
+	request->send_offset = 0;
+	request->send_len = 0;
 
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_TRACELOG(SPDK_TRACE_RPC, "JSON parse error\n");
@@ -176,12 +180,28 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	return end - json;
 }
 
+static int
+spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
+{
+	struct spdk_jsonrpc_request *request = cb_ctx;
+
+	if (SPDK_JSONRPC_SEND_BUF_SIZE - request->send_len < size) {
+		SPDK_ERRLOG("Not enough space in send buf\n");
+		return -1;
+	}
+
+	memcpy(request->send_buf + request->send_len, data, size);
+	request->send_len += size;
+
+	return 0;
+}
+
 static struct spdk_json_write_ctx *
-begin_response(struct spdk_jsonrpc_server_conn *conn, const struct spdk_json_val *id)
+begin_response(struct spdk_jsonrpc_request *request)
 {
 	struct spdk_json_write_ctx *w;
 
-	w = spdk_json_write_begin(spdk_jsonrpc_server_write_cb, conn, 0);
+	w = spdk_json_write_begin(spdk_jsonrpc_server_write_cb, request, 0);
 	if (w == NULL) {
 		return NULL;
 	}
@@ -191,17 +211,25 @@ begin_response(struct spdk_jsonrpc_server_conn *conn, const struct spdk_json_val
 	spdk_json_write_string(w, "2.0");
 
 	spdk_json_write_name(w, "id");
-	spdk_json_write_val(w, id);
+	spdk_json_write_val(w, &request->id);
 
 	return w;
 }
 
 static void
-end_response(struct spdk_jsonrpc_server_conn *conn, struct spdk_json_write_ctx *w)
+end_response(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_object_end(w);
 	spdk_json_write_end(w);
-	spdk_jsonrpc_server_write_cb(conn, "\n", 1);
+	spdk_jsonrpc_server_write_cb(request, "\n", 1);
+	spdk_jsonrpc_server_send_response(request->conn, request);
+}
+
+void
+spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request)
+{
+	request->conn->outstanding_requests--;
+	free(request);
 }
 
 struct spdk_json_write_ctx *
@@ -211,13 +239,13 @@ spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 
 	if (request->id.type == SPDK_JSON_VAL_INVALID) {
 		/* Notification - no response required */
-		free(request);
+		spdk_jsonrpc_free_request(request);
 		return NULL;
 	}
 
-	w = begin_response(request->conn, &request->id);
+	w = begin_response(request);
 	if (w == NULL) {
-		free(request);
+		spdk_jsonrpc_free_request(request);
 		return NULL;
 	}
 
@@ -231,8 +259,7 @@ spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_w
 {
 	assert(w != NULL);
 
-	end_response(request->conn, w);
-	free(request);
+	end_response(request, w);
 }
 
 void
@@ -246,7 +273,7 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 		request->id.type = SPDK_JSON_VAL_NULL;
 	}
 
-	w = begin_response(request->conn, &request->id);
+	w = begin_response(request);
 	if (w == NULL) {
 		free(request);
 		return;
@@ -260,8 +287,7 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 	spdk_json_write_string(w, msg);
 	spdk_json_write_object_end(w);
 
-	end_response(request->conn, w);
-	free(request);
+	end_response(request, w);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("rpc", SPDK_TRACE_RPC)
