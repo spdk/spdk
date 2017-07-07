@@ -33,13 +33,13 @@
 
 #include "spdk_internal/event.h"
 #include "spdk_internal/bdev.h"
+#include "spdk_internal/log.h"
 
 #include "gpt.h"
 
 #include "spdk/event.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
-#include "spdk/log.h"
 #include "spdk/io_channel.h"
 
 #define GPT_PRIMARY_PARTITION_TABLE_LBA 0x1
@@ -202,8 +202,9 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 
 	mbr = (struct spdk_mbr *)gpt->buf;
 	if (from_le16(&mbr->mbr_signature) != SPDK_MBR_SIGNATURE) {
-		SPDK_ERRLOG("Signature mismatch, provided=%x, expected=%x\n", from_le16(&mbr->disk_signature),
-			    SPDK_MBR_SIGNATURE);
+		SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "Signature mismatch, provided=%x,"
+			      "expected=%x\n", from_le16(&mbr->disk_signature),
+			      SPDK_MBR_SIGNATURE);
 		return -1;
 	}
 
@@ -251,7 +252,7 @@ spdk_gpt_parse(struct spdk_gpt *gpt)
 
 	rc = spdk_gpt_check_mbr(gpt);
 	if (rc) {
-		SPDK_ERRLOG("Failed to check mbr_info\n");
+		SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "Failed to detect gpt in MBR\n");
 		return rc;
 	}
 
@@ -269,3 +270,5 @@ spdk_gpt_parse(struct spdk_gpt *gpt)
 
 	return 0;
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("gpt_parse", SPDK_TRACE_GPT_PARSE)
