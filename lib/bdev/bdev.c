@@ -416,7 +416,7 @@ spdk_bdev_module_init_next(int rc)
 	if (g_next_bdev_module) {
 		g_next_bdev_module->module_init();
 	} else {
-		spdk_vbdev_module_init_next(0);
+		spdk_bdev_module_init_complete(rc);
 	}
 }
 
@@ -439,7 +439,7 @@ spdk_vbdev_module_init_next(int rc)
 	if (g_next_vbdev_module) {
 		g_next_vbdev_module->module_init();
 	} else {
-		spdk_bdev_module_init_complete(rc);;
+		spdk_bdev_module_init_next(0);
 	}
 }
 
@@ -526,7 +526,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				sizeof(struct spdk_bdev_mgmt_channel));
 
 end:
-	spdk_bdev_module_init_next(rc);
+	spdk_vbdev_module_init_next(rc);
 }
 
 int
