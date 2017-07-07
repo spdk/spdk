@@ -218,7 +218,7 @@ struct spdk_bdev {
 
 	bool bdev_opened_for_write;
 
-	uint32_t vbdevs_opened_for_write;
+	struct spdk_bdev_module_if *vbdev_claim_module;
 
 	/** List of open descriptors for this block device. */
 	TAILQ_HEAD(, spdk_bdev_desc) open_descs;
@@ -378,6 +378,10 @@ void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
 void spdk_vbdev_register_handled(void);
+
+int spdk_vbdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_bdev_module_if *module);
+void spdk_vbdev_module_release_bdev(struct spdk_bdev *bdev);
 
 void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 			    spdk_bdev_poller_fn fn,
