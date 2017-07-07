@@ -70,10 +70,27 @@ usage(char *executable_name)
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", defaults.mem_size);
 	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
+	printf(" -f         save pid to vhost.pid file in current working directory");
 	spdk_tracelog_usage(stdout, "-t");
 	printf(" -h         show this usage\n");
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -q         disable notice level logging to stderr\n");
+}
+
+static void
+save_pid(void)
+{
+	FILE *pidfile;
+
+	pidfile = fopen("vhost.pid", "w");
+	if (pidfile == NULL) {
+		SPDK_ERRLOG("Couldn't open vhost.pid file: %s\n", strerror(errno));
+		return;
+	}
+
+	fprintf(pidfile, "%d", getpid());
+
+	fclose(pidfile);
 }
 
 int
@@ -87,7 +104,7 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	while ((ch = getopt(argc, argv, "c:de:l:m:p:qs:S:t:h")) != -1) {
+	while ((ch = getopt(argc, argv, "c:de:l:m:p:qs:S:t:hf")) != -1) {
 		switch (ch) {
 		case 'c':
 			opts.config_file = optarg;
@@ -118,6 +135,9 @@ main(int argc, char *argv[])
 			break;
 		case 'S':
 			socket_path = optarg;
+			break;
+		case 'f':
+			save_pid();
 			break;
 		case 't':
 			rc = spdk_log_set_trace_flag(optarg);
