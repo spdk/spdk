@@ -1288,7 +1288,7 @@ spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *primary,
 						  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
 						  SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE,
 						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-			return -1;
+			goto fail;
 		}
 	} else {
 		/*
@@ -1300,11 +1300,17 @@ spdk_bdev_scsi_read_write_lba_check(struct spdk_scsi_task *primary,
 			       primary->sense_data_len);
 			task->status = SPDK_SCSI_STATUS_CHECK_CONDITION;
 			task->sense_data_len = primary->sense_data_len;
-			return -1;
+			goto fail;
 		}
 	}
 
 	return 0;
+fail:
+	SPDK_ERRLOG("primary: %p (status: %d) lba: %"PRIu64" cmd_num_blocks: %"PRIu64": bdev_num_blocks: %"PRIu64"\n",
+		    primary,
+		    primary ? primary->status : -1,
+		    lba, cmd_num_blocks, bdev_num_blocks);
+	return -1;
 }
 
 static int
@@ -1462,7 +1468,7 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 {
 	if (task->dxfer_dir != SPDK_SCSI_DIR_NONE &&
 	    task->dxfer_dir != (is_read ? SPDK_SCSI_DIR_FROM_DEV : SPDK_SCSI_DIR_TO_DEV)) {
-		SPDK_ERRLOG("Incorrect data direction\n");
+		SPDK_ERRLOG("Incorrect data direction: %d is_read=%d\n", task->dxfer_dir, (int)is_read);
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,

@@ -331,6 +331,7 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 	if (io_flags & 0xFFFF) {
 		/* The bottom 16 bits must be empty */
+		SPDK_ERRLOG("io_flags: %"PRIx32"\n", io_flags);
 		return NULL;
 	}
 
@@ -347,6 +348,7 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 	req = nvme_allocate_request(qpair, payload, lba_count * sector_size, cb_fn, cb_arg);
 	if (req == NULL) {
+		SPDK_ERRLOG("req == NULL!\n");
 		return NULL;
 	}
 
