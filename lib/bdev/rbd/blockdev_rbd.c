@@ -537,6 +537,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	rbd->disk.blockcnt = rbd->info.size / rbd->disk.blocklen;
 	rbd->disk.ctxt = rbd;
 	rbd->disk.fn_table = &rbd_fn_table;
+	rbd->disk.module = SPDK_GET_BDEV_MODULE(rbd);
 
 	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
 	TAILQ_INSERT_TAIL(&g_rbds, rbd, tailq);

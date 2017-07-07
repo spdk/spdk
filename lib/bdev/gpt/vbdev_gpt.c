@@ -50,6 +50,8 @@
 
 #include "gpt.h"
 
+SPDK_DECLARE_BDEV_MODULE(gpt);
+
 /* Base block device gpt context */
 struct spdk_gpt_bdev {
 	struct spdk_bdev_desc *bdev_desc;
@@ -385,6 +387,7 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 		d->disk.blockcnt = lba_end - lba_start;
 		d->disk.ctxt = d;
 		d->disk.fn_table = &vbdev_gpt_fn_table;
+		d->disk.module = SPDK_GET_BDEV_MODULE(gpt);
 
 		SPDK_TRACELOG(SPDK_TRACE_VBDEV_GPT, "gpt vbdev %s: base bdev: %s offset_bytes: "
 			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",

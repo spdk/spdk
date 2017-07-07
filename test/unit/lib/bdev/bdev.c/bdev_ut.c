@@ -109,6 +109,9 @@ static struct spdk_bdev_fn_table fn_table = {
 	.destruct = stub_destruct,
 };
 
+SPDK_BDEV_MODULE_REGISTER(bdev_ut, NULL, NULL, NULL, NULL)
+SPDK_VBDEV_MODULE_REGISTER(vbdev_ut, NULL, NULL, NULL, NULL, NULL)
+
 static struct spdk_bdev *
 allocate_bdev(char *name)
 {
@@ -119,6 +122,7 @@ allocate_bdev(char *name)
 
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
+	bdev->module = SPDK_GET_BDEV_MODULE(bdev_ut);
 
 	spdk_bdev_register(bdev);
 	CU_ASSERT(TAILQ_EMPTY(&bdev->base_bdevs));
@@ -138,6 +142,7 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
+	bdev->module = SPDK_GET_BDEV_MODULE(vbdev_ut);
 
 	/* vbdev must have at least one base bdev */
 	CU_ASSERT(base1 != NULL);
