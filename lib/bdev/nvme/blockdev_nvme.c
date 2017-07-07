@@ -745,13 +745,13 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	nvme_ctrlr->trid = *trid;
 	nvme_ctrlr->name = name;
 
+	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
+				sizeof(struct nvme_io_channel));
 	nvme_ctrlr_create_bdevs(nvme_ctrlr);
 
 	spdk_bdev_poller_start(&nvme_ctrlr->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
 			       spdk_env_get_current_core(), g_nvme_adminq_poll_timeout_us);
 
-	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
-				sizeof(struct nvme_io_channel));
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
 	if (g_action_on_timeout != TIMEOUT_ACTION_NONE) {

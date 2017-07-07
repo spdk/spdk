@@ -76,8 +76,6 @@ static TAILQ_HEAD(, gpt_partition_disk) g_gpt_partition_disks = TAILQ_HEAD_INITI
 			g_gpt_partition_disks);
 static TAILQ_HEAD(, spdk_bdev) g_bdevs = TAILQ_HEAD_INITIALIZER(g_bdevs);
 
-static int g_gpt_base_num;
-static bool g_gpt_init_done;
 static bool g_gpt_disabled;
 
 static void
@@ -407,7 +405,6 @@ static void
 spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct spdk_gpt_bdev *gpt_bdev = (struct spdk_gpt_bdev *)arg;
-	static int bdev_init_num = 0;
 	int rc;
 
 	/* free the ch and also close the bdev_desc */
@@ -416,7 +413,6 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	spdk_bdev_close(gpt_bdev->bdev_desc);
 	gpt_bdev->bdev_desc = NULL;
 
-	bdev_init_num++;
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
 		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
 			    spdk_bdev_get_name(gpt_bdev->bdev), status);
@@ -436,18 +432,16 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	}
 
 end:
+	/*
+	 * Notify the generic bdev layer that the actions related to the original examine
+	 *  callback are now completed.
+	 */
+	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+
 	spdk_bdev_free_io(bdev_io);
 	if (gpt_bdev->ref == 0) {
 		/* If no gpt_partition_disk instances were created, free the base context */
 		spdk_gpt_bdev_free(gpt_bdev);
-	}
-
-	if (!g_gpt_init_done) {
-		/* Call next vbdev module init after the last gpt creation */
-		if (bdev_init_num == g_gpt_base_num) {
-			g_gpt_init_done = true;
-			spdk_vbdev_module_init_next(0);
-		}
 	}
 }
 
@@ -477,36 +471,14 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 static void
 vbdev_gpt_init(void)
 {
-	struct spdk_bdev *base_bdev, *tmp;
-	int rc = 0;
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Gpt");
 
 	if (sp && spdk_conf_section_get_boolval(sp, "Disable", false)) {
 		/* Disable Gpt probe */
 		g_gpt_disabled = true;
-		goto end;
 	}
 
-	TAILQ_FOREACH_SAFE(base_bdev, &g_bdevs, link, tmp) {
-		TAILQ_REMOVE(&g_bdevs, base_bdev, link);
-		rc = vbdev_gpt_read_gpt(base_bdev);
-		if (rc) {
-			SPDK_ERRLOG("Failed to read info from bdev %s\n",
-				    spdk_bdev_get_name(base_bdev));
-			continue;
-		}
-		g_gpt_base_num++;
-
-	}
-
-	if (!g_gpt_base_num) {
-		g_gpt_init_done = true;
-	}
-end:
-	/* if no gpt bdev num is counted, just call vbdev_module_init_next */
-	if (!g_gpt_base_num) {
-		spdk_vbdev_module_init_next(rc);
-	}
+	spdk_vbdev_module_init_next(0);
 }
 
 static void
@@ -522,19 +494,17 @@ vbdev_gpt_fini(void)
 static void
 vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
-	/*
-	 * TODO: this will get fixed in a later patch which refactors
-	 * the GPT init/register code.  For now, nothing is operating
-	 * on the examination counts so just immediately indicate
-	 * that the examination is done.
-	 */
-	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+	int rc;
+
 	if (g_gpt_disabled) {
+		spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 		return;
 	}
 
-	if (!g_gpt_init_done) {
-		TAILQ_INSERT_TAIL(&g_bdevs, bdev, link);
+	rc = vbdev_gpt_read_gpt(bdev);
+	if (rc) {
+		spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+		SPDK_ERRLOG("Failed to read info from bdev %s\n", spdk_bdev_get_name(bdev));
 	}
 }
 
