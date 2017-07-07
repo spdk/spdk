@@ -111,11 +111,6 @@ p.set_defaults(func=get_target_nodes)
 
 
 def construct_target_node(args):
-    lun_name_id_dict = dict(u.split(":")
-                            for u in args.lun_name_id_pairs.strip().split(" "))
-    lun_names = lun_name_id_dict.keys()
-    lun_ids = list(map(int, lun_name_id_dict.values()))
-
     pg_tags = []
     ig_tags = []
     for u in args.pg_ig_mappings.strip().split(" "):
@@ -128,8 +123,7 @@ def construct_target_node(args):
         'alias_name': args.alias_name,
         'pg_tags': pg_tags,
         'ig_tags': ig_tags,
-        'lun_names': lun_names,
-        'lun_ids': lun_ids,
+        'lun_names': lun_name_list,
         'queue_depth': args.queue_depth,
         'chap_disabled': args.chap_disabled,
         'chap_required': args.chap_required,
@@ -141,11 +135,11 @@ def construct_target_node(args):
 p = subparsers.add_parser('construct_target_node', help='Add a target node')
 p.add_argument('name', help='Target node name (ASCII)')
 p.add_argument('alias_name', help='Target node alias name (ASCII)')
-p.add_argument('lun_name_id_pairs', help="""Whitespace-separated list of LUN <name:id> pairs enclosed
-in quotes.  Format:  'lun_name0:id0 lun_name1:id1' etc
-Example: 'Malloc0:0 Malloc1:1 Malloc5:2'
+p.add_argument('lun_name_list', help="""Whitespace-separated list of LUN names enclosed
+in quotes.
+Example: 'Malloc0 Malloc1 Malloc5'
 *** The LUNs must pre-exist ***
-*** LUN0 (id = 0) is required ***
+*** At least one LUN is required ***
 *** LUN names cannot contain space or colon characters ***""")
 p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
 Whitespace separated, quoted, mapping defined with colon

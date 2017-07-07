@@ -197,9 +197,7 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
  * \return The constructed spdk_scsi_dev object.
  */
 struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
-		char *lun_name_list[],
-		int *lun_id_list,
-		int num_luns,
+		const char *const lun_name_list[SPDK_SCSI_DEV_MAX_LUN],
 		uint8_t protocol_id,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 		void *hotremove_ctx);

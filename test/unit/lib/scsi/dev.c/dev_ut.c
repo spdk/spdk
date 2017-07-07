@@ -234,30 +234,15 @@ dev_destruct_success(void)
 }
 
 static void
-dev_construct_num_luns_zero(void)
-{
-	struct spdk_scsi_dev *dev;
-	char *lun_name_list[1] = {};
-	int lun_id_list[1] = { 0 };
-
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 0,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
-
-	/* dev should be null since we passed num_luns = 0 */
-	CU_ASSERT_TRUE(dev == NULL);
-}
-
-static void
 dev_construct_no_lun_zero(void)
 {
 	struct spdk_scsi_dev *dev;
-	char *lun_name_list[1] = {};
-	int lun_id_list[1] = { 0 };
+	const char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN] = { 0 };
 
-	lun_id_list[0] = 1;
+	lun_name_list[0] = "";
 
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				      NULL);
 
 	/* dev should be null since no LUN0 was specified (lun_id_list[0] = 1) */
 	CU_ASSERT_TRUE(dev == NULL);
@@ -267,13 +252,12 @@ static void
 dev_construct_null_lun(void)
 {
 	struct spdk_scsi_dev *dev;
-	char *lun_name_list[1] = {};
-	int lun_id_list[1] = { 0 };
+	const char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN] = { 0 };
 
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				      NULL);
 
-	/* dev should be null since no LUN0 was specified (lun_list[0] = NULL) */
+	/* dev should be null since no LUN0 was specified (lun_name_list[0] = NULL) */
 	CU_ASSERT_TRUE(dev == NULL);
 }
 
@@ -281,11 +265,10 @@ static void
 dev_construct_success(void)
 {
 	struct spdk_scsi_dev *dev;
-	char *lun_name_list[1] = {"malloc0"};
-	int lun_id_list[1] = { 0 };
+	const char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN] = { "malloc0" };
 
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				      NULL);
 
 	/* Successfully constructs and returns a dev */
 	CU_ASSERT_TRUE(dev != NULL);
@@ -300,17 +283,16 @@ static void
 dev_construct_same_lun_two_devices(void)
 {
 	struct spdk_scsi_dev *dev, *dev2;
-	char *lun_name_list[1] = {"malloc0"};
-	int lun_id_list[1] = { 0 };
+	const char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN] = {"malloc0"};
 
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				      NULL);
 
 	/* Successfully constructs and returns a dev */
 	CU_ASSERT_TRUE(dev != NULL);
 
-	dev2 = spdk_scsi_dev_construct("Name2", lun_name_list, lun_id_list, 1,
-				       SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev2 = spdk_scsi_dev_construct("Name2", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				       NULL);
 
 	/* Fails to construct dev and returns NULL */
 	CU_ASSERT_TRUE(dev2 == NULL);
@@ -325,11 +307,10 @@ static void
 dev_construct_same_lun_one_device(void)
 {
 	struct spdk_scsi_dev *dev;
-	char *lun_name_list[2] = {"malloc0", "malloc0"};
-	int lun_id_list[2] = { 0, 1 };
+	const char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN] = {"malloc0", "malloc0"};
 
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 2,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				      NULL);
 
 	/* Fails to construct dev and returns NULL */
 	CU_ASSERT_TRUE(dev == NULL);
@@ -341,12 +322,11 @@ static void
 dev_queue_mgmt_task_success(void)
 {
 	struct spdk_scsi_dev *dev;
-	char *lun_name_list[1] = {"malloc0"};
-	int lun_id_list[1] = { 0 };
+	const char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN] = {"malloc0"};
 	struct spdk_scsi_task *task;
 
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				      NULL);
 
 	/* Successfully constructs and returns a dev */
 	CU_ASSERT_TRUE(dev != NULL);
@@ -364,12 +344,11 @@ static void
 dev_queue_task_success(void)
 {
 	struct spdk_scsi_dev *dev;
-	char *lun_name_list[1] = {"malloc0"};
-	int lun_id_list[1] = { 0 };
+	const char *lun_name_list[SPDK_SCSI_DEV_MAX_LUN] = {"malloc0"};
 	struct spdk_scsi_task *task;
 
-	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1,
-				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL,
+				      NULL);
 
 	/* Successfully constructs and returns a dev */
 	CU_ASSERT_TRUE(dev != NULL);
@@ -572,8 +551,6 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "destruct - zero luns", dev_destruct_zero_luns) == NULL
 		|| CU_add_test(suite, "destruct - null lun", dev_destruct_null_lun) == NULL
 		|| CU_add_test(suite, "destruct - success", dev_destruct_success) == NULL
-		|| CU_add_test(suite, "construct  - queue depth gt max depth",
-			       dev_construct_num_luns_zero) == NULL
 		|| CU_add_test(suite, "construct  - no lun0",
 			       dev_construct_no_lun_zero) == NULL
 		|| CU_add_test(suite, "construct  - null lun",
