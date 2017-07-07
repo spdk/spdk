@@ -259,6 +259,12 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		goto cleanup;
 	}
 
+	rc = spdk_vbdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(error));
+	if (rc) {
+		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
+		goto cleanup;
+	}
+
 	disk->base_bdev = base_bdev;
 	memcpy(&disk->disk, base_bdev, sizeof(*base_bdev));
 	disk->disk.name = spdk_sprintf_alloc("EE_%s", base_bdev->name);
