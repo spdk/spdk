@@ -95,16 +95,6 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev,
 {
 	int rc;
 
-	if (id < 0 || id >= SPDK_SCSI_DEV_MAX_LUN) {
-		SPDK_ERRLOG("device %s: invalid LUN id %d\n", dev->name, id);
-		return -1;
-	}
-
-	if (dev->lun[id]) {
-		SPDK_ERRLOG("device %s: LUN id %d is already occupied\n", dev->name, id);
-		return -1;
-	}
-
 	rc = spdk_scsi_lun_claim(lun);
 	if (rc < 0) {
 		SPDK_ERRLOG("device %s: LUN id %d is already occupied\n", dev->name, id);
@@ -136,31 +126,18 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 typedef struct spdk_scsi_dev _spdk_scsi_dev;
 
 _spdk_scsi_dev *
-spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_list, int num_luns,
+spdk_scsi_dev_construct(const char *name, const char *const lun_name_list[SPDK_SCSI_DEV_MAX_LUN],
 			uint8_t protocol_id, void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 			void *hotremove_ctx)
 {
 	struct spdk_scsi_dev *dev;
 	struct spdk_bdev *bdev;
-	struct spdk_scsi_lun *lun = NULL;
+	struct spdk_scsi_lun *lun;
 	int i, rc;
 
-	if (num_luns == 0) {
-		SPDK_ERRLOG("device %s: no LUNs specified\n", name);
-		return NULL;
-	}
-
-	if (lun_id_list[0] != 0) {
+	if (lun_name_list[0] == NULL) {
 		SPDK_ERRLOG("device %s: no LUN 0 specified\n", name);
 		return NULL;
-	}
-
-	for (i = 0; i < num_luns; i++) {
-		if (lun_name_list[i] == NULL) {
-			SPDK_ERRLOG("NULL spdk_scsi_lun for LUN %d\n",
-				    lun_id_list[i]);
-			return NULL;
-		}
 	}
 
 	dev = allocate_dev();
@@ -173,7 +150,11 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
 
-	for (i = 0; i < num_luns; i++) {
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		if (lun_name_list[i] == NULL) {
+			continue;
+		}
+
 		bdev = spdk_bdev_get_by_name(lun_name_list[i]);
 		if (bdev == NULL) {
 			goto error;
@@ -184,7 +165,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 			goto error;
 		}
 
-		rc = spdk_scsi_dev_add_lun(dev, lun, lun_id_list[i]);
+		rc = spdk_scsi_dev_add_lun(dev, lun, i);
 		if (rc < 0) {
 			spdk_scsi_lun_destruct(lun);
 			goto error;

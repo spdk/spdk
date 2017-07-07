@@ -783,8 +783,7 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
-	int lun_id_list[1];
-	char *lun_names_list[1];
+	const char *lun_names_list[SPDK_SCSI_DEV_MAX_LUN] = { 0 };
 
 	if (ctrlr_name == NULL) {
 		SPDK_ERRLOG("No controller name\n");
@@ -830,11 +829,10 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	 * At this stage only one LUN per device
 	 */
 	snprintf(dev_name, sizeof(dev_name), "Dev %u", scsi_dev_num);
-	lun_id_list[0] = 0;
-	lun_names_list[0] = (char *)lun_name;
+	lun_names_list[0] = lun_name;
 
 	svdev->removed_dev[scsi_dev_num] = false;
-	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
+	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list,
 					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
 
 	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
