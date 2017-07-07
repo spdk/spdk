@@ -283,18 +283,39 @@ vbdev_gpt_get_io_channel(void *ctx)
 	return gpt_partition_disk->base_bdev->fn_table->get_io_channel(gpt_partition_disk->base_bdev);
 }
 
+static void
+write_guid(struct spdk_json_write_ctx *w, const struct spdk_gpt_guid *guid)
+{
+	spdk_json_write_string_fmt(w, "%08x-%04x-%04x-%04x-%04x%08x",
+				   from_le32(&guid->raw[0]),
+				   from_le16(&guid->raw[4]),
+				   from_le16(&guid->raw[6]),
+				   from_be16(&guid->raw[8]),
+				   from_be16(&guid->raw[10]),
+				   from_be32(&guid->raw[12]));
+}
+
 static int
 vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct gpt_partition_disk *gpt_partition_disk = ctx;
+	struct spdk_gpt *gpt = &gpt_partition_disk->gpt_base->gpt;
+	struct spdk_gpt_partition_entry *gpt_entry = &gpt->partitions[gpt_partition_disk->partition_index];
 
 	spdk_json_write_name(w, "gpt");
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, spdk_bdev_get_name(gpt_partition_disk->base_bdev));
+
 	spdk_json_write_name(w, "offset_blocks");
 	spdk_json_write_uint64(w, gpt_partition_disk->offset_blocks);
+
+	spdk_json_write_name(w, "partition_type_guid");
+	write_guid(w, &gpt_entry->part_type_guid);
+
+	spdk_json_write_name(w, "unique_partition_guid");
+	write_guid(w, &gpt_entry->unique_partition_guid);
 
 	spdk_json_write_object_end(w);
 
