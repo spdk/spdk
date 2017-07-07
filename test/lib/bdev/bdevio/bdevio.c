@@ -51,6 +51,7 @@
 
 pthread_mutex_t g_test_mutex;
 pthread_cond_t g_test_cond;
+struct spdk_poller *g_start_timer;
 
 struct io_target {
 	struct spdk_bdev	*bdev;
@@ -699,10 +700,12 @@ blockdev_test_reset(void)
 }
 
 static void
-test_main(void *arg1, void *arg2)
+test_main(void *arg1)
 {
 	CU_pSuite suite = NULL;
 	unsigned int num_failures;
+
+	spdk_poller_unregister(&g_start_timer, NULL);
 
 	pthread_mutex_init(&g_test_mutex, NULL);
 	pthread_cond_init(&g_test_cond, NULL);
@@ -765,6 +768,12 @@ test_main(void *arg1, void *arg2)
 	spdk_app_stop(num_failures);
 }
 
+static void
+start_timer(void *arg1, void *arg2)
+{
+	spdk_poller_register(&g_start_timer, test_main, NULL, spdk_env_get_current_core(), 1000 * 1000);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -779,7 +788,7 @@ main(int argc, char **argv)
 	}
 	bdevtest_init(config_file, "0x3", &opts);
 
-	num_failures = spdk_app_start(&opts, test_main, NULL, NULL);
+	num_failures = spdk_app_start(&opts, start_timer, NULL, NULL);
 	spdk_app_fini();
 
 	return num_failures;
