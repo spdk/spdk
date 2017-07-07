@@ -1360,6 +1360,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module_if *vbdev_module;
 
+	assert(bdev->module != NULL);
+
 	bdev->status = SPDK_BDEV_STATUS_READY;
 
 	/* initialize the reset generation value to zero */

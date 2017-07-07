@@ -186,6 +186,11 @@ struct spdk_bdev {
 	 */
 	int need_aligned_buffer;
 
+	/**
+	 * Pointer to the bdev module that registered this bdev.
+	 */
+	struct spdk_bdev_module_if *module;
+
 	/** function table for all LUN ops */
 	const struct spdk_bdev_fn_table *fn_table;
 
@@ -449,5 +454,14 @@ spdk_bdev_io_from_ctx(void *ctx)
 	{                                                           				\
 	    spdk_vbdev_module_list_add(&_name ## _if);                  			\
 	}
+
+#define SPDK_GET_BDEV_MODULE(name) &name ## _if
+
+/*
+ * Modules are not required to use this macro.  It allows modules to reference the module with
+ * SPDK_GET_BDEV_MODULE() before it is defined by SPDK_BDEV_MODULE_REGISTER or its VBDEV variant.
+ */
+#define SPDK_DECLARE_BDEV_MODULE(name)								\
+	static struct spdk_bdev_module_if name ## _if;
 
 #endif /* SPDK_INTERNAL_BDEV_H */
