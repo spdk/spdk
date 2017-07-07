@@ -373,7 +373,7 @@ spdk_bdev_module_init_next(int rc)
 {
 	if (rc) {
 		assert(g_next_bdev_module != NULL);
-		SPDK_ERRLOG("Failed to init bdev module: %s\n", g_next_bdev_module->module_name);
+		SPDK_ERRLOG("Failed to init bdev module: %s\n", g_next_bdev_module->name);
 		spdk_bdev_init_complete(rc);
 		return;
 	}
@@ -396,7 +396,7 @@ spdk_vbdev_module_init_next(int rc)
 {
 	if (rc) {
 		assert(g_next_vbdev_module != NULL);
-		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->module_name);
+		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->name);
 		spdk_bdev_init_complete(rc);
 		return;
 	}

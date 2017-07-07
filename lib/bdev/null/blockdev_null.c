@@ -284,7 +284,7 @@ blockdev_null_get_spdk_running_config(FILE *fp)
 	}
 }
 
-SPDK_BDEV_MODULE_REGISTER(blockdev_null_initialize, blockdev_null_finish,
+SPDK_BDEV_MODULE_REGISTER(null, blockdev_null_initialize, blockdev_null_finish,
 			  blockdev_null_get_spdk_running_config, blockdev_null_get_ctx_size)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_null", SPDK_TRACE_BDEV_NULL)

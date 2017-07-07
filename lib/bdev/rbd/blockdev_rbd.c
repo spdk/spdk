@@ -210,7 +210,7 @@ blockdev_rbd_get_ctx_size(void)
 	return sizeof(struct blockdev_rbd_io);
 }
 
-SPDK_BDEV_MODULE_REGISTER(blockdev_rbd_library_init, blockdev_rbd_library_fini, NULL,
+SPDK_BDEV_MODULE_REGISTER(rbd, blockdev_rbd_library_init, blockdev_rbd_library_fini, NULL,
 			  blockdev_rbd_get_ctx_size)
 
 static int64_t
