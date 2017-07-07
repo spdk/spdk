@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/env.h"
 #include "spdk/jsonrpc.h"
 
 #include "spdk_internal/log.h"
@@ -52,16 +53,22 @@ struct spdk_jsonrpc_request {
 	/* Copy of request id value */
 	struct spdk_json_val id;
 	uint8_t id_data[SPDK_JSONRPC_ID_MAX_LEN];
+
+	size_t send_len;
+	size_t send_offset;
+	uint8_t send_buf[SPDK_JSONRPC_SEND_BUF_SIZE];
 };
 
 struct spdk_jsonrpc_server_conn {
 	struct spdk_jsonrpc_server *server;
 	int sockfd;
+	bool closed;
 	struct spdk_json_val values[SPDK_JSONRPC_MAX_VALUES];
 	size_t recv_len;
 	uint8_t recv_buf[SPDK_JSONRPC_RECV_BUF_SIZE];
-	size_t send_len;
-	uint8_t send_buf[SPDK_JSONRPC_SEND_BUF_SIZE];
+	uint32_t outstanding_requests;
+	struct spdk_ring *send_queue;
+	struct spdk_jsonrpc_request *send_request;
 };
 
 struct spdk_jsonrpc_server {
@@ -73,13 +80,15 @@ struct spdk_jsonrpc_server {
 };
 
 /* jsonrpc_server_tcp */
-int spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size);
 void spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 					const struct spdk_json_val *method,
 					const struct spdk_json_val *params);
 void spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error);
+void spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_server_conn *conn,
+				       struct spdk_jsonrpc_request *request);
 
 /* jsonrpc_server */
 int spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, size_t size);
+void spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request);
 
 #endif
