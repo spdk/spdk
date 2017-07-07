@@ -115,6 +115,8 @@ spdk_jsonrpc_server_conn_remove(struct spdk_jsonrpc_server_conn *conn)
 
 	close(conn->sockfd);
 
+	spdk_ring_free(conn->send_queue);
+
 	/* Swap conn with the last entry in conns */
 	server->conns[conn_idx] = server->conns[server->num_conns - 1];
 	server->num_conns--;
@@ -134,8 +136,16 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 		conn = &server->conns[conn_idx];
 		conn->server = server;
 		conn->sockfd = rc;
+		conn->closed = false;
 		conn->recv_len = 0;
-		conn->send_len = 0;
+		conn->outstanding_requests = 0;
+		conn->send_request = NULL;
+		conn->send_queue = spdk_ring_create(SPDK_RING_TYPE_SP_SC, 128, SPDK_ENV_SOCKET_ID_ANY);
+		if (conn->send_queue == NULL) {
+			SPDK_ERRLOG("send_queue allocation failed\n");
+			close(conn->sockfd);
+			return -1;
+		}
 
 		nonblock = 1;
 		rc = ioctl(conn->sockfd, FIONBIO, &nonblock);
@@ -162,26 +172,11 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 	return -1;
 }
 
-int
-spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
-{
-	struct spdk_jsonrpc_server_conn *conn = cb_ctx;
-
-	if (SPDK_JSONRPC_SEND_BUF_SIZE - conn->send_len < size) {
-		SPDK_ERRLOG("Not enough space in send buf\n");
-		return -1;
-	}
-
-	memcpy(conn->send_buf + conn->send_len, data, size);
-	conn->send_len += size;
-
-	return 0;
-}
-
 void
 spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *method, const struct spdk_json_val *params)
 {
+	request->conn->outstanding_requests++;
 	request->conn->server->handle_request(request, method, params);
 }
 
@@ -261,12 +256,39 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 	return 0;
 }
 
+void
+spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_server_conn *conn,
+				  struct spdk_jsonrpc_request *request)
+{
+	/* Queue the response to be sent */
+	spdk_ring_enqueue(conn->send_queue, (void **)&request, 1);
+}
+
 static int
 spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
 {
+	struct spdk_jsonrpc_request *request;
 	ssize_t rc;
 
-	rc = send(conn->sockfd, conn->send_buf, conn->send_len, 0);
+more:
+	if (conn->outstanding_requests == 0) {
+		return 0;
+	}
+
+	if (conn->send_request == NULL) {
+		if (spdk_ring_dequeue(conn->send_queue, (void **)&conn->send_request, 1) != 1) {
+			return 0;
+		}
+	}
+
+	request = conn->send_request;
+	if (request == NULL) {
+		/* Nothing to send right now */
+		return 0;
+	}
+
+	rc = send(conn->sockfd, request->send_buf + request->send_offset,
+		  request->send_len, 0);
 	if (rc < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 			return 0;
@@ -281,7 +303,19 @@ spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
 		return -1;
 	}
 
-	conn->send_len -= rc;
+	request->send_offset += rc;
+	request->send_len -= rc;
+
+	if (request->send_len == 0) {
+		/*
+		 * Full response has been sent.
+		 * Free it and set send_request to NULL to move on to the next queued response.
+		 */
+		conn->outstanding_requests--;
+		conn->send_request = NULL;
+		spdk_jsonrpc_free_request(request);
+		goto more;
+	}
 
 	return 0;
 }
@@ -321,31 +355,53 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 	for (i = 0; i < server->num_conns; i++) {
 		pfd = &server->pollfds[i + 1];
 		conn = &server->conns[i];
-		if (conn->send_len) {
+
+		if (conn->closed) {
+			struct spdk_jsonrpc_request *request;
+
 			/*
-			 * If there is any data to send, keep sending it until the send buffer
-			 *  is empty.  Each response should be allowed the full send buffer, so
-			 *  don't accept any new requests until the previous response is sent out.
+			 * The client closed the connection, but there may still be requests
+			 * outstanding; we have no way to cancel outstanding requests, so wait until
+			 * each outstanding request sends a response (which will be discarded, since
+			 * the connection is closed).
 			 */
-			if (pfd->revents & POLLOUT) {
-				rc = spdk_jsonrpc_server_conn_send(conn);
-				if (rc != 0) {
-					SPDK_TRACELOG(SPDK_TRACE_RPC, "closing conn due to send failure\n");
-					spdk_jsonrpc_server_conn_remove(conn);
-				}
+
+			if (conn->send_request) {
+				conn->outstanding_requests--;
+				conn->send_request = NULL;
 			}
-		} else {
-			/*
-			 * No data to send - we can receive a new request.
-			 */
-			if (pfd->revents & POLLIN) {
-				rc = spdk_jsonrpc_server_conn_recv(conn);
-				if (rc != 0) {
-					SPDK_TRACELOG(SPDK_TRACE_RPC, "closing conn due to recv failure\n");
-					spdk_jsonrpc_server_conn_remove(conn);
-				}
+
+			while (spdk_ring_dequeue(conn->send_queue, (void **)&request, 1) == 1) {
+				conn->outstanding_requests--;
+				spdk_jsonrpc_free_request(request);
+			}
+
+			if (conn->outstanding_requests == 0) {
+				SPDK_TRACELOG(SPDK_TRACE_RPC, "all outstanding requests completed\n");
+				spdk_jsonrpc_server_conn_remove(conn);
+			}
+
+			continue;
+		}
+
+		if (pfd->revents & POLLOUT) {
+			rc = spdk_jsonrpc_server_conn_send(conn);
+			if (rc != 0) {
+				SPDK_TRACELOG(SPDK_TRACE_RPC, "closing conn due to send failure\n");
+				conn->closed = true;
+				continue;
 			}
 		}
+
+		if (pfd->revents & POLLIN) {
+			rc = spdk_jsonrpc_server_conn_recv(conn);
+			if (rc != 0) {
+				SPDK_TRACELOG(SPDK_TRACE_RPC, "closing conn due to recv failure\n");
+				conn->closed = true;
+				continue;
+			}
+		}
+
 		pfd->revents = 0;
 	}
 
