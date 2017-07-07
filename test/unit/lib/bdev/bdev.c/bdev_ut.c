@@ -213,12 +213,25 @@ open_write_test(void)
 	 */
 
 	bdev[0] = allocate_bdev("bdev0");
+	rc = spdk_vbdev_module_claim_bdev(bdev[0], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	CU_ASSERT(rc == 0);
+
 	bdev[1] = allocate_bdev("bdev1");
+	rc = spdk_vbdev_module_claim_bdev(bdev[1], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	CU_ASSERT(rc == 0);
+
 	bdev[2] = allocate_bdev("bdev2");
+	rc = spdk_vbdev_module_claim_bdev(bdev[2], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	CU_ASSERT(rc == 0);
 
 	bdev[3] = allocate_vbdev("bdev3", bdev[0], bdev[1]);
+	rc = spdk_vbdev_module_claim_bdev(bdev[3], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	CU_ASSERT(rc == 0);
 
 	bdev[4] = allocate_vbdev("bdev4", bdev[2], NULL);
+	rc = spdk_vbdev_module_claim_bdev(bdev[4], NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	CU_ASSERT(rc == 0);
+
 	bdev[5] = allocate_vbdev("bdev5", bdev[2], NULL);
 	bdev[6] = allocate_vbdev("bdev6", bdev[2], NULL);
 
@@ -230,14 +243,16 @@ open_write_test(void)
 	CU_ASSERT(desc[0] != NULL);
 	spdk_bdev_close(desc[0]);
 
-	/* Open bdev1 read/write.  This should succeed. */
+	/*
+	 * Open bdev1 read/write.  This should fail since bdev1 has been claimed
+	 * by a vbdev module.
+	 */
 	rc = spdk_bdev_open(bdev[1], true, NULL, NULL, &desc[1]);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[1] != NULL);
+	CU_ASSERT(rc == -EPERM);
 
 	/*
-	 * Open bdev3 read/write.  This should fail, since one of its
-	 * base bdevs have been explicitly opened read/write.
+	 * Open bdev3 read/write.  This should fail since bdev3 has been claimed
+	 * by a vbdev module.
 	 */
 	rc = spdk_bdev_open(bdev[3], true, NULL, NULL, &desc[3]);
 	CU_ASSERT(rc == -EPERM);
@@ -249,31 +264,17 @@ open_write_test(void)
 	spdk_bdev_close(desc[3]);
 
 	/*
-	 * Open bdev7 read/write.  This should fail, since one of its
-	 * base bdevs have been explicitly opened read/write.  This
-	 * test ensures the bdev code traverses through multiple levels
-	 * of base bdevs.
+	 * Open bdev7 read/write.  This should succeed since it is a leaf
+	 * bdev.
 	 */
 	rc = spdk_bdev_open(bdev[7], true, NULL, NULL, &desc[7]);
-	CU_ASSERT(rc == -EPERM);
-
-	/* Open bdev7 read-only.  This should succeed. */
-	rc = spdk_bdev_open(bdev[7], false, NULL, NULL, &desc[7]);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc[7] != NULL);
 	spdk_bdev_close(desc[7]);
 
-	/* Reset tree by closing remaining descriptors. */
-	spdk_bdev_close(desc[1]);
-
-	/* Open bdev7 read/write.  This should succeed. */
-	rc = spdk_bdev_open(bdev[7], true, NULL, NULL, &desc[7]);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[7] != NULL);
-
 	/*
-	 * Open bdev4 read/write.  This should fail, since one of its
-	 * virtual bdevs has been explicitly opened read/write.
+	 * Open bdev4 read/write.  This should fail since bdev4 has been claimed
+	 * by a vbdev module.
 	 */
 	rc = spdk_bdev_open(bdev[4], true, NULL, NULL, &desc[4]);
 	CU_ASSERT(rc == -EPERM);
@@ -283,24 +284,6 @@ open_write_test(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(desc[4] != NULL);
 	spdk_bdev_close(desc[4]);
-
-	/*
-	 * Open bdev2 read/write.  This should fail, since one of its
-	 * virtual bdevs has been explicitly opened read/write.  This
-	 * test ensures the bdev code traverses through multiple levels
-	 * of virtual bdevs.
-	 */
-	rc = spdk_bdev_open(bdev[2], true, NULL, NULL, &desc[2]);
-	CU_ASSERT(rc == -EPERM);
-
-	/* Open bdev2 read-only.  This should succeed. */
-	rc = spdk_bdev_open(bdev[2], false, NULL, NULL, &desc[2]);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(desc[2] != NULL);
-	spdk_bdev_close(desc[2]);
-
-	/* Reset tree by closing remaining descriptors. */
-	spdk_bdev_close(desc[7]);
 
 	free_vbdev(bdev[7]);
 
