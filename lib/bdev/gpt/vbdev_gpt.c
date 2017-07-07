@@ -220,14 +220,12 @@ vbdev_gpt_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	spdk_bdev_io_resubmit(bdev_io, gpt_partition_disk->base_bdev);
 }
 
-static int
+static void
 vbdev_gpt_base_get_ref(struct spdk_gpt_bdev *gpt_base,
 		       struct gpt_partition_disk *gpt_partition_disk)
 {
 	__sync_fetch_and_add(&gpt_base->ref, 1);
 	gpt_partition_disk->gpt_base = gpt_base;
-
-	return 0;
 }
 
 static void
@@ -339,7 +337,6 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 	struct gpt_partition_disk *d;
 	struct spdk_bdev *base_bdev = gpt_bdev->bdev;
 	struct spdk_gpt *gpt;
-	int rc;
 
 	gpt = &gpt_bdev->gpt;
 	num_partition_entries = from_le32(&gpt->header->num_partition_entries);
@@ -393,11 +390,7 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
 			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_bytes, d->offset_blocks);
 
-		rc = vbdev_gpt_base_get_ref(gpt_bdev, d);
-		if (rc < 0) {
-			free(d);
-			return -1;
-		}
+		vbdev_gpt_base_get_ref(gpt_bdev, d);
 
 		spdk_vbdev_register(&d->disk, &base_bdev, 1);
 
