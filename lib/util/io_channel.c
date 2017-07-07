@@ -273,9 +273,11 @@ spdk_get_io_channel(void *io_device)
 	return ch;
 }
 
-void
-spdk_put_io_channel(struct spdk_io_channel *ch)
+static void
+_spdk_put_io_channel(void *arg)
 {
+	struct spdk_io_channel *ch = arg;
+
 	if (ch->ref == 0) {
 		SPDK_ERRLOG("ref already zero\n");
 		return;
@@ -288,6 +290,12 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 		ch->destroy_cb(ch->io_device, (uint8_t *)ch + sizeof(*ch));
 		free(ch);
 	}
+}
+
+void
+spdk_put_io_channel(struct spdk_io_channel *ch)
+{
+	spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
 }
 
 void *
