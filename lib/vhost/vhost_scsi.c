@@ -72,13 +72,12 @@
 /* Allocated iovec buffer len */
 #define SPDK_VHOST_SCSI_IOVS_LEN 128
 
-#define SPDK_VHOST_SCSI_TASK_POOL_SIZE 16384
-
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
-
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	bool removed_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+
+	struct spdk_ring *task_pool;
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 
@@ -114,8 +113,6 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	}
 };
 
-static struct spdk_ring *g_task_pool;
-
 static void
 spdk_vhost_task_put(struct spdk_vhost_task *task)
 {
@@ -129,7 +126,7 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 
 	assert(task->svdev->vdev.task_cnt > 0);
 	task->svdev->vdev.task_cnt--;
-	spdk_ring_enqueue(g_task_pool, (void **) &task, 1);
+	spdk_ring_enqueue(task->svdev->task_pool, (void **) &task, 1);
 }
 
 static void
@@ -138,7 +135,7 @@ spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_task *
 {
 	size_t res_count;
 
-	res_count = spdk_ring_dequeue(g_task_pool, (void **)tasks, count);
+	res_count = spdk_ring_dequeue(svdev->task_pool, (void **)tasks, count);
 	if (res_count != count) {
 		SPDK_ERRLOG("%s: couldn't get %zu tasks from task_pool\n", svdev->vdev.name, count);
 		/* FIXME: we should never run out of tasks, but what if we do? */
@@ -955,6 +952,66 @@ spdk_vhost_scsi_controller_construct(void)
 	return 0;
 }
 
+static void
+free_task_pool(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_vhost_task *task;
+
+	if (!svdev->task_pool) {
+		return;
+	}
+
+	while (spdk_ring_dequeue(svdev->task_pool, (void **)&task, 1) == 1) {
+		spdk_dma_free(task);
+	}
+
+	spdk_ring_free(svdev->task_pool);
+	svdev->task_pool = NULL;
+}
+
+static int
+alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
+{
+	struct spdk_vhost_task *task;
+	uint32_t task_cnt = 0;
+	uint32_t ring_size;
+	uint16_t i;
+	int rc;
+
+	for (i = 0; i < svdev->vdev.num_queues; i++) {
+		/*
+		 * FIXME:
+		 * this is too big because we need only size/2 from each queue but for now
+		 * lets leave it as is to be sure we are not mistaken.
+		 *
+		 * Limit the pool size to 1024 * num_queues. This should be enough as QEMU have the
+		 * same hard limit for queue size.
+		 */
+		task_cnt += spdk_min(svdev->vdev.virtqueue[i].size, 1024);
+	}
+
+	ring_size = spdk_align32pow2(task_cnt + 1);
+	svdev->task_pool = spdk_ring_create(SPDK_RING_TYPE_SP_SC, ring_size,
+					    spdk_env_get_socket_id(svdev->vdev.lcore));
+	if (svdev->task_pool == NULL) {
+		SPDK_ERRLOG("Controller %s: Failed to init vhost scsi task pool\n", svdev->vdev.name);
+		return -1;
+	}
+
+	for (i = 0; i < task_cnt; ++i) {
+		task = spdk_dma_zmalloc(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL);
+		rc = spdk_ring_enqueue(svdev->task_pool, (void **)&task, 1);
+		if (rc != 1) {
+			SPDK_ERRLOG("Controller %s: Failed to alloc %"PRIu32" vhost scsi tasks\n", svdev->vdev.name,
+				    task_cnt);
+			free_task_pool(svdev);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 /*
  * A new device is added to a data core. First the device is added to the main linked list
  * and then allocated to a specific data core.
@@ -966,6 +1023,11 @@ new_device(int vid)
 
 	svdev = to_scsi_dev(spdk_vhost_dev_load(vid));
 	if (svdev == NULL) {
+		return -1;
+	}
+
+	if (alloc_task_pool(svdev)) {
+		spdk_vhost_dev_unload(&svdev->vdev);
 		return -1;
 	}
 
@@ -1007,44 +1069,19 @@ destroy_device(int vid)
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
 
+	free_task_pool(svdev);
 	spdk_vhost_dev_unload(vdev);
 }
 
 int
 spdk_vhost_init(void)
 {
-	struct spdk_vhost_dev *task;
-	int rc, i;
-
-	g_task_pool = spdk_ring_create(SPDK_RING_TYPE_MP_SC, SPDK_VHOST_SCSI_TASK_POOL_SIZE, SOCKET_ID_ANY);
-	if (g_task_pool == NULL) {
-		SPDK_ERRLOG("Failed to init vhost scsi task pool\n");
-		return -1;
-	}
-
-	for (i = 0; i < SPDK_VHOST_SCSI_TASK_POOL_SIZE - 1; ++i) {
-		task = spdk_dma_zmalloc(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL);
-		rc = spdk_ring_enqueue(g_task_pool, (void **)&task, 1);
-		if (rc != 1) {
-			SPDK_ERRLOG("Failed to alloc vhost scsi tasks\n");
-			return -1;
-		}
-	}
-
 	return 0;
 }
 
 int
 spdk_vhost_fini(void)
 {
-	struct spdk_vhost_dev *task;
-
-	while (spdk_ring_dequeue(g_task_pool, (void **)&task, 1) == 1) {
-		spdk_dma_free(task);
-	}
-
-	spdk_ring_free(g_task_pool);
-
 	return 0;
 }
 
