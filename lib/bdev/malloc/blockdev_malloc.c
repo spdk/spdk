@@ -422,6 +422,7 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
+	mdisk->disk.module = SPDK_GET_BDEV_MODULE(malloc);
 
 	spdk_bdev_register(&mdisk->disk);
 

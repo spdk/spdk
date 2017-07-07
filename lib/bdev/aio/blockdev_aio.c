@@ -361,6 +361,7 @@ create_aio_disk(const char *name, const char *fname)
 		goto error_return;
 	}
 	fdisk->disk.product_name = "AIO disk";
+	fdisk->disk.module = SPDK_GET_BDEV_MODULE(aio);
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;

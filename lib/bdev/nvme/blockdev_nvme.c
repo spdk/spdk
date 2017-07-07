@@ -1066,6 +1066,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
+		bdev->disk.module = SPDK_GET_BDEV_MODULE(nvme);
 		spdk_bdev_register(&bdev->disk);
 
 		TAILQ_INSERT_TAIL(&g_nvme_bdevs, bdev, link);
