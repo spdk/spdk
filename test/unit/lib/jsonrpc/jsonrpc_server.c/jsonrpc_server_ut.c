@@ -208,11 +208,11 @@ spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 	ut_handle(request, 0, method, params);
 }
 
-int
-spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
+void
+spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_server_conn *conn,
+				  struct spdk_jsonrpc_request *request)
 {
 	/* TODO */
-	return -1;
 }
 
 static void
