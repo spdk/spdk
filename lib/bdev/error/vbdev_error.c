@@ -48,6 +48,8 @@
 
 #include "vbdev_error.h"
 
+SPDK_DECLARE_BDEV_MODULE(error);
+
 struct vbdev_error_info {
 	bool				enabled;
 	uint32_t			error_type;
@@ -267,6 +269,7 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	disk->disk.product_name = "Error Injection Disk";
 	disk->disk.ctxt = disk;
 	disk->disk.fn_table = &vbdev_error_fn_table;
+	disk->disk.module = SPDK_GET_BDEV_MODULE(error);
 	spdk_vbdev_register(&disk->disk, &base_bdev, 1);
 	TAILQ_INIT(&disk->pending_ios);
 	TAILQ_INSERT_TAIL(&g_vbdev_error_disks, disk, tailq);

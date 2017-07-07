@@ -306,6 +306,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		d->disk.blockcnt = split_size_blocks;
 		d->disk.ctxt = d;
 		d->disk.fn_table = &vbdev_split_fn_table;
+		d->disk.module = SPDK_GET_BDEV_MODULE(split);
 
 		SPDK_TRACELOG(SPDK_TRACE_VBDEV_SPLIT, "Split vbdev %s: base bdev: %s offset_bytes: "
 			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
