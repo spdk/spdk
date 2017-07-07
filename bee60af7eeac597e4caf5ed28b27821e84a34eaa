@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ef3163a_29f82e09",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-07T23:35:51Z",
+      "side": 1,
+      "message": "spdk_get_thread() is somewhat inefficient (it has to take a lock and do a linear search in a linked list).  Can you use ch-\u003ethread here instead?",
+      "range": {
+        "startLine": 299,
+        "startChar": 22,
+        "endLine": 299,
+        "endChar": 39
+      },
+      "revId": "bee60af7eeac597e4caf5ed28b27821e84a34eaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
