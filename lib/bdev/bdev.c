@@ -1389,7 +1389,6 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	bdev->gencnt = 0;
 	TAILQ_INIT(&bdev->open_descs);
 	bdev->bdev_opened_for_write = false;
-	bdev->vbdevs_opened_for_write = 0;
 
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
@@ -1495,35 +1494,6 @@ spdk_vbdev_register_handled(void)
 	}
 }
 
-static bool
-__is_bdev_opened_for_write(struct spdk_bdev *bdev)
-{
-	struct spdk_bdev *base;
-
-	if (bdev->bdev_opened_for_write) {
-		return true;
-	}
-
-	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
-		if (__is_bdev_opened_for_write(base)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-static void
-__modify_write_counts(struct spdk_bdev *bdev, int mod)
-{
-	struct spdk_bdev *base;
-
-	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
-		base->vbdevs_opened_for_write += mod;
-		__modify_write_counts(base, mod);
-	}
-}
-
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **_desc)
@@ -1537,8 +1507,8 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	if (write && (__is_bdev_opened_for_write(bdev) || bdev->vbdevs_opened_for_write > 0)) {
-		SPDK_ERRLOG("failed, %s (or one of its virtual bdevs) already opened for write\n", bdev->name);
+	if (write && (bdev->bdev_opened_for_write || bdev->vbdev_claim_module)) {
+		SPDK_ERRLOG("failed, %s already opened for write or claimed\n", bdev->name);
 		free(desc);
 		pthread_mutex_unlock(&bdev->mutex);
 		return -EPERM;
@@ -1548,7 +1518,6 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	if (write) {
 		bdev->bdev_opened_for_write = true;
-		__modify_write_counts(bdev, 1);
 	}
 
 	desc->bdev = bdev;
@@ -1573,7 +1542,6 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	if (desc->write) {
 		assert(bdev->bdev_opened_for_write);
 		bdev->bdev_opened_for_write = false;
-		__modify_write_counts(bdev, -1);
 	}
 
 	TAILQ_REMOVE(&bdev->open_descs, desc, link);
@@ -1587,6 +1555,36 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	if (do_unregister == true) {
 		spdk_bdev_unregister(bdev);
 	}
+}
+
+int
+spdk_vbdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			     struct spdk_bdev_module_if *module)
+{
+	if (bdev->vbdev_claim_module != NULL) {
+		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
+			    bdev->vbdev_claim_module->name);
+		return -EPERM;
+	}
+
+	if ((!desc || !desc->write) && bdev->bdev_opened_for_write) {
+		SPDK_ERRLOG("bdev %s already opened with write access\n", bdev->name);
+		return -EPERM;
+	}
+
+	if (desc && !desc->write) {
+		desc->write = true;
+	}
+
+	bdev->vbdev_claim_module = module;
+	return 0;
+}
+
+void
+spdk_vbdev_module_release_bdev(struct spdk_bdev *bdev)
+{
+	assert(bdev->vbdev_claim_module != NULL);
+	bdev->vbdev_claim_module = NULL;
 }
 
 void

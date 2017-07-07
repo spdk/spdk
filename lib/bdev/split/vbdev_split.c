@@ -240,6 +240,12 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	int rc;
 	struct split_base *split_base;
 
+	rc = spdk_vbdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(split));
+	if (rc) {
+		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
+		return -1;
+	}
+
 	if (split_size_mb) {
 		if (((split_size_mb * mb) % base_bdev->blocklen) != 0) {
 			SPDK_ERRLOG("Split size %" PRIu64 " MB is not possible with block size "
