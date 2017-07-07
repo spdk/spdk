@@ -20,6 +20,8 @@ timing_exit bounds
 if [ $(uname -s) = Linux ] && hash sgdisk; then
 	echo "[Rpc]" >> $testdir/bdev.conf
 	echo "  Enable Yes" >> $testdir/bdev.conf
+	echo "[Gpt]" >> $testdir/bdev.conf
+	echo "  Disable Yes" >> $testdir/bdev.conf
 
 	if [ ! -z "`grep "Nvme0" $testdir/bdev.conf`" ]; then
 		modprobe nbd
@@ -38,8 +40,10 @@ if [ $(uname -s) = Linux ] && hash sgdisk; then
 		fi
 		killprocess $nbd_pid
 
-		# run nbd again to test get_bdevs
-		$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+		# enable the gpt module and run nbd again to test get_bdevs and
+		# bind nbd to the new gpt partition bdev
+		sed -i'' '/Disable/d' $testdir/bdev.conf
+		$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1p1 -n /dev/nbd0 &
 		nbd_pid=$!
 		waitforlisten $nbd_pid 5260
 		waitforbdev Nvme0n1p1 $rootdir/scripts/rpc.py
