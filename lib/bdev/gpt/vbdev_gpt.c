@@ -63,6 +63,7 @@ struct spdk_gpt_bdev {
 struct gpt_partition_disk {
 	struct spdk_bdev	disk;
 	struct spdk_bdev	*base_bdev;
+	uint32_t		partition_index;
 	struct spdk_gpt_bdev	*gpt_base;
 	uint64_t		offset_blocks;
 	uint64_t		offset_bytes;
@@ -358,6 +359,7 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 			return -1;
 		}
 
+		d->partition_index = i;
 		d->disk.product_name = "GPT Disk";
 		d->base_bdev = base_bdev;
 		d->offset_bytes = lba_start * gpt->sector_size;
