@@ -86,6 +86,18 @@ write_cb(void *cb_ctx, const void *data, size_t size)
 #define STR_FAIL(in) \
 	BEGIN(); VAL_STRING_FAIL(in); END_FAIL()
 
+#define VAL_STRING_UTF16LE(str) \
+	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) == 0)
+
+#define VAL_STRING_UTF16LE_FAIL(str) \
+	CU_ASSERT(spdk_json_write_string_utf16le_raw(w, (const uint16_t *)str, sizeof(str) / sizeof(uint16_t) - 1) < 0)
+
+#define STR_UTF16LE_PASS(in, out) \
+	BEGIN(); VAL_STRING_UTF16LE(in); END("\"" out "\"")
+
+#define STR_UTF16LE_FAIL(in) \
+	BEGIN(); VAL_STRING_UTF16LE_FAIL(in); END_FAIL()
+
 #define VAL_NAME(name) \
 	CU_ASSERT(spdk_json_write_name_raw(w, name, sizeof(name) - 1) == 0)
 
@@ -246,6 +258,37 @@ test_write_string_escapes(void)
 	STR_FAIL("\xED\xB0\x80"); /* U+DC00 First low surrogate */
 	STR_FAIL("\xED\xBF\xBF"); /* U+DFFF Last low surrogate */
 	STR_FAIL("\xED\xA1\x8C\xED\xBE\xB4"); /* U+233B4 (invalid surrogate pair encoding) */
+}
+
+static void
+test_write_string_utf16le(void)
+{
+	struct spdk_json_write_ctx *w;
+
+	/* All characters in BMP */
+	STR_UTF16LE_PASS(((uint8_t[]) {
+		'H', 0, 'e', 0, 'l', 0, 'l', 0, 'o', 0, 0x15, 0xFE, 0, 0
+	}), "Hello\\uFE15");
+
+	/* Surrogate pair */
+	STR_UTF16LE_PASS(((uint8_t[]) {
+		'H', 0, 'i', 0,  0x34, 0xD8, 0x1E, 0xDD, '!', 0, 0, 0
+	}), "Hi\\uD834\\uDD1E!");
+
+	/* Valid high surrogate, but no low surrogate */
+	STR_UTF16LE_FAIL(((uint8_t[]) {
+		0x00, 0xD8, 0, 0 /* U+D800 */
+	}));
+
+	/* Invalid leading low surrogate */
+	STR_UTF16LE_FAIL(((uint8_t[]) {
+		0x00, 0xDC, 0x00, 0xDC, 0, 0 /* U+DC00 U+DC00 */
+	}));
+
+	/* Valid high surrogate followed by another high surrogate (invalid) */
+	STR_UTF16LE_FAIL(((uint8_t[]) {
+		0x00, 0xD8, 0x00, 0xD8, 0, 0 /* U+D800 U+D800 */
+	}));
 }
 
 static void
@@ -618,6 +661,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "write_literal", test_write_literal) == NULL ||
 		CU_add_test(suite, "write_string_simple", test_write_string_simple) == NULL ||
 		CU_add_test(suite, "write_string_escapes", test_write_string_escapes) == NULL ||
+		CU_add_test(suite, "write_string_utf16le", test_write_string_utf16le) == NULL ||
 		CU_add_test(suite, "write_number_int32", test_write_number_int32) == NULL ||
 		CU_add_test(suite, "write_number_uint32", test_write_number_uint32) == NULL ||
 		CU_add_test(suite, "write_array", test_write_array) == NULL ||
