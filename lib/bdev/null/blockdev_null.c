@@ -43,6 +43,8 @@
 
 #include "blockdev_null.h"
 
+SPDK_DECLARE_BDEV_MODULE(null);
+
 struct null_bdev {
 	struct spdk_bdev	bdev;
 	TAILQ_ENTRY(null_bdev)	tailq;
@@ -156,6 +158,7 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 
 	bdev->bdev.ctxt = bdev;
 	bdev->bdev.fn_table = &null_fn_table;
+	bdev->bdev.module = SPDK_GET_BDEV_MODULE(null);
 
 	spdk_bdev_register(&bdev->bdev);
 
