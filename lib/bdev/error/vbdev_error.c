@@ -259,13 +259,22 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		goto cleanup;
 	}
 
+	rc = spdk_vbdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(error));
+	if (rc) {
+		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
+		goto cleanup;
+	}
+
 	disk->base_bdev = base_bdev;
-	memcpy(&disk->disk, base_bdev, sizeof(*base_bdev));
 	disk->disk.name = spdk_sprintf_alloc("EE_%s", base_bdev->name);
 	if (!disk->disk.name) {
 		rc = -ENOMEM;
 		goto cleanup;
 	}
+	disk->disk.blockcnt = base_bdev->blockcnt;
+	disk->disk.blocklen = base_bdev->blocklen;
+	disk->disk.write_cache = base_bdev->write_cache;
+	disk->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
 	disk->disk.product_name = "Error Injection Disk";
 	disk->disk.ctxt = disk;
 	disk->disk.fn_table = &vbdev_error_fn_table;
