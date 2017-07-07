@@ -275,11 +275,9 @@ write_hex_4(void *dest, uint16_t val)
 	p[3] = hex[val & 0xF];
 }
 
-static int
-write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
+static inline int
+write_codepoint(struct spdk_json_write_ctx *w, uint32_t codepoint)
 {
-	const uint8_t *p = val;
-	const uint8_t *end = val + len;
 	static const uint8_t escapes[] = {
 		['\b'] = 'b',
 		['\f'] = 'f',
@@ -293,15 +291,51 @@ write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
 		 *  (it is valid unescaped).
 		 */
 	};
+	uint16_t high, low;
+	char out[13];
+	size_t out_len;
+
+	if (codepoint < sizeof(escapes) && escapes[codepoint]) {
+		out[0] = '\\';
+		out[1] = escapes[codepoint];
+		out_len = 2;
+	} else if (codepoint >= 0x20 && codepoint < 0x7F) {
+		/*
+		 * Encode plain ASCII directly (except 0x7F, since it is really
+		 *  a control character, despite the JSON spec not considering it one).
+		 */
+		out[0] = (uint8_t)codepoint;
+		out_len = 1;
+	} else if (codepoint < 0x10000) {
+		out[0] = '\\';
+		out[1] = 'u';
+		write_hex_4(&out[2], (uint16_t)codepoint);
+		out_len = 6;
+	} else {
+		utf16_encode_surrogate_pair(codepoint, &high, &low);
+		out[0] = '\\';
+		out[1] = 'u';
+		write_hex_4(&out[2], high);
+		out[6] = '\\';
+		out[7] = 'u';
+		write_hex_4(&out[8], low);
+		out_len = 12;
+	}
+
+	return emit(w, out, out_len);
+}
+
+static int
+write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
+{
+	const uint8_t *p = val;
+	const uint8_t *end = val + len;
 
 	if (emit(w, "\"", 1)) return fail(w);
 
 	while (p != end) {
 		int codepoint_len;
 		uint32_t codepoint;
-		uint16_t high, low;
-		char out[13];
-		size_t out_len;
 
 		codepoint_len = utf8_valid(p, end);
 		switch (codepoint_len) {
@@ -321,34 +355,38 @@ write_string_or_name(struct spdk_json_write_ctx *w, const char *val, size_t len)
 			return fail(w);
 		}
 
-		if (codepoint < sizeof(escapes) && escapes[codepoint]) {
-			out[0] = '\\';
-			out[1] = escapes[codepoint];
-			out_len = 2;
-		} else if (codepoint >= 0x20 && codepoint < 0x7F) {
-			/*
-			 * Encode plain ASCII directly (except 0x7F, since it is really
-			 *  a control character, despite the JSON spec not considering it one).
-			 */
-			out[0] = (uint8_t)codepoint;
-			out_len = 1;
-		} else if (codepoint < 0x10000) {
-			out[0] = '\\';
-			out[1] = 'u';
-			write_hex_4(&out[2], (uint16_t)codepoint);
-			out_len = 6;
-		} else {
-			utf16_encode_surrogate_pair(codepoint, &high, &low);
-			out[0] = '\\';
-			out[1] = 'u';
-			write_hex_4(&out[2], high);
-			out[6] = '\\';
-			out[7] = 'u';
-			write_hex_4(&out[8], low);
-			out_len = 12;
+		if (write_codepoint(w, codepoint)) return fail(w);
+		p += codepoint_len;
+	}
+
+	return emit(w, "\"", 1);
+}
+
+static int
+write_string_or_name_utf16le(struct spdk_json_write_ctx *w, const uint16_t *val, size_t len)
+{
+	const uint16_t *p = val;
+	const uint16_t *end = val + len;
+
+	if (emit(w, "\"", 1)) return fail(w);
+
+	while (p != end) {
+		int codepoint_len;
+		uint32_t codepoint;
+
+		codepoint_len = utf16le_valid(p, end);
+		switch (codepoint_len) {
+		case 1:
+			codepoint = from_le16(&p[0]);
+			break;
+		case 2:
+			codepoint = utf16_decode_surrogate_pair(from_le16(&p[0]), from_le16(&p[1]));
+			break;
+		default:
+			return fail(w);
 		}
 
-		if (emit(w, out, out_len)) return fail(w);
+		if (write_codepoint(w, codepoint)) return fail(w);
 		p += codepoint_len;
 	}
 
@@ -366,6 +404,26 @@ int
 spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 {
 	return spdk_json_write_string_raw(w, val, strlen(val));
+}
+
+int
+spdk_json_write_string_utf16le_raw(struct spdk_json_write_ctx *w, const uint16_t *val, size_t len)
+{
+	if (begin_value(w)) return fail(w);
+	return write_string_or_name_utf16le(w, val, len);
+}
+
+int
+spdk_json_write_string_utf16le(struct spdk_json_write_ctx *w, const uint16_t *val)
+{
+	const uint16_t *p;
+	size_t len;
+
+	for (len = 0, p = val; *p; p++) {
+		len++;
+	}
+
+	return spdk_json_write_string_utf16le_raw(w, val, len);
 }
 
 int
