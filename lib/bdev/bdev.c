@@ -408,7 +408,7 @@ spdk_bdev_module_init_next(int rc)
 	if (g_next_bdev_module) {
 		g_next_bdev_module->module_init();
 	} else {
-		spdk_vbdev_module_init_next(0);
+		spdk_bdev_module_init_complete(rc);
 	}
 }
 
@@ -431,7 +431,7 @@ spdk_vbdev_module_init_next(int rc)
 	if (g_next_vbdev_module) {
 		g_next_vbdev_module->module_init();
 	} else {
-		spdk_bdev_module_init_complete(rc);;
+		spdk_bdev_module_init_next(0);
 	}
 }
 
@@ -518,7 +518,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				sizeof(struct spdk_bdev_mgmt_channel));
 
 end:
-	spdk_bdev_module_init_next(rc);
+	spdk_vbdev_module_init_next(rc);
 }
 
 int
@@ -1405,10 +1405,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
 	TAILQ_FOREACH(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		if (vbdev_module->bdev_registered) {
-			g_bdev_mgr.outstanding_register_count++;
-			vbdev_module->bdev_registered(bdev);
-		}
+		g_bdev_mgr.outstanding_register_count++;
+		vbdev_module->bdev_registered(bdev);
 	}
 }
 
@@ -1633,5 +1631,6 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 void
 spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
+	assert(vbdev_module->bdev_registered != NULL);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
 }
