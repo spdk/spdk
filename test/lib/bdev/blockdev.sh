@@ -37,6 +37,14 @@ if [ $(uname -s) = Linux ] && [ -f /usr/sbin/sgdisk ]; then
 			/usr/sbin/sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
 		fi
 		killprocess $nbd_pid
+
+		# run nbd again to test get_bdevs
+		$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+		nbd_pid=$!
+		waitforlisten $nbd_pid 5260
+		waitforbdev Nvme0n1p1 $rootdir/scripts/rpc.py
+		$rpc_py get_bdevs
+		killprocess $nbd_pid
 	fi
 fi
 
