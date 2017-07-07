@@ -422,6 +422,8 @@ static void
 spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct spdk_gpt_bdev *gpt_bdev = (struct spdk_gpt_bdev *)arg;
+	struct spdk_bdev *bdev = gpt_bdev->bdev;
+	bool claimed = false;
 	int rc;
 
 	/* free the ch and also close the bdev_desc */
@@ -429,10 +431,11 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	gpt_bdev->ch = NULL;
 	spdk_bdev_close(gpt_bdev->bdev_desc);
 	gpt_bdev->bdev_desc = NULL;
+	spdk_bdev_free_io(bdev_io);
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
 		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
-			    spdk_bdev_get_name(gpt_bdev->bdev), status);
+			    spdk_bdev_get_name(bdev), status);
 		goto end;
 	}
 
@@ -442,10 +445,17 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 		goto end;
 	}
 
+	rc = spdk_vbdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(gpt));
+	if (rc) {
+		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
+		goto end;
+	}
+
+	claimed = true;
 	rc = vbdev_gpt_create_bdevs(gpt_bdev);
 	if (rc < 0) {
 		SPDK_TRACELOG(SPDK_TRACE_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
-			      spdk_bdev_get_name(gpt_bdev->bdev));
+			      spdk_bdev_get_name(bdev));
 	}
 
 end:
@@ -455,10 +465,12 @@ end:
 	 */
 	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 
-	spdk_bdev_free_io(bdev_io);
 	if (gpt_bdev->ref == 0) {
 		/* If no gpt_partition_disk instances were created, free the base context */
 		spdk_gpt_bdev_free(gpt_bdev);
+		if (claimed) {
+			spdk_vbdev_module_release_bdev(bdev);
+		}
 	}
 }
 
