@@ -43,7 +43,7 @@
 
 #define SPDK_GPT_PART_TYPE_GUID SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
 #define SPDK_GPT_BUFFER_SIZE 32768  /* 32KB */
-#define	SPDK_GPT_UUID_EQUAL(x,y) (memcmp(x, y, sizeof(struct spdk_gpt_guid)) == 0)
+#define	SPDK_GPT_GUID_EQUAL(x,y) (memcmp(x, y, sizeof(struct spdk_gpt_guid)) == 0)
 
 struct spdk_gpt {
 	unsigned char *buf;
