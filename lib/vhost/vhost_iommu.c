@@ -306,7 +306,7 @@ int spdk_iommu_mem_unregister(uint64_t addr, uint64_t len)
 	int ret;
 
 	pthread_mutex_lock(&vfio_cfg.map_lock);
-	ret = spdk_vfio_mem_op(addr, len, VFIO_IOMMU_MAP_DMA);
+	ret = spdk_vfio_mem_op(addr, len, VFIO_IOMMU_UNMAP_DMA);
 	pthread_mutex_unlock(&vfio_cfg.map_lock);
 	return ret;
 }
