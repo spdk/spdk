@@ -64,6 +64,7 @@ struct gpt_partition_disk {
 	struct spdk_bdev	disk;
 	struct spdk_bdev	*base_bdev;
 	struct spdk_gpt_bdev	*gpt_base;
+	uint32_t		partition_index;
 	uint64_t		offset_blocks;
 	uint64_t		offset_bytes;
 	TAILQ_ENTRY(gpt_partition_disk)	tailq;
@@ -350,14 +351,15 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 		d->disk.need_aligned_buffer = base_bdev->need_aligned_buffer;
 		d->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
 
-		/* index start at 1 instead of 0 to match the existing style */
-		d->disk.name = spdk_sprintf_alloc("%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i + 1);
+		d->disk.name = spdk_sprintf_alloc("%sp%s", spdk_bdev_get_name(base_bdev),
+						  gpt->partitions[i].partition_name);
 		if (!d->disk.name) {
 			free(d);
 			SPDK_ERRLOG("Failed to allocate disk name\n");
 			return -1;
 		}
 
+		d->partition_index = i;
 		d->disk.product_name = "GPT Disk";
 		d->base_bdev = base_bdev;
 		d->offset_bytes = lba_start * gpt->sector_size;
