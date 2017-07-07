@@ -44,6 +44,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -293,6 +294,19 @@ write_guid(struct spdk_json_write_ctx *w, const struct spdk_gpt_guid *guid)
 				   from_be32(&guid->raw[12]));
 }
 
+static void
+write_string_utf16le(struct spdk_json_write_ctx *w, const uint16_t *str, size_t max_len)
+{
+	size_t len;
+	const uint16_t *p;
+
+	for (len = 0, p = str; len < max_len && *p; p++) {
+		len++;
+	}
+
+	spdk_json_write_string_utf16le_raw(w, str, len);
+}
+
 static int
 vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 {
@@ -314,6 +328,9 @@ vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_name(w, "unique_partition_guid");
 	write_guid(w, &gpt_entry->unique_partition_guid);
+
+	spdk_json_write_name(w, "partition_name");
+	write_string_utf16le(w, gpt_entry->partition_name, SPDK_COUNTOF(gpt_entry->partition_name));
 
 	spdk_json_write_object_end(w);
 
