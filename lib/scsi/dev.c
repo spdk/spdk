@@ -95,8 +95,19 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev,
 {
 	int rc;
 
+	if (id < 0 || id >= SPDK_SCSI_DEV_MAX_LUN) {
+		SPDK_ERRLOG("device %s: invalid LUN id %d\n", dev->name, id);
+		return -1;
+	}
+
+	if (dev->lun[id]) {
+		SPDK_ERRLOG("device %s: LUN id %d is already occupied\n", dev->name, id);
+		return -1;
+	}
+
 	rc = spdk_scsi_lun_claim(lun);
 	if (rc < 0) {
+		SPDK_ERRLOG("device %s: LUN id %d is already occupied\n", dev->name, id);
 		return rc;
 	}
 
