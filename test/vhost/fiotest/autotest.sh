@@ -232,7 +232,7 @@ for vm_num in $used_vms; do
 	vm_check_scsi_location $vm_num
 
 	SCSI_DISK="${SCSI_DISK::-1}"
-	#vm_reset_scsi_devices $vm_num $SCSI_DISK
+	vm_reset_scsi_devices $vm_num $SCSI_DISK
 
 	run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
 	for disk in $SCSI_DISK; do
@@ -241,6 +241,8 @@ for vm_num in $used_vms; do
 	run_fio="${run_fio::-1}"
 	run_fio+=","
 done
+
+sleep 10
 
 run_fio="${run_fio%,}"
 run_fio+=" "
@@ -257,9 +259,9 @@ fi
 
 $run_fio
 
-#for vm_num in $used_vms; do
-	#vm_reset_scsi_devices $vm_num $SCSI_DISK
-#done
+for vm_num in $used_vms; do
+	vm_reset_scsi_devices $vm_num $SCSI_DISK
+done
 
 if ! $no_shutdown; then
 	echo "==============="
