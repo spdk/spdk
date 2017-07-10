@@ -107,7 +107,7 @@ spdk_rpc_get_vhost_scsi_controllers(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "ctrlr");
 		spdk_json_write_string(w, spdk_vhost_dev_get_name(vdev));
 
-		spdk_json_write_name(w, "cpu_mask");
+		spdk_json_write_name(w, "cpumask");
 		spdk_json_write_string_fmt(w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
 
 		spdk_json_write_name(w, "scsi_devs");
@@ -530,7 +530,7 @@ spdk_rpc_get_vhost_blk_controllers(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "ctrlr");
 		spdk_json_write_string(w, spdk_vhost_dev_get_name(vdev));
 
-		spdk_json_write_name(w, "cpu_mask");
+		spdk_json_write_name(w, "cpumask");
 		spdk_json_write_string_fmt(w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
 
 		spdk_json_write_name(w, "readonly");
