@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2bb8af1_3a8a12a9",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 964,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-10T17:03:20Z",
+      "side": 1,
+      "message": "This check looks odd - either the loop above that dequeues from svdev-\u003etask_pool should be inside it, or the check should be removed.",
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9c2e3cd_bd13e93e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1063,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-10T17:03:20Z",
+      "side": 1,
+      "message": "The addition of this assert() looks unrelated to the rest of the change.",
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
