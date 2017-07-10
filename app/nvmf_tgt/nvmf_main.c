@@ -98,6 +98,7 @@ main(int argc, char **argv)
 				usage();
 				exit(EXIT_FAILURE);
 			}
+			print_level = SPDK_LOG_DEBUG;
 #ifndef DEBUG
 			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
 				argv[0]);

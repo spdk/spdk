@@ -119,6 +119,7 @@ main(int argc, char **argv)
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
 			}
+			print_level = SPDK_LOG_DEBUG;
 #ifndef DEBUG
 			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
 				argv[0]);
