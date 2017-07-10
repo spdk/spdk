@@ -432,12 +432,13 @@ nbd_start(void *arg1, void *arg2)
 static void usage(char *program_name)
 {
 	printf("%s options\n", program_name);
-	printf("\t[-b bdev name]\n");
-	printf("\t[-c configuration file]\n");
-	printf("\t[-m core mask for distributing I/O submission/completion work\n");
-	printf("\t\t(default: 0x1 - use core 0 only)]\n");
-	printf("\t[-n nbd device name]\n");
-	printf("\t\t(default: /dev/nbd0)\n");
+	printf(" -b bdev    export bdev via NBD (required)\n");
+	printf(" -c conf    configuration file (required)\n");
+	printf(" -m mask    core mask for distributing I/O submission/completion work\n");
+	printf("            (default: 0x1 - use core 0 only)\n");
+	printf(" -n dev     nbd device name\n");
+	printf("            (default: /dev/nbd0)\n");
+	spdk_tracelog_usage(stdout, "-t");
 }
 
 int
@@ -452,7 +453,7 @@ main(int argc, char **argv)
 	config_file = NULL;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "b:c:m:n:")) != -1) {
+	while ((op = getopt(argc, argv, "b:c:m:n:t:")) != -1) {
 		switch (op) {
 		case 'b':
 			g_bdev_name = optarg;
@@ -465,6 +466,20 @@ main(int argc, char **argv)
 			break;
 		case 'n':
 			g_nbd_name = optarg;
+			break;
+		case 't':
+			if (spdk_log_set_trace_flag(optarg) < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+#ifndef DEBUG
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
+				argv[0]);
+			usage(argv[0]);
+			exit(EXIT_FAILURE);
+#endif
 			break;
 		default:
 			usage(argv[0]);
