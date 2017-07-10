@@ -55,7 +55,7 @@
 #define VIRTIO_BLK_F_CONFIG_WCE	11
 #endif
 
-#define MAX_VHOST_VRINGS	256
+#define SPDK_VHOST_MAX_VQUEUES	256
 
 #define SPDK_VHOST_SCSI_CTRLR_MAX_DEVS 8
 
@@ -78,7 +78,8 @@ struct spdk_vhost_dev {
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
-	struct rte_vhost_vring virtqueue[MAX_VHOST_VRINGS] __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
+	struct rte_vhost_vring virtqueue[SPDK_VHOST_MAX_VQUEUES] __attribute((aligned(
+				SPDK_CACHE_LINE_SIZE)));
 };
 
 
