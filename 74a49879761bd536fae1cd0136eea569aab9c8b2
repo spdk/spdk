@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47b5038b_f7fbe590",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-10T07:03:23Z",
+      "side": 1,
+      "message": "One more call can be added here for testing - $rpc_py delete_bdev $lvol_id\nlvol_id is within return of construct_lvol_bdev() or can be retrieved from get_bdevs() call.",
+      "revId": "74a49879761bd536fae1cd0136eea569aab9c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
