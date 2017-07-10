@@ -16,6 +16,24 @@
       "revId": "e58393e0357420eaa68000a034f34ff75069553a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d4042de_823adcb0",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-10T19:34:26Z",
+      "side": 1,
+      "message": "WTF? Never seen git do something like that before and the only merge conflict cleanup was deletion of a line, weird!",
+      "parentUuid": "e1dd1772_68dd4792",
+      "revId": "e58393e0357420eaa68000a034f34ff75069553a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
