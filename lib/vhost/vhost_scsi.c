@@ -85,7 +85,7 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_ring *eventq_ring;
 } __rte_cache_aligned;
 
-struct spdk_vhost_task {
+struct spdk_vhost_scsi_task {
 	struct spdk_scsi_task	scsi;
 	struct iovec iovs[SPDK_VHOST_SCSI_IOVS_LEN];
 
@@ -117,15 +117,15 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 static struct spdk_ring *g_task_pool;
 
 static void
-spdk_vhost_task_put(struct spdk_vhost_task *task)
+spdk_vhost_scsi_task_put(struct spdk_vhost_scsi_task *task)
 {
 	spdk_scsi_task_put(&task->scsi);
 }
 
 static void
-spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
+spdk_vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
-	struct spdk_vhost_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_task, scsi);
+	struct spdk_vhost_scsi_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_scsi_task, scsi);
 
 	assert(task->svdev->vdev.task_cnt > 0);
 	task->svdev->vdev.task_cnt--;
@@ -133,7 +133,7 @@ spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 }
 
 static void
-spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_task **tasks,
+spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_task **tasks,
 		     size_t count)
 {
 	size_t res_count;
@@ -247,27 +247,27 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, const struct spdk_scsi_dev *de
 }
 
 static void
-submit_completion(struct spdk_vhost_task *task)
+submit_completion(struct spdk_vhost_scsi_task *task)
 {
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx,
 					task->scsi.data_transferred);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
 
-	spdk_vhost_task_put(task);
+	spdk_vhost_scsi_task_put(task);
 }
 
 static void
-spdk_vhost_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
+spdk_vhost_scsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
-	struct spdk_vhost_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_task, scsi);
+	struct spdk_vhost_scsi_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_scsi_task, scsi);
 
 	submit_completion(task);
 }
 
 static void
-spdk_vhost_task_cpl(struct spdk_scsi_task *scsi_task)
+spdk_vhost_scsi_task_cpl(struct spdk_scsi_task *scsi_task)
 {
-	struct spdk_vhost_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_task, scsi);
+	struct spdk_vhost_scsi_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_scsi_task, scsi);
 
 	/* The SCSI task has completed.  Do final processing and then post
 	   notification to the virtqueue's "used" ring.
@@ -284,10 +284,10 @@ spdk_vhost_task_cpl(struct spdk_scsi_task *scsi_task)
 }
 
 static void
-task_submit(struct spdk_vhost_task *task)
+task_submit(struct spdk_vhost_scsi_task *task)
 {
 	/* The task is ready to be submitted.  First create the callback event that
-	   will be invoked when the SCSI command is completed.  See spdk_vhost_task_cpl()
+	   will be invoked when the SCSI command is completed.  See spdk_vhost_scsi_task_cpl()
 	   for what SPDK vhost-scsi does when the task is completed.
 	 */
 
@@ -296,14 +296,14 @@ task_submit(struct spdk_vhost_task *task)
 }
 
 static void
-mgmt_task_submit(struct spdk_vhost_task *task, enum spdk_scsi_task_func func)
+mgmt_task_submit(struct spdk_vhost_scsi_task *task, enum spdk_scsi_task_func func)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
 	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, func);
 }
 
 static void
-invalid_request(struct spdk_vhost_task *task)
+invalid_request(struct spdk_vhost_scsi_task *task)
 {
 	/* Flush eventq so that guest is instantly notified about any hotremoved luns.
 	 * This might prevent him from sending more invalid requests and trying to reset
@@ -311,14 +311,14 @@ invalid_request(struct spdk_vhost_task *task)
 	 */
 	process_eventq(task->svdev);
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
-	spdk_vhost_task_put(task);
+	spdk_vhost_scsi_task_put(task);
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "Invalid request (status=%" PRIu8")\n",
 		      task->resp ? task->resp->response : -1);
 }
 
 static int
-spdk_vhost_task_init_target(struct spdk_vhost_task *task, const __u8 *lun)
+spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *lun)
 {
 	struct spdk_scsi_dev *dev;
 	uint16_t lun_id = (((uint16_t)lun[2] << 8) | lun[3]) & 0x3FFF;
@@ -344,13 +344,13 @@ spdk_vhost_task_init_target(struct spdk_vhost_task *task, const __u8 *lun)
 }
 
 static void
-process_ctrl_request(struct spdk_vhost_task *task)
+process_ctrl_request(struct spdk_vhost_scsi_task *task)
 {
 	struct vring_desc *desc;
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
 
-	spdk_scsi_task_construct(&task->scsi, spdk_vhost_task_mgmt_cpl, spdk_vhost_task_free_cb, NULL);
+	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_mgmt_cpl, spdk_vhost_scsi_task_free_cb, NULL);
 	desc = spdk_vhost_vq_get_desc(task->vq, task->req_idx);
 	ctrl_req = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 
@@ -361,7 +361,7 @@ process_ctrl_request(struct spdk_vhost_task *task)
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "Request desriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
-	spdk_vhost_task_init_target(task, ctrl_req->lun);
+	spdk_vhost_scsi_task_init_target(task, ctrl_req->lun);
 
 	/* Process the TMF request */
 	switch (ctrl_req->type) {
@@ -404,7 +404,7 @@ process_ctrl_request(struct spdk_vhost_task *task)
 	}
 
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
-	spdk_vhost_task_put(task);
+	spdk_vhost_scsi_task_put(task);
 }
 
 /*
@@ -415,7 +415,7 @@ process_ctrl_request(struct spdk_vhost_task *task)
  *    1 if it was not possible to allocate IO vector for this task.
  */
 static int
-task_data_setup(struct spdk_vhost_task *task,
+task_data_setup(struct spdk_vhost_scsi_task *task,
 		struct virtio_scsi_cmd_req **req)
 {
 	struct rte_vhost_vring *vq = task->vq;
@@ -432,7 +432,7 @@ task_data_setup(struct spdk_vhost_task *task,
 		goto abort_task;
 	}
 
-	spdk_scsi_task_construct(&task->scsi, spdk_vhost_task_cpl, spdk_vhost_task_free_cb, NULL);
+	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb, NULL);
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 
 	desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
@@ -524,7 +524,7 @@ abort_task:
 }
 
 static int
-process_request(struct spdk_vhost_task *task)
+process_request(struct spdk_vhost_scsi_task *task)
 {
 	struct virtio_scsi_cmd_req *req;
 	int result;
@@ -534,7 +534,7 @@ process_request(struct spdk_vhost_task *task)
 		return result;
 	}
 
-	result = spdk_vhost_task_init_target(task, req->lun);
+	result = spdk_vhost_scsi_task_init_target(task, req->lun);
 	if (spdk_unlikely(result != 0)) {
 		task->resp->response = VIRTIO_SCSI_S_BAD_TARGET;
 		return -1;
@@ -555,8 +555,8 @@ process_request(struct spdk_vhost_task *task)
 static void
 process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 {
-	struct spdk_vhost_task *tasks[32];
-	struct spdk_vhost_task *task;
+	struct spdk_vhost_scsi_task *tasks[32];
+	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
@@ -576,8 +576,8 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 static void
 process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 {
-	struct spdk_vhost_task *tasks[32];
-	struct spdk_vhost_task *task;
+	struct spdk_vhost_scsi_task *tasks[32];
+	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 	int result;
@@ -602,7 +602,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d submitted ======\n", task,
 				      task->req_idx);
 		} else if (result > 0) {
-			spdk_vhost_task_cpl(&task->scsi);
+			spdk_vhost_scsi_task_cpl(&task->scsi);
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d finished early ======\n", task,
 				      task->req_idx);
 		} else {
