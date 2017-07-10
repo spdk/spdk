@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1dd1772_68dd4792",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-10T19:31:50Z",
+      "side": 1,
+      "message": "This looks like a rebase mistake - it should still be EXIT, not ExIT.",
+      "revId": "e58393e0357420eaa68000a034f34ff75069553a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
