@@ -520,9 +520,9 @@ spdk_vhost_dev_load(int vid)
 		return NULL;
 	}
 
-	if (num_queues > MAX_VHOST_VRINGS) {
+	if (num_queues > SPDK_VHOST_MAX_VQUEUES) {
 		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
-			    MAX_VHOST_VRINGS);
+			    SPDK_VHOST_MAX_VQUEUES);
 		return NULL;
 	}
 
