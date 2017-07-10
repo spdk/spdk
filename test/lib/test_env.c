@@ -33,7 +33,22 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk_internal/mock.h"
+
 #include "spdk/env.h"
+
+/*
+ * NOTE:
+ * functions in this file are mocks for SPDK based functions
+ * and work conceptually in the same way that mocks work in
+ * /lib/ut_mock however the globals that control the behavior
+ * of the mock are defined here, with each function, as
+ * opposed to being defined as part of the macro that defines
+ * the stub or wrapper for other types of functions. Be sre
+ * to use the correct global variable naming convention when
+ * adding working with these functions. see /lib/ut_mock for
+ * details
+ */
 
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
@@ -48,16 +63,24 @@ spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 	return buf;
 }
 
+int ut_spdk_dma_zmalloc = (int)MOCK_PASS_THRU;
+void *ut_p_spdk_dma_zmalloc = &ut_spdk_dma_zmalloc;
 void *
 spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
-	void *buf = spdk_dma_malloc(size, align, phys_addr);
+	if (ut_p_spdk_dma_zmalloc &&
+	    ut_spdk_dma_zmalloc == (int)MOCK_PASS_THRU) {
+		void *buf = spdk_dma_malloc(size, align, phys_addr);
 
-	if (buf != NULL) {
-		memset(buf, 0, size);
+		if (buf != NULL) {
+			memset(buf, 0, size);
+		}
+		return buf;
+	} else {
+		return ut_p_spdk_dma_zmalloc;
 	}
-	return buf;
 }
+
 
 void *
 spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
