@@ -377,6 +377,8 @@ void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			 int base_bdev_count);
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
+void spdk_vbdev_register_handled(void);
+
 void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 			    spdk_bdev_poller_fn fn,
 			    void *arg,
