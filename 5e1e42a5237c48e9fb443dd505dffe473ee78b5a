@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7043af7_821e1928",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-10T10:09:29Z",
+      "side": 1,
+      "message": "This -f should take full path to PID file.",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 79
+      },
+      "revId": "5e1e42a5237c48e9fb443dd505dffe473ee78b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82a5a854_c9e3cba7",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-10T10:09:29Z",
+      "side": 1,
+      "message": "New line is mandatory for some shels.",
+      "range": {
+        "startLine": 91,
+        "startChar": 19,
+        "endLine": 91,
+        "endChar": 21
+      },
+      "revId": "5e1e42a5237c48e9fb443dd505dffe473ee78b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59599819_5e0ca61b",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-10T10:09:29Z",
+      "side": 1,
+      "message": "Don\u0027t think saving pid here is good. eg. for \u0027-h\u0027 we don\u0027t want to save pid :) Move this just befere spdk_app_start(). Also consider rm this file on exit?",
+      "range": {
+        "startLine": 140,
+        "startChar": 3,
+        "endLine": 140,
+        "endChar": 14
+      },
+      "revId": "5e1e42a5237c48e9fb443dd505dffe473ee78b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
