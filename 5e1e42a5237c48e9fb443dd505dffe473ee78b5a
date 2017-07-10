@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9839dc11_86f13a9c",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-10T11:28:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7043af7_821e1928",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 79
+      },
+      "revId": "5e1e42a5237c48e9fb443dd505dffe473ee78b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "82a5a854_c9e3cba7",
         "filename": "app/vhost/vhost.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-07-10T10:09:29Z",
       "side": 1,
       "message": "New line is mandatory for some shels.",
+      "range": {
+        "startLine": 91,
+        "startChar": 19,
+        "endLine": 91,
+        "endChar": 21
+      },
+      "revId": "5e1e42a5237c48e9fb443dd505dffe473ee78b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c27fe7cf_d9446392",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-10T11:28:10Z",
+      "side": 1,
+      "message": "Which ones?\nWhy would you add newline here?",
+      "parentUuid": "82a5a854_c9e3cba7",
       "range": {
         "startLine": 91,
         "startChar": 19,
@@ -68,6 +116,30 @@
       "revId": "5e1e42a5237c48e9fb443dd505dffe473ee78b5a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee5e1df6_aa94bfb9",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-10T11:28:10Z",
+      "side": 1,
+      "message": "e.g. QEMU doesn\u0027t remove it\u0027s pidfile after shutdown. So should we?",
+      "parentUuid": "59599819_5e0ca61b",
+      "range": {
+        "startLine": 140,
+        "startChar": 3,
+        "endLine": 140,
+        "endChar": 14
+      },
+      "revId": "5e1e42a5237c48e9fb443dd505dffe473ee78b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
