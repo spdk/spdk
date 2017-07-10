@@ -38,6 +38,7 @@
 
 /* used to signify pass through */
 #define MOCK_PASS_THRU (0xdeadbeef)
+#define MOCK_PASS_THRU_P (void*)0xdeadbeef
 
 /* helper for initializing struct value with mock macros */
 #define MOCK_STRUCT_INIT(...) \
