@@ -506,6 +506,13 @@ vbdev_gpt_fini(void)
 static void
 vbdev_gpt_register(struct spdk_bdev *bdev)
 {
+	/*
+	 * TODO: this will get fixed in a later patch which refactors
+	 * the GPT init/register code.  For now, nothing is operating
+	 * on the register handle counts so just immediately indicate
+	 * that its been handled.
+	 */
+	spdk_vbdev_register_handled();
 	if (g_gpt_disabled) {
 		return;
 	}

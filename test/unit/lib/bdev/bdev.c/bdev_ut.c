@@ -109,8 +109,14 @@ static struct spdk_bdev_fn_table fn_table = {
 	.destruct = stub_destruct,
 };
 
+static void
+vbdev_ut_register(struct spdk_bdev *bdev)
+{
+	spdk_vbdev_register_handled();
+}
+
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, NULL, NULL, NULL, NULL)
-SPDK_VBDEV_MODULE_REGISTER(vbdev_ut, NULL, NULL, NULL, NULL, NULL)
+SPDK_VBDEV_MODULE_REGISTER(vbdev_ut, NULL, NULL, NULL, NULL, vbdev_ut_register)
 
 static struct spdk_bdev *
 allocate_bdev(char *name)

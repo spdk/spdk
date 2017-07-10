@@ -333,4 +333,11 @@ vbdev_error_fini(void)
 	}
 }
 
-SPDK_VBDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL, NULL)
+static void
+vbdev_error_register(struct spdk_bdev *bdev)
+{
+	spdk_vbdev_register_handled();
+}
+
+SPDK_VBDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,
+			   vbdev_error_register)

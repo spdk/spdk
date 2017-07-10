@@ -71,10 +71,11 @@ struct spdk_bdev_mgr {
 	spdk_bdev_poller_start_cb start_poller_fn;
 	spdk_bdev_poller_stop_cb stop_poller_fn;
 
+	uint32_t outstanding_register_count;
+
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
 #endif
-
 };
 
 static struct spdk_bdev_mgr g_bdev_mgr = {
@@ -82,7 +83,8 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.vbdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.vbdev_modules),
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.start_poller_fn = NULL,
-	.stop_poller_fn = NULL
+	.stop_poller_fn = NULL,
+	.outstanding_register_count = 0,
 };
 
 static struct spdk_bdev_module_if *g_next_bdev_module;
@@ -1385,6 +1387,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	TAILQ_FOREACH(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
 		if (vbdev_module->bdev_registered) {
+			g_bdev_mgr.outstanding_register_count++;
 			vbdev_module->bdev_registered(bdev);
 		}
 	}
@@ -1457,6 +1460,12 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
 	}
 	spdk_bdev_unregister(vbdev);
+}
+
+void
+spdk_vbdev_register_handled(void)
+{
+	g_bdev_mgr.outstanding_register_count--;
 }
 
 static bool
