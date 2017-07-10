@@ -71,6 +71,10 @@ struct spdk_bdev_mgr {
 	spdk_bdev_poller_start_cb start_poller_fn;
 	spdk_bdev_poller_stop_cb stop_poller_fn;
 
+	bool init_complete;
+	bool module_init_complete;
+	int module_init_rc;
+
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
 #endif
@@ -81,7 +85,10 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.vbdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.vbdev_modules),
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.start_poller_fn = NULL,
-	.stop_poller_fn = NULL
+	.stop_poller_fn = NULL,
+	.init_complete = false,
+	.module_init_complete = false,
+	.module_init_rc = 0,
 };
 
 static struct spdk_bdev_module_if *g_next_bdev_module;
@@ -361,10 +368,33 @@ spdk_bdev_init_complete(int rc)
 	spdk_bdev_init_cb cb_fn = g_cb_fn;
 	void *cb_arg = g_cb_arg;
 
+	g_bdev_mgr.init_complete = true;
 	g_cb_fn = NULL;
 	g_cb_arg = NULL;
 
 	cb_fn(cb_arg, rc);
+}
+
+static void
+spdk_bdev_module_init_complete(int rc)
+{
+	struct spdk_bdev_module_if *m;
+
+	g_bdev_mgr.module_init_complete = true;
+	g_bdev_mgr.module_init_rc = rc;
+
+	/*
+	 * Check all vbdev modules for an examinations in progress.  If any
+	 * exist, return immediately since we cannot finish bdev subsystem
+	 * initialization until all are completed.
+	 */
+	TAILQ_FOREACH(m, &g_bdev_mgr.vbdev_modules, tailq) {
+		if (m->examine_in_progress > 0) {
+			return;
+		}
+	}
+
+	spdk_bdev_init_complete(rc);
 }
 
 void
@@ -373,7 +403,7 @@ spdk_bdev_module_init_next(int rc)
 	if (rc) {
 		assert(g_next_bdev_module != NULL);
 		SPDK_ERRLOG("Failed to init bdev module: %s\n", g_next_bdev_module->name);
-		spdk_bdev_init_complete(rc);
+		spdk_bdev_module_init_complete(rc);
 		return;
 	}
 
@@ -396,7 +426,7 @@ spdk_vbdev_module_init_next(int rc)
 	if (rc) {
 		assert(g_next_vbdev_module != NULL);
 		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->name);
-		spdk_bdev_init_complete(rc);
+		spdk_bdev_module_init_complete(rc);
 		return;
 	}
 
@@ -409,7 +439,7 @@ spdk_vbdev_module_init_next(int rc)
 	if (g_next_vbdev_module) {
 		g_next_vbdev_module->module_init();
 	} else {
-		spdk_bdev_init_complete(rc);;
+		spdk_bdev_module_init_complete(rc);;
 	}
 }
 
@@ -1460,8 +1490,30 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 void
 spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
+	struct spdk_bdev_module_if *m;
+
 	assert(module->examine_in_progress > 0);
 	module->examine_in_progress--;
+
+	/*
+	 * Check all vbdev modules for an examinations in progress.  If any
+	 * exist, return immediately since we cannot finish bdev subsystem
+	 * initialization until all are completed.
+	 */
+	TAILQ_FOREACH(m, &g_bdev_mgr.vbdev_modules, tailq) {
+		if (m->examine_in_progress > 0) {
+			return;
+		}
+	}
+
+	if (g_bdev_mgr.module_init_complete && !g_bdev_mgr.init_complete) {
+		/*
+		 * Modules already finished initialization - now that all
+		 * the vbdevs have finished their asynchronous I/O processing,
+		 * the entire bdev layer can be marked as complete.
+		 */
+		spdk_bdev_init_complete(g_bdev_mgr.module_init_rc);
+	}
 }
 
 static bool
