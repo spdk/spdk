@@ -74,7 +74,6 @@ struct spdk_bdev_mgr {
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
 #endif
-
 };
 
 static struct spdk_bdev_mgr g_bdev_mgr = {
@@ -1384,9 +1383,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
 	TAILQ_FOREACH(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		if (vbdev_module->examine) {
-			vbdev_module->examine(bdev);
-		}
+		vbdev_module->examine_in_progress++;
+		vbdev_module->examine(bdev);
 	}
 }
 
@@ -1457,6 +1455,13 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
 	}
 	spdk_bdev_unregister(vbdev);
+}
+
+void
+spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module)
+{
+	assert(module->examine_in_progress > 0);
+	module->examine_in_progress--;
 }
 
 static bool
@@ -1595,5 +1600,6 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 void
 spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
 {
+	assert(vbdev_module->examine != NULL);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
 }

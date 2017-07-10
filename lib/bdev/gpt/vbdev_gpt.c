@@ -522,6 +522,13 @@ vbdev_gpt_fini(void)
 static void
 vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
+	/*
+	 * TODO: this will get fixed in a later patch which refactors
+	 * the GPT init/register code.  For now, nothing is operating
+	 * on the examination counts so just immediately indicate
+	 * that the examination is done.
+	 */
+	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 	if (g_gpt_disabled) {
 		return;
 	}
