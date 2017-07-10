@@ -71,6 +71,10 @@ struct spdk_bdev_mgr {
 	spdk_bdev_poller_start_cb start_poller_fn;
 	spdk_bdev_poller_stop_cb stop_poller_fn;
 
+	bool init_complete;
+	bool module_init_complete;
+	int module_init_rc;
+
 	uint32_t outstanding_register_count;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -84,6 +88,9 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.start_poller_fn = NULL,
 	.stop_poller_fn = NULL,
+	.init_complete = false,
+	.module_init_complete = false,
+	.module_init_rc = 0,
 	.outstanding_register_count = 0,
 };
 
@@ -364,10 +371,22 @@ spdk_bdev_init_complete(int rc)
 	spdk_bdev_init_cb cb_fn = g_cb_fn;
 	void *cb_arg = g_cb_arg;
 
+	g_bdev_mgr.init_complete = true;
 	g_cb_fn = NULL;
 	g_cb_arg = NULL;
 
 	cb_fn(cb_arg, rc);
+}
+
+static void
+spdk_bdev_module_init_complete(int rc)
+{
+	g_bdev_mgr.module_init_complete = true;
+	g_bdev_mgr.module_init_rc = rc;
+
+	if (g_bdev_mgr.outstanding_register_count == 0) {
+		spdk_bdev_init_complete(rc);
+	}
 }
 
 void
@@ -376,7 +395,7 @@ spdk_bdev_module_init_next(int rc)
 	if (rc) {
 		assert(g_next_bdev_module != NULL);
 		SPDK_ERRLOG("Failed to init bdev module: %s\n", g_next_bdev_module->name);
-		spdk_bdev_init_complete(rc);
+		spdk_bdev_module_init_complete(rc);
 		return;
 	}
 
@@ -399,7 +418,7 @@ spdk_vbdev_module_init_next(int rc)
 	if (rc) {
 		assert(g_next_vbdev_module != NULL);
 		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->name);
-		spdk_bdev_init_complete(rc);
+		spdk_bdev_module_init_complete(rc);
 		return;
 	}
 
@@ -412,7 +431,7 @@ spdk_vbdev_module_init_next(int rc)
 	if (g_next_vbdev_module) {
 		g_next_vbdev_module->module_init();
 	} else {
-		spdk_bdev_init_complete(rc);;
+		spdk_bdev_module_init_complete(rc);;
 	}
 }
 
@@ -1466,6 +1485,16 @@ void
 spdk_vbdev_register_handled(void)
 {
 	g_bdev_mgr.outstanding_register_count--;
+	if (g_bdev_mgr.outstanding_register_count == 0 &&
+	    g_bdev_mgr.module_init_complete &&
+	    !g_bdev_mgr.init_complete) {
+		/*
+		 * Modules already finished initialization - now that all
+		 * the vbdevs have finished their asynchronous I/O processing,
+		 * the entire bdev layer can be marked as complete.
+		 */
+		spdk_bdev_init_complete(g_bdev_mgr.module_init_rc);
+	}
 }
 
 static bool
