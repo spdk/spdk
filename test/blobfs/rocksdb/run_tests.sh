@@ -148,6 +148,7 @@ run_step() {
 
 	if [ "$NO_SPDK" = "1" ]
 	then
+	  drop_caches
 	  cat /sys/block/nvme0n1/stat >> "$1"_blockdev_stats.txt
 	fi
 
@@ -159,6 +160,12 @@ run_step() {
 		$TESTDIR/postprocess.py `pwd` $1 > $1_summary.txt
 	echo done.
 	fi
+}
+
+drop_caches() {
+	echo -n Cleaning Page Cache...
+	echo 3 >  /proc/sys/vm/drop_caches
+	echo done.
 }
 
 if [ -z "$SKIP_INSERT" ]
