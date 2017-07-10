@@ -439,8 +439,22 @@ spdk_vhost_blk_get_readonly(struct spdk_vhost_dev *vdev)
 static void
 bdev_remove_cb(void *remove_ctx)
 {
-	SPDK_ERRLOG("Hot-removing bdev's not supported yet.\n");
-	abort();
+	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
+
+	if (bvdev->vdev.lcore != -1 && (uint32_t)bvdev->vdev.lcore != spdk_env_get_current_core()) {
+		/* Call self on proper core. */
+		spdk_vhost_timed_event_send(bvdev->vdev.lcore, bdev_remove_cb, bvdev, 1, "vhost blk hot remove");
+		return;
+	}
+
+	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
+		     bvdev->vdev.name);
+	if (bvdev->requestq_poller) {
+		spdk_poller_unregister(&bvdev->requestq_poller, NULL);
+		spdk_poller_register(&bvdev->requestq_poller, no_bdev_vdev_worker, bvdev, bvdev->vdev.lcore, 0);
+	}
+
+	bvdev->bdev = NULL;
 }
 
 /*
