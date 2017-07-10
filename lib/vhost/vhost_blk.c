@@ -70,46 +70,12 @@ struct spdk_vhost_blk_dev {
 };
 
 static void
-spdk_vhost_blk_get_tasks(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_blk_task **tasks,
-			 size_t count)
-{
-	size_t res_count;
-
-	bvdev->vdev.task_cnt += count;
-	res_count = spdk_ring_dequeue(bvdev->tasks_pool, (void **)tasks, count);
-
-	/* Allocated task count in init function is equal queue depth so dequeue must not fail. */
-	assert(res_count == count);
-
-	for (res_count = 0; res_count < count; res_count++) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_TASK, "GET task %p\n", tasks[res_count]);
-	}
-}
-
-static void
-spdk_vhost_blk_put_tasks(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_blk_task **tasks,
-			 size_t count)
-{
-	size_t res_count;
-
-	for (res_count = 0; res_count < count; res_count++) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_TASK, "PUT task %p\n", tasks[res_count]);
-	}
-
-	res_count = spdk_ring_enqueue(bvdev->tasks_pool, (void **)tasks, count);
-
-	/* Allocated task count in init function is equal queue depth so enqueue must not fail. */
-	assert(res_count == count);
-	bvdev->vdev.task_cnt -= count;
-}
-
-static void
 invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 {
 	*task->status = status;
 	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, &task->bvdev->vdev.virtqueue[0], task->req_idx,
 					0);
-	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
+	spdk_vhost_put_tasks(&task->bvdev->vdev, 0, (void **)&task, 1);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
 
@@ -179,7 +145,7 @@ blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 					task->length);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
-	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
+	spdk_vhost_put_tasks(&task->bvdev->vdev, 0, (void **)&task, 1);
 }
 
 static void
@@ -306,7 +272,7 @@ vdev_worker(void *arg)
 		return;
 	}
 
-	spdk_vhost_blk_get_tasks(bvdev, tasks, reqs_cnt);
+	spdk_vhost_get_tasks(&bvdev->vdev, 0, (void **)tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
 		process_blk_request(tasks[i], bvdev, reqs[i]);
 	}
@@ -597,7 +563,7 @@ spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_nam
 	bvdev->bdev = bdev;
 	bvdev->readonly = readonly;
 	ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
-				       &vhost_blk_device_backend);
+				       &vhost_blk_device_backend, sizeof(struct spdk_vhost_blk_task));
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
 		goto err;
@@ -647,5 +613,4 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk", SPDK_TRACE_VHOST_BLK)
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk_task", SPDK_TRACE_VHOST_BLK_TASK)
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk_data", SPDK_TRACE_VHOST_BLK_DATA)

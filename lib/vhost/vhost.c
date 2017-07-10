@@ -50,6 +50,40 @@ static char dev_dirname[PATH_MAX] = "";
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
+void
+spdk_vhost_get_tasks(struct spdk_vhost_dev *vdev, int vqueue, void **tasks, size_t count)
+{
+	size_t res_count;
+
+	assert(vdev->task_cnt <= INT_MAX - (int) count);
+	vdev->task_cnt += count;
+	res_count = spdk_ring_dequeue(vdev->task_pool[vqueue], tasks, count);
+
+	/* Allocated task count in init function is equal queue depth so dequeue must not fail. */
+	assert(res_count == count);
+
+	for (res_count = 0; res_count < count; res_count++) {
+		SPDK_TRACELOG(SPDK_TRACE_VHOST_TASK, "GET task %p\n", tasks[res_count]);
+	}
+}
+
+void
+spdk_vhost_put_tasks(struct spdk_vhost_dev *vdev, int vqueue, void **tasks, size_t count)
+{
+	size_t res_count;
+
+	for (res_count = 0; res_count < count; res_count++) {
+		SPDK_TRACELOG(SPDK_TRACE_VHOST_TASK, "PUT task %p\n", tasks[res_count]);
+	}
+
+	res_count = spdk_ring_enqueue(vdev->task_pool[vqueue], tasks, count);
+
+	/* Allocated task count in init function is equal queue depth so enqueue must not fail. */
+	assert(res_count == count);
+	assert(vdev->task_cnt >= (int) count);
+	vdev->task_cnt -= count;
+}
+
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
 	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
@@ -252,7 +286,7 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 
 int
 spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
-			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
+			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend, size_t task_size)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
@@ -329,6 +363,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->type = type;
+	vdev->task_size = task_size;
 
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
@@ -482,11 +517,18 @@ void
 spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_vring *q;
+	void *task;
 	uint16_t i;
 
 	for (i = 0; i < vdev->num_queues; i++) {
 		q = &vdev->virtqueue[i];
 		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
+
+		while (spdk_ring_dequeue(vdev->task_pool[i], &task, 1) == 1) {
+			spdk_dma_free(task);
+		}
+
+		spdk_ring_free(vdev->task_pool[i]);
 	}
 
 	free(vdev->mem);
@@ -499,10 +541,11 @@ struct spdk_vhost_dev *
 spdk_vhost_dev_load(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	void **task;
 	char ifname[PATH_MAX];
-
 	uint16_t num_queues = rte_vhost_get_vring_num(vid);
-	uint16_t i;
+	uint16_t i, j;
+	int rc;
 
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
@@ -551,6 +594,24 @@ spdk_vhost_dev_load(int vid)
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
 		return NULL;
+	}
+
+	for (i = 0; i < num_queues; i++) {
+		vdev->task_pool[i] = spdk_ring_create(SPDK_RING_TYPE_SP_SC, vdev->virtqueue[i].size * 2,
+						      SOCKET_ID_ANY);
+		if (vdev->task_pool[i] == NULL) {
+			SPDK_ERRLOG("%s: failed to init task pool for virtqueue %d\n", vdev->name, i);
+			abort();
+		}
+
+		for (j = 0; j < vdev->virtqueue[i].size; ++j) {
+			task = spdk_dma_zmalloc(vdev->task_size, SPDK_CACHE_LINE_SIZE, NULL);
+			rc = spdk_ring_enqueue(vdev->task_pool[i], (void **)&task, 1);
+			if (rc != 1) {
+				SPDK_ERRLOG("%s: failed to alloc task %d for virtqueue %d\n", vdev->name, j, i);
+				abort();
+			}
+		}
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
@@ -687,3 +748,4 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
+SPDK_LOG_REGISTER_TRACE_FLAG("vhost_task", SPDK_TRACE_VHOST_TASK)

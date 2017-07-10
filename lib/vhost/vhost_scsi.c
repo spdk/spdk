@@ -114,8 +114,6 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	}
 };
 
-static struct spdk_ring *g_task_pool;
-
 static void
 spdk_vhost_task_put(struct spdk_vhost_task *task)
 {
@@ -126,27 +124,10 @@ static void
 spdk_vhost_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_task, scsi);
+	int vq_index;
 
-	assert(task->svdev->vdev.task_cnt > 0);
-	task->svdev->vdev.task_cnt--;
-	spdk_ring_enqueue(g_task_pool, (void **) &task, 1);
-}
-
-static void
-spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_task **tasks,
-		     size_t count)
-{
-	size_t res_count;
-
-	res_count = spdk_ring_dequeue(g_task_pool, (void **)tasks, count);
-	if (res_count != count) {
-		SPDK_ERRLOG("%s: couldn't get %zu tasks from task_pool\n", svdev->vdev.name, count);
-		/* FIXME: we should never run out of tasks, but what if we do? */
-		abort();
-	}
-
-	assert(svdev->vdev.task_cnt <= INT_MAX - (int) res_count);
-	svdev->vdev.task_cnt += res_count;
+	vq_index = (int)(task->vq - task->svdev->vdev.virtqueue);
+	spdk_vhost_put_tasks(&task->svdev->vdev, vq_index, (void **)&task, 1);
 }
 
 static void
@@ -561,7 +542,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	uint16_t reqs_cnt, i;
 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
-	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
+	spdk_vhost_get_tasks(&svdev->vdev, VIRTIO_SCSI_CONTROLQ, (void **)tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
 		task = tasks[i];
 		memset(task, 0, sizeof(*task));
@@ -581,11 +562,13 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 	int result;
+	int vq_index;
 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	assert(reqs_cnt <= 32);
 
-	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
+	vq_index = (int)(vq - svdev->vdev.virtqueue);
+	spdk_vhost_get_tasks(&svdev->vdev, vq_index, (void **)tasks, reqs_cnt);
 
 	for (i = 0; i < reqs_cnt; i++) {
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
@@ -713,7 +696,7 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 	}
 
 	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
-				      &spdk_vhost_scsi_device_backend);
+				      &spdk_vhost_scsi_device_backend, sizeof(struct spdk_vhost_task));
 
 	if (rc) {
 		spdk_ring_free(svdev->eventq_ring);
@@ -1013,38 +996,12 @@ destroy_device(int vid)
 int
 spdk_vhost_init(void)
 {
-	struct spdk_vhost_dev *task;
-	int rc, i;
-
-	g_task_pool = spdk_ring_create(SPDK_RING_TYPE_MP_SC, SPDK_VHOST_SCSI_TASK_POOL_SIZE, SOCKET_ID_ANY);
-	if (g_task_pool == NULL) {
-		SPDK_ERRLOG("Failed to init vhost scsi task pool\n");
-		return -1;
-	}
-
-	for (i = 0; i < SPDK_VHOST_SCSI_TASK_POOL_SIZE - 1; ++i) {
-		task = spdk_dma_zmalloc(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL);
-		rc = spdk_ring_enqueue(g_task_pool, (void **)&task, 1);
-		if (rc != 1) {
-			SPDK_ERRLOG("Failed to alloc vhost scsi tasks\n");
-			return -1;
-		}
-	}
-
 	return 0;
 }
 
 int
 spdk_vhost_fini(void)
 {
-	struct spdk_vhost_dev *task;
-
-	while (spdk_ring_dequeue(g_task_pool, (void **)&task, 1) == 1) {
-		spdk_dma_free(task);
-	}
-
-	spdk_ring_free(g_task_pool);
-
 	return 0;
 }
 
