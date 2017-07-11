@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1ce910d1_8e359af4",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-11T12:22:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "82b63e6a_3c39d187",
+      "range": {
+        "startLine": 75,
+        "startChar": 1,
+        "endLine": 75,
+        "endChar": 33
+      },
+      "revId": "164f189978059d83526444e1b5a3dfd56c1d42a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c6359d0a_d5ec1a0b",
         "filename": "scripts/rpc.py",
         "patchSetId": 11
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "8489fab2_792c8a7c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-11T12:22:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6359d0a_d5ec1a0b",
+      "range": {
+        "startLine": 260,
+        "startChar": 4,
+        "endLine": 260,
+        "endChar": 47
+      },
+      "revId": "164f189978059d83526444e1b5a3dfd56c1d42a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7a051ca_fc6c633b",
         "filename": "scripts/rpc.py",
         "patchSetId": 11
@@ -59,6 +107,30 @@
       "writtenOn": "2017-07-11T11:17:58Z",
       "side": 1,
       "message": "This should be called inside some print function so that GUIDs gets printed to screen for further use, so we can avoid using -v verbose. (Preferably use print_array() - see my comment from lib/bdev/lvol/vbdev_lvol_rpc.c)",
+      "range": {
+        "startLine": 269,
+        "startChar": 4,
+        "endLine": 269,
+        "endChar": 46
+      },
+      "revId": "164f189978059d83526444e1b5a3dfd56c1d42a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33606342_70628383",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-11T12:22:39Z",
+      "side": 1,
+      "message": "You\u0027ve probably meant to address construct_lvol_bdev() and construct_lvol_store() - not destroy_lvol_store(). Those were fixed.",
+      "parentUuid": "c7a051ca_fc6c633b",
       "range": {
         "startLine": 269,
         "startChar": 4,
