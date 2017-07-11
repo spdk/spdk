@@ -520,7 +520,7 @@ vbdev_gpt_fini(void)
 }
 
 static void
-vbdev_gpt_register(struct spdk_bdev *bdev)
+vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
 	if (g_gpt_disabled) {
 		return;
@@ -542,5 +542,5 @@ vbdev_gpt_get_ctx_size(void)
 }
 
 SPDK_VBDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
-			   vbdev_gpt_get_ctx_size, vbdev_gpt_register)
+			   vbdev_gpt_get_ctx_size, vbdev_gpt_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_gpt", SPDK_TRACE_VBDEV_GPT)
