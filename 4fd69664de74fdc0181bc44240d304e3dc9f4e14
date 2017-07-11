@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b7abcb3_14fcf52f",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T15:28:18Z",
+      "side": 1,
+      "message": "this should use \u0027 \u0027",
+      "range": {
+        "startLine": 173,
+        "startChar": 35,
+        "endLine": 173,
+        "endChar": 71
+      },
+      "revId": "4fd69664de74fdc0181bc44240d304e3dc9f4e14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c70b2e34_f4b7bde4",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T15:28:18Z",
+      "side": 1,
+      "message": "How do you handle any errors?",
+      "range": {
+        "startLine": 179,
+        "startChar": 15,
+        "endLine": 179,
+        "endChar": 49
+      },
+      "revId": "4fd69664de74fdc0181bc44240d304e3dc9f4e14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
