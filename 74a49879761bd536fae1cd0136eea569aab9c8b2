@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "f8820a30_0f79b98c",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T10:54:48Z",
+      "side": 1,
+      "message": "Please learn how to use if statement in bash before introducing such nonsense.",
+      "range": {
+        "startLine": 191,
+        "startChar": 4,
+        "endLine": 191,
+        "endChar": 31
+      },
+      "revId": "74a49879761bd536fae1cd0136eea569aab9c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fb76a37_22f1bac7",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T10:54:48Z",
+      "side": 1,
+      "message": "\u0027-v\u0027 is not intended for such purpose. please fix construct_lvol_store command so it will print GUID and avoid such monsters like that.",
+      "range": {
+        "startLine": 193,
+        "startChar": 5,
+        "endLine": 193,
+        "endChar": 98
+      },
+      "revId": "74a49879761bd536fae1cd0136eea569aab9c8b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47b5038b_f7fbe590",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 5
