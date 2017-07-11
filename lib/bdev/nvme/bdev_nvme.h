@@ -43,5 +43,7 @@
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
 			  const char **names, size_t *count);
+struct spdk_nvme_ctrlr *spdk_nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
+struct spdk_nvme_ctrlr *spdk_bdev_get_ctrlr(void *bdev);
 
 #endif // SPDK_BDEV_NVME_H

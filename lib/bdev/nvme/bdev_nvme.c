@@ -709,6 +709,15 @@ nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+struct spdk_nvme_ctrlr *
+spdk_nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_ctrlr *nvme_ctrlr_ptr;
+
+	nvme_ctrlr_ptr = nvme_ctrlr_get(trid);
+	return nvme_ctrlr_ptr != NULL ? nvme_ctrlr_ptr->ctrlr : NULL;
+}
+
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -1362,6 +1371,14 @@ static void
 bdev_nvme_get_spdk_running_config(FILE *fp)
 {
 	/* TODO */
+}
+
+struct spdk_nvme_ctrlr *
+spdk_bdev_get_ctrlr(void *bdev_)
+{
+	struct spdk_bdev *bdev = bdev_;
+	struct nvme_bdev *nbdev =  bdev != NULL ? (struct nvme_bdev *)bdev->ctxt : NULL;
+	return nbdev == NULL ? NULL : (nbdev->nvme_ctrlr != NULL ? nbdev->nvme_ctrlr->ctrlr : NULL);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)

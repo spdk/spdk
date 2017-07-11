@@ -475,6 +475,19 @@ def get_interfaces(args):
 p = subparsers.add_parser('get_interfaces', help='Display current interface list')
 p.set_defaults(func=get_interfaces)
 
+def apply_firmware(args):
+
+    params = {
+        'filename': args.filename,
+        'bdev_name': args.bdev_name,
+    }
+
+    print_dict(jsonrpc_call('apply_nvme_firmware', params))
+
+p = subparsers.add_parser('apply_firmware', help='Download and commit firmware to NVMe device')
+p.add_argument('filename', help='filename of the firmware to download')
+p.add_argument('bdev_name', help='name of the NVMe device')
+p.set_defaults(func=apply_firmware)
 
 def get_bdevs(args):
     params = {}
