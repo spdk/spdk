@@ -373,6 +373,27 @@ def get_interfaces(args):
 p = subparsers.add_parser('get_interfaces', help='Display current interface list')
 p.set_defaults(func=get_interfaces)
 
+def apply_firmware(args):
+
+    params = {
+        'filename': args.filename,
+        'pci_address': args.pci_address,
+    }
+
+    # NVMe transport type is PCIe
+    params['trtype'] = 'PCIe'
+
+    params['adrfam'] = 'null'
+    params['trsvcid'] = 'null'
+    params['subnqn'] = 'null'
+
+    print_dict(jsonrpc_call('apply_nvme_firmware', params))
+
+p = subparsers.add_parser('apply_firmware', help='Downloads and commits firmware to NVMe device.')
+p.add_argument('filename', help='filename of the firmware to download.')
+p.add_argument('pci_address', help='PCI address of the NVMe device.')
+p.set_defaults(func=apply_firmware)
+
 def get_bdevs(args):
     print_dict(jsonrpc_call('get_bdevs'))
 
