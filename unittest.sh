@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 #
 # Environment variables:
-#  $valgrind    Valgrind executable name, if desired
+#  $novalgrind  Set if you want to override the auto-check to use
+#               valgrind if installed.
 
 set -xe
+
+# use valgrind if installed
+if hash valgrind && [ -z "$novalgrind" ]; then
+	export valgrind='valgrind --leak-check=full --error-exitcode=2'
+fi
 
 # setup local unit test coverage if cov is available
 if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' config.h; then
