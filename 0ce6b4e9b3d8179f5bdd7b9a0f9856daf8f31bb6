@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ace88fe_3d77818e",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T15:45:29Z",
+      "side": 1,
+      "message": "I really try to see big picture here but don\u0027t follow why such union here is needed? Why you not defined each of those structures on it\u0027s own? In my mind it only make .c files more bloated by this.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 2
+      },
+      "revId": "0ce6b4e9b3d8179f5bdd7b9a0f9856daf8f31bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24d49d64_5c999675",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T15:45:29Z",
+      "side": 1,
+      "message": "So pls remove :)",
+      "range": {
+        "startLine": 80,
+        "startChar": 26,
+        "endLine": 80,
+        "endChar": 48
+      },
+      "revId": "0ce6b4e9b3d8179f5bdd7b9a0f9856daf8f31bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd26ac3c_51807547",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T15:45:29Z",
+      "side": 1,
+      "message": "It would be great to allow user to pass own lvol UUID if it wishes to and use this in library.",
+      "revId": "0ce6b4e9b3d8179f5bdd7b9a0f9856daf8f31bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
