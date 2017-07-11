@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25266ec3_c4f122c9",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-11T02:50:23Z",
+      "side": 1,
+      "message": "For the notification it is clear. It seems that in another patch (bdev.c), you defer the initialization to next subsystem to ensure all vbdev are registered. \nSuch code should be handled in spdk_vbdev_resgister_handled, then we can ensure it really work.\nAlso may be put this function in the end of this function would be much better.",
+      "range": {
+        "startLine": 423,
+        "startChar": 1,
+        "endLine": 423,
+        "endChar": 31
+      },
+      "revId": "0628211305c57543fbc87abb3a576af2b7ab46af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
