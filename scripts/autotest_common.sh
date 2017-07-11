@@ -27,6 +27,15 @@ fi
 : ${SPDK_RUN_ASAN=0}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 
+# pass our valgrind desire on to unittest.sh
+if [ $SPDK_RUN_ASAN -eq 0 ] && [ $SPDK_RUN_VALGRIND -eq 1 ]; then
+	# try to use valgrind
+	export novalgrind=
+else
+	# don't try to use valgrind
+	export novalgrind='true'
+fi
+
 config_params='--enable-debug --enable-werror'
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
@@ -100,13 +109,6 @@ if [ -z "$output_dir" ]; then
 		output_dir=$rootdir/../output
 	fi
 	export output_dir
-fi
-
-# Valgrind does not work well when ASAN is enabled, so only use valgrind if ASAN is disabled
-if [ $SPDK_RUN_ASAN -eq 0 ] && [ $SPDK_RUN_VALGRIND -eq 1 ] && hash valgrind &> /dev/null; then
-	valgrind='valgrind --leak-check=full --error-exitcode=2'
-else
-	valgrind=''
 fi
 
 function timing() {
