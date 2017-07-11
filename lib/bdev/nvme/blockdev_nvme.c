@@ -616,6 +616,14 @@ nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+struct spdk_nvme_ctrlr *
+spdk_nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_ctrlr *nvme_ctrlr_ptr;
+	nvme_ctrlr_ptr = nvme_ctrlr_get(trid);
+	return nvme_ctrlr_ptr != NULL ? nvme_ctrlr_ptr->ctrlr : NULL;
+}
+
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -694,7 +702,7 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 			SPDK_ERRLOG("Unable to send abort. Resetting.\n");
 		}
 
-	/* FALLTHROUGH */
+		/* FALLTHROUGH */
 	case TIMEOUT_ACTION_RESET:
 		rc = spdk_nvme_ctrlr_reset(ctrlr);
 		if (rc) {
