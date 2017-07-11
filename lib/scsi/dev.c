@@ -331,7 +331,7 @@ spdk_scsi_dev_get_max_lun(const struct spdk_scsi_dev *dev)
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
-	if (lun_id < 0 || lun_id > dev->maxlun) {
+	if (lun_id < 0 || lun_id >= dev->maxlun) {
 		return NULL;
 	}
 
