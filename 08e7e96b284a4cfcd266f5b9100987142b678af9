@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c42a88a5_e52599b3",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T14:54:30Z",
+      "side": 1,
+      "message": "Sorry for not pointing it before but I think this should be exit(EXIT_FAILURE) condition.",
+      "range": {
+        "startLine": 87,
+        "startChar": 2,
+        "endLine": 87,
+        "endChar": 9
+      },
+      "revId": "08e7e96b284a4cfcd266f5b9100987142b678af9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f114ba9f_ebae1bf7",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T14:54:30Z",
+      "side": 1,
+      "message": "We keep parameters sorted (also in switch).",
+      "range": {
+        "startLine": 106,
+        "startChar": 51,
+        "endLine": 106,
+        "endChar": 53
+      },
+      "revId": "08e7e96b284a4cfcd266f5b9100987142b678af9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
