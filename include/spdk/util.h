@@ -44,8 +44,15 @@
 extern "C" {
 #endif
 
-#define spdk_min(a,b) (((a)<(b))?(a):(b))
-#define spdk_max(a,b) (((a)>(b))?(a):(b))
+#define spdk_min(a,b) \
+  ({ __typeof__ (a) _a = (a); \
+      __typeof__ (b) _b = (b); \
+    _a < _b ? _a : _b; })
+
+#define spdk_max(a,b) \
+  ({ __typeof__ (a) _a = (a); \
+      __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b; })
 
 #define SPDK_COUNTOF(arr) (sizeof(arr) / sizeof((arr)[0]))
 
