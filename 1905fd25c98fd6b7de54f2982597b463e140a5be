@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "10e6db53_fb1df0b4",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T10:10:49Z",
+      "side": 1,
+      "message": "They will be failed during processing and return instantly to taskpool.",
+      "parentUuid": "8dfa9e24_382af469",
+      "range": {
+        "startLine": 982,
+        "startChar": 5,
+        "endLine": 982,
+        "endChar": 64
+      },
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c55a08d8_320f0f68",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
@@ -53,6 +77,30 @@
       "writtenOn": "2017-07-11T05:36:41Z",
       "side": 1,
       "message": "where did that come from?",
+      "range": {
+        "startLine": 985,
+        "startChar": 52,
+        "endLine": 985,
+        "endChar": 60
+      },
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e768056_081ec05d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-11T10:10:49Z",
+      "side": 1,
+      "message": "This value is hardcodded in QEMU and also some reasonable limit.",
+      "parentUuid": "c55a08d8_320f0f68",
       "range": {
         "startLine": 985,
         "startChar": 52,
