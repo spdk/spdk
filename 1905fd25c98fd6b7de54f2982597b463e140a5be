@@ -113,6 +113,30 @@
     },
     {
       "key": {
+        "uuid": "1424230c_f1469b52",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-11T10:51:00Z",
+      "side": 1,
+      "message": "could you mention it in the docs?",
+      "parentUuid": "1e768056_081ec05d",
+      "range": {
+        "startLine": 985,
+        "startChar": 52,
+        "endLine": 985,
+        "endChar": 60
+      },
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "37c1ee68_693c34bb",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
