@@ -148,3 +148,167 @@ invalid:
 	free_rpc_construct_nvme(&req);
 }
 SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev)
+
+struct rpc_apply_firmware {
+	char *filename;
+	char *trtype;
+	char *pci_address;
+	char *adrfam;
+	char *trsvcid;
+	char *subnqn;
+};
+
+static void
+free_rpc_apply_firmware(struct rpc_apply_firmware *req)
+{
+	free(req->filename);
+	free(req->trtype);
+	free(req->pci_address);
+	free(req->adrfam);
+	free(req->trsvcid);
+	free(req->subnqn);
+}
+
+static const struct spdk_json_object_decoder rpc_apply_firmware_decoders[] = {
+	{"filename", offsetof(struct rpc_apply_firmware, filename), spdk_json_decode_string},
+	{"trtype", offsetof(struct rpc_apply_firmware, trtype), spdk_json_decode_string},
+	{"pci_address", offsetof(struct rpc_apply_firmware, pci_address), spdk_json_decode_string},
+	{"adrfam", offsetof(struct rpc_apply_firmware, adrfam), spdk_json_decode_string},
+	{"trsvcid", offsetof(struct rpc_apply_firmware, trsvcid), spdk_json_decode_string},
+	{"subnqn", offsetof(struct rpc_apply_firmware, subnqn), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	int                                     rc;
+	int                                     fd = -1;
+	int                                     slot = 0;
+	unsigned int                            size;
+	struct stat                             fw_stat;
+	void                                    *fw_image;
+	struct rpc_apply_firmware req           = {};
+	struct spdk_json_write_ctx              *w;
+	struct spdk_nvme_transport_id           trid;
+	struct spdk_nvme_ctrlr                  *ctrlr;
+	char                                    msg[1024];
+	struct spdk_nvme_status                 status;
+
+	if (spdk_json_decode_object(params, rpc_apply_firmware_decoders,
+				    SPDK_COUNTOF(rpc_apply_firmware_decoders), &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	/* Parse trtype */
+	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, req.trtype);
+	if (rc < 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "failed to parse trtype.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	/* Parse traddr */
+	if (req.pci_address) {
+		snprintf(trid.traddr, sizeof(trid.traddr), "%s", req.pci_address);
+	} else {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "PCI is too long.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+
+	if (req.adrfam && strcmp(req.adrfam, "null") != 0) {
+		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, req.adrfam);
+		if (rc < 0) {
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+							 "failed to parse adrfam.");
+			free_rpc_apply_firmware(&req);
+			return;
+		}
+	}
+
+	if (req.trsvcid && strcmp(req.trsvcid, "null") != 0) {
+		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", req.trsvcid);
+	}
+
+	if (req.subnqn && strcmp(req.subnqn, "null") != 0) {
+		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", req.subnqn);
+	}
+
+	if ((ctrlr = spdk_nvme_ctrlr_get(&trid)) == NULL) {
+		sprintf(msg, "Device %s was not found", req.pci_address);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	fd = open(req.filename, O_RDONLY);
+	if (fd < 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "open file failed.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	rc = fstat(fd, &fw_stat);
+	if (rc < 0) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "fstat failed.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	if (fw_stat.st_size % 4) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Firmware image size is not multiple of 4.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	size = fw_stat.st_size;
+	fw_image = spdk_dma_zmalloc(size, 4096, NULL);
+	if (!fw_image) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	if (read(fd, fw_image, size) != ((ssize_t)(size))) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Read firmware image failed!");
+		spdk_dma_free(fw_image);
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+	close(fd);
+
+	rc = spdk_nvme_ctrlr_update_firmware(ctrlr, fw_image, size, slot,
+					     SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG, &status);
+	spdk_dma_free(fw_image);
+	free_rpc_apply_firmware(&req);
+
+	if (rc == -ENXIO && status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC &&
+	    status.sc == SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET) {
+		snprintf(msg, sizeof(msg), "conventional reset is needed to enable firmware.");
+	} else if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_nvme_ctrlr_update_firmware failed..");
+		return;
+	} else {
+		snprintf(msg, sizeof(msg), "spdk_nvme_ctrlr_update_firmware success.");
+	}
+
+	if (!(w = spdk_jsonrpc_begin_result(request))) {
+		return;
+	}
+	spdk_json_write_string(w, msg);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("apply_nvme_firmware", spdk_rpc_apply_nvme_firmware)
