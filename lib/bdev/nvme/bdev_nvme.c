@@ -1355,4 +1355,32 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 	/* TODO */
 }
 
+struct spdk_nvme_ctrlr *
+spdk_bdev_nvme_get_ctrlr(void *bdev_)
+{
+	struct nvme_bdev *btmp;
+	struct spdk_bdev *bdev = bdev_;
+	struct nvme_bdev *nbdev;
+
+	if (!bdev || !bdev->ctxt) {
+		return NULL;
+	}
+	nbdev = (struct nvme_bdev *)bdev->ctxt;
+
+	/*
+	 * Make sure nbdev is NVMe bdev
+	 */
+	TAILQ_FOREACH(btmp, &g_nvme_bdevs, link) {
+		if (btmp == nbdev) {
+			if (nbdev->nvme_ctrlr) {
+				return nbdev->nvme_ctrlr->ctrlr;
+			} else {
+				return NULL;
+			}
+
+		}
+	}
+	return NULL;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)
