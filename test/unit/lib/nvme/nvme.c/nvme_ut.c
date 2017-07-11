@@ -109,6 +109,44 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 }
 
 static void
+test_nvme_allocate_request(void)
+{
+	struct spdk_nvme_qpair qpair;
+	struct nvme_payload payload;
+	uint32_t payload_size = sizeof(struct nvme_payload);
+	spdk_nvme_cmd_cb cb_fn = NULL;
+	void *cb_arg = NULL;
+	struct nvme_request *req = NULL;
+	struct nvme_request match_req, dummy_req;
+
+	memset(&payload, 0, sizeof(struct nvme_payload));
+	STAILQ_INIT(&qpair.free_req);
+	STAILQ_INIT(&qpair.queued_req);
+
+	/* empty queue */
+	req = nvme_allocate_request(&qpair, &payload, payload_size,
+				    cb_fn, cb_arg);
+	CU_ASSERT(req == NULL);
+
+	/* put a dummy on the queue, make sure it matches upon return */
+	memset(&match_req, 0, sizeof(struct nvme_request));
+	memset(&dummy_req, 0, sizeof(struct nvme_request));
+	match_req.cb_fn = cb_fn;
+	match_req.cb_arg = cb_arg;
+	match_req.payload = payload;
+	match_req.payload_size = payload_size;
+	match_req.qpair = &qpair;
+	match_req.pid = getpid();
+	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
+
+	req = nvme_allocate_request(&qpair, &payload, payload_size,
+				    cb_fn, cb_arg);
+	CU_ASSERT(req != NULL);
+	CU_ASSERT(memcmp(req, &match_req,
+			 sizeof(struct nvme_request)) == 0);
+}
+
+static void
 test_nvme_free_request(void)
 {
 	struct nvme_request dummy_req;
@@ -552,6 +590,8 @@ int main(int argc, char **argv)
 			    test_nvme_allocate_request_user_copy) == NULL ||
 		CU_add_test(suite, "test_nvme_free_request",
 			    test_nvme_free_request) == NULL ||
+		CU_add_test(suite, "test_nvme_allocate_request",
+			    test_nvme_allocate_request) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
