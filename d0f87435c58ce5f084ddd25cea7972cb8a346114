@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e05765c_ab1e04cc",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-11T04:43:50Z",
+      "side": 1,
+      "message": "I think we\u0027re overloading two concepts here:\n\n1) We\u0027re using the word \"register\" for both the functionality in spdk_vbdev_register and for the \"register_fn\" callback on the module, but they\u0027re subtly different things. I think we probably need to change the name of that register_fn to \"taste_fn\" or \"new_bdev_notify_fn\" or something. The choice of \"register_fn\" is the basis for the name of this new function you\u0027re adding here, which looks like it should be called from spdk_vbdev_register or something but it\u0027s actually not related.\n\n2) It\u0027s not a vbdev that we\u0027re signalling to in this new function - it\u0027s actually the global bdev library in this patch. I think for better bookkeeping though, this really needs to be signalling the particular bdev module and should take the module as a parameter. That\u0027s where the count should live too. So maybe this function should be named spdk_vbdev_module_taste_complete, or whatever.\n\nI also don\u0027t like the word \"taste\" in this context - it makes me think this bdev is licking another bdev. But I don\u0027t have a better word that describes what is going on as clearly or concisely.",
+      "revId": "d0f87435c58ce5f084ddd25cea7972cb8a346114",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
