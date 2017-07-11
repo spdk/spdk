@@ -19,6 +19,75 @@
     },
     {
       "key": {
+        "uuid": "8dfa9e24_382af469",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-11T05:36:41Z",
+      "side": 1,
+      "message": "why do we need only *size*/2 and not *size* exactly? if all requests consist of just a single buffer (invalid, ik) there might be *size* of them, right?",
+      "range": {
+        "startLine": 982,
+        "startChar": 5,
+        "endLine": 982,
+        "endChar": 64
+      },
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c55a08d8_320f0f68",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-11T05:36:41Z",
+      "side": 1,
+      "message": "where did that come from?",
+      "range": {
+        "startLine": 985,
+        "startChar": 52,
+        "endLine": 985,
+        "endChar": 60
+      },
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37c1ee68_693c34bb",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 988,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-11T05:36:41Z",
+      "side": 1,
+      "message": "spdk_align32pow2\n?",
+      "range": {
+        "startLine": 988,
+        "startChar": 13,
+        "endLine": 988,
+        "endChar": 28
+      },
+      "revId": "1905fd25c98fd6b7de54f2982597b463e140a5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d9c2e3cd_bd13e93e",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
