@@ -109,6 +109,25 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 }
 
 static void
+test_nvme_free_request(void)
+{
+	struct nvme_request dummy_req;
+	struct spdk_nvme_qpair qpair;
+	struct nvme_request *return_req;
+
+	/* init req qpair and put a dummy on it, make sure it gets */
+	/* moved to freeq */
+	memset(&dummy_req.cmd, 0x5a, sizeof(struct spdk_nvme_cmd));
+	dummy_req.num_children = 0;
+	dummy_req.qpair = &qpair;
+	STAILQ_INIT(&dummy_req.qpair->free_req);
+
+	nvme_free_request(&dummy_req);
+	return_req = STAILQ_FIRST(&dummy_req.qpair->free_req);
+	CU_ASSERT(return_req ==  &dummy_req);
+}
+
+static void
 test_nvme_allocate_request_user_copy(void)
 {
 	struct spdk_nvme_qpair qpair;
@@ -529,6 +548,8 @@ int main(int argc, char **argv)
 			    test_nvme_ctrlr_probe) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request_user_copy",
 			    test_nvme_allocate_request_user_copy) == NULL ||
+		CU_add_test(suite, "test_nvme_free_request",
+			    test_nvme_free_request) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
