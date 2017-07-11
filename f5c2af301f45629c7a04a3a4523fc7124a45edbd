@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0c60214_6a2cc725",
+        "filename": "unittest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-11T20:40:04Z",
+      "side": 1,
+      "message": "If you are going to move the valgrind logic here, you can also drop the valgrind\u003d line from scripts/autotest_common.sh and remove the \u0027valgrind\u003d\"$valgrind\"\u0027 from the unittest.sh invocation in autotest.sh.\n\nHowever, we should set novalgrind from scripts/autotest_common.sh based on $SPDK_RUN_VALGRIND to match the current behavior (we don\u0027t necessarily want to run the unit tests under valgrind on all of the agents; for example, it doesn\u0027t work with ASan).",
+      "revId": "f5c2af301f45629c7a04a3a4523fc7124a45edbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
