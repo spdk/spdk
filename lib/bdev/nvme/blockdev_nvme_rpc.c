@@ -148,3 +148,131 @@ invalid:
 	free_rpc_construct_nvme(&req);
 }
 SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev)
+
+struct rpc_apply_firmware {
+	char *path;
+	char *pci_addr;
+};
+
+static void
+free_rpc_apply_firmware(struct rpc_apply_firmware *req)
+{
+	free(req->path);
+	free(req->pci_addr);
+}
+
+static const struct spdk_json_object_decoder rpc_apply_firmware_decoders[] = {
+	{"path", offsetof(struct rpc_apply_firmware, path), spdk_json_decode_string},
+	{"pci_addr", offsetof(struct rpc_apply_firmware, pci_addr), spdk_json_decode_string},
+};
+
+
+static void
+spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+
+	int                                     rc;
+	int                                     fd = -1;
+	int                                     slot = 0;
+	unsigned int                            size;
+	struct stat                             fw_stat;
+	void                                    *fw_image;
+	struct rpc_apply_firmware req           = {};
+	struct spdk_json_write_ctx              *w;
+	struct spdk_nvme_transport_id           trid;
+	struct spdk_nvme_ctrlr                  *ctrlr;
+	char                                    traddr[1024];
+	char                                    msg[1024];
+	struct spdk_nvme_status                 status;
+
+	if (spdk_json_decode_object(params, rpc_apply_firmware_decoders,
+				    SPDK_COUNTOF(rpc_apply_firmware_decoders), &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_json_decode_object failed");
+		return;
+	}
+
+	sprintf(traddr, "trtype:PCIe traddr:%s", req.pci_addr);
+	rc = spdk_nvme_transport_id_parse(&trid, traddr);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_nvme_transport_id_parse(..) failed");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	if ((ctrlr = spdk_nvme_ctrlr_get(&trid)) == NULL) {
+		sprintf(msg, "Device %s was not found", req.pci_addr);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	fd = open(req.path, O_RDONLY);
+	if (fd < 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "open file failed.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	rc = fstat(fd, &fw_stat);
+	if (rc < 0) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "fstat failed.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	if (fw_stat.st_size % 4) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Firmware image size is not multiple of 4.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	size = fw_stat.st_size;
+	fw_image = spdk_dma_zmalloc(size, 4096, NULL);
+	if (!fw_image) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error.");
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+
+	if (read(fd, fw_image, size) != ((ssize_t)(size))) {
+		close(fd);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Read firmware image failed !.");
+		spdk_dma_free(fw_image);
+		free_rpc_apply_firmware(&req);
+		return;
+	}
+	close(fd);
+
+	rc = spdk_nvme_ctrlr_update_firmware(ctrlr, fw_image, size, slot,
+					     SPDK_NVME_FW_COMMIT_REPLACE_AND_ENABLE_IMG, &status);
+	if (rc == -ENXIO && status.sct == SPDK_NVME_SCT_COMMAND_SPECIFIC &&
+	    status.sc == SPDK_NVME_SC_FIRMWARE_REQ_CONVENTIONAL_RESET) {
+		strcpy(msg, "conventional reset is needed to enable firmware.");
+	} else if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "spdk_nvme_ctrlr_update_firmware failed..");
+		spdk_dma_free(fw_image);
+		free_rpc_apply_firmware(&req);
+		return;
+	} else {
+		strcpy(msg, "spdk_nvme_ctrlr_update_firmware success.");
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, msg);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	spdk_dma_free(fw_image);
+	free_rpc_apply_firmware(&req);
+}
+SPDK_RPC_REGISTER("apply_nvme_firmware", spdk_rpc_apply_nvme_firmware)
