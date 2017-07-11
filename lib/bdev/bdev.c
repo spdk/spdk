@@ -424,8 +424,10 @@ void
 spdk_vbdev_module_init_next(int rc)
 {
 	if (rc) {
-		assert(g_next_vbdev_module != NULL);
-		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->name);
+		if (g_next_vbdev_module != NULL) {
+			SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->name);
+		}
+
 		spdk_bdev_module_init_complete(rc);
 		return;
 	}
