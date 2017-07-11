@@ -1384,8 +1384,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
 	TAILQ_FOREACH(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		if (vbdev_module->bdev_registered) {
-			vbdev_module->bdev_registered(bdev);
+		if (vbdev_module->examine) {
+			vbdev_module->examine(bdev);
 		}
 	}
 }
