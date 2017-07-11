@@ -373,6 +373,18 @@ def get_interfaces(args):
 p = subparsers.add_parser('get_interfaces', help='Display current interface list')
 p.set_defaults(func=get_interfaces)
 
+def apply_nvme_firmware(args):
+    params = {
+        'path': args.path,
+        'pci_addr': args.pci_addr
+    }
+    print_dict(jsonrpc_call('apply_nvme_firmware', params))
+
+p = subparsers.add_parser('apply_nvme_firmware', help='Downloads and commits firmware to NVMe device.')
+p.add_argument('path', help='Path to the firmware local to the RPC server.')
+p.add_argument('pci_addr', help='PCI address of the NVMe device.')
+p.set_defaults(func=apply_nvme_firmware)
+
 def get_bdevs(args):
     print_dict(jsonrpc_call('get_bdevs'))
 
