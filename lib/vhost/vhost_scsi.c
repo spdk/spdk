@@ -973,7 +973,7 @@ free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 static int
 alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
-	struct spdk_vhost_task *task;
+	struct spdk_vhost_scsi_task *task;
 	uint32_t task_cnt = 0;
 	uint32_t ring_size;
 	uint16_t i;
