@@ -1001,6 +1001,12 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 
 	for (i = 0; i < task_cnt; ++i) {
 		task = spdk_dma_zmalloc(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL);
+		if (task == NULL) {
+			SPDK_ERRLOG("Controller %s: Failed to allocate task\n", svdev->vdev.name);
+			free_task_pool(svdev);
+			return -1;
+		}
+
 		rc = spdk_ring_enqueue(svdev->task_pool, (void **)&task, 1);
 		if (rc != 1) {
 			SPDK_ERRLOG("Controller %s: Failed to alloc %"PRIu32" vhost scsi tasks\n", svdev->vdev.name,
