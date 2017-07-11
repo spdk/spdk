@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
 #
 # Environment variables:
-#  $valgrind    Valgrind executable name, if desired
+#  $novalgrind  If set to anything, don't use valgrind
+#  $valgrind    Specify the valgrind command line, if not
+#               then a default command line is used
 
 set -xe
+
+# prefer ASAN to valgrind
+if grep --quiet "CONFIG_ASAN?=y" ./CONFIG.local; then
+	novalgrind=asan
+fi
+
+# use valgrind if desired and installed
+if [ -z "$novalgrind" ]; then
+	# use default command line if not specified
+	if hash valgrind && [ -z "$valgrind" ]; then
+		valgrind='valgrind --leak-check=full --error-exitcode=2'
+	fi
+else
+        valgrind=
+fi
 
 # setup local unit test coverage if cov is available
 if hash lcov && grep -q '#define SPDK_CONFIG_COVERAGE 1' config.h; then
@@ -105,5 +122,9 @@ if [ "$cov_avail" = "yes" ]; then
 else
 	echo "WARN: lcov not installed or SPDK built without coverage!"
 fi
+if [ "$valgrind" = "" ] && [ "$novalgrind" != "asan" ]; then
+	echo "WARN: valgrind is not installed or has been disabled!"
+fi
+
 echo
 echo
