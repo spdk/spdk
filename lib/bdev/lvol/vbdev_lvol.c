@@ -67,11 +67,115 @@ vbdev_lvol_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static struct spdk_io_channel *
+vbdev_lvol_get_io_channel(void *ctx)
+{
+	struct spdk_lvol *lvol = ctx;
+
+	return lvol->lvol_store->channel;
+}
+
+static bool
+vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+{
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		return true;
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return false;
+
+	default:
+		return false;
+	}
+}
+
+static void
+lvol_op_comp(void *cb_arg, int bserrno)
+{
+	struct spdk_bdev_io *bdev_io = cb_arg;
+	assert(bserrno == 0);
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+
+}
+
+static void
+__get_page_parameters(struct spdk_lvol *lvol, uint64_t offset, uint64_t length,
+		      uint64_t *start_page, uint64_t *num_pages)
+{
+	uint64_t end_page;
+	uint32_t page_size;
+
+	page_size = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
+	*start_page = offset / page_size;
+	end_page = (offset + length - 1) / page_size;
+	*num_pages = (end_page - *start_page + 1);
+}
+
+static void
+lvol_read(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	uint64_t start_page, num_pages;
+	struct spdk_blob *blob = lvol->blob;
+
+	__get_page_parameters(lvol, bdev_io->u.read.offset, bdev_io->u.read.len, &start_page, &num_pages);
+
+	spdk_bs_io_read_blob(blob, ch, &bdev_io->u.read.iov, start_page, num_pages, lvol_op_comp, bdev_io);
+}
+
+static void
+lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	uint64_t start_page, num_pages;
+	struct spdk_blob *blob = lvol->blob;
+
+	__get_page_parameters(lvol, bdev_io->u.write.offset, bdev_io->u.write.len, &start_page, &num_pages);
+
+	spdk_bs_io_write_blob(blob, ch, &bdev_io->u.write.iov, start_page, num_pages, lvol_op_comp,
+			      bdev_io);
+}
+
+static void
+lvol_flush(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	spdk_bs_io_flush_channel(ch, lvol_op_comp, bdev_io);
+}
+
+static void
+vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		lvol_read(lvol, ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		lvol_write(lvol, ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		lvol_flush(ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_RESET:
+	default:
+		SPDK_ERRLOG("lvol: unknown I/O type %d\n", bdev_io->type);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+	return;
+}
+
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.destruct		= vbdev_lvol_destruct,
-	.io_type_supported	= NULL,
-	.submit_request		= NULL,
-	.get_io_channel		= NULL,
+	.io_type_supported	= vbdev_lvol_io_type_supported,
+	.submit_request		= vbdev_lvol_submit_request,
+	.get_io_channel		= vbdev_lvol_get_io_channel,
 	.dump_config_json	= vbdev_lvol_dump_config_json,
 };
 
@@ -169,3 +273,22 @@ vbdev_lvol_create(uuid_t guid, size_t sz,
 
 	return 0;
 }
+
+static void
+vbdev_lvol_initialize(void)
+{
+	spdk_bdev_module_init_next(0);
+}
+
+static void
+vbdev_lvol_finish(void)
+{
+}
+
+static void
+vbdev_lvol_get_spdk_running_config(FILE *fp)
+{
+}
+
+SPDK_BDEV_MODULE_REGISTER(vbdev_lvol_initialize, vbdev_lvol_finish,
+			  vbdev_lvol_get_spdk_running_config, 0)//blockdev_null_get_ctx_size)

@@ -68,6 +68,46 @@ vbdev_get_lvs_pair_by_lvs(struct spdk_lvol_store *lvs)
 	return g_lvs_pair;
 }
 
+void
+spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
+{
+}
+
+uint64_t
+spdk_bs_get_page_size(struct spdk_blob_store *bs)
+{
+	return 0;
+}
+
+void
+spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		     void *payload, uint64_t offset, uint64_t length,
+		     spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+}
+
+void
+spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		      void *payload, uint64_t offset, uint64_t length,
+		      spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+}
+
+void
+spdk_bs_io_flush_channel(struct spdk_io_channel *channel, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+}
+
+void
+spdk_bdev_module_init_next(int rc)
+{
+}
+
+void
+spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
+{
+}
+
 int
 spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
 {
