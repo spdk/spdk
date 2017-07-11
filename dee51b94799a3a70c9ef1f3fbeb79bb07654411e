@@ -1,0 +1,180 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c12700ea_b28e2687",
+        "filename": "test/scsi/__init__.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "Wasn\u0027t this file supposed to be removed? (moved to test/vhost?)",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6e9414b_931d7841",
+        "filename": "test/scsi/rpc/rpc_scsi.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "Wasn\u0027t this file supposed to be removed? (moved to test/vhost?)",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eae62365_ef40c1d9",
+        "filename": "test/scsi/scsi.conf",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "Wasn\u0027t this file supposed to be removed? (moved to test/vhost?)",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21b54279_c5228e7c",
+        "filename": "test/scsi/scsi.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "Wasn\u0027t this file supposed to be removed? (moved to test/vhost?)",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1280c3b3_d46613fb",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "Unnecessary change. Should be shutdown.",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad5436eb_be8c848b",
+        "filename": "test/vhost/rpc/fio/autotest.config",
+        "patchSetId": 15
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "Remind / explain why 99?",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5729cfb5_2ff81e53",
+        "filename": "test/vhost/rpc/fio/hotremove.conf",
+        "patchSetId": 15
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91acfbd3_66fb0377",
+        "filename": "test/vhost/rpc/fio/hotremove.conf",
+        "patchSetId": 15
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b9e7e3b_8f366940",
+        "filename": "test/vhost/rpc/test/scsi__.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 1
+      },
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9246d7ce_21d9c732",
+        "filename": "test/vhost/rpc/test/scsi__.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-11T08:21:53Z",
+      "side": 1,
+      "message": "Why is this file name \"scsi__.py\"? why underscores?\nAlso, this file is duplicated by test/scsi/scsi.py which was meant to be removed.",
+      "revId": "dee51b94799a3a70c9ef1f3fbeb79bb07654411e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
