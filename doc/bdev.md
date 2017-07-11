@@ -91,3 +91,47 @@ Configuration file syntax:
 ~~~
 
 This exports 1 rbd block device, named Ceph0.
+
+## GPT (GUID Partition Table) {#bdev_config_gpt}
+
+The GPT virtual bdev driver examines all bdevs as they are added and exposes partitions
+with a SPDK-specific partition type as bdevs.
+The SPDK partition type GUID is `7c5222bd-8f5d-4087-9c00-bf9843c7b58c`.
+
+Configuration file syntax:
+
+~~~
+[Gpt]
+  # If Gpt is disabled, it will not automatically expose GPT partitions as bdevs.
+  Disable No
+~~~
+
+### Creating a GPT partition table using NBD
+
+The bdev NBD app can be used to temporarily expose an SPDK bdev through the Linux kernel
+block stack so that standard partitioning tools can be used.
+
+~~~
+# Expose bdev Nvme0n1 as kernel block device /dev/nbd0
+# Assumes bdev.conf is already configured with a bdev named Nvme0n1 -
+# see the NVMe section above.
+test/lib/bdev/nbd/nbd -c bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+nbd_pid=$!
+
+# Create GPT partition table.
+parted -s /dev/nbd0 mklabel gpt
+
+# Add a partition consuming 50% of the available space.
+parted -s /dev/nbd0 mkpart MyPartition '0%' '50%'
+
+# Change the partition type to the SPDK GUID.
+# sgdisk is part of the gdisk package.
+sgdisk -t 1:7c5222bd-8f5d-4087-9c00-bf9843c7b58c /dev/nbd0
+
+# Kill the NBD application (stop exporting /dev/nbd0).
+kill $nbd_pid
+
+# Now Nvme0n1 is configured with a GPT partition table, and
+# the first partition will be automatically exposed as
+# Nvme0n1p1 in SPDK applications.
+~~~
