@@ -24,6 +24,9 @@
   # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
   #TpointGroupMask 0x0
 
+  # syslog facility
+   LogFacility "local7"
+
 [Rpc]
   # Defines whether SPDK vhost will enable configuration via RPC.
   # Default is disabled.  Note that the RPC interface is not
@@ -129,15 +132,3 @@
 #  Name vhost.1
 #  Dev0 AIO1
 #  Cpumask 0x1
-
-#[VhostBlk0]
-  # Define name for controller
-  #Name vhost.2
-  # Use first partition from the second Malloc device
-  #Dev Malloc2p0
-  # Put controller in read-only mode
-  #ReadOnly no
-  # Start the poller for this vhost controller on one of the cores in
-  #  this cpumask.  By default, it not specified, will use any core in the
-  #  SPDK process.
-  #Cpumask 0x1
