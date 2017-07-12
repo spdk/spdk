@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26a5d28b_641a0fd1",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-12T17:03:11Z",
+      "side": 1,
+      "message": "Allocation needs a SPDK_CU_ASSERT_FATAL() - or just use a stack qpair variable.",
+      "revId": "00141c9b61b91daa1ea68574068f1bdf736e7b97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
