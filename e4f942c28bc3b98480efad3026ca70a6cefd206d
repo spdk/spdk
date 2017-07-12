@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "07054e46_73c49022",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-12T11:29:58Z",
+      "side": 1,
+      "message": "remove, it\u0027s not the time yet",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 31
+      },
+      "revId": "e4f942c28bc3b98480efad3026ca70a6cefd206d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2475063_55ff67db",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-12T11:29:58Z",
+      "side": 1,
+      "message": "\"Vhost device hotplug \u0026 hotremove tests\"\nTo separate it from upcoming LUN hotremove tests",
+      "range": {
+        "startLine": 54,
+        "startChar": 5,
+        "endLine": 54,
+        "endChar": 30
+      },
+      "revId": "e4f942c28bc3b98480efad3026ca70a6cefd206d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b539dbc_1491e649",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-12T11:29:58Z",
+      "side": 1,
+      "message": "describe traffic cases, we also want to test hotplug when no traffic is taking place",
+      "range": {
+        "startLine": 57,
+        "startChar": 4,
+        "endLine": 57,
+        "endChar": 47
+      },
+      "revId": "e4f942c28bc3b98480efad3026ca70a6cefd206d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bc7102b4_e42edc4d",
         "filename": "lib/vhost/test_plan.md",
         "patchSetId": 1
@@ -22,6 +91,52 @@
       "revId": "e4f942c28bc3b98480efad3026ca70a6cefd206d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39408b73_456906f2",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-12T11:29:58Z",
+      "side": 1,
+      "message": "vhost devices",
+      "range": {
+        "startLine": 58,
+        "startChar": 11,
+        "endLine": 58,
+        "endChar": 16
+      },
+      "revId": "e4f942c28bc3b98480efad3026ca70a6cefd206d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a274fdf0_0c8de82d",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-12T11:29:58Z",
+      "side": 1,
+      "message": "you could make this a part of line #56 entry",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 63
+      },
+      "revId": "e4f942c28bc3b98480efad3026ca70a6cefd206d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
