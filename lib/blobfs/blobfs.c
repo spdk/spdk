@@ -166,6 +166,7 @@ struct spdk_fs_cb_args {
 		struct {
 			uint64_t			offset;
 			TAILQ_ENTRY(spdk_fs_request)	tailq;
+			bool				xattr_in_progress;
 		} sync;
 		struct {
 			uint32_t			num_clusters;
@@ -1647,6 +1648,8 @@ __wake_caller(struct spdk_fs_cb_args *args)
 	sem_post(args->sem);
 }
 
+static void __check_sync_reqs(struct spdk_file *file);
+
 static void
 __file_cache_finish_sync(struct spdk_file *file)
 {
@@ -1654,19 +1657,18 @@ __file_cache_finish_sync(struct spdk_file *file)
 	struct spdk_fs_cb_args *sync_args;
 
 	pthread_spin_lock(&file->lock);
-	while (!TAILQ_EMPTY(&file->sync_requests)) {
-		sync_req = TAILQ_FIRST(&file->sync_requests);
-		sync_args = &sync_req->args;
-		if (sync_args->op.sync.offset > file->length_flushed) {
-			break;
-		}
-		BLOBFS_TRACE(file, "sync done offset=%jx\n", sync_args->op.sync.offset);
-		TAILQ_REMOVE(&file->sync_requests, sync_req, args.op.sync.tailq);
-		pthread_spin_unlock(&file->lock);
-		sync_args->fn.file_op(sync_args->arg, 0);
-		pthread_spin_lock(&file->lock);
-		free_fs_request(sync_req);
-	}
+	sync_req = TAILQ_FIRST(&file->sync_requests);
+	sync_args = &sync_req->args;
+	assert(sync_args->op.sync.offset <= file->length_flushed);
+	BLOBFS_TRACE(file, "sync done offset=%jx\n", sync_args->op.sync.offset);
+	TAILQ_REMOVE(&file->sync_requests, sync_req, args.op.sync.tailq);
+	pthread_spin_unlock(&file->lock);
+
+	sync_args->fn.file_op(sync_args->arg, 0);
+	__check_sync_reqs(file);
+
+	pthread_spin_lock(&file->lock);
+	free_fs_request(sync_req);
 	pthread_spin_unlock(&file->lock);
 }
 
@@ -1693,10 +1695,35 @@ __free_args(struct spdk_fs_cb_args *args)
 }
 
 static void
+__check_sync_reqs(struct spdk_file *file)
+{
+	struct spdk_fs_request *sync_req;
+
+	pthread_spin_lock(&file->lock);
+
+	TAILQ_FOREACH(sync_req, &file->sync_requests, args.op.sync.tailq) {
+		if (sync_req->args.op.sync.offset <= file->length_flushed) {
+			break;
+		}
+	}
+
+	if (sync_req != NULL && !sync_req->args.op.sync.xattr_in_progress) {
+		BLOBFS_TRACE(file, "set xattr length 0x%jx\n", file->length_flushed);
+		sync_req->args.op.sync.xattr_in_progress = true;
+		spdk_blob_md_set_xattr(file->blob, "length", &file->length_flushed,
+				       sizeof(file->length_flushed));
+
+		pthread_spin_unlock(&file->lock);
+		spdk_bs_md_sync_blob(file->blob, __file_cache_finish_sync_bs_cb, file);
+	} else {
+		pthread_spin_unlock(&file->lock);
+	}
+}
+
+static void
 __file_flush_done(void *arg, int bserrno)
 {
 	struct spdk_fs_cb_args *args = arg;
-	struct spdk_fs_request *sync_req;
 	struct spdk_file *file = args->file;
 	struct cache_buffer *next = args->op.flush.cache_buffer;
 
@@ -1714,12 +1741,6 @@ __file_flush_done(void *arg, int bserrno)
 		next = spdk_tree_find_buffer(file->tree, file->length_flushed);
 	}
 
-	TAILQ_FOREACH_REVERSE(sync_req, &file->sync_requests, sync_requests_head, args.op.sync.tailq) {
-		if (sync_req->args.op.sync.offset <= file->length_flushed) {
-			break;
-		}
-	}
-
 	/*
 	 * Assert that there is no cached data that extends past the end of the underlying
 	 *  blob.
@@ -1727,17 +1748,9 @@ __file_flush_done(void *arg, int bserrno)
 	assert(next == NULL || next->offset < __file_get_blob_size(file) ||
 	       next->bytes_filled == 0);
 
-	if (sync_req != NULL) {
-		BLOBFS_TRACE(file, "set xattr length 0x%jx\n", file->length_flushed);
-		spdk_blob_md_set_xattr(file->blob, "length", &file->length_flushed,
-				       sizeof(file->length_flushed));
+	pthread_spin_unlock(&file->lock);
 
-		pthread_spin_unlock(&file->lock);
-		spdk_bs_md_sync_blob(file->blob, __file_cache_finish_sync_bs_cb, file);
-	} else {
-		pthread_spin_unlock(&file->lock);
-		__file_cache_finish_sync(file);
-	}
+	__check_sync_reqs(file);
 
 	__file_flush(args);
 }
@@ -2153,6 +2166,7 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 	sync_args->fn.file_op = cb_fn;
 	sync_args->arg = cb_arg;
 	sync_args->op.sync.offset = file->append_pos;
+	sync_args->op.sync.xattr_in_progress = false;
 	TAILQ_INSERT_TAIL(&file->sync_requests, sync_req, args.op.sync.tailq);
 	pthread_spin_unlock(&file->lock);
 
