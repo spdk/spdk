@@ -313,11 +313,6 @@ more:
 		return -1;
 	}
 
-	if (rc == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "remote closed connection\n");
-		return -1;
-	}
-
 	request->send_offset += rc;
 	request->send_len -= rc;
 
