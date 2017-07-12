@@ -215,6 +215,9 @@ struct spdk_bdev {
 
 	uint32_t vbdevs_opened_for_write;
 
+	/** GUID for logical volume store built on top of this block device. */
+	char *lvs_guid;
+
 	/** List of open descriptors for this block device. */
 	TAILQ_HEAD(, spdk_bdev_desc) open_descs;
 

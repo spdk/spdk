@@ -36,9 +36,6 @@
 #include "spdk/string.h"
 #include "vbdev_lvol.h"
 
-/* Length of string returned from uuid_unparse() */
-#define UUID_STRING_LEN 37
-
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 {
