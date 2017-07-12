@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a0ae298_387d5ac1",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-12T17:07:17Z",
+      "side": 1,
+      "message": "This is going to insert match_req on the free request list, and nvme_allocate_request() will pull that request off and overwrite its values, so using it to compare later is always going to succeed (it is literally going to be comparing with itself).  Maybe we need two requests: match_req, which is filled out with the expected values but not inserted into the free list, and some other request, which is memset() to 0 and added to the free list.",
+      "revId": "2ba7603d89d7e1f18be6814b4d19ece60fa2c722",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
