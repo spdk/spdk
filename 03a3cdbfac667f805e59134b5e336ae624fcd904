@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cf6f3d8_ad55a5b4",
+        "filename": "test/lib/hotplug/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-12T10:34:52Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this test plan be split into smaller, separate parts in \ntest/lib/nvmf, test/lib/iscsi, etc?",
+      "range": {
+        "startLine": 23,
+        "startChar": 18,
+        "endLine": 23,
+        "endChar": 51
+      },
+      "revId": "03a3cdbfac667f805e59134b5e336ae624fcd904",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
