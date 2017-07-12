@@ -108,6 +108,52 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
 
+/* stub callback used by test_nvme_user_copy_cmd_complete() */
+static int ut_dummy_cb_ret = 0;
+static void
+dummy_cb(void *user_cb_arg, struct spdk_nvme_cpl *cpl)
+{
+	ut_dummy_cb_ret  = 1;
+}
+
+static void
+test_nvme_user_copy_cmd_complete(void)
+{
+	struct nvme_request req;
+	struct spdk_nvme_cpl cpl;
+	int test_data = 0xdeadbeef;
+	int buff_size = sizeof(test_data);
+
+	memset(&req, 0, sizeof(struct nvme_request));
+	memset(&cpl, 0, sizeof(struct spdk_nvme_cpl));
+
+	/* without user buffer */
+	req.user_cb_fn = (void *)dummy_cb;
+	ut_dummy_cb_ret = 0;
+
+	nvme_user_copy_cmd_complete(&req, &cpl);
+	CU_ASSERT(ut_dummy_cb_ret == 1);
+
+	/* with user buffer */
+	req.user_buffer = malloc(buff_size);
+	CU_ASSERT(req.user_buffer != NULL);
+	memset(req.user_buffer, 0, buff_size);
+	req.payload_size = buff_size;
+	req.payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	/* code under test will free this */
+	req.payload.u.contig = malloc(buff_size);
+	SPDK_CU_ASSERT_FATAL(req.payload.u.contig != NULL);
+	memcpy(req.payload.u.contig, &test_data, buff_size);
+	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	req.pid = getpid();
+
+	ut_dummy_cb_ret = 0;
+	nvme_user_copy_cmd_complete(&req, &cpl);
+	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) == 0);
+	CU_ASSERT(ut_dummy_cb_ret == 1);
+	free(req.user_buffer);
+}
+
 static void
 test_nvme_allocate_request(void)
 {
@@ -622,6 +668,8 @@ int main(int argc, char **argv)
 			    test_nvme_allocate_request) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request_null",
 			    test_nvme_allocate_request_null) == NULL ||
+		CU_add_test(suite, "test_nvme_user_copy_cmd_complete",
+			    test_nvme_user_copy_cmd_complete) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
