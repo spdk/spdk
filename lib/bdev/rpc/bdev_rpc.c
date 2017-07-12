@@ -42,6 +42,7 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
+	const char *lvs_guid = NULL;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -61,6 +62,12 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "name");
 		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+		lvs_guid = spdk_bdev_get_lvs_guid(bdev);
+		if (lvs_guid != NULL) {
+			spdk_json_write_name(w, "lvs_guid");
+			spdk_json_write_string(w, lvs_guid);
+		}
 
 		spdk_json_write_name(w, "product_name");
 		spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));

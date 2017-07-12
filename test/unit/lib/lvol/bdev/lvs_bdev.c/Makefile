@@ -41,7 +41,7 @@ C_SRCS := lvs_bdev_ut.c
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/lvol/bdev
 
-SPDK_LIB_LIST = log
+SPDK_LIB_LIST = log util
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
 
