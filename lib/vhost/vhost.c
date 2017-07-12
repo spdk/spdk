@@ -52,6 +52,7 @@ static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
+	spdk_vhost_dev_mem_validate(vdev);
 	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
 }
 
@@ -218,6 +219,22 @@ spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 		}
 
 		spdk_mem_unregister((void *)start, len);
+	}
+}
+
+void
+spdk_vhost_dev_mem_validate(struct spdk_vhost_dev *vdev)
+{
+	struct rte_vhost_mem_region *region;
+	uint32_t i;
+
+	for (i = 0; i < vdev->mem->nregions; i++) {
+		uint64_t start, end, len;
+		region = &vdev->mem->regions[i];
+		start = FLOOR_2MB(region->mmap_addr);
+		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+		len = end - start;
+		spdk_mem_validate((void *)start, len);
 	}
 }
 

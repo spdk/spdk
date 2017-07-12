@@ -90,6 +90,7 @@ struct spdk_vhost_dev_backend {
 
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
+void spdk_vhost_dev_mem_validate(struct spdk_vhost_dev *vdev);
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr);
 

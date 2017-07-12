@@ -67,6 +67,14 @@
 /* Max value for a 16-bit ref count. */
 #define VTOPHYS_MAX_REF_COUNT (0xFFFF)
 
+static uint64_t g_paddr_count;
+
+#ifdef DEBUG
+#define VTOPHYS_VALIDATION_HISTORY_SIZE 1024 * 1024
+
+static uint64_t g_prev_paddrs[VTOPHYS_VALIDATION_HISTORY_SIZE];
+#endif
+
 /* Translation of a single 2MB page. */
 struct map_2mb {
 	uint64_t translation_2mb;
@@ -241,6 +249,19 @@ spdk_mem_unregister(void *vaddr, size_t len)
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
 		map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, vaddr, len);
+	}
+	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+}
+
+void
+spdk_mem_validate(void *vaddr, size_t len)
+{
+	struct spdk_mem_map *map;
+
+	pthread_mutex_lock(&g_spdk_mem_map_mutex);
+	g_paddr_count = 0;
+	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+		map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_VALIDATE, vaddr, len);
 	}
 	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 }
@@ -478,6 +499,7 @@ _spdk_vtophys_unregister_one(uint64_t vfn_2mb)
 	spdk_mem_map_clear_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024);
 }
 
+#ifdef DEBUG
 static void
 spdk_vtophys_register(void *vaddr, uint64_t len)
 {
@@ -505,6 +527,13 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 		uint64_t vaddr = vfn_2mb << SHIFT_2MB;
 		uint64_t paddr = vtophys_get_paddr(vaddr);
 
+		if (g_paddr_count < sizeof(g_prev_paddrs) / sizeof(g_prev_paddrs[0])) {
+			if (g_prev_paddrs[g_paddr_count] > 0 && paddr != g_prev_paddrs[g_paddr_count]) {
+				abort();
+			}
+			g_prev_paddrs[g_paddr_count++] = paddr;
+		}
+
 		if (paddr == RTE_BAD_PHYS_ADDR) {
 #ifdef DEBUG
 			fprintf(stderr, "could not get phys addr for 0x%" PRIx64 "\n", vaddr);
@@ -517,6 +546,7 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 		len--;
 	}
 }
+#endif
 
 static void
 spdk_vtophys_unregister(void *vaddr, uint64_t len)
@@ -548,6 +578,53 @@ spdk_vtophys_unregister(void *vaddr, uint64_t len)
 	}
 }
 
+#ifdef DEBUG
+static void
+spdk_vtophys_validate(void *vaddr, uint64_t len)
+{
+	uint64_t vfn_2mb;
+
+	if ((uintptr_t)vaddr & ~MASK_128TB) {
+		printf("invalid usermode virtual address %p\n", vaddr);
+		return;
+	}
+
+	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+		fprintf(stderr, "invalid %s parameters, vaddr=%p len=%ju\n",
+			__func__, vaddr, len);
+		return;
+	}
+
+	vfn_2mb = (uintptr_t)vaddr >> SHIFT_2MB;
+	len = len >> SHIFT_2MB;
+
+	while (len > 0) {
+		uint64_t vaddr = vfn_2mb << SHIFT_2MB;
+		uint64_t paddr = vtophys_get_paddr(vaddr);
+
+		if (g_paddr_count >= VTOPHYS_VALIDATION_HISTORY_SIZE) {
+			fprintf(stderr, "run out of vtophys history memory. consider increasing VTOPHYS_VALIDATION_HISTORY_SIZE value\n");
+			break;
+		}
+
+		int64_t diff = (int64_t) (paddr - g_prev_paddrs[g_paddr_count]);
+		if (diff != 0) {
+			fprintf(stderr, "physical address of %"PRIu64" have changed! value: %"PRIu64" previous: %"PRIu64" (current - previous = %"PRId64" bytes = %"PRId64" MB\n", vaddr, paddr, g_prev_paddrs[g_paddr_count], diff, diff / 1024 / 1024);
+			return;
+		}
+		g_prev_paddrs[g_paddr_count++] = paddr;
+
+		if (paddr == RTE_BAD_PHYS_ADDR) {
+			fprintf(stderr, "could not get phys addr for 0x%" PRIx64 "\n", vaddr);
+			return;
+		}
+
+		vfn_2mb++;
+		len--;
+	}
+}
+#endif
+
 static void
 spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		    enum spdk_mem_map_notify_action action,
@@ -559,6 +636,13 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 		spdk_vtophys_unregister(vaddr, len);
+		break;
+	case SPDK_MEM_MAP_NOTIFY_VALIDATE:
+#ifdef DEBUG
+		spdk_vtophys_validate(vaddr, len);
+#else
+		fprintf(stderr, "SPDK_MEM_MAP_NOTIFY_VALIDATE requires spdk to be built in debug mode\n");
+#endif
 		break;
 	}
 }

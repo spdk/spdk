@@ -402,6 +402,7 @@ struct spdk_mem_map;
 enum spdk_mem_map_notify_action {
 	SPDK_MEM_MAP_NOTIFY_REGISTER,
 	SPDK_MEM_MAP_NOTIFY_UNREGISTER,
+	SPDK_MEM_MAP_NOTIFY_VALIDATE,
 };
 
 typedef void (*spdk_mem_map_notify_cb)(void *cb_ctx, struct spdk_mem_map *map,
@@ -456,6 +457,12 @@ void spdk_mem_register(void *vaddr, size_t len);
  *  are completed or cancelled before calling this function.
  */
 void spdk_mem_unregister(void *vaddr, size_t len);
+
+/**
+ * Check if physical addresses of given memory region have changed since last
+ * spdk_mem_validate call. Requires debug build.
+ */
+void spdk_mem_validate(void *vaddr, size_t len);
 
 #ifdef __cplusplus
 }

@@ -120,6 +120,9 @@ test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 		action_str = "unregister";
 		break;
+	case SPDK_MEM_MAP_NOTIFY_VALIDATE:
+		action_str = "validate";
+		break;
 	}
 
 	printf("%s: %s %p-%p (%zu bytes)\n", __func__, action_str, vaddr, vaddr + size - 1, size);
