@@ -91,3 +91,10 @@ Configuration file syntax:
 ~~~
 
 This exports 1 rbd block device, named Ceph0.
+
+## Logical Volumes
+
+The SPDK lvol driver allows to dynamically partition other SPDK backends.
+No static configuration for this driver. Refer to lvol.md for detailed RPC configuration.
+
+@ref lvol
