@@ -19,6 +19,11 @@
   written to and read from correctly on each LUN
 - runs on Fedora 25 and Ubuntu 16.04 guest systems
 
+#### Lvol tests
+- Using the same setup and steps as FIO Integrity tests
+- Logical volume block device is used as backend instead of using
+    NVMe device backed directly
+
 #### Filesystem integrity
 - runs SPDK with 1 VM with 1 NVMe device attached.
 - creates a partition table and filesystem on passed device, and mounts it
@@ -37,6 +42,22 @@
 - Linux guests run FIO integrity jobs to verify read/write operations,
     while Windows HCK SCSI Compliance Test 2.0 is running on Windows guest
 
+#### RPC tests
+- start SPDK vhost with fresh configuration, just RPC enabled
+- modify vhost running configuration using related RPC calls; this includes:
+    - creating and removing of scsi and block controllers,
+    - adding and removing scsi luns,
+    - adding and removing controllers to/from VMs during I/O operations
+        (hotplug and hotremove tests),
+    - verification of actual configuration vs user input based on "get" RPC calls
+
+#### Hotplug & Hotremove tests
+- run as part of RPC tests
+- adding new LUNs to vhost scsi controller takes place
+    when there are ongoing I/O operations on VM
+- removing LUNS from vhost scsi controller takes place 
+    when there are ongoing I/O operations on VM
+- I/O operations done with FIO, with enabled I/O verification  
 
 
 ### Performance tests
