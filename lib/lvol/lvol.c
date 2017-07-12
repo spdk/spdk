@@ -49,6 +49,7 @@ _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	} else {
 		assert(bs != NULL);
 		lvs->blobstore = bs;
+		lvs->channel = spdk_bs_alloc_io_channel(bs);
 
 		SPDK_TRACELOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
 	}
@@ -120,6 +121,11 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	lvs_req->u.lvs_basic.cb_arg = cb_arg;
 
 	SPDK_TRACELOG(SPDK_TRACE_LVOL, "Unloading lvol store\n");
+
+	assert(lvs->channel != NULL);
+	spdk_bs_free_io_channel(lvs->channel);
+	lvs->channel = NULL;
+
 	spdk_bs_unload(lvs->blobstore, _lvs_unload_cb, lvs_req);
 	free(lvs);
 
@@ -252,6 +258,14 @@ spdk_lvol_destroy(struct spdk_lvol *lvol)
 	spdk_bs_md_delete_blob(bs, blobid, _spdk_lvol_close_blob_cb, lvol);
 	free(lvol->name);
 	free(lvol);
+}
+
+struct spdk_io_channel *
+spdk_lvol_get_io(struct spdk_lvol *lvol)
+{
+	assert(lvol->lvol_store->channel != NULL);
+
+	return lvol->lvol_store->channel;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)
