@@ -52,7 +52,9 @@ static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
-	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
+	void *ret = (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
+	spdk_vtophys_validate(ret);
+	return ret;
 }
 
 /*
