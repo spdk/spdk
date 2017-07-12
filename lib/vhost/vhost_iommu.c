@@ -196,8 +196,17 @@ vfio_pci_memory_region_op(uint64_t vaddr, uint64_t phys_addr, uint64_t size, int
 		}
 
 		if (vfio_cfg.maps_count == vfio_cfg.maps_max_count) {
-			vfio_cfg.maps_max_count += 128;
-			vfio_cfg.maps = realloc(vfio_cfg.maps, vfio_cfg.maps_max_count * sizeof(vfio_cfg.maps[0]));
+			struct vfio_map *new_maps;
+			size_t new_maps_max_count;
+
+			new_maps_max_count = vfio_cfg.maps_max_count + 128;
+			new_maps = realloc(vfio_cfg.maps, new_maps_max_count * sizeof(vfio_cfg.maps[0]));
+			if (new_maps == NULL) {
+				return -ENOMEM;
+			}
+
+			vfio_cfg.maps_max_count = new_maps_max_count;
+			vfio_cfg.maps = new_maps;
 			map = &vfio_cfg.maps[idx];
 		}
 
