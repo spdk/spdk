@@ -34,6 +34,10 @@
 #include "spdk_cunit.h"
 
 #include "lib/test_env.c"
+
+/* HACK: disable VTune integration so the unit test doesn't need VTune headers and libs to build */
+#undef SPDK_CONFIG_VTUNE
+
 #include "bdev.c"
 
 SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
