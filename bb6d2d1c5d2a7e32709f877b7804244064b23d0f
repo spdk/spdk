@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e500b2cf_ac698679",
+        "filename": "test/lib/test_env.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-12T22:35:53Z",
+      "side": 1,
+      "message": "I think this is really non-intuitive.  I\u0027m having a hard time getting my head around it which makes me think it will be even harder for new folks coming into SPDK to be able to use.  This seems to be hardcoded around an int-size allocations - what happens for other unit tests or functions that need something bigger?\n\nMaybe for now we drop this part (and the part of the unit test that uses it) until we can look for a solution that\u0027s a bit easier to understand?",
+      "revId": "bb6d2d1c5d2a7e32709f877b7804244064b23d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
