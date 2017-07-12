@@ -175,6 +175,7 @@ test_decode_object(void)
 
 	/* Passing Test: object containing simple types */
 	CU_ASSERT(spdk_json_decode_object(object, decoders, 4, &output) == 0);
+	SPDK_CU_ASSERT_FATAL(output.my_name != NULL);
 	CU_ASSERT(memcmp(output.my_name, answer_str, 6) == 0);
 	CU_ASSERT(output.my_int == answer);
 	CU_ASSERT(output.my_bool == answer_bool);
