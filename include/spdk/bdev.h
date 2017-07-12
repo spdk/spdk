@@ -177,6 +177,14 @@ int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 const char *spdk_bdev_get_name(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device logical volume store GUID.
+ *
+ * \param bdev Block device to query.
+ * \return GUID of logical volumes store as a null-terminated string.
+ */
+const char *spdk_bdev_get_lvs_guid(const struct spdk_bdev *bdev);
+
+/**
  * Get block device product name.
  *
  * \param bdev Block device to query.
