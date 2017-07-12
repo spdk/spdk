@@ -46,7 +46,7 @@
 #define PRIMARY_PARTITION_NUMBER 4
 #define GPT_PROTECTIVE_MBR 1
 #define SPDK_MAX_NUM_PARTITION_ENTRIES 128
-#define SPDK_GPT_CRC32C_POLYNOMIAL_REFLECT 0xedb88320UL
+#define SPDK_GPT_CRC32_POLYNOMIAL_REFLECT 0xedb88320UL
 
 static uint32_t spdk_gpt_crc32_table[256];
 
@@ -60,7 +60,7 @@ spdk_gpt_init_crc32(void)
 		val = i;
 		for (j = 0; j < 8; j++) {
 			if (val & 1) {
-				val = (val >> 1) ^ SPDK_GPT_CRC32C_POLYNOMIAL_REFLECT;
+				val = (val >> 1) ^ SPDK_GPT_CRC32_POLYNOMIAL_REFLECT;
 			} else {
 				val = (val >> 1);
 			}
