@@ -37,6 +37,24 @@
 - Linux guests run FIO integrity jobs to verify read/write operations,
     while Windows HCK SCSI Compliance Test 2.0 is running on Windows guest
 
+#### RPC tests
+- start SPDK vhost with fresh configuration, just RPC enabled
+- modify vhost running configuration using related RPC calls; this includes:
+    - creating and removing of scsi and block controllers,
+    - adding and removing scsi luns,
+    - adding and removing controllers to/from VMs during I/O operations
+        (hotplug and hotremove tests),
+    - verification of actual configuration vs user input based on "get" RPC calls
+
+#### Hotplug & Hotremove tests
+- run as part of RPC tests
+- hotplug and hotremove operations performed both with and without
+    background I/O traffic
+- I/O traffic generated with FIO read/write operations,
+    with enabled I/O verification
+- vhost device hotplug and hotremove tests - adding and removing device to
+    a controller which is already in use
+- LUN hotremove from VM (simulated by unbinding the disk from driver)
 
 
 ### Performance tests
