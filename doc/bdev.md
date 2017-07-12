@@ -155,3 +155,8 @@ kill $nbd_pid
 # the first partition will be automatically exposed as
 # Nvme0n1p1 in SPDK applications.
 ~~~
+
+## Logical Volumes
+
+The SPDK lvol driver allows to dynamically partition other SPDK backends.
+No static configuration for this driver. Refer to @ref lvol for detailed RPC configuration.
