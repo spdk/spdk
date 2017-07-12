@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ea59923_8a47f60b",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-12T17:01:53Z",
+      "side": 1,
+      "message": "I think this sizeof(buff_size) should just be buff_size.",
+      "range": {
+        "startLine": 149,
+        "startChar": 49,
+        "endLine": 149,
+        "endChar": 66
+      },
+      "revId": "150327a963014ee6ade7835e64e701e6b4759c1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfddff48_24faaec3",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-12T17:01:53Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 163,
+        "startChar": 49,
+        "endLine": 163,
+        "endChar": 67
+      },
+      "revId": "150327a963014ee6ade7835e64e701e6b4759c1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
