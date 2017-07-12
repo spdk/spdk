@@ -457,6 +457,12 @@ void spdk_mem_register(void *vaddr, size_t len);
  */
 void spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ * Check if latest registered physical address of given virtual address is still valid.
+ * Requires debug build. Will abort() on mismatch.
+ */
+void spdk_vtophys_validate(void *buf);
+
 #ifdef __cplusplus
 }
 #endif

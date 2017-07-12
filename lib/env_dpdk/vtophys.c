@@ -588,6 +588,15 @@ spdk_vtophys_register_dpdk_mem(void)
 	}
 }
 
+void
+spdk_vtophys_validate(void *buf) {
+	uint64_t actual = vtophys_get_paddr((uint64_t) buf);
+	uint64_t cached = spdk_vtophys(buf);
+	if (actual != cached) {
+		abort();
+	}
+}
+
 uint64_t
 spdk_vtophys(void *buf)
 {
