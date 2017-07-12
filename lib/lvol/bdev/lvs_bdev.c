@@ -32,6 +32,7 @@
  */
 
 #include "spdk/blob_bdev.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -48,6 +49,7 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	struct spdk_bs_dev *bs_dev = req->u.lvs_handle.bs_dev;
 	struct lvol_store_bdev_pair *lvs_pair;
 	struct spdk_bdev *bdev = req->u.lvs_handle.base_bdev;
+	char guid[UUID_STRING_LEN];
 
 	if (lvserrno != 0) {
 		assert(lvs == NULL);
@@ -66,6 +68,9 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	}
 	lvs_pair->lvs = lvs;
 	lvs_pair->bdev = bdev;
+
+	uuid_unparse(lvs->uuid, guid);
+	bdev->lvs_guid = spdk_sprintf_alloc("%s", guid);
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_pair, lvol_stores);
 	SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev inserted\n");
@@ -146,6 +151,9 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	lvs_pair = vbdev_get_lvs_pair_by_lvs(lvs);
 	req->u.lvs_basic.base_bdev = lvs_pair->bdev;
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_pair, lvol_stores);
+
+	free(lvs_pair->bdev->lvs_guid);
+	lvs_pair->bdev->lvs_guid = NULL;
 
 	free(lvs_pair);
 

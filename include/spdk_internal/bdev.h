@@ -225,6 +225,9 @@ struct spdk_bdev {
 	 */
 	struct spdk_bdev_module_if *claim_module;
 
+	/** GUID for logical volume store built on top of this block device. */
+	char *lvs_guid;
+
 	/** List of open descriptors for this block device. */
 	TAILQ_HEAD(, spdk_bdev_desc) open_descs;
 
