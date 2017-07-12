@@ -341,33 +341,7 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 	struct pollfd *pfd;
 	struct spdk_jsonrpc_server_conn *conn;
 
-	rc = poll(server->pollfds, server->num_conns + 1, 0);
-
-	if (rc < 0) {
-		if (errno == EINTR) {
-			return 0;
-		}
-
-		SPDK_ERRLOG("jsonrpc poll() failed\n");
-		return -1;
-	}
-
-	if (rc == 0) {
-		/* No sockets are ready */
-		return 0;
-	}
-
-	/* Check listen socket */
-	if (server->num_conns < SPDK_JSONRPC_MAX_CONNS) {
-		pfd = &server->pollfds[0];
-		if (pfd->revents) {
-			spdk_jsonrpc_server_accept(server);
-		}
-		pfd->revents = 0;
-	}
-
 	for (i = 0; i < server->num_conns; i++) {
-		pfd = &server->pollfds[i + 1];
 		conn = &server->conns[i];
 
 		if (conn->closed) {
@@ -396,6 +370,36 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 
 			continue;
 		}
+	}
+
+	rc = poll(server->pollfds, server->num_conns + 1, 0);
+
+	if (rc < 0) {
+		if (errno == EINTR) {
+			return 0;
+		}
+
+		SPDK_ERRLOG("jsonrpc poll() failed\n");
+		return -1;
+	}
+
+	if (rc == 0) {
+		/* No sockets are ready */
+		return 0;
+	}
+
+	/* Check listen socket */
+	if (server->num_conns < SPDK_JSONRPC_MAX_CONNS) {
+		pfd = &server->pollfds[0];
+		if (pfd->revents) {
+			spdk_jsonrpc_server_accept(server);
+		}
+		pfd->revents = 0;
+	}
+
+	for (i = 0; i < server->num_conns; i++) {
+		pfd = &server->pollfds[i + 1];
+		conn = &server->conns[i];
 
 		if (pfd->revents & POLLOUT) {
 			rc = spdk_jsonrpc_server_conn_send(conn);
