@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc7102b4_e42edc4d",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-12T10:14:40Z",
+      "side": 1,
+      "message": "yes I know, whitespace",
+      "range": {
+        "startLine": 58,
+        "startChar": 54,
+        "endLine": 58,
+        "endChar": 55
+      },
+      "revId": "e4f942c28bc3b98480efad3026ca70a6cefd206d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
