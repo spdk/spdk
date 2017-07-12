@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81da949b_a361b00c",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 14
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-12T20:08:23Z",
+      "side": 1,
+      "message": "For now, I think you can just remove blob and blob_bdev from the list of modules included in RocksDB.  We will need to think if there is a better way to handle these dependencies in the future, but for now I\u0027m ok with just fixing up the RocksDB makefile snippet.  See lib/rocksdb/spdk.rocksdb.mk.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
