@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdev.c scsi_nvme.c
+DIRS-y = bdev.c scsi_nvme.c vbdev_lvol.c
 
 .PHONY: all clean $(DIRS-y)
 
