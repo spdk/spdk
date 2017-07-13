@@ -792,6 +792,7 @@ INPUT                  = ../include/spdk \
                          ioat.md \
                          iscsi.md \
                          nvme.md \
+                         nvme-cli.md \
                          nvmf.md \
                          vhost.md
 
