@@ -35,7 +35,7 @@
 
 #include "nvmf_internal.h"
 #include "request.h"
-#include "session.h"
+#include "ctrlr.h"
 #include "subsystem.h"
 #include "transport.h"
 
@@ -76,7 +76,7 @@ nvmf_process_property_get(struct spdk_nvmf_request *req)
 	cmd = &req->cmd->prop_get_cmd;
 	response = &req->rsp->prop_get_rsp;
 
-	spdk_nvmf_property_get(req->conn->sess, cmd, response);
+	spdk_nvmf_property_get(req->conn->ctrlr, cmd, response);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -88,7 +88,7 @@ nvmf_process_property_set(struct spdk_nvmf_request *req)
 
 	cmd = &req->cmd->prop_set_cmd;
 
-	spdk_nvmf_property_set(req->conn->sess, cmd, &req->rsp->nvme_cpl);
+	spdk_nvmf_property_set(req->conn->ctrlr, cmd, &req->rsp->nvme_cpl);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -102,7 +102,7 @@ spdk_nvmf_handle_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_rsp *response = &req->rsp->connect_rsp;
 	struct spdk_nvmf_conn *conn = req->conn;
 
-	spdk_nvmf_session_connect(conn, connect, connect_data, response);
+	spdk_nvmf_ctrlr_connect(conn, connect, connect_data, response);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      response->status_code_specific.success.cntlid);
@@ -187,8 +187,8 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 
 	cap_hdr = &req->cmd->nvmf_cmd;
 
-	if (conn->sess == NULL) {
-		/* No session established yet; the only valid command is Connect */
+	if (conn->ctrlr == NULL) {
+		/* No ctrlr established yet; the only valid command is Connect */
 		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
 			return nvmf_process_connect(req);
 		} else {
@@ -199,7 +199,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 		}
 	} else if (conn->type == CONN_TYPE_AQ) {
 		/*
-		 * Session is established, and this is an admin queue.
+		 * Controller session is established, and this is an admin queue.
 		 * Disallow Connect and allow other fabrics commands.
 		 */
 		switch (cap_hdr->fctype) {
@@ -214,7 +214,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	} else {
-		/* Session is established, and this is an I/O queue */
+		/* Controller session is established, and this is an I/O queue */
 		/* For now, no I/O-specific Fabrics commands are implemented (other than Connect) */
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
@@ -269,7 +269,7 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
 int
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	spdk_nvmf_request_exec_status status;
@@ -278,7 +278,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		status = nvmf_process_fabrics_command(req);
-	} else if (session == NULL || !session->vcprop.cc.bits.en) {
+	} else if (ctrlr == NULL || !ctrlr->vcprop.cc.bits.en) {
 		/* Only Fabric commands are allowed when the controller is disabled */
 		SPDK_ERRLOG("Non-Fabric command sent to disabled controller\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
@@ -286,7 +286,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	} else {
 		struct spdk_nvmf_subsystem *subsystem;
 
-		subsystem = session->subsys;
+		subsystem = ctrlr->subsys;
 		assert(subsystem != NULL);
 
 		if (subsystem->is_removed) {
