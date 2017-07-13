@@ -369,7 +369,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 
 		base_bdev_name = spdk_conf_section_get_nmval(sp, "Split", i, 0);
 		if (!base_bdev_name) {
-			SPDK_ERRLOG("Split configuration missing blockdev name\n");
+			SPDK_ERRLOG("Split configuration missing bdev name\n");
 			break;
 		}
 

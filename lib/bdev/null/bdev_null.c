@@ -41,7 +41,7 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-#include "blockdev_null.h"
+#include "bdev_null.h"
 
 SPDK_DECLARE_BDEV_MODULE(null);
 
@@ -54,13 +54,13 @@ static TAILQ_HEAD(, null_bdev) g_null_bdev_head;
 static void *g_null_read_buf;
 
 static int
-blockdev_null_get_ctx_size(void)
+bdev_null_get_ctx_size(void)
 {
 	return 0;
 }
 
 static int
-blockdev_null_destruct(void *ctx)
+bdev_null_destruct(void *ctx)
 {
 	struct null_bdev *bdev = ctx;
 
@@ -72,7 +72,7 @@ blockdev_null_destruct(void *ctx)
 }
 
 static void
-blockdev_null_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_null_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -96,7 +96,7 @@ blockdev_null_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bd
 }
 
 static bool
-blockdev_null_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+bdev_null_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -111,16 +111,16 @@ blockdev_null_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static struct spdk_io_channel *
-blockdev_null_get_io_channel(void *ctx)
+bdev_null_get_io_channel(void *ctx)
 {
 	return spdk_get_io_channel(&g_null_bdev_head);
 }
 
 static const struct spdk_bdev_fn_table null_fn_table = {
-	.destruct		= blockdev_null_destruct,
-	.submit_request		= blockdev_null_submit_request,
-	.io_type_supported	= blockdev_null_io_type_supported,
-	.get_io_channel		= blockdev_null_get_io_channel,
+	.destruct		= bdev_null_destruct,
+	.submit_request		= bdev_null_submit_request,
+	.io_type_supported	= bdev_null_io_type_supported,
+	.get_io_channel		= bdev_null_get_io_channel,
 };
 
 struct spdk_bdev *
@@ -179,7 +179,7 @@ null_bdev_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-blockdev_null_initialize(void)
+bdev_null_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Null");
 	uint64_t size_in_mb, num_blocks;
@@ -261,7 +261,7 @@ end:
 }
 
 static void
-blockdev_null_finish(void)
+bdev_null_finish(void)
 {
 	struct null_bdev *bdev, *tmp;
 
@@ -272,7 +272,7 @@ blockdev_null_finish(void)
 }
 
 static void
-blockdev_null_get_spdk_running_config(FILE *fp)
+bdev_null_get_spdk_running_config(FILE *fp)
 {
 	struct null_bdev *bdev;
 	uint64_t null_bdev_size;
@@ -287,7 +287,7 @@ blockdev_null_get_spdk_running_config(FILE *fp)
 	}
 }
 
-SPDK_BDEV_MODULE_REGISTER(null, blockdev_null_initialize, blockdev_null_finish,
-			  blockdev_null_get_spdk_running_config, blockdev_null_get_ctx_size)
+SPDK_BDEV_MODULE_REGISTER(null, bdev_null_initialize, bdev_null_finish,
+			  bdev_null_get_spdk_running_config, bdev_null_get_ctx_size)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_null", SPDK_TRACE_BDEV_NULL)

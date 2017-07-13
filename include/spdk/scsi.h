@@ -33,7 +33,7 @@
 
 /**
  * \file
- * SCSI to blockdev translation layer
+ * SCSI to bdev translation layer
  */
 
 #ifndef SPDK_SCSI_H
@@ -134,7 +134,7 @@ struct spdk_scsi_task {
 	uint8_t sense_data[32];
 	size_t sense_data_len;
 
-	void *blockdev_io;
+	void *bdev_io;
 
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
 
