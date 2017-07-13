@@ -56,6 +56,8 @@ int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_
 void spdk_lvs_remove_own_lvols(struct spdk_lvol_store *lvol_store);
 int spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+int spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,
+		     spdk_lvol_op_complete cb_fn, void *cb_arg);
 void spdk_lvol_destroy(struct spdk_lvol *lvol);
 struct lvol_store_bdev_pair *vbdev_get_lvs_pair_by_lvs(struct spdk_lvol_store *lvs_orig);
 struct spdk_lvol_store *vbdev_get_lvol_store_by_guid(uuid_t uuid);

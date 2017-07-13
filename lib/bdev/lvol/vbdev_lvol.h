@@ -39,5 +39,7 @@
 int vbdev_lvol_create(uuid_t guid, size_t sz, spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
 
+int vbdev_lvol_resize(char *name, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 void vbdev_lvol_close(struct spdk_lvol *lvol);
 #endif /* SPDK_VBDEV_LVOL_H */
