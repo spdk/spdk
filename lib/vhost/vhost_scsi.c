@@ -42,6 +42,7 @@
 #include "spdk/event.h"
 #include "spdk/util.h"
 #include "spdk/likely.h"
+#include "spdk/rpc.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -692,6 +693,54 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 
 	return (struct spdk_vhost_scsi_dev *)ctrlr;
 }
+static int
+spdk_vhost_scsi_config_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct spdk_scsi_dev *dev;
+	struct spdk_vhost_dev *vdev = ctx;
+
+	for (uint32_t i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		dev = spdk_vhost_scsi_dev_get_dev(vdev, i);
+		if (!dev) {
+			continue;
+		}
+		spdk_json_write_object_begin(w);
+		spdk_json_write_name(w, "scsi_dev_num");
+		spdk_json_write_uint32(w, i);
+
+		spdk_json_write_name(w, "id");
+		spdk_json_write_int32(w, spdk_scsi_dev_get_id(dev));
+
+		spdk_json_write_name(w, "device_name");
+		spdk_json_write_string(w, spdk_scsi_dev_get_name(dev));
+
+		spdk_json_write_name(w, "luns");
+		spdk_json_write_array_begin(w);
+
+		for (uint32_t l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
+			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
+
+			if (!lun) {
+				continue;
+			}
+
+			spdk_json_write_object_begin(w);
+
+			spdk_json_write_name(w, "id");
+			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
+
+			spdk_json_write_name(w, "name");
+			spdk_json_write_string(w, spdk_scsi_lun_get_name(lun));
+
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
+
+		spdk_json_write_object_end(w);
+	}
+
+	return 0;
+}
 
 int
 spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
@@ -709,6 +758,8 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		spdk_dma_free(svdev);
 		return -ENOMEM;
 	}
+	svdev->vdev.dump_config_json = spdk_vhost_scsi_config_json;
+	svdev->vdev.ctxt = &svdev->vdev;
 
 	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
 				      &spdk_vhost_scsi_device_backend);

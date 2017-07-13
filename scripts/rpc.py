@@ -563,5 +563,11 @@ def get_vhost_blk_controllers(args):
 p = subparsers.add_parser('get_vhost_blk_controllers', help='List vhost block controllers')
 p.set_defaults(func=get_vhost_blk_controllers)
 
+def get_vhost_controllers(args):
+    print_dict(jsonrpc_call('get_vhost_controllers'))
+
+p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
+p.set_defaults(func=get_vhost_controllers)
+
 args = parser.parse_args()
 args.func(args)
