@@ -288,6 +288,6 @@ bdev_null_get_spdk_running_config(FILE *fp)
 }
 
 SPDK_BDEV_MODULE_REGISTER(null, bdev_null_initialize, bdev_null_finish,
-			  bdev_null_get_spdk_running_config, bdev_null_get_ctx_size)
+			  bdev_null_get_spdk_running_config, bdev_null_get_ctx_size, NULL)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_null", SPDK_TRACE_BDEV_NULL)

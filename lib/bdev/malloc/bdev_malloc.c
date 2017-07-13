@@ -100,7 +100,7 @@ bdev_malloc_get_ctx_size(void)
 }
 
 SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, bdev_malloc_finish,
-			  bdev_malloc_get_spdk_running_config, bdev_malloc_get_ctx_size)
+			  bdev_malloc_get_spdk_running_config, bdev_malloc_get_ctx_size, NULL)
 
 static void
 bdev_malloc_delete_from_list(struct malloc_disk *malloc_disk)
