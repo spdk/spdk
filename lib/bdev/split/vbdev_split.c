@@ -341,10 +341,10 @@ cleanup:
 	return rc;
 }
 
-static void
+static int
 vbdev_split_init(void)
 {
-	spdk_vbdev_module_init_next(0);
+	return 0;
 }
 
 static void

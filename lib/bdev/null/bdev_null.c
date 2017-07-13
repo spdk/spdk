@@ -178,7 +178,7 @@ null_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
 }
 
-static void
+static int
 bdev_null_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Null");
@@ -257,7 +257,7 @@ bdev_null_initialize(void)
 	}
 
 end:
-	spdk_bdev_module_init_next(rc);
+	return rc;
 }
 
 static void

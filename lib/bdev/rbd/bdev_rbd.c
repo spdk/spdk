@@ -201,7 +201,7 @@ bdev_rbd_start_aio(rbd_image_t image, struct bdev_rbd_io *cmd,
 	return 0;
 }
 
-static void bdev_rbd_library_init(void);
+static int bdev_rbd_library_init(void);
 static void bdev_rbd_library_fini(void);
 
 static int
@@ -549,7 +549,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	return &rbd->disk;
 }
 
-static void
+static int
 bdev_rbd_library_init(void)
 {
 	int i, rc = 0;
@@ -609,5 +609,5 @@ bdev_rbd_library_init(void)
 	}
 
 end:
-	spdk_bdev_module_init_next(rc);
+	return rc;
 }

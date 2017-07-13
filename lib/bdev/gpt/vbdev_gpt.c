@@ -480,7 +480,7 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 	return 0;
 }
 
-static void
+static int
 vbdev_gpt_init(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Gpt");
@@ -490,7 +490,7 @@ vbdev_gpt_init(void)
 		g_gpt_disabled = true;
 	}
 
-	spdk_vbdev_module_init_next(0);
+	return 0;
 }
 
 static void
