@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4eda6fa_674cf801",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:49:45Z",
+      "side": 1,
+      "message": "This was still using the older vhost_scsi_vm_image.qcow2; I don\u0027t know if this was on purpose or if it was just missed when we updated the other VM image filenames.",
+      "revId": "302f7f03f252f9dbd5a5f949cfde865b40eb950e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
