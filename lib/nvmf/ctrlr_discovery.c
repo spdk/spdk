@@ -155,7 +155,7 @@ nvmf_get_log_page_len(struct spdk_nvme_cmd *cmd)
 static int
 nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint64_t log_page_offset;

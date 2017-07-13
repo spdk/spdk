@@ -144,19 +144,19 @@ connect_cb(void *cb_ctx, struct spdk_nvmf_request *req)
 static void
 disconnect_event(void *arg1, void *arg2)
 {
-	struct spdk_nvmf_conn *conn = arg1;
+	struct spdk_nvmf_qpair *qpair = arg1;
 
-	spdk_nvmf_ctrlr_disconnect(conn);
+	spdk_nvmf_ctrlr_disconnect(qpair);
 }
 
 static void
-disconnect_cb(void *cb_ctx, struct spdk_nvmf_conn *conn)
+disconnect_cb(void *cb_ctx, struct spdk_nvmf_qpair *qpair)
 {
 	struct nvmf_tgt_subsystem *app_subsys = cb_ctx;
 	struct spdk_event *event;
 
 	/* Pass an event to the core that owns this connection */
-	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, conn, NULL);
+	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, qpair, NULL);
 	spdk_event_call(event);
 }
 

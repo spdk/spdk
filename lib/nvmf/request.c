@@ -59,7 +59,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      response->cid, response->cdw0, response->rsvd1,
 		      *(uint16_t *)&response->status);
 
-	if (req->conn->transport->req_complete(req)) {
+	if (req->qpair->transport->req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 		return -1;
 	}
@@ -76,7 +76,7 @@ nvmf_process_property_get(struct spdk_nvmf_request *req)
 	cmd = &req->cmd->prop_get_cmd;
 	response = &req->rsp->prop_get_rsp;
 
-	spdk_nvmf_property_get(req->conn->ctrlr, cmd, response);
+	spdk_nvmf_property_get(req->qpair->ctrlr, cmd, response);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -88,7 +88,7 @@ nvmf_process_property_set(struct spdk_nvmf_request *req)
 
 	cmd = &req->cmd->prop_set_cmd;
 
-	spdk_nvmf_property_set(req->conn->ctrlr, cmd, &req->rsp->nvme_cpl);
+	spdk_nvmf_property_set(req->qpair->ctrlr, cmd, &req->rsp->nvme_cpl);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
@@ -100,9 +100,9 @@ spdk_nvmf_handle_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_data *connect_data = (struct spdk_nvmf_fabric_connect_data *)
 			req->data;
 	struct spdk_nvmf_fabric_connect_rsp *response = &req->rsp->connect_rsp;
-	struct spdk_nvmf_conn *conn = req->conn;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
 
-	spdk_nvmf_ctrlr_connect(conn, connect, connect_data, response);
+	spdk_nvmf_ctrlr_connect(qpair, connect, connect_data, response);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      response->status_code_specific.success.cntlid);
@@ -182,12 +182,12 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 static spdk_nvmf_request_exec_status
 nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_conn *conn = req->conn;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_capsule_cmd *cap_hdr;
 
 	cap_hdr = &req->cmd->nvmf_cmd;
 
-	if (conn->ctrlr == NULL) {
+	if (qpair->ctrlr == NULL) {
 		/* No ctrlr established yet; the only valid command is Connect */
 		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
 			return nvmf_process_connect(req);
@@ -197,7 +197,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-	} else if (conn->type == CONN_TYPE_AQ) {
+	} else if (qpair->type == QPAIR_TYPE_AQ) {
 		/*
 		 * Controller session is established, and this is an admin queue.
 		 * Disallow Connect and allow other fabrics commands.
@@ -223,7 +223,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
+nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_type)
 {
 	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
 	struct spdk_nvme_cmd *cmd = &h2c_msg->nvme_cmd;
@@ -233,12 +233,12 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		opc = cap_hdr->fctype;
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
-			      conn_type == CONN_TYPE_AQ ? "Admin" : "I/O",
+			      qpair_type == QPAIR_TYPE_AQ ? "Admin" : "I/O",
 			      cap_hdr->fctype, cap_hdr->cid);
 	} else {
 		opc = cmd->opc;
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
-			      conn_type == CONN_TYPE_AQ ? "Admin" : "I/O",
+			      qpair_type == QPAIR_TYPE_AQ ? "Admin" : "I/O",
 			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
 		if (cmd->mptr) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
@@ -269,12 +269,12 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum conn_type conn_type)
 int
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	spdk_nvmf_request_exec_status status;
 
-	nvmf_trace_command(req->cmd, req->conn->type);
+	nvmf_trace_command(req->cmd, req->qpair->type);
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		status = nvmf_process_fabrics_command(req);
@@ -292,7 +292,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		if (subsystem->is_removed) {
 			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
 			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		} else if (req->conn->type == CONN_TYPE_AQ) {
+		} else if (req->qpair->type == QPAIR_TYPE_AQ) {
 			status = subsystem->ops->process_admin_cmd(req);
 		} else {
 			status = subsystem->ops->process_io_cmd(req);
