@@ -30,3 +30,4 @@ handling overhead.
 - @ref blob
 - @ref blobfs
 - @ref vhost
+- @ref nvme-cli
