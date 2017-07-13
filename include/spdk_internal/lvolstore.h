@@ -69,7 +69,7 @@ struct spdk_lvol_store {
 	struct spdk_bs_dev              *bs_dev;
 	struct spdk_blob_store          *blobstore;
 	uuid_t				uuid;
-	TAILQ_ENTRY(spdk_lvol)		lvols;
+	TAILQ_HEAD(, spdk_lvol)		lvols;
 };
 
 struct spdk_lvol {
@@ -77,7 +77,9 @@ struct spdk_lvol {
 	struct spdk_blob		*blob;
 	size_t				sz;
 	char				*name;
+	bool				close_only;
 	struct spdk_bdev		*bdev; // Shouldn't be here ?
+	TAILQ_ENTRY(spdk_lvol) link;
 };
 
 #endif /* SPDK_LVOLSTORE_H */

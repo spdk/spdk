@@ -53,6 +53,7 @@ typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol
 
 int spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
+void spdk_lvs_remove_own_lvols(struct spdk_lvol_store *lvol_store);
 int spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 void spdk_lvol_destroy(struct spdk_lvol *lvol);

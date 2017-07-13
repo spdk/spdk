@@ -43,6 +43,12 @@ int g_lvserrno;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 
+void
+vbdev_lvol_close(struct spdk_lvol *lvol)
+{
+	return;
+}
+
 static void
 _lvol_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
