@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c49f55e1_bfc0fe79",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:22:02Z",
+      "side": 1,
+      "message": "We need to first verify that this is actually an lvol bdev and not some other kind of bdev - this should search the registered lvol bdev list and make sure bdev is in that list before casting it.",
+      "revId": "7d12e4a9736017b8de3d47d6366985e8c9eb984b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9cab17d_cfd2944f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:22:02Z",
+      "side": 1,
+      "message": "This is a little sketchy - I\u0027m not sure if the rest of the code is set up for runtime changes in blockcnt.",
+      "revId": "7d12e4a9736017b8de3d47d6366985e8c9eb984b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
