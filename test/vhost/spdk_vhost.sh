@@ -39,7 +39,7 @@ case $param in
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
-	--qemu-src=/home/sys_sgsw/vhost/qemu
+	--qemu-src=/home/sys_sgsw/vhost/qemu -x
     ;;
     -ib|--integrity-blk)
 	echo Running blk integrity suite...
@@ -47,7 +47,7 @@ case $param in
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
-	--qemu-src=/home/sys_sgsw/vhost/qemu
+	--qemu-src=/home/sys_sgsw/vhost/qemu -x
     ;;
 	-f|--fs-integrity)
 	echo Running filesystem integrity suite...
@@ -56,8 +56,8 @@ case $param in
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test with vhost scsi"
 	echo "-f|--fs-integrity 	for running an integrity test with filesystem"
-	echo "-p|--performance 		for running a performance test with vhost scsi
-	echo "-ib|--integrity-blk 	for running an integrity test with vhost blk""
+	echo "-p|--performance 		for running a performance test with vhost scsi"
+	echo "-ib|--integrity-blk 	for running an integrity test with vhost blk"
 	echo "-pb|--performance-blk	for running a performance test with vhost blk"
 	echo "-h|--help 		prints this message"
     ;;
