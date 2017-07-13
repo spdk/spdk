@@ -168,11 +168,11 @@ if [ "$CONFIG_ASAN" = "y" -a "$CONFIG_TSAN" = "y" ]; then
 fi
 
 if [[ "$OSTYPE" == "FreeBSD"* ]]; then
-        # FreeBSD doesn't support all configurations
-        if [[ "$CONFIG_COVERAGE" == "y" ]]; then
-                echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
-                exit 1
-        fi
+	# FreeBSD doesn't support all configurations
+	if [[ "$CONFIG_COVERAGE" == "y" ]]; then
+		echo "ERROR: CONFIG_COVERAGE not available on FreeBSD"
+		exit 1
+	fi
 fi
 
 echo -n "Creating CONFIG.local..."
@@ -229,9 +229,9 @@ python scripts/genconfig.py > config.h
 
 echo "done."
 if [[ "$OSTYPE" == "FreeBSD"* ]]; then
-        echo "Type 'gmake' to build."
+	echo "Type 'gmake' to build."
 else
-        echo "Type 'make' to build."
+	echo "Type 'make' to build."
 fi
 
 exit 0
