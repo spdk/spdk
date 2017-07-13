@@ -11,6 +11,7 @@ WORKDIR=$(dirname $0)
 cd $WORKDIR
 
 param="$1"
+x="-x"
 
 if [ $(uname -s) = Linux ]; then
 
@@ -19,7 +20,7 @@ echo Running SPDK vhost fio autotest...
 case $param in
     -p|--performance)
 	echo Running performance suite...
-	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	./fiotest/autotest.sh $x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_performance.job \
@@ -27,7 +28,7 @@ case $param in
     ;;
 	-pb|--performance-blk)
 	echo Running blk performance suite...
-	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	./fiotest/autotest.sh $x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_performance.job \
@@ -35,7 +36,7 @@ case $param in
     ;;
     -i|--integrity)
 	echo Running integrity suite...
-	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	./fiotest/autotest.sh $x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
@@ -43,7 +44,7 @@ case $param in
     ;;
     -ib|--integrity-blk)
 	echo Running blk integrity suite...
-	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	./fiotest/autotest.sh $x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
@@ -51,7 +52,7 @@ case $param in
     ;;
 	-f|--fs-integrity)
 	echo Running filesystem integrity suite...
-	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
+	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh $x
 	;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test with vhost scsi"

@@ -155,10 +155,19 @@ function spdk_vhost_run()
 	echo "INFO: Socket:      $vhost_socket"
 	echo "INFO: Command:     $cmd"
 
-	( cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd & echo $! >&3) 3>$vhost_pid_file  2>&1 | tee -a $vhost_log_file &
-
-	echo "INFO: waiting for app to run..."
+	(	[[ ! -z "$x" ]] && set -x;
+		echo "Executing vhost in subshell";
+		cd $SPDK_VHOST_SCSI_TEST_DIR;
+		$cmd &
+		local sub_vhost_pid=$!
+		echo $sub_vhost_pid > $vhost_pid_file;
+		sync
+		echo "Executed vhost in subshell (PID=$sub_vhost_pid)";
+	) 2>&1 | tee -a $vhost_log_file &
+	
 	local vhost_pid="$(cat $vhost_pid_file)"
+	assert_number "$vhost_pid"
+	echo "INFO: waiting for app to run (PID=..."
 	waitforlisten "$vhost_pid" ${RPC_PORT}
 	echo "INFO: vhost started - pid=$vhost_pid"
 

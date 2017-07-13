@@ -3,6 +3,7 @@
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
+x=""
 function usage()
 {
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -31,7 +32,9 @@ while getopts 'xh-:' optchar; do
 		esac
 		;;
 	h) usage $0 ;;
-	x) set -x ;;
+	x) set -x 
+		x="-x"
+		;;
 	*) usage $0 "Invalid argument '$optchar'" ;;
 	esac
 done
