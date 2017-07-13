@@ -39,6 +39,13 @@
 #include "vbdev_lvol.h"
 #include "lvs_bdev.h"
 
+void
+vbdev_lvol_close(struct spdk_lvol *lvol)
+{
+	lvol->close_only = true;
+	spdk_bdev_unregister(lvol->bdev);
+}
+
 static int
 vbdev_lvol_destruct(void *ctx)
 {

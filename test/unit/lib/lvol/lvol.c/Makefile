@@ -39,6 +39,7 @@ SPDK_LIB_LIST = blob util log
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/lvol
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/lvol
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += -lcunit
 

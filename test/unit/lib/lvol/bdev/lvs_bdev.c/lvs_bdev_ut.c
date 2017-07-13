@@ -111,6 +111,12 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 }
 
 void
+spdk_lvs_remove_own_lvols(struct spdk_lvol_store *lvs)
+{
+	return;
+}
+
+void
 spdk_vbdev_module_init_next(int rc)
 {
 	return;

@@ -34,6 +34,7 @@
 #include "spdk_internal/lvolstore.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
+#include "vbdev_lvol.h"
 
 /* Length of string returned from uuid_unparse() */
 #define UUID_STRING_LEN 37
@@ -52,6 +53,7 @@ _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	} else {
 		assert(bs != NULL);
 		lvs->blobstore = bs;
+		TAILQ_INIT(&lvs->lvols);
 
 		SPDK_TRACELOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
 	}
@@ -100,6 +102,16 @@ _lvs_unload_cb(void *cb_arg, int lvserrno)
 	SPDK_TRACELOG(SPDK_TRACE_LVOL, "Lvol store unloaded\n");
 	lvs_req->u.lvs_basic.cb_fn(lvs_req->u.lvs_basic.cb_arg, lvserrno);
 	free(lvs_req);
+}
+
+void
+spdk_lvs_remove_own_lvols(struct spdk_lvol_store *lvs)
+{
+	struct spdk_lvol *lvol, *tmp;
+
+	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		vbdev_lvol_close(lvol);
+	}
 }
 
 int
@@ -167,6 +179,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	uuid_unparse(lvol->lvol_store->uuid, guid);
 	lvol->name = spdk_sprintf_alloc("%s_%lu", guid, (uint64_t)blob_id);
 
+
 	lvolerrno = spdk_bs_md_resize_blob(blob, number_of_clusters);
 	if (lvolerrno < 0) {
 		spdk_bs_md_close_blob(&blob, _spdk_lvol_close_blob_cb, lvol);
@@ -174,6 +187,8 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		free(lvol->name);
 		goto invalid;
 	}
+
+	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
 	spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
 
@@ -238,6 +253,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
 
 	lvol->lvol_store = lvs;
 	lvol->sz = sz * spdk_bs_get_cluster_size(lvs->blobstore);
+	lvol->close_only = false;
 	req->u.lvol_handle.lvol = lvol;
 
 	spdk_bs_md_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
@@ -252,7 +268,12 @@ spdk_lvol_destroy(struct spdk_lvol *lvol)
 	spdk_blob_id blobid = spdk_blob_get_id(lvol->blob);
 
 	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_close_blob_cb, lvol);
-	spdk_bs_md_delete_blob(bs, blobid, _spdk_lvol_close_blob_cb, lvol);
+	if (lvol->close_only == false) {
+		spdk_bs_md_delete_blob(bs, blobid, _spdk_lvol_close_blob_cb, lvol);
+	}
+
+	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
+
 	free(lvol->name);
 	free(lvol);
 }

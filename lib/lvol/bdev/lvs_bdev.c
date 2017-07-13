@@ -148,6 +148,7 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 
 	free(lvs_pair);
 
+	spdk_lvs_remove_own_lvols(lvs);
 	spdk_lvs_unload(lvs, _vbdev_lvs_destruct_cb, req);
 	return;
 }
