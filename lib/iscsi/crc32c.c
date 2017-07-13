@@ -93,38 +93,3 @@ spdk_update_crc32c(const uint8_t *buf, size_t len, uint32_t crc)
 	return crc;
 }
 #endif /* USE_ISAL */
-
-uint32_t
-spdk_fixup_crc32c(size_t total, uint32_t crc)
-{
-	uint8_t padding[ISCSI_ALIGNMENT];
-	size_t pad_length;
-	size_t rest;
-
-	if (total == 0)
-		return crc;
-	rest = total % ISCSI_ALIGNMENT;
-	if (rest != 0) {
-		pad_length = ISCSI_ALIGNMENT;
-		pad_length -= rest;
-		if (pad_length > 0 && pad_length < sizeof padding) {
-			memset(padding, 0, sizeof padding);
-			crc = spdk_update_crc32c(padding, pad_length, crc);
-		}
-	}
-	return crc;
-}
-
-uint32_t
-spdk_crc32c(const uint8_t *buf, size_t len)
-{
-	uint32_t crc32c;
-
-	crc32c = SPDK_CRC32C_INITIAL;
-	crc32c = spdk_update_crc32c(buf, len, crc32c);
-	if ((len % ISCSI_ALIGNMENT) != 0) {
-		crc32c = spdk_fixup_crc32c(len, crc32c);
-	}
-	crc32c = crc32c ^ SPDK_CRC32C_XOR;
-	return crc32c;
-}
