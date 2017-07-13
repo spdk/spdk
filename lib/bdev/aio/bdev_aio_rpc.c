@@ -31,52 +31,50 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "blockdev_rbd.h"
+#include "bdev_aio.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
-struct rpc_construct_rbd {
-	char *pool_name;
-	char *rbd_name;
-	uint32_t block_size;
+struct rpc_construct_aio {
+	char *name;
+	char *fname;
 };
 
 static void
-free_rpc_construct_rbd(struct rpc_construct_rbd *req)
+free_rpc_construct_aio(struct rpc_construct_aio *req)
 {
-	free(req->pool_name);
-	free(req->rbd_name);
+	free(req->name);
+	free(req->fname);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_rbd_decoders[] = {
-	{"pool_name", offsetof(struct rpc_construct_rbd, pool_name), spdk_json_decode_string},
-	{"rbd_name", offsetof(struct rpc_construct_rbd, rbd_name), spdk_json_decode_string},
-	{"block_size", offsetof(struct rpc_construct_rbd, block_size), spdk_json_decode_uint32},
+static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
+	{"name", offsetof(struct rpc_construct_aio, name), spdk_json_decode_string},
+	{"fname", offsetof(struct rpc_construct_aio, fname), spdk_json_decode_string},
 };
 
 static void
-spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
+spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_construct_rbd req = {};
+	struct rpc_construct_aio req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 
-	if (spdk_json_decode_object(params, rpc_construct_rbd_decoders,
-				    SPDK_COUNTOF(rpc_construct_rbd_decoders),
+	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
+				    SPDK_COUNTOF(rpc_construct_aio_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_rbd_create(req.pool_name, req.rbd_name, req.block_size);
+	bdev = create_aio_disk(req.name, req.fname);
 	if (bdev == NULL) {
 		goto invalid;
 	}
 
-	free_rpc_construct_rbd(&req);
+	free_rpc_construct_aio(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -91,6 +89,6 @@ spdk_rpc_construct_rbd_bdev(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_construct_rbd(&req);
+	free_rpc_construct_aio(&req);
 }
-SPDK_RPC_REGISTER("construct_rbd_bdev", spdk_rpc_construct_rbd_bdev)
+SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev)

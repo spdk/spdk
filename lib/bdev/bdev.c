@@ -475,7 +475,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 	g_bdev_mgr.start_poller_fn = start_poller_fn;
 	g_bdev_mgr.stop_poller_fn = stop_poller_fn;
 
-	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("blockdev_io",
+	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("bdev_io",
 				  SPDK_BDEV_IO_POOL_SIZE,
 				  sizeof(struct spdk_bdev_io) +
 				  spdk_bdev_module_get_max_ctx_size(),
@@ -805,7 +805,7 @@ spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
 		return -1;
 	}
 
-	/* Return failure if offset + nbytes exceeds the size of the blockdev */
+	/* Return failure if offset + nbytes exceeds the size of the bdev */
 	if (offset + nbytes > bdev->blockcnt * bdev->blocklen) {
 		return -1;
 	}
@@ -903,7 +903,7 @@ spdk_bdev_write(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
-		SPDK_ERRLOG("blockdev_io memory allocation failed duing write\n");
+		SPDK_ERRLOG("bdev_io memory allocation failed duing write\n");
 		return -ENOMEM;
 	}
 
@@ -1238,7 +1238,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
 		/* Successful reset */
 		if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-			/* Increase the blockdev generation */
+			/* Increase the bdev generation */
 			bdev_io->bdev->gencnt++;
 		}
 		bdev_io->bdev->reset_in_progress = false;

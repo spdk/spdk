@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
-C_SRCS = blockdev_rbd.c blockdev_rbd_rpc.c
+C_SRCS = bdev_rbd.c bdev_rbd_rpc.c
 LIBNAME = bdev_rbd
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

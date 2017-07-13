@@ -78,13 +78,13 @@ struct spdk_scsi_lun {
 	/** Pointer to the SCSI device containing this LUN. */
 	struct spdk_scsi_dev *dev;
 
-	/** The blockdev associated with this LUN. */
+	/** The bdev associated with this LUN. */
 	struct spdk_bdev *bdev;
 
 	/** Descriptor for opened block device. */
 	struct spdk_bdev_desc *bdev_desc;
 
-	/** I/O channel for the blockdev associated with this LUN. */
+	/** I/O channel for the bdev associated with this LUN. */
 	struct spdk_io_channel *io_channel;
 
 	/** Thread ID for the thread that allocated the I/O channel for this

@@ -31,17 +31,13 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_BLOCKDEV_NVME_H
-#define SPDK_BLOCKDEV_NVME_H
+#ifndef SPDK_BDEV_NULL_H
+#define SPDK_BDEV_NULL_H
 
 #include "spdk/stdinc.h"
 
-#include "spdk/nvme.h"
+struct spdk_bdev;
 
-#define NVME_MAX_CONTROLLERS 1024
+struct spdk_bdev *create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size);
 
-int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
-			  const char *base_name,
-			  const char **names, size_t *count);
-
-#endif // SPDK_BLOCKDEV_NVME_H
+#endif /* SPDK_BDEV_NULL_H */

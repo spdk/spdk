@@ -158,7 +158,7 @@ struct spdk_bdev_fn_table {
 	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
-/** Blockdev I/O completion status */
+/** bdev I/O completion status */
 enum spdk_bdev_io_status {
 	SPDK_BDEV_IO_STATUS_SCSI_ERROR = -3,
 	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
@@ -275,7 +275,7 @@ struct spdk_bdev_io {
 			/** Total size of data to be transferred. */
 			size_t len;
 
-			/** Starting offset (in bytes) of the blockdev for this I/O. */
+			/** Starting offset (in bytes) of the bdev for this I/O. */
 			uint64_t offset;
 		} read;
 		struct {
@@ -291,7 +291,7 @@ struct spdk_bdev_io {
 			/** Total size of data to be transferred. */
 			size_t len;
 
-			/** Starting offset (in bytes) of the blockdev for this I/O. */
+			/** Starting offset (in bytes) of the bdev for this I/O. */
 			uint64_t offset;
 		} write;
 		struct {
@@ -366,7 +366,7 @@ struct spdk_bdev_io {
 	TAILQ_ENTRY(spdk_bdev_io) module_link;
 
 	/**
-	 * Per I/O context for use by the blockdev module.
+	 * Per I/O context for use by the bdev module.
 	 *
 	 * Note that vbdev modules may not use this field if modifying a bdev_io and resubmitting
 	 * to the next lower bdev.
