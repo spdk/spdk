@@ -48,7 +48,7 @@
 #define MAX_VIRTUAL_NAMESPACE 16
 #define MAX_SN_LEN 20
 
-int spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_conn_per_sess,
+int spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_qpair_per_ctrlr,
 		       uint32_t in_capsule_data_size, uint32_t max_io_size);
 
 int spdk_nvmf_tgt_fini(void);
@@ -57,15 +57,14 @@ int spdk_nvmf_check_pools(void);
 
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
-struct spdk_nvmf_conn;
+struct spdk_nvmf_qpair;
 struct spdk_nvmf_request;
 struct spdk_bdev;
 struct spdk_nvmf_request;
-struct spdk_nvmf_conn;
 struct spdk_nvmf_ctrlr_ops;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
-typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_conn *conn);
+typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_qpair *qpair);
 
 struct spdk_nvmf_listen_addr {
 	struct spdk_nvme_transport_id		trid;
@@ -172,6 +171,6 @@ void spdk_nvmf_acceptor_poll(void);
 
 void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
 
-void spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_conn *conn);
+void spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair);
 
 #endif

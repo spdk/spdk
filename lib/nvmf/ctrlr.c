@@ -169,12 +169,12 @@ static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	while (!TAILQ_EMPTY(&ctrlr->connections)) {
-		struct spdk_nvmf_conn *conn = TAILQ_FIRST(&ctrlr->connections);
+	while (!TAILQ_EMPTY(&ctrlr->qpairs)) {
+		struct spdk_nvmf_qpair *qpair = TAILQ_FIRST(&ctrlr->qpairs);
 
-		TAILQ_REMOVE(&ctrlr->connections, conn, link);
-		ctrlr->num_connections--;
-		conn->transport->conn_fini(conn);
+		TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
+		ctrlr->num_qpairs--;
+		qpair->transport->qpair_fini(qpair);
 	}
 
 	ctrlr_destruct(ctrlr);
@@ -228,7 +228,7 @@ spdk_nvmf_ctrlr_gen_cntlid(void)
 }
 
 void
-spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
+spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			struct spdk_nvmf_fabric_connect_cmd *cmd,
 			struct spdk_nvmf_fabric_connect_data *data,
 			struct spdk_nvmf_fabric_connect_rsp *rsp)
@@ -272,11 +272,11 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
 		INVALID_CONNECT_CMD(sqsize);
 		return;
 	}
-	conn->sq_head_max = cmd->sqsize;
-	conn->qid = cmd->qid;
+	qpair->sq_head_max = cmd->sqsize;
+	qpair->qid = cmd->qid;
 
 	if (cmd->qid == 0) {
-		conn->type = CONN_TYPE_AQ;
+		qpair->type = QPAIR_TYPE_AQ;
 
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect Admin Queue for controller ID 0x%x\n", data->cntlid);
 
@@ -288,14 +288,14 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
 		}
 
 		/* Establish a new ctrlr */
-		ctrlr = conn->transport->ctrlr_init();
+		ctrlr = qpair->transport->ctrlr_init();
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Memory allocation failure\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return;
 		}
 
-		TAILQ_INIT(&ctrlr->connections);
+		TAILQ_INIT(&ctrlr->qpairs);
 
 		ctrlr->cntlid = spdk_nvmf_ctrlr_gen_cntlid();
 		if (ctrlr->cntlid == 0) {
@@ -304,17 +304,18 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return;
 		}
+
 		ctrlr->kato = cmd->kato;
 		ctrlr->async_event_config.raw = 0;
-		ctrlr->num_connections = 0;
+		ctrlr->num_qpairs = 0;
 		ctrlr->subsys = subsystem;
-		ctrlr->max_connections_allowed = g_nvmf_tgt.max_queues_per_ctrlr;
+		ctrlr->max_qpairs_allowed = g_nvmf_tgt.max_qpairs_per_ctrlr;
 
 		memcpy(ctrlr->hostid, data->hostid, sizeof(ctrlr->hostid));
 
-		if (conn->transport->ctrlr_add_conn(ctrlr, conn)) {
+		if (qpair->transport->ctrlr_add_qpair(ctrlr, qpair)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			conn->transport->ctrlr_fini(ctrlr);
+			qpair->transport->ctrlr_fini(ctrlr);
 			free(ctrlr);
 			return;
 		}
@@ -329,7 +330,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
 	} else {
 		struct spdk_nvmf_ctrlr *tmp;
 
-		conn->type = CONN_TYPE_IOQ;
+		qpair->type = QPAIR_TYPE_IOQ;
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
 		ctrlr = NULL;
@@ -366,22 +367,22 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
 		}
 
 		/* check if we would exceed ctrlr connection limit */
-		if (ctrlr->num_connections >= ctrlr->max_connections_allowed) {
-			SPDK_ERRLOG("connection limit %d\n", ctrlr->num_connections);
+		if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
+			SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
 			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
 			return;
 		}
 
-		if (conn->transport->ctrlr_add_conn(ctrlr, conn)) {
+		if (qpair->transport->ctrlr_add_qpair(ctrlr, qpair)) {
 			INVALID_CONNECT_CMD(qid);
 			return;
 		}
 	}
 
-	ctrlr->num_connections++;
-	TAILQ_INSERT_HEAD(&ctrlr->connections, conn, link);
-	conn->ctrlr = ctrlr;
+	ctrlr->num_qpairs++;
+	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
+	qpair->ctrlr = ctrlr;
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 	rsp->status_code_specific.success.cntlid = ctrlr->vcdata.cntlid;
@@ -390,39 +391,39 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
 }
 
 void
-spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_conn *conn)
+spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
 	assert(ctrlr != NULL);
-	ctrlr->num_connections--;
-	TAILQ_REMOVE(&ctrlr->connections, conn, link);
+	ctrlr->num_qpairs--;
+	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 
-	conn->transport->ctrlr_remove_conn(ctrlr, conn);
-	conn->transport->conn_fini(conn);
+	qpair->transport->ctrlr_remove_qpair(ctrlr, qpair);
+	qpair->transport->qpair_fini(qpair);
 
-	if (ctrlr->num_connections == 0) {
+	if (ctrlr->num_qpairs == 0) {
 		ctrlr_destruct(ctrlr);
 	}
 }
 
-struct spdk_nvmf_conn *
-spdk_nvmf_ctrlr_get_conn(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
+struct spdk_nvmf_qpair *
+spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
 {
-	struct spdk_nvmf_conn *conn;
+	struct spdk_nvmf_qpair *qpair;
 
-	TAILQ_FOREACH(conn, &ctrlr->connections, link) {
-		if (conn->qid == qid) {
-			return conn;
+	TAILQ_FOREACH(qpair, &ctrlr->qpairs, link) {
+		if (qpair->qid == qid) {
+			return qpair;
 		}
 	}
 	return NULL;
 }
 
 struct spdk_nvmf_request *
-spdk_nvmf_conn_get_request(struct spdk_nvmf_conn *conn, uint16_t cid)
+spdk_nvmf_qpair_get_request(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
-	/* TODO: track list of outstanding requests in conn? */
+	/* TODO: track list of outstanding requests in qpair? */
 	return NULL;
 }
 
@@ -637,7 +638,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 int
 spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	struct spdk_nvmf_conn	*conn, *tmp;
+	struct spdk_nvmf_qpair		*qpair, *tmp;
 	struct spdk_nvmf_subsystem 	*subsys = ctrlr->subsys;
 
 	if (subsys->is_removed) {
@@ -652,10 +653,10 @@ spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(conn, &ctrlr->connections, link, tmp) {
-		if (conn->transport->conn_poll(conn) < 0) {
-			SPDK_ERRLOG("Transport poll failed for conn %p; closing connection\n", conn);
-			spdk_nvmf_ctrlr_disconnect(conn);
+	TAILQ_FOREACH_SAFE(qpair, &ctrlr->qpairs, link, tmp) {
+		if (qpair->transport->qpair_poll(qpair) < 0) {
+			SPDK_ERRLOG("Transport poll failed for qpair %p; closing connection\n", qpair);
+			spdk_nvmf_ctrlr_disconnect(qpair);
 		}
 	}
 
@@ -675,7 +676,7 @@ spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -700,7 +701,7 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
@@ -722,7 +723,7 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Keep Alive Timer\n");
@@ -733,7 +734,7 @@ spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint32_t nr_io_queues;
 
@@ -741,10 +742,10 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 		      req->cmd->nvme_cmd.cdw11);
 
 	/* Extra 1 connection for Admin queue */
-	nr_io_queues = ctrlr->max_connections_allowed - 1;
+	nr_io_queues = ctrlr->max_qpairs_allowed - 1;
 
 	/* verify that the contoller is ready to process commands */
-	if (ctrlr->num_connections > 1) {
+	if (ctrlr->num_qpairs > 1) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Queue pairs already active!\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 	} else {
@@ -759,13 +760,13 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	uint32_t nr_io_queues;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Number of Queues\n");
 
-	nr_io_queues = ctrlr->max_connections_allowed - 1;
+	nr_io_queues = ctrlr->max_qpairs_allowed - 1;
 
 	/* Number of IO queues has a zero based value */
 	rsp->cdw0 = ((nr_io_queues - 1) << 16) |
@@ -777,7 +778,7 @@ spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
 int
 spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Set Features - Async Event Configuration, cdw11 0x%08x\n",
@@ -789,7 +790,7 @@ spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request 
 int
 spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Async Event Configuration\n");
@@ -800,7 +801,7 @@ spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request 
 int
 spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Async Event Request\n");

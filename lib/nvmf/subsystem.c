@@ -112,13 +112,13 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 static bool
 nvmf_subsystem_removable(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_ctrlr *ctrlr;
-	struct spdk_nvmf_conn	*conn;
+	struct spdk_nvmf_ctrlr	*ctrlr;
+	struct spdk_nvmf_qpair	*qpair;
 
 	if (subsystem->is_removed) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-			TAILQ_FOREACH(conn, &ctrlr->connections, link) {
-				if (!conn->transport->conn_is_idle(conn)) {
+			TAILQ_FOREACH(qpair, &ctrlr->qpairs, link) {
+				if (!qpair->transport->qpair_is_idle(qpair)) {
 					return false;
 				}
 			}

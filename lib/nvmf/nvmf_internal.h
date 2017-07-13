@@ -78,7 +78,7 @@ struct spdk_nvmf_ctrlr_ops {
 
 struct spdk_nvmf_tgt {
 	uint16_t				max_queue_depth;
-	uint16_t				max_queues_per_ctrlr;
+	uint16_t				max_qpairs_per_ctrlr;
 	uint32_t				in_capsule_data_size;
 	uint32_t				max_io_size;
 	uint64_t				discovery_genctr;

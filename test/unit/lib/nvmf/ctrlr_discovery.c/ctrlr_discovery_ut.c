@@ -149,14 +149,14 @@ test_process_discovery_cmd(void)
 	int	ret;
 	/* random request length value for testing */
 	int	req_length = 122;
-	struct	spdk_nvmf_conn req_conn = {};
+	struct	spdk_nvmf_qpair req_qpair = {};
 	struct	spdk_nvmf_ctrlr req_ctrlr = {};
 	struct	spdk_nvme_ctrlr_data req_data = {};
 	struct	spdk_nvmf_discovery_log_page req_page = {};
 	union	nvmf_h2c_msg  req_cmd = {};
 	union	nvmf_c2h_msg   req_rsp = {};
 
-	req.conn = &req_conn;
+	req.qpair = &req_qpair;
 	req.cmd  = &req_cmd;
 	req.rsp  = &req_rsp;
 
@@ -168,7 +168,7 @@ test_process_discovery_cmd(void)
 	/* IDENTIFY opcode return value check */
 	req.cmd->nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
 	req.cmd->nvme_cmd.cdw10 = SPDK_NVME_IDENTIFY_CTRLR;
-	req.conn->ctrlr = &req_ctrlr;
+	req.qpair->ctrlr = &req_ctrlr;
 	req.data = &req_data;
 	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
