@@ -113,17 +113,7 @@ spdk_rpc_get_vhost_scsi_controllers(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "scsi_devs");
 		spdk_json_write_array_begin(w);
 
-		for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-			dev = spdk_vhost_scsi_dev_get_dev(vdev, i);
-			if (!dev)
-				continue;
-
-			spdk_json_write_object_begin(w);
-			spdk_json_write_name(w, "scsi_dev_num");
-			spdk_json_write_uint32(w, i);
-			json_scsi_dev_write(w, dev);
-			spdk_json_write_object_end(w);
-		}
+		spdk_vhost_dump_config_json(vdev, w);
 
 		spdk_json_write_array_end(w); // devs
 
@@ -525,25 +515,8 @@ spdk_rpc_get_vhost_blk_controllers(struct spdk_jsonrpc_request *request,
 	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
 		if (vdev->type != SPDK_VHOST_DEV_T_BLK)
 			continue;
-		spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "ctrlr");
-		spdk_json_write_string(w, spdk_vhost_dev_get_name(vdev));
-
-		spdk_json_write_name(w, "cpu_mask");
-		spdk_json_write_string_fmt(w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
-
-		spdk_json_write_name(w, "readonly");
-		spdk_json_write_bool(w, spdk_vhost_blk_get_readonly(vdev));
-
-		bdev = spdk_vhost_blk_get_dev(vdev);
-		spdk_json_write_name(w, "bdev");
-		if (bdev)
-			spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-		else
-			spdk_json_write_null(w);
-
-		spdk_json_write_object_end(w);
+		spdk_vhost_dump_config_json(vdev, w);
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);

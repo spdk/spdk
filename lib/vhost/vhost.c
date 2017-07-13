@@ -686,4 +686,14 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 	sem_destroy(&ev->sem);
 }
 
+int
+spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	if(vdev->dump_config_json){
+		return vdev->dump_config_json(vdev->ctxt, w);
+	}
+
+	return 0;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)

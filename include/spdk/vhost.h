@@ -42,6 +42,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
+#include "spdk/rpc.h"
 
 int spdk_vhost_init(void);
 int spdk_vhost_fini(void);
@@ -79,5 +80,7 @@ int spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev
 int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev);
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
 bool spdk_vhost_blk_get_readonly(struct spdk_vhost_dev *vdev);
+int
+spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 #endif /* SPDK_VHOST_H */
