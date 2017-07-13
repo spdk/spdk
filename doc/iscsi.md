@@ -13,6 +13,10 @@ Ubuntu 14.04, 15.04, and 15.10, Fedora 21, 22, and 23, and CentOS 7.
 
 Once built, the binary will be in `app/iscsi_tgt`.
 
+If you want to kill the application using signal, make sure use the SIGTERM, then the application
+will release all the share memory resource before exit, the SIGKILL will make the share memory
+resource have no chance to be released by applications, you may need to release the resource manually.
+
 ## Configuring iSCSI Target {#iscsi_config}
 
 A `iscsi_tgt` specific configuration file is used to configure the iSCSI target. A fully documented
