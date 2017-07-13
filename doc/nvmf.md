@@ -23,6 +23,10 @@ machine, the kernel will need to be a release candidate until the code is actual
 system running the SPDK target, however, you can run any modern flavor of Linux as required by your
 NIC vendor's OFED distribution.
 
+If you want to kill the application using signal, make sure use the SIGTERM, then the application
+will release all the share memory resource before exit, the SIGKILL will make the share memory
+resource have no chance to be released by application, you may need to release the resource manually.
+
 ## Prerequisites {#nvmf_prereqs}
 
 This guide starts by assuming that you can already build the standard SPDK distribution on your
