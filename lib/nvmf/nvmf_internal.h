@@ -42,7 +42,7 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
-#define SPDK_NVMF_DEFAULT_NUM_SESSIONS_PER_LCORE 1
+#define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
 
 struct spdk_nvmf_ctrlr_ops {
 	/**
@@ -53,7 +53,7 @@ struct spdk_nvmf_ctrlr_ops {
 	/**
 	 * Get NVMe identify controller data.
 	 */
-	void (*ctrlr_get_data)(struct spdk_nvmf_session *session);
+	void (*ctrlr_get_data)(struct spdk_nvmf_ctrlr *ctrlr);
 
 	/**
 	 * Process admin command.
@@ -78,7 +78,7 @@ struct spdk_nvmf_ctrlr_ops {
 
 struct spdk_nvmf_tgt {
 	uint16_t				max_queue_depth;
-	uint16_t				max_queues_per_session;
+	uint16_t				max_queues_per_ctrlr;
 	uint32_t				in_capsule_data_size;
 	uint32_t				max_io_size;
 	uint64_t				discovery_genctr;

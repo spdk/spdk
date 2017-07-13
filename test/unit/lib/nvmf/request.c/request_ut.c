@@ -45,10 +45,10 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 }
 
 void
-spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
-			  struct spdk_nvmf_fabric_connect_cmd *cmd,
-			  struct spdk_nvmf_fabric_connect_data *data,
-			  struct spdk_nvmf_fabric_connect_rsp *rsp)
+spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
+			struct spdk_nvmf_fabric_connect_cmd *cmd,
+			struct spdk_nvmf_fabric_connect_data *data,
+			struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
 }
 
@@ -97,19 +97,19 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 }
 
 void
-spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn)
+spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_conn *conn)
 {
 }
 
 void
-spdk_nvmf_property_get(struct spdk_nvmf_session *session,
+spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
 		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
 		       struct spdk_nvmf_fabric_prop_get_rsp *response)
 {
 }
 
 void
-spdk_nvmf_property_set(struct spdk_nvmf_session *session,
+spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 		       struct spdk_nvmf_fabric_prop_set_cmd *cmd,
 		       struct spdk_nvme_cpl *rsp)
 {
@@ -145,9 +145,9 @@ test_nvmf_process_fabrics_cmd(void)
 	req.conn = &req_conn;
 	req.cmd  = &req_cmd;
 	req.rsp  = &req_rsp;
-	req.conn->sess = NULL;
+	req.conn->ctrlr = NULL;
 
-	/* No session and invalid command check */
+	/* No ctrlr and invalid command check */
 	req.cmd->nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
 	ret = nvmf_process_fabrics_command(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);

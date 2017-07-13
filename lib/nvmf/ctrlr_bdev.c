@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "subsystem.h"
-#include "session.h"
+#include "ctrlr.h"
 #include "request.h"
 
 #include "spdk/bdev.h"
@@ -61,12 +61,12 @@ struct __attribute__((packed)) nvme_read_cdw12 {
 	uint8_t		lr	: 1;	/* limited retry */
 };
 
-static void nvmf_bdev_set_dsm(struct spdk_nvmf_session *session)
+static void nvmf_bdev_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	uint32_t i;
 
-	for (i = 0; i < session->subsys->dev.max_nsid; i++) {
-		struct spdk_bdev *bdev = session->subsys->dev.ns_list[i];
+	for (i = 0; i < ctrlr->subsys->dev.max_nsid; i++) {
+		struct spdk_bdev *bdev = ctrlr->subsys->dev.ns_list[i];
 
 		if (bdev == NULL) {
 			continue;
@@ -81,40 +81,40 @@ static void nvmf_bdev_set_dsm(struct spdk_nvmf_session *session)
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
-		      spdk_nvmf_subsystem_get_nqn(session->subsys));
-	session->vcdata.oncs.dsm = 1;
+		      spdk_nvmf_subsystem_get_nqn(ctrlr->subsys));
+	ctrlr->vcdata.oncs.dsm = 1;
 }
 
 static void
-nvmf_bdev_ctrlr_get_data(struct spdk_nvmf_session *session)
+nvmf_bdev_ctrlr_get_data(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	struct spdk_nvmf_subsystem *subsys = session->subsys;
+	struct spdk_nvmf_subsystem *subsys = ctrlr->subsys;
 
-	memset(&session->vcdata, 0, sizeof(struct spdk_nvme_ctrlr_data));
-	spdk_strcpy_pad(session->vcdata.fr, FW_VERSION, sizeof(session->vcdata.fr), ' ');
-	spdk_strcpy_pad(session->vcdata.mn, MODEL_NUMBER, sizeof(session->vcdata.mn), ' ');
-	spdk_strcpy_pad(session->vcdata.sn, spdk_nvmf_subsystem_get_sn(subsys),
-			sizeof(session->vcdata.sn), ' ');
-	session->vcdata.rab = 6;
-	session->vcdata.ver.bits.mjr = 1;
-	session->vcdata.ver.bits.mnr = 2;
-	session->vcdata.ver.bits.ter = 1;
-	session->vcdata.ctratt.host_id_exhid_supported = 1;
-	session->vcdata.aerl = 0;
-	session->vcdata.frmw.slot1_ro = 1;
-	session->vcdata.frmw.num_slots = 1;
-	session->vcdata.lpa.edlp = 1;
-	session->vcdata.elpe = 127;
-	session->vcdata.sqes.min = 0x06;
-	session->vcdata.sqes.max = 0x06;
-	session->vcdata.cqes.min = 0x04;
-	session->vcdata.cqes.max = 0x04;
-	session->vcdata.maxcmd = 1024;
-	session->vcdata.nn = subsys->dev.max_nsid;
-	session->vcdata.vwc.present = 1;
-	session->vcdata.sgls.supported = 1;
-	strncpy(session->vcdata.subnqn, session->subsys->subnqn, sizeof(session->vcdata.subnqn));
-	nvmf_bdev_set_dsm(session);
+	memset(&ctrlr->vcdata, 0, sizeof(struct spdk_nvme_ctrlr_data));
+	spdk_strcpy_pad(ctrlr->vcdata.fr, FW_VERSION, sizeof(ctrlr->vcdata.fr), ' ');
+	spdk_strcpy_pad(ctrlr->vcdata.mn, MODEL_NUMBER, sizeof(ctrlr->vcdata.mn), ' ');
+	spdk_strcpy_pad(ctrlr->vcdata.sn, spdk_nvmf_subsystem_get_sn(subsys),
+			sizeof(ctrlr->vcdata.sn), ' ');
+	ctrlr->vcdata.rab = 6;
+	ctrlr->vcdata.ver.bits.mjr = 1;
+	ctrlr->vcdata.ver.bits.mnr = 2;
+	ctrlr->vcdata.ver.bits.ter = 1;
+	ctrlr->vcdata.ctratt.host_id_exhid_supported = 1;
+	ctrlr->vcdata.aerl = 0;
+	ctrlr->vcdata.frmw.slot1_ro = 1;
+	ctrlr->vcdata.frmw.num_slots = 1;
+	ctrlr->vcdata.lpa.edlp = 1;
+	ctrlr->vcdata.elpe = 127;
+	ctrlr->vcdata.sqes.min = 0x06;
+	ctrlr->vcdata.sqes.max = 0x06;
+	ctrlr->vcdata.cqes.min = 0x04;
+	ctrlr->vcdata.cqes.max = 0x04;
+	ctrlr->vcdata.maxcmd = 1024;
+	ctrlr->vcdata.nn = subsys->dev.max_nsid;
+	ctrlr->vcdata.vwc.present = 1;
+	ctrlr->vcdata.sgls.supported = 1;
+	strncpy(ctrlr->vcdata.subnqn, ctrlr->subsys->subnqn, sizeof(ctrlr->vcdata.subnqn));
+	nvmf_bdev_set_dsm(ctrlr);
 }
 
 static void
@@ -216,9 +216,9 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static int
-identify_ctrlr(struct spdk_nvmf_session *session, struct spdk_nvme_ctrlr_data *cdata)
+identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
-	*cdata = session->vcdata;
+	*cdata = ctrlr->vcdata;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
@@ -258,10 +258,10 @@ static int
 nvmf_bdev_ctrlr_identify(struct spdk_nvmf_request *req)
 {
 	uint8_t cns;
-	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	struct spdk_nvmf_subsystem *subsystem = session->subsys;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 
 	if (req->data == NULL || req->length < 4096) {
 		SPDK_ERRLOG("identify command with invalid buffer\n");
@@ -276,7 +276,7 @@ nvmf_bdev_ctrlr_identify(struct spdk_nvmf_request *req)
 	case SPDK_NVME_IDENTIFY_NS:
 		return identify_ns(subsystem, cmd, rsp, req->data);
 	case SPDK_NVME_IDENTIFY_CTRLR:
-		return identify_ctrlr(session, req->data);
+		return identify_ctrlr(ctrlr, req->data);
 	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
 		return identify_active_ns_list(subsystem, cmd, rsp, req->data);
 	default:
@@ -289,7 +289,7 @@ nvmf_bdev_ctrlr_identify(struct spdk_nvmf_request *req)
 static int
 nvmf_bdev_ctrlr_abort(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint32_t cdw10 = cmd->cdw10;
@@ -302,7 +302,7 @@ nvmf_bdev_ctrlr_abort(struct spdk_nvmf_request *req)
 
 	rsp->cdw0 = 1; /* Command not aborted */
 
-	conn = spdk_nvmf_session_get_conn(session, sqid);
+	conn = spdk_nvmf_ctrlr_get_conn(ctrlr, sqid);
 	if (conn == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "sqid %u not found\n", sqid);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -311,7 +311,7 @@ nvmf_bdev_ctrlr_abort(struct spdk_nvmf_request *req)
 	}
 
 	/*
-	 * NOTE: This relies on the assumption that all connections for a session will be handled
+	 * NOTE: This relies on the assumption that all connections for a ctrlr will be handled
 	 * on the same thread.  If this assumption becomes untrue, this will need to pass a message
 	 * to the thread handling conn, and the abort will need to be asynchronous.
 	 */
@@ -324,8 +324,8 @@ nvmf_bdev_ctrlr_abort(struct spdk_nvmf_request *req)
 	}
 
 	if (spdk_nvmf_request_abort(req_to_abort) == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "abort session=%p req=%p sqid=%u cid=%u successful\n",
-			      session, req_to_abort, sqid, cid);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "abort ctrlr=%p req=%p sqid=%u cid=%u successful\n",
+			      ctrlr, req_to_abort, sqid, cid);
 		rsp->cdw0 = 0; /* Command successfully aborted */
 	}
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -343,16 +343,16 @@ nvmf_bdev_ctrlr_get_features(struct spdk_nvmf_request *req)
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		return spdk_nvmf_session_get_features_number_of_queues(req);
+		return spdk_nvmf_ctrlr_get_features_number_of_queues(req);
 	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
 		response->cdw0 = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		return spdk_nvmf_session_get_features_keep_alive_timer(req);
+		return spdk_nvmf_ctrlr_get_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-		return spdk_nvmf_session_get_features_async_event_configuration(req);
+		return spdk_nvmf_ctrlr_get_features_async_event_configuration(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
-		return spdk_nvmf_session_get_features_host_identifier(req);
+		return spdk_nvmf_ctrlr_get_features_host_identifier(req);
 	default:
 		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -370,13 +370,13 @@ nvmf_bdev_ctrlr_set_features(struct spdk_nvmf_request *req)
 	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
 	switch (feature) {
 	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
-		return spdk_nvmf_session_set_features_number_of_queues(req);
+		return spdk_nvmf_ctrlr_set_features_number_of_queues(req);
 	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
-		return spdk_nvmf_session_set_features_keep_alive_timer(req);
+		return spdk_nvmf_ctrlr_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
-		return spdk_nvmf_session_set_features_async_event_configuration(req);
+		return spdk_nvmf_ctrlr_set_features_async_event_configuration(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
-		return spdk_nvmf_session_set_features_host_identifier(req);
+		return spdk_nvmf_ctrlr_set_features_host_identifier(req);
 	default:
 		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -405,18 +405,18 @@ nvmf_bdev_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_SET_FEATURES:
 		return nvmf_bdev_ctrlr_set_features(req);
 	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
-		return spdk_nvmf_session_async_event_request(req);
+		return spdk_nvmf_ctrlr_async_event_request(req);
 	case SPDK_NVME_OPC_KEEP_ALIVE:
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keep Alive\n");
 		/*
 		 * To handle keep alive just clear or reset the
-		 * session based keep alive duration counter.
+		 * ctrlr based keep alive duration counter.
 		 * When added, a separate timer based process
 		 * will monitor if the time since last recorded
 		 * keep alive has exceeded the max duration and
 		 * take appropriate action.
 		 */
-		//session->keep_alive_timestamp = ;
+		//ctrlr->keep_alive_timestamp = ;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 
 	case SPDK_NVME_OPC_CREATE_IO_SQ:
@@ -569,7 +569,7 @@ nvmf_bdev_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
-	struct spdk_nvmf_subsystem *subsystem = req->conn->sess->subsys;
+	struct spdk_nvmf_subsystem *subsystem = req->conn->ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
