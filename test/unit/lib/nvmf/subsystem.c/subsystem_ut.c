@@ -137,12 +137,12 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
-spdk_nvmf_session_destruct(struct spdk_nvmf_session *session)
+spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
 int
-spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
+spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return -1;
 }

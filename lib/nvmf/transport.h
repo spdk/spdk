@@ -82,24 +82,24 @@ struct spdk_nvmf_transport {
 				     struct spdk_nvmf_discovery_log_page_entry *entry);
 
 	/**
-	 * Create a new session
+	 * Create a new ctrlr
 	 */
-	struct spdk_nvmf_session *(*session_init)(void);
+	struct spdk_nvmf_ctrlr *(*ctrlr_init)(void);
 
 	/**
-	 * Destroy a session
+	 * Destroy a ctrlr
 	 */
-	void (*session_fini)(struct spdk_nvmf_session *session);
+	void (*ctrlr_fini)(struct spdk_nvmf_ctrlr *ctrlr);
 
 	/**
-	 * Add a connection to a session
+	 * Add a connection to a ctrlr
 	 */
-	int (*session_add_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+	int (*ctrlr_add_conn)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_conn *conn);
 
 	/**
-	 * Remove a connection from a session
+	 * Remove a connection from a ctrlr
 	 */
-	int (*session_remove_conn)(struct spdk_nvmf_session *session, struct spdk_nvmf_conn *conn);
+	int (*ctrlr_remove_conn)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_conn *conn);
 
 	/*
 	 * Signal request completion, which sends a response

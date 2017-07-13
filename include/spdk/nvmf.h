@@ -56,7 +56,7 @@ int spdk_nvmf_tgt_fini(void);
 int spdk_nvmf_check_pools(void);
 
 struct spdk_nvmf_subsystem;
-struct spdk_nvmf_session;
+struct spdk_nvmf_ctrlr;
 struct spdk_nvmf_conn;
 struct spdk_nvmf_request;
 struct spdk_bdev;
@@ -84,7 +84,7 @@ struct spdk_nvmf_subsystem_allowed_listener {
 
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
- * of virtual controller sessions.  Any individual controller session has
+ * of controllers.  Any individual controller has
  * access to all the NVMe device/namespaces maintained by the subsystem.
  */
 struct spdk_nvmf_subsystem {
@@ -107,7 +107,7 @@ struct spdk_nvmf_subsystem {
 	spdk_nvmf_subsystem_connect_fn		connect_cb;
 	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
 
-	TAILQ_HEAD(, spdk_nvmf_session)		sessions;
+	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
 
 	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
 
@@ -172,6 +172,6 @@ void spdk_nvmf_acceptor_poll(void);
 
 void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
 
-void spdk_nvmf_session_disconnect(struct spdk_nvmf_conn *conn);
+void spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_conn *conn);
 
 #endif
