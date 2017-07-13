@@ -89,7 +89,7 @@ static struct malloc_disk *g_malloc_disk_head = NULL;
 
 int malloc_disk_count = 0;
 
-static void bdev_malloc_initialize(void);
+static int bdev_malloc_initialize(void);
 static void bdev_malloc_finish(void);
 static void bdev_malloc_get_spdk_running_config(FILE *fp);
 
@@ -439,7 +439,7 @@ static void free_malloc_disk(struct malloc_disk *mdisk)
 	spdk_dma_free(mdisk);
 }
 
-static void bdev_malloc_initialize(void)
+static int bdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
 	int NumberOfLuns, LunSizeInMB, BlockSize, i, rc = 0;
@@ -471,7 +471,7 @@ static void bdev_malloc_initialize(void)
 	}
 
 end:
-	spdk_bdev_module_init_next(rc);
+	return rc;
 }
 
 static void bdev_malloc_finish(void)

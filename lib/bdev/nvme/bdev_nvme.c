@@ -131,7 +131,7 @@ static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ct
 static TAILQ_HEAD(, nvme_bdev) g_nvme_bdevs = TAILQ_HEAD_INITIALIZER(g_nvme_bdevs);
 
 static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
-static void bdev_nvme_library_init(void);
+static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 			       struct nvme_bdev_io *bio,
@@ -850,7 +850,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	return 0;
 }
 
-static void
+static int
 bdev_nvme_library_init(void)
 {
 	struct spdk_conf_section *sp;
@@ -991,7 +991,7 @@ bdev_nvme_library_init(void)
 
 end:
 	free(probe_ctx);
-	spdk_bdev_module_init_next(rc);
+	return rc;
 }
 
 static void
