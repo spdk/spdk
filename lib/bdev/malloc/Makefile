@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/
-C_SRCS = blockdev_malloc.c blockdev_malloc_rpc.c
+C_SRCS = bdev_malloc.c bdev_malloc_rpc.c
 LIBNAME = bdev_malloc
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

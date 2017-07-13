@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_BLOCKDEV_ERROR_H
-#define SPDK_BLOCKDEV_ERROR_H
+#ifndef SPDK_VBDEV_ERROR_H
+#define SPDK_VBDEV_ERROR_H
 
 #include "spdk/stdinc.h"
 #include "spdk/bdev.h"
@@ -46,4 +46,4 @@ int spdk_vbdev_error_create(struct spdk_bdev *base_bdev);
 int spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type,
 			    uint32_t error_num);
 
-#endif // SPDK_BLOCKDEV_ERROR_H
+#endif // SPDK_VBDEV_ERROR_H

@@ -31,50 +31,41 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "blockdev_aio.h"
+#include "bdev_malloc.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
-struct rpc_construct_aio {
-	char *name;
-	char *fname;
+struct rpc_construct_malloc {
+	uint32_t num_blocks;
+	uint32_t block_size;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
+	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint32},
+	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
 };
 
 static void
-free_rpc_construct_aio(struct rpc_construct_aio *req)
+spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
-	free(req->name);
-	free(req->fname);
-}
-
-static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
-	{"name", offsetof(struct rpc_construct_aio, name), spdk_json_decode_string},
-	{"fname", offsetof(struct rpc_construct_aio, fname), spdk_json_decode_string},
-};
-
-static void
-spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
-{
-	struct rpc_construct_aio req = {};
+	struct rpc_construct_malloc req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 
-	if (spdk_json_decode_object(params, rpc_construct_aio_decoders,
-				    SPDK_COUNTOF(rpc_construct_aio_decoders),
+	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
+				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
 				    &req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	bdev = create_aio_disk(req.name, req.fname);
+	bdev = create_malloc_disk(req.num_blocks, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
-
-	free_rpc_construct_aio(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -89,6 +80,5 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_construct_aio(&req);
 }
-SPDK_RPC_REGISTER("construct_aio_bdev", spdk_rpc_construct_aio_bdev)
+SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev)

@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "blockdev_nvme.h"
+#include "bdev_nvme.h"
 
 #include "spdk/string.h"
 #include "spdk/rpc.h"
@@ -71,7 +71,7 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
 };
 
-#define NVME_MAX_BLOCKDEVS_PER_RPC 32
+#define NVME_MAX_BDEVS_PER_RPC 32
 
 static void
 spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
@@ -80,7 +80,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_nvme req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvme_transport_id trid = {};
-	const char *names[NVME_MAX_BLOCKDEVS_PER_RPC];
+	const char *names[NVME_MAX_BDEVS_PER_RPC];
 	size_t count;
 	size_t i;
 	int rc;
@@ -121,7 +121,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", req.subnqn);
 	}
 
-	count = NVME_MAX_BLOCKDEVS_PER_RPC;
+	count = NVME_MAX_BDEVS_PER_RPC;
 	if (spdk_bdev_nvme_create(&trid, req.name, names, &count)) {
 		goto invalid;
 	}

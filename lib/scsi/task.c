@@ -47,7 +47,7 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 	task->ref--;
 
 	if (task->ref == 0) {
-		struct spdk_bdev_io *bdev_io = task->blockdev_io;
+		struct spdk_bdev_io *bdev_io = task->bdev_io;
 
 		if (task->parent) {
 			spdk_scsi_task_put(task->parent);

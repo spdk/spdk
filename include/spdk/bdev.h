@@ -60,7 +60,7 @@ struct spdk_bdev_fn_table;
 struct spdk_io_channel;
 struct spdk_json_write_ctx;
 
-/** Blockdev status */
+/** bdev status */
 enum spdk_bdev_status {
 	SPDK_BDEV_STATUS_INVALID,
 	SPDK_BDEV_STATUS_READY,
@@ -79,7 +79,7 @@ struct spdk_bdev;
  */
 struct spdk_bdev_desc;
 
-/** Blockdev I/O type */
+/** bdev I/O type */
 enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_READ = 1,
 	SPDK_BDEV_IO_TYPE_WRITE,

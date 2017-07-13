@@ -31,44 +31,13 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_BLOCKDEV_AIO_H
-#define SPDK_BLOCKDEV_AIO_H
+#ifndef SPDK_BDEV_MALLOC_H
+#define SPDK_BDEV_MALLOC_H
 
 #include "spdk/stdinc.h"
 
-#include <libaio.h>
-
-#include "spdk/queue.h"
 #include "spdk/bdev.h"
 
-#include "spdk_internal/bdev.h"
+struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size);
 
-struct blockdev_aio_task {
-	struct iocb			iocb;
-	uint64_t			len;
-	TAILQ_ENTRY(blockdev_aio_task)	link;
-};
-
-struct blockdev_aio_io_channel {
-	io_context_t		io_ctx;
-	long			queue_depth;
-	struct io_event		*events;
-	struct spdk_bdev_poller	*poller;
-};
-
-struct file_disk {
-	struct spdk_bdev	disk;
-	const char		*file;
-	int			fd;
-	uint64_t		size;
-
-	/**
-	 * For storing I/O that were completed synchronously, and will be
-	 *   completed during next check_io call.
-	 */
-	TAILQ_HEAD(, blockdev_aio_task) sync_completion_list;
-};
-
-struct spdk_bdev *create_aio_disk(const char *name, const char *fname);
-
-#endif // SPDK_BLOCKDEV_AIO_H
+#endif /* SPDK_BDEV_MALLOC_H */

@@ -37,7 +37,7 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-#include "blockdev_null.h"
+#include "bdev_null.h"
 
 struct rpc_construct_null {
 	char *name;
