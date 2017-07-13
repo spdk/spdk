@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1692cf0b_2e604bf4",
+        "filename": "lib/lvol/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:17:43Z",
+      "side": 1,
+      "message": "I don\u0027t think the generic lvol library should be calling into the bdev implementation...  The bdev should be layered on top of the lvol lib, and if a hook is needed for a call up to the user, that should be done via a callback that would be set by the lvol bdev module.",
+      "revId": "37388b5b93766096cc4500960efbcb058fc9d66c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
