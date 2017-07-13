@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ecfe4f5_ce6522ec",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-13T17:54:36Z",
+      "side": 1,
+      "message": "If you use the trick I posted on the other file, this can become:\n\nif [ $SPDK_RUN_VALGRIND -eq 0 ]; then\n    export valgrind\u003d\"\"\nfi",
+      "revId": "9420845402b733573f3f1e52547dda6681975851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5fef48b_20708f60",
+        "filename": "unittest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-13T17:54:36Z",
+      "side": 1,
+      "message": "There is a pretty tricky method in bash to tell whether a variable is set to an empty string or whether the variable has not been set at all. You can do:\n\nif [ -z ${valgrind+x} ]; then\n  this will execute if $valgrind wasn\u0027t set\nelse\n  this will execute if $valgrind is set to anything, including \"\"\nfi\n\nGiven that trick, we can make this patch a lot simpler and eliminate the $novalgrind variable entirely. I think the code becomes:\n\n#!/usr/bin/env bash\n\nset -xe\n\nif grep -q \u0027#define SPDK_CONFIG_ASAN 1\u0027 config.h; then\n    valgrind\u003d\"\"\nfi\n\nif [ -z $[valgrind+x} ]; then\n    if hash valgrind; then\n        valgrind\u003d\u0027valgrind --leak-check\u003dfull --error-exitcode\u003d2\u0027\n    else\n        valgrind\u003d\"\"\n    fi\nfi\n\nAfter that, $valgrind will be set to the correct thing for all situations. Full disclosure - I didn\u0027t test any of this.",
+      "revId": "9420845402b733573f3f1e52547dda6681975851",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
