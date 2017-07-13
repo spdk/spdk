@@ -70,24 +70,19 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 
 	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
 		listen_addr = allowed_listener->listen_addr;
-		const char *adrfam = spdk_nvme_transport_id_adrfam_str(listen_addr->adrfam);
 
 		spdk_json_write_object_begin(w);
 		/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 		spdk_json_write_name(w, "transport");
-		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trtype));
+		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trid.trtype));
 		spdk_json_write_name(w, "trtype");
-		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trtype));
-
-		if (adrfam) {
-			spdk_json_write_name(w, "adrfam");
-			spdk_json_write_string(w, adrfam);
-		}
-
+		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trid.trtype));
+		spdk_json_write_name(w, "adrfam");
+		spdk_json_write_string(w, spdk_nvme_transport_id_adrfam_str(listen_addr->trid.adrfam));
 		spdk_json_write_name(w, "traddr");
-		spdk_json_write_string(w, listen_addr->traddr);
+		spdk_json_write_string(w, listen_addr->trid.traddr);
 		spdk_json_write_name(w, "trsvcid");
-		spdk_json_write_string(w, listen_addr->trsvcid);
+		spdk_json_write_string(w, listen_addr->trid.trsvcid);
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
