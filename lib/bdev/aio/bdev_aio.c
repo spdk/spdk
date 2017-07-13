@@ -52,7 +52,7 @@ bdev_aio_get_ctx_size(void)
 	return sizeof(struct bdev_aio_task);
 }
 
-SPDK_BDEV_MODULE_REGISTER(aio, bdev_aio_initialize, NULL, NULL, bdev_aio_get_ctx_size)
+SPDK_BDEV_MODULE_REGISTER(aio, bdev_aio_initialize, NULL, NULL, bdev_aio_get_ctx_size, NULL)
 
 static int
 bdev_aio_open(struct file_disk *disk)

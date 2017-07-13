@@ -428,7 +428,7 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 		goto end;
 	}
 
-	rc = spdk_vbdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(gpt));
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(gpt));
 	if (rc) {
 		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
 		goto end;
@@ -446,13 +446,13 @@ end:
 	 * Notify the generic bdev layer that the actions related to the original examine
 	 *  callback are now completed.
 	 */
-	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 
 	if (gpt_bdev->ref == 0) {
 		/* If no gpt_partition_disk instances were created, free the base context */
 		spdk_gpt_bdev_free(gpt_bdev);
 		if (claimed) {
-			spdk_vbdev_module_release_bdev(bdev);
+			spdk_bdev_module_release_bdev(bdev);
 		}
 	}
 }
@@ -509,13 +509,13 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 	int rc;
 
 	if (g_gpt_disabled) {
-		spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 		return;
 	}
 
 	rc = vbdev_gpt_read_gpt(bdev);
 	if (rc) {
-		spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 		SPDK_ERRLOG("Failed to read info from bdev %s\n", spdk_bdev_get_name(bdev));
 	}
 }
@@ -530,6 +530,6 @@ vbdev_gpt_get_ctx_size(void)
 	return sizeof(struct spdk_io_channel *);
 }
 
-SPDK_VBDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
-			   vbdev_gpt_get_ctx_size, vbdev_gpt_examine)
+SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
+			  vbdev_gpt_get_ctx_size, vbdev_gpt_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_gpt", SPDK_TRACE_VBDEV_GPT)

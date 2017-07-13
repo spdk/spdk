@@ -64,7 +64,6 @@ struct spdk_bdev_mgr {
 	struct spdk_mempool *buf_large_pool;
 
 	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
-	TAILQ_HEAD(, spdk_bdev_module_if) vbdev_modules;
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
 
@@ -81,7 +80,6 @@ struct spdk_bdev_mgr {
 
 static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdev_modules),
-	.vbdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.vbdev_modules),
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.start_poller_fn = NULL,
 	.stop_poller_fn = NULL,
@@ -311,12 +309,6 @@ spdk_bdev_module_get_max_ctx_size(void)
 		}
 	}
 
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		if (bdev_module->get_ctx_size && bdev_module->get_ctx_size() > max_bdev_module_size) {
-			max_bdev_module_size = bdev_module->get_ctx_size();
-		}
-	}
-
 	return max_bdev_module_size;
 }
 
@@ -326,11 +318,6 @@ spdk_bdev_config_text(FILE *fp)
 	struct spdk_bdev_module_if *bdev_module;
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
-		if (bdev_module->config_text) {
-			bdev_module->config_text(fp);
-		}
-	}
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
 		if (bdev_module->config_text) {
 			bdev_module->config_text(fp);
 		}
@@ -383,11 +370,11 @@ spdk_bdev_module_init_complete(int rc)
 	}
 
 	/*
-	 * Check all vbdev modules for an examinations in progress.  If any
+	 * Check all bdev modules for an examinations in progress.  If any
 	 * exist, return immediately since we cannot finish bdev subsystem
 	 * initialization until all are completed.
 	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.vbdev_modules, tailq) {
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
 		if (m->examine_in_progress > 0) {
 			return;
 		}
@@ -403,22 +390,6 @@ spdk_bdev_modules_init(void)
 	int rc;
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
-		rc = module->module_init();
-		if (rc != 0) {
-			return rc;
-		}
-	}
-
-	return 0;
-}
-
-static int
-spdk_vbdev_modules_init(void)
-{
-	struct spdk_bdev_module_if *module;
-	int rc;
-
-	TAILQ_FOREACH(module, &g_bdev_mgr.vbdev_modules, tailq) {
 		rc = module->module_init();
 		if (rc != 0) {
 			return rc;
@@ -510,12 +481,6 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				spdk_bdev_mgmt_channel_destroy,
 				sizeof(struct spdk_bdev_mgmt_channel));
 
-	rc = spdk_vbdev_modules_init();
-	if (rc != 0) {
-		spdk_bdev_module_init_complete(rc);
-		return;
-	}
-
 	rc = spdk_bdev_modules_init();
 	spdk_bdev_module_init_complete(rc);
 }
@@ -524,12 +489,6 @@ int
 spdk_bdev_finish(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
-
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		if (bdev_module->module_fini) {
-			bdev_module->module_fini();
-		}
-	}
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->module_fini) {
@@ -1378,7 +1337,7 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 static void
 _spdk_bdev_register(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev_module_if *vbdev_module;
+	struct spdk_bdev_module_if *module;
 
 	assert(bdev->module != NULL);
 
@@ -1402,9 +1361,11 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
-	TAILQ_FOREACH(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
-		vbdev_module->examine_in_progress++;
-		vbdev_module->examine(bdev);
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+		if (module->examine) {
+			module->examine_in_progress++;
+			module->examine(bdev);
+		}
 	}
 }
 
@@ -1478,7 +1439,7 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 }
 
 void
-spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module)
+spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
 	struct spdk_bdev_module_if *m;
 
@@ -1486,11 +1447,11 @@ spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module)
 	module->examine_in_progress--;
 
 	/*
-	 * Check all vbdev modules for an examinations in progress.  If any
+	 * Check all bdev modules for an examinations in progress.  If any
 	 * exist, return immediately since we cannot finish bdev subsystem
 	 * initialization until all are completed.
 	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.vbdev_modules, tailq) {
+	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
 		if (m->examine_in_progress > 0) {
 			return;
 		}
@@ -1499,8 +1460,8 @@ spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module)
 	if (g_bdev_mgr.module_init_complete && !g_bdev_mgr.init_complete) {
 		/*
 		 * Modules already finished initialization - now that all
-		 * the vbdevs have finished their asynchronous I/O processing,
-		 * the entire bdev layer can be marked as complete.
+		 * the bdev moduless have finished their asynchronous I/O
+		 * processing, the entire bdev layer can be marked as complete.
 		 */
 		spdk_bdev_init_complete(0);
 	}
@@ -1519,7 +1480,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	if (write && (bdev->bdev_opened_for_write || bdev->vbdev_claim_module)) {
+	if (write && (bdev->bdev_opened_for_write || bdev->claim_module)) {
 		SPDK_ERRLOG("failed, %s already opened for write or claimed\n", bdev->name);
 		free(desc);
 		pthread_mutex_unlock(&bdev->mutex);
@@ -1570,12 +1531,12 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 }
 
 int
-spdk_vbdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			     struct spdk_bdev_module_if *module)
+spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			    struct spdk_bdev_module_if *module)
 {
-	if (bdev->vbdev_claim_module != NULL) {
+	if (bdev->claim_module != NULL) {
 		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
-			    bdev->vbdev_claim_module->name);
+			    bdev->claim_module->name);
 		return -EPERM;
 	}
 
@@ -1588,15 +1549,15 @@ spdk_vbdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc
 		desc->write = true;
 	}
 
-	bdev->vbdev_claim_module = module;
+	bdev->claim_module = module;
 	return 0;
 }
 
 void
-spdk_vbdev_module_release_bdev(struct spdk_bdev *bdev)
+spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
 {
-	assert(bdev->vbdev_claim_module != NULL);
-	bdev->vbdev_claim_module = NULL;
+	assert(bdev->claim_module != NULL);
+	bdev->claim_module = NULL;
 }
 
 void
@@ -1635,12 +1596,14 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 void
 spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 {
-	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
-}
-
-void
-spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module)
-{
-	assert(vbdev_module->examine != NULL);
-	TAILQ_INSERT_TAIL(&g_bdev_mgr.vbdev_modules, vbdev_module, tailq);
+	/*
+	 * Modules with examine callbacks must be initialized first, so they are
+	 *  ready to handle examine callbacks from later modules that will
+	 *  register physical bdevs.
+	 */
+	if (bdev_module->examine != NULL) {
+		TAILQ_INSERT_HEAD(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
+	} else {
+		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
+	}
 }

@@ -240,7 +240,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	int rc;
 	struct split_base *split_base;
 
-	rc = spdk_vbdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(split));
+	rc = spdk_bdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(split));
 	if (rc) {
 		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
 		return -1;
@@ -358,7 +358,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 
 	sp = spdk_conf_find_section(NULL, "Split");
 	if (sp == NULL) {
-		spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(split));
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(split));
 		return;
 	}
 
@@ -406,7 +406,7 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 		}
 	}
 
-	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(split));
+	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(split));
 }
 
 static void
@@ -429,6 +429,6 @@ vbdev_split_get_ctx_size(void)
 	return sizeof(struct spdk_io_channel *);
 }
 
-SPDK_VBDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
-			   vbdev_split_get_ctx_size, vbdev_split_examine)
+SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
+			  vbdev_split_get_ctx_size, vbdev_split_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_split", SPDK_TRACE_VBDEV_SPLIT)
