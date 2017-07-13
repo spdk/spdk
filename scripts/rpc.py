@@ -389,6 +389,15 @@ p.add_argument('bdev_name', help='Blockdev name to be deleted. Example: Malloc0.
 p.set_defaults(func=delete_bdev)
 
 
+def examine_bdev(args):
+    params = {'module_name': args.module_name, 'bdev_name': args.bdev_name}
+    jsonrpc_call('examine_bdev', params)
+p = subparsers.add_parser('examine_bdev', help='Examine virtual bdev on given bdev module and bdev name')
+p.add_argument('module_name', help='name of virtual block module')
+p.add_argument('bdev_name', help='name of block device')
+p.set_defaults(func=examine_bdev)
+
+
 def get_nvmf_subsystems(args):
     print_dict(jsonrpc_call('get_nvmf_subsystems'))
 

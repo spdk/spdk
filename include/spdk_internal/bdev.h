@@ -428,6 +428,7 @@ void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
 void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module);
 void spdk_bdev_module_init_next(int rc);
 void spdk_vbdev_module_init_next(int rc);
+int spdk_vbdev_module_examine(const char *module_name, const char *bdev_name);
 
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
