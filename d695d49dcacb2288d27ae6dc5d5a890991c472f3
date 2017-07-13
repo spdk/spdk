@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa0a69b3_f1327b2a",
+        "filename": "dpdk",
+        "patchSetId": 19
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T16:49:15Z",
+      "side": 1,
+      "message": "I don\u0027t think this dpdk submodule update is intentional - can you double check that you have the latest submodule when you rebase?",
+      "revId": "d695d49dcacb2288d27ae6dc5d5a890991c472f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8aea29c_34cdb8a5",
+        "filename": "test/scsi/rpc/rpc_scsi.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T16:49:15Z",
+      "side": 1,
+      "message": "It would be nice to split rpc.py into a proper Python module and a separate command-line frontend so we could call the RPC methods directly (that doesn\u0027t have to be part of this review, though).",
+      "revId": "d695d49dcacb2288d27ae6dc5d5a890991c472f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c272c08_91b1f306",
+        "filename": "test/scsi/scsi.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T16:49:15Z",
+      "side": 1,
+      "message": "This might be nicer written with native Python subprocess functions rather than relying on the shell via system().",
+      "revId": "d695d49dcacb2288d27ae6dc5d5a890991c472f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "202336d1_f90ed0d7",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T16:49:15Z",
+      "side": 1,
+      "message": "Is this change intentional? I think we wanted to do a graceful shutdown if possible rather than just killing the VMs.",
+      "revId": "d695d49dcacb2288d27ae6dc5d5a890991c472f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0aa38f67_d1615931",
+        "filename": "test/vhost/rpc/configuration/scsi_nvme.conf",
+        "patchSetId": 19
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T16:49:15Z",
+      "side": 1,
+      "message": "Hard-coding the PCI address here seems fragile - can you use scripts/gen_nvme.sh instead?",
+      "revId": "d695d49dcacb2288d27ae6dc5d5a890991c472f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ad3f932_d69f5500",
+        "filename": "test/vhost/rpc/fio/hotremove.conf",
+        "patchSetId": 19
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T16:49:15Z",
+      "side": 1,
+      "message": "Same here - the NVMe device may not be at this PCI address on a given test system.",
+      "revId": "d695d49dcacb2288d27ae6dc5d5a890991c472f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
