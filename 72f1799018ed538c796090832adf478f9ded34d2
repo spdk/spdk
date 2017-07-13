@@ -1,0 +1,243 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec4c4c57_e25ad13a",
+        "filename": "test/scsi/__init__.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "\"test/scsi/*\" files were suppossed to be removed",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa49f1dd_ab47d522",
+        "filename": "test/vhost/rpc/configuration/scsi.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "Rename to vhost.conf",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc4097a2_cf55b6ec",
+        "filename": "test/vhost/rpc/configuration/scsi_malloc.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "Rename with \"vhost\" prefix. Why do we need this file if all configuration is to be done via RPC?",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c33ffe3_9fb7a3a5",
+        "filename": "test/vhost/rpc/configuration/scsi_nvme.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "Rename with \"vhost\" prefix. Why do we need this file if all configuration is to be done via RPC?",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64e96573_a037f0d9",
+        "filename": "test/vhost/rpc/configuration/scsi_nvme.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "This cannot be hardcoded.",
+      "range": {
+        "startLine": 10,
+        "startChar": 1,
+        "endLine": 10,
+        "endChar": 53
+      },
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9154aadd_31783d26",
+        "filename": "test/vhost/rpc/fio/autotest.config",
+        "patchSetId": 16
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "why 99?",
+      "range": {
+        "startLine": 4,
+        "startChar": 3,
+        "endLine": 4,
+        "endChar": 5
+      },
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fc2caff_6de922b0",
+        "filename": "test/vhost/rpc/fio/hotremove.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00feb2a0_5b128e1b",
+        "filename": "test/vhost/rpc/fio/hotremove.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "Cannot be hardcoded",
+      "range": {
+        "startLine": 18,
+        "startChar": 14,
+        "endLine": 18,
+        "endChar": 53
+      },
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "005f9e9e_960d2fcc",
+        "filename": "test/vhost/rpc/fio/hotremove.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a1862c7_dafcfd6f",
+        "filename": "test/vhost/rpc/test/rpc_scsi_test.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "Remove if not needed",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee3699bf_b5ffb212",
+        "filename": "test/vhost/rpc/test/vhost_hotremove.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "import whole os or just os.path?",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14640ee5_d1765d66",
+        "filename": "test/vhost/rpc/test/vhost_hotremove.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f96fb8_81486853",
+        "filename": "test/vhost/rpc/test/vhost_hotremove.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T11:26:16Z",
+      "side": 1,
+      "message": "???",
+      "revId": "72f1799018ed538c796090832adf478f9ded34d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
