@@ -45,7 +45,6 @@ fi
 timing_enter fio
 
 cp $testdir/iscsi.conf.in $testdir/iscsi.conf
-$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
 
 # iSCSI target configuration
 PORT=3260
