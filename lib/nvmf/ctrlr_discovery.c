@@ -38,7 +38,7 @@
 #include "spdk/stdinc.h"
 
 #include "nvmf_internal.h"
-#include "session.h"
+#include "ctrlr.h"
 #include "subsystem.h"
 #include "request.h"
 #include "transport.h"
@@ -155,7 +155,7 @@ nvmf_get_log_page_len(struct spdk_nvme_cmd *cmd)
 static int
 nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_session *session = req->conn->sess;
+	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	uint64_t log_page_offset;
@@ -175,7 +175,7 @@ nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		/* Only identify controller can be supported */
 		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
-			memcpy(req->data, (char *)&session->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
+			memcpy(req->data, (char *)&ctrlr->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		} else {
 			SPDK_ERRLOG("Unsupported identify command\n");
@@ -225,7 +225,7 @@ nvmf_discovery_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_discovery_ctrlr_get_data(struct spdk_nvmf_session *session)
+nvmf_discovery_ctrlr_get_data(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 

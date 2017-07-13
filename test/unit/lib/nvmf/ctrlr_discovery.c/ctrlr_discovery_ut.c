@@ -132,12 +132,12 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 }
 
 void
-spdk_nvmf_session_destruct(struct spdk_nvmf_session *session)
+spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
 int
-spdk_nvmf_session_poll(struct spdk_nvmf_session *session)
+spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return -1;
 }
@@ -150,7 +150,7 @@ test_process_discovery_cmd(void)
 	/* random request length value for testing */
 	int	req_length = 122;
 	struct	spdk_nvmf_conn req_conn = {};
-	struct	spdk_nvmf_session req_sess = {};
+	struct	spdk_nvmf_ctrlr req_ctrlr = {};
 	struct	spdk_nvme_ctrlr_data req_data = {};
 	struct	spdk_nvmf_discovery_log_page req_page = {};
 	union	nvmf_h2c_msg  req_cmd = {};
@@ -168,7 +168,7 @@ test_process_discovery_cmd(void)
 	/* IDENTIFY opcode return value check */
 	req.cmd->nvme_cmd.opc = SPDK_NVME_OPC_IDENTIFY;
 	req.cmd->nvme_cmd.cdw10 = SPDK_NVME_IDENTIFY_CTRLR;
-	req.conn->sess = &req_sess;
+	req.conn->ctrlr = &req_ctrlr;
 	req.data = &req_data;
 	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);

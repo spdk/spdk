@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NVMF_SESSION_H
-#define NVMF_SESSION_H
+#ifndef SPDK_NVMF_CTRLR_H
+#define SPDK_NVMF_CTRLR_H
 
 #include "spdk/stdinc.h"
 
@@ -40,7 +40,7 @@
 #include "spdk/queue.h"
 
 /* define a virtual controller limit to the number of QPs supported */
-#define MAX_SESSION_IO_QUEUES 64
+#define MAX_QPAIRS_PER_CTRLR 64
 
 struct spdk_nvmf_transport;
 struct spdk_nvmf_request;
@@ -52,7 +52,7 @@ enum conn_type {
 
 struct spdk_nvmf_conn {
 	const struct spdk_nvmf_transport	*transport;
-	struct spdk_nvmf_session		*sess;
+	struct spdk_nvmf_ctrlr			*ctrlr;
 	enum conn_type				type;
 
 	uint16_t				qid;
@@ -63,11 +63,10 @@ struct spdk_nvmf_conn {
 };
 
 /*
- * This structure maintains the NVMf virtual controller session
- * state. Each NVMf session permits some number of connections.
- * At least one admin connection and additional IOQ connections.
+ * This structure represents an NVMe-oF controller,
+ * which is like a "ctrlr" in networking terms.
  */
-struct spdk_nvmf_session {
+struct spdk_nvmf_ctrlr {
 	uint16_t			cntlid;
 	struct spdk_nvmf_subsystem 	*subsys;
 
@@ -95,44 +94,44 @@ struct spdk_nvmf_session {
 	uint8_t hostid[16];
 	const struct spdk_nvmf_transport	*transport;
 
-	TAILQ_ENTRY(spdk_nvmf_session) 		link;
+	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
 };
 
-void spdk_nvmf_session_connect(struct spdk_nvmf_conn *conn,
-			       struct spdk_nvmf_fabric_connect_cmd *cmd,
-			       struct spdk_nvmf_fabric_connect_data *data,
-			       struct spdk_nvmf_fabric_connect_rsp *rsp);
+void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
+			     struct spdk_nvmf_fabric_connect_cmd *cmd,
+			     struct spdk_nvmf_fabric_connect_data *data,
+			     struct spdk_nvmf_fabric_connect_rsp *rsp);
 
-struct spdk_nvmf_conn *spdk_nvmf_session_get_conn(struct spdk_nvmf_session *session, uint16_t qid);
+struct spdk_nvmf_conn *spdk_nvmf_ctrlr_get_conn(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
 
 struct spdk_nvmf_request *spdk_nvmf_conn_get_request(struct spdk_nvmf_conn *conn, uint16_t cid);
 
 void
-spdk_nvmf_property_get(struct spdk_nvmf_session *session,
+spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
 		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
 		       struct spdk_nvmf_fabric_prop_get_rsp *response);
 
 void
-spdk_nvmf_property_set(struct spdk_nvmf_session *session,
+spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 		       struct spdk_nvmf_fabric_prop_set_cmd *cmd,
 		       struct spdk_nvme_cpl *rsp);
 
-int spdk_nvmf_session_poll(struct spdk_nvmf_session *session);
+int spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr);
 
-void spdk_nvmf_session_destruct(struct spdk_nvmf_session *session);
+void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 
-int spdk_nvmf_session_set_features_host_identifier(struct spdk_nvmf_request *req);
-int spdk_nvmf_session_get_features_host_identifier(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req);
 
-int spdk_nvmf_session_set_features_keep_alive_timer(struct spdk_nvmf_request *req);
-int spdk_nvmf_session_get_features_keep_alive_timer(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req);
 
-int spdk_nvmf_session_set_features_number_of_queues(struct spdk_nvmf_request *req);
-int spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req);
 
-int spdk_nvmf_session_set_features_async_event_configuration(struct spdk_nvmf_request *req);
-int spdk_nvmf_session_get_features_async_event_configuration(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request *req);
 
-int spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req);
 
 #endif

@@ -70,8 +70,8 @@ $valgrind test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut
 $valgrind test/unit/lib/log/log.c/log_ut
 
 $valgrind test/unit/lib/nvmf/request.c/request_ut
-$valgrind test/unit/lib/nvmf/session.c/session_ut
 $valgrind test/unit/lib/nvmf/subsystem.c/subsystem_ut
+$valgrind test/unit/lib/nvmf/ctrlr.c/ctrlr_ut
 $valgrind test/unit/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
 $valgrind test/unit/lib/nvmf/ctrlr_bdev.c/ctrlr_bdev_ut
 
