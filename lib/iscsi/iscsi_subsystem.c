@@ -531,7 +531,7 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 	}
 
 	/* we do not want to zero out the last part of the structure reserved for AHS and sense data */
-	memset(pdu, 0, offsetof(struct spdk_iscsi_pdu, ahs_data));
+	memset(pdu, 0, offsetof(struct spdk_iscsi_pdu, ahs));
 	pdu->ref = 1;
 
 	return pdu;

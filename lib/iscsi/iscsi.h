@@ -153,7 +153,6 @@ struct spdk_mobj {
 
 struct spdk_iscsi_pdu {
 	struct iscsi_bhs bhs;
-	struct iscsi_ahs *ahs;
 	struct spdk_mobj *mobj;
 	uint8_t *data_buf;
 	uint8_t *data;
@@ -178,7 +177,7 @@ struct spdk_iscsi_pdu {
 	 * This should always be at the end of PDU data structure.
 	 * we need to not zero this out when doing memory clear.
 	 */
-	uint8_t ahs_data[ISCSI_AHS_LEN];
+	uint8_t ahs[ISCSI_AHS_LEN];
 
 	struct {
 		uint16_t length; /* iSCSI SenseLength (big-endian) */
