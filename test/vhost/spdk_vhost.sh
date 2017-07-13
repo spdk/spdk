@@ -2,7 +2,7 @@
 
 set -e
 
-vhost_vm_image=/home/sys_sgsw/vhost_vm_image.qcow2
+vhost_vm_image=/home/sys_sgsw/vhost_vm_image-v1.qcow2
 
 if [ ! -f "$vhost_vm_image" ]; then
 	echo "VM does not exist, exiting vhost tests without running"
