@@ -1375,10 +1375,21 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 }
 
 static void
-_spdk_bdev_register(struct spdk_bdev *bdev)
+_spdk_bdev_examine(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module_if *module;
 
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+		if (module->examine) {
+			module->examine_in_progress++;
+			module->examine(bdev);
+		}
+	}
+}
+
+static void
+_spdk_bdev_register(struct spdk_bdev *bdev)
+{
 	assert(bdev->module != NULL);
 
 	bdev->status = SPDK_BDEV_STATUS_READY;
@@ -1401,12 +1412,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
-	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
-		if (module->examine) {
-			module->examine_in_progress++;
-			module->examine(bdev);
-		}
-	}
+	_spdk_bdev_examine(bdev);
 }
 
 void
@@ -1476,6 +1482,19 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
 	}
 	spdk_bdev_unregister(vbdev);
+}
+
+void
+spdk_bdev_module_reexamine(void)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_first_leaf();
+	while (bdev) {
+		_spdk_bdev_examine(bdev);
+
+		bdev = spdk_bdev_next_leaf(bdev);
+	}
 }
 
 void

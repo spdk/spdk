@@ -33,6 +33,7 @@
 
 #include "spdk/log.h"
 #include "spdk/rpc.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
 
@@ -146,3 +147,23 @@ invalid:
 	free_rpc_delete_bdev(&req);
 }
 SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev)
+
+static void
+spdk_rpc_reexamine_bdevs(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+
+{
+	struct spdk_json_write_ctx	*w;
+
+	spdk_bdev_module_reexamine();
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+}
+SPDK_RPC_REGISTER("reexamine_bdevs", spdk_rpc_reexamine_bdevs)

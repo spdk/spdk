@@ -429,6 +429,11 @@ void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
 
+/**
+ * Re-examine all unclaimed bdevs, allowing modules to claim them.
+ */
+void spdk_bdev_module_reexamine(void);
+
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
 {

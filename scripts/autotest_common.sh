@@ -312,5 +312,44 @@ function print_backtrace() {
 	return 0
 }
 
+function format_gpt () {
+	if [ $(uname -s) = Linux ] && hash sgdisk; then
+		echo "[Rpc]" >> $testdir/bdev.conf
+		echo "  Enable Yes" >> $testdir/bdev.conf
+		echo "[Gpt]" >> $testdir/bdev.conf
+		echo "  Disable Yes" >> $testdir/bdev.conf
+
+		if [ ! -z "`grep "Nvme0" $testdir/bdev.conf`" ]; then
+			modprobe nbd
+			$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+			nbd_pid=$!
+			echo "Process nbd pid: $nbd_pid"
+			waitforlisten $nbd_pid 5260
+			#if return 1, it will trap, so do not need to consider this case
+			waitforbdev Nvme0n1 $rootdir/scripts/rpc.py
+
+			if [ -e /dev/nbd0 ]; then
+				parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+				# change the partition type GUID to SPDK GUID value
+				sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
+				sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
+			fi
+			killprocess $nbd_pid
+
+			# enable the gpt module and run nbd again to test get_bdevs and
+			# bind nbd to the new gpt partition bdev
+			sed -i'' '/Disable/d' $testdir/bdev.conf
+			$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1p1 -n /dev/nbd0 &
+			nbd_pid=$!
+			waitforlisten $nbd_pid 5260
+			waitforbdev Nvme0n1p1 $rootdir/scripts/rpc.py
+			$rpc_py get_bdevs
+			killprocess $nbd_pid
+		fi
+	fi
+
+	return 0
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
