@@ -68,10 +68,7 @@ typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_re
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_conn *conn);
 
 struct spdk_nvmf_listen_addr {
-	enum spdk_nvme_transport_type		trtype;
-	char					*traddr;
-	char					*trsvcid;
-	enum spdk_nvmf_adrfam			adrfam;
+	struct spdk_nvme_transport_id		trid;
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
 };
 
@@ -138,8 +135,7 @@ struct spdk_nvmf_subsystem *spdk_nvmf_find_subsystem(const char *subnqn);
 
 bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
 
-struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(const char *trname, enum spdk_nvmf_adrfam adrfam,
-		const char *traddr, const char *trsvcid);
+struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid);
 
 int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvmf_listen_addr *listen_addr);

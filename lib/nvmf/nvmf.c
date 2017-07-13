@@ -97,15 +97,12 @@ spdk_nvmf_tgt_fini(void)
 }
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(enum spdk_nvme_transport_type trtype,
-			     enum spdk_nvmf_adrfam adrfam,
-			     const char *traddr,
-			     const char *trsvcid)
+spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
 
-	transport = spdk_nvmf_transport_get(trtype);
+	transport = spdk_nvmf_transport_get(trid->trtype);
 	if (!transport) {
 		return NULL;
 	}
@@ -115,21 +112,7 @@ spdk_nvmf_listen_addr_create(enum spdk_nvme_transport_type trtype,
 		return NULL;
 	}
 
-	listen_addr->trtype = trtype;
-	listen_addr->adrfam = adrfam;
-
-	listen_addr->traddr = strdup(traddr);
-	if (!listen_addr->traddr) {
-		free(listen_addr);
-		return NULL;
-	}
-
-	listen_addr->trsvcid = strdup(trsvcid);
-	if (!listen_addr->trsvcid) {
-		free(listen_addr->traddr);
-		free(listen_addr);
-		return NULL;
-	}
+	listen_addr->trid = *trid;
 
 	return listen_addr;
 }
@@ -139,18 +122,10 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 {
 	const struct spdk_nvmf_transport *transport;
 
-	transport = spdk_nvmf_transport_get(addr->trtype);
+	transport = spdk_nvmf_transport_get(addr->trid.trtype);
 	assert(transport != NULL);
 	transport->listen_addr_remove(addr);
 
-	spdk_nvmf_listen_addr_cleanup(addr);
-}
-
-void
-spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr)
-{
-	free(addr->trsvcid);
-	free(addr->traddr);
 	free(addr);
 }
 

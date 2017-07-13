@@ -99,7 +99,7 @@ nvmf_update_discovery_log(void)
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-			transport = spdk_nvmf_transport_get(listen_addr->trtype);
+			transport = spdk_nvmf_transport_get(listen_addr->trid.trtype);
 			assert(transport != NULL);
 
 			transport->listen_addr_discover(listen_addr, entry);
