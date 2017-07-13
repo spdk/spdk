@@ -259,43 +259,33 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 }
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_tgt_listen(const char *trname, enum spdk_nvmf_adrfam adrfam, const char *traddr,
-		     const char *trsvcid)
+spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
-	enum spdk_nvme_transport_type trtype;
 	int rc;
 
-	rc = spdk_nvme_transport_id_parse_trtype(&trtype, trname);
-	if (rc) {
-		return NULL;
-	}
-
 	TAILQ_FOREACH(listen_addr, &g_nvmf_tgt.listen_addrs, link) {
-		if (trtype == listen_addr->trtype &&
-		    (listen_addr->adrfam == adrfam) &&
-		    (strcmp(listen_addr->traddr, traddr) == 0) &&
-		    (strcmp(listen_addr->trsvcid, trsvcid) == 0)) {
+		if (spdk_nvme_transport_id_compare(&listen_addr->trid, trid) == 0) {
 			return listen_addr;
 		}
 	}
 
-	transport = spdk_nvmf_transport_get(trtype);
+	transport = spdk_nvmf_transport_get(trid->trtype);
 	if (!transport) {
-		SPDK_ERRLOG("Unknown transport '%s'\n", trname);
+		SPDK_ERRLOG("Unknown transport '%u'\n", trid->trtype);
 		return NULL;
 	}
 
-	listen_addr = spdk_nvmf_listen_addr_create(trtype, adrfam, traddr, trsvcid);
+	listen_addr = spdk_nvmf_listen_addr_create(trid);
 	if (!listen_addr) {
 		return NULL;
 	}
 
 	rc = transport->listen_addr_add(listen_addr);
 	if (rc < 0) {
-		spdk_nvmf_listen_addr_cleanup(listen_addr);
-		SPDK_ERRLOG("Unable to listen on address '%s'\n", traddr);
+		free(listen_addr);
+		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
 		return NULL;
 	}
 

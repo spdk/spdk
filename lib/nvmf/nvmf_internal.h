@@ -91,10 +91,8 @@ struct spdk_nvmf_tgt {
 
 extern struct spdk_nvmf_tgt g_nvmf_tgt;
 
-struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(enum spdk_nvme_transport_type trtype,
-		enum spdk_nvmf_adrfam adrfam, const char *traddr, const char *trsvcid);
+struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
 void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
-void spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr);
 
 #define OBJECT_NVMF_IO				0x30
 

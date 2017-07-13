@@ -46,8 +46,7 @@ struct spdk_nvmf_tgt g_nvmf_tgt = {
 };
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(enum spdk_nvme_transport_type trtype, enum spdk_nvmf_adrfam adrfam,
-			     const char *traddr, const char *trsvcid)
+spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 
@@ -56,29 +55,15 @@ spdk_nvmf_listen_addr_create(enum spdk_nvme_transport_type trtype, enum spdk_nvm
 		return NULL;
 	}
 
-	listen_addr->traddr = strdup(traddr);
-	if (!listen_addr->traddr) {
-		free(listen_addr);
-		return NULL;
-	}
-
-	listen_addr->trsvcid = strdup(trsvcid);
-	if (!listen_addr->trsvcid) {
-		free(listen_addr->traddr);
-		free(listen_addr);
-		return NULL;
-	}
-
-	listen_addr->trtype = trtype;
-	listen_addr->adrfam = adrfam;
+	listen_addr->trid = *trid;
 
 	return listen_addr;
 }
 
 void
-spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr)
+spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 {
-	return;
+	free(addr);
 }
 
 int
@@ -136,6 +121,13 @@ spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const
 	} else {
 		return -ENOENT;
 	}
+	return 0;
+}
+
+int
+spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
+			       const struct spdk_nvme_transport_id *trid2)
+{
 	return 0;
 }
 
@@ -225,6 +217,7 @@ test_discovery_log(void)
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvmf_listen_addr *listen_addr;
+	struct spdk_nvme_transport_id trid = {};
 
 	/* Reset discovery-related globals */
 	g_nvmf_tgt.discovery_genctr = 0;
@@ -237,7 +230,11 @@ test_discovery_log(void)
 					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
-	listen_addr = spdk_nvmf_tgt_listen("RDMA", SPDK_NVMF_ADRFAM_IPV4, "1234", "5678");
+	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	snprintf(trid.traddr, sizeof(trid.traddr), "1234");
+	snprintf(trid.trsvcid, sizeof(trid.trsvcid), "5678");
+	listen_addr = spdk_nvmf_tgt_listen(&trid);
 	SPDK_CU_ASSERT_FATAL(listen_addr != NULL);
 
 	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, listen_addr) == 0);
