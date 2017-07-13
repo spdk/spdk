@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0d3c8bb_94c07f13",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T05:36:46Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to do this here.  examine_in_progress should only be modified by the generic bdev code.\n\nInstead, we should add a new call to lib/bdev/bdev.c.  We can call it spdk_vbdev_module_examine_bdev(module, bdev).\n\nThis could then be used anywhere, for any vbdev module.  And you would not need to add special rpc parameters here.\n\nIn fact, the rpc could be moved to the generic bdev code.  client can pass the name of the vbdev module, and bdev.c can walk the list of registered modules and match the name.\n\nThis should be part of a separate patch though.",
+      "revId": "114aae1c2444faf46f8ffe7dd8595546c1caaf7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
