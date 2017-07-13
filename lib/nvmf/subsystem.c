@@ -34,7 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "nvmf_internal.h"
-#include "session.h"
+#include "ctrlr.h"
 #include "subsystem.h"
 #include "transport.h"
 
@@ -67,11 +67,11 @@ struct spdk_nvmf_subsystem *
 spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
-	struct spdk_nvmf_session 	*session;
+	struct spdk_nvmf_ctrlr 	*ctrlr;
 
 	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
-		TAILQ_FOREACH(session, &subsystem->sessions, link) {
-			if (session->cntlid == cntlid) {
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			if (ctrlr->cntlid == cntlid) {
 				return subsystem;
 			}
 		}
@@ -112,12 +112,12 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 static bool
 nvmf_subsystem_removable(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_session *session;
+	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_conn	*conn;
 
 	if (subsystem->is_removed) {
-		TAILQ_FOREACH(session, &subsystem->sessions, link) {
-			TAILQ_FOREACH(conn, &session->connections, link) {
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			TAILQ_FOREACH(conn, &ctrlr->connections, link) {
 				if (!conn->transport->conn_is_idle(conn)) {
 					return false;
 				}
@@ -131,16 +131,16 @@ nvmf_subsystem_removable(struct spdk_nvmf_subsystem *subsystem)
 void
 spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_session *session;
+	struct spdk_nvmf_ctrlr *ctrlr;
 
 	/* Check the backing physical device for completions. */
 	if (subsystem->ops->poll_for_completions) {
 		subsystem->ops->poll_for_completions(subsystem);
 	}
 
-	TAILQ_FOREACH(session, &subsystem->sessions, link) {
-		/* For each connection in the session, check for completions */
-		spdk_nvmf_session_poll(session);
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		/* For each connection in the ctrlr, check for completions */
+		spdk_nvmf_ctrlr_poll(ctrlr);
 	}
 
 	if (nvmf_subsystem_removable(subsystem)) {
@@ -204,7 +204,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->allowed_listeners);
 	TAILQ_INIT(&subsystem->hosts);
-	TAILQ_INIT(&subsystem->sessions);
+	TAILQ_INIT(&subsystem->ctrlrs);
 
 	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		subsystem->ops = &spdk_nvmf_discovery_ctrlr_ops;
@@ -223,7 +223,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_subsystem_allowed_listener	*allowed_listener, *allowed_listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
-	struct spdk_nvmf_session	*session, *session_tmp;
+	struct spdk_nvmf_ctrlr	*ctrlr, *ctrlr_tmp;
 
 	if (!subsystem) {
 		return;
@@ -244,8 +244,8 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		free(host);
 	}
 
-	TAILQ_FOREACH_SAFE(session, &subsystem->sessions, link, session_tmp) {
-		spdk_nvmf_session_destruct(session);
+	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
+		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
 
 	if (subsystem->ops->detach) {

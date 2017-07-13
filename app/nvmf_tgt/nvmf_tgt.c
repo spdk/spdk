@@ -146,7 +146,7 @@ disconnect_event(void *arg1, void *arg2)
 {
 	struct spdk_nvmf_conn *conn = arg1;
 
-	spdk_nvmf_session_disconnect(conn);
+	spdk_nvmf_ctrlr_disconnect(conn);
 }
 
 static void

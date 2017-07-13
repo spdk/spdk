@@ -158,53 +158,53 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 }
 
 int
-spdk_nvmf_session_get_features_number_of_queues(struct spdk_nvmf_request *req)
+spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
 
-int spdk_nvmf_session_set_features_number_of_queues(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_session_set_features_host_identifier(struct spdk_nvmf_request *req)
+int spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
 
 int
-spdk_nvmf_session_get_features_host_identifier(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-int
-spdk_nvmf_session_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
+spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
 
 int
-spdk_nvmf_session_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
+spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+int
+spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
 
 int
-spdk_nvmf_session_set_features_async_event_configuration(struct spdk_nvmf_request *req)
+spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
 
 int
-spdk_nvmf_session_get_features_async_event_configuration(struct spdk_nvmf_request *req)
+spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
 
 int
-spdk_nvmf_session_async_event_request(struct spdk_nvmf_request *req)
+spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
+int
+spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 {
 	return -1;
 }
