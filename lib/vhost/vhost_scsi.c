@@ -104,15 +104,6 @@ struct spdk_vhost_scsi_task {
 static int new_device(int vid);
 static void destroy_device(int vid);
 
-const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
-	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
-	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
-	.ops = {
-		.new_device =  new_device,
-		.destroy_device = destroy_device,
-	}
-};
-
 static void
 spdk_vhost_scsi_task_put(struct spdk_vhost_scsi_task *task)
 {
@@ -692,6 +683,63 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 
 	return (struct spdk_vhost_scsi_dev *)ctrlr;
 }
+
+static void
+spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_scsi_dev *sdev;
+	svdev = to_scsi_dev(vdev);
+
+	for (uint32_t i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		sdev = spdk_vhost_scsi_dev_get_dev(&svdev->vdev, i);
+		if (!sdev) {
+			continue;
+		}
+
+		spdk_json_write_name(w, "scsi_dev_num");
+		spdk_json_write_uint32(w, i);
+
+		spdk_json_write_name(w, "id");
+		spdk_json_write_int32(w, spdk_scsi_dev_get_id(sdev));
+
+		spdk_json_write_name(w, "device_name");
+		spdk_json_write_string(w, spdk_scsi_dev_get_name(sdev));
+
+		spdk_json_write_name(w, "luns");
+		spdk_json_write_array_begin(w);
+
+		for (uint32_t l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
+			struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(sdev, l);
+
+			if (!lun) {
+				continue;
+			}
+
+			spdk_json_write_object_begin(w);
+
+			spdk_json_write_name(w, "id");
+			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
+
+			spdk_json_write_name(w, "name");
+			spdk_json_write_string(w, spdk_scsi_lun_get_name(lun));
+
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
+
+	}
+}
+
+const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
+	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
+	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
+	.dump_config_json = spdk_vhost_scsi_config_json,
+	.ops = {
+		.new_device =  new_device,
+		.destroy_device = destroy_device,
+	}
+};
 
 int
 spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)

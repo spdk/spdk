@@ -323,6 +323,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 		return -EIO;
 	}
 
+	vdev->dump_config_json = backend->dump_config_json;
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->vid = -1;
@@ -684,6 +685,14 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 
 	ev->spdk_event = NULL;
 	sem_destroy(&ev->sem);
+}
+
+void
+spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	assert(vdev->dump_config_json != NULL);
+	vdev->dump_config_json(vdev, w);
+
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
