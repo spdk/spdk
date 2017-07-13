@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "f6f00745_f9c9ece2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:27:32Z",
+      "side": 1,
+      "message": "The exposed bdev\u0027s blocklen should probably be spdk_bs_get_page_size(), not the underlying bdev\u0027s blocklen.",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6465175a_9d13cfa5",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 17
