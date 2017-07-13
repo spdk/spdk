@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7d9c8cc_12746d58",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T20:57:26Z",
+      "side": 1,
+      "message": "This is adding lvol-specific information to the generic bdev API - can we just add the GUID to the lvol driver_specific JSON?",
+      "revId": "cea1eb543a60532d32a0c1bcdcabd861b9c959ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
