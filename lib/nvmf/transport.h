@@ -36,15 +36,16 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/nvme.h"
 #include "spdk/nvmf.h"
 
 struct spdk_nvmf_listen_addr;
 
 struct spdk_nvmf_transport {
 	/**
-	 * Name of the transport.
+	 * Transport type
 	 */
-	const char *name;
+	enum spdk_nvme_transport_type type;
 
 	/**
 	 * Initialize the transport.
@@ -125,7 +126,7 @@ struct spdk_nvmf_transport {
 int spdk_nvmf_transport_init(void);
 int spdk_nvmf_transport_fini(void);
 
-const struct spdk_nvmf_transport *spdk_nvmf_transport_get(const char *name);
+const struct spdk_nvmf_transport *spdk_nvmf_transport_get(enum spdk_nvme_transport_type type);
 
 extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
 

@@ -97,13 +97,15 @@ spdk_nvmf_tgt_fini(void)
 }
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(const char *trname, enum spdk_nvmf_adrfam adrfam, const char *traddr,
+spdk_nvmf_listen_addr_create(enum spdk_nvme_transport_type trtype,
+			     enum spdk_nvmf_adrfam adrfam,
+			     const char *traddr,
 			     const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
 
-	transport = spdk_nvmf_transport_get(trname);
+	transport = spdk_nvmf_transport_get(trtype);
 	if (!transport) {
 		return NULL;
 	}
@@ -113,6 +115,7 @@ spdk_nvmf_listen_addr_create(const char *trname, enum spdk_nvmf_adrfam adrfam, c
 		return NULL;
 	}
 
+	listen_addr->trtype = trtype;
 	listen_addr->adrfam = adrfam;
 
 	listen_addr->traddr = strdup(traddr);
@@ -128,14 +131,6 @@ spdk_nvmf_listen_addr_create(const char *trname, enum spdk_nvmf_adrfam adrfam, c
 		return NULL;
 	}
 
-	listen_addr->trname = strdup(trname);
-	if (!listen_addr->trname) {
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr);
-		return NULL;
-	}
-
 	return listen_addr;
 }
 
@@ -144,7 +139,7 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 {
 	const struct spdk_nvmf_transport *transport;
 
-	transport = spdk_nvmf_transport_get(addr->trname);
+	transport = spdk_nvmf_transport_get(addr->trtype);
 	assert(transport != NULL);
 	transport->listen_addr_remove(addr);
 
@@ -154,7 +149,6 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 void
 spdk_nvmf_listen_addr_cleanup(struct spdk_nvmf_listen_addr *addr)
 {
-	free(addr->trname);
 	free(addr->trsvcid);
 	free(addr->traddr);
 	free(addr);
