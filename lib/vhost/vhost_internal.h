@@ -40,6 +40,7 @@
 
 #include "spdk_internal/log.h"
 #include "spdk/event.h"
+#include "spdk/rpc.h"
 
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
@@ -64,6 +65,13 @@ enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_BLK,
 };
 
+struct spdk_vhost_dev_backend {
+	uint64_t virtio_features;
+	uint64_t disabled_features;
+	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+	const struct vhost_device_ops ops;
+};
+
 struct spdk_vhost_dev {
 	struct rte_vhost_memory *mem;
 	char *name;
@@ -80,13 +88,7 @@ struct spdk_vhost_dev {
 	uint64_t negotiated_features;
 	struct rte_vhost_vring virtqueue[SPDK_VHOST_MAX_VQUEUES] __attribute((aligned(
 				SPDK_CACHE_LINE_SIZE)));
-};
-
-
-struct spdk_vhost_dev_backend {
-	uint64_t virtio_features;
-	uint64_t disabled_features;
-	const struct vhost_device_ops ops;
+	const struct spdk_vhost_dev_backend *vhost_backend;
 };
 
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
@@ -143,5 +145,7 @@ void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn,
 void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event, const char *errmsg);
 
 int spdk_vhost_blk_controller_construct(void);
+void
+spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 #endif /* SPDK_VHOST_INTERNAL_H */

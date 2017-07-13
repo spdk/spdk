@@ -103,10 +103,12 @@ struct spdk_vhost_scsi_task {
 
 static int new_device(int vid);
 static void destroy_device(int vid);
+static void spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
+	.dump_config_json = spdk_vhost_scsi_config_json,
 	.ops = {
 		.new_device =  new_device,
 		.destroy_device = destroy_device,
@@ -1090,6 +1092,54 @@ int
 spdk_vhost_fini(void)
 {
 	return 0;
+}
+
+static void
+spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_scsi_dev *sdev;
+	struct spdk_scsi_lun *lun;
+	uint32_t dev_idx;
+	uint32_t lun_idx;
+
+	assert(vdev != NULL);
+	for (dev_idx = 0; dev_idx < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_idx++) {
+		sdev = spdk_vhost_scsi_dev_get_dev(vdev, dev_idx);
+		if (!sdev) {
+			continue;
+		}
+
+		spdk_json_write_name(w, "scsi_dev_num");
+		spdk_json_write_uint32(w, dev_idx);
+
+		spdk_json_write_name(w, "id");
+		spdk_json_write_int32(w, spdk_scsi_dev_get_id(sdev));
+
+		spdk_json_write_name(w, "device_name");
+		spdk_json_write_string(w, spdk_scsi_dev_get_name(sdev));
+
+		spdk_json_write_name(w, "luns");
+		spdk_json_write_array_begin(w);
+
+		for (lun_idx = 0; lun_idx < SPDK_SCSI_DEV_MAX_LUN; lun_idx++) {
+			lun = spdk_scsi_dev_get_lun(sdev, lun_idx);
+			if (!lun) {
+				continue;
+			}
+
+			spdk_json_write_object_begin(w);
+
+			spdk_json_write_name(w, "id");
+			spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
+
+			spdk_json_write_name(w, "name");
+			spdk_json_write_string(w, spdk_scsi_lun_get_name(lun));
+
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
+
+	}
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_scsi", SPDK_TRACE_VHOST_SCSI)
