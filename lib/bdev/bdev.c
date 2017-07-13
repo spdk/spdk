@@ -73,7 +73,6 @@ struct spdk_bdev_mgr {
 
 	bool init_complete;
 	bool module_init_complete;
-	int module_init_rc;
 
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
@@ -88,11 +87,8 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.stop_poller_fn = NULL,
 	.init_complete = false,
 	.module_init_complete = false,
-	.module_init_rc = 0,
 };
 
-static struct spdk_bdev_module_if *g_next_bdev_module;
-static struct spdk_bdev_module_if *g_next_vbdev_module;
 static spdk_bdev_init_cb	g_cb_fn = NULL;
 static void			*g_cb_arg = NULL;
 
@@ -381,7 +377,10 @@ spdk_bdev_module_init_complete(int rc)
 	struct spdk_bdev_module_if *m;
 
 	g_bdev_mgr.module_init_complete = true;
-	g_bdev_mgr.module_init_rc = rc;
+
+	if (rc != 0) {
+		spdk_bdev_init_complete(rc);
+	}
 
 	/*
 	 * Check all vbdev modules for an examinations in progress.  If any
@@ -394,53 +393,39 @@ spdk_bdev_module_init_complete(int rc)
 		}
 	}
 
-	spdk_bdev_init_complete(rc);
+	spdk_bdev_init_complete(0);
 }
 
-void
-spdk_bdev_module_init_next(int rc)
+static int
+spdk_bdev_modules_init(void)
 {
-	if (rc) {
-		assert(g_next_bdev_module != NULL);
-		SPDK_ERRLOG("Failed to init bdev module: %s\n", g_next_bdev_module->name);
-		spdk_bdev_module_init_complete(rc);
-		return;
+	struct spdk_bdev_module_if *module;
+	int rc;
+
+	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
+		rc = module->module_init();
+		if (rc != 0) {
+			return rc;
+		}
 	}
 
-	if (!g_next_bdev_module) {
-		g_next_bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
-	} else {
-		g_next_bdev_module = TAILQ_NEXT(g_next_bdev_module, tailq);
-	}
-
-	if (g_next_bdev_module) {
-		g_next_bdev_module->module_init();
-	} else {
-		spdk_bdev_module_init_complete(rc);
-	}
+	return 0;
 }
 
-void
-spdk_vbdev_module_init_next(int rc)
+static int
+spdk_vbdev_modules_init(void)
 {
-	if (rc) {
-		assert(g_next_vbdev_module != NULL);
-		SPDK_ERRLOG("Failed to init vbdev module: %s\n", g_next_vbdev_module->name);
-		spdk_bdev_module_init_complete(rc);
-		return;
+	struct spdk_bdev_module_if *module;
+	int rc;
+
+	TAILQ_FOREACH(module, &g_bdev_mgr.vbdev_modules, tailq) {
+		rc = module->module_init();
+		if (rc != 0) {
+			return rc;
+		}
 	}
 
-	if (!g_next_vbdev_module) {
-		g_next_vbdev_module = TAILQ_FIRST(&g_bdev_mgr.vbdev_modules);
-	} else {
-		g_next_vbdev_module = TAILQ_NEXT(g_next_vbdev_module, tailq);
-	}
-
-	if (g_next_vbdev_module) {
-		g_next_vbdev_module->module_init();
-	} else {
-		spdk_bdev_module_init_next(0);
-	}
+	return 0;
 }
 
 void
@@ -484,8 +469,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool");
-		rc = -1;
-		goto end;
+		spdk_bdev_module_init_complete(-1);
+		return;
 	}
 
 	/**
@@ -501,8 +486,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_small_pool) {
 		SPDK_ERRLOG("create rbuf small pool failed\n");
-		rc = -1;
-		goto end;
+		spdk_bdev_module_init_complete(-1);
+		return;
 	}
 
 	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
@@ -513,8 +498,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
-		rc = -1;
-		goto end;
+		spdk_bdev_module_init_complete(-1);
+		return;
 	}
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -525,8 +510,14 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				spdk_bdev_mgmt_channel_destroy,
 				sizeof(struct spdk_bdev_mgmt_channel));
 
-end:
-	spdk_vbdev_module_init_next(rc);
+	rc = spdk_vbdev_modules_init();
+	if (rc != 0) {
+		spdk_bdev_module_init_complete(rc);
+		return;
+	}
+
+	rc = spdk_bdev_modules_init();
+	spdk_bdev_module_init_complete(rc);
 }
 
 int
@@ -1511,7 +1502,7 @@ spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module)
 		 * the vbdevs have finished their asynchronous I/O processing,
 		 * the entire bdev layer can be marked as complete.
 		 */
-		spdk_bdev_init_complete(g_bdev_mgr.module_init_rc);
+		spdk_bdev_init_complete(0);
 	}
 }
 

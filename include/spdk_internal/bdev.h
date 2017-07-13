@@ -83,11 +83,10 @@ struct spdk_bdev_module_if {
 	/**
 	 * Initialization function for the module.  Called by the spdk
 	 * application during startup.
-	 * User must call spdk_bdev_module_init_next() with return code inside this func.
 	 *
 	 * Modules are required to define this function.
 	 */
-	void (*module_init)(void);
+	int (*module_init)(void);
 
 	/**
 	 * Finish function for the module.  Called by the spdk application
@@ -430,8 +429,6 @@ void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
 void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module);
-void spdk_bdev_module_init_next(int rc);
-void spdk_vbdev_module_init_next(int rc);
 
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
