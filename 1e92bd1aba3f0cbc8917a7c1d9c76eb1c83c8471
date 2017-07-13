@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39806f84_e33f8e74",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T16:05:37Z",
+      "side": 1,
+      "message": "vhost pid file is needed later in other functions, so I still need to save it, at least for now",
+      "range": {
+        "startLine": 160,
+        "startChar": 1,
+        "endLine": 160,
+        "endChar": 34
+      },
+      "revId": "1e92bd1aba3f0cbc8917a7c1d9c76eb1c83c8471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
