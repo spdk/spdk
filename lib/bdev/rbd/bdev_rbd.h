@@ -31,54 +31,14 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "blockdev_malloc.h"
-#include "spdk/rpc.h"
-#include "spdk/util.h"
+#ifndef SPDK_BDEV_RBD_H
+#define SPDK_BDEV_RBD_H
 
-#include "spdk_internal/log.h"
+#include "spdk/stdinc.h"
 
-struct rpc_construct_malloc {
-	uint32_t num_blocks;
-	uint32_t block_size;
-};
+#include "spdk/bdev.h"
 
-static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
-	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint32},
-	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
-};
+struct spdk_bdev *spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name,
+				       uint32_t block_size);
 
-static void
-spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
-			       const struct spdk_json_val *params)
-{
-	struct rpc_construct_malloc req = {};
-	struct spdk_json_write_ctx *w;
-	struct spdk_bdev *bdev;
-
-	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
-				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
-				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
-		goto invalid;
-	}
-
-	bdev = create_malloc_disk(req.num_blocks, req.block_size);
-	if (bdev == NULL) {
-		goto invalid;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_array_begin(w);
-	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(request, w);
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-}
-SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev)
+#endif // SPDK_BDEV_RBD_H

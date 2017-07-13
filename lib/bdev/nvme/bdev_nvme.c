@@ -34,7 +34,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "blockdev_nvme.h"
+#include "bdev_nvme.h"
 
 #include "spdk/conf.h"
 #include "spdk/endian.h"
@@ -783,7 +783,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
-blockdev_nvme_hotplug(void *arg)
+bdev_nvme_hotplug(void *arg)
 {
 	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb) != 0) {
 		SPDK_ERRLOG("spdk_nvme_probe() failed\n");
@@ -984,7 +984,7 @@ bdev_nvme_library_init(void)
 	}
 
 	if (g_nvme_hotplug_enabled) {
-		spdk_bdev_poller_start(&g_hotplug_poller, blockdev_nvme_hotplug, NULL,
+		spdk_bdev_poller_start(&g_hotplug_poller, bdev_nvme_hotplug, NULL,
 				       g_nvme_hotplug_poll_core,
 				       g_nvme_hotplug_poll_timeout_us);
 	}
