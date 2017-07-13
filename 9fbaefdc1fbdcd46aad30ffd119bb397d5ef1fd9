@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7df1b51c_7c3264d2",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:56:46Z",
+      "side": 1,
+      "message": "Maybe device -\u003e bdev here?",
+      "range": {
+        "startLine": 184,
+        "startChar": 37,
+        "endLine": 184,
+        "endChar": 43
+      },
+      "revId": "9fbaefdc1fbdcd46aad30ffd119bb397d5ef1fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4d12109_a14ba49c",
+        "filename": "test/nvmf/host/identify.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:56:46Z",
+      "side": 1,
+      "message": "This can\u0027t be single quoted - $NVMF_FIRST_TARGET_IP won\u0027t expand.",
+      "range": {
+        "startLine": 33,
+        "startChar": 60,
+        "endLine": 33,
+        "endChar": 61
+      },
+      "revId": "9fbaefdc1fbdcd46aad30ffd119bb397d5ef1fd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

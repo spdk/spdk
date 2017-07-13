@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20117467_f54eee33",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:56:46Z",
+      "side": 0,
+      "message": "We could keep \"mode\" around as an optional parameter, mark it deprecated, and just ignore it - this should keep current RPC clients working as-is. It\u0027s probably OK to break compatibility in this case, since anybody using direct mode would already have to change, but it\u0027s not that hard to keep it, either, so I could go either way on this one.",
+      "revId": "4560c2bf895530a5cd8d9a38f3fcecae74449417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
