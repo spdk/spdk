@@ -92,14 +92,14 @@ struct spdk_nvmf_transport {
 	void (*ctrlr_fini)(struct spdk_nvmf_ctrlr *ctrlr);
 
 	/**
-	 * Add a connection to a ctrlr
+	 * Add a qpair to a ctrlr
 	 */
-	int (*ctrlr_add_conn)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_conn *conn);
+	int (*ctrlr_add_qpair)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_qpair *qpair);
 
 	/**
-	 * Remove a connection from a ctrlr
+	 * Remove a qpair from a ctrlr
 	 */
-	int (*ctrlr_remove_conn)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_conn *conn);
+	int (*ctrlr_remove_qpair)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_qpair *qpair);
 
 	/*
 	 * Signal request completion, which sends a response
@@ -110,17 +110,17 @@ struct spdk_nvmf_transport {
 	/*
 	 * Deinitialize a connection.
 	 */
-	void (*conn_fini)(struct spdk_nvmf_conn *conn);
+	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair);
 
 	/*
 	 * Poll a connection for events.
 	 */
-	int (*conn_poll)(struct spdk_nvmf_conn *conn);
+	int (*qpair_poll)(struct spdk_nvmf_qpair *qpair);
 
 	/*
-	 * True if the conn has no pending IO.
+	 * True if the qpair has no pending IO.
 	 */
-	bool (*conn_is_idle)(struct spdk_nvmf_conn *conn);
+	bool (*qpair_is_idle)(struct spdk_nvmf_qpair *qpair);
 };
 
 int spdk_nvmf_transport_init(void);
