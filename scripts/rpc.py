@@ -264,6 +264,18 @@ p.add_argument('size', help='size for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
 
 
+def resize_lvol_bdev(args):
+    params = {
+        'name': args.name,
+        'size': args.size,
+    }
+    jsonrpc_call('resize_lvol_bdev', params)
+p = subparsers.add_parser('resize_lvol_bdev', help='Resize existing lvol bdev')
+p.add_argument('name', help='lvol bdev name')
+p.add_argument('size', help='new size for this bdev', type=int)
+p.set_defaults(func=resize_lvol_bdev)
+
+
 def destroy_lvol_store(args):
     params = {'guid': args.guid}
     jsonrpc_call('destroy_lvol_store', params)
