@@ -1487,6 +1487,37 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 	spdk_bdev_unregister(vbdev);
 }
 
+int
+spdk_vbdev_module_examine(const char *module_name, const char *bdev_name)
+{
+	struct spdk_bdev_module_if *vbdev_module;
+	struct spdk_bdev *base_bdev, *vbdev;
+
+	base_bdev = spdk_bdev_get_by_name(bdev_name);
+	if (!base_bdev) {
+		SPDK_ERRLOG("Could not find bdev %s\n", bdev_name);
+		return -1;
+	}
+
+	/* Check vbdevs created on the base_bdev with the module name */
+	TAILQ_FOREACH(vbdev, &base_bdev->vbdevs, vbdev_link) {
+		if (strcmp(vbdev->module->name, module_name) == 0) {
+			return 0;
+		}
+	}
+
+	TAILQ_FOREACH(vbdev_module, &g_bdev_mgr.vbdev_modules, tailq) {
+		if (strcmp(module_name, vbdev_module->name) == 0) {
+			vbdev_module->examine_in_progress++;
+			vbdev_module->examine(base_bdev);
+			return 0;
+		}
+	}
+
+	SPDK_ERRLOG("Could not find vbdev_module by provided name=%s\n", module_name);
+	return -1;
+}
+
 void
 spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
