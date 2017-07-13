@@ -59,7 +59,8 @@ spdk_nvmf_transport_init(void)
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
 		if (g_transports[i]->transport_init(g_nvmf_tgt.max_queue_depth, g_nvmf_tgt.max_io_size,
 						    g_nvmf_tgt.in_capsule_data_size) < 0) {
-			SPDK_NOTICELOG("%s transport init failed\n", g_transports[i]->name);
+			SPDK_NOTICELOG("Transport type %s init failed\n",
+				       spdk_nvme_transport_id_trtype_str(g_transports[i]->type));
 		} else {
 			count++;
 		}
@@ -76,7 +77,8 @@ spdk_nvmf_transport_fini(void)
 
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
 		if (g_transports[i]->transport_fini() < 0) {
-			SPDK_NOTICELOG("%s transport fini failed\n", g_transports[i]->name);
+			SPDK_NOTICELOG("Transport type %s fini failed\n",
+				       spdk_nvme_transport_id_trtype_str(g_transports[i]->type));
 		} else {
 			count++;
 		}
@@ -96,12 +98,12 @@ spdk_nvmf_acceptor_poll(void)
 }
 
 const struct spdk_nvmf_transport *
-spdk_nvmf_transport_get(const char *name)
+spdk_nvmf_transport_get(enum spdk_nvme_transport_type type)
 {
 	size_t i;
 
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (strcasecmp(name, g_transports[i]->name) == 0) {
+		if (type == g_transports[i]->type) {
 			return g_transports[i];
 		}
 	}
