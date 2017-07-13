@@ -198,8 +198,7 @@ for vm_conf in ${vms[@]}; do
 			done
 		done <<< "${conf[2]}"
 		unset IFS;
-		$rpc_py get_vhost_scsi_controllers
-		$rpc_py get_vhost_blk_controllers
+		$rpc_py get_vhost_controllers
 	fi
 	$setup_cmd
 done
