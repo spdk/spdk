@@ -303,6 +303,48 @@ spdk_islun2lun(uint64_t islun)
 	return lun_i;
 }
 
+static uint32_t
+spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
+{
+	uint32_t crc32c;
+	uint32_t ahs_len_bytes = pdu->bhs.total_ahs_len * 4;
+
+	crc32c = SPDK_CRC32C_INITIAL;
+	crc32c = spdk_update_crc32c((uint8_t *)&pdu->bhs, ISCSI_BHS_LEN, crc32c);
+
+	if (ahs_len_bytes) {
+		crc32c = spdk_update_crc32c((uint8_t *)pdu->ahs, ahs_len_bytes, crc32c);
+	}
+
+	/* BHS and AHS are always 4-byte multiples in length, so no padding is necessary. */
+	crc32c = crc32c ^ SPDK_CRC32C_XOR;
+	return crc32c;
+}
+
+static uint32_t
+spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
+{
+	uint32_t data_len = DGET24(pdu->bhs.data_segment_len);
+	uint32_t crc32c;
+	uint32_t mod;
+
+	crc32c = SPDK_CRC32C_INITIAL;
+	crc32c = spdk_update_crc32c(pdu->data, data_len, crc32c);
+
+	mod = data_len % ISCSI_ALIGNMENT;
+	if (mod != 0) {
+		uint32_t pad_length = ISCSI_ALIGNMENT - mod;
+		uint8_t pad[3] = {0, 0, 0};
+
+		assert(pad_length > 0);
+		assert(pad_length <= sizeof(pad));
+		crc32c = spdk_update_crc32c(pad, pad_length, crc32c);
+	}
+
+	crc32c = crc32c ^ SPDK_CRC32C_XOR;
+	return crc32c;
+}
+
 int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
@@ -496,21 +538,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 	/* check digest */
 	if (conn->header_digest) {
-		if (ahs_len == 0) {
-			crc32c = spdk_crc32c((uint8_t *)&pdu->bhs,
-					     ISCSI_BHS_LEN);
-		} else {
-			int upd_total = 0;
-			crc32c = SPDK_CRC32C_INITIAL;
-			crc32c = spdk_update_crc32c((uint8_t *)&pdu->bhs,
-						    ISCSI_BHS_LEN, crc32c);
-			upd_total += ISCSI_BHS_LEN;
-			crc32c = spdk_update_crc32c((uint8_t *)pdu->ahs,
-						    ahs_len, crc32c);
-			upd_total += ahs_len;
-			crc32c = spdk_fixup_crc32c(upd_total, crc32c);
-			crc32c = crc32c ^ SPDK_CRC32C_XOR;
-		}
+		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
 		rc = MATCH_DIGEST_WORD(pdu->header_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("header digest error (%s)\n", conn->initiator_name);
@@ -519,7 +547,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		}
 	}
 	if (conn->data_digest && data_len != 0) {
-		crc32c = spdk_crc32c(pdu->data, ISCSI_ALIGN(data_len));
+		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
 			SPDK_ERRLOG("data digest error (%s)\n", conn->initiator_name);
@@ -565,23 +593,7 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		if (total_ahs_len == 0) {
-			crc32c = spdk_crc32c((uint8_t *)&pdu->bhs,
-					     ISCSI_BHS_LEN);
-		} else {
-			int upd_total = 0;
-			crc32c = SPDK_CRC32C_INITIAL;
-			crc32c = spdk_update_crc32c((uint8_t *)&pdu->bhs,
-						    ISCSI_BHS_LEN, crc32c);
-			upd_total += ISCSI_BHS_LEN;
-			crc32c = spdk_update_crc32c((uint8_t *)pdu->ahs,
-						    (4 * total_ahs_len),
-						    crc32c);
-			upd_total += (4 * total_ahs_len);
-			crc32c = spdk_fixup_crc32c(upd_total, crc32c);
-			crc32c = crc32c ^ SPDK_CRC32C_XOR;
-		}
-
+		crc32c = spdk_iscsi_pdu_calc_header_digest(pdu);
 		MAKE_DIGEST_WORD(pdu->header_digest, crc32c);
 
 		iovec[iovec_cnt].iov_base = pdu->header_digest;
@@ -598,7 +610,7 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		crc32c = spdk_crc32c(pdu->data, ISCSI_ALIGN(data_len));
+		crc32c = spdk_iscsi_pdu_calc_data_digest(pdu);
 		MAKE_DIGEST_WORD(pdu->data_digest, crc32c);
 
 		iovec[iovec_cnt].iov_base = pdu->data_digest;

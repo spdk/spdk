@@ -48,7 +48,5 @@ uint32_t crc32_iscsi(const uint8_t *buf, size_t len, uint32_t crc);
 #else
 uint32_t spdk_update_crc32c(const uint8_t *buf, size_t len, uint32_t crc);
 #endif
-uint32_t spdk_fixup_crc32c(size_t total, uint32_t crc);
-uint32_t spdk_crc32c(const uint8_t *buf, size_t len);
 
 #endif /* SPDK_CRC32C_H */
