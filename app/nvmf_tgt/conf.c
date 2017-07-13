@@ -414,8 +414,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 	for (i = 0; i < num_listen_addresses; i++) {
 		int nic_numa_node = spdk_get_ifaddr_numa_node(addresses[i].traddr);
 		unsigned subsys_numa_node = spdk_env_get_socket_id(app_subsys->lcore);
-		const char *adrfam_str;
-		enum spdk_nvmf_adrfam adrfam;
+		struct spdk_nvme_transport_id trid = {};
 
 		if (nic_numa_node >= 0) {
 			if (subsys_numa_node != (unsigned)nic_numa_node) {
@@ -429,27 +428,23 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 			}
 		}
 
-		if (addresses[i].transport == NULL) {
+		if (spdk_nvme_transport_id_parse_trtype(&trid.trtype, addresses[i].transport)) {
 			SPDK_ERRLOG("Missing listen address transport type\n");
 			goto error;
 		}
 
-		adrfam_str = addresses[i].adrfam;
-		if (adrfam_str == NULL) {
-			adrfam_str = "IPv4";
+		if (spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, addresses[i].adrfam)) {
+			trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
 		}
 
-		if (spdk_nvme_transport_id_parse_adrfam(&adrfam, adrfam_str)) {
-			SPDK_ERRLOG("Unknown address family '%s'\n", adrfam_str);
-			goto error;
-		}
+		snprintf(trid.traddr, sizeof(trid.traddr), "%s", addresses[i].traddr);
+		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", addresses[i].trsvcid);
 
-		listen_addr = spdk_nvmf_tgt_listen(addresses[i].transport, adrfam,
-						   addresses[i].traddr, addresses[i].trsvcid);
+		listen_addr = spdk_nvmf_tgt_listen(&trid);
 		if (listen_addr == NULL) {
 			SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
 				    addresses[i].transport,
-				    adrfam_str,
+				    addresses[i].adrfam,
 				    addresses[i].traddr,
 				    addresses[i].trsvcid);
 			goto error;

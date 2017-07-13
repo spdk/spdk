@@ -178,8 +178,7 @@ struct spdk_nvmf_rdma_session {
 };
 
 struct spdk_nvmf_rdma_listen_addr {
-	char					*traddr;
-	char					*trsvcid;
+	struct spdk_nvme_transport_id		trid;
 	struct rdma_cm_id			*id;
 	struct ibv_device_attr 			attr;
 	struct ibv_comp_channel			*comp_channel;
@@ -950,8 +949,6 @@ spdk_nvmf_rdma_listen_addr_free(struct spdk_nvmf_rdma_listen_addr *addr)
 		return;
 	}
 
-	free(addr->traddr);
-	free(addr->trsvcid);
 	free(addr);
 }
 static int
@@ -975,8 +972,7 @@ spdk_nvmf_rdma_listen_remove(struct spdk_nvmf_listen_addr *listen_addr)
 
 	pthread_mutex_lock(&g_rdma.lock);
 	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, tmp) {
-		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
-		    (!strcasecmp(addr->trsvcid, listen_addr->trsvcid))) {
+		if (spdk_nvme_transport_id_compare(&listen_addr->trid, &addr->trid) == 0) {
 			assert(addr->ref > 0);
 			addr->ref--;
 			if (!addr->ref) {
@@ -1016,7 +1012,7 @@ spdk_nvmf_rdma_addr_listen_init(struct spdk_nvmf_rdma_listen_addr *addr)
 	addr->is_listened = true;
 
 	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
-		       addr->traddr, ntohs(rdma_get_src_port(addr->id)));
+		       addr->trid.traddr, ntohs(rdma_get_src_port(addr->id)));
 }
 
 static void
@@ -1103,8 +1099,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 	pthread_mutex_lock(&g_rdma.lock);
 	assert(g_rdma.event_channel != NULL);
 	TAILQ_FOREACH(addr, &g_rdma.listen_addrs, link) {
-		if ((!strcasecmp(addr->traddr, listen_addr->traddr)) &&
-		    (!strcasecmp(addr->trsvcid, listen_addr->trsvcid))) {
+		if (spdk_nvme_transport_id_compare(&listen_addr->trid, &addr->trid) == 0) {
 			addr->ref++;
 			/* Already listening at this address */
 			pthread_mutex_unlock(&g_rdma.lock);
@@ -1118,19 +1113,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 		return -1;
 	}
 
-	addr->traddr = strdup(listen_addr->traddr);
-	if (!addr->traddr) {
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-
-	addr->trsvcid = strdup(listen_addr->trsvcid);
-	if (!addr->trsvcid) {
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
+	addr->trid = listen_addr->trid;
 
 	rc = rdma_create_id(g_rdma.event_channel, &addr->id, addr, RDMA_PS_TCP);
 	if (rc < 0) {
@@ -1142,8 +1125,8 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_listen_addr *listen_addr)
 
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = inet_addr(addr->traddr);
-	saddr.sin_port = htons((uint16_t)strtoul(addr->trsvcid, NULL, 10));
+	saddr.sin_addr.s_addr = inet_addr(addr->trid.traddr);
+	saddr.sin_port = htons((uint16_t)strtoul(addr->trid.trsvcid, NULL, 10));
 	rc = rdma_bind_addr(addr->id, (struct sockaddr *)&saddr);
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_bind_addr() failed\n");
@@ -1197,11 +1180,11 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_listen_addr *listen_addr,
 			struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = SPDK_NVMF_TRTYPE_RDMA;
-	entry->adrfam = listen_addr->adrfam;
+	entry->adrfam = listen_addr->trid.adrfam;
 	entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED;
 
-	spdk_strcpy_pad(entry->trsvcid, listen_addr->trsvcid, sizeof(entry->trsvcid), ' ');
-	spdk_strcpy_pad(entry->traddr, listen_addr->traddr, sizeof(entry->traddr), ' ');
+	spdk_strcpy_pad(entry->trsvcid, listen_addr->trid.trsvcid, sizeof(entry->trsvcid), ' ');
+	spdk_strcpy_pad(entry->traddr, listen_addr->trid.traddr, sizeof(entry->traddr), ' ');
 
 	entry->tsas.rdma.rdma_qptype = SPDK_NVMF_RDMA_QPTYPE_RELIABLE_CONNECTED;
 	entry->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_PRTYPE_NONE;
