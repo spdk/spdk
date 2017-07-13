@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afa8908b_437e324d",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T07:05:43Z",
+      "side": 1,
+      "message": "(I know this patch is marked draft - but saw it related to another patch I was reviewing so I took a look).\n\nDeclaring parameters as arrays in C does not really work.  User could pass an array of size 1 here and compiler would not even warn about it I don\u0027t think.\n\nI like the idea of reducing the number of parameters here, but I think you need to still pass a num_luns parameter and just get rid of the lun_id_list.",
+      "revId": "e1d3b4687661c9ccfe9458f1b566ec1b7adc54cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
