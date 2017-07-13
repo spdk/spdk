@@ -343,5 +343,5 @@ vbdev_error_fini(void)
 	}
 }
 
-SPDK_VBDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,
-			   vbdev_error_examine)
+SPDK_BDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,
+			  vbdev_error_examine)

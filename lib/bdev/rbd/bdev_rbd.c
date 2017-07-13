@@ -211,7 +211,7 @@ bdev_rbd_get_ctx_size(void)
 }
 
 SPDK_BDEV_MODULE_REGISTER(rbd, bdev_rbd_library_init, bdev_rbd_library_fini, NULL,
-			  bdev_rbd_get_ctx_size)
+			  bdev_rbd_get_ctx_size, NULL)
 
 static int64_t
 bdev_rbd_readv(struct bdev_rbd *disk, struct spdk_io_channel *ch,

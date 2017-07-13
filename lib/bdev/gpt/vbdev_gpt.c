@@ -530,6 +530,6 @@ vbdev_gpt_get_ctx_size(void)
 	return sizeof(struct spdk_io_channel *);
 }
 
-SPDK_VBDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
-			   vbdev_gpt_get_ctx_size, vbdev_gpt_examine)
+SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
+			  vbdev_gpt_get_ctx_size, vbdev_gpt_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_gpt", SPDK_TRACE_VBDEV_GPT)

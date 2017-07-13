@@ -117,8 +117,8 @@ vbdev_ut_examine(struct spdk_bdev *bdev)
 	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(vbdev_ut));
 }
 
-SPDK_BDEV_MODULE_REGISTER(bdev_ut, NULL, NULL, NULL, NULL)
-SPDK_VBDEV_MODULE_REGISTER(vbdev_ut, NULL, NULL, NULL, NULL, vbdev_ut_examine)
+SPDK_BDEV_MODULE_REGISTER(bdev_ut, NULL, NULL, NULL, NULL, NULL)
+SPDK_BDEV_MODULE_REGISTER(vbdev_ut, NULL, NULL, NULL, NULL, vbdev_ut_examine)
 
 static struct spdk_bdev *
 allocate_bdev(char *name)

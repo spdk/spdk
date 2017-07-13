@@ -429,6 +429,6 @@ vbdev_split_get_ctx_size(void)
 	return sizeof(struct spdk_io_channel *);
 }
 
-SPDK_VBDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
-			   vbdev_split_get_ctx_size, vbdev_split_examine)
+SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
+			  vbdev_split_get_ctx_size, vbdev_split_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_split", SPDK_TRACE_VBDEV_SPLIT)
