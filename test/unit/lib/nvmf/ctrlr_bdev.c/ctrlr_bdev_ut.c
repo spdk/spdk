@@ -40,14 +40,14 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
-struct spdk_nvmf_conn *
-spdk_nvmf_ctrlr_get_conn(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
+struct spdk_nvmf_qpair *
+spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
 {
 	return NULL;
 }
 
 struct spdk_nvmf_request *
-spdk_nvmf_conn_get_request(struct spdk_nvmf_conn *conn, uint16_t cid)
+spdk_nvmf_qpair_get_request(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
 	return NULL;
 }

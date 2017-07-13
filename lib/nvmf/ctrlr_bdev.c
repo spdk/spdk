@@ -258,7 +258,7 @@ static int
 nvmf_bdev_ctrlr_identify(struct spdk_nvmf_request *req)
 {
 	uint8_t cns;
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
@@ -289,21 +289,21 @@ nvmf_bdev_ctrlr_identify(struct spdk_nvmf_request *req)
 static int
 nvmf_bdev_ctrlr_abort(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->conn->ctrlr;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	uint32_t cdw10 = cmd->cdw10;
 	uint16_t cid = cdw10 >> 16;
 	uint16_t sqid = cdw10 & 0xFFFFu;
-	struct spdk_nvmf_conn *conn;
+	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_request *req_to_abort;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "abort sqid=%u cid=%u\n", sqid, cid);
 
 	rsp->cdw0 = 1; /* Command not aborted */
 
-	conn = spdk_nvmf_ctrlr_get_conn(ctrlr, sqid);
-	if (conn == NULL) {
+	qpair = spdk_nvmf_ctrlr_get_qpair(ctrlr, sqid);
+	if (qpair == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "sqid %u not found\n", sqid);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -313,9 +313,9 @@ nvmf_bdev_ctrlr_abort(struct spdk_nvmf_request *req)
 	/*
 	 * NOTE: This relies on the assumption that all connections for a ctrlr will be handled
 	 * on the same thread.  If this assumption becomes untrue, this will need to pass a message
-	 * to the thread handling conn, and the abort will need to be asynchronous.
+	 * to the thread handling qpair, and the abort will need to be asynchronous.
 	 */
-	req_to_abort = spdk_nvmf_conn_get_request(conn, cid);
+	req_to_abort = spdk_nvmf_qpair_get_request(qpair, cid);
 	if (req_to_abort == NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "cid %u not found\n", cid);
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -569,7 +569,7 @@ nvmf_bdev_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
-	struct spdk_nvmf_subsystem *subsystem = req->conn->ctrlr->subsys;
+	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
