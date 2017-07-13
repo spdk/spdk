@@ -525,6 +525,34 @@ spdk_rpc_get_vhost_blk_controllers(struct spdk_jsonrpc_request *request,
 	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
 		if (vdev->type != SPDK_VHOST_DEV_T_BLK)
 			continue;
+
+		spdk_vhost_dump_config_json(vdev, w);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_vhost_blk_controllers", spdk_rpc_get_vhost_blk_controllers)
+
+static void
+spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_vhost_dev *vdev = NULL;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_vhost_controllers requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	spdk_json_write_array_begin(w);
+
+	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_name(w, "ctrlr");
@@ -533,19 +561,28 @@ spdk_rpc_get_vhost_blk_controllers(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "cpu_mask");
 		spdk_json_write_string_fmt(w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
 
-		spdk_json_write_name(w, "readonly");
-		spdk_json_write_bool(w, spdk_vhost_blk_get_readonly(vdev));
+		spdk_json_write_name(w, "type");
+		switch (vdev->type) {
+		case SPDK_VHOST_DEV_T_BLK:
+			spdk_json_write_string(w, "vblk");
+			break;
+		case SPDK_VHOST_DEV_T_SCSI:
+			spdk_json_write_string(w, "scsi");
+			break;
+		default:
+			break;
+		}
+		spdk_json_write_name(w, "dev");
 
-		bdev = spdk_vhost_blk_get_dev(vdev);
-		spdk_json_write_name(w, "bdev");
-		if (bdev)
-			spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-		else
-			spdk_json_write_null(w);
+		spdk_json_write_object_begin(w);
+		spdk_vhost_dump_config_json(vdev, w);
+		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);
+
 	}
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
+
 }
-SPDK_RPC_REGISTER("get_vhost_blk_controllers", spdk_rpc_get_vhost_blk_controllers)
+SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers)
