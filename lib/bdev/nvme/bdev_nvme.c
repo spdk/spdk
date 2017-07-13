@@ -152,7 +152,7 @@ bdev_nvme_get_ctx_size(void)
 
 SPDK_BDEV_MODULE_REGISTER(nvme, bdev_nvme_library_init, bdev_nvme_library_fini,
 			  bdev_nvme_get_spdk_running_config,
-			  bdev_nvme_get_ctx_size)
+			  bdev_nvme_get_ctx_size, NULL)
 
 static int
 bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,

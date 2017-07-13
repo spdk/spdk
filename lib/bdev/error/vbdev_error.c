@@ -259,7 +259,7 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		goto cleanup;
 	}
 
-	rc = spdk_vbdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(error));
+	rc = spdk_bdev_module_claim_bdev(base_bdev, NULL, SPDK_GET_BDEV_MODULE(error));
 	if (rc) {
 		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(base_bdev));
 		goto cleanup;
@@ -305,7 +305,7 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 
 	sp = spdk_conf_find_section(NULL, "BdevError");
 	if (sp == NULL) {
-		spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(error));
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(error));
 		return;
 	}
 
@@ -330,7 +330,7 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 		}
 	}
 
-	spdk_vbdev_module_examine_done(SPDK_GET_BDEV_MODULE(error));
+	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(error));
 }
 
 static void
@@ -343,5 +343,5 @@ vbdev_error_fini(void)
 	}
 }
 
-SPDK_VBDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,
-			   vbdev_error_examine)
+SPDK_BDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,
+			  vbdev_error_examine)

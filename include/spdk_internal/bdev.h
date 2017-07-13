@@ -50,12 +50,8 @@
  * To implement a backend block device driver, a number of functions
  * dictated by struct spdk_bdev_fn_table must be provided.
  *
- * The module should register itself using SPDK_BDEV_MODULE_REGISTER or
- * SPDK_VBDEV_MODULE_REGISTER to define the parameters for the module.
- *
- * Use SPDK_BDEV_MODULE_REGISTER for all block backends that are real disks.
- * Any virtual backends such as RAID, partitioning, etc. should use
- * SPDK_VBDEV_MODULE_REGISTER.
+ * The module should register itself using SPDK_BDEV_MODULE_REGISTER to
+ * define the parameters for the module.
  *
  * <hr>
  *
@@ -223,7 +219,11 @@ struct spdk_bdev {
 
 	bool bdev_opened_for_write;
 
-	struct spdk_bdev_module_if *vbdev_claim_module;
+	/**
+	 * Pointer to the module that has claimed this bdev for purposes of creating virtual
+	 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
+	 */
+	struct spdk_bdev_module_if *claim_module;
 
 	/** List of open descriptors for this block device. */
 	TAILQ_HEAD(, spdk_bdev_desc) open_descs;
@@ -382,11 +382,11 @@ void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			 int base_bdev_count);
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
-void spdk_vbdev_module_examine_done(struct spdk_bdev_module_if *module);
+void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
 
-int spdk_vbdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-				 struct spdk_bdev_module_if *module);
-void spdk_vbdev_module_release_bdev(struct spdk_bdev *bdev);
+int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				struct spdk_bdev_module_if *module);
+void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
 
 void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 			    spdk_bdev_poller_fn fn,
@@ -428,7 +428,6 @@ void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			      int *sc, int *sk, int *asc, int *ascq);
 
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
-void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module);
 
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
@@ -437,20 +436,7 @@ spdk_bdev_io_from_ctx(void *ctx)
 	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
 }
 
-#define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn)		\
-	static struct spdk_bdev_module_if _name ## _if = {					\
-	.name		= #_name,								\
-	.module_init 	= init_fn,								\
-	.module_fini	= fini_fn,								\
-	.config_text	= config_fn,								\
-	.get_ctx_size	= ctx_size_fn,                                				\
-	};  											\
-	__attribute__((constructor)) static void _name ## _init(void)  				\
-	{                                                           				\
-	    spdk_bdev_module_list_add(&_name ## _if);                  				\
-	}
-
-#define SPDK_VBDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)\
+#define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)\
 	static struct spdk_bdev_module_if _name ## _if = {					\
 	.name		= #_name,								\
 	.module_init 	= init_fn,								\
@@ -461,14 +447,14 @@ spdk_bdev_io_from_ctx(void *ctx)
 	};  											\
 	__attribute__((constructor)) static void _name ## _init(void) 				\
 	{                                                           				\
-	    spdk_vbdev_module_list_add(&_name ## _if);                  			\
+	    spdk_bdev_module_list_add(&_name ## _if);                  				\
 	}
 
 #define SPDK_GET_BDEV_MODULE(name) &name ## _if
 
 /*
  * Modules are not required to use this macro.  It allows modules to reference the module with
- * SPDK_GET_BDEV_MODULE() before it is defined by SPDK_BDEV_MODULE_REGISTER or its VBDEV variant.
+ * SPDK_GET_BDEV_MODULE() before it is defined by SPDK_BDEV_MODULE_REGISTER.
  */
 #define SPDK_DECLARE_BDEV_MODULE(name)								\
 	static struct spdk_bdev_module_if name ## _if;
