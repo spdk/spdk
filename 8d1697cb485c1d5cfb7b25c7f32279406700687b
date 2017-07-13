@@ -1,0 +1,158 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3f0ca1c_03d1bd50",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "Maybe \"filename\" would be more descriptive than \"path\" here.",
+      "range": {
+        "startLine": 165,
+        "startChar": 3,
+        "endLine": 165,
+        "endChar": 7
+      },
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4b6c78b_cbe4f444",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "This should at least use pci_address for consistency with other RPCs, but I think it would be even better to use a full transport ID like the construct_nvme_bdev call above - this would allow us to do firmware update for other transports (e.g. NVMe-oF).",
+      "range": {
+        "startLine": 166,
+        "startChar": 3,
+        "endLine": 166,
+        "endChar": 11
+      },
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63fe4991_58e60c69",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "This needs to at least use snprintf() to avoid buffer overflows, and it should also verify that overflow doesn\u0027t happen (e.g. check return value of snprintf()). If you replace the parameters with a transport ID as mentioned above, then we won\u0027t need to manually generate a traddr string, and this problem would be eliminated.",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b2d7048_eaf2ff76",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "This message seems to have some extra punctuation and space at the end (should be something like \"Read firmware image failed!\").",
+      "range": {
+        "startLine": 247,
+        "startChar": 8,
+        "endLine": 247,
+        "endChar": 37
+      },
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b748907d_b48b78e6",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "We should avoid using strcpy() - it is a banned function on our security checklist, and it\u0027s easy to overflow the buffer. You can use snprintf(msg, sizeof(msg), \"%s\", \"...\") instead in this case.",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc65f304_4064421f",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "The return value of spdk_jsonrpc_begin_result() must be checked - if it is NULL, no response is required.",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d7cea50_305673cc",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "This response doesn\u0027t really need to be in an array - the construct_nvme_bdev response only uses an array because it needs to be able to return multiple names (e.g. controllers with multiple namespaces).",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cc58f44_99f7dde3",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T17:20:38Z",
+      "side": 1,
+      "message": "You can probably free fw_image and req right after the spdk_nvme_ctrlr_update_firmware() call, before the if (rc..) checks - that would simplify some of the error paths.",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
