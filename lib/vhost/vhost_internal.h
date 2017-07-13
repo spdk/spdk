@@ -80,6 +80,9 @@ struct spdk_vhost_dev {
 	uint64_t negotiated_features;
 	struct rte_vhost_vring virtqueue[SPDK_VHOST_MAX_VQUEUES] __attribute((aligned(
 				SPDK_CACHE_LINE_SIZE)));
+
+	void *ctxt;
+	int (*dump_config_json)(void *ctx, struct spdk_json_write_ctx *w);
 };
 
 
