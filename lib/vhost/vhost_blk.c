@@ -520,6 +520,26 @@ destroy_device(int vid)
 	spdk_vhost_dev_unload(vdev);
 }
 
+static void
+spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vdev);
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+	assert(bvdev != NULL);
+	spdk_json_write_name(w, "readonly");
+	spdk_json_write_bool(w, bvdev->readonly);
+
+	bdev = spdk_vhost_blk_get_dev(vdev);
+	spdk_json_write_name(w, "bdev");
+	if (bdev) {
+		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	} else {
+		spdk_json_write_null(w);
+	}
+
+}
+
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.virtio_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VHOST_USER_F_PROTOCOL_FEATURES) |
 	(1ULL << VIRTIO_F_VERSION_1) | (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
@@ -531,6 +551,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.disabled_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
+	.dump_config_json = spdk_vhost_blk_dump_config_json,
 	.ops = {
 		.new_device =  new_device,
 		.destroy_device = destroy_device,

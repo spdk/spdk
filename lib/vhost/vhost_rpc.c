@@ -42,99 +42,6 @@
 #include "vhost_internal.h"
 #include "spdk/bdev.h"
 
-static void
-json_scsi_dev_write(struct spdk_json_write_ctx *ctx, struct spdk_scsi_dev *dev)
-{
-	int l;
-
-	spdk_json_write_name(ctx, "id");
-	spdk_json_write_int32(ctx, spdk_scsi_dev_get_id(dev));
-
-	spdk_json_write_name(ctx, "device_name");
-	spdk_json_write_string(ctx, spdk_scsi_dev_get_name(dev));
-
-	spdk_json_write_name(ctx, "luns");
-	spdk_json_write_array_begin(ctx);
-
-	for (l = 0; l < SPDK_SCSI_DEV_MAX_LUN; l++) {
-		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(dev, l);
-
-		if (!lun) {
-			continue;
-		}
-
-		spdk_json_write_object_begin(ctx);
-
-		spdk_json_write_name(ctx, "id");
-		spdk_json_write_int32(ctx, spdk_scsi_lun_get_id(lun));
-
-		spdk_json_write_name(ctx, "name");
-		spdk_json_write_string(ctx, spdk_scsi_lun_get_name(lun));
-
-		spdk_json_write_object_end(ctx);
-	}
-	spdk_json_write_array_end(ctx);
-}
-
-static void
-spdk_rpc_get_vhost_scsi_controllers(struct spdk_jsonrpc_request *request,
-				    const struct spdk_json_val *params)
-{
-	struct spdk_json_write_ctx *w;
-	struct spdk_vhost_dev *vdev = NULL;
-	struct spdk_scsi_dev *dev;
-	uint32_t i;
-
-	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_vhost_scsi_controllers requires no parameters");
-		return;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_array_begin(w);
-	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
-		if (vdev->type != SPDK_VHOST_DEV_T_SCSI) {
-			continue;
-		}
-
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_name(w, "ctrlr");
-		spdk_json_write_string(w, spdk_vhost_dev_get_name(vdev));
-
-		spdk_json_write_name(w, "cpu_mask");
-		spdk_json_write_string_fmt(w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
-
-		spdk_json_write_name(w, "scsi_devs");
-		spdk_json_write_array_begin(w);
-
-		for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-			dev = spdk_vhost_scsi_dev_get_dev(vdev, i);
-			if (!dev)
-				continue;
-
-			spdk_json_write_object_begin(w);
-			spdk_json_write_name(w, "scsi_dev_num");
-			spdk_json_write_uint32(w, i);
-			json_scsi_dev_write(w, dev);
-			spdk_json_write_object_end(w);
-		}
-
-		spdk_json_write_array_end(w); // devs
-
-		spdk_json_write_object_end(w); // ctrl
-	}
-	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(request, w);
-	return;
-}
-SPDK_RPC_REGISTER("get_vhost_scsi_controllers", spdk_rpc_get_vhost_scsi_controllers)
-
 struct rpc_vhost_scsi_ctrlr {
 	char *ctrlr;
 	char *cpumask;
@@ -502,17 +409,15 @@ invalid:
 SPDK_RPC_REGISTER("remove_vhost_blk_controller", spdk_rpc_remove_vhost_blk_controller)
 
 static void
-spdk_rpc_get_vhost_blk_controllers(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
+spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_vhost_dev *vdev = NULL;
-	struct spdk_bdev *bdev;
 
 	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request,
-						 SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_vhost_block_controllers requires no parameters");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_vhost_controllers requires no parameters");
 		return;
 	}
 
@@ -523,8 +428,6 @@ spdk_rpc_get_vhost_blk_controllers(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_array_begin(w);
 	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
-		if (vdev->type != SPDK_VHOST_DEV_T_BLK)
-			continue;
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_name(w, "ctrlr");
@@ -533,19 +436,16 @@ spdk_rpc_get_vhost_blk_controllers(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "cpu_mask");
 		spdk_json_write_string_fmt(w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
 
-		spdk_json_write_name(w, "readonly");
-		spdk_json_write_bool(w, spdk_vhost_blk_get_readonly(vdev));
+		spdk_json_write_name(w, "backend_specific");
 
-		bdev = spdk_vhost_blk_get_dev(vdev);
-		spdk_json_write_name(w, "bdev");
-		if (bdev)
-			spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-		else
-			spdk_json_write_null(w);
+		spdk_json_write_object_begin(w);
+		spdk_vhost_dump_config_json(vdev, w);
+		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);
 	}
+
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
-SPDK_RPC_REGISTER("get_vhost_blk_controllers", spdk_rpc_get_vhost_blk_controllers)
+SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers)

@@ -478,12 +478,6 @@ p = subparsers.add_parser('kill_instance', help='Send signal to instance')
 p.add_argument('sig_name', help='signal will be sent to server.')
 p.set_defaults(func=kill_instance)
 
-def get_vhost_scsi_controllers(args):
-    print_dict(jsonrpc_call('get_vhost_scsi_controllers'))
-
-p = subparsers.add_parser('get_vhost_scsi_controllers', help='List vhost controllers')
-p.set_defaults(func=get_vhost_scsi_controllers)
-
 def construct_vhost_scsi_controller(args):
     params = {'ctrlr': args.ctrlr}
 
@@ -557,11 +551,11 @@ p = subparsers.add_parser('remove_vhost_blk_controller', help='Remove a vhost bl
 p.add_argument('ctrlr', help='controller name')
 p.set_defaults(func=remove_vhost_blk_controller)
 
-def get_vhost_blk_controllers(args):
-    print_dict(jsonrpc_call('get_vhost_blk_controllers'))
+def get_vhost_controllers(args):
+    print_dict(jsonrpc_call('get_vhost_controllers'))
 
-p = subparsers.add_parser('get_vhost_blk_controllers', help='List vhost block controllers')
-p.set_defaults(func=get_vhost_blk_controllers)
+p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
+p.set_defaults(func=get_vhost_controllers)
 
 args = parser.parse_args()
 args.func(args)
