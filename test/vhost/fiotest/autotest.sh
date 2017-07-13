@@ -268,7 +268,12 @@ if $dry_run; then
 	exit 0
 fi
 
-$run_fio
+failed=0
+$run_fio || failed=1
+if [ $failed -eq 1 ]; then
+	echo "fio failed - try it again"
+	$run_fio
+fi
 
 #if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 #	for vm_num in $used_vms; do
