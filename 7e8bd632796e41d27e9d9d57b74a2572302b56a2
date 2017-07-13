@@ -25,6 +25,40 @@
     },
     {
       "key": {
+        "uuid": "d0ab9a74_460d8fff",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T23:24:02Z",
+      "side": 1,
+      "message": "Should use SPDK_BDEV_IO_STATUS_FAILED is bserrno !\u003d 0 (and remove the assert).",
+      "revId": "7e8bd632796e41d27e9d9d57b74a2572302b56a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28c07a50_47633fbd",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T23:24:02Z",
+      "side": 1,
+      "message": "I think these functions should be in lib/lvol/lvol.c (and include/spdk/lvol.h).  Then all of the code mapping lvols to blobs is in that file, and other files only use the lvol.h API.",
+      "revId": "7e8bd632796e41d27e9d9d57b74a2572302b56a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e46d133_0439148b",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 7
