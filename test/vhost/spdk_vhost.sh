@@ -2,7 +2,9 @@
 
 set -e
 
-if [ ! -f "/home/sys_sgsw/vhost_vm_image.qcow2" ]; then
+vhost_vm_image=/home/sys_sgsw/vhost_vm_image.qcow2
+
+if [ ! -f "$vhost_vm_image" ]; then
 	echo "VM does not exist, exiting vhost tests without running"
 	exit 0
 fi
@@ -20,7 +22,7 @@ case $param in
     -p|--performance)
 	echo Running performance suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
+	--vm=0,$vhost_vm_image,Nvme0n1p0 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_performance.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu
@@ -28,7 +30,7 @@ case $param in
 	-pb|--performance-blk)
 	echo Running blk performance suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
+	--vm=0,$vhost_vm_image,Nvme0n1p0 \
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_performance.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu
@@ -36,7 +38,7 @@ case $param in
     -i|--integrity)
 	echo Running integrity suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+	--vm=0,$vhost_vm_image,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
@@ -44,14 +46,14 @@ case $param in
     -ib|--integrity-blk)
 	echo Running blk integrity suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+	--vm=0,$vhost_vm_image,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
     ;;
 	-f|--fs-integrity)
 	echo Running filesystem integrity suite...
-	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
+	VM_IMG=$vhost_vm_image ./integrity/integrity_start.sh
 	;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test with vhost scsi"
