@@ -45,21 +45,21 @@
 struct spdk_nvmf_transport;
 struct spdk_nvmf_request;
 
-enum conn_type {
-	CONN_TYPE_AQ = 0,
-	CONN_TYPE_IOQ = 1,
+enum spdk_nvmf_qpair_type {
+	QPAIR_TYPE_AQ = 0,
+	QPAIR_TYPE_IOQ = 1,
 };
 
-struct spdk_nvmf_conn {
+struct spdk_nvmf_qpair {
 	const struct spdk_nvmf_transport	*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
-	enum conn_type				type;
+	enum spdk_nvmf_qpair_type		type;
 
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
 
-	TAILQ_ENTRY(spdk_nvmf_conn) 		link;
+	TAILQ_ENTRY(spdk_nvmf_qpair) 		link;
 };
 
 /*
@@ -78,9 +78,9 @@ struct spdk_nvmf_ctrlr {
 	} vcprop; /* virtual controller properties */
 	struct spdk_nvme_ctrlr_data	vcdata; /* virtual controller data */
 
-	TAILQ_HEAD(connection_q, spdk_nvmf_conn) connections;
-	int num_connections;
-	int max_connections_allowed;
+	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
+	int num_qpairs;
+	int max_qpairs_allowed;
 	uint32_t kato;
 	union {
 		uint32_t raw;
@@ -97,14 +97,14 @@ struct spdk_nvmf_ctrlr {
 	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
 };
 
-void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
+void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			     struct spdk_nvmf_fabric_connect_cmd *cmd,
 			     struct spdk_nvmf_fabric_connect_data *data,
 			     struct spdk_nvmf_fabric_connect_rsp *rsp);
 
-struct spdk_nvmf_conn *spdk_nvmf_ctrlr_get_conn(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
+struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
 
-struct spdk_nvmf_request *spdk_nvmf_conn_get_request(struct spdk_nvmf_conn *conn, uint16_t cid);
+struct spdk_nvmf_request *spdk_nvmf_qpair_get_request(struct spdk_nvmf_qpair *qpair, uint16_t cid);
 
 void
 spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,

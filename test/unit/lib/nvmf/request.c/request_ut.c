@@ -45,7 +45,7 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 }
 
 void
-spdk_nvmf_ctrlr_connect(struct spdk_nvmf_conn *conn,
+spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			struct spdk_nvmf_fabric_connect_cmd *cmd,
 			struct spdk_nvmf_fabric_connect_data *data,
 			struct spdk_nvmf_fabric_connect_rsp *rsp)
@@ -97,7 +97,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
 }
 
 void
-spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_conn *conn)
+spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 {
 }
 
@@ -138,14 +138,14 @@ test_nvmf_process_fabrics_cmd(void)
 {
 	struct	spdk_nvmf_request req = {};
 	int	ret;
-	struct	spdk_nvmf_conn req_conn = {};
+	struct	spdk_nvmf_qpair req_qpair = {};
 	union	nvmf_h2c_msg  req_cmd = {};
 	union	nvmf_c2h_msg   req_rsp = {};
 
-	req.conn = &req_conn;
+	req.qpair = &req_qpair;
 	req.cmd  = &req_cmd;
 	req.rsp  = &req_rsp;
-	req.conn->ctrlr = NULL;
+	req.qpair->ctrlr = NULL;
 
 	/* No ctrlr and invalid command check */
 	req.cmd->nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;

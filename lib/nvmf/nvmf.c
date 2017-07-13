@@ -49,12 +49,12 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 struct spdk_nvmf_tgt g_nvmf_tgt;
 
 int
-spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_ctrlr,
+spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_qpairs_per_ctrlr,
 		   uint32_t in_capsule_data_size, uint32_t max_io_size)
 {
 	int rc;
 
-	g_nvmf_tgt.max_queues_per_ctrlr = max_queues_per_ctrlr;
+	g_nvmf_tgt.max_qpairs_per_ctrlr = max_qpairs_per_ctrlr;
 	g_nvmf_tgt.max_queue_depth = max_queue_depth;
 	g_nvmf_tgt.in_capsule_data_size = in_capsule_data_size;
 	g_nvmf_tgt.max_io_size = max_io_size;
@@ -65,7 +65,7 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_queues_per_ctrlr,
 	TAILQ_INIT(&g_nvmf_tgt.subsystems);
 	TAILQ_INIT(&g_nvmf_tgt.listen_addrs);
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queues Per Controller: %d\n", max_queues_per_ctrlr);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queues Per Controller: %d\n", max_qpairs_per_ctrlr);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n", in_capsule_data_size);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", max_io_size);
