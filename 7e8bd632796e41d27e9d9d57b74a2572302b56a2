@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7b08d2d_4099adc1",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:24:18Z",
+      "side": 1,
+      "message": "get_io -\u003e get_io_channel?",
+      "range": {
+        "startLine": 62,
+        "startChar": 24,
+        "endLine": 62,
+        "endChar": 40
+      },
+      "revId": "7e8bd632796e41d27e9d9d57b74a2572302b56a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32d43225_bffb4718",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:24:18Z",
+      "side": 1,
+      "message": "If we\u0027re not going to do anything for unmap on lvol, we should just report it as unsupported in vbdev_lvol_io_type_supported().",
+      "revId": "7e8bd632796e41d27e9d9d57b74a2572302b56a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
