@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bffddff_27a32e3d",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T18:24:13Z",
+      "side": 1,
+      "message": "vhost pid file is needed later in other functions, so I still need to save it, at least for now",
+      "revId": "e972ba9809a6e5af800141bdb4719631ccf054fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e507611e_1436db4c",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T18:24:13Z",
+      "side": 1,
+      "message": "I\u0027d leave debug on. It can help us if any other problem shows up later. Remove it if ou don\u0027t like it:)",
+      "revId": "e972ba9809a6e5af800141bdb4719631ccf054fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa0578de_289baee7",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-13T18:24:13Z",
+      "side": 1,
+      "message": "Let\u0027s also fix this, minor thing",
+      "range": {
+        "startLine": 59,
+        "startChar": 72,
+        "endLine": 59,
+        "endChar": 73
+      },
+      "revId": "e972ba9809a6e5af800141bdb4719631ccf054fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
