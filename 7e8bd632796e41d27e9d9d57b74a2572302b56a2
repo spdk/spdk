@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "4e46d133_0439148b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-13T21:26:11Z",
+      "side": 1,
+      "message": "Does this correctly handle the zero-copy read case? I think we need to call spdk_bdev_io_get_buf() like all other bdevs.",
+      "revId": "7e8bd632796e41d27e9d9d57b74a2572302b56a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32d43225_bffb4718",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 7
