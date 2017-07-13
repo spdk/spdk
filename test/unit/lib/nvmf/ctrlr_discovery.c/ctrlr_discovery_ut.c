@@ -46,7 +46,7 @@ struct spdk_nvmf_tgt g_nvmf_tgt = {
 };
 
 struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(const char *trname, enum spdk_nvmf_adrfam adrfam,
+spdk_nvmf_listen_addr_create(enum spdk_nvme_transport_type trtype, enum spdk_nvmf_adrfam adrfam,
 			     const char *traddr, const char *trsvcid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
@@ -69,14 +69,7 @@ spdk_nvmf_listen_addr_create(const char *trname, enum spdk_nvmf_adrfam adrfam,
 		return NULL;
 	}
 
-	listen_addr->trname = strdup(trname);
-	if (!listen_addr->trname) {
-		free(listen_addr->traddr);
-		free(listen_addr->trsvcid);
-		free(listen_addr);
-		return NULL;
-	}
-
+	listen_addr->trtype = trtype;
 	listen_addr->adrfam = adrfam;
 
 	return listen_addr;
@@ -120,13 +113,30 @@ static const struct spdk_nvmf_transport test_transport1 = {
 };
 
 const struct spdk_nvmf_transport *
-spdk_nvmf_transport_get(const char *trname)
+spdk_nvmf_transport_get(enum spdk_nvme_transport_type trtype)
 {
-	if (!strcasecmp(trname, "test_transport1")) {
+	if (trtype == SPDK_NVME_TRANSPORT_RDMA) {
 		return &test_transport1;
 	}
 
 	return NULL;
+}
+
+int
+spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
+{
+	if (trtype == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
+	if (strcasecmp(str, "PCIe") == 0) {
+		*trtype = SPDK_NVME_TRANSPORT_PCIE;
+	} else if (strcasecmp(str, "RDMA") == 0) {
+		*trtype = SPDK_NVME_TRANSPORT_RDMA;
+	} else {
+		return -ENOENT;
+	}
+	return 0;
 }
 
 void
@@ -227,7 +237,7 @@ test_discovery_log(void)
 					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
-	listen_addr = spdk_nvmf_tgt_listen("test_transport1", SPDK_NVMF_ADRFAM_IPV4, "1234", "5678");
+	listen_addr = spdk_nvmf_tgt_listen("RDMA", SPDK_NVMF_ADRFAM_IPV4, "1234", "5678");
 	SPDK_CU_ASSERT_FATAL(listen_addr != NULL);
 
 	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, listen_addr) == 0);

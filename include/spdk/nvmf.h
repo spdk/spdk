@@ -41,6 +41,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
@@ -67,9 +68,9 @@ typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_re
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_conn *conn);
 
 struct spdk_nvmf_listen_addr {
+	enum spdk_nvme_transport_type		trtype;
 	char					*traddr;
 	char					*trsvcid;
-	char					*trname;
 	enum spdk_nvmf_adrfam			adrfam;
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
 };
