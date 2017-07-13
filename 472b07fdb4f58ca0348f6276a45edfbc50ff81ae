@@ -2,6 +2,176 @@
   "comments": [
     {
       "key": {
+        "uuid": "abe461e4_98b6f65a",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 14
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "the changes in this file are not related at all to logical volumes",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29f6f96a_0b9ecf41",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "yes - this should not be here",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5a9c6a8_d3487735",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "I\u0027m not sure what this \"close_only\" flag means?\n\nReally you should not have this vbdev code changing fields directly in the lvol structure.  This breaks encapsulation.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1951f85_8f34a66d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "I think probably we should just merge the I/O processing patch with this patch before we submit these patches to master.  Leave this separate for now though - I like that you have it split up.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2948cf7_af2c5504",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "these two lines duplicate the lines just above the invalid label - this can be simplified",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d40bb94_07afa824",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "can we just return rc here in all cases and remove the if statement?",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c762bc3e_753a36c4",
+        "filename": "lib/lvol/bdev/lvs_bdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "I would like to come up with a better name for this.  I think \"bdev_pair\" indicates there are two bdevs.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "730a0595_06ef8718",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "This is a dependency on the code in lib/bdev.  What if someone wants to use logical volumes without using our bdev code?  We need to make sure this is a possibility.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cab9fa14_e0fc3575",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "I\u0027m not sure we need to set a length xattr.  I think for logical volumes, we just say that the size must be an exact multiple of the cluster size.  This simplifies the implementation.  There is no reason someone needs to have a 10.0005GB logical volume - they can just round up to the nearest 1MB cluster (10.001GB).",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "427dd49c_920a5d2b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "We should have separate APIs for lvol close and lvol delete.  (We should use \"delete\" to match the blob API).  A user should not have to call spdk_lvol_destroy to close a logical volume.\n\nI think there should also be a callback function here, so the user knows when the close operation is complete.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81da949b_a361b00c",
         "filename": "mk/spdk.modules.mk",
         "patchSetId": 14
@@ -13,6 +183,40 @@
       "writtenOn": "2017-07-12T20:08:23Z",
       "side": 1,
       "message": "For now, I think you can just remove blob and blob_bdev from the list of modules included in RocksDB.  We will need to think if there is a better way to handle these dependencies in the future, but for now I\u0027m ok with just fixing up the RocksDB makefile snippet.  See lib/rocksdb/spdk.rocksdb.mk.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7e8f60b_1dfbf32e",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "Successful",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be81d20e_b315b4fa",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-13T06:23:25Z",
+      "side": 1,
+      "message": "Successful",
       "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
