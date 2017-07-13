@@ -75,9 +75,9 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 		spdk_json_write_object_begin(w);
 		/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 		spdk_json_write_name(w, "transport");
-		spdk_json_write_string(w, listen_addr->trname);
+		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trtype));
 		spdk_json_write_name(w, "trtype");
-		spdk_json_write_string(w, listen_addr->trname);
+		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trtype));
 
 		if (adrfam) {
 			spdk_json_write_name(w, "adrfam");

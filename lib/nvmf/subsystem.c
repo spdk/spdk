@@ -264,10 +264,16 @@ spdk_nvmf_tgt_listen(const char *trname, enum spdk_nvmf_adrfam adrfam, const cha
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
 	const struct spdk_nvmf_transport *transport;
+	enum spdk_nvme_transport_type trtype;
 	int rc;
 
+	rc = spdk_nvme_transport_id_parse_trtype(&trtype, trname);
+	if (rc) {
+		return NULL;
+	}
+
 	TAILQ_FOREACH(listen_addr, &g_nvmf_tgt.listen_addrs, link) {
-		if ((strcmp(listen_addr->trname, trname) == 0) &&
+		if (trtype == listen_addr->trtype &&
 		    (listen_addr->adrfam == adrfam) &&
 		    (strcmp(listen_addr->traddr, traddr) == 0) &&
 		    (strcmp(listen_addr->trsvcid, trsvcid) == 0)) {
@@ -275,13 +281,13 @@ spdk_nvmf_tgt_listen(const char *trname, enum spdk_nvmf_adrfam adrfam, const cha
 		}
 	}
 
-	transport = spdk_nvmf_transport_get(trname);
+	transport = spdk_nvmf_transport_get(trtype);
 	if (!transport) {
 		SPDK_ERRLOG("Unknown transport '%s'\n", trname);
 		return NULL;
 	}
 
-	listen_addr = spdk_nvmf_listen_addr_create(trname, adrfam, traddr, trsvcid);
+	listen_addr = spdk_nvmf_listen_addr_create(trtype, adrfam, traddr, trsvcid);
 	if (!listen_addr) {
 		return NULL;
 	}

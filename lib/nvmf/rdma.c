@@ -1592,7 +1592,7 @@ spdk_nvmf_rdma_conn_is_idle(struct spdk_nvmf_conn *conn)
 }
 
 const struct spdk_nvmf_transport spdk_nvmf_transport_rdma = {
-	.name = "rdma",
+	.type = SPDK_NVME_TRANSPORT_RDMA,
 	.transport_init = spdk_nvmf_rdma_init,
 	.transport_fini = spdk_nvmf_rdma_fini,
 
