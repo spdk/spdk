@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "6f3f02cb_e2c0a541",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 20
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:11:38Z",
+      "side": 1,
+      "message": "Also - do not change commit message on each patch set.\nThis should be a general description of what is the purpose of the whole commit, not of single patch set.",
+      "range": {
+        "startLine": 7,
+        "startChar": 1,
+        "endLine": 7,
+        "endChar": 34
+      },
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b0610a2_808eb177",
         "filename": "dpdk",
         "patchSetId": 20
