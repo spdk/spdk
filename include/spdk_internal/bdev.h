@@ -211,6 +211,8 @@ struct spdk_bdev {
 
 	TAILQ_ENTRY(spdk_bdev) vbdev_link;
 
+	bool bdev_opened;
+
 	bool bdev_opened_for_write;
 
 	uint32_t vbdevs_opened_for_write;
@@ -418,6 +420,8 @@ void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
 void spdk_vbdev_module_list_add(struct spdk_bdev_module_if *vbdev_module);
 void spdk_bdev_module_init_next(int rc);
 void spdk_vbdev_module_init_next(int rc);
+
+bool is_bdev_opened(struct spdk_bdev *bdev);
 
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)

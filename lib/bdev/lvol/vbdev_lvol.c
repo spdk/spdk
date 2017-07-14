@@ -176,3 +176,61 @@ vbdev_lvol_create(uuid_t guid, size_t sz,
 
 	return 0;
 }
+
+static void
+_vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+
+	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg,  lvolerrno);
+	free(req);
+}
+
+int
+vbdev_lvol_resize(char *name, size_t sz,
+		  spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_store_req *req;
+	struct spdk_bdev *bdev;
+	struct spdk_lvol *lvol;
+	struct spdk_lvol_store *lvs;
+	uint64_t cluster_size;
+	int rc;
+
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("lvol '%s' does not exist\n", name);
+		return -1;
+	}
+
+	lvol = vbdev_get_lvol_by_name(name);
+	if (lvol == NULL) {
+		SPDK_ERRLOG("bdev '%s' is not an lvol type device\n", name);
+		return -1;
+	}
+
+	if (is_bdev_opened(bdev)) {
+		SPDK_ERRLOG("bdev '%s' cannot be resized because it is currently opened\n", name);
+		return -1;
+	}
+
+	lvol = (struct spdk_lvol *)bdev->ctxt;
+	lvs = lvol->lvol_store;
+	cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, -1);
+		return -ENOMEM;
+	}
+	req->u.lvol_basic.cb_fn = cb_fn;
+	req->u.lvol_basic.cb_arg = cb_arg;
+
+	rc = spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
+
+	if (rc >= 0) {
+		bdev->blockcnt = sz * cluster_size / bdev->blocklen;
+	}
+
+	return rc;
+}
