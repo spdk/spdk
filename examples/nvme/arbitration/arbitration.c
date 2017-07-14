@@ -403,7 +403,13 @@ drain_io(struct ns_worker_ctx *ns_ctx)
 static int
 init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx, enum spdk_nvme_qprio qprio)
 {
-	ns_ctx->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->nvme.ctrlr, qprio);
+	struct spdk_nvme_ctrlr *ctrlr = ns_ctx->entry->nvme.ctrlr;
+	struct spdk_nvme_io_qpair_opts opts;
+
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	opts.qprio = qprio;
+
+	ns_ctx->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 	if (!ns_ctx->qpair) {
 		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 		return 1;

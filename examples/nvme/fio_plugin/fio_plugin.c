@@ -171,7 +171,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		SPDK_ERRLOG("Cannot allocate space for fio_qpair\n");
 		return;
 	}
-	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, 0);
+	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, NULL, 0);
 	fio_qpair->ns = ns;
 	fio_qpair->f = f;
 	fio_qpair->next = fio_thread->fio_qpair;
