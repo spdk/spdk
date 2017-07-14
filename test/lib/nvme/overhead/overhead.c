@@ -409,7 +409,7 @@ init_ns_worker_ctx(void)
 		 * TODO: If a controller has multiple namespaces, they could all use the same queue.
 		 *  For now, give each namespace/thread combination its own queue.
 		 */
-		g_ns->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_ns->u.nvme.ctrlr, 0);
+		g_ns->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(g_ns->u.nvme.ctrlr, NULL, 0);
 		if (!g_ns->u.nvme.qpair) {
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 			return -1;

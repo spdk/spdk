@@ -142,13 +142,60 @@ nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+void
+spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_io_qpair_opts *opts,
+		size_t opts_size)
+{
+	if (!ctrlr || !opts) {
+		return;
+	}
+
+	memset(opts, 0, opts_size);
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_nvme_io_qpair_opts, field) + sizeof(opts->field) <= opts_size
+
+	if (FIELD_OK(qprio)) {
+		opts->qprio = SPDK_NVME_QPRIO_URGENT;
+	}
+
+	if (FIELD_OK(io_queue_size)) {
+		opts->io_queue_size = ctrlr->opts.io_queue_size;
+	}
+
+	if (FIELD_OK(io_queue_requests)) {
+		opts->io_queue_requests = ctrlr->opts.io_queue_requests;
+	}
+
+#undef FIELD_OK
+}
+
 struct spdk_nvme_qpair *
 spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
-			       enum spdk_nvme_qprio qprio)
+			       const struct spdk_nvme_io_qpair_opts *user_opts,
+			       size_t opts_size)
 {
 	uint32_t				qid;
 	struct spdk_nvme_qpair			*qpair;
 	union spdk_nvme_cc_register		cc;
+	struct spdk_nvme_io_qpair_opts		opts;
+
+	if (!ctrlr) {
+		return NULL;
+	}
+
+	/*
+	 * Get the default options, then overwrite them with the user-provided options
+	 * up to opts_size.
+	 *
+	 * This allows for extensions of the opts structure without breaking
+	 * ABI compatibility.
+	 */
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	if (user_opts) {
+		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
+	}
 
 	if (nvme_ctrlr_get_cc(ctrlr, &cc)) {
 		SPDK_ERRLOG("get_cc failed\n");
@@ -156,7 +203,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	/* Only the low 2 bits (values 0, 1, 2, 3) of QPRIO are valid. */
-	if ((qprio & 3) != qprio) {
+	if ((opts.qprio & 3) != opts.qprio) {
 		return NULL;
 	}
 
@@ -164,7 +211,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 * Only value SPDK_NVME_QPRIO_URGENT(0) is valid for the
 	 * default round robin arbitration method.
 	 */
-	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (qprio != SPDK_NVME_QPRIO_URGENT)) {
+	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (opts.qprio != SPDK_NVME_QPRIO_URGENT)) {
 		SPDK_ERRLOG("invalid queue priority for default round robin arbitration method\n");
 		return NULL;
 	}
@@ -181,7 +228,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, qprio);
+	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, &opts);
 	if (qpair == NULL) {
 		SPDK_ERRLOG("transport->ctrlr_create_io_qpair() failed\n");
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);

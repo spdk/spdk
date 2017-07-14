@@ -420,7 +420,7 @@ int main(int argc, char **argv)
 	foreach_dev(iter) {
 		struct spdk_nvme_qpair *qpair;
 
-		qpair = spdk_nvme_ctrlr_alloc_io_qpair(iter->ctrlr, 0);
+		qpair = spdk_nvme_ctrlr_alloc_io_qpair(iter->ctrlr, NULL, 0);
 		if (!qpair) {
 			fprintf(stderr, "spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 			rc = 1;

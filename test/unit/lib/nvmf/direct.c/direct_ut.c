@@ -139,7 +139,9 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 struct spdk_nvme_qpair *
-spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr, enum spdk_nvme_qprio qprio)
+spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+			       const struct spdk_nvme_io_qpair_opts *opts,
+			       size_t opts_size)
 {
 	return NULL;
 }

@@ -514,7 +514,7 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 		return 0;
 	}
 
-	qpair = spdk_nvme_ctrlr_alloc_io_qpair(dev->ctrlr, 0);
+	qpair = spdk_nvme_ctrlr_alloc_io_qpair(dev->ctrlr, NULL, 0);
 	if (!qpair) {
 		free_req(req);
 		return -1;
