@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67caf062_f3fb21bb",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 32
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:28:20Z",
+      "side": 1,
+      "message": "Will need to be rebased from latest.  Should be spdk_bdev_module_examine_bdev.",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "947f5ff9_3210f62a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1503,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:28:20Z",
+      "side": 1,
+      "message": "I think instead you can just check if the bdev has already been claimed.  This is actually a better check, since for cases like logical volumes, the lvol bdev could have claimed the bdev, but maybe no logical volumes have been created yet.",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26754701_6cd2584a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1512,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:28:20Z",
+      "side": 1,
+      "message": "When you rebase, you will see that now we only have one module list.  Since all modules are now in one list, some modules will not have an examine callback.  If user specifies a module with no examine callback, that should also be an error and return -1.",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24e72909_821a801f",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:28:20Z",
+      "side": 1,
+      "message": "This change belongs in a different patch.",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7940c314_378f8e5f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 32
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:28:20Z",
+      "side": 1,
+      "message": "Description should be: \"Start examination of a given bdev by a given bdev module.\"  The bdev specified is probably not a \"virtual bdev\" actually - for example, telling GPT module to examine an NVMe namespace.",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2257b7d_97fd98b3",
+        "filename": "test/iscsi_tgt/gpt/fio_gpt.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:28:20Z",
+      "side": 1,
+      "message": "Will this be able to catch any I/O integrity issues?\n\nI am thinking we should have multiple partitions, and run I/O to all of them in parallel.\n\nPlease think about how we can better test the correctness of the GPT module.  This test will show that the examine RPC works but does not really stress the GPT code itself.  For example, making sure that I/O to partition 2 does not really go to partition 1 (if the LBA offsets were incorrect).  It does not need to be part of this patch but want to make sure it gets covered.",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
