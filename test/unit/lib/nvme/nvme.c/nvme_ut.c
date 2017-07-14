@@ -41,8 +41,9 @@
 
 #include "spdk_internal/mock.h"
 
-DEFINE_STUB_V(nvme_ctrlr_destruct, (struct spdk_nvme_ctrlr *ctrlr))
-
+/*
+ * these stubs don't have a return value
+ */
 DEFINE_STUB_V(nvme_ctrlr_fail,
 	      (struct spdk_nvme_ctrlr *ctrlr, bool hot_remove))
 
@@ -50,6 +51,9 @@ DEFINE_STUB_V(nvme_ctrlr_proc_get_ref, (struct spdk_nvme_ctrlr *ctrlr))
 
 DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr))
 
+/*
+ * these stubs have a return value set with one of the MOCK_SET macros
+ */
 DEFINE_STUB(spdk_pci_nvme_enumerate, int,
 	    (spdk_pci_enum_cb enum_cb, void *enum_ctx), -1)
 
@@ -90,11 +94,18 @@ DEFINE_STUB(dummy_probe_cb, bool,
 	    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	     struct spdk_nvme_ctrlr_opts *opts), false)
 
+/*
+ * these stubs have a * return value set with one of the MOCK_SET macros
+ */
 DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
 	      (const struct spdk_nvme_transport_id *trid,
 	       const struct spdk_nvme_ctrlr_opts *opts,
 	       void *devhandle), {0})
 
+/*
+ * these mocks don't fit well with the library macro model because
+ * they do 'something' other than just return a pre-set value
+ */
 void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -106,6 +117,47 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 {
 	memset(trid1, 0, sizeof(struct spdk_nvme_transport_id));
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
+}
+
+static bool ut_destruct_called = false;
+void
+nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
+{
+	ut_destruct_called = true;
+}
+
+static void
+test_spdk_nvme_detach(void)
+{
+	int rc = 1;
+	struct spdk_nvme_ctrlr ctrlr;
+	struct spdk_nvme_ctrlr *ret_ctrlr;
+	struct nvme_driver dummy;
+	g_spdk_nvme_driver = &dummy;
+
+	TAILQ_INIT(&dummy.attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&dummy.attached_ctrlrs, &ctrlr, tailq);
+	CU_ASSERT_FATAL(pthread_mutex_init(&dummy.lock, NULL) == 0);
+
+	/* check when ref count drops to 0  */
+	MOCK_SET(nvme_ctrlr_get_ref_count, int, 0);
+	rc = spdk_nvme_detach(&ctrlr);
+	ret_ctrlr = TAILQ_FIRST(&dummy.attached_ctrlrs);
+	CU_ASSERT(ret_ctrlr == NULL);
+	CU_ASSERT(ut_destruct_called == true);
+	CU_ASSERT(rc == 0);
+
+	/* check when ref count remains at 1  */
+	MOCK_SET(nvme_ctrlr_get_ref_count, int, 1);
+	TAILQ_INSERT_TAIL(&dummy.attached_ctrlrs, &ctrlr, tailq);
+	ut_destruct_called = false;
+	rc = spdk_nvme_detach(&ctrlr);
+	ret_ctrlr = TAILQ_FIRST(&dummy.attached_ctrlrs);
+	CU_ASSERT(ret_ctrlr != NULL);
+	CU_ASSERT(ut_destruct_called == false);
+	CU_ASSERT(rc == 0);
+
+	g_spdk_nvme_driver = NULL;
 }
 
 static void
@@ -460,6 +512,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_spdk_nvme_detach",
+			    test_spdk_nvme_detach) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
