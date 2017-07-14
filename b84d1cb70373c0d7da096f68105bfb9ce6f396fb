@@ -1,0 +1,193 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b0610a2_808eb177",
+        "filename": "dpdk",
+        "patchSetId": 20
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "Unnecessary change, remove",
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "220e5982_a085d3f5",
+        "filename": "test/scsi/__init__.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "test/scsi/* path files were the be removed, see previous comments",
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ecebcd2_a15efb57",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "Again - see previous comments. This should not change!",
+      "range": {
+        "startLine": 244,
+        "startChar": 1,
+        "endLine": 244,
+        "endChar": 12
+      },
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1c57174_0c2dc98c",
+        "filename": "test/vhost/rpc/configuration/scsi_nvme.conf",
+        "patchSetId": 20
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "Cannot have hardcoded PCI addresses in config! Mine is 0000:84:00.0, so it would not work.\nThis has been pointed in previous comments, please read them and apply them.",
+      "range": {
+        "startLine": 10,
+        "startChar": 2,
+        "endLine": 10,
+        "endChar": 53
+      },
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e9be2d2_fb76f5c2",
+        "filename": "test/vhost/rpc/fio/autotest.config",
+        "patchSetId": 20
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "Again - why 99?\nThis has been pointed in previous comments, please read them and apply or answer them.",
+      "range": {
+        "startLine": 4,
+        "startChar": 3,
+        "endLine": 4,
+        "endChar": 5
+      },
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08d2fd03_cd728660",
+        "filename": "test/vhost/rpc/fio/hotremove.conf",
+        "patchSetId": 20
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "this",
+      "range": {
+        "startLine": 18,
+        "startChar": 2,
+        "endLine": 18,
+        "endChar": 5
+      },
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e97a36d_5accc122",
+        "filename": "test/vhost/rpc/test/rpc_scsi_test.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "Remove commented lines",
+      "range": {
+        "startLine": 85,
+        "startChar": 4,
+        "endLine": 85,
+        "endChar": 16
+      },
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d92f43b5_08262158",
+        "filename": "test/vhost/rpc/test/vhost_hotremove.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "Nitpicking - either go in alphabetical order, or sort in \"import first / from * second\", but let\u0027s keep some order",
+      "range": {
+        "startLine": 3,
+        "startChar": 1,
+        "endLine": 6,
+        "endChar": 31
+      },
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9f294ba_fd07db06",
+        "filename": "test/vhost/rpc/test/vhost_hotremove.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T06:04:05Z",
+      "side": 1,
+      "message": "???",
+      "revId": "b84d1cb70373c0d7da096f68105bfb9ce6f396fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
