@@ -38,6 +38,7 @@ DIRS-y += bdev blob blobfs conf copy cunit event json jsonrpc \
           log env_dpdk net rpc trace util nvme nvmf scsi ioat \
 	  ut_mock iscsi
 ifeq ($(OS),Linux)
+DIRS-y += nbd
 DIRS-$(CONFIG_VHOST) += vhost
 endif
 
