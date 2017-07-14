@@ -199,7 +199,32 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 void
 spdk_io_device_unregister(void *io_device)
 {
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
 	struct io_device *dev;
+	TAILQ_HEAD(, spdk_io_channel) related_channels = TAILQ_HEAD_INITIALIZER(related_channels);
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->io_device == io_device) {
+				ch->ref--;
+				if (ch->ref > 0) {
+					ch->io_device = NULL;
+					continue;
+				}
+
+				TAILQ_REMOVE(&thread->io_channels, ch, tailq);
+				TAILQ_INSERT_TAIL(&related_channels, ch, tailq);
+			}
+		}
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	TAILQ_FOREACH(ch, &related_channels, tailq) {
+		ch->destroy_cb(ch->io_device, (uint8_t *)ch + sizeof(*ch));
+		free(ch);
+	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
@@ -277,9 +302,18 @@ static void
 _spdk_put_io_channel(void *arg)
 {
 	struct spdk_io_channel *ch = arg;
+	struct io_device *dev;
 
-	if (ch->ref == 0) {
-		SPDK_ERRLOG("ref already zero\n");
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
+		if (dev == ch->io_device) {
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	if (ch->io_device != dev) {
+		/* channel has already been deleted together with io_device unregistration */
 		return;
 	}
 
@@ -290,6 +324,7 @@ _spdk_put_io_channel(void *arg)
 		ch->destroy_cb(ch->io_device, (uint8_t *)ch + sizeof(*ch));
 		free(ch);
 	}
+
 }
 
 void
