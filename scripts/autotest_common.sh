@@ -371,5 +371,59 @@ function discover_bdevs()
 	rm -f /var/run/spdk_bdev0
 }
 
+function fio_config_gen()
+{
+	config_file=$1
+	workload=$2
+
+	if [ -e "$config_file" ]; then
+		echo "Configuration File Already Exists!: $config_file"
+		return -1
+	fi
+
+	if [ -z "$workload" ]; then
+		workload=randrw
+	fi
+
+	touch $1
+
+	cat > $1 << EOL
+[global]
+thread=1
+group_reporting=1
+direct=1
+norandommap=1
+percentile_list=50:99:99.9:99.99:99.999
+time_based=1
+ramp_time=0
+EOL
+
+	if [ "$workload" == "verify" ]; then
+		echo "verify=sha1" >> $config_file
+		echo "rw=randwrite" >> $config_file
+	else
+		echo "rw=$workload" >> $config_file
+	fi
+}
+
+function fio_config_add_job()
+{
+	config_file=$1
+	filename=$2
+
+	if [ ! -e "$config_file" ]; then
+		echo "Configuration File Doesn't Exist: $config_file"
+		return -1
+	fi
+
+	if [ -z "$filename" ]; then
+		echo "No filename provided"
+		return -1
+	fi
+
+	echo "[job_$filename]" >> $config_file
+	echo "filename=$filename" >> $config_file
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
