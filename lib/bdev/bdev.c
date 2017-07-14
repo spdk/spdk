@@ -1440,16 +1440,21 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev_desc	*desc, *tmp;
+	struct spdk_bdev	*vbdev, *vbdev_tmp;
+	struct spdk_bdev_desc	*desc, *desc_tmp;
 	int			rc;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Removing bdev %s from list\n", bdev->name);
+
+	TAILQ_FOREACH_SAFE(vbdev, &bdev->vbdevs, vbdev_link, vbdev_tmp) {
+		spdk_bdev_unregister(vbdev);
+	}
 
 	pthread_mutex_lock(&bdev->mutex);
 
 	bdev->status = SPDK_BDEV_STATUS_REMOVING;
 
-	TAILQ_FOREACH_SAFE(desc, &bdev->open_descs, link, tmp) {
+	TAILQ_FOREACH_SAFE(desc, &bdev->open_descs, link, desc_tmp) {
 		if (desc->remove_cb) {
 			pthread_mutex_unlock(&bdev->mutex);
 			desc->remove_cb(desc->remove_ctx);
@@ -1457,7 +1462,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 		}
 	}
 
-	if (!TAILQ_EMPTY(&bdev->open_descs)) {
+	if (!TAILQ_EMPTY(&bdev->vbdevs) || !TAILQ_EMPTY(&bdev->open_descs)) {
 		pthread_mutex_unlock(&bdev->mutex);
 		return;
 	}
