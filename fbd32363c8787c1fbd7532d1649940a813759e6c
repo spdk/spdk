@@ -70,6 +70,46 @@
     },
     {
       "key": {
+        "uuid": "91c1148d_f899d379",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-14T21:25:06Z",
+      "side": 1,
+      "message": "This seems to be putting back the old code that names both of the partitions \"primary\" (note that this parameter of mkpart is the name for GPT, not primary/logical/extended as it is for msdos).  Can you double check that this is copied correctly?",
+      "range": {
+        "startLine": 333,
+        "startChar": 42,
+        "endLine": 333,
+        "endChar": 49
+      },
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "141fd019_dfd0b038",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-14T21:25:06Z",
+      "side": 1,
+      "message": "I think this could actually use the new RPC call to re-examine the bdev that we modified rather than restarting NBD.",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7940c314_378f8e5f",
         "filename": "scripts/rpc.py",
         "patchSetId": 32
