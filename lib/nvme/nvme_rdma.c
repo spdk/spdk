@@ -1044,10 +1044,10 @@ nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
 
 struct spdk_nvme_qpair *
 nvme_rdma_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
-				enum spdk_nvme_qprio qprio)
+				const struct spdk_nvme_io_qpair_opts *opts)
 {
-	return nvme_rdma_ctrlr_create_qpair(ctrlr, qid, ctrlr->opts.io_queue_size, qprio,
-					    ctrlr->opts.io_queue_requests);
+	return nvme_rdma_ctrlr_create_qpair(ctrlr, qid, opts->io_queue_size, opts->qprio,
+					    opts->io_queue_requests);
 }
 
 int

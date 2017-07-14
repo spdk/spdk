@@ -123,7 +123,7 @@ nvme_transport_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
 
 struct spdk_nvme_qpair *
 nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
-				     enum spdk_nvme_qprio qprio)
+				     const struct spdk_nvme_io_qpair_opts *opts)
 {
 	struct spdk_nvme_qpair *qpair;
 
@@ -132,7 +132,7 @@ nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid
 
 	qpair->ctrlr = ctrlr;
 	qpair->id = qid;
-	qpair->qprio = qprio;
+	qpair->qprio = opts->qprio;
 
 	return qpair;
 }
@@ -1115,6 +1115,7 @@ cleanup_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 static void
 test_alloc_io_qpair_rr_1(void)
 {
+	struct spdk_nvme_io_qpair_opts opts;
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_qpair *q0;
 
@@ -1126,32 +1127,40 @@ test_alloc_io_qpair_rr_1(void)
 	 */
 	g_ut_nvme_regs.cc.bits.ams = SPDK_NVME_CC_AMS_RR;
 
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, &opts, sizeof(opts));
+
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, NULL, 0);
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
 	SPDK_CU_ASSERT_FATAL(q0->qprio == 0);
 	/* Only 1 I/O qpair was allocated, so this should fail */
-	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0) == NULL);
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, NULL, 0) == NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
 
 	/*
 	 * Now that the qpair has been returned to the free list,
 	 * we should be able to allocate it again.
 	 */
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, NULL, 0);
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
 	SPDK_CU_ASSERT_FATAL(q0->qprio == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
 
 	/* Only 0 qprio is acceptable for default round robin arbitration mechanism */
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 1);
+	opts.qprio = 1;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q0 == NULL);
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 2);
+
+	opts.qprio = 2;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q0 == NULL);
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 3);
+
+	opts.qprio = 3;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q0 == NULL);
 
 	/* Only 0 ~ 3 qprio is acceptable */
-	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 4) == NULL);
+	opts.qprio = 4;
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts)) == NULL);
 
 	cleanup_qpairs(&ctrlr);
 }
@@ -1159,6 +1168,7 @@ test_alloc_io_qpair_rr_1(void)
 static void
 test_alloc_io_qpair_wrr_1(void)
 {
+	struct spdk_nvme_io_qpair_opts opts;
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_qpair *q0, *q1;
 
@@ -1170,13 +1180,18 @@ test_alloc_io_qpair_wrr_1(void)
 	 */
 	g_ut_nvme_regs.cc.bits.ams = SPDK_NVME_CC_AMS_WRR;
 
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, &opts, sizeof(opts));
+
 	/*
 	 * Allocate 2 qpairs and free them
 	 */
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	opts.qprio = 0;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
 	SPDK_CU_ASSERT_FATAL(q0->qprio == 0);
-	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 1);
+
+	opts.qprio = 1;
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q1 != NULL);
 	SPDK_CU_ASSERT_FATAL(q1->qprio == 1);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
@@ -1185,17 +1200,21 @@ test_alloc_io_qpair_wrr_1(void)
 	/*
 	 * Allocate 2 qpairs and free them in the reverse order
 	 */
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 2);
+	opts.qprio = 2;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
 	SPDK_CU_ASSERT_FATAL(q0->qprio == 2);
-	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 3);
+
+	opts.qprio = 3;
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q1 != NULL);
 	SPDK_CU_ASSERT_FATAL(q1->qprio == 3);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q0) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
 
 	/* Only 0 ~ 3 qprio is acceptable */
-	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 4) == NULL);
+	opts.qprio = 4;
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts)) == NULL);
 
 	cleanup_qpairs(&ctrlr);
 }
@@ -1203,6 +1222,7 @@ test_alloc_io_qpair_wrr_1(void)
 static void
 test_alloc_io_qpair_wrr_2(void)
 {
+	struct spdk_nvme_io_qpair_opts opts;
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_qpair *q0, *q1, *q2, *q3;
 
@@ -1214,20 +1234,31 @@ test_alloc_io_qpair_wrr_2(void)
 	 */
 	g_ut_nvme_regs.cc.bits.ams = SPDK_NVME_CC_AMS_WRR;
 
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, &opts, sizeof(opts));
+
+	opts.qprio = 0;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
 	SPDK_CU_ASSERT_FATAL(q0->qprio == 0);
-	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 1);
+
+	opts.qprio = 1;
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q1 != NULL);
 	SPDK_CU_ASSERT_FATAL(q1->qprio == 1);
-	q2 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 2);
+
+	opts.qprio = 2;
+	q2 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q2 != NULL);
 	SPDK_CU_ASSERT_FATAL(q2->qprio == 2);
-	q3 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 3);
+
+	opts.qprio = 3;
+	q3 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q3 != NULL);
 	SPDK_CU_ASSERT_FATAL(q3->qprio == 3);
+
 	/* Only 4 I/O qpairs was allocated, so this should fail */
-	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 0) == NULL);
+	opts.qprio = 0;
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts)) == NULL);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q3) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q2) == 0);
 	SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_free_io_qpair(q1) == 0);
@@ -1239,16 +1270,23 @@ test_alloc_io_qpair_wrr_2(void)
 	 *
 	 * Allocate 4 I/O qpairs and half of them with same qprio.
 	 */
-	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 1);
+	opts.qprio = 1;
+	q0 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q0 != NULL);
 	SPDK_CU_ASSERT_FATAL(q0->qprio == 1);
-	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 1);
+
+	opts.qprio = 1;
+	q1 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q1 != NULL);
 	SPDK_CU_ASSERT_FATAL(q1->qprio == 1);
-	q2 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 3);
+
+	opts.qprio = 3;
+	q2 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q2 != NULL);
 	SPDK_CU_ASSERT_FATAL(q2->qprio == 3);
-	q3 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, 3);
+
+	opts.qprio = 3;
+	q3 = spdk_nvme_ctrlr_alloc_io_qpair(&ctrlr, &opts, sizeof(opts));
 	SPDK_CU_ASSERT_FATAL(q3 != NULL);
 	SPDK_CU_ASSERT_FATAL(q3->qprio == 3);
 
