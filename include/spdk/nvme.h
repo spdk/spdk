@@ -469,17 +469,63 @@ void spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t timeout_sec, spdk_nvme_timeout_cb cb_fn, void *cb_arg);
 
 /**
+ * \brief NVMe I/O queue pair initialization options.
+ *
+ * A pointer to this structure will be provided for each probe callback from spdk_nvme_probe() to
+ * allow the user to request non-default options, and the actual options enabled on the controller
+ * will be provided during the attach callback.
+ */
+struct spdk_nvme_io_qpair_opts {
+	/**
+	 * Queue priority for weighted round robin arbitration.  If a different arbitration
+	 * method is in use, pass 0.
+	 */
+	enum spdk_nvme_qprio qprio;
+
+	/**
+	 * The queue depth of this NVMe I/O queue. Overrides spdk_nvme_ctrlr_opts::io_queue_size.
+	 */
+	uint32_t io_queue_size;
+
+	/**
+	 * The number of requests to allocate for this NVMe I/O queue.
+	 *
+	 * Overrides spdk_nvme_ctrlr_opts::io_queue_requests.
+	 *
+	 * This should be at least as large as io_queue_size.
+	 *
+	 * A single I/O may allocate more than one request, since splitting may be necessary to
+	 * conform to the device's maximum transfer size, PRP list compatibility requirements,
+	 * or driver-assisted striping.
+	 */
+	uint32_t io_queue_requests;
+};
+
+/**
+ * \brief Get the default options for I/O qpair creation for a specific NVMe controller.
+ *
+ * \param ctrlr NVMe controller to retrieve the defaults from.
+ * \param[out] opts Will be filled with the default options for spdk_nvme_ctrlr_alloc_io_qpair().
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_io_qpair_opts).
+ */
+void spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_io_qpair_opts *opts,
+		size_t opts_size);
+
+/**
  * \brief Allocate an I/O queue pair (submission and completion queue).
  *
  * Each queue pair should only be used from a single thread at a time (mutual exclusion must be
  * enforced by the user).
  *
  * \param ctrlr NVMe controller for which to allocate the I/O queue pair.
- * \param qprio Queue priority for weighted round robin arbitration.  If a different arbitration
- * method is in use, pass 0.
+ * \param opts I/O qpair creation options, or NULL to use the defaults as returned by
+ *             spdk_nvme_ctrlr_alloc_io_qpair().
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_io_qpair_opts), or 0 if opts is NULL.
  */
 struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
-		enum spdk_nvme_qprio qprio);
+		const struct spdk_nvme_io_qpair_opts *opts,
+		size_t opts_size);
 
 /**
  * \brief Free an I/O queue pair that was allocated by spdk_nvme_ctrlr_alloc_io_qpair().
