@@ -33,6 +33,24 @@
       "revId": "7d12e4a9736017b8de3d47d6366985e8c9eb984b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9ee1575_4108b552",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-07-14T13:36:19Z",
+      "side": 1,
+      "message": "We decide to make resize possible only if device is not open. I will make patch for this check. Do you think this is sufficient?",
+      "parentUuid": "a9cab17d_cfd2944f",
+      "revId": "7d12e4a9736017b8de3d47d6366985e8c9eb984b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
