@@ -119,7 +119,7 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 	dev->size_in_ios = spdk_nvme_ns_get_size(dev->ns) / g_io_size_bytes;
 	dev->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(dev->ns);
 
-	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 	if (!dev->qpair) {
 		fprintf(stderr, "ERROR: spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		goto skip;

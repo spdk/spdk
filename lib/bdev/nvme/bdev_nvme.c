@@ -251,7 +251,7 @@ _bdev_nvme_reset_create_qpair(void *io_device, struct spdk_io_channel *ch,
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
-	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 	assert(nvme_ch->qpair != NULL); /* Currently, no good way to handle this error */
 }
 
@@ -423,7 +423,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
 
-	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, 0);
+	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 
 	if (ch->qpair == NULL) {
 		return -1;

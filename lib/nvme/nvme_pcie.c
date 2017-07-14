@@ -1403,7 +1403,7 @@ _nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 
 struct spdk_nvme_qpair *
 nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
-				enum spdk_nvme_qprio qprio)
+				const struct spdk_nvme_io_qpair_opts *opts)
 {
 	struct nvme_pcie_qpair *pqpair;
 	struct spdk_nvme_qpair *qpair;
@@ -1416,11 +1416,11 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		return NULL;
 	}
 
-	pqpair->num_entries = ctrlr->opts.io_queue_size;
+	pqpair->num_entries = opts->io_queue_size;
 
 	qpair = &pqpair->qpair;
 
-	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, ctrlr->opts.io_queue_requests);
+	rc = nvme_qpair_init(qpair, qid, ctrlr, opts->qprio, opts->io_queue_requests);
 	if (rc != 0) {
 		nvme_pcie_qpair_destroy(qpair);
 		return NULL;

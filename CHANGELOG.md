@@ -44,6 +44,20 @@ modifying `io_queue_requests` in the opts structure.
 
 The SPDK NVMe `fio_plugin` has been updated to support multiple threads (`numjobs`).
 
+spdk_nvme_ctrlr_alloc_io_qpair() has been modified to allow the user to override
+controller-level options for each individual I/O queue pair.
+Existing callers with qprio == 0 can be updated to:
+~~~
+... = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+~~~
+Callers that need to specify a non-default qprio should be updated to:
+~~~
+struct spdk_nvme_io_qpair_opts opts;
+spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+opts.qprio = SPDK_NVME_QPRIO_...;
+... = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
+~~~
+
 ### Environment Abstraction Layer
 
 The environment abstraction layer has been updated to include several new functions

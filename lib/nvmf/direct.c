@@ -303,7 +303,8 @@ nvmf_direct_ctrlr_complete_aer(void *arg, const struct spdk_nvme_cpl *cpl)
 static int
 nvmf_direct_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
 {
-	subsystem->dev.direct.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(subsystem->dev.direct.ctrlr, 0);
+	subsystem->dev.direct.io_qpair = spdk_nvme_ctrlr_alloc_io_qpair(subsystem->dev.direct.ctrlr, NULL,
+					 0);
 	if (subsystem->dev.direct.io_qpair == NULL) {
 		SPDK_ERRLOG("spdk_nvme_ctrlr_alloc_io_qpair() failed\n");
 		return -1;
