@@ -23,7 +23,7 @@ if [ $(uname -s) = Linux ] && hash sgdisk; then
 	echo "[Gpt]" >> $testdir/bdev.conf
 	echo "  Disable Yes" >> $testdir/bdev.conf
 
-	if [ ! -z "`grep "Nvme0" $testdir/bdev.conf`" ]; then
+	if grep -q Nvme0 $testdir/bdev.conf; then
 		modprobe nbd
 		$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
 		nbd_pid=$!
