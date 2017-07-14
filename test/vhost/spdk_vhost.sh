@@ -35,7 +35,7 @@ case $param in
     ;;
     -i|--integrity)
 	echo Running integrity suite...
-	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	./fiotest/autotest.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
@@ -43,7 +43,7 @@ case $param in
     ;;
     -ib|--integrity-blk)
 	echo Running blk integrity suite...
-	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	./fiotest/autotest.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \

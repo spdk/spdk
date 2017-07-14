@@ -87,7 +87,7 @@ fi
 
 . $BASE_DIR/common.sh
 
-trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
+trap 'trap - ERR; error_exit "${FUNCNAME}" "${LINENO}; print_backtrace >&2' ERR
 
 echo "==============="
 echo "INFO: checking qemu"
@@ -242,13 +242,13 @@ for vm_num in $used_vms; do
 
 	if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 		vm_check_scsi_location $vm_num
-		# vm_reset_scsi_devices $vm_num $SCSI_DISK
+		# vm_reset_scsi_devices $vm_num $VM_DISKS
 	elif [[ "$test_type" == "spdk_vhost_blk" ]]; then
 		vm_check_blk_location $vm_num
 	fi
 
 	run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
-	for disk in $SCSI_DISK; do
+	for disk in $VM_DISKS; do
 		run_fio+="/dev/$disk:"
 	done
 	run_fio="${run_fio::-1}"
@@ -272,7 +272,7 @@ $run_fio
 
 #if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 #	for vm_num in $used_vms; do
-#	vm_reset_scsi_devices $vm_num $SCSI_DISK
+#	vm_reset_scsi_devices $vm_num $VM_DISKS
 #	done
 #fi
 
