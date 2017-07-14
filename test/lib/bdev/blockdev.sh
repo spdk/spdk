@@ -21,7 +21,7 @@ if [ $(uname -s) = Linux ] && [ -f /usr/sbin/sgdisk ]; then
 	echo "[Rpc]" >> $testdir/bdev.conf
 	echo "  Enable Yes" >> $testdir/bdev.conf
 
-	if [ ! -z "`grep "Nvme0" $testdir/bdev.conf`" ]; then
+	if grep -q Nvme0 $testdir/bdev.conf; then
 		modprobe nbd
 		$testdir/nbd/nbd -c $testdir/bdev.conf -b Nvme0n1 -n /dev/nbd0 &
 		nbd_pid=$!
