@@ -542,7 +542,7 @@ nvme_rdma_parse_addr(struct sockaddr_storage *sa, int family, const char *addr, 
 
 	ret = getaddrinfo(addr, service, &hints, &res);
 	if (ret) {
-		SPDK_ERRLOG("getaddrinfo failed - invalid hostname or IP address\n");
+		SPDK_ERRLOG("getaddrinfo failed: %s (%d)\n", gai_strerror(ret), ret);
 		return ret;
 	}
 
