@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8a35b2a_9c4ce971",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:52:44Z",
+      "side": 1,
+      "message": "My concern is that none of these changes are really dependent on VTune.  Even adding the extra fields to the io_channel are fine to leave in if not using VTune.  We can leave more of the code in by default, set get_spin_time() to NULL by default, and just set the get_spin_time() to bdev_nvme_get_spin_time during module_init if this SPDK_CONFIG_VTUNE flag is set.",
+      "revId": "8fef2844a90b149467a7d28245621eedf6aac943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1e67c3d_cc9f1aa7",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-14T19:52:44Z",
+      "side": 1,
+      "message": "Maybe we take this code out of SPDK_CONFIG_VTUNE as well?\n\nSome ways to simplify this:\n\n1) at the beginning, return immediately if ch-\u003eqpair is NULL.  Then you can avoid an extra level of indentation in the code.\n2) add a ch-\u003ecollect_spin_stat field - this should all fit within the same cache line so i don\u0027t expect any runtime degradation\n3) only do the tick calculations if collect_spin_stat \u003d\u003d true\n4) when allocating the io channel, only set collect_spin_stat \u003d true if SPDK_CONFIG_VTUNE is defined\n5) just leave get_spin_time always defined - worst case if someone tries to use it with SPDK_CONFIG_VTUNE undefined we can add an error message and return zeroes.",
+      "revId": "8fef2844a90b149467a7d28245621eedf6aac943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
