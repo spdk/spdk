@@ -1,0 +1,314 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a73ef447_10593330",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Typo.",
+      "range": {
+        "startLine": 542,
+        "startChar": 17,
+        "endLine": 542,
+        "endChar": 18
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d182104_bcf06584",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Move this to vhost_rpc.c",
+      "range": {
+        "startLine": 547,
+        "startChar": 1,
+        "endLine": 547,
+        "endChar": 33
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06e90c75_04af4778",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Check here (using to_blk_dev()) if this is blk object.",
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d29b5dd6_e003aca6",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Ditto.",
+      "range": {
+        "startLine": 565,
+        "startChar": 2,
+        "endLine": 565,
+        "endChar": 32
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1aede438_847a38a0",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Nope, move this to spdk_vhost_dev_construct()",
+      "range": {
+        "startLine": 649,
+        "startChar": 1,
+        "endLine": 649,
+        "endChar": 65
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59a5d4de_30bd6232",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "ctxt is not needed here as it should be the device.",
+      "range": {
+        "startLine": 84,
+        "startChar": 1,
+        "endLine": 84,
+        "endChar": 12
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35bfa952_0d734995",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "This should be \"struct spdk_vhost_dev *vdev\"",
+      "range": {
+        "startLine": 85,
+        "startChar": 25,
+        "endLine": 85,
+        "endChar": 34
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "455e8d0f_b49212db",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Add dump_config_json here so it can be copied to vdev during construction.",
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e934d3bb_11458a96",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Change this function name to spdk_rpc_get_vhost_controllers",
+      "range": {
+        "startLine": 80,
+        "startChar": 19,
+        "endLine": 80,
+        "endChar": 24
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "734cd87e_c1320a40",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Drop this check.",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 3
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2401e73b_b220c29b",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Move this to callback",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 33
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf54518d_ba81fb96",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "Move JSON object begin from callback function here the same way as bdev is doing this in spdk_rpc_get_bdevs()",
+      "range": {
+        "startLine": 116,
+        "startChar": 2,
+        "endLine": 116,
+        "endChar": 39
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "531ef694_0a798734",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "And here remove \"scsi_\" part.",
+      "range": {
+        "startLine": 126,
+        "startChar": 29,
+        "endLine": 126,
+        "endChar": 34
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e246533_5c531832",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-14T15:03:24Z",
+      "side": 1,
+      "message": "You can remove this function.",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 524,
+        "endChar": 82
+      },
+      "revId": "0a8e9affe3115b2cdd096d7048d4d3306da47d92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
