@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6fe59d2_7dd579d5",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-14T08:59:53Z",
+      "side": 1,
+      "message": "Maybe let\u0027s allow up to 3 failures and if \u003e3 then fail the test?",
+      "range": {
+        "startLine": 273,
+        "startChar": 3,
+        "endLine": 273,
+        "endChar": 26
+      },
+      "revId": "22f8c2231a46144e9ea94fb2e6a931f9be49e031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
