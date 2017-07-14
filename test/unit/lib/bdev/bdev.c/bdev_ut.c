@@ -42,6 +42,12 @@
 
 SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
 
+struct spdk_thread *
+spdk_get_thread(void)
+{
+	return NULL;
+}
+
 void *
 spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
 {

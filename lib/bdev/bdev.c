@@ -1606,7 +1606,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	pthread_mutex_unlock(&bdev->mutex);
 
 	if (do_unregister == true) {
-		spdk_bdev_unregister(bdev);
+		spdk_thread_send_msg(spdk_get_thread(), (spdk_thread_fn)spdk_bdev_unregister, bdev);
 	}
 }
 
