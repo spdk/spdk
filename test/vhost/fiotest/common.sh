@@ -127,7 +127,6 @@ function spdk_vhost_run()
 	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
 	local vhost_log_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.log"
 	local vhost_pid_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.pid"
-	local vhost_socket="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
 	local vhost_conf_template="$BASE_DIR/vhost.conf.in"
 	local vhost_conf_file="$BASE_DIR/vhost.conf"
 	echo "INFO: starting vhost app in background"
@@ -152,7 +151,6 @@ function spdk_vhost_run()
 
 	echo "INFO: Loging to:   $vhost_log_file"
 	echo "INFO: Config file: $vhost_conf_file"
-	echo "INFO: Socket:      $vhost_socket"
 	echo "INFO: Command:     $cmd"
 
 	cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd &
@@ -773,9 +771,11 @@ function vm_start_fio_server()
 	for vm_num in $@; do
 		echo "INFO: Starting fio server on VM$vm_num"
 		if [[ $fio_bin != "" ]]; then
+			echo "INFO: using $(${fio_bin} --version)"
 			cat $fio_bin | vm_ssh $vm_num 'cat > /root/fio; chmod +x /root/fio'
 			vm_ssh $vm_num /root/fio $readonly --eta=never --server --daemonize=/root/fio.pid
 		else
+			echo "INFO: using native guest fio $(vm_ssh $vm_num fio --version)"
 			vm_ssh $vm_num fio $readonly --eta=never --server --daemonize=/root/fio.pid
 		fi
 	done
