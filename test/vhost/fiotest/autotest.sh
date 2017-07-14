@@ -87,7 +87,7 @@ fi
 
 . $BASE_DIR/common.sh
 
-trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
+trap 'trap - ERR; error_exit "${FUNCNAME}" "${LINENO}; print_backtrace >&2' ERR
 
 echo "==============="
 echo "INFO: checking qemu"
