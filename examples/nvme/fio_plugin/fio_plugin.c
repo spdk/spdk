@@ -371,7 +371,7 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		fio_qpair = fio_qpair->next;
 	}
 	if (fio_qpair == NULL || ns == NULL) {
-		return FIO_Q_COMPLETED;
+		return -ENXIO;
 	}
 
 	block_size = spdk_nvme_ns_get_sector_size(ns);
@@ -392,9 +392,16 @@ static int spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		break;
 	}
 
-	assert(rc == 0);
+	/* NVMe read/write functions return -ENOMEM if there are no free requests. */
+	if (rc == -ENOMEM) {
+		return FIO_Q_BUSY;
+	}
 
-	return rc ? FIO_Q_COMPLETED : FIO_Q_QUEUED;
+	if (rc != 0) {
+		return -abs(rc);
+	}
+
+	return FIO_Q_QUEUED;
 }
 
 static struct io_u *spdk_fio_event(struct thread_data *td, int event)
