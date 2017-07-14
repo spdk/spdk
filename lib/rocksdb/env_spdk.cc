@@ -293,7 +293,12 @@ public:
 				result->reset(new SpdkSequentialFile(file));
 				return Status::OK();
 			} else {
-				return IOError(fname, rc);
+				/* Myrocks engine uses errno(ENOENT) as one
+				 * special condition, for the purpose to
+				 * support MySQL, set the errno to right value.
+				 */
+				errno = -rc;
+				return IOError(fname, errno);
 			}
 		} else {
 			return PosixEnv::NewSequentialFile(fname, result, options);
