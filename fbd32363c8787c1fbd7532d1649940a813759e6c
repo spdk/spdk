@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "7bcc1f60_eb735fbd",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-14T21:32:29Z",
+      "side": 1,
+      "message": "I think we should be able to send just the bdev_name here (not the module_name) and re-run the examine callbacks of all bdev modules against it. Does that seem like it would work?",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24e72909_821a801f",
         "filename": "scripts/autotest_common.sh",
         "patchSetId": 32
