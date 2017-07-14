@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0aee42d3_fe8616aa",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-14T14:25:58Z",
+      "side": 1,
+      "message": "This GUID info is for devices that were taken over by lvol_store, such as NVMe or Malloc. Driver_specific (dump_config_json) is used by lvol to display its own details (currently its base_bdev name of lvol_store). I see two ways to get lvol_store GUID on get_bdevs() RPC call:\n1) Add lvol-specific information to generic bdev API as implemented right now in this patch\n2) Remove bdev that was taken over by lvol_store and replace it with new lvol_store bdev. That might add too much complexity\nAnother solution would be to drop changes in get_bdevs() and implement another RPC call to display lvol_stores only - get_lvol_stores().",
+      "parentUuid": "a7d9c8cc_12746d58",
+      "revId": "cea1eb543a60532d32a0c1bcdcabd861b9c959ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66b9f192_7407c8ad",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 4
