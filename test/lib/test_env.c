@@ -33,7 +33,35 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk_internal/mock.h"
+
 #include "spdk/env.h"
+
+/*
+ * these stubs have a return value set with one of the MOCK_SET macros
+ */
+DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
+
+DEFINE_STUB_VP(spdk_memzone_lookup, void, (const char *name),
+	       NULL)
+
+/*
+ * these mocks don't fit well with the library macro model because
+ * they do 'something' other than just return a pre-set value
+ */
+
+/* setup the mock control to pass thru by default */
+void *ut_p_spdk_memzone_reserve = MOCK_PASS_THRU_P;
+void *
+spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
+{
+	if (ut_p_spdk_memzone_reserve &&
+	    ut_p_spdk_memzone_reserve == MOCK_PASS_THRU_P) {
+		return malloc(len);
+	} else {
+		return ut_p_spdk_memzone_reserve;
+	}
+}
 
 void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
@@ -92,18 +120,6 @@ uint64_t spdk_vtophys(void *buf)
 	}
 }
 
-void *
-spdk_memzone_reserve(const char *name, size_t len, int socket_id, unsigned flags)
-{
-	return malloc(len);
-}
-
-void *
-spdk_memzone_lookup(const char *name)
-{
-	return NULL;
-}
-
 void
 spdk_memzone_dump(FILE *f)
 {
@@ -153,12 +169,6 @@ size_t
 spdk_mempool_count(const struct spdk_mempool *mp)
 {
 	return 1024;
-}
-
-bool
-spdk_process_is_primary(void)
-{
-	return true;
 }
 
 uint64_t ut_tsc = 0;
