@@ -38,7 +38,7 @@
 
 /* used to signify pass through */
 #define MOCK_PASS_THRU (0xdeadbeef)
-
+#define MOCK_PASS_THRU_P (void*)0xdeadbeef
 /* helper for initializing struct value with mock macros */
 #define MOCK_STRUCT_INIT(...) \
 	{ __VA_ARGS__ }
@@ -75,9 +75,7 @@
 		} \
 	}
 
-/* For defining the implmentation of stubs for SPDK funcs. */
-/* DEFINE_STUB_P macro is for stubs that return pointer values. */
-/* DEFINE_STUB_V macro is for void stubs. */
+/* DEFINE_STUB is for defining the implmentation of stubs for SPDK funcs. */
 #define DEFINE_STUB(fn, ret, dargs, val) \
 	ret ut_ ## fn = val; \
 	ret fn dargs; \
@@ -86,6 +84,7 @@
 		return MOCK_GET(fn); \
 	}
 
+/* DEFINE_STUB_P macro is for stubs that return pointer values. */
 #define DEFINE_STUB_P(fn, ret, dargs, val) \
 	ret ut_ ## fn = val; \
 	ret* ut_p_ ## fn = &(ut_ ## fn); \
@@ -95,10 +94,20 @@
 		return MOCK_GET_P(fn); \
 	}
 
+/* DEFINE_STUB_V macro is for void stubs. */
 #define DEFINE_STUB_V(fn, dargs) \
 	void fn dargs; \
 	void fn dargs \
 	{ \
+	}
+
+/* DEFINE_STUB_VP macro is for stubs that return void pointer values */
+#define DEFINE_STUB_VP(fn, ret, dargs, val) \
+	ret* ut_p_ ## fn = val; \
+	ret* fn dargs; \
+	ret* fn dargs \
+	{ \
+		return MOCK_GET_P(fn); \
 	}
 
 /* declare wrapper protos (alphabetically please) here */
