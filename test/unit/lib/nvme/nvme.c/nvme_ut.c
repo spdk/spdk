@@ -126,6 +126,57 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	ut_destruct_called = true;
 }
 
+static bool ut_attach_cb_called = false;
+static void
+dummy_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+		struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	ut_attach_cb_called = true;
+}
+
+static void
+test_nvme_init_controllers(void)
+{
+	int rc = 0;
+	struct nvme_driver dummy;
+	g_spdk_nvme_driver = &dummy;
+	void *cb_ctx = NULL;
+	spdk_nvme_attach_cb attach_cb = dummy_attach_cb;
+	struct spdk_nvme_ctrlr ctrlr;
+	pthread_mutexattr_t attr;
+
+	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
+	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
+	CU_ASSERT(pthread_mutex_init(&dummy.lock, &attr) == 0);
+	TAILQ_INIT(&dummy.init_ctrlrs);
+	TAILQ_INSERT_TAIL(&dummy.init_ctrlrs, &ctrlr, tailq);
+	TAILQ_INIT(&dummy.attached_ctrlrs);
+
+	/* controller failed to init */
+	MOCK_SET(nvme_ctrlr_process_init, int, 1);
+	g_spdk_nvme_driver->initialized = false;
+	ut_destruct_called = false;
+	rc = nvme_init_controllers(cb_ctx, attach_cb);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(ut_destruct_called == true);
+
+	/* controller init OK */
+	TAILQ_INSERT_TAIL(&dummy.init_ctrlrs, &ctrlr, tailq);
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	MOCK_SET(nvme_ctrlr_process_init, int, 0);
+	rc = nvme_init_controllers(cb_ctx, attach_cb);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_attach_cb_called == true);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(TAILQ_FIRST(&g_spdk_nvme_driver->attached_ctrlrs) == &ctrlr);
+
+	g_spdk_nvme_driver = NULL;
+	pthread_mutexattr_destroy(&attr);
+	pthread_mutex_destroy(&dummy.lock);
+}
+
 static void
 test_nvme_driver_init(void)
 {
@@ -173,7 +224,7 @@ test_nvme_driver_init(void)
 	/* process is primary, got mem but mutex won't init */
 	MOCK_SET(spdk_process_is_primary, bool, true);
 	MOCK_SET_P(spdk_memzone_reserve, void *, &dummy);
-	MOCK_SET(pthread_mutexattr_init, int, -1);
+	MOCK_SET(pthread_mutexattr_init, int, 1);
 	g_spdk_nvme_driver = NULL;
 	dummy.initialized = true;
 	rc = nvme_driver_init();
@@ -181,7 +232,7 @@ test_nvme_driver_init(void)
 
 	/* process is primary, got mem, mutex OK */
 	MOCK_SET(spdk_process_is_primary, bool, true);
-	MOCK_SET(pthread_mutexattr_init, int, 0);
+	MOCK_SET(pthread_mutexattr_init, int, MOCK_PASS_THRU);
 	g_spdk_nvme_driver = NULL;
 	rc = nvme_driver_init();
 	CU_ASSERT(g_spdk_nvme_driver->initialized == false);
@@ -190,7 +241,6 @@ test_nvme_driver_init(void)
 	CU_ASSERT(rc == 0);
 
 	g_spdk_nvme_driver = NULL;
-	MOCK_SET(pthread_mutexattr_init, int, MOCK_PASS_THRU);
 	MOCK_SET_P(spdk_memzone_reserve, void *, MOCK_PASS_THRU_P);
 }
 
@@ -199,7 +249,6 @@ test_spdk_nvme_detach(void)
 {
 	int rc = 1;
 	struct spdk_nvme_ctrlr ctrlr;
-	struct spdk_nvme_ctrlr *ret_ctrlr;
 	struct nvme_driver dummy;
 	g_spdk_nvme_driver = &dummy;
 
@@ -210,8 +259,7 @@ test_spdk_nvme_detach(void)
 	/* check when ref count drops to 0  */
 	MOCK_SET(nvme_ctrlr_get_ref_count, int, 0);
 	rc = spdk_nvme_detach(&ctrlr);
-	ret_ctrlr = TAILQ_FIRST(&dummy.attached_ctrlrs);
-	CU_ASSERT(ret_ctrlr == NULL);
+	CU_ASSERT(TAILQ_FIRST(&dummy.attached_ctrlrs) == NULL);
 	CU_ASSERT(ut_destruct_called == true);
 	CU_ASSERT(rc == 0);
 
@@ -220,8 +268,7 @@ test_spdk_nvme_detach(void)
 	TAILQ_INSERT_TAIL(&dummy.attached_ctrlrs, &ctrlr, tailq);
 	ut_destruct_called = false;
 	rc = spdk_nvme_detach(&ctrlr);
-	ret_ctrlr = TAILQ_FIRST(&dummy.attached_ctrlrs);
-	CU_ASSERT(ret_ctrlr != NULL);
+	CU_ASSERT(TAILQ_FIRST(&dummy.attached_ctrlrs) == &ctrlr);
 	CU_ASSERT(ut_destruct_called == false);
 	CU_ASSERT(rc == 0);
 
@@ -584,6 +631,8 @@ int main(int argc, char **argv)
 			    test_spdk_nvme_detach) == NULL ||
 		CU_add_test(suite, "test_nvme_driver_init",
 			    test_nvme_driver_init) == NULL ||
+		CU_add_test(suite, "test_nvme_init_controllers",
+			    test_nvme_init_controllers) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
