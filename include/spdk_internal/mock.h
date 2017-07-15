@@ -38,7 +38,7 @@
 
 /* used to signify pass through */
 #define MOCK_PASS_THRU (0xdeadbeef)
-
+#define MOCK_PASS_THRU_P (void*)0xdeadbeef
 /* helper for initializing struct value with mock macros */
 #define MOCK_STRUCT_INIT(...) \
 	{ __VA_ARGS__ }
@@ -76,8 +76,6 @@
 	}
 
 /* for defining the implmentation of stubs for SPDK funcs */
-/* the _P macro is for stubs that return pointer values */
-/* the _V macro is for stubs that don't have a return value */
 #define DEFINE_STUB(fn, ret, dargs, val) \
 	ret ut_ ## fn = val; \
 	ret fn dargs; \
@@ -86,6 +84,11 @@
 		return MOCK_GET(fn); \
 	}
 
+/* the _V macro is for stubs that don't have a return value */
+#define DEFINE_STUB_V(fn, dargs) \
+	void fn dargs {}
+
+/* the _P macro is for stubs that return pointer values */
 #define DEFINE_STUB_P(fn, ret, dargs, val) \
 	ret ut_ ## fn = val; \
 	ret* ut_p_ ## fn = &(ut_ ## fn); \
@@ -95,8 +98,14 @@
 		return MOCK_GET_P(fn); \
 	}
 
-#define DEFINE_STUB_V(fn, dargs) \
-	void fn dargs {}
+/* the _VP macro is for stubs that return void pointer values */
+#define DEFINE_STUB_VP(fn, ret, dargs, val) \
+	ret* ut_p_ ## fn = val; \
+	ret* fn dargs; \
+	ret* fn dargs \
+	{ \
+		return MOCK_GET_P(fn); \
+	}
 
 /* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(pthread_mutex_init, int,
