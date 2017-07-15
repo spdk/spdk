@@ -135,6 +135,58 @@ dummy_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 }
 
 static void
+test_spdk_nvme_probe(void)
+{
+	int rc = 0;
+	struct spdk_nvme_transport_id *trid = NULL;
+	void *cb_ctx = NULL;
+	spdk_nvme_probe_cb probe_cb = NULL;
+	spdk_nvme_attach_cb attach_cb = dummy_attach_cb;
+	spdk_nvme_remove_cb remove_cb = NULL;
+	struct spdk_nvme_ctrlr ctrlr;
+	pthread_mutexattr_t attr;
+	struct nvme_driver dummy;
+	g_spdk_nvme_driver = &dummy;
+
+	/* driver init fails */
+	MOCK_SET(spdk_process_is_primary, bool, false);
+	MOCK_SET_P(spdk_memzone_lookup, void *, NULL);
+	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	CU_ASSERT(rc == -1);
+
+	/* driver init passes, no transport available */
+	MOCK_SET(spdk_nvme_transport_available, bool, false);
+	MOCK_SET(spdk_process_is_primary, bool, true);
+	dummy.initialized = true;
+	g_spdk_nvme_driver = &dummy;
+	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	CU_ASSERT(rc == -1);
+
+	/* driver init passes, transport available, secondary call attach_cb */
+	MOCK_SET(spdk_nvme_transport_available, bool, true);
+	MOCK_SET(spdk_process_is_primary, bool, false);
+	MOCK_SET_P(spdk_memzone_lookup, void *, g_spdk_nvme_driver);
+	dummy.initialized = true;
+	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
+	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
+	CU_ASSERT(pthread_mutex_init(&dummy.lock, &attr) == 0);
+	TAILQ_INIT(&dummy.attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&dummy.attached_ctrlrs, &ctrlr, tailq);
+	ut_attach_cb_called = false;
+	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_attach_cb_called == true);
+
+	/* driver init passes, transport available, we are primary */
+	MOCK_SET(spdk_process_is_primary, bool, true);
+	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	CU_ASSERT(rc == 0);
+
+	/* return to pass through */
+	MOCK_SET_P(spdk_memzone_lookup, void *, MOCK_PASS_THRU_P);
+}
+
+static void
 test_nvme_init_controllers(void)
 {
 	int rc = 0;
@@ -638,6 +690,8 @@ int main(int argc, char **argv)
 			    test_nvme_driver_init) == NULL ||
 		CU_add_test(suite, "test_nvme_init_controllers",
 			    test_nvme_init_controllers) == NULL ||
+		CU_add_test(suite, "test_spdk_nvme_probe",
+			    test_spdk_nvme_probe) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
