@@ -133,6 +133,7 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 
 	struct spdk_lvol_store_req *req;
 	struct lvol_store_bdev_pair *lvs_pair;
+	struct spdk_lvol *lvol, *tmp;
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
@@ -147,6 +148,11 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_pair, lvol_stores);
 
 	free(lvs_pair);
+
+	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		lvol->close_only = true;
+		spdk_bdev_unregister(lvol->bdev);
+	}
 
 	spdk_lvs_unload(lvs, _vbdev_lvs_destruct_cb, req);
 	return;
