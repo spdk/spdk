@@ -2935,9 +2935,9 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	reqh = (struct iscsi_bhs_scsi_req *)&pdu->bhs;
 
-	F_bit = reqh->final;
-	R_bit = reqh->read;
-	W_bit = reqh->write;
+	F_bit = reqh->final_bit;
+	R_bit = reqh->read_bit;
+	W_bit = reqh->write_bit;
 	lun = from_be64(&reqh->lun);
 	task_tag = from_be32(&reqh->itt);
 	transfer_len = from_be32(&reqh->expected_data_xfer_len);

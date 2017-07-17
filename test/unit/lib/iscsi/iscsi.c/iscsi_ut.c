@@ -145,8 +145,8 @@ maxburstlength_test(void)
 	to_be32(&req->cmd_sn, 0);
 	to_be32(&req->expected_data_xfer_len, 1028);
 	to_be32(&req->itt, 0x1234);
-	req->write = 1;
-	req->final = 1;
+	req->write_bit = 1;
+	req->final_bit = 1;
 
 	g_spdk_iscsi.MaxRecvDataSegmentLength = 1024;
 
