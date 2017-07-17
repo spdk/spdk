@@ -310,5 +310,38 @@ function print_backtrace() {
 	return 0
 }
 
+function part_dev_by_gpt () {
+	if [ $(uname -s) = Linux ] && hash sgdisk; then
+		conf=$1
+		devname=$2
+		rootdir=$3
+
+		if [ ! -e $conf ]; then
+			return 1
+		fi
+
+		cp $conf ${conf}.gpt
+		echo "[Gpt]" >> ${conf}.gpt
+		echo "  Disable Yes" >> ${conf}.gpt
+
+		modprobe nbd
+		$rootdir/test/lib/bdev/nbd/nbd -c ${conf}.gpt -b $devname -n /dev/nbd0 &
+		nbd_pid=$!
+		echo "Process nbd pid: $nbd_pid"
+		waitforlisten $nbd_pid 5260
+		waitforbdev $devname "python $rootdir/scripts/rpc.py"
+
+		if [ -e /dev/nbd0 ]; then
+			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+			# change the GUID to SPDK GUID value
+			sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
+			sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
+		fi
+		rm -f ${conf}.gpt
+	fi
+
+	return 0
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
