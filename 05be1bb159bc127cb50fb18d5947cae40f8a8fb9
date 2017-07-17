@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd499faa_759dedfb",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-17T18:09:29Z",
+      "side": 1,
+      "message": "nvme_ctrlr_destruct() destroys ctrlr_lock and frees the ctrlr, so I don\u0027t think this is quite correct as-is. (The unlock call below will crash if this path is executed.)",
+      "revId": "05be1bb159bc127cb50fb18d5947cae40f8a8fb9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
