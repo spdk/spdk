@@ -592,5 +592,42 @@ def get_vhost_blk_controllers(args):
 p = subparsers.add_parser('get_vhost_blk_controllers', help='List vhost block controllers')
 p.set_defaults(func=get_vhost_blk_controllers)
 
+def app_bdev_open(args):
+    params = {
+        'bdev': args.bdev,
+    }
+    print(jsonrpc_call('bdev_open', params))
+p = subparsers.add_parser('bdev_open', help='Open BDEV')
+p.add_argument('bdev', help='Name of bdev to open')
+p.set_defaults(func=app_bdev_open)
+
+def app_bdev_close(args):
+    params = {
+        'bdev': args.bdev,
+    }
+    print(jsonrpc_call('bdev_close', params))
+p = subparsers.add_parser('bdev_close', help='Close BDEV')
+p.add_argument('bdev', help='Name of bdev to close')
+p.set_defaults(func=app_bdev_close)
+
+def app_bdev_read(args):
+    params = {
+        'num_blocks': args.num_blocks,
+    }
+    print(jsonrpc_call('bdev_read', params))
+p = subparsers.add_parser('bdev_read', help='Perform read on opened bdev')
+p.add_argument('num_blocks', help='Number of blocks to read', type=int)
+p.set_defaults(func=app_bdev_read)
+
+def app_bdev_write(args):
+    params = {
+        'num_blocks': args.num_blocks,
+    }
+    print(jsonrpc_call('bdev_write', params))
+p = subparsers.add_parser('bdev_write', help='Perform write to opened bdev')
+p.add_argument('num_blocks', help='Number of blocks to write', type=int)
+p.set_defaults(func=app_bdev_write)
+
+
 args = parser.parse_args()
 args.func(args)
