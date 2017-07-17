@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "959819b7_3b1eec27",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-17T19:14:51Z",
+      "side": 1,
+      "message": "This should probably make a copy rather than modifying the conf file in place.",
+      "revId": "e5ef136bec838c097387e0c6d0e85a2feb1a63a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bed58583_9b961f52",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-17T19:14:51Z",
+      "side": 1,
+      "message": "This has an extra level of indentation.",
+      "revId": "e5ef136bec838c097387e0c6d0e85a2feb1a63a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73ced0ff_e4d8edca",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-17T19:14:51Z",
+      "side": 1,
+      "message": "Please fix the comment style (add space between # and the text).",
+      "revId": "e5ef136bec838c097387e0c6d0e85a2feb1a63a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ec42bf2_31bda43a",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-17T19:14:51Z",
+      "side": 1,
+      "message": "This looks like it could cause problems if there are other Disable lines in the configuration file (e.g. for [Ioat]).  If we just copy the config file rather than modifying it in place, then you don\u0027t have to remove the Disable at the end.",
+      "revId": "e5ef136bec838c097387e0c6d0e85a2feb1a63a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
