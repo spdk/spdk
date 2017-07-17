@@ -128,12 +128,12 @@ void spdk_io_device_unregister(void *io_device);
 struct spdk_io_channel *spdk_get_io_channel(void *io_device);
 
 /**
- * \brief Releases a reference to an I/O channel.
+ * \brief Releases a reference to an I/O channel. This happens asynchronously.
  *
- * Must be called from the same thread that called spdk_get_io_channel() for the specified
- *  I/O channel.  If this releases the last reference to the I/O channel, The destroy_cb
- *  function specified in spdk_io_device_register() will be invoked to release any
- *  associated resources.
+ * Actual release will happen on the same thread that called spdk_get_io_channel() for the
+ *  specified I/O channel.  If this releases the last reference to the I/O channel, The
+ *  destroy_cb function specified in spdk_io_device_register() will be invoked to release
+ *  any associated resources.
  */
 void spdk_put_io_channel(struct spdk_io_channel *ch);
 
