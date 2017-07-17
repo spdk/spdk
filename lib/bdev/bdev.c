@@ -1560,7 +1560,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	TAILQ_REMOVE(&bdev->open_descs, desc, link);
 	free(desc);
 
-	if (bdev->status == SPDK_BDEV_STATUS_REMOVING) {
+	if (bdev->status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->open_descs)) {
 		do_unregister = true;
 	}
 	pthread_mutex_unlock(&bdev->mutex);
