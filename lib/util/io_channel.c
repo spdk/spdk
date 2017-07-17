@@ -323,6 +323,15 @@ struct call_channel {
 };
 
 static void
+_call_completion(void *ctx)
+{
+	struct call_channel *ch_ctx = ctx;
+
+	ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx);
+	free(ch_ctx);
+}
+
+static void
 _call_channel(void *ctx)
 {
 	struct call_channel *ch_ctx = ctx;
@@ -351,8 +360,7 @@ _call_channel(void *ctx)
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx);
-	free(ch_ctx);
+	spdk_thread_send_msg(ch_ctx->orig_thread, _call_completion, ch_ctx);
 }
 
 void
