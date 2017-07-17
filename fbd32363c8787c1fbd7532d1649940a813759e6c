@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "a9c7e1c8_384097e0",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-17T01:27:50Z",
+      "side": 1,
+      "message": "Jim preferred to add specify the designated module to check.",
+      "parentUuid": "7bcc1f60_eb735fbd",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24e72909_821a801f",
         "filename": "scripts/autotest_common.sh",
         "patchSetId": 32
