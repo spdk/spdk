@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e8c0778_30c45bef",
+        "filename": "doc/nvme-cli.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-17T21:19:27Z",
+      "side": 1,
+      "message": "Is nvme-cli \"installed\" or is it just \"built\"? This comment applies to step 2 under the SPDK section too.",
+      "revId": "6aa07a07b4c0a5cde8a3d9aeb24fdf293053ed25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "328ee545_56f86de4",
+        "filename": "doc/nvme-cli.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-17T21:19:27Z",
+      "side": 1,
+      "message": "The user needs to run setup.sh too. Maybe this document can skip this whole step 3 though.",
+      "revId": "6aa07a07b4c0a5cde8a3d9aeb24fdf293053ed25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c73deca3_38f2413b",
+        "filename": "doc/nvme-cli.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-17T21:19:27Z",
+      "side": 1,
+      "message": "Instead of building nvme-cli, then spdk then re-building nvme-cli, why not have the user build spdk first?",
+      "revId": "6aa07a07b4c0a5cde8a3d9aeb24fdf293053ed25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
