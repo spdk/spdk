@@ -46,7 +46,10 @@ vbdev_lvol_destruct(void *ctx)
 
 	assert(lvol != NULL);
 	free(lvol->bdev);
-	spdk_lvol_destroy(lvol);
+	if (lvol->close_only)
+		spdk_lvol_close(lvol);
+	else
+		spdk_lvol_destroy(lvol);
 
 	return 0;
 }

@@ -50,6 +50,12 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return "test";
 }
 
+void
+spdk_bdev_unregister(struct spdk_bdev *bdev)
+{
+        return;
+}
+
 static void
 bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 {
