@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "411a8a86_6baed80c",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "why do you source the file inside the loop?\nwhy do you source this file anyway? you you shouldn\u0027t need any functions from setup.sh",
+      "range": {
+        "startLine": 213,
+        "startChar": 0,
+        "endLine": 213,
+        "endChar": 35
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "797776c6_2a082275",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "\"use uio\"? please reword",
+      "range": {
+        "startLine": 215,
+        "startChar": 14,
+        "endLine": 215,
+        "endChar": 22
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e420c93_321165b1",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "not inside the loop!",
+      "range": {
+        "startLine": 214,
+        "startChar": 1,
+        "endLine": 217,
+        "endChar": 3
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f1e181b_1e349dee",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "please move it outside of the loop",
+      "range": {
+        "startLine": 218,
+        "startChar": 0,
+        "endLine": 218,
+        "endChar": 42
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f635982_a3bb0eb5",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "you might want to check against *exactly* spdk_vhost_scsi. we\u0027re only deleting scsi devices below.",
+      "range": {
+        "startLine": 218,
+        "startChar": 22,
+        "endLine": 218,
+        "endChar": 32
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e981cda8_04682c41",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "you echo controller name in hot-attach log in line #232. please be consistent",
+      "range": {
+        "startLine": 224,
+        "startChar": 96,
+        "endLine": 224,
+        "endChar": 97
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d667b64f_1ff2d849",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "you forgot to init conf. (copy it from line #138 for instance)",
+      "range": {
+        "startLine": 225,
+        "startChar": 64,
+        "endLine": 225,
+        "endChar": 68
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6175790e_5bd1e952",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "I guess we don\u0027t want another success messages in log",
+      "range": {
+        "startLine": 226,
+        "startChar": 0,
+        "endLine": 226,
+        "endChar": 59
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "acfabf64_0f0c8716",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "we could call $rpc_py without the condition. It would simplify the code greatly",
+      "range": {
+        "startLine": 227,
+        "startChar": 5,
+        "endLine": 230,
+        "endChar": 21
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7645b723_bae4eae0",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "please see above coments",
+      "range": {
+        "startLine": 233,
+        "startChar": 19,
+        "endLine": 238,
+        "endChar": 21
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c27b8a9_b346b6ff",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "we probably want hotremove tests at the very end of the autotest (just before shutdown)",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 240,
+        "endChar": 50
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55d80a63_929df4a5",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "what is happening here?",
+      "range": {
+        "startLine": 241,
+        "startChar": 0,
+        "endLine": 241,
+        "endChar": 33
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78334421_15d68e31",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "this might return a list. however, please don\u0027t use setup.sh function in here anyway",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 242,
+        "endChar": 32
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cc73c94_7401de4f",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "what is this for? a single unbind [1] would be sufficient\n[1] echo \"\u003caddr\u003e\" \u003e /sys/bus/pci/drivers/uio_pci_generic/unbind",
+      "range": {
+        "startLine": 243,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 64
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81d241f9_955562bd",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:14:33Z",
+      "side": 1,
+      "message": "you should be testing spdk vhost and not the linux kernel.",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 247,
+        "endChar": 10
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
