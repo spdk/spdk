@@ -1586,6 +1586,7 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	}
 
 	if (desc && !desc->write) {
+		desc->bdev->bdev_opened_for_write = true;
 		desc->write = true;
 	}
 
