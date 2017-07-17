@@ -241,6 +241,11 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	spdk_dma_free(req_buf);
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+
+	if (ctrlr->is_removed) {
+		nvme_ctrlr_destruct(ctrlr);
+	}
+
 	return 0;
 }
 
@@ -1396,6 +1401,10 @@ void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
+
+	if (ctrlr->is_removed && !TAILQ_EMPTY(&ctrlr->active_io_qpairs)) {
+		return;
+	}
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
