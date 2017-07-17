@@ -1392,6 +1392,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	/* initialize the reset generation value to zero */
 	bdev->gencnt = 0;
 	TAILQ_INIT(&bdev->open_descs);
+	bdev->bdev_opened = false;
 	bdev->bdev_opened_for_write = false;
 
 	TAILQ_INIT(&bdev->vbdevs);
@@ -1513,6 +1514,24 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 	}
 }
 
+bool
+is_bdev_opened(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev *base;
+
+	if (bdev->bdev_opened) {
+		return true;
+	}
+
+	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
+		if (is_bdev_opened(base)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **_desc)
@@ -1539,6 +1558,8 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 		bdev->bdev_opened_for_write = true;
 	}
 
+	bdev->bdev_opened = true;
+
 	desc->bdev = bdev;
 	desc->remove_cb = remove_cb;
 	desc->remove_ctx = remove_ctx;
@@ -1562,6 +1583,8 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 		assert(bdev->bdev_opened_for_write);
 		bdev->bdev_opened_for_write = false;
 	}
+
+	bdev->bdev_opened = false;
 
 	TAILQ_REMOVE(&bdev->open_descs, desc, link);
 	free(desc);

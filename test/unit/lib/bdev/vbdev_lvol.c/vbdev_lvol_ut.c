@@ -42,6 +42,25 @@ struct spdk_lvol *g_lvol = NULL;
 struct lvol_store_bdev_pair *g_lvs_pair = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
 
+int
+spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
+uint64_t
+spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
+{
+	return 0;
+}
+
+struct spdk_bdev *
+spdk_bdev_get_by_name(const char *bdev_name)
+{
+	return NULL;
+}
+
 void
 spdk_lvol_close(struct spdk_lvol *lvol)
 {
@@ -71,6 +90,18 @@ vbdev_get_lvs_pair_by_lvs(struct spdk_lvol_store *lvs)
 	g_lvs_pair->lvs = lvs;
 
 	return g_lvs_pair;
+}
+
+bool
+is_bdev_opened(struct spdk_bdev *bdev)
+{
+	return false;
+}
+
+struct spdk_lvol *
+vbdev_get_lvol_by_name(char *name)
+{
+	return NULL;
 }
 
 int
