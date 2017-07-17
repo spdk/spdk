@@ -14,6 +14,7 @@ vms=()
 used_vms=""
 disk_split=""
 x=""
+driver_name=vfio-pci
 
 function usage()
 {
@@ -207,6 +208,50 @@ done
 # Run everything
 $BASE_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
 vm_wait_for_boot 600 $used_vms
+
+for vm_conf in ${vms[@]}; do
+	. $SPDK_BUILD_DIR/scripts/setup.sh
+	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
+		# No IOMMU. Use uio.
+		driver_name=uio_pci_generic
+	fi
+	if [[ $test_type =~ "spdk_vhost" ]]; then
+        	while IFS=':' read -ra disks; do
+        		for disk in "${disks[@]}"; do
+				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
+            				echo "Vhost block tests"
+				else
+		                	echo "INFO: Hotdetach test. Trying to remove existing device from a controller"
+                			if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0 > /dev/null; then
+			                        echo "INFO: Hotdetach succeeded"
+					else
+						echo "ERROR: Hotdetach failed"
+        	        		        false
+			                fi
+
+        	        		echo "INFO: Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
+			                if $rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk > /dev/null; then
+						echo "INFO: Hotattach succeeded"
+					else
+						echo "ERROR: Hotattach failed"
+						false
+		                	fi
+            			fi
+			if [[ $driver_name = "uio_pci_generic" ]]; then
+				modprobe $driver_name || true
+				bdf = $(linux_iter_pci 0108)
+				if linux_bind_driver "$bdf" "$driver_name" > /dev/null; then
+					echo "INFO: Hotremove/hotplug succeeded"
+				else
+					echo "ERROR: Hotremove/hotplug failed"
+					false
+			else
+				echo "The driver $driver_name is not supporting hotremove/hotplug function."
+			done
+		done <<< "${conf[2]}"
+		unset IFS;
+	fi
+done
 
 echo "==============="
 echo ""
