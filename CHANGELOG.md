@@ -1,6 +1,6 @@
 # Changelog
 
-## (Upcoming release) v17.07
+## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
 
