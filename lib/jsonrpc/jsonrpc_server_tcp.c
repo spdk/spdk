@@ -362,8 +362,6 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 				SPDK_TRACELOG(SPDK_TRACE_RPC, "all outstanding requests completed\n");
 				spdk_jsonrpc_server_conn_remove(conn);
 			}
-
-			continue;
 		}
 	}
 
