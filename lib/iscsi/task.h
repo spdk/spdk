@@ -145,7 +145,7 @@ spdk_iscsi_task_is_read(struct spdk_iscsi_task *task)
 	struct iscsi_bhs_scsi_req *scsi_req;
 
 	scsi_req = (struct iscsi_bhs_scsi_req *)spdk_iscsi_task_get_bhs(task);
-	return (scsi_req->read == 1);
+	return (scsi_req->read_bit == 1);
 }
 
 static inline uint32_t

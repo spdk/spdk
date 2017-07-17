@@ -310,9 +310,9 @@ struct iscsi_bhs_scsi_req {
 	uint8_t reserved	: 1;
 	uint8_t attribute	: 3;
 	uint8_t reserved2	: 2;
-	uint8_t write		: 1;
-	uint8_t read		: 1;
-	uint8_t final		: 1;
+	uint8_t write_bit	: 1;
+	uint8_t read_bit	: 1;
+	uint8_t final_bit	: 1;
 	uint8_t res[2];
 	uint8_t total_ahs_len;
 	uint8_t data_segment_len[3];
