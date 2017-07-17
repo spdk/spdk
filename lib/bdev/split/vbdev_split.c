@@ -157,6 +157,7 @@ static void
 vbdev_split_base_put_ref(struct split_base *split_base)
 {
 	if (__sync_sub_and_fetch(&split_base->ref, 1) == 0) {
+		spdk_bdev_close(split_base->desc);
 		free(split_base);
 	}
 }
@@ -188,6 +189,19 @@ vbdev_split_destruct(void *ctx)
 
 	vbdev_split_free(split_disk);
 	return 0;
+}
+
+static void
+vbdev_base_hotremove_cb(void *remove_ctx)
+{
+	struct spdk_bdev *base_bdev = remove_ctx;
+	struct split_disk *split_disk, *tmp;
+
+	TAILQ_FOREACH_SAFE(split_disk, &g_split_disks, tailq, tmp) {
+		if (split_disk->base_bdev == base_bdev) {
+			spdk_bdev_unregister(&split_disk->disk);
+		}
+	}
 }
 
 static bool
@@ -278,7 +292,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	split_base->base_bdev = base_bdev;
 	split_base->ref = 0;
 
-	rc = spdk_bdev_open(base_bdev, false, NULL, NULL, &split_base->desc);
+	rc = spdk_bdev_open(base_bdev, false, vbdev_base_hotremove_cb, base_bdev, &split_base->desc);
 	if (rc) {
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(base_bdev));
 		free(split_base);
