@@ -320,7 +320,12 @@ function part_dev_by_gpt () {
 			return 1
 		fi
 
+		if [ !  grep -q "\[Rpc\]" $conf ]; then
+			return 1
+		fi
+
 		cp $conf ${conf}.gpt
+		echo "  Listen 127.0.0.1:5261" >> ${conf}.gpt		
 		echo "[Gpt]" >> ${conf}.gpt
 		echo "  Disable Yes" >> ${conf}.gpt
 
@@ -328,8 +333,8 @@ function part_dev_by_gpt () {
 		$rootdir/test/lib/bdev/nbd/nbd -c ${conf}.gpt -b $devname -n /dev/nbd0 &
 		nbd_pid=$!
 		echo "Process nbd pid: $nbd_pid"
-		waitforlisten $nbd_pid 5260
-		waitforbdev $devname "python $rootdir/scripts/rpc.py"
+		waitforlisten $nbd_pid 5261
+		waitforbdev $devname "python $rootdir/scripts/rpc.py -p 5261"
 
 		if [ -e /dev/nbd0 ]; then
 			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
