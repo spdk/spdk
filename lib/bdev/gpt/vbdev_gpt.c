@@ -90,8 +90,22 @@ spdk_gpt_bdev_free(struct spdk_gpt_bdev *gpt_bdev)
 		spdk_put_io_channel(gpt_bdev->ch);
 	}
 
+	spdk_bdev_close(gpt_bdev->bdev_desc);
 	spdk_dma_free(gpt_bdev->gpt.buf);
 	free(gpt_bdev);
+}
+
+static void
+spdk_gpt_base_bdev_hotremove_cb(void *remove_ctx)
+{
+	struct spdk_bdev *base_bdev = remove_ctx;
+	struct gpt_partition_disk *split_disk, *tmp;
+
+	TAILQ_FOREACH_SAFE(split_disk, &g_gpt_partition_disks, tailq, tmp) {
+		if (split_disk->base_bdev == base_bdev) {
+			spdk_bdev_unregister(&split_disk->disk);
+		}
+	}
 }
 
 static struct spdk_gpt_bdev *
@@ -123,7 +137,7 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	gpt->lba_start = 0;
 	gpt->lba_end = gpt->total_sectors - 1;
 
-	rc = spdk_bdev_open(gpt_bdev->bdev, false, NULL, NULL, &gpt_bdev->bdev_desc);
+	rc = spdk_bdev_open(gpt_bdev->bdev, false, spdk_gpt_base_bdev_hotremove_cb, bdev, &gpt_bdev->bdev_desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not open bdev %s, error=%d\n",
 			    spdk_bdev_get_name(gpt_bdev->bdev), rc);
@@ -465,7 +479,6 @@ end:
 
 	if (gpt_bdev->ref == 0) {
 		/* If no gpt_partition_disk instances were created, free the base context */
-		spdk_bdev_close(gpt_bdev->bdev_desc);
 		spdk_gpt_bdev_free(gpt_bdev);
 		if (claimed) {
 			spdk_bdev_module_release_bdev(bdev);
