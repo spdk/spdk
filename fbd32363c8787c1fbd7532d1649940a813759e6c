@@ -145,6 +145,24 @@
     },
     {
       "key": {
+        "uuid": "2d27d3d8_518d803f",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-17T04:47:43Z",
+      "side": 1,
+      "message": "NBD process is already opened the bdev, and the bdev is already claimed, so if we use the examine call, we will fail the test.",
+      "parentUuid": "141fd019_dfd0b038",
+      "revId": "fbd32363c8787c1fbd7532d1649940a813759e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7940c314_378f8e5f",
         "filename": "scripts/rpc.py",
         "patchSetId": 32
