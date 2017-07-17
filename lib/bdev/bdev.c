@@ -1478,6 +1478,38 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 	spdk_bdev_unregister(vbdev);
 }
 
+int
+spdk_bdev_module_examine_bdev(const char *module_name, const char *bdev_name)
+{
+	struct spdk_bdev_module_if *bdev_module;
+	struct spdk_bdev *bdev;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (!bdev) {
+		SPDK_ERRLOG("Could not find bdev %s\n", bdev_name);
+		return -1;
+	}
+
+	if (bdev->claim_module != NULL) {
+		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
+			    bdev->claim_module->name);
+		return -1;
+	}
+
+	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
+		if ((bdev_module->examine != NULL) &&
+		    (strcmp(module_name, bdev_module->name) == 0)) {
+			bdev_module->examine_in_progress++;
+			bdev_module->examine(bdev);
+			return 0;
+		}
+	}
+
+	SPDK_ERRLOG("Could not examine bdev_name=%s with provided module_name=%s\n",
+		    bdev_name, module_name);
+	return -1;
+}
+
 void
 spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
