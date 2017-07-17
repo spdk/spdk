@@ -208,6 +208,22 @@ done
 $BASE_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
 vm_wait_for_boot 600 $used_vms
 
+if [[ $test_type == "spdk_vhost_scsi" ]]; then
+	for vm_conf in ${vms[@]}; do
+		IFS=',' read -ra conf <<< "$vm_conf"
+        	while IFS=':' read -ra disks; do
+        		for disk in "${disks[@]}"; do
+				echo "INFO: Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
+                		$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
+
+        	        	echo "INFO: Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
+				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+            		done
+		done <<< "${conf[2]}"
+		unset IFS;
+	done
+fi
+
 echo "==============="
 echo ""
 echo "INFO: Testing..."
