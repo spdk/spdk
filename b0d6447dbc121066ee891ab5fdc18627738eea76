@@ -117,6 +117,29 @@
     },
     {
       "key": {
+        "uuid": "affe136c_f2b80c24",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:22:58Z",
+      "side": 1,
+      "message": "this is unnecessary, please remove",
+      "range": {
+        "startLine": 221,
+        "startChar": 0,
+        "endLine": 223,
+        "endChar": 8
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e981cda8_04682c41",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 3
@@ -341,6 +364,23 @@
         "endLine": 247,
         "endChar": 10
       },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5978d77e_7c7fa2ab",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-17T19:22:58Z",
+      "side": 1,
+      "message": "you should sleep for a while as hotattach is asynchronous and might take some time to be processed\nsleep 1 should be sufficient.",
       "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
