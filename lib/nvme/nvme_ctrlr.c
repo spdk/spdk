@@ -240,6 +240,10 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 
 	spdk_dma_free(req_buf);
 
+	if (ctrlr->is_removed) {
+		nvme_ctrlr_destruct(ctrlr);
+	}
+
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	return 0;
 }
@@ -1395,10 +1399,10 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_qpair *qpair, *tmp;
+	assert(ctrlr->is_removed);
 
-	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
-		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	if (!TAILQ_EMPTY(&ctrlr->active_io_qpairs)) {
+		return;
 	}
 
 	nvme_ctrlr_shutdown(ctrlr);
