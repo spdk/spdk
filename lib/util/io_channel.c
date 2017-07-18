@@ -175,6 +175,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev = calloc(1, sizeof(struct io_device));
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not allocate io_device\n");
+		assert(false);
 		return;
 	}
 
@@ -189,6 +190,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
 			free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
+			assert(false);
 			return;
 		}
 	}
@@ -200,18 +202,44 @@ void
 spdk_io_device_unregister(void *io_device)
 {
 	struct io_device *dev;
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
 
 	pthread_mutex_lock(&g_devlist_mutex);
+
+	dev = NULL;
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
 		if (dev->io_device_ctx == io_device) {
-			TAILQ_REMOVE(&g_io_devices, dev, tailq);
-			free(dev);
-			pthread_mutex_unlock(&g_devlist_mutex);
-			return;
+			break;
 		}
 	}
-	SPDK_ERRLOG("io_device %p not found\n", io_device);
+
+	if (!dev) {
+		SPDK_ERRLOG("io_device %p not found\n", io_device);
+		pthread_mutex_unlock(&g_devlist_mutex);
+		assert(false);
+		return;
+	}
+
+	/* Check all existing I/O channels on all threads to see
+	 * if there are any references to this device.
+	 */
+	thread = NULL;
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->io_device == io_device) {
+				SPDK_ERRLOG("Found I/O channel for unregistered io_device %p\n", io_device);
+				pthread_mutex_unlock(&g_devlist_mutex);
+				assert(false);
+				return;
+			}
+		}
+	}
+
+	TAILQ_REMOVE(&g_io_devices, dev, tailq);
+	free(dev);
 	pthread_mutex_unlock(&g_devlist_mutex);
+	return;
 }
 
 struct spdk_io_channel *
