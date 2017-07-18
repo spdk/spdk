@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0210da0_2b2a27ed",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-18T07:14:25Z",
+      "side": 1,
+      "message": "the io_channel will be put (and freed) twice. there\u0027s a \"ref already zero\" check in _spdk_put_io_channel but in io_channel.c:288 you can see that when ref counter reaches 0, the io_channel will be instantly freed. You might run into the if(ch-\u003eref \u003d\u003d 0) branch the second time you try to put io_channel, but you\u0027re still reading freed memory. that\u0027s undefined behavior.",
+      "range": {
+        "startLine": 209,
+        "startChar": 1,
+        "endLine": 209,
+        "endChar": 25
+      },
+      "revId": "92b0d48b081646bd4f4ff2d14aa333a86df267d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "386359cd_3bf7c753",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-18T07:14:25Z",
+      "side": 1,
+      "message": "you might want to wrap it with pthread_mutex_lock(\u0026g_bdev_nvme_mutex);",
+      "range": {
+        "startLine": 218,
+        "startChar": 1,
+        "endLine": 223,
+        "endChar": 0
+      },
+      "revId": "92b0d48b081646bd4f4ff2d14aa333a86df267d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
