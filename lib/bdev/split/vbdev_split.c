@@ -154,10 +154,20 @@ vbdev_split_base_get_ref(struct split_base *split_base, struct split_disk *split
 }
 
 static void
+vbdev_split_base_free(struct split_base *split_base)
+{
+	assert(split_base->base_bdev);
+	assert(split_base->desc);
+	spdk_bdev_module_release_bdev(split_base->base_bdev);
+	spdk_bdev_close(split_base->desc);
+	free(split_base);
+}
+
+static void
 vbdev_split_base_put_ref(struct split_base *split_base)
 {
 	if (__sync_sub_and_fetch(&split_base->ref, 1) == 0) {
-		free(split_base);
+		vbdev_split_base_free(split_base);
 	}
 }
 
@@ -346,9 +356,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 cleanup:
 	if (split_base->ref == 0) {
 		/* If no split_disk instances were created, free the resources */
-		spdk_bdev_module_release_bdev(split_base->base_bdev);
-		spdk_bdev_close(split_base->desc);
-		free(split_base);
+		vbdev_split_base_free(split_base);
 	}
 
 	return rc;
