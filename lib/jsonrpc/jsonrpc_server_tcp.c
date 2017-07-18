@@ -86,10 +86,6 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 		return NULL;
 	}
 
-	/* Put listen socket in pollfds[0] */
-	server->pollfds[0].fd = server->sockfd;
-	server->pollfds[0].events = POLLIN;
-
 	return server;
 }
 
@@ -111,9 +107,6 @@ static void
 spdk_jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
 {
 	conn->closed = true;
-
-	/* Set the pollfd fd to a negative value so it is ignored by poll() */
-	conn->pfd->fd = -1;
 
 	if (conn->sockfd >= 0) {
 		close(conn->sockfd);
@@ -140,7 +133,6 @@ static int
 spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 {
 	struct spdk_jsonrpc_server_conn *conn;
-	struct pollfd *pfd;
 	int rc, conn_idx, nonblock;
 
 	rc = accept(server->sockfd, NULL, NULL);
@@ -168,13 +160,6 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 			close(conn->sockfd);
 			return -1;
 		}
-
-		/* Add connection to pollfds */
-		pfd = &server->pollfds[conn_idx + 1];
-		pfd->fd = conn->sockfd;
-		pfd->events = POLLIN | POLLOUT;
-		pfd->revents = 0;
-		conn->pfd = pfd;
 
 		server->num_conns++;
 
@@ -333,7 +318,6 @@ int
 spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 {
 	int rc, i;
-	struct pollfd *pfd;
 	struct spdk_jsonrpc_server_conn *conn;
 
 	for (i = 0; i < server->num_conns; i++) {
@@ -365,61 +349,29 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 		}
 	}
 
-	rc = poll(server->pollfds, server->num_conns + 1, 0);
-
-	if (rc < 0) {
-		if (errno == EINTR) {
-			return 0;
-		}
-
-		SPDK_ERRLOG("jsonrpc poll() failed\n");
-		return -1;
-	}
-
-	if (rc == 0) {
-		/* No sockets are ready */
-		return 0;
-	}
-
 	/* Check listen socket */
 	if (server->num_conns < SPDK_JSONRPC_MAX_CONNS) {
-		pfd = &server->pollfds[0];
-		if (pfd->revents) {
-			spdk_jsonrpc_server_accept(server);
-		}
-		pfd->revents = 0;
+		spdk_jsonrpc_server_accept(server);
 	}
 
 	for (i = 0; i < server->num_conns; i++) {
-		pfd = &server->pollfds[i + 1];
 		conn = &server->conns[i];
 
-		if (pfd->revents & POLLOUT) {
-			rc = spdk_jsonrpc_server_conn_send(conn);
-			if (rc != 0) {
-				SPDK_TRACELOG(SPDK_TRACE_RPC, "closing conn due to send failure\n");
-				spdk_jsonrpc_server_conn_close(conn);
-				continue;
-			}
+		if (conn->closed) {
+			continue;
 		}
 
-		if (pfd->revents & POLLIN) {
-			rc = spdk_jsonrpc_server_conn_recv(conn);
-			if (rc != 0) {
-				SPDK_TRACELOG(SPDK_TRACE_RPC, "closing conn due to recv failure\n");
-				spdk_jsonrpc_server_conn_close(conn);
-				continue;
-			}
-		}
-
-		if (pfd->revents & (POLLERR | POLLNVAL)) {
-			SPDK_TRACELOG(SPDK_TRACE_RPC, "closing conn due to poll() flag %d\n",
-				      (int)pfd->revents);
+		rc = spdk_jsonrpc_server_conn_send(conn);
+		if (rc != 0) {
 			spdk_jsonrpc_server_conn_close(conn);
 			continue;
 		}
 
-		pfd->revents = 0;
+		rc = spdk_jsonrpc_server_conn_recv(conn);
+		if (rc != 0) {
+			spdk_jsonrpc_server_conn_close(conn);
+			continue;
+		}
 	}
 
 	return 0;

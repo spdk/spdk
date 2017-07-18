@@ -69,14 +69,12 @@ struct spdk_jsonrpc_server_conn {
 	uint32_t outstanding_requests;
 	struct spdk_ring *send_queue;
 	struct spdk_jsonrpc_request *send_request;
-	struct pollfd *pfd;
 };
 
 struct spdk_jsonrpc_server {
 	int sockfd;
 	spdk_jsonrpc_handle_request_fn handle_request;
 	struct spdk_jsonrpc_server_conn conns[SPDK_JSONRPC_MAX_CONNS];
-	struct pollfd pollfds[SPDK_JSONRPC_MAX_CONNS + 1];
 	int num_conns;
 };
 
