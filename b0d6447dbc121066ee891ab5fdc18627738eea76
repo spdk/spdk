@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "45ea8ef0_61d0c64b",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-18T06:19:24Z",
+      "side": 1,
+      "message": "Why do you copy-paste setup.sh?",
+      "range": {
+        "startLine": 214,
+        "startChar": 1,
+        "endLine": 214,
+        "endChar": 49
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "797776c6_2a082275",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 3
@@ -298,6 +321,29 @@
       "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a77c9628_76e115c9",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-18T06:19:24Z",
+      "side": 1,
+      "message": "?",
+      "range": {
+        "startLine": 241,
+        "startChar": 4,
+        "endLine": 241,
+        "endChar": 33
+      },
+      "revId": "b0d6447dbc121066ee891ab5fdc18627738eea76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
