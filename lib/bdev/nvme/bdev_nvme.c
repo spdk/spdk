@@ -200,6 +200,29 @@ bdev_nvme_poll_adminq(void *arg)
 	spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
+static void
+_bdev_nvme_put_io_channel(void *io_device, struct spdk_io_channel *ch,
+			  void *ctx)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+
+	spdk_put_io_channel(ch);
+	nvme_ch->qpair = NULL;
+}
+
+static void
+_bdev_nvme_put_io_channel_cpl(void *io_device, void *ctx)
+{
+	struct nvme_ctrlr *nvme_ctrlr = ctx;
+
+	spdk_io_device_unregister(nvme_ctrlr->ctrlr);
+	spdk_bdev_poller_stop(&nvme_ctrlr->adminq_timer_poller);
+	spdk_nvme_detach(nvme_ctrlr->ctrlr);
+	free(nvme_ctrlr->name);
+	free(nvme_ctrlr);
+
+}
+
 static int
 bdev_nvme_destruct(void *ctx)
 {
@@ -216,11 +239,8 @@ bdev_nvme_destruct(void *ctx)
 	if (nvme_ctrlr->ref == 0) {
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		spdk_io_device_unregister(nvme_ctrlr->ctrlr);
-		spdk_bdev_poller_stop(&nvme_ctrlr->adminq_timer_poller);
-		spdk_nvme_detach(nvme_ctrlr->ctrlr);
-		free(nvme_ctrlr->name);
-		free(nvme_ctrlr);
+		spdk_for_each_channel(nvme_ctrlr->ctrlr, _bdev_nvme_put_io_channel, nvme_ctrlr,
+				      _bdev_nvme_put_io_channel_cpl);
 		return 0;
 	}
 
