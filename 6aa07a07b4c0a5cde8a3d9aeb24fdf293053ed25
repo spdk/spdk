@@ -50,6 +50,24 @@
       "revId": "6aa07a07b4c0a5cde8a3d9aeb24fdf293053ed25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d6665f2_c9114879",
+        "filename": "doc/nvme-cli.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-18T02:13:12Z",
+      "side": 1,
+      "message": "Good suggestion. Let me reorder the sequence. My previous considering is to let the user to make sure at least nvme-cli can be successfully built without SPDK.",
+      "parentUuid": "c73deca3_38f2413b",
+      "revId": "6aa07a07b4c0a5cde8a3d9aeb24fdf293053ed25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
