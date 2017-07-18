@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f28bebb5_6904dd21",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-18T17:01:18Z",
+      "side": 1,
+      "message": "This will call each channel\u0027s destroy_cb on the thread calling spdk_io_device_unregister(), whereas it is expected to be called on the channel\u0027s thread.",
+      "revId": "93dd4235e0653091b4326ed4b3d2eda884962b94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
