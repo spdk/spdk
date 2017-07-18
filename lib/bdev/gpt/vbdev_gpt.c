@@ -82,14 +82,13 @@ static bool g_gpt_disabled;
 static void
 spdk_gpt_bdev_free(struct spdk_gpt_bdev *gpt_bdev)
 {
-	if (!gpt_bdev) {
-		return;
+	assert(gpt_bdev->ch == NULL);
+	assert(gpt_bdev->bdev);
+	assert(gpt_bdev->bdev_desc);
+	if (gpt_bdev->bdev->claim_module == SPDK_GET_BDEV_MODULE(gpt)) {
+		spdk_bdev_module_release_bdev(gpt_bdev->bdev);
 	}
-
-	if (gpt_bdev->ch) {
-		spdk_put_io_channel(gpt_bdev->ch);
-	}
-
+	spdk_bdev_close(gpt_bdev->bdev_desc);
 	spdk_dma_free(gpt_bdev->gpt.buf);
 	free(gpt_bdev);
 }
@@ -113,8 +112,8 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	gpt = &gpt_bdev->gpt;
 	gpt->buf = spdk_dma_zmalloc(SPDK_GPT_BUFFER_SIZE, 0x1000, NULL);
 	if (!gpt->buf) {
-		spdk_gpt_bdev_free(gpt_bdev);
 		SPDK_ERRLOG("Cannot alloc buf\n");
+		free(gpt_bdev);
 		return NULL;
 	}
 
@@ -127,14 +126,17 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not open bdev %s, error=%d\n",
 			    spdk_bdev_get_name(gpt_bdev->bdev), rc);
-		spdk_gpt_bdev_free(gpt_bdev);
+		spdk_dma_free(gpt->buf);
+		free(gpt_bdev);
 		return NULL;
 	}
 
 	gpt_bdev->ch = spdk_bdev_get_io_channel(gpt_bdev->bdev_desc);
 	if (!gpt_bdev->ch) {
 		SPDK_ERRLOG("Cannot allocate ch\n");
-		spdk_gpt_bdev_free(gpt_bdev);
+		spdk_bdev_close(gpt_bdev->bdev_desc);
+		spdk_dma_free(gpt->buf);
+		free(gpt_bdev);
 		return NULL;
 	}
 
@@ -423,7 +425,6 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct spdk_gpt_bdev *gpt_bdev = (struct spdk_gpt_bdev *)arg;
 	struct spdk_bdev *bdev = gpt_bdev->bdev;
-	bool claimed = false;
 	int rc;
 
 	/* free the ch and also close the bdev_desc */
@@ -449,7 +450,6 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 		goto end;
 	}
 
-	claimed = true;
 	rc = vbdev_gpt_create_bdevs(gpt_bdev);
 	if (rc < 0) {
 		SPDK_TRACELOG(SPDK_TRACE_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
@@ -465,11 +465,7 @@ end:
 
 	if (gpt_bdev->ref == 0) {
 		/* If no gpt_partition_disk instances were created, free the base context */
-		spdk_bdev_close(gpt_bdev->bdev_desc);
 		spdk_gpt_bdev_free(gpt_bdev);
-		if (claimed) {
-			spdk_bdev_module_release_bdev(bdev);
-		}
 	}
 }
 
