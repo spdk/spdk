@@ -107,6 +107,7 @@ struct ns_worker_ctx {
 	uint64_t		total_tsc;
 	uint64_t		min_tsc;
 	uint64_t		max_tsc;
+	uint64_t		end_tsc;
 	uint64_t		current_queue_depth;
 	uint64_t		offset_in_ios;
 	bool			is_draining;
@@ -507,11 +508,12 @@ task_complete(struct perf_task *task)
 {
 	struct ns_worker_ctx	*ns_ctx;
 	uint64_t		tsc_diff;
+	uint64_t		tsc_current = spdk_get_ticks();
 
 	ns_ctx = task->ns_ctx;
 	ns_ctx->current_queue_depth--;
 	ns_ctx->io_completed++;
-	tsc_diff = spdk_get_ticks() - task->submit_tsc;
+	tsc_diff = tsc_current - task->submit_tsc;
 	ns_ctx->total_tsc += tsc_diff;
 	if (ns_ctx->min_tsc > tsc_diff) {
 		ns_ctx->min_tsc = tsc_diff;
@@ -523,6 +525,10 @@ task_complete(struct perf_task *task)
 		spdk_histogram_data_tally(&ns_ctx->histogram, tsc_diff);
 	}
 	rte_mempool_put(task_pool, task);
+
+	if (ns_ctx->end_tsc <= tsc_current) {
+		ns_ctx->is_draining = true;
+	}
 
 	/*
 	 * is_draining indicates when time has expired for the test run
@@ -639,6 +645,7 @@ work_fn(void *arg)
 	/* Submit initial I/O for each namespace. */
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
+		ns_ctx->end_tsc = tsc_end;
 		submit_io(ns_ctx, g_queue_depth);
 		ns_ctx = ns_ctx->next;
 	}
