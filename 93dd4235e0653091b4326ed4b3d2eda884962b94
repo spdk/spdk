@@ -16,6 +16,24 @@
       "revId": "93dd4235e0653091b4326ed4b3d2eda884962b94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2166e1d_12c0291f",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-18T22:43:09Z",
+      "side": 1,
+      "message": "Further, if the user calls spdk_put_io_channel(ch); followed by spdk_io_device_unregister(dev);, this change will basically undo the deferring of the channel free by calling this here.\n\nI think the only way forward is to remove the need to defer the put_io_channel in the first place. I\u0027m working on some patches that address that, then we can loop back to this patch series.",
+      "parentUuid": "f28bebb5_6904dd21",
+      "revId": "93dd4235e0653091b4326ed4b3d2eda884962b94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
