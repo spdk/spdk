@@ -46,6 +46,8 @@
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 
+#include "spdk_internal/assert.h"
+
 /* Features supported by SPDK VHOST lib. */
 #define SPDK_VHOST_SCSI_FEATURES	((1ULL << VIRTIO_F_VERSION_1) | \
 					(1ULL << VHOST_F_LOG_ALL) | \
@@ -102,6 +104,7 @@ struct spdk_vhost_scsi_task {
 };
 
 enum spdk_vhost_scsi_event_type {
+	SPDK_VHOST_SCSI_EVENT_HOTATTACH,
 	SPDK_VHOST_SCSI_EVENT_HOTDETACH,
 };
 
@@ -169,6 +172,15 @@ spdk_vhost_scsi_event_process(struct spdk_vhost_scsi_dev *svdev, struct spdk_vho
 	dev_id = ev->dev_index;
 
 	switch (ev->type) {
+	case SPDK_VHOST_SCSI_EVENT_HOTATTACH:
+		event_id = VIRTIO_SCSI_T_TRANSPORT_RESET;
+		reason_id = VIRTIO_SCSI_EVT_RESET_RESCAN;
+
+		spdk_scsi_dev_allocate_io_channels(ev->dev);
+		svdev->scsi_dev[dev_id] = ev->dev;
+		svdev->detached_dev[dev_id] = false;
+		SPDK_NOTICELOG("%s: hot-attached device %d\n", svdev->vdev.name, dev_id);
+		break;
 	case SPDK_VHOST_SCSI_EVENT_HOTDETACH:
 		event_id = VIRTIO_SCSI_T_TRANSPORT_RESET;
 		reason_id = VIRTIO_SCSI_EVT_RESET_REMOVED;
@@ -180,6 +192,8 @@ spdk_vhost_scsi_event_process(struct spdk_vhost_scsi_dev *svdev, struct spdk_vho
 			SPDK_NOTICELOG("%s: hotremoved LUN '%s'\n", svdev->vdev.name, spdk_scsi_lun_get_name(ev->lun));
 		}
 		break;
+	default:
+		SPDK_UNREACHABLE();
 	}
 
 	/* some events may apply to the entire device via lun id set to 0 */
@@ -841,6 +855,7 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev *vdev;
+	struct spdk_scsi_dev *scsi_dev;
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
@@ -875,9 +890,9 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -EINVAL;
 	}
 
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", ctrlr_name);
-		return -ENODEV;
+	if (vdev->lcore != -1 && (svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
+		SPDK_ERRLOG("Controller %s is in use and hotplug is not enabled for this controller\n", ctrlr_name);
+		return -ENOTSUP;
 	}
 
 	if (svdev->scsi_dev[scsi_dev_num] != NULL) {
@@ -892,16 +907,23 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	lun_id_list[0] = 0;
 	lun_names_list[0] = (char *)lun_name;
 
-	svdev->detached_dev[scsi_dev_num] = false;
-	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
-					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
-
-	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
+	scsi_dev = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
+					   SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
+	if (scsi_dev == NULL) {
 		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
 			    dev_name, lun_name, vdev->name);
 		return -EINVAL;
 	}
-	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
+
+	spdk_scsi_dev_add_port(scsi_dev, 0, "vhost");
+
+	if (vdev->lcore == -1) {
+		svdev->detached_dev[scsi_dev_num] = false;
+		svdev->scsi_dev[scsi_dev_num] = scsi_dev;
+	} else {
+		enqueue_vhost_event(svdev, SPDK_VHOST_SCSI_EVENT_HOTATTACH, scsi_dev_num, scsi_dev, NULL);
+	}
+
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
 	return 0;
