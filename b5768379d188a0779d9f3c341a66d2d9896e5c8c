@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cacbdacb_7fcc4e1d",
+        "filename": "test/iscsi_tgt/gpt/fio_gpt.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-18T17:30:13Z",
+      "side": 1,
+      "message": "Won\u0027t the device be automatically examined by the GPT module when the iSCSI target starts? The GPT partition is sitting on the disk before the iSCSI target runs, so it will be there during the initial examine pass. I think this test works just fine if you don\u0027t send this RPC at all.",
+      "revId": "b5768379d188a0779d9f3c341a66d2d9896e5c8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
