@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "env_posix.cc"
+#include "rocksdb/env.h"
 
 extern "C" {
 #include "spdk/env.h"
@@ -265,7 +265,7 @@ public:
 	}
 };
 
-class SpdkEnv : public PosixEnv
+class SpdkEnv : public EnvWrapper
 {
 private:
 	pthread_t mSpdkTid;
@@ -274,7 +274,7 @@ private:
 	std::string mBdev;
 
 public:
-	SpdkEnv(const std::string &dir, const std::string &conf,
+	SpdkEnv(Env* base_env, const std::string &dir, const std::string &conf,
 		const std::string &bdev, uint64_t cache_size_in_mb);
 
 	virtual ~SpdkEnv();
@@ -298,10 +298,10 @@ public:
 				 * support MySQL, set the errno to right value.
 				 */
 				errno = -rc;
-				return IOError(fname, errno);
+				return Status::IOError(fname, strerror(errno));
 			}
 		} else {
-			return PosixEnv::NewSequentialFile(fname, result, options);
+			return EnvWrapper::NewSequentialFile(fname, result, options);
 		}
 	}
 
@@ -313,7 +313,7 @@ public:
 			result->reset(new SpdkRandomAccessFile(basename(fname), options));
 			return Status::OK();
 		} else {
-			return PosixEnv::NewRandomAccessFile(fname, result, options);
+			return EnvWrapper::NewRandomAccessFile(fname, result, options);
 		}
 	}
 
@@ -325,7 +325,7 @@ public:
 			result->reset(new SpdkWritableFile(basename(fname), options));
 			return Status::OK();
 		} else {
-			return PosixEnv::NewWritableFile(fname, result, options);
+			return EnvWrapper::NewWritableFile(fname, result, options);
 		}
 	}
 
@@ -334,7 +334,7 @@ public:
 					 unique_ptr<WritableFile> *result,
 					 const EnvOptions &options) override
 	{
-		return PosixEnv::ReuseWritableFile(fname, old_fname, result, options);
+		return EnvWrapper::ReuseWritableFile(fname, old_fname, result, options);
 	}
 
 	virtual Status NewDirectory(const std::string &name,
@@ -353,7 +353,7 @@ public:
 		if (rc == 0) {
 			return Status::OK();
 		}
-		return PosixEnv::FileExists(fname);
+		return EnvWrapper::FileExists(fname);
 	}
 	virtual Status RenameFile(const std::string &src, const std::string &target) override
 	{
@@ -364,7 +364,7 @@ public:
 		rc = spdk_fs_rename_file(g_fs, g_sync_args.channel,
 					 src_base.c_str(), target_base.c_str());
 		if (rc == -ENOENT) {
-			return PosixEnv::RenameFile(src, target);
+			return EnvWrapper::RenameFile(src, target);
 		}
 		return Status::OK();
 	}
@@ -380,7 +380,7 @@ public:
 
 		rc = spdk_fs_file_stat(g_fs, g_sync_args.channel, fname_base.c_str(), &stat);
 		if (rc == -ENOENT) {
-			return PosixEnv::GetFileSize(fname, size);
+			return EnvWrapper::GetFileSize(fname, size);
 		}
 		*size = stat.size;
 		return Status::OK();
@@ -391,7 +391,7 @@ public:
 		std::string fname_base = basename(fname);
 		rc = spdk_fs_delete_file(g_fs, g_sync_args.channel, fname_base.c_str());
 		if (rc == -ENOENT) {
-			return PosixEnv::DeleteFile(fname);
+			return EnvWrapper::DeleteFile(fname);
 		}
 		return Status::OK();
 	}
@@ -425,7 +425,7 @@ public:
 			}
 			return Status::OK();
 		}
-		return PosixEnv::GetChildren(dir, result);
+		return EnvWrapper::GetChildren(dir, result);
 	}
 };
 
@@ -444,20 +444,26 @@ void SpdkInitializeThread(void)
 	}
 }
 
+struct SpdkThreadState {
+	void (*user_function)(void*);
+	void* arg;
+};
+
 static void SpdkStartThreadWrapper(void *arg)
 {
-	StartThreadState *state = reinterpret_cast<StartThreadState *>(arg);
+	SpdkThreadState *state = reinterpret_cast<SpdkThreadState *>(arg);
 
 	SpdkInitializeThread();
-	StartThreadWrapper(state);
+	state->user_function(state->arg);
+	delete state;
 }
 
 void SpdkEnv::StartThread(void (*function)(void *arg), void *arg)
 {
-	StartThreadState *state = new StartThreadState;
+	SpdkThreadState *state = new SpdkThreadState;
 	state->user_function = function;
 	state->arg = arg;
-	PosixEnv::StartThread(SpdkStartThreadWrapper, state);
+	EnvWrapper::StartThread(SpdkStartThreadWrapper, state);
 }
 
 static void
@@ -517,9 +523,9 @@ initialize_spdk(void *arg)
 	pthread_exit(NULL);
 }
 
-SpdkEnv::SpdkEnv(const std::string &dir, const std::string &conf,
+SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 		 const std::string &bdev, uint64_t cache_size_in_mb)
-	: PosixEnv(), mDirectory(dir), mConfig(conf), mBdev(bdev)
+	: EnvWrapper(base_env), mDirectory(dir), mConfig(conf), mBdev(bdev)
 {
 	struct spdk_app_opts *opts = new struct spdk_app_opts;
 
@@ -546,16 +552,16 @@ SpdkEnv::~SpdkEnv()
 	pthread_join(mSpdkTid, NULL);
 }
 
-void NewSpdkEnv(Env **env, const std::string &dir, const std::string &conf,
+Env* NewSpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 		const std::string &bdev, uint64_t cache_size_in_mb)
 {
-	SpdkEnv *spdk_env = new SpdkEnv(dir, conf, bdev, cache_size_in_mb);
+	SpdkEnv *spdk_env = new SpdkEnv(base_env, dir, conf, bdev, cache_size_in_mb);
 
 	if (g_fs != NULL) {
-		*env = spdk_env;
+		return spdk_env;
 	} else {
-		*env = NULL;
 		delete spdk_env;
+		return NULL;
 	}
 }
 
