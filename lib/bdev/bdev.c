@@ -685,9 +685,9 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, ch);
 
+	assert(ch->io_outstanding == 0);
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
-	assert(ch->io_outstanding == 0);
 }
 
 struct spdk_io_channel *
