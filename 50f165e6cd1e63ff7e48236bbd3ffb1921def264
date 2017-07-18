@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "922f2f12_bb39ca87",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-18T13:04:49Z",
+      "side": 1,
+      "message": "IF you change this to\nif [[ $test_type \u003d\u003d \"spdk_vhost_scsi\" ]];\n\nyou can remove \nif [[ \"$test_type\" !\u003d \"spdk_vhost_blk\" ]]; then\nin line 216 and reduce number of indentions.",
+      "range": {
+        "startLine": 211,
+        "startChar": 3,
+        "endLine": 211,
+        "endChar": 35
+      },
+      "revId": "50f165e6cd1e63ff7e48236bbd3ffb1921def264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9c975c0_8caf64b7",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-18T13:04:49Z",
+      "side": 1,
+      "message": "Just execute the command without any \u0027if\u0027 statement here and bellow.",
+      "range": {
+        "startLine": 218,
+        "startChar": 19,
+        "endLine": 221,
+        "endChar": 21
+      },
+      "revId": "50f165e6cd1e63ff7e48236bbd3ffb1921def264",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
