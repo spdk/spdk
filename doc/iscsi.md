@@ -170,4 +170,9 @@ return with check condition status. Then the LUN starts one poller which will
 wait for all the commands which have already been submitted to block device to
 return back; after all the commands return back, the LUN will be deleted.
 
+## Known bugs and limitations {#iscsi_hotplug_bugs}
+
+For write command, when hot remove device, the initiator keep send commands to 
+target even if target return check condition to initiator.
+
 @sa spdk_nvme_probe
