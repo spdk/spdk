@@ -83,17 +83,6 @@ spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_
 	return count;
 }
 
-bool
-spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq)
-{
-	if ((vdev->negotiated_features & (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY)) &&
-	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
-		return 1;
-	}
-
-	return !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
-}
-
 struct vring_desc *
 spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx)
 {
@@ -125,9 +114,14 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vr
 	rte_compiler_barrier();
 
 	vq->used->idx = vq->last_used_idx;
-	if (spdk_vhost_vq_should_notify(vdev, vq)) {
-		eventfd_write(vq->callfd, (eventfd_t)1);
-	}
+
+	/*
+	 * We should be able to used hints form guest but simply checking
+	 * avail->flags prove to be unreliable. Till it is figured out how
+	 * reliable use avail->flags value interrupts are always sent to guest.
+	 */
+	eventfd_write(vq->callfd, (eventfd_t)1);
+
 }
 
 bool
