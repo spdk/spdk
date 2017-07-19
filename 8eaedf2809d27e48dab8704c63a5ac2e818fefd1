@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7978a3f9_fb351da9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T13:20:47Z",
+      "side": 1,
+      "message": "how about \"testplan\"\ni was confused when I first saw this commit title",
+      "range": {
+        "startLine": 7,
+        "startChar": 19,
+        "endLine": 7,
+        "endChar": 23
+      },
+      "revId": "8eaedf2809d27e48dab8704c63a5ac2e818fefd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6192b02e_32738be8",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T13:20:47Z",
+      "side": 1,
+      "message": "could this be the first bullet in vhost hot-remove tests section?",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 26
+      },
+      "revId": "8eaedf2809d27e48dab8704c63a5ac2e818fefd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db67a9a4_c21f87ae",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T13:20:47Z",
+      "side": 1,
+      "message": "how about: \"via RPC to a\"?",
+      "range": {
+        "startLine": 52,
+        "startChar": 30,
+        "endLine": 52,
+        "endChar": 34
+      },
+      "revId": "8eaedf2809d27e48dab8704c63a5ac2e818fefd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
