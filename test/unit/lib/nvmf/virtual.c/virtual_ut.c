@@ -151,7 +151,7 @@ spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 int
 spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		struct spdk_scsi_unmap_bdesc *unmap_d, uint16_t bdesc_count, spdk_bdev_io_completion_cb cb,
+		uint64_t offset, uint64_t length, spdk_bdev_io_completion_cb cb,
 		void *cb_arg)
 {
 	return 0;
