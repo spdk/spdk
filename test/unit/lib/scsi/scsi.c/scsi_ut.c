@@ -89,7 +89,6 @@ set_default_scsi_params(struct spdk_scsi_parameters *params)
 {
 	memset(params, 0, sizeof(*params));
 	params->max_unmap_lba_count = DEFAULT_MAX_UNMAP_LBA_COUNT;
-	params->max_unmap_block_descriptor_count = DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT;
 	params->optimal_unmap_granularity = DEFAULT_OPTIMAL_UNMAP_GRANULARITY;
 	params->unmap_granularity_alignment = DEFAULT_UNMAP_GRANULARITY_ALIGNMENT;
 	params->ugavalid = DEFAULT_UGAVALID;
@@ -134,29 +133,6 @@ scsi_init_set_max_unmap_lba_count_config_param(void)
 	 * assert the rest of the params are set to their default values */
 	set_default_scsi_params(&params);
 	params.max_unmap_lba_count = 65536;
-	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
-
-	spdk_conf_free(config);
-}
-
-static void
-scsi_init_set_max_unmap_block_descriptor_count_config_param(void)
-{
-	struct spdk_scsi_parameters params;
-	struct spdk_conf *config;
-	int rc;
-
-	/* set scsi_params.max_unmap_block_descriptor_count = 1
-	 * of Scsi section */
-	config = spdk_config_init_scsi_params("MaxUnmapBlockDescriptorCount", "1");
-	spdk_conf_set_as_default(config);
-	rc = spdk_scsi_init();
-	CU_ASSERT_EQUAL(rc, 0);
-
-	/* Assert the scsi_params.max_unmap_block_descriptor_count == 1 and
-	 * assert the rest of the params are set to their default values */
-	set_default_scsi_params(&params);
-	params.max_unmap_block_descriptor_count = 1;
 	CU_ASSERT(memcmp(&g_spdk_scsi.scsi_params, &params, sizeof(params)) == 0);
 
 	spdk_conf_free(config);
@@ -366,8 +342,6 @@ main(int argc, char **argv)
 			    scsi_init_sp_null) == NULL
 		|| CU_add_test(suite, "scsi init - set max_unmap_lba_count", \
 			       scsi_init_set_max_unmap_lba_count_config_param) == NULL
-		|| CU_add_test(suite, "scsi init - set max_unmap_block_descriptor_count", \
-			       scsi_init_set_max_unmap_block_descriptor_count_config_param) == NULL
 		|| CU_add_test(suite, "scsi init - set optimal_unmap_granularity", \
 			       scsi_init_set_optimal_unmap_granularity_config_param) == NULL
 		|| CU_add_test(suite, "scsi init - set unmap_granularity_alignment", \
