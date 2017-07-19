@@ -52,7 +52,6 @@ struct bdevperf_task {
 	struct io_target		*target;
 	void				*buf;
 	uint64_t			offset;
-	struct spdk_scsi_unmap_bdesc	bdesc;
 };
 
 static int g_io_size = 0;
@@ -276,14 +275,8 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 	target = task->target;
 
 	if (g_unmap) {
-		uint32_t block_size = spdk_bdev_get_block_size(target->bdev);
-
-		/* Unmap the data */
-		to_be64(&task->bdesc.lba, task->offset / block_size);
-		to_be32(&task->bdesc.block_count, g_io_size / block_size);
-
-		rc = spdk_bdev_unmap(target->bdev_desc, target->ch, &task->bdesc, 1, bdevperf_unmap_complete,
-				     task);
+		rc = spdk_bdev_unmap(target->bdev_desc, target->ch, task->offset, g_io_size,
+				     bdevperf_unmap_complete, task);
 		if (rc) {
 			printf("Failed to submit unmap: %d\n", rc);
 			target->is_draining = true;

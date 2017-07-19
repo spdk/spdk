@@ -211,14 +211,6 @@ uint32_t spdk_bdev_get_block_size(const struct spdk_bdev *bdev);
 uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 
 /**
- * Get maximum number of descriptors per unmap request.
- *
- * \param bdev Block device to query.
- * \return Maximum number of unmap descriptors per request.
- */
-uint32_t spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev);
-
-/**
  * Get minimum I/O buffer address alignment for a bdev.
  *
  * \param bdev Block device to query.
@@ -344,8 +336,8 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  *
  * \param bdev Block device
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
- * \param unmap_d An array of unmap descriptors.
- * \param bdesc_count The number of elements in unmap_d.
+ * \param offset The offset, in bytes, from the start of the block device.
+ * \param nbytes The number of bytes to unmap. Must be a multiple of the block size.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
@@ -354,8 +346,7 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * negated errno on failure, in which case the callback will not be called.
  */
 int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		    struct spdk_scsi_unmap_bdesc *unmap_d,
-		    uint16_t bdesc_count,
+		    uint64_t offset, uint64_t nbytes,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
