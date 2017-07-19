@@ -43,6 +43,11 @@ struct lvol_store_bdev_pair *g_lvs_pair = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
 
 void
+spdk_lvol_close(struct spdk_lvol *lvol)
+{
+}
+
+void
 spdk_lvol_destroy(struct spdk_lvol *lvol)
 {
 	free(g_lvs_pair);
