@@ -129,12 +129,7 @@ nvmf_virtual_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 {
 	struct spdk_nvmf_request 	*req = cb_arg;
 	struct spdk_nvme_cpl 		*response = &req->rsp->nvme_cpl;
-	struct spdk_nvme_cmd 		*cmd = &req->cmd->nvme_cmd;
 	int				sc, sct;
-
-	if (cmd->opc == SPDK_NVME_OPC_DATASET_MANAGEMENT) {
-		free(req->unmap_bdesc);
-	}
 
 	spdk_bdev_io_get_nvme_status(bdev_io, &sc, &sct);
 	response->status.sc = sc;
@@ -504,10 +499,8 @@ static int
 nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			   struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
 {
-	int i;
 	uint32_t attribute;
 	uint16_t nr;
-	struct spdk_scsi_unmap_bdesc *unmap;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	bool async = false;
@@ -522,23 +515,24 @@ nvmf_virtual_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	attribute = cmd->cdw11 & 0x00000007;
 	if (attribute & SPDK_NVME_DSM_ATTR_DEALLOCATE) {
 		struct spdk_nvme_dsm_range *dsm_range = (struct spdk_nvme_dsm_range *)req->data;
-		unmap = calloc(nr, sizeof(*unmap));
-		if (unmap == NULL) {
-			SPDK_ERRLOG("memory allocation failure\n");
-			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		uint64_t lba;
+		uint32_t lba_count;
+		uint32_t block_size = spdk_bdev_get_block_size(bdev);
+
+		if (nr > 1) {
+			SPDK_ERRLOG("Only 1 DSM Deallocate range is supported\n");
+			response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
-		for (i = 0; i < nr; i++) {
-			to_be64(&unmap[i].lba, dsm_range[i].starting_lba);
-			to_be32(&unmap[i].block_count, dsm_range[i].length);
-		}
-		if (spdk_bdev_unmap(desc, ch, unmap, nr, nvmf_virtual_ctrlr_complete_cmd, req)) {
-			free(unmap);
+		lba = dsm_range[0].starting_lba;
+		lba_count = dsm_range[0].length;
+
+		if (spdk_bdev_unmap(desc, ch, lba * block_size, lba_count * block_size,
+				    nvmf_virtual_ctrlr_complete_cmd, req)) {
 			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-		req->unmap_bdesc = unmap;
 		async = true;
 	}
 
