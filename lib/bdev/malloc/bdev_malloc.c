@@ -46,8 +46,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-#define MALLOC_MAX_UNMAP_BDESC	1
-
 struct malloc_disk {
 	struct spdk_bdev	disk;
 	void 			*malloc_buf;
@@ -235,24 +233,14 @@ static int
 bdev_malloc_unmap(struct malloc_disk *mdisk,
 		  struct spdk_io_channel *ch,
 		  struct malloc_task *task,
-		  struct spdk_scsi_unmap_bdesc *unmap_d,
-		  uint16_t bdesc_count)
+		  uint64_t offset,
+		  uint64_t byte_count)
 {
-	uint64_t lba, offset, byte_count;
+	uint64_t lba;
 	uint32_t block_count;
 
-	assert(bdesc_count <= MALLOC_MAX_UNMAP_BDESC);
-
-	/*
-	 * For now, only support a single unmap descriptor per command. The copy engine API does not
-	 * support batch submission of operations.
-	 */
-	assert(bdesc_count == 1);
-
-	lba = from_be64(&unmap_d[0].lba);
-	offset = lba * mdisk->disk.blocklen;
-	block_count = from_be32(&unmap_d[0].block_count);
-	byte_count = (uint64_t)block_count * mdisk->disk.blocklen;
+	lba = offset / mdisk->disk.blocklen;
+	block_count = byte_count / mdisk->disk.blocklen;
 
 	if (lba >= mdisk->disk.blockcnt || block_count > mdisk->disk.blockcnt - lba) {
 		return -1;
@@ -330,8 +318,8 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
 					 ch,
 					 (struct malloc_task *)bdev_io->driver_ctx,
-					 bdev_io->u.unmap.unmap_bdesc,
-					 bdev_io->u.unmap.bdesc_count);
+					 bdev_io->u.unmap.offset,
+					 bdev_io->u.unmap.len);
 	default:
 		return -1;
 	}
@@ -418,7 +406,6 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
 	mdisk->disk.blockcnt = num_blocks;
-	mdisk->disk.max_unmap_bdesc_count = MALLOC_MAX_UNMAP_BDESC;
 
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
