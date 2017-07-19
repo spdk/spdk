@@ -165,7 +165,6 @@ int spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
 
 struct spdk_scsi_parameters {
 	uint32_t max_unmap_lba_count;
-	uint32_t max_unmap_block_descriptor_count;
 	uint32_t optimal_unmap_granularity;
 	uint32_t unmap_granularity_alignment;
 	uint32_t ugavalid;
