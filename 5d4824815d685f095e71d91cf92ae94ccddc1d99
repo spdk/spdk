@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c647af4d_009c66a2",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T17:03:47Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to check in this assert().",
+      "revId": "5d4824815d685f095e71d91cf92ae94ccddc1d99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21bb22d6_93980afb",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T17:03:47Z",
+      "side": 1,
+      "message": "The way this line is split looks weird (and unnecessary, since it\u0027s short enough to fit on one line).",
+      "revId": "5d4824815d685f095e71d91cf92ae94ccddc1d99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
