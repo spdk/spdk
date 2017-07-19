@@ -7,4 +7,4 @@ percentile_list=50:99:99.9:99.99:99.999
 time_based=1
 ramp_time=0
 verify=sha1
-rw=randwrite
+rw=trimwrite
