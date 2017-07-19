@@ -6,6 +6,10 @@ An [fio](http://github.com/axboe/fio) plugin was added that can route
 I/O to the bdev layer. See the [plugin documentation](https://github.com/spdk/spdk/blob/master/examples/bdev/fio_plugin/README.md)
 for more information.
 
+spdk_bdev_unmap() was modified to take an offset and a length in bytes as
+arguments instead of requiring the user to provide an array of SCSI
+unmap descriptors.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System

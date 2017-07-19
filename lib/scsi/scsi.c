@@ -37,7 +37,6 @@
 #include "spdk/conf.h"
 
 #define DEFAULT_MAX_UNMAP_LBA_COUNT			4194304
-#define DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT	1
 #define DEFAULT_OPTIMAL_UNMAP_GRANULARITY		0
 #define DEFAULT_UNMAP_GRANULARITY_ALIGNMENT		0
 #define DEFAULT_UGAVALID				0
@@ -49,8 +48,6 @@ static void
 spdk_set_default_scsi_parameters(void)
 {
 	g_spdk_scsi.scsi_params.max_unmap_lba_count = DEFAULT_MAX_UNMAP_LBA_COUNT;
-	g_spdk_scsi.scsi_params.max_unmap_block_descriptor_count =
-		DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT;
 	g_spdk_scsi.scsi_params.optimal_unmap_granularity =
 		DEFAULT_OPTIMAL_UNMAP_GRANULARITY;
 	g_spdk_scsi.scsi_params.unmap_granularity_alignment =
@@ -75,9 +72,6 @@ spdk_read_config_scsi_parameters(void)
 	g_spdk_scsi.scsi_params.max_unmap_lba_count = (val == NULL) ?
 			DEFAULT_MAX_UNMAP_LBA_COUNT : strtoul(val, NULL, 10);
 
-	val = spdk_conf_section_get_val(sp, "MaxUnmapBlockDescriptorCount");
-	g_spdk_scsi.scsi_params.max_unmap_block_descriptor_count = (val == NULL) ?
-			DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT : strtoul(val, NULL, 10);
 	val = spdk_conf_section_get_val(sp, "OptimalUnmapGranularity");
 	g_spdk_scsi.scsi_params.optimal_unmap_granularity = (val == NULL) ?
 			DEFAULT_OPTIMAL_UNMAP_GRANULARITY : strtoul(val, NULL, 10);

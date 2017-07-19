@@ -108,12 +108,6 @@ spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 	return "test product";
 }
 
-uint32_t
-spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev)
-{
-	return 1;
-}
-
 bool
 spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 {
@@ -215,8 +209,7 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 int
 spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		struct spdk_scsi_unmap_bdesc *unmap_d,
-		uint16_t bdesc_count,
+		uint64_t offset, uint64_t length,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	return 0;
