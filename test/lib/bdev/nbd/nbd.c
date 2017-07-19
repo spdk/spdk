@@ -46,6 +46,14 @@
 static char *g_bdev_name;
 static char *g_nbd_name = "/dev/nbd0";
 
+/*
+ * Used to determine how the I/O buffers should be aligned.
+ *  This alignment will be bumped up for blockdevs that
+ *  require alignment based on block length - for example,
+ *  AIO blockdevs.
+ */
+static size_t g_min_alignment = 64;
+
 #include "../common.c"
 
 struct nbd_io {
@@ -213,7 +221,7 @@ process_request(struct nbd_disk *nbd)
 
 	io->payload_size = from_be32(&io->req.len);
 	spdk_dma_free(io->payload);
-	io->payload = spdk_dma_malloc(io->payload_size, 64, NULL);
+	io->payload = spdk_dma_malloc(io->payload_size, g_min_alignment, NULL);
 	if (io->payload == NULL) {
 		SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
 		spdk_app_stop(-1);
@@ -365,6 +373,7 @@ nbd_start(void *arg1, void *arg2)
 	}
 
 	g_nbd_disk.bdev = bdev;
+	g_min_alignment = spdk_max(g_min_alignment, spdk_bdev_get_buf_align(bdev));
 	g_nbd_disk.ch = spdk_bdev_get_io_channel(g_nbd_disk.bdev_desc);
 
 	rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
