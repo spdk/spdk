@@ -39,7 +39,16 @@
 /* Length of string returned from uuid_unparse() */
 #define UUID_STRING_LEN 37
 
+enum spdk_lvol_store_req_type {
+	SPDK_LVS_REQ_UNSET,
+	SPDK_LVS_REQ_LVS_BASIC,
+	SPDK_LVS_REQ_LVS_HANDLE,
+	SPDK_LVS_REQ_LVOL_BASIC,
+	SPDK_LVS_REQ_LVOL_HANDLE,
+};
+
 struct spdk_lvol_store_req {
+	enum spdk_lvol_store_req_type type;
 	union {
 		struct {
 			spdk_lvs_op_complete    cb_fn;
@@ -81,6 +90,11 @@ struct spdk_lvol {
 	size_t				sz;
 	char				*name;
 	bool				close_only;
+	struct spdk_io_channel		*bs_channel;
+	struct spdk_io_channel		*io_channel;
+	struct {
+		uint32_t		max_channel_ops;
+	} io_target;
 	struct spdk_bdev		*bdev; // Shouldn't be here ?
 	TAILQ_ENTRY(spdk_lvol) link;
 };
