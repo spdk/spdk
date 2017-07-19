@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "4f56793b_32aaecf0",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T16:48:24Z",
+      "side": 1,
+      "message": "this is not necessary, tailq_foreach will set dev to NULL after it\u0027s finished",
+      "range": {
+        "startLine": 210,
+        "startChar": 1,
+        "endLine": 210,
+        "endChar": 12
+      },
+      "revId": "2a191c1af8d2bf070db46cfd7f38b84129c7a274",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca749fdb_1e07d690",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T16:48:24Z",
+      "side": 1,
+      "message": "there\u0027s a similar loop in _spdk_put_io_channel, could you separate those to a seperate function?",
+      "range": {
+        "startLine": 226,
+        "startChar": 1,
+        "endLine": 239,
+        "endChar": 11
+      },
+      "revId": "2a191c1af8d2bf070db46cfd7f38b84129c7a274",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b16f79f5_2c03352a",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T16:48:24Z",
+      "side": 1,
+      "message": "you might want to use spdk_io_channel_get_ctx",
+      "range": {
+        "startLine": 322,
+        "startChar": 9,
+        "endLine": 322,
+        "endChar": 36
+      },
+      "revId": "2a191c1af8d2bf070db46cfd7f38b84129c7a274",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c60b4aeb_d6fa4ab8",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 1
