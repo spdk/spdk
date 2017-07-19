@@ -246,7 +246,12 @@ function start_iscsi_service() {
 function rbd_setup() {
 	export CEPH_DIR=/home/sys_sgsw/ceph/build
 
-	if [ -d $CEPH_DIR ]; then
+	if hash ceph; then
+		export RBD_POOL=rbd
+		export RBD_NAME=foo
+		(cd $rootdir/scripts/ceph && ./start.sh)
+		rbd create $RBD_NAME --size 1000
+	elif [ -d $CEPH_DIR ]; then
 		export RBD_POOL=rbd
 		export RBD_NAME=foo
 		(cd $CEPH_DIR && ../src/vstart.sh -d -n -x -l)
@@ -255,7 +260,9 @@ function rbd_setup() {
 }
 
 function rbd_cleanup() {
-	if [ -d $CEPH_DIR ]; then
+	if hash ceph; then
+		(cd $rootdir/scripts/ceph && ./stop.sh || true)
+	elif [ -d $CEPH_DIR ]; then
 		(cd $CEPH_DIR && ../src/stop.sh || true)
 	fi
 }
