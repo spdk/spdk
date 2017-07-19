@@ -181,3 +181,31 @@ spdk_rpc_close(void)
 		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
 	}
 }
+
+
+static void
+spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_rpc_method *m;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_rpc_methods requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	SLIST_FOREACH(m, &g_rpc_methods, slist) {
+		spdk_json_write_string(w, m->name);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods)
