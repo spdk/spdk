@@ -282,6 +282,8 @@ spdk_get_io_channel(void *io_device)
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 		if (ch->dev == dev) {
 			ch->ref++;
+			SPDK_ERRLOG("Channel %p for io_dev %p ref++ increased to %d (thread %p)\n", ch, ch->dev,
+				    ch->ref, thread);
 			/*
 			 * An I/O channel already exists for this device on this
 			 *  thread, so return it.
@@ -290,6 +292,7 @@ spdk_get_io_channel(void *io_device)
 			return ch;
 		}
 	}
+	SPDK_ERRLOG("io_dev %p not found (thread %p)\n", io_device, thread);
 
 	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
 	if (ch == NULL) {
@@ -315,6 +318,9 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
+	SPDK_ERRLOG("Channel %p created on io_dev %p ref set to %d (thread %p)\n", ch, ch->dev,
+		    ch->ref, thread);
+
 	return ch;
 }
 
@@ -329,8 +335,12 @@ _spdk_put_io_channel(void *arg)
 	}
 
 	ch->ref--;
+	SPDK_ERRLOG("Channel %p for io_dev %p ref-- decreased to %d (thread %p)\n", ch, ch->dev,
+		    ch->ref, _get_thread());
 
 	if (ch->ref > 0) {
+		SPDK_ERRLOG("Channel %p ref==0, destroying  io_dev %p (thread %p)\n", ch, ch->dev,
+			    _get_thread());
 		return;
 	}
 
