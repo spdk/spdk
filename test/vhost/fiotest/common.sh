@@ -846,3 +846,17 @@ function error_exit()
 	at_app_exit
 	exit 1
 }
+
+# Script to checking nvme_pci_address 
+# param $2 vhost config file path e.g. vhost.conf.in
+# param $3 Name Disc e.g. Nvme[0-9]
+function get_nvme_pci_addr()
+{	
+	if [[ ! $2 =~ (^[n-N][v-V][m-M][e-E][0-9]+) ]]; then 
+		error "Bad name disk: $2" 
+		return 1
+	fi
+	
+	[[ $( $1 | grep $2) =~ ([0-9a-fA-F]{4}(:[0-9a-fA-F]{2}){2}\.[0-9a-fA-F]) ]]
+	echo ${BASH_REMATCH[1]}
+}

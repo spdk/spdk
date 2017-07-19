@@ -296,6 +296,21 @@ $run_fio
 #	done
 #fi
 
+if [[ -z "$(ls /sys/kernel/iommu_groups)" ]] && [[ $test_type =~ "spdk_vhost" ]]; then
+	for vm_conf in ${vms[@]}; do
+		IFS=',' read -ra conf <<< "$vm_conf"
+        while IFS=':' read -ra disks; do
+			echo "${disks[@]}"
+            for disk in "${disks[@]}"; do
+				echo "Hotremove test"
+				get_nvme_pci_addr $TEST_DIR/spdk/scripts/gen_nvme.sh "Nvme0" | > /sys/bus/pci/drivers/uio_pci_generic/unbind > /dev/null
+				sleep 1
+			done                    
+        done <<< "${conf[2]}"
+        unset IFS;
+    done
+fi
+
 if ! $no_shutdown; then
 	echo "==============="
 	echo "INFO: APP EXITING"
