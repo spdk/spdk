@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0496248_80555451",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T13:08:33Z",
+      "side": 1,
+      "message": "Why here and not in vhost_internal.h?",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 88
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07b14c9a_a2fbe17f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T13:08:33Z",
+      "side": 1,
+      "message": "This might be removed or converted to assert.",
+      "range": {
+        "startLine": 531,
+        "startChar": 0,
+        "endLine": 533,
+        "endChar": 2
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a323ad4_48c3eb45",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T13:08:33Z",
+      "side": 1,
+      "message": "Remove commented out code.",
+      "range": {
+        "startLine": 534,
+        "startChar": 0,
+        "endLine": 535,
+        "endChar": 35
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28bff207_2ed9e442",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T13:08:33Z",
+      "side": 1,
+      "message": "I think better name can be invented here. Virtio spec specify this as \u0027device\u0027. Target_specific or backend_specific also would be good?",
+      "range": {
+        "startLine": 439,
+        "startChar": 27,
+        "endLine": 439,
+        "endChar": 41
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfc5f1c6_e4f7a012",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T13:08:33Z",
+      "side": 1,
+      "message": "Check error code here or change this function to return void.",
+      "range": {
+        "startLine": 442,
+        "startChar": 2,
+        "endLine": 442,
+        "endChar": 39
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78968d45_b74df88f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T13:08:33Z",
+      "side": 1,
+      "message": "Be consistent with vhost_blk about checking \u0027vdev\u0027 here.",
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ba47fce_01839642",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T13:08:33Z",
+      "side": 1,
+      "message": "Hmm...? Why not 42 :)",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 34
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
