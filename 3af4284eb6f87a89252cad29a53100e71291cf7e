@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "2d4c8a91_51973a85",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T13:31:07Z",
+      "side": 1,
+      "message": "could we use vdev-\u003etype switch here?",
+      "range": {
+        "startLine": 693,
+        "startChar": 1,
+        "endLine": 693,
+        "endChar": 30
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07b14c9a_a2fbe17f",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 7
@@ -68,6 +91,29 @@
       "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e40ca69_d4d49b52",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T13:31:07Z",
+      "side": 1,
+      "message": "I\u0027d like to avoid having any extra function pointers. Currently there are just 2 vhost backends, and there won\u0027t be more than 3 in near future. Could we use a single switch for dumping config instead?",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 85
+      },
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -131,6 +177,23 @@
       "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d57d8405_1c4606c0",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-19T13:31:07Z",
+      "side": 1,
+      "message": "I agree with Pawel. Please change to 42.",
+      "revId": "3af4284eb6f87a89252cad29a53100e71291cf7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
