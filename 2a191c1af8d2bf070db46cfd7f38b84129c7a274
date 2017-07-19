@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c60b4aeb_d6fa4ab8",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T16:41:40Z",
+      "side": 1,
+      "message": "This loop and the free(dev) below look identical to what\u0027s in spdk_io_device_unregister() - can we factor this out into a helper function?",
+      "revId": "2a191c1af8d2bf070db46cfd7f38b84129c7a274",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
