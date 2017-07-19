@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "572ec7cf_c8a92187",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-07-19T09:48:42Z",
+      "side": 1,
+      "message": "We need this to unregister lvol bdev when unloading lvol store - look at \"lvol: close lvols present on lvol store\" patch, vbdev_lvs_destruct function.",
+      "parentUuid": "29f6f96a_0b9ecf41",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5a9c6a8_d3487735",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 14
@@ -47,6 +65,24 @@
       "writtenOn": "2017-07-13T06:23:25Z",
       "side": 1,
       "message": "I\u0027m not sure what this \"close_only\" flag means?\n\nReally you should not have this vbdev code changing fields directly in the lvol structure.  This breaks encapsulation.",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b374337_9d53b1e5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-07-19T09:48:42Z",
+      "side": 1,
+      "message": "This flags informs in vbdev_lvol_destruct function if we only want to close blob or delete it. It has been moved to function vbdev_lvs_destruct in \"lvol: close lvols present on lvol store\" patch.",
+      "parentUuid": "f5a9c6a8_d3487735",
       "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "28b22746_9daa9a16",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-07-19T09:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e2948cf7_af2c5504",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d40bb94_07afa824",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 14
@@ -98,6 +152,24 @@
       "writtenOn": "2017-07-13T06:23:25Z",
       "side": 1,
       "message": "can we just return rc here in all cases and remove the if statement?",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4be463d9_d1445a00",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-07-19T09:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3d40bb94_07afa824",
       "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -206,6 +278,24 @@
     },
     {
       "key": {
+        "uuid": "f18f5927_b55b0100",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-07-19T09:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d7e8f60b_1dfbf32e",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be81d20e_b315b4fa",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 14
@@ -217,6 +307,24 @@
       "writtenOn": "2017-07-13T06:23:25Z",
       "side": 1,
       "message": "Successful",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10416dce_7547c5ef",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-07-19T09:48:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be81d20e_b315b4fa",
       "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
