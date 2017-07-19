@@ -107,17 +107,12 @@ static void
 bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64_t lba,
 		uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
 {
-	struct spdk_scsi_unmap_bdesc *desc;
+	struct spdk_bdev *bdev = __get_bdev(dev);
 	int rc;
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 
-	SPDK_STATIC_ASSERT(sizeof(cb_args->scratch) >= sizeof(*desc), "scratch too small");
-
-	desc = (struct spdk_scsi_unmap_bdesc *)cb_args->scratch;
-	to_be64(&desc->lba, lba);
-	to_be32(&desc->block_count, lba_count);
-	desc->reserved = 0;
-
-	rc = spdk_bdev_unmap(__get_desc(dev), channel, desc, 1, bdev_blob_io_complete, cb_args);
+	rc = spdk_bdev_unmap(__get_desc(dev), channel, lba * block_size, lba_count * block_size,
+			     bdev_blob_io_complete, cb_args);
 	if (rc) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}

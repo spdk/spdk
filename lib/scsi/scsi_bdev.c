@@ -570,7 +570,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * in the parameter data transferred to the
 				 * device server for an UNMAP command.
 				 */
-				max_unmap_desc = spdk_min(spdk_bdev_get_max_unmap_descriptors(bdev),
+				max_unmap_desc = spdk_min(1,
 							  g_spdk_scsi.scsi_params.max_unmap_block_descriptor_count);
 				to_be32(&data[24], max_unmap_desc);
 
@@ -1490,10 +1490,13 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 {
 	uint8_t *data;
 	struct spdk_scsi_unmap_bdesc *desc;
-	uint32_t bdesc_count, max_unmap_bdesc_count;
+	uint32_t bdesc_count;
 	int bdesc_data_len;
 	int data_len;
 	int rc;
+	uint64_t blen;
+	uint64_t offset;
+	uint64_t nbytes;
 
 	if (task->iovcnt == 1) {
 		data = (uint8_t *)task->iovs[0].iov_base;
@@ -1522,10 +1525,8 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		spdk_dma_free(data);
 	}
 
-	max_unmap_bdesc_count = spdk_bdev_get_max_unmap_descriptors(bdev);
-	if (bdesc_count > max_unmap_bdesc_count) {
-		SPDK_ERRLOG("Error - supported unmap block descriptor count limit"
-			    " is %u\n", max_unmap_bdesc_count);
+	if (bdesc_count > 1) {
+		SPDK_ERRLOG("Error - supported unmap block descriptor count limit is 1\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
@@ -1541,9 +1542,12 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	rc = spdk_bdev_unmap(task->desc, task->ch, desc,
-			     bdesc_count, spdk_bdev_scsi_task_complete_cmd,
-			     task);
+	blen = spdk_bdev_get_block_size(bdev);
+	offset = from_be64(&desc[0].lba) * blen;
+	nbytes = from_be32(&desc[0].block_count) * blen;
+
+	rc = spdk_bdev_unmap(task->desc, task->ch, offset, nbytes,
+			     spdk_bdev_scsi_task_complete_cmd, task);
 
 	if (rc) {
 		SPDK_ERRLOG("SCSI Unmapping failed\n");
