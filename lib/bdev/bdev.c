@@ -722,12 +722,6 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 	return bdev->blockcnt;
 }
 
-uint32_t
-spdk_bdev_get_max_unmap_descriptors(const struct spdk_bdev *bdev)
-{
-	return bdev->max_unmap_bdesc_count;
-}
-
 size_t
 spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 {
@@ -931,8 +925,7 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 int
 spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-		struct spdk_scsi_unmap_bdesc *unmap_d,
-		uint16_t bdesc_count,
+		uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
@@ -944,14 +937,8 @@ spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EBADF;
 	}
 
-	if (bdesc_count == 0) {
-		SPDK_ERRLOG("Invalid bdesc_count 0\n");
-		return -EINVAL;
-	}
-
-	if (bdesc_count > bdev->max_unmap_bdesc_count) {
-		SPDK_ERRLOG("Invalid bdesc_count %u > max_unmap_bdesc_count %u\n",
-			    bdesc_count, bdev->max_unmap_bdesc_count);
+	if (nbytes == 0) {
+		SPDK_ERRLOG("Can't unmap 0 bytes\n");
 		return -EINVAL;
 	}
 
@@ -963,8 +950,8 @@ spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
-	bdev_io->u.unmap.unmap_bdesc = unmap_d;
-	bdev_io->u.unmap.bdesc_count = bdesc_count;
+	bdev_io->u.unmap.offset = offset;
+	bdev_io->u.unmap.len = nbytes;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
