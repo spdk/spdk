@@ -16,6 +16,24 @@
       "revId": "b5768379d188a0779d9f3c341a66d2d9896e5c8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a966ec6e_3d66e402",
+        "filename": "test/iscsi_tgt/gpt/fio_gpt.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-19T01:27:04Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nI know that. \n1 Another patch is need to dynamically part the device with GPT (which should add a service to combine the nbd function)\n\n2 And this RPC also has feature if detected with already parted device with GPT, it will be return the partition. So it still test our rpc examine function.",
+      "parentUuid": "cacbdacb_7fcc4e1d",
+      "revId": "b5768379d188a0779d9f3c341a66d2d9896e5c8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
