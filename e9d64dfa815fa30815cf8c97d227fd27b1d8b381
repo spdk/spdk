@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "156f86bb_361f1d1c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-19T08:59:43Z",
+      "side": 1,
+      "message": "I only saw scripts related to hot remove.  Where is hot plug?\nAlso: line too long.",
+      "range": {
+        "startLine": 9,
+        "startChar": 29,
+        "endLine": 9,
+        "endChar": 36
+      },
+      "revId": "e9d64dfa815fa30815cf8c97d227fd27b1d8b381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc50d934_849f4936",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-19T08:59:43Z",
+      "side": 1,
+      "message": "Hardcoded value?",
+      "range": {
+        "startLine": 286,
+        "startChar": 58,
+        "endLine": 286,
+        "endChar": 63
+      },
+      "revId": "e9d64dfa815fa30815cf8c97d227fd27b1d8b381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dafcefef_4b80628c",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-19T08:59:43Z",
+      "side": 1,
+      "message": "Try saving the result in local variable and in the next line pass it to unbind separately to avoid piping.",
+      "range": {
+        "startLine": 286,
+        "startChar": 65,
+        "endLine": 286,
+        "endChar": 66
+      },
+      "revId": "e9d64dfa815fa30815cf8c97d227fd27b1d8b381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1df3fc8d_d22fb15e",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-19T08:59:43Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "e9d64dfa815fa30815cf8c97d227fd27b1d8b381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb3779ec_b95ab3a0",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-19T08:59:43Z",
+      "side": 1,
+      "message": "I suppose this part will fail, because you unbound disks just before that and in a few moments you will try to \"remove_\" resources which are already unavailable",
+      "range": {
+        "startLine": 302,
+        "startChar": 2,
+        "endLine": 302,
+        "endChar": 62
+      },
+      "revId": "e9d64dfa815fa30815cf8c97d227fd27b1d8b381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40b50fd8_90e1cea2",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 850,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-19T08:59:43Z",
+      "side": 1,
+      "message": "Whitespsaces everywhere",
+      "range": {
+        "startLine": 850,
+        "startChar": 36,
+        "endLine": 850,
+        "endChar": 38
+      },
+      "revId": "e9d64dfa815fa30815cf8c97d227fd27b1d8b381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
