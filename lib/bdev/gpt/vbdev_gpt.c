@@ -173,14 +173,7 @@ gpt_write(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bd
 static void
 gpt_unmap(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	uint16_t i;
-	uint64_t lba;
-
-	for (i = 0; i < bdev_io->u.unmap.bdesc_count; i++) {
-		lba = from_be64(&bdev_io->u.unmap.unmap_bdesc[i].lba);
-		lba += gpt_partition_disk->offset_blocks;
-		to_be64(&bdev_io->u.unmap.unmap_bdesc[i].lba, lba);
-	}
+	bdev_io->u.unmap.offset += gpt_partition_disk->offset_bytes;
 }
 
 static void
@@ -400,7 +393,6 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 		d->disk.blocklen = base_bdev->blocklen;
 		d->disk.write_cache = base_bdev->write_cache;
 		d->disk.need_aligned_buffer = base_bdev->need_aligned_buffer;
-		d->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
 
 		/* index start at 1 instead of 0 to match the existing style */
 		d->disk.name = spdk_sprintf_alloc("%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i + 1);

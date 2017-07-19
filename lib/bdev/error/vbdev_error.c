@@ -280,7 +280,6 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	disk->disk.blockcnt = base_bdev->blockcnt;
 	disk->disk.blocklen = base_bdev->blocklen;
 	disk->disk.write_cache = base_bdev->write_cache;
-	disk->disk.max_unmap_bdesc_count = base_bdev->max_unmap_bdesc_count;
 	disk->disk.product_name = "Error Injection Disk";
 	disk->disk.ctxt = disk;
 	disk->disk.fn_table = &vbdev_error_fn_table;

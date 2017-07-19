@@ -200,9 +200,6 @@ struct spdk_bdev {
 	/** function table for all LUN ops */
 	const struct spdk_bdev_fn_table *fn_table;
 
-	/** Represents maximum unmap block descriptor count */
-	uint32_t max_unmap_bdesc_count;
-
 	/** generation value used by block device reset */
 	uint32_t gencnt;
 
@@ -299,11 +296,11 @@ struct spdk_bdev_io {
 			uint64_t offset;
 		} write;
 		struct {
-			/** Represents the unmap block descriptors. */
-			struct spdk_scsi_unmap_bdesc *unmap_bdesc;
+			/** Total size of region to be unmapped. */
+			size_t len;
 
-			/** Count of unmap block descriptors. */
-			uint16_t bdesc_count;
+			/** Starting offset (in bytes) of the bdev for this I/O. */
+			uint64_t offset;
 		} unmap;
 		struct {
 			/** Represents starting offset in bytes of the range to be flushed. */

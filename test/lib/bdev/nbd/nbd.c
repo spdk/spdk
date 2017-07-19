@@ -71,8 +71,6 @@ struct nbd_io {
 	struct nbd_reply	resp;
 	bool			resp_in_progress;
 
-	struct spdk_scsi_unmap_bdesc	unmap;
-
 	/*
 	 * Tracks current progress on reading/writing a request,
 	 * response, or payload from the nbd socket.
@@ -192,9 +190,8 @@ nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				     io->payload_size, nbd_io_done, io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		to_be64(&io->unmap.lba, from_be64(&io->req.from) / spdk_bdev_get_block_size(bdev));
-		to_be32(&io->unmap.block_count, io->payload_size / spdk_bdev_get_block_size(bdev));
-		rc = spdk_bdev_unmap(desc, ch, &io->unmap, 1, nbd_io_done, io);
+		rc = spdk_bdev_unmap(desc, ch, from_be64(&io->req.from), io->payload_size,
+				     nbd_io_done, io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush(desc, ch, 0, spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev),
