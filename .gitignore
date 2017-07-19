@@ -15,6 +15,7 @@
 *.DS_Store
 ut_coverage/
 tags
+ceph.conf
 cscope.out
 dpdk-*
 CUnit-Memory-Dump.xml
