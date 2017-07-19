@@ -43,10 +43,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	#timing_enter reset
 	#$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -s 4096 -t 60
 	#timing_exit reset
-
-	timing_enter unmap
-	$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 1 -w unmap -s 4096 -t 60
-	timing_exit unmap
 fi
 
 rm -f $testdir/bdev.conf

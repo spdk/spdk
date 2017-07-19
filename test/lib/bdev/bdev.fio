@@ -16,6 +16,6 @@ rw=randwrite
 filename=Malloc1p0
 rw=randwrite
 
-[randwrite_nvme0]
+[trimwrite_nvme0]
 filename=Nvme0n1
-rw=randwrite
+rw=trimwrite
