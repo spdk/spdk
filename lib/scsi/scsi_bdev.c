@@ -54,6 +54,7 @@
 #define DEFAULT_DISK_REVISION		"0001"
 #define DEFAULT_DISK_ROTATION_RATE	1	/* Non-rotating medium */
 #define DEFAULT_DISK_FORM_FACTOR	0x02	/* 3.5 inch */
+#define DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT	256
 
 #define INQUIRY_OFFSET(field)		offsetof(struct spdk_scsi_cdb_inquiry_data, field) + \
 					sizeof(((struct spdk_scsi_cdb_inquiry_data *)0x0)->field)
@@ -554,8 +555,6 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			len = 20 - hlen;
 
 			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-				uint32_t max_unmap_desc;
-
 				/*
 				 * MAXIMUM UNMAP LBA COUNT: indicates the
 				 * maximum  number of LBAs that may be
@@ -569,10 +568,10 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * block descriptors that shall be contained
 				 * in the parameter data transferred to the
 				 * device server for an UNMAP command.
+				 * The bdev layer automatically splits unmap
+				 * requests, so pick an arbitrary high number here.
 				 */
-				max_unmap_desc = spdk_min(spdk_bdev_get_max_unmap_descriptors(bdev),
-							  g_spdk_scsi.scsi_params.max_unmap_block_descriptor_count);
-				to_be32(&data[24], max_unmap_desc);
+				to_be32(&data[24], DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT);
 
 				/*
 				 * OPTIMAL UNMAP GRANULARITY: indicates the
@@ -1484,73 +1483,144 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 	}
 }
 
+struct spdk_bdev_scsi_unmap_ctx {
+	struct spdk_scsi_task		*task;
+	struct spdk_scsi_unmap_bdesc	desc[DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT];
+	uint32_t			count;
+};
+
+static void
+spdk_bdev_scsi_task_complete_unmap_cmd(struct spdk_bdev_io *bdev_io, bool success,
+				       void *cb_arg)
+{
+	struct spdk_bdev_scsi_unmap_ctx *ctx = cb_arg;
+	struct spdk_scsi_task *task = ctx->task;
+	int sc, sk, asc, ascq;
+
+	ctx->count--;
+
+	task->bdev_io = bdev_io;
+
+	if (task->status == SPDK_SCSI_STATUS_GOOD) {
+		spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
+		spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
+	}
+
+	if (ctx->count == 0) {
+		spdk_scsi_lun_complete_task(task->lun, task);
+		free(ctx);
+	}
+}
+
+static int
+__copy_desc(struct spdk_bdev_scsi_unmap_ctx *ctx, uint8_t *data, size_t data_len)
+{
+	uint16_t	desc_data_len;
+	uint16_t	desc_count;
+
+	if (!data) {
+		return -EINVAL;
+	}
+
+	if (data_len < 4) {
+		/* We can't even get the reported length, so fail. */
+		return -EINVAL;
+	}
+
+	desc_data_len = from_be16(&data[2]);
+	desc_count = desc_data_len / 16;
+
+	if (desc_data_len > data_len || desc_count > DEFAULT_MAX_UNMAP_BLOCK_DESCRIPTOR_COUNT) {
+		SPDK_ERRLOG("Error - desc_data_len (%u) > data_len (%lu)",
+			    desc_data_len, data_len);
+		return -EINVAL;
+	}
+
+	memcpy(ctx->desc, &data[8], desc_data_len);
+	return desc_count;
+}
+
 static int
 spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 		     struct spdk_scsi_task *task)
 {
-	uint8_t *data;
-	struct spdk_scsi_unmap_bdesc *desc;
-	uint32_t bdesc_count, max_unmap_bdesc_count;
-	int bdesc_data_len;
-	int data_len;
-	int rc;
+	uint8_t				*data;
+	struct spdk_bdev_scsi_unmap_ctx	*ctx;
+	int 				desc_count, i;
+	int				data_len;
+	int				rc;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	ctx->task = task;
+	ctx->count = 0;
 
 	if (task->iovcnt == 1) {
 		data = (uint8_t *)task->iovs[0].iov_base;
 		data_len = task->iovs[0].iov_len;
+		desc_count = __copy_desc(ctx, data, data_len);
 	} else {
 		data = spdk_scsi_task_gather_data(task, &data_len);
+		desc_count = __copy_desc(ctx, data, data_len);
+		if (desc_count < 0) {
+			spdk_dma_free(data);
+		}
 	}
 
-	/*
-	 * The UNMAP BLOCK DESCRIPTOR DATA LENGTH field specifies the length in
-	 * bytes of the UNMAP block descriptors that are available to be
-	 * transferred from the Data-Out Buffer. The unmap block descriptor data
-	 * length should be a multiple of 16. If the unmap block descriptor data
-	 * length is not a multiple of 16, then the last unmap block descriptor
-	 * is incomplete and shall be ignored.
-	 */
-	bdesc_data_len = from_be16(&data[2]);
-	bdesc_count = bdesc_data_len / 16;
-	assert(bdesc_data_len <= data_len);
-
-	if (task->iovcnt == 1) {
-		desc = (struct spdk_scsi_unmap_bdesc *)&data[8];
-	} else {
-		desc = spdk_scsi_task_alloc_data(task, bdesc_data_len - 8);
-		memcpy(desc, &data[8], bdesc_data_len - 8);
-		spdk_dma_free(data);
-	}
-
-	max_unmap_bdesc_count = spdk_bdev_get_max_unmap_descriptors(bdev);
-	if (bdesc_count > max_unmap_bdesc_count) {
-		SPDK_ERRLOG("Error - supported unmap block descriptor count limit"
-			    " is %u\n", max_unmap_bdesc_count);
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		return SPDK_SCSI_TASK_COMPLETE;
-	} else if (bdesc_data_len > data_len) {
-		SPDK_ERRLOG("Error - bdesc_data_len (%d) > data_len (%d)",
-			    bdesc_data_len, data_len);
+	if (desc_count < 0) {
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
 					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		free(ctx);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	rc = spdk_bdev_unmap(task->desc, task->ch, desc,
-			     bdesc_count, spdk_bdev_scsi_task_complete_cmd,
-			     task);
+	/* Before we submit commands, set the status to success */
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_GOOD,
+				  SPDK_SCSI_SENSE_NO_SENSE,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 
-	if (rc) {
-		SPDK_ERRLOG("SCSI Unmapping failed\n");
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	for (i = 0; i < desc_count; i++) {
+		struct spdk_scsi_unmap_bdesc	*desc;
+		uint64_t block_size;
+		uint64_t offset;
+		uint64_t nbytes;
+
+		desc = &ctx->desc[i];
+
+		block_size = spdk_bdev_get_block_size(bdev);
+		offset = from_be64(&desc->lba) * block_size;
+		nbytes = from_be32(&desc->block_count) * block_size;
+
+		ctx->count++;
+		assert(nbytes > 0);
+		rc = spdk_bdev_unmap(task->desc, task->ch, offset, nbytes,
+				     spdk_bdev_scsi_task_complete_unmap_cmd, ctx);
+
+		if (rc) {
+			SPDK_ERRLOG("SCSI Unmapping failed\n");
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_NO_SENSE,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			ctx->count--;
+			/* We can't complete here - we may have to wait for previously
+			 * submitted unmaps to complete */
+			break;
+		}
+	}
+
+	if (ctx->count == 0) {
+		free(ctx);
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
