@@ -251,12 +251,19 @@ function rbd_setup() {
 		export RBD_NAME=foo
 		(cd $CEPH_DIR && ../src/vstart.sh -d -n -x -l)
 		/usr/local/bin/rbd create $RBD_NAME --size 1000
+	elif hash ceph; then
+		export RBD_POOL=rbd
+		export RBD_NAME=foo
+		(cd $rootdir/scripts/ceph && ./start.sh)
+		rbd create $RBD_NAME --size 1000
 	fi
 }
 
 function rbd_cleanup() {
 	if [ -d $CEPH_DIR ]; then
 		(cd $CEPH_DIR && ../src/stop.sh || true)
+	elif hash ceph; then
+		(cd $rootdir/scripts/ceph && ./stop.sh || true)
 	fi
 }
 
