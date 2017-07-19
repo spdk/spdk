@@ -65,7 +65,6 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
-	struct spdk_scsi_unmap_bdesc	*unmap_bdesc;
 };
 
 int
