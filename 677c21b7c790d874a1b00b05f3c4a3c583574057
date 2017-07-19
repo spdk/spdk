@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3aa475af_509cc83d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T17:39:10Z",
+      "side": 1,
+      "message": "An this is a scsi_dev, LUN and bdev leak if vm is turned off before events are processed.",
+      "range": {
+        "startLine": 803,
+        "startChar": 0,
+        "endLine": 803,
+        "endChar": 37
+      },
+      "revId": "677c21b7c790d874a1b00b05f3c4a3c583574057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9c4e7ec_ed6097c5",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T17:39:10Z",
+      "side": 1,
+      "message": "If VM is turned off before this event is processed you have zombie scsi_dev that you can\u0027t see or remove. LUN and bdev is also held here.",
+      "range": {
+        "startLine": 924,
+        "startChar": 0,
+        "endLine": 924,
+        "endChar": 92
+      },
+      "revId": "677c21b7c790d874a1b00b05f3c4a3c583574057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
