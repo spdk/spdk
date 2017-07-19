@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3324f627_1a32f1ad",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T23:42:19Z",
+      "side": 1,
+      "message": "Can we move this block before the -d $CEPH_DIR one to try it out on the system that has a locally-installed ceph? I think it should still work.",
+      "revId": "033cb65759ef9d6967b60e1394411ea9e7d6db74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3efd58b1_63826f30",
+        "filename": "scripts/ceph/ceph.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T23:42:19Z",
+      "side": 1,
+      "message": "Mixed tabs and spaces",
+      "revId": "033cb65759ef9d6967b60e1394411ea9e7d6db74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "494aeb91_835daa70",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T23:42:19Z",
+      "side": 1,
+      "message": "Please use #!/usr/bin/env bash here to match our other scripts.",
+      "revId": "033cb65759ef9d6967b60e1394411ea9e7d6db74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3480763f_0ae7292e",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T23:42:19Z",
+      "side": 1,
+      "message": "We should probably also set -e to catch errors.",
+      "revId": "033cb65759ef9d6967b60e1394411ea9e7d6db74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b033dd6f_aa69dee3",
+        "filename": "scripts/ceph/start.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T23:42:19Z",
+      "side": 1,
+      "message": "Is this safe to do in general? It seems like it might blow away some other disk that isn\u0027t related to our tests.",
+      "revId": "033cb65759ef9d6967b60e1394411ea9e7d6db74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ac4632d_409b90d9",
+        "filename": "scripts/ceph/stop.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-19T23:42:19Z",
+      "side": 1,
+      "message": "#!/usr/bin/env bash",
+      "revId": "033cb65759ef9d6967b60e1394411ea9e7d6db74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
