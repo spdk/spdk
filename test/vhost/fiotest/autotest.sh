@@ -208,26 +208,6 @@ done
 $BASE_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
 vm_wait_for_boot 600 $used_vms
 
-if [[ $test_type == "spdk_vhost_scsi" ]]; then
-	for vm_conf in ${vms[@]}; do
-		IFS=',' read -ra conf <<< "$vm_conf"
-		while IFS=':' read -ra disks; do
-			for disk in "${disks[@]}"; do
-				echo "INFO: Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
-				$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
-
-				sleep 0.1
-
-				echo "INFO: Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
-				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
-			done
-		done <<< "${conf[2]}"
-		unset IFS;
-	done
-fi
-
-sleep 0.1
-
 echo "==============="
 echo ""
 echo "INFO: Testing..."
@@ -289,6 +269,35 @@ if $dry_run; then
 fi
 
 $run_fio
+
+if [[ -z "$(ls /sys/kernel/iommu_groups)" ]] && [[ $test_type == "spdk_vhost_scsi" ]]; then
+	for vm_conf in ${vms[@]}; do
+		IFS=',' read -ra conf <<< "$vm_conf"
+        while IFS=':' read -ra disks; do
+            for disk in "${disks[@]}"; do
+				for scsi_disk in ${SCSI_DISK[@]}; do
+                    echo "INFO: Start testing hotremove in $scsi_disk disk "
+                    bdf="$(get_nvme_pci_addr $BASE_DIR/vhost.conf $disk)"
+                    vm_ssh $vm_num lsblk -d "/dev/$scsi_disk"
+                    echo $bdf>/sys/bus/pci/devices/$bdf/driver/unbind
+                    sleep 5
+                    if vm_ssh $vm_num lsblk -d /dev/$scsi_disk; then
+                        echo "Error: $scsi_disk disk is found"
+                        false
+                    fi
+                    echo "INFO: Stop testing hotremove"
+                    echo "INFO: Start testing hotplug  in $scsi_disk disk"
+                    echo $bdf>/sys/bus/pci/drivers/uio_pci_generic/bind
+                    sleep 5
+                    $rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 HotInNvme0n1
+                    vm_ssh $vm_num lsblk -d /dev/$scsi_disk
+                    echo "INFO: Stop testing hotplug"
+			    done
+			done
+        done <<< "${conf[2]}"
+        unset IFS;
+    done
+fi
 
 #if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 #	for vm_num in $used_vms; do

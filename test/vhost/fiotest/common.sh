@@ -163,7 +163,6 @@ function spdk_vhost_run()
 	waitforlisten "$vhost_pid" ${RPC_PORT}
 	echo "INFO: vhost started - pid=$vhost_pid"
 
-	rm $vhost_conf_file
 }
 
 function spdk_vhost_kill()
@@ -845,4 +844,19 @@ function error_exit()
 
 	at_app_exit
 	exit 1
+}
+
+# Script to checking nvme_pci_address
+# param $2 vhost config file path e.g. vhost.conf.in
+# param $3 Name Disc e.g. Nvme[0-9]
+function get_nvme_pci_addr()
+{
+	if [[ ! $2 =~ (^[n-N][v-V][m-M][e-E][0-9]+) ]]; then
+		error "Bad name disk: $2"
+		return 1
+	fi
+	chmod 755 $1
+	[[ $( grep "Nvme"[0-9] $1) =~ ([0-9a-fA-F]{4}(:[0-9a-fA-F]{2}){2}.[0-9a-fA-F]) ]]
+	echo ${BASH_REMATCH[1]}
+	rm $1
 }
