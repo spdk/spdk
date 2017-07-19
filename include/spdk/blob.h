@@ -94,12 +94,6 @@ struct spdk_bs_dev_cb_args {
 	spdk_bs_dev_cpl		cb_fn;
 	struct spdk_io_channel	*channel;
 	void			*cb_arg;
-	/*
-	 * Blobstore device implementations can use this for scratch space for any data
-	 *  structures needed to translate the function arguments to the required format
-	 *  for the backing store.
-	 */
-	uint8_t			scratch[32];
 };
 
 struct spdk_bs_dev {
