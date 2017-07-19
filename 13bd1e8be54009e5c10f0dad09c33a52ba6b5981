@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c1d7366_adcc69d9",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T17:27:21Z",
+      "side": 1,
+      "message": "This should be unsigned type.",
+      "range": {
+        "startLine": 110,
+        "startChar": 1,
+        "endLine": 110,
+        "endChar": 15
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e5ac7b6_bfb79827",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T17:27:21Z",
+      "side": 1,
+      "message": "Can this be moved to new_device() for consistency with task pool alloc?",
+      "range": {
+        "startLine": 749,
+        "startChar": 0,
+        "endLine": 754,
+        "endChar": 2
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb62ad3c_ff0ebe45",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T17:27:21Z",
+      "side": 1,
+      "message": "Can this be moved to to destroy_device()?",
+      "range": {
+        "startLine": 789,
+        "startChar": 1,
+        "endLine": 789,
+        "endChar": 37
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd2f1b89_019de83e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T17:27:21Z",
+      "side": 1,
+      "message": "Pointers to SCSI dev and lun should not be needed. Device index must be sufficient here to avoid race with RPC.",
+      "range": {
+        "startLine": 833,
+        "startChar": 7,
+        "endLine": 833,
+        "endChar": 70
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95bb9fc6_95fe5f17",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-19T17:27:21Z",
+      "side": 1,
+      "message": "We should not need to pass this pointer. By doing this we are racing with other threads that might remove scsi_dev after sending the event (it might be 5ms when device is really removed).",
+      "range": {
+        "startLine": 945,
+        "startChar": 75,
+        "endLine": 945,
+        "endChar": 83
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
