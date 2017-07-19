@@ -84,7 +84,6 @@ struct nvme_io_channel {
 	uint64_t		end_ticks;
 };
 
-#define NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT	1
 struct nvme_bdev_io {
 	/** array of iovecs to transfer. */
 	struct iovec *iovs;
@@ -326,8 +325,8 @@ bdev_nvme_reset(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio)
 static int
 bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		struct nvme_bdev_io *bio,
-		struct spdk_scsi_unmap_bdesc *umap_d,
-		uint16_t bdesc_count);
+		uint64_t offset,
+		uint64_t nbytes);
 
 static void
 bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -374,8 +373,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.unmap.unmap_bdesc,
-				       bdev_io->u.unmap.bdesc_count);
+				       bdev_io->u.unmap.offset,
+				       bdev_io->u.unmap.len);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return bdev_nvme_reset((struct nvme_bdev *)bdev_io->bdev->ctxt,
@@ -1101,15 +1100,6 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		}
 		bdev->disk.product_name = "NVMe disk";
 
-		if (cdata->oncs.dsm) {
-			/*
-			 * Enable the thin provisioning
-			 * if nvme controller supports
-			 * DataSet Management command.
-			 */
-			bdev->disk.max_unmap_bdesc_count = NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT;
-		}
-
 		bdev->disk.write_cache = 0;
 		if (cdata->vwc.present) {
 			/* Enable if the Volatile Write Cache exists */
@@ -1240,27 +1230,24 @@ bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 static int
 bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		struct nvme_bdev_io *bio,
-		struct spdk_scsi_unmap_bdesc *unmap_d,
-		uint16_t bdesc_count)
+		uint64_t offset,
+		uint64_t nbytes)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	int rc = 0, i;
-	struct spdk_nvme_dsm_range dsm_range[NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT];
+	int rc = 0;
+	struct spdk_nvme_dsm_range dsm_range = {};
 
-	if (bdesc_count > NVME_DEFAULT_MAX_UNMAP_BDESC_COUNT) {
+	if (nbytes % nbdev->disk.blocklen) {
+		SPDK_ERRLOG("Unaligned IO request length\n");
 		return -EINVAL;
 	}
 
-	for (i = 0; i < bdesc_count; i++) {
-		dsm_range[i].starting_lba = from_be64(&unmap_d->lba);
-		dsm_range[i].length = from_be32(&unmap_d->block_count);
-		dsm_range[i].attributes.raw = 0;
-		unmap_d++;
-	}
+	dsm_range.starting_lba = offset / nbdev->disk.blocklen;
+	dsm_range.length = nbytes / nbdev->disk.blocklen;
 
 	rc = spdk_nvme_ns_cmd_dataset_management(nbdev->ns, nvme_ch->qpair,
 			SPDK_NVME_DSM_ATTR_DEALLOCATE,
-			dsm_range, bdesc_count,
+			&dsm_range, 1,
 			bdev_nvme_queued_done, bio);
 
 	return rc;
