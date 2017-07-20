@@ -2,6 +2,206 @@
   "comments": [
     {
       "key": {
+        "uuid": "e0fef0e1_69daddde",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "Lets keep this in the same as variables are declared in structure.",
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1384f0fe_dc6bc498",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6207da83_f4a66392",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "no empty line after variables declaration. Also initialize bvdev and bvdev during declaration.\n\nAdd assert to check bvdev.",
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c6d5a62_65dd3bef",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "missing { }",
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91781657_4b2272bd",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "Nope, it is not \u0027devs\u0027. Need to think about proper name here.",
+      "range": {
+        "startLine": 439,
+        "startChar": 27,
+        "endLine": 439,
+        "endChar": 31
+      },
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44062d46_9e572ebb",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "Empty line. Every where empty lines.",
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33f6551e_c10d60f3",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "Need empty line after variables declaration. Also why svdev here? Initialize sdev during declaration and add assert to check it for NULL.",
+      "range": {
+        "startLine": 692,
+        "startChar": 1,
+        "endLine": 692,
+        "endChar": 27
+      },
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01a1b0e6_2a4f765c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "Don\u0027t declare varialbe in loop.",
+      "range": {
+        "startLine": 694,
+        "startChar": 6,
+        "endLine": 694,
+        "endChar": 14
+      },
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1deb8272_5b62679b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "Don\u0027t declare variable in loop. Also name it like \"lun_idx\"",
+      "range": {
+        "startLine": 712,
+        "startChar": 7,
+        "endLine": 712,
+        "endChar": 15
+      },
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27c74d69_82d41cf7",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:26:01Z",
+      "side": 1,
+      "message": "Keep keep one convention here - the same as for sdev in line 695 or change line 695",
+      "range": {
+        "startLine": 713,
+        "startChar": 3,
+        "endLine": 713,
+        "endChar": 25
+      },
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55e32a45_05733cea",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 10
