@@ -17,6 +17,9 @@ can then be associated with higher level abstractions such as iSCSI target nodes
 or vhost-scsi controllers.  This section will describe how to configure block devices for the
 SPDK bdev drivers included with SPDK.
 
+The SPDK configuration file is specified in the `spdk_app_opts` structure when you initialize your
+SPDK application and there are examples in the `etc/` directory in the [SPDK repo](https://github.com/spdk/spdk/).
+
 ## NVMe
 
 The SPDK nvme bdev driver provides SPDK block layer access to NVMe SSDs via the SPDK userspace
