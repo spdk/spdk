@@ -344,5 +344,32 @@ function part_dev_by_gpt () {
 	return 0
 }
 
+function discover_bdevs()
+{
+	config_file=$1
+
+	if [ ! -e $config_file ]; then
+		echo "Invalid Configuration File: $config_file"
+		return -1
+	fi
+
+	# Start the bdev service to query for the list of available
+	# bdevs.
+	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -c $config_file &
+	stubpid=$!
+	while ! [ -e /var/run/spdk_bdev0 ]; do
+		sleep 1
+	done
+	# Get all of the bdevs that aren't opened for write
+	bdevs=$($rpc_py get_bdevs | jq -r '.[] | select(.bdev_opened_for_write == false) | .name')
+
+	echo $bdevs
+
+	# Shut down the bdev service
+	kill $stubpid
+	wait $stubpid
+	rm -f /var/run/spdk_bdev0
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
