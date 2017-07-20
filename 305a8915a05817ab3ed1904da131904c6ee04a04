@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e67a1b8e_39a9f9d9",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T12:12:03Z",
+      "side": 1,
+      "message": "so if this is not set, we print...nothing?\nwhy not assert?",
+      "range": {
+        "startLine": 693,
+        "startChar": 0,
+        "endLine": 693,
+        "endChar": 30
+      },
+      "revId": "305a8915a05817ab3ed1904da131904c6ee04a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46c29c46_f5caddfb",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T12:12:03Z",
+      "side": 1,
+      "message": "newline",
+      "range": {
+        "startLine": 149,
+        "startChar": 0,
+        "endLine": 150,
+        "endChar": 4
+      },
+      "revId": "305a8915a05817ab3ed1904da131904c6ee04a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3003a247_4ce666c5",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T12:12:03Z",
+      "side": 1,
+      "message": "could you move it to the bottom of the file? this would avoid moving to_scsi_dev() declaration",
+      "range": {
+        "startLine": 120,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 1
+      },
+      "revId": "305a8915a05817ab3ed1904da131904c6ee04a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
