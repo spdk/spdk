@@ -48,7 +48,7 @@ endif
 
 OS := $(shell uname)
 
-COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
+COMMON_CFLAGS = -O0 -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -march=native -m64 -I$(SPDK_ROOT_DIR)/include
 
 COMMON_CFLAGS += -include $(SPDK_ROOT_DIR)/config.h
 
