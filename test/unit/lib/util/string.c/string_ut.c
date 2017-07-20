@@ -95,6 +95,47 @@ test_parse_ip_addr(void)
 	CU_ASSERT_EQUAL(port, NULL);
 }
 
+static void
+test_str_chomp(void)
+{
+	char s[1024];
+
+	/* One \n newline */
+	snprintf(s, sizeof(s), "%s", "hello world\n");
+	CU_ASSERT(spdk_str_chomp(s) == 1);
+	CU_ASSERT(strcmp(s, "hello world") == 0);
+
+	/* One \r\n newline */
+	snprintf(s, sizeof(s), "%s", "hello world\r\n");
+	CU_ASSERT(spdk_str_chomp(s) == 2);
+	CU_ASSERT(strcmp(s, "hello world") == 0);
+
+	/* No newlines */
+	snprintf(s, sizeof(s), "%s", "hello world");
+	CU_ASSERT(spdk_str_chomp(s) == 0);
+	CU_ASSERT(strcmp(s, "hello world") == 0);
+
+	/* Two newlines */
+	snprintf(s, sizeof(s), "%s", "hello world\n\n");
+	CU_ASSERT(spdk_str_chomp(s) == 2);
+	CU_ASSERT(strcmp(s, "hello world") == 0);
+
+	/* Empty string */
+	snprintf(s, sizeof(s), "%s", "");
+	CU_ASSERT(spdk_str_chomp(s) == 0);
+	CU_ASSERT(strcmp(s, "") == 0);
+
+	/* One-character string with only \n */
+	snprintf(s, sizeof(s), "%s", "\n");
+	CU_ASSERT(spdk_str_chomp(s) == 1);
+	CU_ASSERT(strcmp(s, "") == 0);
+
+	/* One-character string without a newline */
+	snprintf(s, sizeof(s), "%s", "a");
+	CU_ASSERT(spdk_str_chomp(s) == 0);
+	CU_ASSERT(strcmp(s, "a") == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -112,7 +153,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr) == NULL) {
+		CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr) == NULL ||
+		CU_add_test(suite, "test_str_chomp", test_str_chomp) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
