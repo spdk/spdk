@@ -17,6 +17,9 @@ can then be associated with higher level abstractions such as iSCSI target nodes
 or vhost-scsi controllers.  This section will describe how to configure block devices for the
 SPDK bdev drivers included with SPDK.
 
+The SPDK configuration file is typically passed to your SPDK-based application via the command line.
+Refer to the help facility of your application for more details.
+
 ## NVMe
 
 The SPDK nvme bdev driver provides SPDK block layer access to NVMe SSDs via the SPDK userspace
