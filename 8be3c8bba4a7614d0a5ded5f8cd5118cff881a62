@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55e32a45_05733cea",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T15:22:55Z",
+      "side": 1,
+      "message": "Please add forward declaration of spdk_vhost_scsi_config_json and don\u0027t move spdk_vhost_scsi_device_backend location to keep patch size as small as possible.",
+      "range": {
+        "startLine": 734,
+        "startChar": 0,
+        "endLine": 742,
+        "endChar": 2
+      },
+      "revId": "8be3c8bba4a7614d0a5ded5f8cd5118cff881a62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
