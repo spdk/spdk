@@ -433,6 +433,7 @@ void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			      int *sc, int *sk, int *asc, int *ascq);
 
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
+int spdk_bdev_module_examine_bdev(const char *module_name, const char *bdev_name);
 
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
