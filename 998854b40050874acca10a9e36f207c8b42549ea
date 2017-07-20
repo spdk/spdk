@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c76a462_3e94740f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-20T18:57:35Z",
+      "side": 1,
+      "message": "Maybe say that the configuration file is typically passed in on the command line. I think that\u0027s more relevant to this level of documentation (which is user-centric more than developer-centric).",
+      "revId": "998854b40050874acca10a9e36f207c8b42549ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
