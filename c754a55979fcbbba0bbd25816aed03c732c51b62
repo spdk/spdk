@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "0fe2ed95_d5313154",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:05:06Z",
+      "side": 1,
+      "message": "It is intent to be non-const.",
+      "parentUuid": "e585dc16_987897eb",
+      "range": {
+        "startLine": 54,
+        "startChar": 7,
+        "endLine": 54,
+        "endChar": 11
+      },
+      "revId": "c754a55979fcbbba0bbd25816aed03c732c51b62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9721da09_0ec7eb40",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:05:06Z",
+      "side": 1,
+      "message": "Even in C++ it is also perfectly fine :)",
+      "parentUuid": "f953c751_144dbf7c",
+      "range": {
+        "startLine": 54,
+        "startChar": 39,
+        "endLine": 54,
+        "endChar": 44
+      },
+      "revId": "c754a55979fcbbba0bbd25816aed03c732c51b62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4a8af6e9_4fead81e",
         "filename": "examples/bdev/io/bdev_io.c",
         "patchSetId": 3
@@ -76,6 +124,30 @@
       "writtenOn": "2017-07-20T15:40:18Z",
       "side": 1,
       "message": "not necessary",
+      "range": {
+        "startLine": 310,
+        "startChar": 1,
+        "endLine": 310,
+        "endChar": 11
+      },
+      "revId": "c754a55979fcbbba0bbd25816aed03c732c51b62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f64acc3e_c3d9d84b",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-07-20T21:05:06Z",
+      "side": 1,
+      "message": "Not true.",
+      "parentUuid": "9ec0cf88_c14abca0",
       "range": {
         "startLine": 310,
         "startChar": 1,
