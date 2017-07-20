@@ -90,6 +90,16 @@ char *spdk_strsepq(char **stringp, const char *delim);
 char *spdk_str_trim(char *s);
 
 /**
+ * Remove trailing newlines from the end of a string in place.
+ *
+ * Any sequence of trailing \r and \n characters is removed from the end of the string.
+ *
+ * \param s String to remove newline from.
+ * \return Number of characters removed.
+ */
+size_t spdk_str_chomp(char *s);
+
+/**
  * Copy a string into a fixed-size buffer, padding extra bytes with a specific character.
  *
  * \param dst Pointer to destination fixed-size buffer to fill.

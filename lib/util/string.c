@@ -307,3 +307,22 @@ spdk_parse_ip_addr(char *ip, char **host, char **port)
 
 	return 0;
 }
+
+size_t
+spdk_str_chomp(char *s)
+{
+	size_t len = strlen(s);
+	size_t removed = 0;
+
+	while (len > 0) {
+		if (s[len - 1] != '\r' && s[len - 1] != '\n') {
+			break;
+		}
+
+		s[len - 1] = '\0';
+		len--;
+		removed++;
+	}
+
+	return removed;
+}
