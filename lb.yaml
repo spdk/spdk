@@ -1,0 +1,4 @@
+spdk:
+  spdk-sdk:
+  - dpdk:dpdk-sdk
+  - file://.
