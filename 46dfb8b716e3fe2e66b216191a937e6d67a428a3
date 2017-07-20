@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cdc19a5_d599f6cb",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T10:15:41Z",
+      "side": 1,
+      "message": "we should either sleep after each hotremove and before running fio tests OR - better idea - make RPC call blocking, so it won\u0027t return until device is hot-attached/detached.",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 219,
+        "endChar": 75
+      },
+      "revId": "46dfb8b716e3fe2e66b216191a937e6d67a428a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
