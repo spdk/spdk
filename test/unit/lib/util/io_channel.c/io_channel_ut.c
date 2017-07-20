@@ -146,9 +146,9 @@ channel(void)
 	ch1 = spdk_get_io_channel(&device3);
 	CU_ASSERT(ch1 == NULL);
 
-	spdk_io_device_unregister(&device1);
-	spdk_io_device_unregister(&device2);
-	spdk_io_device_unregister(&device3);
+	spdk_io_device_unregister(&device1, NULL);
+	spdk_io_device_unregister(&device2, NULL);
+	spdk_io_device_unregister(&device3, NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 	spdk_free_thread();
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));

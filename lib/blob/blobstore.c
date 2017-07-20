@@ -1141,8 +1141,8 @@ _spdk_bs_free(struct spdk_blob_store *bs)
 	struct spdk_blob	*blob, *blob_tmp;
 
 	spdk_bs_unregister_md_thread(bs);
-	spdk_io_device_unregister(&bs->io_target);
-	spdk_io_device_unregister(&bs->md_target);
+	spdk_io_device_unregister(&bs->io_target, NULL);
+	spdk_io_device_unregister(&bs->md_target, NULL);
 
 	TAILQ_FOREACH_SAFE(blob, &bs->blobs, link, blob_tmp) {
 		TAILQ_REMOVE(&bs->blobs, blob, link);

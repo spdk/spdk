@@ -55,7 +55,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 }
 
 void
-spdk_io_device_unregister(void *io_device)
+spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregister_cb)
 {
 }
 
