@@ -522,7 +522,7 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 
-	spdk_io_device_unregister(&g_bdev_mgr);
+	spdk_io_device_unregister(&g_bdev_mgr, NULL);
 
 	return 0;
 }
@@ -1462,7 +1462,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 
 	pthread_mutex_destroy(&bdev->mutex);
 
-	spdk_io_device_unregister(bdev);
+	spdk_io_device_unregister(bdev, NULL);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {

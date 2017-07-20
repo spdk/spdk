@@ -52,6 +52,8 @@ typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
 typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
+typedef void (*spdk_io_device_unregister_cb)(void *io_device);
+
 typedef void (*spdk_channel_msg)(void *io_device, struct spdk_io_channel *ch,
 				 void *ctx);
 typedef void (*spdk_channel_for_each_cpl)(void *io_device, void *ctx);
@@ -110,10 +112,11 @@ void spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_c
 /**
  * \brief Unregister the opaque io_device context as an I/O device.
  *
- * Callers must ensure they release references to any I/O channel related to this
- *  device before calling this function.
+ * The actual unregistration might be deferred until all active I/O channels are destroyed.
+ *  unregister_cb is an optional callback function invoked to release any references to
+ *  this I/O device.
  */
-void spdk_io_device_unregister(void *io_device);
+void spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregister_cb);
 
 /**
  * \brief Gets an I/O channel for the specified io_device to be used by the calling thread.
