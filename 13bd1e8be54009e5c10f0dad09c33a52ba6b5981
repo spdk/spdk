@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "36fdbff1_b90085d6",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T10:10:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5c1d7366_adcc69d9",
+      "range": {
+        "startLine": 110,
+        "startChar": 1,
+        "endLine": 110,
+        "endChar": 15
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e5ac7b6_bfb79827",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-07-19T17:27:21Z",
       "side": 1,
       "message": "Can this be moved to new_device() for consistency with task pool alloc?",
+      "range": {
+        "startLine": 749,
+        "startChar": 0,
+        "endLine": 754,
+        "endChar": 2
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f932fcdb_6e045de7",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T10:10:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5e5ac7b6_bfb79827",
       "range": {
         "startLine": 749,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1365cc30_d9cf0a6a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T10:10:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bb62ad3c_ff0ebe45",
+      "range": {
+        "startLine": 789,
+        "startChar": 1,
+        "endLine": 789,
+        "endChar": 37
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dd2f1b89_019de83e",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "94267aa3_11a79a13",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T10:10:29Z",
+      "side": 1,
+      "message": "Ack, let me think of something else.",
+      "parentUuid": "dd2f1b89_019de83e",
+      "range": {
+        "startLine": 833,
+        "startChar": 7,
+        "endLine": 833,
+        "endChar": 70
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "95bb9fc6_95fe5f17",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
@@ -105,6 +201,30 @@
       "writtenOn": "2017-07-19T17:27:21Z",
       "side": 1,
       "message": "We should not need to pass this pointer. By doing this we are racing with other threads that might remove scsi_dev after sending the event (it might be 5ms when device is really removed).",
+      "range": {
+        "startLine": 945,
+        "startChar": 75,
+        "endLine": 945,
+        "endChar": 83
+      },
+      "revId": "13bd1e8be54009e5c10f0dad09c33a52ba6b5981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ab037d7_67fd205e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-20T10:10:29Z",
+      "side": 1,
+      "message": "\u003e other threads that might remove scsi_dev after\n\nwhich ones? how?",
+      "parentUuid": "95bb9fc6_95fe5f17",
       "range": {
         "startLine": 945,
         "startChar": 75,
