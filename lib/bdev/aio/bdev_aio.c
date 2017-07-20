@@ -46,6 +46,8 @@
 static int bdev_aio_initialize(void);
 static void aio_free_disk(struct file_disk *fdisk);
 
+#define SPDK_AIO_QUEUE_DEPTH 128
+
 static int
 bdev_aio_get_ctx_size(void)
 {
@@ -170,16 +172,8 @@ bdev_aio_destruct(void *ctx)
 static int
 bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
 {
-	ch->queue_depth = 128;
-
-	if (io_setup(ch->queue_depth, &ch->io_ctx) < 0) {
+	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
 		SPDK_ERRLOG("async I/O context setup failure\n");
-		return -1;
-	}
-
-	ch->events = calloc(sizeof(struct io_event), ch->queue_depth);
-	if (!ch->events) {
-		io_destroy(ch->io_ctx);
 		return -1;
 	}
 
@@ -194,12 +188,13 @@ bdev_aio_poll(void *arg)
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
 	struct timespec timeout;
+	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
 
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
 
-	nr = io_getevents(ch->io_ctx, 1, ch->queue_depth,
-			  ch->events, &timeout);
+	nr = io_getevents(ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
+			  events, &timeout);
 
 	if (nr < 0) {
 		SPDK_ERRLOG("%s: io_getevents returned %d\n", __func__, nr);
@@ -207,8 +202,8 @@ bdev_aio_poll(void *arg)
 	}
 
 	for (i = 0; i < nr; i++) {
-		aio_task = ch->events[i].data;
-		if (ch->events[i].res != aio_task->len) {
+		aio_task = events[i].data;
+		if (events[i].res != aio_task->len) {
 			status = SPDK_BDEV_IO_STATUS_FAILED;
 		} else {
 			status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -309,7 +304,6 @@ bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 	struct bdev_aio_io_channel *io_channel = ctx_buf;
 
 	io_destroy(io_channel->io_ctx);
-	free(io_channel->events);
 	spdk_bdev_poller_stop(&io_channel->poller);
 }
 
