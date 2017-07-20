@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdev blob ioat iscsi json jsonrpc log nvme nvmf scsi util
+DIRS-y = bdev blob ioat iscsi json jsonrpc log lvol nvme nvmf scsi util
 
 .PHONY: all clean $(DIRS-y)
 
