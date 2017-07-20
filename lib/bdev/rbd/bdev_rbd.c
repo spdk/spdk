@@ -48,6 +48,8 @@
 
 #include "spdk_internal/bdev.h"
 
+#define SPDK_RBD_QUEUE_DEPTH 128
+
 static TAILQ_HEAD(, bdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int bdev_rbd_count = 0;
 
@@ -68,8 +70,6 @@ struct bdev_rbd_io_channel {
 	rados_t cluster;
 	struct pollfd pfd;
 	rbd_image_t image;
-	rbd_completion_t *comps;
-	uint32_t queue_depth;
 	struct bdev_rbd *disk;
 	struct spdk_bdev_poller *poller;
 };
@@ -325,7 +325,9 @@ bdev_rbd_io_poll(void *arg)
 	struct bdev_rbd_io_channel *ch = arg;
 	struct bdev_rbd_io *req;
 	struct spdk_bdev_io *bdev_io;
-	int i, io_status, status, rc;
+	int i, io_status, rc;
+	rbd_completion_t comps[SPDK_RBD_QUEUE_DEPTH];
+	int status[SPDK_RBD_QUEUE_DEPTH];
 
 	rc = poll(&ch->pfd, 1, 0);
 
@@ -334,27 +336,32 @@ bdev_rbd_io_poll(void *arg)
 		return;
 	}
 
-	rc = rbd_poll_io_events(ch->image, ch->comps, ch->queue_depth);
+	rc = rbd_poll_io_events(ch->image, comps, SPDK_RBD_QUEUE_DEPTH);
 	for (i = 0; i < rc; i++) {
-		req = (struct bdev_rbd_io *)rbd_aio_get_arg(ch->comps[i]);
+		req = (struct bdev_rbd_io *)rbd_aio_get_arg(comps[i]);
 		bdev_io = spdk_bdev_io_from_ctx(req);
-		io_status = rbd_aio_get_return_value(ch->comps[i]);
+		io_status = rbd_aio_get_return_value(comps[i]);
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 			if ((int)bdev_io->u.read.len == io_status) {
-				status = SPDK_BDEV_IO_STATUS_SUCCESS;
+				status[i] = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
-				status = SPDK_BDEV_IO_STATUS_FAILED;
+				status[i] = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		} else {
 			/* For others, 0 means success */
 			if (!io_status) {
-				status = SPDK_BDEV_IO_STATUS_SUCCESS;
+				status[i] = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
-				status = SPDK_BDEV_IO_STATUS_FAILED;
+				status[i] = SPDK_BDEV_IO_STATUS_FAILED;
 			}
 		}
-		spdk_bdev_io_complete(bdev_io, status);
 		rbd_aio_release(req->completion);
+	}
+
+	for (i = 0; i < rc; i++) {
+		req = (struct bdev_rbd_io *)rbd_aio_get_arg(comps[i]);
+		bdev_io = spdk_bdev_io_from_ctx(req);
+		spdk_bdev_io_complete(bdev_io, status[i]);
 	}
 }
 
@@ -375,10 +382,6 @@ bdev_rbd_free_channel(struct bdev_rbd_io_channel *ch)
 
 	if (ch->cluster) {
 		rados_shutdown(ch->cluster);
-	}
-
-	if (ch->comps) {
-		free(ch->comps);
 	}
 
 	if (ch->pfd.fd >= 0) {
@@ -432,13 +435,6 @@ bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 	ret = rbd_set_image_notification(ch->image, ch->pfd.fd, EVENT_TYPE_EVENTFD);
 	if (ret < 0) {
 		SPDK_ERRLOG("Failed to set rbd image notification\n");
-		goto err;
-	}
-
-	ch->queue_depth = 128;
-	ch->comps = calloc(sizeof(rbd_completion_t), ch->queue_depth);
-	if (!ch->comps) {
-		SPDK_ERRLOG("Failed to allocate rbd completion array\n");
 		goto err;
 	}
 
