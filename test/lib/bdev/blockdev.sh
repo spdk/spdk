@@ -10,6 +10,8 @@ testdir=$(readlink -f $(dirname $0))
 
 timing_enter blockdev
 
+rpc_py=$rootdir/scripts/rpc.py
+
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
@@ -20,6 +22,10 @@ timing_exit bounds
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
 fi
+
+timing_enter bdev_svc
+discover_bdevs $testdir/bdev.conf
+timing_exit bdev_svc
 
 timing_enter verify
 $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
