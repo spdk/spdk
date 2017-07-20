@@ -21,6 +21,10 @@ if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
 fi
 
+timing_enter bdev_svc
+bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.bdev_opened_for_write == false) | .name')
+timing_exit bdev_svc
+
 timing_enter verify
 $testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 32 -s 4096 -w verify -t 1
 timing_exit verify
