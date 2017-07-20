@@ -1122,10 +1122,16 @@ nvme_rdma_discovery_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 	/* Convert traddr to a null terminated string. */
 	len = spdk_strlen_pad(entry->traddr, sizeof(entry->traddr), ' ');
 	memcpy(trid.traddr, entry->traddr, len);
+	if (spdk_str_chomp(trid.traddr) != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Trailing newlines removed from discovery TRADDR\n");
+	}
 
 	/* Convert trsvcid to a null terminated string. */
 	len = spdk_strlen_pad(entry->trsvcid, sizeof(entry->trsvcid), ' ');
 	memcpy(trid.trsvcid, entry->trsvcid, len);
+	if (spdk_str_chomp(trid.trsvcid) != 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVME, "Trailing newlines removed from discovery TRSVCID\n");
+	}
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
 		      trid.subnqn, trid.trtype,
