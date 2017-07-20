@@ -242,5 +242,21 @@ vbdev_get_lvs_pair_by_lvs(struct spdk_lvol_store *lvs_orig)
 	return NULL;
 }
 
+struct spdk_lvol *
+vbdev_get_lvol_by_name(char *name)
+{
+	struct spdk_lvol *lvol, *tmp_lvol;
+	struct lvol_store_bdev_pair *lvs_pair, *tmp_lvs_pair;
+
+	TAILQ_FOREACH_SAFE(lvs_pair, &g_spdk_lvol_pairs, lvol_stores, tmp_lvs_pair) {
+		TAILQ_FOREACH_SAFE(lvol, &lvs_pair->lvs->lvols, link, tmp_lvol) {
+			if (!strcmp(lvol->name, name)) {
+				return lvol;
+			}
+		}
+	}
+
+	return NULL;
+}
 SPDK_BDEV_MODULE_REGISTER(lvs, vbdev_lvs_init, vbdev_lvs_fini, NULL, NULL, NULL)
 SPDK_LOG_REGISTER_TRACE_FLAG("lvs_bdev", SPDK_TRACE_LVS_BDEV)
