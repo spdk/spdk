@@ -208,10 +208,10 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 		return -1;
 	}
 
-	to_le32(&expected_start_lba, GPT_PRIMARY_PARTITION_TABLE_LBA);
-	if (mbr->partitions[0].start_lba != expected_start_lba) {
+	expected_start_lba = GPT_PRIMARY_PARTITION_TABLE_LBA;
+	if (from_le32(&mbr->partitions[0].start_lba) != expected_start_lba) {
 		SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "start lba mismatch, provided=%u, expected=%u\n",
-			      mbr->partitions[0].start_lba, expected_start_lba);
+			      from_le32(&mbr->partitions[0].start_lba), expected_start_lba);
 		return -1;
 	}
 
