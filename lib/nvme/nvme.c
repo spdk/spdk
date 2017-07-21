@@ -314,7 +314,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 
 	spdk_nvme_ctrlr_opts_set_defaults(&opts);
 
-	if (probe_cb(cb_ctx, trid, &opts)) {
+	if (!probe_cb || probe_cb(cb_ctx, trid, &opts)) {
 		ctrlr = nvme_transport_ctrlr_construct(trid, &opts, devhandle);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Failed to construct NVMe controller\n");
@@ -393,25 +393,14 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 	return rc;
 }
 
-int
-spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
-		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
-		spdk_nvme_remove_cb remove_cb)
+/* This function must only be called while holding g_spdk_nvme_driver->lock */
+static int
+spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
+			 spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+			 spdk_nvme_remove_cb remove_cb)
 {
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
-	struct spdk_nvme_transport_id trid_pcie;
-
-	rc = nvme_driver_init();
-	if (rc != 0) {
-		return rc;
-	}
-
-	if (trid == NULL) {
-		memset(&trid_pcie, 0, sizeof(trid_pcie));
-		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
-		trid = &trid_pcie;
-	}
 
 	if (!spdk_nvme_transport_available(trid->trtype)) {
 		SPDK_ERRLOG("NVMe trtype %u not available\n", trid->trtype);
@@ -452,6 +441,47 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	rc = nvme_init_controllers(cb_ctx, attach_cb);
 
 	return rc;
+}
+
+int
+spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
+		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_remove_cb remove_cb)
+{
+	int rc;
+	struct spdk_nvme_transport_id trid_pcie;
+
+	rc = nvme_driver_init();
+	if (rc != 0) {
+		return rc;
+	}
+
+	if (trid == NULL) {
+		memset(&trid_pcie, 0, sizeof(trid_pcie));
+		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
+		trid = &trid_pcie;
+	}
+
+	return spdk_nvme_probe_internal(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+}
+
+int
+spdk_nvme_attach(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
+		 spdk_nvme_attach_cb attach_cb, spdk_nvme_remove_cb remove_cb)
+{
+	int rc;
+
+	if (trid == NULL) {
+		SPDK_ERRLOG("No transport ID specified\n");
+		return -1;
+	}
+
+	rc = nvme_driver_init();
+	if (rc != 0) {
+		return rc;
+	}
+
+	return spdk_nvme_probe_internal(trid, cb_ctx, NULL, attach_cb, remove_cb);
 }
 
 int
