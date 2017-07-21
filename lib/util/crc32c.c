@@ -33,6 +33,10 @@
 
 #include "spdk/crc32.h"
 
+#if defined(__i386__) || defined(__x86_64__)
+#include <x86intrin.h>
+#endif
+
 static struct spdk_crc32_table g_crc32c_table;
 
 __attribute__((constructor)) static void
@@ -44,5 +48,37 @@ spdk_crc32c_init(void)
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 {
+#if defined(__SSE4_2__)
+#define CRC_LOOP(bits, tmp) \
+	do { \
+		uint ## bits ## _t v; \
+		while (len >= sizeof(v)) { \
+			/* Use memcpy() to avoid unaligned loads, which are undefined behavior in C. */ \
+			/* The compiler will optimize out the memcpy() in release builds. */ \
+			memcpy(&v, buf, sizeof(v)); \
+			buf += sizeof(v); \
+			len -= sizeof(v); \
+			tmp = _mm_crc32_u ## bits (tmp, v); \
+		} \
+		if (len == 0) { \
+			return tmp; \
+		} \
+	} while (0)
+
+#if defined(__x86_64__)
+	/* _mm_crc32_u64() needs a 64-bit intermediate value */
+	uint64_t crc_tmp64 = crc;
+	CRC_LOOP(64, crc_tmp64);
+	crc = (uint32_t)crc_tmp64;
+#endif
+
+	CRC_LOOP(32, crc);
+	CRC_LOOP(16, crc);
+	CRC_LOOP(8, crc);
+
+	return crc;
+#else
+	/* SSE 4.2 (CRC32 instruction) not available - fall back to table-based update */
 	return spdk_crc32_update(&g_crc32c_table, buf, len, crc);
+#endif
 }
