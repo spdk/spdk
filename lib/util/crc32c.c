@@ -33,6 +33,71 @@
 
 #include "spdk/crc32.h"
 
+#include "spdk_internal/assert.h"
+
+#if defined(__x86_64__) && defined(__SSE4_2__)
+#include <x86intrin.h>
+
+uint32_t
+spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
+{
+	uint64_t crc_tmp64;
+	const void *buf_end;
+
+#define CRC32(bits, tmp) \
+	do { \
+		uint ## bits ## _t v; \
+		/* Use memcpy() to avoid unaligned loads, which are undefined behavior in C. */ \
+		/* The compiler will optimize out the memcpy() in release builds. */ \
+		memcpy(&v, buf, sizeof(v)); \
+		buf += sizeof(v); \
+		tmp = _mm_crc32_u ## bits (tmp, v); \
+	} while (0)
+
+	/* _mm_crc32_u64() needs a 64-bit intermediate value */
+	crc_tmp64 = crc;
+	buf_end = buf + len;
+	while (buf_end - buf >= 8) {
+		CRC32(64, crc_tmp64);
+	}
+	crc = (uint32_t)crc_tmp64;
+
+	switch (len & 7) {
+	case 0:
+		return crc;
+	case 1:
+		CRC32(8, crc);
+		return crc;
+	case 2:
+		CRC32(16, crc);
+		return crc;
+	case 3:
+		CRC32(16, crc);
+		CRC32(8, crc);
+		return crc;
+	case 4:
+		CRC32(32, crc);
+		return crc;
+	case 5:
+		CRC32(32, crc);
+		CRC32(8, crc);
+		return crc;
+	case 6:
+		CRC32(32, crc);
+		CRC32(16, crc);
+		return crc;
+	case 7:
+		CRC32(32, crc);
+		CRC32(16, crc);
+		CRC32(8, crc);
+		return crc;
+	}
+
+	SPDK_UNREACHABLE();
+}
+
+#else /* SSE 4.2 (CRC32 instruction) not available */
+
 static struct spdk_crc32_table g_crc32c_table;
 
 __attribute__((constructor)) static void
@@ -46,3 +111,5 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 {
 	return spdk_crc32_update(&g_crc32c_table, buf, len, crc);
 }
+
+#endif
