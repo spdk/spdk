@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd76ff4c_88257a65",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-21T18:44:03Z",
+      "side": 1,
+      "message": "I think this check is better written as trid-\u003etrtype \u003d\u003d SPDK_NVME_TRANSPORT_PCIE. For example, there are discovery services on the FC transport too so this logic wouldn\u0027t work.",
+      "revId": "168e229e3068b82ae238145a5a36fdca248267e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
