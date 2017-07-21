@@ -680,6 +680,10 @@ static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts)
 {
+	if (spdk_nvme_transport_id_is_nvmf_discovery_ctrlr(trid) == true) {
+		return false;
+	}
+
 	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Attaching to %s\n", trid->traddr);
 
 	return true;
@@ -703,6 +707,9 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	if (spdk_nvme_transport_id_is_nvmf_discovery_ctrlr(trid) == true) {
+		return false;
+	}
 
 	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "Probing device %s\n", trid->traddr);
 
