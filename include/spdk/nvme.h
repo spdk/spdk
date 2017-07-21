@@ -266,6 +266,18 @@ int spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
 
 /**
+ * Determine whether the transport ID is the well known NVMe-oF discovery ctrlr.
+ *
+ * \param trid the transport ID to check.
+ *
+ * \return true if the trid is the well known NVMe-oF discovery ctrlr.
+ *
+ * The well known NVMe-oF discovery ctrlr has the name of "nqn.2014-08.org.nvmexpress.discovery"
+ * and NVMe-oF transport type.
+ */
+bool spdk_nvme_transport_id_is_nvmf_discovery_ctrlr(const struct spdk_nvme_transport_id *trid);
+
+/**
  * Callback for spdk_nvme_probe() enumeration.
  *
  * \param opts NVMe controller initialization options.  This structure will be populated with the
