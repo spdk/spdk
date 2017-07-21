@@ -135,7 +135,7 @@ spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr
 }
 
 void
-spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
+spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	memset(opts, 0, sizeof(*opts));
 }
@@ -182,7 +182,8 @@ int
 nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 			  void *cb_ctx,
 			  spdk_nvme_probe_cb probe_cb,
-			  spdk_nvme_remove_cb remove_cb)
+			  spdk_nvme_remove_cb remove_cb,
+			  bool direct_connect)
 {
 	return 0;
 }
