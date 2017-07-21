@@ -1459,6 +1459,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		}
 		break;
 
+	case NVME_CTRLR_STATE_READY:
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Ctrlr already in ready state\n");
+		return 0;
+
 	default:
 		assert(0);
 		nvme_ctrlr_fail(ctrlr, false);

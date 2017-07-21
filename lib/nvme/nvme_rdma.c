@@ -1172,7 +1172,8 @@ int
 nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		     void *cb_ctx,
 		     spdk_nvme_probe_cb probe_cb,
-		     spdk_nvme_remove_cb remove_cb)
+		     spdk_nvme_remove_cb remove_cb,
+		     bool direct_connect)
 {
 	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
@@ -1230,6 +1231,15 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	if (spdk_nvme_cpl_is_error(&status.cpl)) {
 		SPDK_ERRLOG("nvme_identify_controller failed!\n");
 		return -ENXIO;
+	}
+
+	/* Direct attach through spdk_nvme_connect() API */
+	if (direct_connect == true) {
+		/* Set the ready state to skip the normal init process */
+		discovery_ctrlr->state = NVME_CTRLR_STATE_READY;
+		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, discovery_ctrlr, tailq);
+		nvme_ctrlr_add_process(discovery_ctrlr, 0);
+		return 0;
 	}
 
 	buffer_max_entries_first = (sizeof(buffer) - offsetof(struct spdk_nvmf_discovery_log_page,
