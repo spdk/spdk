@@ -1,7 +1,6 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
@@ -32,21 +31,53 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_CRC32C_H
-#define SPDK_CRC32C_H
-
 #include "spdk/stdinc.h"
 
-#define SPDK_CRC32C_INITIAL    0xffffffffUL
-#define	SPDK_CRC32C_XOR        0xffffffffUL
-#define SPDK_CRC32C_POLYNOMIAL 0x1edc6f41UL
-#define SPDK_CRC32C_POLYNOMIAL_REFLECT 0x82f63b78UL
+#include "spdk_cunit.h"
 
-#ifdef USE_ISAL
-uint32_t crc32_iscsi(const uint8_t *buf, size_t len, uint32_t crc);
-#define spdk_update_crc32c(a,b,c) crc32_iscsi(a,b,c)
-#else
-uint32_t spdk_update_crc32c(const uint8_t *buf, size_t len, uint32_t crc);
-#endif
+#include "crc32.c"
+#include "crc32_ieee.c"
 
-#endif /* SPDK_CRC32C_H */
+static void
+test_crc32_ieee(void)
+{
+	uint32_t crc;
+	char buf[] = "Hello world!";
+
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32_ieee_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x1b851995);
+}
+
+int
+main(int argc, char **argv)
+{
+	CU_pSuite	suite = NULL;
+	unsigned int	num_failures;
+
+	if (CU_initialize_registry() != CUE_SUCCESS) {
+		return CU_get_error();
+	}
+
+	suite = CU_add_suite("crc32_ieee", NULL, NULL);
+	if (suite == NULL) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (
+		CU_add_test(suite, "test_crc32_ieee", test_crc32_ieee) == NULL) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	CU_basic_set_mode(CU_BRM_VERBOSE);
+
+	CU_basic_run_tests();
+
+	num_failures = CU_get_number_of_failures();
+	CU_cleanup_registry();
+
+	return num_failures;
+}

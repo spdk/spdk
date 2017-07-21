@@ -1,7 +1,6 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
@@ -32,64 +31,18 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
+#include "spdk/crc32.h"
 
-#include "iscsi/iscsi.h"
-#include "iscsi/crc32c.h"
-
-#ifndef USE_ISAL
-#define SPDK_USE_CRC32C_TABLE
-#endif
-
-#ifdef SPDK_USE_CRC32C_TABLE
-static uint32_t spdk_crc32c_table[256];
+static struct spdk_crc32_table g_crc32_ieee_table;
 
 __attribute__((constructor)) static void
-spdk_init_crc32c(void)
+spdk_crc32_ieee_init(void)
 {
-	int i, j;
-	uint32_t val;
-
-	for (i = 0; i < 256; i++) {
-		val = i;
-		for (j = 0; j < 8; j++) {
-			if (val & 1) {
-				val = (val >> 1) ^ SPDK_CRC32C_POLYNOMIAL_REFLECT;
-			} else {
-				val = (val >> 1);
-			}
-		}
-		spdk_crc32c_table[i] = val;
-	}
+	spdk_crc32_table_init(&g_crc32_ieee_table, SPDK_CRC32_POLYNOMIAL_REFLECT);
 }
-#endif /* SPDK_USE_CRC32C_TABLE */
 
-
-#ifndef USE_ISAL
 uint32_t
-spdk_update_crc32c(const uint8_t *buf, size_t len, uint32_t crc)
+spdk_crc32_ieee_update(const void *buf, size_t len, uint32_t crc)
 {
-	size_t s;
-#ifndef SPDK_USE_CRC32C_TABLE
-	int i;
-	uint32_t val;
-#endif /* SPDK_USE_CRC32C_TABLE */
-
-	for (s = 0; s < len; s++) {
-#ifdef SPDK_USE_CRC32C_TABLE
-		crc = (crc >> 8) ^ spdk_crc32c_table[(crc ^ buf[s]) & 0xff];
-#else
-		val = buf[s];
-		for (i = 0; i < 8; i++) {
-			if ((crc ^ val) & 1) {
-				crc = (crc >> 1) ^ SPDK_CRC32C_POLYNOMIAL_REFLECT;
-			} else {
-				crc = (crc >> 1);
-			}
-			val = val >> 1;
-		}
-#endif /* SPDK_USE_CRC32C_TABLE */
-	}
-	return crc;
+	return spdk_crc32_update(&g_crc32_ieee_table, buf, len, crc);
 }
-#endif /* USE_ISAL */

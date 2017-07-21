@@ -37,6 +37,7 @@
 #include <rte_config.h>
 #include <rte_mempool.h>
 
+#include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/trace.h"
@@ -44,7 +45,7 @@
 #include "spdk/queue.h"
 #include "spdk/conf.h"
 #include "spdk/net.h"
-#include "iscsi/crc32c.h"
+
 #include "iscsi/md5.h"
 #include "iscsi/iscsi.h"
 #include "iscsi/param.h"
@@ -59,6 +60,9 @@
 #include "spdk_internal/log.h"
 
 #define MAX_TMPBUF 1024
+
+#define SPDK_CRC32C_INITIAL    0xffffffffUL
+#define SPDK_CRC32C_XOR        0xffffffffUL
 
 #ifdef __FreeBSD__
 #define HAVE_SRANDOMDEV 1
@@ -310,10 +314,10 @@ spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
 	uint32_t ahs_len_bytes = pdu->bhs.total_ahs_len * 4;
 
 	crc32c = SPDK_CRC32C_INITIAL;
-	crc32c = spdk_update_crc32c((uint8_t *)&pdu->bhs, ISCSI_BHS_LEN, crc32c);
+	crc32c = spdk_crc32c_update(&pdu->bhs, ISCSI_BHS_LEN, crc32c);
 
 	if (ahs_len_bytes) {
-		crc32c = spdk_update_crc32c((uint8_t *)pdu->ahs, ahs_len_bytes, crc32c);
+		crc32c = spdk_crc32c_update(pdu->ahs, ahs_len_bytes, crc32c);
 	}
 
 	/* BHS and AHS are always 4-byte multiples in length, so no padding is necessary. */
@@ -329,7 +333,7 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	uint32_t mod;
 
 	crc32c = SPDK_CRC32C_INITIAL;
-	crc32c = spdk_update_crc32c(pdu->data, data_len, crc32c);
+	crc32c = spdk_crc32c_update(pdu->data, data_len, crc32c);
 
 	mod = data_len % ISCSI_ALIGNMENT;
 	if (mod != 0) {
@@ -338,7 +342,7 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 
 		assert(pad_length > 0);
 		assert(pad_length <= sizeof(pad));
-		crc32c = spdk_update_crc32c(pad, pad_length, crc32c);
+		crc32c = spdk_crc32c_update(pad, pad_length, crc32c);
 	}
 
 	crc32c = crc32c ^ SPDK_CRC32C_XOR;

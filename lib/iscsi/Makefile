@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib
-C_SRCS = acceptor.c conn.c crc32c.c \
+C_SRCS = acceptor.c conn.c \
 	 init_grp.c iscsi.c md5.c param.c portal_grp.c \
 	 tgt_node.c iscsi_subsystem.c \
 	 iscsi_rpc.c task.c
