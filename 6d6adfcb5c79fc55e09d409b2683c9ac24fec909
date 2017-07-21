@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2c6ad50_742394e6",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T17:50:28Z",
+      "side": 1,
+      "message": "Unrelated change?",
+      "revId": "6d6adfcb5c79fc55e09d409b2683c9ac24fec909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0198a73a_185c7ff0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T17:50:28Z",
+      "side": 1,
+      "message": "This seems like it could just be:\n\n    *num_pages \u003d length / page_size;\n\nIf length is not a page_size multiple, it is an invalid I/O anyway.",
+      "revId": "6d6adfcb5c79fc55e09d409b2683c9ac24fec909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39903289_2ec26f64",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T17:50:28Z",
+      "side": 1,
+      "message": "The changes in this file seem unrelated as well.",
+      "revId": "6d6adfcb5c79fc55e09d409b2683c9ac24fec909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
