@@ -1174,7 +1174,8 @@ int
 nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		     void *cb_ctx,
 		     spdk_nvme_probe_cb probe_cb,
-		     spdk_nvme_remove_cb remove_cb)
+		     spdk_nvme_remove_cb remove_cb,
+		     bool direct_connect)
 {
 	struct spdk_nvme_ctrlr_opts discovery_opts;
 	struct spdk_nvme_ctrlr *discovery_ctrlr;
@@ -1194,7 +1195,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		return rc;
 	}
 
-	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts);
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&discovery_opts);
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
 
@@ -1271,7 +1272,16 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
 	} while (remaining_num_rec != 0);
 
-	nvme_ctrlr_destruct(discovery_ctrlr);
+	/* Direct attach through spdk_nvme_connect() API */
+	if (direct_connect == true) {
+		/* Set the ready state to skip the normal init process */
+		discovery_ctrlr->state = NVME_CTRLR_STATE_READY;
+		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, discovery_ctrlr, tailq);
+		nvme_ctrlr_add_process(discovery_ctrlr, 0);
+	} else {
+		nvme_ctrlr_destruct(discovery_ctrlr);
+	}
+
 	return 0;
 }
 
