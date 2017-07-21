@@ -1400,7 +1400,7 @@ test_ctrlr_opts_set_defaults(void)
 {
 	struct spdk_nvme_ctrlr_opts opts = {};
 
-	spdk_nvme_ctrlr_opts_set_defaults(&opts);
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
 	CU_ASSERT_EQUAL(opts.num_io_queues, DEFAULT_MAX_IO_QUEUES);
 	CU_ASSERT_TRUE(opts.use_cmb_sqs);
 	CU_ASSERT_EQUAL(opts.arb_mechanism, SPDK_NVME_CC_AMS_RR);
