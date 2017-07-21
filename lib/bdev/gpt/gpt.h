@@ -52,7 +52,6 @@ struct spdk_gpt {
 	uint64_t lba_end;
 	uint64_t total_sectors;
 	uint32_t sector_size;
-	struct spdk_mbr *mbr;
 	struct spdk_gpt_header *header;
 	struct spdk_gpt_partition_entry *partitions;
 };
