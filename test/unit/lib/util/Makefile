@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bit_array.c io_channel.c string.c
+DIRS-y = bit_array.c crc32_ieee.c crc32c.c io_channel.c string.c
 
 .PHONY: all clean $(DIRS-y)
 
