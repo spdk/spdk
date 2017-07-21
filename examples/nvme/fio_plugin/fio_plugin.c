@@ -92,6 +92,14 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	if (spdk_nvme_transport_id_is_nvmf_discovery_ctrlr(trid) == true) {
+		return false;
+	}
+
+	struct thread_data *td = (struct thread_data *)cb_ctx;
+
+	opts->io_queue_size = td->o.iodepth + 1;
+
 	return true;
 }
 
