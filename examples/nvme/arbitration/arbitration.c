@@ -861,6 +861,10 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	if (spdk_nvme_transport_id_is_nvmf_discovery_ctrlr(trid) == true) {
+		return false;
+	}
+
 	/* Update with user specified arbitration configuration */
 	opts->arb_mechanism = g_arbitration.arbitration_mechanism;
 
