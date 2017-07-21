@@ -154,6 +154,8 @@ spdk_app_start_shutdown(void)
 	if (g_shutdown_event != NULL) {
 		spdk_event_call(g_shutdown_event);
 		g_shutdown_event = NULL;
+	} else {
+		spdk_app_stop(0);
 	}
 }
 
@@ -186,14 +188,93 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->max_delay_us = 0;
 }
 
+static int
+spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
+{
+	struct sigaction	sigact;
+	sigset_t		sigmask;
+	int			rc;
+
+	/* Set up custom shutdown handling if the user requested it. */
+	if (opts->shutdown_cb != NULL) {
+		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
+						       __shutdown_event_cb,
+						       NULL, NULL);
+	}
+
+	sigemptyset(&sigmask);
+
+	/* Ignore closed pipes */
+	memset(&sigact, 0, sizeof(sigact));
+	sigact.sa_handler = SIG_IGN;
+	sigemptyset(&sigact.sa_mask);
+	rc = sigaction(SIGPIPE, &sigact, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("sigaction(SIGPIPE) failed\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
+	sigaddset(&sigmask, SIGPIPE);
+
+	/* Catch SIGINT, SIGTERM, and SIGHUP to correctly clean up */
+	memset(&sigact, 0, sizeof(sigact));
+	sigact.sa_handler = __shutdown_signal;
+	sigemptyset(&sigact.sa_mask);
+
+	rc = sigaction(SIGHUP, &sigact, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("sigaction(SIGHUP) failed\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
+	sigaddset(&sigmask, SIGHUP);
+
+	rc = sigaction(SIGINT, &sigact, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("sigaction(SIGINT) failed\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
+	sigaddset(&sigmask, SIGINT);
+
+	rc = sigaction(SIGTERM, &sigact, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("sigaction(SIGTERM) failed\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
+	sigaddset(&sigmask, SIGTERM);
+
+	/* If the user wants to handle usr1, set up their handler. */
+	if (opts->usr1_handler != NULL) {
+		memset(&sigact, 0, sizeof(sigact));
+		sigact.sa_handler = opts->usr1_handler;
+		sigemptyset(&sigact.sa_mask);
+		rc = sigaction(SIGUSR1, &sigact, NULL);
+		if (rc < 0) {
+			SPDK_ERRLOG("sigaction(SIGUSR1) failed\n");
+			spdk_conf_free(g_spdk_app.config);
+			exit(EXIT_FAILURE);
+		}
+		sigaddset(&sigmask, SIGUSR1);
+	}
+
+	rc = pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
+	if (rc) {
+		SPDK_ERRLOG("Unable to set signal mask: %d\n", rc);
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
+
+	return 0;
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1, void *arg2)
 {
 	struct spdk_conf		*config;
 	struct spdk_conf_section	*sp;
-	struct sigaction	sigact;
-	sigset_t		sigmask;
 	char			shm_name[64];
 	int			rc;
 	uint64_t		tpoint_group_mask;
@@ -281,76 +362,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		exit(EXIT_FAILURE);
 	}
 
-	/* Set up custom shutdown handling if the user requested it. */
-	if (opts->shutdown_cb != NULL) {
-		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
-						       __shutdown_event_cb,
-						       NULL, NULL);
-	}
-
-	sigemptyset(&sigmask);
-
-	/* Ignore closed pipes */
-	memset(&sigact, 0, sizeof(sigact));
-	sigact.sa_handler = SIG_IGN;
-	sigemptyset(&sigact.sa_mask);
-	rc = sigaction(SIGPIPE, &sigact, NULL);
-	if (rc < 0) {
-		SPDK_ERRLOG("sigaction(SIGPIPE) failed\n");
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
-	sigaddset(&sigmask, SIGPIPE);
-
-	/* Catch SIGINT, SIGTERM, and SIGHUP to correctly clean up */
-	memset(&sigact, 0, sizeof(sigact));
-	sigact.sa_handler = __shutdown_signal;
-	sigemptyset(&sigact.sa_mask);
-
-	rc = sigaction(SIGHUP, &sigact, NULL);
-	if (rc < 0) {
-		SPDK_ERRLOG("sigaction(SIGHUP) failed\n");
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
-	sigaddset(&sigmask, SIGHUP);
-
-	rc = sigaction(SIGINT, &sigact, NULL);
-	if (rc < 0) {
-		SPDK_ERRLOG("sigaction(SIGINT) failed\n");
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
-	sigaddset(&sigmask, SIGINT);
-
-	rc = sigaction(SIGTERM, &sigact, NULL);
-	if (rc < 0) {
-		SPDK_ERRLOG("sigaction(SIGTERM) failed\n");
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
-	sigaddset(&sigmask, SIGTERM);
-
-	/* If the user wants to handle usr1, set up their handler. */
-	if (opts->usr1_handler != NULL) {
-		memset(&sigact, 0, sizeof(sigact));
-		sigact.sa_handler = opts->usr1_handler;
-		sigemptyset(&sigact.sa_mask);
-		rc = sigaction(SIGUSR1, &sigact, NULL);
-		if (rc < 0) {
-			SPDK_ERRLOG("sigaction(SIGUSR1) failed\n");
-			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
-		}
-		sigaddset(&sigmask, SIGUSR1);
-	}
-
-	rc = pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
-	if (rc) {
-		SPDK_ERRLOG("Unable to set signal mask: %d\n", rc);
-		spdk_conf_free(g_spdk_app.config);
-		exit(EXIT_FAILURE);
-	}
+	spdk_app_setup_signal_handlers(opts);
 
 	if (opts->shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
