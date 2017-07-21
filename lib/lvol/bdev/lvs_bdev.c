@@ -104,6 +104,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 		return -ENODEV;
 	}
 
+	lvs_req->type = SPDK_LVS_REQ_LVOL_HANDLE;
 	lvs_req->u.lvs_handle.bs_dev = bs_dev;
 	lvs_req->u.lvs_handle.base_bdev = base_bdev;
 	lvs_req->u.lvs_handle.cb_fn = cb_fn;
@@ -145,6 +146,8 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
 		return;
 	}
+
+	req->type = SPDK_LVS_REQ_LVOL_BASIC;
 	req->u.lvs_basic.cb_fn = cb_fn;
 	req->u.lvs_basic.cb_arg = cb_arg;
 

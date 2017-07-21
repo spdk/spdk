@@ -197,6 +197,9 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 			return;
 		}
 	}
+
+	SPDK_ERRLOG("Registering context (void *)io_device %p with struct io_device %p \n", io_device, dev);
+
 	TAILQ_INSERT_TAIL(&g_io_devices, dev, tailq);
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
@@ -267,7 +270,9 @@ spdk_get_io_channel(void *io_device)
 		}
 	}
 	if (dev == NULL) {
-		SPDK_ERRLOG("could not find io_device %p\n", io_device);
+		SPDK_ERRLOG("Could not find registered struct io_device %p with context (void *)io_device %p - probaby spdk_bdev_desc\n",
+			    dev,
+			    io_device);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -282,6 +287,9 @@ spdk_get_io_channel(void *io_device)
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 		if (ch->dev == dev) {
 			ch->ref++;
+			SPDK_ERRLOG("Channel %p for struct io_device %p and context (void *)io_device %p ref++ increased to %d\n",
+				    ch, ch->dev, io_device,
+				    ch->ref);
 			/*
 			 * An I/O channel already exists for this device on this
 			 *  thread, so return it.
@@ -290,6 +298,8 @@ spdk_get_io_channel(void *io_device)
 			return ch;
 		}
 	}
+	SPDK_ERRLOG("Channel with struct io_device %p not found for context (void *)io_device %p)\n",
+		    dev, io_device);
 
 	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
 	if (ch == NULL) {
@@ -315,6 +325,10 @@ spdk_get_io_channel(void *io_device)
 		return NULL;
 	}
 
+	SPDK_ERRLOG("Channel %p created with struct io_device %p on context (void *)io_device %p ref set to %d\n",
+		    ch, ch->dev, io_device,
+		    ch->ref);
+
 	return ch;
 }
 
@@ -329,10 +343,14 @@ _spdk_put_io_channel(void *arg)
 	}
 
 	ch->ref--;
+	SPDK_ERRLOG("Channel %p for struct io_device %p on context (void *)io_device %p ref-- decreased to %d\n",
+		    ch, ch->dev, ch->dev->io_device, ch->ref);
 
 	if (ch->ref > 0) {
+		SPDK_ERRLOG("leaving channel alone.\n");
 		return;
 	}
+	SPDK_ERRLOG("DESTROYING the channel !!!\n");
 
 	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
 
