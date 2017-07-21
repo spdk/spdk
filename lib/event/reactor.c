@@ -586,6 +586,8 @@ spdk_reactors_init(unsigned int max_delay_us)
 					return -1;
 				}
 			}
+		} else {
+			g_spdk_event_mempool[i] = NULL;
 		}
 	}
 
@@ -603,7 +605,6 @@ int
 spdk_reactors_fini(void)
 {
 	uint32_t i;
-	uint64_t socket_mask;
 	struct spdk_reactor *reactor;
 
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -613,9 +614,8 @@ spdk_reactors_fini(void)
 		}
 	}
 
-	socket_mask = spdk_reactor_get_socket_mask();
 	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
-		if ((1ULL << i) & socket_mask && g_spdk_event_mempool[i] != NULL) {
+		if (g_spdk_event_mempool[i] != NULL) {
 			spdk_mempool_free(g_spdk_event_mempool[i]);
 		}
 	}
