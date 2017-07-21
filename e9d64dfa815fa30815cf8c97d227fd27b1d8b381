@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "428665ae_54130191",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-21T07:22:20Z",
+      "side": 1,
+      "message": "you could add a single echo to know that hotremove is being tested\necho \"INFO: Testing LUN hotremove (unbinding devices from the driver)\"",
+      "revId": "e9d64dfa815fa30815cf8c97d227fd27b1d8b381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fc50d934_849f4936",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 1
