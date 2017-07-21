@@ -78,23 +78,66 @@ nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_regist
 }
 
 void
-spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
+spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts,
+				       size_t opts_size)
 {
 	char host_id_str[37];
 
-	opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
-	opts->use_cmb_sqs = true;
-	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
-	opts->keep_alive_timeout_ms = 10 * 1000;
-	opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;
-	opts->io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
-	memset(opts->src_addr, 0, sizeof(opts->src_addr));
-	memset(opts->src_svcid, 0, sizeof(opts->src_svcid));
-	memset(opts->host_id, 0, sizeof(opts->host_id));
-	memcpy(opts->extended_host_id, g_spdk_nvme_driver->default_extended_host_id,
-	       sizeof(opts->extended_host_id));
-	uuid_unparse(opts->extended_host_id, host_id_str);
-	snprintf(opts->hostnqn, sizeof(opts->hostnqn), "2014-08.org.nvmexpress:uuid:%s", host_id_str);
+	if (!opts) {
+		return;
+	}
+
+	memset(opts, 0, opts_size);
+
+#define FIELD_OK(field) \
+	offsetof(struct spdk_nvme_ctrlr_opts, field) + sizeof(opts->field) <= opts_size
+
+	if (FIELD_OK(num_io_queues)) {
+		opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
+	}
+
+	if (FIELD_OK(use_cmb_sqs)) {
+		opts->use_cmb_sqs = true;
+	}
+
+	if (FIELD_OK(arb_mechanism)) {
+		opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
+	}
+
+	if (FIELD_OK(keep_alive_timeout_ms)) {
+		opts->keep_alive_timeout_ms = 10 * 1000;
+	}
+
+	if (FIELD_OK(io_queue_size)) {
+		opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;
+	}
+
+	if (FIELD_OK(host_id)) {
+		memset(opts->host_id, 0, sizeof(opts->host_id));
+	}
+
+	if (FIELD_OK(extended_host_id)) {
+		memcpy(opts->extended_host_id, g_spdk_nvme_driver->default_extended_host_id,
+		       sizeof(opts->extended_host_id));
+	}
+
+	if (FIELD_OK(hostnqn)) {
+		uuid_unparse(g_spdk_nvme_driver->default_extended_host_id, host_id_str);
+		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "2014-08.org.nvmexpress:uuid:%s", host_id_str);
+	}
+
+	if (FIELD_OK(io_queue_requests)) {
+		opts->io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
+	}
+
+	if (FIELD_OK(src_addr)) {
+		memset(opts->src_addr, 0, sizeof(opts->src_addr));
+	}
+
+	if (FIELD_OK(src_svcid)) {
+		memset(opts->src_svcid, 0, sizeof(opts->src_svcid));
+	}
+#undef FIELD_OK
 }
 
 /**
@@ -1418,6 +1461,10 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			return rc;
 		}
 		break;
+
+	case NVME_CTRLR_STATE_READY:
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Ctrlr already in ready state\n");
+		return 0;
 
 	default:
 		assert(0);

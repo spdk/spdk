@@ -147,6 +147,15 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
+ * \brief Get the default options for the creation of a specific NVMe controller.
+ *
+ * \param[out] opts Will be filled with the default option.
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_ctrlr_opts).
+ */
+void spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts,
+		size_t opts_size);
+
+/**
  * NVMe library transports
  *
  * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
@@ -361,6 +370,34 @@ int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
 		    spdk_nvme_probe_cb probe_cb,
 		    spdk_nvme_attach_cb attach_cb,
 		    spdk_nvme_remove_cb remove_cb);
+
+/**
+ * \brief Connect the NVMe driver to the device located at the given transport ID.
+ *
+ * \param trid The transport ID indicating which device to connect. If the trtype is PCIe, this will
+ * connect the local PCIe bus. If the trtype is RDMA, the traddr and trsvcid must point at the
+ * location of an NVMe-oF service.
+ * \param opts NVMe controller initialization options. Default values will be used if the user does
+ * not specify the options. The controller may not support all requested parameters.
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_ctrlr_opts), or 0 if opts is NULL.
+ *
+ * \return pointer to the connected NVMe controller or NULL if there is any failure.
+ *
+ * This function is not thread safe and should only be called from one thread at a time while no
+ * other threads are actively using this NVMe device.
+ *
+ * If called from a secondary process, only the device that has been attached to the userspace driver
+ * in the primary process will be connected.
+ *
+ * If expecting more efficiency, suggest to call spdk_nvme_probe() to attach multiple devices at one
+ * time.
+ *
+ * To stop using the the controller and release its associated resources,
+ * call \ref spdk_nvme_detach with the spdk_nvme_ctrlr instance returned by this function.
+ */
+struct spdk_nvme_ctrlr *spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
+		struct spdk_nvme_ctrlr_opts *opts,
+		size_t opts_size);
 
 /**
  * \brief Detaches specified device returned by \ref spdk_nvme_probe()'s attach_cb from the NVMe driver.
