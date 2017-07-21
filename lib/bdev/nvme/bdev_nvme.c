@@ -703,7 +703,6 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
-
 	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Probing device %s\n", trid->traddr);
 
 	if (nvme_ctrlr_get(trid)) {
