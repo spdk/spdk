@@ -331,7 +331,7 @@ no_bdev_vdev_worker(void *arg)
 	}
 
 	iovcnt = SPDK_COUNTOF(iovs);
-	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, iovs, &iovcnt, &length) && iovcnt >= 2) {
+	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, iovs, &iovcnt, &length) == 0) {
 		*(volatile uint8_t *)iovs[iovcnt - 1].iov_base = VIRTIO_BLK_S_IOERR;
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
 	}
