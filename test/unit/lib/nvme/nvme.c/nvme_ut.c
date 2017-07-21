@@ -59,6 +59,13 @@ DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id,
 DEFINE_STUB(spdk_nvme_transport_available, bool,
 	    (enum spdk_nvme_transport_type trtype), true)
 
+DEFINE_STUB(nvme_transport_ctrlr_scan, int,
+	    (const struct spdk_nvme_transport_id *trid,
+	     void *cb_ctx,
+	     spdk_nvme_probe_cb probe_cb,
+	     spdk_nvme_remove_cb remove_cb,
+	     bool direct_connect), 0)
+
 DEFINE_STUB(nvme_ctrlr_add_process, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0)
 

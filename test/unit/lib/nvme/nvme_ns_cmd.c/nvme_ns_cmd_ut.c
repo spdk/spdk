@@ -182,7 +182,8 @@ int
 nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 			  void *cb_ctx,
 			  spdk_nvme_probe_cb probe_cb,
-			  spdk_nvme_remove_cb remove_cb)
+			  spdk_nvme_remove_cb remove_cb,
+			  bool direct_connect)
 {
 	return 0;
 }
