@@ -37,6 +37,7 @@
 
 #include "gpt.h"
 
+#include "spdk/crc32.h"
 #include "spdk/event.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
@@ -46,40 +47,6 @@
 #define PRIMARY_PARTITION_NUMBER 4
 #define GPT_PROTECTIVE_MBR 1
 #define SPDK_MAX_NUM_PARTITION_ENTRIES 128
-#define SPDK_GPT_CRC32_POLYNOMIAL_REFLECT 0xedb88320UL
-
-static uint32_t spdk_gpt_crc32_table[256];
-
-__attribute__((constructor)) static void
-spdk_gpt_init_crc32(void)
-{
-	int i, j;
-	uint32_t val;
-
-	for (i = 0; i < 256; i++) {
-		val = i;
-		for (j = 0; j < 8; j++) {
-			if (val & 1) {
-				val = (val >> 1) ^ SPDK_GPT_CRC32_POLYNOMIAL_REFLECT;
-			} else {
-				val = (val >> 1);
-			}
-		}
-		spdk_gpt_crc32_table[i] = val;
-	}
-}
-
-static uint32_t
-spdk_gpt_crc32(const uint8_t *buf, uint32_t size, uint32_t seed)
-{
-	uint32_t i, crc32 = seed;
-
-	for (i = 0; i < size; i++) {
-		crc32 = spdk_gpt_crc32_table[(crc32 ^ buf[i]) & 0xff] ^ (crc32 >> 8);
-	}
-
-	return crc32 ^ seed;
-}
 
 static int
 spdk_gpt_read_partitions(struct spdk_gpt *gpt)
@@ -113,7 +80,8 @@ spdk_gpt_read_partitions(struct spdk_gpt *gpt)
 	gpt->partitions = (struct spdk_gpt_partition_entry *)(gpt->buf +
 			  partition_start_lba * gpt->sector_size);
 
-	crc32 = spdk_gpt_crc32((uint8_t *)gpt->partitions, total_partition_size, ~0);
+	crc32 = spdk_crc32_ieee_update(gpt->partitions, total_partition_size, ~0);
+	crc32 ^= ~0;
 
 	if (crc32 != from_le32(&head->partition_entry_array_crc32)) {
 		SPDK_ERRLOG("GPT partition entry array crc32 did not match\n");
@@ -168,7 +136,8 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 
 	original_crc = from_le32(&head->header_crc32);
 	head->header_crc32 = 0;
-	new_crc = spdk_gpt_crc32((uint8_t *)head, from_le32(&head->header_size), ~0);
+	new_crc = spdk_crc32_ieee_update(head, from_le32(&head->header_size), ~0);
+	new_crc ^= ~0;
 	/* restore header crc32 */
 	to_le32(&head->header_crc32, original_crc);
 

@@ -33,29 +33,20 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-SPDK_LIB_LIST = log util cunit trace conf
-
-CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
-LIBS += -lcunit -lcrypto
-SCSI_OBJS = port
-ISCSI_OBJS = md5 param
-OBJS += $(SCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/scsi/%.o)
-OBJS += $(ISCSI_OBJS:%=$(SPDK_ROOT_DIR)/lib/iscsi/%.o)
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/util
+APP = crc32_ieee_ut
+C_SRCS := crc32_ieee_ut.c
 
-APP = iscsi_ut
-C_SRCS = iscsi_ut.c
+LIBS += -lcunit
 
-all: $(APP)
+all : $(APP)
 
-$(APP): $(OBJS) $(SPDK_LIB_FILES)
+$(APP) : $(OBJS) $(SPDK_LIBS)
 	$(LINK_C)
 
-clean:
+clean :
 	$(CLEAN_C) $(APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
