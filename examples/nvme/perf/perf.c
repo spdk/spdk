@@ -1168,6 +1168,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_pci_device	*pci_dev;
 	struct spdk_pci_id	pci_id;
 
+	if (spdk_nvme_transport_id_is_nvmf_discovery_ctrlr(trid) == true) {
+		return false;
+	}
+
 	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attaching to NVMe over Fabrics controller at %s:%s: %s\n",
 		       trid->traddr, trid->trsvcid,
