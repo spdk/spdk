@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b4ab7b6_70396bfd",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-21T12:47:15Z",
+      "side": 1,
+      "message": "can\u0027t we pass entire backend here? this is very short sighted solution",
+      "range": {
+        "startLine": 332,
+        "startChar": 7,
+        "endLine": 332,
+        "endChar": 24
+      },
+      "revId": "7ec90a35a3ed21dd56e2f89455c28e8889818cb0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
