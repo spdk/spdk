@@ -42,12 +42,61 @@ static void
 test_crc32c(void)
 {
 	uint32_t crc;
-	char buf[] = "Hello world!";
+	char buf[1024];
 
+	snprintf(buf, sizeof(buf), "%s", "Hello world!");
 	crc = 0xFFFFFFFFu;
 	crc = spdk_crc32c_update(buf, strlen(buf), crc);
 	crc ^= 0xFFFFFFFFu;
 	CU_ASSERT(crc == 0x7b98e751);
+
+	snprintf(buf, sizeof(buf), "%s", "1");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x90F599E3);
+
+	snprintf(buf, sizeof(buf), "%s", "12");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x7355C460);
+
+	snprintf(buf, sizeof(buf), "%s", "123");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x107B2FB2);
+
+	snprintf(buf, sizeof(buf), "%s", "1234");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0xF63AF4EE);
+
+	snprintf(buf, sizeof(buf), "%s", "12345");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x18D12335);
+
+	snprintf(buf, sizeof(buf), "%s", "123456");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x41357186);
+
+	snprintf(buf, sizeof(buf), "%s", "1234567");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x124297EA);
+
+	snprintf(buf, sizeof(buf), "%s", "12345678");
+	crc = 0xFFFFFFFFu;
+	crc = spdk_crc32c_update(buf, strlen(buf), crc);
+	crc ^= 0xFFFFFFFFu;
+	CU_ASSERT(crc == 0x6087809A);
 }
 
 int
