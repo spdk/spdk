@@ -157,6 +157,30 @@
       "revId": "c754a55979fcbbba0bbd25816aed03c732c51b62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f07677b3_0872ff1d",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-21T06:35:03Z",
+      "side": 1,
+      "message": "hmmm. i\u0027m pretty sure you dereference it in line #286 right after you allocated it. it doesn\u0027t change since then, so how come?",
+      "parentUuid": "f64acc3e_c3d9d84b",
+      "range": {
+        "startLine": 310,
+        "startChar": 1,
+        "endLine": 310,
+        "endChar": 11
+      },
+      "revId": "c754a55979fcbbba0bbd25816aed03c732c51b62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
