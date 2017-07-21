@@ -38,8 +38,9 @@
 #ifndef SPDK_INTERNAL_GPT_H
 #define SPDK_INTERNAL_GPT_H
 
+#include "spdk/stdinc.h"
+
 #include "spdk/gpt_spec.h"
-#include "spdk/bdev.h"
 
 #define SPDK_GPT_PART_TYPE_GUID SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
 #define SPDK_GPT_BUFFER_SIZE 32768  /* 32KB */

@@ -31,16 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk_internal/event.h"
-#include "spdk_internal/bdev.h"
-#include "spdk_internal/log.h"
-
 #include "gpt.h"
 
-#include "spdk/event.h"
 #include "spdk/endian.h"
-#include "spdk/env.h"
-#include "spdk/io_channel.h"
+
+#include "spdk_internal/log.h"
 
 #define GPT_PRIMARY_PARTITION_TABLE_LBA 0x1
 #define PRIMARY_PARTITION_NUMBER 4

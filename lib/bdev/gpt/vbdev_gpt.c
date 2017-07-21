@@ -36,20 +36,18 @@
  * each partition.
  */
 
-#include "spdk/stdinc.h"
+#include "gpt.h"
 
-#include "spdk/rpc.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
-#include "spdk/io_channel.h"
 #include "spdk/env.h"
+#include "spdk/io_channel.h"
+#include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
-
-#include "gpt.h"
 
 SPDK_DECLARE_BDEV_MODULE(gpt);
 
