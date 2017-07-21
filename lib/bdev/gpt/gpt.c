@@ -231,7 +231,6 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 		return -1;
 	}
 
-	gpt->mbr = mbr;
 	return 0;
 }
 
