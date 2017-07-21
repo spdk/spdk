@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93349158_773c680d",
+        "filename": "lib/nvmf/virtual.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T19:26:22Z",
+      "side": 1,
+      "message": "We probably need to handle this case by sending one deallocate at a time to the bdev layer, chaining them together in the completion. I don\u0027t think there is any way to report a maximum Dataset Management number of ranges (the controller must support 256).\n\nThis was already broken with the current implementation, since the existing bdevs only supported one range anyway, but we should fix it before we forget about it again.",
+      "revId": "442f753be55588c9ac89de2c11c78c5fa7aa59e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
