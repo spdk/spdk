@@ -655,4 +655,18 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 	return 0;
 }
 
+bool
+spdk_nvme_transport_id_is_nvmf_discovery_ctrlr(const struct spdk_nvme_transport_id *trid)
+{
+	if (trid->trtype != SPDK_NVME_TRANSPORT_RDMA) {
+		return false;
+	}
+
+	if (strcmp(trid->subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
+		return false;
+	}
+
+	return true;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)
