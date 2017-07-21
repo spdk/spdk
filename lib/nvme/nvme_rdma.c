@@ -1271,7 +1271,16 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
 	} while (remaining_num_rec != 0);
 
-	nvme_ctrlr_destruct(discovery_ctrlr);
+	/* Direct attach with no probe_cb set */
+	if (!probe_cb) {
+		/* Set the ready state to skip the normal init process */
+		discovery_ctrlr->state = NVME_CTRLR_STATE_READY;
+		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, discovery_ctrlr, tailq);
+		nvme_ctrlr_add_process(discovery_ctrlr, 0);
+	} else {
+		nvme_ctrlr_destruct(discovery_ctrlr);
+	}
+
 	return 0;
 }
 
