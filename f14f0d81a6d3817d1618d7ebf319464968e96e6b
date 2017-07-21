@@ -1,0 +1,265 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1987e0b8_6434c280",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "uuid.h is part of libuuid, not a standard POSIX or C header, so it should not be included from stdinc.h.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08a41620_c7fb1c40",
+        "filename": "lib/bdev/lvol/Makefile",
+        "patchSetId": 23
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "Trim the blank line at the beginning of the file to match other license headers.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9178373_77dc4be9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "blocklen of the lvol should be the page size, not the underlying bdev\u0027s blocklen.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce8e2f86_ae691498",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "We should use \"uuid\" or \"guid\" consistently (it is probably a UUID in this case since we are using libuuid to generate it).",
+      "range": {
+        "startLine": 138,
+        "startChar": 3,
+        "endLine": 138,
+        "endChar": 7
+      },
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6d54430_35015336",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "It seems like size should probably be a uint64_t (what units does size use? bytes?)",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "618c4578_65e1694b",
+        "filename": "lib/lvol/bdev/lvs_bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "The lvol library shouldn\u0027t need to include the internal bdev.h - are we missing something in the spdk/bdev.h API that is needed here?",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16b01791_e62f3d14",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "spdk_sprintf_alloc() needs an allocation failure check.\n\nAlso, uint64_t is not necessarily unsigned long; this should use PRI_u64 rather than %lu.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52f9738e_dbaf9991",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "Maybe \"lvol_store_uuid\" would be more descriptive as a parameter name.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "177b65cd_d0634acc",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "The help for \u0027size\u0027 should mention what units it is in.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a496265_88ba2bdd",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "Allocation needs a NULL check (can be SPDK_CU_ASSERT_FATAL() in the unit tests).",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0af93de6_3848b659",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "This allocation must be checked as well.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9d410cd_c3e5ed61",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "Check allocation.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "896f26d9_d363a674",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "Check allocation.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7463de0c_04abc051",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "Check allocation.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e17c667_7ea8adf2",
+        "filename": "unittest.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-21T18:16:40Z",
+      "side": 1,
+      "message": "This should go in the bdev section above.",
+      "revId": "f14f0d81a6d3817d1618d7ebf319464968e96e6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
