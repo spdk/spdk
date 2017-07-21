@@ -203,13 +203,6 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 		return -1;
 	}
 
-	expected_start_lba = GPT_PRIMARY_PARTITION_TABLE_LBA;
-	if (from_le32(&mbr->partitions[0].start_lba) != expected_start_lba) {
-		SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "start lba mismatch, provided=%u, expected=%u\n",
-			      from_le32(&mbr->partitions[0].start_lba), expected_start_lba);
-		return -1;
-	}
-
 	for (i = 0; i < PRIMARY_PARTITION_NUMBER; i++) {
 		if (mbr->partitions[i].os_type == SPDK_MBR_OS_TYPE_GPT_PROTECTIVE) {
 			primary_partition = i;
@@ -219,6 +212,14 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 	}
 
 	if (ret == GPT_PROTECTIVE_MBR) {
+		expected_start_lba = GPT_PRIMARY_PARTITION_TABLE_LBA;
+		if (from_le32(&mbr->partitions[primary_partition].start_lba) != expected_start_lba) {
+			SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "start lba mismatch, provided=%u, expected=%u\n",
+				      from_le32(&mbr->partitions[primary_partition].start_lba),
+				      expected_start_lba);
+			return -1;
+		}
+
 		total_lba_size = from_le32(&mbr->partitions[primary_partition].size_lba);
 		if ((total_lba_size != ((uint32_t) gpt->total_sectors - 1)) &&
 		    (total_lba_size != 0xFFFFFFFF)) {
