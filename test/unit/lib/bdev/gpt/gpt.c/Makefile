@@ -1,8 +1,7 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) 2016 FUJITSU LIMITED, All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -14,7 +13,7 @@
 #      notice, this list of conditions and the following disclaimer in
 #      the documentation and/or other materials provided with the
 #      distribution.
-#    * Neither the name of Intel Corporation nor the names of its
+#    * Neither the name of the copyright holder nor the names of its
 #      contributors may be used to endorse or promote products derived
 #      from this software without specific prior written permission.
 #
@@ -31,14 +30,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = bdev.c gpt scsi_nvme.c
+SPDK_LIB_LIST = log cunit
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += -lcunit
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+APP = gpt_ut
+C_SRCS = gpt_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
