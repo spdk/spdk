@@ -44,6 +44,8 @@ fi
 $valgrind test/unit/lib/bdev/bdev.c/bdev_ut
 $valgrind test/unit/lib/bdev/scsi_nvme.c/scsi_nvme_ut
 
+$valgrind test/unit/lib/gpt/gpt_parse.c/gpt_parse_ut
+
 $valgrind test/unit/lib/blob/blob.c/blob_ut
 
 $valgrind test/lib/blobfs/blobfs_async_ut/blobfs_async_ut
