@@ -67,27 +67,46 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 }
 
 static int
-test_transport1_listen_addr_add(struct spdk_nvmf_listen_addr *listen_addr)
+test_transport1_listen_addr_add(struct spdk_nvmf_transport *transport,
+				struct spdk_nvmf_listen_addr *listen_addr)
 {
 	return 0;
 }
 
 static void
-test_transport1_listen_addr_discover(struct spdk_nvmf_listen_addr *listen_addr,
+test_transport1_listen_addr_discover(struct spdk_nvmf_transport *transport,
+				     struct spdk_nvmf_listen_addr *listen_addr,
 				     struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = 42;
 }
 
-static const struct spdk_nvmf_transport test_transport1 = {
+static const struct spdk_nvmf_transport_ops test_transport1_ops = {
 	.listen_addr_add = test_transport1_listen_addr_add,
 	.listen_addr_discover = test_transport1_listen_addr_discover,
 };
 
-const struct spdk_nvmf_transport *
-spdk_nvmf_transport_get(enum spdk_nvme_transport_type trtype)
+static struct spdk_nvmf_transport test_transport1 = {
+	.ops = &test_transport1_ops,
+};
+
+struct spdk_nvmf_transport *
+spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
+			   enum spdk_nvme_transport_type type)
+{
+	if (type == SPDK_NVME_TRANSPORT_RDMA) {
+		test_transport1.tgt = tgt;
+		return &test_transport1;
+	}
+
+	return NULL;
+}
+
+struct spdk_nvmf_transport *
+spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_type trtype)
 {
 	if (trtype == SPDK_NVME_TRANSPORT_RDMA) {
+		test_transport1.tgt = tgt;
 		return &test_transport1;
 	}
 

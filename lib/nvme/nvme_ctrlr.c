@@ -230,7 +230,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	qpair = nvme_transport_ctrlr_create_io_qpair(ctrlr, qid, &opts);
 	if (qpair == NULL) {
-		SPDK_ERRLOG("transport->ctrlr_create_io_qpair() failed\n");
+		SPDK_ERRLOG("transport->ops->ctrlr_create_io_qpair() failed\n");
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return NULL;
 	}
