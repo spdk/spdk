@@ -46,7 +46,7 @@ static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
-#define MAX_VHOST_DEVICES	15
+#define MAX_VHOST_DEVICES	64
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
