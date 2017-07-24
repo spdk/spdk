@@ -87,12 +87,16 @@ struct spdk_nvmf_tgt {
 	size_t					discovery_log_page_size;
 	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
 	uint32_t				current_subsystem_id;
+	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 };
 
 extern struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
 void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
+
+struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
+		enum spdk_nvme_transport_type);
 
 #define OBJECT_NVMF_IO				0x30
 
