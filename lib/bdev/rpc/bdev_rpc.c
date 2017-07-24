@@ -74,6 +74,24 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "bdev_opened_for_write");
 		spdk_json_write_bool(w, bdev->bdev_opened_for_write);
 
+		spdk_json_write_name(w, "io_types");
+		spdk_json_write_object_begin(w);
+		spdk_json_write_name(w, "read");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
+		spdk_json_write_name(w, "write");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
+		spdk_json_write_name(w, "unmap");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
+		spdk_json_write_name(w, "flush");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
+		spdk_json_write_name(w, "reset");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
+		spdk_json_write_name(w, "nvme_admin");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
+		spdk_json_write_name(w, "nvme_io");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
+		spdk_json_write_object_end(w);
+
 		spdk_json_write_name(w, "driver_specific");
 		spdk_json_write_object_begin(w);
 		spdk_bdev_dump_config_json(bdev, w);
