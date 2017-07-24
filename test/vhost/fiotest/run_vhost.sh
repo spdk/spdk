@@ -45,5 +45,6 @@ echo "INFO: $0"
 echo
 
 . $BASE_DIR/common.sh
-
+spdk_vhost_run_invalid_option || true
+spdk_vhost_run_help
 spdk_vhost_run
