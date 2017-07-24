@@ -130,6 +130,8 @@ function spdk_vhost_run()
 	local vhost_socket="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
 	local vhost_conf_template="$BASE_DIR/vhost.conf.in"
 	local vhost_conf_file="$BASE_DIR/vhost.conf"
+	local vhost_mem_size=2000
+	local vhost_tpoint_group_mask=0x0
 	echo "INFO: starting vhost app in background"
 	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill
 	[[ -d $SPDK_VHOST_SCSI_TEST_DIR ]] && rm -f $SPDK_VHOST_SCSI_TEST_DIR/*
@@ -148,7 +150,8 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
+	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file -s $vhost_mem_size\
+	-e $vhost_tpoint_group_mask"
 
 	echo "INFO: Loging to:   $vhost_log_file"
 	echo "INFO: Config file: $vhost_conf_file"
@@ -164,6 +167,26 @@ function spdk_vhost_run()
 	echo "INFO: vhost started - pid=$vhost_pid"
 
 	rm $vhost_conf_file
+}
+
+function spdk_vhost_run_help()
+{
+	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
+	local cmd="$vhost_app -h"
+	echo "INFO: Starting vhost help"
+	cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd
+	sleep 0.5
+	echo "INFO: Test done"
+}
+
+function spdk_vhost_run_invalid_option()
+{
+	local vhost_app="$SPDK_BUILD_DIR/app/vhost/vhost"
+	local cmd="$vhost_app -z"
+	echo "INFO: Starting vhost with invalid option"
+	cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd
+	sleep 0.5
+	echo "INFO: Test done"
 }
 
 function spdk_vhost_kill()
