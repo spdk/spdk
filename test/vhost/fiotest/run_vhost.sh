@@ -46,4 +46,18 @@ echo
 
 . $BASE_DIR/common.sh
 
+echo "INFO: Testing vhost command line arguments"
+# Passing invalid path to config file, forcing vhost to exit
+$VHOST_APP -c /path/to/non_existing_file/conf -S $BASE_DIR -e 0x0 -s 1024 -d -q -h
+
+# Testing vhost create pid file option. Vhost will exit as invalid config path is given
+$VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid || true
+
+# Expecting vhost to fail if an incorrect argument is given
+$VHOST_APP -x || true
+
+# Passing trace flags if spdk is build without CONFIG_DEBUG=y option make vhost exit with error
+$VHOST_APP -c /path/to/non_existing_file/conf -t vhost_scsi || true
+
+# Startig vhost with valid options
 spdk_vhost_run
