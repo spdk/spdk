@@ -46,4 +46,16 @@ echo
 
 . $BASE_DIR/common.sh
 
+echo "INFO: Testing vhost command line arguments"
+$VHOST_APP -c $BASE_DIR/vhost.conf.in -S $BASE_DIR -e 0x0 -s 1024 -d -q -h
+
+# Testing vhost create pid file option
+$VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid || true
+
+# expecting vhost to fail if incorrect option is given
+$VHOST_APP -x || true
+
+# if spdk is build without CONFIG_DEBUG=y option, vhost will exit with error
+$VHOST_APP -c /path/to/non_existing_file/conf -t vhost_scsi || true
+
 spdk_vhost_run
