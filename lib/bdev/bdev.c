@@ -1437,6 +1437,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc;
+	bool			do_destruct = true;
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Removing bdev %s from list\n", bdev->name);
 
@@ -1447,12 +1448,13 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	TAILQ_FOREACH_SAFE(desc, &bdev->open_descs, link, tmp) {
 		if (desc->remove_cb) {
 			pthread_mutex_unlock(&bdev->mutex);
+			do_destruct = false;
 			desc->remove_cb(desc->remove_ctx);
 			pthread_mutex_lock(&bdev->mutex);
 		}
 	}
 
-	if (!TAILQ_EMPTY(&bdev->open_descs)) {
+	if (!do_destruct) {
 		pthread_mutex_unlock(&bdev->mutex);
 		return;
 	}
