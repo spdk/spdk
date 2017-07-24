@@ -42,49 +42,58 @@
 struct spdk_nvmf_listen_addr;
 
 struct spdk_nvmf_transport {
+	struct spdk_nvmf_tgt			*tgt;
+	const struct spdk_nvmf_transport_ops	*ops;
+
+	TAILQ_ENTRY(spdk_nvmf_transport)	link;
+};
+
+struct spdk_nvmf_transport_ops {
 	/**
 	 * Transport type
 	 */
 	enum spdk_nvme_transport_type type;
 
 	/**
-	 * Initialize the transport.
+	 * Create a transport for the given target
 	 */
-	int (*transport_init)(uint16_t max_queue_depth, uint32_t max_io_size,
-			      uint32_t in_capsule_data_size);
+	struct spdk_nvmf_transport *(*create)(struct spdk_nvmf_tgt *tgt);
 
 	/**
-	 * Shut down the transport.
+	 * Destroy the transport
 	 */
-	int (*transport_fini)(void);
+	int (*destroy)(struct spdk_nvmf_transport *transport);
 
 	/**
 	 * Check for new connections on the transport.
 	 */
-	void (*acceptor_poll)(void);
+	void (*acceptor_poll)(struct spdk_nvmf_transport *transport);
 
 	/**
 	  * Instruct the acceptor to listen on the address provided. This
 	  * may be called multiple times.
 	  */
-	int (*listen_addr_add)(struct spdk_nvmf_listen_addr *listen_addr);
+	int (*listen_addr_add)(struct spdk_nvmf_transport *transport,
+			       struct spdk_nvmf_listen_addr *listen_addr);
 
 	/**
 	  * Instruct to remove listening on the address provided. This
 	  * may be called multiple times.
 	  */
-	int (*listen_addr_remove)(struct spdk_nvmf_listen_addr *listen_addr);
+	int (*listen_addr_remove)(struct spdk_nvmf_transport *transport,
+				  struct spdk_nvmf_listen_addr *listen_addr);
 
 	/**
 	 * Fill out a discovery log entry for a specific listen address.
 	 */
-	void (*listen_addr_discover)(struct spdk_nvmf_listen_addr *listen_addr,
+	void (*listen_addr_discover)(struct spdk_nvmf_transport *transport,
+				     struct spdk_nvmf_listen_addr *listen_addr,
 				     struct spdk_nvmf_discovery_log_page_entry *entry);
 
 	/**
 	 * Create a new ctrlr
 	 */
-	struct spdk_nvmf_ctrlr *(*ctrlr_init)(void);
+	struct spdk_nvmf_ctrlr *(*ctrlr_init)(struct spdk_nvmf_transport *transport);
 
 	/**
 	 * Destroy a ctrlr
@@ -123,11 +132,12 @@ struct spdk_nvmf_transport {
 	bool (*qpair_is_idle)(struct spdk_nvmf_qpair *qpair);
 };
 
-int spdk_nvmf_transport_init(void);
-int spdk_nvmf_transport_fini(void);
+struct spdk_nvmf_transport *spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
+		enum spdk_nvme_transport_type type);
+int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
 
-const struct spdk_nvmf_transport *spdk_nvmf_transport_get(enum spdk_nvme_transport_type type);
+void spdk_nvmf_transport_poll(struct spdk_nvmf_transport *transport);
 
-extern const struct spdk_nvmf_transport spdk_nvmf_transport_rdma;
+extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 
 #endif /* SPDK_NVMF_TRANSPORT_H */

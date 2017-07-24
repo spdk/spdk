@@ -263,7 +263,7 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 static void
 acceptor_poll(void *arg)
 {
-	spdk_nvmf_acceptor_poll();
+	spdk_nvmf_tgt_poll();
 }
 
 static void
