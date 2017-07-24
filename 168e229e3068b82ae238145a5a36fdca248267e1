@@ -16,6 +16,24 @@
       "revId": "168e229e3068b82ae238145a5a36fdca248267e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de3bf9b0_7d321a79",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-24T07:55:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd76ff4c_88257a65",
+      "revId": "168e229e3068b82ae238145a5a36fdca248267e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
