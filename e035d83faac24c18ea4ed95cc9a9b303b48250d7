@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dad8d79d_d3ee0286",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-24T22:54:28Z",
+      "side": 1,
+      "message": "Indentation issue",
+      "revId": "e035d83faac24c18ea4ed95cc9a9b303b48250d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
