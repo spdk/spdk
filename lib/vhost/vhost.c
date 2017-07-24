@@ -49,6 +49,7 @@ static char dev_dirname[PATH_MAX] = "";
 #define MAX_VHOST_DEVICES	15
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
+static struct spdk_event *g_spdk_vhost_rpc_event;
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
@@ -684,6 +685,30 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 
 	ev->spdk_event = NULL;
 	sem_destroy(&ev->sem);
+}
+
+void
+spdk_vhost_start_rpc_event(const char *ctrlr_name, void (*fn)(void *, void *), void *arg1, void *arg2)
+{
+    struct spdk_vhost_dev *vdev;
+
+    /* FIXME: lock g_vhost_mutex */
+    if (g_spdk_vhost_rpc_event) {
+        // ...
+        return;
+    }
+
+    vdev = spdk_vhost_dev_find(ctrlr_name);
+    // ...
+    /* FIXME: unlock mutex */
+    /* FIXME: lock vdev->mutex */
+    if (vdev->lcore == -1) {
+        fn(arg1, arg2);
+    } else {
+        g_spdk_vhost_rpc_event = spdk_event_allocate(vdev->lcore, fn, arg1, arg2);
+        spdk_event_call(g_spdk_vhost_rpc_event);
+    }
+    /* FIXME: unlock mutex */
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
