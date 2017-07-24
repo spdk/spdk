@@ -50,7 +50,7 @@ fi
 
 cd $RESULTS_DIR
 
-SYSINFO_FILE=$RESULTS_DIR/sysinfo.txt
+SYSINFO_FILE=sysinfo.txt
 COMMAND="hostname"
 echo ">> $COMMAND : " >> $SYSINFO_FILE
 $COMMAND >> $SYSINFO_FILE
