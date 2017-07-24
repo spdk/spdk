@@ -34,6 +34,7 @@
 #include "spdk_internal/lvolstore.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
+#include "spdk/io_channel.h"
 
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
@@ -79,6 +80,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 		return -ENOMEM;
 	}
 
+	lvs_req->type = SPDK_LVS_REQ_LVS_HANDLE;
 	lvs_req->u.lvs_handle.cb_fn = cb_fn;
 	lvs_req->u.lvs_handle.cb_arg = cb_arg;
 	lvs_req->u.lvs_handle.lvol_store = lvs;
@@ -117,10 +119,12 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		return -ENOMEM;
 	}
 
+	lvs_req->type = SPDK_LVS_REQ_LVS_BASIC;
 	lvs_req->u.lvs_basic.cb_fn = cb_fn;
 	lvs_req->u.lvs_basic.cb_arg = cb_arg;
 
 	SPDK_TRACELOG(SPDK_TRACE_LVOL, "Unloading lvol store\n");
+
 	spdk_bs_unload(lvs->blobstore, _lvs_unload_cb, lvs_req);
 	free(lvs);
 
@@ -164,6 +168,9 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	uuid_unparse(lvol->lvol_store->uuid, guid);
 	lvol->name = spdk_sprintf_alloc("%s_%lu", guid, (uint64_t)blob_id);
+
+	lvol->bs_channel = spdk_bs_alloc_io_channel(lvol->lvol_store->blobstore);
+	SPDK_TRACELOG(SPDK_TRACE_LVOL, "bs_channel %p created for lvol %s\n", lvol->bs_channel, lvol->name);
 
 	lvolerrno = spdk_bs_md_resize_blob(blob, number_of_clusters);
 	if (lvolerrno < 0) {
@@ -312,6 +319,12 @@ spdk_lvol_destroy(struct spdk_lvol *lvol)
 
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 
+	SPDK_TRACELOG(SPDK_TRACE_LVOL, "bs_channel %p removed for lvol %s\n", lvol->bs_channel, lvol->name);
+	assert(lvol->bs_channel != NULL);
+	spdk_bs_free_io_channel(lvol->bs_channel);
+	spdk_io_device_unregister(&lvol->io_target, NULL);
+	lvol->bs_channel = NULL;
+
 	free(lvol->name);
 	free(lvol);
 }
@@ -323,6 +336,12 @@ spdk_lvol_close(struct spdk_lvol *lvol)
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	free(lvol->name);
 	free(lvol);
+}
+
+struct spdk_io_channel *
+spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
+{
+	return spdk_bs_alloc_io_channel(lvol->lvol_store->blobstore);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)

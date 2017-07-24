@@ -145,6 +145,8 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 		return NULL;
 	}
 
+	SPDK_ERRLOG("GPT BASE BDEV INIT\n");
+
 	gpt_bdev->ch = spdk_bdev_get_io_channel(gpt_bdev->bdev_desc);
 	if (!gpt_bdev->ch) {
 		SPDK_ERRLOG("Cannot allocate ch\n");
@@ -445,6 +447,8 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	spdk_put_io_channel(gpt_bdev->ch);
 	gpt_bdev->ch = NULL;
 	spdk_bdev_free_io(bdev_io);
+
+	SPDK_ERRLOG("GPT BASE BDEV FREE\n");
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
 		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
