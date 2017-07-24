@@ -11,6 +11,7 @@ TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
 
 SPDK_SRC_DIR=$TEST_DIR/spdk
 SPDK_BUILD_DIR=$BASE_DIR/../../../
+VHOST_APP=$SPDK_BUILD_DIR/app/vhost/vhost
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 

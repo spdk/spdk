@@ -46,4 +46,22 @@ echo
 
 . $BASE_DIR/common.sh
 
+#operation will increasse vhost test coverage
+echo "INFO: Starting vhost with additional options "
+$VHOST_APP -c $BASE_DIR/vhost.conf.in -S $BASE_DIR -e 0x0 -s 2000 -f $BASE_DIR/vhost.pid -d -q -h
+sleep 0.5
+echo "INFO: Test done"
+
+#expacting vhost to fail if incorrect option is given
+echo "INFO: Starting vhost incorrect option"
+$VHOST_APP -x || true
+sleep 0.5
+echo "INFO: Test done"
+
+#for trace flags, vhost should be build with CONFIG_DEBUG=y parameter, otherwise vhost will exit with error
+echo "INFO: Starting vhost with trace_flag option"
+$VHOST_APP -t vhost_scsi || true
+sleep 0.5
+echo "INFO: Test done"
+
 spdk_vhost_run
