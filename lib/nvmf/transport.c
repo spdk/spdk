@@ -42,71 +42,56 @@
 
 #include "nvmf_internal.h"
 
-static const struct spdk_nvmf_transport *const g_transports[] = {
+static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 #ifdef SPDK_CONFIG_RDMA
 	&spdk_nvmf_transport_rdma,
 #endif
 };
 
-#define NUM_TRANSPORTS (SPDK_COUNTOF(g_transports))
+#define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))
 
-int
-spdk_nvmf_transport_init(void)
+struct spdk_nvmf_transport *
+spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt,
+			   enum spdk_nvme_transport_type type)
 {
 	size_t i;
-	int count = 0;
+	const struct spdk_nvmf_transport_ops *ops = NULL;
+	struct spdk_nvmf_transport *transport;
 
 	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (g_transports[i]->transport_init(g_nvmf_tgt.max_queue_depth, g_nvmf_tgt.max_io_size,
-						    g_nvmf_tgt.in_capsule_data_size) < 0) {
-			SPDK_NOTICELOG("Transport type %s init failed\n",
-				       spdk_nvme_transport_id_trtype_str(g_transports[i]->type));
-		} else {
-			count++;
+		if (g_transport_ops[i]->type == type) {
+			ops = g_transport_ops[i];
+			break;
 		}
 	}
 
-	return count;
+	if (!ops) {
+		SPDK_ERRLOG("Transport type %s unavailable.\n",
+			    spdk_nvme_transport_id_trtype_str(type));
+		return NULL;
+	}
+
+	transport = ops->create(tgt);
+	if (!transport) {
+		SPDK_ERRLOG("Unable to create new transport of type %s\n",
+			    spdk_nvme_transport_id_trtype_str(type));
+		return NULL;
+	}
+
+	transport->ops = ops;
+	transport->tgt = tgt;
+
+	return transport;
 }
 
 int
-spdk_nvmf_transport_fini(void)
+spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 {
-	size_t i;
-	int count = 0;
-
-	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (g_transports[i]->transport_fini() < 0) {
-			SPDK_NOTICELOG("Transport type %s fini failed\n",
-				       spdk_nvme_transport_id_trtype_str(g_transports[i]->type));
-		} else {
-			count++;
-		}
-	}
-
-	return count;
+	return transport->ops->destroy(transport);
 }
 
 void
-spdk_nvmf_acceptor_poll(void)
+spdk_nvmf_transport_poll(struct spdk_nvmf_transport *transport)
 {
-	size_t i;
-
-	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		g_transports[i]->acceptor_poll();
-	}
-}
-
-const struct spdk_nvmf_transport *
-spdk_nvmf_transport_get(enum spdk_nvme_transport_type type)
-{
-	size_t i;
-
-	for (i = 0; i != NUM_TRANSPORTS; i++) {
-		if (type == g_transports[i]->type) {
-			return g_transports[i];
-		}
-	}
-
-	return NULL;
+	transport->ops->acceptor_poll(transport);
 }
