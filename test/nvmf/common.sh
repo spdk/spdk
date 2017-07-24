@@ -29,6 +29,17 @@ function load_ib_rdma_modules()
 	modprobe rdma_ucm
 }
 
+
+function detect_soft_roce_nics()
+{
+	if hash rxe_cfg; then
+		interface="$(ifconfig | grep "RUNNING" -m 1 | awk '{print $1}' | sed s/://)"
+		rxe_cfg add $interface
+		rxe_cfg start
+		export SOFT_ROCE=true
+	fi
+}
+
 function detect_mellanox_nics()
 {
 	if ! hash lspci; then
@@ -71,10 +82,19 @@ function detect_rdma_nics()
 {
 	# could be add other nics, so wrap it
 	detect_mellanox_nics
+	detect_soft_roce_nics
 }
 
 function allocate_nic_ips()
 {
+	if [ $SOFT_ROCE == true ]; then
+		return 0
+	fi
+
+	if [ -z $NVMF_IP_LEAST_ADDR ]; then
+		return 0
+	fi
+
 	let count=$NVMF_IP_LEAST_ADDR
 	for nic_type in `ls /sys/class/infiniband`; do
 		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
