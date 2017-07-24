@@ -118,7 +118,7 @@ nvmf_subsystem_removable(struct spdk_nvmf_subsystem *subsystem)
 	if (subsystem->is_removed) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 			TAILQ_FOREACH(qpair, &ctrlr->qpairs, link) {
-				if (!qpair->transport->qpair_is_idle(qpair)) {
+				if (!qpair->transport->ops->qpair_is_idle(qpair)) {
 					return false;
 				}
 			}
@@ -262,7 +262,7 @@ struct spdk_nvmf_listen_addr *
 spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
-	const struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_transport *transport;
 	int rc;
 
 	TAILQ_FOREACH(listen_addr, &g_nvmf_tgt.listen_addrs, link) {
@@ -271,7 +271,7 @@ spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid)
 		}
 	}
 
-	transport = spdk_nvmf_transport_get(trid->trtype);
+	transport = spdk_nvmf_tgt_get_transport(&g_nvmf_tgt, trid->trtype);
 	if (!transport) {
 		SPDK_ERRLOG("Unknown transport '%u'\n", trid->trtype);
 		return NULL;
@@ -282,7 +282,7 @@ spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid)
 		return NULL;
 	}
 
-	rc = transport->listen_addr_add(listen_addr);
+	rc = transport->ops->listen_addr_add(transport, listen_addr);
 	if (rc < 0) {
 		free(listen_addr);
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);

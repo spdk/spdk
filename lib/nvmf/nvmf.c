@@ -52,8 +52,6 @@ int
 spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_qpairs_per_ctrlr,
 		   uint32_t in_capsule_data_size, uint32_t max_io_size)
 {
-	int rc;
-
 	g_nvmf_tgt.max_qpairs_per_ctrlr = max_qpairs_per_ctrlr;
 	g_nvmf_tgt.max_queue_depth = max_queue_depth;
 	g_nvmf_tgt.in_capsule_data_size = in_capsule_data_size;
@@ -64,17 +62,12 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_qpairs_per_ctrlr,
 	g_nvmf_tgt.current_subsystem_id = 0;
 	TAILQ_INIT(&g_nvmf_tgt.subsystems);
 	TAILQ_INIT(&g_nvmf_tgt.listen_addrs);
+	TAILQ_INIT(&g_nvmf_tgt.transports);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queues Per Controller: %d\n", max_qpairs_per_ctrlr);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n", in_capsule_data_size);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", max_io_size);
-
-	rc = spdk_nvmf_transport_init();
-	if (rc < 0) {
-		SPDK_ERRLOG("Transport initialization failed\n");
-		return -1;
-	}
 
 	return 0;
 }
@@ -83,6 +76,7 @@ int
 spdk_nvmf_tgt_fini(void)
 {
 	struct spdk_nvmf_listen_addr *listen_addr, *listen_addr_tmp;
+	struct spdk_nvmf_transport *transport, *transport_tmp;
 
 	TAILQ_FOREACH_SAFE(listen_addr, &g_nvmf_tgt.listen_addrs, link, listen_addr_tmp) {
 		TAILQ_REMOVE(&g_nvmf_tgt.listen_addrs, listen_addr, link);
@@ -91,20 +85,42 @@ spdk_nvmf_tgt_fini(void)
 		spdk_nvmf_listen_addr_destroy(listen_addr);
 	}
 
-	spdk_nvmf_transport_fini();
+	TAILQ_FOREACH_SAFE(transport, &g_nvmf_tgt.transports, link, transport_tmp) {
+		TAILQ_REMOVE(&g_nvmf_tgt.transports, transport, link);
+		spdk_nvmf_transport_destroy(transport);
+	}
 
 	return 0;
+}
+
+struct spdk_nvmf_transport *
+spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_type type)
+{
+	struct spdk_nvmf_transport *transport;
+
+	TAILQ_FOREACH(transport, &tgt->transports, link) {
+		if (transport->ops->type == type) {
+			return transport;
+		}
+	}
+
+	return NULL;
 }
 
 struct spdk_nvmf_listen_addr *
 spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_listen_addr *listen_addr;
-	const struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_transport *transport;
 
-	transport = spdk_nvmf_transport_get(trid->trtype);
+	transport = spdk_nvmf_tgt_get_transport(&g_nvmf_tgt, trid->trtype);
 	if (!transport) {
-		return NULL;
+		transport = spdk_nvmf_transport_create(&g_nvmf_tgt, trid->trtype);
+		if (!transport) {
+			SPDK_ERRLOG("Transport initialization failed\n");
+			return NULL;
+		}
+		TAILQ_INSERT_TAIL(&g_nvmf_tgt.transports, transport, link);
 	}
 
 	listen_addr = calloc(1, sizeof(*listen_addr));
@@ -120,13 +136,26 @@ spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid)
 void
 spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 {
-	const struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_transport *transport;
 
-	transport = spdk_nvmf_transport_get(addr->trid.trtype);
-	assert(transport != NULL);
-	transport->listen_addr_remove(addr);
+	transport = spdk_nvmf_tgt_get_transport(&g_nvmf_tgt, addr->trid.trtype);
+	if (!transport) {
+		SPDK_ERRLOG("Attempted to destroy listener without a valid transport\n");
+		return;
+	}
 
+	transport->ops->listen_addr_remove(transport, addr);
 	free(addr);
+}
+
+void
+spdk_nvmf_tgt_poll(void)
+{
+	struct spdk_nvmf_transport *transport, *tmp;
+
+	TAILQ_FOREACH_SAFE(transport, &g_nvmf_tgt.transports, link, tmp) {
+		transport->ops->acceptor_poll(transport);
+	}
 }
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace)

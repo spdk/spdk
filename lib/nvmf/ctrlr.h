@@ -51,7 +51,7 @@ enum spdk_nvmf_qpair_type {
 };
 
 struct spdk_nvmf_qpair {
-	const struct spdk_nvmf_transport	*transport;
+	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	enum spdk_nvmf_qpair_type		type;
 
@@ -92,7 +92,7 @@ struct spdk_nvmf_ctrlr {
 	} async_event_config;
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
-	const struct spdk_nvmf_transport	*transport;
+	struct spdk_nvmf_transport		*transport;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
 };

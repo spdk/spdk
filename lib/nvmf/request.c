@@ -59,7 +59,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 		      response->cid, response->cdw0, response->rsvd1,
 		      *(uint16_t *)&response->status);
 
-	if (req->qpair->transport->req_complete(req)) {
+	if (req->qpair->transport->ops->req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 		return -1;
 	}
