@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf767cc3_704a91ea",
+        "filename": "lib/nvmf/virtual.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-24T23:28:40Z",
+      "side": 1,
+      "message": "I don\u0027t think this case should be an error - if the user requested other DSM attributes that we don\u0027t support, we should just ignore them and report success.",
+      "revId": "42547c1a88e989b9048d893519b4c35e3611ce99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
