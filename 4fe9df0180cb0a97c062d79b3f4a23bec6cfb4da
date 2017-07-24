@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "263c238f_81856a43",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-24T13:24:12Z",
+      "side": 1,
+      "message": "this function is now unused. could you remove it?",
+      "range": {
+        "startLine": 435,
+        "startChar": 0,
+        "endLine": 435,
+        "endChar": 27
+      },
+      "revId": "4fe9df0180cb0a97c062d79b3f4a23bec6cfb4da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3b9eac7_51dea211",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-24T13:24:12Z",
+      "side": 1,
+      "message": "if you want to use same function pointer in two places. you might want to use typedef. i wouldn\u0027t advise going this way though. please add backend pointer to the spdk_vhost_dev, we\u0027ll need it for more than this function pointer.",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 86
+      },
+      "revId": "4fe9df0180cb0a97c062d79b3f4a23bec6cfb4da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bb06437_489e0f6a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 698,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-24T13:24:12Z",
+      "side": 1,
+      "message": "newline",
+      "revId": "4fe9df0180cb0a97c062d79b3f4a23bec6cfb4da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63792200_f81e2c87",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-07-24T13:24:12Z",
+      "side": 1,
+      "message": "newline",
+      "revId": "4fe9df0180cb0a97c062d79b3f4a23bec6cfb4da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
