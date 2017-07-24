@@ -130,6 +130,8 @@ function spdk_vhost_run()
 	local vhost_socket="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
 	local vhost_conf_template="$BASE_DIR/vhost.conf.in"
 	local vhost_conf_file="$BASE_DIR/vhost.conf"
+	local vhost_mem_size=2000
+	local vhost_tpoint_group_mask=0x0
 	echo "INFO: starting vhost app in background"
 	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill
 	[[ -d $SPDK_VHOST_SCSI_TEST_DIR ]] && rm -f $SPDK_VHOST_SCSI_TEST_DIR/*
@@ -148,18 +150,29 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
+	echo "INFO: Starting vhost with -h "
+	local cmd="$vhost_app -h"
+	( cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd)
+	sleep 0.5
+	echo "INFO: Test done"
+
+	echo "INFO: Starting vhost with bad config option "
+	local cmd="$vhost_app -xx"
+	( cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd & echo $!)
+	sleep 0.5
+	echo "INFO: Test done"
+
+	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file -s $vhost_mem_size -e $vhost_tpoint_group_mask"
 
 	echo "INFO: Loging to:   $vhost_log_file"
 	echo "INFO: Config file: $vhost_conf_file"
 	echo "INFO: Socket:      $vhost_socket"
 	echo "INFO: Command:     $cmd"
 
-	cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd &
-	vhost_pid=$!
-	echo $vhost_pid > $vhost_pid_file
+	( cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd & echo $! >&3) 3>$vhost_pid_file  2>&1 | tee -a $vhost_log_file &
 
 	echo "INFO: waiting for app to run..."
+	local vhost_pid="$(cat $vhost_pid_file)"
 	waitforlisten "$vhost_pid" ${RPC_PORT}
 	echo "INFO: vhost started - pid=$vhost_pid"
 
