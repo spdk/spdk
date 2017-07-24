@@ -82,26 +82,31 @@ enum spdk_vhost_scsi_dev_state {
 	SPDK_VHOST_SCSI_DEV_UNAVAILABLE,
 
 	/**
-	 * Device has been queued to be attached. This is handled the same way
-	 * as SPDK_VHOST_SCSI_DEV_UNAVAILABLE, but has different value just for
-	 * readability purposes.
+	 * Device is marked to be hot-attached.
 	 */
-	SPDK_VHOST_SCSI_DEV_ATTACHING,
+	SPDK_VHOST_SCSI_DEV_ATTACH,
 
-	/** Device is attached and ready for use. No changing event is pending. */
+	/**
+	 * Device is ready to IO processing.
+	 */
 	SPDK_VHOST_SCSI_DEV_READY,
 
 	/**
-	 * Device has been marked to be detached.
-	 * It cannot be detached just yet, as there might be still pending tasks.
+	 * Device has been marked to be detached. Guest will be informed about
+	 * this using event queue.
+	 */
+	SPDK_VHOST_SCSI_DEV_DETACH,
+
+	/**
+	 * Guest has been informed that device will be detached. Further IO will
+	 * fail. When all tasks complete device will be removed.
 	 */
 	SPDK_VHOST_SCSI_DEV_DETACHING,
 
 	/**
 	 * Device has been detached. This is separate from DEV_UNAVAILABLE,
-	 * because we will fail requests to this device with specific hotremove
-	 * scsi sense code. It will be left in this state until new device is
-	 * attached on the same slot or the controller is restarted.
+	 * because we will fail requests to this device by passing them to SCSI
+	 * layer with LUN set to NULL.
 	 */
 	SPDK_VHOST_SCSI_DEV_DETACHED,
 };
@@ -110,6 +115,7 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 
+	enum spdk_vhost_scsi_dev_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 
 	struct spdk_ring *task_pool;
 	struct spdk_poller *requestq_poller;
@@ -119,8 +125,6 @@ struct spdk_vhost_scsi_dev {
 	 * TODO comment
 	 */
 	pthread_mutex_t conf_mutex;
-	enum spdk_vhost_scsi_dev_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
-	struct spdk_ring *vhost_events;
 } __rte_cache_aligned;
 
 struct spdk_vhost_scsi_task {
@@ -138,32 +142,6 @@ struct spdk_vhost_scsi_task {
 	int req_idx;
 
 	struct rte_vhost_vring *vq;
-};
-
-/** Proxy enum for virtio eventq event types. */
-enum spdk_vhost_scsi_event_type {
-	/** Attach spdk_vhost_scsi_event::dev to a vhost controller at given index */
-	SPDK_VHOST_SCSI_EVENT_DEV_ATTACH,
-
-	/** Detach device from vhost controller at given index */
-	SPDK_VHOST_SCSI_EVENT_DEV_DETACH,
-};
-
-struct spdk_vhost_scsi_event {
-	/** Type of this event. */
-	enum spdk_vhost_scsi_event_type type;
-
-	/** SCSI device index in current controller to operate on. */
-	unsigned dev_index;
-
-	/** Number of remaining defers until event is rejected due to timeout */
-	int retries_left;
-
-	/**
-	 * SCSI device to be attached. This is only used for
-	 * SPDK_VHOST_SCSI_EVENT_DEV_ATTACH event.
-	 */
-	struct spdk_scsi_dev *dev;
 };
 
 static int new_device(int vid);
@@ -211,159 +189,47 @@ spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_t
 	svdev->vdev.task_cnt += res_count;
 }
 
-/**
- * Process vhost event.
- * \return 0 on success, -1 on failure, 1 when deferred
- */
 static int
-spdk_vhost_scsi_event_process(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_event *ev,
-			      struct virtio_scsi_event *virtio_ev)
-{
-	uint32_t event_id, reason_id;
-	struct spdk_scsi_dev *current_dev;
-
-	assert(ev->dev && ev->dev_index < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
-	current_dev = svdev->scsi_dev[ev->dev_index];
-
-	switch (ev->type) {
-	case SPDK_VHOST_SCSI_EVENT_DEV_ATTACH:
-		event_id = VIRTIO_SCSI_T_TRANSPORT_RESET;
-		reason_id = VIRTIO_SCSI_EVT_RESET_RESCAN;
-
-		if (svdev->scsi_dev_state[ev->dev_index] == SPDK_VHOST_SCSI_DEV_ATTACHING ||
-		    svdev->scsi_dev_state[ev->dev_index] == SPDK_VHOST_SCSI_DEV_UNAVAILABLE) {
-			assert(current_dev == NULL);
-			spdk_scsi_dev_allocate_io_channels(ev->dev);
-			svdev->scsi_dev[ev->dev_index] = ev->dev;
-			svdev->scsi_dev_state[ev->dev_index] = SPDK_VHOST_SCSI_DEV_READY;
-			SPDK_NOTICELOG("%s: hot-attached device %u\n", svdev->vdev.name, ev->dev_index);
-		} else if (svdev->scsi_dev_state[ev->dev_index] == SPDK_VHOST_SCSI_DEV_DETACHING) {
-			/* device at this index will be detached soon, defer attaching */
-			assert(current_dev != NULL);
-			return 1;
-		} else {
-			SPDK_ERRLOG("%s: can't hot-attach scsi device 'Dev %u'. The slot is busy.\n", svdev->vdev.name,
-				    ev->dev_index);
-			assert(current_dev != NULL);
-			spdk_scsi_dev_destruct(ev->dev);
-			return -1;
-		}
-
-		break;
-	case SPDK_VHOST_SCSI_EVENT_DEV_DETACH:
-		event_id = VIRTIO_SCSI_T_TRANSPORT_RESET;
-		reason_id = VIRTIO_SCSI_EVT_RESET_REMOVED;
-
-		/* No action here, the hot-detaching is deferred until all tasks
-		 * using this device have finished, see process_removed_devs()
-		 */
-
-		assert(current_dev != NULL &&
-		       svdev->scsi_dev_state[ev->dev_index] == SPDK_VHOST_SCSI_DEV_DETACHING);
-		break;
-	default:
-		SPDK_UNREACHABLE();
-	}
-
-	if (virtio_ev) {
-		virtio_ev->event = event_id;
-		virtio_ev->lun[0] = 1;
-		virtio_ev->lun[1] = ev->dev_index;
-		/* virtio LUN id 0 may refer either to the entire device or
-		 * actual LUN 0 (the only supported by vhost for now)
-		 */
-		virtio_ev->lun[2] = 0 >> 8; /* FIXME: (clarify): relies on linux kernel implementation */
-		virtio_ev->lun[3] = 0 & 0xFF;
-		memset(&virtio_ev->lun[4], 0, 4);
-		virtio_ev->reason = reason_id;
-	}
-
-	return 0;
-}
-
-static void
-spdk_vhost_scsi_event_cleanup(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_event *ev)
-{
-	if (ev->type == SPDK_VHOST_SCSI_EVENT_DEV_ATTACH) {
-		assert(ev->dev && ev->dev_index < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
-		spdk_scsi_dev_destruct(ev->dev);
-		if (svdev->scsi_dev_state[ev->dev_index] == SPDK_VHOST_SCSI_DEV_ATTACHING) {
-			svdev->scsi_dev_state[ev->dev_index] = SPDK_VHOST_SCSI_DEV_UNAVAILABLE;
-		}
-	}
-}
-
-/**
- * Process vhost event and send virtio event.
- * \return 0 on success, 1 when deferred
- */
-static int
-process_event(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_event *ev)
+vhost_send_event(struct spdk_vhost_scsi_dev *svdev, uint8_t dev_index, uint32_t event, uint32_t reason)
 {
 	struct rte_vhost_vring *vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
+	struct virtio_scsi_event *ev;
 	struct vring_desc *desc;
-	struct virtio_scsi_event *desc_ev;
-	struct virtio_scsi_event event;
 	uint32_t req_size;
 	uint16_t req;
-	int rc;
 
-	rc = spdk_vhost_scsi_event_process(svdev, ev, &event);
-	if (rc == 1) {
-		return 1;
-	} else if (rc == -1) {
-		SPDK_ERRLOG("%s: failed to process vhost event. virtio event won't be sent.\n",
-			    svdev->vdev.name);
-		return 0;
-	}
 
 	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
 		SPDK_ERRLOG("%s: no avail virtio eventq ring entries. virtio event won't be sent.\n",
 			    svdev->vdev.name);
-		return 0;
 	}
 
 	desc =  spdk_vhost_vq_get_desc(vq, req);
-	desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
-	req_size = sizeof(*desc_ev);
+	ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+	req_size = sizeof(*ev);
 
-	if (desc->len < sizeof(*desc_ev) || desc_ev == NULL) {
+	if (desc->len < req_size || ev == NULL) {
 		SPDK_ERRLOG("%s: invalid eventq descriptor. virtio event won't be sent.\n", svdev->vdev.name);
 		req_size = 0;
 	} else {
-		memcpy(desc_ev, &event, sizeof(event));
+		ev->event = event;
+		ev->lun[0] = 1;
+		ev->lun[1] = dev_index;
+		/* virtio LUN id 0 may refer either to the entire device or
+		 * actual LUN 0 (the only supported by vhost for now)
+		 */
+		ev->lun[2] = 0 >> 8; /* FIXME: (clarify): relies on linux kernel implementation */
+		ev->lun[3] = 0 & 0xFF;
+		memset(&ev->lun[4], 0, 4);
+		ev->reason = reason;
 	}
 
 	spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
-	return 0;
-}
-
-static void
-process_eventq(struct spdk_vhost_scsi_dev *svdev)
-{
-	struct spdk_vhost_scsi_event *ev;
-	int rc;
-
-	while (spdk_ring_dequeue(svdev->vhost_events, (void **)&ev, 1) == 1) {
-		rc = process_event(svdev, ev);
-		if (rc == 1) {
-			if (ev->retries_left-- <= 0) {
-				SPDK_ERRLOG("%s: event %d timed-out.\n", svdev->vdev.name, ev->type);
-				spdk_vhost_scsi_event_cleanup(svdev, ev);
-				spdk_dma_free(ev);
-				continue;
-			}
-
-			rc = spdk_ring_enqueue(svdev->vhost_events, (void **) ev, 1);
-			assert(rc == 1); /* FIXME: just assert for now */
-		} else {
-			spdk_dma_free(ev);
-		}
-	}
+	return req_size == 0 ? 1 : 0;
 }
 
 static int
-process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
+process_devs_status(struct spdk_vhost_scsi_dev *svdev)
 {
 	struct spdk_scsi_dev *dev;
 	int i, rc = 0;
@@ -371,53 +237,50 @@ process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		dev = svdev->scsi_dev[i];
 
-		if (!dev) {
-			continue;
-		}
+		switch(svdev->scsi_dev_state[i]) {
+		case SPDK_VHOST_SCSI_DEV_ATTACH:
+			if (vhost_send_event(svdev, i, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_RESCAN) == 0) {
+				/*
+				 * If we can't send event to guest don't change state because guest will not see this device anyway.
+				 */
+				assert(svdev->scsi_dev[i]);
+				spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[i]);
+				svdev->scsi_dev_state[i] = SPDK_VHOST_SCSI_DEV_READY;
+			} else {
+				SPDK_NOTICELOG("Controller %s: Can't inform quest about new device.\n", svdev->vdev.name, spdk_scsi_dev_get_name(dev));
+			}
 
-		if (svdev->scsi_dev_state[i] != SPDK_VHOST_SCSI_DEV_DETACHING) {
-			continue;
-		}
+			break;
+		case SPDK_VHOST_SCSI_DEV_DETACH:
+			if (vhost_send_event(svdev, i, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED)) {
+				SPDK_WARNLOG("Controller %s: Failed to inform guest about device %d removal.\n", svdev->vdev.name, i);
+			}
+			svdev->scsi_dev_state[i] = SPDK_VHOST_SCSI_DEV_DETACHING;
+			SPDK_NOTICELOG("Controller %s: Starting hot-detach of '%s'.\n", svdev->vdev.name, spdk_scsi_dev_get_name(dev));
+			/* No break */
+		case SPDK_VHOST_SCSI_DEV_DETACHING:
+			if (dev) {
+				assert(false);
+				SPDK_ERRLOG("Controller %s: DETACHING state of device %d but SCSI device is NULL\n", svdev->vdev.name, i);
+			} else if (spdk_scsi_dev_has_pending_tasks(dev)) {
+				continue;
+			} else {
+				spdk_scsi_dev_free_io_channels(dev);
+				spdk_scsi_dev_destruct(dev);
+			}
 
-		if (spdk_scsi_dev_has_pending_tasks(dev)) {
-			rc = -1;
+			svdev->scsi_dev[i] = NULL;
+			svdev->scsi_dev_state[i] = SPDK_VHOST_SCSI_DEV_DETACHED;
+			SPDK_NOTICELOG("%s: hot-detached '%s'.\n", svdev->vdev.name, spdk_scsi_dev_get_name(dev));
+			break;
+		default:
+			/* TODO ATTACH */
 			continue;
-		}
 
-		spdk_scsi_dev_free_io_channels(dev);
-		spdk_scsi_dev_destruct(dev);
-		svdev->scsi_dev[i] = NULL;
-		svdev->scsi_dev_state[i] = SPDK_VHOST_SCSI_DEV_DETACHED;
-		SPDK_NOTICELOG("%s: hot-detached 'Dev %d'.\n", svdev->vdev.name, i);
+		}
 	}
 
 	return rc;
-}
-
-static void
-enqueue_vhost_event(struct spdk_vhost_scsi_dev *svdev, enum spdk_vhost_scsi_event_type type,
-		    unsigned dev_index, struct spdk_scsi_dev *dev)
-{
-	struct spdk_vhost_scsi_event *ev;
-
-	ev = spdk_dma_zmalloc(sizeof(*ev), SPDK_CACHE_LINE_SIZE, NULL);
-	if (ev == NULL) {
-		SPDK_ERRLOG("%s: failed to alloc vhost event.\n", svdev->vdev.name);
-		/* NOT OK */
-		return;
-	}
-
-	ev->type = type;
-	ev->dev_index = dev_index;
-	ev->retries_left = SPDK_VHOST_SCSI_EVENT_DEFER_RETRY_CNT;
-	ev->dev = dev;
-
-	if (spdk_ring_enqueue(svdev->vhost_events, (void **)&ev, 1) != 1) {
-		SPDK_ERRLOG("%s: failed to enqueue vhost event (no room in ring?).\n", svdev->vdev.name);
-		spdk_vhost_scsi_event_cleanup(svdev, ev);
-		/* NOT OK */
-		spdk_dma_free(ev);
-	}
 }
 
 static void
@@ -483,7 +346,7 @@ invalid_request(struct spdk_vhost_scsi_task *task)
 	 * This might prevent him from sending more invalid requests and trying to reset
 	 * the device.
 	 */
-	process_eventq(task->svdev);
+	process_devs_status(task->svdev);
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_scsi_task_put(task);
 
@@ -513,17 +376,15 @@ spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *
 		task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
 		task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_id);
 		return 0;
+	case SPDK_VHOST_SCSI_DEV_DETACH:
 	case SPDK_VHOST_SCSI_DEV_DETACHING:
-		assert(task->svdev->scsi_dev[lun[1]]);
-		/* see SPDK_VHOST_SCSI_DEV_DETACHED comments below */
-		return 0;
 	case SPDK_VHOST_SCSI_DEV_DETACHED:
 		/* If dev has been hot-detached, return 0 to allow sending additional
 		 * scsi hotremove event via sense codes. Not setting task->scsi.lun
 		 * allows task to be failed on SCSI layer.
 		 */
 		return 0;
-	case SPDK_VHOST_SCSI_DEV_ATTACHING:
+	case SPDK_VHOST_SCSI_DEV_ATTACH:
 	case SPDK_VHOST_SCSI_DEV_UNAVAILABLE:
 		/* No device yet */
 		return -1;
@@ -810,8 +671,7 @@ vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
-	process_removed_devs(svdev);
-	process_eventq(svdev);
+	process_devs_status(svdev);
 	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
 }
 
@@ -852,16 +712,16 @@ static void
 remove_vdev_cb(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
-	struct spdk_vhost_scsi_event *ev;
 	uint32_t i;
-	int rc;
+//	int rc;
 
 	/* Process devs to ensure no device is left in DETACHING state */
-	if (process_removed_devs(svdev) != 0) {
+	if (process_devs_status(svdev) != 0) {
 		SPDK_ERRLOG("%s: failed to detach pending hot-detached devices. (unfinished tasks?)\n",
 			    svdev->vdev.name);
 	}
 
+#if 0
 	/* Flush not sent events */
 	while (spdk_ring_dequeue(svdev->vhost_events, (void **)&ev, 1) == 1) {
 		/* process vhost event, but don't send virtio event */
@@ -872,8 +732,11 @@ remove_vdev_cb(void *arg)
 		}
 		spdk_dma_free(ev);
 	}
+#else
+#error Need to fix this
+#endif
 
-	if (process_removed_devs(svdev) != 0) {
+	if (process_devs_status(svdev) != 0) {
 		SPDK_ERRLOG("%s: failed to detach pending hot-detached devices. (unfinished tasks?)\n",
 			    svdev->vdev.name);
 	}
@@ -1001,8 +864,9 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	}
 
 	/* detach entire device */
-	enqueue_vhost_event(svdev, SPDK_VHOST_SCSI_EVENT_DEV_DETACH, scsi_dev_num,
-			    (struct spdk_scsi_dev *) scsi_dev);
+	svdev->scsi_dev_state[scsi_dev_num] = SPDK_VHOST_SCSI_DEV_DETACHING;
+	/* The same core as vhde so flush queue now to inform guest about hot-remove */
+	process_devs_status(svdev);
 
 	SPDK_NOTICELOG("%s: queued LUN '%s' for hotremove\n", svdev->vdev.name,
 		       spdk_scsi_dev_get_name(scsi_dev));
@@ -1038,19 +902,19 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -1;
 	}
 
-	pthread_mutex_lock(&svdev->conf_mutex);
+	/* FIXME: This is still a race here vs controller removal :( */
 	vdev = spdk_vhost_dev_find(ctrlr_name);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Controller %s is not defined.\n", ctrlr_name);
-		rc = -ENODEV;
-		goto out;
+		return -ENODEV;
 	}
 
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
-		rc = -EINVAL;
-		goto out;
+		return -EINVAL;
 	}
+
+	pthread_mutex_lock(&svdev->conf_mutex);
 
 	if (vdev->lcore != -1 && (svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
 		SPDK_ERRLOG("%s: 'Dev %u' is in use and hot-attach is not enabled for this controller\n",
@@ -1076,19 +940,12 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	}
 
 	spdk_scsi_dev_add_port(scsi_dev, 0, "vhost");
-
+	svdev->scsi_dev[scsi_dev_num] = scsi_dev;
 	if (vdev->lcore == -1) {
 		svdev->scsi_dev_state[scsi_dev_num] = SPDK_VHOST_SCSI_DEV_READY;
-		svdev->scsi_dev[scsi_dev_num] = scsi_dev;
-	} else {
-		if (svdev->scsi_dev_state[scsi_dev_num] != SPDK_VHOST_SCSI_DEV_UNAVAILABLE &&
-		    svdev->scsi_dev_state[scsi_dev_num] != SPDK_VHOST_SCSI_DEV_DETACHED) {
-			SPDK_ERRLOG("%s: can't hot-attach scsi device on slot %u. The slot is busy.\n", svdev->vdev.name,
-				    scsi_dev_num);
-		}
-
-		svdev->scsi_dev_state[scsi_dev_num] = SPDK_VHOST_SCSI_DEV_ATTACHING;
-		enqueue_vhost_event(svdev, SPDK_VHOST_SCSI_EVENT_DEV_ATTACH, scsi_dev_num, scsi_dev);
+	}
+	else {
+		svdev->scsi_dev_state[scsi_dev_num] = SPDK_VHOST_SCSI_DEV_ATTACH;
 	}
 
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
@@ -1110,12 +967,14 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&svdev->conf_mutex);
+	/* FIXME: This is still a race here vs controller removal :( */
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
 		rc = -ENODEV;
 		goto out;
 	}
+
+	pthread_mutex_lock(&svdev->conf_mutex);
 
 	scsi_dev = svdev->scsi_dev[scsi_dev_num];
 	if (scsi_dev == NULL) {
@@ -1141,8 +1000,7 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 	}
 
 	/* FIXME: this is still race vs reactor addin dev */
-	svdev->scsi_dev_state[scsi_dev_num] = SPDK_VHOST_SCSI_DEV_DETACHING;
-	enqueue_vhost_event(svdev, SPDK_VHOST_SCSI_EVENT_DEV_DETACH, scsi_dev_num, NULL);
+	svdev->scsi_dev_state[scsi_dev_num] = SPDK_VHOST_SCSI_DEV_DETACH;
 
 	SPDK_NOTICELOG("%s: marked device on slot %u for hot-detach.\n", svdev->vdev.name, scsi_dev_num);
 out:
@@ -1312,15 +1170,7 @@ new_device(int vid)
 		goto out;
 	}
 
-	svdev->vhost_events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16,
-					       spdk_env_get_socket_id(vdev->lcore));
-	if (svdev->vhost_events == NULL) {
-		SPDK_ERRLOG("%s: failed to alloc event pool.", vdev->name);
-		goto out;
-	}
-
 	spdk_vhost_timed_event_send(vdev->lcore, add_vdev_cb, svdev, 1, "add scsi vdev");
-
 	rc = 0;
 
 out:
@@ -1341,14 +1191,14 @@ destroy_device(int vid)
 	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
-	pthread_mutex_lock(&svdev->conf_mutex);
-
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
 		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
 	}
 	svdev = to_scsi_dev(vdev);
 	assert(svdev);
+
+	pthread_mutex_lock(&svdev->conf_mutex);
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);
@@ -1368,8 +1218,6 @@ destroy_device(int vid)
 	}
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
-
-	spdk_ring_free(svdev->vhost_events);
 
 	free_task_pool(svdev);
 	spdk_vhost_dev_unload(vdev);
