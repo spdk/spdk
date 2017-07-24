@@ -109,12 +109,17 @@ enum spdk_vhost_scsi_dev_state {
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
-	enum spdk_vhost_scsi_dev_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+
 
 	struct spdk_ring *task_pool;
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 
+	/**
+	 * TODO comment
+	 */
+	pthread_mutex_t conf_mutex;
+	enum spdk_vhost_scsi_dev_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_ring *vhost_events;
 } __rte_cache_aligned;
 
@@ -398,6 +403,7 @@ enqueue_vhost_event(struct spdk_vhost_scsi_dev *svdev, enum spdk_vhost_scsi_even
 	ev = spdk_dma_zmalloc(sizeof(*ev), SPDK_CACHE_LINE_SIZE, NULL);
 	if (ev == NULL) {
 		SPDK_ERRLOG("%s: failed to alloc vhost event.\n", svdev->vdev.name);
+		/* NOT OK */
 		return;
 	}
 
@@ -409,6 +415,7 @@ enqueue_vhost_event(struct spdk_vhost_scsi_dev *svdev, enum spdk_vhost_scsi_even
 	if (spdk_ring_enqueue(svdev->vhost_events, (void **)&ev, 1) != 1) {
 		SPDK_ERRLOG("%s: failed to enqueue vhost event (no room in ring?).\n", svdev->vdev.name);
 		spdk_vhost_scsi_event_cleanup(svdev, ev);
+		/* NOT OK */
 		spdk_dma_free(ev);
 	}
 }
@@ -845,7 +852,7 @@ static void
 remove_vdev_cb(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
-	void *ev;
+	struct spdk_vhost_scsi_event *ev;
 	uint32_t i;
 	int rc;
 
@@ -856,10 +863,10 @@ remove_vdev_cb(void *arg)
 	}
 
 	/* Flush not sent events */
-	while (spdk_ring_dequeue(svdev->vhost_events, &ev, 1) == 1) {
+	while (spdk_ring_dequeue(svdev->vhost_events, (void **)&ev, 1) == 1) {
 		/* process vhost event, but don't send virtio event */
 		rc = spdk_vhost_scsi_event_process(svdev, ev, NULL);
-		if (rc == 0) {
+		if (rc == 1) {
 			 /* events can't be deferred, as there are no devs in DETACHING state */
 			assert(false);
 		}
@@ -909,11 +916,13 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -ENOMEM;
 	}
 
+	pthread_mutex_init(&svdev->conf_mutex, NULL);
+	// TODO: vhost lock -> vhost.c
 	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
 				      &spdk_vhost_scsi_device_backend);
 
 	if (rc) {
-		spdk_ring_free(svdev->vhost_events);
+		pthread_mutex_destroy(&svdev->conf_mutex);
 		spdk_dma_free(svdev);
 		return rc;
 	}
@@ -931,6 +940,8 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return -EINVAL;
 	}
 
+	pthread_mutex_lock(&svdev->conf_mutex);
+
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		if (svdev->scsi_dev[i]) {
 			SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
@@ -942,7 +953,8 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return -EIO;
 	}
 
-	spdk_ring_free(svdev->vhost_events);
+	pthread_mutex_unlock(&svdev->conf_mutex);
+	pthread_mutex_destroy(&svdev->conf_mutex);
 	spdk_dma_free(svdev);
 	return 0;
 }
@@ -958,6 +970,7 @@ spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, uint8_t num)
 	return svdev ? svdev->scsi_dev[num] : NULL;
 }
 
+
 static void
 spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 {
@@ -965,6 +978,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	const struct spdk_scsi_dev *scsi_dev;
 	unsigned scsi_dev_num;
 
+	/* No conf_lock - called on the same core as vdev core */
 	assert(lun != NULL);
 	assert(svdev != NULL);
 	if ((svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
@@ -1003,6 +1017,7 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
+	int rc = 0;
 
 	if (ctrlr_name == NULL) {
 		SPDK_ERRLOG("No controller name\n");
@@ -1023,21 +1038,25 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -1;
 	}
 
+	pthread_mutex_lock(&svdev->conf_mutex);
 	vdev = spdk_vhost_dev_find(ctrlr_name);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Controller %s is not defined.\n", ctrlr_name);
-		return -ENODEV;
+		rc = -ENODEV;
+		goto out;
 	}
 
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto out;
 	}
 
 	if (vdev->lcore != -1 && (svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
 		SPDK_ERRLOG("%s: 'Dev %u' is in use and hot-attach is not enabled for this controller\n",
 			    ctrlr_name, scsi_dev_num);
-		return -ENOTSUP;
+		rc = -ENOTSUP;
+		goto out;
 	}
 
 	/*
@@ -1052,7 +1071,8 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 	if (scsi_dev == NULL) {
 		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
 			    dev_name, lun_name, vdev->name);
-		return -EINVAL;
+		rc = -EINVAL;
+		goto out;
 	}
 
 	spdk_scsi_dev_add_port(scsi_dev, 0, "vhost");
@@ -1073,7 +1093,9 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
-	return 0;
+out:
+	pthread_mutex_unlock(&svdev->conf_mutex);
+	return rc;
 }
 
 int
@@ -1081,26 +1103,25 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_dev *scsi_dev;
+	int rc = 0;
 
 	if (scsi_dev_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
 		SPDK_ERRLOG("%s: invalid device number %d\n", vdev->name, scsi_dev_num);
 		return -EINVAL;
 	}
 
+	pthread_mutex_lock(&svdev->conf_mutex);
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
-		return -ENODEV;
+		rc = -ENODEV;
+		goto out;
 	}
 
 	scsi_dev = svdev->scsi_dev[scsi_dev_num];
 	if (scsi_dev == NULL) {
 		SPDK_ERRLOG("%s: device slot %u is not occupied\n", vdev->name, scsi_dev_num);
-		return -ENODEV;
-	}
-
-	if (svdev->scsi_dev_state[scsi_dev_num] != SPDK_VHOST_SCSI_DEV_READY) {
-		SPDK_ERRLOG("%s device in slot %u is not ready\n", vdev->name, scsi_dev_num);
-		return -EBUSY;
+		rc = -ENODEV;
+		goto out;
 	}
 
 	if (svdev->vdev.lcore == -1) {
@@ -1108,20 +1129,25 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		spdk_scsi_dev_destruct(scsi_dev);
 		svdev->scsi_dev[scsi_dev_num] = NULL;
 		SPDK_NOTICELOG("%s: removed device 'Dev %u'\n", vdev->name, scsi_dev_num);
-		return 0;
+		rc = 0;
+		goto out;
 	}
 
 	if ((svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
 		SPDK_WARNLOG("%s: 'Dev %u' is in use and hot-detach is not enabled for this controller.\n",
 			     svdev->vdev.name, scsi_dev_num);
-		return -ENOTSUP;
+		rc = -ENOTSUP;
+		goto out;
 	}
 
+	/* FIXME: this is still race vs reactor addin dev */
 	svdev->scsi_dev_state[scsi_dev_num] = SPDK_VHOST_SCSI_DEV_DETACHING;
 	enqueue_vhost_event(svdev, SPDK_VHOST_SCSI_EVENT_DEV_DETACH, scsi_dev_num, NULL);
 
 	SPDK_NOTICELOG("%s: marked device on slot %u for hot-detach.\n", svdev->vdev.name, scsi_dev_num);
-	return 0;
+out:
+	pthread_mutex_unlock(&svdev->conf_mutex);
+	return rc;
 }
 
 int
@@ -1266,10 +1292,12 @@ new_device(int vid)
 	struct spdk_vhost_scsi_dev *svdev = NULL;
 	int rc = -1;
 
+	pthread_mutex_lock(&svdev->conf_mutex);
 	vdev = spdk_vhost_dev_load(vid);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Failed to start controller with vid %d.\n", vid);
-		return -1;
+		rc = -1;
+		goto out;
 	}
 
 	svdev = to_scsi_dev(vdev);
@@ -1301,6 +1329,7 @@ out:
 		spdk_vhost_dev_unload(&svdev->vdev);
 	}
 
+	pthread_mutex_unlock(&svdev->conf_mutex);
 	return rc;
 }
 
@@ -1311,6 +1340,8 @@ destroy_device(int vid)
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
+
+	pthread_mutex_lock(&svdev->conf_mutex);
 
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
@@ -1342,6 +1373,7 @@ destroy_device(int vid)
 
 	free_task_pool(svdev);
 	spdk_vhost_dev_unload(vdev);
+	pthread_mutex_unlock(&svdev->conf_mutex);
 }
 
 int
