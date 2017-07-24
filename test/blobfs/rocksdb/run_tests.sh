@@ -48,8 +48,6 @@ else
 	[ -e /dev/nvme0n1 ] && (echo "/dev/nvme0n1 device found - need to run SPDK setup.sh script to bind to UIO." && exit 1)
 fi
 
-cd $RESULTS_DIR
-
 SYSINFO_FILE=$RESULTS_DIR/sysinfo.txt
 COMMAND="hostname"
 echo ">> $COMMAND : " >> $SYSINFO_FILE
