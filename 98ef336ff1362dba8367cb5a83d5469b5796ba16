@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2736bd1_6145907d",
+        "filename": "lib/util/crc32c.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-24T17:31:57Z",
+      "side": 1,
+      "message": "You chose to make \u0027tmp\u0027 an argument, but not \u0027buf\u0027 - any reason why? I think it is clearer to make them all arguments to the macro.",
+      "revId": "98ef336ff1362dba8367cb5a83d5469b5796ba16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
