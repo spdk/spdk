@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e192d94_03530bc3",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-24T17:14:09Z",
+      "side": 1,
+      "message": "The primary change is here - we\u0027re unblocking these signals instead of masking them off. This was discovered when trying to use the app framework on BSD which appears to correctly handle signals. Linux just seems to ignore masking off certain signals entirely, which is why it was working.",
+      "revId": "98a9e00b2e649cd76c1ae11883fa5b315e6bc7f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
