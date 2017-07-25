@@ -7,7 +7,7 @@ source $rootdir/test/nvmf/common.sh
 
 set -e
 
-RDMA_NIC_LIST=$(get_rdma_nic_list)
+RDMA_NIC_LIST=$(get_rdma_ip_list)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_NIC_LIST" | head -n 1)
 if [ -z $NVMF_FIRST_TARGET_IP ]; then
 	echo "no NIC for nvmf test"
