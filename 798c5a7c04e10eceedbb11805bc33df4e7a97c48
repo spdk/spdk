@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "571ae55f_8e969fcc",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-25T17:57:15Z",
+      "side": 1,
+      "message": "If I am reading the code correctly, blk_iovs_setup() returns 0 on success and -1 on error, so I think \u003d\u003d 0 is the wrong check here - don\u0027t we want !\u003d 0?",
+      "revId": "798c5a7c04e10eceedbb11805bc33df4e7a97c48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
