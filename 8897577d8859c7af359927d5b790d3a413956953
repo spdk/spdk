@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "ca201795_6d919a03",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6f00745_f9c9ece2",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6465175a_9d13cfa5",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 17
@@ -64,6 +82,24 @@
       "writtenOn": "2017-07-13T21:13:47Z",
       "side": 1,
       "message": "Are unmaps actually processed by lvol? It might make more sense to just refuse unmap requests.",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdf27520_a893da3e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6465175a_9d13cfa5",
       "revId": "8897577d8859c7af359927d5b790d3a413956953",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +123,24 @@
     },
     {
       "key": {
+        "uuid": "b3355e94_71d4ccf4",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "412a216e_a98f0d37",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0794669b_6dd4a9c0",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 17
@@ -98,6 +152,42 @@
       "writtenOn": "2017-07-13T21:13:47Z",
       "side": 1,
       "message": "This looks like it\u0027s used as a standard UUID, not a GUID. We should be consistent in naming these (i.e. use \"uuid\" everywhere).",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ea37232_89baa6ba",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0794669b_6dd4a9c0",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b4d4ba5_7a9cb2f8",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0794669b_6dd4a9c0",
       "revId": "8897577d8859c7af359927d5b790d3a413956953",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +211,24 @@
     },
     {
       "key": {
+        "uuid": "3f6c39d5_a9a91c70",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "This is done same way as in malloc creation rpc code. If we were to use object begin/end, I think each RPC call would need to be changed in rpc.py.",
+      "parentUuid": "05349f45_ea030831",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9609a84_1d0ed5c0",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 17
@@ -138,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "183d6aad_a23adaf7",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9609a84_1d0ed5c0",
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1932748_6b86a259",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 17
@@ -149,6 +275,30 @@
       "writtenOn": "2017-07-13T21:13:47Z",
       "side": 1,
       "message": "\"guid\" vs \"uuid\" again here.",
+      "range": {
+        "startLine": 138,
+        "startChar": 3,
+        "endLine": 138,
+        "endChar": 7
+      },
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b09ba2b_87ca3b7b",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c1932748_6b86a259",
       "range": {
         "startLine": 138,
         "startChar": 3,
@@ -184,6 +334,30 @@
     },
     {
       "key": {
+        "uuid": "f48f55b6_3f0b918f",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done.\nSize is given in MiB.",
+      "parentUuid": "f8352497_ffdfbb83",
+      "range": {
+        "startLine": 219,
+        "startChar": 58,
+        "endLine": 219,
+        "endChar": 81
+      },
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0ea3dd23_fce47f3c",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 17
@@ -195,6 +369,30 @@
       "writtenOn": "2017-07-13T21:13:47Z",
       "side": 1,
       "message": "%lu is for long, but uint64_t can be other types, e.g. long long on 32-bit x86. Please use PRIu64.",
+      "range": {
+        "startLine": 168,
+        "startChar": 37,
+        "endLine": 168,
+        "endChar": 40
+      },
+      "revId": "8897577d8859c7af359927d5b790d3a413956953",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee216fa9_625657f2",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0ea3dd23_fce47f3c",
       "range": {
         "startLine": 168,
         "startChar": 37,
