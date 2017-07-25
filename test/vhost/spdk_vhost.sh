@@ -57,14 +57,26 @@ case $param in
 	echo Running filesystem integrity suite...
 	./integrity/integrity_start.sh -i /home/sys_sgsw/vhost_vm_image.qcow2 -m blk -f ntfs
 	;;
+	-ils|--integrity-lvol-scsi)
+	echo Running lvol integrity suite...
+	./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	--ctrl-type=vhost_scsi
+    ;;
+	-ilb|--integrity-lvol-blk)
+	echo Running lvol integrity suite...
+	./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	--ctrl-type=vhost_blk
+    ;;
     -h|--help)
-	echo "-i |--integrity          for running an integrity test with vhost scsi"
-	echo "-fs|--fs-integrity-scsi  for running an integrity test with filesystem"
-	echo "-fb|--fs-integrity-blk   for running an integrity test with filesystem"
-	echo "-p |--performance        for running a performance test with vhost scsi"
-	echo "-ib|--integrity-blk      for running an integrity test with vhost blk"
-	echo "-pb|--performance-blk    for running a performance test with vhost blk"
-	echo "-h |--help               prints this message"
+	echo "-i |--integrity             for running an integrity test with vhost scsi"
+	echo "-fs|--fs-integrity-scsi     for running an integrity test with filesystem"
+	echo "-fb|--fs-integrity-blk      for running an integrity test with filesystem"
+	echo "-p |--performance           for running a performance test with vhost scsi"
+	echo "-ib|--integrity-blk         for running an integrity test with vhost blk"
+	echo "-pb|--performance-blk       for running a performance test with vhost blk"
+	echo "-ils|--integrity-lvol-scsi  for running an integrity test with vhost scsi and lvol backends"
+	echo "-ilb|--integrity-lvol-blk   for running an integrity test with vhost blk and lvol backends"
+	echo "-h |--help                  prints this message"
     ;;
     *)
 	echo "unknown test type"

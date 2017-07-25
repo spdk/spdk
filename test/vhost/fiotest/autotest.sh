@@ -162,6 +162,7 @@ for vm_conf in ${vms[@]}; do
 
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
+
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
 					echo "INFO: Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
