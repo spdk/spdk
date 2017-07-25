@@ -34,6 +34,7 @@
 #include "spdk_internal/lvolstore.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
+#include "spdk/io_channel.h"
 
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
@@ -326,6 +327,12 @@ spdk_lvol_close(struct spdk_lvol *lvol)
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	free(lvol->name);
 	free(lvol);
+}
+
+struct spdk_io_channel *
+spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
+{
+	return spdk_bs_alloc_io_channel(lvol->lvol_store->blobstore);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)

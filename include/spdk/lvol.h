@@ -59,6 +59,7 @@ int spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,
 		     spdk_lvol_op_complete cb_fn, void *cb_arg);
 void spdk_lvol_destroy(struct spdk_lvol *lvol);
 void spdk_lvol_close(struct spdk_lvol *lvol);
+struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
 struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig);
 struct spdk_lvol *vbdev_get_lvol_by_name(char *name);
 struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(uuid_t uuid);
