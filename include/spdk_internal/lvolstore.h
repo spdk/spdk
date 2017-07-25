@@ -36,6 +36,9 @@
 
 #include "spdk/lvol.h"
 
+/* Length of string returned from uuid_unparse() */
+#define UUID_STRING_LEN 37
+
 struct spdk_lvol_store_req {
 	union {
 		struct {
