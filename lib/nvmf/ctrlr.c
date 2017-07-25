@@ -163,7 +163,7 @@ nvmf_init_nvme_ctrlr_properties(struct spdk_nvmf_ctrlr *ctrlr)
 static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	TAILQ_REMOVE(&ctrlr->subsys->ctrlrs, ctrlr, link);
-	ctrlr->transport->ops->ctrlr_fini(ctrlr);
+	spdk_nvmf_transport_ctrlr_fini(ctrlr);
 }
 
 void
@@ -174,7 +174,7 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 
 		TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 		ctrlr->num_qpairs--;
-		qpair->transport->ops->qpair_fini(qpair);
+		spdk_nvmf_transport_qpair_fini(qpair);
 	}
 
 	ctrlr_destruct(ctrlr);
@@ -288,7 +288,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		}
 
 		/* Establish a new ctrlr */
-		ctrlr = qpair->transport->ops->ctrlr_init(qpair->transport);
+		ctrlr = spdk_nvmf_transport_ctrlr_init(qpair->transport);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Memory allocation failure\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -313,9 +313,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 
 		memcpy(ctrlr->hostid, data->hostid, sizeof(ctrlr->hostid));
 
-		if (qpair->transport->ops->ctrlr_add_qpair(ctrlr, qpair)) {
+		if (spdk_nvmf_transport_ctrlr_add_qpair(ctrlr, qpair)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			qpair->transport->ops->ctrlr_fini(ctrlr);
+			spdk_nvmf_transport_ctrlr_fini(ctrlr);
 			free(ctrlr);
 			return;
 		}
@@ -374,7 +374,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			return;
 		}
 
-		if (qpair->transport->ops->ctrlr_add_qpair(ctrlr, qpair)) {
+		if (spdk_nvmf_transport_ctrlr_add_qpair(ctrlr, qpair)) {
 			INVALID_CONNECT_CMD(qid);
 			return;
 		}
@@ -399,8 +399,8 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	ctrlr->num_qpairs--;
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 
-	qpair->transport->ops->ctrlr_remove_qpair(ctrlr, qpair);
-	qpair->transport->ops->qpair_fini(qpair);
+	spdk_nvmf_transport_ctrlr_remove_qpair(ctrlr, qpair);
+	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (ctrlr->num_qpairs == 0) {
 		ctrlr_destruct(ctrlr);
@@ -654,7 +654,7 @@ spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 	}
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->qpairs, link, tmp) {
-		if (qpair->transport->ops->qpair_poll(qpair) < 0) {
+		if (spdk_nvmf_transport_qpair_poll(qpair) < 0) {
 			SPDK_ERRLOG("Transport poll failed for qpair %p; closing connection\n", qpair);
 			spdk_nvmf_ctrlr_disconnect(qpair);
 		}
