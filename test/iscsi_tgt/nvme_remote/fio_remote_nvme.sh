@@ -8,7 +8,9 @@ source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-if ! rdma_nic_available; then
+RDMA_IP_LIST=$(get_available_rdma_ips)
+NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
+if [ -z $NVMF_FIRST_TARGET_IP ]; then
 	echo "no NIC for nvmf test"
 	exit 0
 fi
