@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b421d30_f494b711",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-25T17:41:42Z",
+      "side": 1,
+      "message": "This seems inconsistent with all of our other applications, as well as system information tools like lscpu, which list cores starting at index 0.",
+      "revId": "c2ab4256b9a8e9aad6ac8d5edb3ebcbe340568e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
