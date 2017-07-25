@@ -12,7 +12,9 @@ rpc_py="python $rootdir/scripts/rpc.py"
 
 set -e
 
-if ! rdma_nic_available; then
+RDMA_NIC_LIST=$(Get_available_rdma_ips)
+NVMF_FIRST_TARGET_IP=$(echo "$RDMA_NIC_LIST" | head -n 1)
+if [ -z $NVMF_FIRST_TARGET_IP ]; then
 	echo "no NIC for nvmf test"
 	exit 0
 fi
