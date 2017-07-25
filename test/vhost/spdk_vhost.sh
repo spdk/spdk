@@ -52,7 +52,7 @@ case $param in
 	-f|--fs-integrity)
 	echo Running filesystem integrity suite...
 	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
-	;;
+    ;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test with vhost scsi"
 	echo "-f|--fs-integrity 	for running an integrity test with filesystem"
