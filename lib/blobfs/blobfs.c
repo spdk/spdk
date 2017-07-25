@@ -1583,7 +1583,6 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 		}
 	}
 
-	assert(false);
 	return NULL;
 }
 
