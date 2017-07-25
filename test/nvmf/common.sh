@@ -33,13 +33,14 @@ function load_ib_rdma_modules()
 function detect_soft_roce_nics()
 {
 	if hash rxe_cfg; then
-		interface="$(ifconfig | grep "RUNNING" -m 1 | awk '{print $1}' | sed s/://)"
-		export NVMF_FIRST_TARGET_IP="$(ifconfig $interface | grep "inet " | awk '{print $2}')"
-		export NVMF_IP_PREFIX="${NVMF_FIRST_TARGET_IP%.*}"
-		export NVMF_IP_LEAST_ADDR="$(cut -d'.' -f4 <<<"$NVMF_FIRST_TARGET_IP")"
-		rxe_cfg add $interface
 		rxe_cfg start
-		export SOFT_ROCE=true
+		rdma_nics=$(get_rdma_if_list)
+		all_nics=$(ifconfig -s | awk '{print $1}')
+		all_nics=("${all_nics[@]/"Iface"}")
+		non_rdma_nics=$(echo "$rdma_nics $all_nics" | sort | uniq -u)
+		for nic in $non_rdma_nics; do
+			rxe_cfg add $nic || true
+		done
 	fi
 }
 
@@ -90,34 +91,38 @@ function detect_rdma_nics()
 
 function allocate_nic_ips()
 {
-	if [ $SOFT_ROCE == true ]; then
-		return 0
-	fi
-
-	if [ -z $NVMF_IP_LEAST_ADDR ]; then
-		return 0
-	fi
-
 	let count=$NVMF_IP_LEAST_ADDR
-	for nic_type in `ls /sys/class/infiniband`; do
-		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
+	for nic_name in $get_rdma_if_list; do
+		ip="$(get_ip_address $nic_name)"
+		if [ -z $ip ]; then
 			ifconfig $nic_name $NVMF_IP_PREFIX.$count netmask 255.255.255.0 up
-
-			# dump configuration for debug log
-			ifconfig $nic_name
 			let count=$count+1
-		done
+		fi
+		# dump configuration for debug log
+		ifconfig $nic_name
 	done
 }
 
 function get_available_rdma_ips()
 {
-	nic_list=""
+	for nic_name in $get_rdma_if_list; do
+		ifconfig $nic_name | grep "inet " | awk '{print $2}'
+	done
+}
+
+function get_rdma_if_list()
+{
 	for nic_type in `ls /sys/class/infiniband`; do
 		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
-			ifconfig $nic_name | grep "inet " | awk '{print $2}'
+			echo "$nic_name"
 		done
 	done
+}
+
+function get_ip_address()
+{
+	interface=$1
+	ifconfig $interface | grep "inet " | awk '{print $2}'
 }
 
 function nvmfcleanup()
@@ -131,4 +136,15 @@ function rdma_device_init()
 	load_ib_rdma_modules
 	detect_rdma_nics
 	allocate_nic_ips
+}
+
+function revert_soft_roce()
+{
+	if hash rxe_cfg; then
+		interfaces="$(ifconfig -s | awk '{print $1}')"
+		for interface in $interfaces; do
+			rxe_cfg remove $interface || true
+		done
+		rxe_cfg stop || true
+	fi
 }
