@@ -59,7 +59,7 @@
 /**
  * Version string suffix.
  */
-#define SPDK_VERSION_SUFFIX	"-rc1"
+#define SPDK_VERSION_SUFFIX	"-rc2"
 
 /**
  * Single numeric value representing a version number for compile-time comparisons.
