@@ -6,6 +6,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
+lvol_run=false
 fio_jobs="$BASE_DIR/fio_jobs/"
 test_type=spdk_vhost_scsi
 reuse_vms=false
@@ -45,6 +46,7 @@ function usage()
 	echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
 	echo "                          If test-type=spdk_vhost_blk then each disk can have additional size parameter, e.g."
 	echo "                          --vm=X,os.qcow,DISK_size_35G; unit can be M or G; default - 20G"
+	echo "    --lvol-run            Enable the lvol functionality for a bdev device"
 	echo "    --disk-split          By default all test types execute fio jobs on all disks which are available on guest"
 	echo "                          system. Use this option if only some of the disks should be used for testing."
 	echo "                          Example: --disk-split=4,1-3 will result in VM 1 using it's first disk (ex. /dev/sda)"
@@ -69,6 +71,7 @@ while getopts 'xh-:' optchar; do
 			test-type=*) test_type="${OPTARG#*=}" ;;
 			force-build) force_build=true ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
+			lvol-run) lvol_run=true ;;
 			disk-split=*) disk_split="${OPTARG#*=}" ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
@@ -161,6 +164,38 @@ for vm_conf in ${vms[@]}; do
 
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
+				echo "=============================$disk============================="
+				dev_to_add=$disk
+				if $lvol_run; then
+					echo "INFO: Trying to remove inexistent lvol store"
+					if $rpc_py destroy_lvol_store '12345678-1234-1234-1234-123456789012' > /dev/null; then
+						echo "ERROR: Removing inexistent lvol store succeeded, but it should't"
+						false
+					fi
+
+					echo "INFO: Constructing lvol store on disk $disk"
+					ls_guid=$($rpc_py construct_lvol_store $disk)
+
+					echo "INFO: Removing and re-adding lvol store"
+					$rpc_py destroy_lvol_store $ls_guid
+					ls_guid=$($rpc_py construct_lvol_store $disk)
+
+					echo "INFO: Construct lvol bdev from lvol store $ls_guid on $disk"
+					lb_guid=$($rpc_py construct_lvol_bdev $ls_guid 36)
+
+					echo "INFO: Removing and re-adding lvol bdev"
+					$rpc_py delete_bdev $lb_guid
+					lb_guid=$($rpc_py construct_lvol_bdev $ls_guid 36)
+
+					echo "INFO: Destroy an lvol store to $disk"
+					$rpc_py delete_bdev $lb_guid
+					$rpc_py destroy_lvol_store $ls_guid
+
+					# Remove destroying lvol store and use lvol bdev as LUN in controllers
+					# when read/write for lvols is ready
+					# dev_to_add=$lb_guid
+				fi
+
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
 					echo "INFO: Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
@@ -193,7 +228,7 @@ for vm_conf in ${vms[@]}; do
 					fi
 
 					echo "INFO: Re-adding device 0 to naa.$disk.${conf[0]}"
-					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
+					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $dev_to_add
 				fi
 			done
 		done <<< "${conf[2]}"
