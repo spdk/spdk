@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63ebd27b_6573997f",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-07-25T10:43:32Z",
+      "side": 1,
+      "message": "This shall not pass.\nCreate separate config with masks (i.e. \"autotest_mq.config\") and in case of MQ test just replace default SQ config with MQ config with \"cp\"",
+      "range": {
+        "startLine": 62,
+        "startChar": 8,
+        "endLine": 62,
+        "endChar": 65
+      },
+      "revId": "1a2590eab0bef0c5a4fd4ef30e95ad5776d42ec3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
