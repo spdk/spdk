@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "913ef89c_0621b228",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-25T23:21:33Z",
+      "side": 1,
+      "message": "Rather than building up the list in a variable and echoing it out at the end, you can just let the ifconfig command above print its output instead of capturing it. This should be simpler overall.",
+      "revId": "9d4290a60327c58c7e628170cb527518d29f34ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
