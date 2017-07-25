@@ -50,4 +50,5 @@ kill_stub
 # TODO: enable nvme device detachment for multi-process so that
 #  we can use the stub for this test
 run_test test/nvmf/rpc/rpc.sh
+revert_soft_roce
 timing_exit nvmf_tgt
