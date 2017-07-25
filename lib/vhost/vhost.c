@@ -57,6 +57,7 @@ const struct vhost_device_ops g_spdk_vhost_ops = {
 };
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
+static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
@@ -511,9 +512,11 @@ destroy_device(int vid)
 	struct rte_vhost_vring *q;
 	uint16_t i;
 
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
@@ -526,6 +529,7 @@ destroy_device(int vid)
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
 	vdev->vid = -1;
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 static int
@@ -533,43 +537,45 @@ new_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	char ifname[PATH_MAX];
-	int rc;
-
-	uint16_t num_queues = rte_vhost_get_vring_num(vid);
+	int rc = -1;
+	uint16_t num_queues;
 	uint16_t i;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	num_queues = rte_vhost_get_vring_num(vid);
 
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
-		return -1;
+		goto out;
 	}
 
 	vdev = spdk_vhost_dev_find(ifname);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Controller %s not found.\n", ifname);
-		return -1;
+		goto out;
 	}
 
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s already connected.\n", ifname);
-		return -1;
+		goto out;
 	}
 
 	if (num_queues > SPDK_VHOST_MAX_VQUEUES) {
 		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
 			    SPDK_VHOST_MAX_VQUEUES);
-		return -1;
+		goto out;
 	}
 
 	for (i = 0; i < num_queues; i++) {
 		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i])) {
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
-			return -1;
+			goto out;
 		}
 
 		/* Disable notifications. */
 		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
 			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
-			return -1;
+			goto out;
 		}
 
 	}
@@ -579,12 +585,12 @@ new_device(int vid)
 
 	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		return -1;
+		goto out;
 	}
 
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
-		return -1;
+		goto out;
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
@@ -594,10 +600,11 @@ new_device(int vid)
 		spdk_vhost_free_reactor(vdev->lcore);
 		vdev->lcore = -1;
 		vdev->vid = -1;
-		return -1;
 	}
 
-	return 0;
+out:
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return rc;
 }
 
 void
