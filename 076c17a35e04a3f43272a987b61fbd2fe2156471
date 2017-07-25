@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "842e794d_0f78ebf5",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "You should probably define a structure that holds a pointer to the blobstore, the blob you made, and the I/O channel. Allocate this structure when opening the blob and pass it as the cb_arg everywhere. Free it when the blob is closed. That way you don\u0027t have to get an I/O channel for each operation.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c1d27d2_d6216a13",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "You can\u0027t free the channel while I/O is outstanding - need to do it only when you shut this thread down.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9fcbbd2_748402ce",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "You\u0027re choosing to resize the blob to be the full size of the disk, which is probably a bit of an odd choice. At a minimum, call out that you\u0027re doing this just as an example.\n\nWe should also explain that resize is in units of clusters.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f17ac7de_65fb4058",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "This print isn\u0027t right - \"free\" here is the number of free clusters in the blobstore, which should be 0 at this point (the clusters are all assigned to the blob). I think you want to print out the size of the blob instead (spdk_blob_get_num_clusters).",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aff5dc33_c5a8db2d",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "You don\u0027t need the event here - you can just call spdk_bs_md_create_blob directly in this function.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "713e75c3_cf92b47b",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "To make this even clearer, you can call spdk_bdev_get_by_name and pass the name of the bdev from the configuration file.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9978aec_0c00fb34",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "Maybe preface this comment with more context such as spdk_bs_init requires us to fill out the structure spdk_bs_dev with a set of callbacks. These callbacks implement read, write, and other operations on the underlying disks. As a convenience, a utility function is provided that creates an spdk_bs_dev that implements all of the callbacks by forwarding the I/O to the SPDK bdev layer.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62753a80_bc7905e0",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "I think we should be extra clear that this is an asynchronous operation and bs_init_complete will be called when the operation is done.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8813ce4_006f9a88",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "It\u0027s probably even simpler to write:\n\nopts.config_file \u003d \"hello_blob.conf\"",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f37d0245_9e364b7a",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "re: comment above - You\u0027re right that spdk_app_start() will block until someone calls spdk_app_stop(), and also that it will execute hello_start(), but it won\u0027t block on hello_start returning. hello_start() can return immediately and spdk_app_start() will stay blocked.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71bf074b_73fcd9a8",
+        "filename": "examples/blobstore/hello_blob.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-25T17:57:04Z",
+      "side": 1,
+      "message": "You can just put this at the top of the .c file - the whole example can just be the one file for simplicity.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
