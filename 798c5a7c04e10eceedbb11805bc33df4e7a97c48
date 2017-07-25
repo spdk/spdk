@@ -16,6 +16,24 @@
       "revId": "798c5a7c04e10eceedbb11805bc33df4e7a97c48",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35b2e966_cf5ee78c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-25T18:05:05Z",
+      "side": 1,
+      "message": "Never mind, this poller is only used with removed devices, so I think this is behaving as intended.",
+      "parentUuid": "571ae55f_8e969fcc",
+      "revId": "798c5a7c04e10eceedbb11805bc33df4e7a97c48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
