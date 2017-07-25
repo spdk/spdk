@@ -705,6 +705,12 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 }
 
 const char *
+spdk_bdev_get_lvs_guid(const struct spdk_bdev *bdev)
+{
+	return bdev->lvs_guid;
+}
+
+const char *
 spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 {
 	return bdev->product_name;
