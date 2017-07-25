@@ -136,7 +136,35 @@ struct spdk_nvmf_transport *spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt
 		enum spdk_nvme_transport_type type);
 int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
 
-void spdk_nvmf_transport_poll(struct spdk_nvmf_transport *transport);
+void spdk_nvmf_transport_acceptor_poll(struct spdk_nvmf_transport *transport);
+
+int spdk_nvmf_transport_listen_addr_add(struct spdk_nvmf_transport *transport,
+					struct spdk_nvmf_listen_addr *listen_addr);
+
+int spdk_nvmf_transport_listen_addr_remove(struct spdk_nvmf_transport *transport,
+		struct spdk_nvmf_listen_addr *listen_addr);
+
+void spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transport,
+		struct spdk_nvmf_listen_addr *listen_addr,
+		struct spdk_nvmf_discovery_log_page_entry *entry);
+
+struct spdk_nvmf_ctrlr *spdk_nvmf_transport_ctrlr_init(struct spdk_nvmf_transport *transport);
+
+void spdk_nvmf_transport_ctrlr_fini(struct spdk_nvmf_ctrlr *ctrlr);
+
+int spdk_nvmf_transport_ctrlr_add_qpair(struct spdk_nvmf_ctrlr *ctrlr,
+					struct spdk_nvmf_qpair *qpair);
+
+int spdk_nvmf_transport_ctrlr_remove_qpair(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvmf_qpair *qpair);
+
+int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
+
+void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
+
+int spdk_nvmf_transport_qpair_poll(struct spdk_nvmf_qpair *qpair);
+
+bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
 
 extern const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 

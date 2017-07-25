@@ -118,7 +118,7 @@ nvmf_subsystem_removable(struct spdk_nvmf_subsystem *subsystem)
 	if (subsystem->is_removed) {
 		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 			TAILQ_FOREACH(qpair, &ctrlr->qpairs, link) {
-				if (!qpair->transport->ops->qpair_is_idle(qpair)) {
+				if (!spdk_nvmf_transport_qpair_is_idle(qpair)) {
 					return false;
 				}
 			}
@@ -287,7 +287,7 @@ spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid)
 		return NULL;
 	}
 
-	rc = transport->ops->listen_addr_add(transport, listen_addr);
+	rc = spdk_nvmf_transport_listen_addr_add(transport, listen_addr);
 	if (rc < 0) {
 		free(listen_addr);
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
