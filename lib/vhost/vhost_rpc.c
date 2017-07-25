@@ -158,6 +158,7 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_vhost_scsi_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
+	struct spdk_vhost_dev *vdev;
 	int rc;
 	uint64_t cpumask;
 
@@ -175,8 +176,9 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_construct(req.ctrlr, cpumask);
-	if (rc < 0) {
+	vdev = spdk_vhost_scsi_dev_construct(req.ctrlr, cpumask);
+	if (vdev == NULL) {
+		rc = -EINVAL;
 		goto invalid;
 	}
 
@@ -281,6 +283,7 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_add_vhost_scsi_ctrlr_lun req = {0};
 	struct spdk_json_write_ctx *w;
+	struct spdk_vhost_dev *vdev;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_vhost_add_lun,
@@ -291,7 +294,20 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_add_dev(req.ctrlr, req.scsi_dev_num, req.lun_name);
+	if (req.ctrlr == NULL) {
+		SPDK_ERRLOG("No controller name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	vdev = spdk_vhost_dev_find(req.ctrlr);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Controller %s is not defined.\n", req.ctrlr);
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_scsi_dev_add_dev(vdev, req.scsi_dev_num, req.lun_name);
 	if (rc < 0) {
 		goto invalid;
 	}
