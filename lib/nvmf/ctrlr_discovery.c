@@ -102,7 +102,7 @@ nvmf_update_discovery_log(void)
 			transport = spdk_nvmf_tgt_get_transport(&g_nvmf_tgt, listen_addr->trid.trtype);
 			assert(transport != NULL);
 
-			transport->ops->listen_addr_discover(transport, listen_addr, entry);
+			spdk_nvmf_transport_listen_addr_discover(transport, listen_addr, entry);
 
 			numrec++;
 		}

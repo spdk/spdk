@@ -59,6 +59,42 @@ spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 	return NULL;
 }
 
+struct spdk_nvmf_ctrlr *
+spdk_nvmf_transport_ctrlr_init(struct spdk_nvmf_transport *transport)
+{
+	return NULL;
+}
+
+void
+spdk_nvmf_transport_ctrlr_fini(struct spdk_nvmf_ctrlr *ctrlr)
+{
+}
+
+void
+spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
+{
+}
+
+int
+spdk_nvmf_transport_ctrlr_add_qpair(struct spdk_nvmf_ctrlr *ctrlr,
+				    struct spdk_nvmf_qpair *qpair)
+{
+	return 0;
+}
+
+int
+spdk_nvmf_transport_ctrlr_remove_qpair(struct spdk_nvmf_ctrlr *ctrlr,
+				       struct spdk_nvmf_qpair *qpair)
+{
+	return 0;
+}
+
+int
+spdk_nvmf_transport_qpair_poll(struct spdk_nvmf_qpair *qpair)
+{
+	return 0;
+}
+
 static void
 test_foobar(void)
 {
