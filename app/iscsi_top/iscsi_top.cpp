@@ -79,7 +79,7 @@ print_connections(void)
 	int			fd, i;
 	char			shm_name[64];
 
-	snprintf(shm_name, sizeof(shm_name), "spdk_iscsi_conns.%d", g_shm_id);
+	snprintf(shm_name, sizeof(shm_name), "/spdk_iscsi_conns.%d", g_shm_id);
 	fd = shm_open(shm_name, O_RDONLY, 0600);
 	if (fd < 0) {
 		fprintf(stderr, "Cannot open shared memory: %s\n", shm_name);
