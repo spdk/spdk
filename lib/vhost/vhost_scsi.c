@@ -645,15 +645,15 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 	return (struct spdk_vhost_scsi_dev *)ctrlr;
 }
 
-int
-spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
+struct spdk_vhost_dev *
+	spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 {
 	struct spdk_vhost_scsi_dev *svdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_dev),
 					    SPDK_CACHE_LINE_SIZE, NULL);
 	int rc;
 
 	if (svdev == NULL) {
-		return -ENOMEM;
+		return NULL;
 	}
 
 	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
@@ -661,10 +661,10 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 
 	if (rc) {
 		spdk_dma_free(svdev);
-		return rc;
+		return NULL;
 	}
 
-	return 0;
+	return &svdev->vdev;
 }
 
 int
@@ -736,16 +736,16 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 }
 
 int
-spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const char *lun_name)
+spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+			    const char *lun_name)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_dev *vdev;
 	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
 
-	if (ctrlr_name == NULL) {
-		SPDK_ERRLOG("No controller name\n");
+	svdev = to_scsi_dev(vdev);
+	if (svdev == NULL) {
 		return -EINVAL;
 	}
 
@@ -763,24 +763,18 @@ spdk_vhost_scsi_dev_add_dev(const char *ctrlr_name, unsigned scsi_dev_num, const
 		return -1;
 	}
 
-	vdev = spdk_vhost_dev_find(ctrlr_name);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller %s is not defined.\n", ctrlr_name);
-		return -ENODEV;
-	}
-
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
 		return -EINVAL;
 	}
 
 	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", ctrlr_name);
+		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
 		return -ENODEV;
 	}
 
 	if (svdev->scsi_dev[scsi_dev_num] != NULL) {
-		SPDK_ERRLOG("Controller %s dev %u already occupied\n", ctrlr_name, scsi_dev_num);
+		SPDK_ERRLOG("Controller %s dev %u already occupied\n", vdev->name, scsi_dev_num);
 		return -EEXIST;
 	}
 
@@ -852,6 +846,7 @@ int
 spdk_vhost_scsi_controller_construct(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_first_section(NULL);
+	struct spdk_vhost_dev *vdev;
 	int i, dev_num;
 	unsigned ctrlr_num = 0;
 	char *lun_name, *dev_num_str;
@@ -880,7 +875,8 @@ spdk_vhost_scsi_controller_construct(void)
 			return -1;
 		}
 
-		if (spdk_vhost_scsi_dev_construct(name, cpumask) < 0) {
+		vdev = spdk_vhost_scsi_dev_construct(name, cpumask);
+		if (vdev == NULL) {
 			return -1;
 		}
 
@@ -901,7 +897,7 @@ spdk_vhost_scsi_controller_construct(void)
 				return -1;
 			}
 
-			if (spdk_vhost_scsi_dev_add_dev(name, dev_num, lun_name) < 0) {
+			if (spdk_vhost_scsi_dev_add_dev(vdev, dev_num, lun_name) < 0) {
 				return -1;
 			}
 		}
