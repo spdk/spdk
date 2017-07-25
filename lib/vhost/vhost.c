@@ -57,6 +57,7 @@ const struct vhost_device_ops g_spdk_vhost_ops = {
 };
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
+static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 {
@@ -526,9 +527,10 @@ spdk_vhost_dev_load(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	char ifname[PATH_MAX];
-
-	uint16_t num_queues = rte_vhost_get_vring_num(vid);
+	uint16_t num_queues;
 	uint16_t i;
+
+	num_queues = rte_vhost_get_vring_num(vid);
 
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
@@ -580,7 +582,6 @@ spdk_vhost_dev_load(int vid)
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
-
 	return vdev;
 }
 
@@ -718,9 +719,11 @@ new_device(int vid)
 	struct spdk_vhost_dev *vdev = NULL;
 	int rc;
 
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	spdk_vhost_dev_load(vid);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to create.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return -1;
 	}
 
@@ -729,6 +732,7 @@ new_device(int vid)
 		spdk_vhost_dev_unload(vdev);
 	}
 
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return rc;
 }
 
@@ -737,14 +741,17 @@ destroy_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
 	vdev->backend->destroy_device(vdev);
 	spdk_vhost_dev_unload(vdev);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
