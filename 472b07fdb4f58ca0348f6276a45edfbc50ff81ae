@@ -193,6 +193,24 @@
     },
     {
       "key": {
+        "uuid": "416d02be_9e3703c2",
+        "filename": "lib/lvol/bdev/lvs_bdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done.\nRenamed lvol_store_bdev.",
+      "parentUuid": "c762bc3e_753a36c4",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "730a0595_06ef8718",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 14
@@ -221,6 +239,24 @@
       "writtenOn": "2017-07-13T06:23:25Z",
       "side": 1,
       "message": "I\u0027m not sure we need to set a length xattr.  I think for logical volumes, we just say that the size must be an exact multiple of the cluster size.  This simplifies the implementation.  There is no reason someone needs to have a 10.0005GB logical volume - they can just round up to the nearest 1MB cluster (10.001GB).",
+      "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be3b6be9_ca9833dc",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-07-25T09:59:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cab9fa14_e0fc3575",
       "revId": "472b07fdb4f58ca0348f6276a45edfbc50ff81ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
