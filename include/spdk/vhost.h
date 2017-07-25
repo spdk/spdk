@@ -73,7 +73,8 @@ struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *ctrl,
 		uint8_t num);
 int spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 				const char *lun_name);
-int spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num);
+int spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+				   void (*cb_fn)(void *, void *), void *cb_arg);
 
 int spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_name,
 			     bool readonly);
