@@ -81,7 +81,7 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 
-	struct spdk_ring *eventq_ring;
+	pthread_mutex_t eventq_mutex;
 } __rte_cache_aligned;
 
 struct spdk_vhost_scsi_task {
@@ -147,41 +147,6 @@ spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_t
 }
 
 static void
-process_eventq(struct spdk_vhost_scsi_dev *svdev)
-{
-	struct rte_vhost_vring *vq;
-	struct vring_desc *desc;
-	struct virtio_scsi_event *ev, *desc_ev;
-	uint32_t req_size;
-	uint16_t req;
-
-	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
-
-	while (spdk_ring_dequeue(svdev->eventq_ring, (void **)&ev, 1) == 1) {
-		if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
-			SPDK_ERRLOG("Controller %s: Failed to send virtio event (no avail ring entries?).\n",
-				    svdev->vdev.name);
-			spdk_dma_free(ev);
-			break;
-		}
-
-		desc =  spdk_vhost_vq_get_desc(vq, req);
-		desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
-
-		if (desc->len >= sizeof(*desc_ev) && desc_ev != NULL) {
-			req_size = sizeof(*desc_ev);
-			memcpy(desc_ev, ev, sizeof(*desc_ev));
-		} else {
-			SPDK_ERRLOG("Controller %s: Invalid eventq descriptor.\n", svdev->vdev.name);
-			req_size = 0;
-		}
-
-		spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
-		spdk_dma_free(ev);
-	}
-}
-
-static void
 process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
 {
 	struct spdk_scsi_dev *dev;
@@ -203,8 +168,12 @@ static void
 eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, const struct spdk_scsi_dev *dev,
 	       const struct spdk_scsi_lun *lun, uint32_t event, uint32_t reason)
 {
-	struct virtio_scsi_event *ev;
 	int dev_id, lun_id;
+	struct rte_vhost_vring *vq;
+	struct vring_desc *desc;
+	struct virtio_scsi_event *desc_ev;
+	uint32_t req_size;
+	uint16_t req;
 
 	if (dev == NULL) {
 		SPDK_ERRLOG("%s: eventq device cannot be NULL.\n", svdev->vdev.name);
@@ -223,24 +192,39 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, const struct spdk_scsi_dev *de
 		return;
 	}
 
+	pthread_mutex_lock(&svdev->eventq_mutex);
+
 	/* some events may apply to the entire device via lun id set to 0 */
 	lun_id = lun == NULL ? 0 : spdk_scsi_lun_get_id(lun);
 
-	ev = spdk_dma_zmalloc(sizeof(*ev), SPDK_CACHE_LINE_SIZE, NULL);
-	assert(ev);
+	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
 
-	ev->event = event;
-	ev->lun[0] = 1;
-	ev->lun[1] = dev_id;
-	ev->lun[2] = lun_id >> 8; /* relies on linux kernel implementation */
-	ev->lun[3] = lun_id & 0xFF;
-	ev->reason = reason;
-
-	if (spdk_ring_enqueue(svdev->eventq_ring, (void **)&ev, 1) != 1) {
-		SPDK_ERRLOG("Controller %s: Failed to inform guest about LUN #%d removal (no room in ring?).\n",
-			    svdev->vdev.name, lun_id);
-		spdk_dma_free(ev);
+	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
+		SPDK_ERRLOG("Controller %s: Failed to send virtio event (no avail ring entries?).\n",
+			    svdev->vdev.name);
+		pthread_mutex_unlock(&svdev->eventq_mutex);
+		return;
 	}
+
+	desc =  spdk_vhost_vq_get_desc(vq, req);
+	desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
+
+	if (desc->len < sizeof(*desc_ev) || desc_ev != NULL) {
+		SPDK_ERRLOG("Controller %s: Invalid eventq descriptor.\n", svdev->vdev.name);
+		req_size = 0;
+	} else {
+		desc_ev->event = event;
+		desc_ev->lun[0] = 1;
+		desc_ev->lun[1] = dev_id;
+		desc_ev->lun[2] = lun_id >> 8; /* relies on linux kernel implementation */
+		desc_ev->lun[3] = lun_id & 0xFF;
+		memset(&desc_ev->lun[4], 0, 4);
+		desc_ev->reason = reason;
+	}
+
+	spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
+
+	pthread_mutex_unlock(&svdev->eventq_mutex);
 }
 
 static void
@@ -302,11 +286,6 @@ mgmt_task_submit(struct spdk_vhost_scsi_task *task, enum spdk_scsi_task_func fun
 static void
 invalid_request(struct spdk_vhost_scsi_task *task)
 {
-	/* Flush eventq so that guest is instantly notified about any hotremoved luns.
-	 * This might prevent him from sending more invalid requests and trying to reset
-	 * the device.
-	 */
-	process_eventq(task->svdev);
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_scsi_task_put(task);
 
@@ -617,7 +596,6 @@ vdev_mgmt_worker(void *arg)
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
 	process_removed_devs(svdev);
-	process_eventq(svdev);
 	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
 }
 
@@ -658,7 +636,6 @@ static void
 remove_vdev_cb(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
-	void *ev;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -670,11 +647,6 @@ remove_vdev_cb(void *arg)
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
 	spdk_vhost_dev_mem_unregister(&svdev->vdev);
-
-	/* Cleanup not sent events */
-	while (spdk_ring_dequeue(svdev->eventq_ring, &ev, 1) == 1) {
-		spdk_dma_free(ev);
-	}
 }
 
 static struct spdk_vhost_scsi_dev *
@@ -704,17 +676,12 @@ struct spdk_vhost_dev *
 		return NULL;
 	}
 
-	svdev->eventq_ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16, SOCKET_ID_ANY);
-	if (svdev->eventq_ring == NULL) {
-		spdk_dma_free(svdev);
-		return NULL;
-	}
-
+	pthread_mutex_init(&svdev->eventq_mutex, NULL);
 	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
 				      &spdk_vhost_scsi_device_backend);
 
 	if (rc) {
-		spdk_ring_free(svdev->eventq_ring);
+		pthread_mutex_destroy(&svdev->eventq_mutex);
 		spdk_dma_free(svdev);
 		return NULL;
 	}
@@ -743,7 +710,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return -EIO;
 	}
 
-	spdk_ring_free(svdev->eventq_ring);
+	pthread_mutex_destroy(&svdev->eventq_mutex);
 	spdk_dma_free(svdev);
 	return 0;
 }
