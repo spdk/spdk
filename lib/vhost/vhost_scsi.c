@@ -347,11 +347,6 @@ spdk_vhost_scsi_task_cpl(struct spdk_scsi_task *scsi_task)
 static void
 task_submit(struct spdk_vhost_scsi_task *task)
 {
-	/* The task is ready to be submitted.  First create the callback event that
-	   will be invoked when the SCSI command is completed.  See spdk_vhost_scsi_task_cpl()
-	   for what SPDK vhost-scsi does when the task is completed.
-	 */
-
 	task->resp->response = VIRTIO_SCSI_S_OK;
 	spdk_scsi_dev_queue_task(task->scsi_dev, &task->scsi);
 }
@@ -473,8 +468,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
  * Process task's descriptor chain and setup data related fields.
  * Return
  *   -1 if request is invalid and must be aborted,
- *    0 if all data are set,
- *    1 if it was not possible to allocate IO vector for this task.
+ *    0 if all data are set.
  */
 static int
 task_data_setup(struct spdk_vhost_scsi_task *task,
