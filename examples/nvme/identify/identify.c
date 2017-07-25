@@ -981,7 +981,7 @@ usage(const char *program_name)
 	spdk_tracelog_usage(stdout, "-t");
 
 	printf(" -i         shared memory group ID\n");
-	printf(" -p         core to run this application\n");
+	printf(" -p         core number in decimal to run this application which started from 0\n");
 	printf(" -d         DPDK huge memory size in MB\n");
 	printf(" -x         print hex dump of raw data\n");
 	printf(" -v         verbose (enable warnings)\n");
