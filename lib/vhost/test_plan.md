@@ -21,6 +21,23 @@
 - runs on Fedora 25 and Ubuntu 16.04 guest systems
 - runs against vhost scsi and vhost blk
 
+#### Lvol tests
+- starts vhost with at least 1 NVMe device
+- starts 1 VM or multiple VMs
+- lvol store is constructed on each NVMe device
+- on each lvol store 1 lvol bdev will be constructed for each running VM
+- Logical volume block device is used as backend instead of using
+  NVMe device backed directly
+- after set up, data integrity check will be performed by FIO randwrite
+  operation with verify flag enabled
+- optionally nested lvols can be tested with use of appropriate flag;
+  On each base lvol store additional lvol bdev will be created which will
+  serve as a base for nested lvol stores.
+  On each of the nested lvol stores there will be 1 lvol bdev created for each
+  VM running. Nested lvol bdevs will be used along with base lvol bdevs for
+  data integrity check.
+- runs against vhost scsi and vhost blk
+
 #### Filesystem integrity
 - runs SPDK with 1 VM with 1 NVMe device attached.
 - creates a partition table and filesystem on passed device, and mounts it
