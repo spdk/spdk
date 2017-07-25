@@ -72,10 +72,16 @@
 /* Allocated iovec buffer len */
 #define SPDK_VHOST_SCSI_IOVS_LEN 128
 
+struct spdk_scsi_dev_vhost_state {
+	bool removed;
+	spdk_scsi_dev_vhost_remove_cb remove_cb;
+	void *remove_ctx;
+};
+
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
-	bool removed_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 
 	struct spdk_ring *task_pool;
 	struct spdk_poller *requestq_poller;
@@ -185,15 +191,20 @@ static void
 process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
 {
 	struct spdk_scsi_dev *dev;
+	struct spdk_scsi_dev_vhost_state *state;
 	int i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
 		dev = svdev->scsi_dev[i];
+		state = &svdev->scsi_dev_state[i];
 
-		if (dev && svdev->removed_dev[i] && !spdk_scsi_dev_has_pending_tasks(dev)) {
+		if (dev && state->removed && !spdk_scsi_dev_has_pending_tasks(dev)) {
 			spdk_scsi_dev_free_io_channels(dev);
 			spdk_scsi_dev_destruct(dev);
 			svdev->scsi_dev[i] = NULL;
+			if (state->remove_cb) {
+				state->remove_cb(&svdev->vdev, state->remove_ctx);
+			}
 			SPDK_NOTICELOG("%s: hotremoved device 'Dev %u'.\n", svdev->vdev.name, i);
 		}
 	}
@@ -332,7 +343,7 @@ spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *
 		/* If dev has been hotremoved, return 0 to allow sending additional
 		 * hotremove event via sense codes.
 		 */
-		return task->svdev->removed_dev[lun[1]] ? 0 : -1;
+		return task->svdev->scsi_dev_state[lun[1]].removed ? 0 : -1;
 	}
 
 	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
@@ -788,7 +799,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	}
 
 	/* remove entire device */
-	spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, scsi_dev_num);
+	spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, scsi_dev_num, NULL, NULL);
 }
 
 int
@@ -841,7 +852,7 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 	lun_id_list[0] = 0;
 	lun_names_list[0] = (char *)lun_name;
 
-	svdev->removed_dev[scsi_dev_num] = false;
+	svdev->scsi_dev_state[scsi_dev_num].removed = false;
 	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
 					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
 
@@ -857,10 +868,12 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 }
 
 int
-spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num)
+spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+			       spdk_scsi_dev_vhost_remove_cb cb_fn, void *cb_arg)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_dev *scsi_dev;
+	struct spdk_scsi_dev_vhost_state *scsi_dev_state;
 
 	if (scsi_dev_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
 		SPDK_ERRLOG("%s: invalid device number %d\n", vdev->name, scsi_dev_num);
@@ -882,6 +895,9 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		/* controller is not in use, remove dev and exit */
 		spdk_scsi_dev_destruct(scsi_dev);
 		svdev->scsi_dev[scsi_dev_num] = NULL;
+		if (cb_fn) {
+			cb_fn(vdev, cb_arg);
+		}
 		SPDK_NOTICELOG("%s: removed device 'Dev %u'\n", vdev->name, scsi_dev_num);
 		return 0;
 	}
@@ -891,11 +907,20 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		return -ENOTSUP;
 	}
 
-	svdev->removed_dev[scsi_dev_num] = true;
+	scsi_dev_state = &svdev->scsi_dev_state[scsi_dev_num];
+	if (scsi_dev_state->removed) {
+		SPDK_WARNLOG("%s: 'Dev %u' has been already marked to hotremove.\n", svdev->vdev.name,
+			     scsi_dev_num);
+		return -EBUSY;
+	}
+
+	scsi_dev_state->remove_cb = cb_fn;
+	scsi_dev_state->remove_ctx = cb_arg;
+	scsi_dev_state->removed = true;
 	eventq_enqueue(svdev, scsi_dev, NULL, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
 
 	SPDK_NOTICELOG("%s: 'Dev %u' marked for hotremove.\n", vdev->name, scsi_dev_num);
-	return 0;
+	return 1;
 }
 
 int
