@@ -37,8 +37,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 DIRS-y += trace
 DIRS-y += nvmf_tgt
 DIRS-y += iscsi_top
-ifeq ($(OS),Linux)
 DIRS-y += iscsi_tgt
+ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VHOST) += vhost
 endif
 
