@@ -43,6 +43,7 @@ fi
 
 $valgrind test/unit/lib/bdev/bdev.c/bdev_ut
 $valgrind test/unit/lib/bdev/scsi_nvme.c/scsi_nvme_ut
+$valgrind test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
 
 $valgrind test/unit/lib/blob/blob.c/blob_ut
 
@@ -80,6 +81,9 @@ $valgrind test/unit/lib/scsi/dev.c/dev_ut
 $valgrind test/unit/lib/scsi/lun.c/lun_ut
 $valgrind test/unit/lib/scsi/scsi.c/scsi_ut
 $valgrind test/unit/lib/scsi/scsi_bdev.c/scsi_bdev_ut
+
+$valgrind test/unit/lib/lvol/lvol.c/lvol_ut
+$valgrind test/unit/lib/lvol/bdev/lvs_bdev.c/lvs_bdev_ut
 
 $valgrind test/unit/lib/iscsi/param.c/param_ut
 $valgrind test/unit/lib/iscsi/tgt_node.c/tgt_node_ut test/unit/lib/iscsi/tgt_node.c/tgt_node.conf

@@ -32,64 +32,32 @@
  */
 
 /** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
+ * Logical Volume Interface
  */
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#ifndef SPDK_LVOL_H
+#define SPDK_LVOL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "spdk/queue.h"
+#include "spdk/blob.h"
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+struct spdk_lvol_store;
+struct spdk_lvol;
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
+typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
+		int lvserrno);
+typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
+typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
+typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol *lvol,
+		int lvolerrno);
 
-#include <uuid/uuid.h>
+int spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
+int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
+int spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
+		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_lvol_destroy(struct spdk_lvol *lvol);
+void spdk_lvol_close(struct spdk_lvol *lvol);
+struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig);
+struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(uuid_t uuid);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SPDK_STDINC_H */
+#endif  /* SPDK_LVOL_H */
