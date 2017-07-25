@@ -686,4 +686,24 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 	sem_destroy(&ev->sem);
 }
 
+void
+spdk_vhost_call_external_event(const char *ctrlr_name, void (*fn)(void *, void *), void *arg)
+{
+	struct spdk_vhost_dev *vdev;
+	struct spdk_event *ev;
+	uint32_t lcore;
+
+	/* FIXME: lock g_vhost_mutex */
+	vdev = spdk_vhost_dev_find(ctrlr_name);
+	if (vdev->lcore == -1) {
+		fn(vdev, arg);
+	} else {
+		ev = spdk_event_allocate(lcore, fn, vdev, arg);
+		assert(ev);
+		spdk_event_call(ev);
+	}
+	/* FIXME: unlock, if destroy_device uses same mutex
+	 * it's remove_vdev_cb won't be called before this event */
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
