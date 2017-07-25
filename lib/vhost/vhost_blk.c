@@ -495,7 +495,7 @@ destroy_device(int vid)
 	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
-	vdev = spdk_vhost_dev_find_by_vid(vid);
+	vdev = spdk_vhost_dev_unload_start(vid);
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);

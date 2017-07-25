@@ -73,6 +73,7 @@ struct spdk_vhost_dev {
 	int task_cnt;
 	int32_t lcore;
 	uint64_t cpumask;
+	bool removing;
 
 	enum spdk_vhost_dev_type type;
 
@@ -110,7 +111,7 @@ bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 bool spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				  const struct vring_desc *desc);
 
-struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
+struct spdk_vhost_dev *spdk_vhost_dev_unload_start(int vid);
 
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
@@ -143,7 +144,7 @@ void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn,
 void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event, const char *errmsg);
 
 /** Call given function on given ctrlr reactor, or on current one if ctrlr is not in use */
-void spdk_vhost_call_external_event(const char *ctrlr_name, void (*fn)(void *, void *), void *arg);
+int spdk_vhost_call_external_event(const char *ctrlr_name, void (*fn)(void *, void *), void *arg);
 
 int spdk_vhost_blk_controller_construct(void);
 

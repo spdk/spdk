@@ -334,8 +334,12 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_add_vhost_scsi_lun_cb, req);
+	rc = spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_add_vhost_scsi_lun_cb, req);
+	if (rc < 0) {
+		goto invalid;
+	}
 
+	return;
 invalid:
 	free_rpc_add_vhost_scsi_ctrlr_lun(req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, strerror(-rc));
@@ -429,7 +433,12 @@ spdk_rpc_remove_vhost_scsi_dev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_remove_vhost_scsi_dev_cb, req);
+	rc = spdk_vhost_call_external_event(req->ctrlr, spdk_rpc_remove_vhost_scsi_dev_cb, req);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	return;
 
 invalid:
 	free_rpc_remove_vhost_scsi_ctrlr_dev(req);
