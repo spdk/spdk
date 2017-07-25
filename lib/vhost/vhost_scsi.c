@@ -76,6 +76,7 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	bool removed_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+	struct spdk_event *scsi_dev_remove_cb[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 
 	struct spdk_ring *task_pool;
 	struct spdk_poller *requestq_poller;
@@ -738,7 +739,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	}
 
 	/* remove entire device */
-	spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, scsi_dev_num);
+	spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, scsi_dev_num, NULL);
 }
 
 int
@@ -807,7 +808,8 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 }
 
 int
-spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num)
+spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+			       struct spdk_event *cb)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_dev *scsi_dev;
@@ -841,11 +843,12 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		return -ENOTSUP;
 	}
 
+	svdev->scsi_dev_remove_cb[scsi_dev_num] = cb;
 	svdev->removed_dev[scsi_dev_num] = true;
 	eventq_enqueue(svdev, scsi_dev_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
 
 	SPDK_NOTICELOG("%s: 'Dev %u' marked for hotremove.\n", vdev->name, scsi_dev_num);
-	return 0;
+	return 1;
 }
 
 int
