@@ -163,36 +163,16 @@ process_removed_devs(struct spdk_vhost_scsi_dev *svdev)
 }
 
 static void
-eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, const struct spdk_scsi_dev *dev,
-	       const struct spdk_scsi_lun *lun, uint32_t event,
+eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_t event,
 	       uint32_t reason)
 {
-	int dev_id, lun_id;
 	struct rte_vhost_vring *vq;
 	struct vring_desc *desc;
 	struct virtio_scsi_event *desc_ev;
 	uint32_t req_size;
 	uint16_t req;
 
-	if (dev == NULL) {
-		SPDK_ERRLOG("%s: eventq device cannot be NULL.\n", svdev->vdev.name);
-		return;
-	}
-
-	for (dev_id = 0; dev_id < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_id++) {
-		if (svdev->scsi_dev[dev_id] == dev) {
-			break;
-		}
-	}
-
-	if (dev_id == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-		SPDK_ERRLOG("Dev %s is not a part of vhost scsi controller '%s'.\n", spdk_scsi_dev_get_name(dev),
-			    svdev->vdev.name);
-		return;
-	}
-
-	/* some events may apply to the entire device via lun id set to 0 */
-	lun_id = lun == NULL ? 0 : spdk_scsi_lun_get_id(lun);
+	assert(scsi_dev_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 
 	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
 
@@ -211,9 +191,12 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, const struct spdk_scsi_dev *de
 	} else {
 		desc_ev->event = event;
 		desc_ev->lun[0] = 1;
-		desc_ev->lun[1] = dev_id;
-		desc_ev->lun[2] = lun_id >> 8; /* relies on linux kernel implementation */
-		desc_ev->lun[3] = lun_id & 0xFF;
+		desc_ev->lun[1] = scsi_dev_num;
+		/* virtio LUN id 0 can refer either to the entire device
+		 * or actual LUN 0 (the only supported by vhost for now)
+		 */
+		desc_ev->lun[2] = 0 >> 8;
+		desc_ev->lun[3] = 0 & 0xFF;
 		/* virtio doesn't specify any strict format for LUN id (bytes 2 and 3)
 		 * current implementation relies on linux kernel sources
 		 */
@@ -724,11 +707,27 @@ static void
 spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
+	const struct spdk_scsi_dev *scsi_dev;
+	unsigned scsi_dev_num;
 
 	assert(lun != NULL);
 	assert(svdev != NULL);
 	if ((svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
 		SPDK_WARNLOG("Controller %s: hotremove is not supported\n", svdev->vdev.name);
+		return;
+	}
+
+	scsi_dev = spdk_scsi_lun_get_dev(lun);
+	for (scsi_dev_num = 0; scsi_dev_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; scsi_dev_num++) {
+		if (svdev->scsi_dev[scsi_dev_num] == scsi_dev) {
+			break;
+		}
+	}
+
+	if (scsi_dev_num == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("Dev %s is not a part of vhost scsi controller '%s'.\n",
+			    spdk_scsi_dev_get_name(scsi_dev),
+			    svdev->vdev.name);
 		return;
 	}
 
@@ -843,7 +842,7 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 	}
 
 	svdev->removed_dev[scsi_dev_num] = true;
-	eventq_enqueue(svdev, scsi_dev, NULL, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
+	eventq_enqueue(svdev, scsi_dev_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
 
 	SPDK_NOTICELOG("%s: 'Dev %u' marked for hotremove.\n", vdev->name, scsi_dev_num);
 	return 0;
