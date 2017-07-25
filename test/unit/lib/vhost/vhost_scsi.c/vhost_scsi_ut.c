@@ -282,11 +282,11 @@ vhost_scsi_dev_remove_dev_test(void)
 	svdev->vdev.name = strdup("vhost.0");
 
 	/* Invalid device number */
-	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, SPDK_VHOST_SCSI_CTRLR_MAX_DEVS + 1);
+	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, SPDK_VHOST_SCSI_CTRLR_MAX_DEVS + 1, NULL, NULL);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Try to remove nonexistent device */
-	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, 0);
+	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENODEV);
 
 	/* Try to remove device when controller is in use */
@@ -294,7 +294,7 @@ vhost_scsi_dev_remove_dev_test(void)
 	scsi_dev = alloc_scsi_dev();
 	svdev->scsi_dev[0] = scsi_dev;
 	MOCK_SET(spdk_vhost_dev_has_feature, bool, false);
-	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, 0);
+	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
 	free(scsi_dev);
 	free(svdev->vdev.name);
