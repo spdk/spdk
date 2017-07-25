@@ -396,32 +396,37 @@ static const struct spdk_json_object_decoder rpc_vhost_remove_dev[] = {
 };
 
 static int
-spdk_rpc_remove_vhost_scsi_dev_cb(struct spdk_vhost_dev *vdev, void *arg)
+spdk_rpc_remove_vhost_scsi_dev_finish_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_dev *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
 	struct spdk_json_write_ctx *w;
-	int rc;
-
-	if (vdev == NULL) {
-		rc = -ENODEV;
-		goto invalid;
-	}
-
-	rc = spdk_vhost_scsi_dev_remove_dev(vdev, rpc->scsi_dev_num);
-	if (rc < 0) {
-		goto invalid;
-	}
 
 	free_rpc_remove_vhost_scsi_ctrlr_dev(rpc);
 
-	w = spdk_jsonrpc_begin_result(rpc->request);
+	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
 		return -1;
 	}
 
 	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(rpc->request, w);
+	spdk_jsonrpc_end_result(request, w);
+	return 0;
+}
+
+static int
+spdk_rpc_remove_vhost_scsi_dev_cb(struct spdk_vhost_dev *vdev, void *arg)
+{
+	struct rpc_remove_vhost_scsi_ctrlr_dev *rpc = arg;
+	struct spdk_jsonrpc_request *request = rpc->request;
+	int rc;
+
+	rc = spdk_vhost_scsi_dev_remove_dev(vdev, rpc->scsi_dev_num,
+					    spdk_rpc_remove_vhost_scsi_dev_finish_cb, rpc);
+	if (rc < 0) {
+		goto invalid;
+	}
+
 	return 0;
 
 invalid:
