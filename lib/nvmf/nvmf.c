@@ -133,7 +133,7 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 		return;
 	}
 
-	transport->ops->listen_addr_remove(transport, addr);
+	spdk_nvmf_transport_listen_addr_remove(transport, addr);
 	free(addr);
 }
 
@@ -143,7 +143,7 @@ spdk_nvmf_tgt_poll(void)
 	struct spdk_nvmf_transport *transport, *tmp;
 
 	TAILQ_FOREACH_SAFE(transport, &g_nvmf_tgt.transports, link, tmp) {
-		transport->ops->acceptor_poll(transport);
+		spdk_nvmf_transport_acceptor_poll(transport);
 	}
 }
 
