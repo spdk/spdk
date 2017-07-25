@@ -34,6 +34,7 @@ case $param in
 	--qemu-src=/home/sys_sgsw/vhost/qemu
     ;;
     -i|--integrity)
+    ls -la ./fiotest
 	echo Running integrity suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
@@ -42,6 +43,7 @@ case $param in
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
     ;;
     -ib|--integrity-blk)
+    ls -la ./fiotest
 	echo Running blk integrity suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
@@ -52,13 +54,28 @@ case $param in
 	-f|--fs-integrity)
 	echo Running filesystem integrity suite...
 	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
-	;;
+    ;;
+	-im|--integrity-multiqueue)
+	ls -la ./fiotest
+	echo Running integrity multiqueue suite...
+	if [ ! -f "/home/sys_sgsw/vhost_vm_image_mq.qcow2" ]; then
+		echo "VM image with multiqueue does not exist, exiting vhost tests without running"
+		exit 0
+	fi
+	cp ./fiotest/autotest_mq.config ./fiotest/autotest.config
+	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	--vm=0,/home/sys_sgsw/vhost_vm_image_mq.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+	--test-type=spdk_vhost_scsi \
+	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
+	--qemu-src=/home/sys_sgsw/vhost/qemu -x
+    ;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test with vhost scsi"
 	echo "-f|--fs-integrity 	for running an integrity test with filesystem"
 	echo "-p|--performance 		for running a performance test with vhost scsi"
 	echo "-ib|--integrity-blk 	for running an integrity test with vhost blk"
 	echo "-pb|--performance-blk	for running a performance test with vhost blk"
+	echo "-im|--integrity-multiqueue for running a integrity mutliqueue test with vhost scsi"
 	echo "-h|--help 		prints this message"
     ;;
     *)
