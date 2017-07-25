@@ -3,7 +3,6 @@
 NVMF_PORT=4420
 NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
-NVMF_FIRST_TARGET_IP=$NVMF_IP_PREFIX.$NVMF_IP_LEAST_ADDR
 RPC_PORT=5260
 
 if [ -z "$NVMF_APP" ]; then
@@ -18,7 +17,7 @@ function load_ib_rdma_modules()
 {
 	if [ `uname` != Linux ]; then
 		return 0
-	fi
+	f
 
 	modprobe ib_cm
 	modprobe ib_core
@@ -88,6 +87,17 @@ function allocate_nic_ips()
 	done
 }
 
+function get_rdma_nic_list(){
+	nic_list=""
+	for nic_type in `ls /sys/class/infiniband`; do
+		for nic_name in `ls /sys/class/infiniband/${nic_type}/device/net`; do
+			nic_list+="$(ifconfig $nic_name | grep "inet " | awk '{print $2}')"
+			nic_list+=$'\n'
+		done
+	done
+	echo "$nic_list"
+}
+
 function nvmfcleanup()
 {
 	sync
@@ -99,9 +109,4 @@ function rdma_device_init()
 	load_ib_rdma_modules
 	detect_rdma_nics
 	allocate_nic_ips
-}
-
-function rdma_nic_available()
-{
-	ifconfig | grep -q $NVMF_IP_PREFIX
 }
