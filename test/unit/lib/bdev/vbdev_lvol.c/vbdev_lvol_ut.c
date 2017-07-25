@@ -37,10 +37,36 @@
 #include "vbdev_lvol.c"
 
 int g_lvolerrno;
+int g_cluster_size;
 struct spdk_lvol_store *g_lvs = NULL;
 struct spdk_lvol *g_lvol = NULL;
 struct lvol_store_bdev *g_lvs_bdev = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
+
+int
+spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0);
+
+	return 0;
+}
+
+uint64_t
+spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
+{
+	return g_cluster_size;
+}
+
+struct spdk_bdev *
+spdk_bdev_get_by_name(const char *bdev_name)
+{
+	if (!strcmp(g_base_bdev->name, bdev_name)) {
+		return g_base_bdev;
+	}
+
+	return NULL;
+}
 
 void
 spdk_lvol_close(struct spdk_lvol *lvol)
@@ -51,6 +77,7 @@ void
 spdk_lvol_destroy(struct spdk_lvol *lvol)
 {
 	free(g_lvs_bdev);
+	free(g_base_bdev->name);
 	free(g_base_bdev);
 	CU_ASSERT_FATAL(lvol == g_lvol);
 	free(lvol->name);
@@ -73,6 +100,34 @@ vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs)
 	g_lvs_bdev->lvs = lvs;
 
 	return g_lvs_bdev;
+}
+
+bool
+is_bdev_opened(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev *base;
+
+	if (bdev->bdev_opened) {
+		return true;
+	}
+
+	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
+		if (is_bdev_opened(base)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+struct spdk_lvol *
+vbdev_get_lvol_by_name(char *name)
+{
+	if (!strcmp(g_lvol->name, name)) {
+		return g_lvol;
+	}
+
+	return NULL;
 }
 
 int
@@ -133,6 +188,12 @@ vbdev_lvol_create_complete(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 }
 
 static void
+vbdev_lvol_resize_complete(void *cb_arg, int lvolerrno)
+{
+	g_lvolerrno = lvolerrno;
+}
+
+static void
 lvol_init(void)
 {
 	uuid_t wrong_uuid;
@@ -164,6 +225,56 @@ lvol_init(void)
 	free(g_lvs);
 }
 
+static void
+lvol_resize(void)
+{
+	int sz = 10;
+	int rc = 0;
+
+	g_lvs = calloc(1, sizeof(*g_lvs));
+
+	uuid_generate_time(g_lvs->uuid);
+	g_lvs->page_size = 4096;
+
+	/* Successful lvol create */
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(g_lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	g_base_bdev->bdev_opened = false;
+	g_base_bdev->ctxt = g_lvol;
+
+	g_base_bdev->name = spdk_sprintf_alloc("%s", g_lvol->name);
+
+	/* Successful lvol resize */
+	rc = vbdev_lvol_resize(g_lvol->name, 20, vbdev_lvol_resize_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_base_bdev->blockcnt == 20 * g_cluster_size / g_base_bdev->blocklen);
+
+	/* Resize while bdev is open */
+	g_base_bdev->bdev_opened = true;
+	rc = vbdev_lvol_resize(g_lvol->name, 20, vbdev_lvol_resize_complete, NULL);
+	CU_ASSERT(rc != 0);
+
+	/* Resize with wrong bdev name */
+	g_base_bdev->bdev_opened = false;
+	rc = vbdev_lvol_resize("wrong name", 20, vbdev_lvol_resize_complete, NULL);
+	CU_ASSERT(rc != 0);
+
+	/* Resize with correct bdev name, but wrong lvol name */
+	sprintf(g_lvol->name, "wrong name");
+	rc = vbdev_lvol_resize(g_base_bdev->name, 20, vbdev_lvol_resize_complete, NULL);
+	CU_ASSERT(rc != 0);
+
+	/* Successful lvol destruct */
+	vbdev_lvol_destruct(g_lvol);
+	CU_ASSERT(g_lvol == NULL);
+
+	free(g_lvs);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -180,7 +291,8 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "lvol_init", lvol_init) == NULL
+		CU_add_test(suite, "lvol_init", lvol_init) == NULL ||
+		CU_add_test(suite, "lvol_resize", lvol_resize) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
