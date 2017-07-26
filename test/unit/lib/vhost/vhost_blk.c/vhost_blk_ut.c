@@ -88,8 +88,8 @@ DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_f
 				     uint32_t lcore, uint64_t period_microseconds));
 DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
-DEFINE_STUB_V(spdk_vhost_timed_event_send, (int32_t lcore, spdk_vhost_timed_event_fn cb_fn,
-		void *arg, unsigned timeout_sec, const char *errmsg));
+DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
+		void *arg, unsigned timeout_sec, const char *errmsg), 0);
 DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller, struct spdk_event *complete));
 DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
@@ -119,6 +119,8 @@ DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0
 DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bdev_desc *desc), {0});
+DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhost_event_fn fn,
+		void *arg));
 
 /* This sets spdk_vhost_dev_remove to either to fail or success */
 DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);

@@ -49,12 +49,21 @@ static char dev_dirname[PATH_MAX] = "";
 
 #define MAX_VHOST_DEVICES	64
 
-struct spdk_vhost_timed_event {
+struct spdk_vhost_dev_event_ctx {
+	/** Pointer to the controller obtained before enqueuing the event */
+	struct spdk_vhost_dev *vdev;
+
+	/** Name of the ctrlr to send event to */
+	char *ctrlr_name;
+
 	/** User callback function to be executed on given lcore. */
-	spdk_vhost_timed_event_fn cb_fn;
+	spdk_vhost_event_fn cb_fn;
 
 	/** Semaphore used to signal that event is done. */
 	sem_t sem;
+
+	/** Response to be written by enqueued event. */
+	int response;
 };
 
 static int new_connection(int vid);
@@ -531,34 +540,36 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 }
 
 static void
-vhost_timed_event_fn(void *arg1, void *arg2)
+spdk_vhost_event_cb(void *arg1, void *arg2)
 {
-	struct spdk_vhost_timed_event *ctx = arg1;
+	struct spdk_vhost_dev_event_ctx *ctx = arg1;
 
-	if (ctx->cb_fn) {
-		ctx->cb_fn(arg2);
-	}
-
+	ctx->response = ctx->cb_fn(ctx->vdev, arg2);
 	sem_post(&ctx->sem);
 }
 
-void
-spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg,
-			    unsigned timeout_sec, const char *errmsg)
+int
+spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
+		      unsigned timeout_sec, const char *errmsg)
 {
-	struct spdk_vhost_timed_event ev_ctx = {0};
+	struct spdk_vhost_dev_event_ctx ev_ctx = {0};
 	struct spdk_event *ev;
 	struct timespec timeout;
 	int rc;
 
-	if (sem_init(&ev_ctx.sem, 0, 0) < 0)
+	rc = sem_init(&ev_ctx.sem, 0, 0);
+	if (rc != 0) {
 		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
+		return -errno;
+	}
 
+	ev_ctx.vdev = vdev;
+	ev_ctx.ctrlr_name = strdup(vdev->name);
 	ev_ctx.cb_fn = cb_fn;
 	clock_gettime(CLOCK_REALTIME, &timeout);
 	timeout.tv_sec += timeout_sec;
 
-	ev = spdk_event_allocate(lcore, vhost_timed_event_fn, &ev_ctx, arg);
+	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, arg);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -569,6 +580,9 @@ spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void
 	}
 
 	sem_destroy(&ev_ctx.sem);
+	free(ev_ctx.ctrlr_name);
+
+	return ev_ctx.response;
 }
 
 static void
