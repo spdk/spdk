@@ -67,6 +67,24 @@
       "revId": "d0429b112cbe33863b01c99d819589e4307ecb08",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41909d75_a817bf07",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-07-26T16:42:46Z",
+      "side": 1,
+      "message": "No, it just throws an error saying the interface wasn\u0027t added which is why I have the || true added on the end. There doesn\u0027t seem to be any other peripheral effect.",
+      "parentUuid": "d4fc0195_673ffdc0",
+      "revId": "d0429b112cbe33863b01c99d819589e4307ecb08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
