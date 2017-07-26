@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "887fd773_511e9cc0",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-26T20:07:00Z",
+      "side": 1,
+      "message": "Put the \u0027{\u0027 on the line below.\n\nI also don\u0027t like the name get_rdma_nic_list - it\u0027s returning a list of ip addresses, not nics. Maybe get_available_rdma_ips().",
+      "revId": "1895bd3f06a6e35dbad2a1c89721feb92664156f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
