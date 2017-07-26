@@ -558,7 +558,7 @@ static void
 print_configuration(char *program_name)
 {
 	printf("%s run with configuration:\n", program_name);
-	printf("%s -q %d -s %d -w %s -M %d -l %d -t %d -c %s -m %d -a %d -b %d -i %d\n",
+	printf("%s -q %d -s %d -w %s -M %d -l %d -t %d -c %s -m %d -a %d -b %d -n %d -i %d\n",
 	       program_name,
 	       g_arbitration.queue_depth,
 	       g_arbitration.io_size_bytes,
@@ -570,7 +570,8 @@ print_configuration(char *program_name)
 	       g_arbitration.max_completions,
 	       g_arbitration.arbitration_mechanism,
 	       g_arbitration.arbitration_config,
-	       g_arbitration.io_count);
+	       g_arbitration.io_count,
+	       g_arbitration.shm_id);
 }
 
 
