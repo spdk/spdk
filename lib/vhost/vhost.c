@@ -160,7 +160,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 }
 
 struct spdk_vhost_dev *
-spdk_vhost_dev_find_by_vid(int vid)
+spdk_vhost_dev_unload_start(int vid)
 {
 	unsigned i;
 	struct spdk_vhost_dev *vdev;
@@ -168,6 +168,7 @@ spdk_vhost_dev_find_by_vid(int vid)
 	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
 		vdev = g_spdk_vhost_devices[i];
 		if (vdev && vdev->vid == vid) {
+			vdev->removing = true;
 			return vdev;
 		}
 	}
@@ -495,6 +496,7 @@ spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
+	vdev->removing = false;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
@@ -693,6 +695,32 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 
 	ev->spdk_event = NULL;
 	sem_destroy(&ev->sem);
+}
+
+int
+spdk_vhost_call_external_event(const char *ctrlr_name, spdk_event_fn fn, void *arg)
+{
+	struct spdk_vhost_dev *vdev;
+	struct spdk_event *ev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find(ctrlr_name);
+
+	if (vdev == NULL || vdev->removing) {
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -ENODEV;
+	}
+
+	if (vdev->lcore == -1) {
+		fn(vdev, arg);
+	} else {
+		ev = spdk_event_allocate(vdev->lcore, fn, vdev, arg);
+		assert(ev);
+		spdk_event_call(ev);
+	}
+
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)

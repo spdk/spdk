@@ -707,7 +707,7 @@ struct spdk_vhost_dev *
 	svdev->eventq_ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16, SOCKET_ID_ANY);
 	if (svdev->eventq_ring == NULL) {
 		spdk_dma_free(svdev);
-		return -ENOMEM;
+		return NULL;
 	}
 
 	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
@@ -1062,7 +1062,7 @@ destroy_device(int vid)
 	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
-	vdev = spdk_vhost_dev_find_by_vid(vid);
+	vdev = spdk_vhost_dev_unload_start(vid);
 	if (vdev == NULL) {
 		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
 	}

@@ -73,6 +73,7 @@ struct spdk_vhost_dev {
 	int task_cnt;
 	int32_t lcore;
 	uint64_t cpumask;
+	bool removing;
 
 	enum spdk_vhost_dev_type type;
 
@@ -110,7 +111,7 @@ bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 bool spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				  const struct vring_desc *desc);
 
-struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
+struct spdk_vhost_dev *spdk_vhost_dev_unload_start(int vid);
 
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
@@ -141,6 +142,21 @@ void spdk_vhost_timed_event_init(struct spdk_vhost_timed_event *ev, int32_t lcor
 void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn, void *arg,
 				 unsigned timeout_sec, const char *errmsg);
 void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event, const char *errmsg);
+
+/**
+ * Call function on reactor of given vhost controller.
+ * If controller is not in use, the event will be called
+ * right away on the caller's thread.
+ *
+ * The first parameter of callback function is always
+ * spdk_vhost_dev pointer (passed as a void*).
+ *
+ * It is guaranteed that vdev won't be destroyed throughout
+ * the entire process, including the callback body.
+ * \return 0 on success or negative errno if controller is
+ * not found or already being shutdown.
+ */
+int spdk_vhost_call_external_event(const char *ctrlr_name, spdk_event_fn fn, void *arg);
 
 int spdk_vhost_blk_controller_construct(void);
 
