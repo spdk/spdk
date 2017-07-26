@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10d9ec45_53b5e209",
+        "filename": "lib/blobfs/tree.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-26T02:58:42Z",
+      "side": 1,
+      "message": "I do not suggest to change in this way:\nThe two macro should be:\n\n#define CACHE_BUFFER_SHIFT 14\n#define CACHE_BUFFER_SIZE  (2 \u003c\u003c CACHE_BUFFER_SHIFT )\n\nThus we can avoid the mistake and only change one variable.\nAlso could you write another patch to make the cache size configurable in conf file. And the macro defined can be a default version.",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 31
+      },
+      "revId": "918a9ea22d4bd017fd0bd75b79fb4163438d77af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
