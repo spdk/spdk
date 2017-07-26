@@ -688,15 +688,17 @@ spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_nam
 	struct spdk_bdev *bdev;
 	int ret;
 
+	spdk_vhost_lock();
 	bdev = spdk_bdev_get_by_name(dev_name);
 	if (bdev == NULL) {
-		SPDK_ERRLOG("Controller %s: bdev '%s' not found\n",
-			    name, dev_name);
+		SPDK_ERRLOG("Controller %s: bdev '%s' not found\n", name, dev_name);
+		spdk_vhost_unlock();
 		return -1;
 	}
 
 	bvdev = spdk_dma_zmalloc(sizeof(*bvdev), SPDK_CACHE_LINE_SIZE, NULL);
 	if (bvdev == NULL) {
+		spdk_vhost_unlock();
 		return -1;
 	}
 
@@ -730,9 +732,11 @@ spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_nam
 	SPDK_NOTICELOG("Controller %s: using bdev '%s'\n",
 		       name, dev_name);
 
+	spdk_vhost_unlock();
 	return 0;
 
 err:
+	spdk_vhost_unlock();
 	spdk_dma_free(bvdev);
 	return -1;
 }
