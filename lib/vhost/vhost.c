@@ -900,4 +900,16 @@ spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, v
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
+void
+spdk_vhost_lock(void)
+{
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+}
+
+void
+spdk_vhost_unlock(void)
+{
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
