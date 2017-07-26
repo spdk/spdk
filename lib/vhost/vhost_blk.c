@@ -336,11 +336,10 @@ no_bdev_vdev_worker(void *arg)
 	spdk_vhost_vq_used_ring_enqueue(&bvdev->vdev, vq, req_idx, 0);
 }
 
-static void
-add_vdev_cb(void *arg)
+static int
+add_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct spdk_vhost_dev *vdev = &bvdev->vdev;
 	struct spdk_vhost_blk_task *task;
 	size_t rc;
 	uint32_t i;
@@ -376,10 +375,11 @@ add_vdev_cb(void *arg)
 	spdk_poller_register(&bvdev->requestq_poller, bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
 			     bvdev, vdev->lcore, 0);
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
+	return 0;
 }
 
-static void
-remove_vdev_cb(void *arg)
+static int
+remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
 	struct spdk_vhost_blk_task *task;
@@ -401,14 +401,16 @@ remove_vdev_cb(void *arg)
 	bvdev->tasks_pool = NULL;
 
 	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
+	return 0;
 }
 
-static void
-unregister_vdev_cb(void *arg)
+static int
+unregister_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
 
 	spdk_poller_unregister(&bvdev->requestq_poller, NULL);
+	return 0;
 }
 
 static struct spdk_vhost_blk_dev *
@@ -445,16 +447,10 @@ spdk_vhost_blk_get_readonly(struct spdk_vhost_dev *vdev)
 	return bvdev->readonly;
 }
 
-static void
-bdev_remove_cb(void *remove_ctx)
+static int
+_bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
-	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
-
-	if (bvdev->vdev.lcore != -1 && (uint32_t)bvdev->vdev.lcore != spdk_env_get_current_core()) {
-		/* Call self on proper core. */
-		spdk_vhost_timed_event_send(bvdev->vdev.lcore, bdev_remove_cb, bvdev, 1, "vhost blk hot remove");
-		return;
-	}
+	struct spdk_vhost_blk_dev *bvdev = arg;
 
 	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
 		     bvdev->vdev.name);
@@ -464,6 +460,15 @@ bdev_remove_cb(void *remove_ctx)
 	}
 
 	bvdev->bdev = NULL;
+	return 0;
+}
+
+static void
+bdev_remove_cb(void *remove_ctx)
+{
+	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
+
+	spdk_vhost_call_external_event(bvdev->vdev.name, _bdev_remove_cb, bvdev, "blk dev hotremove");
 }
 
 /*
@@ -488,7 +493,7 @@ new_device(struct spdk_vhost_dev *vdev)
 		return -1;
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, add_vdev_cb, vdev, 1, "add blk vdev");
+	spdk_vhost_event_send(vdev, add_vdev_cb, bvdev, 1, "add blk vdev");
 	return 0;
 }
 
@@ -506,7 +511,7 @@ destroy_device(struct spdk_vhost_dev *vdev)
 		return -1;
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, unregister_vdev_cb, bvdev, 1, "unregister vdev");
+	spdk_vhost_event_send(vdev, unregister_vdev_cb, bvdev, 1, "unregister vdev");
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {
@@ -518,7 +523,7 @@ destroy_device(struct spdk_vhost_dev *vdev)
 		abort();
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, bvdev, 1, "remove vdev");
+	spdk_vhost_event_send(vdev, remove_vdev_cb, bvdev, 1, "remove vdev");
 	return 0;
 }
 

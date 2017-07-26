@@ -118,10 +118,8 @@ int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
-typedef void (*spdk_vhost_timed_event_fn)(void *);
-
-void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn, void *arg,
-				 unsigned timeout_sec, const char *errmsg);
+int spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
+			  unsigned timeout_sec, const char *errmsg);
 
 int spdk_vhost_blk_controller_construct(void);
 
