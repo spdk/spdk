@@ -141,6 +141,21 @@ void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn,
 				 unsigned timeout_sec, const char *errmsg);
 void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event, const char *errmsg);
 
+/**
+ * Call function on reactor of given vhost controller.
+ * If controller is not in use, the event will be called
+ * right away on the caller's thread.
+ *
+ * The first parameter of callback function is always
+ * spdk_vhost_dev pointer (passed as a void*).
+ *
+ * It is guaranteed that vdev won't be destroyed throughout
+ * the entire process, including the callback body.
+ * \return 0 on success or negative errno if controller is
+ * not found or already being shutdown.
+ */
+int spdk_vhost_call_external_event(const char *ctrlr_name, spdk_event_fn fn, void *arg);
+
 int spdk_vhost_blk_controller_construct(void);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
