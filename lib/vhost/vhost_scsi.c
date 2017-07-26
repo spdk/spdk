@@ -755,6 +755,7 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 	int lun_id_list[1];
 	char *lun_names_list[1];
 
+	assert(vdev->lcore == -1 || spdk_env_get_current_core() == (uint32_t) vdev->lcore);
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
 		return -EINVAL;
@@ -779,11 +780,6 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 		return -EINVAL;
 	}
 
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
-		return -ENODEV;
-	}
-
 	if (svdev->scsi_dev[scsi_dev_num] != NULL) {
 		SPDK_ERRLOG("Controller %s dev %u already occupied\n", vdev->name, scsi_dev_num);
 		return -EEXIST;
@@ -806,6 +802,12 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 		return -EINVAL;
 	}
 	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
+
+	if (vdev->lcore != -1) {
+		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[scsi_dev_num]);
+		eventq_enqueue(svdev, scsi_dev_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_RESCAN);
+	}
+
 	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
 		       vdev->name, dev_name, lun_name);
 	return 0;
