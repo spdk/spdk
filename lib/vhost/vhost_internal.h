@@ -121,5 +121,7 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+void spdk_vhost_lock(void);
+void spdk_vhost_unlock(void);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
