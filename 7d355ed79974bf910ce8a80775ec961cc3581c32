@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c550098d_4c81ea71",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-26T22:18:22Z",
+      "side": 1,
+      "message": "I think you should get rid of this in the SCSI layer too, if we\u0027re not going to try to handle more than 1 unmap descriptor.  That will get rid of some more code especially the scsi unit tests.",
+      "revId": "7d355ed79974bf910ce8a80775ec961cc3581c32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
