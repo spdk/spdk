@@ -803,4 +803,35 @@ destroy_connection(int vid)
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
+int
+spdk_vhost_call_external_event(const char *ctrlr_name, spdk_event_fn fn, void *arg)
+{
+	struct spdk_vhost_dev *vdev;
+	struct spdk_event *ev;
+	int rc;
+
+	rc = pthread_mutex_lock(&g_spdk_vhost_mutex);
+	if (rc != 0) {
+		return -EBUSY;
+	}
+
+	vdev = spdk_vhost_dev_find(ctrlr_name);
+
+	if (vdev == NULL) {
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -ENODEV;
+	}
+
+	if (vdev->lcore == -1) {
+		fn(vdev, arg);
+	} else {
+		ev = spdk_event_allocate(vdev->lcore, fn, vdev, arg);
+		assert(ev);
+		spdk_event_call(ev);
+	}
+
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return 0;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
