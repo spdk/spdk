@@ -48,15 +48,20 @@ static char dev_dirname[PATH_MAX] = "";
 
 #define MAX_VHOST_DEVICES	64
 
-struct spdk_vhost_timed_event_ctx {
+struct spdk_vhost_dev_timed_event_ctx {
+	/** Pointer to the controller obtained before enqueuing the event */
+	struct spdk_vhost_dev *vdev;
+
+	char *ctrlr_name;
+
 	/** User callback function to be executed on given lcore. */
-	spdk_vhost_timed_event_fn cb_fn;
+	spdk_vhost_event_fn cb_fn;
 
 	/** Semaphore used to signal that event is done. */
 	sem_t sem;
 
-	/** Timout specified during initialization. */
-	struct timespec timeout;
+	/** Response to be written by enqueued event. */
+	int response;
 };
 
 static int new_connection(int vid);
@@ -526,6 +531,95 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 }
 
 static void
+spdk_vhost_event_cb(void *arg1, void *arg2)
+{
+	struct spdk_vhost_dev_timed_event_ctx *ctx = arg1;
+
+	ctx->response = ctx->cb_fn(ctx->vdev, arg2);
+	sem_post(&ctx->sem);
+}
+
+static void
+spdk_vhost_event_async_fn(void *arg1, void *arg2)
+{
+	struct spdk_vhost_dev_timed_event_ctx *ctx = arg1;
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find(ctx->ctrlr_name);
+	if (vdev != ctx->vdev) {
+		/* vdev has been changed after enqueuing this event */
+		vdev = NULL;
+	}
+
+	ctx->cb_fn(vdev, arg2);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+
+	spdk_dma_free(ctx);
+}
+
+int
+spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
+		      unsigned timeout_sec, const char *errmsg)
+{
+	struct spdk_vhost_dev_timed_event_ctx ev_ctx;
+	struct spdk_event *ev;
+	struct timespec timeout;
+	int rc;
+
+	rc = sem_init(&ev_ctx.sem, 0, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
+		return -errno;
+	}
+
+	ev_ctx.vdev = vdev;
+	ev_ctx.ctrlr_name = strdup(vdev->name);
+	ev_ctx.cb_fn = cb_fn;
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
+
+	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, arg);
+	assert(ev);
+	spdk_event_call(ev);
+
+	rc = sem_timedwait(&ev_ctx.sem, &timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
+		abort();
+	}
+
+	free(ev_ctx.ctrlr_name);
+	sem_destroy(&ev_ctx.sem);
+
+	return ev_ctx.response;
+}
+
+static int
+spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
+			    const char *errmsg)
+{
+	struct spdk_vhost_dev_timed_event_ctx *ev_ctx;
+	struct spdk_event *ev;
+
+	ev_ctx = spdk_dma_zmalloc(sizeof(*ev_ctx), SPDK_CACHE_LINE_SIZE, NULL);
+	if (ev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc vhost event.\n");
+		return -ENOMEM;
+	}
+
+	ev_ctx->vdev = vdev;
+	ev_ctx->ctrlr_name = strdup(vdev->name);
+	ev_ctx->cb_fn = cb_fn;
+
+	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_async_fn, ev_ctx, arg);
+	assert(ev);
+	spdk_event_call(ev);
+
+	return 0;
+}
+
+static void
 destroy_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
@@ -694,46 +788,6 @@ spdk_vhost_shutdown_cb(void)
 	pthread_detach(tid);
 }
 
-static void
-vhost_timed_event_fn(void *arg1, void *arg2)
-{
-	struct spdk_vhost_timed_event_ctx *ev = arg1;
-
-	if (ev->cb_fn) {
-		ev->cb_fn(arg2);
-	}
-
-	sem_post(&ev->sem);
-}
-
-void
-spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg,
-			    unsigned timeout_sec, const char *errmsg)
-{
-	struct spdk_vhost_timed_event_ctx ev_ctx = {0};
-	struct spdk_event *ev;
-	int rc;
-
-	if (sem_init(&ev_ctx.sem, 0, 0) < 0)
-		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
-
-	ev_ctx.cb_fn = cb_fn;
-	clock_gettime(CLOCK_REALTIME, &ev_ctx.timeout);
-	ev_ctx.timeout.tv_sec += timeout_sec;
-
-	ev = spdk_event_allocate(lcore, vhost_timed_event_fn, &ev_ctx, arg);
-	assert(ev);
-	spdk_event_call(ev);
-
-	rc = sem_timedwait(&ev_ctx.sem, &ev_ctx.timeout);
-	if (rc != 0) {
-		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
-		abort();
-	}
-
-	sem_destroy(&ev_ctx.sem);
-}
-
 static int
 new_connection(int vid)
 {
@@ -788,6 +842,30 @@ destroy_connection(int vid)
 	vdev->vid = -1;
 	vdev->connected = false;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+}
+
+int
+spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg,
+			       const char *event_name)
+{
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find(ctrlr_name);
+
+	if (vdev == NULL) {
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -ENODEV;
+	}
+
+	if (vdev->lcore == -1) {
+		fn(vdev, arg);
+	} else {
+		spdk_vhost_event_async_send(vdev, fn, arg, event_name);
+	}
+
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
