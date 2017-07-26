@@ -55,6 +55,8 @@ void spdk_vhost_shutdown_cb(void);
 /* Forward declaration */
 struct spdk_vhost_dev;
 
+typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *, void *);
+
 /**
  * Get handle to next controller.
  * \param prev Previous controller or NULL to get first one.
@@ -79,5 +81,25 @@ int spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev
 int spdk_vhost_blk_destroy(struct spdk_vhost_dev *dev);
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
 bool spdk_vhost_blk_get_readonly(struct spdk_vhost_dev *vdev);
+
+/**
+ * Call function on reactor of given vhost controller.
+ * If controller is not in use, the event will be called
+ * right away on the caller's thread.
+ *
+ * This function is thread safe.
+ *
+ * \param ctrlr_name name of the vhost controller to run
+ * this event on
+ * \param fn function to be called. The first parameter
+ * of callback function is either actual spdk_vhost_dev
+ * pointer or NULL in case vdev with given name doesn't
+ * exist. The second param is user provided argument *arg*.
+ * \param arg parameter to be passed to *fn*.
+ * \param event_name name of the event to be printed in any
+ * error messages.
+ */
+void spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg,
+				    const char *event_name);
 
 #endif /* SPDK_VHOST_H */
