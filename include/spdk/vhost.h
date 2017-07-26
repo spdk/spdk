@@ -55,6 +55,8 @@ void spdk_vhost_shutdown_cb(void);
 /* Forward declaration */
 struct spdk_vhost_dev;
 
+typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *, void *);
+
 /**
  * Get handle to next controller.
  * \param prev Previous controller or NULL to get first one.
