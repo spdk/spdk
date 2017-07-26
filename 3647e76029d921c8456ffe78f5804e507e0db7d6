@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d70bb8f6_ee313f98",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-26T16:59:38Z",
+      "side": 1,
+      "message": "Can this TODO be resolved or removed?",
+      "revId": "3647e76029d921c8456ffe78f5804e507e0db7d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
