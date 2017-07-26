@@ -731,8 +731,8 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 		return;
 	}
 
-	eventq_enqueue(svdev, spdk_scsi_lun_get_dev(lun), lun, VIRTIO_SCSI_T_TRANSPORT_RESET,
-		       VIRTIO_SCSI_EVT_RESET_REMOVED);
+	/* remove entire device */
+	spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, scsi_dev_num);
 }
 
 int
