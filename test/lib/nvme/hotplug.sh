@@ -117,11 +117,11 @@ timing_enter hotplug_test
 ssh_vm "examples/nvme/hotplug/hotplug -i 0 -t 25 -n 4 -r 8" &
 example_pid=$!
 
-sleep 2
+sleep 4
 remove_devices
-sleep 2
+sleep 4
 insert_devices
-sleep 2
+sleep 4
 remove_devices
 devices_delete
 
