@@ -171,10 +171,3 @@ Instructions below for Ubuntu OS:
 
 To achieve better performance, make sure to increase number of cores
 assigned to the VM.
-
-# Known bugs and limitations {#vhost_bugs}
-
-## Hot plug is not supported
-
-Hot plug is not supported in vhost yet. Event queue path doesn't handle that
-case yet.
