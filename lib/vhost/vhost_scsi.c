@@ -715,16 +715,16 @@ spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
 		return -ENOMEM;
 	}
 
+	spdk_vhost_lock();
 	rc = spdk_vhost_dev_construct(&svdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_SCSI,
 				      &spdk_vhost_scsi_device_backend);
-
 	if (rc) {
 		spdk_ring_free(svdev->vhost_events);
 		spdk_dma_free(svdev);
-		return rc;
 	}
 
-	return 0;
+	spdk_vhost_unlock();
+	return rc;
 }
 
 int
