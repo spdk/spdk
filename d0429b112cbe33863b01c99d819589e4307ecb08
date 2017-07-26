@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cfcadad_48e4e82f",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-26T16:22:56Z",
+      "side": 1,
+      "message": "I think this is going to concatenate all of the names without any spaces in between.\n\nSimilar to the previous review, I think this would be simpler to just \u0027echo \"$nic_name\"\u0027 for each device (which will add a newline) rather than building up a list in a variable.",
+      "revId": "d0429b112cbe33863b01c99d819589e4307ecb08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f06bc1c_3d785421",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-26T16:22:56Z",
+      "side": 1,
+      "message": "You can drop the echo and subshell here (just call ifconfig).",
+      "revId": "d0429b112cbe33863b01c99d819589e4307ecb08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ec6bd55_c88f003d",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-26T16:22:56Z",
+      "side": 1,
+      "message": "This is indented an extra level.",
+      "revId": "d0429b112cbe33863b01c99d819589e4307ecb08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4fc0195_673ffdc0",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-26T16:22:56Z",
+      "side": 1,
+      "message": "Does this cause any problems if $interface was not previously configured with rxe_cfg?",
+      "revId": "d0429b112cbe33863b01c99d819589e4307ecb08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
