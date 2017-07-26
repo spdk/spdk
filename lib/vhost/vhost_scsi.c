@@ -689,11 +689,10 @@ vdev_worker(void *arg)
 	}
 }
 
-static void
-add_vdev_cb(void *arg)
+static int
+add_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
-	struct spdk_vhost_dev *vdev = &svdev->vdev;
 	uint32_t i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -709,10 +708,11 @@ add_vdev_cb(void *arg)
 	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
 	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev, vdev->lcore,
 			     MGMT_POLL_PERIOD_US);
+	return 0;
 }
 
-static void
-remove_vdev_cb(void *arg)
+static int
+remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 	uint32_t i;
@@ -726,15 +726,17 @@ remove_vdev_cb(void *arg)
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
 	spdk_vhost_dev_mem_unregister(&svdev->vdev);
+	return 0;
 }
 
-static void
-unregister_vdev_cb(void *arg)
+static int
+unregister_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
 	spdk_poller_unregister(&svdev->requestq_poller, NULL);
 	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
+	return 0;
 }
 
 static struct spdk_vhost_scsi_dev *
@@ -1130,8 +1132,7 @@ new_device(struct spdk_vhost_dev *vdev)
 		return -1;
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, add_vdev_cb, svdev, 1, "add scsi vdev");
-
+	spdk_vhost_event_send(vdev, add_vdev_cb, svdev, 1, "add scsi vdev");
 	return 0;
 }
 
@@ -1148,7 +1149,7 @@ destroy_device(struct spdk_vhost_dev *vdev)
 		return -1;
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, unregister_vdev_cb, svdev, 1, "unregister scsi vdev");
+	spdk_vhost_event_send(vdev, unregister_vdev_cb, svdev, 1, "unregister scsi vdev");
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {
@@ -1159,7 +1160,7 @@ destroy_device(struct spdk_vhost_dev *vdev)
 		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, svdev, 1, "remove scsi vdev");
+	spdk_vhost_event_send(vdev, remove_vdev_cb, svdev, 1, "remove scsi vdev");
 
 	/* Flush not sent events */
 	while (spdk_ring_dequeue(svdev->vhost_events, &ev, 1) == 1) {
