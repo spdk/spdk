@@ -763,6 +763,8 @@ static void
 spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
+	const struct spdk_scsi_dev *scsi_dev;
+	unsigned scsi_dev_num;
 
 	assert(lun != NULL);
 	assert(svdev != NULL);
@@ -771,8 +773,22 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 		return;
 	}
 
-	eventq_enqueue(svdev, spdk_scsi_lun_get_dev(lun), lun, VIRTIO_SCSI_T_TRANSPORT_RESET,
-		       VIRTIO_SCSI_EVT_RESET_REMOVED);
+	scsi_dev = spdk_scsi_lun_get_dev(lun);
+	for (scsi_dev_num = 0; scsi_dev_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; scsi_dev_num++) {
+		if (svdev->scsi_dev[scsi_dev_num] == scsi_dev) {
+			break;
+		}
+	}
+
+	if (scsi_dev_num == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("Dev %s is not a part of vhost scsi controller '%s'.\n",
+			    spdk_scsi_dev_get_name(scsi_dev),
+			    svdev->vdev.name);
+		return;
+	}
+
+	/* remove entire device */
+	spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, scsi_dev_num);
 }
 
 int
