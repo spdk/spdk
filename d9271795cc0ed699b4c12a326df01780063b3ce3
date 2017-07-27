@@ -1,0 +1,469 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb1f31a0_1ed2d9a0",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "unnecessary blank line. we only need one, but you use two. Before commit, you can use ./scripts/check_format.sh script to detect some format issue.",
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4e41d3e_7a93f927",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove one blank line",
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1faba866_88958cae",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "why choose this size? maybe 32768, or directly use the macro SPDK_GPT_BUFFER_SIZE defined in gpt.h",
+      "range": {
+        "startLine": 58,
+        "startChar": 17,
+        "endLine": 58,
+        "endChar": 22
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0b88f64_585eab9e",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "unnecessary set, buf is already NULL;",
+      "range": {
+        "startLine": 68,
+        "startChar": 1,
+        "endLine": 68,
+        "endChar": 17
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ccc1f39_18386a0a",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "maybe directly call memset function to fill the contents. also please add {} for any statement for, if, even there is one statement.",
+      "range": {
+        "startLine": 72,
+        "startChar": 1,
+        "endLine": 72,
+        "endChar": 22
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83b3df95_c20f2be2",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "move this to the head of this function.",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 22
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6533401a_3eb54b54",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 88,
+        "endChar": 12
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f63e02a_85db357f",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this.",
+      "range": {
+        "startLine": 92,
+        "startChar": 1,
+        "endLine": 92,
+        "endChar": 35
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f93f2342_a348770f",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 12
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94b1ec67_c72d2913",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this.",
+      "range": {
+        "startLine": 99,
+        "startChar": 1,
+        "endLine": 99,
+        "endChar": 35
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "184b8e05_09eff16e",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this.",
+      "range": {
+        "startLine": 102,
+        "startChar": 0,
+        "endLine": 102,
+        "endChar": 12
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fe3501c_165a4ba5",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 111,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 14
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee5364c2_382d5a5d",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 119,
+        "startChar": 1,
+        "endLine": 119,
+        "endChar": 14
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d69169fd_bbe86c4a",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this statement.",
+      "range": {
+        "startLine": 123,
+        "startChar": 1,
+        "endLine": 123,
+        "endChar": 31
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16ea1bc5_6f9cfdab",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 14
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3544401_dc3d07bb",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this statement",
+      "range": {
+        "startLine": 130,
+        "startChar": 1,
+        "endLine": 130,
+        "endChar": 5
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "112095ec_9cfd688d",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this statement",
+      "range": {
+        "startLine": 141,
+        "startChar": 1,
+        "endLine": 141,
+        "endChar": 14
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bc9c24c_18919b39",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this statement",
+      "range": {
+        "startLine": 145,
+        "startChar": 1,
+        "endLine": 145,
+        "endChar": 11
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e29c168_de87ee7e",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this statement",
+      "range": {
+        "startLine": 152,
+        "startChar": 1,
+        "endLine": 152,
+        "endChar": 14
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0746dae_21102a0c",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "same issue.",
+      "range": {
+        "startLine": 156,
+        "startChar": 1,
+        "endLine": 156,
+        "endChar": 5
+      },
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7019240_7c2354bc",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-07-27T05:56:12Z",
+      "side": 1,
+      "message": "remove this blank line",
+      "revId": "d9271795cc0ed699b4c12a326df01780063b3ce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
