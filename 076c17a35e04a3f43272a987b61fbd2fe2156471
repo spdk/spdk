@@ -194,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "1147cf8d_2b338eb4",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-27T17:03:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "713e75c3_cf92b47b",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e9978aec_0c00fb34",
         "filename": "examples/blobstore/hello_blob.c",
         "patchSetId": 2
@@ -205,6 +223,24 @@
       "writtenOn": "2017-07-25T17:57:04Z",
       "side": 1,
       "message": "Maybe preface this comment with more context such as spdk_bs_init requires us to fill out the structure spdk_bs_dev with a set of callbacks. These callbacks implement read, write, and other operations on the underlying disks. As a convenience, a utility function is provided that creates an spdk_bs_dev that implements all of the callbacks by forwarding the I/O to the SPDK bdev layer.",
+      "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c1b4b2f_1d13a0ce",
+        "filename": "examples/blobstore/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-27T17:03:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e9978aec_0c00fb34",
       "revId": "076c17a35e04a3f43272a987b61fbd2fe2156471",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
