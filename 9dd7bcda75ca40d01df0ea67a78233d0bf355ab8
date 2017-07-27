@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ea35ba9_a9126b7b",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1596,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-27T17:31:24Z",
+      "side": 1,
+      "message": "This doesn\u0027t need to be in the loop.",
+      "revId": "9dd7bcda75ca40d01df0ea67a78233d0bf355ab8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
