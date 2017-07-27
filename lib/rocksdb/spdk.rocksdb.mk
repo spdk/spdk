@@ -46,8 +46,12 @@ CXXFLAGS += -Wno-missing-declarations
 # The SPDK Makefiles may turn these options on but we do not want to enable
 #  them for the RocksDB source files.
 CXXFLAGS += -fno-profile-arcs -fno-test-coverage
+ifeq ($(CONFIG_UBSAN),y)
 CXXFLAGS += -fno-sanitize=undefined
-CXXFLAGS += -fno-sanitize=address
+endif
+ifeq ($(CONFIG_ASAN),y)
+CXX_CFLAGS += -fsanitize=address
+endif
 
 SPDK_LIB_LIST = event_bdev event_copy event_rpc
 SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
