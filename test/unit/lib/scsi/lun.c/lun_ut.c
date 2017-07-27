@@ -211,7 +211,7 @@ lun_construct(void)
 	struct spdk_scsi_lun		*lun;
 	struct spdk_bdev		bdev;
 
-	lun = spdk_scsi_lun_construct("lun0", &bdev, NULL, NULL);
+	lun = spdk_scsi_lun_construct("lun0", &bdev);
 
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 	if (lun != NULL) {
@@ -607,7 +607,7 @@ lun_construct_null_ctx(void)
 {
 	struct spdk_scsi_lun		*lun;
 
-	lun = spdk_scsi_lun_construct("lun0", NULL, NULL, NULL);
+	lun = spdk_scsi_lun_construct("lun0", NULL);
 
 	/* lun should be NULL since we passed NULL for the ctx pointer. */
 	CU_ASSERT(lun == NULL);
@@ -630,12 +630,12 @@ lun_construct_same_same_twice(void)
 	struct spdk_scsi_lun		*lun, *lun2;
 	struct spdk_bdev		bdev, bdev2;
 
-	lun = spdk_scsi_lun_construct("lun0", &bdev, NULL, NULL);
+	lun = spdk_scsi_lun_construct("lun0", &bdev);
 
 	/* Successfully constructs and returns lun */
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 
-	lun2 = spdk_scsi_lun_construct("lun0", &bdev2, NULL, NULL);
+	lun2 = spdk_scsi_lun_construct("lun0", &bdev2);
 
 	/* Fails to construct the same lun on another bdev and returns NULL */
 	CU_ASSERT(lun2 == NULL);

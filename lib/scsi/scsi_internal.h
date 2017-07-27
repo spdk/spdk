@@ -68,6 +68,12 @@ struct spdk_scsi_dev {
 	int			num_ports;
 	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
 
+	/** Callback to be fired when child LUN removal is first triggered. */
+	spdk_scsi_dev_hotremove_cb hotremove_cb;
+
+	/** Argument for hotremove_cb */
+	void *hotremove_ctx;
+
 	uint8_t 		protocol_id;
 };
 
@@ -110,12 +116,6 @@ struct spdk_scsi_lun {
 	/** The LUN is clamed */
 	bool claimed;
 
-	/** Callback to be fired when LUN removal is first triggered. */
-	void (*hotremove_cb)(const struct spdk_scsi_lun *lun, void *arg);
-
-	/** Argument for hotremove_cb */
-	void *hotremove_ctx;
-
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;			/* submitted tasks */
 	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
 };
@@ -132,9 +132,7 @@ extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
  */
 typedef struct spdk_scsi_lun _spdk_scsi_lun;
 
-_spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
-					void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-					void *hotremove_ctx);
+_spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev);
 int spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
 void spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun);

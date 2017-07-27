@@ -104,7 +104,7 @@ spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
 struct spdk_scsi_dev *
 	spdk_scsi_dev_construct(const char *name, char **lun_name_list,
 			int *lun_id_list, int num_luns, uint8_t protocol_id,
-			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+			spdk_scsi_dev_hotremove_cb hotremove_cb,
 			void *hotremove_ctx)
 {
 	return NULL;

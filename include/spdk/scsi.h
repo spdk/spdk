@@ -157,6 +157,8 @@ struct spdk_scsi_dev;
  */
 struct spdk_scsi_lun;
 
+typedef void (*spdk_scsi_dev_hotremove_cb)(struct spdk_scsi_lun *dev, void *arg);
+
 int spdk_scsi_init(void);
 
 int spdk_scsi_fini(void);
@@ -201,7 +203,7 @@ struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		int *lun_id_list,
 		int num_luns,
 		uint8_t protocol_id,
-		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		spdk_scsi_dev_hotremove_cb hotremove_cb,
 		void *hotremove_ctx);
 
 void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun);
