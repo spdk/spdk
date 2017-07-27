@@ -760,7 +760,7 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 }
 
 static void
-_spdk_blob_persist_unmap_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
 	struct spdk_blob 		*blob = ctx->blob;
@@ -769,7 +769,7 @@ _spdk_blob_persist_unmap_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 
 	/* This loop starts at 1 because the first page is special and handled
 	 * below. The pages (except the first) are never written in place,
-	 * so any pages in the clean list must be unmapped.
+	 * so any pages in the clean list must be zeroed.
 	 */
 	for (i = 1; i < blob->clean.num_pages; i++) {
 		spdk_bit_array_clear(bs->used_md_pages, blob->clean.pages[i]);
@@ -787,7 +787,7 @@ _spdk_blob_persist_unmap_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 }
 
 static void
-_spdk_blob_persist_unmap_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_blob_persist_zero_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx 	*ctx = cb_arg;
 	struct spdk_blob 		*blob = ctx->blob;
@@ -797,21 +797,21 @@ _spdk_blob_persist_unmap_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 	spdk_bs_batch_t			*batch;
 	size_t				i;
 
-	batch = spdk_bs_sequence_to_batch(seq, _spdk_blob_persist_unmap_pages_cpl, ctx);
+	batch = spdk_bs_sequence_to_batch(seq, _spdk_blob_persist_zero_pages_cpl, ctx);
 
 	lba_count = _spdk_bs_byte_to_lba(bs, SPDK_BS_PAGE_SIZE);
 
 	/* This loop starts at 1 because the first page is special and handled
 	 * below. The pages (except the first) are never written in place,
-	 * so any pages in the clean list must be unmapped.
+	 * so any pages in the clean list must be zeroed.
 	 */
 	for (i = 1; i < blob->clean.num_pages; i++) {
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->clean.pages[i]);
 
-		spdk_bs_batch_unmap(batch, lba, lba_count);
+		spdk_bs_batch_write_zeroes(batch, lba, lba_count);
 	}
 
-	/* The first page will only be unmapped if this is a delete. */
+	/* The first page will only be zeroed if this is a delete. */
 	if (blob->active.num_pages == 0) {
 		uint32_t page_num;
 
@@ -819,7 +819,7 @@ _spdk_blob_persist_unmap_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 		page_num = _spdk_bs_blobid_to_page(blob->id);
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + page_num);
 
-		spdk_bs_batch_unmap(batch, lba, lba_count);
+		spdk_bs_batch_write_zeroes(batch, lba, lba_count);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -837,7 +837,7 @@ _spdk_blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 
 	if (blob->active.num_pages == 0) {
 		/* Move on to the next step */
-		_spdk_blob_persist_unmap_pages(seq, ctx, 0);
+		_spdk_blob_persist_zero_pages(seq, ctx, 0);
 		return;
 	}
 
@@ -848,7 +848,7 @@ _spdk_blob_persist_write_page_root(spdk_bs_sequence_t *seq, void *cb_arg, int bs
 	lba = _spdk_bs_page_to_lba(bs, bs->md_start + _spdk_bs_blobid_to_page(blob->id));
 
 	spdk_bs_sequence_write(seq, page, lba, lba_count,
-			       _spdk_blob_persist_unmap_pages, ctx);
+			       _spdk_blob_persist_zero_pages, ctx);
 }
 
 static void
@@ -994,7 +994,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		 * Immediately jump to the clean up routine. */
 		assert(blob->clean.num_pages > 0);
 		ctx->idx = blob->clean.num_pages - 1;
-		_spdk_blob_persist_unmap_pages(seq, ctx, 0);
+		_spdk_blob_persist_zero_pages(seq, ctx, 0);
 		return;
 
 	}
@@ -2177,8 +2177,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
-	/* TRIM the entire device */
-	spdk_bs_sequence_unmap(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
+	/* Zero the entire device */
+	spdk_bs_sequence_write_zeroes(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
 }
 
 /* END spdk_bs_init */
