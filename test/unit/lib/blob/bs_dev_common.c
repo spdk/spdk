@@ -97,6 +97,19 @@ dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	offset = lba * DEV_BUFFER_BLOCKLEN;
 	length = lba_count * DEV_BUFFER_BLOCKLEN;
 	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+}
+
+static void
+dev_write_zeroes(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		 uint64_t lba, uint32_t lba_count,
+		 struct spdk_bs_dev_cb_args *cb_args)
+{
+	uint64_t offset, length;
+
+	offset = lba * DEV_BUFFER_BLOCKLEN;
+	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
 	memset(&g_dev_buffer[offset], 0, length);
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
 }
@@ -111,6 +124,7 @@ init_dev(struct spdk_bs_dev *dev)
 	dev->write = dev_write;
 	dev->flush = dev_flush;
 	dev->unmap = dev_unmap;
+	dev->write_zeroes = dev_write_zeroes;
 	dev->blockcnt = DEV_BUFFER_BLOCKCNT;
 	dev->blocklen = DEV_BUFFER_BLOCKLEN;
 }
