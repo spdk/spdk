@@ -743,7 +743,7 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		 * as an unmap.
 		 */
 		if (lba_count > 0) {
-			spdk_bs_batch_unmap(batch, lba, lba_count);
+			spdk_bs_batch_write_zeroes(batch, lba, lba_count);
 		}
 
 		/* Start building the next batch */
@@ -753,7 +753,7 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 
 	/* If we ended with a contiguous set of LBAs, send the unmap now */
 	if (lba_count > 0) {
-		spdk_bs_batch_unmap(batch, lba, lba_count);
+		spdk_bs_batch_write_zeroes(batch, lba, lba_count);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -808,7 +808,7 @@ _spdk_blob_persist_unmap_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 	for (i = 1; i < blob->clean.num_pages; i++) {
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + blob->clean.pages[i]);
 
-		spdk_bs_batch_unmap(batch, lba, lba_count);
+		spdk_bs_batch_write_zeroes(batch, lba, lba_count);
 	}
 
 	/* The first page will only be unmapped if this is a delete. */
@@ -819,7 +819,7 @@ _spdk_blob_persist_unmap_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 		page_num = _spdk_bs_blobid_to_page(blob->id);
 		lba = _spdk_bs_page_to_lba(bs, bs->md_start + page_num);
 
-		spdk_bs_batch_unmap(batch, lba, lba_count);
+		spdk_bs_batch_write_zeroes(batch, lba, lba_count);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -1888,7 +1888,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 
 	/* TRIM the entire device */
-	spdk_bs_sequence_unmap(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
+	spdk_bs_sequence_write_zeroes(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
 }
 
 /* END spdk_bs_init */
