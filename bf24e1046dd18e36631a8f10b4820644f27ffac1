@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69afdde2_4f7eaeb6",
+        "filename": "lib/rocksdb/spdk.rocksdb.mk",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-27T16:09:44Z",
+      "side": 0,
+      "message": "Hi Ziye,\n\nCan you try wrapping this in if ($CONFIG_UBSAN) rather than removing it? That should allow us to disable this flag only when only when it has previously been enabled.",
+      "revId": "bf24e1046dd18e36631a8f10b4820644f27ffac1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
