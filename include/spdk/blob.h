@@ -121,6 +121,10 @@ struct spdk_bs_dev {
 	void (*flush)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		      struct spdk_bs_dev_cb_args *cb_args);
 
+	void (*write_zeroes)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+			     uint64_t lba, uint32_t lba_count,
+			     struct spdk_bs_dev_cb_args *cb_args);
+
 	void (*unmap)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		      uint64_t lba, uint32_t lba_count,
 		      struct spdk_bs_dev_cb_args *cb_args);
