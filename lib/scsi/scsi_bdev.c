@@ -560,7 +560,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * maximum  number of LBAs that may be
 				 * unmapped by an UNMAP command.
 				 */
-				to_be32(&data[20], g_spdk_scsi.scsi_params.max_unmap_lba_count);
+				to_be32(&data[20], 0xFFFFFFFF);
 
 				/*
 				 * MAXIMUM UNMAP BLOCK DESCRIPTOR COUNT:
@@ -578,24 +578,14 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * optimal granularity in logical blocks
 				 * for unmap request.
 				 */
-				to_be32(&data[28], g_spdk_scsi.scsi_params.optimal_unmap_granularity);
+				to_be32(&data[28], 0);
 
 				/*
 				 * UNMAP GRANULARITY ALIGNMENT: indicates the
 				 * LBA of the first logical block to which the
 				 * OPTIMAL UNMAP GRANULARITY field applies.
 				 */
-				/* not specified */
-				to_be32(&data[32], g_spdk_scsi.scsi_params.unmap_granularity_alignment);
-
-				/*
-				 * UGAVALID(7): bit set to one indicates that
-				 * the UNMAP GRANULARITY ALIGNMENT field is
-				 * valid.
-				 */
-				/* not specified */
-				if (g_spdk_scsi.scsi_params.ugavalid)
-					data[32] |= 1 << 7;
+				to_be32(&data[24], 0);
 
 				/*
 				 * MAXIMUM WRITE SAME LENGTH: indicates the
@@ -603,7 +593,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 				 * that the device server allows to be unmapped
 				 * or written in a single WRITE SAME command.
 				 */
-				to_be64(&data[36], g_spdk_scsi.scsi_params.max_write_same_length);
+				to_be64(&data[36], 0);
 
 				/* Reserved */
 				/* not specified */
