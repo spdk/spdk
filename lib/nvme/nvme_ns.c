@@ -185,6 +185,13 @@ spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return _nvme_ns_get_data(ns);
 }
 
+enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical_block_read_value(
+	struct spdk_nvme_ns *ns)
+{
+	const struct spdk_nvme_ns_data *data = spdk_nvme_ns_get_data(ns);
+	return data->dlfeat.bits.read_value;
+}
+
 int nvme_ns_construct(struct spdk_nvme_ns *ns, uint16_t id,
 		      struct spdk_nvme_ctrlr *ctrlr)
 {
