@@ -911,6 +911,15 @@ uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
 bool spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns);
 
 /**
+ * \brief Determine the value returned when reading deallocated blocks.
+ *
+ * If deallocated blocks return 0, the deallocate command can be used as a more efficient alternative
+ * to the write_zeroes command, especially for large requests.
+ */
+enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical_block_read_value(
+	struct spdk_nvme_ns *ns);
+
+/**
  * \brief Namespace command support flags.
  */
 enum spdk_nvme_ns_flags {
