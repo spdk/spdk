@@ -185,8 +185,8 @@ spdk_bs_sequence_unmap(spdk_bs_sequence_t *seq,
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
 
-	channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
-			    &set->cb_args);
+	channel->dev->write_zeroes(channel->dev, channel->dev_channel, lba, lba_count,
+				   &set->cb_args);
 }
 
 void
@@ -301,8 +301,8 @@ spdk_bs_batch_unmap(spdk_bs_batch_t *batch,
 	SPDK_TRACELOG(SPDK_TRACE_BLOB_RW, "Unmapping %u blocks at LBA %lu\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
-	channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
-			    &set->cb_args);
+	channel->dev->write_zeroes(channel->dev, channel->dev_channel, lba, lba_count,
+				   &set->cb_args);
 }
 
 void
