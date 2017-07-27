@@ -190,6 +190,23 @@ spdk_bs_sequence_unmap(spdk_bs_sequence_t *seq,
 }
 
 void
+spdk_bs_sequence_write_zeroes(spdk_bs_sequence_t *seq,
+			      uint64_t lba, uint32_t lba_count,
+			      spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+{
+	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
+	struct spdk_bs_channel       *channel = set->channel;
+
+	SPDK_TRACELOG(SPDK_TRACE_BLOB_RW, "Unmapping %u blocks at LBA %lu\n", lba_count, lba);
+
+	set->u.sequence.cb_fn = cb_fn;
+	set->u.sequence.cb_arg = cb_arg;
+
+	channel->dev->write_zeroes(channel->dev, channel->dev_channel, lba, lba_count,
+				   &set->cb_args);
+}
+
+void
 spdk_bs_sequence_finish(spdk_bs_sequence_t *seq, int bserrno)
 {
 	if (bserrno != 0) {
@@ -303,6 +320,20 @@ spdk_bs_batch_unmap(spdk_bs_batch_t *batch,
 	set->u.batch.outstanding_ops++;
 	channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
 			    &set->cb_args);
+}
+
+void
+spdk_bs_batch_write_zeroes(spdk_bs_batch_t *batch,
+			   uint64_t lba, uint32_t lba_count)
+{
+	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
+	struct spdk_bs_channel		*channel = set->channel;
+
+	SPDK_TRACELOG(SPDK_TRACE_BLOB_RW, "Unmapping %u blocks at LBA %lu\n", lba_count, lba);
+
+	set->u.batch.outstanding_ops++;
+	channel->dev->write_zeroes(channel->dev, channel->dev_channel, lba, lba_count,
+				   &set->cb_args);
 }
 
 void
