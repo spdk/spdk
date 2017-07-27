@@ -911,6 +911,14 @@ uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
 bool spdk_nvme_ns_supports_extended_lba(struct spdk_nvme_ns *ns);
 
 /**
+ * \brief True if the namespace supports read zero after calling unmap on a block.
+ *
+ *
+ */
+enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical_block_read_value(
+	struct spdk_nvme_ns *ns);
+
+/**
  * \brief Namespace command support flags.
  */
 enum spdk_nvme_ns_flags {
