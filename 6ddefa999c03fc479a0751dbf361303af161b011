@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28ed6cc5_0a7cfbe4",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:28:25Z",
+      "side": 1,
+      "message": "Is there any chance we can use the new mq VM image for all of the tests?  How does it differ from the existing VM image?",
+      "revId": "6ddefa999c03fc479a0751dbf361303af161b011",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
