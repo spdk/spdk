@@ -948,6 +948,7 @@ typedef void (*spdk_nvme_req_reset_sgl_cb)(void *cb_arg, uint32_t offset);
  * The cb_arg parameter is the value passed to readv/writev.
  * The address parameter contains the virtual address of this segment.
  * The length parameter contains the length of this physical segment.
+ * The described segment must be physically contiguous.
  */
 typedef int (*spdk_nvme_req_next_sge_cb)(void *cb_arg, void **address, uint32_t *length);
 
