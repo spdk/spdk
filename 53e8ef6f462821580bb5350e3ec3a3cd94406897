@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6d4aa1d_4a2643f9",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1533,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:23:37Z",
+      "side": 1,
+      "message": "I think this allows a buffer overrun, since the memcpy() below starts at \u0026data[8].\n\nIt should probably be something like:\n\n   if (desc_data_len \u003e data_len - 8 || ...\n\n(as well as updating the data_len \u003c 4 check to be data_len \u003c 8 so the subtraction can\u0027t wrap around).",
+      "revId": "53e8ef6f462821580bb5350e3ec3a3cd94406897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21cf4700_102d5480",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1534,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:23:37Z",
+      "side": 1,
+      "message": "We should probably do the desc_count check separately so it can have its own error message.",
+      "revId": "53e8ef6f462821580bb5350e3ec3a3cd94406897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
