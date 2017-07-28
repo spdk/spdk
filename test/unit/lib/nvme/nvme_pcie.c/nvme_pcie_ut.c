@@ -642,6 +642,143 @@ static void test_nvme_qpair_destroy(void)
 }
 #endif
 
+static void
+prp_list_prep(struct nvme_tracker *tr, struct nvme_request *req, uint32_t *prp_index)
+{
+	memset(req, 0, sizeof(*req));
+	memset(tr, 0, sizeof(*tr));
+	tr->req = req;
+	tr->prp_sgl_bus_addr = 0xDEADBEEF;
+	*prp_index = 0;
+}
+
+static void
+test_prp_list_append(void)
+{
+	struct nvme_request req;
+	struct nvme_tracker tr;
+	uint32_t prp_index;
+
+	/* Non-DWORD-aligned buffer (invalid) */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100001, 0x1000) == -EINVAL);
+
+	/* 512-byte buffer, 4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x200) == 0);
+	CU_ASSERT(prp_index == 1);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100000);
+
+	/* 512-byte buffer, non-4K-aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x108000, 0x200) == 0);
+	CU_ASSERT(prp_index == 1);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x108000);
+
+	/* 4K buffer, 4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x1000) == 0);
+	CU_ASSERT(prp_index == 1);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100000);
+
+	/* 4K buffer, non-4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800, 0x1000) == 0);
+	CU_ASSERT(prp_index == 2);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100800);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == 0x101000);
+
+	/* 8K buffer, 4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x2000) == 0);
+	CU_ASSERT(prp_index == 2);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100000);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == 0x101000);
+
+	/* 8K buffer, non-4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800, 0x2000) == 0);
+	CU_ASSERT(prp_index == 3);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100800);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == tr.prp_sgl_bus_addr);
+	CU_ASSERT(tr.u.prp[0] == 0x101000);
+	CU_ASSERT(tr.u.prp[1] == 0x102000);
+
+	/* 12K buffer, 4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x3000) == 0);
+	CU_ASSERT(prp_index == 3);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100000);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == tr.prp_sgl_bus_addr);
+	CU_ASSERT(tr.u.prp[0] == 0x101000);
+	CU_ASSERT(tr.u.prp[1] == 0x102000);
+
+	/* 12K buffer, non-4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800, 0x3000) == 0);
+	CU_ASSERT(prp_index == 4);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100800);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == tr.prp_sgl_bus_addr);
+	CU_ASSERT(tr.u.prp[0] == 0x101000);
+	CU_ASSERT(tr.u.prp[1] == 0x102000);
+	CU_ASSERT(tr.u.prp[2] == 0x103000);
+
+	/* Two 4K buffers, both 4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x1000) == 0);
+	CU_ASSERT(prp_index == 1);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x900000, 0x1000) == 0);
+	CU_ASSERT(prp_index == 2);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100000);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == 0x900000);
+
+	/* Two 4K buffers, first non-4K aligned, second 4K aligned */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800, 0x1000) == 0);
+	CU_ASSERT(prp_index == 2);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x900000, 0x1000) == 0);
+	CU_ASSERT(prp_index == 3);
+	CU_ASSERT(req.cmd.dptr.prp.prp1 == 0x100800);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == tr.prp_sgl_bus_addr);
+	CU_ASSERT(tr.u.prp[0] == 0x101000);
+	CU_ASSERT(tr.u.prp[1] == 0x900000);
+
+	/* Two 4K buffers, both non-4K aligned (invalid) */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800, 0x1000) == 0);
+	CU_ASSERT(prp_index == 2);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x900800, 0x1000) == -EINVAL);
+	CU_ASSERT(prp_index == 2);
+
+	/* 4K buffer, 4K aligned, but vtophys fails */
+	ut_fail_vtophys = true;
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000, 0x1000) == -EINVAL);
+	ut_fail_vtophys = false;
+
+	/* Largest aligned buffer that can be described in NVME_MAX_PRP_LIST_ENTRIES (plus PRP1) */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000,
+					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000) == 0);
+	CU_ASSERT(prp_index == NVME_MAX_PRP_LIST_ENTRIES + 1);
+
+	/* Largest non-4K-aligned buffer that can be described in NVME_MAX_PRP_LIST_ENTRIES (plus PRP1) */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800,
+					    NVME_MAX_PRP_LIST_ENTRIES * 0x1000) == 0);
+	CU_ASSERT(prp_index == NVME_MAX_PRP_LIST_ENTRIES + 1);
+
+	/* Buffer too large to be described in NVME_MAX_PRP_LIST_ENTRIES */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100000,
+					    (NVME_MAX_PRP_LIST_ENTRIES + 2) * 0x1000) == -EINVAL);
+
+	/* Non-4K-aligned buffer too large to be described in NVME_MAX_PRP_LIST_ENTRIES */
+	prp_list_prep(&tr, &req, &prp_index);
+	CU_ASSERT(nvme_pcie_prp_list_append(&tr, &prp_index, (void *)0x100800,
+					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000) == -EINVAL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -657,14 +794,11 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-#if 0
-	if (CU_add_test(suite, "test3", test3) == NULL
-	    || CU_add_test(suite, "test4", test4) == NULL
+	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL
 	   ) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
-#endif
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
