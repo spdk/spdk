@@ -454,9 +454,19 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_ctrlr->ctrlr);
 		return cdata->oncs.dsm;
 
+	/*
+	 * This case reflects the fact that an nvme that does not support write_zeroes can
+	 * still fulfill that function by using an unmap that ensures the unallocated block
+	 * will read out as all zeroes.
+	 */
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_ctrlr->ctrlr);
-		return cdata->oncs.write_zeroes;
+		if (cdata->oncs.dsm &&
+		    spdk_nvme_ns_get_dealloc_logical_block_read_value(nbdev->ns) == SPDK_NVME_DEALLOC_READ_00) {
+			return cdata->oncs.dsm;
+		} else {
+			return cdata->oncs.write_zeroes;
+		}
 
 	default :
 		return false;
