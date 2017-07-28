@@ -1711,6 +1711,7 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 			req->cmd.psdt = SPDK_NVME_PSDT_PRP;
 			req->cmd.dptr.prp.prp1 = phys_addr;
 			phys_addr -= unaligned;
+			virt_addr -= unaligned;
 		}
 
 		total_nseg += nseg;
@@ -1718,10 +1719,16 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 		remaining_transfer_len -= data_transferred;
 
 		if (total_nseg == 2) {
-			if (sge_count == 1)
-				tr->req->cmd.dptr.prp.prp2 = phys_addr + PAGE_SIZE;
-			else if (sge_count == 2)
+			if (sge_count == 1) {
+				phys_addr = spdk_vtophys(virt_addr + PAGE_SIZE);
+				if (phys_addr == SPDK_VTOPHYS_ERROR) {
+					nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+					return -1;
+				}
 				tr->req->cmd.dptr.prp.prp2 = phys_addr;
+			} else if (sge_count == 2) {
+				tr->req->cmd.dptr.prp.prp2 = phys_addr;
+			}
 			/* save prp2 value */
 			prp2 = tr->req->cmd.dptr.prp.prp2;
 		} else if (total_nseg > 2) {
@@ -1732,11 +1739,17 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 
 			tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
 			while (cur_nseg < nseg) {
+				phys_addr = spdk_vtophys(virt_addr + cur_nseg * PAGE_SIZE);
+				if (phys_addr == SPDK_VTOPHYS_ERROR) {
+					nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+					return -1;
+				}
 				if (prp2) {
 					tr->u.prp[0] = prp2;
-					tr->u.prp[last_nseg + 1] = phys_addr + cur_nseg * PAGE_SIZE;
-				} else
-					tr->u.prp[last_nseg] = phys_addr + cur_nseg * PAGE_SIZE;
+					tr->u.prp[last_nseg + 1] = phys_addr;
+				} else {
+					tr->u.prp[last_nseg] = phys_addr;
+				}
 
 				last_nseg++;
 				cur_nseg++;
