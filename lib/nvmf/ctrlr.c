@@ -163,7 +163,8 @@ nvmf_init_nvme_ctrlr_properties(struct spdk_nvmf_ctrlr *ctrlr)
 static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	TAILQ_REMOVE(&ctrlr->subsys->ctrlrs, ctrlr, link);
-	spdk_nvmf_transport_ctrlr_fini(ctrlr);
+	spdk_nvmf_transport_poll_group_destroy(ctrlr->group);
+	free(ctrlr);
 }
 
 void
@@ -288,10 +289,18 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		}
 
 		/* Establish a new ctrlr */
-		ctrlr = spdk_nvmf_transport_ctrlr_init(qpair->transport);
-		if (ctrlr == NULL) {
+		ctrlr = calloc(1, sizeof(*ctrlr));
+		if (!ctrlr) {
 			SPDK_ERRLOG("Memory allocation failure\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			return;
+		}
+
+		ctrlr->group = spdk_nvmf_transport_poll_group_create(qpair->transport);
+		if (ctrlr->group == NULL) {
+			SPDK_ERRLOG("Memory allocation failure\n");
+			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			free(ctrlr);
 			return;
 		}
 
@@ -302,6 +311,8 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			/* Unable to get a cntlid */
 			SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			spdk_nvmf_transport_poll_group_destroy(ctrlr->group);
+			free(ctrlr);
 			return;
 		}
 
@@ -313,9 +324,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 
 		memcpy(ctrlr->hostid, data->hostid, sizeof(ctrlr->hostid));
 
-		if (spdk_nvmf_transport_ctrlr_add_qpair(ctrlr, qpair)) {
+		if (spdk_nvmf_transport_poll_group_add(ctrlr->group, qpair)) {
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			spdk_nvmf_transport_ctrlr_fini(ctrlr);
+			spdk_nvmf_transport_poll_group_destroy(ctrlr->group);
 			free(ctrlr);
 			return;
 		}
@@ -374,7 +385,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			return;
 		}
 
-		if (spdk_nvmf_transport_ctrlr_add_qpair(ctrlr, qpair)) {
+		if (spdk_nvmf_transport_poll_group_add(ctrlr->group, qpair)) {
 			INVALID_CONNECT_CMD(qid);
 			return;
 		}
@@ -399,7 +410,7 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	ctrlr->num_qpairs--;
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 
-	spdk_nvmf_transport_ctrlr_remove_qpair(ctrlr, qpair);
+	spdk_nvmf_transport_poll_group_remove(ctrlr->group, qpair);
 	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (ctrlr->num_qpairs == 0) {

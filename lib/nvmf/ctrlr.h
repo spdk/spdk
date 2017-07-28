@@ -92,7 +92,7 @@ struct spdk_nvmf_ctrlr {
 	} async_event_config;
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
-	struct spdk_nvmf_transport		*transport;
+	struct spdk_nvmf_poll_group		*group;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
 };
