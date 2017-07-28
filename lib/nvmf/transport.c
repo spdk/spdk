@@ -120,44 +120,44 @@ spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transport,
 	transport->ops->listen_addr_discover(transport, listen_addr, entry);
 }
 
-struct spdk_nvmf_ctrlr *
-spdk_nvmf_transport_ctrlr_init(struct spdk_nvmf_transport *transport)
+struct spdk_nvmf_poll_group *
+spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
-	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_poll_group *group;
 
-	ctrlr = transport->ops->ctrlr_init(transport);
-	ctrlr->transport = transport;
+	group = transport->ops->poll_group_create(transport);
+	group->transport = transport;
 
-	return ctrlr;
+	return group;
 }
 
 void
-spdk_nvmf_transport_ctrlr_fini(struct spdk_nvmf_ctrlr *ctrlr)
+spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 {
-	ctrlr->transport->ops->ctrlr_fini(ctrlr);
+	group->transport->ops->poll_group_destroy(group);
 }
 
 int
-spdk_nvmf_transport_ctrlr_add_qpair(struct spdk_nvmf_ctrlr *ctrlr,
-				    struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_poll_group *group,
+				   struct spdk_nvmf_qpair *qpair)
 {
 	if (qpair->transport) {
-		assert(qpair->transport == ctrlr->transport);
-		if (qpair->transport != ctrlr->transport) {
+		assert(qpair->transport == group->transport);
+		if (qpair->transport != group->transport) {
 			return -1;
 		}
 	} else {
-		qpair->transport = ctrlr->transport;
+		qpair->transport = group->transport;
 	}
 
-	return ctrlr->transport->ops->ctrlr_add_qpair(ctrlr, qpair);
+	return group->transport->ops->poll_group_add(group, qpair);
 }
 
 int
-spdk_nvmf_transport_ctrlr_remove_qpair(struct spdk_nvmf_ctrlr *ctrlr,
-				       struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_qpair *qpair)
 {
-	return ctrlr->transport->ops->ctrlr_remove_qpair(ctrlr, qpair);
+	return group->transport->ops->poll_group_remove(group, qpair);
 }
 
 int
