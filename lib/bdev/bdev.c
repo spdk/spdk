@@ -65,6 +65,8 @@ struct spdk_bdev_mgr {
 	struct spdk_mempool *buf_small_pool;
 	struct spdk_mempool *buf_large_pool;
 
+	void *spdk_zero_buffer;
+
 	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
@@ -473,6 +475,13 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 		SPDK_ERRLOG("create rbuf large pool failed\n");
 		spdk_bdev_module_init_complete(-1);
 		return;
+
+		g_bdev_mgr.spdk_zero_buffer = spdk_dma_zmalloc(4096, 4096, NULL);
+		if (!g_bdev_mgr.spdk_zero_buffer) {
+			SPDK_ERRLOG("create bdev zero buffer failed\n");
+			spdk_bdev_module_init_complete(-1);
+			return;
+		}
 	}
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -521,6 +530,7 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+	spdk_dma_free(g_bdev_mgr.spdk_zero_buffer);
 
 	spdk_io_device_unregister(&g_bdev_mgr, NULL);
 
@@ -548,6 +558,10 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io) {
 		return;
+	}
+
+	if (bdev_io->iovs != NULL) {
+		free(bdev_io->iovs);
 	}
 
 	if (bdev_io->buf != NULL) {
@@ -933,10 +947,12 @@ spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset, uint64_t len,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	int rc;
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct iovec *iov;
+	uint32_t block_size;
+	int i, rc, iovcnt;
 
 	if (!spdk_bdev_io_valid(bdev, offset, len)) {
 		return -EINVAL;
@@ -951,7 +967,31 @@ spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->ch = channel;
 	bdev_io->u.write.len = len;
 	bdev_io->u.write.offset = offset;
-	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+	}
+
+	else {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+		block_size = spdk_bdev_get_block_size(bdev);
+		iovcnt = len / block_size;
+
+		iov = calloc(iovcnt, sizeof(struct iovec));
+		if (!iov) {
+			SPDK_ERRLOG("io vector memory allocation failed during write_zeroes\n");
+			return -ENOMEM;
+		}
+
+		for (i = 0; i < iovcnt; i++) {
+			iov[i].iov_base = g_bdev_mgr.spdk_zero_buffer;
+			iov[i].iov_len = block_size;
+		}
+		bdev_io->iovs = iov;
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+		bdev_io->u.write.iovs = iov;
+		bdev_io->u.write.iovcnt = iovcnt;
+	}
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
