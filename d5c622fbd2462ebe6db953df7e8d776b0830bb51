@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "b229ed44_10148c67",
+        "filename": "examples/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:34:37Z",
+      "side": 1,
+      "message": "Extra credit if these are in alphabetical order. :)",
+      "revId": "d5c622fbd2462ebe6db953df7e8d776b0830bb51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7221625_e52feded",
+        "filename": "examples/blob/hello_world/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:34:37Z",
+      "side": 1,
+      "message": "$(DPDK_INC) shouldn\u0027t be needed anymore. If this is still hanging around in some other Makefile, we should clean that up too (it should only be used in env_dpdk/env.mk).",
+      "revId": "d5c622fbd2462ebe6db953df7e8d776b0830bb51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2566db0a_6a28b3e3",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:34:37Z",
+      "side": 1,
+      "message": "This looks like a good, well-commented \"hello world\" example.\n\nThe only suggestion I would make here is to rearrange the functions so they are roughly in the order they are called from top to bottom so that someone reading it for the first time can follow the sequence of steps without jumping around a lot.  (Normally, we order functions so that we don\u0027t need forward declarations, but in this specific case, it\u0027s for a good cause.)",
+      "revId": "d5c622fbd2462ebe6db953df7e8d776b0830bb51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0d9d48c0_9415f11f",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 9
