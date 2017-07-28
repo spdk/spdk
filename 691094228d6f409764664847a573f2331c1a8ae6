@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4162876c_b038285b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:41:25Z",
+      "side": 1,
+      "message": "Find/replace mistake? This should probably still be \"connect\".",
+      "revId": "691094228d6f409764664847a573f2331c1a8ae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
