@@ -92,24 +92,24 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 	return transport->ops->destroy(transport);
 }
 
+int
+spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
+			   const struct spdk_nvme_transport_id *trid)
+{
+	return transport->ops->listen(transport, trid);
+}
+
+int
+spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
+				const struct spdk_nvme_transport_id *trid)
+{
+	return transport->ops->stop_listen(transport, trid);
+}
+
 void
-spdk_nvmf_transport_acceptor_poll(struct spdk_nvmf_transport *transport)
+spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport)
 {
-	transport->ops->acceptor_poll(transport);
-}
-
-int
-spdk_nvmf_transport_listen_addr_add(struct spdk_nvmf_transport *transport,
-				    struct spdk_nvmf_listen_addr *listen_addr)
-{
-	return transport->ops->listen_addr_add(transport, listen_addr);
-}
-
-int
-spdk_nvmf_transport_listen_addr_remove(struct spdk_nvmf_transport *transport,
-				       struct spdk_nvmf_listen_addr *listen_addr)
-{
-	return transport->ops->listen_addr_remove(transport, listen_addr);
+	transport->ops->accept(transport);
 }
 
 void

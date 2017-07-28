@@ -80,8 +80,8 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 }
 
 int
-spdk_nvmf_transport_listen_addr_add(struct spdk_nvmf_transport *transport,
-				    struct spdk_nvmf_listen_addr *listen_addr)
+spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
+			   const struct spdk_nvme_transport_id *trid)
 {
 	return 0;
 }

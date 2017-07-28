@@ -287,7 +287,7 @@ spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid)
 		return NULL;
 	}
 
-	rc = spdk_nvmf_transport_listen_addr_add(transport, listen_addr);
+	rc = spdk_nvmf_transport_listen(transport, trid);
 	if (rc < 0) {
 		free(listen_addr);
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
