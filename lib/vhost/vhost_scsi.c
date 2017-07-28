@@ -516,9 +516,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 
 		/* All remaining descriptors are data. */
 		while (iovcnt < iovcnt_max) {
-			spdk_vhost_vring_desc_to_iov(vdev, &iovs[iovcnt], desc);
+			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
+				task->resp = NULL;
+				goto abort_task;
+			}
 			len += desc->len;
-			iovcnt++;
 
 			if (!spdk_vhost_vring_desc_has_next(desc))
 				break;
@@ -539,9 +541,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 
 		/* Process descriptors up to response. */
 		while (!spdk_vhost_vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
-			spdk_vhost_vring_desc_to_iov(vdev, &iovs[iovcnt], desc);
+			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
+				task->resp = NULL;
+				goto abort_task;
+			}
 			len += desc->len;
-			iovcnt++;
 
 			if (!spdk_vhost_vring_desc_has_next(desc)) {
 				SPDK_WARNLOG("TO_DEV cmd: no response descriptor.\n");
