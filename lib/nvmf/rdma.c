@@ -183,7 +183,6 @@ struct spdk_nvmf_rdma_listen_addr {
 	struct ibv_device_attr 			attr;
 	struct ibv_comp_channel			*comp_channel;
 	uint32_t				ref;
-	bool					is_listened;
 	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
 };
 
@@ -954,15 +953,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	return transport;
 }
 
-static void
-spdk_nvmf_rdma_listen_addr_free(struct spdk_nvmf_rdma_listen_addr *addr)
-{
-	if (!addr) {
-		return;
-	}
-
-	free(addr);
-}
 static int
 spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 {
@@ -980,21 +970,135 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 }
 
 static int
-spdk_nvmf_rdma_listen_remove(struct spdk_nvmf_transport *transport,
-			     struct spdk_nvmf_listen_addr *listen_addr)
+spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
+		      const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_rdma_listen_addr *addr_tmp, *addr;
+	struct sockaddr_in saddr;
+	int rc;
+
+	addr = calloc(1, sizeof(*addr));
+	if (!addr) {
+		return -ENOMEM;
+	}
+
+	/* Selectively copy the trid. Things like NQN don't matter here - that
+	 * mapping is enforced elsewhere.
+	 */
+	addr->trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	addr->trid.adrfam = trid->adrfam;
+	snprintf(addr->trid.traddr, sizeof(addr->trid.traddr), "%s", trid->traddr);
+	snprintf(addr->trid.trsvcid, sizeof(addr->trid.trsvcid), "%s", trid->trsvcid);
+
+	pthread_mutex_lock(&g_rdma.lock);
+	assert(g_rdma.event_channel != NULL);
+	TAILQ_FOREACH(addr_tmp, &g_rdma.listen_addrs, link) {
+		if (spdk_nvme_transport_id_compare(&addr_tmp->trid, &addr->trid) == 0) {
+			addr_tmp->ref++;
+			free(addr);
+			/* Already listening at this address */
+			pthread_mutex_unlock(&g_rdma.lock);
+			return 0;
+		}
+	}
+
+	rc = rdma_create_id(g_rdma.event_channel, &addr->id, addr, RDMA_PS_TCP);
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_create_id() failed\n");
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return rc;
+	}
+
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sin_family = AF_INET;
+	saddr.sin_addr.s_addr = inet_addr(addr->trid.traddr);
+	saddr.sin_port = htons((uint16_t)strtoul(addr->trid.trsvcid, NULL, 10));
+	rc = rdma_bind_addr(addr->id, (struct sockaddr *)&saddr);
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_bind_addr() failed\n");
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return rc;
+	}
+
+	rc = ibv_query_device(addr->id->verbs, &addr->attr);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return rc;
+	}
+
+	addr->comp_channel = ibv_create_comp_channel(addr->id->verbs);
+	if (!addr->comp_channel) {
+		SPDK_ERRLOG("Failed to create completion channel\n");
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return rc;
+	}
+	SPDK_TRACELOG(SPDK_TRACE_RDMA, "For listen id %p with context %p, created completion channel %p\n",
+		      addr->id, addr->id->verbs, addr->comp_channel);
+
+	rc = fcntl(addr->comp_channel->fd, F_SETFL, O_NONBLOCK);
+	if (rc < 0) {
+		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
+		ibv_destroy_comp_channel(addr->comp_channel);
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return rc;
+	}
+
+	rc = rdma_listen(addr->id, 10); /* 10 = backlog */
+	if (rc < 0) {
+		SPDK_ERRLOG("rdma_listen() failed\n");
+		ibv_destroy_comp_channel(addr->comp_channel);
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&g_rdma.lock);
+		return rc;
+	}
+
+	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
+		       addr->trid.traddr, ntohs(rdma_get_src_port(addr->id)));
+
+	addr->ref = 1;
+
+	TAILQ_INSERT_TAIL(&g_rdma.listen_addrs, addr, link);
+	pthread_mutex_unlock(&g_rdma.lock);
+
+	return 0;
+}
+
+static int
+spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
+			   const struct spdk_nvme_transport_id *_trid)
 {
 	struct spdk_nvmf_rdma_listen_addr *addr, *tmp;
+	struct spdk_nvme_transport_id trid = {};
+
+	/* Selectively copy the trid. Things like NQN don't matter here - that
+	 * mapping is enforced elsewhere.
+	 */
+	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	trid.adrfam = _trid->adrfam;
+	snprintf(trid.traddr, sizeof(addr->trid.traddr), "%s", _trid->traddr);
+	snprintf(trid.trsvcid, sizeof(addr->trid.trsvcid), "%s", _trid->trsvcid);
 
 	pthread_mutex_lock(&g_rdma.lock);
 	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, tmp) {
-		if (spdk_nvme_transport_id_compare(&listen_addr->trid, &addr->trid) == 0) {
+		if (spdk_nvme_transport_id_compare(&addr->trid, &trid) == 0) {
 			assert(addr->ref > 0);
 			addr->ref--;
-			if (!addr->ref) {
+			if (addr->ref == 0) {
 				TAILQ_REMOVE(&g_rdma.listen_addrs, addr, link);
 				ibv_destroy_comp_channel(addr->comp_channel);
 				rdma_destroy_id(addr->id);
-				spdk_nvmf_rdma_listen_addr_free(addr);
+				free(addr);
 			}
 			break;
 		}
@@ -1008,47 +1112,15 @@ static int
 spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair);
 
 static void
-spdk_nvmf_rdma_addr_listen_init(struct spdk_nvmf_rdma_listen_addr *addr)
-{
-	int rc;
-
-	rc = rdma_listen(addr->id, 10); /* 10 = backlog */
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_listen() failed\n");
-		addr->ref--;
-		assert(addr->ref == 0);
-		TAILQ_REMOVE(&g_rdma.listen_addrs, addr, link);
-		ibv_destroy_comp_channel(addr->comp_channel);
-		rdma_destroy_id(addr->id);
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		return;
-	}
-
-	addr->is_listened = true;
-
-	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
-		       addr->trid.traddr, ntohs(rdma_get_src_port(addr->id)));
-}
-
-static void
-spdk_nvmf_rdma_acceptor_poll(struct spdk_nvmf_transport *transport)
+spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 {
 	struct rdma_cm_event		*event;
 	int				rc;
 	struct spdk_nvmf_rdma_qpair	*rdma_qpair, *tmp;
-	struct spdk_nvmf_rdma_listen_addr *addr = NULL, *addr_tmp;
 
 	if (g_rdma.event_channel == NULL) {
 		return;
 	}
-
-	pthread_mutex_lock(&g_rdma.lock);
-	TAILQ_FOREACH_SAFE(addr, &g_rdma.listen_addrs, link, addr_tmp) {
-		if (!addr->is_listened) {
-			spdk_nvmf_rdma_addr_listen_init(addr);
-		}
-	}
-	pthread_mutex_unlock(&g_rdma.lock);
 
 	/* Process pending connections for incoming capsules. The only capsule
 	 * this should ever find is a CONNECT request. */
@@ -1102,93 +1174,6 @@ spdk_nvmf_rdma_acceptor_poll(struct spdk_nvmf_transport *transport)
 			break;
 		}
 	}
-}
-
-static int
-spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
-		      struct spdk_nvmf_listen_addr *listen_addr)
-{
-	struct spdk_nvmf_rdma_listen_addr *addr;
-	struct sockaddr_in saddr;
-	int rc;
-
-	pthread_mutex_lock(&g_rdma.lock);
-	assert(g_rdma.event_channel != NULL);
-	TAILQ_FOREACH(addr, &g_rdma.listen_addrs, link) {
-		if (spdk_nvme_transport_id_compare(&listen_addr->trid, &addr->trid) == 0) {
-			addr->ref++;
-			/* Already listening at this address */
-			pthread_mutex_unlock(&g_rdma.lock);
-			return 0;
-		}
-	}
-
-	addr = calloc(1, sizeof(*addr));
-	if (!addr) {
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-
-	addr->trid = listen_addr->trid;
-
-	rc = rdma_create_id(g_rdma.event_channel, &addr->id, addr, RDMA_PS_TCP);
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_create_id() failed\n");
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-
-	memset(&saddr, 0, sizeof(saddr));
-	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = inet_addr(addr->trid.traddr);
-	saddr.sin_port = htons((uint16_t)strtoul(addr->trid.trsvcid, NULL, 10));
-	rc = rdma_bind_addr(addr->id, (struct sockaddr *)&saddr);
-	if (rc < 0) {
-		SPDK_ERRLOG("rdma_bind_addr() failed\n");
-		rdma_destroy_id(addr->id);
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-
-	rc = ibv_query_device(addr->id->verbs, &addr->attr);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
-		rdma_destroy_id(addr->id);
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-
-	addr->comp_channel = ibv_create_comp_channel(addr->id->verbs);
-	if (!addr->comp_channel) {
-		SPDK_ERRLOG("Failed to create completion channel\n");
-		rdma_destroy_id(addr->id);
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "For listen id %p with context %p, created completion channel %p\n",
-		      addr->id, addr->id->verbs, addr->comp_channel);
-
-	rc = fcntl(addr->comp_channel->fd, F_SETFL, O_NONBLOCK);
-	if (rc < 0) {
-		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
-		rdma_destroy_id(addr->id);
-		ibv_destroy_comp_channel(addr->comp_channel);
-		spdk_nvmf_rdma_listen_addr_free(addr);
-		pthread_mutex_unlock(&g_rdma.lock);
-		return -1;
-	}
-
-
-	addr->ref = 1;
-	TAILQ_INSERT_TAIL(&g_rdma.listen_addrs, addr, link);
-	pthread_mutex_unlock(&g_rdma.lock);
-
-
-	return 0;
 }
 
 static void
@@ -1596,10 +1581,10 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.create = spdk_nvmf_rdma_create,
 	.destroy = spdk_nvmf_rdma_destroy,
 
-	.acceptor_poll = spdk_nvmf_rdma_acceptor_poll,
+	.listen = spdk_nvmf_rdma_listen,
+	.stop_listen = spdk_nvmf_rdma_stop_listen,
+	.accept = spdk_nvmf_rdma_accept,
 
-	.listen_addr_add = spdk_nvmf_rdma_listen,
-	.listen_addr_remove = spdk_nvmf_rdma_listen_remove,
 	.listen_addr_discover = spdk_nvmf_rdma_discover,
 
 	.ctrlr_init = spdk_nvmf_rdma_ctrlr_init,
