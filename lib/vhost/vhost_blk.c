@@ -137,14 +137,13 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t
 			return -1;
 		}
 
-		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, &iovs[cnt], desc))) {
+		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &cnt, desc))) {
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
 				      req_idx, cnt);
 			return -1;
 		}
 
-		len += iovs[cnt].iov_len;
-		cnt++;
+		len += desc->len;
 
 		out_cnt += spdk_vhost_vring_desc_is_wr(desc);
 
