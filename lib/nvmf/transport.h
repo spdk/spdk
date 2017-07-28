@@ -65,23 +65,22 @@ struct spdk_nvmf_transport_ops {
 	int (*destroy)(struct spdk_nvmf_transport *transport);
 
 	/**
+	  * Instruct the transport to accept new connections at the address
+	  * provided. This may be called multiple times.
+	  */
+	int (*listen)(struct spdk_nvmf_transport *transport,
+		      const struct spdk_nvme_transport_id *trid);
+
+	/**
+	  * Stop accepting new connections at the given address.
+	  */
+	int (*stop_listen)(struct spdk_nvmf_transport *transport,
+			   const struct spdk_nvme_transport_id *trid);
+
+	/**
 	 * Check for new connections on the transport.
 	 */
-	void (*acceptor_poll)(struct spdk_nvmf_transport *transport);
-
-	/**
-	  * Instruct the acceptor to listen on the address provided. This
-	  * may be called multiple times.
-	  */
-	int (*listen_addr_add)(struct spdk_nvmf_transport *transport,
-			       struct spdk_nvmf_listen_addr *listen_addr);
-
-	/**
-	  * Instruct to remove listening on the address provided. This
-	  * may be called multiple times.
-	  */
-	int (*listen_addr_remove)(struct spdk_nvmf_transport *transport,
-				  struct spdk_nvmf_listen_addr *listen_addr);
+	void (*accept)(struct spdk_nvmf_transport *transport);
 
 	/**
 	 * Fill out a discovery log entry for a specific listen address.
@@ -136,13 +135,13 @@ struct spdk_nvmf_transport *spdk_nvmf_transport_create(struct spdk_nvmf_tgt *tgt
 		enum spdk_nvme_transport_type type);
 int spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport);
 
-void spdk_nvmf_transport_acceptor_poll(struct spdk_nvmf_transport *transport);
+int spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
+			       const struct spdk_nvme_transport_id *trid);
 
-int spdk_nvmf_transport_listen_addr_add(struct spdk_nvmf_transport *transport,
-					struct spdk_nvmf_listen_addr *listen_addr);
+int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
+				    const struct spdk_nvme_transport_id *trid);
 
-int spdk_nvmf_transport_listen_addr_remove(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_listen_addr *listen_addr);
+void spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport);
 
 void spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transport,
 		struct spdk_nvmf_listen_addr *listen_addr,
