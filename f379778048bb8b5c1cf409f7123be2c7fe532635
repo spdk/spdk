@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f519e2b1_873c0ed1",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d57da04c_f9e766e8",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a74847fe_5481684e",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "A more common name for a structure like this may be \"hello_world_context\"",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0e36973_d5123e39",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a74847fe_5481684e",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e4780e34_2fd3ff6d",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5fb7d04a_a2c8c2ab",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea9fba8f_f727439a",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "Maybe return -ENOMEM instead of -1",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "653b8c3e_51abab96",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "cool",
+      "parentUuid": "ea9fba8f_f727439a",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "1212e533_83269e14",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "yeah, good call!",
+      "parentUuid": "98ab8cbe_4e112562",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d37ce9ea_4ba09116",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -98,6 +188,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "No need to 0 init these - they\u0027re all assigned before they\u0027re used.",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07906ba3_e7591df4",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "habit",
+      "parentUuid": "d37ce9ea_4ba09116",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "a4cbb878_b4b3faaa",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71a7d60c_7777b57c",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d3eaaeb_bdf97e16",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -132,6 +258,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "You should check bserrno in all callbacks for correctness.",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10f51425_60ac270f",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d3eaaeb_bdf97e16",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "2ed313a9_1d5362d4",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5425865c_09318c81",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e43b37b5_322eaaba",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -166,6 +328,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "Just call spdk_bs_md_create_blob right here. I\u0027m not sure the comment about the event is helping, for an example this simple. That\u0027s more of an advanced topic. Regardless, spdk_bs_md_create_blob is cheap anyway so you\u0027d never want to allocate an event.",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ca4e30e_1acc795b",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "I want create_blob to be its own function instead of in the callback for init just so it stands out.",
+      "parentUuid": "e43b37b5_322eaaba",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "da42b93b_32271a6c",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e82bf51_445ad830",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c49a55fa_c6740e44",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -200,6 +398,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "easuer -\u003e easier",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdb869a9_a6d6c9fe",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c49a55fa_c6740e44",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "1558971e_bbb8eae2",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a057e48a_f0642bd7",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3edd103a_562fe339",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -234,6 +468,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "I think this paragraph has been eclipsed by the paragraph above and can be removed.",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63ec974b_93403e6f",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3edd103a_562fe339",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -257,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "2bb92e8a_b3181303",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47061d9c_568760f9",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc1ab061_c0704355",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -274,6 +544,24 @@
     },
     {
       "key": {
+        "uuid": "58a6b5da_d9a66c18",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cc1ab061_c0704355",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7062f931_8bd836f0",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 8
@@ -285,6 +573,24 @@
       "writtenOn": "2017-07-28T16:52:14Z",
       "side": 1,
       "message": "For the target audience of this example, nothing is obvious. We should explain that we\u0027re initializing the SPDK event framework which requires a name and a configuration file.",
+      "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "300ee8e6_0c11773c",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T18:39:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7062f931_8bd836f0",
       "revId": "f379778048bb8b5c1cf409f7123be2c7fe532635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
