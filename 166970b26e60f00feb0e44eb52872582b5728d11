@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "960b3681_43b6e18b",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-28T23:44:00Z",
+      "side": 1,
+      "message": "Hi Cunyin,\n\nDoes this cause a crash in the iscsi_tgt, or is it just a bug/unexpected behavior in the initiator?",
+      "revId": "166970b26e60f00feb0e44eb52872582b5728d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
