@@ -143,13 +143,36 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
-bool
+#define _2MB_OFFSET(ptr)	((ptr) & (0x200000 - 1))
+
+int
 spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
-			     const struct vring_desc *desc)
+			     uint16_t *iov_index, const struct vring_desc *desc)
 {
-	iov->iov_base =  spdk_vhost_gpa_to_vva(vdev, desc->addr);
-	iov->iov_len = desc->len;
-	return !iov->iov_base;
+	uint32_t remaining = desc->len;
+	uint32_t len;
+	uintptr_t payload = desc->addr;
+	uintptr_t vva;
+
+	while (remaining) {
+		if (*iov_index >= SPDK_VHOST_IOVS_MAX) {
+			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
+			return -1;
+		}
+		vva = (uintptr_t)spdk_vhost_gpa_to_vva(vdev, payload);
+		if (vva == 0) {
+			SPDK_ERRLOG("gpa_to_vva(%p) == NULL\n", (void *)payload);
+			return -1;
+		}
+		len = spdk_min(remaining, 0x200000 - _2MB_OFFSET(payload));
+		iov[*iov_index].iov_base = (void *)vva;
+		iov[*iov_index].iov_len = len;
+		remaining -= len;
+		payload += len;
+		(*iov_index)++;
+	}
+
+	return 0;
 }
 
 struct spdk_vhost_dev *
