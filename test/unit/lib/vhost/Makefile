@@ -31,13 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = bdev blob ioat iscsi json jsonrpc log nvme nvmf scsi util
-ifeq ($(OS),Linux)
-DIRS-$(CONFIG_VHOST) += vhost
-endif
+DIRS-y = vhost.c
 
 .PHONY: all clean $(DIRS-y)
 
