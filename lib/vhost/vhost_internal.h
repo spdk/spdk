@@ -59,6 +59,8 @@
 
 #define SPDK_VHOST_SCSI_CTRLR_MAX_DEVS 8
 
+#define SPDK_VHOST_IOVS_MAX 128
+
 enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_SCSI,
 	SPDK_VHOST_DEV_T_BLK,

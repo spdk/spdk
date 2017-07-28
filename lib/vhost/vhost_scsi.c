@@ -71,9 +71,6 @@
 #define VIRTIO_SCSI_EVENTQ   1
 #define VIRTIO_SCSI_REQUESTQ   2
 
-/* Allocated iovec buffer len */
-#define SPDK_VHOST_SCSI_IOVS_LEN 128
-
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
@@ -88,7 +85,7 @@ struct spdk_vhost_scsi_dev {
 
 struct spdk_vhost_scsi_task {
 	struct spdk_scsi_task	scsi;
-	struct iovec iovs[SPDK_VHOST_SCSI_IOVS_LEN];
+	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 
 	union {
 		struct virtio_scsi_cmd_resp *resp;
@@ -478,7 +475,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
 	struct vring_desc *desc =  spdk_vhost_vq_get_desc(task->vq, task->req_idx);
 	struct iovec *iovs = task->iovs;
-	uint16_t iovcnt = 0, iovcnt_max = SPDK_VHOST_SCSI_IOVS_LEN;
+	uint16_t iovcnt = 0, iovcnt_max = SPDK_VHOST_IOVS_MAX;
 	uint32_t len = 0;
 
 	/* Sanity check. First descriptor must be readable and must have next one. */

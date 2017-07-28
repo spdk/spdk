@@ -45,8 +45,6 @@
 #include "vhost_internal.h"
 #include "vhost_iommu.h"
 
-#define VHOST_BLK_IOVS_MAX 128
-
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_vhost_blk_dev *bvdev;
@@ -56,7 +54,7 @@ struct spdk_vhost_blk_task {
 
 	uint32_t length;
 	uint16_t iovcnt;
-	struct iovec iovs[VHOST_BLK_IOVS_MAX];
+	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 };
 
 struct spdk_vhost_blk_dev {
@@ -322,7 +320,7 @@ no_bdev_vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
 	struct rte_vhost_vring *vq = &bvdev->vdev.virtqueue[0];
-	struct iovec iovs[VHOST_BLK_IOVS_MAX];
+	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 	uint32_t length;
 	uint16_t iovcnt, req_idx;
 
