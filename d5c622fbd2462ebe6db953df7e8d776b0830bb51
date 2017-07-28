@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d9d48c0_9415f11f",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-28T19:03:22Z",
+      "side": 1,
+      "message": "hmmm, can I call this after unloading blobstore? doesn\u0027t seem like i should be able to but its not explding",
+      "revId": "d5c622fbd2462ebe6db953df7e8d776b0830bb51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
