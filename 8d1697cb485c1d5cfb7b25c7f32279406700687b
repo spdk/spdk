@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8154fc9a_7edcfafe",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b3f0ca1c_03d1bd50",
+      "range": {
+        "startLine": 165,
+        "startChar": 3,
+        "endLine": 165,
+        "endChar": 7
+      },
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4b6c78b_cbe4f444",
         "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-07-13T17:20:38Z",
       "side": 1,
       "message": "This should at least use pci_address for consistency with other RPCs, but I think it would be even better to use a full transport ID like the construct_nvme_bdev call above - this would allow us to do firmware update for other transports (e.g. NVMe-oF).",
+      "range": {
+        "startLine": 166,
+        "startChar": 3,
+        "endLine": 166,
+        "endChar": 11
+      },
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c66976f_7be21cd0",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4b6c78b_cbe4f444",
       "range": {
         "startLine": 166,
         "startChar": 3,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "c653c458_8e0b584a",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "63fe4991_58e60c69",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b2d7048_eaf2ff76",
         "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
         "patchSetId": 3
@@ -76,6 +142,30 @@
       "writtenOn": "2017-07-13T17:20:38Z",
       "side": 1,
       "message": "This message seems to have some extra punctuation and space at the end (should be something like \"Read firmware image failed!\").",
+      "range": {
+        "startLine": 247,
+        "startChar": 8,
+        "endLine": 247,
+        "endChar": 37
+      },
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6972daa_dd42c5b0",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3b2d7048_eaf2ff76",
       "range": {
         "startLine": 247,
         "startChar": 8,
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "da0b3727_ad639925",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b748907d_b48b78e6",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc65f304_4064421f",
         "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
         "patchSetId": 3
@@ -116,6 +224,24 @@
       "writtenOn": "2017-07-13T17:20:38Z",
       "side": 1,
       "message": "The return value of spdk_jsonrpc_begin_result() must be checked - if it is NULL, no response is required.",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f84bb13_bcb5625f",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc65f304_4064421f",
       "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -139,6 +265,24 @@
     },
     {
       "key": {
+        "uuid": "7f246451_3537be0f",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d7cea50_305673cc",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4cc58f44_99f7dde3",
         "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
         "patchSetId": 3
@@ -150,6 +294,24 @@
       "writtenOn": "2017-07-13T17:20:38Z",
       "side": 1,
       "message": "You can probably free fw_image and req right after the spdk_nvme_ctrlr_update_firmware() call, before the if (rc..) checks - that would simplify some of the error paths.",
+      "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d1ca2d4_905e6874",
+        "filename": "lib/bdev/nvme/blockdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011301
+      },
+      "writtenOn": "2017-07-28T01:31:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4cc58f44_99f7dde3",
       "revId": "8d1697cb485c1d5cfb7b25c7f32279406700687b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
