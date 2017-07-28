@@ -58,6 +58,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_SMALL_POOL_SIZE	8192
 #define BUF_LARGE_POOL_SIZE	1024
 #define NOMEM_THRESHOLD_COUNT	8
+#define ZERO_BUFFER_SIZE	0x100000
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 
@@ -66,6 +67,8 @@ struct spdk_bdev_mgr {
 
 	struct spdk_mempool *buf_small_pool;
 	struct spdk_mempool *buf_large_pool;
+
+	void *zero_buffer;
 
 	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
 
@@ -149,6 +152,8 @@ struct spdk_bdev_channel {
 #endif
 
 };
+
+static void spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 
 struct spdk_bdev *
 spdk_bdev_first(void)
@@ -527,6 +532,14 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 		return;
 	}
 
+	g_bdev_mgr.zero_buffer = spdk_dma_zmalloc(ZERO_BUFFER_SIZE, ZERO_BUFFER_SIZE,
+				 NULL);
+	if (!g_bdev_mgr.zero_buffer) {
+		SPDK_ERRLOG("create bdev zero buffer failed\n");
+		spdk_bdev_init_complete(-1);
+		return;
+	}
+
 #ifdef SPDK_CONFIG_VTUNE
 	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
 #endif
@@ -579,6 +592,7 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
 	spdk_io_device_unregister(&g_bdev_mgr, NULL);
 }
@@ -1088,26 +1102,60 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	uint64_t len;
+	bool split_request = false;
+
+	if (num_blocks > UINT64_MAX / spdk_bdev_get_block_size(bdev)) {
+		SPDK_ERRLOG("length argument out of range in write_zeroes\n");
+		return -ERANGE;
+	}
 
 	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
 	}
 
 	bdev_io = spdk_bdev_get_io();
+
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing write_zeroes\n");
 		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
-	bdev_io->u.bdev.iovs = NULL;
-	bdev_io->u.bdev.iovcnt = 0;
-	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
-	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 
-	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+		bdev_io->u.bdev.num_blocks = num_blocks;
+		bdev_io->u.bdev.iovs = NULL;
+		bdev_io->u.bdev.iovcnt = 0;
 
+	} else {
+		assert(spdk_bdev_get_block_size(bdev) <= ZERO_BUFFER_SIZE);
+
+		len = spdk_bdev_get_block_size(bdev) * num_blocks;
+
+		if (len > ZERO_BUFFER_SIZE) {
+			split_request = true;
+			len = ZERO_BUFFER_SIZE;
+		}
+
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+		bdev_io->u.bdev.iov.iov_base = g_bdev_mgr.zero_buffer;
+		bdev_io->u.bdev.iov.iov_len = len;
+		bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+		bdev_io->u.bdev.iovcnt = 1;
+		bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev);
+		bdev_io->split_remaining_num_blocks = num_blocks - bdev_io->u.bdev.num_blocks;
+		bdev_io->split_current_offset_blocks = offset_blocks + bdev_io->u.bdev.num_blocks;
+	}
+
+	if (split_request) {
+		bdev_io->stored_user_cb = cb;
+		spdk_bdev_io_init(bdev_io, bdev, cb_arg, spdk_bdev_write_zeroes_split);
+	} else {
+		spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+	}
 	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
@@ -1946,6 +1994,38 @@ spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 
 	spdk_bdev_io_complete(part_io, status);
 	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	uint64_t len;
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	} else {
+		/* no need to perform the error checking from write_zeroes_blocks because this request already passed those checks. */
+
+		len = spdk_min(spdk_bdev_get_block_size(bdev_io->bdev) * bdev_io->split_remaining_num_blocks,
+			       ZERO_BUFFER_SIZE);
+
+		bdev_io->u.bdev.offset_blocks = bdev_io->split_current_offset_blocks;
+		bdev_io->u.bdev.iov.iov_len = len;
+		bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev_io->bdev);
+		bdev_io->split_remaining_num_blocks -= bdev_io->u.bdev.num_blocks;
+		bdev_io->split_current_offset_blocks += bdev_io->u.bdev.num_blocks;
+
+		/* if this round completes the i/o, change the callback to be the original user callback */
+		if (bdev_io->split_remaining_num_blocks == 0) {
+			spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, bdev_io->stored_user_cb);
+		} else {
+			spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, spdk_bdev_write_zeroes_split);
+		}
+		spdk_bdev_io_submit(bdev_io);
+
+		return;
+	}
 }
 
 void
