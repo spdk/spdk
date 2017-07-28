@@ -210,6 +210,21 @@ __blockdev_write(void *arg1, void *arg2)
 }
 
 static void
+__blockdev_write_zeroes(void *arg1, void *arg2)
+{
+	struct bdevio_request *req = arg1;
+	struct io_target *target = req->target;
+	int rc;
+
+	rc = spdk_bdev_write_zeroes(target->bdev_desc, target->ch, req->offset,
+				    req->data_len, quick_test_complete, NULL);
+	if (rc) {
+		g_completion_success = false;
+		wake_ut_thread();
+	}
+}
+
+static void
 sgl_chop_buffer(struct bdevio_request *req, int iov_len)
 {
 	int data_len = req->data_len;
@@ -248,6 +263,22 @@ blockdev_write(struct io_target *target, char *tx_buf,
 	g_completion_success = false;
 
 	execute_spdk_function(__blockdev_write, &req, NULL);
+}
+
+static void
+blockdev_write_zeroes(struct io_target *target, char *tx_buf,
+		      uint64_t offset, int data_len)
+{
+	struct bdevio_request req;
+
+	req.target = target;
+	req.buf = tx_buf;
+	req.data_len = data_len;
+	req.offset = offset;
+
+	g_completion_success = false;
+
+	execute_spdk_function(__blockdev_write_zeroes, &req, NULL);
 }
 
 static void
@@ -303,7 +334,7 @@ blockdev_write_read_data_match(char *rx_buf, char *tx_buf, int data_length)
 
 static void
 blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_t offset,
-		    int expected_rc)
+		    int expected_rc, bool write_zeroes)
 {
 	struct io_target *target;
 	char	*tx_buf = NULL;
@@ -312,22 +343,30 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 
 	target = g_io_targets;
 	while (target != NULL) {
-		if (data_length < spdk_bdev_get_block_size(target->bdev)) {
+		if (data_length < spdk_bdev_get_block_size(target->bdev) ||
+		    data_length / spdk_bdev_get_block_size(target->bdev) > spdk_bdev_get_num_blocks(target->bdev)) {
 			target = target->next;
 			continue;
 		}
 
-		initialize_buffer(&tx_buf, pattern, data_length);
-		initialize_buffer(&rx_buf, 0, data_length);
+		if (!write_zeroes) {
+			initialize_buffer(&tx_buf, pattern, data_length);
+			initialize_buffer(&rx_buf, 0, data_length);
 
-		blockdev_write(target, tx_buf, offset, data_length, iov_len);
+			blockdev_write(target, tx_buf, offset, data_length, iov_len);
+		} else {
+			initialize_buffer(&tx_buf, 0, data_length);
+			initialize_buffer(&rx_buf, pattern, data_length);
+
+			blockdev_write_zeroes(target, tx_buf, offset, data_length);
+		}
+
 
 		if (expected_rc == 0) {
 			CU_ASSERT_EQUAL(g_completion_success, true);
 		} else {
 			CU_ASSERT_EQUAL(g_completion_success, false);
 		}
-
 		blockdev_read(target, rx_buf, offset, data_length, iov_len);
 
 		if (expected_rc == 0) {
@@ -364,7 +403,119 @@ blockdev_write_read_4k(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
+}
+
+static void
+blockdev_write_zeroes_read_4k(void)
+{
+	uint32_t data_length;
+	uint64_t offset;
+	int pattern;
+	int expected_rc;
+
+	/* Data size = 4K */
+	data_length = 4096;
+	offset = 0;
+	pattern = 0xA3;
+	/* Params are valid, hence the expected return value
+	 * of write_zeroes and read for all blockdevs is 0. */
+	expected_rc = 0;
+
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 1);
+}
+
+/*
+ * This i/o will not have to split at the bdev layer.
+ */
+static void
+blockdev_write_zeroes_read_1m(void)
+{
+	uint32_t data_length;
+	uint64_t offset;
+	int pattern;
+	int expected_rc;
+
+	/* Data size = 1M */
+	data_length = 1048576;
+	offset = 0;
+	pattern = 0xA3;
+	/* Params are valid, hence the expected return value
+	 * of write_zeroes and read for all blockdevs is 0. */
+	expected_rc = 0;
+
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 1);
+}
+
+/*
+ * This i/o will have to split at the bdev layer if
+ * write-zeroes is not supported by the bdev.
+ */
+static void
+blockdev_write_zeroes_read_5m(void)
+{
+	uint32_t data_length;
+	uint64_t offset;
+	int pattern;
+	int expected_rc;
+
+	/* Data size = 5M */
+	data_length = 5242880;
+	offset = 0;
+	pattern = 0xA3;
+	/* Params are valid, hence the expected return value
+	 * of write_zeroes and read for all blockdevs is 0. */
+	expected_rc = 0;
+
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 1);
+}
+
+/*
+ * This i/o will have to split at the bdev layer if
+ * write-zeroes is not supported by the bdev. It also
+ * tests a write size that is not an even multiple of
+ * the bdev layer zero buffer size.
+ */
+static void
+blockdev_write_zeroes_read_5m_500k(void)
+{
+	uint32_t data_length;
+	uint64_t offset;
+	int pattern;
+	int expected_rc;
+
+	/* Data size = 5M and 500 Kb */
+	data_length = 5767168;
+	offset = 0;
+	pattern = 0xA3;
+	/* Params are valid, hence the expected return value
+	 * of write_zeroes and read for all blockdevs is 0. */
+	expected_rc = 0;
+
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 1);
+}
+
+/*
+ * This i/o will have to split at the bdev layer twice if
+ * write-zeroes is not supported by the bdev.
+ */
+static void
+blockdev_write_zeroes_read_9m(void)
+{
+	uint32_t data_length;
+	uint64_t offset;
+	int pattern;
+	int expected_rc;
+
+	/* Data size = 9M */
+	data_length = 9437184;
+	offset = 0;
+	pattern = 0xA3;
+	/* Params are valid, hence the expected return value
+	 * of write_zeroes and read for all blockdevs is 0. */
+	expected_rc = 0;
+
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 1);
 }
 
 static void
@@ -385,7 +536,7 @@ blockdev_writev_readv_4k(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -406,7 +557,7 @@ blockdev_writev_readv_30x4k(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -426,7 +577,7 @@ blockdev_write_read_512Bytes(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -447,7 +598,7 @@ blockdev_writev_readv_512Bytes(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -467,7 +618,7 @@ blockdev_write_read_size_gt_128k(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -488,7 +639,7 @@ blockdev_writev_readv_size_gt_128k(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -509,7 +660,7 @@ blockdev_writev_readv_size_gt_128k_two_iov(void)
 	 * of write and read for all blockdevs is 0. */
 	expected_rc = 0;
 
-	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, iov_len, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -529,7 +680,7 @@ blockdev_write_read_invalid_size(void)
 	 * of write and read for all blockdevs is < 0 */
 	expected_rc = -1;
 
-	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -628,7 +779,7 @@ blockdev_write_read_max_offset(void)
 	 * of write and read for all blockdevs is < 0 */
 	expected_rc = -1;
 
-	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -649,7 +800,7 @@ blockdev_overlapped_write_read_8k(void)
 	expected_rc = 0;
 	/* Assert the write by comparing it with values read
 	 * from the same offset for each blockdev */
-	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 
 	/* Overwrite the pattern 0xbb of size 8K on an address offset overlapping
 	 * with the address written above and assert the new value in
@@ -660,7 +811,7 @@ blockdev_overlapped_write_read_8k(void)
 	offset = 4096;
 	/* Assert the write by comparing it with values read
 	 * from the overlapped offset for each blockdev */
-	blockdev_write_read(data_length, 0, pattern, offset, expected_rc);
+	blockdev_write_read(data_length, 0, pattern, offset, expected_rc, 0);
 }
 
 static void
@@ -741,6 +892,11 @@ __run_ut_thread(void *arg1, void *arg2)
 
 	if (
 		CU_add_test(suite, "blockdev write read 4k", blockdev_write_read_4k) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read 4k", blockdev_write_zeroes_read_4k) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read 1m", blockdev_write_zeroes_read_1m) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read 5m", blockdev_write_zeroes_read_5m) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read 5.5m", blockdev_write_zeroes_read_5m_500k) == NULL
+		|| CU_add_test(suite, "blockdev write zeroes read 9m", blockdev_write_zeroes_read_9m) == NULL
 		|| CU_add_test(suite, "blockdev write read 512 bytes",
 			       blockdev_write_read_512Bytes) == NULL
 		|| CU_add_test(suite, "blockdev write read size > 128k",
