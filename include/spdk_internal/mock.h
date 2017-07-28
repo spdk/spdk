@@ -71,8 +71,9 @@
 		} \
 	}
 
-/* for defining the implmentation of stubs for SPDK funcs */
-/* the _P macro is for stubs that return pointer values */
+/* For defining the implmentation of stubs for SPDK funcs. */
+/* DEFINE_STUB_P macro is for stubs that return pointer values. */
+/* DEFINE_STUB_V macro is for void stubs. */
 #define DEFINE_STUB(fn, ret, dargs, val) \
 	ret ut_ ## fn = val; \
 	ret fn dargs; \
@@ -88,6 +89,12 @@
 	ret* fn dargs \
 	{ \
 		return MOCK_GET_P(fn); \
+	}
+
+#define DEFINE_STUB_V(fn, dargs) \
+	void fn dargs; \
+	void fn dargs \
+	{ \
 	}
 
 /* declare wrapper protos (alphabetically please) here */
