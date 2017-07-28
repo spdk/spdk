@@ -306,6 +306,16 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		return -1;
 	}
 
+	/* `user1` log type is used by rte_vhost, which prints an INFO log for each received
+	 * vhost user message. We don't want that. The same log type is also used by a couple
+	 * of other DPDK libs, but none of which we make use right now. If necessary, this can
+	 * be overridden via opts->env_context.
+	 */
+	args = spdk_push_arg(args, &argcount, strdup("--log-level=user1:6"));
+	if (args == NULL) {
+		return -1;
+	}
+
 	if (opts->env_context) {
 		args = spdk_push_arg(args, &argcount, strdup(opts->env_context));
 		if (args == NULL) {
