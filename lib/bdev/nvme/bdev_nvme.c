@@ -148,6 +148,10 @@ static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct spdk_io_chan
 static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				 struct nvme_bdev_io *bio,
 				 struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
+static int bdev_nvme_write_zeroes(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+				  struct nvme_bdev_io *bio,
+				  size_t len,
+				  uint64_t offset);
 
 static int
 bdev_nvme_get_ctx_size(void)
@@ -377,6 +381,13 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					bdev_io->u.write.len,
 					bdev_io->u.write.offset);
 
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return bdev_nvme_write_zeroes((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					      ch,
+					      (struct nvme_bdev_io *)bdev_io->driver_ctx,
+					      bdev_io->u.write.len,
+					      bdev_io->u.write.offset);
+
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
@@ -443,7 +454,24 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_ctrlr->ctrlr);
 		return cdata->oncs.dsm;
 
-	default:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_ctrlr->ctrlr);
+		/*
+		 * If an NVMe controller guarantees reading unallocated blocks returns zero,
+		 * we can implement WRITE_ZEROES as an NVMe deallocate command.
+		 */
+		if (cdata->oncs.dsm &&
+		    spdk_nvme_ns_get_dealloc_logical_block_read_value(nbdev->ns) == SPDK_NVME_DEALLOC_READ_00) {
+			return true;
+		}
+		/*
+		 * The NVMe controller write_zeroes function is currently not used by our driver.
+		 * If a user submits an arbitrarily large write_zeroes request to the controller, the request will fail.
+		 * Until this is resolved, we only claim support for write_zeroes if deallocated blocks return 0's when read.
+		 */
+		return false;
+
+	default :
 		return false;
 	}
 }
@@ -1241,6 +1269,29 @@ bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 	if (rc != 0) {
 		SPDK_ERRLOG("%s failed: rc = %d\n", direction == BDEV_DISK_READ ? "readv" : "writev", rc);
 	}
+	return rc;
+}
+
+static int
+bdev_nvme_write_zeroes(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+		       struct nvme_bdev_io *bio,
+		       size_t len,
+		       uint64_t offset)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int64_t lba_count = len / nbdev->disk.blocklen;
+	uint64_t lba = offset / nbdev->disk.blocklen;
+	int rc;
+	struct spdk_nvme_dsm_range dsm_range = {};
+
+	dsm_range.starting_lba = lba;
+	dsm_range.length = lba_count;
+
+	rc = spdk_nvme_ns_cmd_dataset_management(nbdev->ns, nvme_ch->qpair,
+			SPDK_NVME_DSM_ATTR_DEALLOCATE,
+			&dsm_range, 1,
+			bdev_nvme_queued_done, bio);
+
 	return rc;
 }
 
