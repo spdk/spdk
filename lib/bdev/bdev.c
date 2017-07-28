@@ -65,6 +65,9 @@ struct spdk_bdev_mgr {
 	struct spdk_mempool *buf_small_pool;
 	struct spdk_mempool *buf_large_pool;
 
+	void *zero_buffer;
+	uint32_t zero_buffer_size;
+
 	TAILQ_HEAD(, spdk_bdev_module_if) bdev_modules;
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
@@ -482,6 +485,15 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 		return;
 	}
 
+	g_bdev_mgr.zero_buffer_size = 4096;
+	g_bdev_mgr.zero_buffer = spdk_dma_zmalloc(g_bdev_mgr.zero_buffer_size, g_bdev_mgr.zero_buffer_size,
+				 NULL);
+	if (!g_bdev_mgr.zero_buffer) {
+		SPDK_ERRLOG("create bdev zero buffer failed\n");
+		spdk_bdev_module_init_complete(-1);
+		return;
+	}
+
 #ifdef SPDK_CONFIG_VTUNE
 	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
 #endif
@@ -528,6 +540,7 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
 	spdk_io_device_unregister(&g_bdev_mgr, NULL);
 
@@ -555,6 +568,10 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io) {
 		return;
+	}
+
+	if (bdev_io->iovs != NULL) {
+		free(bdev_io->iovs);
 	}
 
 	if (bdev_io->buf != NULL) {
@@ -946,10 +963,13 @@ spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset, uint64_t len,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	int rc;
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+	struct iovec *iov;
+	uint64_t iovcnt_u64;
+	uint32_t remnant = 0;
+	int i, rc, iovcnt;
 
 	if (!spdk_bdev_io_valid(bdev, offset, len)) {
 		return -EINVAL;
@@ -957,6 +977,7 @@ spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
+		spdk_bdev_put_io(bdev_io);
 		SPDK_ERRLOG("bdev_io memory allocation failed duing write_zeroes\n");
 		return -ENOMEM;
 	}
@@ -964,10 +985,66 @@ spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->ch = channel;
 	bdev_io->u.write.len = len;
 	bdev_io->u.write.offset = offset;
-	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+	} else {
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+
+		assert(spdk_bdev_get_block_size(bdev) <= g_bdev_mgr.zero_buffer_size);
+
+		iovcnt_u64 = len / g_bdev_mgr.zero_buffer_size;
+		if (iovcnt_u64 > INT_MAX) {
+			spdk_bdev_put_io(bdev_io);
+			SPDK_ERRLOG("length argument out of range in write_zeroes\n");
+			return -ERANGE;
+		}
+
+		/* iovcnt is stored as a signed int to comply with underlying api, but will always be positive. */
+		iovcnt = len / g_bdev_mgr.zero_buffer_size;
+		remnant = len % g_bdev_mgr.zero_buffer_size;
+		if (remnant) {
+			if (iovcnt == INT_MAX) {
+				spdk_bdev_put_io(bdev_io);
+				SPDK_ERRLOG("length argument out of range in write_zeroes\n");
+				return -ERANGE;
+			}
+
+			iovcnt++;
+		}
+
+		if ((size_t)iovcnt > 0 && (size_t)iovcnt > SIZE_MAX / sizeof(struct iovec)) {
+			spdk_bdev_put_io(bdev_io);
+			SPDK_ERRLOG("write_zeroes request too large to handle\n");
+			return -ERANGE;
+		}
+
+		iov = malloc(iovcnt * sizeof(struct iovec));
+		if (!iov) {
+			spdk_bdev_put_io(bdev_io);
+			SPDK_ERRLOG("io vector memory allocation failed during write_zeroes\n");
+			return -ENOMEM;
+		}
+
+		for (i = 0; i < iovcnt - 1; i++) {
+			iov[i].iov_base = g_bdev_mgr.zero_buffer;
+			iov[i].iov_len = g_bdev_mgr.zero_buffer_size;
+		}
+
+		iov[iovcnt - 1].iov_base = g_bdev_mgr.zero_buffer;
+		if (remnant) {
+			iov[iovcnt - 1].iov_len = remnant;
+		} else {
+			iov[iovcnt - 1].iov_len = g_bdev_mgr.zero_buffer_size;
+		}
+
+		bdev_io->iovs = iov;
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
+		bdev_io->u.write.iovs = iov;
+		bdev_io->u.write.iovcnt = iovcnt;
+	}
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
-
 	rc = spdk_bdev_io_submit(bdev_io);
 	if (rc < 0) {
 		spdk_bdev_put_io(bdev_io);
