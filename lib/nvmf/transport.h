@@ -90,24 +90,26 @@ struct spdk_nvmf_transport_ops {
 				     struct spdk_nvmf_discovery_log_page_entry *entry);
 
 	/**
-	 * Create a new ctrlr
+	 * Create a new poll group
 	 */
-	struct spdk_nvmf_ctrlr *(*ctrlr_init)(struct spdk_nvmf_transport *transport);
+	struct spdk_nvmf_poll_group *(*poll_group_create)(struct spdk_nvmf_transport *transport);
 
 	/**
-	 * Destroy a ctrlr
+	 * Destroy a poll group
 	 */
-	void (*ctrlr_fini)(struct spdk_nvmf_ctrlr *ctrlr);
+	void (*poll_group_destroy)(struct spdk_nvmf_poll_group *group);
 
 	/**
-	 * Add a qpair to a ctrlr
+	 * Add a qpair to a poll group
 	 */
-	int (*ctrlr_add_qpair)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_qpair *qpair);
+	int (*poll_group_add)(struct spdk_nvmf_poll_group *group,
+			      struct spdk_nvmf_qpair *qpair);
 
 	/**
-	 * Remove a qpair from a ctrlr
+	 * Remove a qpair from a poll group
 	 */
-	int (*ctrlr_remove_qpair)(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_qpair *qpair);
+	int (*poll_group_remove)(struct spdk_nvmf_poll_group *group,
+				 struct spdk_nvmf_qpair *qpair);
 
 	/*
 	 * Signal request completion, which sends a response
@@ -147,14 +149,15 @@ void spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transp
 		struct spdk_nvmf_listen_addr *listen_addr,
 		struct spdk_nvmf_discovery_log_page_entry *entry);
 
-struct spdk_nvmf_ctrlr *spdk_nvmf_transport_ctrlr_init(struct spdk_nvmf_transport *transport);
+struct spdk_nvmf_poll_group *spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport
+		*transport);
 
-void spdk_nvmf_transport_ctrlr_fini(struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_poll_group *group);
 
-int spdk_nvmf_transport_ctrlr_add_qpair(struct spdk_nvmf_ctrlr *ctrlr,
-					struct spdk_nvmf_qpair *qpair);
+int spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_poll_group *group,
+				       struct spdk_nvmf_qpair *qpair);
 
-int spdk_nvmf_transport_ctrlr_remove_qpair(struct spdk_nvmf_ctrlr *ctrlr,
+int spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_qpair *qpair);
 
 int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
