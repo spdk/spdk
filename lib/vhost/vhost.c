@@ -571,6 +571,10 @@ spdk_vhost_startup(void *arg1, void *arg2)
 		}
 	}
 
+	if (spdk_log_get_print_level() != SPDK_LOG_DEBUG) {
+		rte_log_set_global_level(RTE_LOG_NOTICE);
+	}
+
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost controllers\n");
