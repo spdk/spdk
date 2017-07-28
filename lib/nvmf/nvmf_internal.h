@@ -90,6 +90,11 @@ struct spdk_nvmf_tgt {
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 };
 
+struct spdk_nvmf_poll_group {
+	struct spdk_nvmf_transport		*transport;
+	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;
+};
+
 extern struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
