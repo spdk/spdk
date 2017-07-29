@@ -39,7 +39,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP = fuse
 
 C_SRCS := fuse.c
-CFLAGS += $(DPDK_INC)
 
 SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
