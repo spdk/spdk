@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e928d140_3608df46",
+        "filename": "examples/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-29T15:41:26Z",
+      "side": 1,
+      "message": "smart ass :)",
+      "parentUuid": "b229ed44_10148c67",
+      "revId": "d5c622fbd2462ebe6db953df7e8d776b0830bb51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7221625_e52feded",
         "filename": "examples/blob/hello_world/Makefile",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2017-07-28T23:34:37Z",
       "side": 1,
       "message": "$(DPDK_INC) shouldn\u0027t be needed anymore. If this is still hanging around in some other Makefile, we should clean that up too (it should only be used in env_dpdk/env.mk).",
+      "revId": "d5c622fbd2462ebe6db953df7e8d776b0830bb51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b685d69_d39d7d71",
+        "filename": "examples/blob/hello_world/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-29T15:41:26Z",
+      "side": 1,
+      "message": "OK, I\u0027ll hunt down where I nabbed this from and clean it up on another commit",
+      "parentUuid": "e7221625_e52feded",
       "revId": "d5c622fbd2462ebe6db953df7e8d776b0830bb51",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
