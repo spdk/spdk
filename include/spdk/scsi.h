@@ -94,6 +94,11 @@ struct spdk_scsi_task {
 	uint8_t				status;
 	uint8_t				function; /* task mgmt function */
 	uint8_t				response; /* task mgmt response */
+	/**
+	 * Record the lun id just in case the lun is invalid,
+	 * which will happen when hot remove the lun.
+	 */
+	int				lun_id;
 	struct spdk_scsi_lun		*lun;
 	struct spdk_bdev_desc		*desc;
 	struct spdk_io_channel		*ch;
