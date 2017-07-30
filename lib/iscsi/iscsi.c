@@ -4041,12 +4041,15 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 {
 	struct spdk_iscsi_task	*task, *subtask;
 	struct iscsi_bhs_data_out *reqh;
+	struct spdk_scsi_lun	*lun_dev;
 	uint32_t transfer_tag;
 	uint32_t task_tag;
 	uint32_t transfer_len;
 	uint32_t DataSN;
 	uint32_t buffer_offset;
 	uint32_t len;
+	uint64_t lun;
+	int lun_i;
 	int F_bit;
 	int rc;
 
@@ -4061,6 +4064,9 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	task_tag = from_be32(&reqh->itt);
 	DataSN = from_be32(&reqh->data_sn);
 	buffer_offset = from_be32(&reqh->buffer_offset);
+	lun = from_be64(&reqh->lun);
+	lun_i = spdk_islun2lun(lun);
+	lun_dev = spdk_scsi_dev_get_lun(conn->dev, lun_i);
 
 	task = spdk_get_transfer_task(conn, transfer_tag);
 	if (task == NULL) {
@@ -4136,6 +4142,13 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("iscsi_send_r2t() failed\n");
 		}
 		task->next_r2t_offset += len;
+	}
+
+	if (lun_dev == NULL) {
+		subtask->scsi.transfer_len = subtask->scsi.length;
+		spdk_scsi_task_process_null_lun(&subtask->scsi);
+		spdk_iscsi_task_cpl(&subtask->scsi);
+		return 0;
 	}
 
 	spdk_iscsi_queue_task(conn, subtask);
