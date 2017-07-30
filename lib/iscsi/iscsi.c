@@ -2862,6 +2862,13 @@ int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
 		assert(task->current_datain_offset <= task->scsi.transfer_len);
 
 		if (task->current_datain_offset == 0) {
+			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->scsi.lun_id);
+			if (task->scsi.lun == NULL) {
+				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+				spdk_scsi_task_process_null_lun(&task->scsi);
+				spdk_iscsi_task_cpl(&task->scsi);
+				return 0;
+			}
 			task->current_datain_offset = task->scsi.length;
 			conn->data_in_cnt++;
 			spdk_iscsi_queue_task(conn, task);
@@ -2877,9 +2884,18 @@ int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
 			subtask->scsi.offset = task->current_datain_offset;
 			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
 			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
-			spdk_iscsi_queue_task(conn, subtask);
 			task->current_datain_offset += subtask->scsi.length;
 			conn->data_in_cnt++;
+
+			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->scsi.lun_id);
+			if (task->scsi.lun == NULL) {
+				subtask->scsi.transfer_len = subtask->scsi.length;
+				spdk_scsi_task_process_null_lun(&subtask->scsi);
+				spdk_iscsi_task_cpl(&subtask->scsi);
+				return 0;
+			}
+
+			spdk_iscsi_queue_task(conn, subtask);
 		}
 		if (task->current_datain_offset == task->scsi.transfer_len) {
 			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
@@ -2951,6 +2967,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	spdk_iscsi_task_associate_pdu(task, pdu);
 	lun_i = spdk_islun2lun(lun);
+	task->scsi.lun_id = lun_i;
 	dev = conn->dev;
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 
