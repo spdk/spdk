@@ -5,6 +5,17 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+function linux_iter_pci {
+	# Argument is the class code
+	# TODO: More specifically match against only class codes in the grep
+	# step.
+	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
+}
+
+function linux_remove_nvme_devices() {
+	echo 1 > "/sys/bus/pci/devices/$bdf/remove"
+}
+
 function running_config() {
 	# generate a config file from the running iscsi_tgt
 	#  running_config.sh will leave the file at /tmp/iscsi.conf
@@ -99,11 +110,48 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	running_config
 fi
 
+iscsicleanup
+$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
+
+
+if [ -z "$NO_NVME" ]; then
+$rpc_py construct_target_node Target3 Target3_alias HotInNvme0n1:0 1:2 64 1 0 0 0
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+iscsiadm -m node --login -p $TARGET_IP:$PORT
+sleep 1
+$fio_py 1048576 128 read 10 &
+fio_pid=$!
+
+sleep 3
+
+set +e
+
+for bdf in $(linux_iter_pci 0108); do
+	linux_remove_nvme_devices "$bdf"
+done
+
+wait $fio_pid
+fio_status=$?
+
+if [ $fio_status -eq 0 ]; then
+	echo "fio successful - expected failure"
+	iscsicleanup
+	rm -f $testdir/iscsi.conf
+	killprocess $pid
+	exit 1
+else
+	echo "fio failed as expected"
+fi
+fi
+
+set -e
+
 rm -f ./local-job0-0-verify.state
-
 trap - SIGINT SIGTERM EXIT
-
 iscsicleanup
 rm -f $testdir/iscsi.conf
 killprocess $pid
+echo 1 > /sys/bus/pci/rescan
+$rootdir/scripts/setup.sh
+
 timing_exit fio
