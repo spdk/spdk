@@ -49,6 +49,7 @@ struct dev {
 
 static struct dev devs[MAX_DEVS];
 static int num_devs = 0;
+static int g_shm_id = -1;
 
 #define foreach_dev(iter) \
 	for (iter = devs; iter - devs < num_devs; iter++)
@@ -851,14 +852,48 @@ update_firmware_image(void)
 	spdk_dma_free(fw_image);
 }
 
+static void
+args_usage(const char *program_name)
+{
+	printf("%s [options]", program_name);
+	printf("\n");
+	printf("options:\n");
+	printf(" -i         shared memory group ID\n");
+}
+
+static int
+parse_args(int argc, char **argv)
+{
+	int op;
+
+	while ((op = getopt(argc, argv, "i:")) != -1) {
+		switch (op) {
+		case 'i':
+			g_shm_id = atoi(optarg);
+			break;
+		default:
+			args_usage(argv[0]);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
-	int		i;
+	int			i, rc;
 	struct spdk_env_opts	opts;
+
+	rc = parse_args(argc, argv);
+	if (rc != 0) {
+		return rc;
+	}
 
 	spdk_env_opts_init(&opts);
 	opts.name = "nvme_manage";
 	opts.core_mask = "0x1";
+	opts.shm_id = g_shm_id;
 	spdk_env_init(&opts);
 
 	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, NULL) != 0) {
