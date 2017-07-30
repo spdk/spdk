@@ -16,6 +16,24 @@
       "revId": "166970b26e60f00feb0e44eb52872582b5728d11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76370481_66835af6",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-30T21:01:55Z",
+      "side": 1,
+      "message": "Hi Daniel, I have series patches to fix these issues and also add autotest case:\nhttps://review.gerrithub.io/#/c/371814/\nif we want to merge these fixs into this release, I will abandon this patch, or we could just get this patch committed.",
+      "parentUuid": "960b3681_43b6e18b",
+      "revId": "166970b26e60f00feb0e44eb52872582b5728d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
