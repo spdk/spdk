@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "71f9c97a_a9f749f1",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-31T22:32:06Z",
+      "side": 1,
+      "message": "not needed, see comment later",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff92c74f_2cb4d072",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-31T22:32:06Z",
+      "side": 1,
+      "message": "not needed, see comment later",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f97452c8_51b32448",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -36,6 +70,23 @@
     },
     {
       "key": {
+        "uuid": "6e5a7bc3_9ec75b9f",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-31T22:32:06Z",
+      "side": 1,
+      "message": "would be better for the comment to state what condition it is testing in the function under test. For this one its unclear what you are doing here, seems like you are trying to force failure of spdk_gpt_check_mbr() but that looks like what the next assert is also doing, no?",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b42bdfb_d336b287",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -53,6 +104,23 @@
     },
     {
       "key": {
+        "uuid": "f6a3fe13_48019e41",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-31T22:32:06Z",
+      "side": 1,
+      "message": "So actually a bunch of these tests don\u0027t really belong in this function.  There should be only 5 total assertions on return failures, 4 failures and 1 success. You don\u0027t need to be concerned with which failure condition inside of a function being called but the FUT under test fails because that\u0027s a \"don\u0027t care\". If the 4 functions in the FUT weren\u0027t in the same C file, for example, you would use the MOCK library to control each of them. Instead you have to rely on passing parameters to stimulate failures as needed which is OK but don\u0027t put coverage in here for those sub functions. They should be covered in their own unit tests. Hopefully that makes sense :)",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3ba0611_5d80a668",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -64,6 +132,23 @@
       "writtenOn": "2017-07-31T21:03:16Z",
       "side": 1,
       "message": "Move variable declarations to the top of the block.",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4efc7073_d5f3ddd2",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-07-31T22:32:06Z",
+      "side": 1,
+      "message": "you can use use NULL for the 2nd and 3rd parms here",
       "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
