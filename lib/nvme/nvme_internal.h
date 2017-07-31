@@ -84,6 +84,13 @@
  */
 #define NVME_QUIRK_DELAY_AFTER_QUEUE_ALLOC 0x10
 
+/*
+ * Earlier NVMe devices do not indicate whether unmapped blocks
+ * will read all zeroes or not. This define indicates that the
+ * device does in fact read all zeroes after an unmap event
+ */
+#define NVME_QUIRK_READ_ZERO_AFTER_DEALLOCATE 0x20
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MIN_TIMEOUT_PERIOD		(5)
