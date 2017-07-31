@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d63c54cc_cc25f57f",
+        "filename": "test/unit/lib/bdev/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:15:03Z",
+      "side": 1,
+      "message": "any special reason to have this in the middle?",
+      "range": {
+        "startLine": 37,
+        "startChar": 16,
+        "endLine": 37,
+        "endChar": 19
+      },
+      "revId": "73c3f66b4a1a238980f4a4fda99ce4897bcc8231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b92e8cd_bc874afe",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:15:03Z",
+      "side": 1,
+      "message": "Is this correct?",
+      "range": {
+        "startLine": 4,
+        "startChar": 17,
+        "endLine": 4,
+        "endChar": 37
+      },
+      "revId": "73c3f66b4a1a238980f4a4fda99ce4897bcc8231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e2c8744_eb3568df",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:15:03Z",
+      "side": 1,
+      "message": "??",
+      "range": {
+        "startLine": 4,
+        "startChar": 19,
+        "endLine": 4,
+        "endChar": 39
+      },
+      "revId": "73c3f66b4a1a238980f4a4fda99ce4897bcc8231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "641c8ac4_29b3df57",
+        "filename": "unittest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:15:03Z",
+      "side": 1,
+      "message": "same as previous question. Any specific reason to put in the middle? Thanks.",
+      "range": {
+        "startLine": 45,
+        "startChar": 14,
+        "endLine": 45,
+        "endChar": 44
+      },
+      "revId": "73c3f66b4a1a238980f4a4fda99ce4897bcc8231",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
