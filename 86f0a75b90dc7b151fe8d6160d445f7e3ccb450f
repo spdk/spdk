@@ -22,6 +22,30 @@
       "revId": "86f0a75b90dc7b151fe8d6160d445f7e3ccb450f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5748752_726df618",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2866,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-07-31T14:49:29Z",
+      "side": 1,
+      "message": "the details is not the exactly same, we need remove the task out from the list here, and we need setup the transfer len for the subtask in the lollowing.",
+      "parentUuid": "826f0f3e_863cde27",
+      "range": {
+        "startLine": 2865,
+        "startChar": 3,
+        "endLine": 2866,
+        "endChar": 30
+      },
+      "revId": "86f0a75b90dc7b151fe8d6160d445f7e3ccb450f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
