@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ce0d426_92570895",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-07-31T05:55:27Z",
+      "side": 1,
+      "message": "Can you move the definition of variable i to the top of the function to make code style be consistent with other code?",
+      "revId": "dd474c853ac374afb972664bd93010564a53b4b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
