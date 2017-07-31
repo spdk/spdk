@@ -283,7 +283,7 @@ _nvme_ns_cmd_split_sgl_request(struct spdk_nvme_ns *ns,
 		 *  when no splitting is required - in that case we will fall-through and just create
 		 *  a single request with no children for the entire I/O.
 		 */
-		if (!child_equals_parent) {
+		if (!start_valid || !child_equals_parent) {
 			struct nvme_request *child;
 			uint32_t child_lba_count;
 
