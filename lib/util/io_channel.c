@@ -42,7 +42,6 @@ struct io_device {
 	void			*io_device;
 	spdk_io_channel_create_cb create_cb;
 	spdk_io_channel_destroy_cb destroy_cb;
-	spdk_io_device_unregister_cb unregister_cb;
 	uint32_t		ctx_size;
 	TAILQ_ENTRY(io_device)	tailq;
 
@@ -184,7 +183,6 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->io_device = io_device;
 	dev->create_cb = create_cb;
 	dev->destroy_cb = destroy_cb;
-	dev->unregister_cb = NULL;
 	dev->ctx_size = ctx_size;
 	dev->unregistered = false;
 
@@ -219,15 +217,11 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 		}
 	}
 
-	if (dev->unregister_cb) {
-		dev->unregister_cb(dev->io_device);
-	}
-
 	free(dev);
 }
 
 void
-spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregister_cb)
+spdk_io_device_unregister(void *io_device)
 {
 	struct io_device *dev;
 
@@ -244,7 +238,6 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 		return;
 	}
 
-	dev->unregister_cb = unregister_cb;
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
 	_spdk_io_device_attempt_free(dev);
