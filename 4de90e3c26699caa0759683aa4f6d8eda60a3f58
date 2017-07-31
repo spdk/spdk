@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1752ac5_76a718d5",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T19:47:10Z",
+      "side": 1,
+      "message": "I\u0027m reasonably confident that freeing the I/O channel here won\u0027t crash, but the correct thing to do would be to free the I/O channel prior to doing the unload.",
+      "revId": "4de90e3c26699caa0759683aa4f6d8eda60a3f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
