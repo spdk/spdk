@@ -244,7 +244,11 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
 	}
 
-	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun, lun->lcore, 0);
+	if (lun->io_channel) {
+		spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun, lun->lcore, 0);
+	} else {
+		spdk_scsi_lun_delete(lun->name);
+	}
 }
 
 /**
