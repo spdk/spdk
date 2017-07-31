@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8875551_055b0c56",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:39:03Z",
+      "side": 1,
+      "message": "This should probably be uint64_t - it\u0027s not describing the size of an in-memory buffer like the read and write ones are, and uint64_t matches the spdk_bdev_unmap() API.",
+      "revId": "585acfa37340d941fb8de7acac9aa63be4e2ad28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a7c542d_39c32e8c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:39:03Z",
+      "side": 1,
+      "message": "We should check that offset and nbytes are valid with spdk_bdev_io_valid().",
+      "revId": "585acfa37340d941fb8de7acac9aa63be4e2ad28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
