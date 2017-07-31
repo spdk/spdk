@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b10bfb50_76579122",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T23:19:12Z",
+      "side": 1,
+      "message": "This logic (the part about UNMAP) should be in this patch - not the earlier one in your series.",
+      "revId": "b12c54e5ac05f6ffb8fdf4f58d0f1696800cde15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
