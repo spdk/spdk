@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "826f0f3e_863cde27",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2866,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:40:56Z",
+      "side": 1,
+      "message": "can we consolidate this check and the below check at line 2891 into one check and move just after the \"assert\"? Looks like if the device is not there, there is also impossible to hit the io completion case at line 2901?",
+      "range": {
+        "startLine": 2865,
+        "startChar": 3,
+        "endLine": 2866,
+        "endChar": 30
+      },
+      "revId": "86f0a75b90dc7b151fe8d6160d445f7e3ccb450f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
