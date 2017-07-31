@@ -65,6 +65,23 @@
     },
     {
       "key": {
+        "uuid": "8336e257_125f9c5c",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T23:23:33Z",
+      "side": 1,
+      "message": "Let\u0027s call this NVME_QUIRK_READ_ZERO_AFTER_DEALLOCATE",
+      "revId": "27279c7652ad3ab19aa9afd401019f703656416f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74e76f6b_9519058b",
         "filename": "lib/nvme/nvme_ns.c",
         "patchSetId": 1
