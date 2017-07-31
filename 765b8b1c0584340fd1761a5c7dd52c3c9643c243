@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d2ad536_d1b8bc74",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T09:01:20Z",
+      "side": 1,
+      "message": "#  All rights reserved.\n\nLooks like this line is needed.",
+      "revId": "765b8b1c0584340fd1761a5c7dd52c3c9643c243",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "490d023e_872d748f",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T09:01:20Z",
+      "side": 1,
+      "message": "#  All rights reserved.",
+      "revId": "765b8b1c0584340fd1761a5c7dd52c3c9643c243",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
