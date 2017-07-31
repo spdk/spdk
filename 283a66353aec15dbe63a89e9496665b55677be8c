@@ -22,6 +22,30 @@
       "revId": "283a66353aec15dbe63a89e9496665b55677be8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9c30cfb_2e767efd",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-07-31T16:47:29Z",
+      "side": 1,
+      "message": "Good point.  Let\u0027s try to remember to remove this after the release.  Thanks!",
+      "parentUuid": "c9702f59_fa52369d",
+      "range": {
+        "startLine": 130,
+        "startChar": 2,
+        "endLine": 138,
+        "endChar": 3
+      },
+      "revId": "283a66353aec15dbe63a89e9496665b55677be8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
