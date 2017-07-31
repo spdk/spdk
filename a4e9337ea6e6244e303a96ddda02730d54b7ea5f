@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f4509694_b936f89b",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:21:39Z",
+      "side": 1,
+      "message": "by using",
+      "range": {
+        "startLine": 16,
+        "startChar": 36,
+        "endLine": 16,
+        "endChar": 41
+      },
+      "revId": "a4e9337ea6e6244e303a96ddda02730d54b7ea5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdbdaf36_7fe95759",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:21:39Z",
+      "side": 1,
+      "message": "shared",
+      "range": {
+        "startLine": 17,
+        "startChar": 82,
+        "endLine": 17,
+        "endChar": 87
+      },
+      "revId": "a4e9337ea6e6244e303a96ddda02730d54b7ea5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3934e292_6265ef05",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:21:39Z",
+      "side": 1,
+      "message": "shared",
+      "range": {
+        "startLine": 17,
+        "startChar": 21,
+        "endLine": 17,
+        "endChar": 26
+      },
+      "revId": "a4e9337ea6e6244e303a96ddda02730d54b7ea5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
