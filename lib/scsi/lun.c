@@ -237,11 +237,9 @@ spdk_scsi_lun_hotplug(void *arg)
 }
 
 static void
-_spdk_scsi_lun_hot_remove(void *arg1, void *arg2)
+_spdk_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
-
-	assert(lun->lcore == spdk_env_get_current_core());
 
 	lun->removed = true;
 	if (lun->hotremove_cb) {
@@ -255,14 +253,18 @@ static void
 spdk_scsi_lun_hot_remove(void *remove_ctx)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
+	struct spdk_thread *thread;
 
-	if (lun->lcore != spdk_env_get_current_core()) {
-		struct spdk_event *event;
+	if (lun->io_channel == NULL) {
+		_spdk_scsi_lun_hot_remove(lun);
+		return;
+	}
 
-		event = spdk_event_allocate(lun->lcore, _spdk_scsi_lun_hot_remove, lun, NULL);
-		spdk_event_call(event);
+	thread = spdk_io_channel_get_thread(lun->io_channel);
+	if (thread != spdk_get_thread()) {
+		spdk_thread_send_msg(thread, _spdk_scsi_lun_hot_remove, lun);
 	} else {
-		_spdk_scsi_lun_hot_remove(lun, NULL);
+		_spdk_scsi_lun_hot_remove(lun);
 	}
 }
 
@@ -311,6 +313,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	TAILQ_INIT(&lun->pending_tasks);
 
 	lun->bdev = bdev;
+	lun->io_channel = NULL;
 	snprintf(lun->name, sizeof(lun->name), "%s", name);
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
@@ -368,8 +371,6 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 		SPDK_ERRLOG("io_channel already allocated for lun %s\n", lun->name);
 		return -1;
 	}
-
-	lun->lcore = spdk_env_get_current_core();
 
 	lun->io_channel = spdk_bdev_get_io_channel(lun->bdev_desc);
 	if (lun->io_channel == NULL) {
