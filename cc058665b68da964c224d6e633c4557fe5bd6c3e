@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f97452c8_51b32448",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T21:03:16Z",
+      "side": 1,
+      "message": "Is this a left-over debugging print?",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b83d01e_86afb6bd",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T21:03:16Z",
+      "side": 1,
+      "message": "Allocations should be checked with SPDK_CU_ASSERT_FATAL().",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b42bdfb_d336b287",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T21:03:16Z",
+      "side": 1,
+      "message": "This is an out-of-bounds write, since gpt-\u003ebuf points at a, and a is SPDK_GPT_BUFFER_SIZE in length.",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3ba0611_5d80a668",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T21:03:16Z",
+      "side": 1,
+      "message": "Move variable declarations to the top of the block.",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
