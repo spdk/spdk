@@ -814,6 +814,11 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 
 	assert(lun != NULL);
 	assert(svdev != NULL);
+	if (svdev->vdev.lcore == -1) {
+		/* controller is not in use, no action required */
+		return;
+	}
+
 	if ((svdev->vdev.negotiated_features & (1ULL << VIRTIO_SCSI_F_HOTPLUG)) == 0) {
 		SPDK_WARNLOG("%s: hotremove is not enabled for this controller.\n", svdev->vdev.name);
 		return;
