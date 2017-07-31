@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b42ee2ce_9dbc92cd",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T22:37:53Z",
+      "side": 1,
+      "message": "Typo: \"can\u0027t can\u0027t\"",
+      "range": {
+        "startLine": 180,
+        "startChar": 19,
+        "endLine": 180,
+        "endChar": 30
+      },
+      "revId": "20fce7139f4405a87ddc9b678edfbdf0128d5e9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
