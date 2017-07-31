@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1325b3a6_921e31dd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:10:05Z",
+      "side": 1,
+      "message": "Drop the \":\" at the end of the subject.",
+      "range": {
+        "startLine": 7,
+        "startChar": 47,
+        "endLine": 7,
+        "endChar": 48
+      },
+      "revId": "27279c7652ad3ab19aa9afd401019f703656416f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bcc4dd5_fe681c4c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:10:05Z",
+      "side": 1,
+      "message": "We should probably say \"deallocated\" rather than \"unmapped\" to match the words used by the NVMe specification.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 8
+      },
+      "revId": "27279c7652ad3ab19aa9afd401019f703656416f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2209ffce_f38ae7b5",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:10:05Z",
+      "side": 1,
+      "message": "Missing space between sentences.",
+      "revId": "27279c7652ad3ab19aa9afd401019f703656416f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74e76f6b_9519058b",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:10:05Z",
+      "side": 1,
+      "message": "Leave a blank line between declarations and code.  Also keep the opening brace on the same line as the \"if\".",
+      "revId": "27279c7652ad3ab19aa9afd401019f703656416f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e98cbdb_38e87e84",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:10:05Z",
+      "side": 1,
+      "message": "Remove extra blank line here.",
+      "revId": "27279c7652ad3ab19aa9afd401019f703656416f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
