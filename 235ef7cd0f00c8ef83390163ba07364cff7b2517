@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edd96967_6a7c2644",
+        "filename": "lib/lvol/bdev/lvs_bdev.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T20:26:43Z",
+      "side": 1,
+      "message": "The code in this file and in lib/lvol/bdev/lvs_bdev.c can be instead moved into the main bdev module (lib/bdev/lvol). This code is provided as a convenience for people who want to use the general purpose lvol library with our bdev library, but if they\u0027re able to use our bdev library at all then they\u0027ll certainly consume the lvol library through the lvol bdev module. Therefore, having this separate from that lvol bdev module isn\u0027t necessary.",
+      "revId": "235ef7cd0f00c8ef83390163ba07364cff7b2517",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d213d52_32cb704e",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T20:26:43Z",
+      "side": 1,
+      "message": "You can\u0027t delete a blob while it is open.",
+      "revId": "235ef7cd0f00c8ef83390163ba07364cff7b2517",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
