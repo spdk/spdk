@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58b6d163_84eb2a50",
+        "filename": "doc/iscsi.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:17:37Z",
+      "side": 1,
+      "message": "Do we know how big the read IO is? Maybe we need to make it clear here. Thanks.",
+      "range": {
+        "startLine": 177,
+        "startChar": 51,
+        "endLine": 177,
+        "endChar": 64
+      },
+      "revId": "b6a58e822c13f6cab23268dd46c9abe46378029a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
