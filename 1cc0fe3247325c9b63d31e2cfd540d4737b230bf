@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7504104d_2fcd1334",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1271,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:16:19Z",
+      "side": 1,
+      "message": "rc will always be set by one of the \"if\" branches below, so we shouldn\u0027t need to initialize it here. (This will help catch cases where we accidentally didn\u0027t set rc in one of the branches.)",
+      "revId": "1cc0fe3247325c9b63d31e2cfd540d4737b230bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98d213e4_e47179ee",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:16:19Z",
+      "side": 1,
+      "message": "Keep the \"else\" on the same line as the other curly brace:\n\n  } else {",
+      "revId": "1cc0fe3247325c9b63d31e2cfd540d4737b230bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
