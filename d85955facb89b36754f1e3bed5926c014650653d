@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56d314f2_44aea64e",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4148,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-07-31T08:28:33Z",
+      "side": 1,
+      "message": "\"LUN %d....\\n\", lun_i\n\nMaybe it is useful to print out some indicator on which LUN?",
+      "range": {
+        "startLine": 4148,
+        "startChar": 35,
+        "endLine": 4148,
+        "endChar": 39
+      },
+      "revId": "d85955facb89b36754f1e3bed5926c014650653d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
