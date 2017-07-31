@@ -101,9 +101,6 @@ struct spdk_scsi_lun {
 	/** Poller to release the resource of the lun when it is hot removed */
 	struct spdk_poller *hotplug_poller;
 
-	/** The core hotplug_poller is assigned */
-	uint32_t			lcore;
-
 	/** The LUN is removed */
 	bool				removed;
 
