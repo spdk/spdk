@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "2c5efcdd_b14a985f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:20:42Z",
+      "side": 1,
+      "message": "I would put this comment right above the \u0027if\u0027 below so it\u0027s clear what it is referring to.",
+      "revId": "b12c54e5ac05f6ffb8fdf4f58d0f1696800cde15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2019c13_2c8c12b6",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:20:42Z",
+      "side": 1,
+      "message": "We already checked cdata-\u003eoncs.dsm above, so this should probably just be \u0027return true\u0027 for clarity.",
+      "revId": "b12c54e5ac05f6ffb8fdf4f58d0f1696800cde15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "231da782_581b229a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:20:42Z",
+      "side": 1,
+      "message": "I think we should prefer to use Write Zeroes if it is available.  Something like:\n\n    if (cdata-\u003eoncs.write_zeroes) {\n        return true;\n    } else if (cdata-\u003eoncs.dsm \u0026\u0026 spdk_nvme_ns_get_...()) {\n        return true;\n    }",
+      "revId": "b12c54e5ac05f6ffb8fdf4f58d0f1696800cde15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a882e56_952a6d40",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:20:42Z",
+      "side": 1,
+      "message": "Make sure there is a \u0027return false\u0027 at the end of this case so we don\u0027t accidentally fall through (if we add another case after this later, we might not notice the fallthrough).",
+      "revId": "b12c54e5ac05f6ffb8fdf4f58d0f1696800cde15",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b10bfb50_76579122",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 1
