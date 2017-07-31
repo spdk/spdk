@@ -16,6 +16,91 @@
       "revId": "4de90e3c26699caa0759683aa4f6d8eda60a3f58",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a71ba998_a0f61b4d",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T19:59:57Z",
+      "side": 1,
+      "message": "The comment says that this buffer is 4k aligned, but you actually wrote 1k aligned.",
+      "revId": "4de90e3c26699caa0759683aa4f6d8eda60a3f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "674e2b8c_30f0bb10",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T19:59:57Z",
+      "side": 1,
+      "message": "beforew -\u003e before\n\nThere should be a period after init, with \u0027for most\u0027 starting a new sentence. You could also write out initialize.",
+      "revId": "4de90e3c26699caa0759683aa4f6d8eda60a3f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06dd5bd8_616580f4",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T19:59:57Z",
+      "side": 1,
+      "message": "It\u0027s probably just my difficult personality, but I like to properly capitalize my sentences for longer comments like this. For one line comments punctuation doesn\u0027t matter, but when they get to this length they\u0027re more like regular prose, in my mind. I feel like it makes it much easier to read.",
+      "revId": "4de90e3c26699caa0759683aa4f6d8eda60a3f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c246a8c_fca5a903",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T19:59:57Z",
+      "side": 1,
+      "message": "its -\u003e it\u0027s",
+      "revId": "4de90e3c26699caa0759683aa4f6d8eda60a3f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "147c41f8_d129ca22",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-07-31T19:59:57Z",
+      "side": 1,
+      "message": "It probably simplifies this a bit more to just always call hello_cleanup before calling spdk_app_fini, instead of only calling it if the return code indicates a failure. Then, you can remove the hello_cleanup call from the unload completion callback too.",
+      "revId": "4de90e3c26699caa0759683aa4f6d8eda60a3f58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
