@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "2d240a5c_27b9100d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-07-31T23:12:12Z",
+      "side": 1,
+      "message": "This function returns the enum value, not true or false.\n\nMaybe: \"Determine what value is returned when reading deallocated blocks.\"",
+      "revId": "d423124454057a22a5b895acbabeeeb4aba6cd1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97cbdcb6_660f7328",
         "filename": "lib/nvme/nvme_ns.c",
         "patchSetId": 1
