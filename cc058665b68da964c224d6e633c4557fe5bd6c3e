@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "24c027e0_60e7bca1",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71f9c97a_a9f749f1",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff92c74f_2cb4d072",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2017-07-31T22:32:06Z",
       "side": 1,
       "message": "not needed, see comment later",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3cc30a7_4db7ef10",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff92c74f_2cb4d072",
       "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "43ed4fb6_2cee94fc",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "No, in order to print good looking, not with the front of the print together.",
+      "parentUuid": "f97452c8_51b32448",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b83d01e_86afb6bd",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -64,6 +118,24 @@
       "writtenOn": "2017-07-31T21:03:16Z",
       "side": 1,
       "message": "Allocations should be checked with SPDK_CU_ASSERT_FATAL().",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8421d2b_c27a2eae",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4b83d01e_86afb6bd",
       "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "6dc66cf1_c74998e3",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "OK,I update the comment to make it clear.",
+      "parentUuid": "6e5a7bc3_9ec75b9f",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b42bdfb_d336b287",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -98,6 +188,24 @@
       "writtenOn": "2017-07-31T21:03:16Z",
       "side": 1,
       "message": "This is an out-of-bounds write, since gpt-\u003ebuf points at a, and a is SPDK_GPT_BUFFER_SIZE in length.",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1f928a4_71b43c27",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "I redefine: unsigned char a[SPDK_GPT_BUFFER_SIZE+1];",
+      "parentUuid": "4b42bdfb_d336b287",
       "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -139,6 +247,24 @@
     },
     {
       "key": {
+        "uuid": "720bcc84_0a81e098",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "I see, my unit test do something else that other unit tests should do. Your comments make sense. But there are no unit tests for sub functions at present. Need I add some?",
+      "parentUuid": "f6a3fe13_48019e41",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3ba0611_5d80a668",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -156,6 +282,24 @@
     },
     {
       "key": {
+        "uuid": "a44e5b7f_20838a24",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3ba0611_5d80a668",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4efc7073_d5f3ddd2",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
@@ -167,6 +311,24 @@
       "writtenOn": "2017-07-31T22:32:06Z",
       "side": 1,
       "message": "you can use use NULL for the 2nd and 3rd parms here",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0beefccb_b95156bb",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-01T10:43:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4efc7073_d5f3ddd2",
       "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
