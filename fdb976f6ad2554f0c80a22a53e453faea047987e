@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "546ebb7f_927e4dad",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-01T21:53:08Z",
+      "side": 1,
+      "message": "General tip for good code comments - throw away the context setting words and get right to the point. For example, the context setting words here are \"This case reflects the fact that...\". You can drop those words and the meaning of the comment is just as clear.\n\nAs a full example, I\u0027d write this comment as \"If an NVMe controller guarantees reading unallocated blocks returns zero, we can implement WRITE_ZEROES as an NVMe deallocate command.\"\n\nI bet you thought this was a code review. Surprise! It\u0027s a writing review.",
+      "revId": "fdb976f6ad2554f0c80a22a53e453faea047987e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "94ab9280_0289d327",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 2
