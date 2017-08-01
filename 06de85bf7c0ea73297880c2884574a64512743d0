@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8cb351bb_c9e3ba96",
+        "filename": "lib/util/crc32c.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T20:03:47Z",
+      "side": 1,
+      "message": "ugh, not a fan of single char variable names. Do we do that a lot in SPDK?",
+      "revId": "06de85bf7c0ea73297880c2884574a64512743d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a314530_47d2bc49",
+        "filename": "test/unit/lib/util/crc32c.c/crc32c_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T20:03:47Z",
+      "side": 1,
+      "message": "comments for each test case indicating what coverage it\u0027s providing would be good.  This is one of those things that we decided while I was beefing up nvme.c coverage - well Jim decided :)",
+      "revId": "06de85bf7c0ea73297880c2884574a64512743d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
