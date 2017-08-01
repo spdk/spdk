@@ -726,19 +726,19 @@ int
 spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+	int rc;
 
 	if (!bvdev) {
 		return -EINVAL;
 	}
 
+	rc = spdk_vhost_dev_remove(&bvdev->vdev);
+	if (rc != 0) {
+		return rc;
+	}
+
 	spdk_bdev_close(bvdev->bdev_desc);
 	bvdev->bdev = NULL;
-
-	SPDK_NOTICELOG("Controller %s: removed device\n", vdev->name);
-
-	if (spdk_vhost_dev_remove(&bvdev->vdev)) {
-		return -EIO;
-	}
 
 	spdk_dma_free(bvdev);
 	return 0;
