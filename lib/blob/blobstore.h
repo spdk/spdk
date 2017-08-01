@@ -156,6 +156,8 @@ struct spdk_blob_store {
 
 	spdk_blob_id			super_blob;
 
+	bool				cleaned;
+
 	TAILQ_HEAD(, spdk_blob) 	blobs;
 };
 
