@@ -322,6 +322,16 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 	sigaddset(&sigmask, SIGTERM);
 
+	sigact.sa_handler = __shutdown_signal;
+	sigemptyset(&sigact.sa_mask);
+	rc = sigaction(SIGHUP, &sigact, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("sigaction(SIGHUP) failed\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
+	sigaddset(&sigmask, SIGHUP);
+
 	if (opts->usr1_handler != NULL) {
 		sigact.sa_handler = opts->usr1_handler;
 		sigemptyset(&sigact.sa_mask);
