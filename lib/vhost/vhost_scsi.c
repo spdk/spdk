@@ -112,16 +112,14 @@ struct spdk_vhost_scsi_event {
 	struct spdk_scsi_lun *lun;
 };
 
-static int new_device(int vid);
-static void destroy_device(int vid);
+static int new_device(struct spdk_vhost_dev *);
+static int destroy_device(struct spdk_vhost_dev *);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
-	.ops = {
-		.new_device =  new_device,
-		.destroy_device = destroy_device,
-	}
+	.new_device =  new_device,
+	.destroy_device = destroy_device,
 };
 
 static void
@@ -1099,64 +1097,48 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
  * and then allocated to a specific data core.
  */
 static int
-new_device(int vid)
+new_device(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_dev *vdev;
-	struct spdk_vhost_scsi_dev *svdev = NULL;
-	int rc = -1;
-
-	vdev = spdk_vhost_dev_load(vid);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Trying start a controller with unknown vid: %d.\n", vid);
-		return -1;
-	}
+	struct spdk_vhost_scsi_dev *svdev;
+	int rc;
 
 	svdev = to_scsi_dev(vdev);
 	if (svdev == NULL) {
-		SPDK_ERRLOG("Trying to start non-scsi controller as scsi one.\n");
-		goto out;
+		SPDK_ERRLOG("Trying to start non-scsi controller as a scsi one.\n");
+		return -1;
 	}
 
 	rc = alloc_task_pool(svdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.", vdev->name);
-		goto out;
+		return -1;
 	}
 
 	svdev->vhost_events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16,
 					       spdk_env_get_socket_id(vdev->lcore));
 	if (svdev->vhost_events == NULL) {
 		SPDK_ERRLOG("%s: failed to alloc event pool.", vdev->name);
-		goto out;
+		return -1;
 	}
 
 	spdk_vhost_timed_event_send(vdev->lcore, add_vdev_cb, svdev, 1, "add scsi vdev");
 
-	rc = 0;
-
-out:
-	if (rc != 0) {
-		spdk_vhost_dev_unload(&svdev->vdev);
-	}
-
-	return rc;
+	return 0;
 }
 
-static void
-destroy_device(int vid)
+static int
+destroy_device(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_dev *vdev;
 	void *ev;
 	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		rte_panic("Couldn't find device with vid %d to stop.\n", vid);
-	}
 	svdev = to_scsi_dev(vdev);
-	assert(svdev);
+	if (svdev == NULL) {
+		SPDK_ERRLOG("Trying to stop non-scsi controller as a scsi one.\n");
+		return -1;
+	}
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
 	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);
@@ -1187,7 +1169,7 @@ destroy_device(int vid)
 	spdk_ring_free(svdev->vhost_events);
 
 	free_task_pool(svdev);
-	spdk_vhost_dev_unload(vdev);
+	return 0;
 }
 
 int
