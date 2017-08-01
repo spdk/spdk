@@ -1,5 +1,5 @@
 [global]
-blocksize=4k
+blocksize_range=4k-512k
 iodepth=512
 iodepth_batch=128
 iodepth_low=256
