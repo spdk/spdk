@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6304de1_2f96131e",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-01T04:45:41Z",
+      "side": 1,
+      "message": "Add the SPDK_CU_ASSERT_FATAL(g_file !\u003d NULL); check after this line.\n\nThanks.",
+      "range": {
+        "startLine": 179,
+        "startChar": 1,
+        "endLine": 179,
+        "endChar": 20
+      },
+      "revId": "97755b490ec3e5e3024b43aedd533693a3112f5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "502f8510_d752516a",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-01T04:45:41Z",
+      "side": 1,
+      "message": "Propose to add a new case after this.\n\n1. Delete file2 and expect rc \u003d 0 (no reference there)\n2. Iterate to find file 1 and file 3 and expect these two files there\n3. No more deletion of file2 at line 260\n\nThe purpose is to check if we deleted one file on the list and we can still find the other files.",
+      "revId": "97755b490ec3e5e3024b43aedd533693a3112f5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
