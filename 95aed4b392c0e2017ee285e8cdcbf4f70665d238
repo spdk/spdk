@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae90c036_14e5c5ba",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T20:32:33Z",
+      "side": 1,
+      "message": "Typo? (\"Get\" vs \"get\")\n\nAlso, if the function is going to get \"ips\", then the variable should use that as well instead of \"NIC\".",
+      "range": {
+        "startLine": 11,
+        "startChar": 16,
+        "endLine": 11,
+        "endChar": 38
+      },
+      "revId": "95aed4b392c0e2017ee285e8cdcbf4f70665d238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd590a3c_9a0c18f6",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T20:32:33Z",
+      "side": 1,
+      "message": "Unrelated/accidental change?",
+      "revId": "95aed4b392c0e2017ee285e8cdcbf4f70665d238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1e97dd5_9a29765d",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T20:32:33Z",
+      "side": 1,
+      "message": "Same as before, I think this would be clearer if we just run ifconfig and let it print to stdout rather than capturing it in a variable.",
+      "revId": "95aed4b392c0e2017ee285e8cdcbf4f70665d238",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
