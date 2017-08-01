@@ -48,6 +48,14 @@ static char dev_dirname[PATH_MAX] = "";
 
 #define MAX_VHOST_DEVICES	64
 
+static int new_device(int vid);
+static void destroy_device(int vid);
+
+const struct vhost_device_ops g_spdk_vhost_ops = {
+	.new_device =  new_device,
+	.destroy_device = destroy_device,
+};
+
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
@@ -175,7 +183,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 	return 0;
 }
 
-struct spdk_vhost_dev *
+static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
 	unsigned i;
@@ -334,7 +342,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 		return -EIO;
 	}
 
-	if (rte_vhost_driver_callback_register(path, &backend->ops) != 0) {
+	if (rte_vhost_driver_callback_register(path, &g_spdk_vhost_ops) != 0) {
 		rte_vhost_driver_unregister(path);
 		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
 		return -EIO;
@@ -346,6 +354,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->type = type;
+	vdev->backend = backend;
 
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
@@ -495,7 +504,7 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 	return selected_core;
 }
 
-void
+static void
 spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_vring *q;
@@ -512,7 +521,7 @@ spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 	vdev->lcore = -1;
 }
 
-struct spdk_vhost_dev *
+static struct spdk_vhost_dev *
 spdk_vhost_dev_load(int vid)
 {
 	struct spdk_vhost_dev *vdev;
@@ -701,6 +710,41 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 
 	ev->spdk_event = NULL;
 	sem_destroy(&ev->sem);
+}
+
+static int
+new_device(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+	int rc;
+
+	vdev = spdk_vhost_dev_load(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to create.\n", vid);
+		return -1;
+	}
+
+	rc = vdev->backend->new_device(vdev);
+	if (rc != 0) {
+		spdk_vhost_dev_unload(vdev);
+	}
+
+	return rc;
+}
+
+static void
+destroy_device(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);
+		return;
+	}
+
+	vdev->backend->destroy_device(vdev);
+	spdk_vhost_dev_unload(vdev);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
