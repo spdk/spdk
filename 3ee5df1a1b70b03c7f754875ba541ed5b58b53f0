@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c450764_dbf14dac",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T20:24:36Z",
+      "side": 1,
+      "message": "The opening brace of functions should be on a new line (unlike all other braces).",
+      "revId": "3ee5df1a1b70b03c7f754875ba541ed5b58b53f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
