@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "adc4ea20_d9909708",
+        "filename": "test/vhost/fiotest/common.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "Remove this if you add global variable.",
+      "range": {
+        "startLine": 128,
+        "startChar": 1,
+        "endLine": 128,
+        "endChar": 50
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "753e9a5a_b2b3bcd8",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "Keep one space for comments like:\n# Operation ....",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 2
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1ae3551_10f5e3dd",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "\"Something like \"Testing vhost command line options\"",
+      "range": {
+        "startLine": 50,
+        "startChar": 12,
+        "endLine": 50,
+        "endChar": 50
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fdbbff5_77ef9a8f",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "lets keep this 1024 to avoid out of memory problems.",
+      "range": {
+        "startLine": 51,
+        "startChar": 61,
+        "endLine": 51,
+        "endChar": 65
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc0eff03_66921de4",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "This should be in some other place since \u0027-h\u0027 will don\u0027t allow pid file creation.",
+      "range": {
+        "startLine": 51,
+        "startChar": 66,
+        "endLine": 51,
+        "endChar": 88
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ae7fbc4_ffebc20d",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "Why sleep? vhost is run in blocking mode. So not needed.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 9
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "300ac15a_445f6927",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "This is not needed.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 22
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc44389c_ac8db210",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 22
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "877aeb9a_79021b81",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "For debug build this will run vhost and block further execution.",
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57f3b08d_064621dc",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T11:10:41Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 22
+      },
+      "revId": "0e37fc1ada7e55f7a647fba43162b7630bca09eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
