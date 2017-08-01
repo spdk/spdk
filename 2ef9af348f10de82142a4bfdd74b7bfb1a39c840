@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1a3c6fc_b068138d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T23:19:25Z",
+      "side": 1,
+      "message": "note sure what the convention is through the rest of the code but why not pass up rc here?",
+      "revId": "2ef9af348f10de82142a4bfdd74b7bfb1a39c840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
