@@ -78,6 +78,7 @@ struct spdk_vhost_dev {
 
 	enum spdk_vhost_dev_type type;
 	const struct spdk_vhost_dev_backend *backend;
+	bool connected;
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
