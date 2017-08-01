@@ -82,6 +82,8 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
 		spdk_json_write_name(w, "unmap");
 		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
+		spdk_json_write_name(w, "write_zeroes");
+		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
 		spdk_json_write_name(w, "flush");
 		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
 		spdk_json_write_name(w, "reset");

@@ -88,6 +88,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_RESET,
 	SPDK_BDEV_IO_TYPE_NVME_ADMIN,
 	SPDK_BDEV_IO_TYPE_NVME_IO,
+	SPDK_BDEV_IO_TYPE_WRITE_ZEROES,
 };
 
 /**
@@ -336,6 +337,25 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		     struct iovec *iov, int iovcnt,
 		     uint64_t offset, uint64_t len,
 		     spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a write zeroes request to the bdev on the given channel. This command
+ *  ensures that all bytes in the specified range are set to 00h
+ *
+ * \param bdev Block device
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset The offset, in bytes, from the start of the block device.
+ * \param nbytes The number of bytes to zero.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   uint64_t offset, uint64_t len,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit an unmap request to the block device. Unmap is sometimes also called trim or
