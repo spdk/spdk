@@ -195,7 +195,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	struct spdk_conf		*config;
 	struct spdk_conf_section	*sp;
 	struct sigaction	sigact;
-	sigset_t		signew;
+	sigset_t		sigmask;
 	char			shm_name[64];
 	int			rc;
 	uint64_t		tpoint_group_mask;
@@ -290,8 +290,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 						       NULL, NULL);
 	}
 
-	/* setup signal handler thread */
-	pthread_sigmask(SIG_SETMASK, NULL, &signew);
+	sigemptyset(&sigmask);
 
 	memset(&sigact, 0, sizeof(sigact));
 	sigact.sa_handler = SIG_IGN;
@@ -311,7 +310,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		spdk_conf_free(g_spdk_app.config);
 		exit(EXIT_FAILURE);
 	}
-	sigaddset(&signew, SIGINT);
+	sigaddset(&sigmask, SIGINT);
 
 	sigact.sa_handler = __shutdown_signal;
 	sigemptyset(&sigact.sa_mask);
@@ -321,7 +320,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		spdk_conf_free(g_spdk_app.config);
 		exit(EXIT_FAILURE);
 	}
-	sigaddset(&signew, SIGTERM);
+	sigaddset(&sigmask, SIGTERM);
 
 	if (opts->usr1_handler != NULL) {
 		sigact.sa_handler = opts->usr1_handler;
@@ -332,12 +331,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 			spdk_conf_free(g_spdk_app.config);
 			exit(EXIT_FAILURE);
 		}
-		sigaddset(&signew, SIGUSR1);
+		sigaddset(&sigmask, SIGUSR1);
 	}
 
-	sigaddset(&signew, SIGQUIT);
-	sigaddset(&signew, SIGHUP);
-	pthread_sigmask(SIG_SETMASK, &signew, NULL);
+	pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
 
 	if (opts->shm_id >= 0) {
 		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", opts->name, opts->shm_id);
