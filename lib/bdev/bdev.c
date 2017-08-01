@@ -929,6 +929,42 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 int
+spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		       uint64_t offset, uint64_t len,
+		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	int rc;
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!spdk_bdev_io_valid(bdev, offset, len)) {
+		return -EINVAL;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed duing write_zeroes\n");
+		return -ENOMEM;
+	}
+
+	bdev_io->ch = channel;
+	bdev_io->u.write.len = len;
+	bdev_io->u.write.offset = offset;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	rc = spdk_bdev_io_submit(bdev_io);
+	if (rc < 0) {
+		spdk_bdev_put_io(bdev_io);
+		return rc;
+	}
+
+	return 0;
+}
+
+int
 spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		uint64_t offset, uint64_t nbytes,
 		spdk_bdev_io_completion_cb cb, void *cb_arg)
