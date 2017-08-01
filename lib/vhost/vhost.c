@@ -346,6 +346,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->type = type;
+	vdev->backend = backend;
 
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 

@@ -77,6 +77,7 @@ struct spdk_vhost_dev {
 	uint64_t cpumask;
 
 	enum spdk_vhost_dev_type type;
+	const struct spdk_vhost_dev_backend *backend;
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
