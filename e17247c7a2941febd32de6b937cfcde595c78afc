@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c75b1d5e_3e3ad970",
+        "filename": "lib/rocksdb/spdk.rocksdb.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T17:58:50Z",
+      "side": 1,
+      "message": "I think this is intended to be -fno-sanitize\u003daddress - the idea is that if we turned it on for SPDK, we want to turn it off for RocksDB.",
+      "revId": "e17247c7a2941febd32de6b937cfcde595c78afc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
