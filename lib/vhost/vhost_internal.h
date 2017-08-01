@@ -85,8 +85,9 @@ enum spdk_vhost_dev_type {
 struct spdk_vhost_dev_backend {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
+	int (*new_device)(struct spdk_vhost_dev *);
+	int (*destroy_device)(struct spdk_vhost_dev *);
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-	const struct vhost_device_ops ops;
 };
 
 struct spdk_vhost_dev {
@@ -100,12 +101,12 @@ struct spdk_vhost_dev {
 	uint64_t cpumask;
 
 	enum spdk_vhost_dev_type type;
+	const struct spdk_vhost_dev_backend *backend;
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
 	struct rte_vhost_vring virtqueue[SPDK_VHOST_MAX_VQUEUES] __attribute((aligned(
 				SPDK_CACHE_LINE_SIZE)));
-	const struct spdk_vhost_dev_backend *vhost_backend;
 };
 
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
@@ -129,14 +130,10 @@ bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
 bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id);
-struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
 
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
-
-struct spdk_vhost_dev *spdk_vhost_dev_load(int vid);
-void spdk_vhost_dev_unload(struct spdk_vhost_dev *dev);
 
 typedef void (*spdk_vhost_timed_event_fn)(void *);
 

@@ -50,6 +50,14 @@ static char dev_dirname[PATH_MAX] = "";
 
 #define MAX_VHOST_DEVICES	64
 
+static int new_device(int vid);
+static void destroy_device(int vid);
+
+const struct vhost_device_ops g_spdk_vhost_ops = {
+	.new_device =  new_device,
+	.destroy_device = destroy_device,
+};
+
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
@@ -184,7 +192,7 @@ spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
 	return vdev->negotiated_features & (1ULL << feature_id);
 }
 
-struct spdk_vhost_dev *
+static struct spdk_vhost_dev *
 spdk_vhost_dev_find_by_vid(int vid)
 {
 	unsigned i;
@@ -356,7 +364,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 		return -EIO;
 	}
 
-	if (rte_vhost_driver_callback_register(path, &backend->ops) != 0) {
+	if (rte_vhost_driver_callback_register(path, &g_spdk_vhost_ops) != 0) {
 		rte_vhost_driver_unregister(path);
 		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
 		return -EIO;
@@ -368,7 +376,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->type = type;
-	vdev->vhost_backend = backend;
+	vdev->backend = backend;
 
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
@@ -519,11 +527,23 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 	return selected_core;
 }
 
-void
-spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
+static void
+destroy_device(int vid)
 {
+	struct spdk_vhost_dev *vdev;
 	struct rte_vhost_vring *q;
 	uint16_t i;
+
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);
+		return;
+	}
+
+	if (vdev->backend->destroy_device(vdev) != 0) {
+		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
+		return;
+	}
 
 	for (i = 0; i < vdev->num_queues; i++) {
 		q = &vdev->virtqueue[i];
@@ -531,52 +551,53 @@ spdk_vhost_dev_unload(struct spdk_vhost_dev *vdev)
 	}
 
 	free(vdev->mem);
-
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
+	vdev->vid = -1;
 }
 
-struct spdk_vhost_dev *
-spdk_vhost_dev_load(int vid)
+static int
+new_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	char ifname[PATH_MAX];
+	int rc;
 
 	uint16_t num_queues = rte_vhost_get_vring_num(vid);
 	uint16_t i;
 
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
-		return NULL;
+		return -1;
 	}
 
 	vdev = spdk_vhost_dev_find(ifname);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Controller %s not found.\n", ifname);
-		return NULL;
+		return -1;
 	}
 
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s already connected.\n", ifname);
-		return NULL;
+		return -1;
 	}
 
 	if (num_queues > SPDK_VHOST_MAX_VQUEUES) {
 		SPDK_ERRLOG("vhost device %d: Too many queues (%"PRIu16"). Max %"PRIu16"\n", vid, num_queues,
 			    SPDK_VHOST_MAX_VQUEUES);
-		return NULL;
+		return -1;
 	}
 
 	for (i = 0; i < num_queues; i++) {
 		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i])) {
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
-			return NULL;
+			return -1;
 		}
 
 		/* Disable notifications. */
 		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
 			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
-			return NULL;
+			return -1;
 		}
 
 	}
@@ -586,17 +607,25 @@ spdk_vhost_dev_load(int vid)
 
 	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		return NULL;
+		return -1;
 	}
 
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
-		return NULL;
+		return -1;
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
+	rc = vdev->backend->new_device(vdev);
+	if (rc != 0) {
+		free(vdev->mem);
+		spdk_vhost_free_reactor(vdev->lcore);
+		vdev->lcore = -1;
+		vdev->vid = -1;
+		return -1;
+	}
 
-	return vdev;
+	return 0;
 }
 
 void
@@ -733,8 +762,8 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 void
 spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	assert(vdev->vhost_backend->dump_config_json != NULL);
-	vdev->vhost_backend->dump_config_json(vdev, w);
+	assert(vdev->backend->dump_config_json != NULL);
+	vdev->backend->dump_config_json(vdev, w);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
