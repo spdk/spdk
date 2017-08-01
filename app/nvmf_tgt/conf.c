@@ -316,7 +316,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int i, ret;
 	int lcore;
 	int num_listen_addrs;
-	struct rpc_listen_address listen_addrs[MAX_LISTEN_ADDRESSES];
+	struct rpc_listen_address listen_addrs[MAX_LISTEN_ADDRESSES] = {};
 	char *listen_addrs_str[MAX_LISTEN_ADDRESSES] = {};
 	int num_hosts;
 	char *hosts[MAX_HOSTS];
