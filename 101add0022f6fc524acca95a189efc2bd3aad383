@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d6b6b79_236aed4d",
+        "filename": "doc/vision.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T23:46:18Z",
+      "side": 1,
+      "message": "dunno how often we\u0027re using the word \"commodity\" around here but at some point in the past it was a bad word as we don\u0027t want to think our of stuff as commodity in any sense.  Guidance has always been to use \"standard\" instead",
+      "revId": "101add0022f6fc524acca95a189efc2bd3aad383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d4ca305_8383169e",
+        "filename": "doc/vision.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T23:46:18Z",
+      "side": 1,
+      "message": "I\u0027m not a big fan of \"in our vision\" like we\u0027ve been given some special insight - too pretentious. Instead I\u0027d say something like \"can be thought of as...\"",
+      "revId": "101add0022f6fc524acca95a189efc2bd3aad383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51ac0320_24cb9a1b",
+        "filename": "doc/vision.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T23:46:18Z",
+      "side": 1,
+      "message": "again, I wouldn\u0027t use \"we recommend\" but something that just makes the statement \"SPDK can be used...\" and toss the world optimally in there or something",
+      "range": {
+        "startLine": 17,
+        "startChar": 56,
+        "endLine": 17,
+        "endChar": 68
+      },
+      "revId": "101add0022f6fc524acca95a189efc2bd3aad383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f804ac72_8323cad4",
+        "filename": "doc/vision.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T23:46:18Z",
+      "side": 1,
+      "message": "I\u0027d get rid of all \"we\" instances and make them generic statements.  Too much preaching.  Here you could say \"These are intedned\"",
+      "range": {
+        "startLine": 40,
+        "startChar": 13,
+        "endLine": 40,
+        "endChar": 15
+      },
+      "revId": "101add0022f6fc524acca95a189efc2bd3aad383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6a18597_0a08fb5c",
+        "filename": "doc/vision.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T23:46:18Z",
+      "side": 1,
+      "message": "See, this is good.  Doesn\u0027t say \"We believe that...\" :)",
+      "revId": "101add0022f6fc524acca95a189efc2bd3aad383",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
