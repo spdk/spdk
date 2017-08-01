@@ -50,10 +50,14 @@ static char dev_dirname[PATH_MAX] = "";
 
 static int new_device(int vid);
 static void destroy_device(int vid);
+static int new_connection(int vid);
+static void destroy_connection(int vid);
 
 const struct vhost_device_ops g_spdk_vhost_ops = {
 	.new_device =  new_device,
 	.destroy_device = destroy_device,
+	.new_connection = new_connection,
+	.destroy_connection = destroy_connection,
 };
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
@@ -379,6 +383,11 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
 		return -ENODEV;
+	}
+
+	if (vdev->connected) {
+		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
+		return -EBUSY;
 	}
 
 	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
@@ -782,6 +791,54 @@ destroy_device(int vid)
 
 	vdev->backend->destroy_device(vdev);
 	spdk_vhost_dev_unload(vdev);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+}
+
+static int
+new_connection(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -1;
+	}
+
+	if (vdev->connected) {
+		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -1;
+	}
+
+	vdev->connected = true;
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return 0;
+}
+
+
+static void
+destroy_connection(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to destroy connection for.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return;
+	}
+
+	if (!vdev->connected) {
+		SPDK_ERRLOG("Device with vid %d is not connected.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return;
+	}
+
+	vdev->connected = false;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
