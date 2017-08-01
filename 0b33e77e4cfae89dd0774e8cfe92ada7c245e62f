@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c18bfb39_f1ecff9c",
+        "filename": "app/nvmf_tgt/conf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T19:58:29Z",
+      "side": 0,
+      "message": "It might be a good idea to continue looking for Mode - if it exists, we should print an error telling the user to update their config file. (If it exists and says \"Virtual\", we can just print a warning for now, and later, we can remove the option entirely once everyone has had a chance to update their configuration.)",
+      "revId": "0b33e77e4cfae89dd0774e8cfe92ada7c245e62f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

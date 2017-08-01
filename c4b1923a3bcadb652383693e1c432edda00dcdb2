@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e6154bc_3b92c9bb",
+        "filename": "app/nvmf_tgt/conf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T19:58:29Z",
+      "side": 1,
+      "message": "bdf (PCI address) is no longer used and should be removed.",
+      "range": {
+        "startLine": 371,
+        "startChar": 39,
+        "endLine": 371,
+        "endChar": 55
+      },
+      "revId": "c4b1923a3bcadb652383693e1c432edda00dcdb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "148bade2_f81d941a",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T19:58:29Z",
+      "side": 1,
+      "message": "We should remove pci_address as well.",
+      "revId": "c4b1923a3bcadb652383693e1c432edda00dcdb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aab736f1_8022e110",
+        "filename": "unittest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T19:58:29Z",
+      "side": 1,
+      "message": "Keep these in alphabetical order.",
+      "revId": "c4b1923a3bcadb652383693e1c432edda00dcdb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
