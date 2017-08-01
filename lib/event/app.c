@@ -291,10 +291,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	sigemptyset(&sigmask);
-
 	memset(&sigact, 0, sizeof(sigact));
-	sigact.sa_handler = SIG_IGN;
 	sigemptyset(&sigact.sa_mask);
+
+	sigact.sa_handler = SIG_IGN;
 	rc = sigaction(SIGPIPE, &sigact, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("sigaction(SIGPIPE) failed\n");
@@ -302,8 +302,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		exit(EXIT_FAILURE);
 	}
 
+	/* Install the same handler for SIGINT,
+	 * SIGTERM, and SIGHUP
+	 */
 	sigact.sa_handler = __shutdown_signal;
-	sigemptyset(&sigact.sa_mask);
+
 	rc = sigaction(SIGINT, &sigact, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("sigaction(SIGINT) failed\n");
@@ -312,8 +315,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 	sigaddset(&sigmask, SIGINT);
 
-	sigact.sa_handler = __shutdown_signal;
-	sigemptyset(&sigact.sa_mask);
 	rc = sigaction(SIGTERM, &sigact, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("sigaction(SIGTERM) failed\n");
@@ -322,8 +323,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 	sigaddset(&sigmask, SIGTERM);
 
-	sigact.sa_handler = __shutdown_signal;
-	sigemptyset(&sigact.sa_mask);
 	rc = sigaction(SIGHUP, &sigact, NULL);
 	if (rc < 0) {
 		SPDK_ERRLOG("sigaction(SIGHUP) failed\n");
@@ -334,7 +333,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	if (opts->usr1_handler != NULL) {
 		sigact.sa_handler = opts->usr1_handler;
-		sigemptyset(&sigact.sa_mask);
 		rc = sigaction(SIGUSR1, &sigact, NULL);
 		if (rc < 0) {
 			SPDK_ERRLOG("sigaction(SIGUSR1) failed\n");
