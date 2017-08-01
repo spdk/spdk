@@ -154,6 +154,8 @@ spdk_app_start_shutdown(void)
 	if (g_shutdown_event != NULL) {
 		spdk_event_call(g_shutdown_event);
 		g_shutdown_event = NULL;
+	} else {
+		spdk_app_stop(0);
 	}
 }
 
@@ -281,6 +283,13 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		exit(EXIT_FAILURE);
 	}
 
+	/* Set up custom shutdown handling if the user requested it. */
+	if (opts->shutdown_cb != NULL) {
+		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
+						       __shutdown_event_cb,
+						       NULL, NULL);
+	}
+
 	/* setup signal handler thread */
 	pthread_sigmask(SIG_SETMASK, NULL, &signew);
 
@@ -294,31 +303,25 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		exit(EXIT_FAILURE);
 	}
 
-	if (opts->shutdown_cb != NULL) {
-		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
-						       __shutdown_event_cb,
-						       NULL, NULL);
-
-		sigact.sa_handler = __shutdown_signal;
-		sigemptyset(&sigact.sa_mask);
-		rc = sigaction(SIGINT, &sigact, NULL);
-		if (rc < 0) {
-			SPDK_ERRLOG("sigaction(SIGINT) failed\n");
-			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
-		}
-		sigaddset(&signew, SIGINT);
-
-		sigact.sa_handler = __shutdown_signal;
-		sigemptyset(&sigact.sa_mask);
-		rc = sigaction(SIGTERM, &sigact, NULL);
-		if (rc < 0) {
-			SPDK_ERRLOG("sigaction(SIGTERM) failed\n");
-			spdk_conf_free(g_spdk_app.config);
-			exit(EXIT_FAILURE);
-		}
-		sigaddset(&signew, SIGTERM);
+	sigact.sa_handler = __shutdown_signal;
+	sigemptyset(&sigact.sa_mask);
+	rc = sigaction(SIGINT, &sigact, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("sigaction(SIGINT) failed\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
 	}
+	sigaddset(&signew, SIGINT);
+
+	sigact.sa_handler = __shutdown_signal;
+	sigemptyset(&sigact.sa_mask);
+	rc = sigaction(SIGTERM, &sigact, NULL);
+	if (rc < 0) {
+		SPDK_ERRLOG("sigaction(SIGTERM) failed\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
+	sigaddset(&signew, SIGTERM);
 
 	if (opts->usr1_handler != NULL) {
 		sigact.sa_handler = opts->usr1_handler;
