@@ -16,6 +16,24 @@
       "revId": "3ee5df1a1b70b03c7f754875ba541ed5b58b53f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5cde943_a739a185",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-01T21:43:50Z",
+      "side": 1,
+      "message": "I think astyle messes up when the return type is a long enum, so this may not be his fault.",
+      "parentUuid": "0c450764_dbf14dac",
+      "revId": "3ee5df1a1b70b03c7f754875ba541ed5b58b53f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
