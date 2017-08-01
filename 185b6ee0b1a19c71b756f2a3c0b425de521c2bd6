@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58844a52_e3519ca4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1176,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-01T20:20:26Z",
+      "side": 1,
+      "message": "So it looks like the above 3 LOC need to happen after the unregister of the md_target is complete? If so and there are no other callers of the new function(s) above then why not move the above 3 LOC to the callback, remove the \"cleaned\" flag and move the code in new free_attempt function into the new destroy function at the very end.  This would make all the code with dependencies run in the callback and simplify a bunch of stuff.\n\nI could me missing something of course, please feel free to educate me :)\n\nAlso, I don\u0027t see any test code with this?",
+      "revId": "185b6ee0b1a19c71b756f2a3c0b425de521c2bd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
