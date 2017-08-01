@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5759f817_69bc4699",
+        "filename": "lib/vhost/rte_vhost/rte_vhost.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T14:53:41Z",
+      "side": 1,
+      "message": "Rather open and close.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 37
+      },
+      "revId": "78b9bbaa79045b3830ed5035f74a36b5fb081ecb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
