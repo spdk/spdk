@@ -48,12 +48,16 @@ static char dev_dirname[PATH_MAX] = "";
 
 #define MAX_VHOST_DEVICES	64
 
+static int new_connection(int vid);
 static int new_device(int vid);
 static void destroy_device(int vid);
+static void destroy_connection(int vid);
 
 const struct vhost_device_ops g_spdk_vhost_ops = {
 	.new_device =  new_device,
 	.destroy_device = destroy_device,
+	.new_connection = new_connection,
+	.destroy_connection = destroy_connection,
 };
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
@@ -376,8 +380,8 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
 
-	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
+	if (vdev->vid != -1) {
+		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		return -ENODEV;
 	}
 
@@ -520,6 +524,12 @@ destroy_device(int vid)
 		return;
 	}
 
+	if (vdev->lcore == -1) {
+		SPDK_ERRLOG("Controller %s is not loaded.\n", vdev->name);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return;
+	}
+
 	if (vdev->backend->destroy_device(vdev) != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -534,7 +544,6 @@ destroy_device(int vid)
 	free(vdev->mem);
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
-	vdev->vid = -1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
@@ -542,7 +551,6 @@ static int
 new_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
-	char ifname[PATH_MAX];
 	int rc = -1;
 	uint16_t num_queues;
 	uint16_t i;
@@ -550,19 +558,14 @@ new_device(int vid)
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	num_queues = rte_vhost_get_vring_num(vid);
 
-	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
-		SPDK_ERRLOG("Couldn't get a valid ifname for device %d\n", vid);
-		goto out;
-	}
-
-	vdev = spdk_vhost_dev_find(ifname);
+	vdev = spdk_vhost_dev_find_by_vid(vid);
 	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller %s not found.\n", ifname);
+		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
 		goto out;
 	}
 
 	if (vdev->lcore != -1) {
-		SPDK_ERRLOG("Controller %s already connected.\n", ifname);
+		SPDK_ERRLOG("Controller %s already loaded.\n", vdev->name);
 		goto out;
 	}
 
@@ -586,7 +589,6 @@ new_device(int vid)
 
 	}
 
-	vdev->vid = vid;
 	vdev->num_queues = num_queues;
 
 	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
@@ -605,7 +607,6 @@ new_device(int vid)
 		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
 		vdev->lcore = -1;
-		vdev->vid = -1;
 	}
 
 out:
@@ -739,6 +740,54 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 
 	ev->spdk_event = NULL;
 	sem_destroy(&ev->sem);
+}
+
+static int
+new_connection(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+	char ifname[PATH_MAX];
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
+		SPDK_ERRLOG("Couldn't get a valid ifname for device with vid %d\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -1;
+	}
+
+	vdev = spdk_vhost_dev_find(ifname);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -1;
+	}
+
+	if (vdev->vid != -1) {
+		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -1;
+	}
+
+	vdev->vid = vid;
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return 0;
+}
+
+static void
+destroy_connection(int vid)
+{
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Couldn't find device with vid %d to destroy connection for.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return;
+	}
+
+	vdev->vid = -1;
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
