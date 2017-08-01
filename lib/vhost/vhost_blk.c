@@ -518,48 +518,42 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
  *
  */
 static int
-new_device(int vid)
+new_device(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_dev *vdev = spdk_vhost_dev_load(vid);
-	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+	struct spdk_vhost_blk_dev *bvdev;
 	int rc = -1;
 
-	if (vdev == NULL) {
+	bvdev = to_blk_dev(vdev);
+	if (bvdev == NULL) {
+		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
 		return -1;
 	} else if (bvdev == NULL) {
 		SPDK_ERRLOG("Trying to start non-blk controller as blk one.\n");
-		goto out;
+		return -1;
 	}
 
 	rc = alloc_task_pool(bvdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.", bvdev->vdev.name);
-		goto out;
+		return -1;
 	}
 
 	spdk_vhost_timed_event_send(bvdev->vdev.lcore, add_vdev_cb, bvdev, 1, "add blk vdev");
 
-out:
-	if (rc != 0) {
-		spdk_vhost_dev_unload(&bvdev->vdev);
-	}
-
-	return rc;
+	return 0;
 }
 
-static void
-destroy_device(int vid)
+static int
+destroy_device(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
-	vdev = spdk_vhost_dev_find_by_vid(vid);
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
-		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);
-		abort();
+		SPDK_ERRLOG("Trying to stop non-blk controller as a blk one.\n");
+		return -1;
 	}
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
@@ -579,7 +573,7 @@ destroy_device(int vid)
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, bvdev, 1, "remove vdev");
 
 	free_task_pool(bvdev);
-	spdk_vhost_dev_unload(vdev);
+	return 0;
 }
 
 static void
@@ -617,11 +611,9 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.disabled_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
+	.new_device =  new_device,
+	.destroy_device = destroy_device,
 	.dump_config_json = spdk_vhost_blk_dump_config_json,
-	.ops = {
-		.new_device =  new_device,
-		.destroy_device = destroy_device,
-	}
 };
 
 int
