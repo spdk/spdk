@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9d0eabf_cd173e80",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T18:00:58Z",
+      "side": 1,
+      "message": "Maybe \"supported_io_types\" would be clearer.",
+      "revId": "330c741ccd6c32f0c7060bb1a88c6b007cfce503",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
