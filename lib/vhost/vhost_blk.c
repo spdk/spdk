@@ -464,12 +464,13 @@ bdev_remove_cb(void *remove_ctx)
  *
  */
 static int
-new_device(int vid)
+new_device(struct spdk_vhost_dev *vdev)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_blk_dev *bvdev;
 
-	vdev = spdk_vhost_dev_load(vid);
-	if (vdev == NULL) {
+	bvdev = to_blk_dev(vdev);
+	if (bvdev == NULL) {
+		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
 		return -1;
 	}
 
@@ -485,18 +486,16 @@ new_device(int vid)
 }
 
 static void
-destroy_device(int vid)
+destroy_device(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
-	vdev = spdk_vhost_dev_find_by_vid(vid);
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
-		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);
-		abort();
+		SPDK_ERRLOG("Trying to stop non-blk controller as a blk one.\n");
+		return;
 	}
 
 	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
@@ -514,7 +513,6 @@ destroy_device(int vid)
 	}
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, bvdev, 1, "remove vdev");
-	spdk_vhost_dev_unload(vdev);
 }
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
@@ -528,10 +526,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.disabled_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
-	.ops = {
-		.new_device =  new_device,
-		.destroy_device = destroy_device,
-	}
+	.new_device =  new_device,
+	.destroy_device = destroy_device,
 };
 
 int
