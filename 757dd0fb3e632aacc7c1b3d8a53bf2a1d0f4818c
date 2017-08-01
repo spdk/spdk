@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0b0443f_96b04101",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-01T13:48:17Z",
+      "side": 1,
+      "message": "Please add documentation about that arg1 is pointer to vdev and change name \u0027arg\u0027 to arg2.",
+      "range": {
+        "startLine": 157,
+        "startChar": 59,
+        "endLine": 157,
+        "endChar": 86
+      },
+      "revId": "757dd0fb3e632aacc7c1b3d8a53bf2a1d0f4818c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
