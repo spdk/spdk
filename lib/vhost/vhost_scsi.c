@@ -770,7 +770,7 @@ int
 spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_scsi_dev *svdev = to_scsi_dev(vdev);
-	int i;
+	int rc, i;
 
 	if (svdev == NULL) {
 		return -EINVAL;
@@ -783,8 +783,9 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		}
 	}
 
-	if (spdk_vhost_dev_remove(vdev) != 0) {
-		return -EIO;
+	rc = spdk_vhost_dev_remove(vdev);
+	if (rc != 0) {
+		return rc;
 	}
 
 	spdk_ring_free(svdev->vhost_events);
