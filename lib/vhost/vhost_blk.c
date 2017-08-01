@@ -477,7 +477,6 @@ new_device(struct spdk_vhost_dev *vdev)
 	if (vdev->num_queues != 1) {
 		SPDK_ERRLOG("Controller %s virtio-block device must have exactly one queue but got %d.\n",
 			    vdev->name, vdev->num_queues);
-		vdev->vid = -1;
 		return -1;
 	}
 
