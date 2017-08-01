@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94ab9280_0289d327",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-01T20:26:18Z",
+      "side": 1,
+      "message": "\"an nvme\" -\u003e \"an NVMe controller\"",
+      "range": {
+        "startLine": 449,
+        "startChar": 38,
+        "endLine": 449,
+        "endChar": 45
+      },
+      "revId": "fdb976f6ad2554f0c80a22a53e453faea047987e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
